@@ -1,9 +1,10 @@
-// The topic screen (hashtag.md; roadmap "Slice 2.3"): a topic's name,
-// its follow control — a plain toggle, no pad, no axis labels (D10) —
+// The topic screen (hashtag.md; roadmap "Slice 2.3"): a topic's name
 // and the content currently tagged with it, the fold read from the
 // Type's own side (`Hashtag.taggedContent`). Shipped deliberately
 // plain: a visual redesign pass over slice 2 is coming and this
 // screen is built once for it to reach (rulings.md, redesign note).
+// Following a topic is a slice-3 surface (roadmap): the backend
+// accepts the stance, the client offers no control for it yet.
 
 package com.cogra.feature.topics
 
@@ -19,14 +20,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -45,9 +44,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
-import com.cogra.core.designsystem.SeveranceConfirm
-import com.cogra.core.designsystem.SeverancePrompt
-import com.cogra.core.designsystem.StancePoint
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.TaggedContentKind
 import com.cogra.domain.TaggedContentView
@@ -66,10 +62,6 @@ fun TopicRoute(
         name = name,
         state = state,
         onRefresh = viewModel::refresh,
-        onFollow = viewModel::onFollow,
-        onOpenUnfollow = viewModel::onOpenUnfollow,
-        onDismissUnfollow = viewModel::onDismissUnfollow,
-        onConfirmUnfollow = viewModel::onConfirmUnfollow,
         onOpenPost = onOpenPost,
         onOpenActor = onOpenActor,
         onBack = onBack,
@@ -82,10 +74,6 @@ fun TopicScreen(
     name: String,
     state: TopicUiState,
     onRefresh: () -> Unit,
-    onFollow: () -> Unit,
-    onOpenUnfollow: () -> Unit,
-    onDismissUnfollow: () -> Unit,
-    onConfirmUnfollow: () -> Unit,
     onOpenPost: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onBack: () -> Unit,
@@ -143,13 +131,6 @@ fun TopicScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    item {
-                        FollowControl(
-                            state = state,
-                            onFollow = onFollow,
-                            onOpenUnfollow = onOpenUnfollow,
-                        )
-                    }
                     if (!state.contentLoading && state.content.isEmpty()) {
                         item {
                             Text(
@@ -173,59 +154,6 @@ fun TopicScreen(
                     }
                 }
             }
-        }
-    }
-    state.severance?.let { quote ->
-        SeveranceConfirm(
-            prompt = SeverancePrompt(
-                standing = StancePoint(quote.standing.pDirected, quote.standing.pInterest),
-                raw = StancePoint(quote.raw.pDirected, quote.raw.pInterest),
-                records = quote.records,
-                alreadySevered = quote.alreadySevered,
-                fromPick = false,
-                working = state.severanceWorking,
-                failed = state.severanceFailed,
-            ),
-            onConfirm = onConfirmUnfollow,
-            onDismiss = onDismissUnfollow,
-            testTagPrefix = "topic",
-        )
-    }
-}
-
-/**
- * The follow control: a plain toggle (D10) — tap follows at the
- * tap default, tap again opens the existing severance confirm to
- * unfollow (D9). No pad, no axis labels; the redesign pass revisits.
- */
-@Composable
-private fun FollowControl(
-    state: TopicUiState,
-    onFollow: () -> Unit,
-    onOpenUnfollow: () -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (state.following) {
-            OutlinedButton(
-                onClick = onOpenUnfollow,
-                modifier = Modifier.testTag("topic_following"),
-            ) {
-                Text(stringResource(R.string.topics_following))
-            }
-        } else {
-            Button(
-                onClick = onFollow,
-                enabled = !state.followBusy,
-                modifier = Modifier.testTag("topic_follow"),
-            ) {
-                Text(stringResource(R.string.topics_follow))
-            }
-        }
-        if (state.followFailed) {
-            ErrorLine(
-                if (state.followNeedsKey) R.string.topics_error_signing_no_key else R.string.topics_error_signing,
-                "topic_follow_failed",
-            )
         }
     }
 }

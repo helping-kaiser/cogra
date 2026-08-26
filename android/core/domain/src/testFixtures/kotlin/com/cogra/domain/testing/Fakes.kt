@@ -451,14 +451,6 @@ open class ThrowingTopicRepository : TopicRepository {
         pDirected: Double?,
         pInterest: Double?,
     ): Outcome<List<PreparedWriteView>> = throw UnsupportedOperationException()
-    override suspend fun followStanding(name: String, includePending: Boolean): Outcome<StanceStanding> =
-        throw UnsupportedOperationException()
-    override suspend fun prepareFollow(name: String, pick: StancePair): Outcome<List<PreparedWriteView>> =
-        throw UnsupportedOperationException()
-    override suspend fun followSeveranceQuote(name: String, includePending: Boolean): Outcome<SeveranceQuote> =
-        throw UnsupportedOperationException()
-    override suspend fun prepareUnfollow(name: String): Outcome<List<PreparedWriteView>> =
-        throw UnsupportedOperationException()
 }
 
 fun testProfile(

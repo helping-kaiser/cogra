@@ -5,10 +5,4 @@
     <string name="topics_error_transport">Couldn\'t load this topic.</string>
     <string name="topics_retry">Try again</string>
     <string name="topics_content_empty">Nothing tagged with this topic yet.</string>
-
-    <!-- The follow control: a plain toggle (D10). -->
-    <string name="topics_follow">Follow</string>
-    <string name="topics_following">Following</string>
-    <string name="topics_error_signing">That didn\'t go through. Try again.</string>
-    <string name="topics_error_signing_no_key">This device can\'t sign yet. Restore your key first.</string>
 </resources>

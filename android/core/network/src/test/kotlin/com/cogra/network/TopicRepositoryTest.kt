@@ -1,7 +1,7 @@
 // The topic repository against a MockWebServer through the real
 // generated Apollo client: the hashtag read (found and not-found), the
-// polymorphic taggedContent mapping (Post and Comment), the standalone
-// Tag gesture, and the follow control's fold + staging.
+// polymorphic taggedContent mapping (Post and Comment), and the Tag
+// gesture with its two parameters.
 
 package com.cogra.network
 
@@ -9,7 +9,6 @@ import com.apollographql.apollo.ApolloClient
 import com.cogra.domain.Outcome
 import com.cogra.domain.TaggedContentKind
 import com.cogra.domain.identity.EndLocalSession
-import com.cogra.domain.stance.StancePair
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.network.auth.AuthGuard
@@ -125,41 +124,16 @@ class TopicRepositoryTest {
     }
 
     @Test
-    fun followStandingFoldsTheBundleByName() = runTest {
+    fun prepareTagCarriesBothParametersWhenTheSlidersWereUsed() = runTest {
         enqueue(
-            """{"data":{"hashtag":{"__typename":"Hashtag",
-               "viewerStance":{"__typename":"StanceBundle",
-                 "pDirected":0.1,"pInterest":0.1,"rawPDirected":0.1,"rawPInterest":0.1,
-                 "recordCount":1,"severed":false,"severanceCost":1,"projected":null}}}}""",
-        )
-        val standing = (repo().followStanding("rust") as Outcome.Success).value
-        assertThat(standing.target).isEqualTo("rust")
-        assertThat(standing.net).isEqualTo(StancePair(0.1, 0.1))
-        assertThat(standing.records).isEqualTo(1)
-    }
-
-    @Test
-    fun prepareFollowSendsTopicNameNotTarget() = runTest {
-        enqueue(
-            """{"data":{"prepareStance":{"__typename":"PreparePayload",
-               "writes":[{"__typename":"PreparedWrite","id":"w1","family":"AFFINITY",
+            """{"data":{"prepareTag":{"__typename":"PreparePayload",
+               "writes":[{"__typename":"PreparedWrite","id":"w1","family":"TAG",
                           "canonicalProposal":"AA==","gcAfterEpochs":8}],
                "userErrors":[]}}}""",
         )
-        repo().prepareFollow("rust", StancePair.TapDefault)
+        repo().prepareTag("post-1", "rust", pDirected = 0.4, pInterest = 0.75)
         val body = server.takeRequest().body.readUtf8()
-        assertThat(body).contains("\"topicName\":\"rust\"")
-        assertThat(body).doesNotContain("\"target\":")
-    }
-
-    @Test
-    fun prepareUnfollowSendsTopicNameAsSeverance() = runTest {
-        enqueue(
-            """{"data":{"prepareSeverance":{"__typename":"PreparePayload",
-               "writes":[],"userErrors":[]}}}""",
-        )
-        repo().prepareUnfollow("rust")
-        val body = server.takeRequest().body.readUtf8()
-        assertThat(body).contains("\"topicName\":\"rust\"")
+        assertThat(body).contains("\"pDirected\":0.4")
+        assertThat(body).contains("\"pInterest\":0.75")
     }
 }
