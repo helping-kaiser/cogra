@@ -66,7 +66,7 @@ The geometry does the moderation of depth by itself:
   exactly the utterance it judges.
 - **Depth attenuates naturally.** Each nesting level compounds the
   terminal leg's Marginal damping, so deep chains fade without any
-  explicit depth cap (`rem:nodes:nested-comment-review`).
+  explicit depth cap (``rem:nodes:nested-comment-review``).
 
 Reviews are **commentary, never state**: the family is
 standing-inert, transitions no settlement, moves no title, binds

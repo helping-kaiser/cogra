@@ -46,7 +46,7 @@ and declared dependencies, and the host publishes one
 authoritative order `𝒬_k` that totalizes concurrent acts — every
 record inherits its act's logical time, and `≺` means precedence
 in that published order
-(`def:graph:authoritative-act-order`). Two participants holding
+(``def:graph:authoritative-act-order``). Two participants holding
 the same published order derive the same result; agreement on the
 order, not merely the record set, is what replay consumes — there
 is no server clock to trust.
@@ -73,7 +73,7 @@ bundle is a `≺`-chain, the full history public by construction.
 **Invariant: parallel records are unrestricted; "current" is a
 declared fold.** The append layer never rejects, merges, or
 supersedes a same-author record
-(`ax:graph:parallel-authored-acts`); every current-state read
+(``ax:graph:parallel-authored-acts``); every current-state read
 names the fold it applies.
 
 What "current" means is always a declared fold:
@@ -148,7 +148,7 @@ Two influence channels exist, and they must never be conflated:
   Acts directed at a person *do* move that person's standing `α_i`
   through L1's conserved standing transport — lifting when the
   source's rate exceeds the target's standing, diluting otherwise
-  (`prop:epoch:final-standing-response`);
+  (``prop:epoch:final-standing-response``);
   standing feeds the write gate and is freely readable
   downstream — but it never enters the feed: who may act, never
   what the feed shows.

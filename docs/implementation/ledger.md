@@ -210,7 +210,7 @@ scripts cannot read L1, so the platform key attests the L1 outcome
 the release matches — the settlement payload and its epoch
 certificate. That seam is L1's own posture: a terminal escrow "may
 observe the public log", and the observing mechanism is terminal
-(`rem:graph:settlement-cross-layer`,
+(``rem:graph:settlement-cross-layer``,
 [layer1-interface.md §7.2](../primitive/layer1-interface.md#72-settlement-recognition)) —
 the attestation is CoGra's to make and everyone's to audit, against
 the same public state it attests.
@@ -358,7 +358,7 @@ and it is purely rail-side — a transfer is never a graph object:
   recognition for branch A, defeat for branch B — because Liquid
   scripts cannot read L1; the escrow observes the public log
   through CoGra's key, and that mechanism is terminal
-  (`rem:graph:settlement-cross-layer`). Release keys on the epoch
+  (``rem:graph:settlement-cross-layer``). Release keys on the epoch
   certificate, never the Ratify — the regret window sits between
   them.
 - **No per-sale fee.** The same gate posture as tips: the protocol

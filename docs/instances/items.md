@@ -23,7 +23,7 @@ model and the money seam below are committed now.
 Listing a good is the author's **genesis Owner** record
 (Actor → Item): its act identifier mints the Item and roots the
 ownership thread
-(`def:graph:item-genesis-act`,
+(``def:graph:item-genesis-act``,
 [layer1-interface.md §7.2](../primitive/layer1-interface.md#72-settlement-recognition)).
 Like Publish, Owner is a single-parameter family — `p_d` = the
 attachment `a`, `p_i` fixed at `1` — and **title is
@@ -146,7 +146,7 @@ all three stance marginals are positive — buyer generosity
 (Bid), seller comfort (Accept), buyer confirmation (Ratify) — a
 conjunction over stances, never the parity product (which would
 reward predatory-meets-coerced)
-(`rem:graph:settlement-reputation`).
+(``rem:graph:settlement-reputation``).
 
 Commerce also leaves ordinary interpersonal fabric: Accept and
 Ratify are actor-directed records, and stance-positive ones are
