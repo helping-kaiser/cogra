@@ -296,9 +296,9 @@ pub fn parse(
 /// asset, rather than an asset pointing at a file no run saw. The result is
 /// ordered by the backing source's path (´[ARCH-req:linter:determinism]´).
 ///
-/// A file directly under a package's `tests` directory is a crate root by
-/// [`is_crate_root`], which is why the `mod rig;` of eleven integration
-/// suites pairs to the one tree beside them.
+/// A file directly under a package's `tests` directory is a crate root as
+/// well, because Cargo compiles each as its own crate, which is why the
+/// `mod rig;` of eleven integration suites pairs to the one tree beside them.
 #[must_use]
 pub fn backing_definitions<'s>(
     profile: &Profile,

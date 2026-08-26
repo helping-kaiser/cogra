@@ -45,7 +45,8 @@
 //! # Heads
 //!
 //! None. A code comment is a scanned region that carries occurrences and
-//! heads nothing, which is why this frontend produces no [`Head`] values
+//! heads nothing, which is why this frontend produces no
+//! [`crate::frontend::Head`] values
 //! (´dec:lint:head-recognition´).
 
 use syn::spanned::Spanned;
