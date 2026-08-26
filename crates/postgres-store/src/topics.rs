@@ -139,6 +139,17 @@ fn type_name(target: &str) -> Result<String, TopicsError> {
 ///
 /// `author` is the content's own author for the chip row (D8): the
 /// content-intrinsic channel, the one that needs no forward-path weight.
+///
+/// # The two halves filter on different actors
+///
+/// The landed half selects on `author`; the pending half selects on the
+/// actor named by `view`, because a staged write is visible only to
+/// whoever staged it. Every returned claim is then attributed to
+/// `author`. So a call whose viewer is not the content's author, made
+/// with [`TopicView::IncludingPending`], mixes the viewer's own in-flight
+/// tags into the author's chip row under the author's name. Count pending
+/// only when the two actors are the same one — `crates/api`'s
+/// `topic_claims` gates on exactly that.
 pub async fn topics_of(
     pool: &PgPool,
     node: &str,

@@ -31,6 +31,7 @@ label.
 | `test:integration:expire-one-is-targeted-and-terminal`                               | expire_one_is_targeted_and_terminal                               |
 | `test:integration:gc-expires-then-reaps-and-spares-landed-writes`                    | gc_expires_then_reaps_and_spares_landed_writes                    |
 | `test:integration:genesis-seed-round-trips`                                          | genesis_seed_round_trips                                          |
+| `test:integration:hand-computed-fold-agrees`                                         | hand_computed_fold_agrees                                         |
 | `test:integration:handle-lookup-resolves-exactly-one-actor`                          | handle_lookup_resolves_exactly_one_actor                          |
 | `test:integration:handles-share-one-namespace-across-kinds`                          | handles_share_one_namespace_across_kinds                          |
 | `test:integration:has-live-targeting-sees-only-live-writes-at-the-target`            | has_live_targeting_sees_only_live_writes_at_the_target            |

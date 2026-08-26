@@ -26,7 +26,8 @@ within a phase, order is flexible.
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
 | 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
 | 2a. Stance control (slice 2.2, both clients) | 1 | **Q42** | The resting face an unauthored stance target wears. Cheap to answer and worth answering soon: the two clients are shipping the control now, and a face is a shared contract exactly as §8.4's anchor table is. |
-| 2b. Profile surface (with slice 2.2) | 3 | **Q35, Q36, Q41** | The profile header's connection count (which fold counts as a connection — answerable once the stance control makes Affinity real), the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without all three. |
+| 2b. Profile surface (with slice 2.2) | 3 | **Q35, Q36, Q41** | The profile header's connection count (which fold counts as a connection — answerable now that every passive class rides one stance control), the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without all three. |
+| 2c. Batched creation (with slice 2.4) | 1 | **Q43** | Whether a creation batch quotes its total θ before staging any of it — the write rule is checked per act, so a batch can stage part of itself and refuse the rest. References batch exactly as tags do, which makes 2.4 the moment. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
@@ -203,6 +204,43 @@ choice wants a cross-device look first. 😐 stays until then.
 
 ---
 
+## Q43 — Does a creation batch quote its total cost?
+
+**Where it shows up:**
+[api-spec.md "Content authoring"](implementation/api-spec.md) (the
+creation batch),
+[substrate.md §6](primitive/substrate.md#6-authoring-path-and-admission)
+(the write rule)
+**Status:** open (surfaced by slice 2.3's tag batches)
+
+### Context
+
+Creating content stages a batch — the minting record plus one Tag
+per declared topic and one Reference per citation, each its own
+priced act. The write rule is checked **per act**, against the
+balance as it stands, and staging reserves nothing: an author
+holding a single θ stages a batch of ten, and an author whose
+balance falls mid-batch keeps the acts already staged and takes a
+refusal on the rest. Each act commits its own transaction, so
+there is no batch to roll back. Severance is the precedent — its
+`(0,0)` batch stages act by act on the same rule.
+
+The arithmetic is coherent, since only landing debits. What it is
+not is visible: the composer asks for one gesture and the author
+pays N times what one gesture costs.
+
+### The question
+
+Should a prepare quote the batch's total — N acts at the current θ
+— and refuse the whole batch when the balance cannot carry it?
+The alternatives are a cumulative pre-check in the API, a
+client-side quote with no server guarantee behind it, and leaving
+the per-act check as the only rule with the count shown in the
+composer. Slice 2.4 doubles the surface: references batch exactly
+as tags do.
+
+---
+
 ## Q35 — The profile connection count: which fold counts
 
 **Where it shows up:**
@@ -216,21 +254,26 @@ count in slice 2.1)
 design.md's profile-header inventory names a **connection
 count**, and the profile screen will eventually show direct
 connections both ways (who this actor connects to, who connects
-to them). No doc defines the fold behind the number: which
-families count as a "connection" (Affinity toward a Profile?
-any non-`(0,0)` Opinion bundle? reciprocated only?), whether a
-severed bundle subtracts, and whether the two directions are one
-number or two. A math-shaped claim with no math is not
-implementable ([CLAUDE.md](../CLAUDE.md) — trace claims to the
-docs).
+to them). No doc defines the fold behind the number: what counts
+as a "connection" (any non-`(0,0)` Opinion bundle? reciprocated
+only? a threshold on the bundle's sum?), whether a severed bundle
+subtracts, and whether the two directions are one number or two.
+A math-shaped claim with no math is not implementable
+([CLAUDE.md](../CLAUDE.md) — trace claims to the docs).
+
+The count reads Opinion bundles. Affinity is Actor → Type,
+enforced by the census
+([edges.md §2](primitive/edges.md#2-binary-families-cogra-authors)),
+so no actor ever holds an Affinity toward a Profile.
 
 ### The question
 
 What is the declared fold for an actor's connection count (and
-the connection *lists* behind it)? The natural moment to answer
-is slice 2.2, when the stance control makes Affinity bundles
-real. Display-only either way: inbound connections never shape
-the holder's feed.
+the connection *lists* behind it)? The trigger has fired: slice
+2.3 made a Type a stance target, so Affinity bundles are real and
+every passive class now rides one control and one fold.
+Display-only either way: inbound connections never shape the
+holder's feed.
 
 ---
 
