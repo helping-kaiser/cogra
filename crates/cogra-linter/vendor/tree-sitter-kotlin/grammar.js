@@ -81,6 +81,13 @@ module.exports = grammar({
     // `(A)` is a parenthesised type; `(A) -> B` is a function type whose
     // parameter list happens to look identical up to the arrow.
     [$.parenthesized_type, $.function_type_parameters],
+
+    // Where an `if` branch ends against a postfix suffix: `if (c) a[0]`
+    // may close the branch at `a` or read the indexing as part of it.
+    // This is the bottom of the cascade, so unlike a bound drawn higher
+    // up it does not repeat at further levels.
+    [$._if_branch, $.postfix_expression],
+
   ],
 
   rules: {
@@ -572,7 +579,6 @@ module.exports = grammar({
     _expression: $ => choice(
       $._disjunction,
       $.jump_expression,
-      $.if_expression,
       // Same reason: its `= expr` body is unbracketed and runs greedily.
       $.anonymous_function,
     ),
@@ -717,6 +723,14 @@ module.exports = grammar({
       $.string_literal,
       $.when_expression,
       $.try_expression,
+      // `a provides if (c) X else Y`: an `if` used as an operand. Its
+      // branches are tight — below the comparison and logical operators
+      // — which is what lets it sit among the atoms without being
+      // ambiguous with the operators around it. The full form, with
+      // `_control_structure_body` branches that may be blocks, is the one
+      // at the top of the cascade and is what `val x = if (c) { } else { }`
+      // reaches.
+      $.if_expression,
       $.lambda_literal,
       $.object_literal,
       $.this_expression,
@@ -725,21 +739,46 @@ module.exports = grammar({
       $.collection_literal,
     ),
 
+    // `if` is an ordinary operand, so its branches are bounded rather
+    // than running to the end of the enclosing expression. An unbounded
+    // branch would make `if (c) a || b` ambiguous about whether the `||`
+    // is inside the branch at every level of the cascade.
+    //
+    // The bound is drawn to admit what actually occurs: a block, an
+    // else-if chain, a bare jump, and any expression below the
+    // comparison and logical operators. `if (c) a || b` binds the `||`
+    // outside the branch, where Kotlin binds it inside; write the parens
+    // if that distinction matters.
     if_expression: $ => prec.right(seq(
       'if', '(', field('condition', $._expression), ')',
-      optional(field('consequence', $._control_structure_body)),
-      // The separator before `else` is what lets `else` start its own
-      // line: the scanner has already inferred a terminator after the
-      // consequence, and this absorbs it. KotlinParser.g4's bare
-      // `SEMICOLON` branches for an empty body are dropped — an omitted
-      // body plus the enclosing statement's own separator covers them,
-      // and keeping them collides with that separator.
+      optional(field('consequence', $._if_branch)),
+      // The separator before `else` lets `else` start its own line: the
+      // scanner has already inferred a terminator after the consequence,
+      // and this absorbs it.
       optional(seq(
         optional($._semi),
         'else',
-        optional(field('alternative', $._control_structure_body)),
+        optional(field('alternative', $._if_branch)),
       )),
     )),
+
+    _if_branch: $ => choice(
+      $.block,
+      // `if` itself is not listed: it is an atom, so an else-if chain
+      // already arrives through the cascade below.
+      alias($._branch_jump, $.jump_expression),
+      // The bottom of the operator cascade. Bounding a branch anywhere
+      // in the middle leaves the pass-through below it competing with
+      // that level's operator, and the competition then repeats at every
+      // level down — no precedence or conflict resolves it in one place.
+      // Here there is nothing below to compete.
+      //
+      // The cost: an unparenthesised operator in a branch, as in
+      // `if (c) a + 1 else a - 1`, is not read as part of the branch.
+      // Blocks, else-if chains, jumps, calls, navigation and plain names
+      // — which is what branches are in this corpus — all still fit.
+      $._postfix_unary_expression,
+    ),
 
     when_expression: $ => seq(
       'when',
@@ -799,6 +838,11 @@ module.exports = grammar({
     // what keeps `a ?: throw b || c` from being ambiguous about whether
     // the `||` belongs to the throw or to the elvis.
     _tight_jump: $ => jumpForms($, $._infix_function_call),
+
+    // The same forms again at the branch's own level, so that
+    // `if (c) return x` does not bound its operand higher up the cascade
+    // than the branch around it.
+    _branch_jump: $ => jumpForms($, $._postfix_unary_expression),
 
     this_expression: $ => seq(
       'this',
