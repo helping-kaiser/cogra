@@ -341,6 +341,60 @@ impl Rig {
             .await
             .expect("registry")
     }
+
+    /// A post's chip row, as a client reads it.
+    async fn post_topics(&self, token: Option<&str>, id: &str, include_pending: bool) -> Value {
+        let data = self
+            .gql(
+                token,
+                r#"query($id: UUID!, $ip: Boolean!) {
+                     post(id: $id) {
+                       topics(includePending: $ip) {
+                         relevance confidence pending
+                         hashtag { id name { value status } moderationStatus }
+                       }
+                     }
+                   }"#,
+                json!({ "id": id, "ip": include_pending }),
+            )
+            .await;
+        data["post"]["topics"].clone()
+    }
+
+    async fn comment_topics(&self, token: Option<&str>, id: &str) -> Value {
+        let data = self
+            .gql(
+                token,
+                r#"query($id: UUID!) {
+                     comment(id: $id) { topics { hashtag { name { value } } } }
+                   }"#,
+                json!({ "id": id }),
+            )
+            .await;
+        data["comment"]["topics"].clone()
+    }
+
+    async fn hashtag(&self, token: Option<&str>, name: &str) -> Value {
+        let data = self
+            .gql(
+                token,
+                r#"query($n: String!) {
+                     hashtag(name: $n) {
+                       id
+                       name { value status }
+                       moderationStatus
+                       taggedContent {
+                         relevance confidence pending
+                         node { id ... on Post { title { value } } }
+                       }
+                       viewerStance { pDirected pInterest recordCount severed }
+                     }
+                   }"#,
+                json!({ "n": name }),
+            )
+            .await;
+        data["hashtag"].clone()
+    }
 }
 
 /// Folds a tag object into a mutation input object.
@@ -989,5 +1043,330 @@ async fn an_illegal_topic_name_refuses_the_follow(pool: PgPool) {
     assert!(
         rig.registry_names().await.is_empty(),
         "a refused follow registers nothing"
+    );
+}
+
+// ---------------------------------------------------------------------
+// The read surface: the fold, served.
+// ---------------------------------------------------------------------
+
+/// Every well-formed name already denotes a Type, and a read never
+/// writes the registry (D4).
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_untagged_name_resolves_without_a_registry_row(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+
+    let hashtag = rig.hashtag(None, "#Nobody-Has-Tagged-This").await;
+    assert_eq!(
+        hashtag["name"]["value"], "nobody-has-tagged-this",
+        "canonicalized on the way in: {hashtag}"
+    );
+    assert_eq!(
+        hashtag["id"],
+        common::hashtag_uuid("nobody-has-tagged-this").to_string(),
+        "the id is derived, not looked up"
+    );
+    assert_eq!(hashtag["moderationStatus"], "NORMAL");
+    assert_eq!(
+        hashtag["taggedContent"].as_array().expect("array"),
+        &Vec::<Value>::new()
+    );
+    assert!(
+        rig.registry_names().await.is_empty(),
+        "reading a topic wrote a row"
+    );
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_name_the_substrate_could_never_carry_resolves_to_nothing(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    for bad in ["", "has space", "münchen"] {
+        let data = rig
+            .gql(
+                None,
+                r#"query($n: String!) { hashtag(name: $n) { id } }"#,
+                json!({ "n": bad }),
+            )
+            .await;
+        assert!(data["hashtag"].is_null(), "for {bad:?}: {data}");
+    }
+}
+
+/// A `Hashtag` is not a `Node`: it has no minting record, so there is
+/// nothing to date and nothing to land (D2).
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_hashtag_carries_no_node_fields(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    for field in ["createdAt", "updatedAt", "landing { state }"] {
+        let refused = rig
+            .gql_raw(
+                None,
+                &format!("query {{ hashtag(name: \"rust\") {{ {field} }} }}"),
+                json!({}),
+            )
+            .await;
+        assert!(
+            refused.get("errors").is_some(),
+            "Hashtag answered {field}: {refused}"
+        );
+    }
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_posts_chip_row_serves_the_authors_current_topics(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let post = rig
+        .landed_post(
+            &token,
+            &ak,
+            "A post",
+            json!([{ "name": "#Rust", "pDirected": 0.8, "pInterest": 0.9 }]),
+        )
+        .await;
+
+    let topics = rig.post_topics(None, &post, true).await;
+    let chips = topics.as_array().expect("array");
+    assert_eq!(chips.len(), 1, "{topics}");
+    assert_eq!(chips[0]["hashtag"]["name"]["value"], "rust");
+    assert_eq!(chips[0]["relevance"], 0.8);
+    assert_eq!(chips[0]["confidence"], 0.9);
+    assert_eq!(chips[0]["pending"], false);
+}
+
+/// Defaults, as jakob ruled them: a modest relevance claim held with
+/// full confidence in one's own declaration (D13).
+#[sqlx::test(migrations = "../../migrations")]
+async fn omitted_parameters_land_the_declared_defaults(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let post = rig
+        .landed_post(&token, &ak, "A post", json!([tag("rust")]))
+        .await;
+
+    let topics = rig.post_topics(None, &post, true).await;
+    assert_eq!(topics[0]["relevance"], 0.1);
+    assert_eq!(topics[0]["confidence"], 1.0);
+}
+
+/// The un-tag, read through the fold: relevance 0 is a record like any
+/// other, and the chip is gone without anything being erased.
+#[sqlx::test(migrations = "../../migrations")]
+async fn un_tagging_takes_the_chip_off_the_row(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let post = rig
+        .landed_post(&token, &ak, "A post", json!([tag("rust"), tag("graphs")]))
+        .await;
+    assert_eq!(
+        rig.post_topics(None, &post, true)
+            .await
+            .as_array()
+            .map(Vec::len),
+        Some(2)
+    );
+
+    rig.land_tag(
+        &token,
+        &ak,
+        &post,
+        json!({ "name": "rust", "pDirected": 0.0 }),
+    )
+    .await;
+
+    let topics = rig.post_topics(None, &post, true).await;
+    let chips = topics.as_array().expect("array");
+    assert_eq!(chips.len(), 1, "the withdrawn claim is gone: {topics}");
+    assert_eq!(chips[0]["hashtag"]["name"]["value"], "graphs");
+
+    // And re-tagging brings it back — the fold reads the newest record,
+    // not a tombstone.
+    rig.land_tag(&token, &ak, &post, tag("rust")).await;
+    assert_eq!(
+        rig.post_topics(None, &post, true)
+            .await
+            .as_array()
+            .map(Vec::len),
+        Some(2)
+    );
+}
+
+/// Third-party claims are the ranker's to weight, so 2.3's chip row
+/// carries only the content-intrinsic channel (D8).
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_strangers_tag_stays_off_the_chip_row(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let (_, sk) = rig.seed_member("stranger", "stranger@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let stranger = rig.log_in("stranger@example.com").await;
+    let post = rig
+        .landed_post(&token, &ak, "A post", json!([tag("rust")]))
+        .await;
+
+    rig.land_tag(&stranger, &sk, &post, tag("spam")).await;
+
+    let topics = rig.post_topics(None, &post, true).await;
+    let chips = topics.as_array().expect("array");
+    assert_eq!(
+        chips.len(),
+        1,
+        "the stranger's claim is not the post's: {topics}"
+    );
+    assert_eq!(chips[0]["hashtag"]["name"]["value"], "rust");
+
+    // Nor does it reach the topic page's author-owned channel.
+    let spam = rig.hashtag(None, "spam").await;
+    assert_eq!(
+        spam["taggedContent"].as_array().expect("array"),
+        &Vec::<Value>::new(),
+        "{spam}"
+    );
+}
+
+/// A tag still in flight is the author's own content from the moment
+/// they sign it — and nobody else's business until it lands.
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_pending_tag_shows_to_its_author_only(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    rig.seed_member("other", "other@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let other = rig.log_in("other@example.com").await;
+    let post = rig.landed_post(&token, &ak, "A post", json!([])).await;
+
+    let prepared = rig.prepare_tag(&token, &post, tag("rust")).await;
+    rig.pre_sign(&token, &ak, &prepared["prepareTag"]["writes"])
+        .await;
+
+    let mine = rig.post_topics(Some(&token), &post, true).await;
+    assert_eq!(mine.as_array().map(Vec::len), Some(1), "{mine}");
+    assert_eq!(mine[0]["pending"], true);
+
+    let landed_only = rig.post_topics(Some(&token), &post, false).await;
+    assert_eq!(
+        landed_only.as_array().expect("array"),
+        &Vec::<Value>::new(),
+        "the L1 view carries only what landed"
+    );
+
+    let theirs = rig.post_topics(Some(&other), &post, true).await;
+    assert_eq!(
+        theirs.as_array().expect("array"),
+        &Vec::<Value>::new(),
+        "an unlanded act is not on the graph"
+    );
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_comments_chip_row_reads_the_same_fold(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let post = rig.landed_post(&token, &ak, "A post", json!([])).await;
+    let comment = rig
+        .landed_comment(&token, &ak, &post, json!([tag("rust")]))
+        .await;
+
+    let topics = rig.comment_topics(None, &comment).await;
+    assert_eq!(topics.as_array().map(Vec::len), Some(1), "{topics}");
+    assert_eq!(topics[0]["hashtag"]["name"]["value"], "rust");
+    assert_eq!(
+        rig.post_topics(None, &post, true)
+            .await
+            .as_array()
+            .map(Vec::len),
+        Some(0),
+        "the comment's topic is not the post's"
+    );
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_topic_page_lists_the_content_tagged_with_it(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    rig.landed_post(&token, &ak, "Tagged", json!([tag("rust")]))
+        .await;
+    rig.landed_post(&token, &ak, "Untagged", json!([])).await;
+
+    let hashtag = rig.hashtag(None, "rust").await;
+    let listed = hashtag["taggedContent"].as_array().expect("array");
+    assert_eq!(listed.len(), 1, "{hashtag}");
+    assert_eq!(listed[0]["node"]["title"]["value"], "Tagged");
+    assert_eq!(listed[0]["relevance"], 0.1);
+    assert_eq!(listed[0]["pending"], false);
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_tagged_content_limit_refuses_over_asking(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let refused = rig
+        .gql_raw(
+            None,
+            r#"query { hashtag(name: "rust") { taggedContent(limit: 101) { pending } } }"#,
+            json!({}),
+        )
+        .await;
+    assert!(refused.get("errors").is_some(), "{refused}");
+}
+
+/// The follow control's read: the topic page shows where the viewer's
+/// own Affinity bundle stands, and what severing it would cost.
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_topic_page_reads_the_viewers_own_follow(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    rig.seed_member("other", "other@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let other = rig.log_in("other@example.com").await;
+
+    assert!(
+        rig.hashtag(None, "rust").await["viewerStance"].is_null(),
+        "a guest reads no bundle"
+    );
+
+    rig.follow_topic(&token, &ak, "rust", 0.1, 0.1).await;
+
+    let mine = rig.hashtag(Some(&token), "rust").await;
+    assert_eq!(mine["viewerStance"]["pDirected"], 0.1, "{mine}");
+    assert_eq!(mine["viewerStance"]["recordCount"], 1);
+    assert_eq!(mine["viewerStance"]["severed"], false);
+
+    let theirs = rig.hashtag(Some(&other), "rust").await;
+    assert_eq!(
+        theirs["viewerStance"]["recordCount"], 0,
+        "the fold never nets across authors: {theirs}"
+    );
+}
+
+/// Follow, then unfollow, then read: the round trip a topic page runs.
+#[sqlx::test(migrations = "../../migrations")]
+async fn follow_and_unfollow_round_trip_through_the_topic_page(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    rig.follow_topic(&token, &ak, "rust", 0.6, 0.6).await;
+    assert_eq!(
+        rig.hashtag(Some(&token), "rust").await["viewerStance"]["severed"],
+        false
+    );
+
+    let severed = rig
+        .prepare_severance(&token, json!({ "topicName": "rust" }))
+        .await;
+    rig.land(&token, &ak, &severed["prepareSeverance"]["writes"])
+        .await;
+
+    let after = rig.hashtag(Some(&token), "rust").await;
+    assert_eq!(after["viewerStance"]["pDirected"], 0.0, "{after}");
+    assert_eq!(after["viewerStance"]["severed"], true);
+    assert_eq!(
+        after["viewerStance"]["recordCount"], 2,
+        "the follow and its counter-record both stand"
     );
 }
