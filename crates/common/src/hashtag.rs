@@ -8,6 +8,8 @@
 
 use uuid::Uuid;
 
+use crate::l1::identifier::{MAX_ATOM_BYTES, NodeId};
+
 /// The project-scoped UUIDv5 namespace for hashtag ids.
 ///
 /// Fixed forever: changing it would invalidate every previously minted
@@ -19,8 +21,49 @@ pub const HASHTAG_NAMESPACE: Uuid = uuid::uuid!("7c844aef-fe5c-4849-90c2-196cbd8
 /// Derives the content-addressed UUID for a canonical hashtag name.
 ///
 /// The caller must pass the canonical form — lowercase, no leading `#`.
+/// [`canonicalize`] produces it.
 pub fn hashtag_uuid(canonical_name: &str) -> Uuid {
     Uuid::new_v5(&HASHTAG_NAMESPACE, canonical_name.as_bytes())
+}
+
+/// Why a tag string names no Type.
+///
+/// The variants exist to sharpen the field-level refusal a client sees;
+/// the verdict itself is always the identifier atom's, never this enum's.
+#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+pub enum HashtagNameError {
+    #[error("a topic name cannot be empty")]
+    Empty,
+    #[error("a topic name is at most {MAX_ATOM_BYTES} bytes, got {0}")]
+    TooLong(usize),
+    #[error("`{0}` is not a legal topic name: ASCII letters, digits, `.`, `-`, `_` only")]
+    Charset(String),
+}
+
+/// Canonicalizes a tag string into the Type name L1 compares by byte
+/// equality: lowercase, no leading `#` (hashtag.md §1).
+///
+/// Legality is decided by *constructing the Type identifier itself*, so the
+/// naming service and the identifier algebra cannot drift apart: a name is
+/// legal exactly when `name(s)` is (layer1-interface.md §8.1 — ASCII
+/// `[A-Za-z0-9._-]`, 1..=128 bytes). Nothing else is transformed — a name
+/// that is not an atom is refused rather than encoded, because encoding it
+/// would change what the name *means* while leaving it looking the same.
+///
+/// Idempotent: canonical input is returned unchanged.
+pub fn canonicalize(input: &str) -> Result<String, HashtagNameError> {
+    // One `#` is the sigil; a second is an ordinary character, and not one
+    // the atom admits.
+    let name = input
+        .strip_prefix('#')
+        .unwrap_or(input)
+        .to_ascii_lowercase();
+    match NodeId::name(&name) {
+        Ok(_) => Ok(name),
+        Err(_) if name.is_empty() => Err(HashtagNameError::Empty),
+        Err(_) if name.len() > MAX_ATOM_BYTES => Err(HashtagNameError::TooLong(name.len())),
+        Err(_) => Err(HashtagNameError::Charset(name)),
+    }
 }
 
 #[cfg(test)]
@@ -42,6 +85,98 @@ mod tests {
         // The v5 hash is over the raw bytes, so a non-canonical casing
         // derives a *different* id.
         assert_ne!(hashtag_uuid("Bot-Defense"), hashtag_uuid("bot-defense"));
+    }
+
+    #[test]
+    fn canonicalizes_casing_and_the_sigil() {
+        for input in ["rust", "Rust", "RUST", "#rust", "#Rust", "#RUST"] {
+            assert_eq!(canonicalize(input).expect("legal"), "rust", "from {input}");
+        }
+    }
+
+    #[test]
+    fn canonicalization_is_idempotent() {
+        for input in ["#Bot-Defense", "rust", "a.b_c-1"] {
+            let once = canonicalize(input).expect("legal");
+            assert_eq!(canonicalize(&once).expect("legal"), once);
+        }
+    }
+
+    #[test]
+    fn canonical_names_are_atoms() {
+        for input in ["a", "a.b", "a-b", "a_b", "0", "bot-defense"] {
+            let name = canonicalize(input).expect("legal");
+            assert!(NodeId::name(&name).is_ok(), "{name} must be an atom");
+        }
+    }
+
+    #[test]
+    fn empty_is_refused() {
+        assert_eq!(
+            canonicalize("").expect_err("refused"),
+            HashtagNameError::Empty
+        );
+        // A bare sigil is empty once the sigil is stripped.
+        assert_eq!(
+            canonicalize("#").expect_err("refused"),
+            HashtagNameError::Empty
+        );
+    }
+
+    #[test]
+    fn the_length_bound_is_the_atom_bound() {
+        let at_bound = "a".repeat(MAX_ATOM_BYTES);
+        assert_eq!(canonicalize(&at_bound).expect("legal"), at_bound);
+
+        let over = "a".repeat(MAX_ATOM_BYTES + 1);
+        assert_eq!(
+            canonicalize(&over).expect_err("refused"),
+            HashtagNameError::TooLong(MAX_ATOM_BYTES + 1)
+        );
+        // The sigil is not part of the name, so it does not consume budget.
+        assert!(canonicalize(&format!("#{at_bound}")).is_ok());
+    }
+
+    #[test]
+    fn non_atoms_are_refused_never_encoded() {
+        // D3: non-ASCII is unrepresentable on the substrate, so it is
+        // refused outright — never punycoded or percent-encoded into
+        // something that looks like a different name.
+        for input in [
+            "münchen",
+            "#münchen",
+            "日本語",
+            "has space",
+            "colon:inside",
+            "a#b",
+            "##rust",
+            "emoji🎉",
+        ] {
+            assert!(
+                canonicalize(input).is_err(),
+                "{input} must be refused as a name"
+            );
+        }
+    }
+
+    #[test]
+    fn non_ascii_case_is_not_folded() {
+        // ASCII lowercasing leaves `Ü` alone, and the atom check then
+        // refuses it — the refusal must not depend on Unicode case folding.
+        assert_eq!(
+            canonicalize("MÜNCHEN").expect_err("refused"),
+            HashtagNameError::Charset("mÜnchen".to_string())
+        );
+    }
+
+    #[test]
+    fn canonical_names_derive_the_seeded_reserved_ids() {
+        // The reserved Types are seeded by name; canonicalizing the same
+        // strings must land on the same content-addressed keys.
+        assert_eq!(
+            hashtag_uuid(&canonicalize("#Bot-Defense").expect("legal")),
+            hashtag_uuid("bot-defense")
+        );
     }
 
     #[test]

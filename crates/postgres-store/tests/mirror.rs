@@ -34,6 +34,8 @@ fn package(epoch: i64, records: Vec<PublishedRecord>) -> EpochPackage {
     EpochPackage { epoch, records }
 }
 
+/// Ingesting a package appends its records and advances the cursor, and
+/// the leg rows come back carrying the family-fixed census metadata.
 #[sqlx::test(migrations = "../../migrations")]
 async fn ingestion_appends_and_advances_the_cursor(pool: PgPool) {
     assert_eq!(
@@ -59,7 +61,6 @@ async fn ingestion_appends_and_advances_the_cursor(pool: PgPool) {
             .expect("gate")
     );
 
-    // Leg rows carry the family-fixed census metadata.
     let (domain, tier, mask_a00): (String, String, bool) = sqlx::query_as(
         "SELECT domain, tier, mask_a00 FROM mirror_record_legs WHERE record_id = $1",
     )
@@ -72,6 +73,8 @@ async fn ingestion_appends_and_advances_the_cursor(pool: PgPool) {
     assert!(mask_a00);
 }
 
+/// Only the cursor's successor is accepted: a gap ahead of the cursor and
+/// a replay of an already-ingested epoch are refused alike.
 #[sqlx::test(migrations = "../../migrations")]
 async fn ingestion_is_strictly_sequential(pool: PgPool) {
     let p1 = package(1, vec![registration("alice", 1, 0)]);
@@ -81,7 +84,6 @@ async fn ingestion_is_strictly_sequential(pool: PgPool) {
         MirrorError::OutOfOrder { got: 1, cursor: -1 }
     ));
 
-    // Re-ingesting an already-ingested epoch is refused the same way.
     let p0 = package(0, vec![registration("alice", 0, 0)]);
     mirror::ingest_epoch(&pool, &p0).await.expect("ingests");
     let err = mirror::ingest_epoch(&pool, &p0).await.expect_err("refused");
@@ -105,7 +107,6 @@ async fn mirror_is_rebuildable_from_the_published_sequence(pool: PgPool) {
     .await
     .expect("rows");
 
-    // Wipe and replay the same published sequence: identical state.
     mirror::reset(&pool).await.expect("reset");
     assert_eq!(
         mirror::last_ingested_epoch(&pool).await.expect("cursor"),
