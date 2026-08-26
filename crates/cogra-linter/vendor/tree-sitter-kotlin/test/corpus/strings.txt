@@ -132,3 +132,90 @@ val h = -1f..1f
         (prefix_unary_operator)
         (real_literal))
       (real_literal))))
+
+================================================================
+A comment leader just inside the opening quote is content
+================================================================
+
+val a = "// not a comment"
+val b = "/* not a comment */"
+
+----
+
+(source_file
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (string_literal
+      (line_string_literal)))
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (string_literal
+      (line_string_literal))))
+
+================================================================
+A comment leader just after an interpolation is content
+================================================================
+
+val a = "a // b ${y} /* c */ d"
+val b = "${y}// tail"
+
+----
+
+(source_file
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (string_literal
+      (line_string_literal
+        (string_interpolation
+          (simple_identifier)))))
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (string_literal
+      (line_string_literal
+        (string_interpolation
+          (simple_identifier))))))
+
+================================================================
+A URL in a string stays content
+================================================================
+
+val a = "https://cogra.example/join/$id"
+val b = "a // b"
+
+----
+
+(source_file
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (string_literal
+      (line_string_literal
+        (string_reference
+          (simple_identifier)))))
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (string_literal
+      (line_string_literal))))
+
+================================================================
+A raw string carries no comment however many leaders it spans
+================================================================
+
+val a = """
+// not a comment
+/** nor this */
+"""
+
+----
+
+(source_file
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (string_literal
+      (multiline_string_literal))))
