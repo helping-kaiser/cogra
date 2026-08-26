@@ -8,13 +8,19 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PreparedContentView
+import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.TopicClaimView
 import com.cogra.domain.UserError
 import com.cogra.domain.signing.WriteSigner
-import com.cogra.domain.topics.TagClaim
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingContentRepository
+import com.cogra.domain.testing.ThrowingTopicRepository
 import com.cogra.domain.testing.testPost
+import com.cogra.domain.testing.testTopicClaim
+import com.cogra.domain.topics.TAG_DEFAULT_CONFIDENCE
+import com.cogra.domain.topics.TAG_DEFAULT_RELEVANCE
+import com.cogra.domain.topics.TagClaim
 import com.google.common.truth.Truth.assertThat
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +32,14 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+
+/** One staged Tag act, as the fake saw it. */
+private data class TagCall(
+    val target: String,
+    val name: String,
+    val pDirected: Double?,
+    val pInterest: Double?,
+)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ComposePostViewModelTest {
@@ -40,6 +54,10 @@ class ComposePostViewModelTest {
         var editOutcome: Outcome<PreparedContentView>? = null
         var lastCreate: List<Any?> = emptyList()
         var lastEdit: List<Any?> = emptyList()
+        var editCalls = 0
+
+        /** The topics the edited post already carries. */
+        var loadedTopics: List<TopicClaimView> = emptyList()
 
         override suspend fun post(
             id: String,
@@ -48,7 +66,8 @@ class ComposePostViewModelTest {
             includePending: Boolean,
         ): Outcome<PostDetail?> = Outcome.Success(
             PostDetail(
-                post = testPost(id, title = "Loaded title", body = "Loaded body"),
+                post = testPost(id, title = "Loaded title", body = "Loaded body")
+                    .copy(topics = loadedTopics),
                 comments = Page(emptyList(), null, hasNextPage = false),
             ),
         )
@@ -72,6 +91,7 @@ class ComposePostViewModelTest {
             description: String?,
             content: String,
         ): Outcome<PreparedContentView> {
+            editCalls += 1
             lastEdit = listOf(id, title, description, content)
             return editOutcome ?: Outcome.Success(
                 PreparedContentView(id, listOf(sealer.stage(Family.PUBLISH))),
@@ -79,7 +99,33 @@ class ComposePostViewModelTest {
         }
     }
 
-    private fun viewModel() = ComposePostViewModel(content, WriteSigner(sealer, identity))
+    private val topics = object : ThrowingTopicRepository() {
+        val calls = mutableListOf<TagCall>()
+        var outcomeFor: (String) -> Outcome<List<PreparedWriteView>>? = { null }
+
+        override suspend fun prepareTag(
+            target: String,
+            name: String,
+            pDirected: Double?,
+            pInterest: Double?,
+        ): Outcome<List<PreparedWriteView>> {
+            calls += TagCall(target, name, pDirected, pInterest)
+            return outcomeFor(name) ?: Outcome.Success(listOf(sealer.stage(Family.TAG)))
+        }
+    }
+
+    private fun viewModel() =
+        ComposePostViewModel(content, topics, WriteSigner(sealer, identity), identity)
+
+    /**
+     * Most tests exercise the staging, not the confirm (F4): the device
+     * has already said "don't ask", and the collector has read that
+     * before the first submit.
+     */
+    private fun viewModelWithoutConfirm(): ComposePostViewModel {
+        identity.confirmMultiAction.value = false
+        return viewModel().also { dispatcher.scheduler.advanceUntilIdle() }
+    }
 
     @Before
     fun setUp() {
@@ -135,7 +181,7 @@ class ComposePostViewModelTest {
             null,
             "The body",
             LicenseChoice(attribution = 1.0, provenance = 0.5),
-            emptyList<String>(),
+            emptyList<TagClaim>(),
         ).inOrder()
     }
 
@@ -170,14 +216,14 @@ class ComposePostViewModelTest {
     }
 
     @Test
-    fun aRefusalAndATransportFaultRenderDistinctly() = runTest(dispatcher) {
+    fun aTransportFaultRendersDistinctlyFromARefusal() = runTest(dispatcher) {
         val vm = viewModel()
         vm.onBodyChange("body")
         content.prepareOutcome =
             Outcome.Refused(listOf(UserError(ErrorCode.FORBIDDEN, "not a member")))
         vm.onSubmit()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.refused).isTrue()
+        assertThat(vm.state.value.refusal).isEqualTo("not a member")
 
         content.prepareOutcome = Outcome.Failed(IOException("offline"))
         vm.onSubmit()
@@ -186,15 +232,25 @@ class ComposePostViewModelTest {
         assertThat(vm.state.value.saved).isFalse()
     }
 
-    // -- Topics (D15: no autocomplete; D18: cap at 10) --
+    // -- Topics (D15: no autocomplete; D18: cap at 10; F1 gating) --
 
     @Test
-    fun addingATagNormalizesAndStagesAChip() = runTest(dispatcher) {
+    fun addingATagCanonicalizesAndStagesAChip() = runTest(dispatcher) {
         val vm = viewModel()
         vm.onTagInputChange("  #Rust  ")
         vm.onAddTag()
-        assertThat(vm.state.value.tags).containsExactly("rust")
+        assertThat(vm.state.value.tags.map { it.name }).containsExactly("rust")
         assertThat(vm.state.value.tagInput).isEmpty()
+    }
+
+    @Test
+    fun aFreshChipCarriesTheDefaultParameters() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onTagInputChange("rust")
+        vm.onAddTag()
+        val row = vm.state.value.tags.single()
+        assertThat(row.relevance).isEqualTo(TAG_DEFAULT_RELEVANCE)
+        assertThat(row.confidence).isEqualTo(TAG_DEFAULT_CONFIDENCE)
     }
 
     @Test
@@ -207,14 +263,27 @@ class ComposePostViewModelTest {
         assertThat(vm.state.value.tags).isEmpty()
     }
 
+    /** F1: the atom rule refuses before anything is staged. */
     @Test
-    fun reAddingANormalizedDuplicateDoesNotDoubleTheChip() = runTest(dispatcher) {
+    fun anIllegalNameIsNeverStaged() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onTagInputChange("two words")
+        vm.onAddTag()
+        vm.onTagInputChange("café")
+        vm.onAddTag()
+        assertThat(vm.state.value.tags).isEmpty()
+        // The text stays put, so the reader can fix it.
+        assertThat(vm.state.value.tagInput).isEqualTo("café")
+    }
+
+    @Test
+    fun reAddingACanonicalDuplicateDoesNotDoubleTheChip() = runTest(dispatcher) {
         val vm = viewModel()
         vm.onTagInputChange("rust")
         vm.onAddTag()
         vm.onTagInputChange("RUST")
         vm.onAddTag()
-        assertThat(vm.state.value.tags).containsExactly("rust")
+        assertThat(vm.state.value.tags.map { it.name }).containsExactly("rust")
     }
 
     @Test
@@ -225,7 +294,7 @@ class ComposePostViewModelTest {
         vm.onTagInputChange("kotlin")
         vm.onAddTag()
         vm.onRemoveTag("rust")
-        assertThat(vm.state.value.tags).containsExactly("kotlin")
+        assertThat(vm.state.value.tags.map { it.name }).containsExactly("kotlin")
     }
 
     @Test
@@ -241,17 +310,19 @@ class ComposePostViewModelTest {
         assertThat(vm.state.value.tagInput).isEqualTo("tag10")
     }
 
+    /** F6: the sliders' values ride the create mutation. */
     @Test
-    fun submittingSendsTheStagedTagsAlongsideTheCreate() = runTest(dispatcher) {
-        val vm = viewModel()
+    fun submittingSendsTheStagedTagsWithTheirParameters() = runTest(dispatcher) {
+        val vm = viewModelWithoutConfirm()
         vm.onBodyChange("The body")
         vm.onTagInputChange("rust")
         vm.onAddTag()
+        vm.onTagRelevanceChange("rust", 0.75)
+        vm.onTagConfidenceChange("rust", 0.5)
         vm.onSubmit()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(content.lastCreate).containsExactly(null, null, "The body", LicenseChoice.PublicDomain, listOf("rust"))
-            .inOrder()
+        assertThat(content.lastCreate.last()).isEqualTo(listOf(TagClaim("rust", 0.75, 0.5)))
     }
 
     @Test
@@ -262,7 +333,7 @@ class ComposePostViewModelTest {
             PreparedContentView(
                 "node-1",
                 listOf(
-                    com.cogra.domain.PreparedWriteView(
+                    PreparedWriteView(
                         id = "unknown",
                         family = Family.PUBLISH,
                         canonicalProposal = ByteArray(4),
@@ -278,5 +349,326 @@ class ComposePostViewModelTest {
 
         assertThat(vm.state.value.signingFailed).isTrue()
         assertThat(vm.state.value.saved).isFalse()
+    }
+
+    // -- The edit screen's tags section (F3) --
+
+    @Test
+    fun theEditScreenLoadsTheCurrentTags() = runTest(dispatcher) {
+        content.loadedTopics = listOf(testTopicClaim("rust", relevance = 0.4, confidence = 0.9))
+        val vm = viewModel()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val row = vm.state.value.tags.single()
+        assertThat(row.name).isEqualTo("rust")
+        assertThat(row.relevance).isEqualTo(0.4)
+        assertThat(row.confidence).isEqualTo(0.9)
+    }
+
+    @Test
+    fun anAddedTagOnTheEditScreenStagesItsOwnTagAct() = runTest(dispatcher) {
+        content.loadedTopics = listOf(testTopicClaim("rust"))
+        val vm = viewModelWithoutConfirm()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onTagInputChange("kotlin")
+        vm.onAddTag()
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(topics.calls).containsExactly(
+            TagCall("post-9", "kotlin", TAG_DEFAULT_RELEVANCE, TAG_DEFAULT_CONFIDENCE),
+        )
+        // Content untouched: no edit record rides along.
+        assertThat(content.editCalls).isEqualTo(0)
+        assertThat(vm.state.value.saved).isTrue()
+    }
+
+    /** A withdrawal is a Tag at relevance 0 (hashtag.md §4). */
+    @Test
+    fun aRemovedTagStagesAWithdrawal() = runTest(dispatcher) {
+        content.loadedTopics = listOf(testTopicClaim("rust"))
+        val vm = viewModelWithoutConfirm()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onRemoveTag("rust")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(topics.calls).hasSize(1)
+        assertThat(topics.calls.single().name).isEqualTo("rust")
+        assertThat(topics.calls.single().pDirected).isEqualTo(0.0)
+    }
+
+    /** Re-declaring at a new relevance is its own act, not a no-op. */
+    @Test
+    fun retuningAnExistingTagStagesAFreshTagAct() = runTest(dispatcher) {
+        content.loadedTopics = listOf(testTopicClaim("rust", relevance = 0.1))
+        val vm = viewModelWithoutConfirm()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onTagRelevanceChange("rust", 0.8)
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(topics.calls.single().pDirected).isEqualTo(0.8)
+        assertThat(topics.calls.single().name).isEqualTo("rust")
+    }
+
+    @Test
+    fun anEditAndItsTagChangesRideOneSigningPass() = runTest(dispatcher) {
+        content.loadedTopics = listOf(testTopicClaim("rust"))
+        val vm = viewModelWithoutConfirm()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onBodyChange("Edited body")
+        vm.onTagInputChange("kotlin")
+        vm.onAddTag()
+        vm.onRemoveTag("rust")
+        assertThat(vm.state.value.signedActionCount).isEqualTo(3)
+
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.editCalls).isEqualTo(1)
+        assertThat(topics.calls.map { it.name }).containsExactly("kotlin", "rust")
+        // One saved flag for the whole batch: one signing flow.
+        assertThat(vm.state.value.saved).isTrue()
+    }
+
+    @Test
+    fun anUntouchedEditStagesNothing() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+        assertThat(vm.state.value.nothingToSign).isTrue()
+
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.editCalls).isEqualTo(0)
+        assertThat(vm.state.value.saved).isFalse()
+    }
+
+    // -- Error routing (F2) --
+
+    @Test
+    fun aFieldRefusalLandsOnTheChipTheServerNamed() = runTest(dispatcher) {
+        content.prepareOutcome = Outcome.Refused(
+            listOf(
+                UserError(
+                    ErrorCode.BAD_INPUT,
+                    "`kotlin` is not a legal topic name: bad",
+                    listOf("tags", "1", "name"),
+                ),
+            ),
+        )
+        val vm = viewModelWithoutConfirm()
+        vm.onBodyChange("body")
+        vm.onTagInputChange("rust")
+        vm.onAddTag()
+        vm.onTagInputChange("kotlin")
+        vm.onAddTag()
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.tags[1].error).isEqualTo("`kotlin` is not a legal topic name: bad")
+        assertThat(vm.state.value.tags[0].error).isNull()
+        // A pre-staging refusal never claims signing failed.
+        assertThat(vm.state.value.signingFailed).isFalse()
+        assertThat(vm.state.value.refusal).isNull()
+    }
+
+    @Test
+    fun aRefusalNamingNoChipSurfacesOnItsOwn() = runTest(dispatcher) {
+        content.prepareOutcome = Outcome.Refused(
+            listOf(UserError(ErrorCode.BAD_INPUT, "the body is empty", listOf("content"))),
+        )
+        val vm = viewModel()
+        vm.onBodyChange("body")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.refusal).isEqualTo("the body is empty")
+        assertThat(vm.state.value.signingFailed).isFalse()
+    }
+
+    /** A standalone Tag names one chip by construction (F2). */
+    @Test
+    fun aStandaloneTagRefusalLandsOnItsOwnChipAndSignsNothing() = runTest(dispatcher) {
+        topics.outcomeFor = { name ->
+            if (name == "kotlin") {
+                Outcome.Refused(
+                    listOf(UserError(ErrorCode.BAD_INPUT, "`kotlin` is not a legal topic name", listOf("name"))),
+                )
+            } else {
+                null
+            }
+        }
+        val vm = viewModelWithoutConfirm()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onTagInputChange("kotlin")
+        vm.onAddTag()
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.tags.single().error)
+            .isEqualTo("`kotlin` is not a legal topic name")
+        assertThat(vm.state.value.signingFailed).isFalse()
+        assertThat(vm.state.value.saved).isFalse()
+    }
+
+    @Test
+    fun aFreshSubmitClearsTheChipErrorsFirst() = runTest(dispatcher) {
+        content.prepareOutcome = Outcome.Refused(
+            listOf(UserError(ErrorCode.BAD_INPUT, "no", listOf("tags", "0", "name"))),
+        )
+        val vm = viewModelWithoutConfirm()
+        vm.onBodyChange("body")
+        vm.onTagInputChange("rust")
+        vm.onAddTag()
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.tags.single().error).isEqualTo("no")
+
+        content.prepareOutcome = null
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.saved).isTrue()
+        assertThat(vm.state.value.tags.single().error).isNull()
+    }
+
+    // -- The signed-action count and its confirm (F4) --
+
+    @Test
+    fun aCreateCountsTheMintingRecordAndEachTag() = runTest(dispatcher) {
+        val vm = viewModel()
+        assertThat(vm.state.value.signedActionCount).isEqualTo(1)
+        vm.onTagInputChange("rust")
+        vm.onAddTag()
+        vm.onTagInputChange("kotlin")
+        vm.onAddTag()
+        assertThat(vm.state.value.signedActionCount).isEqualTo(3)
+    }
+
+    @Test
+    fun anEditCountsOnlyWhatChanged() = runTest(dispatcher) {
+        content.loadedTopics = listOf(testTopicClaim("rust"))
+        val vm = viewModel()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+
+        vm.onBodyChange("Edited body")
+        assertThat(vm.state.value.signedActionCount).isEqualTo(1)
+
+        vm.onTagInputChange("kotlin")
+        vm.onAddTag()
+        assertThat(vm.state.value.signedActionCount).isEqualTo(2)
+
+        vm.onRemoveTag("rust")
+        assertThat(vm.state.value.signedActionCount).isEqualTo(3)
+    }
+
+    /** Typing the loaded body back in leaves nothing for the edit record to say. */
+    @Test
+    fun revertingAnEditDropsTheRecordFromTheCount() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onBodyChange("Edited body")
+        assertThat(vm.state.value.signedActionCount).isEqualTo(1)
+        vm.onBodyChange("Loaded body")
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+    }
+
+    @Test
+    fun oneSignedActionSubmitsWithoutAsking() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onBodyChange("body")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.confirmPending).isFalse()
+        assertThat(vm.state.value.saved).isTrue()
+    }
+
+    @Test
+    fun aBatchAsksBeforeItSigns() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onBodyChange("body")
+        vm.onTagInputChange("rust")
+        vm.onAddTag()
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.confirmPending).isTrue()
+        assertThat(content.lastCreate).isEmpty()
+        assertThat(vm.state.value.saved).isFalse()
+
+        vm.onConfirmSubmit(dontAskAgain = false)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.confirmPending).isFalse()
+        assertThat(vm.state.value.saved).isTrue()
+    }
+
+    @Test
+    fun dismissingTheConfirmStagesNothing() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onBodyChange("body")
+        vm.onTagInputChange("rust")
+        vm.onAddTag()
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onDismissConfirm()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.confirmPending).isFalse()
+        assertThat(content.lastCreate).isEmpty()
+        assertThat(vm.state.value.saved).isFalse()
+    }
+
+    @Test
+    fun dontAskAgainPersistsAndTheNextBatchGoesStraightThrough() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onBodyChange("body")
+        vm.onTagInputChange("rust")
+        vm.onAddTag()
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onConfirmSubmit(dontAskAgain = true)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(identity.confirmMultiAction.value).isFalse()
+
+        vm.onSavedConsumed()
+        vm.onTagInputChange("kotlin")
+        vm.onAddTag()
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.confirmPending).isFalse()
+        assertThat(vm.state.value.saved).isTrue()
+    }
+
+    /** Settings turns the confirm back on, and a composer already open sees it. */
+    @Test
+    fun theSettingReachesAnOpenComposer() = runTest(dispatcher) {
+        identity.setConfirmMultiActionSubmits(false)
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.confirmMultiActionSubmits).isFalse()
+
+        identity.setConfirmMultiActionSubmits(true)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.confirmMultiActionSubmits).isTrue()
     }
 }

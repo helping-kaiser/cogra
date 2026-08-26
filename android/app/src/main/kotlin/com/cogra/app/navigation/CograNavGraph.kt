@@ -401,10 +401,8 @@ private fun CograNavGraphContent(
                 val actorRestoredResult by entry.savedStateHandle
                     .getStateFlow(ACTOR_RESTORED_RESULT, false)
                     .collectAsStateWithLifecycle()
-                val accountId by authState.accountId.collectAsStateWithLifecycle()
                 FeedRoute(
                     signedIn = signedIn,
-                    viewerId = accountId,
                     onOpenPost = { id -> navController.navigate(PostDetail(id)) },
                     onOpenActor = { handle -> navController.navigate(Profile(handle)) },
                     onOpenTopic = { name -> navController.navigate(Topic(name)) },
