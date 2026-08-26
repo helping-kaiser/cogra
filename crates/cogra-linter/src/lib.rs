@@ -48,6 +48,7 @@ pub mod carrier;
 pub mod diag;
 pub mod error;
 pub mod frontend;
+pub mod frontend_kotlin;
 pub mod frontend_md;
 pub mod frontend_rust;
 pub mod frontend_web;
