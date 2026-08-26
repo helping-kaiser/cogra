@@ -1,10 +1,10 @@
-// The interim act-authentication realization (open-questions.md Q30 —
-// stand-in-scoped, not a Q30 resolution): Ed25519 signatures, SHA-256
-// salted hash commitments, domain-separated throughout. L1 prescribes the
-// properties — authorship, proposal integrity, realization transparency,
-// exact approval, removable-projection binding
-// (`post:graph:act-authentication-requirements`) — and leaves the schemes
-// to the deployment.
+//! The interim act-authentication realization: Ed25519 signatures, SHA-256
+//! salted hash commitments, domain-separated throughout. It is scoped to
+//! the stand-in and resolves nothing of open-questions.md Q30.
+//!
+//! L1 prescribes the properties — authorship, proposal integrity,
+//! realization transparency, exact approval, removable-projection binding
+//! (layer1-interface.md §8.2) — and leaves the schemes to the deployment.
 
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use sha2::{Digest, Sha256};
@@ -21,8 +21,8 @@ pub mod tags {
     pub const APPROVAL: &[u8] = b"cogra-l1:approval:v1";
 }
 
-/// Salt / nonce length. The published entropy floor of the stand-in
-/// (`def:graph:verified-act` requires host salts meet a published floor).
+/// Salt / nonce length: the published entropy floor of the stand-in, which
+/// host salts are required to meet (layer1-interface.md §8.2).
 pub const SALT_LEN: usize = 32;
 
 pub fn sha256_tagged(tag: &[u8], parts: &[&[u8]]) -> [u8; 32] {
@@ -38,7 +38,7 @@ pub fn sha256_tagged(tag: &[u8], parts: &[&[u8]]) -> [u8; 32] {
 
 /// The actor-side pre-digest of a removable projection: binds the exact
 /// bytes under the actor's private nonce, before any host salt exists
-/// (`def:graph:proposal-pre-commitment`).
+/// (layer1-interface.md §8.2).
 pub fn pre_digest(tag: &[u8], nonce: &[u8], bytes: &[u8]) -> [u8; 32] {
     sha256_tagged(tag, &[nonce, bytes])
 }
@@ -46,7 +46,7 @@ pub fn pre_digest(tag: &[u8], nonce: &[u8], bytes: &[u8]) -> [u8; 32] {
 /// The host-side binding, concealing commitment over a removable
 /// projection: SHA-256 over (tag, host salt, bytes). Binding — no second
 /// payload is consistent with it; concealing — without salt and bytes the
-/// commitment reveals nothing (`post:graph:separable-act-projections`).
+/// commitment reveals nothing (layer1-interface.md §8.4).
 pub fn commitment(tag: &[u8], salt: &[u8], bytes: &[u8]) -> [u8; 32] {
     sha256_tagged(tag, &[salt, bytes])
 }
@@ -82,6 +82,9 @@ mod tests {
     use super::*;
     use rand::rngs::OsRng;
 
+    /// A signature verifies only under the tag and message it was made for:
+    /// the same message under another domain tag and a tampered message both
+    /// refuse. Garbage signature bytes refuse rather than panic.
     #[test]
     fn signatures_verify_and_are_domain_separated() {
         let key = SigningKey::generate(&mut OsRng);
@@ -93,16 +96,13 @@ mod tests {
             msg,
             &sig
         ));
-        // Same message, different domain tag: must not verify.
         assert!(!verify(&key.verifying_key(), tags::APPROVAL, msg, &sig));
-        // Tampered message: must not verify.
         assert!(!verify(
             &key.verifying_key(),
             tags::PRE_COMMITMENT,
             b"structural bodY",
             &sig
         ));
-        // Garbage signature bytes: must not verify (and not panic).
         assert!(!verify(
             &key.verifying_key(),
             tags::PRE_COMMITMENT,
@@ -124,9 +124,10 @@ mod tests {
         assert_ne!(c, commitment(tags::COMMIT_DEPS, &salt, b"payload"));
     }
 
+    /// Without the length prefixes, two different part lists sharing a
+    /// concatenation would hash identically.
     #[test]
     fn length_framing_prevents_concatenation_ambiguity() {
-        // ("ab", "c") and ("a", "bc") must hash differently.
         assert_ne!(
             sha256_tagged(b"t", &[b"ab", b"c"]),
             sha256_tagged(b"t", &[b"a", b"bc"])
