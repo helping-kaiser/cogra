@@ -1,7 +1,9 @@
-// Auth-endpoint throttle state (auth.md "Rate limiting") — the SQL half
-// of the api crate's ratelimit module. Counted limits and the login
-// backoff share the auth_rate_limits table; every state change is one
-// atomic upsert, so concurrent attempts never race.
+//! Auth-endpoint throttle state (auth.md "Rate limiting") — the SQL half
+//! of the api crate's ratelimit module.
+//!
+//! Counted limits and the login backoff share the `auth_rate_limits`
+//! table; every state change is one atomic upsert, so concurrent attempts
+//! never race.
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;

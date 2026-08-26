@@ -1,9 +1,11 @@
-// L2 genesis seeding — the CoGra-side half of the bootstrap
-// (architecture.md "Genesis bootstrap"): the operator account's service
-// rows, the system actors with their custodied keys, the reserved Type
-// keys, and the overlay parameter carrier initialized from the Charter's
-// genesis payload. The L1-side half (the genesis records) runs through
-// the seam; the gate over both halves lives in api::bootstrap.
+//! L2 genesis seeding — the CoGra-side half of the bootstrap
+//! (architecture.md "Genesis bootstrap"): the operator account's service
+//! rows, the system actors with their custodied keys, the reserved Type
+//! keys, and the overlay parameter carrier initialized from the Charter's
+//! genesis payload.
+//!
+//! The L1-side half, the genesis records, runs through the seam; the gate
+//! over both halves lives in `api::bootstrap`.
 
 use sqlx::{PgConnection, PgPool};
 use uuid::Uuid;

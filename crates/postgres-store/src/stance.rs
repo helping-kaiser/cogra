@@ -1,12 +1,12 @@
-// The stance bundle fold (feed-ranking.md §3.2): the sum of one author's
-// own parameters toward one node, per family. The clip that turns the sum
-// into the folded pair is the read rule and lives with the math
-// (common::l1::fold) — this module answers only the storage question.
-//
-// The bundle spans both halves of the write path. The landed half is the
-// mirror; the pending half is the author's own staged writes from the
-// pre-commitment onward, which the L2 view counts and the L1 view does not
-// (api-spec.md "Conventions", the includePending split).
+//! The stance bundle fold (feed-ranking.md §3.2): the sum of one author's
+//! own parameters toward one node, per family. The clip that turns the sum
+//! into the folded pair is the read rule and lives with the math, in
+//! `common::l1::fold` — this module answers only the storage question.
+//!
+//! The bundle spans both halves of the write path. The landed half is the
+//! mirror; the pending half is the author's own staged writes from the
+//! pre-commitment onward, which the L2 view counts and the L1 view does
+//! not (api-spec.md "Conventions", the includePending split).
 
 use common::l1::census::Family;
 use common::l1::fold::BundleSum;
@@ -40,6 +40,13 @@ impl BundleView {
 /// payloadMarked`; the L1 exclusion list in layer1-interface.md §11.3).
 /// Ballots are payload-marked Opinions toward a proposal anchor, so without
 /// this a vote would silently move the voter's stance bundle.
+///
+/// The two halves are keyed differently: the mirror keys legs by node
+/// identifier, the staged row by the bare atom a proposal carries. On the
+/// pending half, landed and expired rows are excluded — the first is
+/// already counted through the mirror, the second never existed on the
+/// graph — and an empty payload stands in for the unmarked test, since an
+/// empty payload is what makes a record unmarked once it lands.
 pub async fn bundle(
     pool: &PgPool,
     author_atom: &str,
@@ -47,8 +54,6 @@ pub async fn bundle(
     target: &str,
     view: BundleView,
 ) -> Result<BundleSum, sqlx::Error> {
-    // The mirror keys legs by node identifier; the staged row keys by the
-    // bare atom the proposal carries.
     let source = NodeId::Addr(author_atom.to_string()).to_string();
     let landed = sqlx::query!(
         r#"SELECT COALESCE(SUM(l.p_d), 0)::float8 AS "p_d!",
@@ -73,11 +78,6 @@ pub async fn bundle(
     };
 
     if view == BundleView::IncludingPending {
-        // The author's own acts in flight. Landed and expired rows are
-        // excluded: the first is already counted through the mirror, the
-        // second never existed on the graph. An empty payload is what makes
-        // a record unmarked once it lands, so the same exclusion applies
-        // here — a staged ballot must not move the bundle either.
         let pending = sqlx::query!(
             r#"SELECT COALESCE(SUM(p_d), 0)::float8 AS "p_d!",
                       COALESCE(SUM(p_i), 0)::float8 AS "p_i!",
