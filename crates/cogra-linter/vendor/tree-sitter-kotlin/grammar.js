@@ -77,11 +77,16 @@ module.exports = grammar({
     // lambda whose body is a parenthesised expression. Which one is
     // being read is not known until the `->` is or is not there.
     [$.variable_declaration, $._primary_expression],
+
+    // `(A)` is a parenthesised type; `(A) -> B` is a function type whose
+    // parameter list happens to look identical up to the arrow.
+    [$.parenthesized_type, $.function_type_parameters],
   ],
 
   rules: {
     source_file: $ => seq(
       optional($.shebang_line),
+      repeat($.file_annotation),
       optional($.package_header),
       repeat($.import_header),
       // The separator is required, not optional. Kotlin always has one
@@ -93,6 +98,32 @@ module.exports = grammar({
     ),
 
     shebang_line: _ => token(seq('#!', /[^\r\n]*/)),
+
+    // `@file:JvmName("X")`, and the bracketed form `@file:[A B]`.
+    file_annotation: $ => seq(
+      '@', token.immediate('file'), ':',
+      choice(
+        seq('[', repeat1($.unescaped_annotation), ']'),
+        $.unescaped_annotation,
+      ),
+      $._semi,
+    ),
+
+    // The argument list must follow the name with no space between.
+    // `@Preview(showBackground = true)` attaches its arguments;
+    // `@Composable () -> Unit` does not — there the `()` opens the
+    // function type being annotated. Nothing but the whitespace
+    // distinguishes them, which is why the paren is `immediate`.
+    unescaped_annotation: $ => prec.right(seq(
+      $.user_type,
+      optional(alias($._annotation_arguments, $.value_arguments)),
+    )),
+
+    _annotation_arguments: $ => seq(
+      token.immediate('('),
+      optional(commaSep1Trailing($.value_argument)),
+      ')',
+    ),
 
     package_header: $ => seq('package', $.qualified_identifier, $._semi),
 
@@ -293,23 +324,45 @@ module.exports = grammar({
         )),
         ':',
       )),
-      $.user_type,
-      optional($.value_arguments),
+      choice(
+        seq('[', repeat1($.unescaped_annotation), ']'),
+        $.unescaped_annotation,
+      ),
     ),
 
     function_declaration: $ => prec.right(seq(
       optional($.modifiers),
       'fun',
+      optional($.type_parameters),
+      // Extension receiver: `fun Modifier.padding(...)`. Decided by the
+      // dot — the token after the name settles receiver against name.
+      optional(seq(field('receiver', $.receiver_type), '.')),
       field('name', $.simple_identifier),
       $.function_value_parameters,
       optional(seq(':', field('return_type', $._type))),
+      optional($.type_constraints),
       optional($.function_body),
     )),
 
+    // A named type with an optional `?`, and nothing parenthesised: a
+    // parenthesised receiver would make `val (a, b) = ...` ambiguous with
+    // a destructuring declaration from the opening paren onwards.
+    receiver_type: $ => prec(1, seq($.user_type, optional('?'))),
+
     function_value_parameters: $ => seq(
       '(',
-      optional(commaSep1Trailing($.parameter)),
+      optional(commaSep1Trailing($.function_value_parameter)),
       ')',
+    ),
+
+    // Modifiers live here rather than on `parameter`, because `parameter`
+    // is shared with function *type* parameter lists, where a leading
+    // annotation belongs to the type (`(@Ann Foo) -> Unit`) and not to a
+    // parameter. Carrying them on `parameter` makes the two readings of a
+    // run of annotations ambiguous.
+    function_value_parameter: $ => seq(
+      optional($.modifiers),
+      $.parameter,
     ),
 
     parameter: $ => seq(
@@ -329,18 +382,77 @@ module.exports = grammar({
     property_declaration: $ => prec.right(seq(
       optional($.modifiers),
       choice('val', 'var'),
+      optional($.type_parameters),
+      optional(seq(field('receiver', $.receiver_type), '.')),
+      choice($.multi_variable_declaration, $.variable_declaration),
+      optional($.type_constraints),
+      optional(choice(
+        seq('=', field('value', $._expression)),
+        $.property_delegate,
+      )),
+      // No separator before an accessor. Either form of one — optional
+      // or required — competes with the declaration's own terminator for
+      // the same token. The scanner instead declines to infer a
+      // terminator before `get`/`set`, so the accessor simply follows.
+      repeat(choice($.getter, $.setter)),
+    )),
+
+    // `by lazy { }`, `by remember { }`, `by viewModels()`. Tight for the
+    // same reason the supertype delegate is.
+    property_delegate: $ => prec.right(seq('by', $._infix_function_call)),
+
+    getter: $ => prec.right(1, seq(
+      optional($.modifiers),
+      'get',
+      optional(seq(
+        '(', ')',
+        optional(seq(':', $._type)),
+        $.function_body,
+      )),
+    )),
+
+    setter: $ => prec.right(1, seq(
+      optional($.modifiers),
+      'set',
+      optional(seq(
+        '(',
+        $.parameter_with_optional_type,
+        optional(','),
+        ')',
+        optional(seq(':', $._type)),
+        $.function_body,
+      )),
+    )),
+
+    parameter_with_optional_type: $ => seq(
+      optional($.modifiers),
       field('name', $.simple_identifier),
       optional(seq(':', field('type', $._type))),
-      optional(seq('=', field('value', $._expression))),
-    )),
+    ),
 
     // ---- types ----
 
-    _type: $ => choice(
+    _type: $ => choice($._unannotated_type, $.annotated_type),
+
+    _unannotated_type: $ => choice(
       $.function_type,
       $.nullable_type,
       $.user_type,
+      $.parenthesized_type,
+      $.suspend_type,
     ),
+
+    // KotlinParser.g4 `typeModifiers`. `@Composable () -> Unit` is the
+    // form this corpus is built out of. The annotated form does not nest
+    // in itself — one run of annotations, then the type.
+    annotated_type: $ => prec.right(seq(repeat1($.annotation), $._unannotated_type)),
+
+    // `suspend () -> Unit`
+    // In type position `suspend` opens a suspending function type rather
+    // than naming a type called `suspend`.
+    suspend_type: $ => prec.right(1, seq('suspend', choice($.function_type, $.parenthesized_type))),
+
+    parenthesized_type: $ => seq('(', $._type, ')'),
 
     // A dotted type keeps extending: `a.b.C` is one name.
     user_type: $ => prec.right(sepBy1('.', $.simple_user_type)),
@@ -355,19 +467,20 @@ module.exports = grammar({
 
     type_arguments: $ => seq('<', commaSep1Trailing($.type_projection), '>'),
 
-    type_projection: $ => choice($._type, '*'),
+    type_projection: $ => choice(seq(optional(choice('in', 'out')), $._type), '*'),
 
-    nullable_type: $ => seq($.user_type, repeat1('?')),
+    nullable_type: $ => seq(choice($.user_type, $.parenthesized_type), repeat1('?')),
 
-    function_type: $ => seq(
+    function_type: $ => prec.right(seq(
+      optional(seq(field('receiver', $.receiver_type), '.')),
       $.function_type_parameters,
       '->',
       field('return_type', $._type),
-    ),
+    )),
 
     function_type_parameters: $ => seq(
       '(',
-      optional(commaSep1Trailing($._type)),
+      optional(commaSep1Trailing(choice($.parameter, $._type))),
       ')',
     ),
 
@@ -692,10 +805,11 @@ module.exports = grammar({
       optional(seq(token.immediate('@'), $._immediate_identifier)),
     ),
 
-    super_expression: $ => seq(
+    super_expression: $ => prec.right(seq(
       'super',
+      optional(seq('<', $._type, '>')),
       optional(seq(token.immediate('@'), $._immediate_identifier)),
-    ),
+    )),
 
     // Only the receiverless form. `String::class` and `foo::bar` arrive
     // as a navigation suffix on the expression, so admitting a type here
@@ -727,6 +841,10 @@ module.exports = grammar({
     _literal_constant: $ => choice(
       $.boolean_literal,
       $.integer_literal,
+      $.hex_literal,
+      $.bin_literal,
+      $.long_literal,
+      $.unsigned_literal,
       $.real_literal,
       $.null_literal,
       $.character_literal,
@@ -734,7 +852,32 @@ module.exports = grammar({
 
     boolean_literal: _ => choice('true', 'false'),
     null_literal: _ => 'null',
+    // KotlinLexer.g4 permits `_` as a digit separator, but never as the
+    // first or last digit.
     integer_literal: _ => token(choice(/[1-9][0-9_]*[0-9]/, /[0-9]/)),
+
+    hex_literal: _ => token(/0[xX][0-9a-fA-F]([0-9a-fA-F_]*[0-9a-fA-F])?/),
+
+    bin_literal: _ => token(/0[bB][01]([01_]*[01])?/),
+
+    long_literal: _ => token(seq(
+      choice(
+        /[1-9][0-9_]*[0-9]|[0-9]/,
+        /0[xX][0-9a-fA-F]([0-9a-fA-F_]*[0-9a-fA-F])?/,
+        /0[bB][01]([01_]*[01])?/,
+      ),
+      /[lL]/,
+    )),
+
+    unsigned_literal: _ => token(seq(
+      choice(
+        /[1-9][0-9_]*[0-9]|[0-9]/,
+        /0[xX][0-9a-fA-F]([0-9a-fA-F_]*[0-9a-fA-F])?/,
+        /0[bB][01]([01_]*[01])?/,
+      ),
+      /[uU]/,
+      optional(/[lL]/),
+    )),
     real_literal: _ => token(/([0-9][0-9_]*[0-9]|[0-9])?\.([0-9][0-9_]*[0-9]|[0-9])([eE][+-]?[0-9]+)?[fF]?/),
 
     character_literal: $ => seq(

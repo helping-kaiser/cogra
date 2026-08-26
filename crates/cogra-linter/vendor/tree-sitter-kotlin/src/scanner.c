@@ -225,6 +225,18 @@ static void peek_past_trivia(TSLexer *lexer) {
   }
 }
 
+// Matches the rest of a keyword and checks that it ends there rather
+// than running on into a longer identifier: `get` continues a property,
+// `getScreenName` does not. Enters with the first letter unconsumed.
+static bool scan_word_tail(TSLexer *lexer, const char *tail) {
+  advance(lexer);
+  for (const char *c = tail; *c; c++) {
+    if (lexer->lookahead != (int32_t)*c) return false;
+    advance(lexer);
+  }
+  return !is_ident_start(lexer->lookahead) && !iswdigit(lexer->lookahead);
+}
+
 // Whether the token beginning at the current position may continue the
 // previous line's expression.
 //
@@ -241,6 +253,16 @@ static void peek_past_trivia(TSLexer *lexer) {
 // grammar does not permit a newline before. So are `+`, `*`, `in`, `is`
 // and the infix function form, all of which the grammar writes without a
 // leading `NL*` — a newline before them ends the statement.
+//
+// `get` and `set` are here for a different reason. A property's
+// accessors sit on the following line, so the terminator inferred after
+// the property would cut them off; and the grammar cannot absorb it
+// instead, because an accessor separator — optional or required —
+// competes with the terminator itself for the same token. Only
+// look-ahead settles it, which is the scanner's job. The cost is that a
+// statement beginning with a bare `get(` or `set(` call does not get a
+// terminator inferred before it; `getFoo()` is unaffected, since the
+// word must end there.
 static bool at_statement_continuation(TSLexer *lexer) {
   switch (lexer->lookahead) {
     case '.':
@@ -261,6 +283,10 @@ static bool at_statement_continuation(TSLexer *lexer) {
       advance(lexer);
       if (lexer->lookahead == '?') return true;
       return !is_ident_start(lexer->lookahead) && !iswdigit(lexer->lookahead);
+    case 'g':
+      return scan_word_tail(lexer, "et");
+    case 's':
+      return scan_word_tail(lexer, "et");
     default:
       return false;
   }
