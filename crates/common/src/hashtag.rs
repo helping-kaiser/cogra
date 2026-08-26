@@ -54,7 +54,10 @@ pub enum HashtagNameError {
 pub fn canonicalize(input: &str) -> Result<String, HashtagNameError> {
     // One `#` is the sigil; a second is an ordinary character, and not one
     // the atom admits.
-    let name = input.strip_prefix('#').unwrap_or(input).to_ascii_lowercase();
+    let name = input
+        .strip_prefix('#')
+        .unwrap_or(input)
+        .to_ascii_lowercase();
     match NodeId::name(&name) {
         Ok(_) => Ok(name),
         Err(_) if name.is_empty() => Err(HashtagNameError::Empty),
@@ -109,9 +112,15 @@ mod tests {
 
     #[test]
     fn empty_is_refused() {
-        assert_eq!(canonicalize("").unwrap_err(), HashtagNameError::Empty);
+        assert_eq!(
+            canonicalize("").expect_err("refused"),
+            HashtagNameError::Empty
+        );
         // A bare sigil is empty once the sigil is stripped.
-        assert_eq!(canonicalize("#").unwrap_err(), HashtagNameError::Empty);
+        assert_eq!(
+            canonicalize("#").expect_err("refused"),
+            HashtagNameError::Empty
+        );
     }
 
     #[test]
@@ -121,7 +130,7 @@ mod tests {
 
         let over = "a".repeat(MAX_ATOM_BYTES + 1);
         assert_eq!(
-            canonicalize(&over).unwrap_err(),
+            canonicalize(&over).expect_err("refused"),
             HashtagNameError::TooLong(MAX_ATOM_BYTES + 1)
         );
         // The sigil is not part of the name, so it does not consume budget.
@@ -134,7 +143,14 @@ mod tests {
         // refused outright — never punycoded or percent-encoded into
         // something that looks like a different name.
         for input in [
-            "münchen", "#münchen", "日本語", "has space", "colon:inside", "a#b", "##rust", "emoji🎉",
+            "münchen",
+            "#münchen",
+            "日本語",
+            "has space",
+            "colon:inside",
+            "a#b",
+            "##rust",
+            "emoji🎉",
         ] {
             assert!(
                 canonicalize(input).is_err(),
@@ -148,7 +164,7 @@ mod tests {
         // ASCII lowercasing leaves `Ü` alone, and the atom check then
         // refuses it — the refusal must not depend on Unicode case folding.
         assert_eq!(
-            canonicalize("MÜNCHEN").unwrap_err(),
+            canonicalize("MÜNCHEN").expect_err("refused"),
             HashtagNameError::Charset("mÜnchen".to_string())
         );
     }

@@ -93,11 +93,13 @@ async fn stage_tag(
             .expect("actor lookup");
     let actor_id = match actor_id {
         Some(id) => id,
-        None => sqlx::query_scalar("INSERT INTO actors (kind, handle) VALUES ('user', $1) RETURNING id")
-            .bind(author)
-            .fetch_one(pool)
-            .await
-            .expect("actor insert"),
+        None => {
+            sqlx::query_scalar("INSERT INTO actors (kind, handle) VALUES ('user', $1) RETURNING id")
+                .bind(author)
+                .fetch_one(pool)
+                .await
+                .expect("actor insert")
+        }
     };
     sqlx::query(
         "INSERT INTO staged_writes
@@ -132,8 +134,18 @@ async fn newest_wins_within_a_bundle(pool: PgPool) {
     let post = content_of("alice", 0);
     // Three claims about the same (author, content, Type) bundle. Only the
     // newest is the author's current claim.
-    land(&pool, 0, vec![tag("alice", 0, &post, "rust", 0.2, 0.5, 0, 10, 0)]).await;
-    land(&pool, 1, vec![tag("alice", 1, &post, "rust", 0.9, 0.8, 1, 20, 0)]).await;
+    land(
+        &pool,
+        0,
+        vec![tag("alice", 0, &post, "rust", 0.2, 0.5, 0, 10, 0)],
+    )
+    .await;
+    land(
+        &pool,
+        1,
+        vec![tag("alice", 1, &post, "rust", 0.9, 0.8, 1, 20, 0)],
+    )
+    .await;
 
     let current = topics::topics_of(&pool, &post.to_string(), "alice", TopicView::Landed)
         .await
@@ -179,14 +191,22 @@ async fn within_one_epoch_the_causal_key_decides(pool: PgPool) {
     let current = topics::topics_of(&pool, &post.to_string(), "alice", TopicView::Landed)
         .await
         .expect("folds");
-    let ferris = current.iter().find(|c| c.name == "ferris").expect("present");
+    let ferris = current
+        .iter()
+        .find(|c| c.name == "ferris")
+        .expect("present");
     assert_eq!(ferris.relevance, 0.6, "highest position is newest");
 }
 
 #[sqlx::test(migrations = "../../migrations")]
 async fn relevance_zero_withdraws_the_pair(pool: PgPool) {
     let post = content_of("alice", 0);
-    land(&pool, 0, vec![tag("alice", 0, &post, "rust", 0.8, 1.0, 0, 1, 0)]).await;
+    land(
+        &pool,
+        0,
+        vec![tag("alice", 0, &post, "rust", 0.8, 1.0, 0, 1, 0)],
+    )
+    .await;
     assert_eq!(
         names(
             &topics::topics_of(&pool, &post.to_string(), "alice", TopicView::Landed)
@@ -198,7 +218,12 @@ async fn relevance_zero_withdraws_the_pair(pool: PgPool) {
 
     // The un-tag: a further Tag at relevance 0, held at full confidence.
     // It is an ordinary record — the earlier claim is history, not erased.
-    land(&pool, 1, vec![tag("alice", 1, &post, "rust", 0.0, 1.0, 1, 2, 0)]).await;
+    land(
+        &pool,
+        1,
+        vec![tag("alice", 1, &post, "rust", 0.0, 1.0, 1, 2, 0)],
+    )
+    .await;
     assert!(
         topics::topics_of(&pool, &post.to_string(), "alice", TopicView::Landed)
             .await
@@ -218,9 +243,24 @@ async fn relevance_zero_withdraws_the_pair(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_topic_can_be_reclaimed_after_withdrawal(pool: PgPool) {
     let post = content_of("alice", 0);
-    land(&pool, 0, vec![tag("alice", 0, &post, "rust", 0.8, 0.9, 0, 1, 0)]).await;
-    land(&pool, 1, vec![tag("alice", 1, &post, "rust", 0.0, 0.9, 1, 2, 0)]).await;
-    land(&pool, 2, vec![tag("alice", 2, &post, "rust", 0.3, 0.7, 2, 3, 0)]).await;
+    land(
+        &pool,
+        0,
+        vec![tag("alice", 0, &post, "rust", 0.8, 0.9, 0, 1, 0)],
+    )
+    .await;
+    land(
+        &pool,
+        1,
+        vec![tag("alice", 1, &post, "rust", 0.0, 0.9, 1, 2, 0)],
+    )
+    .await;
+    land(
+        &pool,
+        2,
+        vec![tag("alice", 2, &post, "rust", 0.3, 0.7, 2, 3, 0)],
+    )
+    .await;
 
     let current = topics::topics_of(&pool, &post.to_string(), "alice", TopicView::Landed)
         .await
@@ -243,7 +283,12 @@ async fn each_type_folds_in_its_own_bundle(pool: PgPool) {
     )
     .await;
     // Withdrawing one leaves the other standing.
-    land(&pool, 1, vec![tag("alice", 2, &post, "rust", 0.0, 0.9, 1, 3, 0)]).await;
+    land(
+        &pool,
+        1,
+        vec![tag("alice", 2, &post, "rust", 0.0, 0.9, 1, 3, 0)],
+    )
+    .await;
 
     assert_eq!(
         names(
@@ -267,7 +312,12 @@ async fn relevance_is_read_from_the_transposed_leg(pool: PgPool) {
     let post = content_of("alice", 0);
 
     // Asymmetric parameters: a swap is visible in the values.
-    land(&pool, 0, vec![tag("alice", 0, &post, "rust", 0.25, 0.75, 0, 1, 0)]).await;
+    land(
+        &pool,
+        0,
+        vec![tag("alice", 0, &post, "rust", 0.25, 0.75, 0, 1, 0)],
+    )
+    .await;
     let current = topics::topics_of(&pool, &post.to_string(), "alice", TopicView::Landed)
         .await
         .expect("folds");
@@ -288,7 +338,12 @@ async fn relevance_is_read_from_the_transposed_leg(pool: PgPool) {
     // A withdrawal held at full confidence: r = 0, c = 1. Read from the
     // wrong column the winner looks like relevance 1 and the topic would
     // wrongly stay on the chip row.
-    land(&pool, 1, vec![tag("alice", 1, &post, "rust", 0.0, 1.0, 1, 2, 0)]).await;
+    land(
+        &pool,
+        1,
+        vec![tag("alice", 1, &post, "rust", 0.0, 1.0, 1, 2, 0)],
+    )
+    .await;
     assert!(
         topics::topics_of(&pool, &post.to_string(), "alice", TopicView::Landed)
             .await
@@ -300,7 +355,12 @@ async fn relevance_is_read_from_the_transposed_leg(pool: PgPool) {
     // The mirror image: a claim at full relevance held at zero confidence
     // is still a claim. Read from the wrong column it would vanish.
     let other = content_of("alice", 1);
-    land(&pool, 2, vec![tag("alice", 2, &other, "rust", 1.0, 0.0, 2, 3, 0)]).await;
+    land(
+        &pool,
+        2,
+        vec![tag("alice", 2, &other, "rust", 1.0, 0.0, 2, 3, 0)],
+    )
+    .await;
     let current = topics::topics_of(&pool, &other.to_string(), "alice", TopicView::Landed)
         .await
         .expect("folds");
@@ -399,7 +459,12 @@ async fn bundles_of_different_authors_do_not_fold_together(pool: PgPool) {
         ],
     )
     .await;
-    land(&pool, 1, vec![tag("bob", 1, &post, "rust", 0.0, 0.9, 1, 3, 0)]).await;
+    land(
+        &pool,
+        1,
+        vec![tag("bob", 1, &post, "rust", 0.0, 0.9, 1, 3, 0)],
+    )
+    .await;
 
     assert_eq!(
         topics::topics_of(&pool, &post.to_string(), "alice", TopicView::Landed)
@@ -432,9 +497,15 @@ async fn the_topic_page_gates_third_party_claims(pool: PgPool) {
     )
     .await;
 
-    let owned = topics::tagged_with(&pool, "rust", TagChannel::AuthorOwned, TopicView::Landed, 50)
-        .await
-        .expect("folds");
+    let owned = topics::tagged_with(
+        &pool,
+        "rust",
+        TagChannel::AuthorOwned,
+        TopicView::Landed,
+        50,
+    )
+    .await
+    .expect("folds");
     assert_eq!(owned.len(), 1);
     assert_eq!(owned[0].node, alices.to_string());
     assert_eq!(owned[0].author, "alice");
@@ -472,9 +543,15 @@ async fn the_topic_page_folds_and_orders_newest_first(pool: PgPool) {
     )
     .await;
 
-    let listed = topics::tagged_with(&pool, "rust", TagChannel::AuthorOwned, TopicView::Landed, 50)
-        .await
-        .expect("folds");
+    let listed = topics::tagged_with(
+        &pool,
+        "rust",
+        TagChannel::AuthorOwned,
+        TopicView::Landed,
+        50,
+    )
+    .await
+    .expect("folds");
     let nodes: Vec<&str> = listed.iter().map(|t| t.node.as_str()).collect();
     assert_eq!(
         nodes,
@@ -482,10 +559,9 @@ async fn the_topic_page_folds_and_orders_newest_first(pool: PgPool) {
         "newest claim first, the withdrawn bundle absent"
     );
 
-    let limited =
-        topics::tagged_with(&pool, "rust", TagChannel::AuthorOwned, TopicView::Landed, 1)
-            .await
-            .expect("folds");
+    let limited = topics::tagged_with(&pool, "rust", TagChannel::AuthorOwned, TopicView::Landed, 1)
+        .await
+        .expect("folds");
     assert_eq!(limited.len(), 1);
     assert_eq!(limited[0].node, second.to_string());
 }
@@ -514,9 +590,15 @@ async fn the_topic_page_reads_relevance_from_the_transposed_leg(pool: PgPool) {
     )
     .await;
 
-    let listed = topics::tagged_with(&pool, "rust", TagChannel::AuthorOwned, TopicView::Landed, 50)
-        .await
-        .expect("folds");
+    let listed = topics::tagged_with(
+        &pool,
+        "rust",
+        TagChannel::AuthorOwned,
+        TopicView::Landed,
+        50,
+    )
+    .await
+    .expect("folds");
     assert_eq!(listed.len(), 1);
     assert_eq!(listed[0].node, kept.to_string());
     assert_eq!(listed[0].relevance, 1.0);
@@ -567,7 +649,12 @@ async fn pending_claims_are_counted_only_in_the_l2_view(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_pending_claim_supersedes_a_landed_one(pool: PgPool) {
     let post = content_of("alice", 0);
-    land(&pool, 0, vec![tag("alice", 0, &post, "rust", 0.8, 0.9, 0, 1, 0)]).await;
+    land(
+        &pool,
+        0,
+        vec![tag("alice", 0, &post, "rust", 0.8, 0.9, 0, 1, 0)],
+    )
+    .await;
     // The withdrawal is still in flight: L1 still shows the claim, L2 does
     // not.
     stage_tag(&pool, "alice", 1, &post, "rust", 0.0, 0.9).await;
@@ -598,10 +685,16 @@ async fn the_topic_page_takes_the_same_pending_split(pool: PgPool) {
     stage_tag(&pool, "alice", 0, &post, "rust", 0.5, 0.9).await;
 
     assert!(
-        topics::tagged_with(&pool, "rust", TagChannel::AuthorOwned, TopicView::Landed, 50)
-            .await
-            .expect("folds")
-            .is_empty()
+        topics::tagged_with(
+            &pool,
+            "rust",
+            TagChannel::AuthorOwned,
+            TopicView::Landed,
+            50
+        )
+        .await
+        .expect("folds")
+        .is_empty()
     );
     let pending = topics::tagged_with(
         &pool,
@@ -693,6 +786,99 @@ async fn a_verdict_mark_does_not_hide_a_real_claim(pool: PgPool) {
         .expect("folds");
     assert_eq!(current.len(), 1);
     assert_eq!(current[0].relevance, 0.5);
+}
+
+// ------------------------------------------------------------ access paths
+
+/// Seeds enough tag legs that the planner has a real choice to make: a
+/// handful of rows is always a sequential scan, whatever the indexes say.
+async fn seed_bulk_tags(pool: &PgPool) {
+    sqlx::query(
+        "INSERT INTO mirror_records
+             (record_id, family, author, epoch, act_time, position,
+              payload_marked, payload_witness)
+         SELECT 'act:a' || (i % 400) || ':' || i || ':tag', 'tag',
+                'a' || (i % 400), i / 100, i, i % 100, FALSE, ''::bytea
+         FROM generate_series(1, 20000) AS i",
+    )
+    .execute(pool)
+    .await
+    .expect("seeds records");
+    sqlx::query(
+        "INSERT INTO mirror_record_legs
+             (record_id, leg, source, target, p_d, p_i, domain,
+              mask_a00, mask_a01, mask_a10, mask_a11, tier, tau,
+              family, epoch, act_time, position)
+         SELECT 'act:a' || (i % 400) || ':' || i || ':tag', 't',
+                'mint:act:a' || (i % 400) || ':' || (i % 500) || ':publish',
+                'name:t' || (i % 50), 0.5, 0.5, 'epistemic',
+                FALSE, TRUE, FALSE, TRUE, 'marginal', 0.0,
+                'tag', i / 100, i, i % 100
+         FROM generate_series(1, 20000) AS i",
+    )
+    .execute(pool)
+    .await
+    .expect("seeds legs");
+    sqlx::query("ANALYZE mirror_records, mirror_record_legs")
+        .execute(pool)
+        .await
+        .expect("analyzes");
+}
+
+async fn plan_of(pool: &PgPool, sql: &str) -> String {
+    let rows: Vec<String> = sqlx::query_scalar(&format!("EXPLAIN {sql}"))
+        .fetch_all(pool)
+        .await
+        .expect("explains");
+    rows.join("\n")
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_fold_reads_through_existing_indexes(pool: PgPool) {
+    // The mirror's existing indexes are expected to serve both read
+    // directions with no migration of this slice's own. This test is that
+    // expectation's oracle: it explains the access path each query's
+    // candidates CTE takes — the part index choice actually turns on — and
+    // fails if the planner falls back to scanning the leg table.
+    //
+    // Only the leg table is asserted on. Whether `mirror_records` is
+    // reached by a nested loop over its primary key or built into a hash
+    // is a join-strategy choice the planner remakes as the table grows;
+    // the leg side is the one an index has to serve.
+    seed_bulk_tags(&pool).await;
+
+    // Direction 1, the chip row: legs out of one content node.
+    // mirror_legs_bundle_idx (source, family, target) is the prefix match.
+    let chip = plan_of(
+        &pool,
+        "SELECT l.target, l.p_i, l.p_d, r.epoch, r.act_time, r.position
+         FROM mirror_record_legs l
+         JOIN mirror_records r ON r.record_id = l.record_id
+         WHERE l.leg = 't' AND l.family = 'tag'
+           AND l.source = 'mint:act:a7:7:publish'
+           AND r.author = 'a7' AND NOT r.payload_marked",
+    )
+    .await;
+    assert!(
+        !chip.contains("Seq Scan on mirror_record_legs"),
+        "chip-row read scans the leg table:\n{chip}"
+    );
+
+    // Direction 2, the topic page: legs into one Type.
+    // mirror_legs_fold_idx (family, target, epoch) is the prefix match.
+    let page = plan_of(
+        &pool,
+        "SELECT l.source, r.author, l.p_i, l.p_d, r.epoch, r.act_time, r.position
+         FROM mirror_record_legs l
+         JOIN mirror_records r ON r.record_id = l.record_id
+         WHERE l.leg = 't' AND l.family = 'tag'
+           AND l.target = 'name:t7' AND NOT r.payload_marked",
+    )
+    .await;
+    assert!(
+        !page.contains("Seq Scan on mirror_record_legs"),
+        "topic-page read scans the leg table:\n{page}"
+    );
 }
 
 // ------------------------------------------------------------- the registry
