@@ -60,8 +60,9 @@ for the generated Kotlin parser of ``dec:linter:kotlin-tree-sitter``;
 `vendored_files` holds `docs/primitive/layer1-interface.md` (R2).
 
 The per-owner label registers of the test profile are generated files
-of the first sort — committed, in the carrier, byte-compared — and join
-`generated_files` as the generator creates them.
+of the first sort — committed, in the carrier, byte-compared — and
+`generated_files` lists the six the generator has created, one per
+owner with covered assets.
 
 ### `[signature]` — Σ
 
@@ -141,12 +142,14 @@ does not exist cannot compute a census — ``inv:labels:two-pass``
 requires every census computed before any resolution runs, so a
 half-available Π is not a smaller Π, it is a broken one.
 
-The same reasoning stages the two that are here (R19). Both are
-registered and neither is in force: ``inv:labels:inventory`` admits
-nothing partial, and on the day either is switched on it fails at
-every covered asset, because the places their labels must occupy do
-not exist yet. A profile therefore enters Π in the commit that lands
-its migration; `status` and `effective` are what move.
+The same reasoning governs the two that are here (R19):
+``inv:labels:inventory`` admits nothing partial, and a profile
+switched on before the places its labels must occupy exist fails at
+every covered asset. A profile therefore enters Π in the commit that
+lands its migration; `status` and `effective` are what move. The test
+profile entered on 2026-08-26 with its per-owner registers; the module
+profile is registered and staged, waiting on its 84 inner doc
+comments.
 
 Each profile fixes exactly the five data ``sig:labels:profiles``
 demands. Three of the five were genuinely hard:
@@ -508,14 +511,15 @@ and the first generation run commits it and arms exact comparison
 thereafter.
 
 **R19 — Profiles enter Π with their migrations, staged until then.**
-``inv:labels:inventory`` admits nothing partial, so both profiles are
-unsatisfiable the day they are switched on: the test profile's
-standard place is a register no generator has written, and the module
-profile's is an inner doc comment all 84 definitions lack. Registering
-them and staging entry keeps the file honest about both facts — the
-profiles are decided, and neither is in force. The test profile enters
-when the first register generation lands (R18), the module profile
-when its comments do. Entering is a commit that flips two fields.
+``inv:labels:inventory`` admits nothing partial, so a profile is
+unsatisfiable until the places its labels must occupy exist:
+registering it and staging entry keeps the file honest about both
+facts — the profile is decided, and it is not yet in force. The test
+profile entered on 2026-08-26, when the first register generation
+committed a label-register.md for each of the six owners with covered
+assets (R18); the module profile enters when the inner doc comments
+all 84 definitions lack are written. Entering is a commit that flips
+two fields.
 
 **R20 — The docs trees' label-shaped spans are reformed into displayed
 spans (F4).** They mean what they look like — references to the Layer 1
