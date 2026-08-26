@@ -170,6 +170,10 @@ fn the_failing_set_is_clean() {
 /// under-counts the comment sweep, participation being an AST fact no
 /// sweep sees. The bounds here are wide enough to be about classes rather
 /// than about a commit.
+///
+/// Both classes shrink as each crate completes its migration — a swept crate
+/// carries neither — so what is bounded from below is only that the class is
+/// still reported at all, which the loop at the end asserts directly.
 #[test]
 fn the_advisory_remainder_carries_the_expected_classes() {
     let by_rule = counted();
@@ -190,16 +194,8 @@ fn the_advisory_remainder_carries_the_expected_classes() {
         .copied()
         .unwrap_or_default();
     assert!(
-        (40..200).contains(&backticks),
+        backticks < 200,
         "the Rust backtick near-misses the concept counted at 88: {backticks}"
-    );
-    let comments = by_rule
-        .get("rust-plain-line-comment")
-        .copied()
-        .unwrap_or_default();
-    assert!(
-        comments > 800,
-        "the plain-comment sweep the concept counted at ~1210: {comments}"
     );
     for expected in ["label-backtick-in-code", "rust-plain-line-comment"] {
         assert!(by_rule.contains_key(expected), "{expected} is not reported");

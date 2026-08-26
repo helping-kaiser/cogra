@@ -6,7 +6,7 @@
 //! admits. This module makes that machine-visible — it *computes* where a
 //! theory reaches such a value and how, and enforces nothing: refusing a
 //! theory that reaches one without naming it is acquisition's act
-//! (`design.md`, `sig:xchg:restraint-api`).
+//! (´sig:xchg:restraint-api´).
 //!
 //! # What separates a provision from a reach
 //!
@@ -113,7 +113,7 @@ impl RestraintReport {
     /// theory that reaches nothing restrained at all is restrained
     /// vacuously, and one whose every reach is named is restrained by
     /// provision. This is the predicate acquisition refuses on
-    /// (`design.md`, `dec:xchg:restraint-enforcement`).
+    /// (´dec:xchg:restraint-enforcement´).
     ///
     /// ```
     /// use cogra_interchange::Theory;
@@ -245,7 +245,7 @@ impl Provision {
     /// negative zero and subnormals are handled, whether integral-valued
     /// floats may be written as integers — is an open question the design
     /// records and does not settle, and this flag is not an answer to it
-    /// (`design.md`, `dec:xchg:restraint-enforcement`).
+    /// (´dec:xchg:restraint-enforcement´).
     ///
     /// ```
     /// use cogra_interchange::Theory;
@@ -390,24 +390,27 @@ impl Walk<'_> {
         }
     }
 
+    /// Both endpoints of a range are positions, since both are admitted; a
+    /// control operator's operand is a control value and no position of its
+    /// own, so it is not walked.
     fn type1(&mut self, ty: &Type1) {
         self.type2(&ty.target);
         if let Some(operation) = &ty.operation
             && !matches!(operation.operator, Operator::Control(_))
         {
-            // Both endpoints of a range are admitted; a control operator's
-            // operand is a control value and no position of its own.
             self.type2(&operation.operand);
         }
     }
 
+    /// One `type2`. A float literal is a provision naming a value and no
+    /// width; a tag's inner type is a position of the author's like any
+    /// other, since they wrote what the tag carries.
     fn type2(&mut self, ty: &Type2) {
         match &ty.kind {
             Type2Kind::Value(value) => {
                 if let ValueKind::Number(number) = &value.kind
                     && number.is_float
                 {
-                    // A literal names a value, and no width.
                     self.provision(Restrained::Float, &number.text, false);
                 }
             }
@@ -420,8 +423,6 @@ impl Walk<'_> {
             Type2Kind::Representation { major, ai } => self.representation(*major, ai, ty),
             Type2Kind::Tagged { number, inner } => {
                 self.provision(Restrained::Tag, &printed(ty), number.is_some());
-                // The author wrote what the tag carries, so it is a
-                // position of theirs like any other.
                 self.ty(inner);
             }
             Type2Kind::Typename { name, args } | Type2Kind::EnumGroup { name, args } => {
@@ -439,6 +440,11 @@ impl Walk<'_> {
     }
 
     /// `#N` and `#N.M`: the major-type forms, restricted or not.
+    ///
+    /// An `ai` this crate cannot read as a number restricts major 7 to
+    /// something unreadable rather than to nothing, as does an unrestricted
+    /// `#6.<unreadable>`; both fall to the final arm with the major types that
+    /// carry nothing restrained.
     fn representation(&mut self, major: u8, ai: &Option<Uint>, ty: &Type2) {
         let spelling = printed(ty);
         match (
@@ -458,21 +464,17 @@ impl Walk<'_> {
                 }
                 _ => self.provision(Restrained::Simple, &spelling, true),
             },
-            // An `ai` this crate cannot read as a number restricts major 7
-            // to something unreadable rather than to nothing; the same is
-            // true of an unrestricted `#6.<unreadable>`. Both fall here
-            // with the major types that carry nothing restrained.
             _ => {}
         }
     }
 
+    /// Generic arguments, walked without substitution: an argument is a
+    /// position where it is written, and a parameter inside the generic rule's
+    /// body resolves to nothing.
     fn args(&mut self, args: &Option<GenericArgs>) {
         let Some(args) = args else {
             return;
         };
-        // Substitution is not performed: an argument is a position where it
-        // is written, and a parameter inside the generic rule's body
-        // resolves to nothing.
         for arg in &args.args {
             self.type1(arg);
         }
@@ -508,15 +510,16 @@ impl Walk<'_> {
 
     /// A reference to a rule: descended into where the theory owns it,
     /// classified by its denotation where the prelude does.
+    ///
+    /// A name the table does not hold contributes nothing — an undefined
+    /// socket is the empty choice, and a generic parameter stands for its
+    /// argument, which was walked where it was written. Under `~` the tag is
+    /// stripped, so what the position admits is what the tag carries.
     fn reference(&mut self, name: &Name, unwrap: bool) {
         let table = self.table;
-        // An undefined socket is the empty choice and a generic parameter
-        // stands for its argument, which was walked where it was written.
         let Some(rule) = table.get(&name.text) else {
             return;
         };
-        // `~` strips the tag, so what such a position admits is what the
-        // tag carries.
         let inner = if unwrap {
             tagged_inner(rule.body())
         } else {
@@ -625,8 +628,6 @@ fn tagged_inner(body: &RuleBody) -> Option<&Type> {
     }
 }
 
-// -- what a type denotes at its own top level -----------------------------
-
 /// The named form of an admitted kind: none, exactly one, or not fixed.
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
 enum Pin {
@@ -724,10 +725,11 @@ impl Shape {
     }
 }
 
+/// The shape of a rule body. A group is not an item, so as a position it
+/// admits no restrained kind at all.
 fn shape_of_body(table: &RuleTable, body: &RuleBody, seen: &mut BTreeSet<String>) -> Shape {
     match body {
         RuleBody::Type(ty) => shape_of_type(table, ty, seen),
-        // A group is not an item, so as a position it admits none.
         RuleBody::Group(_) => Shape::default(),
     }
 }

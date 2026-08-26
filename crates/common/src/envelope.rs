@@ -1,19 +1,27 @@
-// The Peer Content Envelope (PCE v0.1.0) — the payload format every
-// content-bearing act carries through the seam. The normative spec is the
-// L1 team's draft (Peer Content Envelope v0.1.0; adopted for slice 2,
-// recorded in data-model.md "The payload envelope"): one deterministic
-// CBOR map in CDE form wrapped in self-describe tag 55799, an integer
-// keyspace, a four-axis version vector at key 0, a validated text body at
-// key 1, and an extension map at key 2 whose keys ≥ 100 belong to guilds.
-//
-// CoGra's fields ride guild key 49258 (0xC06A) as a nested integer-keyed
-// map (data-model.md "CoGra's guild schema"). CoGra currently produces
-// only empty-body envelopes, so the spec's §3 text pipeline (Unicode
-// normalization and counting for non-empty bodies) is deliberately not
-// implemented — it arrives if CoGra ever emits a non-empty key-1 body.
-// Everything else is enforced: the magic, Gate P's key-set rule, CDE
-// canonicality (decode re-encodes and compares), the §4.4 empty-value
-// rules, and the reserved-range rejection.
+//! The Peer Content Envelope (PCE v0.1.0) — the payload format every
+//! content-bearing act carries through the seam. The normative spec is the
+//! L1 team's draft (Peer Content Envelope v0.1.0; adopted for slice 2,
+//! recorded in data-model.md "The payload envelope"): one deterministic
+//! CBOR map in CDE form wrapped in self-describe tag 55799, an integer
+//! keyspace, a four-axis version vector at key 0, a validated text body at
+//! key 1, and an extension map at key 2 whose keys ≥ 100 belong to guilds.
+//!
+//! CoGra's fields ride guild key 49258 (0xC06A) as a nested integer-keyed
+//! map (data-model.md "CoGra's guild schema"). CoGra currently produces
+//! only empty-body envelopes, so the spec's §3 text pipeline (Unicode
+//! normalization and counting for non-empty bodies) is deliberately not
+//! implemented — it arrives if CoGra ever emits a non-empty key-1 body.
+//! Everything else is enforced: the magic, Gate P's key-set rule, CDE
+//! canonicality (decode re-encodes and compares), the §4.4 empty-value
+//! rules, and the reserved-range rejection.
+//!
+//! Inside the guild map, keys 2–6 ride Publish/Review payloads and keys
+//! 7–10 the parallel-Registration profile payload, each family's reader
+//! rejecting the other's keys. Three of those are declared but not built:
+//! key 5 (media manifest), key 6 (provenance chain, platform-guidelines.md
+//! §5 plank 4), and key 10 (payout address, which arrives with the rail —
+//! ledger.md). None is ever produced, and all three are rejected on read
+//! until their slices define them.
 
 use std::collections::BTreeMap;
 
@@ -42,16 +50,9 @@ const COGRA_KEY_NODE: u64 = 1;
 const COGRA_KEY_TITLE: u64 = 2;
 const COGRA_KEY_DESCRIPTION: u64 = 3;
 const COGRA_KEY_BODY: u64 = 4;
-// Keys 5 (media manifest) and 6 (provenance chain,
-// platform-guidelines.md §5 plank 4) are reserved: never produced yet,
-// rejected on read until their slices define them.
 const COGRA_KEY_DISPLAY_NAME: u64 = 7;
 const COGRA_KEY_BIO: u64 = 8;
 const COGRA_KEY_WEBSITE_URL: u64 = 9;
-// Key 10 (payout address) is assigned but arrives with the rail
-// (ledger.md); rejected on read until then. Keys 2–6 ride
-// Publish/Review payloads, 7–10 the parallel-Registration profile
-// payload — each family's reader rejects the other's keys.
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum EnvelopeError {
@@ -181,7 +182,13 @@ impl Envelope {
     /// Gate P (package version and key set), Gate C2/C3 (canonical form —
     /// verified by re-encoding), the §4.4 empty rules, and the §4.2
     /// reserved-range rule. The §3 text pipeline is not applied (see the
-    /// module comment).
+    /// module documentation).
+    ///
+    /// Gate P is fail-closed: this reader implements package 1 only, and a
+    /// future package denies the whole envelope rather than any part of it.
+    /// Gates C2 and C3 fall out of one move — canonical bytes are the fixed
+    /// point of decode then encode, so anything non-preferred, unsorted,
+    /// indefinite, or text-keyed fails to reproduce itself.
     pub fn decode(bytes: &[u8]) -> Result<Self, EnvelopeError> {
         if bytes.len() < 3 || bytes[0..3] != [0xD9, 0xD9, 0xF7] {
             return Err(EnvelopeError::Magic);
@@ -205,8 +212,6 @@ impl Envelope {
         for axis in &mut version {
             *axis = d.uint()?;
         }
-        // Gate P: this reader implements package 1 only; a future package
-        // denies the whole envelope (fail-closed).
         if version[0] != 1 {
             return Err(EnvelopeError::UnknownPackage(version[0]));
         }
@@ -222,7 +227,6 @@ impl Envelope {
             }
             let len = d.map()?;
             if len == 0 {
-                // §4.4: the empty extension map must be key omission.
                 return Err(EnvelopeError::ForbiddenEmpty(KEY_EXTENSIONS));
             }
             let mut last: Option<u64> = None;
@@ -234,7 +238,6 @@ impl Envelope {
                 last = Some(k);
                 let v = Value::decode(&mut d)?;
                 if (4..100).contains(&k) {
-                    // §4.2: nothing is allocated at (floor 1, ceiling 1).
                     return Err(EnvelopeError::ReservedKey(k));
                 }
                 if k < 4 {
@@ -256,9 +259,6 @@ impl Envelope {
             body,
             extensions,
         };
-        // Gate C2/C3 in one move: canonical bytes are the fixed point of
-        // decode → encode. Anything non-preferred, unsorted, indefinite,
-        // or text-keyed fails to reproduce itself.
         if envelope.encode() != bytes {
             return Err(EnvelopeError::NonCanonical);
         }
@@ -464,6 +464,12 @@ impl CograProfile {
 
 #[cfg(test)]
 mod tests {
+    //! The numbered `vector_*` tests are PCE §8.2's normative value vectors,
+    //! pinned byte-identical. The `rejects_*` tests are §8.4's negative
+    //! vectors, less the ones that live inside the §3 text pipeline. The
+    //! rest cover CoGra's own guild schema — the content keys and the
+    //! profile keys 7–9 alike.
+
     use super::*;
 
     fn hex(s: &str) -> Vec<u8> {
@@ -481,8 +487,6 @@ mod tests {
             extensions,
         }
     }
-
-    // PCE §8.2 value vectors — normative, byte-identical.
 
     #[test]
     fn vector_1_minimal_body() {
@@ -537,10 +541,10 @@ mod tests {
         assert_eq!(decoded.encode(), bytes);
     }
 
+    /// The vector pins the serialized form of the already-normalized body
+    /// "café"; the §3 normalize transform that produces it is out of scope.
     #[test]
     fn vector_5_nfc_form() {
-        // The vector's serialized form is of the normalized body "café";
-        // the §3 normalize transform itself is out of scope (module doc).
         let bytes = envelope("café", BTreeMap::new()).encode();
         assert_eq!(bytes, hex("D9D9F7 A2 00 84 01010101 01 65 636166C3A9"));
     }
@@ -597,16 +601,15 @@ mod tests {
         assert_eq!(Envelope::decode(&bytes).expect("valid").body, "");
     }
 
+    /// The canonical bytes of the already-trimmed output "a\n\nb"; the §3
+    /// transform that produces it is out of scope, its result is what is
+    /// pinned.
     #[test]
     fn vector_16_per_line_trim_output() {
-        // Serialized form of the normalized output "a\n\nb" (§3 transform
-        // out of scope; the canonical bytes are what we pin).
         let bytes = envelope("a\n\nb", BTreeMap::new()).encode();
         assert_eq!(bytes, hex("D9D9F7 A2 00 84 01010101 01 64 61 0A 0A 62"));
         assert_eq!(bytes.len(), 16);
     }
-
-    // PCE §8.4 negative vectors (the ones outside the §3 pipeline).
 
     #[test]
     fn rejects_missing_magic() {
@@ -615,9 +618,10 @@ mod tests {
         assert_eq!(Envelope::decode(&bytes), Err(EnvelopeError::Magic));
     }
 
+    /// The bytes carry `{0: 1, 1: ""}`: the version must be an array of four
+    /// uints, never a scalar.
     #[test]
     fn rejects_scalar_version() {
-        // {0: 1, 1: ""} — version must be an array of four uints.
         let bytes = hex("D9D9F7 A2 00 01 01 60");
         assert!(matches!(
             Envelope::decode(&bytes),
@@ -634,35 +638,37 @@ mod tests {
         );
     }
 
+    /// The bytes carry `{0: [1,1,1,1], 1: "x", 7: 42}` — key 7 is outside
+    /// the package's allowed top-level set.
     #[test]
     fn rejects_unknown_top_level_key() {
-        // {0:[1,1,1,1], 1:"x", 7:42}
         let bytes = hex("D9D9F7 A3 00 84 01010101 01 61 78 07 18 2A");
         assert_eq!(Envelope::decode(&bytes), Err(EnvelopeError::TopLevelKey(7)));
     }
 
+    /// The bytes carry `{0: [1,1,1,1], 1: "x", 2: {5: h'00'}}` — extension
+    /// key 5 falls in the reserved range with nothing allocated to it.
     #[test]
     fn rejects_unallocated_reserved_key() {
-        // {0:[1,1,1,1], 1:"x", 2:{5:h'00'}}
         let bytes = hex("D9D9F7 A3 00 84 01010101 01 61 78 02 A1 05 41 00");
         assert_eq!(Envelope::decode(&bytes), Err(EnvelopeError::ReservedKey(5)));
     }
 
+    /// Three in-band empties, each of which must have been an omission
+    /// instead: an empty link at key 0, empty usr bytes at key 3, and the
+    /// empty extension map, which must drop key 2 altogether.
     #[test]
     fn rejects_empty_registered_values_and_empty_map() {
-        // {…, 2:{0:""}} — empty link must be omitted.
         let empty_link = hex("D9D9F7 A3 00 84 01010101 01 60 02 A1 00 60");
         assert_eq!(
             Envelope::decode(&empty_link),
             Err(EnvelopeError::ForbiddenEmpty(0))
         );
-        // {…, 2:{3:h''}} — empty usr must be omitted.
         let empty_usr = hex("D9D9F7 A3 00 84 01010101 01 60 02 A1 03 40");
         assert_eq!(
             Envelope::decode(&empty_usr),
             Err(EnvelopeError::ForbiddenEmpty(3))
         );
-        // {…, 2:{}} — the empty extension map must drop key 2.
         let empty_map = hex("D9D9F7 A3 00 84 01010101 01 60 02 A0");
         assert_eq!(
             Envelope::decode(&empty_map),
@@ -670,9 +676,10 @@ mod tests {
         );
     }
 
+    /// Vector 15: a package axis of 2 denies the whole envelope, not merely
+    /// the parts this reader does not understand.
     #[test]
     fn rejects_unknown_package_version() {
-        // Vector 15: [2,1,1,1] — deny the whole envelope.
         let bytes = hex("D9D9F7 A2 00 84 02010101 01 62 6869");
         assert_eq!(
             Envelope::decode(&bytes),
@@ -680,17 +687,19 @@ mod tests {
         );
     }
 
+    /// Vector 10's content with the body length in the two-byte form
+    /// (`78 00` for text(0)): the decoder is lenient about head widths, so
+    /// this parses and then fails Gate C2 on re-encoding.
     #[test]
     fn rejects_non_canonical_encoding() {
-        // Same content as vector 10 but the body length in the two-byte
-        // form (78 00 for text(0)) — decodes leniently, fails Gate C2.
         let bytes = hex("D9D9F7 A2 00 84 01010101 01 78 00");
         assert_eq!(Envelope::decode(&bytes), Err(EnvelopeError::NonCanonical));
     }
 
+    /// The extension map carries `{2: "de", 0: "https://e.com/"}` — keys in
+    /// descending order, which no canonical encoding produces.
     #[test]
     fn rejects_unsorted_extension_keys() {
-        // {…, 2:{2:"de", 0:"https://e.com/"}} — descending keys.
         let bytes = hex(
             "D9D9F7 A3 00 84 01010101 01 60 02 A2 02 62 6465 00 6E 68747470733A2F2F652E636F6D2F",
         );
@@ -707,8 +716,6 @@ mod tests {
         ));
     }
 
-    // CoGra guild schema.
-
     fn cogra(title: Option<&str>, description: Option<&str>, body: Option<&str>) -> CograContent {
         CograContent {
             node: Uuid::from_bytes([7; 16]),
@@ -718,16 +725,17 @@ mod tests {
         }
     }
 
+    /// Presence survives the round trip in every shape it carries meaning:
+    /// a full create, a create with only a body, an edit carrying one
+    /// changed field, an edit clearing a field by present-and-empty, and a
+    /// create whose empty body is itself a value (api-spec.md).
     #[test]
     fn cogra_round_trips_create_and_edit_shapes() {
         for content in [
             cogra(Some("Title"), Some("A description"), Some("The body")),
             cogra(None, None, Some("comment body")),
-            // Edit carrying one changed field.
             cogra(Some("New title"), None, None),
-            // Edit clearing a field: present-and-empty.
             cogra(Some(""), None, None),
-            // Full-empty create: empty body is a value (api-spec).
             cogra(None, None, Some("")),
         ] {
             let bytes = content.clone().encode_payload();
@@ -738,11 +746,12 @@ mod tests {
         }
     }
 
+    /// Guild key 49258 is 0xC06A, which rides as the two-byte uint
+    /// `19 C0 6A` — the needle searched for below.
     #[test]
     fn cogra_envelope_is_canonical_and_magic_prefixed() {
         let bytes = cogra(Some("t"), None, Some("b")).encode_payload();
         assert_eq!(&bytes[0..3], &[0xD9, 0xD9, 0xF7]);
-        // Guild key 49258 = 0xC06A rides as a two-byte uint: 19 C0 6A.
         let needle = [0x19, 0xC0, 0x6A];
         assert!(bytes.windows(3).any(|w| w == needle));
         assert_eq!(Envelope::decode(&bytes).expect("valid").encode(), bytes);
@@ -812,8 +821,6 @@ mod tests {
         );
     }
 
-    // CoGra profile guild schema (keys 7–9).
-
     fn profile(
         display_name: Option<&str>,
         bio: Option<&str>,
@@ -827,13 +834,14 @@ mod tests {
         }
     }
 
+    /// The same presence semantics as content: a full payload, an edit
+    /// carrying one changed field, and an edit clearing bio and website by
+    /// present-and-empty.
     #[test]
     fn profile_round_trips_edit_shapes() {
         for content in [
             profile(Some("Ada"), Some("Curious."), Some("https://ada.example")),
-            // Edit carrying one changed field.
             profile(None, Some("New bio"), None),
-            // Edit clearing bio and website: present-and-empty.
             profile(None, Some(""), Some("")),
         ] {
             let bytes = content.clone().encode_payload();

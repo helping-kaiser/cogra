@@ -1,13 +1,14 @@
-// Net stance — the bundle fold (`def:epoch:net-stance`,
-// layer1-interface.md §11.3; adopted verbatim as CoGra's read-side fold in
-// feed-ranking.md §3.2):
-//
-//     p̄_d = clip_[-1,1](Σ_e p_d(e)),  p̄_i = clip_[-1,1](Σ_e p_i(e))
-//
-// The sum is the storage question and the clip is the read rule, so the
-// store returns raw sums and everything here works on them. Severance
-// needs that distinction: a bundle is netted when its *sum* reaches zero,
-// and a clipped sum has already lost how far away that is.
+//! Net stance — the bundle fold (layer1-interface.md §11.3; adopted verbatim
+//! as CoGra's read-side fold in feed-ranking.md §3.2):
+//!
+//! ```text
+//! p̄_d = clip_[-1,1](Σ_e p_d(e)),  p̄_i = clip_[-1,1](Σ_e p_i(e))
+//! ```
+//!
+//! The sum is the storage question and the clip is the read rule, so the
+//! store returns raw sums and everything here works on them. Severance needs
+//! that distinction: a bundle is netted when its *sum* reaches zero, and a
+//! clipped sum has already lost how far away that is.
 
 /// The closed range every authored parameter lives in (edges.md §1).
 const LIMIT: f64 = 1.0;
@@ -44,7 +45,7 @@ impl NetStance {
 }
 
 /// Sum-then-clip. `clip` returns the parameters to the master formula's
-/// domain (`prop:epoch:net-stance-properties`, range-safety).
+/// domain — the range-safety property of layer1-interface.md §11.3.
 pub fn clip(x: f64) -> f64 {
     x.clamp(-LIMIT, LIMIT)
 }
@@ -144,10 +145,10 @@ mod tests {
         );
     }
 
+    /// The raw-edge semantic: a pick is one more edge, so a (+0.5, +0.5)
+    /// bundle taking a (+0.1, +0.1) pick reads 0.6, not the picked 0.1.
     #[test]
     fn projection_appends_the_pick_rather_than_replacing_the_bundle() {
-        // The raw-edge semantic: a (+0.5,+0.5) bundle plus a (+0.1,+0.1)
-        // pick reads 0.6, not the picked 0.1 — the pick is one more edge.
         let projected = sum(0.5, 0.5).project(0.1, 0.1);
         assert!((projected.p_d - 0.6).abs() < 1e-12);
         assert!((projected.p_i - 0.6).abs() < 1e-12);
@@ -161,9 +162,10 @@ mod tests {
         );
     }
 
+    /// A bundle within one record's reach severs in one: a (+1, +1) edge
+    /// plus a fresh (-1, -1) nets to zero (design.md §8.2).
     #[test]
     fn a_counter_pick_can_reach_severance_in_one_record() {
-        // design.md §8.2: one (+1,+1) edge plus a new (-1,-1) nets to zero.
         assert!(sum(1.0, 1.0).project(-1.0, -1.0).is_severed());
     }
 
@@ -193,9 +195,11 @@ mod tests {
         assert_eq!(batch, vec![(-0.5, -0.5)]);
     }
 
+    /// A long history carries a sum past what one record can cancel, so the
+    /// batch runs to several — each still authorable, and together cancelling
+    /// the bundle exactly.
     #[test]
     fn severance_beyond_one_record_stages_a_batch_that_nets_to_zero() {
-        // A long history: the sum is 2.5, past what one record can cancel.
         let b = sum(2.5, -1.2);
         let batch = b.severance_batch();
         assert_eq!(batch.len(), 3, "⌈max(2.5, 1.2)⌉ counter-records");

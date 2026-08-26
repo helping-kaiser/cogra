@@ -5,7 +5,7 @@
 //! evaluator will decline to evaluate, because fragment membership and the
 //! key-by-key identity comparison are questions about a whole parsed
 //! theory and neither is answerable over a region the crate could not read
-//! (`design.md`, `dec:xchg:cddl-coverage`). A node that stood for "some
+//! (´dec:xchg:cddl-coverage´). A node that stood for "some
 //! CDDL I did not understand" would make the identity comparison report
 //! two different types as the same one, which is the worst answer this
 //! crate could give.
@@ -310,7 +310,7 @@ pub(crate) enum Operator {
     ///
     /// The name is kept as a name and nothing more. Which names this crate
     /// evaluates, and which it refuses, is settled at a later stage
-    /// (`design.md`, `dec:xchg:evaluable-subset`); the parser admits every
+    /// (´dec:xchg:evaluable-subset´); the parser admits every
     /// name the grammar admits, including names no implementation defines.
     Control(Name),
 }

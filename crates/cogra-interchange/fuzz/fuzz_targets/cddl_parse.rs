@@ -1,7 +1,7 @@
 #![no_main]
 //! `cddl_parse` — arbitrary text into [`Theory::parse`], asserting only
 //! that it never panics; parse failure is a returned `Err`, not a crash
-//! (`preview:xchg:fuzz-plan`, design.md).
+//! (´preview:xchg:fuzz-plan´).
 //!
 //! Known finding: the CDDL grammar has an exponential-backtracking path,
 //! so a hostile nested theory makes `parse` hang. Under libfuzzer this

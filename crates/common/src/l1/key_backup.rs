@@ -1,7 +1,8 @@
-// The key-backup blob, format v1 (auth.md "Blob format (v1)"): the
-// actor seed sealed under a generated recovery code. One format across
-// every client — this module is the reference the golden vectors pin,
-// and the bootstrap's operator-account seeding seals with it.
+//! The key-backup blob, format v1: the actor seed sealed under a generated
+//! recovery code (auth.md "Blob format (v1)").
+//!
+//! One format across every client — this module is the reference the golden
+//! vectors pin, and the bootstrap's operator-account seeding seals with it.
 
 use aes_gcm::aead::{Aead, Payload};
 use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce};
@@ -211,11 +212,13 @@ mod tests {
         );
     }
 
+    /// The header rides as associated data and the ciphertext is sealed, so a
+    /// flipped bit anywhere refuses to open. An unsupported version and a
+    /// truncated container are told apart from that refusal.
     #[test]
     fn tampering_anywhere_refuses() {
         let code = RecoveryCode::generate();
         let blob = seal(&[7u8; 32], &code);
-        // The header is associated data; the ciphertext is sealed.
         for index in [2usize, blob.len() - 1] {
             let mut tampered = blob.clone();
             tampered[index] ^= 1;
@@ -245,6 +248,10 @@ mod tests {
         );
     }
 
+    /// Both bindings carry weight: a proof replayed against another
+    /// challenge, one whose blob was swapped underneath it, and one from a
+    /// different actor all fail to verify. Garbage signature bytes refuse
+    /// rather than panic.
     #[test]
     fn an_upload_proof_binds_both_the_challenge_and_the_blob() {
         let key = SigningKey::from_bytes(&[3u8; 32]);
@@ -254,18 +261,14 @@ mod tests {
         let public = key.verifying_key();
 
         assert!(verify_upload(&public, &challenge, &blob, &signature));
-        // Replayed against a different challenge: the whole point.
         assert!(!verify_upload(
             &public,
             &[8u8; CHALLENGE_LEN],
             &blob,
             &signature
         ));
-        // Same challenge, swapped blob: a captured signature must not
-        // authorize different ciphertext.
         let other = seal(&[6u8; 32], &RecoveryCode::generate());
         assert!(!verify_upload(&public, &challenge, &other, &signature));
-        // A different actor's signature.
         let stranger = SigningKey::from_bytes(&[4u8; 32]);
         assert!(!verify_upload(
             &stranger.verifying_key(),
@@ -273,7 +276,6 @@ mod tests {
             &blob,
             &signature
         ));
-        // Garbage signature bytes refuse rather than panic.
         assert!(!verify_upload(&public, &challenge, &blob, b"xx"));
     }
 
