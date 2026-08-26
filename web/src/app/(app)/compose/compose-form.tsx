@@ -30,12 +30,14 @@ import { tagChanges, WITHDRAWN_RELEVANCE, type TagDraft } from "@/lib/topics/dra
 import { TAG_BATCH_CAP } from "@/lib/topics/normalize";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthGuard } from "@/lib/session/runtime";
+import { useConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { RestoreCard } from "@/app/applicant-status";
 import { Button } from "@/lib/ui/button";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { LicenseChooser } from "@/lib/ui/license-fields";
 import { PageHeader } from "@/lib/ui/page-header";
+import { MultiActionConfirm, SignedActionsIndicator } from "@/lib/ui/signed-actions";
 import { SigningPending } from "@/lib/ui/signing-pending";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { TextField } from "@/lib/ui/text-field";
@@ -91,6 +93,8 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   const [signIncomplete, setSignIncomplete] = useState(false);
   const [signingNeedsKey, setSigningNeedsKey] = useState(false);
   const [transportFailed, setTransportFailed] = useState(false);
+  const [confirmMultiAction, setConfirmMultiAction] = useConfirmMultiAction();
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     if (editingId === null) return;
@@ -136,6 +140,12 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
     title !== loadedContent.title ||
     description !== loadedContent.description ||
     body !== loadedContent.body;
+
+  // What pressing submit right now would sign (F4). Creating mints the
+  // post and batches one Tag act per drafted topic; editing signs the
+  // edit record only if the content moved, plus one act per tag change.
+  const signedActions =
+    editingId === null ? 1 + tags.length : (contentChanged ? 1 : 0) + changes.length;
 
   const signAll = async (writes: readonly StagedWriteView[]): Promise<boolean> => {
     const results = [];
@@ -262,12 +272,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
     await finish(writes);
   };
 
-  const onSubmit = async () => {
-    if (submitting) return;
-    if (body.trim() === "" && editingId === null) {
-      setEmptyBody(true);
-      return;
-    }
+  const run = async () => {
     setSubmitting(true);
     setRefusedMessage(null);
     setTagErrors({});
@@ -275,6 +280,22 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
     setTransportFailed(false);
     if (editingId === null) await submitCreate();
     else await submitEdit(editingId);
+  };
+
+  const onSubmit = async () => {
+    if (submitting) return;
+    if (body.trim() === "" && editingId === null) {
+      setEmptyBody(true);
+      return;
+    }
+    // More than one signed action is more than one price, so it is asked
+    // about before it is signed (F4) — unless the reader turned the
+    // asking off.
+    if (signedActions > 1 && confirmMultiAction) {
+      setConfirming(true);
+      return;
+    }
+    await run();
   };
 
   // Leaving is plain back navigation, no discard confirm — the Android
@@ -366,9 +387,28 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
         <SigningPending needsKey={signingNeedsKey} testIdPrefix="compose" />
       )}
       {transportFailed && <TransportError testId="compose-transport-error" />}
-      <Button testId="compose-submit" onClick={() => void onSubmit()} disabled={submitting}>
+      {/* The cost, beside the control that pays it (F4). */}
+      <SignedActionsIndicator count={signedActions} testId="compose-signed-actions" />
+      <Button
+        testId="compose-submit"
+        onClick={() => void onSubmit()}
+        disabled={submitting || signedActions === 0}
+      >
         {editingId === null ? "Sign and publish" : "Sign the edit"}
       </Button>
+      {confirming && (
+        <MultiActionConfirm
+          count={signedActions}
+          busy={submitting}
+          testIdPrefix="compose"
+          onCancel={() => setConfirming(false)}
+          onConfirm={(stopAsking) => {
+            if (stopAsking) setConfirmMultiAction(false);
+            setConfirming(false);
+            void run();
+          }}
+        />
+      )}
     </main>
   );
 }

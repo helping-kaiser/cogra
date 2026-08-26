@@ -31,6 +31,7 @@ import { useTokenStore } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
+import { MultiActionConfirmSetting } from "@/lib/ui/multi-action-setting";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PasswordField } from "@/lib/ui/password-field";
 import { RecoveryCode } from "@/lib/ui/recovery-code";
@@ -414,6 +415,8 @@ export function SettingsView({
       </Card>
 
       <StanceInputSetting />
+
+      <MultiActionConfirmSetting />
 
       <Card testId="settings_sessions_card">
         <h2 className="text-title-medium">Sessions</h2>
