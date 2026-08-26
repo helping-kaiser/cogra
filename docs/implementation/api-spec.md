@@ -1799,8 +1799,10 @@ type Query {
    not a record has referenced it — Types anchor vacuously and
    their ids are a pure function of the name — so this resolves
    without a registry row and without writing one, and a client can
-   navigate to an empty topic page and follow it from there. Null
-   only for a name the substrate could never carry."
+   navigate to an empty topic page from a chip. The follow gesture
+   (`prepareStance` toward the Hashtag) is backend-accepted; the
+   client control stays hidden until the topic feed lands (slice
+   3). Null only for a name the substrate could never carry."
   hashtag(name: String!): Hashtag
   proposal(id: UUID!): Proposal
   campaign(id: UUID!): Campaign

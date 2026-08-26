@@ -12,6 +12,10 @@
 // remove gesture, D14). The two controls are SIBLINGS inside one
 // wrapper, never nested — a link inside a button (or vice versa) is
 // invalid HTML and unreachable by keyboard in a browser's own way.
+//
+// A draft chip navigates nowhere; instead its label is the button that
+// opens the tag's own parameter sliders (F6), which is why `onSelect`
+// and `href` are alternatives rather than companions.
 
 import Link from "next/link";
 
@@ -21,6 +25,9 @@ export function TopicChip({
   pending = false,
   onRemove,
   removeLabel,
+  onSelect,
+  selectLabel,
+  expanded,
   testId,
 }: {
   /** The canonical name (hashtag.md §1) — displayed as `#name`. */
@@ -32,6 +39,11 @@ export function TopicChip({
   /** Present only for a removable chip. */
   onRemove?: () => void;
   removeLabel?: string;
+  /** Makes the label a button — a draft chip opening its sliders (F6). */
+  onSelect?: () => void;
+  selectLabel?: string;
+  /** Whether `onSelect`'s panel is open, for the label's `aria-expanded`. */
+  expanded?: boolean;
   testId?: string;
 }) {
   const label = `#${name}`;
@@ -44,6 +56,17 @@ export function TopicChip({
         <Link href={href} data-testid={testId !== undefined ? `${testId}-link` : undefined}>
           {label}
         </Link>
+      ) : onSelect !== undefined ? (
+        <button
+          type="button"
+          aria-label={selectLabel ?? `Adjust ${label}`}
+          aria-expanded={expanded}
+          data-testid={testId !== undefined ? `${testId}-select` : undefined}
+          onClick={onSelect}
+          className="text-on-secondary-container"
+        >
+          {label}
+        </button>
       ) : (
         <span>{label}</span>
       )}
