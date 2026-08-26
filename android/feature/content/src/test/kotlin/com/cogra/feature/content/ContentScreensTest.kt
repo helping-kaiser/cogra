@@ -967,7 +967,7 @@ class ContentScreensTest {
     fun tappingAChipReportsItForTuning() {
         var tuned: String? = null
         renderComposer(ComposePostUiState(tags = tagRows("rust")), onTuneTag = { tuned = it })
-        compose.onNodeWithTag("compose_tag_rust").performClick()
+        compose.onNodeWithTag("compose_tag_rust_open").performScrollTo().performClick()
         assertThat(tuned).isEqualTo("rust")
     }
 
