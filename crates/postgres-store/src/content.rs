@@ -1,15 +1,17 @@
-// Display content for the content slice (data-model.md "Content nodes",
-// "Display-content versioning"): immutable entity rows bound to their
-// minted L1 node, append-only version rows, and the act payload carriage.
-// An entity row is written at the pre-commitment signature and carries a
-// pending mark — absent landing coordinates — until confirm fills them in
-// (substrate.md §6: a prepared record is its author's content from the
-// moment they sign it). Version rows carry the same coordinates, of the
-// record that promoted them, and that is what orders the versions of a
-// node: the newest version is the one whose record landed last, not the
-// one whose row was written last. Like every mirror-derived column the
-// coordinates are rebuildable and never authoritative (data-model.md
-// "The Boundary Rule").
+//! Display content for the content slice: immutable entity rows bound to
+//! their minted L1 node, append-only version rows, and the act payload
+//! carriage (data-model.md "Content nodes", "Display-content versioning").
+//!
+//! An entity row is written at the pre-commitment signature and carries a
+//! pending mark — absent landing coordinates — until confirm fills them
+//! in; a prepared record is its author's content from the moment they sign
+//! it (substrate.md §6).
+//!
+//! Version rows carry the coordinates of the record that promoted them,
+//! and those order a node's versions: the newest version is the one whose
+//! record landed last, not the one whose row was written last. Like every
+//! mirror-derived column they are rebuildable and never authoritative
+//! (data-model.md "The Boundary Rule").
 
 use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
@@ -524,8 +526,10 @@ pub async fn discard_pending_many(
 /// comments hanging under it, and the pending replies under those. Their
 /// own staged writes expire on their own schedule, but the content has
 /// nowhere left to hang — a pending comment on nothing is not a thread.
-/// A *landed* comment is left where it is: its record is ordered fact,
-/// so it renders as an orphan whose `target` resolves to null.
+/// Each one goes whole, versions and attachments with it, since a pending
+/// node's versions are all pending by construction. A *landed* comment is
+/// left where it is: its record is ordered fact, so it renders as an
+/// orphan whose `target` resolves to null.
 async fn discard_pending_thread(
     tx: &mut Transaction<'_, Postgres>,
     roots: Vec<Uuid>,
@@ -542,8 +546,6 @@ async fn discard_pending_thread(
         if children.is_empty() {
             break;
         }
-        // The entity row goes, so every version it carries goes with it —
-        // a pending node's versions are all pending by construction.
         sqlx::query!(
             "DELETE FROM comment_versions WHERE comment_id = ANY($1)",
             &children
@@ -706,6 +708,8 @@ pub async fn post_by_node(pool: &PgPool, l1_node_id: &str) -> Result<Option<Post
 /// namespace; `backward` flips the walk for `last`/`before` paging
 /// (results always come back newest-first). `include_pending` false
 /// serves only what has landed on L1. `limit` is capped by the resolver.
+/// The cursor is re-resolved against its entry's current state before the
+/// walk — see [`resolve_post_cursor`].
 pub async fn list_posts(
     pool: &PgPool,
     cursor: Option<ContentCursor>,
@@ -713,10 +717,6 @@ pub async fn list_posts(
     limit: i64,
     include_pending: bool,
 ) -> Result<Vec<Post>, ContentError> {
-    // The cursor is resolved against the row's current state before the
-    // walk: a pending entry can land between two pages, and a stale
-    // cursor would put the walk in the wrong branch — serving the entry
-    // again out of the other one, or skipping what sorts between them.
     let cursor = resolve_post_cursor(pool, cursor).await?;
     merge_walk(
         cursor,
