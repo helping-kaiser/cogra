@@ -28,7 +28,7 @@ src/
   frontend.rs       the shared frontend contract: Region, Head, Asset, Declaration, Table, Parsed; the cross-source pairing
   frontend_md.rs    pulldown-cmark: blocks, code spans, headings, registry tables
   frontend_rust.rs  syn: doc-comment regions, the two profiles' censuses
-  frontend_web.rs   swc                                             [slice 7]
+  frontend_web.rs   swc: the comment regions of TypeScript and TSX
   frontend_kotlin.rs tree-sitter                                    [slice 8]
   graph.rs          NodeW, EdgeW, the index maps, the free functions over them
   judge/
@@ -1290,12 +1290,14 @@ Every version was verified against the crate's own docs.rs page on 2026-08-25, n
 | anyhow | workspace `1` | 2026-08-25 | workspace `Cargo.toml` | runtime | `main.rs` only |
 | clap | 4.6.6 | 2026-08-25 | docs.rs/clap | runtime | the two modes of (`sig:lint:cli-api`), `derive` feature |
 | proptest | 1.11.0 | 2026-08-25 | docs.rs/proptest | dev | the obligations of (`tab:lint:metatheorem-tests`) |
-| swc_ecma_parser | slice 7 | — | — | runtime | the web frontend (`[ARCH-conv:linter:web-frontend]`) |
+| swc_ecma_parser | 45.0.0 | 2026-08-26 | docs.rs/swc_ecma_parser | runtime | the web frontend (`[ARCH-conv:linter:web-frontend]`); `typescript` is one of its default features |
+| swc_common | 26.0.0 | 2026-08-26 | docs.rs/swc_common | runtime | the comments store the parser fills, and the source map its spans are positions in |
+| swc_ecma_ast | 29.0.0 | 2026-08-26 | docs.rs/swc_ecma_ast | runtime | `EsVersion`, the parse target; the tree itself goes unread |
 | tree-sitter + first-party grammar | slice 8 | — | — | runtime | the Kotlin frontend (`[ARCH-dec:linter:kotlin-tree-sitter]`) |
 | cogra-interchange | when envelope validation opens | — | — | runtime | R19 of (`tab:lint:functional`); nothing reimplemented linter-side |
 | cargo-fuzz, libfuzzer-sys, arbitrary | audit phase | — | — | dev | the targets of (`preview:lint:fuzz-plan`), absent from the version-1 tree |
 
-Two versions have moved since the architecture's table of 2026-08-20 and the movement is recorded rather than absorbed. syn stands at 3.0.4 where the architecture pinned 3.0.3; the pin is a floor and Cargo's caret resolves upward, so nothing is owed but the note. `toml` stands at 1.1.4, a crate the architecture's table does not carry at all, because the adoption-data parser is this document's decision (`dec:lint:toml-parsing`). swc and tree-sitter are deliberately unverified here: they belong to slices 7 and 8, their verification is owed at those slices' own starts, and swc's aggressive major cadence makes a version verified now worthless by then.
+Versions that have moved since the architecture's table of 2026-08-20 are recorded rather than absorbed. syn stands at 3.0.4 where the architecture pinned 3.0.3; the pin is a floor and Cargo's caret resolves upward, so nothing is owed but the note. `toml` stands at 1.1.4, a crate the architecture's table does not carry at all, because the adoption-data parser is this document's decision (`dec:lint:toml-parsing`). swc arrives as three crates where the architecture's table names one: the parser takes its comments store and its source map from `swc_common` and its parse target from `swc_ecma_ast`, and all three release on one train — 45.0.0, 26.0.0 and 29.0.0 were published within a day of each other and verified together. The caret resolves the parser to 45.1.0 today, which is the floor behaving as syn's does. tree-sitter is deliberately unverified here: it belongs to slice 8, its verification is owed at that slice's own start, and a version verified now would be stale by then.
 
 **Justification (Each first-slice dependency)** · `just:lint:dependency-argument`
 

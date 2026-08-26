@@ -608,13 +608,13 @@ figure and the check that reads it cannot drift apart.
 | Test-attributed functions (2026-08-25) | 1444, the `rust-test` census |
 | Test-name collisions per owner | 0 (160/160, 81/81, 15/15, 26/26) |
 | `mod name;` declarations (2026-08-26) | 98, of which 11 `mod rig;` for one definition |
-| Module definitions (2026-08-26) | 89, the whole `rust-module` census, every one carrying its `//!` label — it grows with the corpus, so slices that add Rust modules re-measure it, and a new module carries its label in the commit that adds it |
+| Module definitions (2026-08-26) | 90, the whole `rust-module` census, every one carrying its `//!` label — it grows with the corpus, so slices that add Rust modules re-measure it, and a new module carries its label in the commit that adds it |
 | `#[cfg(test)] mod tests` definitions (2026-08-26) | 38, all excluded from that census |
 | Plain `//` comment occurrences | ~1210 |
 | Plain `/*` occurrences under `crates/` (2026-08-21) | 0 |
 | Files in `docs/primitive/` (2026-08-21) | 18, of which 1 (`layer1-interface.md`) is outside the carrier |
 | Kotlin sources | 138 `.kt`, 16 `.kts`, 12 Gradle modules |
-| TypeScript sources | 162 `.ts`/`.tsx` |
+| TypeScript sources (2026-08-26) | 215: 105 `.ts` and 110 `.tsx`, all under `web/`, all scanned, and none carrying an occurrence |
 | Markdown in carrier | 58 files (4 more in the working-note trees) |
 | Files carrying label-shaped spans (2026-08-25) | 29 in the carrier: 10 under `crates/`, written under the discipline; 19 under `docs/`, displayed under R20 |
 | Label-shaped spans in the docs trees (2026-08-25) | 61 across those 19 files, 37 of them parenthesized; all displayed spans (R20) |
