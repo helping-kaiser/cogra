@@ -20,7 +20,7 @@
 //!    name list: a list would say that `tstr` exists but not that it is
 //!    `#3`, and the evaluator needs the second. The prelude is parsed once
 //!    for the process and shared by every theory
-//!    (`design.md`, `dec:xchg:cddl-coverage`).
+//!    (´dec:xchg:cddl-coverage´).
 //! 4. **A socket with no plugs.** RFC 8610 §3.9 is explicit that a name
 //!    beginning with `$` or `$$` need not be defined at all: "it is not an
 //!    error if there is no definition for a socket at all; this then means

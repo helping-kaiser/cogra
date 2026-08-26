@@ -21,19 +21,19 @@
 //! - **The fragment is what makes the top level deterministic.** Every
 //!   content key of an assigned theory is a literal unsigned integer, so
 //!   each member of a document has at most one entry that can pick it and
-//!   the pick order cannot matter (`design.md`,
-//!   `judg:xchg:satisfaction-total`). The general matcher is implemented
+//!   the pick order cannot matter (´judg:xchg:satisfaction-total´). The
+//!   general matcher is implemented
 //!   nonetheless, because the *type* at a content key is arbitrary CDDL.
 //!
 //! # Totality, and the one refusal
 //!
 //! Nothing here returns a `Result`. Every way satisfaction could fail to
 //! compute was caught at `Theory::parse`, and the judgment itself is a
-//! verdict (`conv:xchg:rejection-is-a-verdict`). The single runtime
+//! verdict (´conv:xchg:rejection-is-a-verdict´). The single runtime
 //! refusal the seam can raise — a `.regexp` match that exhausts the
 //! operation budget — is rendered as a [`Mismatch`] of its own kind,
 //! naming the budget and the pattern: never a panic, and never a silent
-//! `false` (`dec:xchg:regexp-engine`).
+//! `false` (´dec:xchg:regexp-engine´).
 //!
 //! An exhausted budget under a content key makes that key a mismatch
 //! whether or not some later alternative matched. PEG locks in the first
@@ -70,7 +70,7 @@ use crate::{ContentKey, Document};
 ///
 /// A negative outcome is a verdict and not an error — the document was
 /// exactly the kind of thing the judgment takes, and the answer is no
-/// (`design.md`, `crit:xchg:error-or-verdict`).
+/// (´crit:xchg:error-or-verdict´).
 ///
 /// ```
 /// use cogra_interchange::{satisfies_global, Content, Document, Envelope, NamespaceLabel, Version};
@@ -120,7 +120,7 @@ pub enum MismatchKind {
     /// the pattern would have answered is unknown.
     ///
     /// The budget counts matching operations and never time, so this
-    /// outcome is the same on every machine (`dec:xchg:regexp-engine`).
+    /// outcome is the same on every machine (´dec:xchg:regexp-engine´).
     BudgetExhausted {
         /// The budget that was in force.
         budget: usize,
@@ -203,7 +203,7 @@ impl Mismatch {
     ///
     /// Normalized rather than quoted from the source, because a companion's
     /// wildcard was never written in any source
-    /// (`design.md`, `dec:xchg:public-printer`).
+    /// (´dec:xchg:public-printer´).
     ///
     /// ```
     /// use cogra_interchange::{satisfies, Content, ContentKey, Document, Envelope, NamespaceLabel, Satisfaction, Theory, Value, Version};
@@ -291,8 +291,7 @@ impl Mismatch {
 /// Total: a [`Theory`] exists only downstream of a successful
 /// [`Theory::parse`], which compiled every pattern and refused every
 /// operator this crate does not evaluate, so there is nothing left for the
-/// judgment to fail *to compute* (`design.md`,
-/// `judg:xchg:satisfaction-total`).
+/// judgment to fail *to compute* (´judg:xchg:satisfaction-total´).
 ///
 /// ```
 /// use cogra_interchange::{

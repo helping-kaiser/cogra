@@ -4,8 +4,7 @@
 //!
 //! The rows the design sizes: explicit provisions with and without a fixed
 //! canonical form, and implicit reach through `any`, through a major-type
-//! reference, and through a prelude type (`design.md`,
-//! `tab:xchg:test-sizing`).
+//! reference, and through a prelude type (´tab:xchg:test-sizing´).
 
 use cogra_interchange::{Restrained, RestraintReport, Theory};
 

@@ -6,7 +6,7 @@
 //! comparison are both questions about a *whole parsed theory*. Neither is
 //! answerable over a theory the crate could not parse. Parsing is
 //! therefore complete even where evaluation is not
-//! (`design.md`, `dec:xchg:cddl-coverage`).
+//! (´dec:xchg:cddl-coverage´).
 //!
 //! # The modules
 //!
@@ -252,7 +252,7 @@ impl Theory {
     /// The report is computed, never enforced: a theory reaching a float
     /// through `any` is refused where it is acquired, and the report is
     /// what such a refusal carries. Nothing here changes what a document
-    /// satisfies (`design.md`, `dec:xchg:restraint-enforcement`).
+    /// satisfies (´dec:xchg:restraint-enforcement´).
     ///
     /// ```
     /// use cogra_interchange::Theory;
@@ -432,7 +432,7 @@ impl BaseTheory {
     /// Read out of the parsed theory rather than from a copy of the pattern
     /// text, which is what lets the cross-check of the two label
     /// recognizers be a check and not a restatement
-    /// (`design.md`, `verif:xchg:label-pattern-crosscheck`).
+    /// (´verif:xchg:label-pattern-crosscheck´).
     #[cfg(test)]
     pub(crate) fn pattern_of(&self, rule: &str) -> Option<&XsdPattern> {
         let prepared = self.prepared.as_ref()?;

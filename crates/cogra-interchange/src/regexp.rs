@@ -3,7 +3,7 @@
 //!
 //! The signed exception that admits a regex engine at all is scoped to
 //! this operator, not to the crate, so every other recognizer here is a
-//! hand-written scanner (`design.md`, `dec:xchg:regexp-seam`). The seam is
+//! hand-written scanner (´dec:xchg:regexp-seam´). The seam is
 //! three methods wide — compile, match, and the pattern as given — and it
 //! stays one file, so replacing the engine behind it is a one-file change.
 //!
@@ -11,7 +11,7 @@
 //! implement the XSD flavor itself, so this crate holds a wrapper and never
 //! a translator; and that compiling a pattern not execute it, so a pattern
 //! this crate cannot use is refused at `Theory::parse` rather than at match
-//! time. The engine is `regexml` (`dec:xchg:regexp-engine`), entered
+//! time. The engine is `regexml` (´dec:xchg:regexp-engine´), entered
 //! through `Regex::xsd` and never through `Regex::xpath`, whose XPath
 //! `fn:matches` semantics are a substring search that would accept subjects
 //! `.regexp` rejects.
@@ -21,7 +21,7 @@
 //! RFC 8610 §3.8.3 defines `.regexp` against the XSD flavor, which differs
 //! from the Perl-descended dialect every mainstream engine implements in
 //! ways that are not stylistic. The design records the divergences
-//! (`rep:xchg:xsd-divergences`); each is asserted against this engine's
+//! (´rep:xchg:xsd-divergences´); each is asserted against this engine's
 //! actual behavior in the tests below, so the list is checked rather than
 //! recited.
 //!
@@ -32,7 +32,7 @@
 //!   engine returns the first alternative that matches at the leftmost
 //!   position — `a|ab` against `ab` yields a match of span 0 to 1, and a
 //!   span check would reject a subject XSD accepts
-//!   (`conv:xchg:regexp-anchoring`).
+//!   (´conv:xchg:regexp-anchoring´).
 //! - **`^` and `$` are ordinary characters**, matching themselves. Because
 //!   anchoring is implicit, XSD makes them metacharacters nowhere.
 //! - **Character-class subtraction** `[a-z-[aeiou]]` exists.
@@ -71,7 +71,7 @@
 //!
 //! A Saxon-derived engine backtracks, so no linear-time bound in the
 //! length of the subject is available by construction, and the guard duty
-//! (`req:xchg:regexp-guard`) is discharged by measurement. Under the
+//! (´req:xchg:regexp-guard´) is discharged by measurement. Under the
 //! correct anchored matching the classic exponential shapes are real —
 //! `(a+)+b` against thirty characters measured **761 seconds** unbounded
 //! (2026-08-21), where the unanchored search's early-exit optimizations
@@ -184,7 +184,7 @@ mod tests {
     /// Whole-string matching, the anchored discipline the seam requires: a
     /// pattern matches only when it accounts for the whole subject, so a
     /// match against a strict superstring or a substring fails. The engine's
-    /// own anchored matcher delivers this (`dec:xchg:regexp-engine`); the
+    /// own anchored matcher delivers this (´dec:xchg:regexp-engine´); the
     /// alternation case beside it is the counterexample that rules out ever
     /// recovering anchoring from a span check.
     #[test]
@@ -378,7 +378,7 @@ mod tests {
         assert!(!p.is_match("com..example").expect("within budget"));
     }
 
-    /// The guard duty (`req:xchg:regexp-guard`): a backtracking engine
+    /// The guard duty (´req:xchg:regexp-guard´): a backtracking engine
     /// offers no linear-time bound, so the budget bounds the walk instead,
     /// and this measures that it does. Under anchored matching the
     /// exponential shapes are real — `(a+)+b` against thirty characters

@@ -6,7 +6,7 @@
 //! cut, so a present-but-mistyped known key fails rather than falling
 //! through to the wildcard. Nothing else moves: every content key S names
 //! keeps its type and its requiredness
-//! (`design.md`, `alg:xchg:companion`).
+//! (´alg:xchg:companion´).
 //!
 //! # Why the rewrite is a tree rewrite
 //!

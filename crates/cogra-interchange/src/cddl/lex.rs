@@ -5,7 +5,7 @@
 //! regular-expression engine into this repository is scoped to the
 //! `.regexp` control operator's semantics, not to the reading of CDDL
 //! source, so the scanning rule stands unamended here
-//! (`design.md`, `dec:xchg:regexp-seam`).
+//! (´dec:xchg:regexp-seam´).
 //!
 //! # The lexical productions
 //!

@@ -3,7 +3,7 @@
 //! The rows the design sizes: legal additions, illegal widening, relaxed
 //! and tightened requiredness, a changed type, a dropped key, a required
 //! new key, and the rule-rename case that the ruled literal reading of type
-//! identity makes a major boundary (`design.md`, `tab:xchg:test-sizing`).
+//! identity makes a major boundary (´tab:xchg:test-sizing´).
 
 use cogra_interchange::{Inclusion, InclusionBreach, Theory, TheoryError, check_inclusion};
 
@@ -277,7 +277,7 @@ fn every_breach_is_reported_in_key_order() {
 /// definitions standing behind both names, is no additive minor. The cost
 /// is deliberate — it calls a rename a major boundary, which is stricter
 /// than the invariant's intent and conservative in the safe direction
-/// (`design.md`, `dec:xchg:type-identity`).
+/// (´dec:xchg:type-identity´).
 #[test]
 fn a_pure_rule_rename_is_a_breach() {
     let found = breaches(

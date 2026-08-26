@@ -3,7 +3,7 @@
 //!
 //! The matching rules are RFC 8610 Appendix C together with the PEG
 //! semantics of its Appendix A and the cuts of its §3.5.4; the control
-//! operators are the ten of `dec:xchg:evaluable-subset`. Where the RFC's
+//! operators are the ten of (´dec:xchg:evaluable-subset´). Where the RFC's
 //! own text fixes an outcome, the test quotes it, so a later reader can see
 //! what the assertion is evidence for.
 
@@ -754,7 +754,7 @@ fn regexp_reaches_its_pattern_through_a_rule_reference() {
 /// The one runtime refusal: a pattern that exhausts the seam's operation
 /// budget is a mismatch of its own kind, naming the budget and the pattern
 /// — never a panic, and never a silent `false`
-/// (`design.md`, `dec:xchg:regexp-engine`).
+/// (´dec:xchg:regexp-engine´).
 #[test]
 fn an_exhausted_regexp_budget_is_a_located_mismatch() {
     let theory = theory_of(r#"tstr .regexp "(a+)+b""#);

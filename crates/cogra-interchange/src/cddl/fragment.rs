@@ -2,7 +2,7 @@
 //!
 //! The fragment is "structural, not lexical": it constrains the top-level
 //! map rule and nothing below a content key. This module decides membership
-//! by the six clauses of `alg:xchg:fragment-check`, refusing at the first
+//! by the six clauses of (´alg:xchg:fragment-check´), refusing at the first
 //! failure with a [`TheoryError::NotInFragment`] whose detail opens with
 //! the line it was located at.
 //!

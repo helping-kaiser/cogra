@@ -5,7 +5,7 @@
 //! printer, and the check below diffs the two printed forms and reads the
 //! hunks: exactly two, one freeing the minor position of key 1 and one
 //! adding the base theory's wildcard. Anything else the derivation touched
-//! would appear as a third hunk (`design.md`, `alg:xchg:companion`).
+//! would appear as a third hunk (´alg:xchg:companion´).
 
 use cogra_interchange::{
     Content, ContentKey, Document, Envelope, NamespaceLabel, Theory, Value, Version, satisfies_open,
@@ -265,7 +265,7 @@ fn every_content_key_keeps_its_type_and_its_requiredness() {
 /// The cut binds an optional key's type under tolerant validation: a
 /// document carrying a value outside the enumerated type at a known
 /// optional key is rejected, where the companion's wildcard would
-/// otherwise have readmitted it (`design.md`, `alg:xchg:companion`).
+/// otherwise have readmitted it (´alg:xchg:companion´).
 #[test]
 fn a_mistyped_optional_key_is_rejected_tolerantly() {
     let theory = parse(r#"e = {0 => "com.example", 1 => [1, 2, uint], ? 2 => tstr}"#);
