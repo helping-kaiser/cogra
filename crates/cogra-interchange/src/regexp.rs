@@ -184,9 +184,12 @@ mod tests {
     /// Whole-string matching, the anchored discipline the seam requires: a
     /// pattern matches only when it accounts for the whole subject, so a
     /// match against a strict superstring or a substring fails. The engine's
-    /// own anchored matcher delivers this (´dec:xchg:regexp-engine´); the
-    /// alternation case beside it is the counterexample that rules out ever
-    /// recovering anchoring from a span check.
+    /// own anchored matcher delivers this (´dec:xchg:regexp-engine´).
+    ///
+    /// The alternation case is the counterexample that rules out ever
+    /// recovering anchoring from a span check: a leftmost-first engine
+    /// matches `a` in `a|ab` and reports span 0..1, so a span check would
+    /// reject a subject XSD accepts through the second alternative.
     #[test]
     fn xsd_whole_string_matching() {
         let p = compile("a");
@@ -195,9 +198,6 @@ mod tests {
         assert!(!p.is_match("ba").expect("within budget"));
         assert!(!p.is_match("bab").expect("within budget"));
 
-        // The counterexample that rules out a span check: a leftmost-first
-        // engine matches `a` here and reports span 0..1, so a span check
-        // rejects a subject XSD accepts through the second alternative.
         let alternation = compile("a|ab");
         assert!(alternation.is_match("ab").expect("within budget"));
         assert!(!alternation.is_match("abc").expect("within budget"));

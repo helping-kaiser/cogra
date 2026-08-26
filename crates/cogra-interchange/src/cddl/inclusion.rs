@@ -302,8 +302,6 @@ fn own_rule<'t>(table: &'t RuleTable, name: &str) -> Option<&'t super::resolve::
     table.get(name).filter(|rule| !rule.is_from_prelude())
 }
 
-// -- the names a type reaches ---------------------------------------------
-
 fn names_of_body(body: &RuleBody, into: &mut Vec<String>) {
     match body {
         RuleBody::Type(ty) => names_of_type(ty, into),
@@ -370,10 +368,11 @@ fn names_of_entry(entry: &GroupEntry, into: &mut Vec<String>) {
     }
 }
 
+/// The rule names a member key reaches, which only a type key can do: a
+/// bareword key denotes the text string of its spelling and a literal key
+/// denotes itself.
 fn names_of_member_key(key: &MemberKey, into: &mut Vec<String>) {
     match &key.kind {
-        // A bareword key denotes the text string of its spelling and a
-        // literal key denotes itself; neither reaches a rule.
         MemberKeyKind::Bareword(_) | MemberKeyKind::Value(_) => {}
         MemberKeyKind::Type { key, .. } => names_of_type1(key, into),
     }

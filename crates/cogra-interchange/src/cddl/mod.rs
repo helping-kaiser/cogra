@@ -720,13 +720,14 @@ mod tests {
         );
     }
 
+    /// The expected source is what reaches the engine, `\.`, and not what the
+    /// CDDL literal writes for it, `\\.`.
     #[test]
     fn the_base_theory_carries_the_conventions_pattern() {
         let pattern = match global().pattern_of("namespace-form") {
             Some(pattern) => pattern,
             None => panic!("the base theory has no compiled namespace-form pattern"),
         };
-        // The CDDL literal writes `\\.`; what reaches the engine is `\.`.
         assert_eq!(
             pattern.source(),
             r"[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+"
