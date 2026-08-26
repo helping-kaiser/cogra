@@ -28,9 +28,15 @@ fn guidelines_hash() -> String {
     }
 }
 
+/// Runs the bootstrap and prints what an operator needs afterwards: the
+/// genesis identity, the login that reaches it, and the one-time recovery
+/// code. `.env` is read first, with the same precedence the server uses
+/// (main.rs).
+///
+/// The admission burn is seeded at 100 units, which buys an admitted
+/// account roughly 1893 acts at the reference θ.
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // .env first — precedence rationale in main.rs.
     dotenvy::dotenv().ok();
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
@@ -51,7 +57,7 @@ async fn main() -> anyhow::Result<()> {
         display_name: env_or("GENESIS_DISPLAY_NAME", "Genesis Moderator"),
         guidelines_version: "1".to_string(),
         guidelines_hash: guidelines_hash(),
-        burn_per_account_micro: 100_000_000, // 100 units ≈ 1893 acts at reference θ
+        burn_per_account_micro: 100_000_000,
     };
     let handle = input.handle.clone();
 
@@ -70,7 +76,6 @@ async fn main() -> anyhow::Result<()> {
         println!("  Genesis Moderator : {id} (@{handle}, L0 address {address})");
     }
 
-    // The operator's way in (bootstrap.rs `ensure_operator_login`).
     let email = env_or("GENESIS_EMAIL", "genesis@cogra.local");
     let password = env_or("GENESIS_PASSWORD", "genesis-dev-password");
     let login = api::bootstrap::ensure_operator_login(&pool, &handle, &email, &password).await?;

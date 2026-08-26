@@ -191,6 +191,42 @@ impl Rig {
     }
 }
 
+/// The whole admission arc, through the real HTTP surface: the inviter
+/// logs in and issues a link; the applicant's device checks the
+/// capability anonymously before the form; registration creates the
+/// account and returns an ordinary session, so the person is simply
+/// logged in from there on.
+///
+/// The fresh account reads its own state — applicant, unverified,
+/// application pending both proofs — and acting is member-gated, so an
+/// applicant preparing a stance is a FORBIDDEN transport fault rather
+/// than a userError. The two proofs then land: email verification with
+/// the token read "from the inbox", and the key ceremony as a logged-in
+/// step where the device mints the key and attaches the public halves.
+///
+/// The inviter approves from the queue, adjusting the pre-filled stance;
+/// the funding burn lands on the applicant's own address; the inviter
+/// signs their vouch through the generic relay legs, and the applicant's
+/// device signs the staged Registration on next open, discovering it
+/// through a `me`-driven poll and the ordinary staged-write surface.
+/// Until the epoch closes the account is still an applicant. Confirmation
+/// is the epoch close plus ingestion: landing flips the account to
+/// member, and nothing moves and nothing is claimed — the session never
+/// stopped being an ordinary session.
+///
+/// Reciprocation is then the joiner's own act toward the account that
+/// vouched them in, discovered through the viewer's provenance read (the
+/// genesis-seeded inviter carries no such trace, so the field is
+/// vacuously true there). The prompt-driving field reads false before any
+/// gesture, true from the staged write while the act is in flight — the
+/// latch, being the mirror-confirmed cache, is not set yet — and once the
+/// mirror shows the Opinion the read latches it onto the landed
+/// application row and stays true from the latch alone.
+///
+/// At the end the shared graph carries the Registration and the mutual
+/// Opinion pair, the joiner's act has debited their own funded balance,
+/// and the account's rows are the ones registration created, with the
+/// session list showing the registration device.
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -198,7 +234,6 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
         .seed_member("inviter", "inviter@example.com", "a strong password")
         .await;
 
-    // The inviter logs in and issues a link.
     let login = rig
         .gql(
             None,
@@ -232,8 +267,6 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
         .expect("link")
         .to_string();
 
-    // The applicant's device checks the capability anonymously before
-    // the form.
     let check = rig
         .gql(
             None,
@@ -246,8 +279,6 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
     assert_eq!(check["inviteLinkCheck"]["usable"], true);
     assert_eq!(check["inviteLinkCheck"]["inviterHandle"], "inviter");
 
-    // Registration creates the account and returns an ordinary session
-    // — the person is simply logged in from here on.
     let registered = rig
         .gql(
             None,
@@ -277,8 +308,6 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
         .parse()
         .expect("uuid");
 
-    // The fresh account reads its own state: an applicant, unverified,
-    // application pending both proofs.
     let me = rig
         .gql(
             Some(&joiner_token),
@@ -291,8 +320,6 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
     assert_eq!(me["me"]["emailVerified"], false);
     assert_eq!(me["me"]["application"]["keyAttached"], false);
 
-    // Acting is member-gated: an applicant preparing a stance is a
-    // FORBIDDEN transport fault, not a userError.
     let refused = rig
         .gql_raw(
             Some(&joiner_token),
@@ -308,7 +335,6 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
         .await;
     assert_eq!(refused["errors"][0]["extensions"]["code"], "FORBIDDEN");
 
-    // Email verification, token read "from the inbox".
     let verification = rig.mailer.latest_token_for("joiner@example.com");
     let verified = rig
         .gql(
@@ -321,8 +347,6 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
         .await;
     assert_eq!(verified["verifyEmail"]["ok"], true);
 
-    // The key ceremony, as a logged-in step: the device mints the key
-    // and attaches the public halves — the other approvability proof.
     let joiner_key = ActorKey::generate();
     let attached = rig
         .gql(
@@ -343,8 +367,6 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
     assert_eq!(proofs["emailVerified"], true);
     assert_eq!(proofs["keyAttached"], true);
 
-    // The inviter sees the application in the approval queue and
-    // approves, adjusting the pre-filled stance.
     let queue = rig
         .gql(
             Some(&inviter_token),
@@ -382,7 +404,6 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
     assert_eq!(opinion_writes.as_array().expect("writes").len(), 1);
     assert_eq!(opinion_writes[0]["family"], "OPINION");
 
-    // The funding burn landed on the applicant's own address.
     let funded = rig
         .standin
         .balance(&joiner_key.address())
@@ -390,13 +411,9 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
         .expect("balance");
     assert!(funded.burned_total > 0.0);
 
-    // The inviter signs their vouch through the generic relay legs.
     rig.sign_prepared(&inviter_token, &inviter_key, opinion_writes)
         .await;
 
-    // The applicant's device signs the staged Registration on next open.
-    // The poll is `me`-driven: the application shows approved, and the
-    // staged write rides the ordinary staged-write surface.
     let view = rig
         .gql(
             Some(&joiner_token),
@@ -426,7 +443,6 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
     rig.sign_prepared(&joiner_token, &joiner_key, &registration_writes)
         .await;
 
-    // Before the epoch closes, the account is still an applicant.
     let early = rig
         .gql(
             Some(&joiner_token),
@@ -436,10 +452,6 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
         .await;
     assert_eq!(early["me"]["accountState"], "APPLICANT");
 
-    // Confirm: the epoch closes, ingestion lands the Registration and
-    // the vouch, and landing flips the account to member — nothing
-    // moves, nothing is claimed; the session never stopped being an
-    // ordinary session.
     rig.close_and_ingest().await;
 
     let landed = rig
@@ -456,9 +468,6 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
     assert_eq!(landed["me"]["displayName"]["status"], "NORMAL");
     assert!(landed["me"]["application"]["landedAt"].is_string());
 
-    // Reciprocation — the joiner's own act toward the account that
-    // vouched them in, discovered through the viewer's provenance read.
-    // The genesis-seeded inviter carries no such trace.
     let provenance = rig
         .gql(
             Some(&joiner_token),
@@ -468,7 +477,6 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
         .await;
     assert_eq!(provenance["me"]["invitedBy"]["handle"], "inviter");
     assert_eq!(provenance["me"]["invitedBy"]["id"], inviter_id.to_string());
-    // No gesture yet: the prompt-driving field reads false.
     assert_eq!(provenance["me"]["hasReciprocated"], false);
     let inviter_provenance = rig
         .gql(
@@ -478,7 +486,6 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
         )
         .await;
     assert!(inviter_provenance["me"]["invitedBy"].is_null());
-    // Vacuously true without an invitedBy trace.
     assert_eq!(inviter_provenance["me"]["hasReciprocated"], true);
 
     let reciprocation = rig
@@ -503,8 +510,6 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
     )
     .await;
 
-    // In flight: the staged write answers true, but the latch — the
-    // mirror-confirmed cache — is not set yet.
     let in_flight = rig
         .gql(
             Some(&joiner_token),
@@ -523,8 +528,6 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
 
     rig.close_and_ingest().await;
 
-    // Confirmed: the mirror shows the Opinion, the read latches it on
-    // the landed application row, and stays true from the latch alone.
     for _ in 0..2 {
         let confirmed = rig
             .gql(
@@ -544,8 +547,6 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
         assert!(latched.is_some());
     }
 
-    // The shared graph now carries the Registration and the mutual
-    // Opinion pair; the joiner's act debited their own funded balance.
     let records: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM mirror_records")
         .fetch_one(&rig.pool)
         .await
@@ -558,8 +559,6 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
         .expect("balance");
     assert_eq!(joiner_balance.action_count, 2);
 
-    // The account's rows are the ones registration created, and the
-    // session list shows the registration device.
     let me = rig
         .gql(
             Some(&joiner_token),
@@ -614,7 +613,6 @@ async fn the_attached_key_reads_for_its_viewer_only(pool: PgPool) {
         .expect("session")
         .to_string();
 
-    // The viewer reads their own attached identity.
     let me = rig
         .gql(
             Some(&inviter_token),
@@ -631,7 +629,6 @@ async fn the_attached_key_reads_for_its_viewer_only(pool: PgPool) {
         inviter_key.address()
     );
 
-    // An applicant before the ceremony reads null for both.
     let link = rig
         .gql(
             Some(&inviter_token),
@@ -679,8 +676,6 @@ async fn the_attached_key_reads_for_its_viewer_only(pool: PgPool) {
         "no key before the ceremony"
     );
     assert!(me["me"]["l0Address"].is_null());
-    // The inviter HAS a key, but read as someone else's User both
-    // fields stay null.
     assert!(me["me"]["invitedBy"]["actorPubkey"].is_null());
     assert!(me["me"]["invitedBy"]["l0Address"].is_null());
 }

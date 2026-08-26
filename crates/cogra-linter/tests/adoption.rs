@@ -736,6 +736,7 @@ fn the_enforcement_section_round_trips() {
             PathPrefix::new("crates/postgres-store/"),
             PathPrefix::new("crates/l1-standin/"),
             PathPrefix::new("crates/common/"),
+            PathPrefix::new("crates/api/"),
             PathPrefix::new("docs/"),
         ]
     );
@@ -754,6 +755,10 @@ fn enforcement_is_decided_by_the_finding_s_path() {
     );
     assert_eq!(
         enforcement.enforcement_for(Path::new("crates/api/src/lib.rs")),
+        Enforcement::Failing
+    );
+    assert_eq!(
+        enforcement.enforcement_for(Path::new("android/app/src/main/AndroidManifest.xml")),
         Enforcement::Advisory
     );
 }

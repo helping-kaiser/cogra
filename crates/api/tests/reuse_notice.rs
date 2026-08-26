@@ -99,6 +99,12 @@ const REFRESH: &str = "mutation($input: RefreshSessionInput!) {
 /// Rotates once and re-presents the consumed token past the grace
 /// window, arming the reuse-detection mark; asserts the collapsed
 /// refresh-time code.
+///
+/// The rotation is backdated behind the grace window because an
+/// immediate replay would be answered idempotently rather than read as
+/// theft. The code that comes back is the plain-invalid one: reuse and
+/// invalidity collapse together, so the presenter — possibly the thief —
+/// is never told detection fired.
 async fn detect_reuse(rig: &Rig, refresh_token: &str) {
     let rotated = rig
         .gql(
@@ -107,8 +113,6 @@ async fn detect_reuse(rig: &Rig, refresh_token: &str) {
         )
         .await;
     assert!(rotated["data"]["refreshSession"]["auth"]["refreshToken"].is_string());
-    // Shift the rotation behind the grace window: an immediate replay
-    // would be answered idempotently, not read as theft.
     let hash = api::auth::hash_of(refresh_token);
     sqlx::query(
         "UPDATE auth_refresh_tokens
@@ -124,8 +128,6 @@ async fn detect_reuse(rig: &Rig, refresh_token: &str) {
             json!({ "input": { "refreshToken": refresh_token } }),
         )
         .await;
-    // Reuse and plain-invalid share one code: the presenter — possibly
-    // the thief — is never told detection fired.
     assert_eq!(
         reused["data"]["refreshSession"]["userErrors"][0]["code"],
         "REFRESH_TOKEN_INVALID"
@@ -133,13 +135,15 @@ async fn detect_reuse(rig: &Rig, refresh_token: &str) {
     assert!(reused["data"]["refreshSession"]["auth"].is_null());
 }
 
+/// The carrier is null before any detection, carries the timestamp on the
+/// first successful login after it, and is clean again on the next —
+/// delivered exactly once.
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_notice_rides_the_first_login_after_detection(pool: PgPool) {
     let rig = Rig::new(pool);
     rig.seed_user("alice", "a@example.com", "a strong password")
         .await;
 
-    // Before any detection the carrier is null.
     let clean = rig.log_in("a@example.com", "a strong password").await;
     assert!(clean["data"]["logIn"]["reuseDetectedAt"].is_null());
     let refresh_token = clean["data"]["logIn"]["auth"]["refreshToken"]
@@ -149,14 +153,14 @@ async fn the_notice_rides_the_first_login_after_detection(pool: PgPool) {
 
     detect_reuse(&rig, &refresh_token).await;
 
-    // The first login after detection carries the timestamp; the next
-    // one is clean again — delivered exactly once.
     let notified = rig.log_in("a@example.com", "a strong password").await;
     assert!(notified["data"]["logIn"]["reuseDetectedAt"].is_string());
     let after = rig.log_in("a@example.com", "a strong password").await;
     assert!(after["data"]["logIn"]["reuseDetectedAt"].is_null());
 }
 
+/// A wrong password neither leaks the pending mark nor consumes it, so
+/// the notice still waits for the next successful login.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_refusal_never_carries_or_clears_the_notice(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -170,7 +174,6 @@ async fn a_refusal_never_carries_or_clears_the_notice(pool: PgPool) {
 
     detect_reuse(&rig, &refresh_token).await;
 
-    // A wrong password neither leaks the pending mark nor consumes it.
     let refused = rig.log_in("a@example.com", "wrong password").await;
     assert_eq!(
         refused["data"]["logIn"]["userErrors"][0]["code"],

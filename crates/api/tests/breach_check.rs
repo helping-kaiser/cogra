@@ -68,9 +68,10 @@ async fn an_absent_suffix_reports_clean() {
     ));
 }
 
+/// Add-Padding responses list the queried suffix itself with count 0, so
+/// a listed suffix reads as clean unless its count is positive.
 #[tokio::test]
 async fn a_padding_entry_reports_clean() {
-    // Padded responses list the suffix with count 0 — not a breach.
     let (_, suffix) = split_digest("padded password");
     let corpus =
         HibpCorpus::with_base_url(range_server(StatusCode::OK, format!("{suffix}:0")).await)

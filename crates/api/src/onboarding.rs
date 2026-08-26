@@ -1,9 +1,11 @@
-// The applicant-as-account admission flow (auth.md "Account lifecycle";
-// invitations.md §4): link → registration (a real account + session) →
-// the key ceremony as a logged-in attach → funding burn at approval →
-// staged Registration signed on the device → landing flips the account
-// to member. The backend orchestrates and relays; the applicant's own
-// signatures ground the actor — nothing here can author for anyone.
+//! The applicant-as-account admission flow (auth.md "Account lifecycle";
+//! invitations.md §4): link → registration (a real account + session) →
+//! the key ceremony as a logged-in attach → funding burn at approval →
+//! staged Registration signed on the device → landing flips the account
+//! to member.
+//!
+//! The backend orchestrates and relays; the applicant's own signatures
+//! ground the actor, so nothing here can author for anyone.
 
 use chrono::{DateTime, Duration, Utc};
 use common::l1::census::Family;
@@ -118,10 +120,6 @@ impl From<RelayError> for OnboardingError {
     }
 }
 
-// ---------------------------------------------------------------------
-// Registration
-// ---------------------------------------------------------------------
-
 /// The registration form (api-spec `register`): the invite capability
 /// plus the login triple.
 #[derive(Debug, Clone)]
@@ -145,6 +143,12 @@ pub struct RegisteredAccount {
 /// state, and the application row, then an ordinary session. Handle and
 /// email conflicts surface here, at the form. Pure L2 — nothing touches
 /// L1.
+///
+/// The two bounds differ (auth.md "Expiry"): the account dies unverified
+/// on its own clock, while the application row is bounded by the invite
+/// link's expiry. The verification mail carries the link URL and the bare
+/// token beside it, the universal fallback native apps accept as a paste
+/// (auth.md "Link URLs").
 pub async fn register(
     pool: &PgPool,
     auth_cfg: &AuthConfig,
@@ -184,8 +188,6 @@ pub async fn register(
         &password_hash,
         &verification.hash,
         dead_before(),
-        // The application row, not the account, is bounded by its
-        // link's expiry (auth.md "Expiry").
         link.expires_at,
     )
     .await?;
@@ -199,8 +201,6 @@ pub async fn register(
         .send(Mail {
             to: email,
             subject: "Verify your CoGra email".into(),
-            // The link URL (auth.md "Link URLs") plus the bare token —
-            // the universal fallback native apps accept as a paste.
             body: format!(
                 "Verify your email: {web_origin}/verify?token={token}\nOr paste the token in the app: {token}\n\nThe account expires in {UNVERIFIED_TTL_HOURS} hours if unverified.",
                 token = verification.token
@@ -252,24 +252,21 @@ pub async fn resend_verification(
     Ok(())
 }
 
-// ---------------------------------------------------------------------
-// The key ceremony's server half
-// ---------------------------------------------------------------------
-
 /// Attaches the device-minted actor identity to the viewer's account
 /// (auth.md §Application step 3; the mutation doc carries the contract).
 /// ActorKeyInUse guards against a duplicate Registration wedging the
 /// second admission behind an unlandable record.
+///
+/// The ceremony's two outputs must cohere: the submitted L0 address has
+/// to be the one the submitted public key controls. Approval funds a burn
+/// to that address, and funding one the key cannot spend from would
+/// strand the admission (substrate.md §6).
 pub async fn attach_actor_key(
     pool: &PgPool,
     account_id: Uuid,
     actor_pubkey: Vec<u8>,
     l0_address: String,
 ) -> Result<(), OnboardingError> {
-    // The ceremony's outputs must cohere: the L0 address is the one the
-    // submitted public key controls — approval funds a burn to it, and
-    // funding an address the key cannot spend from would strand the
-    // admission (substrate.md §6).
     let verifying =
         crypto::verifying_key_from_bytes(&actor_pubkey).ok_or(OnboardingError::BadInput {
             field: "actorPubkey",
@@ -287,10 +284,6 @@ pub async fn attach_actor_key(
         store::AttachOutcome::Refused => Err(OnboardingError::Forbidden),
     }
 }
-
-// ---------------------------------------------------------------------
-// Re-arming an expired application
-// ---------------------------------------------------------------------
 
 /// Re-arms an expired, never-approved application with a fresh invite
 /// link — a new application row for the viewer's account (auth.md
@@ -328,10 +321,6 @@ pub async fn apply_with_invite(
         .ok_or_else(|| OnboardingError::Internal("application vanished after creation".into()))
 }
 
-// ---------------------------------------------------------------------
-// Approval — the inviter's priced act
-// ---------------------------------------------------------------------
-
 /// One approval: the application plus the stance values the inviter
 /// commits (pre-filled from the link, adjusted at will).
 #[derive(Debug, Clone)]
@@ -346,6 +335,11 @@ pub struct Approval {
 /// prepares the inviter's own Opinion records — the vouch is the
 /// inviter's signature, never a server write (api-spec
 /// `approveApplicants`).
+///
+/// Every entry is validated before any is executed, so the mutation
+/// refuses a bad batch wholesale rather than half-approving it. Failures
+/// after that pass are per-entry: the approvals that already executed
+/// stand, and their repair path is the applicant's own status poll.
 pub async fn approve_applicants<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -354,8 +348,6 @@ pub async fn approve_applicants<B: L1Boundary>(
     inviter: Uuid,
     approvals: &[Approval],
 ) -> Result<Vec<prepare::Prepared>, Vec<(usize, OnboardingError)>> {
-    // Validate every entry before executing any: the mutation refuses
-    // wholesale rather than half-approving a batch.
     let mut errors = Vec::new();
     let mut applications = Vec::with_capacity(approvals.len());
     for (i, approval) in approvals.iter().enumerate() {
@@ -383,9 +375,6 @@ pub async fn approve_applicants<B: L1Boundary>(
         {
             Ok(opinion) => prepared.push(opinion),
             Err(e) => {
-                // Execution failures after the validation pass are
-                // surfaced per entry; already-executed approvals stand —
-                // their repair path is the applicant's own poll.
                 errors.push((i, e));
             }
         }
@@ -397,6 +386,11 @@ pub async fn approve_applicants<B: L1Boundary>(
     }
 }
 
+/// Checks one approval is the inviter's to make and still live.
+///
+/// The approval queue is issuer-visible only, so someone else's queue
+/// reads as an unknown application rather than a refusal — the two are
+/// deliberately indistinguishable to the caller.
 async fn validate_approval(
     pool: &PgPool,
     inviter: Uuid,
@@ -418,8 +412,6 @@ async fn validate_approval(
         .await?
         .ok_or_else(|| OnboardingError::Internal("application without a link".into()))?;
     if link.inviter_id != inviter {
-        // Someone else's queue reads as an unknown application — the
-        // approval queue is issuer-visible only.
         return Err(OnboardingError::BadInput {
             field: "application",
             message: "unknown application".into(),
@@ -452,6 +444,13 @@ async fn validate_approval(
     Ok(application)
 }
 
+/// Executes one validated approval: marks it, runs the admission
+/// sequence, and prepares the inviter's vouching Opinion.
+///
+/// Marking is the concurrency gate — a concurrent duplicate approval
+/// loses on the `approved_at` guard, before any burn. The Opinion the
+/// inviter then signs depends on the Registration, so it orders after
+/// the anchor it vouches for (invitations.md §2).
 async fn approve_one<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -461,8 +460,6 @@ async fn approve_one<B: L1Boundary>(
     approval: &Approval,
     application: &store::Application,
 ) -> Result<prepare::Prepared, OnboardingError> {
-    // The approved_at guard is the concurrency gate: a concurrent
-    // duplicate approval loses here, before any burn.
     let account_id = store::approve_application(pool, application.id)
         .await?
         .ok_or(OnboardingError::BadInput {
@@ -476,9 +473,6 @@ async fn approve_one<B: L1Boundary>(
     let registration = ensure_admission_staged(pool, boundary, funding, cfg, &approved).await?;
     let applicant_address = actor_address(pool, account_id).await?;
 
-    // The inviter's Opinion toward the new Profile, dependent on the
-    // Registration so it orders after the anchor it vouches for
-    // (invitations.md §2).
     let inviter_address = actor_address(pool, inviter).await?;
     let opinion = prepare::prepare(
         boundary,
@@ -531,7 +525,21 @@ fn registration_payload(handle: &str) -> Vec<u8> {
 /// heals on the applicant's next status poll (`User.application`).
 /// Reachable concurrently from the approving mutation and that poll;
 /// serialized on the application row so the sequence runs at most once
-/// at a time.
+/// at a time. The transaction exists only to hold that row lock — the
+/// writes below it commit on their own connections — so a loser queues
+/// there and then finds the winner's work: the staged admission row, and
+/// the burn via the B_i read.
+///
+/// Only the unchained Registration counts as the admission one. A profile
+/// update is also `Family::Registration` but always asserts its chain
+/// parent (substrate.md §9), so it must neither satisfy the
+/// already-staged check nor hide the admission row behind itself.
+///
+/// The funding guard is the applicant address's zero burn history, which
+/// is sound because that address is fresh — minted at the key ceremony
+/// and funded only by this flow. The burn atomically writes the very fact
+/// that guards it, so a crash on either side heals correctly on the next
+/// poll, and the comparison against zero is exact in `f64`.
 pub async fn ensure_admission_staged<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -546,10 +554,6 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
         });
     }
 
-    // The transaction exists only to hold the row lock; the writes below
-    // commit on their own connections. A loser queues here and then finds
-    // the winner's work: the staged admission row, the burn
-    // via the B_i read.
     let mut lock = pool.begin().await?;
     if !store::lock_application(&mut lock, application.id).await? {
         return Err(OnboardingError::Internal(
@@ -557,10 +561,6 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
         ));
     }
 
-    // Only the unchained Registration is the admission one: a profile
-    // update is also Family::Registration but always asserts its chain
-    // parent (substrate.md §9), so it must neither satisfy this check
-    // nor hide the admission row behind it.
     if let Some(existing) = staged::list_for_actor(pool, application.account_id)
         .await
         .map_err(|e| OnboardingError::Internal(e.to_string()))?
@@ -580,13 +580,6 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
     }
 
     let address = actor_address(pool, application.account_id).await?;
-    // The applicant's address is fresh — minted at the key ceremony and
-    // funded only by this flow — so a zero burn history is the funding
-    // idempotency guard (no double-fund on repair): the burn atomically
-    // writes the very fact guarding it, so a crash on either side of it
-    // heals correctly on the next poll. Exact comparison is sound — the
-    // guard only ever compares against zero, which f64 represents
-    // exactly.
     let balance = boundary
         .balance(&address)
         .await
@@ -622,10 +615,6 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
     lock.commit().await?;
     Ok(prepared)
 }
-
-// ---------------------------------------------------------------------
-// Landing and the reaper
-// ---------------------------------------------------------------------
 
 /// Confirm-side landing (auth.md "Approval and landing" step 4): every
 /// promoted Registration flips its account's approved application to
