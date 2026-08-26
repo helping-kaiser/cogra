@@ -18,7 +18,7 @@
 //! silently skips a byte has classified nothing and reported nothing.
 //!
 //! It is guaranteed structurally rather than by inspection. A language's
-//! lexer never appends a lexeme itself: it hands spans to [`Partitioning`],
+//! lexer never appends a lexeme itself: it hands spans to `Partitioning`,
 //! which fills the run before each one with a [`LexClass::Code`] lexeme and
 //! closes the tail at the end of the input. A lexer that forgets a stretch
 //! therefore produces `Code` over it, which is the invariant's own failure
