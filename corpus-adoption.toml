@@ -1242,9 +1242,10 @@ below.
 failing = [
   "crates/cogra-linter/docs/",
   "crates/cogra-interchange/docs/",
+  "docs/",
 ]
 
-# What those two prefixes carry, and what they deliberately do not.
+# What those three prefixes carry, and what they deliberately do not.
 #
 # crates/cogra-linter/docs/ — the four discipline documents, the
 #   linter architecture, and the linter's own phase artifacts. The
@@ -1255,9 +1256,14 @@ failing = [
 # crates/cogra-interchange/docs/ — that crate's phase artifacts, whose
 #   concept and design are written under the discipline and whose
 #   audit and commissioning notes join them.
+# docs/ — the four doc-tree owners at once, since one prefix covers
+#   what four would and the partition's own rules decide ownership
+#   below it. R20 left the trees carrying no occurrence: every
+#   label-shaped span there is displayed, so the prefix enforces
+#   emptiness and catches the next stray span on the commit that
+#   writes it.
 #
 # DELIBERATELY ADVISORY, each awaiting its own migration:
-#   docs/            — 61 label-shaped spans queued for reforming (R20)
 #   crates/*/src/    — ~1210 plain comments queued for the ban sweep
 #   android/, web/   — no frontend before slices 7 and 8
 # The linter's own src/ joins the failing set when it exists: it is
