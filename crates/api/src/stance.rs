@@ -1,18 +1,16 @@
-// The generic stance gesture (api-spec.md "The generic stance"): one write
-// for sentiment and connection toward any passive node. The target selects
-// the family — Affinity toward a Type, Opinion toward everything else
-// (edges.md §2).
-//
-// The record carries exactly the values picked. It is one new edge against
-// the author's bundle, never a delta derived from it: "the pad writes a
-// single record carrying exactly the values picked... It never computes a
-// delta against your history" (design.md §8.1). Where the bundle lands is a
-// read-side fold the picker shows (`bundle`), never folded into what is
-// written.
-//
-// Severance is the one gesture that does state a net: it walks the bundle
-// to (0,0) with counter-records, each its own priced act
-// (feed-ranking.md §8.1).
+//! The generic stance gesture (api-spec.md "The generic stance"): one
+//! write for sentiment and connection toward any passive node. The target
+//! selects the family — Affinity toward a Type, Opinion toward everything
+//! else (edges.md §2).
+//!
+//! The record carries exactly the values picked: one new edge against the
+//! author's bundle, never a delta derived from it (design.md §8.1). Where
+//! the bundle lands is a read-side fold the picker shows (`bundle`), never
+//! folded into what is written.
+//!
+//! Severance is the one gesture that does state a net: it walks the bundle
+//! to `(0, 0)` with counter-records, each its own priced act
+//! (feed-ranking.md §8.1).
 
 use common::l1::census::Family;
 use common::l1::fold::BundleSum;
@@ -54,9 +52,11 @@ pub struct StanceTarget {
 /// no id to resolve here. A Type resolves to Affinity — the follow-topic
 /// gesture — and everything else to Opinion (api-spec.md "The generic
 /// stance").
+///
+/// A keyless account — an applicant before its ceremony — has no Profile
+/// on the graph to point at, and so meets the same refusal as an unknown
+/// id.
 pub async fn resolve_target(pool: &PgPool, target: Uuid) -> Result<StanceTarget, StanceError> {
-    // A keyless account (an applicant before its ceremony) has no Profile on
-    // the graph to point at — the same refusal as an unknown id.
     let node = if let Some(address) = store::actor_identity(pool, target)
         .await?
         .and_then(|identity| identity.l0_address)
