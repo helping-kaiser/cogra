@@ -10,7 +10,8 @@ fn label(s: &str) -> NamespaceLabel {
 
 /// The derived `Ord` compares fields in declaration order, and that order
 /// is the lexicographic one the conventions fix. A field reordering breaks
-/// this test before it breaks anything downstream.
+/// this test before it breaks anything downstream: a greater minor outranks
+/// any patch, and a greater major any minor.
 #[test]
 fn versions_are_ordered_major_then_minor_then_patch() {
     let ascending = [
@@ -28,7 +29,6 @@ fn versions_are_ordered_major_then_minor_then_patch() {
         assert!(window[0] < window[1], "{:?} < {:?}", window[0], window[1]);
     }
 
-    // A greater minor outranks any patch, and a greater major any minor.
     assert!(Version::new(1, 1, 0) > Version::new(1, 0, u64::MAX));
     assert!(Version::new(2, 0, 0) > Version::new(1, u64::MAX, u64::MAX));
 }

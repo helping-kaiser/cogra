@@ -58,6 +58,8 @@ fn the_name_of_a_document_is_the_map_of_its_parts() {
     );
 }
 
+/// The map view and the byte view agree, which is what lets satisfaction
+/// consume the one and transit carry the other.
 #[test]
 fn documents_survive_the_round_trip_through_bytes() {
     let documents = [
@@ -80,8 +82,6 @@ fn documents_survive_the_round_trip_through_bytes() {
         assert_eq!(decoded, document);
         assert_eq!(decoded.to_canonical_bytes(), bytes);
 
-        // The map view and the byte view agree, which is what lets
-        // satisfaction consume the one and transit carry the other.
         assert_eq!(
             Document::try_from_value(&document.to_value()).expect("a document"),
             document
@@ -220,10 +220,10 @@ fn the_envelope_keys_are_refused_as_content_keys() {
     assert!(ContentKey::new(2).is_ok());
 }
 
+/// The unsorted case is a map with its keys out of canonical order: it is
+/// well-formed CBOR, and no name of the data language.
 #[test]
 fn bytes_outside_the_data_language_are_not_documents() {
-    // A map with its keys out of canonical order: well-formed CBOR, and no
-    // name of the data language.
     let unsorted = [0xa2, 0x01, 0x00, 0x00, 0x00];
     let error = Document::from_canonical_bytes(&unsorted).expect_err("unsorted keys");
     assert!(matches!(error, EnvelopeError::NotCanonical(_)));

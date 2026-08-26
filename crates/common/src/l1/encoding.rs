@@ -1,14 +1,17 @@
-// Canonical serialization for seam objects. L1 declares serialization a
-// deployment concern (layer1-interface.md §8.2,
-// `rem:graph:authentication-realization-out-of-scope`); this deployment
-// uses a small deterministic subset of CBOR (RFC 8949): definite lengths
-// only, shortest-form integer heads, IEEE 754 double-precision floats,
-// field order fixed by the encoder. Maps and tags exist for the Peer
-// Content Envelope (common::envelope); key ordering there is the
-// caller's obligation — the encoder writes entries in call order, and
-// the envelope feeds it from sorted collections. Hand-rolled so
-// determinism is by construction, not by library configuration; golden
-// tests pin the byte layout.
+//! Canonical serialization for seam objects.
+//!
+//! L1 declares serialization a deployment concern (layer1-interface.md
+//! §8.2); this deployment uses a small deterministic subset of CBOR
+//! (RFC 8949): definite lengths only, shortest-form integer heads,
+//! IEEE 754 double-precision floats, field order fixed by the encoder.
+//!
+//! Maps and tags exist for the Peer Content Envelope (common::envelope);
+//! key ordering there is the caller's obligation — the encoder writes
+//! entries in call order, and the envelope feeds it from sorted
+//! collections.
+//!
+//! Hand-rolled so determinism is by construction, not by library
+//! configuration; golden tests pin the byte layout.
 
 /// Deterministic CBOR writer over the subset the seam needs.
 #[derive(Default)]
@@ -345,6 +348,7 @@ mod tests {
         );
     }
 
+    /// Tag 55799 is the envelope magic, written D9 D9F7 (RFC 8949 §3.4.6).
     #[test]
     fn golden_map_and_tag() {
         assert_eq!(
@@ -353,7 +357,6 @@ mod tests {
             }),
             [0xA1, 0x00, 0x61, b'x']
         );
-        // Tag 55799 is the envelope magic: D9 D9F7 (RFC 8949 §3.4.6).
         assert_eq!(
             enc(|e| {
                 e.tag(55799);
@@ -370,16 +373,16 @@ mod tests {
         d.finish().expect("valid");
     }
 
+    /// The 8-byte form is written verbatim from the bit pattern, so -0.0
+    /// keeps its sign bit: one encoding per bit pattern, no normalization.
     #[test]
     fn golden_float() {
-        // 1.0 = 0x3FF0000000000000
         assert_eq!(
             enc(|e| {
                 e.float(1.0);
             }),
             [0xFB, 0x3F, 0xF0, 0, 0, 0, 0, 0, 0]
         );
-        // -0.0 keeps its sign bit — one representation per bit pattern.
         assert_eq!(
             enc(|e| {
                 e.float(-0.0);
