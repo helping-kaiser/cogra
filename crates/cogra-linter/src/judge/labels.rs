@@ -335,8 +335,8 @@ pub fn warrant_totality(g: &Corpus, _r: &Registries, a: &Adoption) -> Vec<Diagno
 ///
 /// Effective is read off the `Profile` node's own status, because a staged
 /// profile carries no `Covers` edges and no inventory judgment runs over it
-/// (´dec:lint:staged-profiles´): both of this corpus's profiles are staged,
-/// so the domain is empty and the judgment passes vacuously.
+/// (´dec:lint:staged-profiles´): a staged profile's assets are outside the
+/// domain, and the judgment quantifies over what the profiles in force cover.
 ///
 /// The per-owner scope is `owner_view`, which is the architecture's views-not-
 /// wrappers rule taken literally: the orphan scan is a filtered graph handed
