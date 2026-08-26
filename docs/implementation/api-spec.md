@@ -2502,6 +2502,17 @@ sub-surfaces: the inputs below are the target contract, and each
 arrives with the work that carries it (media with the media
 follow-up, `actAs` with collectives).
 
+A tag batch is checked whole before a single act is staged, each
+refusal a field-level `userError` naming the offender: at most
+**ten** tags per batch, a named constant; names compared after
+canonicalization, so `["rust", "Rust", "#rust"]` is one claim
+submitted three times and is refused rather than deduplicated —
+silently dropping an act the author asked for, or charging three θ
+for one claim the fold reads once, are both worse than saying no;
+and confidence outside `[0, 1]`, which the census would refuse as a
+formation fault, refused on the `pInterest` path instead. A
+malformed batch must not leave half its acts in flight.
+
 ```graphql
 "One attachment placement within a gallery. Assets are uploaded
  first via uploadMedia; the envelope commits their digests."
@@ -2513,14 +2524,17 @@ input AttachmentInput {
 
 "A topic declaration — one Tag record toward the canonical Type
  (names are normalized by the naming service; a new name needs no
- creation act, Types anchor vacuously — hashtag.md). Parameters
- default per the low-defaults policy; Tag confidence is
- census-bounded to [0, 1]. Re-tagging a name revises the claim —
- the newest record per (author, content, Type) wins, and relevance
- 0 is the un-tag, read as withdrawn (hashtag.md §4)."
+ creation act, Types anchor vacuously — hashtag.md). Re-tagging a
+ name revises the claim — the newest record per (author, content,
+ Type) wins, and relevance 0 is the un-tag, read as withdrawn
+ (hashtag.md §4)."
 input TagInput {
   name: String!
+  "Relevance `r`; defaults to +0.1, the low-defaults value."
   pDirected: Dimension
+  "Confidence `c`, census-bounded to [0, 1]; defaults to 1 — an
+   author believes their own declaration, and confidence is not a
+   stance whose headroom needs preserving."
   pInterest: Dimension
 }
 
@@ -2609,6 +2623,21 @@ input PrepareCommentEditInput {
   attachments: [AttachmentInput!]
 }
 
+"One standalone topic declaration on existing content — the gesture
+ that adds a topic after creation, and, at pDirected: 0, the one
+ that withdraws it. There is no un-tag mutation: withdrawal is a
+ further Tag. Tags are never edit fields; changing a post's topics
+ is its own priced act (post.md §3). Tagging is not restricted to
+ the content's author — the read side separates the author's own
+ declarations from third-party claims."
+input PrepareTagInput {
+  "The content being tagged."
+  target: UUID!
+  name: String!
+  pDirected: Dimension
+  pInterest: Dimension
+}
+
 "Update the acting identity's profile — stages a parallel
  Registration: L1's own profile-update idiom, payload only, never
  identity (substrate.md §9). Covers the display fields and the
@@ -2654,6 +2683,7 @@ extend type Mutation {
   preparePost(input: PreparePostInput!): PrepareContentPayload!
   preparePostEdit(input: PreparePostEditInput!): PrepareContentPayload!
   prepareComment(input: PrepareCommentInput!): PrepareContentPayload!
+  prepareTag(input: PrepareTagInput!): PreparePayload!
   prepareCommentEdit(input: PrepareCommentEditInput!): PrepareContentPayload!
   prepareProfileUpdate(input: PrepareProfileUpdateInput!): PreparePayload!
   uploadMedia(input: UploadMediaInput!): UploadMediaPayload!
