@@ -1,12 +1,12 @@
-// Exports `client-crypto-vectors.json` (repo root) — the cross-language
-// golden vectors pinning the client-side crypto the Kotlin and TypeScript
-// apps re-implement: the deterministic CBOR subset, the tagged hashing and
-// Ed25519 signing, the admission-handshake messages (l1::client), and the
-// key-backup blob format (auth.md "Blob format (v1)").
-//
-// The default run asserts the committed file matches this crate, so drift
-// fails `cargo test`; `make vectors` (UPDATE_CLIENT_VECTORS=1) rewrites it.
-// Every value is derived from fixed seeds — nothing here is random.
+//! Exports `client-crypto-vectors.json` (repo root) — the cross-language
+//! golden vectors pinning the client-side crypto the Kotlin and TypeScript
+//! apps re-implement: the deterministic CBOR subset, the tagged hashing and
+//! Ed25519 signing, the admission-handshake messages (l1::client), and the
+//! key-backup blob format (auth.md "Blob format (v1)").
+//!
+//! The default run asserts the committed file matches this crate, so drift
+//! fails `cargo test`; `make vectors` (UPDATE_CLIENT_VECTORS=1) rewrites it.
+//! Every value is derived from fixed seeds — nothing here is random.
 
 use std::path::Path;
 
@@ -93,6 +93,15 @@ fn encoding_vectors() -> Value {
     ])
 }
 
+/// Builds the whole vector document.
+///
+/// The handshake section runs exactly as l1::client performs it, under a
+/// fixed nonce and fixed host salts, so every intermediate value is pinned —
+/// and the real client approval path is then made to accept the fixture it
+/// pins. The key-backup section seals through the shipping module under a
+/// fixed code, salt and nonce, with the real open path accepting that
+/// fixture in turn. The upload proof (auth.md "Key recovery") has the actor
+/// key sign the server's challenge bound to those exact blob bytes.
 fn build_vectors() -> Value {
     let actor_seed: [u8; 32] = seq_bytes(0x01, 32).try_into().expect("32 bytes");
     let actor = ActorKey::from_seed(actor_seed);
@@ -140,8 +149,6 @@ fn build_vectors() -> Value {
         ],
     };
 
-    // The full handshake, exactly as l1::client performs it, under a fixed
-    // nonce and fixed host salts so every intermediate value is pinned.
     let proposal = Proposal {
         body: body.clone(),
         payload: b"hello, cogra".to_vec(),
@@ -180,7 +187,6 @@ fn build_vectors() -> Value {
     };
     sealed.host_seal = crypto::sign(&host, tags::HOST_SEAL, &sealed.seal_msg());
 
-    // The real client path must accept the fixture it pins.
     let witness = actor
         .approve(&pre, &sealed, host.verifying_key().as_bytes())
         .expect("the client approval path accepts the sealed act");
@@ -201,9 +207,6 @@ fn build_vectors() -> Value {
         sealed
     );
 
-    // The key-backup blob (auth.md "Blob format (v1)") via the shipping
-    // module, under a fixed code, salt, and nonce; the real open path
-    // must accept the fixture it pins.
     let code_bytes: [u8; 16] = seq_bytes(0x00, 16).try_into().expect("16 bytes");
     let hkdf_salt: [u8; 16] = seq_bytes(0x51, 16).try_into().expect("16 bytes");
     let aes_nonce: [u8; 12] = seq_bytes(0x61, 12).try_into().expect("12 bytes");
@@ -225,8 +228,6 @@ fn build_vectors() -> Value {
         e.finish()
     };
 
-    // The upload proof (auth.md "Key recovery"): the actor key signs the
-    // server's challenge bound to these exact blob bytes.
     let upload_challenge: [u8; key_backup::CHALLENGE_LEN] =
         seq_bytes(0x71, key_backup::CHALLENGE_LEN)
             .try_into()

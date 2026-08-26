@@ -1249,10 +1249,11 @@ failing = [
   "crates/cogra-interchange/docs/",
   "crates/postgres-store/",
   "crates/l1-standin/",
+  "crates/common/",
   "docs/",
 ]
 
-# What those five prefixes carry, and what they deliberately do not.
+# What those six prefixes carry, and what they deliberately do not.
 #
 # crates/cogra-linter/ — the whole crate, by first-match prefix: the
 #   four discipline documents, the linter architecture, the linter's
@@ -1280,6 +1281,15 @@ failing = [
 #   vendored_files) and mints nothing here, so acute-quoting them
 #   would cite a mint resolving nowhere in this corpus. Reworded to
 #   plain-prose section citations instead.
+# crates/common/ — the whole crate, having completed the ban sweep of ARCH
+#   dec:linter:rust-comment-ban. Its src/ and tests/ carry documentation
+#   comments only: every why a plain comment held now documents the item it
+#   governs, and what merely narrated the next line is gone. The crate also
+#   holds the L1 seam's Rust surface, where doc comments name the L1
+#   document by section rather than by its label anchors — that document is
+#   outside the carrier ([carrier] vendored_files), so its names never
+#   become citations here. The prefix is the crate's, not one tree's,
+#   because the ban is.
 # docs/ — the four doc-tree owners at once, since one prefix covers
 #   what four would and the partition's own rules decide ownership
 #   below it. R20 left the trees carrying no occurrence: every
@@ -1288,10 +1298,9 @@ failing = [
 #   writes it.
 #
 # DELIBERATELY ADVISORY, each awaiting its own migration:
-#   crates/api/, crates/common/, crates/cogra-interchange/src/ — plain
-#     comments still queued for the ban sweep, MEASURED 2026-08-26 by
-#     the linter itself: api 795, cogra-interchange 541, common 197
-#     (before the topics-fold additions). src/ and tests/ alike; the
+#   crates/api/, crates/cogra-interchange/src/ — findings still queued
+#     for the ban sweep, MEASURED 2026-08-26 by the linter itself:
+#     api 805, cogra-interchange 584. src/ and tests/ alike; the
 #     interchange crate's docs/ is already failing, above.
 #   android/, web/   — no frontend before slices 7 and 8
 
