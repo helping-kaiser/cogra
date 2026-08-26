@@ -30,7 +30,7 @@ says which:
    data every profile must fix; the fact that Π ⊆ K; that working
    notes are their own owner.)
 2. **The repository speaks.** Measured, cited with the number.
-   (Example: 1570 test-attributed functions; 0 test-name collisions;
+   (Example: 1571 test-attributed functions; 0 test-name collisions;
    `mod rig;` declared eleven times for one definition.)
 3. **Neither speaks.** Then it was ruled on 2026-08-21, and the
    **Rulings** section below records what stands and why. No fourth
@@ -167,7 +167,7 @@ of measurement resolving a reading of the discipline.
 **Injectivity is already satisfied for tests, and for modules only
 after the exclusion.** Measured per owner: `api` 239 distinct test names
 of 239, `cogra-interchange` 474/474, `cogra-linter` 682/682, `common`
-101/101, `l1-standin` 15/15, `postgres-store` 59/59 — **no renaming
+101/101, `l1-standin` 15/15, `postgres-store` 60/60 — **no renaming
 needed anywhere**. ``inv:labels:inventory`` calls a collision "a naming
 defect of the assets", and this corpus has none. The module profile
 would fail immediately on 36 `#[cfg(test)] mod tests` definitions;
@@ -605,9 +605,9 @@ the corpus: a slice that adds Rust sources re-measures them.
 | Fact | Value |
 |---|---|
 | Cargo packages | 4 built (`api`, `common`, `l1-standin`, `postgres-store`) + 2 pending (`cogra-linter`, `cogra-interchange`, docs-only) |
-| Rust sources (2026-08-26) | 170 `.rs` files |
-| Test-attributed functions (2026-08-26) | 1570, the `rust-test` census |
-| Test-name collisions per owner (2026-08-26) | 0 (239/239, 474/474, 682/682, 101/101, 15/15, 59/59) |
+| Rust sources (2026-08-26) | 171 `.rs` files |
+| Test-attributed functions (2026-08-26) | 1571, the `rust-test` census |
+| Test-name collisions per owner (2026-08-26) | 0 (239/239, 474/474, 682/682, 101/101, 15/15, 60/60) |
 | `mod` declarations (2026-08-26) | 137, of which 36 `mod tests` and 11 `mod rig;` for one definition |
 | Module definitions needing a `//!` label (2026-08-26) | 87, the whole `rust-module` census — it grows with the corpus, so slices that add Rust modules re-measure it |
 | Plain `//` comment occurrences | ~1210 |
