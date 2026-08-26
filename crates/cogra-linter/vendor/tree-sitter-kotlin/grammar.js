@@ -149,7 +149,6 @@ module.exports = grammar({
     [$.parenthesized_type, $.parenthesized_expression],
     [$.parenthesized_type, $.parenthesized_user_type],
 
-    [$.call_expression, $.navigation_expression],
     [$.class_parameter, $.simple_identifier],
     [$.variable_declaration, $.simple_identifier],
     [$.parameter, $.simple_identifier],
@@ -609,21 +608,126 @@ module.exports = grammar({
 
     // ---- SECTION: expressions ----
     //
-    // KotlinParser.g4 states precedence as a cascade of rules; the same
-    // ordering is expressed here with `prec.left` levels, which is how
-    // tree-sitter documents binary precedence.
+    // KotlinParser.g4 states operator precedence as a cascade of rules,
+    // each level naming the next. That cascade is reproduced literally
+    // here rather than collapsed into one rule carrying `prec.left`
+    // levels.
+    //
+    // The collapsed form is the usual tree-sitter shorthand and it
+    // accepts the same language, but it reaches that language through an
+    // ambiguous grammar that the GLR conflict machinery then has to take
+    // apart at every level. Measured on this grammar, that cost 25,684
+    // parse states and an 85 MB parser.c. The cascade is unambiguous by
+    // construction, which is the whole reason the specification is
+    // written this way.
+    //
+    // Each level is a hidden rule choosing between "pass through" and
+    // "apply this operator", so a level that does no work leaves no node
+    // in the tree.
 
-    _expression: $ => choice(
-      $.binary_expression,
-      $.infix_expression,
-      $.as_expression,
-      $.prefix_expression,
-      $.postfix_expression,
-      $.call_expression,
-      $.indexing_expression,
-      $.navigation_expression,
-      // KotlinParser.g4 `primaryExpression`, folded in: a separate
-      // supertype for it only duplicates parse states.
+    _expression: $ => $._disjunction,
+
+    _disjunction: $ => choice($._conjunction, $.disjunction_expression),
+    disjunction_expression: $ => prec.left(seq(
+      field('left', $._disjunction), '||', field('right', $._conjunction),
+    )),
+
+    _conjunction: $ => choice($._equality, $.conjunction_expression),
+    conjunction_expression: $ => prec.left(seq(
+      field('left', $._conjunction), '&&', field('right', $._equality),
+    )),
+
+    _equality: $ => choice($._comparison, $.equality_expression),
+    equality_expression: $ => prec.left(seq(
+      field('left', $._equality),
+      field('operator', $.equality_operator),
+      field('right', $._comparison),
+    )),
+
+    _comparison: $ => choice($._infix_operation, $.comparison_expression),
+    comparison_expression: $ => prec.left(seq(
+      field('left', $._comparison),
+      field('operator', $.comparison_operator),
+      field('right', $._infix_operation),
+    )),
+
+    // KotlinParser.g4 `infixOperation`. The right operand is an
+    // expression after `in`/`!in` and a type after `is`/`!is`.
+    _infix_operation: $ => choice($._elvis_expression, $.infix_operation),
+    infix_operation: $ => prec.left(seq(
+      field('left', $._infix_operation),
+      choice(
+        seq(field('operator', $.in_operator), field('right', $._elvis_expression)),
+        seq(field('operator', $.is_operator), field('right', $._type)),
+      ),
+    )),
+
+    _elvis_expression: $ => choice($._infix_function_call, $.elvis_expression),
+    elvis_expression: $ => prec.left(seq(
+      field('left', $._elvis_expression), '?:', field('right', $._infix_function_call),
+    )),
+
+    // `a to b`, `x shl 2`: any identifier may be an infix operator.
+    _infix_function_call: $ => choice($._range_expression, $.infix_function_call),
+    infix_function_call: $ => prec.left(seq(
+      field('left', $._infix_function_call),
+      field('operator', $.simple_identifier),
+      field('right', $._range_expression),
+    )),
+
+    _range_expression: $ => choice($._additive_expression, $.range_expression),
+    range_expression: $ => prec.left(seq(
+      field('left', $._range_expression),
+      choice('..', '..<'),
+      field('right', $._additive_expression),
+    )),
+
+    _additive_expression: $ => choice($._multiplicative_expression, $.additive_expression),
+    additive_expression: $ => prec.left(seq(
+      field('left', $._additive_expression),
+      field('operator', $.additive_operator),
+      field('right', $._multiplicative_expression),
+    )),
+
+    _multiplicative_expression: $ => choice($._as_expression, $.multiplicative_expression),
+    multiplicative_expression: $ => prec.left(seq(
+      field('left', $._multiplicative_expression),
+      field('operator', $.multiplicative_operator),
+      field('right', $._as_expression),
+    )),
+
+    _as_expression: $ => choice($._prefix_unary_expression, $.as_expression),
+    as_expression: $ => prec.left(seq(
+      field('left', $._as_expression),
+      field('operator', $.as_operator),
+      field('right', $._type),
+    )),
+
+    // KotlinParser.g4 `prefixUnaryExpression : unaryPrefix* postfixUnaryExpression`
+    _prefix_unary_expression: $ => choice($._postfix_unary_expression, $.prefix_expression),
+    prefix_expression: $ => prec.right(seq(
+      field('operator', $.unary_prefix),
+      field('operand', $._prefix_unary_expression),
+    )),
+
+    unary_prefix: $ => choice($.annotation, $.label, $.prefix_unary_operator),
+
+    // KotlinParser.g4 `postfixUnaryExpression : primaryExpression postfixUnarySuffix*`
+    _postfix_unary_expression: $ => choice($._primary_expression, $.postfix_expression),
+    postfix_expression: $ => prec.left(seq(
+      field('operand', $._postfix_unary_expression),
+      field('suffix', $.postfix_unary_suffix),
+    )),
+
+    postfix_unary_suffix: $ => choice(
+      $.postfix_unary_operator,
+      $.type_arguments,
+      $.call_suffix,
+      $.indexing_suffix,
+      $.navigation_suffix,
+    ),
+
+    _primary_expression: $ => choice(
       $.parenthesized_expression,
       $.simple_identifier,
       $._literal_constant,
@@ -640,56 +744,6 @@ module.exports = grammar({
       $.try_expression,
       $.jump_expression,
     ),
-
-    binary_expression: $ => choice(
-      prec.left(PREC.DISJUNCTION, seq($._expression, '||', $._expression)),
-      prec.left(PREC.CONJUNCTION, seq($._expression, '&&', $._expression)),
-      prec.left(PREC.EQUALITY, seq($._expression, $.equality_operator, $._expression)),
-      prec.left(PREC.COMPARISON, seq($._expression, $.comparison_operator, $._expression)),
-      prec.left(PREC.ELVIS, seq($._expression, '?:', $._expression)),
-      prec.left(PREC.INFIX_FUNCTION, seq($._expression, $.simple_identifier, $._expression)),
-      prec.left(PREC.RANGE, seq($._expression, choice('..', '..<'), $._expression)),
-      prec.left(PREC.ADDITIVE, seq($._expression, $.additive_operator, $._expression)),
-      prec.left(PREC.MULTIPLICATIVE, seq($._expression, $.multiplicative_operator, $._expression)),
-    ),
-
-    // `in`/`is` tests: the right operand is an expression for `in` and a
-    // type for `is` (KotlinParser.g4 `infixOperation`).
-    infix_expression: $ => prec.left(PREC.INFIX_OPERATION, choice(
-      seq($._expression, $.in_operator, $._expression),
-      seq($._expression, $.is_operator, $._type),
-    )),
-
-    as_expression: $ => prec.left(PREC.AS, seq(
-      $._expression,
-      $.as_operator,
-      $._type,
-    )),
-
-    prefix_expression: $ => prec.right(PREC.PREFIX, seq(
-      choice($.annotation, $.label, $.prefix_unary_operator),
-      $._expression,
-    )),
-
-    postfix_expression: $ => prec.left(PREC.POSTFIX, seq(
-      $._expression,
-      $.postfix_unary_operator,
-    )),
-
-    call_expression: $ => prec.left(PREC.POSTFIX, seq(
-      $._expression,
-      $.call_suffix,
-    )),
-
-    indexing_expression: $ => prec.left(PREC.POSTFIX, seq(
-      $._expression,
-      $.indexing_suffix,
-    )),
-
-    navigation_expression: $ => prec.left(PREC.POSTFIX, seq(
-      $._expression,
-      $.navigation_suffix,
-    )),
 
     indexing_suffix: $ => seq(
       '[',
