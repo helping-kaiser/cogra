@@ -2718,7 +2718,7 @@ extend type Mutation {
 ```
 
 Chat metadata has no edit mutation: a chat revises by succession,
-never in place — a passed `decision:set:metadata` proposal is
+never in place — a passed ``decision:set:metadata`` proposal is
 executed by the chat's system actor as one succession act whose
 founding payload carries the new values
 ([chats.md §8](../instances/chats.md#8-chat-metadata-and-updates)).
@@ -2920,7 +2920,7 @@ extend type Mutation {
 
 For a Collective, settlement signatures (Accept / Ratify) are
 governance-acts: default deny, routed through the contract
-(`decision:transfer:Item`) so the cascade performs the gesture
+(``decision:transfer:Item``) so the cascade performs the gesture
 only after the internal vote passes.
 
 ### Tipping
