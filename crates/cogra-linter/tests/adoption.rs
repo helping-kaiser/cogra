@@ -733,6 +733,7 @@ fn the_enforcement_section_round_trips() {
         vec![
             PathPrefix::new("crates/cogra-linter/"),
             PathPrefix::new("crates/cogra-interchange/docs/"),
+            PathPrefix::new("crates/api/"),
             PathPrefix::new("docs/"),
         ]
     );
@@ -751,6 +752,10 @@ fn enforcement_is_decided_by_the_finding_s_path() {
     );
     assert_eq!(
         enforcement.enforcement_for(Path::new("crates/api/src/lib.rs")),
+        Enforcement::Failing
+    );
+    assert_eq!(
+        enforcement.enforcement_for(Path::new("android/app/src/main/AndroidManifest.xml")),
         Enforcement::Advisory
     );
 }
