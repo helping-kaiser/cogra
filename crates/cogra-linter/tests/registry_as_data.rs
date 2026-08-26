@@ -873,7 +873,7 @@ fn every_declared_family_is_recognized() {
 
 /// No rule identifier of this module is label-shaped.
 #[test]
-fn no_rule_identifier_is_label_shaped() {
+fn no_registry_rule_identifier_is_label_shaped() {
     for rule in judge::kinds::RULES {
         assert!(!rule.as_str().contains(':'), "{rule} is label-shaped");
     }
