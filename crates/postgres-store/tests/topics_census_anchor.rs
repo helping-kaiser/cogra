@@ -17,22 +17,29 @@ use sqlx::PgPool;
 
 const NODE: &str = "mint:act:ada:7:publish";
 
+/// A stored T-leg beside its record, read back raw: record id, target,
+/// `p_d`, `p_i`, epoch, act_time, position, payload mark. The hand
+/// computation reads these columns, not the store's interpretation of
+/// them.
+type RawLeg = (String, String, f64, f64, i64, i64, i64, bool);
+
 /// One Tag record and its terminal leg, written the way the census
 /// renders a Tag's T-leg: `p_d` carries confidence, `p_i` carries
 /// relevance.
-#[allow(clippy::too_many_arguments)]
+///
+/// `claim` is the act tuple `(relevance, confidence)`; `key` is the
+/// causal key `(epoch, act_time, position)` the fold orders on.
 async fn land_tag(
     pool: &PgPool,
     record_id: &str,
     author: &str,
     name: &str,
-    relevance: f64,
-    confidence: f64,
-    epoch: i64,
-    act_time: i64,
-    position: i64,
+    claim: (f64, f64),
+    key: (i64, i64, i64),
     payload_marked: bool,
 ) {
+    let (relevance, confidence) = claim;
+    let (epoch, act_time, position) = key;
     sqlx::query(
         "INSERT INTO mirror_records
              (record_id, family, author, epoch, act_time, position,
@@ -82,13 +89,15 @@ async fn land_tag(
 /// - **chess** — `r5` is ada's own claim, `r6` a stranger's louder one
 ///   on the same content.
 async fn fixture(pool: &PgPool) {
-    land_tag(pool, "r1", "ada", "cryptography", 0.40, 0.90, 3, 100, 0, false).await;
-    land_tag(pool, "r2", "ada", "cryptography", -0.75, 0.25, 3, 100, 5, false).await;
-    land_tag(pool, "r3", "ada", "gardening", 0.60, 0.30, 2, 500, 9, false).await;
-    land_tag(pool, "r4", "ada", "gardening", 0.0, 0.80, 5, 1, 0, false).await;
-    land_tag(pool, "r5", "ada", "chess", 0.15, 1.00, 4, 7, 2, false).await;
-    land_tag(pool, "r6", "bob", "chess", 0.95, 0.50, 6, 9, 1, false).await;
-    land_tag(pool, "r7", "ada", "cryptography", 0.0, 0.0, 7, 900, 0, true).await;
+    let crypto = "cryptography";
+    let garden = "gardening";
+    land_tag(pool, "r1", "ada", crypto, (0.40, 0.90), (3, 100, 0), false).await;
+    land_tag(pool, "r2", "ada", crypto, (-0.75, 0.25), (3, 100, 5), false).await;
+    land_tag(pool, "r3", "ada", garden, (0.60, 0.30), (2, 500, 9), false).await;
+    land_tag(pool, "r4", "ada", garden, (0.0, 0.80), (5, 1, 0), false).await;
+    land_tag(pool, "r5", "ada", "chess", (0.15, 1.00), (4, 7, 2), false).await;
+    land_tag(pool, "r6", "bob", "chess", (0.95, 0.50), (6, 9, 1), false).await;
+    land_tag(pool, "r7", "ada", crypto, (0.0, 0.0), (7, 900, 0), true).await;
 }
 
 /// The fold, computed by hand from the fixture and asserted against the
@@ -110,7 +119,7 @@ async fn fixture(pool: &PgPool) {
 async fn hand_computed_fold_agrees(pool: PgPool) {
     fixture(&pool).await;
 
-    let raw: Vec<(String, String, f64, f64, i64, i64, i64, bool)> = sqlx::query_as(
+    let raw: Vec<RawLeg> = sqlx::query_as(
         "SELECT r.record_id, l.target, l.p_d, l.p_i, r.epoch, r.act_time,
                 r.position, r.payload_marked
          FROM mirror_record_legs l
@@ -146,9 +155,15 @@ async fn hand_computed_fold_agrees(pool: PgPool) {
         "topics_of disagrees with the hand-computed fold"
     );
 
-    let owned = topics::tagged_with(&pool, "chess", TagChannel::AuthorOwned, TopicView::Landed, 10)
-        .await
-        .expect("author-owned");
+    let owned = topics::tagged_with(
+        &pool,
+        "chess",
+        TagChannel::AuthorOwned,
+        TopicView::Landed,
+        10,
+    )
+    .await
+    .expect("author-owned");
     println!("AUTHOR-OWNED {owned:?}");
     assert_eq!(owned.len(), 1, "only the author's own claim is intrinsic");
     assert_eq!(owned[0].author, "ada");
