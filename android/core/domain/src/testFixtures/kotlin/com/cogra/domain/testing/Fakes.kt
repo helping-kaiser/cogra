@@ -138,6 +138,14 @@ class FakeIdentityStore : IdentityStore {
         inputMode.value = mode
     }
 
+    private val confirmMultiAction = MutableStateFlow(true)
+
+    override val confirmMultiActionSubmits: Flow<Boolean> = confirmMultiAction
+
+    override suspend fun setConfirmMultiActionSubmits(value: Boolean) {
+        confirmMultiAction.value = value
+    }
+
     override suspend fun forgetOnSignOut(): Boolean = forgetOnSignOut
 
     override suspend fun setForgetOnSignOut(value: Boolean) {
@@ -151,6 +159,7 @@ class FakeIdentityStore : IdentityStore {
         stancePadTaught = false
         forgetOnSignOut = false
         inputMode.value = StanceInputMode.Default
+        confirmMultiAction.value = true
         handshakes.clear()
     }
 }

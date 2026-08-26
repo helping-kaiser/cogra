@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -26,6 +27,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -92,6 +94,7 @@ fun SettingsRoute(
         onEmailChangeCodeChange = viewModel::onEmailChangeCodeChange,
         onConfirmEmailChange = viewModel::onConfirmEmailChange,
         onStanceInputMode = viewModel::onStanceInputMode,
+        onConfirmMultiActionSubmits = viewModel::onConfirmMultiActionSubmits,
         onFeedbackShown = viewModel::onFeedbackShown,
         onSignOut = viewModel::onSignOut,
         keyBanner = keyBanner,
@@ -119,6 +122,7 @@ fun SettingsScreen(
     onEmailChangeCodeChange: (String) -> Unit,
     onConfirmEmailChange: () -> Unit,
     onStanceInputMode: (StanceInputMode) -> Unit,
+    onConfirmMultiActionSubmits: (Boolean) -> Unit,
     onFeedbackShown: () -> Unit,
     onSignOut: () -> Unit,
     keyGate: KeyGate = rememberKeyGate(),
@@ -181,6 +185,7 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             BackupSection(state, onCreateBackup, onBackupCodeSaved, onExportKey, keyGate)
+            WritingSection(state.confirmMultiActionSubmits, onConfirmMultiActionSubmits)
             StanceInputSection(state.stanceInputMode, onStanceInputMode)
             SessionsSection(state, onRevokeSession, onRevokeOthers)
             CredentialsSection(
@@ -198,6 +203,52 @@ fun SettingsScreen(
                     .testTag("settings_sign_out"),
             ) {
                 Text(stringResource(R.string.settings_sign_out))
+            }
+        }
+    }
+}
+
+/**
+ * The way back from "don't ask me again" (F4). A `Switch`, because it
+ * is one setting that is on or off and takes effect immediately —
+ * Material's own reading of the control.
+ */
+@Composable
+private fun WritingSection(
+    confirmMultiActionSubmits: Boolean,
+    onConfirmMultiActionSubmits: (Boolean) -> Unit,
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = stringResource(R.string.settings_writing_title),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.semantics { heading() },
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    // One target for label and switch, announced once.
+                    .toggleable(
+                        value = confirmMultiActionSubmits,
+                        role = Role.Switch,
+                        onValueChange = onConfirmMultiActionSubmits,
+                    )
+                    .testTag("settings_confirm_multi_action"),
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        stringResource(R.string.settings_confirm_multi_action),
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_confirm_multi_action_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(checked = confirmMultiActionSubmits, onCheckedChange = null)
             }
         }
     }
