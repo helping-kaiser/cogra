@@ -64,38 +64,8 @@ query Hashtag($name: String!, $limit: Int, $includePending: Boolean!) {
   }
 }
 
-query TopicStanding($name: String!, $includePending: Boolean!) {
-  hashtag(name: $name) {
-    viewerStance(includePending: $includePending) {
-      ...StanceBundleFields
-    }
-  }
-}
-
 mutation PrepareTag($input: PrepareTagInput!) {
   prepareTag(input: $input) {
-    writes {
-      ...PreparedWriteFields
-    }
-    userErrors {
-      ...UserErrorFields
-    }
-  }
-}
-
-mutation PrepareTopicFollow($input: PrepareStanceInput!) {
-  prepareStance(input: $input) {
-    writes {
-      ...PreparedWriteFields
-    }
-    userErrors {
-      ...UserErrorFields
-    }
-  }
-}
-
-mutation PrepareTopicUnfollow($input: PrepareSeveranceInput!) {
-  prepareSeverance(input: $input) {
     writes {
       ...PreparedWriteFields
     }

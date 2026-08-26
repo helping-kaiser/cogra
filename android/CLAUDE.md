@@ -38,7 +38,8 @@ banners), `feature:invites`, `feature:settings`, slice 2's
 `feature:content`, slice 2.1's `feature:profile`, slice 2.2's
 `feature:stance` (the stance control, embedded in post cards,
 comments, and profiles), and slice 2.3's `feature:topics` (the topic
-screen — name, follow control, tagged content).
+screen — name and tagged content; following a topic is a slice-3
+surface).
 `core:ranker` arrives with slice 3.
 
 The split:

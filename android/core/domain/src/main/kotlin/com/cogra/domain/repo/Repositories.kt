@@ -343,16 +343,4 @@ interface TopicRepository {
         pDirected: Double? = null,
         pInterest: Double? = null,
     ): Outcome<List<PreparedWriteView>>
-
-    /** The viewer's own Affinity bundle toward the named topic — the follow control's read. */
-    suspend fun followStanding(name: String, includePending: Boolean = true): Outcome<StanceStanding>
-
-    /** Stages the follow record for [pick] toward the named topic. */
-    suspend fun prepareFollow(name: String, pick: StancePair): Outcome<List<PreparedWriteView>>
-
-    /** What unfollowing the named topic would take — the severance confirm's read side. */
-    suspend fun followSeveranceQuote(name: String, includePending: Boolean = true): Outcome<SeveranceQuote>
-
-    /** Unfollow: severance toward the topic, reusing the existing confirm flow (D9). */
-    suspend fun prepareUnfollow(name: String): Outcome<List<PreparedWriteView>>
 }
