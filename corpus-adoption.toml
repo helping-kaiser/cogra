@@ -1252,10 +1252,11 @@ failing = [
   "crates/postgres-store/",
   "crates/l1-standin/",
   "crates/common/",
+  "crates/api/",
   "docs/",
 ]
 
-# What those six prefixes carry, and what they deliberately do not.
+# What those seven prefixes carry, and what they deliberately do not.
 #
 # crates/cogra-linter/ — the whole crate, by first-match prefix: the
 #   four discipline documents, the linter architecture, the linter's
@@ -1295,6 +1296,15 @@ failing = [
 #   outside the carrier ([carrier] vendored_files), so its names never
 #   become citations here. The prefix is the crate's, not one tree's,
 #   because the ban is.
+# crates/api/ — the whole crate, the largest to complete the ban sweep of
+#   ARCH dec:linter:rust-comment-ban, and the one that closes it: 805
+#   findings swept, src/ and tests/ alike. Both carry documentation
+#   comments only — every why a plain comment held now documents the item
+#   it governs, and what merely narrated the next line is gone. Its ten
+#   near-misses named L1-surface definitions, which only look
+#   label-shaped; that document is outside the carrier ([carrier]
+#   vendored_files), so they became plain-prose section citations. The
+#   prefix is the crate's, not one tree's, because the ban is.
 # docs/ — the four doc-tree owners at once, since one prefix covers
 #   what four would and the partition's own rules decide ownership
 #   below it. R20 left the trees carrying no occurrence: every
@@ -1303,9 +1313,6 @@ failing = [
 #   writes it.
 #
 # DELIBERATELY ADVISORY, each awaiting its own migration:
-#   crates/api/ — the one crate still queued for the ban sweep,
-#     MEASURED 2026-08-26 by the linter itself: 805 findings, src/ and
-#     tests/ alike.
 #   android/, web/   — no frontend before slices 7 and 8
 
 

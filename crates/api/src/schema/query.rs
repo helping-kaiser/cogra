@@ -37,12 +37,12 @@ pub struct Query;
 #[Object]
 impl Query {
     /// Reports whether the API can reach its store, and how far the record
-    /// mirror has ingested.
+    /// mirror has ingested. Answers even when the store does not, so a
+    /// dumb probe always gets a response: a failed cursor read comes back
+    /// as a null `mirrorEpoch` rather than an error, and so stays
+    /// distinguishable from the legitimate "-1, nothing ingested".
     async fn health(&self, ctx: &Context<'_>) -> async_graphql::Result<Health> {
         let pool = ctx.data::<PgPool>()?;
-        // A failed cursor read must not collapse into the legitimate
-        // "-1, nothing ingested" — health stays answerable for dumb
-        // probes, so the failure reads as null rather than an error.
         let mirror_epoch = match postgres_store::mirror::last_ingested_epoch(pool).await {
             Ok(epoch) => Some(epoch),
             Err(e) => {
@@ -258,7 +258,9 @@ impl Query {
     /// landing order. `target` matches a record's target (the middle
     /// node on hyper families); `terminal` matches the terminal leg —
     /// a comment's revision chain is `records(terminal: <comment>)`.
-    /// An id that resolves to no known node yields an empty page.
+    /// The UUID filters translate to the mirror's own identifiers, so an
+    /// id that resolves to no known node yields an empty page rather than
+    /// an error — the same contract a null slot in `nodes` carries.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
     #[allow(clippy::too_many_arguments)]
     async fn records(
@@ -285,9 +287,6 @@ impl Query {
             until_epoch,
             ..Default::default()
         };
-        // UUID filters translate to the mirror's own identifiers; an
-        // unresolvable id matches nothing rather than erroring — the
-        // same contract as a null slot in `nodes`.
         if let Some(author) = author {
             match store::actor_identity(pool, author)
                 .await?

@@ -1,10 +1,12 @@
-// The breach-corpus password check (auth.md "Password requirements"):
-// a haveibeenpwned-style hash-prefix lookup at registration and password
-// change. The trait is the seam, mirroring the Mailer; the real corpus
-// is the HIBP Pwned Passwords range API — k-anonymity, so only the
-// first five hex characters of the SHA-1 ever leave the process, with
-// Add-Padding defeating response-size analysis. Lookups fail OPEN at
-// the call site (auth.rs `validate_new_password`).
+//! The breach-corpus password check (auth.md "Password requirements"): a
+//! haveibeenpwned-style hash-prefix lookup at registration and password
+//! change.
+//!
+//! The trait is the seam, mirroring the Mailer. The real corpus is the
+//! HIBP Pwned Passwords range API, queried under k-anonymity: only the
+//! first five hex characters of the SHA-1 ever leave the process, and
+//! Add-Padding defeats response-size analysis. Lookups fail OPEN at the
+//! call site (auth.rs `validate_new_password`).
 
 use std::future::Future;
 use std::pin::Pin;
@@ -123,11 +125,13 @@ mod tests {
         assert_eq!(occurrences(body, "0018a45c4d1def81644b54ab7f969b88d65"), 1);
     }
 
+    /// Nothing but a positive count reports as breached: a padding entry,
+    /// an absent suffix, an empty body, and an unparseable line all come
+    /// back clean.
     #[test]
     fn padding_and_absent_suffixes_are_clean() {
         let body = "0018A45C4D1DEF81644B54AB7F969B88D65:0\r\n\
                     00D4F6E8FA6EECAD2A3AA415EEC418D38EC:2";
-        // A padding entry (count 0) is not a breach.
         assert_eq!(occurrences(body, "0018A45C4D1DEF81644B54AB7F969B88D65"), 0);
         assert_eq!(occurrences(body, "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"), 0);
         assert_eq!(occurrences("", "ANY"), 0);

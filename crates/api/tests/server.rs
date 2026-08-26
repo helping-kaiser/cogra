@@ -62,10 +62,11 @@ async fn graphql_health_reports_store_and_mirror(pool: PgPool) {
     assert_eq!(health["backendVersion"], env!("CARGO_PKG_VERSION"));
 }
 
+/// With the cursor table dropped out from under the resolver, the failed
+/// read surfaces as null — never as the legitimate "-1, nothing
+/// ingested", which a probe would read as a healthy empty mirror.
 #[sqlx::test(migrations = "../../migrations")]
 async fn health_reports_a_failed_cursor_read_as_null(pool: PgPool) {
-    // Break the cursor out from under the resolver: a failed read must
-    // surface as null, never as the legitimate "-1, nothing ingested".
     sqlx::query("DROP TABLE mirror_epoch_cursor")
         .execute(&pool)
         .await
@@ -156,6 +157,10 @@ async fn seed_link(
     .id
 }
 
+/// A live link reads usable, named, and bounded; a revoked one still
+/// resolves but unusable; an unknown id resolves to null, so a guess
+/// learns nothing. Expiry is compared as an instant rather than a string,
+/// because Postgres stores microseconds.
 #[sqlx::test(migrations = "../../migrations")]
 async fn invite_link_check_reads_the_capability_anonymously(pool: PgPool) {
     let expires = chrono::Utc::now() + chrono::Duration::days(1);
@@ -163,18 +168,15 @@ async fn invite_link_check_reads_the_capability_anonymously(pool: PgPool) {
     let query =
         format!("{{ inviteLinkCheck(id: \"{link}\") {{ usable inviterHandle expiresAt }} }}");
 
-    // A live link reads usable, named, and bounded.
     let data = gql(test_app(pool.clone()), query.clone()).await;
     let check = &data["inviteLinkCheck"];
     assert_eq!(check["usable"], true);
     assert_eq!(check["inviterHandle"], "inviter");
-    // Postgres stores microseconds; compare instants, not strings.
     let served =
         chrono::DateTime::parse_from_rfc3339(check["expiresAt"].as_str().expect("expiresAt"))
             .expect("rfc3339");
     assert!((served.with_timezone(&chrono::Utc) - expires).abs() < chrono::Duration::seconds(1));
 
-    // A revoked link still resolves, unusable.
     let inviter = postgres_store::auth::invite_link(&pool, link)
         .await
         .expect("query")
@@ -188,7 +190,6 @@ async fn invite_link_check_reads_the_capability_anonymously(pool: PgPool) {
     let data = gql(test_app(pool.clone()), query).await;
     assert_eq!(data["inviteLinkCheck"]["usable"], false);
 
-    // An unknown id resolves to null — nothing to learn from a guess.
     let unknown = uuid::Uuid::new_v4();
     let data = gql(
         test_app(pool),

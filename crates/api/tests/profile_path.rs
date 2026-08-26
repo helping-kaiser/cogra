@@ -170,12 +170,15 @@ fn draft(
     }
 }
 
+/// A landed update appends a merged version row and puts its envelope
+/// into permanent carriage. The payload counts bracket that: the anchor's
+/// own empty payload never reaches carriage, so the count moves from zero
+/// to one across the update.
 #[sqlx::test(migrations = "../../migrations")]
 async fn profile_update_lands_a_merged_version_row(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (actor, key) = rig.registered_actor("ada").await;
     assert_eq!(rig.version_count(actor).await, 1);
-    // The anchor's empty payload never reaches carriage.
     assert_eq!(rig.payload_count().await, 0);
 
     rig.land_update(actor, &key, draft(Some("Ada L"), Some("Curious."), None))
@@ -189,10 +192,12 @@ async fn profile_update_lands_a_merged_version_row(pool: PgPool) {
     assert_eq!(current.bio.as_deref(), Some("Curious."));
     assert_eq!(current.website_url, None);
     assert_eq!(rig.version_count(actor).await, 2);
-    // The update's envelope is in permanent carriage.
     assert_eq!(rig.payload_count().await, 1);
 }
 
+/// A second update asserts the current chain head as its causal parent,
+/// and its merge is per-field: clearing the bio leaves everything the
+/// first update set untouched.
 #[sqlx::test(migrations = "../../migrations")]
 async fn second_update_chains_behind_the_head_and_merges(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -210,7 +215,6 @@ async fn second_update_chains_behind_the_head_and_merges(pool: PgPool) {
         .await
         .expect("reads head")
         .expect("has head");
-    // Clearing bio, leaving the rest untouched.
     let prepared = rig
         .update(actor, draft(None, Some(""), None))
         .await
@@ -240,7 +244,9 @@ async fn second_update_chains_behind_the_head_and_merges(pool: PgPool) {
 
 /// A promotion that cannot complete names itself in the ingestion
 /// outcome rather than leaving the caller with a version row that
-/// silently never appeared.
+/// silently never appeared. The failure is forced by removing the current
+/// version: the merge copies unchanged fields forward from it, so without
+/// one the promotion cannot build the new row.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_failed_promotion_rides_the_ingestion_outcome(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -250,8 +256,6 @@ async fn a_failed_promotion_rides_the_ingestion_outcome(pool: PgPool) {
         .await
         .expect("prepares update");
     rig.sign_and_relay(prepared.id, &key).await;
-    // The merge copies unchanged fields forward from the current
-    // version; without one the promotion cannot build the new row.
     sqlx::query("DELETE FROM actor_profile_versions WHERE actor_id = $1")
         .bind(actor)
         .execute(&rig.pool)
@@ -294,6 +298,9 @@ async fn refuses_the_display_name_clear(pool: PgPool) {
     }
 }
 
+/// Only one update may be in flight per profile, so a second prepare is
+/// refused while the first is unlanded. Landing the first frees the chain
+/// for the next.
 #[sqlx::test(migrations = "../../migrations")]
 async fn refuses_a_second_in_flight_update(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -306,7 +313,6 @@ async fn refuses_a_second_in_flight_update(pool: PgPool) {
         Err(ProfileError::BadInput { field, .. }) => assert_eq!(field, "input"),
         other => panic!("expected BadInput, got {other:?}"),
     }
-    // Landing the first frees the chain for the next.
     rig.sign_and_relay(first.id, &key).await;
     rig.close_and_ingest().await;
     rig.update(actor, draft(None, Some("again"), None))
