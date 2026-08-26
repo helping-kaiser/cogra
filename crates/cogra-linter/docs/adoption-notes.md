@@ -175,11 +175,11 @@ tests` definitions; excluding them (R12) leaves every owner clean.
 **The standard place is one choice per profile — and the two profiles
 choose differently, because their costs differ by an order of
 magnitude.** Tests take a **generated register of the owner** (R11):
-1444 assets, zero source edits, one generator. Modules keep the **inner
-documentation comment**: the label sits at the asset, and the 84
-definitions are a bounded pending task rather than a blocker at the
-scale of the test census. The inner form is the only one a file-backed
-and an inline module can both carry.
+the whole rust-test census, zero source edits, one generator. Modules
+keep the **inner documentation comment**: the label sits at the asset,
+and the 84 definitions are a bounded pending task rather than a
+blocker at the scale of the test census. The inner form is the only
+one a file-backed and an inline module can both carry.
 
 The register deserves one line of justification beyond cost.
 ``inv:labels:generated-compliance`` makes a generated mint stand on its
