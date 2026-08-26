@@ -1,5 +1,5 @@
 //! Control-operator evaluation: the ten of RFC 8610 §3.8 the version-1
-//! evaluator implements (`design.md`, `dec:xchg:evaluable-subset`).
+//! evaluator implements (´dec:xchg:evaluable-subset´).
 //!
 //! A control ties a *target* type to a *controller* type. Every operator
 //! here therefore asks two questions and answers yes only to both: does the

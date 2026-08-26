@@ -888,7 +888,7 @@ fn a_value_nested_one_million_deep_decodes_encodes_and_drops() {
 /// The same depth, put through the walks the compiler once derived —
 /// `Clone`, `PartialEq`, `Hash` — and through the two consumers that carry
 /// a deep value on their own stack, `Document::to_value` and satisfaction.
-/// Each is iterative now (`impl:xchg:iterative-teardown`), and a recursive
+/// Each is iterative now (´impl:xchg:iterative-teardown´), and a recursive
 /// one of any of them would overflow the stack here.
 #[test]
 fn a_value_nested_one_million_deep_clones_hashes_compares_and_satisfies() {

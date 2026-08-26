@@ -6,7 +6,7 @@
 //! admits. This module makes that machine-visible — it *computes* where a
 //! theory reaches such a value and how, and enforces nothing: refusing a
 //! theory that reaches one without naming it is acquisition's act
-//! (`design.md`, `sig:xchg:restraint-api`).
+//! (´sig:xchg:restraint-api´).
 //!
 //! # What separates a provision from a reach
 //!
@@ -113,7 +113,7 @@ impl RestraintReport {
     /// theory that reaches nothing restrained at all is restrained
     /// vacuously, and one whose every reach is named is restrained by
     /// provision. This is the predicate acquisition refuses on
-    /// (`design.md`, `dec:xchg:restraint-enforcement`).
+    /// (´dec:xchg:restraint-enforcement´).
     ///
     /// ```
     /// use cogra_interchange::Theory;
@@ -245,7 +245,7 @@ impl Provision {
     /// negative zero and subnormals are handled, whether integral-valued
     /// floats may be written as integers — is an open question the design
     /// records and does not settle, and this flag is not an answer to it
-    /// (`design.md`, `dec:xchg:restraint-enforcement`).
+    /// (´dec:xchg:restraint-enforcement´).
     ///
     /// ```
     /// use cogra_interchange::Theory;
