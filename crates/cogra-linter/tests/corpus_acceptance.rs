@@ -174,7 +174,7 @@ fn the_advisory_remainder_is_empty() {
         .findings
         .iter()
         .filter(|one| one.enforcement == Enforcement::Advisory)
-        .map(|one| spell(one))
+        .map(spell)
         .collect();
     assert!(
         advisory.is_empty(),
