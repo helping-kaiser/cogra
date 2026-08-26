@@ -37,18 +37,18 @@ mod tests {
         assert_ne!(hashtag_uuid("bot-defense"), hashtag_uuid("botdefense"));
     }
 
+    /// The v5 hash is taken over the raw bytes, so a non-canonical casing
+    /// derives a different id — canonicalization is the caller's job.
     #[test]
     fn derivation_is_case_sensitive() {
-        // The v5 hash is over the raw bytes, so a non-canonical casing
-        // derives a *different* id.
         assert_ne!(hashtag_uuid("Bot-Defense"), hashtag_uuid("bot-defense"));
     }
 
+    /// A golden value locking both the namespace constant and the v5
+    /// derivation. A failure here means previously minted hashtag ids are at
+    /// risk; the expectation is never the thing to update.
     #[test]
     fn derivation_is_pinned() {
-        // Golden value: locks both the namespace constant and the v5
-        // derivation. If this test ever fails, previously minted hashtag
-        // ids are at risk — do not "fix" it by updating the expectation.
         assert_eq!(
             hashtag_uuid("bot-defense").to_string(),
             "a7ebddb3-343f-583f-9c93-51093ada07ae"
