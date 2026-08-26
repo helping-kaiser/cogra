@@ -1021,7 +1021,7 @@ pub enum Scope { WholeCorpus, Owner(OwnerId) }
 
 The headline counts are a generated *region* inside an authored file rather than a generated file, so `RegisterScope::Region` carries its host and span and `write_all` splices rather than replaces — the one place the generator edits a file it does not own end to end, and the reason `environment-kinds.md` is not in `[carrier]` `generated_files`.
 
-Two of the three scopes have subjects. The companion attestation register is committed and compared byte-exact on every run, as `[kinds.register]` records, and so is the headline region it stands beside; between them they arm the comparison for the corpus that exists. `RegisterScope::LabelRegister` has none: its profile is staged, so the check derives no owner's register, and the named regeneration that generates them is the migration's own step (`dec:lint:staged-profiles`). `Freshness::Staged` is what that state reports — a register with no committed bytes is not out of date, and saying "stale" of a file that does not exist names the wrong repair.
+All three scopes have subjects. The companion attestation register is committed and compared byte-exact on every run, as `[kinds.register]` records, and so is the headline region it stands beside; the test profile's per-owner label registers joined them when it entered Π, and the check derives and compares each one. `Freshness::Staged` is the state a register with no committed bytes reports — not out of date, because saying "stale" of a file that does not exist names the wrong repair — and it is what a named regeneration meets on a profile's way into Π (`dec:lint:staged-profiles`).
 
 ## Diagnostics and the command line · `sec:lint:output`
 
