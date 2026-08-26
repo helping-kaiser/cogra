@@ -1,7 +1,7 @@
 #![no_main]
 //! `markdown_regions` — arbitrary text into [`frontend_md::parse`],
 //! asserting no panic, and that every region's pieces lie within the file and
-//! do not overlap (`preview:lint:fuzz-plan`, design.md).
+//! do not overlap, per design.md (´preview:lint:fuzz-plan´).
 //!
 //! The design names the recursive descent of the Markdown region walk as one
 //! of the two deferred hazards to look at first, so the target is pointed at

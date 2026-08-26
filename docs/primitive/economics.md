@@ -63,10 +63,10 @@ they never mix:
 - **The admission economy** — Layer 0's reserve behind `B_i` and
   the θ-debit. Writing any record costs its author θ off their own
   balance; capacity is the balance
-  (`post:epoch:act-debit`). This money is the L1/L0 kernel's:
+  (``post:epoch:act-debit``). This money is the L1/L0 kernel's:
   CoGra consumes `B_i` and the burn benchmarks
   (`B_W1`/`B_safety`/`B_door`,
-  `cor:epoch:universal-burn-benchmarks` — gate benchmarks; there
+  ``cor:epoch:universal-burn-benchmarks`` — gate benchmarks; there
   is no universal admission price) through the interface and
   never authors L0 records
   ([substrate-map.md §7](substrate-map.md#7-economics-and-feed-pointers)).
@@ -80,7 +80,7 @@ The two connect at exactly one point, and only in one direction:
 the **L0 reserve pool** (§7.2) converts a share of campaign revenue
 into Layer-0 burns that fund members' θ-debits. An L0 burn is
 funder-unconstrained and accrues to the member's own address
-whoever paid (`rem:gates:guild-funding`,
+whoever paid (``rem:gates:guild-funding``,
 [layer1-interface.md §11.2](layer1-interface.md#112-commitment-rate));
 the comparator sees a funded member exactly as a self-funded one.
 System actors and Collectives draw on the same pool.
@@ -173,8 +173,8 @@ anti-spam price on top of §7's deposit floor.
 each named anchor and to the target. That declares the targeting as
 replayable public structure while injecting nothing: a `(0, 0)`
 record has `w̃ = 0` and directs no allocation outward
-(`rem:graph:zero-parameter-degeneracy`,
-`def:epoch:standing-recipient-resolution`) — the same degeneracy the proposal
+(``rem:graph:zero-parameter-degeneracy``,
+``def:epoch:standing-recipient-resolution``) — the same degeneracy the proposal
 pattern rests on
 ([substrate-map.md §5](substrate-map.md#5-governance-and-moderation)).
 Reach toward the target is delivered by real contributor records
@@ -476,7 +476,7 @@ The `l0_reserve` line accrues to a dedicated pool — **the
 community's admission fund**, distinct from the team treasury
 ([token.md §6](token.md#6-treasury)). Its outflows are exactly one
 kind: CGT converted to L0 burns at members', system actors', and
-Collectives' own addresses (`rem:gates:guild-funding`; conversion
+Collectives' own addresses (``rem:gates:guild-funding``; conversion
 mechanics in [token.md](token.md)) — covering the θ-debits the
 community's members would otherwise pay out of pocket. Subsidy
 generosity and per-member caps are governed network parameters

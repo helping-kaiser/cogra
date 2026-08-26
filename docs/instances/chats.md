@@ -144,7 +144,7 @@ the write rule
 
 Membership is **computed, never stored**. CoGra adopts the
 canonical membership fold
-(`def:nodes:canonical-membership-fold`,
+(``def:nodes:canonical-membership-fold``,
 [layer1-interface.md §9.8](../primitive/layer1-interface.md#98-membership-proposals-and-revocation))
 **with ban semantics**, which the canonical fold explicitly
 permits a policy `𝒫` to declare. "Banned" is a property this
@@ -308,7 +308,7 @@ Default map at founding:
 | `decision:lift_ban` | active members | `admin:5, chat_mod:3, member:1` | ≥ 2/3 cast, ≥ 40% quorum | — |
 | `decision:rotate_key` | active members | `admin:5, chat_mod:3, member:1` | ≥ 2/3 cast, ≥ 50% quorum | — |
 | `decision:change_role` | active members | `admin:5, chat_mod:3, member:1` | > 50% cast, ≥ 30% quorum | yes |
-| `decision:set:metadata` | active members | `admin:5, chat_mod:3, member:1` | > 50% cast, ≥ 10% quorum | — |
+| ``decision:set:metadata`` | active members | `admin:5, chat_mod:3, member:1` | > 50% cast, ≥ 10% quorum | — |
 | `decision:change_system_actor` | active members | `admin:5, chat_mod:3, member:1` | ≥ 2/3 cast, ≥ 50% quorum | — |
 
 Each entry carries its own `amend` triple (default: ≥ 2/3 cast,
@@ -318,7 +318,7 @@ through the weighted tally, and a community can pass any decision
 without its admins.
 
 A passed decision that changes the founding payload — metadata
-(`decision:set:metadata`), the map itself (its `amend` triple),
+(``decision:set:metadata``), the map itself (its `amend` triple),
 the system-actor pointer (`decision:change_system_actor`) — is
 executed by the chat's system actor as one succession act (§8).
 Everything else executes as before: a chat-authority member's

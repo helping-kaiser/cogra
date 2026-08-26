@@ -492,13 +492,13 @@ fn the_two_optional_roots_are_the_working_notes() {
 fn the_profiles_section_round_trips() {
     let profiles = ruled().profiles;
     assert_eq!(profiles.profiles.len(), 2);
-    assert_eq!(profiles.effective_count, 0);
-    assert_eq!(profiles.effective().count(), 0);
+    assert_eq!(profiles.effective_count, 1);
+    assert_eq!(profiles.effective().count(), 1);
 
     let test = &profiles.profiles[0];
     assert_eq!(test.id, ProfileId::new("rust-test"));
     assert_eq!(test.kind, Kind::new("test"));
-    assert!(matches!(test.status, ProfileStatus::Staged { .. }));
+    assert_eq!(test.status, ProfileStatus::Effective);
     assert_eq!(test.census.language, Language::new("rust"));
     assert_eq!(test.census.attributes.len(), 3);
     assert_eq!(
@@ -535,10 +535,10 @@ fn the_profiles_section_round_trips() {
 #[test]
 fn a_staged_profile_carries_the_condition_it_waits_on() {
     let profiles = ruled().profiles;
-    let ProfileStatus::Staged { enters_when } = &profiles.profiles[0].status else {
-        panic!("the test profile is staged");
+    let ProfileStatus::Staged { enters_when } = &profiles.profiles[1].status else {
+        panic!("the module profile is staged");
     };
-    assert!(enters_when.contains("label-register.md"));
+    assert!(enters_when.contains("inner doc comment"));
 }
 
 #[test]
@@ -731,8 +731,9 @@ fn the_enforcement_section_round_trips() {
     assert_eq!(
         enforcement.failing,
         vec![
-            PathPrefix::new("crates/cogra-linter/docs/"),
+            PathPrefix::new("crates/cogra-linter/"),
             PathPrefix::new("crates/cogra-interchange/docs/"),
+            PathPrefix::new("docs/"),
         ]
     );
 }
@@ -746,7 +747,7 @@ fn enforcement_is_decided_by_the_finding_s_path() {
     );
     assert_eq!(
         enforcement.enforcement_for(Path::new("docs/primitive/layers.md")),
-        Enforcement::Advisory
+        Enforcement::Failing
     );
     assert_eq!(
         enforcement.enforcement_for(Path::new("crates/api/src/lib.rs")),
