@@ -1,3 +1,5 @@
+//! ´mod:module:mirror´
+//!
 //! The record mirror: appends published epoch packages and advances the
 //! epoch cursor in one transaction (data-model.md "The record mirror";
 //! architecture.md "Record ingestion").

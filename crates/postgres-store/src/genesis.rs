@@ -1,3 +1,5 @@
+//! ´mod:module:genesis´
+//!
 //! L2 genesis seeding — the CoGra-side half of the bootstrap
 //! (architecture.md "Genesis bootstrap"): the operator account's service
 //! rows, the system actors with their custodied keys, the reserved Type
