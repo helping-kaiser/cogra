@@ -539,25 +539,25 @@ enum LandingState {
 
 """
 The license qualifiers a content node was minted with (§5 of
-platform-guidelines.md; layer1-interface.md §10
-`def:content:license-qualifiers`) — set by the creator when the node
-entered the graph, immutable thereafter, and surviving payload
-removal. Both are duties on *downstream use*, never a statement about
-how the content was made.
+platform-guidelines.md; layer1-interface.md §10) — set by the creator
+when the node entered the graph, immutable thereafter, and surviving
+payload removal. Both are duties on *downstream use*, never a
+statement about how the content was made.
 """
 type License {
 	"""
 	`a` — the degree to which a use must credit the maker, on
-	`[0, 1]` (`def:content:attribution`). CoGra publishes three
-	readings: 0 no credit owed, 0.5 credit on commercial uses only,
-	1 credit on every use.
+	`[0, 1]` (attribution, layer1-interface.md §10). CoGra publishes
+	three readings: 0 no credit owed, 0.5 credit on commercial uses
+	only, 1 credit on every use.
 	"""
 	attribution: Float!
 	"""
 	`o` — the degree to which a use must be tracked publicly and
-	left open to audit, on `[0, 1]` (`def:content:provenance`).
-	CoGra publishes three readings: 0 no record owed, 0.5 a public
-	record of commercial uses only, 1 a public record of every use.
+	left open to audit, on `[0, 1]` (provenance, layer1-interface.md
+	§10). CoGra publishes three readings: 0 no record owed, 0.5 a
+	public record of commercial uses only, 1 a public record of every
+	use.
 	"""
 	provenance: Float!
 }
@@ -570,14 +570,15 @@ public protocol references, surviving every payload state.
 input LicenseInput {
 	"""
 	`a` — how far a use must credit the maker, a degree on `[0, 1]`
-	(`def:content:attribution`). CoGra's composer offers the three
-	readings it publishes: 0, 0.5 (commercial uses only), and 1.
+	(attribution, layer1-interface.md §10). CoGra's composer offers
+	the three readings it publishes: 0, 0.5 (commercial uses only),
+	and 1.
 	"""
 	attribution: Float!
 	"""
 	`o` — how far a use must be tracked publicly and left open to
-	audit, a degree on `[0, 1]` (`def:content:provenance`), offered
-	on the same three readings.
+	audit, a degree on `[0, 1]` (provenance, layer1-interface.md §10),
+	offered on the same three readings.
 	"""
 	provenance: Float!
 }
@@ -631,7 +632,8 @@ type Mutation {
 	Register through an invite link: creates the account — the actor
 	row (no key yet) and its credentials, in the applicant state —
 	records the application against the link, sends the verification
-	email, and returns an ordinary session.
+	email, and returns an ordinary session. Budgeted per IP and per
+	invite link (auth.md "Rate limiting").
 	"""
 	register(input: RegisterInput!): RegisterPayload!
 	"""
@@ -651,12 +653,16 @@ type Mutation {
 	attachActorKey(input: AttachActorKeyInput!): AttachActorKeyPayload!
 	"""
 	Re-arms an expired, never-approved application with a fresh
-	invite link — a new application row for the viewer's account.
+	invite link — a new application row for the viewer's account. A
+	re-arm is an application submit, so it spends the same budgets
+	`register` does (auth.md "Rate limiting").
 	"""
 	applyWithInvite(input: ApplyWithInviteInput!): ApplyWithInvitePayload!
 	"""
 	Always succeeds, to avoid revealing whether an application
-	exists.
+	exists. The per-account resend budget (auth.md "Rate limiting")
+	trips silently for the same reason: a visible refusal would leak
+	exactly what the verb is built to hide.
 	"""
 	resendVerificationEmail(input: ResendVerificationEmailInput!): ResendVerificationEmailPayload!
 	"""
@@ -673,6 +679,13 @@ type Mutation {
 	A session from credentials; `auth` is null with an
 	INVALID_CREDENTIALS userError when the email / password pair did
 	not match.
+	
+	Two budgets guard it in order — the per-IP window, then the
+	per-email consecutive-failure backoff (auth.md "Rate limiting").
+	A missing account still pays for a password hash, so it costs the
+	same time a wrong password does and the timing tells nothing
+	apart. Any pending reuse mark is taken and cleared only behind a
+	verified password, so a refusal can never leak it.
 	"""
 	logIn(input: LogInInput!): LogInPayload!
 	"""
@@ -695,7 +708,13 @@ type Mutation {
 	revokeOtherSessions: RevokeSessionsPayload!
 	"""
 	Always succeeds, to avoid revealing whether an account exists. If
-	one does, a single-use reset link goes to its address.
+	one does, a single-use reset link goes to its address — and the
+	bare token beside it, which native apps accept as a paste
+	(auth.md "Link URLs").
+	
+	The two budgets differ accordingly (auth.md "Rate limiting"): the
+	per-IP window refuses visibly, while the per-email one trips
+	silently, returning the same `ok: true`.
 	"""
 	requestPasswordReset(input: RequestPasswordResetInput!): RequestPasswordResetPayload!
 	"""
@@ -713,7 +732,8 @@ type Mutation {
 	two-sided proof: a confirmation code to the current address, a
 	verification link to the new one. Always succeeds for a
 	well-formed request, to avoid revealing whether the new address
-	is already registered.
+	is already registered. A wrong current password is silent for the
+	same reason: it too reads as success.
 	"""
 	requestEmailChange(input: RequestEmailChangeInput!): RequestEmailChangePayload!
 	"""
@@ -723,6 +743,12 @@ type Mutation {
 	change whose new address was registered by someone else in the
 	meantime surfaces EMAIL_IN_USE, on this call and on retries,
 	until the change expires.
+	
+	Either side's proof may arrive first, so both are tried and the
+	apply step runs even when the code matched neither. That is what
+	keeps a collided change answerable: its row stays alive, so a
+	retry with an already-consumed code still learns the real reason
+	instead of a token error.
 	"""
 	confirmEmailChange(input: ConfirmEmailChangeInput!): ConfirmEmailChangePayload!
 	"""
@@ -749,6 +775,13 @@ type Mutation {
 	challenge (auth.md "Key recovery"): a session alone could
 	otherwise overwrite the blob and silently destroy the account's
 	recovery path. Replacing an existing blob mails a notice.
+	
+	An account with no attached key is refused outright: there is
+	nothing to verify against, and no legitimate caller either, since
+	the ceremony attaches before it uploads. The signature is checked
+	before the challenge is spent, so a bad one does not burn it — a
+	wrong-key client would otherwise need a fresh round trip per
+	attempt for no security gain.
 	"""
 	uploadKeyBackup(input: UploadKeyBackupInput!): UploadKeyBackupPayload!
 	"""
@@ -816,6 +849,10 @@ type Mutation {
 	failures surface as SIGNATURE_INVALID userErrors per proposal.
 	Resubmitting a sealed proposal is idempotent only for the exact
 	signature that was sealed; differing bytes refuse as BAD_INPUT.
+	
+	A keyless account is refused rather than rendered: no staged write
+	can exist for one, because the Registration stages only after the
+	attach proof, so a missing key here is a client bug.
 	"""
 	submitProposals(input: SubmitProposalsInput!): SubmitProposalsPayload!
 	"""
@@ -830,6 +867,11 @@ type Mutation {
 Every graph-backed thing with an identity and a lifecycle
 (api-spec.md "Identity and actor interfaces"). Coverage grows with
 the slices; slice 2 carries the content nodes.
+
+The `duplicated_attributes` allow answers a named clippy false
+positive (rust-clippy #12537): the lint misfires on derive-helper
+fields that share a value, and `createdAt` and `updatedAt` genuinely
+have the same GraphQL type.
 """
 interface Node {
 	"""
@@ -1104,7 +1146,10 @@ input ProposalSignatureInput {
 type Query {
 	"""
 	Reports whether the API can reach its store, and how far the record
-	mirror has ingested.
+	mirror has ingested. Answers even when the store does not, so a
+	dumb probe always gets a response: a failed cursor read comes back
+	as a null `mirrorEpoch` rather than an error, and so stays
+	distinguishable from the legitimate "-1, nothing ingested".
 	"""
 	health: Health!
 	"""
@@ -1170,7 +1215,9 @@ type Query {
 	landing order. `target` matches a record's target (the middle
 	node on hyper families); `terminal` matches the terminal leg —
 	a comment's revision chain is `records(terminal: <comment>)`.
-	An id that resolves to no known node yields an empty page.
+	The UUID filters translate to the mirror's own identifiers, so an
+	id that resolves to no known node yields an empty page rather than
+	an error — the same contract a null slot in `nodes` carries.
 	"""
 	records(author: UUID, target: UUID, terminal: UUID, family: RecordFamily, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, after: String, before: String, first: Int, last: Int): RecordConnection!
 	"""
@@ -1646,7 +1693,9 @@ type User implements Actor {
 	"""
 	handle: String!
 	"""
-	The current display name (the newest profile version).
+	The current display name (the newest profile version). Registration
+	seeds every user's first version row, so the handle stands in only
+	for actors predating that invariant.
 	"""
 	displayName: ModeratedText!
 	"""
@@ -1710,7 +1759,9 @@ type User implements Actor {
 	the first-login reciprocation prompt (auth.md "Reciprocation is
 	the joiner's own act"). Vacuously true when invitedBy is null —
 	and for any viewer but the account's own: the field exists only
-	to drive the viewer's own prompt.
+	to drive the viewer's own prompt. False needs both addresses to
+	exist: without them no Opinion can, because a keyless viewer has
+	signed nothing.
 	"""
 	hasReciprocated: Boolean!
 	"""
