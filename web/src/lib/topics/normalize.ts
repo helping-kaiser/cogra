@@ -1,6 +1,7 @@
 // The client-side mirror of the server's canonicalization
-// (hashtag.md §1; crates/common/src/hashtag.rs `normalize`): strip one
-// leading `#`, ASCII-lowercase, then require the L1 identifier atom —
+// (hashtag.md §1; crates/common/src/hashtag.rs `canonicalize`): strip one
+// leading `#`, lowercase (pure-ASCII names — the only ones the atom
+// admits — lowercase identically on both sides), then require the L1 identifier atom —
 // ASCII `[A-Za-z0-9._-]`, 1..=128 bytes. Whitespace is NOT trimmed and
 // non-ASCII is refused, never encoded (D3, rulings 2026-08-26).
 //
