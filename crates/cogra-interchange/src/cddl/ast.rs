@@ -1,3 +1,5 @@
+//! ´mod:module:ast´
+//!
 //! The CDDL syntax tree: one node per production of RFC 8610 Appendix B.
 //!
 //! The tree is *faithful*, not simplified. Every construct the ABNF can

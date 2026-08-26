@@ -1,3 +1,5 @@
+//! ´mod:module:cddl´
+//!
 //! CDDL, the description language of the interchange conventions.
 //!
 //! The conventions adopt "CDDL (RFC 8610) entire", narrowing the operator

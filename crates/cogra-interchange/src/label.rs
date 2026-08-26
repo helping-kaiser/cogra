@@ -1,3 +1,5 @@
+//! ´mod:module:label´
+//!
 //! Namespace labels: the ABNF scanner and the tree relation it enables.
 //!
 //! The grammar is a hand-written character scanner, and deliberately so:

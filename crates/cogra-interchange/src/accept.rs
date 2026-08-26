@@ -1,3 +1,5 @@
+//! ´mod:module:accept´
+//!
 //! Acceptance: choosing the instrument that governs a document, and
 //! applying it.
 //!

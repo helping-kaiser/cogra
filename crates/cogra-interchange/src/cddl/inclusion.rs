@@ -1,3 +1,5 @@
+//! ´mod:module:inclusion´
+//!
 //! Minor inclusion, key by key.
 //!
 //! The invariant: every content key of the earlier theory appears in the
