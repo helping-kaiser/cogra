@@ -206,31 +206,23 @@ fn a_kotlin_line_comment_stops_before_its_newline() {
 }
 
 /// `[scanned-regions]` puts string literals outside what is scanned, and a
-/// `//` inside one is not a comment: the grammar lexed it as a string, so no
+/// `//` inside one is not a comment: the grammar hands back a string, so no
 /// comment node exists to become a region.
 ///
-/// PARKED — the grammar admits a comment token at a token boundary inside a
-/// `line_string_literal`. Here the line comment swallows the closing quote,
-/// so the string never closes and the declaration becomes an `ERROR` node.
-/// The frontend reports that honestly, but the finding is spurious: the
-/// source is valid Kotlin. Un-ignore when the grammar is fixed; the
-/// assertion is what the adoption data promises.
+/// The leader sits directly inside the opening quote, which is one of the two
+/// positions where the string's content token begins and a comment could
+/// otherwise be lexed. The grammar makes it unreachable by giving the body to
+/// the scanner, which refuses to produce anything else inside a string.
 #[test]
-#[ignore = "grammar: a comment leader at a token boundary inside a line string is lexed as a comment"]
 fn a_line_leader_inside_a_kotlin_string_is_not_a_comment() {
     assert!(regions("val x = \"// not a comment\"\n").is_empty());
 }
 
-/// The same for a block leader.
-///
-/// PARKED, and this is the graver half of the same defect: the block comment
-/// closes, so the string parses and NO error node is produced. The grammar
-/// hands back `(line_string_literal (block_comment))` — a comment node whose
-/// bytes are string content — and a label written there would become a real
-/// occurrence, which is exactly what `[scanned-regions]` promises cannot
-/// happen. Silent, where the line-comment case at least announces itself.
+/// The same for a block leader, and this is the half that would be silent: a
+/// block comment closes, so the string would still parse and no error node
+/// would mark it. A label written there would become a real occurrence, which
+/// is exactly what `[scanned-regions]` promises cannot happen.
 #[test]
-#[ignore = "grammar: a block comment inside a line string parses as a comment node, with no error"]
 fn a_block_leader_inside_a_kotlin_string_is_not_a_comment() {
     assert!(regions("val x = \"/* not a comment */\"\n").is_empty());
 }
@@ -244,13 +236,10 @@ fn a_character_literal_is_not_scanned() {
 /// String templates are literals, interpolation and all: neither the literal
 /// parts nor the `${}` holes yield a region.
 ///
-/// PARKED — the same defect, and the case that shows what makes it reachable
-/// in ordinary code: an interpolation ends a content token, so whatever
-/// follows `}` is lexed fresh, and a comment leader there is taken as a
-/// comment. The `a // b` before the hole is fine, because it sits inside one
-/// content token and the lexer never stops there.
+/// The leader after `${y}` is the other position a content token begins at,
+/// and the one reachable in ordinary code. The `a // b` before the hole never
+/// was: it sits inside one content run, where the lexer does not stop.
 #[test]
-#[ignore = "grammar: a comment leader after an interpolation is lexed as a comment"]
 fn a_string_template_is_not_scanned() {
     assert!(regions("val x = \"a // b ${y} /* c */ d\"\n").is_empty());
 }

@@ -40,17 +40,16 @@
 //! — which is the property an AST frontend has and a text search does not
 //! (´[ARCH-dec:linter:ast-frontends]´).
 //!
-//! One gap in that guarantee is known and parked, and it belongs to the
-//! grammar rather than to this module: at a *token boundary* inside a line
-//! string — directly after the opening quote, or directly after an
-//! interpolation's closing brace — the grammar admits a comment token, so a
-//! leader there is lexed as a comment rather than as content. Where the
-//! comment is a block comment the string still closes and no error node is
-//! produced, which would make a label written there an occurrence
-//! `[scanned-regions]` promises cannot exist. No source of this corpus
-//! reaches it: every string here that contains `//` contains it mid-content,
-//! where the lexer never stops. `tests/kotlin_frontend.rs` carries the three
-//! ignored repros and the corpus-wide guard that fails the day one appears.
+//! That holds at every position inside a string, which is the grammar's doing
+//! rather than this module's: a string's body is an external token, so the
+//! scanner knows it is inside one and produces no comment there at all.
+//! Without that, the two positions where a body token begins — directly after
+//! the opening quote, and directly after an interpolation's closing brace —
+//! would take a comment leader as a comment; and for a block leader the
+//! string would still close, leaving no error node to mark it, so a label
+//! written there would be an occurrence `[scanned-regions]` promises cannot
+//! exist. `tests/kotlin_frontend.rs` pins each shape, and its corpus-wide
+//! guard fails the day a comment node appears under a string.
 //!
 //! # Error nodes are findings, forever
 //!
