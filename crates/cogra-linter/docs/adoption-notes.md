@@ -137,10 +137,13 @@ exempting the working notes from resolution.
 Two profiles, both Rust, both named by ``conv:linter:rust-frontend``
 ("a test profile recognizing test-attributed functions, a module
 profile recognizing `mod` items"). Nothing for Markdown, TypeScript or
-Kotlin: their frontends are later slices, and a profile whose frontend
-does not exist cannot compute a census — ``inv:labels:two-pass``
-requires every census computed before any resolution runs, so a
-half-available Π is not a smaller Π, it is a broken one.
+Kotlin. A frontend is a **precondition and not a cause**: Kotlin's is
+still a later slice, and a profile whose frontend does not exist cannot
+compute a census — ``inv:labels:two-pass`` requires every census
+computed before any resolution runs, so a half-available Π is not a
+smaller Π, it is a broken one. Markdown's frontend and the web's both
+exist and carry no profile all the same, because what Π registers is
+what a migration has landed (R19).
 
 The same reasoning governs the two that are here (R19):
 ``inv:labels:inventory`` admits nothing partial, and a profile
@@ -612,13 +615,13 @@ corpus: a slice that adds Rust sources re-measures them.
 | Test-attributed functions (2026-08-26) | 1579, the `rust-test` census |
 | Test-name collisions per owner (2026-08-26) | 0 (239/239, 474/474, 690/690, 101/101, 15/15, 60/60) |
 | `mod name;` declarations (2026-08-26) | 98, of which 11 `mod rig;` for one definition |
-| Module definitions (2026-08-26) | 89, the whole `rust-module` census, every one carrying its `//!` label — it grows with the corpus, so slices that add Rust modules re-measure it, and a new module carries its label in the commit that adds it |
+| Module definitions (2026-08-26) | 90, the whole `rust-module` census, every one carrying its `//!` label — it grows with the corpus, so slices that add Rust modules re-measure it, and a new module carries its label in the commit that adds it |
 | `#[cfg(test)] mod tests` definitions (2026-08-26) | 36, all excluded from that census |
 | Plain `//` comment occurrences | ~1210 |
 | Plain `/*` occurrences under `crates/` (2026-08-21) | 0 |
 | Files in `docs/primitive/` (2026-08-21) | 18, of which 1 (`layer1-interface.md`) is outside the carrier |
 | Kotlin sources | 138 `.kt`, 16 `.kts`, 12 Gradle modules |
-| TypeScript sources | 162 `.ts`/`.tsx` |
+| TypeScript sources (2026-08-26) | 215: 105 `.ts` and 110 `.tsx`, all under `web/`, all scanned, and none carrying an occurrence |
 | Markdown in carrier | 58 files (4 more in the working-note trees) |
 | Files carrying label-shaped spans (2026-08-25) | 29 in the carrier: 10 under `crates/`, written under the discipline; 19 under `docs/`, displayed under R20 |
 | Label-shaped spans in the docs trees (2026-08-25) | 61 across those 19 files, 37 of them parenthesized; all displayed spans (R20) |
