@@ -30,8 +30,8 @@ says which:
    data every profile must fix; the fact that Π ⊆ K; that working
    notes are their own owner.)
 2. **The repository speaks.** Measured, cited with the number.
-   (Example: 1444 test-attributed functions; 0 test-name collisions;
-   `mod rig;` declared nine times for one definition.)
+   (Example: 1570 test-attributed functions; 0 test-name collisions;
+   `mod rig;` declared eleven times for one definition.)
 3. **Neither speaks.** Then it was ruled on 2026-08-21, and the
    **Rulings** section below records what stands and why. No fourth
    category was allowed, and nothing in the file is left proposed.
@@ -157,20 +157,21 @@ demands. Three of the five were genuinely hard:
 **Census must count definitions, not declarations.** The calculus says
 the census may cover "a container such as a module or namespace
 **definition**", and the repository proves the word matters: `mod rig;`
-is declared in nine separate integration-test binaries under
+is declared in eleven separate integration-test binaries under
 `crates/api/tests/`, all naming the single definition at
-`crates/api/tests/rig/`. A declaration-census derives `mod:*:rig` nine
+`crates/api/tests/rig/`. A declaration-census derives `mod:*:rig` eleven
 times in one owner and fails ``inv:labels:inventory`` on day one; a
 definition-census sees one asset. This is the clearest case in the file
 of measurement resolving a reading of the discipline.
 
 **Injectivity is already satisfied for tests, and for modules only
-after the exclusion.** Measured per owner: `api` 160 distinct test
-names of 160, `common` 81/81, `l1-standin` 15/15, `postgres-store`
-26/26 — **no renaming needed anywhere**. ``inv:labels:inventory`` calls
-a collision "a naming defect of the assets", and this corpus has none.
-The module profile would fail immediately on 13 `#[cfg(test)] mod
-tests` definitions; excluding them (R12) leaves every owner clean.
+after the exclusion.** Measured per owner: `api` 239 distinct test names
+of 239, `cogra-interchange` 474/474, `cogra-linter` 682/682, `common`
+101/101, `l1-standin` 15/15, `postgres-store` 59/59 — **no renaming
+needed anywhere**. ``inv:labels:inventory`` calls a collision "a naming
+defect of the assets", and this corpus has none. The module profile
+would fail immediately on 36 `#[cfg(test)] mod tests` definitions;
+excluding them (R12) leaves every owner clean.
 
 **The standard place is one choice per profile — and the two profiles
 choose differently, because their costs differ by an order of
@@ -593,19 +594,21 @@ fails on it.
 
 ## Measurements
 
-Taken 2026-08-20 unless noted, on the branch as checked out. The two
-census counts dated 2026-08-25 come from the linter's own `migrations`
-subcommand on its first run over this corpus — the tool that will
-enforce the profiles is now the one that counts them, so a census
-figure and the check that reads it can no longer drift apart.
+Taken 2026-08-20 unless noted, on the branch as checked out. The census
+counts come from the linter's own modes — the `rust-test` census from
+the committed per-owner registers, which every `check` compares byte for
+byte, and the `rust-module` census from the `migrations` subcommand — so
+the tool that enforces a profile is the one that counts it, and a census
+figure and the check that reads it cannot drift apart. Both grow with
+the corpus: a slice that adds Rust sources re-measures them.
 
 | Fact | Value |
 |---|---|
 | Cargo packages | 4 built (`api`, `common`, `l1-standin`, `postgres-store`) + 2 pending (`cogra-linter`, `cogra-interchange`, docs-only) |
-| Rust sources | 73 `.rs` files |
-| Test-attributed functions (2026-08-25) | 1444, the `rust-test` census |
-| Test-name collisions per owner | 0 (160/160, 81/81, 15/15, 26/26) |
-| `mod` declarations | 63, of which 13 `mod tests` and 9 `mod rig;` for one definition |
+| Rust sources (2026-08-26) | 170 `.rs` files |
+| Test-attributed functions (2026-08-26) | 1570, the `rust-test` census |
+| Test-name collisions per owner (2026-08-26) | 0 (239/239, 474/474, 682/682, 101/101, 15/15, 59/59) |
+| `mod` declarations (2026-08-26) | 137, of which 36 `mod tests` and 11 `mod rig;` for one definition |
 | Module definitions needing a `//!` label (2026-08-26) | 87, the whole `rust-module` census — it grows with the corpus, so slices that add Rust modules re-measure it |
 | Plain `//` comment occurrences | ~1210 |
 | Plain `/*` occurrences under `crates/` (2026-08-21) | 0 |
