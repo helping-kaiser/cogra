@@ -52,7 +52,7 @@ use syn::visit::Visit;
 use crate::adopt::{Adoption, Area, Profile};
 use crate::carrier::SourceFile;
 use crate::diag::{ByteSpan, Diagnostic, Enforcement, Location, RuleId, Severity};
-use crate::frontend::{Asset, Parsed, Region, RegionKind};
+use crate::frontend::{Asset, Declaration, Parsed, Region, RegionKind};
 use crate::pretokenize::rust::RUST;
 use crate::pretokenize::{CommentForm, PreTokenized, located};
 use crate::scan::Syntax;
@@ -151,28 +151,15 @@ impl CargoTarget {
     }
 }
 
-/// A `mod name;` declaration, which is not a definition and not an asset.
-///
-/// The module census counts definitions once, never declarations, and the
-/// definition backing a declaration is another file — a pairing no
-/// frontend can make, since it is handed one source. The declarations are
-/// reported so the cross-source step that will pair them has its input.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Declaration {
-    /// The declared module's bare identifier.
-    pub identifier: String,
-    /// Where the declaration sits, in whole-file coordinates.
-    pub span: ByteSpan,
-}
-
 /// The censuses of one source, computed whether or not their profiles are
 /// in force.
 ///
 /// Computing them is not judging them: a staged profile carries no `Covers`
-/// edges and no inventory judgment runs over it (´dec:lint:staged-profiles´),
-/// which is why [`parse`] puts none of this in [`Parsed::assets`] today.
-/// The functions exist and are tested so that entering Π flips fields
-/// rather than writing code.
+/// edges and no inventory judgment runs over it
+/// (´dec:lint:staged-profiles´), which is why [`parse`] reports the assets
+/// of the effective profiles alone and a staged profile's census is read
+/// through here — by the measurement and by the named regeneration, both of
+/// which judge nothing.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Censuses {
     /// The covered assets of every attribute-recognized profile.
@@ -180,7 +167,8 @@ pub struct Censuses {
     /// The covered assets of every definition-recognized profile: inline
     /// module definitions, `#[cfg(test)]` excluded.
     pub modules: Vec<Asset>,
-    /// The `mod name;` declarations, which are neither.
+    /// The `mod name;` declarations, which are neither: the unresolved half
+    /// of the pairing (´dec:lint:cross-source-pairing´).
     pub declarations: Vec<Declaration>,
 }
 
@@ -234,6 +222,7 @@ pub fn parse(
     let mut out = Parsed {
         path: src.path.clone(),
         regions: regions(src, pre, text, &walk),
+        declarations: walk.declarations.clone(),
         ..Parsed::default()
     };
     out.diagnostics = effective_assets(src, a, &walk, enforcement, &mut out.assets);
@@ -436,8 +425,10 @@ fn attributed(
 /// its identifier lives at the `mod name;` declaration in another file, so
 /// pairing the two is a cross-source step, and reading the name off this
 /// file's own path is what (´[LBL-ansatz:labels:path-derivation]´) forbids.
-/// The declarations travel in [`Censuses::declarations`] for the pass that
-/// will do the pairing.
+/// The declarations travel out unresolved — in [`Parsed::declarations`] and
+/// in [`Censuses::declarations`] — and
+/// [`crate::frontend::backing_definitions`] pairs them once a run holds
+/// every source (´dec:lint:cross-source-pairing´).
 fn definitions(walk: &Walk, profile: &Profile) -> Vec<Asset> {
     let mut areas = profile.classification.areas.values();
     let (Some(area), None) = (areas.next(), areas.next()) else {
@@ -722,14 +713,16 @@ impl<'ast> Visit<'ast> for Walk {
     }
 
     fn visit_item_mod(&mut self, item: &'ast syn::ItemMod) {
+        if item.attrs.iter().any(is_cfg_test) {
+            syn::visit::visit_item_mod(self, item);
+            return;
+        }
         if item.content.is_some() {
-            if !item.attrs.iter().any(is_cfg_test) {
-                self.modules.push(Hit {
-                    identifier: item.ident.to_string(),
-                    span: range(item.span()),
-                    attributes: item.attrs.iter().filter_map(final_segment).collect(),
-                });
-            }
+            self.modules.push(Hit {
+                identifier: item.ident.to_string(),
+                span: range(item.span()),
+                attributes: item.attrs.iter().filter_map(final_segment).collect(),
+            });
         } else {
             self.declarations.push(Declaration {
                 identifier: item.ident.to_string(),
@@ -750,6 +743,12 @@ fn final_segment(attr: &syn::Attribute) -> Option<String> {
 }
 
 /// Whether an attribute is exactly `#[cfg(test)]`.
+///
+/// The exclusion reads on the item and not on its shape: a declaration
+/// attributed `#[cfg(test)]` names a module the census excludes, so it is not
+/// reported for pairing either (´dec:lint:cross-source-pairing´). Either way
+/// the attribute is read on the item itself, which is what the inline half
+/// has always done.
 ///
 /// Exactly: `[profiles]` excludes "modules attributed `#[cfg(test)]`", and
 /// a broader reading would swallow `#[cfg(feature = "test")]`, which names
