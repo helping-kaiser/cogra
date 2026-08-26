@@ -43,7 +43,17 @@ function moderated(value: string | null) {
   return { __typename: "ModeratedText", value, status: "NORMAL" };
 }
 
-function post(id: string, title: string, pending = false) {
+function topicClaim(name: string) {
+  return {
+    __typename: "TopicClaim",
+    hashtag: { __typename: "Hashtag", id: `ht-${name}`, name: moderated(name) },
+    relevance: 0.1,
+    confidence: 1,
+    pending: false,
+  };
+}
+
+function post(id: string, title: string, pending = false, topics: ReturnType<typeof topicClaim>[] = []) {
   return {
     __typename: "Post",
     id,
@@ -61,6 +71,7 @@ function post(id: string, title: string, pending = false) {
     landing: { __typename: "Landing", state: pending ? "PENDING" : "LANDED" },
     moderationStatus: "NORMAL",
     license: { __typename: "License", attribution: 0, provenance: 0 },
+    topics,
   };
 }
 
@@ -89,6 +100,22 @@ describe("FeedView", () => {
     expect(screen.queryByTestId("feed-signin")).not.toBeInTheDocument();
     expect(screen.getByTestId("feed-post-p1")).toHaveAttribute("href", "/posts/p1");
     expect(screen.queryByTestId("feed-empty")).not.toBeInTheDocument();
+  });
+
+  it("carries the post's topic chip row, each chip navigating to its topic route", async () => {
+    server.use(
+      graphql.query("Posts", () =>
+        HttpResponse.json({
+          data: postsPage([post("p1", "First", false, [topicClaim("rust")])], null, false),
+        }),
+      ),
+    );
+    renderWithProviders(<FeedView />);
+    expect(await screen.findByTestId("feed-post-p1-topic-rust")).toBeInTheDocument();
+    expect(screen.getByTestId("feed-post-p1-topic-rust-link")).toHaveAttribute(
+      "href",
+      "/topics/rust",
+    );
   });
 
   it("carries a stance control on every post card", async () => {

@@ -37,6 +37,7 @@ function post(id: string, overrides: Record<string, unknown> = {}) {
     landing: { __typename: "Landing", state: "LANDED" },
     moderationStatus: "NORMAL",
     license: { __typename: "License", attribution: 0, provenance: 0 },
+    topics: [],
     ...overrides,
   };
 }
@@ -129,6 +130,7 @@ describe("fetchPostDetail", () => {
                               attribution: 0,
                               provenance: 0,
                             },
+                            topics: [],
                           },
                         },
                       ],

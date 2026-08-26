@@ -7,6 +7,7 @@ import {
   approveAct,
   fetchStagedWrite,
   hostPublicKey,
+  prepareSeverance,
   prepareStance,
   submitProposal,
 } from "./writes-api";
@@ -184,7 +185,7 @@ describe("prepareStance", () => {
         });
       }),
     );
-    const outcome = await prepareStance(client(), "u0", 0.1, 0.1);
+    const outcome = await prepareStance(client(), { target: "u0" }, 0.1, 0.1);
     expect(outcome).toEqual({
       kind: "success",
       value: [
@@ -220,7 +221,86 @@ describe("prepareStance", () => {
         }),
       ),
     );
-    expect(hasCode(await prepareStance(client(), "u0", 0.1, 0.1), "WRITE_RULE_FAILED")).toBe(true);
+    expect(hasCode(await prepareStance(client(), { target: "u0" }, 0.1, 0.1), "WRITE_RULE_FAILED")).toBe(true);
+  });
+
+  // The follow gesture (D9, hashtag.md §3): a topic by name rather than
+  // a UUID target, since a Type is anchored vacuously and a topic
+  // nobody has tagged yet has no id to look up.
+  it("sends topicName instead of target for a topic selector", async () => {
+    server.use(
+      graphql.mutation("PrepareStance", ({ variables }) => {
+        expect(variables).toEqual({
+          input: { topicName: "rust", pDirected: 0.1, pInterest: 0.1 },
+        });
+        return HttpResponse.json({
+          data: {
+            prepareStance: {
+              __typename: "PreparePayload",
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: "w1",
+                  family: "AFFINITY",
+                  canonicalProposal: "cHJvcG9zYWw=",
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const outcome = await prepareStance(client(), { topicName: "rust" }, 0.1, 0.1);
+    expect(outcome.kind).toBe("success");
+  });
+});
+
+describe("prepareSeverance", () => {
+  // The unfollow gesture (D9): the same selector the follow write takes.
+  it("sends topicName instead of target for a topic selector", async () => {
+    server.use(
+      graphql.mutation("PrepareSeverance", ({ variables }) => {
+        expect(variables).toEqual({ input: { topicName: "rust" } });
+        return HttpResponse.json({
+          data: {
+            prepareSeverance: {
+              __typename: "PreparePayload",
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: "w1",
+                  family: "AFFINITY",
+                  canonicalProposal: "cHJvcG9zYWw=",
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const outcome = await prepareSeverance(client(), { topicName: "rust" });
+    expect(outcome.kind).toBe("success");
+  });
+
+  it("sends target for an ordinary UUID selector", async () => {
+    server.use(
+      graphql.mutation("PrepareSeverance", ({ variables }) => {
+        expect(variables).toEqual({ input: { target: "post-1" } });
+        return HttpResponse.json({
+          data: {
+            prepareSeverance: {
+              __typename: "PreparePayload",
+              writes: [],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const outcome = await prepareSeverance(client(), { target: "post-1" });
+    expect(outcome.kind).toBe("success");
   });
 });
 

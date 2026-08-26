@@ -49,6 +49,7 @@ function commentNode(comment: FixtureComment, withReplies = true): Record<string
     landing: landing(comment.pending),
     moderationStatus: "NORMAL",
     license: { __typename: "License", attribution: 0, provenance: 0 },
+    topics: [],
     ...(withReplies
       ? {
           replies: {
@@ -95,6 +96,7 @@ function detail(
       landing: landing(postPending),
       moderationStatus: "NORMAL",
       license: { __typename: "License", attribution: 0, provenance: 0 },
+      topics: [],
       comments: {
         __typename: "CommentConnection",
         edges: comments.map((comment) => ({
@@ -748,6 +750,126 @@ describe("PostView", () => {
     // refreshing and replaying, not because the rig handed it a token.
     expect(anonymous).toContain("p1");
     expect(store.accessToken()).toBe("access-2");
+  });
+
+  it("shows the read-only chip row for a post the viewer doesn't own", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: {
+            ...detail("author-1", []),
+            post: {
+              ...detail("author-1", []).post,
+              topics: [
+                {
+                  __typename: "TopicClaim",
+                  hashtag: {
+                    __typename: "Hashtag",
+                    id: "ht-1",
+                    name: moderated("rust"),
+                  },
+                  relevance: 0.1,
+                  confidence: 1,
+                  pending: false,
+                },
+              ],
+            },
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    expect(await screen.findByTestId("post-topic-rust")).toBeInTheDocument();
+    expect(screen.getByTestId("post-topic-rust-link")).toHaveAttribute("href", "/topics/rust");
+    // Not the viewer's own post — no add/remove affordance.
+    expect(screen.queryByTestId("post-tag-input")).not.toBeInTheDocument();
+  });
+
+  it("adds a topic to the viewer's own post via the standalone tag gesture", async () => {
+    let variables: Record<string, unknown> | null = null;
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("acct-1", []) })),
+      graphql.mutation("PrepareTag", ({ variables: v }) => {
+        variables = v;
+        return HttpResponse.json({
+          data: {
+            prepareTag: {
+              __typename: "PreparePayload",
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: "w1",
+                  family: "TAG",
+                  canonicalProposal: "cHJvcG9zYWw=",
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const signer = fakeWriteSigner();
+    renderWithProviders(<PostView postId="p1" />, { store: storeFor("acct-1"), writeSigner: signer });
+    fireEvent.change(await screen.findByTestId("post-tag-input"), { target: { value: "#Rust" } });
+    fireEvent.click(screen.getByTestId("post-tag-add"));
+    await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(1));
+    expect(variables).toEqual({
+      input: { target: "p1", name: "rust", pDirected: null, pInterest: null },
+    });
+  });
+
+  it("removes a topic from the viewer's own post at relevance 0", async () => {
+    let variables: Record<string, unknown> | null = null;
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: {
+            post: {
+              ...detail("acct-1", []).post,
+              topics: [
+                {
+                  __typename: "TopicClaim",
+                  hashtag: { __typename: "Hashtag", id: "ht-1", name: moderated("rust") },
+                  relevance: 0.1,
+                  confidence: 1,
+                  pending: false,
+                },
+              ],
+            },
+          },
+        }),
+      ),
+      graphql.mutation("PrepareTag", ({ variables: v }) => {
+        variables = v;
+        return HttpResponse.json({
+          data: {
+            prepareTag: {
+              __typename: "PreparePayload",
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: "w1",
+                  family: "TAG",
+                  canonicalProposal: "cHJvcG9zYWw=",
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const signer = fakeWriteSigner();
+    renderWithProviders(<PostView postId="p1" />, { store: storeFor("acct-1"), writeSigner: signer });
+    fireEvent.click(await screen.findByTestId("post-topic-rust-remove"));
+    await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(1));
+    expect(variables).toEqual({
+      input: { target: "p1", name: "rust", pDirected: 0, pInterest: null },
+    });
   });
 
   it("links authors as chips into their profiles", async () => {

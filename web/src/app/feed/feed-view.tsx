@@ -10,20 +10,18 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
-import { fetchPosts, isPending, type PostView } from "@/lib/api/content-api";
+import { fetchPosts, type PostView } from "@/lib/api/content-api";
 import { appendDeduped } from "@/lib/api/pagination";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthPhase } from "@/lib/session/provider";
 import { RestoreCard } from "@/app/applicant-status";
 import { StatusBanners } from "@/app/status-banners";
-import { ActorChip } from "@/lib/ui/actor-chip";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { PageHeader } from "@/lib/ui/page-header";
-import { PendingMarker } from "@/lib/ui/pending-marker";
-import { StanceControl } from "@/lib/ui/stance-control";
+import { PostCard } from "@/lib/ui/post-card";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
 function GuestBanner() {
@@ -150,33 +148,7 @@ export function FeedView({
       <ul className="flex flex-col gap-3" data-testid="feed-list">
         {posts.map((post) => (
           <li key={post.id}>
-            <Card>
-              {post.author && (
-                <ActorChip
-                  handle={post.author.handle}
-                  displayName={post.author.displayName.value}
-                  testId={`feed-author-${post.id}`}
-                />
-              )}
-              <Link
-                href={`/posts/${post.id}`}
-                data-testid={`feed-post-${post.id}`}
-                className="flex flex-col gap-1"
-              >
-                {post.title.value && <h2 className="text-title-medium">{post.title.value}</h2>}
-                <p className="line-clamp-4 text-body-medium">{post.content.value}</p>
-              </Link>
-              {/* Shown in full, marked quietly (design.md §9) — a
-                  pending post is real content whose place in the order
-                  is not yet fixed. */}
-              {isPending(post) && <PendingMarker testId={`feed-pending-${post.id}`} />}
-              {/* Part of the post card's own inventory (design.md §6),
-                  outside the link: it acts, it does not navigate. */}
-              <StanceControl
-                target={{ id: post.id, kind: "post", label: "this post" }}
-                testIdPrefix={`feed-stance-${post.id}`}
-              />
-            </Card>
+            <PostCard post={post} prefix="feed" />
           </li>
         ))}
       </ul>
