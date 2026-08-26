@@ -310,8 +310,40 @@ impl LicenseInput {
     }
 }
 
+/// A topic declaration — one Tag record toward the canonical Type.
+/// Names are normalized by the naming service (lowercase, no `#`, ASCII
+/// `[a-z0-9._-]`, at most 128 bytes) and a new name needs no creation
+/// act: Types anchor vacuously (hashtag.md §1, §2). Re-tagging a name
+/// revises the claim — the newest record per (author, content, Type)
+/// wins, and relevance 0 is the un-tag, read as withdrawn (hashtag.md
+/// §4).
+#[derive(InputObject)]
+struct TagInput {
+    name: String,
+    /// Relevance `r`; defaults to +0.1.
+    p_directed: Option<Dimension>,
+    /// Confidence `c`, census-bounded to `[0, 1]`; defaults to 1 — an
+    /// author believes their own declaration.
+    p_interest: Option<Dimension>,
+}
+
+impl TagInput {
+    fn to_draft(&self) -> crate::topics::TagDraft {
+        crate::topics::TagDraft {
+            name: self.name.clone(),
+            relevance: self.p_directed.map(|d| d.0),
+            confidence: self.p_interest.map(|d| d.0),
+        }
+    }
+}
+
+fn tag_drafts(tags: &Option<Vec<TagInput>>) -> Vec<crate::topics::TagDraft> {
+    tags.iter().flatten().map(TagInput::to_draft).collect()
+}
+
 /// A new Post: one genesis Publish whose envelope carries the display
-/// fields (post.md §1). Fields are raw scalars; moderation is
+/// fields (post.md §1), plus one Tag record per declared topic — each
+/// its own priced act. Fields are raw scalars; moderation is
 /// server-assigned.
 #[derive(InputObject)]
 struct PreparePostInput {
@@ -322,6 +354,11 @@ struct PreparePostInput {
     /// The author's attachment; defaults to the low-defaults policy
     /// value (+0.1). `pInterest` is census-fixed at 1 for Publish.
     p_directed: Option<Dimension>,
+    /// Topics declared at creation — explicit structured input, never
+    /// parsed from the body, so display content and graph structure stay
+    /// decoupled. At most 10 per batch; two names that canonicalize
+    /// alike are refused rather than deduplicated.
+    tags: Option<Vec<TagInput>>,
 }
 
 /// A Post edit: the complete new content state, the same field set a
@@ -336,8 +373,9 @@ struct PreparePostEditInput {
 }
 
 /// A new Comment: one genesis Review — A leg to the target, terminal
-/// leg minting the Comment (comment.md §1). This slice offers the
-/// comment box on Posts and Comments.
+/// leg minting the Comment (comment.md §1) — plus one Tag record per
+/// declared topic. This slice offers the comment box on Posts and
+/// Comments.
 #[derive(InputObject)]
 struct PrepareCommentInput {
     target: Uuid,
@@ -346,6 +384,33 @@ struct PrepareCommentInput {
     /// Enthusiasm and effort; each defaults to +0.1 (invitations.md §3).
     p_directed: Option<Dimension>,
     p_interest: Option<Dimension>,
+    /// Topics declared at creation; same rules as on a Post.
+    tags: Option<Vec<TagInput>>,
+}
+
+/// One standalone topic declaration on existing content — the gesture
+/// that adds a topic after creation, and, at `pDirected: 0`, the one
+/// that withdraws it. Tags are never edit fields: changing a post's
+/// topics is its own priced act (post.md §3).
+#[derive(InputObject)]
+struct PrepareTagInput {
+    /// The content being tagged.
+    target: Uuid,
+    name: String,
+    /// Relevance `r`; defaults to +0.1. Zero is the un-tag.
+    p_directed: Option<Dimension>,
+    /// Confidence `c`, census-bounded to `[0, 1]`; defaults to 1.
+    p_interest: Option<Dimension>,
+}
+
+impl PrepareTagInput {
+    fn to_draft(&self) -> crate::topics::TagDraft {
+        crate::topics::TagDraft {
+            name: self.name.clone(),
+            relevance: self.p_directed.map(|d| d.0),
+            confidence: self.p_interest.map(|d| d.0),
+        }
+    }
 }
 
 /// A Comment edit: the complete new body (comment.md §4).
@@ -366,10 +431,11 @@ struct PrepareProfileUpdateInput {
     website_url: async_graphql::MaybeUndefined<String>,
 }
 
-/// A prepared content write: the staged handshake plus `node` — the L2
+/// A prepared content write: the staged batch plus `node` — the L2
 /// id the envelope binds to the minted node, and the id the content
-/// reads serve once the record lands. Null when `userErrors` is
-/// non-empty.
+/// reads serve once the record lands. `writes` carries the minting
+/// record first, then one Tag record per declared topic, each its own
+/// priced act. Null when `userErrors` is non-empty.
 #[derive(SimpleObject)]
 struct PrepareContentPayload {
     node: Option<Uuid>,
@@ -381,7 +447,13 @@ impl PrepareContentPayload {
     fn ok(prepared: crate::content::PreparedContent) -> Self {
         Self {
             node: Some(prepared.node),
-            writes: Some(vec![PreparedWrite::from_prepared(prepared.prepared)]),
+            writes: Some(
+                prepared
+                    .writes
+                    .into_iter()
+                    .map(PreparedWrite::from_prepared)
+                    .collect(),
+            ),
             user_errors: vec![],
         }
     }
@@ -405,6 +477,7 @@ impl PrepareContentPayload {
                 ErrorCode::Forbidden,
                 "only the creator's edits win the fold",
             ),
+            ContentError::Tags(e) => UserError::at(ErrorCode::BadInput, e.message, e.path),
             ContentError::Prepare(e) => UserError::from_onboarding(&OnboardingError::from(e), ""),
             e @ ContentError::Internal(_) => internal(e),
         }])
@@ -1635,6 +1708,7 @@ impl Mutation {
             content: input.content,
             license,
             p_directed: input.p_directed.map(|d| d.0),
+            tags: tag_drafts(&input.tags),
         };
         match crate::content::prepare_post(pool, boundary, cfg.gc_after_epochs, v.user_id, draft)
             .await
@@ -1698,12 +1772,57 @@ impl Mutation {
             license,
             p_directed: input.p_directed.map(|d| d.0),
             p_interest: input.p_interest.map(|d| d.0),
+            tags: tag_drafts(&input.tags),
         };
         match crate::content::prepare_comment(pool, boundary, cfg.gc_after_epochs, v.user_id, draft)
             .await
         {
             Ok(prepared) => Ok(PrepareContentPayload::ok(prepared)),
             Err(e) => Ok(PrepareContentPayload::from_error(e)),
+        }
+    }
+
+    /// Prepares one standalone Tag on existing content — the gesture
+    /// that adds a topic after creation. There is no un-tag mutation:
+    /// withdrawing a topic is a further Tag at `pDirected: 0`, which the
+    /// current-topics fold reads as withdrawn (hashtag.md §4). Tagging
+    /// is not restricted to the content's author; the read side is what
+    /// separates the author's own declarations from third-party claims.
+    async fn prepare_tag(
+        &self,
+        ctx: &Context<'_>,
+        input: PrepareTagInput,
+    ) -> async_graphql::Result<PreparePayload> {
+        let v = member_viewer(ctx).await?;
+        let pool = ctx.data::<PgPool>()?;
+        let boundary = ctx.data::<StandInBoundary>()?;
+        let cfg = ctx.data::<OnboardingConfig>()?;
+        match crate::topics::prepare_tag(
+            pool,
+            boundary,
+            cfg.gc_after_epochs,
+            v.user_id,
+            input.target,
+            &input.to_draft(),
+        )
+        .await
+        {
+            Ok(prepared) => Ok(PreparePayload {
+                writes: Some(vec![PreparedWrite::from_prepared(prepared)]),
+                user_errors: vec![],
+            }),
+            Err(crate::topics::TopicsError::BadInput(e)) => Ok(PreparePayload {
+                writes: None,
+                user_errors: vec![UserError::at(ErrorCode::BadInput, e.message, e.path)],
+            }),
+            Err(crate::topics::TopicsError::Prepare(e)) => Ok(PreparePayload {
+                writes: None,
+                user_errors: vec![UserError::from_onboarding(&OnboardingError::from(e), "")],
+            }),
+            Err(e) => Ok(PreparePayload {
+                writes: None,
+                user_errors: vec![internal(e)],
+            }),
         }
     }
 
