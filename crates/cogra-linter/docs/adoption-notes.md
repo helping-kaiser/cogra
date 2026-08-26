@@ -137,12 +137,12 @@ exempting the working notes from resolution.
 Two profiles, both Rust, both named by ``conv:linter:rust-frontend``
 ("a test profile recognizing test-attributed functions, a module
 profile recognizing `mod` items"). Nothing for Markdown, TypeScript or
-Kotlin. A frontend is a **precondition and not a cause**: Kotlin's is
-still a later slice, and a profile whose frontend does not exist cannot
-compute a census — ``inv:labels:two-pass`` requires every census
-computed before any resolution runs, so a half-available Π is not a
-smaller Π, it is a broken one. Markdown's frontend and the web's both
-exist and carry no profile all the same, because what Π registers is
+Kotlin. A frontend is a **precondition and not a cause**: a profile
+whose frontend does not exist cannot compute a census —
+``inv:labels:two-pass`` requires every census computed before any
+resolution runs, so a half-available Π is not a smaller Π, it is a
+broken one. All four frontends now exist, and three of them carry no
+profile all the same, because what Π registers is
 what a migration has landed (R19).
 
 The same reasoning governs the two that are here (R19):
@@ -436,10 +436,12 @@ is a corpus-generic document of the same rank as the four disciplines
 beside it, not the linter crate's internal prose; 16 live citations
 already use the prefix.
 
-**R8 — `android/` is one owner.** Nothing is scanned there until the
-Kotlin frontend of slice 3, so a 12-way split would buy 12 prefixes and
-12 rules over an empty occurrence set. The split is revisited when the
-Kotlin frontend lands and the modules begin carrying labels.
+**R8 — `android/` is one owner.** The Kotlin frontend has landed and
+the tree is scanned, but its modules carry no labels — zero occurrences
+across 170 sources — so a 12-way split would still buy 12 prefixes and
+12 rules over an empty occurrence set. The revisit is a conjunction and
+only half of it has happened; the split waits on the modules beginning
+to carry labels.
 
 **R9 — The test profile registers two areas, `unit` and
 `integration`.** Cargo recognizes two test target kinds; `interunit`
@@ -499,10 +501,13 @@ documentation comments only, and both bans stand on that one decision.
 Measured cost to adopt: zero occurrences under `crates/`.
 
 **R17 — `.kts` files are not scanned in v1.** They are build
-infrastructure rather than app source, and the zero-error precondition
-of ``dec:linter:kotlin-tree-sitter`` was measured over the 138 `.kt`
-files only. Revisited at the Kotlin slice, when the grammar that would
-parse them arrives.
+infrastructure rather than app source. Revisited at the Kotlin slice as
+promised, and the answer is that the grammar which parses `.kt` does
+not parse them: it implements `kotlinFile`, which admits declarations,
+where a script needs the specification's `script` production, which
+admits statements at the top level. Measured over the tree: 18 `.kts`
+files, 43 error nodes. Supporting them is an addition to the grammar
+rather than a fix to it, and whether to make it is jakob's ruling.
 
 **R18 — The kind registry's adoption takes the registry's own
 defaults.** jakob is the acceptee, owning X_A, E_A, σ_A, G_A and Ê_A;
@@ -620,7 +625,7 @@ corpus: a slice that adds Rust sources re-measures them.
 | Plain `//` comment occurrences | ~1210 |
 | Plain `/*` occurrences under `crates/` (2026-08-21) | 0 |
 | Files in `docs/primitive/` (2026-08-21) | 18, of which 1 (`layer1-interface.md`) is outside the carrier |
-| Kotlin sources | 138 `.kt`, 16 `.kts`, 12 Gradle modules |
+| Kotlin sources (2026-08-26) | 170 `.kt`, all scanned and none carrying an occurrence, holding 1708 line comments and 681 KDoc and no other block comment; 18 `.kts`, unscanned (R17); 12 Gradle modules |
 | TypeScript sources (2026-08-26) | 215: 105 `.ts` and 110 `.tsx`, all under `web/`, all scanned, and none carrying an occurrence |
 | Markdown in carrier | 58 files (4 more in the working-note trees) |
 | Files carrying label-shaped spans (2026-08-25) | 29 in the carrier: 10 under `crates/`, written under the discipline; 19 under `docs/`, displayed under R20 |

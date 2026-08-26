@@ -12,10 +12,16 @@
 //      frontend gets the three comment kinds the adoption data names as
 //      distinct named nodes.
 //
-//   2. Raw string bodies. The closing delimiter is
+//   2. String bodies, raw and line alike. The raw string's closing
+//      delimiter is
 //        TRIPLE_QUOTE_CLOSE : MultiLineStringQuote? '"""'
 //      so a run of quotes belongs to the content except for its last
-//      three. A longest-match lexer gets this backwards.
+//      three, which a longest-match lexer gets backwards. The line
+//      string's body is here for a different reason: owning it is what
+//      lets this scanner know it is inside a string and refuse to
+//      produce a comment there. `extras` are global in tree-sitter, and
+//      a comment is otherwise a candidate at every position a token may
+//      begin — including just inside a quote.
 //
 //   3. Semicolon inference. Kotlin ends a statement at a newline unless
 //      the next line continues the expression. The specification says
@@ -34,6 +40,7 @@ enum TokenType {
   KDOC,
   RAW_STRING_CONTENT,
   RAW_STRING_END,
+  LINE_STRING_CONTENT,
   ERROR_SENTINEL,
 };
 
@@ -200,6 +207,45 @@ static bool scan_raw_string_content(TSLexer *lexer) {
   if (!consumed_any) return false;
   lexer->mark_end(lexer);
   lexer->result_symbol = RAW_STRING_CONTENT;
+  return true;
+}
+
+// A run of ordinary content inside a `"..."` string, stopping before an
+// escape, an interpolation, the closing quote, or a line break.
+//
+// KotlinLexer.g4 LineStrText is `~('\\' | '"' | '$')+ | '$'`: a lone `$`
+// that opens nothing is content. A line break is not — Kotlin does not
+// let a line string span one — so the run stops there and the missing
+// quote is reported at the end of the line rather than swallowing the
+// rest of the file.
+static bool scan_line_string_content(TSLexer *lexer) {
+  bool consumed_any = false;
+
+  for (;;) {
+    if (lexer->eof(lexer)) break;
+    if (lexer->lookahead == '"' || lexer->lookahead == '\\') break;
+    if (lexer->lookahead == '\n' || lexer->lookahead == '\r') break;
+
+    if (lexer->lookahead == '$') {
+      lexer->mark_end(lexer);
+      advance(lexer);
+      if (lexer->lookahead == '{' || is_ident_start(lexer->lookahead)) {
+        if (!consumed_any) return false;
+        lexer->result_symbol = LINE_STRING_CONTENT;
+        return true;
+      }
+      lexer->mark_end(lexer);
+      consumed_any = true;
+      continue;
+    }
+
+    advance(lexer);
+    consumed_any = true;
+  }
+
+  if (!consumed_any) return false;
+  lexer->mark_end(lexer);
+  lexer->result_symbol = LINE_STRING_CONTENT;
   return true;
 }
 
@@ -464,6 +510,16 @@ bool tree_sitter_kotlin_external_scanner_scan(void *payload, TSLexer *lexer,
   // Inside a raw string nothing else may be scanned: whitespace there is
   // content, not trivia.
   if (valid_symbols[RAW_STRING_CONTENT] || valid_symbols[RAW_STRING_END]) return false;
+
+  if (valid_symbols[LINE_STRING_CONTENT] && scan_line_string_content(lexer)) return true;
+  // The same inside a line string, and this is what makes a comment
+  // there unreachable rather than merely unlikely. Returning here covers
+  // the positions where the content run is empty — just inside the
+  // opening quote, and just after an interpolation's `}` — which are
+  // exactly the ones a comment used to be lexed at. What follows is an
+  // escape, an interpolation, or the closing quote, all of them the
+  // internal lexer's and none of them able to introduce trivia.
+  if (valid_symbols[LINE_STRING_CONTENT]) return false;
 
   if (valid_symbols[AUTOMATIC_SEMICOLON] && scan_automatic_semicolon(lexer)) return true;
 

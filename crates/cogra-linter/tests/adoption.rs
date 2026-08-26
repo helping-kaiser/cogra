@@ -780,10 +780,15 @@ fn the_enforcement_section_round_trips() {
             PathPrefix::new("crates/api/"),
             PathPrefix::new("docs/"),
             PathPrefix::new("web/"),
+            PathPrefix::new("android/"),
         ]
     );
 }
 
+/// Every tree of the carrier is failing, so the advisory half is now only
+/// what is never committed: the working notes, whose roots are gitignored
+/// junctions. They are owned so a note resolves rather than falling outside
+/// the partition, and advisory because no build should fail on one.
 #[test]
 fn enforcement_is_decided_by_the_finding_s_path() {
     let enforcement = ruled().enforcement;
@@ -800,7 +805,11 @@ fn enforcement_is_decided_by_the_finding_s_path() {
         Enforcement::Failing
     );
     assert_eq!(
-        enforcement.enforcement_for(Path::new("android/app/src/main/AndroidManifest.xml")),
+        enforcement.enforcement_for(Path::new("android/app/src/main/kotlin/A.kt")),
+        Enforcement::Failing
+    );
+    assert_eq!(
+        enforcement.enforcement_for(Path::new("tmp_dev/2026-08-26-hand-test.md")),
         Enforcement::Advisory
     );
 }

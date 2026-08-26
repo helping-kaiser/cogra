@@ -45,7 +45,7 @@ use swc_ecma_parser::{Syntax, TsSyntax, parse_file_as_program};
 use crate::adopt::Adoption;
 use crate::carrier::SourceFile;
 use crate::diag::{ByteSpan, Diagnostic, Enforcement, Location, RuleId, Severity};
-use crate::frontend::{Parsed, Region, RegionKind};
+use crate::frontend::{Parsed, Region, RegionKind, append, degutter};
 use crate::pretokenize::{CommentForm, located};
 use crate::scan::Syntax as RegionSyntax;
 
@@ -295,56 +295,5 @@ fn shape(raw: &str, kind: CommentKind) -> (CommentForm, usize, usize) {
         (CommentForm::BlockOuterDoc, "/**".len(), "*/".len())
     } else {
         (CommentForm::BlockPlain, "/*".len(), "*/".len())
-    }
-}
-
-/// Copy a JSDoc comment's interior onto a region, line by line, with each
-/// line's gutter resolved away.
-///
-/// The gutter — the whitespace and `*` that open every line of a JSDoc
-/// comment after the first — is a leader in exactly the sense
-/// (´[ARCH-def:linter:logical-region]´) means, and JSDoc's own convention is
-/// that a reader never sees it. What is not a leader is the line break: it
-/// sits inside one comment, where a `///` run's breaks sit between two, so
-/// it stays in the logical text and the region keeps the shape its author
-/// gave it.
-fn degutter(region: &mut Region, text: &str, interior: ByteSpan) {
-    let Some(whole) = text.get(interior.start..interior.end) else {
-        return;
-    };
-    let mut at = interior.start;
-    for line in whole.split_inclusive('\n') {
-        let cut = gutter(line);
-        append(region, text, ByteSpan::new(at + cut, at + line.len()));
-        at += line.len();
-    }
-}
-
-/// How many bytes of one JSDoc line the gutter occupies.
-///
-/// A gutter is leading whitespace followed by one `*`, and a line without
-/// that shape has none — the first line of a comment written `/** text`,
-/// most often, whose text starts where the leader ended.
-fn gutter(line: &str) -> usize {
-    let blanks = line.len() - line.trim_start().len();
-    match line.as_bytes().get(blanks) {
-        Some(b'*') => blanks + 1,
-        _ => 0,
-    }
-}
-
-/// Copy one file range onto a region's logical text.
-///
-/// Adjacent pieces merge, which keeps a comment with no gutter to resolve
-/// one piece and makes [`crate::frontend::Region::locate`] a single addition
-/// over it.
-fn append(region: &mut Region, text: &str, piece: ByteSpan) {
-    let Some(slice) = text.get(piece.start..piece.end) else {
-        return;
-    };
-    region.text.push_str(slice);
-    match region.pieces.last_mut() {
-        Some(last) if last.end == piece.start => last.end = piece.end,
-        _ => region.pieces.push(piece),
     }
 }
