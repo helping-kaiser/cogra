@@ -18,6 +18,7 @@ pub mod ratelimit;
 pub mod relay;
 pub mod schema;
 pub mod stance;
+pub mod topics;
 
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse};
 use axum::extract::State;

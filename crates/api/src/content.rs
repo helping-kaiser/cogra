@@ -20,6 +20,7 @@ use uuid::Uuid;
 use crate::ingest::PromotionFailure;
 use crate::l1::L1Boundary;
 use crate::prepare::{self, Gesture, PrepareError, Target};
+use crate::topics::{self, TagDraft, TagError, TopicsError};
 
 /// The low-defaults stance value (invitations.md §3): defaults sit low
 /// so stronger stances stay expressible.
@@ -220,10 +221,24 @@ pub enum ContentError {
     /// The viewer is not the creator — edit eligibility (post.md §4).
     #[error("only the creator's edits win the fold")]
     NotCreator,
+    /// A topic declaration in the creation batch was refused; the path
+    /// names the offending entry.
+    #[error(transparent)]
+    Tags(#[from] TagError),
     #[error(transparent)]
     Prepare(#[from] PrepareError),
     #[error("internal: {0}")]
     Internal(String),
+}
+
+impl From<TopicsError> for ContentError {
+    fn from(e: TopicsError) -> Self {
+        match e {
+            TopicsError::BadInput(e) => Self::Tags(e),
+            TopicsError::Prepare(e) => Self::Prepare(e),
+            TopicsError::Internal(m) => Self::Internal(m),
+        }
+    }
 }
 
 impl From<content_store::ContentError> for ContentError {
@@ -250,6 +265,10 @@ pub struct PostDraft {
     pub content: String,
     pub license: License,
     pub p_directed: Option<f64>,
+    /// The topics declared at creation. Explicit structured input, never
+    /// parsed from the body, so display content and graph structure stay
+    /// decoupled (api-spec.md "Content authoring").
+    pub tags: Vec<TagDraft>,
 }
 
 /// An edit's complete field set: the payload is the Post's whole new
@@ -268,6 +287,9 @@ pub struct CommentDraft {
     pub license: License,
     pub p_directed: Option<f64>,
     pub p_interest: Option<f64>,
+    /// The topics declared at creation — a Comment is Taggable like any
+    /// other passive node (layer1-interface.md §9).
+    pub tags: Vec<TagDraft>,
 }
 
 pub struct CommentEditDraft {
@@ -275,11 +297,26 @@ pub struct CommentEditDraft {
     pub content: String,
 }
 
-/// A prepared content write: the staged handshake plus the L2 node id
-/// the envelope carries (the display row's UUID once it lands).
+/// A prepared content write: the staged batch plus the L2 node id the
+/// envelope carries (the display row's UUID once it lands).
+///
+/// Creating content stages a *batch* — the minting record plus one Tag
+/// record per declared topic, each its own priced act (api-spec.md
+/// "Content authoring"). The minting record is always `writes[0]`; the
+/// device signs the whole batch through one handshake loop, so the batch
+/// length is what makes the gesture's cost legible before signing.
 pub struct PreparedContent {
     pub node: Uuid,
-    pub prepared: prepare::Prepared,
+    pub writes: Vec<prepare::Prepared>,
+}
+
+impl PreparedContent {
+    fn single(node: Uuid, prepared: prepare::Prepared) -> Self {
+        Self {
+            node,
+            writes: vec![prepared],
+        }
+    }
 }
 
 fn stance_range(field: &'static str, v: f64) -> Result<(), ContentError> {
@@ -302,8 +339,8 @@ async fn author_address(pool: &PgPool, viewer: Uuid) -> Result<String, ContentEr
 }
 
 /// Prepares a new Post: one genesis Publish whose envelope carries the
-/// display fields (post.md §1). The attachment defaults low; `p_i` is
-/// census-fixed at 1.
+/// display fields (post.md §1), plus one Tag act per declared topic. The
+/// attachment defaults low; `p_i` is census-fixed at 1.
 pub async fn prepare_post<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -313,6 +350,7 @@ pub async fn prepare_post<B: L1Boundary>(
 ) -> Result<PreparedContent, ContentError> {
     let p_d = draft.p_directed.unwrap_or(DEFAULT_STANCE);
     stance_range("pDirected", p_d)?;
+    let tags = topics::plan_batch(&draft.tags)?;
     let address = author_address(pool, viewer).await?;
     let node = Uuid::new_v4();
     let payload = CograContent {
@@ -328,7 +366,7 @@ pub async fn prepare_post<B: L1Boundary>(
         gc_after_epochs,
         viewer,
         Gesture {
-            author: address,
+            author: address.clone(),
             family: Family::Publish,
             middle: None,
             target: Target::OwnMint,
@@ -343,7 +381,50 @@ pub async fn prepare_post<B: L1Boundary>(
         },
     )
     .await?;
-    Ok(PreparedContent { node, prepared })
+    let tag_writes = stage_tags(
+        pool,
+        boundary,
+        gc_after_epochs,
+        viewer,
+        &address,
+        &prepared,
+        &tags,
+    )
+    .await?;
+    let mut writes = vec![prepared];
+    writes.extend(tag_writes);
+    Ok(PreparedContent { node, writes })
+}
+
+/// The tag half of a creation batch: one Tag per topic, each entering the
+/// node the minting record mints.
+///
+/// The middle is read off the minting record's own target rather than
+/// recomputed — for a genesis act that target *is* the node's identifier,
+/// and it only exists once prepare has allocated the sequence value. Each
+/// Tag declares the minting act as a dependency so the epoch close cannot
+/// order a topic claim ahead of the node it claims about
+/// (`l1-standin::close` selects only acts whose deps already stand).
+async fn stage_tags<B: L1Boundary>(
+    pool: &PgPool,
+    boundary: &B,
+    gc_after_epochs: i64,
+    viewer: Uuid,
+    address: &str,
+    minting: &prepare::Prepared,
+    tags: &[topics::PlannedTag],
+) -> Result<Vec<prepare::Prepared>, ContentError> {
+    if tags.is_empty() {
+        return Ok(Vec::new());
+    }
+    let middle = minting.proposal.body.target.clone();
+    let deps = vec![minting.proposal.body.act_id()];
+    let site = topics::TagSite {
+        author: address,
+        middle: &middle,
+        deps: &deps,
+    };
+    Ok(topics::stage_tags(pool, boundary, gc_after_epochs, viewer, site, tags).await?)
 }
 
 /// Prepares a Post edit: an ordinary-role Publish toward the existing
@@ -396,16 +477,14 @@ pub async fn prepare_post_edit<B: L1Boundary>(
         },
     )
     .await?;
-    Ok(PreparedContent {
-        node: post.id,
-        prepared,
-    })
+    Ok(PreparedContent::single(post.id, prepared))
 }
 
 /// Prepares a new Comment: one genesis Review — A leg to the parent,
-/// terminal leg minting the Comment (comment.md §1). This slice offers
-/// the comment box on Posts and Comments (which parents the UI offers
-/// is product policy, never a substrate limit — comment.md §1).
+/// terminal leg minting the Comment (comment.md §1) — plus one Tag act
+/// per declared topic. This slice offers the comment box on Posts and
+/// Comments (which parents the UI offers is product policy, never a
+/// substrate limit — comment.md §1).
 pub async fn prepare_comment<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -417,6 +496,7 @@ pub async fn prepare_comment<B: L1Boundary>(
     let p_i = draft.p_interest.unwrap_or(DEFAULT_STANCE);
     stance_range("pDirected", p_d)?;
     stance_range("pInterest", p_i)?;
+    let tags = topics::plan_batch(&draft.tags)?;
     let parent = parent_node(pool, draft.target).await?;
     let address = author_address(pool, viewer).await?;
     let node = Uuid::new_v4();
@@ -433,7 +513,7 @@ pub async fn prepare_comment<B: L1Boundary>(
         gc_after_epochs,
         viewer,
         Gesture {
-            author: address,
+            author: address.clone(),
             family: Family::Review,
             middle: Some(parent),
             target: Target::OwnMint,
@@ -448,7 +528,19 @@ pub async fn prepare_comment<B: L1Boundary>(
         },
     )
     .await?;
-    Ok(PreparedContent { node, prepared })
+    let tag_writes = stage_tags(
+        pool,
+        boundary,
+        gc_after_epochs,
+        viewer,
+        &address,
+        &prepared,
+        &tags,
+    )
+    .await?;
+    let mut writes = vec![prepared];
+    writes.extend(tag_writes);
+    Ok(PreparedContent { node, writes })
 }
 
 /// Prepares a Comment edit: an ordinary-role Review at (0,0) — A leg to
@@ -499,10 +591,7 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
         },
     )
     .await?;
-    Ok(PreparedContent {
-        node: comment.id,
-        prepared,
-    })
+    Ok(PreparedContent::single(comment.id, prepared))
 }
 
 struct ChainedTarget {
