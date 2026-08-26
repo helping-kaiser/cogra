@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 
@@ -89,6 +89,21 @@ describe("TopicView", () => {
     );
     renderWithProviders(<TopicView name="münchen" />, { writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId("topic-not-found")).toBeInTheDocument();
+  });
+
+  it("offers a retry on the nothing-loaded transport error and heals from it", async () => {
+    let calls = 0;
+    server.use(
+      graphql.query("HashtagDetail", () => {
+        calls += 1;
+        return calls === 1 ? HttpResponse.error() : HttpResponse.json({ data: hashtagDetail("rust") });
+      }),
+    );
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId("topic-transport-error")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("topic-retry"));
+    expect(await screen.findByTestId("topic-name")).toHaveTextContent("#rust");
+    expect(screen.queryByTestId("topic-transport-error")).not.toBeInTheDocument();
   });
 
   it("backs to the feed", async () => {
