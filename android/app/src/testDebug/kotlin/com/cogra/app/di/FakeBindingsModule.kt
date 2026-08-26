@@ -39,6 +39,7 @@ import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
+import com.cogra.domain.topics.TagClaim
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
@@ -108,7 +109,7 @@ class ScriptedContentRepository : ThrowingContentRepository() {
         description: String?,
         content: String,
         license: LicenseChoice,
-        tags: List<String>,
+        tags: List<TagClaim>,
     ): Outcome<PreparedContentView> {
         pendingAfterPrepare?.let { listing = listOf(it) + listing }
         return Outcome.Success(PreparedContentView(preparedNode, emptyList()))

@@ -36,6 +36,7 @@ import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.WriteRepository
+import com.cogra.domain.topics.TagClaim
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
 import com.cogra.network.graphql.ApplicationStatusQuery
@@ -604,7 +605,7 @@ class ContentRepositoryImpl @Inject constructor(
         description: String?,
         content: String,
         license: LicenseChoice,
-        tags: List<String>,
+        tags: List<TagClaim>,
     ): Outcome<PreparedContentView> = guard.run {
         client.mutation(
             PreparePostMutation(
@@ -613,9 +614,19 @@ class ContentRepositoryImpl @Inject constructor(
                     description = Optional.presentIfNotNull(description),
                     content = content,
                     license = license.toInput(),
-                    // Names only — the composer never picks parameters
-                    // (D15: no autocomplete; api-spec.md `TagInput`).
-                    tags = Optional.presentIfNotNull(tags.takeIf { it.isNotEmpty() }?.map { TagInput(name = it) }),
+                    // Both parameters ride explicitly: the composer's
+                    // sliders start at the server's own defaults, so an
+                    // untouched slider says exactly what omitting it
+                    // would (api-spec.md `TagInput`).
+                    tags = Optional.presentIfNotNull(
+                        tags.takeIf { it.isNotEmpty() }?.map {
+                            TagInput(
+                                name = it.name,
+                                pDirected = Optional.present(it.relevance),
+                                pInterest = Optional.present(it.confidence),
+                            )
+                        },
+                    ),
                 ),
             ),
         ).payloadOutcome({ it.preparePost.userErrors.map { e -> e.userErrorFields } }) { data ->

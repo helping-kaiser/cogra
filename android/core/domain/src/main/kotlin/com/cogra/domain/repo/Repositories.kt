@@ -29,6 +29,7 @@ import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
+import com.cogra.domain.topics.TagClaim
 import java.time.Instant
 
 /**
@@ -179,17 +180,16 @@ interface ContentRepository {
     ): Outcome<Page<CommentView>>
 
     /**
-     * [tags] are the topics declared at creation — explicit names only
-     * (post.md §3, D15: no autocomplete). The server stages one Tag
-     * write per name at the default relevance/confidence; the composer
-     * never picks parameters (api-spec.md `TagInput`).
+     * [tags] are the topics declared at creation (post.md §3, D15: no
+     * autocomplete). The server stages one Tag write per claim, at the
+     * parameters the claim carries (api-spec.md `TagInput`).
      */
     suspend fun preparePost(
         title: String?,
         description: String?,
         content: String,
         license: LicenseChoice,
-        tags: List<String> = emptyList(),
+        tags: List<TagClaim> = emptyList(),
     ): Outcome<PreparedContentView>
 
     /**
