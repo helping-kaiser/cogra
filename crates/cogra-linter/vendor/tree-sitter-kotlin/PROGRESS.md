@@ -167,6 +167,44 @@ region kinds the adoption data names: `line_comment`, `block_comment`,
 `kdoc`. KDoc is a block comment whose opener is `/**` and which is not
 the empty `/**/`.
 
+### String bodies are the scanner's, so a comment inside one is impossible
+
+Found by the frontend lane, which is the only place it could be found:
+the grammar alone looked right.
+
+`extras` are global in tree-sitter. A comment is a candidate wherever
+the lexer may begin a token, and `token.immediate` does not prevent it —
+immediacy stops the *internal* lexer from skipping trivia, while the
+external scanner is consulted regardless, and comments must be external
+because Kotlin's nest. So inside `"..."`, at any position where a
+content token began, a `//` was lexed as a comment:
+
+- `val x = "// not a comment"` — the comment swallowed the closing
+  quote, and the declaration became an `ERROR`.
+- `val x = "/* not a comment */"` — the comment closed, the string
+  parsed, and the tree carried `(line_string_literal (block_comment))`
+  with **no error at all**. A label written there would have become a
+  real occurrence, which is precisely what `[scanned-regions]` promises
+  cannot happen. The silent half, and the graver one.
+
+Only two positions bit: just inside the opening quote, and just after an
+interpolation's `}`. Mid-content a single greedy token spanned the
+leader and the lexer never stopped there — which is why every URL in the
+corpus stayed clean and the defect stayed hidden.
+
+The fix is the arrangement the raw string already had: the content is an
+external token, so the scanner knows it is inside a string and refuses
+to produce anything else while `_line_string_content` is valid. It is
+the refusal, not the content token, that does the work — it covers the
+empty runs at exactly the two positions that used to bite, and what
+follows them is an escape, an interpolation or the closing quote, none
+of which can introduce trivia. A comment node inside a string is
+therefore unreachable rather than merely unlikely, which is what the
+ratified contract asks for: string literals are never scanned.
+
+Pinned by four corpus tests and, corpus-wide, by the frontend suite's
+guard over every `.kt` source.
+
 ### The expression cascade is literal
 
 KotlinParser.g4 states precedence as a cascade of rules. The usual
