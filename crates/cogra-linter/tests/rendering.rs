@@ -155,6 +155,6 @@ fn the_measurement_always_exits_zero() {
     let at = fixture("migrations");
     let (code, text) = ran(&at, &["migrations"]);
     assert_eq!(code, 0, "{text}");
-    assert!(text.contains("profile rust-test"), "{text}");
+    assert!(text.contains("profile rust-module"), "{text}");
     let _ = std::fs::remove_dir_all(&at);
 }

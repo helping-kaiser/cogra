@@ -44,8 +44,8 @@ fn one(id: &str) -> &'static Migration {
         .unwrap_or_else(|| panic!("{id} is measured"))
 }
 
-/// (´dec:lint:staged-profiles´): both registered profiles are staged, and a
-/// staged profile is exactly what this run measures.
+/// (´dec:lint:staged-profiles´): a staged profile is exactly what this run
+/// measures, and the module profile is the one this corpus still stages.
 #[test]
 fn every_staged_profile_is_measured() {
     let staged = adoption()
@@ -55,29 +55,19 @@ fn every_staged_profile_is_measured() {
         .filter(|profile| matches!(profile.status, ProfileStatus::Staged { .. }))
         .count();
     assert_eq!(measured().len(), staged);
-    assert_eq!(staged, 2, "the two profiles `[profiles]` registers");
+    assert_eq!(staged, 1, "the module profile, whose migration is pending");
 }
 
-/// (´dec:lint:migrations-subcommand´): the test profile's distance is its
-/// covered assets counted against the registers not yet generated — one
-/// line per owner whose assets have no committed register.
+/// (´dec:lint:staged-profiles´): a profile in force is not measured at all —
+/// the test profile's registers are committed and its distance is no longer a
+/// fact this run has to report.
 #[test]
-fn the_test_profile_waits_on_its_registers() {
-    let found = one("rust-test");
-    println!(
-        "{} covered, {} registers remaining",
-        found.covered,
-        found.remaining.len()
-    );
-    assert!(found.covered > 200, "the census is the corpus's tests");
-    assert!(!found.arrived());
-    for step in &found.remaining {
-        assert!(
-            step.at.path.ends_with("label-register.md"),
-            "a register, not an asset: {}",
-            step.at.path.display()
-        );
-    }
+fn a_profile_in_force_is_not_measured() {
+    let in_force = ProfileId::new("rust-test");
+    assert!(measured().iter().all(|one| one.profile != in_force));
+    let asked = migrate::distances(adoption(), &root(), Some(&in_force))
+        .expect("the repository root is a directory");
+    assert!(asked.is_empty(), "{asked:?}");
 }
 
 /// (´dec:lint:migrations-subcommand´): the module profile's distance is its
