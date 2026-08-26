@@ -103,6 +103,18 @@ interface IdentityStore {
     suspend fun setStanceInputMode(mode: StanceInputMode)
 
     /**
+     * Whether a submit that stages more than one signed action asks
+     * first (fix round 1, F4). On by default — a batch of priced acts is
+     * exactly what a reader should get to see before signing — and
+     * turned off from the confirm itself or back on in Settings. A
+     * rendering preference like [stanceInputMode], and a Flow for the
+     * same reason: Settings has to reach a composer already open.
+     */
+    val confirmMultiActionSubmits: Flow<Boolean>
+
+    suspend fun setConfirmMultiActionSubmits(value: Boolean)
+
+    /**
      * The "don't remember me" opt-in (auth.md "Sign-out"): whether the
      * active account's material is purged when its session ends.
      */
