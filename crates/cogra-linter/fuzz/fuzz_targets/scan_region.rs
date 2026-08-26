@@ -1,7 +1,7 @@
 #![no_main]
 //! `scan_region` — arbitrary text into [`scan_prose`] and [`scan_code`],
 //! asserting no panic and that every reported span lies within the input
-//! (`preview:lint:fuzz-plan`, design.md).
+//! (´preview:lint:fuzz-plan´, design.md).
 //!
 //! # The span sets
 //!

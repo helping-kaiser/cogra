@@ -2,7 +2,7 @@
 //! `pretokenize_rust` — the strongest single assertion the crate has, since
 //! it is total on every input: arbitrary bytes into [`pretokenize`], and the
 //! lexeme partition of (´inv:lint:lexeme-partition´) must hold whatever came
-//! in (`preview:lint:fuzz-plan`, design.md).
+//! in (´preview:lint:fuzz-plan´, design.md).
 //!
 //! [`PreTokenized::partitions`] is the predicate the crate states once and
 //! every fixture, the property obligation, and this target assert — ascending,
