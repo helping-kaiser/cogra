@@ -8,10 +8,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -28,21 +31,31 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.annotation.StringRes
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.CollapsingTopBanner
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.TagParameterSliders
 import com.cogra.core.designsystem.TopicChip
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.topics.TagNameProblem
+import com.cogra.domain.topics.canonicalTagName
+import com.cogra.domain.topics.isAddableTagName
+import com.cogra.domain.topics.tagNameProblem
 import com.cogra.feature.content.R
 
 @Composable
@@ -73,7 +86,13 @@ fun ComposePostRoute(
         onTagInputChange = viewModel::onTagInputChange,
         onAddTag = viewModel::onAddTag,
         onRemoveTag = viewModel::onRemoveTag,
+        onTuneTag = viewModel::onTuneTag,
+        onDoneTuningTag = viewModel::onDoneTuningTag,
+        onTagRelevanceChange = viewModel::onTagRelevanceChange,
+        onTagConfidenceChange = viewModel::onTagConfidenceChange,
         onSubmit = viewModel::onSubmit,
+        onConfirmSubmit = viewModel::onConfirmSubmit,
+        onDismissConfirm = viewModel::onDismissConfirm,
         onBack = onBack,
         keyBanner = keyBanner,
     )
@@ -90,7 +109,13 @@ fun ComposePostScreen(
     onTagInputChange: (String) -> Unit,
     onAddTag: () -> Unit,
     onRemoveTag: (String) -> Unit,
+    onTuneTag: (String) -> Unit,
+    onDoneTuningTag: () -> Unit,
+    onTagRelevanceChange: (String, Double) -> Unit,
+    onTagConfidenceChange: (String, Double) -> Unit,
     onSubmit: () -> Unit,
+    onConfirmSubmit: (Boolean) -> Unit,
+    onDismissConfirm: () -> Unit,
     onBack: () -> Unit,
     keyBanner: @Composable () -> Unit = {},
 ) {
@@ -177,27 +202,30 @@ fun ComposePostScreen(
             if (state.emptyBody) {
                 ErrorLine(R.string.content_error_empty_body, "compose_empty_body")
             }
-            // Tags, like the license, are genesis-only: they are their
-            // own priced gesture, never an edit field (post.md §3, D14)
-            // — changing an existing post's topics rides the chip
-            // row's own add/remove gestures instead.
-            if (!editing) {
-                TopicEntry(
-                    tagInput = state.tagInput,
-                    tags = state.tags,
-                    capReached = state.tagCapReached,
-                    onTagInputChange = onTagInputChange,
-                    onAddTag = onAddTag,
-                    onRemoveTag = onRemoveTag,
-                )
-            }
+            // Tags are never fields of the post record (post.md §3) —
+            // but this is where an author changes them (F3): the
+            // section stages its own Tag acts, which ride the same
+            // submit and the same signing pass.
+            TopicEntry(
+                tagInput = state.tagInput,
+                tags = state.tags,
+                capReached = state.tagCapReached,
+                tagBeingTuned = state.tagBeingTuned,
+                onTagInputChange = onTagInputChange,
+                onAddTag = onAddTag,
+                onRemoveTag = onRemoveTag,
+                onTuneTag = onTuneTag,
+                onDoneTuningTag = onDoneTuningTag,
+                onTagRelevanceChange = onTagRelevanceChange,
+                onTagConfidenceChange = onTagConfidenceChange,
+            )
             // License qualifiers are genesis-only and immutable
             // (post.md §4) — the edit form carries none.
             if (!editing) {
                 LicenseControls(license = state.license, onLicenseChange = onLicenseChange)
             }
-            if (state.refused) {
-                ErrorLine(R.string.content_error_refused, "compose_refused")
+            state.refusal?.let { message ->
+                ErrorLine(message, "compose_refused")
             }
             if (state.signingFailed) {
                 ErrorLine(
@@ -212,38 +240,128 @@ fun ComposePostScreen(
             if (state.transportFailed) {
                 ErrorLine(R.string.content_error_transport, "compose_transport_error")
             }
-            Button(
-                onClick = onSubmit,
-                enabled = !state.submitting,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("compose_submit"),
+            // What signing this will cost, beside the button that does
+            // it: every record in the batch is its own priced act, so
+            // the count is the thing to read BEFORE signing (F4).
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
-                    stringResource(
-                        if (editing) R.string.content_save_edit else R.string.content_submit,
+                    text = pluralStringResource(
+                        R.plurals.content_signed_actions,
+                        state.signedActionCount,
+                        state.signedActionCount,
                     ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("compose_signed_actions"),
                 )
+                Button(
+                    onClick = onSubmit,
+                    enabled = !state.submitting && !state.nothingToSign,
+                    modifier = Modifier.testTag("compose_submit"),
+                ) {
+                    Text(
+                        stringResource(
+                            if (editing) R.string.content_save_edit else R.string.content_submit,
+                        ),
+                    )
+                }
             }
         }
+    }
+    if (state.confirmPending) {
+        MultiActionConfirm(
+            count = state.signedActionCount,
+            onConfirm = onConfirmSubmit,
+            onDismiss = onDismissConfirm,
+        )
     }
 }
 
 /**
- * Topic entry at creation (D15: free text, no autocomplete): a field
- * with a live normalization preview, add-as-chip, remove-before-send,
- * capped at 10 (D18). Tags ride the create mutation as plain names —
- * the composer never picks relevance or confidence (api-spec.md
- * `TagInput`'s per-field defaults).
+ * The confirm a batch earns (F4): what it will sign, and the way out of
+ * being asked again. Material puts the confirming action on the right,
+ * which `AlertDialog` does for us (F7).
+ */
+@Composable
+private fun MultiActionConfirm(
+    count: Int,
+    onConfirm: (Boolean) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var dontAskAgain by rememberSaveable { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.testTag("compose_confirm"),
+        title = { Text(stringResource(R.string.content_confirm_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = pluralStringResource(R.plurals.content_confirm_body, count, count),
+                    modifier = Modifier.testTag("compose_confirm_body"),
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        // One target for the pair, announced once.
+                        .toggleable(
+                            value = dontAskAgain,
+                            role = Role.Checkbox,
+                            onValueChange = { dontAskAgain = it },
+                        )
+                        .testTag("compose_confirm_dont_ask"),
+                ) {
+                    Checkbox(checked = dontAskAgain, onCheckedChange = null)
+                    Text(
+                        text = stringResource(R.string.content_confirm_dont_ask),
+                        modifier = Modifier.padding(start = 12.dp),
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(dontAskAgain) },
+                modifier = Modifier.testTag("compose_confirm_proceed"),
+            ) {
+                Text(stringResource(R.string.content_confirm_proceed))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, modifier = Modifier.testTag("compose_confirm_cancel")) {
+                Text(stringResource(R.string.content_confirm_cancel))
+            }
+        },
+    )
+}
+
+/**
+ * The tags section, on both the creation composer and the edit screen
+ * (F3): free text (D15: no autocomplete) with a live canonicalization
+ * preview, add-as-chip gated on L1's atom rule (F1), tap-a-chip for its
+ * two parameters (F6), remove-before-send, capped at 10 (D18). Each
+ * chip carries the server's own words when a write was refused on it
+ * (F2).
  */
 @Composable
 internal fun TopicEntry(
     tagInput: String,
-    tags: List<String>,
+    tags: List<TagRow>,
     capReached: Boolean,
+    tagBeingTuned: String?,
     onTagInputChange: (String) -> Unit,
     onAddTag: () -> Unit,
     onRemoveTag: (String) -> Unit,
+    onTuneTag: (String) -> Unit,
+    onDoneTuningTag: () -> Unit,
+    onTagRelevanceChange: (String, Double) -> Unit,
+    onTagConfidenceChange: (String, Double) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
@@ -256,13 +374,19 @@ internal fun TopicEntry(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.testTag("compose_tags"),
             ) {
-                tags.forEach { name ->
+                tags.forEach { row ->
                     TopicChip(
-                        name = name,
-                        onClick = {},
-                        onRemove = { onRemoveTag(name) },
-                        testTag = "compose_tag_$name",
+                        name = row.name,
+                        onClick = { onTuneTag(row.name) },
+                        onRemove = { onRemoveTag(row.name) },
+                        testTag = "compose_tag_${row.name}",
                     )
+                }
+            }
+            // Verbatim, on the chip the server named (F2).
+            tags.forEach { row ->
+                row.error?.let { message ->
+                    ErrorLine(message, "compose_tag_error_${row.name}")
                 }
             }
         }
@@ -274,6 +398,7 @@ internal fun TopicEntry(
                 modifier = Modifier.testTag("compose_tags_cap"),
             )
         } else {
+            val problem = tagNameProblem(tagInput)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -284,18 +409,27 @@ internal fun TopicEntry(
                     onValueChange = onTagInputChange,
                     label = { Text(stringResource(R.string.content_topics_field)) },
                     singleLine = true,
+                    isError = problem != null,
                     modifier = Modifier
                         .weight(1f)
                         .testTag("compose_tag_input"),
                 )
-                TextButton(onClick = onAddTag, modifier = Modifier.testTag("compose_tag_add")) {
+                // The gate is UX, not validation — the server stays the
+                // authority — but a name the substrate cannot carry
+                // never reaches a signature (F1).
+                TextButton(
+                    onClick = onAddTag,
+                    enabled = isAddableTagName(tagInput),
+                    modifier = Modifier.testTag("compose_tag_add"),
+                ) {
                     Text(stringResource(R.string.content_topics_add))
                 }
             }
-            val preview = normalizeTagPreview(tagInput)
-            if (tagInput.isNotBlank()) {
+            if (problem != null) {
+                ErrorLine(problem.message(), "compose_tag_illegal")
+            } else if (tagInput.isNotBlank()) {
                 Text(
-                    stringResource(R.string.content_topics_preview, preview),
+                    stringResource(R.string.content_topics_preview, canonicalTagName(tagInput)),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.testTag("compose_tag_preview"),
@@ -303,6 +437,56 @@ internal fun TopicEntry(
             }
         }
     }
+    tags.firstOrNull { it.name == tagBeingTuned }?.let { row ->
+        TagParametersDialog(
+            row = row,
+            onRelevanceChange = { onTagRelevanceChange(row.name, it) },
+            onConfidenceChange = { onTagConfidenceChange(row.name, it) },
+            onDone = onDoneTuningTag,
+        )
+    }
+}
+
+/** Why this name cannot be an identifier atom, in the reader's terms (F1). */
+@Composable
+private fun TagNameProblem.message(): String = stringResource(
+    when (this) {
+        TagNameProblem.WHITESPACE -> R.string.content_topics_illegal_whitespace
+        TagNameProblem.TOO_LONG -> R.string.content_topics_illegal_too_long
+        TagNameProblem.ILLEGAL_CHARSET -> R.string.content_topics_illegal_charset
+    },
+)
+
+/**
+ * One chip's two parameters (F6). The dialog only closes the editor —
+ * every change is already in the draft, and nothing here signs.
+ */
+@Composable
+private fun TagParametersDialog(
+    row: TagRow,
+    onRelevanceChange: (Double) -> Unit,
+    onConfidenceChange: (Double) -> Unit,
+    onDone: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDone,
+        modifier = Modifier.testTag("compose_tag_params"),
+        title = { Text("#${row.name}") },
+        text = {
+            TagParameterSliders(
+                relevance = row.relevance,
+                confidence = row.confidence,
+                onRelevanceChange = onRelevanceChange,
+                onConfidenceChange = onConfidenceChange,
+                testTagPrefix = "compose_tag_params",
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onDone, modifier = Modifier.testTag("compose_tag_params_done")) {
+                Text(stringResource(R.string.content_topics_params_done))
+            }
+        },
+    )
 }
 
 /**

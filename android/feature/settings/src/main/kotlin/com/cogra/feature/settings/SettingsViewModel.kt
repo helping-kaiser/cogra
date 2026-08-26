@@ -34,6 +34,8 @@ data class SettingsUiState(
     val emailChangeRequested: Boolean = false,
     /** Which surface the stance control offers, everywhere (design.md §8.6). */
     val stanceInputMode: StanceInputMode = StanceInputMode.Default,
+    /** Whether a submit staging more than one signed action asks first (F4). */
+    val confirmMultiActionSubmits: Boolean = true,
     /** One-shot snackbar message; consumed via onFeedbackShown after display. */
     val feedback: SettingsFeedback? = null,
 )
@@ -70,11 +72,21 @@ class SettingsViewModel @Inject constructor(
                 _state.update { it.copy(stanceInputMode = mode) }
             }
         }
+        viewModelScope.launch {
+            identity.confirmMultiActionSubmits.collect { on ->
+                _state.update { it.copy(confirmMultiActionSubmits = on) }
+            }
+        }
     }
 
     /** Picking an alternate replaces the pad everywhere (design.md §8.6). */
     fun onStanceInputMode(mode: StanceInputMode) {
         viewModelScope.launch { identity.setStanceInputMode(mode) }
+    }
+
+    /** The way back from the confirm's own "don't ask me again" (F4). */
+    fun onConfirmMultiActionSubmits(value: Boolean) {
+        viewModelScope.launch { identity.setConfirmMultiActionSubmits(value) }
     }
 
     fun refresh() {

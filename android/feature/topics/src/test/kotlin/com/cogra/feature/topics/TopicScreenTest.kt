@@ -5,8 +5,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.cogra.domain.TaggedContentKind
 import com.cogra.domain.TaggedContentView
-import com.cogra.domain.stance.SeveranceQuote
-import com.cogra.domain.stance.StancePair
 import com.cogra.domain.testing.testHashtag
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -22,10 +20,6 @@ class TopicScreenTest {
 
     private fun render(
         state: TopicUiState,
-        onFollow: () -> Unit = {},
-        onOpenUnfollow: () -> Unit = {},
-        onDismissUnfollow: () -> Unit = {},
-        onConfirmUnfollow: () -> Unit = {},
         onOpenPost: (String) -> Unit = {},
     ) {
         compose.setContent {
@@ -33,10 +27,6 @@ class TopicScreenTest {
                 name = "rust",
                 state = state,
                 onRefresh = {},
-                onFollow = onFollow,
-                onOpenUnfollow = onOpenUnfollow,
-                onDismissUnfollow = onDismissUnfollow,
-                onConfirmUnfollow = onConfirmUnfollow,
                 onOpenPost = onOpenPost,
                 onOpenActor = {},
                 onBack = {},
@@ -62,43 +52,13 @@ class TopicScreenTest {
         compose.onNodeWithTag("topic_title").assertExists()
     }
 
+    /** Follow is a slice-3 surface (F5): the screen offers no stance control. */
     @Test
-    fun notFollowingShowsTheFollowButtonAndTappingItCallsBack() {
-        var followed = false
-        render(
-            TopicUiState(loading = false, hashtag = testHashtag("rust"), following = false),
-            onFollow = { followed = true },
-        )
-        compose.onNodeWithTag("topic_follow").assertExists()
-        compose.onNodeWithTag("topic_following").assertDoesNotExist()
-        compose.onNodeWithTag("topic_follow").performClick()
-        assertThat(followed).isTrue()
-    }
-
-    @Test
-    fun followingShowsTheFollowingButtonAndTappingItOpensUnfollow() {
-        var opened = false
-        render(
-            TopicUiState(loading = false, hashtag = testHashtag("rust"), following = true),
-            onOpenUnfollow = { opened = true },
-        )
-        compose.onNodeWithTag("topic_following").assertExists()
+    fun theScreenCarriesNoFollowControl() {
+        render(TopicUiState(loading = false, hashtag = testHashtag("rust")))
         compose.onNodeWithTag("topic_follow").assertDoesNotExist()
-        compose.onNodeWithTag("topic_following").performClick()
-        assertThat(opened).isTrue()
-    }
-
-    @Test
-    fun aFollowFailureNamesTheHuskDeviceSeparately() {
-        render(
-            TopicUiState(
-                loading = false,
-                hashtag = testHashtag("rust"),
-                followFailed = true,
-                followNeedsKey = true,
-            ),
-        )
-        compose.onNodeWithTag("topic_follow_failed").assertExists()
+        compose.onNodeWithTag("topic_following").assertDoesNotExist()
+        compose.onNodeWithTag("topic_severance").assertDoesNotExist()
     }
 
     @Test
@@ -132,28 +92,5 @@ class TopicScreenTest {
     fun emptyContentShowsTheEmptyCopy() {
         render(TopicUiState(loading = false, hashtag = testHashtag("rust"), content = emptyList()))
         compose.onNodeWithTag("topic_content_empty").assertExists()
-    }
-
-    @Test
-    fun theUnfollowConfirmRendersAndConfirmingCallsBack() {
-        var confirmed = false
-        render(
-            TopicUiState(
-                loading = false,
-                hashtag = testHashtag("rust"),
-                following = true,
-                severance = SeveranceQuote(
-                    target = "rust",
-                    standing = StancePair(0.1, 0.1),
-                    raw = StancePair(0.1, 0.1),
-                    records = 1,
-                    alreadySevered = false,
-                ),
-            ),
-            onConfirmUnfollow = { confirmed = true },
-        )
-        compose.onNodeWithTag("topic_severance").assertExists()
-        compose.onNodeWithTag("topic_severance_confirm").performClick()
-        assertThat(confirmed).isTrue()
     }
 }

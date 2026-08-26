@@ -39,6 +39,7 @@ import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
+import com.cogra.domain.topics.TagClaim
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
@@ -108,7 +109,7 @@ class ScriptedContentRepository : ThrowingContentRepository() {
         description: String?,
         content: String,
         license: LicenseChoice,
-        tags: List<String>,
+        tags: List<TagClaim>,
     ): Outcome<PreparedContentView> {
         pendingAfterPrepare?.let { listing = listOf(it) + listing }
         return Outcome.Success(PreparedContentView(preparedNode, emptyList()))
@@ -254,9 +255,6 @@ class ScriptedStanceRepository(private val writes: WriteRepository) : ThrowingSt
 class ScriptedTopicRepository(private val writes: WriteRepository) : ThrowingTopicRepository() {
     var hashtags: MutableMap<String, HashtagView> = mutableMapOf()
     var content: MutableMap<String, List<TaggedContentView>> = mutableMapOf()
-    var net = StancePair.Origin
-    var raw: StancePair? = null
-    var records = 0
 
     override suspend fun hashtag(name: String): Outcome<HashtagView?> =
         Outcome.Success(hashtags[name] ?: HashtagView(id = "hashtag-$name", name = testModeratedField(name)))
@@ -273,26 +271,6 @@ class ScriptedTopicRepository(private val writes: WriteRepository) : ThrowingTop
         pDirected: Double?,
         pInterest: Double?,
     ): Outcome<List<PreparedWriteView>> = writes.prepareStance(target, pDirected ?: 0.1, pInterest ?: 1.0)
-
-    override suspend fun followStanding(name: String, includePending: Boolean): Outcome<StanceStanding> =
-        Outcome.Success(StanceStanding(name, net, raw ?: net, records, includePending = includePending))
-
-    override suspend fun prepareFollow(name: String, pick: StancePair): Outcome<List<PreparedWriteView>> =
-        writes.prepareStance(name, pick.pDirected, pick.pInterest)
-
-    override suspend fun followSeveranceQuote(name: String, includePending: Boolean): Outcome<SeveranceQuote> =
-        Outcome.Success(
-            SeveranceQuote(
-                target = name,
-                standing = net,
-                raw = raw ?: net,
-                records = records,
-                alreadySevered = net == StancePair.Origin,
-            ),
-        )
-
-    override suspend fun prepareUnfollow(name: String): Outcome<List<PreparedWriteView>> =
-        Outcome.Success(emptyList())
 }
 
 @Module

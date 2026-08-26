@@ -256,4 +256,29 @@ class SettingsViewModelTest {
         // other surface too.
         assertThat(identity.stanceInputMode.first()).isEqualTo(StanceInputMode.ENTRY)
     }
+
+    // -- The multi-action confirm (F4) --
+
+    @Test
+    fun theConfirmIsOnUntilTheReaderSaysOtherwise() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.confirmMultiActionSubmits).isTrue()
+    }
+
+    @Test
+    fun turningTheConfirmOffAndOnAgainIsStored() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onConfirmMultiActionSubmits(false)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.confirmMultiActionSubmits).isFalse()
+        assertThat(identity.confirmMultiActionSubmits.first()).isFalse()
+
+        vm.onConfirmMultiActionSubmits(true)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(identity.confirmMultiActionSubmits.first()).isTrue()
+    }
 }

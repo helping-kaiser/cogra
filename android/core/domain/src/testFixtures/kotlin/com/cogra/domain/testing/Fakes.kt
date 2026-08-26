@@ -62,6 +62,7 @@ import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
+import com.cogra.domain.topics.TagClaim
 import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -137,6 +138,14 @@ class FakeIdentityStore : IdentityStore {
         inputMode.value = mode
     }
 
+    val confirmMultiAction = MutableStateFlow(true)
+
+    override val confirmMultiActionSubmits: Flow<Boolean> = confirmMultiAction
+
+    override suspend fun setConfirmMultiActionSubmits(value: Boolean) {
+        confirmMultiAction.value = value
+    }
+
     override suspend fun forgetOnSignOut(): Boolean = forgetOnSignOut
 
     override suspend fun setForgetOnSignOut(value: Boolean) {
@@ -150,6 +159,7 @@ class FakeIdentityStore : IdentityStore {
         stancePadTaught = false
         forgetOnSignOut = false
         inputMode.value = StanceInputMode.Default
+        confirmMultiAction.value = true
         handshakes.clear()
     }
 }
@@ -395,7 +405,7 @@ open class ThrowingContentRepository : ContentRepository {
         description: String?,
         content: String,
         license: LicenseChoice,
-        tags: List<String>,
+        tags: List<TagClaim>,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun preparePostEdit(
         id: String,
@@ -451,14 +461,6 @@ open class ThrowingTopicRepository : TopicRepository {
         pDirected: Double?,
         pInterest: Double?,
     ): Outcome<List<PreparedWriteView>> = throw UnsupportedOperationException()
-    override suspend fun followStanding(name: String, includePending: Boolean): Outcome<StanceStanding> =
-        throw UnsupportedOperationException()
-    override suspend fun prepareFollow(name: String, pick: StancePair): Outcome<List<PreparedWriteView>> =
-        throw UnsupportedOperationException()
-    override suspend fun followSeveranceQuote(name: String, includePending: Boolean): Outcome<SeveranceQuote> =
-        throw UnsupportedOperationException()
-    override suspend fun prepareUnfollow(name: String): Outcome<List<PreparedWriteView>> =
-        throw UnsupportedOperationException()
 }
 
 fun testProfile(

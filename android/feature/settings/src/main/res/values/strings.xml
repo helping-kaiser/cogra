@@ -27,6 +27,11 @@
     <string name="key_export_hex">Raw hex — Ed25519 private key</string>
 
     <!-- Which surface a stance is picked on, everywhere (design.md §8.6). -->
+    <!-- The confirm a multi-record submit earns (fix round 1, F4). -->
+    <string name="settings_writing_title">Writing</string>
+    <string name="settings_confirm_multi_action">Confirm multi-action submits</string>
+    <string name="settings_confirm_multi_action_hint">Ask before signing a submit that stages more than one action.</string>
+
     <string name="settings_stance_input_title">Taking a stance</string>
     <string name="settings_stance_input_body">A tap always adds a small positive one. This is what a longer press opens, everywhere.</string>
     <string name="settings_stance_input_pad">The pad</string>
