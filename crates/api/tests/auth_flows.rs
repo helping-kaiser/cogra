@@ -319,7 +319,9 @@ async fn reuse_detection_stamps_the_account_and_take_clears(pool: PgPool) {
 
 /// Revoking one session touches only that session, revoke-others keeps
 /// exactly the kept one, and another account's sessions are untouched
-/// throughout.
+/// throughout. Revoke-others counts only what was still live, so it
+/// reports the one remaining session rather than both — the first
+/// revocation had already taken the other.
 #[sqlx::test(migrations = "../../migrations")]
 async fn revocations_scope_to_their_target(pool: PgPool) {
     let cfg = AuthConfig::ephemeral().expect("cfg");
@@ -352,7 +354,7 @@ async fn revocations_scope_to_their_target(pool: PgPool) {
     let revoked = store::revoke_sessions(&pool, user, Some(kept.session_id), RevokedReason::Owner)
         .await
         .expect("revokes");
-    assert_eq!(revoked, 1); // mine_too — mine was already gone
+    assert_eq!(revoked, 1);
     let _ = mine_too;
     let sessions = store::sessions_for(&pool, user).await.expect("list");
     assert_eq!(sessions.len(), 1);
