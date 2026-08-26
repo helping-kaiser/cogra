@@ -30,8 +30,8 @@ says which:
    data every profile must fix; the fact that Π ⊆ K; that working
    notes are their own owner.)
 2. **The repository speaks.** Measured, cited with the number.
-   (Example: 1444 test-attributed functions; 0 test-name collisions;
-   `mod rig;` declared nine times for one definition.)
+   (Example: 1579 test-attributed functions; 0 test-name collisions;
+   `mod rig;` declared eleven times for one definition.)
 3. **Neither speaks.** Then it was ruled on 2026-08-21, and the
    **Rulings** section below records what stands and why. No fourth
    category was allowed, and nothing in the file is left proposed.
@@ -137,10 +137,13 @@ exempting the working notes from resolution.
 Two profiles, both Rust, both named by ``conv:linter:rust-frontend``
 ("a test profile recognizing test-attributed functions, a module
 profile recognizing `mod` items"). Nothing for Markdown, TypeScript or
-Kotlin: their frontends are later slices, and a profile whose frontend
-does not exist cannot compute a census — ``inv:labels:two-pass``
-requires every census computed before any resolution runs, so a
-half-available Π is not a smaller Π, it is a broken one.
+Kotlin. A frontend is a **precondition and not a cause**: Kotlin's is
+still a later slice, and a profile whose frontend does not exist cannot
+compute a census — ``inv:labels:two-pass`` requires every census
+computed before any resolution runs, so a half-available Π is not a
+smaller Π, it is a broken one. Markdown's frontend and the web's both
+exist and carry no profile all the same, because what Π registers is
+what a migration has landed (R19).
 
 The same reasoning governs the two that are here (R19):
 ``inv:labels:inventory`` admits nothing partial, and a profile
@@ -169,12 +172,13 @@ also why the pairing reads every file directly under a package's
 crate, so the tree they share is backed from beside them.
 
 **Injectivity is already satisfied for tests, and for modules only
-after the exclusion.** Measured per owner: `api` 160 distinct test
-names of 160, `common` 81/81, `l1-standin` 15/15, `postgres-store`
-26/26 — **no renaming needed anywhere**. ``inv:labels:inventory`` calls
-a collision "a naming defect of the assets", and this corpus has none.
-The module profile would fail immediately on the 38 `#[cfg(test)] mod
-tests` definitions; excluding them (R12) leaves every owner clean.
+after the exclusion.** Measured per owner: `api` 239 distinct test names
+of 239, `cogra-interchange` 474/474, `cogra-linter` 690/690, `common`
+101/101, `l1-standin` 15/15, `postgres-store` 60/60 — **no renaming
+needed anywhere**. ``inv:labels:inventory`` calls a collision "a naming
+defect of the assets", and this corpus has none. The module profile
+would fail immediately on the 36 `#[cfg(test)] mod tests` definitions;
+excluding them (R12) leaves every owner clean.
 
 **The standard place is one choice per profile — and the two profiles
 choose differently, because their costs differ by an order of
@@ -597,24 +601,27 @@ fails on it.
 ## Measurements
 
 Taken 2026-08-20 unless noted, on the branch as checked out. The census
-counts come from the linter's own `migrations` subcommand — the tool
-that enforces the profiles is the one that counts them, so a census
-figure and the check that reads it cannot drift apart.
+counts come from the linter's own standard places, both now in force —
+the `rust-test` census from the committed per-owner registers and the
+`rust-module` census from the `//!` labels the definitions carry, each
+read by the same `check` that enforces the profile, so a census figure
+and the check that reads it cannot drift apart. Both grow with the
+corpus: a slice that adds Rust sources re-measures them.
 
 | Fact | Value |
 |---|---|
 | Cargo packages | 4 built (`api`, `common`, `l1-standin`, `postgres-store`) + 2 pending (`cogra-linter`, `cogra-interchange`, docs-only) |
-| Rust sources | 73 `.rs` files |
-| Test-attributed functions (2026-08-25) | 1444, the `rust-test` census |
-| Test-name collisions per owner | 0 (160/160, 81/81, 15/15, 26/26) |
+| Rust sources (2026-08-26) | 171 `.rs` files |
+| Test-attributed functions (2026-08-26) | 1579, the `rust-test` census |
+| Test-name collisions per owner (2026-08-26) | 0 (239/239, 474/474, 690/690, 101/101, 15/15, 60/60) |
 | `mod name;` declarations (2026-08-26) | 98, of which 11 `mod rig;` for one definition |
-| Module definitions (2026-08-26) | 89, the whole `rust-module` census, every one carrying its `//!` label — it grows with the corpus, so slices that add Rust modules re-measure it, and a new module carries its label in the commit that adds it |
-| `#[cfg(test)] mod tests` definitions (2026-08-26) | 38, all excluded from that census |
+| Module definitions (2026-08-26) | 90, the whole `rust-module` census, every one carrying its `//!` label — it grows with the corpus, so slices that add Rust modules re-measure it, and a new module carries its label in the commit that adds it |
+| `#[cfg(test)] mod tests` definitions (2026-08-26) | 36, all excluded from that census |
 | Plain `//` comment occurrences | ~1210 |
 | Plain `/*` occurrences under `crates/` (2026-08-21) | 0 |
 | Files in `docs/primitive/` (2026-08-21) | 18, of which 1 (`layer1-interface.md`) is outside the carrier |
 | Kotlin sources | 138 `.kt`, 16 `.kts`, 12 Gradle modules |
-| TypeScript sources | 162 `.ts`/`.tsx` |
+| TypeScript sources (2026-08-26) | 215: 105 `.ts` and 110 `.tsx`, all under `web/`, all scanned, and none carrying an occurrence |
 | Markdown in carrier | 58 files (4 more in the working-note trees) |
 | Files carrying label-shaped spans (2026-08-25) | 29 in the carrier: 10 under `crates/`, written under the discipline; 19 under `docs/`, displayed under R20 |
 | Label-shaped spans in the docs trees (2026-08-25) | 61 across those 19 files, 37 of them parenthesized; all displayed spans (R20) |

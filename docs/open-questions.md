@@ -26,7 +26,8 @@ within a phase, order is flexible.
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
 | 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
 | 2a. Stance control (slice 2.2, both clients) | 1 | **Q42** | The resting face an unauthored stance target wears. Cheap to answer and worth answering soon: the two clients are shipping the control now, and a face is a shared contract exactly as §8.4's anchor table is. |
-| 2b. Profile surface (with slice 2.2) | 3 | **Q35, Q36, Q41** | The profile header's connection count (which fold counts as a connection — answerable once the stance control makes Affinity real), the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without all three. |
+| 2b. Profile surface (with slice 2.2) | 3 | **Q35, Q36, Q41** | The profile header's connection count (which fold counts as a connection — answerable now that every passive class rides one stance control), the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without all three. |
+| 2c. Batched creation (with slice 2.4) | 1 | **Q43** | Whether a creation batch quotes its total θ before staging any of it — the write rule is checked per act, so a batch can stage part of itself and refuse the rest. References batch exactly as tags do, which makes 2.4 the moment. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
@@ -49,7 +50,7 @@ questions are closed.
 - Q13 — see [feed-ranking.md §8.7](primitive/feed-ranking.md#87-redemption) (severer-side redemption surface, delta-funnel check on the redeeming node's outbound; self-redemption posts via the same `bot-defense` hashtag mechanism, surfaced in the severer's "review severed accounts" view).
 - Q14 — see [data-model.md "Node identity strategies"](implementation/data-model.md#node-identity-strategies) (three-strategy framework: content-addressed UUIDv5 for canonical-string nodes like Hashtag, random UUID + UNIQUE handle for User/Collective, random UUID alone for per-creation nodes). Hashtag IDs are now content-addressed so independent creations of the same canonical name converge on one node. Cross-instance federation reconciliation for Types 2 and 3 is deferred as Q15.
 - Q6 — see [invitations.md §3 "Default values and customization"](primitive/invitations.md#3-default-values-and-customization). Defaults are `(+0.1, +0.1)` on both stances — the repo-wide low-defaults policy (normal actions default low so stronger stances stay expressible); both inviter and invitee choose their own stance during the invitation flow. The doc walks through the asymmetric-friend example: "love them, not their content" is a modest positive pair, never negative connection — a `p_i < 0` stance taints every path through it and suppresses rather than neutralizes.
-- Q4 — see [feed-ranking.md §5.3](primitive/feed-ranking.md#53-recency). Time decay anchors on the **reactor edge's top-layer age** (the last actor edge in the path), applied as a scalar `f(Δt)` multiplier alongside `d(R)` to all four metrics (`h, i, j, k`). Default exponential with **30-day half-life**, frontend-tunable. Intermediate edges don't decay — silence on a relationship edge is not stance revocation. Post-node age has no separate decay — the authorship edge is itself a reactor edge and ages with the post, so old-with-no-engagement decays naturally and old-with-fresh-engagement resurfaces via fresh reactor-edge layers.
+- Q4 — see [feed-ranking.md §5.3](primitive/feed-ranking.md#53-recency). Time decay anchors on the **reactor edge's top-layer age** (the last actor edge in the path), applied as a scalar `f(Δt)` multiplier alongside `d(R)` to all four metrics (`h, i, j, k`). Default exponential with **30-day half-life**, frontend-tunable. Intermediate edges don't decay — silence on a relationship edge is not stance revocation. Post-node age has no separate decay — the authorship edge is itself a reactor edge and ages with the post, so old-with-no-engagement decays naturally and old-with-fresh-engagement resurfaces via fresh reactor-edge layers. The mechanics this entry names are the pre-§6 design, since superseded — no `d(R)` and no `h, i, j, k` metrics exist in the current model, and `Δt` is **epoch age**, with the half-life a governed parameter measured in epochs rather than a wall-clock 30 days ([feed-ranking.md §5.3](primitive/feed-ranking.md#53-recency)).
 - Q1 — see [graph-model.md §3](primitive/graph-model.md#3-revision-and-current-state). Layer count, layer timestamps, and the sequence of past edge values are **not ranking inputs**. They are metadata for audit, history, and UI surfaces (e.g., a "this edge has been revised N times" indicator, or a stale-edge prompt). Ranking sees only the top layer of each edge — the user's current expressed stance. Rationale: introducing layer-count amplification would let the system infer intent from interaction frequency, in tension with both **stances-not-events** ([graph-model.md §4](primitive/graph-model.md#4-stances-not-events)) and the user-controlled-ranking principle. Edge cases like "two friends with identical edges but very different real-world contact frequency" are explicitly not auto-resolved by the system; users update stances reactively (similar to pruning a stale subscription list) rather than the system inferring from behavior.
 - Q5 — see [feed-ranking.md §9.4](primitive/feed-ranking.md#94-the-already-seen-filter). The seen-list is a per-viewer set of content UUIDs applied as a read-side layer of the feed computation, beside §9.2's friend-fresh reordering (a reorder layer, never a boost). Pre-rank exclusion (perf win — already-seen content never enters the math). New activity on a seen post does **not** resurface it; the new comment/reaction is independently rankable as its own node. Storage location is the viewing user's choice — backend-side `user_view_log` table in Postgres is the central frontend's default ([data-model.md](implementation/data-model.md)), but self-hosted clients can keep the same data locally and pass it to the calculator (the math is the same regardless of where the JSON came from); a delegated miner holds no copy — the seen-list rides inside each request per Q24's push model. Default frontend rule for "seen": every content item that passes through the viewport during a render. Frontend batches and flushes on natural checkpoints (batch-fill, scroll pause, app close); cache-clear before flush is an accepted small loss-window. Default 1-year compaction bounds storage at ~7 MB per active-user-year; the trade-off (a resurging old post will reappear if its view-log entry has been compacted) is documented and treated as acceptable feed character. No privacy-concealment story — viewing history is no more sensitive than reaction history per the network's transparency posture; "history" becomes a UI feature using the same data.
 - Q10 — reframed as a side note rather than an open design question. See [layers.md "Side note on long-term storage"](primitive/layers.md#side-note-on-long-term-storage). Typical actor behavior bounds layer accumulation tightly — people update an edge a handful of times over its lifetime, not hundreds, and node properties change even less frequently. The corner cases that *would* accumulate substantial history (e.g., a decades-old company restructuring through CollectiveMember edges) are precisely the ones where preserving history has value. If a real instance ever runs into storage pressure, compaction-friendly approaches that respect the no-silent-deletion principle exist — but it's an implementation-time decision contingent on real data, not a design-time one to settle preemptively.
@@ -203,6 +204,43 @@ choice wants a cross-device look first. 😐 stays until then.
 
 ---
 
+## Q43 — Does a creation batch quote its total cost?
+
+**Where it shows up:**
+[api-spec.md "Content authoring"](implementation/api-spec.md) (the
+creation batch),
+[substrate.md §6](primitive/substrate.md#6-authoring-path-and-admission)
+(the write rule)
+**Status:** open (surfaced by slice 2.3's tag batches)
+
+### Context
+
+Creating content stages a batch — the minting record plus one Tag
+per declared topic and one Reference per citation, each its own
+priced act. The write rule is checked **per act**, against the
+balance as it stands, and staging reserves nothing: an author
+holding a single θ stages a batch of ten, and an author whose
+balance falls mid-batch keeps the acts already staged and takes a
+refusal on the rest. Each act commits its own transaction, so
+there is no batch to roll back. Severance is the precedent — its
+`(0,0)` batch stages act by act on the same rule.
+
+The arithmetic is coherent, since only landing debits. What it is
+not is visible: the composer asks for one gesture and the author
+pays N times what one gesture costs.
+
+### The question
+
+Should a prepare quote the batch's total — N acts at the current θ
+— and refuse the whole batch when the balance cannot carry it?
+The alternatives are a cumulative pre-check in the API, a
+client-side quote with no server guarantee behind it, and leaving
+the per-act check as the only rule with the count shown in the
+composer. Slice 2.4 doubles the surface: references batch exactly
+as tags do.
+
+---
+
 ## Q35 — The profile connection count: which fold counts
 
 **Where it shows up:**
@@ -216,21 +254,26 @@ count in slice 2.1)
 design.md's profile-header inventory names a **connection
 count**, and the profile screen will eventually show direct
 connections both ways (who this actor connects to, who connects
-to them). No doc defines the fold behind the number: which
-families count as a "connection" (Affinity toward a Profile?
-any non-`(0,0)` Opinion bundle? reciprocated only?), whether a
-severed bundle subtracts, and whether the two directions are one
-number or two. A math-shaped claim with no math is not
-implementable ([CLAUDE.md](../CLAUDE.md) — trace claims to the
-docs).
+to them). No doc defines the fold behind the number: what counts
+as a "connection" (any non-`(0,0)` Opinion bundle? reciprocated
+only? a threshold on the bundle's sum?), whether a severed bundle
+subtracts, and whether the two directions are one number or two.
+A math-shaped claim with no math is not implementable
+([CLAUDE.md](../CLAUDE.md) — trace claims to the docs).
+
+The count reads Opinion bundles. Affinity is Actor → Type,
+enforced by the census
+([edges.md §2](primitive/edges.md#2-binary-families-cogra-authors)),
+so no actor ever holds an Affinity toward a Profile.
 
 ### The question
 
 What is the declared fold for an actor's connection count (and
-the connection *lists* behind it)? The natural moment to answer
-is slice 2.2, when the stance control makes Affinity bundles
-real. Display-only either way: inbound connections never shape
-the holder's feed.
+the connection *lists* behind it)? The trigger has fired: slice
+2.3 made a Type a stance target, so Affinity bundles are real and
+every passive class now rides one control and one fold.
+Display-only either way: inbound connections never shape the
+holder's feed.
 
 ---
 

@@ -292,6 +292,10 @@ can land in any order — 2.3 (topics) needs only the text core.
   [edges.md §3](../primitive/edges.md)).
 - Structured inputs only — never parsed from the body
   ([api-spec.md](api-spec.md)).
+- At most ten references per creation batch — the cap tags
+  carry, for the same reason: each citation is its own priced
+  act, and θ prices the author's cost but not the prepare-side
+  work an unbounded batch demands.
 - **Hand test:** cite a post from a post; mention a person and
   land on their profile from the render.
 - **Surfaces:** backend, API, Android, web.
@@ -341,6 +345,14 @@ can land in any order — 2.3 (topics) needs only the text core.
   container (a delegated service), then on-device via UniFFI — the
   decentralized end state. No stage changes the slice-in,
   ordered-list-out shape.
+- **Third-party topic claims** join the chip row and the topic
+  feed. A tag whose author is not the content's author reaches a
+  viewer only through the tagger, at the viewer's forward-path
+  weight, so 2.3 serves the content-intrinsic channel alone — the
+  author's own declarations — and the union across authors becomes
+  servable with the weight this slice computes
+  ([hashtag.md §4](../instances/hashtag.md#4-the-current-topics-fold),
+  [feed-ranking.md §4](../primitive/feed-ranking.md#4-the-path-set)).
 - The score readout — [design.md §7](design.md) "numbers are in
   scope": a post can show what it scored and why it sits where
   it does, opening into the actual paths behind it.

@@ -50,6 +50,7 @@ pub mod error;
 pub mod frontend;
 pub mod frontend_md;
 pub mod frontend_rust;
+pub mod frontend_web;
 pub mod graph;
 pub mod judge;
 pub mod migrate;

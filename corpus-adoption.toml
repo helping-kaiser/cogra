@@ -462,9 +462,12 @@ note  = "empty prefix matches everything not matched above: README.md, CONTRIBUT
 # Two profiles in v1, both Rust, both named by ARCH
 # conv:linter:rust-frontend ("a test profile recognizing
 # test-attributed functions, a module profile recognizing mod items").
-# No web, Kotlin, or Markdown profile in v1: their frontends are later
-# slices (ARCH gate:linter:architecture-review, sequencing clause),
-# and a profile whose frontend does not exist cannot compute a census.
+# No web, Kotlin, or Markdown profile in v1. A frontend is a
+# PRECONDITION and not a cause: Kotlin's is still a later slice (ARCH
+# gate:linter:architecture-review, sequencing clause) and could not
+# compute a census if a profile asked, while Markdown's and the web's
+# both exist and carry no profile all the same. What Pi registers is
+# what a migration has landed, per the staged-entry rule below.
 #
 # STAGED ENTRY — RULED 2026-08-25. LBL inv:labels:inventory admits
 # nothing partial: every covered asset carries its label at the
@@ -613,7 +616,7 @@ business. 38 files declare `mod tests`, so a census that kept them
 would derive mod:*:tests thirty-eight times and fail injectivity in
 every owner. The consequence is accepted plainly — an inline test
 module carries no label of its own.
-MEASURED 2026-08-26 by the linter's own migrations subcommand: 89
+MEASURED 2026-08-26 by the linter's own migrations subcommand: 90
 module definitions, and after the exclusion no duplicate module name
 in any owner (api, cogra-interchange, cogra-linter, common,
 l1-standin, postgres-store all clean). The census grows with the
@@ -1268,9 +1271,10 @@ failing = [
   "crates/common/",
   "crates/api/",
   "docs/",
+  "web/",
 ]
 
-# What those seven prefixes carry, and what they deliberately do not.
+# What those eight prefixes carry, and what they deliberately do not.
 #
 # crates/cogra-linter/ — the whole crate, by first-match prefix: the
 #   four discipline documents, the linter architecture, the linter's
@@ -1325,9 +1329,19 @@ failing = [
 #   label-shaped span there is displayed, so the prefix enforces
 #   emptiness and catches the next stray span on the commit that
 #   writes it.
+# web/ — the whole app, joining on the day its frontend did. Its 215
+#   .ts and .tsx sources were already in the carrier and already
+#   owned; what the web frontend added is that their comments are
+#   read, and the read found nothing to sweep — no acute occurrence
+#   anywhere in the tree and no label-shaped backtick in any comment.
+#   The one label-shaped span the tree does carry sits inside a string
+#   literal, which [scanned-regions] puts outside what is scanned, so
+#   it is not an occurrence and never becomes one. The prefix
+#   therefore enforces emptiness the way docs/ does, and catches the
+#   first web comment to write a label on the commit that writes it.
 #
-# DELIBERATELY ADVISORY, each awaiting its own migration:
-#   android/, web/   — no frontend before slices 7 and 8
+# DELIBERATELY ADVISORY, awaiting its own migration:
+#   android/   — the Kotlin frontend is still ahead of it
 
 
 

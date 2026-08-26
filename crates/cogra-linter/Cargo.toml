@@ -28,6 +28,21 @@ syn = { version = "3.0.4", features = ["full", "visit", "extra-traits"] }
 # reader can see it. Verified against docs.rs/proc-macro2 1.0.107 on
 # 2026-08-25: outside a procedural macro the range is accurate on stable.
 proc-macro2 = { version = "1.0.107", features = ["span-locations"] }
+# The web frontend (architecture, web-frontend convention): parse_file_as_program
+# with a comments store beside it. `typescript` is one of this crate's
+# DEFAULT features, which is why no feature list appears here; tsx and dts
+# are per-file syntax settings rather than build-time ones. Verified
+# against docs.rs/swc_ecma_parser 45.0.0 on 2026-08-26.
+swc_ecma_parser = "45.0.0"
+# The comments store the parser fills, the source map owning the file's
+# byte positions, and the span type those are keyed by. Verified against
+# docs.rs/swc_common 26.0.0 on 2026-08-26.
+swc_common = "26.0.0"
+# `EsVersion`, the parse target `parse_file_as_program` takes. The syntax
+# tree itself goes unread: the web package carries no census in version 1,
+# so the AST's only duty is to have been built. Verified against
+# docs.rs/swc_ecma_ast 29.0.0 on 2026-08-26.
+swc_ecma_ast = "29.0.0"
 # The adoption-data parser (design, TOML-parsing decision); Spanned locates
 # adoption defects at their row.
 toml = "1.1"
