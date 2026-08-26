@@ -143,6 +143,10 @@ enum Expected {
 /// The reasons are prose written against the standard, so the clauses are
 /// ordered: a reason may name more than one property, and the most
 /// specific naming wins.
+///
+/// An indefinite-length head is refused where it stands, so such a row is
+/// classified by the byte the decoder meets rather than by the deeper defect
+/// its reason goes on to describe.
 fn expected_refusal(bytes: &[u8], reason: &str) -> Expected {
     if reason.contains("map keys not in bytewise-lexicographic order") {
         return Expected::Exactly("UnsortedMapKeys");
@@ -156,9 +160,6 @@ fn expected_refusal(bytes: &[u8], reason: &str) -> Expected {
     if reason.contains("but not canonical") {
         return Expected::Exactly("NonPreferredHead");
     }
-    // An indefinite-length head is refused where it stands, so the row is
-    // classified by the byte the decoder meets rather than by the deeper
-    // defect its reason goes on to describe.
     if matches!(bytes.first(), Some(0x5f | 0x7f | 0x9f | 0xbf)) {
         return Expected::Exactly("IndefiniteLength");
     }

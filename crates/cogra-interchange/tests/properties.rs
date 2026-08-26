@@ -170,8 +170,6 @@ fn mutate(label: &str, mutation: Mutation, index: usize) -> String {
     }
 }
 
-// -- chains of minors -----------------------------------------------------
-
 /// The types a generated content key is drawn from. Small on purpose: what
 /// the two chain properties measure is how keys move between minors, not
 /// how many types the parser reads.
@@ -326,8 +324,6 @@ fn conforming(theory: &Theory, seeds: &[u8], carried: &[bool]) -> Document {
     )
 }
 
-// -- growing readers ------------------------------------------------------
-
 /// The label every generated theory pins, and every generated chain
 /// document carries.
 fn chain_label() -> NamespaceLabel {
@@ -411,22 +407,23 @@ fn map_of(pairs: Vec<(Value, Value)>) -> Map {
 /// representability from the value's own magnitude and granularity, never
 /// by asking the crate. Infinities and the one admitted NaN are exactly the
 /// `binary16` specials, so they are the narrowest width too.
+///
+/// Above the largest finite `binary16` value, or below its smallest positive
+/// subnormal, no `binary16` number equals `x`. Within that range the binade
+/// exponent is read exactly from the `f64` bits, which are necessarily normal
+/// there — `a >= 2^-24` is far above the `f64` subnormal range. `binary16`'s
+/// ULP is then `2^(binade-10)` where it is normal and a fixed `2^-24` through
+/// its subnormal binades, and `x` fits exactly iff it is an integer multiple
+/// of that ULP.
 fn fits_binary16(x: f64) -> bool {
     if x.is_nan() || x.is_infinite() || x == 0.0 {
         return true;
     }
     let a = x.abs();
-    // Above the largest finite `binary16` value, or below its smallest
-    // positive subnormal, no `binary16` number is equal to `x`.
     if a > 65504.0 || a < 2f64.powi(-24) {
         return false;
     }
-    // The binade exponent, read exactly from the (necessarily normal) `f64`
-    // bits — `a >= 2^-24` is far above the `f64` subnormal range.
     let binade = ((a.to_bits() >> 52) & 0x7ff) as i32 - 1023;
-    // `binary16`'s ULP: `2^(binade-10)` where it is normal, a fixed `2^-24`
-    // through its subnormal binades. `x` fits exactly iff it is an integer
-    // multiple of that ULP.
     let ulp_exp = if binade >= -14 { binade - 10 } else { -24 };
     (a / 2f64.powi(ulp_exp)).fract() == 0.0
 }
@@ -569,7 +566,8 @@ proptest! {
     }
 
     /// Bounded determination: the envelope is settled by at most a
-    /// 296-byte prefix, and the bounded read agrees with the full decode.
+    /// 296-byte prefix, and the bounded read agrees with the full decode —
+    /// giving the same answer with nothing beyond the bound to read.
     #[test]
     fn bounded_determination_peek_agrees_within_the_bound(document in any_document()) {
         let bytes = document.to_canonical_bytes();
@@ -582,7 +580,6 @@ proptest! {
         let decoded = Document::from_canonical_bytes(&bytes).expect("a name this crate wrote");
         prop_assert_eq!(decoded.envelope(), &envelope);
 
-        // The same answer given nothing beyond the bound.
         let cut = bytes.len().min(MAX_ENVELOPE_PREFIX);
         prop_assert_eq!(
             Envelope::peek(&bytes[..cut]).expect("the envelope lies inside the bound"),
@@ -744,7 +741,9 @@ proptest! {
 
     /// The other convergence: a stamp the ceiling passes without ever
     /// meeting it turns from tolerant acceptance to rejection, the false
-    /// claim becoming checkable the moment knowledge reaches it.
+    /// claim becoming checkable the moment knowledge reaches it. The skipped
+    /// minor is never 0: it must sit above a floor for the tolerant phase to
+    /// exist at all.
     #[test]
     fn acceptance_monotonicity_a_stamp_never_assigned_turns_to_rejection(
         chain in any_minor_chain(),
@@ -755,8 +754,6 @@ proptest! {
         if !consecutive_inclusion(&chain) || chain.len() < 2 {
             return Ok(());
         }
-        // Never minor 0: the skipped minor must sit above a floor for the
-        // tolerant phase to exist at all.
         let skipped = 1 + index % (chain.len() - 1);
         let document = conforming(&chain[skipped], &seeds, &carried);
 
@@ -786,7 +783,9 @@ proptest! {
     /// Bounded determination, at the surface that makes it usable: the
     /// instrument chosen from at most a 296-byte prefix is the instrument
     /// chosen from the whole envelope — the same arm, and the same theory
-    /// or companion inside it.
+    /// or companion inside it. Quantified over one document of the label the
+    /// reader knows and one of whatever the document generator drew, most
+    /// often a label it does not.
     #[test]
     fn bounded_determination_the_prefix_routes_as_the_envelope_does(
         chain in any_minor_chain(),
@@ -802,8 +801,6 @@ proptest! {
         let registry = reader(&chain, held % (chain.len() + 1), None);
         let stamped = conforming(&chain[index % chain.len()], &seeds, &carried);
 
-        // One document of the label the reader knows, and one of whatever
-        // the document generator drew — most often a label it does not.
         for document in [stamped, stranger] {
             let bytes = document.to_canonical_bytes();
             let cut = bytes.len().min(MAX_ENVELOPE_PREFIX);
@@ -819,7 +816,8 @@ proptest! {
     /// The stamping search rests on an invariant rather than on an
     /// assumption: the satisfying minors are upward closed, so the least
     /// one is a partition point. The check is the cheap way to notice if
-    /// it ever stops resting on it.
+    /// it ever stops resting on it. Quantified over content no theory of the
+    /// chain need admit at all, as well as over content one does.
     #[test]
     fn stamping_the_binary_search_agrees_with_a_linear_scan(
         chain in any_minor_chain(),
@@ -840,7 +838,6 @@ proptest! {
             registry.stamp(&chain_label(), 1, &content),
             scan(&registry, &content)
         );
-        // And over content no theory of the chain need admit at all.
         prop_assert_eq!(
             registry.stamp(&chain_label(), 1, &Content::new()),
             scan(&registry, &Content::new())
@@ -888,8 +885,12 @@ fn a_value_nested_one_million_deep_decodes_encodes_and_drops() {
 /// The same depth, put through the walks the compiler once derived —
 /// `Clone`, `PartialEq`, `Hash` — and through the two consumers that carry
 /// a deep value on their own stack, `Document::to_value` and satisfaction.
-/// Each is iterative now (`impl:xchg:iterative-teardown`), and a recursive
-/// one of any of them would overflow the stack here.
+/// Each is iterative (´impl:xchg:iterative-teardown´), and a recursive one of
+/// any of them would overflow the stack here. The clone is a deep, iterative
+/// rebuild naming the same structure; equal values hash equal however deep,
+/// which is the `Hash`/`PartialEq` contract; and the document carrying the
+/// value has `to_value` clone it into a map for the base theory to judge,
+/// both walking it without the call stack.
 #[test]
 fn a_value_nested_one_million_deep_clones_hashes_compares_and_satisfies() {
     use std::collections::hash_map::DefaultHasher;
@@ -901,19 +902,15 @@ fn a_value_nested_one_million_deep_clones_hashes_compares_and_satisfies() {
     bytes.push(0x00);
     let value = Value::from_canonical_bytes(&bytes).expect("nesting is bounded by the input alone");
 
-    // Clone is a deep, iterative rebuild; the copy names the same structure.
     let clone = value.clone();
     assert!(clone == value);
 
-    // Equal values hash equal, however deep — the Hash/PartialEq contract.
     let mut left = DefaultHasher::new();
     let mut right = DefaultHasher::new();
     value.hash(&mut left);
     clone.hash(&mut right);
     assert_eq!(left.finish(), right.finish());
 
-    // A document carrying the deep value: to_value clones it into a map,
-    // and the base theory judges it — both walk it without the call stack.
     let label = NamespaceLabel::parse("com.example").expect("a label");
     let mut content = Content::new();
     content.insert(ContentKey::new(2).expect("a content key"), value);
