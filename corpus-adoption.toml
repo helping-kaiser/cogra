@@ -105,11 +105,22 @@ generated_files = [
   "crates/postgres-store/label-register.md",
 ]
 
-# Vendored trees: third-party sources kept in-repo. Empty today; the
-# first-party Kotlin grammar of ARCH dec:linter:kotlin-tree-sitter
-# ships a GENERATED parser, which lands here when it exists.
+# Vendored trees: sources kept in-repo that the carrier does not scan.
+#
+# The first-party Kotlin grammar of ARCH dec:linter:kotlin-tree-sitter
+# lives here as ONE tree: tree-sitter's documented project layout keeps
+# the generated parser (src/parser.c, src/grammar.json, src/node-types.json)
+# inside the grammar directory alongside its authoring sources
+# (grammar.js, src/scanner.c, test/corpus/), so splitting a separate
+# "-generated" directory would fight the toolchain for no gain. The
+# reserved path is therefore realised as the grammar tree itself.
+#
+# It is outside the carrier because it is machine-generated in part and
+# spec-derived throughout: its comments answer to the Kotlin
+# specification and to tree-sitter's conventions, not to this corpus's
+# label discipline.
 vendored_trees = [
-  # "crates/cogra-linter/vendor/tree-sitter-kotlin-generated/",
+  "crates/cogra-linter/vendor/tree-sitter-kotlin/",
 ]
 
 # Vendored files: single third-party sources kept in-repo.

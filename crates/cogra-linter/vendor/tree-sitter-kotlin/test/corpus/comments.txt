@@ -1,0 +1,124 @@
+================================================================
+Line comments are named nodes
+================================================================
+
+// leading
+fun f() {
+    // inside
+}
+
+----
+
+(source_file
+  (line_comment)
+  (function_declaration
+    (simple_identifier)
+    (function_value_parameters)
+    (function_body
+      (block
+        (line_comment)))))
+
+================================================================
+KDoc is distinguished from a plain block comment
+================================================================
+
+/** documentation */
+/* plain */
+/**/
+fun f() {}
+
+----
+
+(source_file
+  (kdoc)
+  (block_comment)
+  (block_comment)
+  (function_declaration
+    (simple_identifier)
+    (function_value_parameters)
+    (function_body
+      (block))))
+
+================================================================
+Block comments nest
+================================================================
+
+/* outer /* inner */ still outer */
+fun f() {}
+
+----
+
+(source_file
+  (block_comment)
+  (function_declaration
+    (simple_identifier)
+    (function_value_parameters)
+    (function_body
+      (block))))
+
+================================================================
+A comment between the links of a call chain
+================================================================
+
+fun f() {
+    val i = Builder()
+        .a(t)
+        // a comment where the chain continues
+        .b(u)
+}
+
+----
+
+(source_file
+  (function_declaration
+    (simple_identifier)
+    (function_value_parameters)
+    (function_body
+      (block
+        (statements
+          (property_declaration
+            (variable_declaration
+              (simple_identifier))
+            (postfix_expression
+              (postfix_expression
+                (postfix_expression
+                  (postfix_expression
+                    (postfix_expression
+                      (simple_identifier)
+                      (postfix_unary_suffix
+                        (call_suffix
+                          (value_arguments))))
+                    (postfix_unary_suffix
+                      (navigation_suffix
+                        (member_access_operator)
+                        (simple_identifier))))
+                  (postfix_unary_suffix
+                    (call_suffix
+                      (value_arguments
+                        (value_argument
+                          (simple_identifier))))))
+                (line_comment)
+                (postfix_unary_suffix
+                  (navigation_suffix
+                    (member_access_operator)
+                    (simple_identifier))))
+              (postfix_unary_suffix
+                (call_suffix
+                  (value_arguments
+                    (value_argument
+                      (simple_identifier))))))))))))
+
+================================================================
+A URL inside a string is not a comment
+================================================================
+
+val u = "https://example.com/x"
+
+----
+
+(source_file
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (string_literal
+      (line_string_literal))))
