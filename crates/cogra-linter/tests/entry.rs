@@ -1,6 +1,6 @@
 //! The path into the effective profile family (´dec:lint:staged-profiles´).
 //!
-//! The test profile is in Π, so everything a profile in force does — the
+//! Both profiles are in Π, so everything a profile in force does — the
 //! `Derives` warrant the harvest lays, the inventory bijection over it, the
 //! warrant-totality arm that reads it — has a subject under the ruled
 //! adoption data. The fixtures run it over a handful of sources built here
@@ -140,10 +140,9 @@ fn generated_register(sources: Vec<SourceFile>) -> Register {
 /// The same, under an adoption a fixture built rather than the ruled one.
 fn generated_register_under(a: &Adoption, sources: Vec<SourceFile>) -> Register {
     let before = check_sources(a, sources);
-    let mut produced =
-        regenerate_all(&before.graph, &before.registries, a, before.kinds.as_ref())
-            .into_iter()
-            .filter(|reg| matches!(reg.scope, RegisterScope::LabelRegister { .. }));
+    let mut produced = regenerate_all(&before.graph, &before.registries, a, before.kinds.as_ref())
+        .into_iter()
+        .filter(|reg| matches!(reg.scope, RegisterScope::LabelRegister { .. }));
     let one = produced.next().expect("one owner's label register");
     assert!(produced.next().is_none(), "one owner, one register");
     assert_eq!(one.path, PathBuf::from(REGISTER));
