@@ -58,14 +58,14 @@ impl Mailer for DevMailer {
                 body = %mail.body,
                 "dev mailer: outbound message"
             );
-            if let Some(path) = &self.log_file {
-                if let Err(e) = append(path, &mail).await {
-                    tracing::warn!(
-                        error = %e,
-                        path = %path.display(),
-                        "dev mailer: appending to the log file failed"
-                    );
-                }
+            if let Some(path) = &self.log_file
+                && let Err(e) = append(path, &mail).await
+            {
+                tracing::warn!(
+                    error = %e,
+                    path = %path.display(),
+                    "dev mailer: appending to the log file failed"
+                );
             }
         })
     }

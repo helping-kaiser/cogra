@@ -305,7 +305,6 @@ async fn a_successful_login_clears_the_consecutive_run(pool: PgPool) {
     );
 }
 
-
 fn register_vars(link: Uuid, n: u32) -> Value {
     json!({ "input": {
         "inviteLink": link,
@@ -389,7 +388,6 @@ async fn apply_with_invite_spends_the_register_budget(pool: PgPool) {
     let json: Value = serde_json::from_slice(&bytes).expect("json");
     assert_eq!(transport_code(&json), Some("RATE_LIMITED"), "{json}");
 }
-
 
 /// The tripped per-email budget answers the same `ok: true` and just
 /// stops mailing — no visible difference to enumerate with.

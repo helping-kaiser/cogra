@@ -104,7 +104,6 @@ async fn an_unpriced_connection_charges_the_default_page(pool: PgPool) {
     assert_eq!(first_error(&response), "Query is too complex.");
 }
 
-
 /// The canonical introspection query GraphiQL and codegen tools issue —
 /// ~13 levels deep through the TypeRef ofType recursion.
 const INTROSPECTION_QUERY: &str = r#"
@@ -173,7 +172,6 @@ async fn the_release_posture_serves_no_introspection(pool: PgPool) {
         "no schema data may resolve: {data}"
     );
 }
-
 
 #[tokio::test]
 async fn pages_over_the_cap_refuse_instead_of_clamping() {
