@@ -105,7 +105,7 @@ impl Rig {
 
     /// Drives one prepared content write through signatures and confirm.
     async fn land(&self, prepared: &content::PreparedContent, key: &ActorKey) {
-        self.sign_and_relay(prepared.prepared.id, key).await;
+        self.sign_and_relay(prepared.writes[0].id, key).await;
         self.close_and_ingest().await;
     }
 
@@ -121,6 +121,7 @@ impl Rig {
                 content: body.into(),
                 license: license(),
                 p_directed: None,
+                tags: vec![],
             },
         )
         .await
@@ -152,12 +153,13 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
             content: "The body".into(),
             license: license(),
             p_directed: Some(0.4),
+            tags: vec![],
         },
     )
     .await
     .expect("prepares");
 
-    let body = &prepared.prepared.proposal.body;
+    let body = &prepared.writes[0].proposal.body;
     assert_eq!(body.family, common::l1::Family::Publish);
     assert_eq!(body.p_i, 1.0);
     assert_eq!(body.license.as_deref(), Some("a=1;o=0"));
@@ -165,7 +167,7 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
     assert_eq!(body.target.to_string(), own_mint);
 
     let decoded =
-        CograContent::decode_payload(&prepared.prepared.proposal.payload).expect("decodes");
+        CograContent::decode_payload(&prepared.writes[0].proposal.payload).expect("decodes");
     assert_eq!(decoded.node, prepared.node);
     assert_eq!(decoded.title.as_deref(), Some("First"));
     assert_eq!(decoded.body.as_deref(), Some("The body"));
@@ -190,7 +192,7 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
     .fetch_one(&rig.pool)
     .await
     .expect("carriage row");
-    assert_eq!(carried.0, prepared.prepared.proposal.payload);
+    assert_eq!(carried.0, prepared.writes[0].proposal.payload);
     assert_eq!(carried.1, "full");
 
     let listed = content_store::list_posts(&rig.pool, None, false, 10, true)
@@ -231,7 +233,7 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
     )
     .await
     .expect("prepares edit");
-    let body = &edit.prepared.proposal.body;
+    let body = &edit.writes[0].proposal.body;
     assert_eq!(body.p_d, 0.0);
     assert!(body.license.is_none());
     assert_eq!(body.asserted_parents.len(), 1);
@@ -259,8 +261,8 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
     .await
     .expect("prepares clear");
     assert_eq!(
-        clear.prepared.proposal.body.asserted_parents[0].to_string(),
-        edit.prepared.proposal.body.act_id().to_string(),
+        clear.writes[0].proposal.body.asserted_parents[0].to_string(),
+        edit.writes[0].proposal.body.act_id().to_string(),
     );
     rig.land(&clear, &key).await;
 
@@ -416,12 +418,13 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
             content: "First!".into(),
             license: license(),
             p_directed: None,
+            tags: vec![],
             p_interest: Some(0.6),
         },
     )
     .await
     .expect("prepares comment");
-    let body = &comment.prepared.proposal.body;
+    let body = &comment.writes[0].proposal.body;
     assert_eq!(body.family, common::l1::Family::Review);
     assert_eq!(body.p_d, content::DEFAULT_STANCE);
     assert_eq!(body.p_i, 0.6);
@@ -447,6 +450,7 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
             content: "Thanks".into(),
             license: license(),
             p_directed: None,
+            tags: vec![],
             p_interest: None,
         },
     )
@@ -485,7 +489,7 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
     )
     .await
     .expect("prepares comment edit");
-    let body = &edit.prepared.proposal.body;
+    let body = &edit.writes[0].proposal.body;
     assert_eq!((body.p_d, body.p_i), (0.0, 0.0));
     assert_eq!(
         body.middle.as_ref().expect("parent").to_string(),
@@ -512,6 +516,7 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
             content: "into the void".into(),
             license: license(),
             p_directed: None,
+            tags: vec![],
             p_interest: None,
         },
     )
@@ -612,7 +617,7 @@ async fn the_chain_head_tracks_the_newest_landed_edit(pool: PgPool) {
     .await
     .expect("edit");
     assert_eq!(
-        edit.prepared.proposal.body.asserted_parents[0].to_string(),
+        edit.writes[0].proposal.body.asserted_parents[0].to_string(),
         genesis_head
     );
     rig.land(&edit, &key).await;
@@ -626,7 +631,7 @@ async fn the_chain_head_tracks_the_newest_landed_edit(pool: PgPool) {
     .await
     .expect("head")
     .expect("head exists");
-    assert_eq!(new_head, edit.prepared.proposal.body.act_id().to_string());
+    assert_eq!(new_head, edit.writes[0].proposal.body.act_id().to_string());
 }
 
 /// The chronicle's filters compose: author narrows to Bob's records,
@@ -657,6 +662,7 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
             content: "c".into(),
             license: license(),
             p_directed: None,
+            tags: vec![],
             p_interest: None,
         },
     )

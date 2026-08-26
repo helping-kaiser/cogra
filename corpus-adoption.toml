@@ -458,7 +458,7 @@ note  = "empty prefix matches everything not matched above: README.md, CONTRIBUT
 # STAGED ENTRY — RULED 2026-08-25. LBL inv:labels:inventory admits
 # nothing partial: every covered asset carries its label at the
 # standard place or the run fails. The module profile below is
-# therefore unsatisfiable on the day it is switched on: it wants 86
+# therefore unsatisfiable on the day it is switched on: it wants 87
 # inner doc comments that do not yet exist. So a profile ENTERS Pi
 # together with the migration that makes it satisfiable, and not
 # before: registered here, staged until its own condition holds.
@@ -576,7 +576,7 @@ from the first slice; nothing here waits on a later one.
 id     = "rust-module"
 kind   = "mod"
 status = "staged"
-enters_when = "the 86 module definitions carry the //! inner doc comment of this profile's standard place"
+enters_when = "the 87 module definitions carry the //! inner doc comment of this profile's standard place"
 # KND conv:kinds:assets: Module -> mod.
 
   [profiles.profile.census]
@@ -635,9 +635,11 @@ must share it. The inner doc comment is the only form both can carry:
 `mod foo { ... }` body. An outer /// would work for inline items only.
 The label sits at the asset, which is what this place buys over a
 register.
-PENDING TASK, MEASURED 2026-08-26 by the linter's own migrations
-subcommand: 86 module definitions, every one of them
+PENDING TASK, MEASURED by the linter's own migrations subcommand
+(2026-08-26): 87 module definitions, every one of them
 still needing an inner doc comment before this profile can pass —
+a census that grows with the corpus, so the number is re-measured
+whenever a slice adds Rust modules —
 the census and the remainder coincide because not one carries its
 label yet. LBL inv:labels:inventory admits nothing partial, so the
 migration is a precondition of enabling the profile, not a cleanup

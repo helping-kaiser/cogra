@@ -12,11 +12,15 @@
 //! to `(0, 0)` with counter-records, each its own priced act
 //! (feed-ranking.md §8.1).
 
+use common::hashtag::canonicalize;
 use common::l1::census::Family;
 use common::l1::fold::BundleSum;
 use common::l1::identifier::NodeId;
 use postgres_store::stance::BundleView;
-use postgres_store::{PgPool, auth as store, content as content_store, stance as stance_store};
+use postgres_store::{
+    PgPool, auth as store, content as content_store, hashtag as hashtag_store,
+    stance as stance_store,
+};
 use uuid::Uuid;
 
 use crate::l1::L1Boundary;
@@ -45,42 +49,94 @@ pub struct StanceTarget {
     pub family: Family,
 }
 
-/// Resolves an API id to the passive node a stance points at.
+/// How a stance names the node it points at.
+///
+/// Almost every stance target is an L2 id, but a Type is not a minted
+/// node: it is anchored vacuously, its id is a pure function of its name,
+/// and that derivation is one-way. A topic nobody has tagged yet
+/// therefore has no registry row to look an id back up in — and it is
+/// followable all the same, because the Type exists the moment the name
+/// does. So the topic case names the topic (hashtag.md §2; D4).
+#[derive(Debug, Clone)]
+pub enum TargetRef {
+    Node(Uuid),
+    Topic(String),
+}
+
+impl TargetRef {
+    /// The wire's two spellings: exactly one of them, or the request does
+    /// not name a target at all.
+    pub fn of(target: Option<Uuid>, topic_name: Option<String>) -> Result<Self, StanceError> {
+        match (target, topic_name) {
+            (Some(id), None) => Ok(Self::Node(id)),
+            (None, Some(name)) => Ok(Self::Topic(name)),
+            _ => Err(StanceError::BadInput {
+                field: "target",
+                message: "provide exactly one of target or topicName".into(),
+            }),
+        }
+    }
+}
+
+/// Resolves an API reference to the passive node a stance points at.
 ///
 /// Every passive node class is a stance target under the same control and
 /// the same fold; the classes whose slices have not landed yet simply have
 /// no id to resolve here. A Type resolves to Affinity — the follow-topic
 /// gesture — and everything else to Opinion (api-spec.md "The generic
 /// stance").
-///
-/// A keyless account — an applicant before its ceremony — has no Profile
-/// on the graph to point at, and so meets the same refusal as an unknown
-/// id.
-pub async fn resolve_target(pool: &PgPool, target: Uuid) -> Result<StanceTarget, StanceError> {
-    let node = if let Some(address) = store::actor_identity(pool, target)
-        .await?
-        .and_then(|identity| identity.l0_address)
-    {
-        NodeId::Prof(address)
-    } else {
-        let minted = match content_store::post(pool, target)
-            .await
-            .map_err(|e| StanceError::Internal(e.to_string()))?
-        {
-            Some(post) => Some(post.l1_node_id),
-            None => content_store::comment(pool, target)
-                .await
-                .map_err(|e| StanceError::Internal(e.to_string()))?
-                .map(|comment| comment.l1_node_id),
-        };
-        let minted = minted.ok_or(StanceError::BadInput {
-            field: "target",
-            message: "no such stance target".into(),
-        })?;
-        NodeId::parse(&minted).map_err(|e| StanceError::Internal(e.to_string()))?
+pub async fn resolve_target(
+    pool: &PgPool,
+    target: &TargetRef,
+) -> Result<StanceTarget, StanceError> {
+    let node = match target {
+        TargetRef::Topic(raw) => {
+            let name = canonicalize(raw).map_err(|e| StanceError::BadInput {
+                field: "topicName",
+                message: e.to_string(),
+            })?;
+            NodeId::name(&name).map_err(|e| StanceError::Internal(e.to_string()))?
+        }
+        TargetRef::Node(id) => resolve_id(pool, *id).await?,
     };
     let family = family_for(&node);
     Ok(StanceTarget { node, family })
+}
+
+/// Resolves an L2 id to the node it names, trying each class in turn.
+///
+/// A keyless account — an applicant before its ceremony — has no Profile
+/// on the graph to point at, and so meets the same refusal as an unknown
+/// id. A Type is reached last and only through the registry: the row is
+/// what makes the one-way derivation invertible, so a name with no row
+/// yet is reachable by `topicName` alone.
+async fn resolve_id(pool: &PgPool, target: Uuid) -> Result<NodeId, StanceError> {
+    if let Some(address) = store::actor_identity(pool, target)
+        .await?
+        .and_then(|identity| identity.l0_address)
+    {
+        return Ok(NodeId::Prof(address));
+    }
+    let minted = match content_store::post(pool, target)
+        .await
+        .map_err(|e| StanceError::Internal(e.to_string()))?
+    {
+        Some(post) => Some(post.l1_node_id),
+        None => content_store::comment(pool, target)
+            .await
+            .map_err(|e| StanceError::Internal(e.to_string()))?
+            .map(|comment| comment.l1_node_id),
+    };
+    if let Some(minted) = minted {
+        return NodeId::parse(&minted).map_err(|e| StanceError::Internal(e.to_string()));
+    }
+    if let Some(name) = hashtag_store::name_by_id(pool, target).await? {
+        return NodeId::name(&name).map_err(|e| StanceError::Internal(e.to_string()));
+    }
+    Err(StanceError::BadInput {
+        field: "target",
+        message: "no such stance target".into(),
+    })
 }
 
 /// The family the target's node class fixes. Domain, mask and tier follow
@@ -101,7 +157,21 @@ pub async fn bundle(
     include_pending: bool,
 ) -> Result<BundleSum, StanceError> {
     let author = author_address(pool, viewer).await?;
-    let resolved = resolve_target(pool, target).await?;
+    let resolved = resolve_target(pool, &TargetRef::Node(target)).await?;
+    read_bundle(pool, &author, &resolved, include_pending).await
+}
+
+/// The viewer's bundle toward a Type named by name — the read behind a
+/// topic page's follow control, which has to work on a topic that has
+/// never been tagged and so has no id to look up.
+pub async fn topic_bundle(
+    pool: &PgPool,
+    viewer: Uuid,
+    canonical_name: &str,
+    include_pending: bool,
+) -> Result<BundleSum, StanceError> {
+    let author = author_address(pool, viewer).await?;
+    let resolved = resolve_target(pool, &TargetRef::Topic(canonical_name.to_string())).await?;
     read_bundle(pool, &author, &resolved, include_pending).await
 }
 
@@ -135,7 +205,7 @@ pub async fn prepare_stance<B: L1Boundary>(
     boundary: &B,
     gc_after_epochs: i64,
     viewer: Uuid,
-    target: Uuid,
+    target: &TargetRef,
     p_d: f64,
     p_i: f64,
 ) -> Result<prepare::Prepared, StanceError> {
@@ -169,7 +239,7 @@ pub async fn prepare_severance<B: L1Boundary>(
     boundary: &B,
     gc_after_epochs: i64,
     viewer: Uuid,
-    target: Uuid,
+    target: &TargetRef,
 ) -> Result<Vec<prepare::Prepared>, StanceError> {
     let author = author_address(pool, viewer).await?;
     let resolved = resolve_target(pool, target).await?;

@@ -10,7 +10,7 @@ use common::l1::census::Family;
 use common::l1::handshake::{Proposal, StructuralBody};
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::staged;
-use postgres_store::{PgPool, mirror};
+use postgres_store::{PgPool, hashtag as hashtag_store, mirror};
 use uuid::Uuid;
 
 use crate::l1::{BoundaryError, L1Boundary};
@@ -101,6 +101,14 @@ pub struct Prepared {
 /// number-honoring money; W2a and W2b pass trivially until the real
 /// substrate brings real stamps, and this is their call site (roadmap.md
 /// "The stand-in and the swap").
+///
+/// A gesture that points at a `name(s)` also writes the naming-service
+/// row, in the same transaction that stages the act: a Type exists as
+/// soon as an accepted record references its name (hashtag.md §2; D5).
+/// That write is family-blind on purpose — a Tag's terminal leg, an
+/// Affinity's follow, whichever record names it puts the name into
+/// CoGra's index. Reads never write, which is what keeps a vacuously
+/// anchored Type resolvable without a row at all.
 pub async fn prepare<B: L1Boundary>(
     boundary: &B,
     pool: &PgPool,
@@ -150,6 +158,9 @@ pub async fn prepare<B: L1Boundary>(
             &target,
         )
         .map_err(PrepareError::Formation)?;
+    if let NodeId::Name(name) = &target {
+        hashtag_store::upsert(&mut tx, name).await?;
+    }
     let proposal = Proposal {
         body: StructuralBody {
             author: gesture.author,

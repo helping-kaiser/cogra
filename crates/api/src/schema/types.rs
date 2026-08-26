@@ -11,10 +11,14 @@ use async_graphql::{
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use chrono::{DateTime, Utc};
+use common::hashtag_uuid;
 use common::l1::census::Family;
 use common::l1::identifier::NodeId;
 use common::l1::{crypto, wire};
-use postgres_store::{PgPool, auth as store, mirror, profile as profile_store, staged};
+use postgres_store::topics::{TagChannel, TopicView};
+use postgres_store::{
+    PgPool, auth as store, mirror, profile as profile_store, staged, topics as topics_store,
+};
 use uuid::Uuid;
 
 use l1_standin::StandIn;
@@ -1538,6 +1542,25 @@ impl PostType {
         comments_connection(ctx, self.0.id, after, before, first, last, include_pending).await
     }
 
+    /// This post's current topics — the author's own declarations, as
+    /// the current-topics fold reads them: newest record per (author,
+    /// content, Type), relevance 0 read as withdrawn (hashtag.md §4).
+    ///
+    /// Third-party topic claims are deliberately absent: they reach a
+    /// viewer only through the tagger, at a forward-path weight the
+    /// ranker computes, and the ranker arrives in slice 3.
+    /// `includePending: false` serves only what has landed on L1; the
+    /// pending half is the viewer's own in-flight tags on their own
+    /// content.
+    #[graphql(complexity = "list_cost(None, child_complexity)")]
+    async fn topics(
+        &self,
+        ctx: &Context<'_>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<Vec<TopicClaim>> {
+        topic_claims(ctx, &self.0.l1_node_id, self.0.author_id, include_pending).await
+    }
+
     /// The viewer's own stance bundle toward this post, and — with
     /// `pick` — where a candidate stance would land it. Null for a
     /// viewer with no bundle to read. `includePending: false` folds
@@ -1631,6 +1654,18 @@ impl CommentType {
         comments_connection(ctx, self.0.id, after, before, first, last, include_pending).await
     }
 
+    /// This comment's current topics — the same fold and the same
+    /// author-owned channel as `Post.topics`; a Comment is Taggable
+    /// like any other passive node.
+    #[graphql(complexity = "list_cost(None, child_complexity)")]
+    async fn topics(
+        &self,
+        ctx: &Context<'_>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<Vec<TopicClaim>> {
+        topic_claims(ctx, &self.0.l1_node_id, self.0.author_id, include_pending).await
+    }
+
     /// The viewer's own stance bundle toward this comment, and — with
     /// `pick` — where a candidate stance would land it. Null for a
     /// viewer with no bundle to read. `includePending: false` folds
@@ -1643,6 +1678,216 @@ impl CommentType {
     ) -> async_graphql::Result<Option<StanceBundle>> {
         viewer_stance(ctx, self.0.id, pick, include_pending).await
     }
+}
+
+/// A topic — on the substrate an L1 Type node: named identity, compared
+/// by byte equality, anchored vacuously, owned by nobody. CoGra's naming
+/// service canonicalizes (lowercase, no `#`, ASCII `[a-z0-9._-]`, at
+/// most 128 bytes) and keys its registry by UUIDv5 of the canonical
+/// name. Content reaches it through Tag records; follows are Affinity
+/// records.
+///
+/// Deliberately **not** a `Node`. `Node` promises `createdAt`,
+/// `updatedAt` and `landing` — substrate facts about a *minted* node —
+/// and a Type has no minting record, no author, and never pends: it
+/// exists as soon as some accepted record names it. There is nothing
+/// here to date and nothing to land, so the interface is not implemented
+/// rather than answered with fictions.
+///
+/// A `Hashtag` is served for any well-formed name, whether or not any
+/// record has yet referenced it: reads never write the registry.
+pub struct HashtagType {
+    /// The canonical name — what `common::hashtag::canonicalize` returns.
+    pub name: String,
+}
+
+#[Object(name = "Hashtag")]
+impl HashtagType {
+    /// The content-addressed id: `UUIDv5(HASHTAG_NAMESPACE, name)`. A
+    /// pure function of the name, identical on every instance and fork.
+    async fn id(&self) -> Uuid {
+        hashtag_uuid(&self.name)
+    }
+
+    /// The canonical tag — lowercase, without `#`.
+    async fn name(&self) -> ModeratedText {
+        ModeratedText::from_version(Some(self.name.clone()), false)
+    }
+
+    /// Constant NORMAL until the moderation slice stores verdicts; the
+    /// substrate-visible verdict is The Moderator's Tag behind it.
+    async fn moderation_status(&self) -> ModerationStatus {
+        ModerationStatus::Normal
+    }
+
+    /// The content currently tagged with this topic, newest claim first
+    /// — the current-topics fold read from the Type's side.
+    ///
+    /// Only the *content-intrinsic* channel this slice: claims whose
+    /// author is the content's own author. A stranger's tag reaches a
+    /// viewer only through the tagger, at the viewer's forward-path
+    /// weight, and that weight is the ranker's — slice 3
+    /// (feed-ranking.md §4).
+    ///
+    /// A plain list rather than a connection: the fold this reads is
+    /// limit-bounded, not cursor-bounded, and a Relay connection would
+    /// promise a pagination the read cannot honour.
+    /// `includePending: false` serves only what has landed on L1.
+    ///
+    /// A claim whose node CoGra carries no display row for is dropped:
+    /// the fold is over the mirror, which reaches further than the
+    /// display store, and there is nothing for this surface to render.
+    #[graphql(complexity = "list_cost(limit, child_complexity)")]
+    async fn tagged_content(
+        &self,
+        ctx: &Context<'_>,
+        limit: Option<i32>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<Vec<TaggedContent>> {
+        let pool = ctx.data::<PgPool>()?;
+        let limit = list_limit(limit)?;
+        let viewer = viewer_address(ctx).await?;
+        let rows = topics_store::tagged_with(
+            pool,
+            &self.name,
+            TagChannel::AuthorOwned,
+            TopicView::from_include_pending(include_pending, viewer.as_deref()),
+            limit,
+        )
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let mut out = Vec::with_capacity(rows.len());
+        for row in rows {
+            if let Some(node) = resolve_node_id(ctx, &row.node).await? {
+                out.push(TaggedContent {
+                    node,
+                    relevance: Dimension(row.relevance),
+                    confidence: Dimension(row.confidence),
+                    pending: row.pending,
+                });
+            }
+        }
+        Ok(out)
+    }
+
+    /// The viewer's own Affinity bundle toward this topic — the follow
+    /// control's read — and, with `pick`, where a candidate would land
+    /// it. Null for a viewer with no bundle to read.
+    async fn viewer_stance(
+        &self,
+        ctx: &Context<'_>,
+        pick: Option<StancePickInput>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<Option<StanceBundle>> {
+        let Some(Some(viewer)) = ctx.data_opt::<Option<Viewer>>() else {
+            return Ok(None);
+        };
+        let pool = ctx.data::<PgPool>()?;
+        match crate::stance::topic_bundle(pool, viewer.user_id, &self.name, include_pending).await {
+            Ok(sum) => Ok(Some(StanceBundle {
+                sum,
+                pick: pick.map(|p| (p.p_directed.0, p.p_interest.0)),
+            })),
+            Err(crate::stance::StanceError::BadInput { .. })
+            | Err(crate::stance::StanceError::Internal(_)) => Ok(None),
+            Err(e) => Err(e.into()),
+        }
+    }
+}
+
+/// One current topic claim on a node — a chip in the chip row. The
+/// bundle key is (author, content, Type) and the newest record in it
+/// wins; relevance 0 is a withdrawal and never appears here.
+#[derive(SimpleObject)]
+pub struct TopicClaim {
+    pub hashtag: HashtagType,
+    /// Relevance `r` — how much the topic is the content's.
+    pub relevance: Dimension,
+    /// Confidence `c` — how firmly the claim is held.
+    pub confidence: Dimension,
+    /// True while the winning record is still in flight.
+    pub pending: bool,
+}
+
+/// One node currently tagged with a topic.
+#[derive(SimpleObject)]
+pub struct TaggedContent {
+    pub node: Node,
+    pub relevance: Dimension,
+    pub confidence: Dimension,
+    pub pending: bool,
+}
+
+/// The `limit` a topic list accepts: at most [`MAX_PAGE_SIZE`],
+/// [`DEFAULT_PAGE_SIZE`] when unset. Over-asking refuses rather than
+/// silently clamping, the same contract the connections carry.
+fn list_limit(limit: Option<i32>) -> async_graphql::Result<u32> {
+    let limit = limit.unwrap_or(DEFAULT_PAGE_SIZE);
+    if !(0..=MAX_PAGE_SIZE).contains(&limit) {
+        return Err(async_graphql::Error::new(format!(
+            "limit must lie in 0..={MAX_PAGE_SIZE}"
+        )));
+    }
+    Ok(limit as u32)
+}
+
+/// What a `limit`-bounded list field charges, priced like a connection.
+fn list_cost(limit: Option<i32>, child_complexity: usize) -> usize {
+    let requested = limit.unwrap_or(DEFAULT_PAGE_SIZE).clamp(0, MAX_PAGE_SIZE);
+    requested as usize * child_complexity + 1
+}
+
+/// The requesting viewer's L0 address, when they have one. Pending rows
+/// are only ever *their own* acts: a staged write is not on the graph,
+/// so nobody else may see it.
+async fn viewer_address(ctx: &Context<'_>) -> async_graphql::Result<Option<String>> {
+    let Some(Some(viewer)) = ctx.data_opt::<Option<Viewer>>() else {
+        return Ok(None);
+    };
+    let pool = ctx.data::<PgPool>()?;
+    Ok(store::actor_identity(pool, viewer.user_id)
+        .await?
+        .and_then(|identity| identity.l0_address))
+}
+
+/// The chip row shared by every taggable content node: the content
+/// author's own current topics (D8).
+///
+/// The pending half counts only when the viewer *is* the author —
+/// `topics_of` attributes every row it returns to the author it was
+/// asked about, and an in-flight act belongs to whoever staged it.
+async fn topic_claims(
+    ctx: &Context<'_>,
+    l1_node_id: &str,
+    author_id: Uuid,
+    include_pending: bool,
+) -> async_graphql::Result<Vec<TopicClaim>> {
+    let pool = ctx.data::<PgPool>()?;
+    let Some(author) = store::actor_identity(pool, author_id)
+        .await?
+        .and_then(|identity| identity.l0_address)
+    else {
+        return Ok(Vec::new());
+    };
+    let viewer = viewer_address(ctx).await?;
+    let counts_pending = include_pending && viewer.as_deref() == Some(author.as_str());
+    let rows = topics_store::topics_of(
+        pool,
+        l1_node_id,
+        &author,
+        TopicView::from_include_pending(counts_pending, Some(author.as_str())),
+    )
+    .await
+    .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+    Ok(rows
+        .into_iter()
+        .map(|row| TopicClaim {
+            hashtag: HashtagType { name: row.name },
+            relevance: Dimension(row.relevance),
+            confidence: Dimension(row.confidence),
+            pending: row.pending,
+        })
+        .collect())
 }
 
 /// Every graph-backed thing with an identity and a lifecycle
