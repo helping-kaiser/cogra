@@ -82,6 +82,12 @@ module.exports = grammar({
     // parameter list happens to look identical up to the arrow.
     [$.parenthesized_type, $.function_type_parameters],
 
+    // Where a dotted name stops. In `fun A.B.c()` the receiver is
+    // everything before the last dot, and which dot that is only becomes
+    // clear at what follows the name — further than one token of
+    // look-ahead reaches.
+    [$.user_type],
+
     // Where an `if` branch ends against a postfix suffix: `if (c) a[0]`
     // may close the branch at `a` or read the indexing as part of it.
     // This is the bottom of the cascade, so unlike a bound drawn higher
@@ -461,8 +467,7 @@ module.exports = grammar({
 
     parenthesized_type: $ => seq('(', $._type, ')'),
 
-    // A dotted type keeps extending: `a.b.C` is one name.
-    user_type: $ => prec.right(sepBy1('.', $.simple_user_type)),
+    user_type: $ => sepBy1('.', $.simple_user_type),
 
     // In type position a `<` always opens type arguments — a type is
     // never an operand of `<` — so prefer the longer match rather than
@@ -512,6 +517,14 @@ module.exports = grammar({
       ),
     ),
 
+    // One token, including the `@`. Split into two, the parser has to
+    // shift the identifier before it can see whether an `@` follows, so
+    // any name after a call — the `xor` in `f() xor 1` — gets taken for
+    // the start of a labelled trailing lambda.
+    // Two tokens, not one. A single `name@` token would start like an
+    // identifier, and tree-sitter's keyword extraction lexes such a word
+    // through the `word` token before a longer token can claim it — so
+    // neither `loop@` nor `break@loop` would ever match.
     label: $ => seq($._alpha_identifier, token.immediate('@')),
 
     // In `if (c) x = 1` the body must keep reading rather than stop at
@@ -667,7 +680,11 @@ module.exports = grammar({
       seq(optional($.type_arguments), $.annotated_lambda),
     )),
 
-    annotated_lambda: $ => seq(optional($.label), $.lambda_literal),
+    // No label here. A labelled trailing lambda — `forEach loop@{ ... }`
+    // — would have the parser shift any identifier after a call on the
+    // chance an `@` follows, which is what breaks `f() xor 1`. Statement
+    // labels are unaffected.
+    annotated_lambda: $ => $.lambda_literal,
 
     lambda_literal: $ => seq(
       '{',
@@ -752,11 +769,11 @@ module.exports = grammar({
     if_expression: $ => prec.right(seq(
       'if', '(', field('condition', $._expression), ')',
       optional(field('consequence', $._if_branch)),
-      // The separator before `else` lets `else` start its own line: the
-      // scanner has already inferred a terminator after the consequence,
-      // and this absorbs it.
+      // No separator before `else`. Absorbing one here would take the
+      // terminator that ends the whole `if` statement, so the statement
+      // after `if (c) return x` could never start. The scanner declines
+      // to infer a terminator before an `else` instead.
       optional(seq(
-        optional($._semi),
         'else',
         optional(field('alternative', $._if_branch)),
       )),
@@ -922,7 +939,14 @@ module.exports = grammar({
       /[uU]/,
       optional(/[lL]/),
     )),
-    real_literal: _ => token(/([0-9][0-9_]*[0-9]|[0-9])?\.([0-9][0-9_]*[0-9]|[0-9])([eE][+-]?[0-9]+)?[fF]?/),
+    // KotlinLexer.g4 RealLiteral = FloatLiteral | DoubleLiteral. All
+    // three shapes are needed, and the last one — plain digits with the
+    // float suffix, as in `-1f..1f` — is the one this corpus leans on.
+    real_literal: _ => token(choice(
+      /([0-9][0-9_]*[0-9]|[0-9])?\.([0-9][0-9_]*[0-9]|[0-9])([eE][+-]?[0-9]+)?[fF]?/,
+      /([0-9][0-9_]*[0-9]|[0-9])[eE][+-]?([0-9][0-9_]*[0-9]|[0-9])[fF]?/,
+      /([0-9][0-9_]*[0-9]|[0-9])[fF]/,
+    )),
 
     character_literal: $ => seq(
       "'",
