@@ -314,7 +314,9 @@ pub fn backing_definitions<'s>(
     for (declaring, identifier) in declared {
         for candidate in candidates(declaring, identifier) {
             if let Some(src) = by_path.get(candidate.as_path()) {
-                paired.entry(src.path.as_path()).or_insert((*src, identifier));
+                paired
+                    .entry(src.path.as_path())
+                    .or_insert((*src, identifier));
                 break;
             }
         }
