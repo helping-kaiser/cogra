@@ -1257,9 +1257,10 @@ failing = [
   "crates/common/",
   "crates/api/",
   "docs/",
+  "web/",
 ]
 
-# What those seven prefixes carry, and what they deliberately do not.
+# What those eight prefixes carry, and what they deliberately do not.
 #
 # crates/cogra-linter/ — the whole crate, by first-match prefix: the
 #   four discipline documents, the linter architecture, the linter's
@@ -1314,9 +1315,19 @@ failing = [
 #   label-shaped span there is displayed, so the prefix enforces
 #   emptiness and catches the next stray span on the commit that
 #   writes it.
+# web/ — the whole app, joining on the day its frontend did. Its 215
+#   .ts and .tsx sources were already in the carrier and already
+#   owned; what the web frontend added is that their comments are
+#   read, and the read found nothing to sweep — no acute occurrence
+#   anywhere in the tree and no label-shaped backtick in any comment.
+#   The one label-shaped span the tree does carry sits inside a string
+#   literal, which [scanned-regions] puts outside what is scanned, so
+#   it is not an occurrence and never becomes one. The prefix
+#   therefore enforces emptiness the way docs/ does, and catches the
+#   first web comment to write a label on the commit that writes it.
 #
-# DELIBERATELY ADVISORY, each awaiting its own migration:
-#   android/, web/   — no frontend before slices 7 and 8
+# DELIBERATELY ADVISORY, awaiting its own migration:
+#   android/   — the Kotlin frontend is still ahead of it
 
 
 
