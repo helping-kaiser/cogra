@@ -144,7 +144,7 @@ the write rule
 
 Membership is **computed, never stored**. CoGra adopts the
 canonical membership fold
-(`def:nodes:canonical-membership-fold`,
+(``def:nodes:canonical-membership-fold``,
 [layer1-interface.md §9.8](../primitive/layer1-interface.md#98-membership-proposals-and-revocation))
 **with ban semantics**, which the canonical fold explicitly
 permits a policy `𝒫` to declare. "Banned" is a property this
