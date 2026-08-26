@@ -68,6 +68,7 @@ import com.cogra.feature.profile.ProfileEditRoute
 import com.cogra.feature.profile.ProfileRoute
 import com.cogra.feature.settings.KeyExportRoute
 import com.cogra.feature.settings.SettingsRoute
+import com.cogra.feature.topics.TopicRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
@@ -103,6 +104,10 @@ data class ComposePost(val postId: String? = null)
 
 @Serializable
 data class PostDetail(val postId: String)
+
+/** A topic by its canonical name — reachable from a chip anywhere (D20). */
+@Serializable
+data class Topic(val name: String)
 
 /** An actor's profile; a null handle is the viewer's own (the tab). */
 @Serializable
@@ -396,10 +401,13 @@ private fun CograNavGraphContent(
                 val actorRestoredResult by entry.savedStateHandle
                     .getStateFlow(ACTOR_RESTORED_RESULT, false)
                     .collectAsStateWithLifecycle()
+                val accountId by authState.accountId.collectAsStateWithLifecycle()
                 FeedRoute(
                     signedIn = signedIn,
+                    viewerId = accountId,
                     onOpenPost = { id -> navController.navigate(PostDetail(id)) },
                     onOpenActor = { handle -> navController.navigate(Profile(handle)) },
+                    onOpenTopic = { name -> navController.navigate(Topic(name)) },
                     // Pushes the login screen (the web guest entries link
                     // to /login), so back returns to the reading context.
                     onSignInOrJoin = { navController.navigate(Login) },
@@ -476,12 +484,21 @@ private fun CograNavGraphContent(
                     signedIn = signedIn,
                     onEdit = { id -> navController.navigate(ComposePost(id)) },
                     onOpenActor = { handle -> navController.navigate(Profile(handle)) },
+                    onOpenTopic = { name -> navController.navigate(Topic(name)) },
                     onSignInOrJoin = { navController.navigate(Login) },
                     onBack = { navController.navigateUp() },
                     refreshSignal = signedResult,
                     onRefreshSignalConsumed = {
                         entry.savedStateHandle[CONTENT_SIGNED_RESULT] = false
                     },
+                )
+            }
+            composable<Topic> { entry ->
+                TopicRoute(
+                    name = entry.toRoute<Topic>().name,
+                    onOpenPost = { id -> navController.navigate(PostDetail(id)) },
+                    onOpenActor = { handle -> navController.navigate(Profile(handle)) },
+                    onBack = { navController.navigateUp() },
                 )
             }
             composable<Profile> { entry ->

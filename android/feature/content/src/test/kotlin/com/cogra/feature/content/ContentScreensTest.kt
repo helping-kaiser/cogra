@@ -8,10 +8,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
@@ -20,6 +24,7 @@ import com.cogra.domain.LandingState
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testPost
+import com.cogra.domain.testing.testTopicClaim
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -34,11 +39,29 @@ class ContentScreensTest {
 
     // -- Feed --
 
+    /** Renders each topic as a plain chip, bypassing the DI-backed row — enough to assert what reached the card. */
+    private val stubTopicChipRow: @Composable (
+        target: String,
+        topics: List<com.cogra.domain.TopicClaimView>,
+        editable: Boolean,
+        testTagPrefix: String,
+    ) -> Unit = { _, topics, _, testTagPrefix ->
+        topics.forEach { claim ->
+            com.cogra.core.designsystem.TopicChip(
+                name = claim.hashtag.name.value.orEmpty(),
+                onClick = {},
+                testTag = "${testTagPrefix}_topic_${claim.hashtag.name.value}",
+            )
+        }
+    }
+
     private fun renderFeed(
         state: FeedUiState,
         signedIn: Boolean? = true,
+        viewerId: String? = null,
         onOpenPost: (String) -> Unit = {},
         onOpenActor: (String) -> Unit = {},
+        onOpenTopic: (String) -> Unit = {},
         onSignInOrJoin: () -> Unit = {},
         onLoadMore: () -> Unit = {},
         onRefresh: () -> Unit = {},
@@ -50,12 +73,15 @@ class ContentScreensTest {
                 stanceControl = { target, tag -> onStance(target, tag) },
                 state = state,
                 signedIn = signedIn,
+                viewerId = viewerId,
                 onRefresh = onRefresh,
                 onLoadMore = onLoadMore,
                 onOpenPost = onOpenPost,
                 onOpenActor = onOpenActor,
+                onOpenTopic = onOpenTopic,
                 onSignInOrJoin = onSignInOrJoin,
                 keyBanner = keyBanner,
+                topicChipRow = stubTopicChipRow,
             )
         }
     }
@@ -310,6 +336,9 @@ class ContentScreensTest {
         state: ComposePostUiState,
         onSubmit: () -> Unit = {},
         onLicenseChange: (LicenseChoice) -> Unit = {},
+        onTagInputChange: (String) -> Unit = {},
+        onAddTag: () -> Unit = {},
+        onRemoveTag: (String) -> Unit = {},
         keyBanner: @Composable () -> Unit = {},
     ) {
         compose.setContent {
@@ -319,6 +348,9 @@ class ContentScreensTest {
                 onDescriptionChange = {},
                 onBodyChange = {},
                 onLicenseChange = onLicenseChange,
+                onTagInputChange = onTagInputChange,
+                onAddTag = onAddTag,
+                onRemoveTag = onRemoveTag,
                 onSubmit = onSubmit,
                 onBack = {},
                 keyBanner = keyBanner,
@@ -397,6 +429,7 @@ class ContentScreensTest {
         signedIn: Boolean? = true,
         onEdit: (String) -> Unit = {},
         onOpenActor: (String) -> Unit = {},
+        onOpenTopic: (String) -> Unit = {},
         onSubmitComment: () -> Unit = {},
         onSignInOrJoin: () -> Unit = {},
         onRefresh: () -> Unit = {},
@@ -431,6 +464,7 @@ class ContentScreensTest {
                 onSubmitReply = onSubmitReply,
                 onEdit = onEdit,
                 onOpenActor = onOpenActor,
+                onOpenTopic = onOpenTopic,
                 onSignInOrJoin = onSignInOrJoin,
                 onBack = {},
             )
@@ -816,5 +850,64 @@ class ContentScreensTest {
         )
         compose.onNodeWithTag("detail_author").assertExists()
         compose.onNodeWithTag("comment_author_c1").assertExists()
+    }
+
+    // -- Topics --
+
+    @Test
+    fun aPostCardRendersItsTopicChips() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(testPost("p1").copy(topics = listOf(testTopicClaim("rust")))),
+            ),
+        )
+        compose.onNodeWithTag("feed_post_p1_topic_rust").assertExists()
+    }
+
+    @Test
+    fun theComposerPreviewsTheNormalizedName() {
+        // Stateless by design (android/CLAUDE.md "Stateless screens"): the
+        // preview reads straight off state.tagInput, so a state carrying
+        // the raw text is enough to assert the normalization it renders.
+        renderComposer(ComposePostUiState(tagInput = "#Rust"))
+        compose.onNodeWithTag("compose_tag_preview").assertTextContains("rust", substring = true)
+    }
+
+    @Test
+    fun typingIntoTheTagFieldReportsTheRawText() {
+        var input: String? = null
+        renderComposer(ComposePostUiState(), onTagInputChange = { input = it })
+        compose.onNodeWithTag("compose_tag_input").performTextInput("Rust")
+        assertThat(input).isEqualTo("Rust")
+    }
+
+    @Test
+    fun stagedTagsRenderAsRemovableChips() {
+        renderComposer(ComposePostUiState(tags = listOf("rust", "kotlin")))
+        compose.onNodeWithTag("compose_tag_rust").assertExists()
+        compose.onNodeWithTag("compose_tag_kotlin").assertExists()
+    }
+
+    @Test
+    fun aStagedChipOffersARemoveAffordance() {
+        renderComposer(ComposePostUiState(tags = listOf("rust")))
+        compose.onNodeWithTag("compose_tag_rust_remove")
+            .assertExists()
+            .assert(hasClickAction())
+    }
+
+    @Test
+    fun reachingTheCapHidesTheEntryFieldAndShowsTheLimit() {
+        renderComposer(ComposePostUiState(tags = (1..10).map { "tag$it" }))
+        compose.onNodeWithTag("compose_tag_input").assertDoesNotExist()
+        compose.onNodeWithTag("compose_tags_cap").assertExists()
+    }
+
+    @Test
+    fun tagsNeverShowInEditMode() {
+        renderComposer(ComposePostUiState(editingId = "p1", tags = listOf("rust")))
+        compose.onNodeWithTag("compose_tags").assertDoesNotExist()
+        compose.onNodeWithTag("compose_tag_input").assertDoesNotExist()
     }
 }

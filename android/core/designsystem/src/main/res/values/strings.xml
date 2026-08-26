@@ -8,6 +8,9 @@
     <string name="recovery_code_saved">I\'ve written it down</string>
     <string name="pending_settling">Still settling</string>
 
+    <!-- The topic chip (design.md §6). -->
+    <string name="topic_chip_remove">Remove %1$s</string>
+
     <!-- The stance control (design.md §8). The twenty readout anchors
          are the doc's table; a change there changes both apps. -->
     <string name="stance_anchor_nice">Nice</string>

@@ -8,6 +8,7 @@ import com.cogra.crypto.Family
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.CommentView
+import com.cogra.domain.HashtagView
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
 import com.cogra.domain.InviteCheck
@@ -22,6 +23,7 @@ import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.StagedWriteView
+import com.cogra.domain.TaggedContentView
 import com.cogra.domain.UserProfile
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StancePair
@@ -176,11 +178,18 @@ interface ContentRepository {
         includePending: Boolean = true,
     ): Outcome<Page<CommentView>>
 
+    /**
+     * [tags] are the topics declared at creation — explicit names only
+     * (post.md §3, D15: no autocomplete). The server stages one Tag
+     * write per name at the default relevance/confidence; the composer
+     * never picks parameters (api-spec.md `TagInput`).
+     */
     suspend fun preparePost(
         title: String?,
         description: String?,
         content: String,
         license: LicenseChoice,
+        tags: List<String> = emptyList(),
     ): Outcome<PreparedContentView>
 
     /**
@@ -292,4 +301,58 @@ interface ProfileRepository {
         bio: String?,
         websiteUrl: String?,
     ): Outcome<List<PreparedWriteView>>
+}
+
+/**
+ * The topic surface (hashtag.md; roadmap "Slice 2.3"): the naming
+ * service's own read (a topic's name and its tagged content), the
+ * standalone Tag gesture the chip row's add/remove rides, and the
+ * follow control — Affinity toward a Type, addressed by name rather
+ * than by id, since a Type anchors vacuously and a topic nobody has
+ * tagged yet has no id to look up (D4).
+ *
+ * Follow/unfollow reuse the generic stance machinery `StanceRepository`
+ * already exposes for posts, comments, and profiles; the difference is
+ * only the target shape (a name, not a UUID) and the plain toggle this
+ * slice ships instead of the pad (D10 — the redesign pass revisits).
+ */
+interface TopicRepository {
+    /** Null only for a name the substrate cannot carry (D3's ASCII charset). */
+    suspend fun hashtag(name: String): Outcome<HashtagView?>
+
+    /**
+     * The content currently tagged with this topic — the author-owned
+     * channel only, same as [ContentRepository]'s post/comment reads
+     * (hashtag.md §5, D8).
+     */
+    suspend fun taggedContent(
+        name: String,
+        limit: Int? = null,
+        includePending: Boolean = true,
+    ): Outcome<List<TaggedContentView>>
+
+    /**
+     * Stages one standalone Tag on existing content — the chip row's
+     * add gesture and, at `pDirected = 0`, its remove gesture
+     * (hashtag.md §4). Never reachable from the post/comment editor
+     * (post.md §3, D14).
+     */
+    suspend fun prepareTag(
+        target: String,
+        name: String,
+        pDirected: Double? = null,
+        pInterest: Double? = null,
+    ): Outcome<List<PreparedWriteView>>
+
+    /** The viewer's own Affinity bundle toward the named topic — the follow control's read. */
+    suspend fun followStanding(name: String, includePending: Boolean = true): Outcome<StanceStanding>
+
+    /** Stages the follow record for [pick] toward the named topic. */
+    suspend fun prepareFollow(name: String, pick: StancePair): Outcome<List<PreparedWriteView>>
+
+    /** What unfollowing the named topic would take — the severance confirm's read side. */
+    suspend fun followSeveranceQuote(name: String, includePending: Boolean = true): Outcome<SeveranceQuote>
+
+    /** Unfollow: severance toward the topic, reusing the existing confirm flow (D9). */
+    suspend fun prepareUnfollow(name: String): Outcome<List<PreparedWriteView>>
 }
