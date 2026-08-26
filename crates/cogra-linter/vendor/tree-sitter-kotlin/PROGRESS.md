@@ -31,6 +31,50 @@ files, the tree now holds **170** (plus 18 `.kts`, which are a separate
 and undecided question). The precondition is measured against what is
 there, never against the study's number.
 
+### Met
+
+```
+--- ARCH dec:linter:kotlin-tree-sitter precondition (.kt) ---
+files parsed:        170
+files with errors:   0
+total ERROR/MISSING: 0
+```
+
+Parsing all 170 files (1.27 MB) takes **0.07 s** in one batch. The
+parser is 2,905 states and a 5.4 MB `src/parser.c`.
+
+### The comment census, as a cross-check
+
+The frontend's whole interest is that comments arrive as named nodes, so
+the grammar's own count is worth comparing with the study's:
+
+| | this grammar, 170 files | study, 138 files |
+|---|---:|---:|
+| `line_comment` | 1,708 | 964 |
+| `block_comment` (not KDoc) | **0** | 0 |
+| `kdoc` | 681 | 441 |
+
+The qualitative finding is reproduced exactly and independently: **every
+block comment in this corpus is KDoc**. The line-comment count matches a
+raw count of lines beginning with `//` exactly (1,708), and the corpus
+contains no trailing comments at all, so the two should agree — and do.
+
+### `.kts`, measured but not ruled on
+
+```
+--- ARCH dec:linter:kotlin-tree-sitter precondition (.kts) ---
+files parsed:        18
+files with errors:   18
+total ERROR/MISSING: 43
+```
+
+Expected, and not a defect: the specification parses scripts with its
+`script` production, which admits statements at the top level, while
+this grammar implements `kotlinFile`, which admits only declarations.
+Supporting `.kts` means adding that production, not fixing a bug. The
+adoption data is deliberately untouched — that ruling is jakob's, and
+this measurement is only its input.
+
 ## The lesson that shaped this grammar
 
 The first draft was a faithful, complete translation of the ANTLR
@@ -60,16 +104,28 @@ undecidable, each one argued in a comment where it is declared.
 | \+ control flow, jumps, labels, assignment | 1,890 | 3.7 MB |
 | \+ lambdas, object literals, anonymous functions | 1,805 | 3.3 MB |
 | \+ receivers, accessors, richer types | 4,702 | 8.8 MB |
+| final, after the `if` and accessor rework | 2,905 | 5.4 MB |
 
-### The single most costly mistake
+### The statement separator, which caused most of both problems
 
-`optional($._semi)` between declarations. Kotlin always has a statement
-separator — the scanner infers one from the newline — so making it
-optional lets a declaration abut the expression before it. That is what
-makes `val x = a` followed by `enum class F` ambiguous with an infix
-call named `enum`, and the same shape reappeared in `when` entries and
-in property accessors. **Statement separators in this grammar are
-required, never optional.**
+`optional($._semi)`. Kotlin always has a statement separator — the
+scanner infers one from the newline — so an optional one lets a
+declaration abut the expression before it. That is what makes `val x = a`
+followed by `enum class F` ambiguous with an infix call named `enum`.
+**Where a separator belongs, it is required, never optional.**
+
+The mirror image caused most of the remaining *parse failures*, long
+after the state explosion was solved. Where a construct may follow a
+statement on the next line — `else`, and a property's accessors — a
+separator in the grammar competes with the statement's own terminator
+for the same inferred token, and whichever consumes it strands the
+other. No arrangement in the grammar settles it: optional, and an
+accessor may begin with no separator at all; required, and the
+terminator ending the whole declaration is eaten and an accessor
+demanded in its place. Only look-ahead decides, so **the scanner
+declines to infer a terminator before `else` and before an accessor**,
+and the grammar has no separator there at all. A single missing case —
+`else` — accounted for 58 of the 60 remaining failing files.
 
 ## Design decisions
 
@@ -187,7 +243,36 @@ content ends in a literal quote.
 - **`.kts`**, which the adoption data defers to this slice and which is
   jakob's ruling to make; this lane only measures.
 
+### A comment found while deciding a statement end
+
+The scanner must emit it rather than decline. Deciding whether a newline
+ends a statement means looking at what follows, and what follows may be
+a comment — `foo()` then a comment line then `.bar()`. Looking past it
+means advancing over it, and within one scan call the lexer cannot be
+wound back; declining then loses the comment entirely, because the
+internal lexer has no comment token to fall back on. So on finding a
+comment the scanner returns *the comment*, and the terminator question
+is put again at the position after it, where the newline that follows a
+comment supplies one if it is still wanted.
+
 ## Status
 
-Grammar coverage, scanner state, and corpus test counts are recorded
-here as they land. See `test/corpus/` for what is pinned by test.
+**The precondition is met.** The grammar parses the whole Android corpus
+to zero error nodes, comments and KDoc arrive as named nodes, and the
+corpus tests pin the behaviour that got it there.
+
+Coverage: packages, imports, file annotations, classes, interfaces,
+objects, companions, enums, type aliases, primary and secondary
+constructors, initialisers, properties with accessors and delegates,
+functions, extension receivers, type parameters and constraints,
+delegation, annotations with use-site targets, modifiers, the full
+expression cascade, lambdas and trailing lambdas, anonymous functions,
+object literals, control flow, jumps, labels, string templates, raw
+strings, and every numeric literal form.
+
+Not covered, and deliberate: multi-dollar interpolation, definitely
+non-nullable types (`T & Any`), and the `script` production `.kts`
+needs. See "Not yet covered" above.
+
+`test/corpus/` holds 30 tests. They are what a future change should be
+measured against, together with `scripts/measure.sh`.

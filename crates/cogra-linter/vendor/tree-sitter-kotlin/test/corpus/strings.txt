@@ -1,0 +1,134 @@
+================================================================
+A string template with a bare reference and an expression
+================================================================
+
+val a = "count: $state and ${a.b(1)}"
+
+----
+
+(source_file
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (string_literal
+      (line_string_literal
+        (string_reference
+          (simple_identifier))
+        (string_interpolation
+          (postfix_expression
+            (postfix_expression
+              (simple_identifier)
+              (postfix_unary_suffix
+                (navigation_suffix
+                  (member_access_operator)
+                  (simple_identifier))))
+            (postfix_unary_suffix
+              (call_suffix
+                (value_arguments
+                  (value_argument
+                    (integer_literal)))))))))))
+
+================================================================
+A raw string
+================================================================
+
+val a = """
+    line one
+    ${'$'}
+"""
+
+----
+
+(source_file
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (string_literal
+      (multiline_string_literal
+        (string_interpolation
+          (character_literal))))))
+
+================================================================
+Escapes and a lone dollar
+================================================================
+
+val a = "a\tbAc\$d"
+
+----
+
+(source_file
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (string_literal
+      (line_string_literal
+        (escape_sequence)
+        (escape_sequence)))))
+
+================================================================
+A character literal
+================================================================
+
+val a = 'x'
+val b = '\n'
+
+----
+
+(source_file
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (character_literal))
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (character_literal
+      (escape_sequence))))
+
+================================================================
+Numeric literals
+================================================================
+
+val a = 0xFF9F4100
+val b = 7u
+val c = 1L
+val d = 0b1010
+val e = 1f
+val g = 1.5e3
+val h = -1f..1f
+
+----
+
+(source_file
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (hex_literal))
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (unsigned_literal))
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (long_literal))
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (bin_literal))
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (real_literal))
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (real_literal))
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (range_expression
+      (prefix_expression
+        (prefix_unary_operator)
+        (real_literal))
+      (real_literal))))

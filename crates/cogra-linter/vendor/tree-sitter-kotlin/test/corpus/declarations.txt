@@ -1,0 +1,322 @@
+================================================================
+Package, imports and a wildcard
+================================================================
+
+package com.cogra.app
+
+import a.b.C
+import a.b.*
+import a.b.D as E
+
+----
+
+(source_file
+  (package_header
+    (qualified_identifier
+      (simple_identifier)
+      (simple_identifier)
+      (simple_identifier)))
+  (import_header
+    (qualified_identifier
+      (simple_identifier)
+      (simple_identifier)
+      (simple_identifier)))
+  (import_header
+    (qualified_identifier
+      (simple_identifier)
+      (simple_identifier))
+    (import_wildcard))
+  (import_header
+    (qualified_identifier
+      (simple_identifier)
+      (simple_identifier)
+      (simple_identifier))
+    (import_alias
+      (simple_identifier))))
+
+================================================================
+An extension function and an extension property
+================================================================
+
+fun Modifier.pad(): Modifier = this
+
+val A.B.c: Int
+    get() = 1
+
+----
+
+(source_file
+  (function_declaration
+    (receiver_type
+      (user_type
+        (simple_user_type
+          (simple_identifier))))
+    (simple_identifier)
+    (function_value_parameters)
+    (user_type
+      (simple_user_type
+        (simple_identifier)))
+    (function_body
+      (this_expression)))
+  (property_declaration
+    (receiver_type
+      (user_type
+        (simple_user_type
+          (simple_identifier))
+        (simple_user_type
+          (simple_identifier))))
+    (variable_declaration
+      (simple_identifier)
+      (user_type
+        (simple_user_type
+          (simple_identifier))))
+    (getter
+      (function_body
+        (integer_literal)))))
+
+================================================================
+A data class with a primary constructor
+================================================================
+
+data class P(
+    val a: Int,
+    private val b: String = "x",
+)
+
+----
+
+(source_file
+  (class_declaration
+    (modifiers
+      (modifier))
+    (simple_identifier)
+    (primary_constructor
+      (class_parameters
+        (class_parameter
+          (simple_identifier)
+          (user_type
+            (simple_user_type
+              (simple_identifier))))
+        (class_parameter
+          (modifiers
+            (modifier))
+          (simple_identifier)
+          (user_type
+            (simple_user_type
+              (simple_identifier)))
+          (string_literal
+            (line_string_literal)))))))
+
+================================================================
+A sealed hierarchy with an enum and a companion
+================================================================
+
+sealed class S {
+    data object One : S()
+
+    enum class Kind { A, B }
+
+    companion object {
+        const val X = 1
+    }
+}
+
+----
+
+(source_file
+  (class_declaration
+    (modifiers
+      (modifier))
+    (simple_identifier)
+    (class_body
+      (object_declaration
+        (modifiers
+          (modifier))
+        (simple_identifier)
+        (delegation_specifiers
+          (constructor_invocation
+            (user_type
+              (simple_user_type
+                (simple_identifier)))
+            (value_arguments))))
+      (class_declaration
+        (modifiers
+          (modifier))
+        (simple_identifier)
+        (enum_class_body
+          (enum_entries
+            (enum_entry
+              (simple_identifier))
+            (enum_entry
+              (simple_identifier)))))
+      (companion_object
+        (class_body
+          (property_declaration
+            (modifiers
+              (modifier))
+            (variable_declaration
+              (simple_identifier))
+            (integer_literal)))))))
+
+================================================================
+Class delegation
+================================================================
+
+class A(b: B) : C by b
+
+----
+
+(source_file
+  (class_declaration
+    (simple_identifier)
+    (primary_constructor
+      (class_parameters
+        (class_parameter
+          (simple_identifier)
+          (user_type
+            (simple_user_type
+              (simple_identifier))))))
+    (delegation_specifiers
+      (explicit_delegation
+        (user_type
+          (simple_user_type
+            (simple_identifier)))
+        (simple_identifier)))))
+
+================================================================
+Soft keywords used as identifiers
+================================================================
+
+fun f() {
+    val data = 1
+    val value = data.value
+    sealed.nonce()
+}
+
+----
+
+(source_file
+  (function_declaration
+    (simple_identifier)
+    (function_value_parameters)
+    (function_body
+      (block
+        (statements
+          (property_declaration
+            (variable_declaration
+              (simple_identifier))
+            (integer_literal))
+          (property_declaration
+            (variable_declaration
+              (simple_identifier))
+            (postfix_expression
+              (simple_identifier)
+              (postfix_unary_suffix
+                (navigation_suffix
+                  (member_access_operator)
+                  (simple_identifier)))))
+          (postfix_expression
+            (postfix_expression
+              (simple_identifier)
+              (postfix_unary_suffix
+                (navigation_suffix
+                  (member_access_operator)
+                  (simple_identifier))))
+            (postfix_unary_suffix
+              (call_suffix
+                (value_arguments)))))))))
+
+================================================================
+A labelled loop and a labelled break
+================================================================
+
+fun f() {
+    loop@ for (x in y) {
+        break@loop
+    }
+}
+
+----
+
+(source_file
+  (function_declaration
+    (simple_identifier)
+    (function_value_parameters)
+    (function_body
+      (block
+        (statements
+          (label)
+          (for_statement
+            (variable_declaration
+              (simple_identifier))
+            (simple_identifier)
+            (block
+              (statements
+                (jump_expression)))))))))
+
+================================================================
+A generic call and a comparison
+================================================================
+
+fun f() {
+    val a = viewModel<Foo>()
+    val b = x < y
+    val c = !isEmpty()
+    val d = a.toInt() xor 1
+}
+
+----
+
+(source_file
+  (function_declaration
+    (simple_identifier)
+    (function_value_parameters)
+    (function_body
+      (block
+        (statements
+          (property_declaration
+            (variable_declaration
+              (simple_identifier))
+            (postfix_expression
+              (simple_identifier)
+              (postfix_unary_suffix
+                (call_suffix
+                  (type_arguments
+                    (type_projection
+                      (user_type
+                        (simple_user_type
+                          (simple_identifier)))))
+                  (value_arguments)))))
+          (property_declaration
+            (variable_declaration
+              (simple_identifier))
+            (comparison_expression
+              (simple_identifier)
+              (comparison_operator)
+              (simple_identifier)))
+          (property_declaration
+            (variable_declaration
+              (simple_identifier))
+            (prefix_expression
+              (prefix_unary_operator)
+              (postfix_expression
+                (simple_identifier)
+                (postfix_unary_suffix
+                  (call_suffix
+                    (value_arguments))))))
+          (property_declaration
+            (variable_declaration
+              (simple_identifier))
+            (infix_function_call
+              (postfix_expression
+                (postfix_expression
+                  (simple_identifier)
+                  (postfix_unary_suffix
+                    (navigation_suffix
+                      (member_access_operator)
+                      (simple_identifier))))
+                (postfix_unary_suffix
+                  (call_suffix
+                    (value_arguments))))
+              (simple_identifier)
+              (integer_literal))))))))
