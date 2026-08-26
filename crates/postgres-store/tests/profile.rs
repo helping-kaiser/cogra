@@ -15,9 +15,11 @@ fn order(epoch: i64, position: i64) -> LandingOrder {
     }
 }
 
+/// Seeds one user actor with its first profile version. The key is derived
+/// from the handle only because the pubkey column is UNIQUE — any distinct
+/// bytes serve a store test.
 async fn seed_actor(pool: &PgPool, handle: &str) -> Uuid {
     let id = Uuid::new_v4();
-    // The pubkey column is UNIQUE; any distinct bytes serve a store test.
     let mut pubkey = [0u8; 32];
     pubkey[..handle.len().min(32)].copy_from_slice(&handle.as_bytes()[..handle.len().min(32)]);
     let mut conn = pool.acquire().await.expect("conn");
@@ -37,6 +39,8 @@ async fn seed_actor(pool: &PgPool, handle: &str) -> Uuid {
     id
 }
 
+/// The read serves the newest version, and the insert is append-only — the
+/// older row survives underneath it.
 #[sqlx::test(migrations = "../../migrations")]
 async fn current_profile_serves_the_newest_version(pool: PgPool) {
     let actor = seed_actor(&pool, "ada").await;
@@ -71,7 +75,6 @@ async fn current_profile_serves_the_newest_version(pool: PgPool) {
     assert_eq!(current.website_url.as_deref(), Some("https://ada.example"));
     assert!(current.created_at >= first.created_at);
 
-    // Append-only: the older row survives underneath.
     let count: i64 =
         sqlx::query_scalar("SELECT COUNT(*) FROM actor_profile_versions WHERE actor_id = $1")
             .bind(actor)
