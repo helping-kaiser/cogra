@@ -76,13 +76,11 @@ author for account deletion to touch.
   current claim, and relevance `0` withdraws it (§4).
 - **Following a topic** — an **Affinity** record (Actor → Type):
   relevance, not verdict — its sign is coherence, never a
-  standing vouch. Affinity is the follow gesture the topic feed
-  reads (§5).
-- **Stances** — Opinion → Type is native: liking or rejecting a
-  topic is an ordinary graph act, full vocabulary. The old
-  no-actor-edges-to-Hashtag prohibition is gone — what it
-  protected against is handled as feed policy, not topology
-  (§5).
+  standing vouch. The target selects the family
+  ([edges.md §1](../primitive/edges.md#1-the-edge-record-and-cogras-two-axes)),
+  so
+  the stance gesture toward a Type is Affinity, and it is the
+  follow gesture the topic feed reads (§5).
 - **Commentary** — Reviews of a Type mint Comments like
   anywhere else and change nothing about the Type: no semantics,
   no tags, no standing, no gates
