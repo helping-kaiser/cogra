@@ -1,7 +1,7 @@
 #![no_main]
 //! `adoption_load` — arbitrary text into [`Adoption::from_str`], asserting no
-//! panic and that success implies a total partition
-//! (´preview:lint:fuzz-plan´, design.md).
+//! panic and that success implies a total partition, per design.md
+//! (´preview:lint:fuzz-plan´).
 //!
 //! # Why totality is the assertion
 //!
