@@ -193,12 +193,13 @@ async fn a_signed_upload_roundtrips_and_replacement_overwrites(pool: PgPool) {
     assert_eq!(rows, 1);
 }
 
+/// Enabling backup destroys nothing, so the first upload stays silent.
+/// Every later one replaces a recovery path and mails the notice.
 #[sqlx::test(migrations = "../../migrations")]
 async fn only_replacement_mails_the_notice(pool: PgPool) {
     let rig = Rig::new(pool);
     let account = rig.logged_in_user().await;
 
-    // Enabling backup destroys nothing, so it stays silent.
     rig.upload(&account, b"ciphertext one").await;
     assert_eq!(rig.mailer.subjects_for(EMAIL), Vec::<String>::new());
 
@@ -211,6 +212,9 @@ async fn only_replacement_mails_the_notice(pool: PgPool) {
     );
 }
 
+/// The cap is on decoded bytes, not the encoded payload: one byte over
+/// refuses and leaves the store untouched, while exactly 4096 still
+/// stores.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_blob_over_the_cap_refuses_and_stores_nothing(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -223,19 +227,19 @@ async fn a_blob_over_the_cap_refuses_and_stores_nothing(pool: PgPool) {
     assert!(refused["data"]["uploadKeyBackup"]["ok"].is_null());
     assert!(rig.stored_backup(&account.token).await.is_null());
 
-    // The cap is on decoded bytes: exactly 4096 still stores.
     let at_cap = rig.upload(&account, &vec![0u8; 4096]).await;
     assert_eq!(at_cap["data"]["uploadKeyBackup"]["ok"], true, "{at_cap}");
 }
 
+/// The stolen-login attacker holds a live session but no actor key. They
+/// can still take a challenge, but nothing they sign with verifies, so
+/// the blob — and with it the account's recovery path — survives.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_session_without_the_actor_key_cannot_overwrite_the_blob(pool: PgPool) {
     let rig = Rig::new(pool);
     let account = rig.logged_in_user().await;
     rig.upload(&account, b"the real backup").await;
 
-    // The stolen-login attacker: a live session, no actor key. They can
-    // still take a challenge, but nothing they sign with verifies.
     let issued = rig.challenge(&account.token).await;
     let challenge = issued["data"]["createKeyBackupChallenge"]["challenge"]
         .as_str()
@@ -282,6 +286,8 @@ async fn a_signature_for_other_bytes_does_not_authorize_this_blob(pool: PgPool) 
     );
 }
 
+/// A successful upload spends its challenge, so replaying the very same
+/// bytes and signature a second time is refused as CHALLENGE_EXPIRED.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_challenge_is_single_use(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -299,7 +305,6 @@ async fn a_challenge_is_single_use(pool: PgPool) {
         .await;
     assert_eq!(first["data"]["uploadKeyBackup"]["ok"], true, "{first}");
 
-    // The replay: identical bytes, identical signature, second time.
     let replayed = rig
         .upload_raw(&account.token, b"ciphertext", &challenge, &signature)
         .await;
@@ -372,6 +377,9 @@ async fn issuing_again_discards_the_previous_challenge(pool: PgPool) {
     );
 }
 
+/// A wrong-key signature is refused without spending the challenge, so
+/// the rightful holder can still use the same one — otherwise every
+/// wrong-key attempt would cost a fresh round trip for no security gain.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_bad_signature_does_not_burn_the_challenge(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -394,7 +402,6 @@ async fn a_bad_signature_does_not_burn_the_challenge(pool: PgPool) {
     rig.upload_raw(&account.token, b"ciphertext", &challenge, &wrong)
         .await;
 
-    // The same challenge still works for the rightful holder.
     let signature = rig.sign(&account, &challenge, b"ciphertext");
     let accepted = rig
         .upload_raw(&account.token, b"ciphertext", &challenge, &signature)

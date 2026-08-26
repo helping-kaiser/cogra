@@ -8,6 +8,10 @@ use postgres_store::genesis::{self, RESERVED_TYPES};
 use sqlx::PgPool;
 use uuid::Uuid;
 
+/// Type ids are derived from the name, and both sides enforce the
+/// derivation: re-seeding is idempotent, the CHECK rejects a non-derived id
+/// even from a buggy writer, and the id SQL accepts is the one the Rust
+/// helper computes.
 #[sqlx::test(migrations = "../../migrations")]
 async fn hashtag_ids_are_content_addressed(pool: PgPool) {
     let mut conn = pool.acquire().await.expect("conn");
@@ -16,7 +20,6 @@ async fn hashtag_ids_are_content_addressed(pool: PgPool) {
             .await
             .expect("seeds");
     }
-    // Re-seeding is idempotent.
     genesis::seed_reserved_type(&mut conn, "bot-defense")
         .await
         .expect("idempotent");
@@ -26,8 +29,6 @@ async fn hashtag_ids_are_content_addressed(pool: PgPool) {
         .expect("count");
     assert_eq!(count, RESERVED_TYPES.len() as i64);
 
-    // The CHECK constraint enforces the derivation: a random id for a name
-    // is rejected even by a buggy writer.
     let err = sqlx::query("INSERT INTO hashtags (id, name) VALUES ($1, $2)")
         .bind(Uuid::new_v4())
         .bind("rogue")
@@ -38,7 +39,6 @@ async fn hashtag_ids_are_content_addressed(pool: PgPool) {
         "non-derived hashtag id must violate the CHECK"
     );
 
-    // And the Rust derivation matches the SQL derivation.
     let stored: Uuid = sqlx::query_scalar("SELECT id FROM hashtags WHERE name = 'bot-defense'")
         .fetch_one(&pool)
         .await
@@ -46,14 +46,15 @@ async fn hashtag_ids_are_content_addressed(pool: PgPool) {
     assert_eq!(stored, hashtag_uuid("bot-defense"));
 }
 
+/// Handles live in one namespace across actor kinds, so a mention resolves
+/// to exactly one actor (data-model.md "Actors"); the kind column admits
+/// only the kinds its CHECK names.
 #[sqlx::test(migrations = "../../migrations")]
 async fn handles_share_one_namespace_across_kinds(pool: PgPool) {
     let mut conn = pool.acquire().await.expect("conn");
     genesis::insert_actor(&mut conn, Uuid::new_v4(), "user", "alice", b"key1", "addr1")
         .await
         .expect("user row");
-    // A collective claiming the same handle collides — one namespace, a
-    // mention resolves to exactly one actor (data-model.md "Actors").
     let clash = genesis::insert_actor(
         &mut conn,
         Uuid::new_v4(),
@@ -65,12 +66,14 @@ async fn handles_share_one_namespace_across_kinds(pool: PgPool) {
     .await;
     assert!(clash.is_err());
 
-    // Unknown kinds are rejected by the CHECK.
     let bad_kind =
         genesis::insert_actor(&mut conn, Uuid::new_v4(), "robot", "bob", b"key3", "addr3").await;
     assert!(bad_kind.is_err());
 }
 
+/// The L2-half gate flips only once all three system actors are seeded,
+/// each with its own key and address, as the real bootstrap gives them
+/// (data-model.md "Actors").
 #[sqlx::test(migrations = "../../migrations")]
 async fn genesis_seed_round_trips(pool: PgPool) {
     assert!(!genesis::system_actors_present(&pool).await.expect("gate"));
@@ -81,8 +84,6 @@ async fn genesis_seed_round_trips(pool: PgPool) {
         genesis::TREASURY_HANDLE,
     ] {
         let id = Uuid::new_v4();
-        // Distinct per actor (data-model.md "Actors"), as the real
-        // bootstrap does.
         let pk = format!("pk-{handle}");
         let addr = format!("addr-{handle}");
         genesis::insert_actor(&mut tx, id, "system", handle, pk.as_bytes(), &addr)
@@ -116,6 +117,8 @@ async fn genesis_seed_round_trips(pool: PgPool) {
     );
 }
 
+/// The parameter carrier is layered, never overwritten: a second seed of
+/// the same parameter appends a version row beside the first.
 #[sqlx::test(migrations = "../../migrations")]
 async fn parameter_carrier_versions_append(pool: PgPool) {
     assert!(!genesis::parameters_seeded(&pool).await.expect("check"));
@@ -124,7 +127,6 @@ async fn parameter_carrier_versions_append(pool: PgPool) {
         .await
         .expect("seed");
     assert!(genesis::parameters_seeded(&pool).await.expect("check"));
-    // Layered properties: a later value appends, never overwrites.
     genesis::seed_parameter(&mut conn, "gamma", &serde_json::json!(0.9))
         .await
         .expect("append");

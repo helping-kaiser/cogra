@@ -1,22 +1,22 @@
-// Topic declarations — the Tag act (hashtag.md §3; edges.md §3): a
-// hyper-edge Actor → content → Type, one priced act per topic, staged
-// either inside a content-creation batch or on its own.
-//
-// A Tag's act tuple is (relevance, confidence): `p_d = r`, `p_i = c`, and
-// the census transposes it on the T-leg (layer1-interface.md §9.6). The
-// gesture builder here writes the act tuple, never a leg rendering — the
-// transposition is the census's, and duplicating it would be the single
-// easiest thing in this slice to get backwards.
-//
-// Everything a client can get wrong is refused *before* anything is
-// staged, as a field-level `userError` (api-spec.md "Conventions"): a
-// malformed batch must not leave half its acts in flight, and a θ-priced
-// act must never be staged on input the fold would then ignore.
-//
-// There is no creation gesture for a Type and no un-tag gesture: a Type
-// exists as soon as an accepted record names it, and un-tagging is a
-// further Tag at relevance 0, which the current-topics fold reads as
-// withdrawn (hashtag.md §2, §4).
+//! Topic declarations — the Tag act (hashtag.md §3; edges.md §3): a
+//! hyper-edge Actor → content → Type, one priced act per topic, staged
+//! either inside a content-creation batch or on its own.
+//!
+//! A Tag's act tuple is (relevance, confidence): `p_d = r`, `p_i = c`,
+//! and the census transposes it on the T-leg (layer1-interface.md §9.6).
+//! The gesture builder here writes the act tuple, never a leg rendering —
+//! the transposition is the census's, and duplicating it would be the
+//! single easiest thing in this slice to get backwards.
+//!
+//! Everything a client can get wrong is refused *before* anything is
+//! staged, as a field-level `userError` (api-spec.md "Conventions"): a
+//! malformed batch must not leave half its acts in flight, and a θ-priced
+//! act must never be staged on input the fold would then ignore.
+//!
+//! There is no creation gesture for a Type and no un-tag gesture: a Type
+//! exists as soon as an accepted record names it, and un-tagging is a
+//! further Tag at relevance 0, which the current-topics fold reads as
+//! withdrawn (hashtag.md §2, §4).
 
 use common::hashtag::{HashtagNameError, canonicalize};
 use common::l1::census::Family;
@@ -346,11 +346,10 @@ mod tests {
         assert_eq!(e.path, vec!["tags".to_string()]);
     }
 
+    /// An over-long batch is refused as a batch even when it also carries
+    /// a malformed name: the whole-batch fault is the one to report.
     #[test]
     fn the_cap_is_checked_before_the_entries() {
-        // An over-long batch is refused as a batch even when it also
-        // carries a malformed name — the whole-batch fault is the one to
-        // report.
         let mut over: Vec<TagDraft> = (0..MAX_TAGS_PER_BATCH + 1)
             .map(|i| draft(&format!("t{i}")))
             .collect();
@@ -392,10 +391,10 @@ mod tests {
         assert!(plan_batch(&[]).expect("legal").is_empty());
     }
 
+    /// The census transposes on the T-leg, so the gesture must carry
+    /// `(r, c)` for that transposition to land where the fold reads it.
     #[test]
     fn the_gesture_writes_the_act_tuple_never_a_leg_rendering() {
-        // The census transposes on the T-leg; the gesture must carry
-        // (r, c) so that transposition lands where the fold reads it.
         let tag = PlannedTag {
             name: "rust".into(),
             relevance: -0.25,

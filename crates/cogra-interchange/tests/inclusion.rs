@@ -3,7 +3,7 @@
 //! The rows the design sizes: legal additions, illegal widening, relaxed
 //! and tightened requiredness, a changed type, a dropped key, a required
 //! new key, and the rule-rename case that the ruled literal reading of type
-//! identity makes a major boundary (`design.md`, `tab:xchg:test-sizing`).
+//! identity makes a major boundary (´tab:xchg:test-sizing´).
 
 use cogra_interchange::{Inclusion, InclusionBreach, Theory, TheoryError, check_inclusion};
 
@@ -38,8 +38,6 @@ fn holds(earlier: &str, later: &str) {
 }
 
 const BASE: &str = r#"e = {0 => "com.example", 1 => [1, 0, uint], 2 => tstr, ? 7 => bstr}"#;
-
-// -- legal additions ------------------------------------------------------
 
 #[test]
 fn a_minor_that_changes_nothing_but_its_own_number_includes_its_predecessor() {
@@ -118,8 +116,6 @@ fn a_reached_rule_chain_respelled_is_the_same_type() {
         ),
     );
 }
-
-// -- illegal moves --------------------------------------------------------
 
 #[test]
 fn dropping_a_content_key_is_a_breach() {
@@ -271,13 +267,11 @@ fn every_breach_is_reported_in_key_order() {
     ));
 }
 
-// -- identity of type is literal ------------------------------------------
-
 /// The ruled reading: a pure rule rename between minors, with identical
 /// definitions standing behind both names, is no additive minor. The cost
 /// is deliberate — it calls a rename a major boundary, which is stricter
 /// than the invariant's intent and conservative in the safe direction
-/// (`design.md`, `dec:xchg:type-identity`).
+/// (´dec:xchg:type-identity´).
 #[test]
 fn a_pure_rule_rename_is_a_breach() {
     let found = breaches(
@@ -367,7 +361,9 @@ fn shadowing_a_prelude_name_at_one_minor_and_not_the_next_is_a_breach() {
 }
 
 /// Two theories reaching the same prelude type compare equal without the
-/// prelude entering the comparison at all.
+/// prelude entering the comparison at all — and `text = tstr` in the prelude
+/// leaves the two spellings different all the same, the comparison being over
+/// the expression as written.
 #[test]
 fn a_prelude_type_is_not_part_of_the_compared_form() {
     let found = breaches(
@@ -376,16 +372,12 @@ fn a_prelude_type_is_not_part_of_the_compared_form() {
     );
     match found.as_slice() {
         [InclusionBreach::TypeChanged { earlier, later, .. }] => {
-            // `text = tstr` in the prelude, and the two are still
-            // different: the comparison is over the expression as written.
             assert_eq!(earlier, "tstr");
             assert_eq!(later, "text");
         }
         other => panic!("expected one changed type, got {other:?}"),
     }
 }
-
-// -- composition ----------------------------------------------------------
 
 /// The worked instance of the property in `tests/properties.rs`: the
 /// registry compares an acquired minor against the greatest held theory
@@ -421,8 +413,6 @@ fn a_break_in_the_middle_is_visible_at_the_endpoints() {
         ));
     }
 }
-
-// -- comparability --------------------------------------------------------
 
 fn incomparable(earlier: &str, later: &str) {
     match check_inclusion(&parse(earlier), &parse(later)) {

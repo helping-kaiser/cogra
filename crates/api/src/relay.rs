@@ -1,9 +1,10 @@
-// The relay legs of the write path — steps 3 and 5 of substrate.md §6:
-// submit the device's pre-signed proposal to the seal, store the sealed
-// verified act, relay the approval witness, and (driven off the ingestion
-// pass) promote staged writes whose records land. The relay confers
-// nothing: both signatures cover the act, so nothing here can alter or
-// author one (architecture.md "The write path").
+//! The relay legs of the write path — steps 3 and 5 of substrate.md §6:
+//! submit the device's pre-signed proposal to the seal, store the sealed
+//! verified act, relay the approval witness, and — driven off the
+//! ingestion pass — promote staged writes whose records land.
+//!
+//! The relay confers nothing: both signatures cover the act, so nothing
+//! here can alter or author one (architecture.md "The write path").
 
 use common::l1::handshake::{ApprovalWitness, PreSignedProposal, VerifiedAct};
 use postgres_store::PgPool;
@@ -16,14 +17,15 @@ use crate::l1::{BoundaryError, L1Boundary};
 pub enum RelayError {
     /// The submitted signature (or the proposal it covers) did not verify
     /// on the substrate — surfaced per act (api-spec.md
-    /// `SIGNATURE_INVALID`). Nothing was sealed (`def:graph:verified-act`),
-    /// so the device may fix and retry.
+    /// `SIGNATURE_INVALID`). Nothing was sealed into a verified act
+    /// (layer1-interface.md §8.2), so the device may fix and retry.
     #[error("signature invalid: {0}")]
     SignatureInvalid(String),
-    /// The staged write lost its sealed act (a relay crash between seal
-    /// and store) — unrecoverable, because the host salts cannot be
-    /// re-fetched. The write is expired; the device re-prepares under a
-    /// fresh sequence value.
+    /// The staged write lost its sealed act — a relay crash between seal
+    /// and store, or a re-seal the substrate refuses as a conflict because
+    /// it already sealed the act. Unrecoverable either way, because the
+    /// host salts cannot be re-fetched. The write is expired; the device
+    /// re-prepares under a fresh sequence value.
     #[error("staged write {0} lost its seal; re-prepare")]
     Wedged(Uuid),
     /// A resubmission whose pre-commitment differs from the sealed one —
@@ -57,6 +59,16 @@ fn wrong_state(id: Uuid, expected: &str, actual: StagedState) -> RelayError {
 /// response is idempotent: an already-sealed write returns its stored act
 /// — but only for the exact pre-commitment that was sealed; differing
 /// bytes are refused (`ReplayMismatch`).
+///
+/// The pre-commitment is the anchor: from it on, the content is the
+/// author's, readable by everyone and marked pending (substrate.md §6).
+/// Staging it therefore fails the whole leg rather than degrading to
+/// invisible content, and the device's retry re-runs both steps
+/// idempotently. Staging can also fail deterministically — a comment
+/// whose parent was discarded between prepare and pre-sign fails every
+/// retry — so the write is handed back to `awaiting_pre_sign` instead of
+/// being left in `sealing`, where it would wedge until GC and block the
+/// author's next edit of the node.
 pub async fn submit_pre_signed<B: L1Boundary>(
     boundary: &B,
     pool: &PgPool,
@@ -75,15 +87,7 @@ pub async fn submit_pre_signed<B: L1Boundary>(
         other => return Err(wrong_state(id, "awaiting_pre_sign", other)),
     }
     let pre_signed_at = staged::record_pre_signed(pool, id, &pre).await?;
-    // The pre-commitment is the anchor: from here the content is the
-    // author's, readable by everyone and marked pending (substrate.md §6).
-    // A failure here fails the leg rather than degrading to invisible
-    // content — the device's retry re-runs both steps idempotently.
     if let Err(e) = crate::content::stage_pending(pool, &write, pre_signed_at).await {
-        // Staging can fail deterministically — a comment whose parent was
-        // discarded between prepare and pre-sign will fail every retry —
-        // so leaving the write in `sealing` would wedge it until GC and
-        // block the author's next edit of the node. Hand it back instead.
         if let Err(revert) = staged::revert_to_pre_sign(pool, id).await {
             tracing::error!(
                 staged = %id,
@@ -109,7 +113,6 @@ pub async fn submit_pre_signed<B: L1Boundary>(
             Err(RelayError::SignatureInvalid(m))
         }
         Err(BoundaryError::Conflict(_)) => {
-            // Sealed on the substrate, but the sealed form is gone (`Wedged`).
             staged::expire_one(pool, id, write.prepared_epoch).await?;
             Err(RelayError::Wedged(id))
         }

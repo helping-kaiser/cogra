@@ -131,6 +131,12 @@ impl Rig {
     }
 }
 
+/// The gesture is a genesis Publish — target the mint of its own act,
+/// `p_i` census-fixed at 1, the license structural — and its envelope
+/// decodes back to the draft, node id included. Landing leaves the
+/// display row visible with its node binding and landing order, carriage
+/// holding the exact envelope bytes, and the chronicle serving it in both
+/// the newest-first listing and the record read.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -153,8 +159,6 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
     .await
     .expect("prepares");
 
-    // The gesture is a genesis Publish: target = mint of its own act,
-    // p_i census-fixed at 1, license structural.
     let body = &prepared.writes[0].proposal.body;
     assert_eq!(body.family, common::l1::Family::Publish);
     assert_eq!(body.p_i, 1.0);
@@ -162,7 +166,6 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
     let own_mint = format!("mint:{}", body.act_id());
     assert_eq!(body.target.to_string(), own_mint);
 
-    // The envelope decodes back to the draft, node id included.
     let decoded =
         CograContent::decode_payload(&prepared.writes[0].proposal.payload).expect("decodes");
     assert_eq!(decoded.node, prepared.node);
@@ -171,7 +174,6 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
 
     rig.land(&prepared, &key).await;
 
-    // Display row visible with the node binding and landing order.
     let post = content_store::post(&rig.pool, prepared.node)
         .await
         .expect("reads")
@@ -183,7 +185,6 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
     assert_eq!(post.content, "The body");
     assert!(post.redaction_reason.is_none());
 
-    // Carriage holds the exact envelope bytes.
     let carried = sqlx::query_as::<_, (Vec<u8>, String)>(
         "SELECT payload, payload_state FROM act_payloads WHERE act_id = $1",
     )
@@ -194,7 +195,6 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
     assert_eq!(carried.0, prepared.writes[0].proposal.payload);
     assert_eq!(carried.1, "full");
 
-    // The chronicle sees it: newest-first listing and the record read.
     let listed = content_store::list_posts(&rig.pool, None, false, 10, true)
         .await
         .expect("lists");
@@ -208,13 +208,17 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
     assert_eq!(record.target().expect("leg").target, own_mint);
 }
 
+/// An edit's payload is a whole snapshot, not a patch: it restates the
+/// body it keeps, and an absent title stores NULL because the snapshot is
+/// the whole state — a Post without that field. An explicit empty title
+/// stores NULL the same way. Each edit chains behind the previous one:
+/// the first behind the genesis record, the second behind the first.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (actor, key) = rig.funded_actor("alice").await;
     let post_id = rig.post(actor, &key, "Old title", "Old body").await;
 
-    // A new title; the payload restates the body it keeps.
     let edit = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
@@ -232,7 +236,6 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
     let body = &edit.writes[0].proposal.body;
     assert_eq!(body.p_d, 0.0);
     assert!(body.license.is_none());
-    // The edit chains behind the genesis record.
     assert_eq!(body.asserted_parents.len(), 1);
     rig.land(&edit, &key).await;
 
@@ -243,8 +246,6 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
     assert_eq!(post.title.as_deref(), Some("New title"));
     assert_eq!(post.content, "Old body");
 
-    // A snapshot without a title stores NULL — the snapshot is the
-    // whole state, so an absent field is a Post without that field.
     let clear = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
@@ -259,7 +260,6 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
     )
     .await
     .expect("prepares clear");
-    // The second edit chains behind the first, not the genesis.
     assert_eq!(
         clear.writes[0].proposal.body.asserted_parents[0].to_string(),
         edit.writes[0].proposal.body.act_id().to_string(),
@@ -273,7 +273,6 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
     assert_eq!(post.title, None);
     assert_eq!(post.content, "New body");
 
-    // An explicit empty title stores NULL the same way.
     let empty = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
@@ -307,6 +306,11 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
     assert_eq!(versions, 4, "append-only: genesis + three edits");
 }
 
+/// Three refusals at prepare: a non-creator's edit, which the fold would
+/// never read anyway (post.md §4); an unknown id, as NotFound; and a
+/// second edit while one is in flight, because the backend serializes
+/// edits per (node, author) (substrate.md §9). Once the first lands, the
+/// next edit stages again.
 #[sqlx::test(migrations = "../../migrations")]
 async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -314,8 +318,6 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
     let (bob, _bob_key) = rig.funded_actor("bob").await;
     let post_id = rig.post(alice, &alice_key, "Title", "Body").await;
 
-    // A non-creator's edit is refused at prepare — the fold would
-    // never read it (post.md §4).
     let refused = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
@@ -331,7 +333,6 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
     .await;
     assert!(matches!(refused, Err(ContentError::NotCreator)));
 
-    // An unknown id is NotFound.
     let refused = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
@@ -347,8 +348,6 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
     .await;
     assert!(matches!(refused, Err(ContentError::NotFound)));
 
-    // While one edit is in flight, a second is refused — the backend
-    // serializes edits per (node, author) (substrate.md §9).
     let first = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
@@ -378,7 +377,6 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
     .await;
     assert!(matches!(second, Err(ContentError::BadInput { .. })));
 
-    // Once the first lands, the next edit stages again.
     rig.land(&first, &alice_key).await;
     content::prepare_post_edit(
         &rig.pool,
@@ -396,6 +394,13 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
     .expect("stages after landing");
 }
 
+/// Bob comments on Alice's post — a genesis Review minting the Comment on
+/// its terminal leg — and Alice replies to Bob's comment, so
+/// comment-on-comment threading holds. The thread read gives the post's
+/// direct children as Bob's comment alone, oldest-first, with the reply
+/// living under that comment. A comment edit is an ordinary-role Review
+/// at `(0, 0)` with an A leg back to the genesis parent, and commenting
+/// on nothing refuses.
 #[sqlx::test(migrations = "../../migrations")]
 async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -403,8 +408,6 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
     let (bob, bob_key) = rig.funded_actor("bob").await;
     let post_id = rig.post(alice, &alice_key, "Title", "Body").await;
 
-    // Bob comments on Alice's post — a genesis Review minting the
-    // Comment on its terminal leg.
     let comment = content::prepare_comment(
         &rig.pool,
         &rig.boundary,
@@ -437,7 +440,6 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
     assert_eq!(row.author_id, bob);
     assert_eq!(row.content, "First!");
 
-    // Alice replies to Bob's comment — comment-on-comment threading.
     let reply = content::prepare_comment(
         &rig.pool,
         &rig.boundary,
@@ -463,8 +465,6 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
     assert_eq!(reply_row.target_id, comment.node);
     assert_eq!(reply_row.target_type, "comment");
 
-    // The thread read: the post's direct children hold only Bob's
-    // comment, oldest-first; the reply lives under the comment.
     let on_post = content_store::comments_for_target(&rig.pool, post_id, None, false, 10, true)
         .await
         .expect("thread");
@@ -477,8 +477,6 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
     assert_eq!(on_comment.len(), 1);
     assert_eq!(on_comment[0].id, reply.node);
 
-    // A comment edit: ordinary-role Review at (0,0), A leg back to the
-    // genesis parent.
     let edit = content::prepare_comment_edit(
         &rig.pool,
         &rig.boundary,
@@ -508,7 +506,6 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
         .expect("comment");
     assert_eq!(row.content, "First! (edited)");
 
-    // Commenting on nothing refuses.
     let refused = content::prepare_comment(
         &rig.pool,
         &rig.boundary,
@@ -527,6 +524,10 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
     assert!(matches!(refused, Err(ContentError::BadInput { .. })));
 }
 
+/// Newest-first, so the last post leads. The keyset cursor continues
+/// exactly where the page ended, and walking backward from that same
+/// cursor serves the newer neighbors instead — still newest-first. The
+/// record chronicle pages the five Publishes the same way.
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_listing_pages_by_keyset_in_landing_order(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -536,7 +537,6 @@ async fn the_listing_pages_by_keyset_in_landing_order(pool: PgPool) {
         ids.push(rig.post(actor, &key, &format!("t{i}"), "b").await);
     }
 
-    // Newest-first: the last post leads.
     let page1 = content_store::list_posts(&rig.pool, None, false, 2, true)
         .await
         .expect("page 1");
@@ -545,7 +545,6 @@ async fn the_listing_pages_by_keyset_in_landing_order(pool: PgPool) {
         vec![ids[4], ids[3]]
     );
 
-    // The keyset cursor continues exactly where the page ended.
     let page2 = content_store::list_posts(&rig.pool, Some(cursor_of(&page1[1])), false, 2, true)
         .await
         .expect("page 2");
@@ -554,8 +553,6 @@ async fn the_listing_pages_by_keyset_in_landing_order(pool: PgPool) {
         vec![ids[2], ids[1]]
     );
 
-    // Backward from the same cursor walks the other way (the newer
-    // neighbors), still served newest-first.
     let back = content_store::list_posts(&rig.pool, Some(cursor_of(&page2[1])), true, 2, true)
         .await
         .expect("backward");
@@ -564,7 +561,6 @@ async fn the_listing_pages_by_keyset_in_landing_order(pool: PgPool) {
         vec![ids[3], ids[2]]
     );
 
-    // The record chronicle sees five Publishes newest-first too.
     let records = mirror::records(
         &rig.pool,
         &mirror::RecordFilter {
@@ -638,6 +634,18 @@ async fn the_chain_head_tracks_the_newest_landed_edit(pool: PgPool) {
     assert_eq!(new_head, edit.writes[0].proposal.body.act_id().to_string());
 }
 
+/// The chronicle's filters compose: author narrows to Bob's records,
+/// terminal to the review that minted a comment — its revision chain —
+/// and payload-marked and epoch-window compose on top. Records page
+/// backward too: from the newest record's cursor the backward walk serves
+/// the older neighbor.
+///
+/// Carriage is idempotent under a forced double-promotion. Re-running the
+/// content landing pass over already-promoted writes is a clean no-op:
+/// carriage inserts ignore the conflict and version rows land by their
+/// own key, so the pass reports nothing and duplicates nothing. The real
+/// `promote_landed` filter never re-selects a landed row, so this
+/// exercises a path production does not take.
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -667,7 +675,6 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
         .expect("row")
         .l1_node_id;
 
-    // Author filter: only Bob's records.
     let by_bob = mirror::records(
         &rig.pool,
         &mirror::RecordFilter {
@@ -683,8 +690,6 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
     assert_eq!(by_bob.len(), 1);
     assert_eq!(by_bob[0].family, "review");
 
-    // Terminal filter: the review that minted this comment — the
-    // comment's revision chain.
     let minting = mirror::records(
         &rig.pool,
         &mirror::RecordFilter {
@@ -700,7 +705,6 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
     assert_eq!(minting.len(), 1);
     assert_eq!(minting[0].record_id, by_bob[0].record_id);
 
-    // Payload-marked and epoch-window filters compose.
     let publish_epoch = content_store::post(&rig.pool, post_id)
         .await
         .expect("reads")
@@ -739,8 +743,6 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
     .expect("records");
     assert!(outside.is_empty());
 
-    // Records page backward too: from the newest record's cursor, the
-    // backward walk serves the older neighbor.
     let all = mirror::records(&rig.pool, &mirror::RecordFilter::default(), None, false, 10)
         .await
         .expect("records");
@@ -768,11 +770,6 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
     .expect("backward");
     assert_eq!(back[back.len() - 1].record_id, all[0].record_id);
 
-    // Re-running the content landing pass over already-promoted writes
-    // (a forced double-promotion; the real promote_landed filter never
-    // re-selects a landed row) is a clean no-op: carriage inserts ignore
-    // the conflict and the version rows land by their own key, so the
-    // pass reports nothing and duplicates nothing.
     let promoted = sqlx::query_as::<_, (Uuid, Uuid, String, String)>(
         "SELECT id, actor_id, act_id, family FROM staged_writes WHERE state = 'landed'",
     )

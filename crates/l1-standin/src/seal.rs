@@ -1,8 +1,9 @@
-// The two relay legs of the admission handshake, host side
-// (layer1-interface.md §8.2): seal — verify the pre-signed proposal, add
-// salts, form the binding commitments, seal the verified act; approve —
-// verify the approval witness over the exact sealed act. Only a verified
-// act with a valid approval witness is eligible for ordering.
+//! Host side of the admission handshake's two relay legs
+//! (layer1-interface.md §8.2). `seal` verifies the pre-signed proposal,
+//! adds salts, forms the binding commitments, and seals the verified
+//! act; `approve` verifies the approval witness over that exact sealed
+//! act. Ordering admits only a verified act carrying a valid approval
+//! witness.
 
 use common::l1::census::FamilyKind;
 use common::l1::crypto::{self, tags};
@@ -17,13 +18,52 @@ use rand::rngs::OsRng;
 use crate::{StandIn, StandInError};
 
 /// Bound on declared dependencies + asserted parents — the "dependency
-/// bounds" of `def:graph:verified-act`; a stand-in operating value.
+/// bounds" of the verified-act definition (layer1-interface.md §8.2); a
+/// stand-in operating value.
 const MAX_DEPS: usize = 64;
 
 fn formation(msg: impl Into<String>) -> StandInError {
     StandInError::Formation(msg.into())
 }
 
+/// Verifies a pre-signed proposal and seals it into a verified act
+/// (layer1-interface.md §8.2), enforcing:
+///
+/// - **Formation.** The act identifier is well-formed by construction of
+///   the typed body; endpoint typing and the (p_d, p_i) tuple are
+///   checked against the census.
+/// - **Minted-endpoint rules** (layer1-interface.md §8.1). A self-minted
+///   target is valid only for the genesis families; genesis identity is
+///   per record, so an ordinary-role act toward an existing mint — a
+///   Publish revising its Content node — is well-formed, and it is the
+///   fold, never formation, that decides what it means. Foreign minted
+///   references are permitted even when unanchored: dangling identifiers
+///   are fold-neutral, never a formation failure. A founding Participant
+///   self-loops at its own mint — both legs enter the Chat the act
+///   creates — so the middle-node rule exempts exactly that shape.
+/// - **Bid/T is fresh-mint-only** (layer1-interface.md §8.1): a Bid
+///   toward an existing Offer would hang a second Item's incidence on
+///   it — real raw incidence, live in CAN and sentiment even where no
+///   fold reads it. Offer revision is a new Offer.
+/// - **Carriage and dependency bounds**, checked against
+///   `StandInConfig::max_payload_bytes` and `MAX_DEPS`.
+/// - **Authorship.** The stated author's key binds to the address, and
+///   the pre-commitment verifies over the exact proposal. Key
+///   consistency across the author's history needs no separate check:
+///   the address derives from the key, so this binding already pins it.
+/// - **Host additions.** Fresh domain-separated salts meeting the
+///   entropy floor, the binding and concealing commitments, and the
+///   host seal.
+/// - **Persistence.** The insert is the uniqueness check — a second
+///   record claiming the same act identifier, or reusing the
+///   author-local sequence, is equivocation and produces no Layer-1
+///   object. Sealed-but-never-approved rows are never collected:
+///   unbounded, but stand-in-scoped, since the whole l1_* table set
+///   drops at the swap, so a reaper here would only be machinery for
+///   throwaway substrate state. The author's key is learned on first
+///   contact (the account may pre-exist from a burn credit with no key
+///   yet) in the same transaction as the act, so a crash cannot store an
+///   act whose key was never learned.
 pub(crate) async fn seal(
     standin: &StandIn,
     pre: PreSignedProposal,
@@ -31,8 +71,6 @@ pub(crate) async fn seal(
     let body = &pre.proposal.body;
     let family = body.family;
 
-    // Canonical formation: identifiers well-formed by construction of the
-    // typed body; endpoint typing and the parameter tuple per the census.
     let act_id = ActId::new(&body.author, body.seq, family)
         .map_err(|e| formation(format!("act identifier: {e}")))?;
     family
@@ -45,17 +83,6 @@ pub(crate) async fn seal(
         .map_err(formation)?;
     family.params_check(body.p_d, body.p_i).map_err(formation)?;
 
-    // Minted-endpoint rules (`def:graph:genesis-act-and-creator`): a
-    // self-minted target (mint of this very act) is valid exactly for the
-    // genesis families. Genesis identity is per record, so an ordinary-role
-    // act toward an existing mint — a Publish revising its Content node —
-    // is well-formed; the fold, never formation, decides what it means.
-    // Foreign minted references are permitted even when unanchored:
-    // dangling identifiers are fold-neutral, never a formation failure
-    // (`lem:graph:dangling-neutral-fold`).
-    // A founding Participant self-loops at its own mint — both legs enter
-    // the Chat the act creates — so the middle-node rule exempts exactly
-    // that shape.
     let own_mint = NodeId::Mint(act_id.clone());
     let founding_participant = family == common::l1::Family::Participant && body.target == own_mint;
     if body.middle.as_ref() == Some(&own_mint) && !founding_participant {
@@ -66,17 +93,12 @@ pub(crate) async fn seal(
             "{family} is not a genesis family and cannot mint its target"
         )));
     }
-    // Bid/T alone is fresh-mint-only (layer1-interface.md §8.1): a Bid toward
-    // an existing Offer would hang a second Item's incidence on it — real
-    // raw incidence, live in CAN and sentiment even where no fold reads
-    // it. Offer revision is a new Offer.
     if family == common::l1::Family::Bid && body.target != own_mint {
         return Err(formation(
             "bid mints its Offer: the terminal target must be the act's own mint",
         ));
     }
 
-    // Carriage and dependency bounds.
     if pre.proposal.payload.len() > standin.config().max_payload_bytes {
         return Err(formation(format!(
             "payload exceeds M_payload ({} > {})",
@@ -88,8 +110,6 @@ pub(crate) async fn seal(
         return Err(formation("dependency list exceeds the bound"));
     }
 
-    // Authorship: the stated author's key binds to the address, and the
-    // pre-commitment verifies over the exact proposal.
     let author_key = crypto::verifying_key_from_bytes(&pre.author_pubkey)
         .ok_or_else(|| StandInError::Authentication("malformed author public key".into()))?;
     if crypto::address_of(&author_key) != body.author {
@@ -111,11 +131,6 @@ pub(crate) async fn seal(
         ));
     }
 
-    // Key consistency across the author's history needs no check of its
-    // own: the address derives from the key, so the binding above pins it.
-
-    // Host additions: fresh domain-separated salts meeting the entropy
-    // floor, binding + concealing commitments, the host seal.
     let mut content_salt = vec![0u8; crypto::SALT_LEN];
     let mut deps_salt = vec![0u8; crypto::SALT_LEN];
     OsRng.fill_bytes(&mut content_salt);
@@ -143,12 +158,6 @@ pub(crate) async fn seal(
     let host_key = standin.host_key().await?;
     act.host_seal = crypto::sign(&host_key, tags::HOST_SEAL, &act.seal_msg());
 
-    // Persist the sealed act. The insert is the uniqueness check: a second
-    // record claiming the same act identifier (or reusing the author-local
-    // sequence) is equivocation and produces no Layer-1 object.
-    // Sealed-but-never-approved rows are never collected — unbounded, but
-    // stand-in-scoped: the whole l1_* table set drops at the swap, so a
-    // reaper here would be machinery for throwaway substrate state.
     let parents: Vec<String> = body
         .asserted_parents
         .iter()
@@ -194,9 +203,6 @@ pub(crate) async fn seal(
         )));
     }
 
-    // Learn the author's key on first contact (account may pre-exist from
-    // a burn credit with no key yet) — in the same transaction as the
-    // act, so a crash cannot store an act whose key was never learned.
     sqlx::query!(
         "INSERT INTO l1_accounts (address, pubkey) VALUES ($1, $2)
          ON CONFLICT (address) DO UPDATE SET pubkey = COALESCE(l1_accounts.pubkey, EXCLUDED.pubkey)",
@@ -266,6 +272,9 @@ pub(crate) async fn sealed_act(
     }))
 }
 
+/// Verifies the approval witness over the exact sealed act and marks it
+/// approved. Idempotent once already approved: a repeat call re-checks
+/// nothing and changes nothing.
 pub(crate) async fn approve(
     standin: &StandIn,
     witness: ApprovalWitness,
@@ -283,12 +292,9 @@ pub(crate) async fn approve(
     .ok_or_else(|| StandInError::UnknownAct(act_id.clone()))?;
 
     if row.status != "sealed" {
-        // Approval is idempotent once recorded; anything else re-checks
-        // nothing and changes nothing.
         return Ok(());
     }
 
-    // Rebuild the exact sealed message and verify the witness over it.
     let body = rebuild_body(
         &row.author,
         row.seq,
@@ -379,7 +385,7 @@ pub(crate) fn rebuild_body(
 }
 
 /// The legs of an act's graph projection, as (role, source, target) with
-/// the leg-rendered parameters (`def:graph:act-edge-projection`).
+/// the leg-rendered parameters (layer1-interface.md §8.1).
 pub(crate) fn projection_legs(
     body: &common::l1::StructuralBody,
 ) -> Vec<(common::l1::LegRole, NodeId, NodeId, f64, f64)> {

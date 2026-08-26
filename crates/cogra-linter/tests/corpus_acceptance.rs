@@ -67,14 +67,6 @@ const LINTER_ARTIFACTS: [&str; 5] = [
     "crates/cogra-linter/docs/kickoff.md",
 ];
 
-fn under(prefix: &str) -> Vec<&'static Diagnostic> {
-    run()
-        .findings
-        .iter()
-        .filter(|one| one.primary.path.starts_with(prefix))
-        .collect()
-}
-
 fn spell(one: &Diagnostic) -> String {
     format!(
         "{}:{}:{}: {}: {}",
@@ -160,23 +152,36 @@ fn the_failing_set_is_clean() {
     assert!(run().is_clean(), "the lane exits zero on this corpus");
 }
 
-/// (´rep:lint:first-corpus´): the advisory remainder produces the classes
-/// the concept predicted — the Rust backtick near-misses and the
-/// plain-comment sweep — at the magnitudes it named, while the
-/// unresolved-citation class is empty, every span that fed it being a
+/// (´rep:lint:first-corpus´): the advisory remainder is empty. Every Rust
+/// crate carries documentation comments only, so the two classes the
+/// concept predicted — the backtick near-misses and the plain-comment
+/// sweep — are gone with the sweep that produced them, and the
+/// unresolved-citation class is empty too, every span that fed it being a
 /// displayed one (R20).
 ///
-/// The concept's own figures were a raw-text sweep of 2026-08-25, which
-/// under-counts the comment sweep, participation being an AST fact no
-/// sweep sees. The bounds here are wide enough to be about classes rather
-/// than about a commit.
+/// `android/` and `web/` remain outside the failing set, there being no
+/// frontend before slices 7 and 8, but they carry nothing for the linter
+/// to report. What is left is a corpus clean at both enforcements, which
+/// the failing half asserts separately.
 #[test]
-fn the_advisory_remainder_carries_the_expected_classes() {
+fn the_advisory_remainder_is_empty() {
     let by_rule = counted();
     println!("findings by rule, over {} sources:", run().sources.len());
     for (rule, count) in &by_rule {
         println!("  {rule}: {count}");
     }
+    let advisory: Vec<String> = run()
+        .findings
+        .iter()
+        .filter(|one| one.enforcement == Enforcement::Advisory)
+        .map(spell)
+        .collect();
+    assert!(
+        advisory.is_empty(),
+        "the advisory remainder carries {} finding(s):\n{}",
+        advisory.len(),
+        advisory.join("\n")
+    );
     let unresolved = by_rule
         .get("label-unresolved-citation")
         .copied()
@@ -184,49 +189,6 @@ fn the_advisory_remainder_carries_the_expected_classes() {
     assert_eq!(
         unresolved, 0,
         "no citation in the corpus resolves nowhere: {unresolved}"
-    );
-    let backticks = by_rule
-        .get("label-backtick-in-code")
-        .copied()
-        .unwrap_or_default();
-    assert!(
-        (40..200).contains(&backticks),
-        "the Rust backtick near-misses the concept counted at 88: {backticks}"
-    );
-    let comments = by_rule
-        .get("rust-plain-line-comment")
-        .copied()
-        .unwrap_or_default();
-    assert!(
-        comments > 800,
-        "the plain-comment sweep the concept counted at ~1210: {comments}"
-    );
-    for expected in ["label-backtick-in-code", "rust-plain-line-comment"] {
-        assert!(by_rule.contains_key(expected), "{expected} is not reported");
-    }
-}
-
-/// (´[LBL-cav:labels:coexistence]´): an advisory tree's defects are visible
-/// in full rather than demoted, and enforcement is orthogonal to severity —
-/// an error is an error wherever it is found.
-#[test]
-fn advisory_findings_keep_their_severity() {
-    let advisory = under("crates/api/src/");
-    assert!(
-        !advisory.is_empty(),
-        "the api crate's sources report something"
-    );
-    assert!(
-        advisory
-            .iter()
-            .all(|one| one.enforcement == Enforcement::Advisory),
-        "nothing under crates/api/src/ is in the failing set today"
-    );
-    assert!(
-        advisory
-            .iter()
-            .any(|one| one.severity == cogra_linter::Severity::Error),
-        "an error outside the failing set is still an error"
     );
 }
 

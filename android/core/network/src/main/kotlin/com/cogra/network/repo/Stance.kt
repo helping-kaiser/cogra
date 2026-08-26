@@ -114,7 +114,7 @@ class StanceRepositoryImpl @Inject constructor(
      * handed to the signer in one go.
      */
     override suspend fun prepareSeverance(target: String): Outcome<List<PreparedWriteView>> = guard.run {
-        client.mutation(PrepareSeveranceMutation(PrepareSeveranceInput(target)))
+        client.mutation(PrepareSeveranceMutation(PrepareSeveranceInput(target = Optional.present(target))))
             .payloadOutcome({ it.prepareSeverance.userErrors.map { e -> e.userErrorFields } }) {
                 it.prepareSeverance.writes?.map { w -> w.preparedWriteFields.toDomain() }
             }

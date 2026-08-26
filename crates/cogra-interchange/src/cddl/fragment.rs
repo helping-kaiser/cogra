@@ -2,7 +2,7 @@
 //!
 //! The fragment is "structural, not lexical": it constrains the top-level
 //! map rule and nothing below a content key. This module decides membership
-//! by the six clauses of `alg:xchg:fragment-check`, refusing at the first
+//! by the six clauses of (´alg:xchg:fragment-check´), refusing at the first
 //! failure with a [`TheoryError::NotInFragment`] whose detail opens with
 //! the line it was located at.
 //!
@@ -114,6 +114,10 @@ impl Slot {
 }
 
 /// Decide membership, and read off what the root map pins.
+///
+/// Keys 0 and 1 are consumed as the envelope before any slot is recorded, so
+/// nothing at or below 1 reaches [`ContentKey::new`]; its refusal is
+/// expressed rather than assumed away.
 pub(crate) fn check(cddl: &Cddl) -> Result<Fragment, TheoryError> {
     let root = match cddl.rules.first() {
         Some(root) => root,
@@ -137,9 +141,6 @@ pub(crate) fn check(cddl: &Cddl) -> Result<Fragment, TheoryError> {
                 coordinate = Some(pinned_coordinate(value)?);
             }
             key => {
-                // Unreachable in practice: keys 0 and 1 are consumed above,
-                // so nothing at or below 1 reaches the constructor. The
-                // refusal is expressed rather than assumed away.
                 let key = ContentKey::new(key).map_err(|error| refusal(entry.span.line, error))?;
                 if slots.iter().any(|slot| slot.key == key) {
                     return Err(refusal(
@@ -564,8 +565,6 @@ mod tests {
 
     const MINIMAL: &str = r#"example = {0 => "com.example", 1 => [1, 0, uint]}"#;
 
-    // -- in the fragment --------------------------------------------------
-
     #[test]
     fn the_minimal_theory_is_in_the_fragment() {
         let fragment = admit(MINIMAL);
@@ -676,8 +675,6 @@ uint = 5"#,
         let span = fragment.slots()[0].type_span();
         assert_eq!(&source[span.start..span.end], "tstr .size 3");
     }
-
-    // -- outside the fragment ---------------------------------------------
 
     #[test]
     fn a_root_that_is_not_a_map_is_refused() {
@@ -837,10 +834,10 @@ more = (2 => uint)"#
         );
     }
 
+    /// Keys 0 and 1 are consumed as the envelope before any slot is recorded,
+    /// so no slot can carry them.
     #[test]
     fn a_content_key_at_or_below_one_is_impossible_by_construction() {
-        // Keys 0 and 1 are consumed as the envelope before any slot is
-        // recorded, so no slot can carry them.
         let fragment = admit(MINIMAL);
         assert!(fragment.slots().iter().all(|slot| slot.key().get() > 1));
     }

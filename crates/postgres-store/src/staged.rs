@@ -1,9 +1,10 @@
-// Staged writes (data-model.md "Staged writes"): the L2 row a write
-// occupies from prepare until confirm — the canonical proposal, joined by
-// the pre-commitment and the host-sealed verified act as the handshake
-// advances (architecture.md "The write path"). Staged state is
-// operational: exempt from append-only history, cleared and reaped when a
-// write never lands.
+//! Staged writes (data-model.md "Staged writes"): the L2 row a write
+//! occupies from prepare until confirm — the canonical proposal, joined by
+//! the pre-commitment and the host-sealed verified act as the handshake
+//! advances (architecture.md "The write path").
+//!
+//! Staged state is operational: exempt from append-only history, cleared
+//! and reaped when a write never lands.
 
 use common::l1::census::Family;
 use common::l1::handshake::{PreSignedProposal, Proposal, StructuralBody, VerifiedAct};
@@ -141,9 +142,9 @@ impl StagedWrite {
     }
 }
 
-/// Allocates the author's next act sequence value s_q
-/// (`def:graph:act-identifier` — actor-chosen, unique, fixed before
-/// submission). The counter row is created at zero on first use and caught
+/// Allocates the author's next act sequence value s_q — actor-chosen,
+/// unique, and fixed before submission (layer1-interface.md §8.1). The
+/// counter row is created at zero on first use and caught
 /// up against the mirror on every allocation, so acts landed outside the
 /// prepare path (bootstrap repair, the dev CLI) can never cause identifier
 /// reuse. Runs on a connection so prepare composes it with the staged

@@ -13,9 +13,11 @@ use postgres_store::{genesis, mirror};
 use sqlx::PgPool;
 use uuid::Uuid;
 
+/// Seeds one user actor. The key is derived from the handle so that every
+/// actor gets a distinct one, as the schema requires (data-model.md
+/// "Actors").
 async fn actor(pool: &PgPool, handle: &str, address: &str) -> Uuid {
     let id = Uuid::new_v4();
-    // Distinct per actor (data-model.md "Actors").
     let pubkey = format!("pk-{handle}");
     let mut conn = pool.acquire().await.expect("conn");
     genesis::insert_actor(&mut conn, id, "user", handle, pubkey.as_bytes(), address)
@@ -98,6 +100,9 @@ async fn stage(pool: &PgPool, actor_id: Uuid, p: &Proposal, prepared_epoch: i64)
     id
 }
 
+/// Sequence values are monotone and per-author, and an act landed outside
+/// the prepare path — bootstrap repair, the dev CLI — pushes the counter
+/// past its sequence value rather than letting an identifier be reused.
 #[sqlx::test(migrations = "../../migrations")]
 async fn seq_allocation_is_monotone_and_catches_up_with_the_mirror(pool: PgPool) {
     let mut conn = pool.acquire().await.expect("conn");
@@ -109,11 +114,8 @@ async fn seq_allocation_is_monotone_and_catches_up_with_the_mirror(pool: PgPool)
         staged::allocate_seq(&mut conn, "alice").await.expect("s"),
         1
     );
-    // Independent authors do not share a counter.
     assert_eq!(staged::allocate_seq(&mut conn, "bob").await.expect("s"), 0);
 
-    // An act landed outside the prepare path (bootstrap repair, dev CLI)
-    // pushes the counter past its sequence value.
     mirror::ingest_epoch(
         &pool,
         &EpochPackage {
@@ -175,13 +177,15 @@ async fn a_row_edited_out_of_band_loads_as_corrupt(pool: PgPool) {
     ));
 }
 
+/// The handshake walks pre-sign, seal, then approve, storing each leg's
+/// parts as it goes and rebuilding the verified act from them. Pre-sign and
+/// approve each accept an idempotent retry from the state they lead to.
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_handshake_lifecycle_advances_through_its_states(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
     let p = proposal("alice", 0);
     let id = stage(&pool, actor_id, &p, 0).await;
 
-    // Pre-sign: parts stored, state sealing; retry from sealing accepted.
     staged::record_pre_signed(&pool, id, &pre_parts())
         .await
         .expect("pre-sign");
@@ -197,14 +201,12 @@ async fn the_handshake_lifecycle_advances_through_its_states(pool: PgPool) {
     assert_eq!(pre.proposal, p);
     assert_eq!(pre.nonce, vec![2; 32]);
 
-    // Seal: host additions stored, state awaiting_approval, act rebuilds.
     let act = verified_act(&p);
     staged::record_sealed(&pool, id, &act).await.expect("seal");
     let w = staged::load(&pool, id).await.expect("loads");
     assert_eq!(w.state, StagedState::AwaitingApproval);
     assert_eq!(w.verified_act().expect("act"), act);
 
-    // Approve: relaying, idempotent retry accepted.
     staged::record_relaying(&pool, id).await.expect("relaying");
     staged::record_relaying(&pool, id)
         .await
@@ -215,34 +217,33 @@ async fn the_handshake_lifecycle_advances_through_its_states(pool: PgPool) {
     );
 }
 
+/// Every transition taken out of turn is refused with the state the row is
+/// actually in; an unknown id surfaces NotFound instead. A failed seal is
+/// the one way back — it returns the write to awaiting_pre_sign for the
+/// device's retry.
 #[sqlx::test(migrations = "../../migrations")]
 async fn out_of_order_transitions_are_refused_with_the_actual_state(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
     let p = proposal("alice", 0);
     let id = stage(&pool, actor_id, &p, 0).await;
 
-    // Sealing before any pre-commitment exists.
     assert!(matches!(
         staged::record_sealed(&pool, id, &verified_act(&p)).await,
         Err(StagedError::WrongState { actual, .. }) if actual == "awaiting_pre_sign"
     ));
-    // Relaying before the seal.
     assert!(matches!(
         staged::record_relaying(&pool, id).await,
         Err(StagedError::WrongState { actual, .. }) if actual == "awaiting_pre_sign"
     ));
-    // Reverting a write that is not sealing.
     assert!(matches!(
         staged::revert_to_pre_sign(&pool, id).await,
         Err(StagedError::WrongState { .. })
     ));
-    // Unknown ids surface NotFound, not WrongState.
     assert!(matches!(
         staged::record_relaying(&pool, Uuid::new_v4()).await,
         Err(StagedError::NotFound(_))
     ));
 
-    // A failed seal returns to awaiting_pre_sign for the device's retry.
     staged::record_pre_signed(&pool, id, &pre_parts())
         .await
         .expect("pre-sign");
@@ -253,6 +254,9 @@ async fn out_of_order_transitions_are_refused_with_the_actual_state(pool: PgPool
     );
 }
 
+/// Promotion lands exactly the staged writes whose records arrived in the
+/// epoch and leaves the rest where they were; a second pass over the same
+/// epoch promotes nothing further.
 #[sqlx::test(migrations = "../../migrations")]
 async fn promotion_lands_exactly_the_staged_writes_whose_records_arrive(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
@@ -284,7 +288,6 @@ async fn promotion_lands_exactly_the_staged_writes_whose_records_arrive(pool: Pg
         StagedState::AwaitingPreSign
     );
 
-    // A second pass over the same epoch promotes nothing further.
     assert!(
         staged::promote_landed(&pool, 0)
             .await
@@ -293,6 +296,11 @@ async fn promotion_lands_exactly_the_staged_writes_whose_records_arrive(pool: Pg
     );
 }
 
+/// The two-phase GC: a write past its bound expires while a fresher one
+/// and a landed one are spared, and the expired row stays observable for
+/// one more window before it reaps. The payload rides the row until that
+/// reap, so a record landing in the window can still be promoted
+/// (data-model.md "Staged writes").
 #[sqlx::test(migrations = "../../migrations")]
 async fn gc_expires_then_reaps_and_spares_landed_writes(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
@@ -305,11 +313,7 @@ async fn gc_expires_then_reaps_and_spares_landed_writes(pool: PgPool) {
         .await
         .expect("mark landed");
 
-    // Epoch 7, bound 8: nothing due yet (0 + 8 > 7).
     assert_eq!(staged::expire_due(&pool, 7, 8).await.expect("gc"), 0);
-    // Epoch 8: the stale write expires, landed spared. The payload rides
-    // the row until the reap, so a record landing in that window can
-    // still be promoted (data-model.md "Staged writes").
     assert_eq!(staged::expire_due(&pool, 8, 8).await.expect("gc"), 1);
     let w = staged::load(&pool, stale).await.expect("loads");
     assert_eq!(w.state, StagedState::Expired);
@@ -323,7 +327,6 @@ async fn gc_expires_then_reaps_and_spares_landed_writes(pool: PgPool) {
         StagedState::Landed
     );
 
-    // The expired row stays observable for one more window, then reaps.
     assert_eq!(staged::reap_expired(&pool, 8, 8).await.expect("gc"), 0);
     assert_eq!(staged::reap_expired(&pool, 16, 8).await.expect("gc"), 1);
     assert!(matches!(
@@ -332,6 +335,8 @@ async fn gc_expires_then_reaps_and_spares_landed_writes(pool: PgPool) {
     ));
 }
 
+/// Expiring one write reaches only that write, and expiring an
+/// already-terminal one is refused.
 #[sqlx::test(migrations = "../../migrations")]
 async fn expire_one_is_targeted_and_terminal(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
@@ -347,19 +352,17 @@ async fn expire_one_is_targeted_and_terminal(pool: PgPool) {
         staged::load(&pool, spared).await.expect("loads").state,
         StagedState::AwaitingPreSign
     );
-    // Expiring an already-terminal write is refused.
     assert!(matches!(
         staged::expire_one(&pool, doomed, 0).await,
         Err(StagedError::NotFound(_))
     ));
 }
 
+/// The mirror governs: a late landing wins over expiry, and the payload the
+/// promotion needs is still on the expired row — expiry stops serving the
+/// content, the reap is what destroys it (data-model.md "Staged writes").
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_record_landing_after_expiry_still_promotes(pool: PgPool) {
-    // The mirror governs: late landing wins over expiry, and the payload
-    // the promotion needs is still on the expired row — expiry stops
-    // serving the content, the reap destroys it (data-model.md "Staged
-    // writes").
     let actor_id = actor(&pool, "alice", "alice").await;
     let id = stage(&pool, actor_id, &proposal("alice", 0), 0).await;
     staged::expire_one(&pool, id, 0).await.expect("expires");
@@ -390,14 +393,14 @@ async fn a_record_landing_after_expiry_still_promotes(pool: PgPool) {
     );
 }
 
+/// A staged write answers as live for its own actor and only at its own
+/// target; once expired it is a tombstone and answers no longer.
 #[sqlx::test(migrations = "../../migrations")]
 async fn has_live_targeting_sees_only_live_writes_at_the_target(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
     let other_id = actor(&pool, "carol", "carol").await;
     let id = stage(&pool, actor_id, &proposal("alice", 0), 0).await;
 
-    // The staged Opinion toward prof:bob is live for its actor alone,
-    // and only at its target.
     let hit = staged::has_live_targeting(&pool, actor_id, Family::Opinion, "prof:bob")
         .await
         .expect("query");
@@ -413,7 +416,6 @@ async fn has_live_targeting_sees_only_live_writes_at_the_target(pool: PgPool) {
             .expect("query")
     );
 
-    // Expired stagings are tombstones — they no longer answer.
     staged::expire_one(&pool, id, 0).await.expect("expires");
     assert!(
         !staged::has_live_targeting(&pool, actor_id, Family::Opinion, "prof:bob")

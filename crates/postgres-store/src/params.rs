@@ -1,7 +1,9 @@
-// The network parameter carrier's read side (data-model.md
-// `network_parameter_versions`): append-only version rows per governed
-// parameter, the newest in force. Writes happen at genesis (the
-// bootstrap's seed) and through governance finalization — never here.
+//! The network parameter carrier's read side (data-model.md
+//! `network_parameter_versions`): append-only version rows per governed
+//! parameter, the newest in force.
+//!
+//! Writes happen at genesis, from the bootstrap's seed, and through
+//! governance finalization — never here.
 
 use sqlx::PgPool;
 
