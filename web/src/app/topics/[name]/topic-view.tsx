@@ -17,6 +17,7 @@ import { useApolloClient } from "@apollo/client/react";
 
 import { fetchHashtagDetail, type HashtagDetail } from "@/lib/api/topics-api";
 import { ActorChip } from "@/lib/ui/actor-chip";
+import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PostCard } from "@/lib/ui/post-card";
@@ -28,7 +29,6 @@ export function TopicView({ name }: { name: string }) {
   const [hashtag, setHashtag] = useState<HashtagDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [transportFailed, setTransportFailed] = useState(false);
 
   const refresh = useCallback(() => {
     let cancelled = false;
@@ -36,12 +36,13 @@ export function TopicView({ name }: { name: string }) {
       if (cancelled) return;
       setLoading(false);
       if (outcome.kind !== "success") {
-        setTransportFailed(true);
-      } else if (outcome.value === null) {
-        setTransportFailed(false);
+        // hashtag stays null; the transport-fault branch below reads
+        // exactly that, distinguished from notFound by the flag.
+        return;
+      }
+      if (outcome.value === null) {
         setNotFound(true);
       } else {
-        setTransportFailed(false);
         setNotFound(false);
         setHashtag(outcome.value);
       }
@@ -79,7 +80,20 @@ export function TopicView({ name }: { name: string }) {
     return (
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
         {header}
-        <TransportError testId="topic-transport-error" />
+        <div className="flex items-center gap-3">
+          <TransportError testId="topic-transport-error" />
+          <Button
+            testId="topic-retry"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setLoading(true);
+              refresh();
+            }}
+          >
+            Retry
+          </Button>
+        </div>
       </main>
     );
   }
