@@ -33,11 +33,18 @@ import { ActorChip } from "@/lib/ui/actor-chip";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { LicenseChooser, LicenseTerms } from "@/lib/ui/license-fields";
+import { OwnTopicsEditor } from "@/lib/ui/own-topics-editor";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PendingMarker } from "@/lib/ui/pending-marker";
 import { SigningPending } from "@/lib/ui/signing-pending";
 import { StanceControl } from "@/lib/ui/stance-control";
+import { TopicChipRow, type TopicChipEntry } from "@/lib/ui/topic-chip-row";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
+
+/** `TopicClaim[]` off any content node, projected down to the chip row's shape. */
+function chipEntries(topics: readonly { hashtag: { name: { value?: string | null } }; pending: boolean }[]): readonly TopicChipEntry[] {
+  return topics.map((claim) => ({ name: claim.hashtag.name.value ?? "", pending: claim.pending }));
+}
 
 /** Any node of the thread tree — a comment or a nested reply. */
 type ThreadComment = CommentView | ReplyView;
@@ -424,6 +431,22 @@ export function PostView({
               {isPending(comment) && (
                 <PendingMarker testId={`comment-pending-${comment.id}`} />
               )}
+              {/* Add/remove rides only the viewer's OWN comment, and
+                  never the edit form above (D14) — everyone else gets
+                  the plain, tappable chip row (design.md §6). */}
+              {isOwn ? (
+                <OwnTopicsEditor
+                  contentId={comment.id}
+                  topics={chipEntries(comment.topics)}
+                  onChanged={refresh}
+                  testIdPrefix={`comment-${comment.id}`}
+                />
+              ) : (
+                <TopicChipRow
+                  topics={chipEntries(comment.topics)}
+                  testIdPrefix={`comment-${comment.id}`}
+                />
+              )}
               {/* The comment carries its own stance control (design.md §6). */}
               <StanceControl
                 target={{ id: comment.id, kind: "comment", label: "this comment" }}
@@ -530,9 +553,11 @@ export function PostView({
     );
   };
 
+  const isOwnPost = viewerId !== null && post.author?.id === viewerId;
+
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
-      {header(viewerId !== null && post.author?.id === viewerId)}
+      {header(isOwnPost)}
       <div>
         {post.title.value && (
           <h1 className="text-headline-small" data-testid="post-title">
@@ -558,6 +583,19 @@ export function PostView({
           marker carries the difference (design.md §9). An unlanded edit
           marks the post too — the text on screen is that edit. */}
       {isPending(post) && <PendingMarker testId="post-pending" />}
+      {/* Add/remove rides only the viewer's OWN post, and never the
+          edit form above (D14) — everyone else gets the plain,
+          tappable chip row (design.md §6). */}
+      {isOwnPost ? (
+        <OwnTopicsEditor
+          contentId={postId}
+          topics={chipEntries(post.topics)}
+          onChanged={refresh}
+          testIdPrefix="post"
+        />
+      ) : (
+        <TopicChipRow topics={chipEntries(post.topics)} testIdPrefix="post" />
+      )}
       {/* The post card's stance control, on the detail surface (design.md §6). */}
       <StanceControl target={{ id: postId, kind: "post", label: "this post" }} testIdPrefix="post-stance" />
       <hr className="border-outline-variant" />

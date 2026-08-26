@@ -26,8 +26,16 @@ import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { LicenseChooser } from "@/lib/ui/license-fields";
 import { PageHeader } from "@/lib/ui/page-header";
 import { SigningPending } from "@/lib/ui/signing-pending";
+import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { TextField } from "@/lib/ui/text-field";
 import { TransportError } from "@/lib/ui/transport-error";
+
+/** Parses a `["tags", i, "name"]`-shaped refusal path down to the index. */
+function tagErrorIndex(field: readonly string[] | null): number | null {
+  if (field === null || field.length < 2 || field[0] !== "tags") return null;
+  const index = Number(field[1]);
+  return Number.isInteger(index) ? index : null;
+}
 
 export function ComposeForm({
   store = identityStore,
@@ -56,6 +64,11 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   const [description, setDescription] = useState("");
   const [body, setBody] = useState("");
   const [license, setLicense] = useState<License>(PUBLIC_DOMAIN);
+  // Tags never carry into edit mode (D14): new tags are their own
+  // gesture, not an edit field — the create-only state below is simply
+  // unused once `editingId` is set.
+  const [tags, setTags] = useState<readonly string[]>([]);
+  const [tagErrors, setTagErrors] = useState<Readonly<Record<number, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [emptyBody, setEmptyBody] = useState(false);
   const [refusedMessage, setRefusedMessage] = useState<string | null>(null);
@@ -92,6 +105,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
     }
     setSubmitting(true);
     setRefusedMessage(null);
+    setTagErrors({});
     setSignIncomplete(false);
     setTransportFailed(false);
     const prepared = await guard.run(() =>
@@ -101,6 +115,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
             description: description.trim() === "" ? null : description,
             content: body,
             license,
+            tags: tags.map((name) => ({ name })),
           })
         : preparePostEdit(client, {
             id: editingId,
@@ -111,7 +126,18 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
     );
     if (prepared.kind === "refused") {
       setSubmitting(false);
-      setRefusedMessage(prepared.errors[0]?.message ?? "The server refused this write.");
+      // Field errors on a batched tag land at ["tags", i, "name"] —
+      // surfaced on that exact chip; everything else is the general
+      // refusal line.
+      const perTag: Record<number, string> = {};
+      let general: string | null = null;
+      for (const error of prepared.errors) {
+        const index = tagErrorIndex(error.field);
+        if (index !== null) perTag[index] = error.message;
+        else general = general ?? error.message;
+      }
+      setTagErrors(perTag);
+      setRefusedMessage(general ?? (Object.keys(perTag).length > 0 ? null : "The server refused this write."));
       return;
     }
     if (prepared.kind === "failed") {
@@ -199,6 +225,11 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
           </p>
         )}
       </div>
+      {/* Tags never ride the edit form (D14): new tags are their own
+          gesture, not an edit field. */}
+      {editingId === null && (
+        <TagEntryField tags={tags} onChange={setTags} fieldErrors={tagErrors} testIdPrefix="compose" />
+      )}
       {editingId === null && (
         <LicenseChooser value={license} onChange={setLicense} testIdPrefix="compose" />
       )}
