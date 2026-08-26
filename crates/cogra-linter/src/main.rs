@@ -327,7 +327,8 @@ mod tests {
         let err = named(&adoption(), root, None, UNREGISTERED, true)
             .expect_err("the id is not in `[profiles]`");
         assert!(
-            format!("{err:#}").contains("not-a-real-profile is not a profile `[profiles]` registers"),
+            format!("{err:#}")
+                .contains("not-a-real-profile is not a profile `[profiles]` registers"),
             "{err:#}"
         );
     }
@@ -341,7 +342,8 @@ mod tests {
         let err = migrations(&adoption(), root, Some(UNREGISTERED))
             .expect_err("the id is not in `[profiles]`");
         assert!(
-            format!("{err:#}").contains("not-a-real-profile is not a profile `[profiles]` registers"),
+            format!("{err:#}")
+                .contains("not-a-real-profile is not a profile `[profiles]` registers"),
             "{err:#}"
         );
     }
