@@ -1,3 +1,5 @@
+//! ´mod:module:timing´
+//!
 //! Per-phase wall clock: what every run reports beside its findings.
 //!
 //! Every run reports wall time per phase — pre-tokenize, harvest, resolve,

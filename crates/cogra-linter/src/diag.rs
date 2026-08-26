@@ -1,3 +1,5 @@
+//! ´mod:module:diag´
+//!
 //! Diagnostics: the one value every finding about the corpus travels as.
 //!
 //! A judgment's answer is a list of these and never an `Err`

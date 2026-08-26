@@ -1,3 +1,5 @@
+//! ´mod:module:render´
+//!
 //! Diagnostic rendering and the run summary.
 //!
 //! [`diag`](crate::diag) has already ordered the findings

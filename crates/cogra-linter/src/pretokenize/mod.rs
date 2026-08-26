@@ -1,3 +1,5 @@
+//! ´mod:module:pretokenize´
+//!
 //! The pre-tokenizer contract: comment regions and ban findings.
 //!
 //! The pre-tokenizer is a lexer with a small, testable contract, held to the

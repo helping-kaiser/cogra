@@ -1,3 +1,5 @@
+//! ´mod:module:adopt´
+//!
 //! The adoption data: the whole of `corpus-adoption.toml` as one immutable
 //! value, loaded once, before anything else runs (´sig:lint:adoption-api´).
 //!

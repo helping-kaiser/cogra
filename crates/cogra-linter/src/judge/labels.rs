@@ -1,3 +1,5 @@
+//! ´mod:module:labels´
+//!
 //! The label calculus's invariants, each as one query over the corpus graph.
 //!
 //! Every function here discharges one clause of the calculus and returns the
