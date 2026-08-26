@@ -733,6 +733,7 @@ fn the_enforcement_section_round_trips() {
         vec![
             PathPrefix::new("crates/cogra-linter/"),
             PathPrefix::new("crates/cogra-interchange/docs/"),
+            PathPrefix::new("crates/common/"),
             PathPrefix::new("docs/"),
         ]
     );
