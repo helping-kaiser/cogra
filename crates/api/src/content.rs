@@ -1,11 +1,14 @@
-// Content authoring and promotion — slice 2 (post.md, comment.md,
-// api-spec.md "Content authoring"). Prepare-side: build the Publish /
-// Review gestures with Peer Content Envelope payloads and stage them
-// through the ordinary write path. Confirm-side: promote landed content
-// records into carriage and display rows (architecture.md "The write
-// path" step 5). Nothing here is authoritative about the graph — the
-// display rows and their landing-order columns are projections of the
-// mirror, and the envelope bytes verify against the L1 witness.
+//! Content authoring and promotion — slice 2 (post.md, comment.md,
+//! api-spec.md "Content authoring").
+//!
+//! Prepare-side: build the Publish / Review gestures with Peer Content
+//! Envelope payloads and stage them through the ordinary write path.
+//! Confirm-side: promote landed content records into carriage and display
+//! rows (architecture.md "The write path" step 5).
+//!
+//! Nothing here is authoritative about the graph — the display rows and
+//! their landing-order columns are projections of the mirror, and the
+//! envelope bytes verify against the L1 witness.
 
 use common::envelope::CograContent;
 use common::l1::census::Family;
@@ -30,8 +33,8 @@ const AXIS_STEPS: f64 = 1000.0;
 
 /// License qualifiers, declared at authoring time and immutable
 /// (post.md §1; platform-guidelines.md §5). Both axes are degrees on
-/// `[0, 1]` — attribution `a` (`def:content:attribution`) and provenance
-/// `o` (`def:content:provenance`); neither is a switch. The pair rides
+/// `[0, 1]` — attribution `a` and provenance `o` (layer1-interface.md
+/// §10); neither is a switch. The pair rides
 /// the structural record as public protocol references
 /// (layer1-interface.md §8.2) — never the envelope, so it survives every
 /// payload state.
@@ -44,7 +47,7 @@ pub struct License {
 impl License {
     /// Public Domain, `(a, o) = (0, 0)`: the unique point of zero
     /// severity, where a use carries no downstream obligation whatever
-    /// (`rem:content:public-domain`). CoGra's default license.
+    /// (layer1-interface.md §10). CoGra's default license.
     pub const PUBLIC_DOMAIN: Self = Self {
         attribution: 0.0,
         provenance: 0.0,
@@ -512,6 +515,10 @@ struct ChainedTarget {
 /// chain head as the causal parent (substrate.md §9 "Chain root" — the
 /// backend populates the parent and serializes edits, so CoGra's own
 /// clients never author a branch).
+///
+/// The display row exists, so the genesis record landed: a missing chain
+/// head is therefore a diverged mirror — an operational fault, not user
+/// input.
 async fn chained_edit_target(
     pool: &PgPool,
     viewer: Uuid,
@@ -527,12 +534,7 @@ async fn chained_edit_target(
     }
     let head = mirror::chain_head(pool, author, family, l1_node_id)
         .await?
-        .ok_or_else(|| {
-            // The display row exists, so the genesis record landed; a
-            // missing head means the mirror diverged — an operational
-            // fault, not a user input.
-            ContentError::Internal("edit chain head missing from the mirror".into())
-        })?;
+        .ok_or_else(|| ContentError::Internal("edit chain head missing from the mirror".into()))?;
     let target = NodeId::parse(l1_node_id)
         .map_err(|e| ContentError::Internal(format!("stored node id unparseable: {e}")))?;
     let parent = ActId::parse(&head)
@@ -625,9 +627,6 @@ pub async fn stage_pending(
             .await?;
         }
         (Family::Publish, false) => {
-            // The pending edit's own text shows at once, marked pending —
-            // an edit is a record, and a prepared record is its author's
-            // content from the moment they sign it (substrate.md §6).
             let post = content_store::post(pool, content.node)
                 .await?
                 .ok_or(ContentError::NotFound)?;
@@ -740,17 +739,25 @@ pub async fn land_promoted(
     failures
 }
 
+/// Promotes one landed content record into carriage and display rows.
+///
+/// An expired write still carries its payload — expiry stops serving the
+/// content, the reap is what destroys it — so a record landing in that
+/// window promotes like any other, and the insert branches rebuild the
+/// display rows expiry took down, this time under the real landing order.
+/// Past the reap there is no row left to load and the promotion fails
+/// loudly.
+///
+/// Those insert branches are otherwise the uncommon path: the rows are
+/// normally already on screen from the pre-commitment, so landing only
+/// writes the causal key onto them. An insert means a record landed
+/// without a pending row of its own — a mirror rebuild, or a write staged
+/// before pending rows existed.
 async fn land_one(
     pool: &PgPool,
     write: &staged::PromotedWrite,
     family: Family,
 ) -> Result<(), ContentError> {
-    // An expired write still carries its payload — expiry stops serving
-    // the content, the reap is what destroys it — so a record landing in
-    // that window promotes like any other, and the insert branches below
-    // rebuild the display rows expiry took down, this time with the real
-    // landing order. Past the reap there is no row to load and the
-    // promotion fails loudly.
     let staged_row = staged::load(pool, write.id).await?;
     let payload = &staged_row.proposal.payload;
     let sealed = staged_row
@@ -777,10 +784,6 @@ async fn land_one(
     let target = body.target.to_string();
     let is_genesis = target == own_mint;
 
-    // The rows are normally already on screen from the pre-commitment, so
-    // landing writes the causal key onto them; the insert branches serve a
-    // record that landed without a pending row of its own — a mirror
-    // rebuild, or a write staged before pending rows existed.
     let created_at = staged_row.pre_signed_at.unwrap_or_else(chrono::Utc::now);
 
     let mut tx = pool
