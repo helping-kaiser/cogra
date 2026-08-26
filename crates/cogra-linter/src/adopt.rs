@@ -1027,7 +1027,7 @@ impl EnforcementPartition {
     ///     Enforcement::Failing,
     /// );
     /// assert_eq!(
-    ///     partition.enforcement_for(Path::new("docs/primitive/layers.md")),
+    ///     partition.enforcement_for(Path::new("crates/api/src/lib.rs")),
     ///     Enforcement::Advisory,
     /// );
     /// ```
