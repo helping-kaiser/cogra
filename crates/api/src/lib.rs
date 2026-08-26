@@ -1,6 +1,8 @@
-// API library — schema and router construction, the L1 seam, ingestion,
-// and the bootstrap orchestration, separated from the binaries so tests
-// and the tools can use them without a running server.
+//! Schema and router construction, the L1 seam, ingestion, and the
+//! bootstrap orchestration.
+//!
+//! These live in the library rather than the binaries so tests and the
+//! tools can drive them without a running server.
 
 pub mod auth;
 pub mod bootstrap;
