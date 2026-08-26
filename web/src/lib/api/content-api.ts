@@ -177,6 +177,14 @@ function liftPrepared(payload: {
   return { node: payload.node, writes: payload.writes.map(stagedFromPrepared) };
 }
 
+/**
+ * The composer sends only names (api-spec.md `preparePost` docstring:
+ * "Tags are explicit structured inputs, never parsed from the body") —
+ * relevance and confidence default server-side per D13. Never carried on
+ * an edit: new tags are their own gesture, not an edit field (D14).
+ */
+export type TagDraft = { readonly name: string };
+
 export async function preparePost(
   client: ApolloClient,
   fields: {
@@ -184,6 +192,7 @@ export async function preparePost(
     description: string | null;
     content: string;
     license: LicenseChoice;
+    tags?: readonly TagDraft[];
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -196,6 +205,7 @@ export async function preparePost(
             description: fields.description,
             content: fields.content,
             license: fields.license,
+            tags: fields.tags?.map((tag) => ({ name: tag.name })) ?? null,
           },
         },
       }),

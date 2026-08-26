@@ -109,6 +109,21 @@ query Posts($first: Int!, $after: String, $includePending: Boolean! = true) {
           attribution
           provenance
         }
+        # The chip row (D8): the author's own current tags only — the
+        # content-intrinsic channel, the one that needs no forward-path
+        # weight (feed-ranking.md §4; the ranker arrives in slice 3).
+        topics(includePending: $includePending) {
+          hashtag {
+            id
+            name {
+              value
+              status
+            }
+          }
+          relevance
+          confidence
+          pending
+        }
       }
     }
     pageInfo {
@@ -156,6 +171,18 @@ query PostDetail(
       attribution
       provenance
     }
+    topics(includePending: $includePending) {
+      hashtag {
+        id
+        name {
+          value
+          status
+        }
+      }
+      relevance
+      confidence
+      pending
+    }
     comments(
       first: $commentsFirst
       after: $commentsAfter
@@ -185,6 +212,18 @@ query PostDetail(
             attribution
             provenance
           }
+          topics(includePending: $includePending) {
+            hashtag {
+              id
+              name {
+                value
+                status
+              }
+            }
+            relevance
+            confidence
+            pending
+          }
           replies(first: $repliesFirst, includePending: $includePending) {
             edges {
               node {
@@ -209,6 +248,18 @@ query PostDetail(
                 license {
                   attribution
                   provenance
+                }
+                topics(includePending: $includePending) {
+                  hashtag {
+                    id
+                    name {
+                      value
+                      status
+                    }
+                  }
+                  relevance
+                  confidence
+                  pending
                 }
               }
             }
@@ -263,6 +314,18 @@ query CommentReplies(
             attribution
             provenance
           }
+          topics(includePending: $includePending) {
+            hashtag {
+              id
+              name {
+                value
+                status
+              }
+            }
+            relevance
+            confidence
+            pending
+          }
           replies(first: $repliesFirst, includePending: $includePending) {
             edges {
               node {
@@ -287,6 +350,18 @@ query CommentReplies(
                 license {
                   attribution
                   provenance
+                }
+                topics(includePending: $includePending) {
+                  hashtag {
+                    id
+                    name {
+                      value
+                      status
+                    }
+                  }
+                  relevance
+                  confidence
+                  pending
                 }
               }
             }
