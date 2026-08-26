@@ -17,6 +17,7 @@ import {
   preparePostEdit,
 } from "@/lib/api/content-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
+import type { TagDraft } from "@/lib/topics/draft";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
@@ -67,7 +68,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   // Tags never carry into edit mode (D14): new tags are their own
   // gesture, not an edit field — the create-only state below is simply
   // unused once `editingId` is set.
-  const [tags, setTags] = useState<readonly string[]>([]);
+  const [tags, setTags] = useState<readonly TagDraft[]>([]);
   const [tagErrors, setTagErrors] = useState<Readonly<Record<number, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [emptyBody, setEmptyBody] = useState(false);
@@ -115,7 +116,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
             description: description.trim() === "" ? null : description,
             content: body,
             license,
-            tags: tags.map((name) => ({ name })),
+            tags,
           })
         : preparePostEdit(client, {
             id: editingId,

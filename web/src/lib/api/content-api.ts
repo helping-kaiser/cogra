@@ -19,6 +19,7 @@ import {
   type PostsQuery,
 } from "@/__generated__/graphql";
 import type { License } from "@/lib/license";
+import type { TagDraft } from "@/lib/topics/draft";
 import { failed, fetchOutcome, payloadOutcome, success, type Outcome } from "./outcome";
 import { stagedFromPrepared, type StagedWriteView } from "./writes-api";
 
@@ -177,14 +178,6 @@ function liftPrepared(payload: {
   return { node: payload.node, writes: payload.writes.map(stagedFromPrepared) };
 }
 
-/**
- * The composer sends only names (api-spec.md `preparePost` docstring:
- * "Tags are explicit structured inputs, never parsed from the body") —
- * relevance and confidence default server-side per D13. Never carried on
- * an edit: new tags are their own gesture, not an edit field (D14).
- */
-export type TagDraft = { readonly name: string };
-
 export async function preparePost(
   client: ApolloClient,
   fields: {
@@ -205,7 +198,15 @@ export async function preparePost(
             description: fields.description,
             content: fields.content,
             license: fields.license,
-            tags: fields.tags?.map((tag) => ({ name: tag.name })) ?? null,
+            // The composer's tags are explicit structured input, never
+            // parsed from the body (api-spec.md `preparePost`); each
+            // carries the pair its sliders hold (F6).
+            tags:
+              fields.tags?.map((tag) => ({
+                name: tag.name,
+                pDirected: tag.relevance,
+                pInterest: tag.confidence,
+              })) ?? null,
           },
         },
       }),
