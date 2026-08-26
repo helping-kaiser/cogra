@@ -1,0 +1,237 @@
+================================================================
+A statement follows an if without an else
+================================================================
+
+fun f() {
+    if (lost) return Failed(IOException("gone"))
+    uploaded = blob
+}
+
+----
+
+(source_file
+  (function_declaration
+    (simple_identifier)
+    (function_value_parameters)
+    (function_body
+      (block
+        (statements
+          (if_expression
+            (simple_identifier)
+            (jump_expression
+              (postfix_expression
+                (simple_identifier)
+                (postfix_unary_suffix
+                  (call_suffix
+                    (value_arguments
+                      (value_argument
+                        (postfix_expression
+                          (simple_identifier)
+                          (postfix_unary_suffix
+                            (call_suffix
+                              (value_arguments
+                                (value_argument
+                                  (string_literal
+                                    (line_string_literal))))))))))))))
+          (assignment
+            (simple_identifier)
+            (simple_identifier)))))))
+
+================================================================
+else on its own line
+================================================================
+
+fun f() {
+    if (a) {
+        b()
+    }
+    else {
+        c()
+    }
+}
+
+----
+
+(source_file
+  (function_declaration
+    (simple_identifier)
+    (function_value_parameters)
+    (function_body
+      (block
+        (statements
+          (if_expression
+            (simple_identifier)
+            (block
+              (statements
+                (postfix_expression
+                  (simple_identifier)
+                  (postfix_unary_suffix
+                    (call_suffix
+                      (value_arguments))))))
+            (block
+              (statements
+                (postfix_expression
+                  (simple_identifier)
+                  (postfix_unary_suffix
+                    (call_suffix
+                      (value_arguments))))))))))))
+
+================================================================
+A when entry's else keeps its terminator
+================================================================
+
+fun f() {
+    when (x) {
+        1 -> a()
+        else -> b()
+    }
+}
+
+----
+
+(source_file
+  (function_declaration
+    (simple_identifier)
+    (function_value_parameters)
+    (function_body
+      (block
+        (statements
+          (when_expression
+            (when_subject
+              (simple_identifier))
+            (when_entry
+              (when_condition
+                (integer_literal))
+              (postfix_expression
+                (simple_identifier)
+                (postfix_unary_suffix
+                  (call_suffix
+                    (value_arguments)))))
+            (when_entry
+              (postfix_expression
+                (simple_identifier)
+                (postfix_unary_suffix
+                  (call_suffix
+                    (value_arguments)))))))))))
+
+================================================================
+An accessor on the line after the property
+================================================================
+
+class C {
+    var x: Int = 1
+        private set
+
+    val y: Int
+        get() = 2
+}
+
+----
+
+(source_file
+  (class_declaration
+    (simple_identifier)
+    (class_body
+      (property_declaration
+        (variable_declaration
+          (simple_identifier)
+          (user_type
+            (simple_user_type
+              (simple_identifier))))
+        (integer_literal)
+        (setter
+          (modifiers
+            (modifier))))
+      (property_declaration
+        (variable_declaration
+          (simple_identifier)
+          (user_type
+            (simple_user_type
+              (simple_identifier))))
+        (getter
+          (function_body
+            (integer_literal)))))))
+
+================================================================
+An annotated accessor
+================================================================
+
+object T {
+    internal val colors: Colors
+        @Composable get() = Local.current
+}
+
+----
+
+(source_file
+  (object_declaration
+    (simple_identifier)
+    (class_body
+      (property_declaration
+        (modifiers
+          (modifier))
+        (variable_declaration
+          (simple_identifier)
+          (user_type
+            (simple_user_type
+              (simple_identifier))))
+        (getter
+          (modifiers
+            (annotation
+              (unescaped_annotation
+                (user_type
+                  (simple_user_type
+                    (simple_identifier))))))
+          (function_body
+            (postfix_expression
+              (simple_identifier)
+              (postfix_unary_suffix
+                (navigation_suffix
+                  (member_access_operator)
+                  (simple_identifier))))))))))
+
+================================================================
+A newline before an operator that cannot continue the statement
+================================================================
+
+fun f() {
+    a()
+    b()
+}
+
+----
+
+(source_file
+  (function_declaration
+    (simple_identifier)
+    (function_value_parameters)
+    (function_body
+      (block
+        (statements
+          (postfix_expression
+            (simple_identifier)
+            (postfix_unary_suffix
+              (call_suffix
+                (value_arguments))))
+          (postfix_expression
+            (simple_identifier)
+            (postfix_unary_suffix
+              (call_suffix
+                (value_arguments)))))))))
+
+================================================================
+A newline before an operator that does continue it
+================================================================
+
+val a = first
+    ?: second
+
+----
+
+(source_file
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (elvis_expression
+      (simple_identifier)
+      (simple_identifier))))

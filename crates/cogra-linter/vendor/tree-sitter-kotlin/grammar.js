@@ -61,16 +61,9 @@ module.exports = grammar({
     // declared conflict rather than something to restructure away.
     [$._prefix_unary_expression, $.postfix_expression],
 
-    // Every Kotlin modifier is also a legal identifier, so at the start
-    // of a statement `data` may open a local declaration's modifiers or
-    // simply be a variable. Nothing short of the following token
-    // decides it. Precedence cannot resolve this — preferring the
-    // modifier would break `data.foo()` — so the parse splits and
-    // reconverges immediately.
-    [$.modifier, $.simple_identifier],
-
-    // Same cause, one level up: in `(private data: String)` the run of
-    // modifiers cannot know it has ended until the name is past.
+    // Kotlin's modifiers are soft keywords: every one is also a legal
+    // identifier. In `(private data: String)` the run of modifiers
+    // cannot know it has ended until the name is past.
     [$.modifiers],
 
     // `{ (k, v) -> ... }` destructures its parameter; `{ (x) }` is a
