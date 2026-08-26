@@ -206,13 +206,19 @@ const PREPARE_COMMENT: &str = r#"mutation($input: PrepareCommentInput!) {
   }
 }"#;
 
+/// The whole slice-2 round trip: a post composed and signed "on the
+/// phone", then read back anonymously through every read shape — the
+/// listing, the typed node, and the interface lookup — because the shared
+/// graph needs no session. A second member's comment then serves under
+/// the post in the thread read; the chronicle serves the same records
+/// generically, filtered by target; and one record round-trips by
+/// identifier through the `RecordId` scalar.
 #[sqlx::test(migrations = "../../migrations")]
 async fn post_from_the_phone_read_it_back(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (author_id, key) = rig.seed_member("author", "author@example.com").await;
     let token = rig.log_in("author@example.com").await;
 
-    // Compose and sign the post "on the phone".
     let prepared = rig
         .gql(
             Some(&token),
@@ -235,8 +241,6 @@ async fn post_from_the_phone_read_it_back(pool: PgPool) {
         .await;
     rig.close_and_ingest().await;
 
-    // Read it back — anonymously: the listing, the typed node, and the
-    // interface lookup all serve without a session.
     let listing = rig
         .gql(
             None,
@@ -268,7 +272,6 @@ async fn post_from_the_phone_read_it_back(pool: PgPool) {
         .await;
     assert_eq!(node["node"]["__typename"], "Post");
 
-    // A second member comments; the thread read serves it under the post.
     let (_, commenter_key) = rig.seed_member("commenter", "commenter@example.com").await;
     let commenter_token = rig.log_in("commenter@example.com").await;
     let prepared = rig
@@ -322,8 +325,6 @@ async fn post_from_the_phone_read_it_back(pool: PgPool) {
     assert_eq!(comments[0]["node"]["target"]["__typename"], "Post");
     assert_eq!(comments[0]["node"]["target"]["id"], post_id);
 
-    // The chronicle: the post's records — its genesis Publish and the
-    // comment's Review — read generically, filtered by target.
     let records = rig
         .gql(
             None,
@@ -357,8 +358,6 @@ async fn post_from_the_phone_read_it_back(pool: PgPool) {
     assert_eq!(publish["pInterest"], 1.0);
     assert!(publish["payloadMarked"].as_bool().expect("marked"));
 
-    // One record by its identifier round-trips through the RecordId
-    // scalar.
     let record_id = publish["id"].as_str().expect("record id");
     let single = rig
         .gql(
@@ -390,14 +389,16 @@ async fn content_writes_need_a_member_session(pool: PgPool) {
     );
 }
 
+/// The two refusal tiers stay apart: commenting on an unknown target is a
+/// BAD_INPUT userError pinned to the field, while an out-of-range stance
+/// never reaches the resolver at all — it refuses at the scalar boundary
+/// as a transport fault.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_refused_prepare_reports_user_errors(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (_, _key) = rig.seed_member("author", "author@example.com").await;
     let token = rig.log_in("author@example.com").await;
 
-    // Commenting on an unknown target refuses with BAD_INPUT at the
-    // field, not a transport fault.
     let prepared = rig
         .gql(
             Some(&token),
@@ -418,7 +419,6 @@ async fn a_refused_prepare_reports_user_errors(pool: PgPool) {
     assert!(prepared["prepareComment"]["writes"].is_null());
     assert!(prepared["prepareComment"]["node"].is_null());
 
-    // An out-of-range stance refuses at the scalar boundary.
     let response = rig
         .gql_raw(
             Some(&token),

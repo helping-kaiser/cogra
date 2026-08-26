@@ -1,8 +1,10 @@
-// Prepare — step 1 of the write path (substrate.md §6; architecture.md
-// "The write path"): validate the gesture, pre-check L1's write rule,
-// assemble the canonical proposal, and store it as a staged write for the
-// device to sign. L2 orchestration in front of the seam — nothing here
-// touches the substrate except the reads the pre-check estimates from.
+//! Prepare — step 1 of the write path (substrate.md §6; architecture.md
+//! "The write path"): validate the gesture, pre-check L1's write rule,
+//! assemble the canonical proposal, and store it as a staged write for
+//! the device to sign.
+//!
+//! This is L2 orchestration in front of the seam: nothing here touches
+//! the substrate except the reads the pre-check estimates from.
 
 use common::l1::census::Family;
 use common::l1::handshake::{Proposal, StructuralBody};
@@ -83,6 +85,30 @@ pub struct Prepared {
 /// Prepares one gesture: formation checks, the write-rule pre-check, seq
 /// allocation, and the staged insert — the staged write comes back in
 /// `awaiting_pre_sign` for the device to sign.
+///
+/// Everything checkable is checked here rather than left to the seal,
+/// because a gesture the host refuses has already left a staged row
+/// behind for the GC. Formation runs against the same census surface the
+/// host enforces (`common::l1::census`), and the payload against the
+/// published envelope bound (architecture.md "The write path" step 1).
+/// The endpoint check is the one exception to that order: it runs after
+/// the target resolves, since an own-mint target needs the allocated
+/// sequence value first — a value the counter yields from zero upward, so
+/// the clamp before the unsigned cast is a formality.
+///
+/// The two-gate write rule is an L2 estimate from the last published
+/// values (substrate.md §6). W1 — solvency — is real under the stand-in's
+/// number-honoring money; W2a and W2b pass trivially until the real
+/// substrate brings real stamps, and this is their call site (roadmap.md
+/// "The stand-in and the swap").
+///
+/// A gesture that points at a `name(s)` also writes the naming-service
+/// row, in the same transaction that stages the act: a Type exists as
+/// soon as an accepted record references its name (hashtag.md §2; D5).
+/// That write is family-blind on purpose — a Tag's terminal leg, an
+/// Affinity's follow, whichever record names it puts the name into
+/// CoGra's index. Reads never write, which is what keeps a vacuously
+/// anchored Type resolvable without a row at all.
 pub async fn prepare<B: L1Boundary>(
     boundary: &B,
     pool: &PgPool,
@@ -90,17 +116,10 @@ pub async fn prepare<B: L1Boundary>(
     actor_id: Uuid,
     gesture: Gesture,
 ) -> Result<Prepared, PrepareError> {
-    // Formation, pre-checked on the same census surface the host enforces
-    // (common::l1::census) so a malformed gesture fails before staging.
-    // The endpoint check runs after the target resolves — an own-mint
-    // target needs the allocated sequence value first.
     gesture
         .family
         .params_check(gesture.p_d, gesture.p_i)
         .map_err(PrepareError::Formation)?;
-    // Envelope conformance (architecture.md "The write path" step 1): an
-    // oversized payload would only fail at seal, leaving a staged row for
-    // the GC — the whole point of prepare-side checks is failing first.
     let max_payload = boundary.max_payload_bytes().await?;
     if gesture.payload.len() > max_payload {
         return Err(PrepareError::Formation(format!(
@@ -109,11 +128,6 @@ pub async fn prepare<B: L1Boundary>(
         )));
     }
 
-    // The two-gate write rule, as an L2 estimate from the last published
-    // values (substrate.md §6). W1 — solvency — is real under the
-    // stand-in's number-honoring money. W2a/W2b pass trivially until the
-    // real substrate brings real stamps (roadmap.md "The stand-in and the
-    // swap"); this is their call-site.
     let theta = boundary.current_theta().await?;
     let balance = boundary.balance(&gesture.author).await?;
     if balance.balance < theta {
@@ -126,7 +140,6 @@ pub async fn prepare<B: L1Boundary>(
     let prepared_epoch = mirror::last_ingested_epoch(pool).await?;
     let mut tx = pool.begin().await?;
     let seq = staged::allocate_seq(&mut tx, &gesture.author).await?;
-    // Non-negative by construction: the counter starts at zero.
     let seq = seq.max(0) as u64;
     let target = match gesture.target {
         Target::Node(node) => node,
@@ -145,13 +158,6 @@ pub async fn prepare<B: L1Boundary>(
             &target,
         )
         .map_err(PrepareError::Formation)?;
-    // A Type exists as soon as an accepted record references its name, so
-    // the naming-service row is written by the act that names it, in the
-    // transaction that stages that act (hashtag.md §2; D5). Family-blind
-    // on purpose: whatever gesture points at a `name(s)` — a Tag's
-    // terminal leg, an Affinity's follow — is the record that puts the
-    // name into CoGra's index. Reads never write, which is what keeps a
-    // vacuously anchored Type resolvable without one.
     if let NodeId::Name(name) = &target {
         hashtag_store::upsert(&mut tx, name).await?;
     }

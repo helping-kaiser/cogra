@@ -1,10 +1,12 @@
-// Auth-endpoint rate limiting (auth.md "Rate limiting"): per-IP and
-// per-key fixed windows plus the login backoff, over Postgres-held state
-// (postgres-store::rate_limit) so limits survive restarts and hold
-// across instances. Keys that name an account use the submitted,
-// normalized email string — an unknown email consumes budget exactly
-// like a known one, so the limiter never becomes an account-existence
-// oracle (auth.md "Password reset": success regardless of existence).
+//! Auth-endpoint rate limiting (auth.md "Rate limiting"): per-IP and
+//! per-key fixed windows plus the login backoff.
+//!
+//! The state is Postgres-held (`postgres_store::rate_limit`), so limits
+//! survive restarts and hold across instances. Keys that name an account
+//! use the submitted, normalized email string: an unknown email consumes
+//! budget exactly like a known one, so the limiter never becomes an
+//! account-existence oracle (auth.md "Password reset" — success
+//! regardless of existence).
 
 use std::net::IpAddr;
 

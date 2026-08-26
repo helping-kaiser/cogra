@@ -1,8 +1,10 @@
-// Service-side authentication (auth.md): Argon2id password hashing, the
-// JWT access + rotating opaque refresh token pair, session issuance and
-// rotation with reuse detection, and the handle/email/password validation
-// the application flow applies. Auth gates the service, never the graph —
-// no session fact can author, block, or revoke a record.
+//! Service-side authentication (auth.md): Argon2id password hashing, the
+//! JWT access + rotating opaque refresh token pair, session issuance and
+//! rotation with reuse detection, and the handle/email/password
+//! validation the application flow applies.
+//!
+//! Auth gates the service, never the graph — no session fact can author,
+//! block, or revoke a record.
 
 use aes_gcm::aead::Aead;
 use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce};
@@ -151,10 +153,6 @@ pub fn hash_of(token: &str) -> [u8; 32] {
     Sha256::digest(token.as_bytes()).into()
 }
 
-// ---------------------------------------------------------------------
-// Passwords and identifier validation
-// ---------------------------------------------------------------------
-
 /// Argon2id at the crate's current OWASP-aligned defaults
 /// (auth.md "Password storage").
 pub fn hash_password(password: &str) -> Result<String, AuthError> {
@@ -244,10 +242,6 @@ pub fn normalize_email(email: &str) -> Result<String, &'static str> {
     }
 }
 
-// ---------------------------------------------------------------------
-// Sessions
-// ---------------------------------------------------------------------
-
 /// One issued session: the token pair plus the row identity.
 pub struct IssuedSession {
     pub access_token: String,
@@ -307,6 +301,10 @@ pub enum RefreshError {
 /// successor. Replays of a revoked token dispatch on the revocation
 /// reason — only a rotated token outside the grace window signals theft
 /// and revokes every session (auth.md "Reuse detection").
+///
+/// Losing a concurrent rotation of the same token is not theft either:
+/// the winner has just linked a successor, so the racer is answered
+/// idempotently from the same grace path a replay takes.
 pub async fn refresh_session(
     pool: &PgPool,
     cfg: &AuthConfig,
@@ -335,9 +333,6 @@ pub async fn refresh_session(
     )
     .await?
     {
-        // Lost a concurrent rotation of the same token. The winner just
-        // linked a successor, so the replay dispatch answers this racer
-        // idempotently from the grace path.
         let session = store::session_by_token_hash(pool, &hash)
             .await?
             .ok_or(RefreshError::Invalid)?;
@@ -414,19 +409,6 @@ async fn grace_successor(
     }))
 }
 
-// ---------------------------------------------------------------------
-// The sealed successor
-// ---------------------------------------------------------------------
-//
-// The store holds only token hashes, so it cannot answer a grace-window
-// replay with the successor's raw token — unless the successor rides
-// the parent row encrypted under the raw parent token itself. Only the
-// replayer, who by definition presents that token, can derive the key;
-// a database read still yields nothing usable (auth.md "Refresh
-// token"). Same HKDF-SHA-256 + AES-256-GCM stack as the key backup; the
-// parent token is full-entropy and sealed under at most once, so a
-// random nonce and no salt suffice.
-
 const SUCCESSOR_NONCE_LEN: usize = 12;
 const SUCCESSOR_HKDF_INFO: &[u8] = b"cogra:refresh-successor:v1";
 
@@ -439,6 +421,17 @@ fn successor_key(parent_token: &str) -> [u8; 32] {
 }
 
 /// Seals the successor token under the parent token: nonce ‖ ciphertext.
+///
+/// The store holds only token hashes, so it could not otherwise answer a
+/// grace-window replay with the successor's raw token. Riding the parent
+/// row encrypted under the raw parent token solves that without weakening
+/// the store: only the replayer, who by definition presents that token,
+/// can derive the key, and a database read still yields nothing usable
+/// (auth.md "Refresh token").
+///
+/// The stack is the key backup's — HKDF-SHA-256 into AES-256-GCM. A
+/// random nonce and no salt suffice here because the parent token is
+/// full-entropy and is sealed under at most once.
 fn seal_successor(parent_token: &str, successor_token: &str) -> Result<Vec<u8>, AuthError> {
     let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(&successor_key(parent_token)));
     let mut nonce = [0u8; SUCCESSOR_NONCE_LEN];
@@ -464,6 +457,9 @@ fn open_successor(parent_token: &str, sealed: &[u8]) -> Option<String> {
 mod tests {
     use super::*;
 
+    /// A minted token verifies back to its own viewer, and nothing else
+    /// verifies at all: neither a token signed by a different service key
+    /// nor garbage in place of one.
     #[test]
     fn access_tokens_round_trip_and_reject_forgeries() {
         let cfg = AuthConfig::ephemeral().expect("cfg");
@@ -473,10 +469,8 @@ mod tests {
         let viewer = verify_access_token(&cfg, &token).expect("verifies");
         assert_eq!(viewer.user_id, user);
         assert_eq!(viewer.session_id, session);
-        // A token signed by a different service key never verifies.
         let other = AuthConfig::ephemeral().expect("cfg");
         assert!(verify_access_token(&other, &token).is_none());
-        // Garbage never verifies.
         assert!(verify_access_token(&cfg, "not-a-token").is_none());
     }
 
@@ -542,10 +536,11 @@ mod tests {
         );
     }
 
+    /// The length floor is checked first, so an under-floor password never
+    /// reaches the corpus: even against a breached-everything corpus the
+    /// refusal carries the floor's message, not the breach one.
     #[tokio::test]
     async fn the_floor_refuses_before_the_corpus_runs() {
-        // A breached-everything corpus never sees an under-floor password:
-        // the refusal is the floor's message, not the breach message.
         let err = validate_new_password(&ScriptedCorpus(Ok(true)), "short")
             .await
             .expect_err("under the floor");
@@ -584,6 +579,9 @@ mod tests {
         assert_ne!(new_secret().token, s.token);
     }
 
+    /// A seal opens under its own parent token and under nothing else: a
+    /// different token derives a different key, and a truncated or
+    /// corrupted seal fails its tag.
     #[test]
     fn sealed_successors_open_only_under_the_parent_token() {
         let parent = new_secret();
@@ -593,9 +591,7 @@ mod tests {
             open_successor(&parent.token, &sealed).as_deref(),
             Some(successor.token.as_str())
         );
-        // A different token derives a different key: the seal never opens.
         assert!(open_successor(&new_secret().token, &sealed).is_none());
-        // Truncated or corrupted seals never open.
         assert!(open_successor(&parent.token, &sealed[..8]).is_none());
         let mut corrupted = sealed.clone();
         corrupted[SUCCESSOR_NONCE_LEN + 1] ^= 0x01;

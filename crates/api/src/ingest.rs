@@ -1,9 +1,11 @@
-// Record ingestion (architecture.md "Record ingestion (the mirror
-// contract)"): per epoch, pull the accepted ordered act sequence through
-// the seam and append it to the mirror, advancing the stored epoch
-// cursor. Ingestion state is never precious — a crash between epochs
-// resumes from the cursor; the mirror is rebuildable from the published
-// sequence at any time.
+//! Record ingestion (architecture.md "Record ingestion (the mirror
+//! contract)"): per epoch, pull the accepted ordered act sequence through
+//! the seam and append it to the mirror, advancing the stored epoch
+//! cursor.
+//!
+//! Ingestion state is never precious — a crash between epochs resumes
+//! from the cursor, and the mirror is rebuildable from the published
+//! sequence at any time.
 
 use postgres_store::PgPool;
 use postgres_store::{mirror, staged};
@@ -61,6 +63,13 @@ pub struct IngestOutcome {
 /// (`gc_after_epochs` — an operational parameter, development.md).
 /// Returns the promoted writes so flows built on confirmation (landing an
 /// applicant, promoting display rows) can act on them.
+///
+/// Flow state advances here, on confirmation (architecture.md "The write
+/// path" step 5): a landed applicant Registration creates its account
+/// rows, and a landed content record promotes its payload into carriage
+/// and its display rows into view. Every ingestion path runs it — the
+/// live loop, the dev CLI, and rebuilds alike — so a rebuild reconstructs
+/// the same L2 state the live path produced.
 pub async fn ingest_pending<B: L1Boundary>(
     boundary: &B,
     pool: &PgPool,
@@ -81,11 +90,6 @@ pub async fn ingest_pending<B: L1Boundary>(
         outcome.epochs += 1;
         outcome.promoted.extend(landed);
     }
-    // Flow state advances on confirmation (architecture.md "The write
-    // path" step 5): landed applicant Registrations create their account
-    // rows and landed content records promote their payload into
-    // carriage and their display rows into view — on every ingestion
-    // path: the live loop, the dev CLI, and rebuilds alike.
     let mut failures = crate::onboarding::land_promoted(pool, &outcome.promoted).await;
     failures.extend(crate::content::land_promoted(pool, &outcome.promoted).await);
     failures.extend(crate::profile::land_promoted(pool, &outcome.promoted).await);
