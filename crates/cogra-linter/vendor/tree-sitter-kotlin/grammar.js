@@ -1,49 +1,5 @@
-/**
- * Kotlin grammar for tree-sitter.
- *
- * A first-party grammar for the CoGra corpus linter
- * (ARCH dec:linter:kotlin-tree-sitter), translated from the Kotlin
- * specification's own ANTLR grammar — KotlinParser.g4 and
- * KotlinLexer.g4 — and from no community grammar.
- *
- * Two structural departures from the ANTLR source, both forced by
- * tree-sitter's model and both language-preserving. They are argued in
- * PROGRESS.md:
- *
- *   1. The ANTLR grammar threads `NL*` through nearly every production
- *      and hides newlines inside `(...)`/`[...]` with a lexer mode.
- *      Here newlines are `extras` and statement ends arrive as the
- *      external `_automatic_semicolon`, which the parser only ever asks
- *      for where a statement may actually end.
- *
- *   2. Kotlin's block comments nest, which no regex token can express,
- *      so comments are external-scanner tokens.
- *
- * @see https://kotlinlang.org/spec/
- */
-
 /// <reference types="tree-sitter-cli/dsl" />
 
-const PREC = {
-  ASSIGNMENT: 1,
-  DISJUNCTION: 2,
-  CONJUNCTION: 3,
-  EQUALITY: 4,
-  COMPARISON: 5,
-  INFIX_OPERATION: 6,
-  ELVIS: 7,
-  INFIX_FUNCTION: 8,
-  RANGE: 9,
-  ADDITIVE: 10,
-  MULTIPLICATIVE: 11,
-  AS: 12,
-  PREFIX: 13,
-  POSTFIX: 14,
-  TYPE_ARGUMENTS: 15,
-};
-
-/** Soft keywords: reserved in some positions, plain identifiers elsewhere.
- *  KotlinParser.g4 `simpleIdentifier` is exactly this set plus Identifier. */
 const SOFT_KEYWORDS = [
   'abstract', 'annotation', 'by', 'catch', 'companion', 'constructor',
   'crossinline', 'data', 'dynamic', 'enum', 'external', 'final', 'finally',
@@ -54,28 +10,24 @@ const SOFT_KEYWORDS = [
   'file', 'expect', 'actual', 'const', 'suspend', 'value',
 ];
 
-/** Conflicts discovered while authoring, kept in a side file during
- *  iteration and folded into the list below once reviewed. Absent from a
- *  finished tree. */
-let DISCOVERED = [];
-try {
-  DISCOVERED = require('./conflicts.json');
-} catch (_) {
-  DISCOVERED = [];
-}
-
-/** One or more `rule`, separated by `sep`. */
 function sepBy1(sep, rule) {
   return seq(rule, repeat(seq(sep, rule)));
 }
 
-/** Zero or more `rule`, separated by `sep`. */
-function sepBy(sep, rule) {
-  return optional(sepBy1(sep, rule));
+/** The jump forms, over a given operand. Used twice: once at the top of
+ *  the expression cascade with the full expression, and once on elvis's
+ *  right with an operand tight enough not to compete with the operators
+ *  that outrank elvis. */
+function jumpForms($, operand) {
+  const at = optional(seq(token.immediate('@'), $._immediate_identifier));
+  return choice(
+    prec.right(seq('throw', operand)),
+    prec.right(seq('return', at, optional(operand))),
+    seq('continue', at),
+    seq('break', at),
+  );
 }
 
-/** A comma-separated list permitting the trailing comma Kotlin allows
- *  in every one of these positions (KotlinParser.g4 `(NL* COMMA)?`). */
 function commaSep1Trailing(rule) {
   return seq(sepBy1(',', rule), optional(','));
 }
@@ -90,8 +42,6 @@ module.exports = grammar({
     $.kdoc,
     $._raw_string_content,
     $._raw_string_end,
-    // Never valid; its presence lets the scanner detect tree-sitter's
-    // error-recovery mode, where every external token is marked valid.
     $._error_sentinel,
   ],
 
@@ -104,99 +54,65 @@ module.exports = grammar({
 
   word: $ => $._alpha_identifier,
 
-  supertypes: $ => [
-    $._declaration,
-    $._expression,
-    $._type_body,
-    $._literal_constant,
-  ],
-
-  inline: $ => [
-    $._top_level_object,
-    $._semi,
-  ],
-
-  // Kotlin's modifiers are soft keywords: every one of them is also a
-  // legal identifier (KotlinParser.g4 `simpleIdentifier` lists them all).
-  // That makes `simple_identifier` genuinely ambiguous with each
-  // modifier rule under LR(1), and the ambiguity is intended — it is
-  // resolved by what follows, which is exactly what tree-sitter's GLR
-  // conflict handling is for.
   conflicts: $ => [
-    [$.simple_identifier, $.type_modifier],
-    [$.simple_identifier, $.class_modifier],
-    [$.simple_identifier, $.member_modifier],
-    [$.simple_identifier, $.visibility_modifier],
-    [$.simple_identifier, $.function_modifier],
-    [$.simple_identifier, $.property_modifier],
-    [$.simple_identifier, $.inheritance_modifier],
-    [$.simple_identifier, $.parameter_modifier],
-    [$.simple_identifier, $.platform_modifier],
-    [$.simple_identifier, $.variance_modifier],
-    [$.simple_identifier, $.reification_modifier],
-    [$.simple_identifier, $.modifier],
-    [$.simple_identifier, $.getter],
-    [$.simple_identifier, $.setter],
-    [$.simple_identifier, $.user_type],
-    [$.simple_identifier, $.annotation_use_site_target],
+    // `a < b` against `foo<Bar>()`: on `<` the parser cannot yet know
+    // whether it is reading a comparison or a generic call's type
+    // arguments. Genuinely ambiguous until the closing `>`, and so a
+    // declared conflict rather than something to restructure away.
+    [$._prefix_unary_expression, $.postfix_expression],
 
-    [$._type, $._expression],
-    [$.nullable_type, $.type_reference],
-    [$.receiver_type, $.type_reference],
-    [$.receiver_type, $._type],
-    [$.function_type_parameters, $.parenthesized_type],
-    [$.function_type_parameters, $.value_arguments],
-    [$.parenthesized_type, $.parenthesized_expression],
-    [$.parenthesized_type, $.parenthesized_user_type],
+    // Every Kotlin modifier is also a legal identifier, so at the start
+    // of a statement `data` may open a local declaration's modifiers or
+    // simply be a variable. Nothing short of the following token
+    // decides it. Precedence cannot resolve this — preferring the
+    // modifier would break `data.foo()` — so the parse splits and
+    // reconverges immediately.
+    [$.modifier, $.simple_identifier],
 
-    [$.class_parameter, $.simple_identifier],
-    [$.variable_declaration, $.simple_identifier],
-    [$.parameter, $.simple_identifier],
-    [$.modifiers, $.annotated_lambda],
-    [$.lambda_parameters, $.statements],
+    // Same cause, one level up: in `(private data: String)` the run of
+    // modifiers cannot know it has ended until the name is past.
+    [$.modifiers],
 
-    ...DISCOVERED.map(names => names.map(n => $[n])),
+    // `{ (k, v) -> ... }` destructures its parameter; `{ (x) }` is a
+    // lambda whose body is a parenthesised expression. Which one is
+    // being read is not known until the `->` is or is not there.
+    [$.variable_declaration, $._primary_expression],
   ],
 
   rules: {
-    // ---- SECTION: general (KotlinParser.g4 `kotlinFile`) ----
-
     source_file: $ => seq(
       optional($.shebang_line),
-      repeat($.file_annotation),
       optional($.package_header),
       repeat($.import_header),
-      repeat(seq($._top_level_object, optional($._semi))),
+      // The separator is required, not optional. Kotlin always has one
+      // — the scanner infers it from the newline — and making it
+      // optional would let a declaration abut the expression before it,
+      // which is what makes `val x = a` followed by `enum class F`
+      // ambiguous with an infix call named `enum`.
+      repeat(seq($._declaration, $._semi)),
     ),
 
     shebang_line: _ => token(seq('#!', /[^\r\n]*/)),
 
-    file_annotation: $ => seq(
-      '@',
-      token.immediate('file'),
-      ':',
-      choice(
-        seq('[', repeat1($.unescaped_annotation), ']'),
-        $.unescaped_annotation,
-      ),
-    ),
-
-    package_header: $ => seq('package', $.qualified_identifier, optional($._semi)),
+    package_header: $ => seq('package', $.qualified_identifier, $._semi),
 
     import_header: $ => seq(
       'import',
       $.qualified_identifier,
       optional(choice($.import_wildcard, $.import_alias)),
-      optional($._semi),
+      $._semi,
     ),
 
-    // One token, so that the lexer — not the parser — decides whether a
-    // dot continues the qualified name or opens the wildcard.
     import_wildcard: _ => token(seq('.', '*')),
-
     import_alias: $ => seq('as', $.simple_identifier),
 
-    _top_level_object: $ => $._declaration,
+    _declaration: $ => choice(
+      $.class_declaration,
+      $.object_declaration,
+      $.function_declaration,
+      $.property_declaration,
+      $.type_alias,
+    ),
 
     type_alias: $ => seq(
       optional($.modifiers),
@@ -207,16 +123,7 @@ module.exports = grammar({
       field('value', $._type),
     ),
 
-    _declaration: $ => choice(
-      $.class_declaration,
-      $.object_declaration,
-      $.function_declaration,
-      $.property_declaration,
-      $.type_alias,
-    ),
-
-    // ---- SECTION: classes ----
-
+    // Ends in a run of optional parts; keep reading them.
     class_declaration: $ => prec.right(seq(
       optional($.modifiers),
       choice('class', seq(optional('fun'), 'interface')),
@@ -228,14 +135,24 @@ module.exports = grammar({
       optional(choice($.class_body, $.enum_class_body)),
     )),
 
+    object_declaration: $ => prec.right(seq(
+      optional($.modifiers),
+      'object',
+      field('name', $.simple_identifier),
+      optional(seq(':', $.delegation_specifiers)),
+      optional($.class_body),
+    )),
+
     primary_constructor: $ => seq(
       optional(seq(optional($.modifiers), 'constructor')),
       $.class_parameters,
     ),
 
-    class_body: $ => seq('{', optional($.class_member_declarations), '}'),
-
-    class_parameters: $ => seq('(', optional(commaSep1Trailing($.class_parameter)), ')'),
+    class_parameters: $ => seq(
+      '(',
+      optional(commaSep1Trailing($.class_parameter)),
+      ')',
+    ),
 
     class_parameter: $ => seq(
       optional($.modifiers),
@@ -246,51 +163,62 @@ module.exports = grammar({
       optional(seq('=', field('default', $._expression))),
     ),
 
-    delegation_specifiers: $ => sepBy1(',', $.annotated_delegation_specifier),
+    // Comma lists that can sit inside another comma list keep reading
+    // their own elements rather than yielding the comma to the outer one.
+    delegation_specifiers: $ => prec.right(sepBy1(',', $._delegation_specifier)),
 
     _delegation_specifier: $ => choice(
       $.constructor_invocation,
       $.explicit_delegation,
       $.user_type,
       $.function_type,
-      seq('suspend', $.function_type),
     ),
 
-    constructor_invocation: $ => seq($.user_type, $.value_arguments),
+    // In `object : Foo(...)` the argument list belongs to the supertype.
+    constructor_invocation: $ => prec(1, seq($.user_type, $.value_arguments)),
 
-    annotated_delegation_specifier: $ => seq(
-      repeat($.annotation),
-      $._delegation_specifier,
-    ),
-
-    explicit_delegation: $ => seq(
+    // The delegate names the cascade directly rather than `_expression`.
+    // Going through the pass-through would let the parser reduce a
+    // complete expression early and then find an operator it cannot
+    // attach anywhere.
+    // The delegate is tight — below the comparison and logical
+    // operators. An object literal is itself an expression, so a
+    // full-cascade operand here would compete with every operator that
+    // could follow the literal. Real delegates are `by lazy { }`,
+    // `by viewModels()`, `by remember { ... }`, all well inside this.
+    explicit_delegation: $ => prec.right(seq(
       choice($.user_type, $.function_type),
       'by',
-      $._expression,
-    ),
+      $._infix_function_call,
+    )),
+
+    // Supertypes of an object *literal*, which unlike a declaration is an
+    // expression and so may be followed by an operator. Delegation is
+    // omitted here on purpose: a `by` whose operand reaches into the
+    // expression cascade would compete with every operator that could
+    // follow the literal, at every level of the cascade. `class A : B by b`
+    // — the form that actually occurs — is a declaration and keeps it.
+    _literal_supertypes: $ => prec.right(sepBy1(',', choice(
+      $.constructor_invocation,
+      $.user_type,
+      $.function_type,
+    ))),
 
     type_parameters: $ => seq('<', commaSep1Trailing($.type_parameter), '>'),
 
     type_parameter: $ => seq(
-      optional($.type_parameter_modifiers),
+      optional(choice('in', 'out', 'reified')),
       field('name', $.simple_identifier),
       optional(seq(':', field('bound', $._type))),
     ),
 
-    type_constraints: $ => seq('where', sepBy1(',', $.type_constraint)),
+    type_constraints: $ => prec.right(seq('where', sepBy1(',', $.type_constraint))),
 
-    type_constraint: $ => seq(
-      repeat($.annotation),
-      $.simple_identifier,
-      ':',
-      $._type,
-    ),
+    type_constraint: $ => seq($.simple_identifier, ':', $._type),
 
-    // ---- SECTION: classMembers ----
-
-    class_member_declarations: $ => repeat1(seq(
-      $._class_member_declaration,
-      optional($._semi),
+    // An empty `{}` fits either body; read it as the ordinary one.
+    class_body: $ => prec(1, seq(
+      '{', repeat(seq($._class_member_declaration, $._semi)), '}',
     )),
 
     _class_member_declaration: $ => choice(
@@ -300,9 +228,7 @@ module.exports = grammar({
       $.secondary_constructor,
     ),
 
-    anonymous_initializer: $ => seq('init', $.block),
-
-    companion_object: $ => seq(
+    companion_object: $ => prec(1, seq(
       optional($.modifiers),
       'companion',
       optional('data'),
@@ -310,124 +236,14 @@ module.exports = grammar({
       optional(field('name', $.simple_identifier)),
       optional(seq(':', $.delegation_specifiers)),
       optional($.class_body),
-    ),
-
-    function_value_parameters: $ => seq(
-      '(',
-      optional(commaSep1Trailing($.function_value_parameter)),
-      ')',
-    ),
-
-    function_value_parameter: $ => seq(
-      optional($.parameter_modifiers),
-      $.parameter,
-      optional(seq('=', field('default', $._expression))),
-    ),
-
-    function_declaration: $ => prec.right(seq(
-      optional($.modifiers),
-      'fun',
-      optional($.type_parameters),
-      optional(seq(field('receiver', $.receiver_type), '.')),
-      field('name', $.simple_identifier),
-      $.function_value_parameters,
-      optional(seq(':', field('return_type', $._type))),
-      optional($.type_constraints),
-      optional($.function_body),
     )),
 
-    function_body: $ => choice(
-      $.block,
-      seq('=', field('value', $._expression)),
-    ),
+    anonymous_initializer: $ => prec(1, seq('init', $.block)),
 
-    variable_declaration: $ => seq(
-      repeat($.annotation),
-      field('name', $.simple_identifier),
-      optional(seq(':', field('type', $._type))),
-    ),
-
-    multi_variable_declaration: $ => seq(
-      '(',
-      commaSep1Trailing($.variable_declaration),
-      ')',
-    ),
-
-    property_declaration: $ => prec.right(seq(
-      optional($.modifiers),
-      choice('val', 'var'),
-      optional($.type_parameters),
-      optional(seq(field('receiver', $.receiver_type), '.')),
-      choice($.multi_variable_declaration, $.variable_declaration),
-      optional($.type_constraints),
-      optional(choice(
-        seq('=', field('value', $._expression)),
-        $.property_delegate,
-      )),
-      optional(';'),
-      optional(choice(
-        seq($.getter, optional(seq(optional($._semi), $.setter))),
-        seq($.setter, optional(seq(optional($._semi), $.getter))),
-      )),
-    )),
-
-    property_delegate: $ => seq('by', $._expression),
-
-    getter: $ => prec.right(seq(
-      optional($.modifiers),
-      'get',
-      optional(seq(
-        '(', ')',
-        optional(seq(':', $._type)),
-        $.function_body,
-      )),
-    )),
-
-    setter: $ => prec.right(seq(
-      optional($.modifiers),
-      'set',
-      optional(seq(
-        '(',
-        $.function_value_parameter_with_optional_type,
-        optional(','),
-        ')',
-        optional(seq(':', $._type)),
-        $.function_body,
-      )),
-    )),
-
-    parameters_with_optional_type: $ => seq(
-      '(',
-      optional(commaSep1Trailing($.function_value_parameter_with_optional_type)),
-      ')',
-    ),
-
-    function_value_parameter_with_optional_type: $ => seq(
-      optional($.parameter_modifiers),
-      $.parameter_with_optional_type,
-      optional(seq('=', $._expression)),
-    ),
-
-    parameter_with_optional_type: $ => seq(
-      field('name', $.simple_identifier),
-      optional(seq(':', field('type', $._type))),
-    ),
-
-    parameter: $ => seq(
-      field('name', $.simple_identifier),
-      ':',
-      field('type', $._type),
-    ),
-
-    object_declaration: $ => seq(
-      optional($.modifiers),
-      'object',
-      field('name', $.simple_identifier),
-      optional(seq(':', $.delegation_specifiers)),
-      optional($.class_body),
-    ),
-
-    secondary_constructor: $ => prec.right(seq(
+    // In a class body these soft keywords open the member they name;
+    // reading them as a plain identifier would mean a call to a function
+    // named `constructor`/`init`/`companion`, which is not a thing.
+    secondary_constructor: $ => prec(1, seq(
       optional($.modifiers),
       'constructor',
       $.function_value_parameters,
@@ -440,100 +256,125 @@ module.exports = grammar({
       $.value_arguments,
     ),
 
-    // ---- SECTION: enumClasses ----
-
     enum_class_body: $ => seq(
       '{',
       optional($.enum_entries),
-      optional(seq(';', optional($.class_member_declarations))),
+      optional(seq(';', repeat(seq($._class_member_declaration, $._semi)))),
       '}',
     ),
 
     enum_entries: $ => seq(sepBy1(',', $.enum_entry), optional(',')),
 
-    enum_entry: $ => seq(
+    enum_entry: $ => prec.right(seq(
       optional($.modifiers),
       field('name', $.simple_identifier),
       optional($.value_arguments),
       optional($.class_body),
+    )),
+
+    modifiers: $ => repeat1(choice($.annotation, $.modifier)),
+
+    modifier: _ => choice(
+      'enum', 'sealed', 'annotation', 'data', 'inner', 'value',
+      'override', 'lateinit',
+      'public', 'private', 'internal', 'protected',
+      'tailrec', 'operator', 'infix', 'inline', 'external', 'suspend',
+      'const',
+      'abstract', 'final', 'open',
+      'vararg', 'noinline', 'crossinline',
+      'expect', 'actual',
     ),
 
-    // ---- SECTION: types ----
+    annotation: $ => seq(
+      '@',
+      optional(seq(
+        token.immediate(choice(
+          'field', 'property', 'get', 'set', 'receiver', 'param', 'setparam', 'delegate',
+        )),
+        ':',
+      )),
+      $.user_type,
+      optional($.value_arguments),
+    ),
 
-    // KotlinParser.g4 `type`: the modifiers are hoisted here rather than
-    // repeated per alternative, which is both what the specification
-    // writes and far cheaper in parse states.
-    _type: $ => seq(optional($.type_modifiers), $._type_body),
+    function_declaration: $ => prec.right(seq(
+      optional($.modifiers),
+      'fun',
+      field('name', $.simple_identifier),
+      $.function_value_parameters,
+      optional(seq(':', field('return_type', $._type))),
+      optional($.function_body),
+    )),
 
-    _type_body: $ => choice(
+    function_value_parameters: $ => seq(
+      '(',
+      optional(commaSep1Trailing($.parameter)),
+      ')',
+    ),
+
+    parameter: $ => seq(
+      field('name', $.simple_identifier),
+      ':',
+      field('type', $._type),
+      optional(seq('=', field('default', $._expression))),
+    ),
+
+    function_body: $ => choice(
+      $.block,
+      seq('=', field('value', $._expression)),
+    ),
+
+    // Right-associative so `val x = e` takes the initialiser rather than
+    // closing after the name and leaving `=` to be read as an assignment.
+    property_declaration: $ => prec.right(seq(
+      optional($.modifiers),
+      choice('val', 'var'),
+      field('name', $.simple_identifier),
+      optional(seq(':', field('type', $._type))),
+      optional(seq('=', field('value', $._expression))),
+    )),
+
+    // ---- types ----
+
+    _type: $ => choice(
       $.function_type,
-      $.parenthesized_type,
       $.nullable_type,
-      $.type_reference,
-      $.definitely_non_nullable_type,
+      $.user_type,
     ),
 
-    type_reference: $ => choice($.user_type, 'dynamic'),
+    // A dotted type keeps extending: `a.b.C` is one name.
+    user_type: $ => prec.right(sepBy1('.', $.simple_user_type)),
 
-    nullable_type: $ => seq(
-      choice($.type_reference, $.parenthesized_type),
-      repeat1('?'),
-    ),
-
-    user_type: $ => sepBy1('.', $.simple_user_type),
-
-    simple_user_type: $ => seq(
+    // In type position a `<` always opens type arguments — a type is
+    // never an operand of `<` — so prefer the longer match rather than
+    // splitting the parse.
+    simple_user_type: $ => prec.right(seq(
       field('name', $.simple_identifier),
       optional($.type_arguments),
-    ),
+    )),
 
-    type_projection: $ => choice(
-      seq(optional($.type_projection_modifiers), $._type),
-      '*',
-    ),
+    type_arguments: $ => seq('<', commaSep1Trailing($.type_projection), '>'),
 
-    type_projection_modifiers: $ => repeat1($.type_projection_modifier),
+    type_projection: $ => choice($._type, '*'),
 
-    type_projection_modifier: $ => choice(
-      $.variance_modifier,
-      $.annotation,
-    ),
+    nullable_type: $ => seq($.user_type, repeat1('?')),
 
-    function_type: $ => prec.right(seq(
-      optional(seq(field('receiver', $.receiver_type), '.')),
+    function_type: $ => seq(
       $.function_type_parameters,
       '->',
       field('return_type', $._type),
-    )),
+    ),
 
     function_type_parameters: $ => seq(
       '(',
-      optional(commaSep1Trailing(choice($.parameter, $._type))),
+      optional(commaSep1Trailing($._type)),
       ')',
     ),
 
-    parenthesized_type: $ => seq('(', $._type, ')'),
+    // ---- statements ----
 
-    receiver_type: $ => prec(1, seq(
-      optional($.type_modifiers),
-      choice($.parenthesized_type, $.nullable_type, $.type_reference),
-    )),
-
-    parenthesized_user_type: $ => seq(
-      '(',
-      choice($.user_type, $.parenthesized_user_type),
-      ')',
-    ),
-
-    definitely_non_nullable_type: $ => seq(
-      optional($.type_modifiers),
-      choice($.user_type, $.parenthesized_user_type),
-      '&',
-      optional($.type_modifiers),
-      choice($.user_type, $.parenthesized_user_type),
-    ),
-
-    // ---- SECTION: statements ----
+    // `if (c) { ... }` is a block, not a lambda that is never called.
+    block: $ => prec(1, seq('{', optional($.statements), '}')),
 
     statements: $ => seq(
       $._statement,
@@ -542,7 +383,7 @@ module.exports = grammar({
     ),
 
     _statement: $ => seq(
-      repeat(choice($.label, $.annotation)),
+      repeat($.label),
       choice(
         $._declaration,
         $.assignment,
@@ -551,11 +392,19 @@ module.exports = grammar({
       ),
     ),
 
-    label: $ => seq($.simple_identifier, token.immediate('@')),
+    label: $ => seq($._alpha_identifier, token.immediate('@')),
+
+    // In `if (c) x = 1` the body must keep reading rather than stop at
+    // `x`, so the assignment outranks closing the statement.
+    assignment: $ => prec.left(1, seq(
+      field('target', $._expression),
+      choice('=', $.assignment_and_operator),
+      field('value', $._expression),
+    )),
+
+    assignment_and_operator: _ => choice('+=', '-=', '*=', '/=', '%='),
 
     _control_structure_body: $ => choice($.block, $._statement),
-
-    block: $ => seq('{', optional($.statements), '}'),
 
     _loop_statement: $ => choice(
       $.for_statement,
@@ -564,250 +413,142 @@ module.exports = grammar({
     ),
 
     for_statement: $ => prec.right(seq(
-      'for',
-      '(',
-      repeat($.annotation),
+      'for', '(',
       choice($.variable_declaration, $.multi_variable_declaration),
-      'in',
-      field('range', $._expression),
+      'in', field('range', $._expression),
       ')',
       optional(field('body', $._control_structure_body)),
     )),
 
+    variable_declaration: $ => seq(
+      field('name', $.simple_identifier),
+      optional(seq(':', field('type', $._type))),
+    ),
+
+    multi_variable_declaration: $ => seq(
+      '(', commaSep1Trailing($.variable_declaration), ')',
+    ),
+
     while_statement: $ => seq(
-      'while',
-      '(',
-      field('condition', $._expression),
-      ')',
+      'while', '(', field('condition', $._expression), ')',
       choice(field('body', $._control_structure_body), ';'),
     ),
 
-    do_while_statement: $ => seq(
+    // With an omitted body, `do while (c)` could read as a `do` whose
+    // body is a while-statement. Prefer the do-while.
+    do_while_statement: $ => prec(1, seq(
       'do',
       optional(field('body', $._control_structure_body)),
-      'while',
-      '(',
-      field('condition', $._expression),
-      ')',
-    ),
-
-    // KotlinParser.g4 restricts the left-hand side to the shapes that
-    // can actually be assigned to (`directlyAssignableExpression`,
-    // `assignableExpression`). Those rules re-derive most of the
-    // expression grammar, and duplicating it here costs an enormous
-    // number of parse states for a distinction the linter never uses:
-    // an unassignable target is a type error, which this grammar is not
-    // in the business of catching. The left side is an expression.
-    assignment: $ => prec.left(PREC.ASSIGNMENT, seq(
-      field('target', $._expression),
-      choice('=', $.assignment_and_operator),
-      field('value', $._expression),
+      'while', '(', field('condition', $._expression), ')',
     )),
 
     _semi: $ => choice($._automatic_semicolon, ';'),
 
-    // ---- SECTION: expressions ----
-    //
-    // KotlinParser.g4 states operator precedence as a cascade of rules,
-    // each level naming the next. That cascade is reproduced literally
-    // here rather than collapsed into one rule carrying `prec.left`
-    // levels.
-    //
-    // The collapsed form is the usual tree-sitter shorthand and it
-    // accepts the same language, but it reaches that language through an
-    // ambiguous grammar that the GLR conflict machinery then has to take
-    // apart at every level. Measured on this grammar, that cost 25,684
-    // parse states and an 85 MB parser.c. The cascade is unambiguous by
-    // construction, which is the whole reason the specification is
-    // written this way.
-    //
-    // Each level is a hidden rule choosing between "pass through" and
-    // "apply this operator", so a level that does no work leaves no node
-    // in the tree.
+    // ---- expressions (KotlinParser.g4 cascade) ----
 
-    _expression: $ => $._disjunction,
+    // A jump swallows the whole expression after it, so it cannot be an
+    // atom: as a `_primary_expression` it would be ambiguous with every
+    // operator above it in the cascade. It sits at the top instead,
+    // where nothing can extend it.
+    // `if` joins the jump at the top rather than sitting among the
+    // atoms: its branches are not bracketed, so as an atom `if (c) a || b`
+    // would be ambiguous about whether the `||` is inside the branch.
+    // Kotlin puts it inside. `when` and `try` need no such treatment —
+    // they close with `}`, so they can be operands directly, which is
+    // what makes `when (x) { ... }.also { }` work.
+    _expression: $ => choice(
+      $._disjunction,
+      $.jump_expression,
+      $.if_expression,
+      // Same reason: its `= expr` body is unbracketed and runs greedily.
+      $.anonymous_function,
+    ),
 
     _disjunction: $ => choice($._conjunction, $.disjunction_expression),
-    disjunction_expression: $ => prec.left(seq(
-      field('left', $._disjunction), '||', field('right', $._conjunction),
-    )),
+    disjunction_expression: $ => prec.left(seq($._disjunction, '||', $._conjunction)),
 
     _conjunction: $ => choice($._equality, $.conjunction_expression),
-    conjunction_expression: $ => prec.left(seq(
-      field('left', $._conjunction), '&&', field('right', $._equality),
-    )),
+    conjunction_expression: $ => prec.left(seq($._conjunction, '&&', $._equality)),
 
     _equality: $ => choice($._comparison, $.equality_expression),
-    equality_expression: $ => prec.left(seq(
-      field('left', $._equality),
-      field('operator', $.equality_operator),
-      field('right', $._comparison),
-    )),
+    equality_expression: $ => prec.left(seq($._equality, $.equality_operator, $._comparison)),
 
     _comparison: $ => choice($._infix_operation, $.comparison_expression),
-    comparison_expression: $ => prec.left(seq(
-      field('left', $._comparison),
-      field('operator', $.comparison_operator),
-      field('right', $._infix_operation),
-    )),
+    comparison_expression: $ => prec.left(seq($._comparison, $.comparison_operator, $._infix_operation)),
 
-    // KotlinParser.g4 `infixOperation`. The right operand is an
-    // expression after `in`/`!in` and a type after `is`/`!is`.
     _infix_operation: $ => choice($._elvis_expression, $.infix_operation),
     infix_operation: $ => prec.left(seq(
-      field('left', $._infix_operation),
+      $._infix_operation,
       choice(
-        seq(field('operator', $.in_operator), field('right', $._elvis_expression)),
-        seq(field('operator', $.is_operator), field('right', $._type)),
+        seq($.in_operator, $._elvis_expression),
+        seq($.is_operator, $._type),
       ),
     )),
 
     _elvis_expression: $ => choice($._infix_function_call, $.elvis_expression),
+    // `?: throw ...` and `?: return ...` are the idiom the jump is
+    // mostly used in, so it is admitted explicitly on the right.
     elvis_expression: $ => prec.left(seq(
-      field('left', $._elvis_expression), '?:', field('right', $._infix_function_call),
+      $._elvis_expression, '?:',
+      choice($._infix_function_call, alias($._tight_jump, $.jump_expression)),
     )),
 
-    // `a to b`, `x shl 2`: any identifier may be an infix operator.
+    // KotlinParser.g4 writes the infix operator as `simpleIdentifier`,
+    // which admits every soft keyword. That makes `expr where`,
+    // `expr enum`, `expr by` and so on ambiguous between an infix call
+    // and whatever construct the keyword actually opens — a whole family
+    // of conflicts spread across the grammar.
+    //
+    // The operator is a plain identifier here instead. Kotlin's infix
+    // functions are named `to`, `until`, `shl`, `downTo`; declaring one
+    // named `where` or `private` is possible but not a thing anyone
+    // does, and the ambiguity it buys is not worth carrying.
     _infix_function_call: $ => choice($._range_expression, $.infix_function_call),
     infix_function_call: $ => prec.left(seq(
-      field('left', $._infix_function_call),
-      field('operator', $.simple_identifier),
-      field('right', $._range_expression),
+      $._infix_function_call,
+      field('operator', alias($._alpha_identifier, $.simple_identifier)),
+      $._range_expression,
     )),
 
     _range_expression: $ => choice($._additive_expression, $.range_expression),
     range_expression: $ => prec.left(seq(
-      field('left', $._range_expression),
-      choice('..', '..<'),
-      field('right', $._additive_expression),
+      $._range_expression, choice('..', '..<'), $._additive_expression,
     )),
 
     _additive_expression: $ => choice($._multiplicative_expression, $.additive_expression),
     additive_expression: $ => prec.left(seq(
-      field('left', $._additive_expression),
-      field('operator', $.additive_operator),
-      field('right', $._multiplicative_expression),
+      $._additive_expression, $.additive_operator, $._multiplicative_expression,
     )),
 
     _multiplicative_expression: $ => choice($._as_expression, $.multiplicative_expression),
     multiplicative_expression: $ => prec.left(seq(
-      field('left', $._multiplicative_expression),
-      field('operator', $.multiplicative_operator),
-      field('right', $._as_expression),
+      $._multiplicative_expression, $.multiplicative_operator, $._as_expression,
     )),
 
     _as_expression: $ => choice($._prefix_unary_expression, $.as_expression),
-    as_expression: $ => prec.left(seq(
-      field('left', $._as_expression),
-      field('operator', $.as_operator),
-      field('right', $._type),
-    )),
+    as_expression: $ => prec.left(seq($._as_expression, $.as_operator, $._type)),
 
-    // KotlinParser.g4 `prefixUnaryExpression : unaryPrefix* postfixUnaryExpression`
     _prefix_unary_expression: $ => choice($._postfix_unary_expression, $.prefix_expression),
-    prefix_expression: $ => prec.right(seq(
-      field('operator', $.unary_prefix),
-      field('operand', $._prefix_unary_expression),
-    )),
+    prefix_expression: $ => prec.right(seq($.prefix_unary_operator, $._prefix_unary_expression)),
 
-    unary_prefix: $ => choice($.annotation, $.label, $.prefix_unary_operator),
-
-    // KotlinParser.g4 `postfixUnaryExpression : primaryExpression postfixUnarySuffix*`
     _postfix_unary_expression: $ => choice($._primary_expression, $.postfix_expression),
-    postfix_expression: $ => prec.left(seq(
-      field('operand', $._postfix_unary_expression),
-      field('suffix', $.postfix_unary_suffix),
-    )),
+    postfix_expression: $ => prec.left(seq($._postfix_unary_expression, $.postfix_unary_suffix)),
 
     postfix_unary_suffix: $ => choice(
       $.postfix_unary_operator,
-      $.type_arguments,
       $.call_suffix,
       $.indexing_suffix,
       $.navigation_suffix,
     ),
 
-    _primary_expression: $ => choice(
-      $.parenthesized_expression,
-      $.simple_identifier,
-      $._literal_constant,
-      $.string_literal,
-      $.callable_reference,
-      $.lambda_literal,
-      $.anonymous_function,
-      $.object_literal,
-      $.collection_literal,
-      $.this_expression,
-      $.super_expression,
-      $.if_expression,
-      $.when_expression,
-      $.try_expression,
-      $.jump_expression,
-    ),
-
-    indexing_suffix: $ => seq(
-      '[',
-      commaSep1Trailing($._expression),
-      ']',
-    ),
-
-    navigation_suffix: $ => seq(
-      $.member_access_operator,
-      choice($.simple_identifier, $.parenthesized_expression, 'class'),
-    ),
-
-    call_suffix: $ => prec.left(seq(
-      optional($.type_arguments),
-      choice(
-        seq(optional($.value_arguments), $.annotated_lambda),
-        $.value_arguments,
-      ),
+    // `foo(a) { ... }` attaches the trailing lambda to the call rather
+    // than closing the call and starting a block.
+    call_suffix: $ => prec.right(choice(
+      seq(optional($.type_arguments), $.value_arguments, optional($.annotated_lambda)),
+      seq(optional($.type_arguments), $.annotated_lambda),
     )),
 
-    annotated_lambda: $ => seq(
-      repeat($.annotation),
-      optional($.label),
-      $.lambda_literal,
-    ),
-
-    type_arguments: $ => prec(PREC.TYPE_ARGUMENTS, seq(
-      '<',
-      commaSep1Trailing($.type_projection),
-      '>',
-    )),
-
-    value_arguments: $ => seq(
-      '(',
-      optional(commaSep1Trailing($.value_argument)),
-      ')',
-    ),
-
-    value_argument: $ => seq(
-      optional($.annotation),
-      optional(seq(field('name', $.simple_identifier), '=')),
-      optional('*'),
-      $._expression,
-    ),
-
-    parenthesized_expression: $ => seq('(', $._expression, ')'),
-
-    collection_literal: $ => seq(
-      '[',
-      optional(commaSep1Trailing($._expression)),
-      ']',
-    ),
-
-    _literal_constant: $ => choice(
-      $.boolean_literal,
-      $.integer_literal,
-      $.hex_literal,
-      $.bin_literal,
-      $.character_literal,
-      $.real_literal,
-      $.null_literal,
-      $.long_literal,
-      $.unsigned_literal,
-    ),
+    annotated_lambda: $ => seq(optional($.label), $.lambda_literal),
 
     lambda_literal: $ => seq(
       '{',
@@ -823,96 +564,101 @@ module.exports = grammar({
       seq($.multi_variable_declaration, optional(seq(':', $._type))),
     ),
 
+    // Without `suspend`: as a leading modifier it belongs to a local
+    // `suspend fun name()` declaration, which is the form that actually
+    // occurs; `suspend fun(...) {}` as an expression does not.
     anonymous_function: $ => prec.right(seq(
-      optional('suspend'),
       'fun',
-      optional(seq($._type, '.')),
-      $.parameters_with_optional_type,
+      $.function_value_parameters,
       optional(seq(':', $._type)),
-      optional($.type_constraints),
       optional($.function_body),
     )),
 
+    // No `data` here: a data object is always a declaration, never an
+    // anonymous literal, and admitting it makes `data object` ambiguous
+    // with the modifier.
     object_literal: $ => prec.right(seq(
-      optional('data'),
       'object',
-      optional(seq(':', $.delegation_specifiers)),
+      optional(seq(':', alias($._literal_supertypes, $.delegation_specifiers))),
       optional($.class_body),
     )),
 
-    this_expression: $ => choice(
-      'this',
-      seq('this', token.immediate('@'), $._immediate_identifier),
+    value_arguments: $ => seq('(', optional(commaSep1Trailing($.value_argument)), ')'),
+
+    value_argument: $ => seq(
+      optional(seq(field('name', $.simple_identifier), '=')),
+      $._expression,
     ),
 
-    super_expression: $ => choice(
-      seq(
-        'super',
-        optional(seq('<', $._type, '>')),
-        optional(seq(token.immediate('@'), $._immediate_identifier)),
-      ),
+    indexing_suffix: $ => seq('[', commaSep1Trailing($._expression), ']'),
+
+    navigation_suffix: $ => seq(
+      $.member_access_operator,
+      choice($.simple_identifier, 'class'),
+    ),
+
+    _primary_expression: $ => choice(
+      $.parenthesized_expression,
+      $.simple_identifier,
+      $._literal_constant,
+      $.string_literal,
+      $.when_expression,
+      $.try_expression,
+      $.lambda_literal,
+      $.object_literal,
+      $.this_expression,
+      $.super_expression,
+      $.callable_reference,
+      $.collection_literal,
     ),
 
     if_expression: $ => prec.right(seq(
-      'if',
-      '(',
-      field('condition', $._expression),
-      ')',
-      choice(
-        field('consequence', $._control_structure_body),
-        seq(
-          optional(field('consequence', $._control_structure_body)),
-          optional($._semi),
-          'else',
-          choice(field('alternative', $._control_structure_body), ';'),
-        ),
-        ';',
-      ),
-    )),
-
-    when_subject: $ => seq(
-      '(',
+      'if', '(', field('condition', $._expression), ')',
+      optional(field('consequence', $._control_structure_body)),
+      // The separator before `else` is what lets `else` start its own
+      // line: the scanner has already inferred a terminator after the
+      // consequence, and this absorbs it. KotlinParser.g4's bare
+      // `SEMICOLON` branches for an empty body are dropped — an omitted
+      // body plus the enclosing statement's own separator covers them,
+      // and keeping them collides with that separator.
       optional(seq(
-        repeat($.annotation),
-        'val',
-        $.variable_declaration,
-        '=',
+        optional($._semi),
+        'else',
+        optional(field('alternative', $._control_structure_body)),
       )),
-      $._expression,
-      ')',
-    ),
+    )),
 
     when_expression: $ => seq(
       'when',
       optional($.when_subject),
-      '{',
-      repeat($.when_entry),
-      '}',
+      '{', repeat($.when_entry), '}',
+    ),
+
+    when_subject: $ => seq(
+      '(',
+      optional(seq('val', $.variable_declaration, '=')),
+      $._expression,
+      ')',
     ),
 
     when_entry: $ => seq(
-      choice(
-        seq(commaSep1Trailing($.when_condition)),
-        'else',
-      ),
+      choice(commaSep1Trailing($.when_condition), 'else'),
       '->',
       field('body', $._control_structure_body),
-      optional($._semi),
+      // Required, like every other statement terminator here: an
+      // optional one would let `else -> a` run into a following
+      // `in b -> ...` entry.
+      $._semi,
     ),
 
     when_condition: $ => choice(
       $._expression,
-      $.range_test,
-      $.type_test,
+      seq($.in_operator, $._expression),
+      seq($.is_operator, $._type),
     ),
 
-    range_test: $ => seq($.in_operator, $._expression),
-
-    type_test: $ => seq($.is_operator, $._type),
-
     try_expression: $ => prec.right(seq(
-      'try',
-      $.block,
+      'try', $.block,
       choice(
         seq(repeat1($.catch_block), optional($.finally_block)),
         $.finally_block,
@@ -920,12 +666,8 @@ module.exports = grammar({
     )),
 
     catch_block: $ => seq(
-      'catch',
-      '(',
-      repeat($.annotation),
-      field('name', $.simple_identifier),
-      ':',
-      field('type', $._type),
+      'catch', '(',
+      field('name', $.simple_identifier), ':', field('type', $._type),
       optional(','),
       ')',
       $.block,
@@ -933,129 +675,75 @@ module.exports = grammar({
 
     finally_block: $ => seq('finally', $.block),
 
-    jump_expression: $ => choice(
-      prec.right(seq('throw', $._expression)),
-      prec.right(seq(
-        'return',
-        optional(seq(token.immediate('@'), $._immediate_identifier)),
-        optional($._expression),
-      )),
-      seq('continue', optional(seq(token.immediate('@'), $._immediate_identifier))),
-      seq('break', optional(seq(token.immediate('@'), $._immediate_identifier))),
+    // `throw`/`return` take the whole expression that follows, so in
+    // `throw a || b` the operator binds inside the throw. A negative
+    // precedence makes the parser keep reading rather than close the
+    // jump at the first complete operand.
+    jump_expression: $ => jumpForms($, $._expression),
+
+    // `?: return null`, `?: throw Foo("m")`, `?: return a + b`. The
+    // operand stops below the comparison and logical operators, which is
+    // what keeps `a ?: throw b || c` from being ambiguous about whether
+    // the `||` belongs to the throw or to the elvis.
+    _tight_jump: $ => jumpForms($, $._infix_function_call),
+
+    this_expression: $ => seq(
+      'this',
+      optional(seq(token.immediate('@'), $._immediate_identifier)),
     ),
 
-    callable_reference: $ => seq(
-      optional($.receiver_type),
-      '::',
-      choice($.simple_identifier, 'class'),
+    super_expression: $ => seq(
+      'super',
+      optional(seq(token.immediate('@'), $._immediate_identifier)),
     ),
 
-    assignment_and_operator: _ => choice('+=', '-=', '*=', '/=', '%='),
+    // Only the receiverless form. `String::class` and `foo::bar` arrive
+    // as a navigation suffix on the expression, so admitting a type here
+    // as well would make every leading identifier ambiguous between a
+    // type and an expression.
+    callable_reference: $ => seq('::', choice($.simple_identifier, 'class')),
+
+    collection_literal: $ => seq(
+      '[', optional(commaSep1Trailing($._expression)), ']',
+    ),
+
+    parenthesized_expression: $ => seq('(', $._expression, ')'),
+
+    // ---- operators ----
 
     equality_operator: _ => choice('!=', '!==', '==', '==='),
-
     comparison_operator: _ => choice('<', '>', '<=', '>='),
-
     in_operator: _ => choice('in', '!in'),
-
     is_operator: _ => choice('is', '!is'),
-
     additive_operator: _ => choice('+', '-'),
-
     multiplicative_operator: _ => choice('*', '/', '%'),
-
     as_operator: _ => choice('as', 'as?'),
-
     prefix_unary_operator: _ => choice('++', '--', '-', '+', '!'),
-
     postfix_unary_operator: _ => choice('++', '--', '!!'),
-
     member_access_operator: _ => choice('.', '?.', '::'),
 
-    // ---- SECTION: modifiers ----
+    // ---- literals ----
 
-    modifiers: $ => repeat1(choice($.annotation, $.modifier)),
-
-    parameter_modifiers: $ => repeat1(choice($.annotation, $.parameter_modifier)),
-
-    modifier: $ => choice(
-      $.class_modifier,
-      $.member_modifier,
-      $.visibility_modifier,
-      $.function_modifier,
-      $.property_modifier,
-      $.inheritance_modifier,
-      $.parameter_modifier,
-      $.platform_modifier,
+    _literal_constant: $ => choice(
+      $.boolean_literal,
+      $.integer_literal,
+      $.real_literal,
+      $.null_literal,
+      $.character_literal,
     ),
 
-    type_modifiers: $ => repeat1($.type_modifier),
+    boolean_literal: _ => choice('true', 'false'),
+    null_literal: _ => 'null',
+    integer_literal: _ => token(choice(/[1-9][0-9_]*[0-9]/, /[0-9]/)),
+    real_literal: _ => token(/([0-9][0-9_]*[0-9]|[0-9])?\.([0-9][0-9_]*[0-9]|[0-9])([eE][+-]?[0-9]+)?[fF]?/),
 
-    type_modifier: $ => choice($.annotation, 'suspend'),
-
-    class_modifier: _ => choice('enum', 'sealed', 'annotation', 'data', 'inner', 'value'),
-
-    member_modifier: _ => choice('override', 'lateinit'),
-
-    visibility_modifier: _ => choice('public', 'private', 'internal', 'protected'),
-
-    variance_modifier: _ => choice('in', 'out'),
-
-    type_parameter_modifiers: $ => repeat1($.type_parameter_modifier),
-
-    type_parameter_modifier: $ => choice(
-      $.reification_modifier,
-      $.variance_modifier,
-      $.annotation,
+    character_literal: $ => seq(
+      "'",
+      choice($.escape_sequence, token.immediate(/[^\n\r'\\]/)),
+      token.immediate("'"),
     ),
 
-    function_modifier: _ => choice('tailrec', 'operator', 'infix', 'inline', 'external', 'suspend'),
-
-    property_modifier: _ => 'const',
-
-    inheritance_modifier: _ => choice('abstract', 'final', 'open'),
-
-    parameter_modifier: _ => choice('vararg', 'noinline', 'crossinline'),
-
-    reification_modifier: _ => 'reified',
-
-    platform_modifier: _ => choice('expect', 'actual'),
-
-    // ---- SECTION: annotations ----
-
-    annotation: $ => choice($.single_annotation, $.multi_annotation),
-
-    single_annotation: $ => seq(
-      choice($.annotation_use_site_target, '@'),
-      $.unescaped_annotation,
-    ),
-
-    multi_annotation: $ => seq(
-      choice($.annotation_use_site_target, '@'),
-      '[',
-      repeat1($.unescaped_annotation),
-      ']',
-    ),
-
-    annotation_use_site_target: $ => seq(
-      '@',
-      token.immediate(choice(
-        'field', 'property', 'get', 'set', 'receiver', 'param', 'setparam', 'delegate',
-      )),
-      ':',
-    ),
-
-    unescaped_annotation: $ => choice(
-      $.constructor_invocation,
-      $.user_type,
-    ),
-
-    // ---- SECTION: strings ----
-    //
-    // Every token inside a string is `immediate`, so that `extras` —
-    // whitespace and comments — are not skipped between them. Without
-    // that, the space in `"a b"` would be discarded as whitespace and
-    // `//` inside a URL would begin a comment.
+    // ---- strings ----
 
     string_literal: $ => choice($.line_string_literal, $.multiline_string_literal),
 
@@ -1087,71 +775,13 @@ module.exports = grammar({
       alias($._immediate_identifier, $.simple_identifier),
     ),
 
-    string_interpolation: $ => seq(
-      token.immediate('${'),
-      $._expression,
-      '}',
-    ),
+    string_interpolation: $ => seq(token.immediate('${'), $._expression, '}'),
 
     escape_sequence: _ => token.immediate(seq(
-      '\\',
-      choice(
-        /u[0-9a-fA-F]{4}/,
-        /[tbrn'"\\$]/,
-      ),
+      '\\', choice(/u[0-9a-fA-F]{4}/, /[tbrn'"\\$]/),
     )),
 
-    // ---- SECTION: literals ----
-
-    boolean_literal: _ => choice('true', 'false'),
-
-    null_literal: _ => 'null',
-
-    // KotlinLexer.g4 permits `_` as a digit separator, but never as the
-    // first or last digit.
-    integer_literal: _ => token(choice(
-      /[1-9][0-9_]*[0-9]/,
-      /[0-9]/,
-    )),
-
-    hex_literal: _ => token(/0[xX][0-9a-fA-F][0-9a-fA-F_]*[0-9a-fA-F]|0[xX][0-9a-fA-F]/),
-
-    bin_literal: _ => token(/0[bB][01][01_]*[01]|0[bB][01]/),
-
-    real_literal: _ => token(choice(
-      // DoubleLiteral, optionally with the float suffix
-      /([0-9][0-9_]*[0-9]|[0-9])?\.([0-9][0-9_]*[0-9]|[0-9])([eE][+-]?([0-9][0-9_]*[0-9]|[0-9]))?[fF]?/,
-      /([0-9][0-9_]*[0-9]|[0-9])[eE][+-]?([0-9][0-9_]*[0-9]|[0-9])[fF]?/,
-      // FloatLiteral built straight on decimal digits
-      /([0-9][0-9_]*[0-9]|[0-9])[fF]/,
-    )),
-
-    unsigned_literal: _ => token(seq(
-      choice(
-        /[1-9][0-9_]*[0-9]|[0-9]/,
-        /0[xX][0-9a-fA-F][0-9a-fA-F_]*[0-9a-fA-F]|0[xX][0-9a-fA-F]/,
-        /0[bB][01][01_]*[01]|0[bB][01]/,
-      ),
-      /[uU]/,
-      optional(/[lL]/),
-    )),
-
-    long_literal: _ => token(seq(
-      choice(
-        /[1-9][0-9_]*[0-9]|[0-9]/,
-        /0[xX][0-9a-fA-F][0-9a-fA-F_]*[0-9a-fA-F]|0[xX][0-9a-fA-F]/,
-        /0[bB][01][01_]*[01]|0[bB][01]/,
-      ),
-      /[lL]/,
-    )),
-
-    character_literal: $ => seq(
-      "'",
-      choice($.escape_sequence, token.immediate(/[^\n\r'\\]/)),
-      token.immediate("'"),
-    ),
-
-    // ---- SECTION: identifiers ----
+    // ---- identifiers ----
 
     simple_identifier: $ => choice(
       $._alpha_identifier,
@@ -1161,12 +791,8 @@ module.exports = grammar({
 
     qualified_identifier: $ => sepBy1('.', $.simple_identifier),
 
-    // The `word` token: plain Kotlin identifiers, which drives
-    // tree-sitter's keyword-extraction optimisation.
     _alpha_identifier: _ => token(/[\p{L}_][\p{L}\p{Nd}_]*/u),
-
     _backtick_identifier: _ => token(seq('`', /[^\r\n`]+/, '`')),
-
     _immediate_identifier: _ => token.immediate(/[\p{L}_][\p{L}\p{Nd}_]*/u),
   },
 });
