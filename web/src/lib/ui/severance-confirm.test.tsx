@@ -106,6 +106,14 @@ describe("the severance confirmation", () => {
     expect(screen.getByTestId("severance-proceed")).toBeDisabled();
   });
 
+  // F7: the confirming action sits on the RIGHT, the platform convention.
+  it("puts the confirming action last in the DOM order", () => {
+    show();
+    const buttons = screen.getByTestId("severance-confirm").querySelectorAll("button");
+    expect(buttons[buttons.length - 1]).toBe(screen.getByTestId("severance-proceed"));
+    expect(buttons[0]).toBe(screen.getByTestId("severance-cancel"));
+  });
+
   it("keeps the standing when declined", () => {
     const { onCancel, onConfirm } = show();
     fireEvent.click(screen.getByTestId("severance-cancel"));

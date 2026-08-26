@@ -353,6 +353,12 @@ can land in any order — 2.3 (topics) needs only the text core.
   servable with the weight this slice computes
   ([hashtag.md §4](../instances/hashtag.md#4-the-current-topics-fold),
   [feed-ranking.md §4](../primitive/feed-ranking.md#4-the-path-set)).
+- **Unhide topic follow** — the follow/unfollow control, backend-
+  accepted since 2.3 (`prepareStance` toward the Hashtag) but
+  hidden from the client until the topic feed exists to receive it.
+- **The "topics you follow" list** — a viewerTopics-style query over
+  the viewer's own Affinity bundle, surfaced alongside the unhidden
+  follow control.
 - The score readout — [design.md §7](design.md) "numbers are in
   scope": a post can show what it scored and why it sits where
   it does, opening into the actual paths behind it.

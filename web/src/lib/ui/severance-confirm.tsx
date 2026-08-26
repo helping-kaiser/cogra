@@ -8,7 +8,8 @@
 //
 // The order is fixed (Android parity): title · the pick line when it was
 // reached by a pick · the consequences · where you stand now · the cost ·
-// the failure line when one exists · Sever, Keep it.
+// the failure line when one exists · Keep it, Sever — the confirming
+// action on the right, the platform convention (F7).
 //
 // The batch size is the legible cost (api-spec.md "A prepare may stage a
 // batch"): each counter-record is its own priced act, so the count is
@@ -106,20 +107,20 @@ export function SeveranceConfirm({
       <div className="mt-6 flex justify-end gap-2">
         <button
           type="button"
+          data-testid="severance-cancel"
+          onClick={onCancel}
+          className={buttonClassName({ variant: "text", size: "sm" })}
+        >
+          Keep it
+        </button>
+        <button
+          type="button"
           data-testid="severance-proceed"
           disabled={busy || alreadySevered}
           onClick={onConfirm}
           className={buttonClassName({ variant: "text", size: "sm" })}
         >
           Sever
-        </button>
-        <button
-          type="button"
-          data-testid="severance-cancel"
-          onClick={onCancel}
-          className={buttonClassName({ variant: "text", size: "sm" })}
-        >
-          Keep it
         </button>
       </div>
     </dialog>
