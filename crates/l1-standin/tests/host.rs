@@ -1,7 +1,7 @@
-// Integration tests for the stand-in host: the admission handshake, the
-// epoch close (ordering, causal keys, maturities, θ-debits), and the
-// published packages. Each test gets its own throwaway database via
-// #[sqlx::test]; the workspace migrations create the l1_* tables.
+//! Integration tests for the stand-in host: the admission handshake, the
+//! epoch close (ordering, causal keys, maturities, θ-debits), and the
+//! published packages. Each test gets its own throwaway database via
+//! `#[sqlx::test]`; the workspace migrations create the l1_* tables.
 
 use common::l1::Family;
 use common::l1::census::LegRole;
@@ -11,7 +11,8 @@ use common::l1::identifier::{ActId, NodeId};
 use l1_standin::{StandIn, StandInConfig, StandInError};
 use sqlx::PgPool;
 
-const THETA: i64 = 1_000_000; // 1.0 in micro-units — easy arithmetic
+/// 1.0 in micro-units — easy arithmetic.
+const THETA: i64 = 1_000_000;
 
 fn standin(pool: PgPool) -> StandIn {
     StandIn::new(
@@ -81,6 +82,10 @@ async fn funded_actor(host: &StandIn, micro: i64) -> ActorKey {
     actor
 }
 
+/// A single Registration lands, closes into its own epoch as a Binary
+/// record with one leg (first edge at both endpoints, so τ = 0), and the
+/// θ-debit, count increment, and burn total all land as expected. The
+/// ingest read (`epochs_since`) returns the same package back.
 #[sqlx::test(migrations = "../../migrations")]
 async fn handshake_lands_a_record(pool: PgPool) {
     let host = standin(pool);
@@ -105,15 +110,13 @@ async fn handshake_lands_a_record(pool: PgPool) {
     assert_eq!(leg.role, LegRole::Binary);
     assert_eq!(leg.source, NodeId::Addr(actor.address()));
     assert_eq!(leg.target, NodeId::Prof(actor.address()));
-    assert_eq!(leg.tau, 0.0); // first edge at both endpoints
+    assert_eq!(leg.tau, 0.0);
 
-    // θ-debit consummated; count incremented; B_i monotone.
     let balance = host.balance(&actor.address()).await.expect("balance");
     assert_eq!(balance.action_count, 1);
     assert!((balance.balance - 2.0).abs() < 1e-9);
     assert!((balance.burned_total - 3.0).abs() < 1e-9);
 
-    // The ingest read returns the same package.
     let since = host.epochs_since(-1).await.expect("epochs");
     assert_eq!(since.len(), 1);
     assert_eq!(since[0], package);
@@ -151,18 +154,20 @@ async fn close_loop_publishes_on_the_interval(pool: PgPool) {
     clock.abort();
 }
 
+/// Three distinct formation failures — a Registration targeting someone
+/// else's Profile, a fixed-parameter family given non-fixed (p_d, p_i),
+/// and a payload over M_payload — all reject at seal. None produces a
+/// Layer-1 object, so a subsequent close has nothing to publish.
 #[sqlx::test(migrations = "../../migrations")]
 async fn seal_rejects_formation_failures(pool: PgPool) {
     let host = standin(pool);
     let actor = funded_actor(&host, 3 * THETA).await;
 
-    // Registration toward someone else's Profile.
     let mut bad = registration(&actor);
     bad.body.target = NodeId::Prof("someone-else".into());
     let err = host.seal(actor.pre_sign(bad)).await.expect_err("rejected");
     assert!(matches!(err, StandInError::Formation(_)));
 
-    // Fixed-parameter family with non-fixed parameters.
     let mut bad = registration(&actor);
     bad.body.p_d = 0.5;
     assert!(matches!(
@@ -170,7 +175,6 @@ async fn seal_rejects_formation_failures(pool: PgPool) {
         Err(StandInError::Formation(_))
     ));
 
-    // Payload over M_payload.
     let mut bad = registration(&actor);
     bad.payload = vec![0u8; 2048];
     assert!(matches!(
@@ -178,17 +182,19 @@ async fn seal_rejects_formation_failures(pool: PgPool) {
         Err(StandInError::Formation(_))
     ));
 
-    // A formation failure produces no Layer-1 object: nothing to close.
     assert!(host.close_epoch().await.expect("ok").is_none());
 }
 
+/// Three authentication failures reject at seal: an author address that
+/// does not bind to the signing key, a proposal body tampered after
+/// pre-signing, and a payload tampered after pre-signing (which
+/// mismatches the pre-digest).
 #[sqlx::test(migrations = "../../migrations")]
 async fn seal_rejects_authentication_failures(pool: PgPool) {
     let host = standin(pool);
     let actor = funded_actor(&host, 3 * THETA).await;
     let mallory = ActorKey::generate();
 
-    // Author address not bound to the signing key.
     let mut pre = actor.pre_sign(registration(&actor));
     pre.author_pubkey = mallory.public_key_bytes();
     assert!(matches!(
@@ -196,7 +202,6 @@ async fn seal_rejects_authentication_failures(pool: PgPool) {
         Err(StandInError::Authentication(_))
     ));
 
-    // Tampered body after pre-signing.
     let mut pre = actor.pre_sign(opinion(&actor, 1, "bob", vec![]));
     pre.proposal.body.p_d = -1.0;
     assert!(matches!(
@@ -204,7 +209,6 @@ async fn seal_rejects_authentication_failures(pool: PgPool) {
         Err(StandInError::Authentication(_))
     ));
 
-    // Tampered payload after pre-signing (pre-digest mismatch).
     let mut pre = actor.pre_sign(opinion(&actor, 2, "bob", vec![]));
     pre.proposal.payload = b"swapped".to_vec();
     assert!(matches!(
@@ -213,6 +217,9 @@ async fn seal_rejects_authentication_failures(pool: PgPool) {
     ));
 }
 
+/// Reusing an act identifier is equivocation and rejects with Conflict;
+/// reusing an author-local sequence number under a different family
+/// rejects the same way, via UNIQUE(author, seq).
 #[sqlx::test(migrations = "../../migrations")]
 async fn seal_rejects_identifier_reuse_and_key_change(pool: PgPool) {
     let host = standin(pool);
@@ -221,15 +228,12 @@ async fn seal_rejects_identifier_reuse_and_key_change(pool: PgPool) {
     let pre = actor.pre_sign(opinion(&actor, 1, "bob", vec![]));
     host.seal(pre).await.expect("first seal ok");
 
-    // Same act identifier again — equivocation, rejected.
     let pre = actor.pre_sign(opinion(&actor, 1, "carol", vec![]));
     assert!(matches!(
         host.seal(pre).await,
         Err(StandInError::Conflict(_))
     ));
 
-    // Same author-local sequence under a different family — reuse,
-    // rejected (UNIQUE(author, seq)).
     let mut prop = registration(&actor);
     prop.body.seq = 1;
     assert!(matches!(
@@ -238,6 +242,10 @@ async fn seal_rejects_identifier_reuse_and_key_change(pool: PgPool) {
     ));
 }
 
+/// An unknown act rejects with UnknownAct; a witness signed by the
+/// wrong key rejects with Authentication (mallory signing the same
+/// message must not verify as the actor); and the genuine witness
+/// lands, with a second approval idempotent.
 #[sqlx::test(migrations = "../../migrations")]
 async fn approve_verifies_the_witness(pool: PgPool) {
     let host = standin(pool);
@@ -248,7 +256,6 @@ async fn approve_verifies_the_witness(pool: PgPool) {
     let sealed = host.seal(pre.clone()).await.expect("seals");
     let host_key = host.host_public_key().await.expect("key");
 
-    // Unknown act.
     let bogus = ApprovalWitness {
         act_id: ActId::new("nobody", 9, Family::Opinion).expect("ok"),
         approval_signature: vec![1, 2, 3],
@@ -258,12 +265,10 @@ async fn approve_verifies_the_witness(pool: PgPool) {
         Err(StandInError::UnknownAct(_))
     ));
 
-    // A witness signed by the wrong key.
     let witness = actor.approve(&pre, &sealed, &host_key).expect("client ok");
     let forged = ApprovalWitness {
         act_id: witness.act_id.clone(),
         approval_signature: {
-            // mallory signs the same message — must not verify as actor
             let pre2 = mallory.pre_sign(registration(&mallory));
             pre2.pre_signature
         },
@@ -273,27 +278,26 @@ async fn approve_verifies_the_witness(pool: PgPool) {
         Err(StandInError::Authentication(_))
     ));
 
-    // The genuine witness lands; a second approval is idempotent.
     host.approve(witness.clone()).await.expect("approves");
     host.approve(witness).await.expect("idempotent");
     let package = host.close_epoch().await.expect("ok").expect("one act");
     assert_eq!(package.records.len(), 1);
 }
 
+/// An actor with no burn fails W1 at close, deferring the act
+/// indefinitely; crediting a burn restores capacity immediately
+/// (layer1-interface.md §7.1), and the act lands at the next close.
 #[sqlx::test(migrations = "../../migrations")]
 async fn insolvent_authors_defer_until_funded(pool: PgPool) {
     let host = standin(pool);
-    let actor = ActorKey::generate(); // no burn: W1 fails at close
+    let actor = ActorKey::generate();
     host.credit_burn(&actor.address(), THETA / 2)
         .await
         .expect("underfunded burn");
     submit(&host, &actor, registration(&actor)).await;
 
-    // W1 defers the act: no epoch closes.
     assert!(host.close_epoch().await.expect("ok").is_none());
 
-    // Committing a burn restores capacity immediately (§7.1); the act
-    // lands at the next close.
     host.credit_burn(&actor.address(), THETA)
         .await
         .expect("burn");
@@ -301,6 +305,10 @@ async fn insolvent_authors_defer_until_funded(pool: PgPool) {
     assert_eq!(package.records.len(), 1);
 }
 
+/// An act depending on a never-submitted act defers indefinitely. An act
+/// depending on a same-close act lands after it, at a strictly greater
+/// Lamport time, whatever the approval order — here the dependent is
+/// approved first and its dependency arrives after.
 #[sqlx::test(migrations = "../../migrations")]
 async fn dependencies_defer_and_order(pool: PgPool) {
     let host = standin(pool);
@@ -308,14 +316,10 @@ async fn dependencies_defer_and_order(pool: PgPool) {
     let reg = registration(&alice);
     let reg_id = reg.body.act_id();
 
-    // An act depending on a never-submitted act defers indefinitely.
     let orphan_dep = ActId::new("ghost", 1, Family::Opinion).expect("ok");
     submit(&host, &alice, opinion(&alice, 1, "bob", vec![orphan_dep])).await;
     assert!(host.close_epoch().await.expect("ok").is_none());
 
-    // An act depending on a same-close act lands after it, at a strictly
-    // greater Lamport time, whatever the approval order (the dependent
-    // was approved first above; now its dependency arrives).
     submit(
         &host,
         &alice,
@@ -346,6 +350,11 @@ async fn dependencies_defer_and_order(pool: PgPool) {
     );
 }
 
+/// A hyper act (Tag) projects two legs at one causal key: the A-leg
+/// Actor → middle, the T-leg middle → terminal target. Both legs see the
+/// same pre-act state — first appearance of every endpoint, so τ = 0 on
+/// both — and one act consummates exactly one θ-debit and one count
+/// increment, never per leg.
 #[sqlx::test(migrations = "../../migrations")]
 async fn hyper_acts_project_two_legs_at_one_key(pool: PgPool) {
     let host = standin(pool);
@@ -383,22 +392,22 @@ async fn hyper_acts_project_two_legs_at_one_key(pool: PgPool) {
         .iter()
         .find(|l| l.role == LegRole::T)
         .expect("T leg");
-    // A: Actor → middle; T: middle → terminal target; both legs share the
-    // one act (one record, one key).
     assert_eq!(a.source, NodeId::Addr(publisher.address()));
     assert_eq!(a.target, NodeId::Prof(subject.address()));
     assert_eq!(t.source, NodeId::Prof(subject.address()));
     assert_eq!(t.target, NodeId::name("moderator").expect("ok"));
-    // Both legs see the same pre-act state: first appearance of every
-    // endpoint, τ = 0 on both.
     assert_eq!(a.tau, 0.0);
     assert_eq!(t.tau, 0.0);
-    // One act = one θ-debit, one count increment — never per leg.
     let balance = host.balance(&publisher.address()).await.expect("ok");
     assert_eq!(balance.action_count, 1);
     assert!((balance.balance - 9.0).abs() < 1e-9);
 }
 
+/// Bid/T is fresh-mint-only and rejects at formation (seal.rs) when
+/// targeted at an existing Offer, but a Bid minting its own Offer seals.
+/// An ordinary-role Send toward an existing Message stays legal — L1's
+/// permission set keeps it, and CoGra's transcript fold, not formation,
+/// is what ignores it.
 #[sqlx::test(migrations = "../../migrations")]
 async fn bid_is_fresh_mint_only_while_ordinary_send_stays_legal(pool: PgPool) {
     let host = standin(pool);
@@ -421,7 +430,6 @@ async fn bid_is_fresh_mint_only_while_ordinary_send_stays_legal(pool: PgPool) {
         deps: vec![],
     };
 
-    // Bid/T is fresh-mint-only — rejected at formation (seal.rs).
     let item = NodeId::Mint(ActId::new("lister", 0, Family::Owner).expect("ok"));
     let foreign_offer = NodeId::Mint(ActId::new("other", 1, Family::Bid).expect("ok"));
     assert!(matches!(
@@ -430,13 +438,9 @@ async fn bid_is_fresh_mint_only_while_ordinary_send_stays_legal(pool: PgPool) {
         Err(StandInError::Formation(_))
     ));
 
-    // A Bid minting its own Offer seals.
     let own_offer = NodeId::Mint(ActId::new(&actor.address(), 1, Family::Bid).expect("ok"));
     submit(&host, &actor, hyper(1, Family::Bid, &item, &own_offer)).await;
 
-    // An ordinary-role Send toward an existing Message stays legal — L1's
-    // permission set keeps it, and CoGra's transcript fold, not formation,
-    // is what ignores it.
     let chat = NodeId::Mint(ActId::new("founder", 0, Family::Participant).expect("ok"));
     let foreign_message = NodeId::Mint(ActId::new("other", 2, Family::Send).expect("ok"));
     submit(
@@ -450,13 +454,14 @@ async fn bid_is_fresh_mint_only_while_ordinary_send_stays_legal(pool: PgPool) {
     assert_eq!(package.records.len(), 2);
 }
 
+/// The revise gesture: a Publish toward an existing Content node is
+/// well-formed at the substrate (seal.rs) and lands as a revision rather
+/// than a fresh mint.
 #[sqlx::test(migrations = "../../migrations")]
 async fn publish_toward_an_existing_mint_revises_rather_than_mints(pool: PgPool) {
     let host = standin(pool);
     let author = funded_actor(&host, 10 * THETA).await;
 
-    // The revise gesture: a Publish toward an existing Content node is
-    // well-formed at the substrate (seal.rs).
     let existing = NodeId::Mint(ActId::new("other", 1, Family::Publish).expect("ok"));
     let revise = Proposal {
         body: StructuralBody {
@@ -481,13 +486,15 @@ async fn publish_toward_an_existing_mint_revises_rather_than_mints(pool: PgPool)
     assert_eq!(package.records[0].legs[0].target, existing);
 }
 
+/// The found shape: both legs land at the act's own mint — the A-leg
+/// enters the Chat the act creates, the T-leg mints it. The T-leg's
+/// (p_d, p_i) reads back transposed from the act's own (census.rs
+/// `leg_params`).
 #[sqlx::test(migrations = "../../migrations")]
 async fn founding_participant_self_loops_at_its_own_mint(pool: PgPool) {
     let host = standin(pool);
     let founder = funded_actor(&host, 10 * THETA).await;
 
-    // The found shape: both legs at the act's own mint — the A-leg enters
-    // the Chat the act creates, the T-leg mints it.
     let own_mint =
         NodeId::Mint(ActId::new(&founder.address(), 0, Family::Participant).expect("ok"));
     let found = Proposal {
@@ -527,10 +534,14 @@ async fn founding_participant_self_loops_at_its_own_mint(pool: PgPool) {
     assert_eq!(a.target, own_mint);
     assert_eq!(t.source, own_mint);
     assert_eq!(t.target, own_mint);
-    // Transposed rendering (census.rs `leg_params`).
     assert_eq!((t.p_d, t.p_i), (0.0, 1.0));
 }
 
+/// Bob's opinion toward Alice's Profile matures with the prior degree:
+/// Bob's Actor node is fresh (degree 0) but Alice's Profile has degree 1
+/// from the Registration — max(0, 1) = 1 → τ = 1 − 1/(1+1) = 0.5. Later
+/// acts never contribute to an earlier act's maturity: the epoch-0
+/// record still reads τ = 0 through the ingest surface.
 #[sqlx::test(migrations = "../../migrations")]
 async fn maturity_grows_with_prior_degree(pool: PgPool) {
     let host = standin(pool);
@@ -540,23 +551,20 @@ async fn maturity_grows_with_prior_degree(pool: PgPool) {
     submit(&host, &alice, registration(&alice)).await;
     host.close_epoch().await.expect("ok").expect("epoch 0");
 
-    // Bob's opinion toward Alice's Profile: Bob's Actor node is fresh
-    // (degree 0) but Alice's Profile has degree 1 from the Registration —
-    // max(0, 1) = 1 → τ = 1 − 1/(1+1) = 0.5.
     submit(&host, &bob, opinion(&bob, 0, &alice.address(), vec![])).await;
     let package = host.close_epoch().await.expect("ok").expect("epoch 1");
     assert_eq!(package.epoch, 1);
     let leg = &package.records[0].legs[0];
     assert!((leg.tau - 0.5).abs() < 1e-12);
-    // Later acts never contribute to an earlier act's maturity: epoch-0
-    // record still reads τ = 0 through the ingest surface.
     let all = host.epochs_since(-1).await.expect("ok");
     assert_eq!(all[0].records[0].legs[0].tau, 0.0);
 }
 
+/// With the epoch target act budget set to 1, the epoch fills at one act
+/// and closes on approve, so each of two submitted acts lands in its own
+/// epoch.
 #[sqlx::test(migrations = "../../migrations")]
 async fn act_budget_caps_the_epoch(pool: PgPool) {
-    // target 1: the epoch fills at one act and closes on approve.
     let host = StandIn::new(
         pool.clone(),
         StandInConfig {
