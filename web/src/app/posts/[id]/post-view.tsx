@@ -27,9 +27,19 @@ import {
 import { appendDeduped } from "@/lib/api/pagination";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { prepareTag } from "@/lib/api/topics-api";
+import { prepareReference, prepareReferenceWithdrawal } from "@/lib/api/references-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { tagChanges, WITHDRAWN_RELEVANCE, type TagDraft } from "@/lib/topics/draft";
 import { TAG_BATCH_CAP } from "@/lib/topics/normalize";
+import { referenceChipEntries, referenceDrafts } from "@/lib/references/claims";
+import {
+  referenceActs,
+  referenceChanges,
+  type ReferenceDraft,
+} from "@/lib/references/draft";
+import { REFERENCE_BATCH_CAP } from "@/lib/references/normalize";
+import { ReferenceChipRow } from "@/lib/ui/reference-chip-row";
+import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
@@ -98,11 +108,20 @@ function tagDrafts(
   }));
 }
 
-/** Parses a `["tags", i, "name"]`-shaped refusal path down to the index. */
-function tagErrorIndex(field: readonly string[] | null): number | null {
-  if (field === null || field.length < 2 || field[0] !== "tags") return null;
+function pathIndex(field: readonly string[] | null, head: string): number | null {
+  if (field === null || field.length < 2 || field[0] !== head) return null;
   const index = Number(field[1]);
   return Number.isInteger(index) ? index : null;
+}
+
+/** Parses a `["tags", i, "name"]`-shaped refusal path down to the index. */
+function tagErrorIndex(field: readonly string[] | null): number | null {
+  return pathIndex(field, "tags");
+}
+
+/** Parses a `["references", i, …]`-shaped refusal path down to the index. */
+function referenceErrorIndex(field: readonly string[] | null): number | null {
+  return pathIndex(field, "references");
 }
 
 /** Which composer on this page a confirmation is standing in front of. */
@@ -147,6 +166,10 @@ export function PostView({
   const [draft, setDraft] = useState("");
   const [draftTags, setDraftTags] = useState<readonly TagDraft[]>([]);
   const [draftTagErrors, setDraftTagErrors] = useState<Readonly<Record<number, string>>>({});
+  const [draftReferences, setDraftReferences] = useState<readonly ReferenceDraft[]>([]);
+  const [draftReferenceErrors, setDraftReferenceErrors] = useState<
+    Readonly<Record<number, string>>
+  >({});
   const [license, setLicense] = useState<License>(PUBLIC_DOMAIN);
   const [submitting, setSubmitting] = useState(false);
   const [refusedMessage, setRefusedMessage] = useState<string | null>(null);
@@ -168,16 +191,25 @@ export function PostView({
     loadedDraft: string;
     loadedTags: readonly TagDraft[];
     tags: readonly TagDraft[];
+    loadedReferences: readonly ReferenceDraft[];
+    references: readonly ReferenceDraft[];
   } | null>(null);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editFailed, setEditFailed] = useState(false);
   const [editRefusedMessage, setEditRefusedMessage] = useState<string | null>(null);
   const [editTagErrors, setEditTagErrors] = useState<Readonly<Record<number, string>>>({});
+  const [editReferenceErrors, setEditReferenceErrors] = useState<
+    Readonly<Record<number, string>>
+  >({});
   // The inline reply — a genesis Review targeting the comment.
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState("");
   const [replyTags, setReplyTags] = useState<readonly TagDraft[]>([]);
   const [replyTagErrors, setReplyTagErrors] = useState<Readonly<Record<number, string>>>({});
+  const [replyReferences, setReplyReferences] = useState<readonly ReferenceDraft[]>([]);
+  const [replyReferenceErrors, setReplyReferenceErrors] = useState<
+    Readonly<Record<number, string>>
+  >({});
   const [replySubmitting, setReplySubmitting] = useState(false);
   const [replyFailed, setReplyFailed] = useState(false);
   const [replyRefusedMessage, setReplyRefusedMessage] = useState<string | null>(null);
@@ -185,6 +217,12 @@ export function PostView({
   // whichever composer on this page raised it.
   const [confirmMultiAction, setConfirmMultiAction] = useConfirmMultiAction();
   const [confirming, setConfirming] = useState<PendingSubmit | null>(null);
+  // An edit's batch is quoted by the server before it is confirmed —
+  // only a prepared withdrawal knows its own cost — so the staged
+  // writes wait here while the reader decides.
+  const [pendingEditWrites, setPendingEditWrites] = useState<
+    readonly StagedWriteView[] | null
+  >(null);
 
   const refresh = useCallback(() => {
     let cancelled = false;
@@ -275,29 +313,48 @@ export function PostView({
   // edit signs the edit record only if the text moved, plus one act per
   // tag change.
   const editChanges = editing === null ? [] : tagChanges(editing.loadedTags, editing.tags);
+  const editReferenceChanges =
+    editing === null ? [] : referenceChanges(editing.loadedReferences, editing.references);
   const editTextChanged = editing !== null && editing.draft !== editing.loadedDraft;
-  const commentActions = 1 + draftTags.length;
-  const replyActions = 1 + replyTags.length;
-  const editActions = (editTextChanged ? 1 : 0) + editChanges.length;
+  const commentActions = 1 + draftTags.length + draftReferences.length;
+  const replyActions = 1 + replyTags.length + replyReferences.length;
+  const editActions =
+    (editTextChanged ? 1 : 0) + editChanges.length + referenceActs(editReferenceChanges);
+  // A withdrawal's cost is a batch only the server can size: a claim
+  // serves the CLIPPED fold, not the raw sums, so `editActions` merely
+  // lower-bounds it. Such an edit therefore prepares before it asks, and
+  // the confirm reports the server's quote. Every other edit keeps
+  // asking first, exactly as it did before references existed.
+  const editWithdraws = editReferenceChanges.some((change) => change.kind === "withdraw");
 
   /** Splits a refusal into per-chip field errors and the general line. */
   const routeRefusal = (
     errors: readonly { message: string; field: readonly string[] | null }[],
-  ): { perTag: Record<number, string>; general: string | null } => {
+  ): {
+    perTag: Record<number, string>;
+    perReference: Record<number, string>;
+    general: string | null;
+  } => {
     const perTag: Record<number, string> = {};
+    const perReference: Record<number, string> = {};
     let general: string | null = null;
     for (const error of errors) {
-      const index = tagErrorIndex(error.field);
-      if (index !== null) perTag[index] = error.message;
+      const tagIndex = tagErrorIndex(error.field);
+      const referenceIndex = referenceErrorIndex(error.field);
+      if (tagIndex !== null) perTag[tagIndex] = error.message;
+      else if (referenceIndex !== null) perReference[referenceIndex] = error.message;
+      // D19: a whole-batch refusal — the balance cannot carry every act
+      // — carries no field path, so it reads as one clear line.
       else general = general ?? error.message;
     }
-    return { perTag, general };
+    return { perTag, perReference, general };
   };
 
   const runComment = async () => {
     setSubmitting(true);
     setRefusedMessage(null);
     setDraftTagErrors({});
+    setDraftReferenceErrors({});
     setSignIncomplete(false);
     setSubmitFailed(false);
     setCommentSigned(false);
@@ -307,16 +364,22 @@ export function PostView({
         content: draft,
         license,
         tags: draftTags,
+        references: draftReferences,
       }),
     );
     if (prepared.kind === "refused") {
       setSubmitting(false);
-      // A batched tag's field error lands at ["tags", i, "name"] and
-      // reads on that exact chip; everything else is the general line.
-      const { perTag, general } = routeRefusal(prepared.errors);
+      // A batched tag's field error lands at ["tags", i, "name"] and a
+      // reference's at ["references", i, …]; each reads on that exact
+      // chip, and everything else is the general line.
+      const { perTag, perReference, general } = routeRefusal(prepared.errors);
       setDraftTagErrors(perTag);
+      setDraftReferenceErrors(perReference);
       setRefusedMessage(
-        general ?? (Object.keys(perTag).length > 0 ? null : "The server refused this write."),
+        general ??
+          (Object.keys(perTag).length + Object.keys(perReference).length > 0
+            ? null
+            : "The server refused this write."),
       );
       return;
     }
@@ -330,6 +393,7 @@ export function PostView({
     if (done) {
       setDraft("");
       setDraftTags([]);
+      setDraftReferences([]);
       setCommentSigned(true);
       // The comment is content from the moment it is signed, so re-read
       // the thread and show it rather than sending the author away to
@@ -364,8 +428,10 @@ export function PostView({
     setEditFailed(false);
     setEditRefusedMessage(null);
     setEditTagErrors({});
+    setEditReferenceErrors({});
     const writes: StagedWriteView[] = [];
     const perTag: Record<number, string> = {};
+    const perReference: Record<number, string> = {};
     let general: string | null = null;
 
     if (editTextChanged) {
@@ -415,15 +481,84 @@ export function PostView({
       }
     }
 
-    if (general !== null || Object.keys(perTag).length > 0) {
+    // One Reference act per added or re-tuned reference; a removal is a
+    // WITHDRAWAL, whose counter-records the server assembles (D11).
+    for (const change of editReferenceChanges) {
+      const prepared = await guard.run(() =>
+        change.kind === "reference"
+          ? prepareReference(client, {
+              artifact: editing.id,
+              target: change.reference.targetId,
+              relevance: change.reference.relevance,
+              support: change.reference.support,
+            })
+          : prepareReferenceWithdrawal(client, {
+              artifact: editing.id,
+              target: change.reference.targetId,
+            }),
+      );
+      if (prepared.kind === "failed") {
+        setEditSubmitting(false);
+        setEditFailed(true);
+        return;
+      }
+      if (prepared.kind === "refused") {
+        const message = prepared.errors[0]?.message ?? "The server refused this write.";
+        const index =
+          change.kind === "reference"
+            ? editing.references.findIndex(
+                (reference) => reference.targetId === change.reference.targetId,
+              )
+            : -1;
+        if (index >= 0) perReference[index] = message;
+        else general = general ?? message;
+      } else {
+        writes.push(...prepared.value);
+      }
+    }
+
+    if (
+      general !== null ||
+      Object.keys(perTag).length > 0 ||
+      Object.keys(perReference).length > 0
+    ) {
       setEditSubmitting(false);
       setEditTagErrors(perTag);
+      setEditReferenceErrors(perReference);
       setEditRefusedMessage(general);
+      return;
+    }
+
+    // The batch is staged and unsigned, so it can now be quoted exactly
+    // — a withdrawal's cost is knowable no earlier. Writes nobody signs
+    // are collected by the server's own GC.
+    if (editWithdraws && writes.length > 1 && confirmMultiAction && pendingEditWrites === null) {
+      setEditSubmitting(false);
+      setPendingEditWrites(writes);
+      setConfirming("edit");
       return;
     }
 
     const done = await signAll(writes);
     setEditSubmitting(false);
+    setPendingEditWrites(null);
+    if (done) {
+      setEditing(null);
+      setCommentSigned(true);
+      refresh();
+    } else {
+      setEditFailed(true);
+    }
+  };
+
+  /** Signs a batch the reader has now seen quoted, without re-staging it. */
+  const signPendingEdit = async () => {
+    const staged = pendingEditWrites;
+    if (staged === null) return;
+    setEditSubmitting(true);
+    const done = await signAll(staged);
+    setEditSubmitting(false);
+    setPendingEditWrites(null);
     if (done) {
       setEditing(null);
       setCommentSigned(true);
@@ -436,7 +571,9 @@ export function PostView({
   const onSubmitEdit = async () => {
     if (editing === null || editSubmitting || editing.draft.trim() === "") return;
     if (editActions === 0) return;
-    if (editActions > 1 && confirmMultiAction) {
+    // An edit staging a withdrawal prepares before it asks, so `runEdit`
+    // raises the confirm itself once the server has quoted the batch.
+    if (!editWithdraws && editActions > 1 && confirmMultiAction) {
       setConfirming("edit");
       return;
     }
@@ -449,20 +586,26 @@ export function PostView({
     setReplyFailed(false);
     setReplyRefusedMessage(null);
     setReplyTagErrors({});
+    setReplyReferenceErrors({});
     const prepared = await guard.run(() =>
       prepareComment(client, {
         target: replyingTo,
         content: replyDraft,
         license,
         tags: replyTags,
+        references: replyReferences,
       }),
     );
     if (prepared.kind === "refused") {
       setReplySubmitting(false);
-      const { perTag, general } = routeRefusal(prepared.errors);
+      const { perTag, perReference, general } = routeRefusal(prepared.errors);
       setReplyTagErrors(perTag);
+      setReplyReferenceErrors(perReference);
       setReplyRefusedMessage(
-        general ?? (Object.keys(perTag).length > 0 ? null : "The server refused this write."),
+        general ??
+          (Object.keys(perTag).length + Object.keys(perReference).length > 0
+            ? null
+            : "The server refused this write."),
       );
       return;
     }
@@ -477,6 +620,7 @@ export function PostView({
       setReplyingTo(null);
       setReplyDraft("");
       setReplyTags([]);
+      setReplyReferences([]);
       setCommentSigned(true);
       refresh();
     } else {
@@ -497,7 +641,11 @@ export function PostView({
   const confirmed = (kind: PendingSubmit) => {
     if (kind === "comment") return { count: commentActions, busy: submitting, run: runComment };
     if (kind === "reply") return { count: replyActions, busy: replySubmitting, run: runReply };
-    return { count: editActions, busy: editSubmitting, run: runEdit };
+    // An edit that has already staged its batch reports the server's
+    // quote and signs what is standing rather than staging it twice.
+    return pendingEditWrites !== null
+      ? { count: pendingEditWrites.length, busy: editSubmitting, run: signPendingEdit }
+      : { count: editActions, busy: editSubmitting, run: runEdit };
   };
 
   // The header rides every branch — a dead end (not found, transport
@@ -609,6 +757,18 @@ export function PostView({
                 cap={null}
                 testIdPrefix="comment-edit"
               />
+              {/* The same section the composer carries — current
+                  references at their real values, each change its own
+                  act, so references are not fields of the edit record
+                  (D14). Removing a chip stages a WITHDRAWAL, not a
+                  deletion. No batch here, so no batch cap. */}
+              <ReferenceEntryField
+                references={editing.references}
+                onChange={(references) => setEditing({ ...editing, references })}
+                fieldErrors={editReferenceErrors}
+                cap={null}
+                testIdPrefix="comment-edit"
+              />
               {editRefusedMessage && (
                 <p
                   role="alert"
@@ -677,6 +837,13 @@ export function PostView({
                 testIdPrefix={`comment-${comment.id}`}
                 revealable
               />
+              {/* The reference row under the body (D16), with the
+                  values toggle this detail surface offers. */}
+              <ReferenceChipRow
+                references={referenceChipEntries(comment.references)}
+                testIdPrefix={`comment-${comment.id}`}
+                revealable
+              />
               {/* The comment carries its own stance control (design.md §6). */}
               <StanceControl
                 target={{ id: comment.id, kind: "comment", label: "this comment" }}
@@ -700,6 +867,18 @@ export function PostView({
                     Reply
                   </Button>
                 )}
+                {/* D20's Reference affordance: the word is Reference,
+                    never "cite". It opens the composer with this
+                    comment already drafted as a chip. */}
+                {phase === "signedIn" && (
+                  <Link
+                    href={`/compose?reference=${comment.id}`}
+                    data-testid={`comment-reference-${comment.id}`}
+                    className={buttonClassName({ variant: "text", size: "sm" })}
+                  >
+                    Reference
+                  </Link>
+                )}
                 {isOwn && (
                   <Button
                     testId={`comment-edit-${comment.id}`}
@@ -711,14 +890,21 @@ export function PostView({
                       // editor stages nothing (F10).
                       const loadedDraft = comment.content.value ?? "";
                       const loaded = tagDrafts(comment.topics);
+                      // A claim CoGra cannot type has no L2 id to name
+                      // it back by, so it is left out of the section —
+                      // never staged, never read as a removal.
+                      const loadedRefs = referenceDrafts(comment.references);
                       setEditing({
                         id: comment.id,
                         draft: loadedDraft,
                         loadedDraft,
                         loadedTags: loaded,
                         tags: loaded,
+                        loadedReferences: loadedRefs,
+                        references: loadedRefs,
                       });
                       setEditTagErrors({});
+                      setEditReferenceErrors({});
                       setEditRefusedMessage(null);
                       setEditFailed(false);
                       setReplyingTo(null);
@@ -749,6 +935,16 @@ export function PostView({
               onChange={setReplyTags}
               fieldErrors={replyTagErrors}
               cap={TAG_BATCH_CAP}
+              testIdPrefix="comment-reply"
+            />
+            {/* Referencing is part of the compose gesture, on a reply as
+                on anything else — one batch on the minting record, so
+                the D7 cap applies. */}
+            <ReferenceEntryField
+              references={replyReferences}
+              onChange={setReplyReferences}
+              fieldErrors={replyReferenceErrors}
+              cap={REFERENCE_BATCH_CAP}
               testIdPrefix="comment-reply"
             />
             {replyRefusedMessage && (
@@ -857,6 +1053,24 @@ export function PostView({
           author changes their tags on the edit screen, where the rest of
           the post is changed. */}
       <TopicChipRow topics={chipEntries(post.topics)} testIdPrefix="post" revealable />
+      {/* Read-only here for everyone, the author included: references
+          are changed on the edit screen, where the rest of the post is
+          changed. The values toggle is this detail surface's (D16). */}
+      <ReferenceChipRow
+        references={referenceChipEntries(post.references)}
+        testIdPrefix="post"
+        revealable
+      />
+      {/* D20's Reference affordance on the post itself. */}
+      {phase === "signedIn" && (
+        <Link
+          href={`/compose?reference=${postId}`}
+          data-testid="post-reference"
+          className={`self-start ${buttonClassName({ variant: "outline", size: "sm" })}`}
+        >
+          Reference
+        </Link>
+      )}
       {/* The post card's stance control, on the detail surface (design.md §6). */}
       <StanceControl target={{ id: postId, kind: "post", label: "this post" }} testIdPrefix="post-stance" />
       <hr className="border-outline-variant" />
@@ -928,6 +1142,16 @@ export function PostView({
             cap={TAG_BATCH_CAP}
             testIdPrefix="comment"
           />
+          {/* The comment box references like any other composer — the
+              same finder, chips, and per-chip sliders, batched onto the
+              minting record under the D7 cap. */}
+          <ReferenceEntryField
+            references={draftReferences}
+            onChange={setDraftReferences}
+            fieldErrors={draftReferenceErrors}
+            cap={REFERENCE_BATCH_CAP}
+            testIdPrefix="comment"
+          />
           <LicenseChooser value={license} onChange={setLicense} testIdPrefix="comment" />
           {refusedMessage && (
             <p role="alert" data-testid="comment-refused" className="text-body-medium text-error">
@@ -965,7 +1189,12 @@ export function PostView({
                 ? "comment-reply"
                 : "comment-edit"
           }
-          onCancel={() => setConfirming(null)}
+          onCancel={() => {
+            setConfirming(null);
+            // Abandoning a staged batch is safe: nothing was signed, and
+            // the server collects writes nobody signs.
+            setPendingEditWrites(null);
+          }}
           onConfirm={(stopAsking) => {
             const proceed = confirmed(confirming).run;
             if (stopAsking) setConfirmMultiAction(false);
