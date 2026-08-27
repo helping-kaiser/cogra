@@ -1943,7 +1943,7 @@ pub struct ReferenceClaim {
 
 /// One thing the reference finder offers as a citation target.
 ///
-/// The pairing mirrors [`ReferenceClaim`] — the typed node for the chip,
+/// The pairing mirrors `ReferenceClaim` — the typed node for the chip,
 /// its raw id beside it — with two deliberate differences, both following
 /// from a candidate being a thing about to be *cited* rather than a
 /// citation already standing.
