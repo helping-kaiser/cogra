@@ -157,18 +157,22 @@ pub fn act_count(planned: &[PlannedReference]) -> usize {
 /// neither, unlike Tag's `c ∈ [0, 1]`. The check is here rather than left
 /// to `params_check` so an out-of-range value surfaces as an actionable
 /// field refusal rather than a formation fault.
+///
+/// The leaf names are the input's own — `relevance` and `support` (D1) —
+/// because a field path a client cannot find in the input it sent is a
+/// refusal it cannot attach to anything.
 fn check(draft: &ReferenceDraft) -> Result<(f64, f64), (&'static str, String)> {
     let relevance = draft.relevance.unwrap_or(DEFAULT_RELEVANCE);
     let support = draft.support.unwrap_or(DEFAULT_SUPPORT);
     if !(-1.0..=1.0).contains(&relevance) {
         return Err((
-            "pDirected",
+            "relevance",
             "reference relevance must lie in [-1, 1]".to_string(),
         ));
     }
     if !(-1.0..=1.0).contains(&support) {
         return Err((
-            "pInterest",
+            "support",
             "reference support must lie in [-1, 1]".to_string(),
         ));
     }
@@ -552,21 +556,24 @@ mod tests {
         );
     }
 
+    /// The refusal names the field the client actually sent, which on
+    /// `ReferenceInput` is `relevance` / `support` (D1) and not the
+    /// census-slot spelling `TagInput` still uses.
     #[test]
-    fn out_of_range_parameters_name_their_own_field() {
+    fn out_of_range_parameters_name_their_own_input_field() {
         let over = ReferenceDraft {
             target: Uuid::nil(),
             relevance: Some(1.5),
             support: None,
         };
-        assert_eq!(check(&over).expect_err("refused").0, "pDirected");
+        assert_eq!(check(&over).expect_err("refused").0, "relevance");
 
         let under = ReferenceDraft {
             target: Uuid::nil(),
             relevance: None,
             support: Some(-1.5),
         };
-        assert_eq!(check(&under).expect_err("refused").0, "pInterest");
+        assert_eq!(check(&under).expect_err("refused").0, "support");
     }
 
     #[test]
