@@ -916,3 +916,215 @@ async fn a_mentions_record_terminal_resolves_to_the_person(pool: PgPool) {
         "the raw identifier is the Profile's"
     );
 }
+
+/// The finder's candidate as the picker renders it: the same union the
+/// reference row draws, plus the id a `ReferenceInput` will name.
+const REFERENCE_CANDIDATES: &str = r#"query($query: String!, $limit: Int) {
+  referenceCandidates(query: $query, limit: $limit) {
+    targetId
+    target {
+      __typename
+      ... on Post { id title { value } }
+      ... on Comment { id }
+      ... on User { id handle }
+      ... on Hashtag { id name { value } }
+    }
+  }
+}"#;
+
+/// A person is findable by the handle as typed — bare, `@`-sigilled, or
+/// in whatever case and padding the field carries. `actor(handle:)` folds
+/// case but rejects the sigil outright, so the finder strips it the way
+/// `hashtag(name:)` strips its own `#`; a picker whose first keystroke is
+/// `@` would otherwise never resolve.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_finder_offers_a_person_by_bare_or_sigilled_handle(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (alice, _) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+
+    for typed in ["alice", "@alice", "  @Alice  "] {
+        let found = rig
+            .gql(
+                Some(&token),
+                REFERENCE_CANDIDATES,
+                json!({ "query": typed }),
+            )
+            .await["referenceCandidates"]
+            .clone();
+        let candidates = found.as_array().expect("candidates");
+        assert_eq!(candidates.len(), 1, "for {typed}: {found}");
+        assert_eq!(found[0]["target"]["__typename"], "User", "for {typed}");
+        assert_eq!(found[0]["target"]["handle"], "alice", "for {typed}");
+        assert_eq!(found[0]["targetId"], json!(alice), "for {typed}");
+    }
+}
+
+/// Every class the citation union carries is findable by its own L2 id,
+/// and the id comes back unchanged — the picker hands the composer
+/// exactly what `prepareReference` takes.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_finder_offers_each_target_class_by_its_id(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (alice, key) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+
+    let post = rig.plain_post(&token, &key, "findable").await;
+    let prepared = rig
+        .gql(
+            Some(&token),
+            PREPARE_COMMENT,
+            json!({ "input": {
+                "target": post,
+                "content": "a reply",
+                "license": { "attribution": 0.0, "provenance": 0.0 },
+            }}),
+        )
+        .await;
+    let comment = prepared["prepareComment"]["node"]
+        .as_str()
+        .expect("comment node")
+        .to_string();
+    rig.land(&token, &key, &prepared["prepareComment"]["writes"])
+        .await;
+
+    let tagged = rig
+        .gql(
+            Some(&token),
+            PREPARE_POST,
+            json!({ "input": {
+                "title": "tagged",
+                "content": "a body",
+                "license": { "attribution": 1.0, "provenance": 0.0 },
+                "tags": [{ "name": "rust" }],
+            }}),
+        )
+        .await;
+    rig.land(&token, &key, &tagged["preparePost"]["writes"])
+        .await;
+    let topic = common::hashtag_uuid("rust").to_string();
+
+    for (query, expected) in [
+        (post.clone(), "Post"),
+        (comment.clone(), "Comment"),
+        (alice.to_string(), "User"),
+        (topic.clone(), "Hashtag"),
+        ("#rust".to_string(), "Hashtag"),
+    ] {
+        let found = rig
+            .gql(
+                Some(&token),
+                REFERENCE_CANDIDATES,
+                json!({ "query": query }),
+            )
+            .await["referenceCandidates"]
+            .clone();
+        assert_eq!(
+            found.as_array().expect("candidates").len(),
+            1,
+            "for {query}: {found}"
+        );
+        assert_eq!(found[0]["target"]["__typename"], expected, "for {query}");
+        if query != "#rust" {
+            assert_eq!(found[0]["targetId"], json!(query), "for {query}");
+        }
+    }
+}
+
+/// A finder runs on every keystroke, so most of what it is handed is a
+/// prefix of something still being typed. None of it may be an error:
+/// an empty list is the answer, whatever the shape of the miss.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_finder_answers_a_miss_with_an_empty_list_never_an_error(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+
+    let unknown = Uuid::new_v4().to_string();
+    for typed in [
+        "",
+        "   ",
+        "@",
+        "nobody",
+        "@nobody",
+        "#",
+        "#never-tagged",
+        "not a handle at all!",
+        "ab",
+        unknown.as_str(),
+    ] {
+        let answer = rig
+            .gql_raw(
+                Some(&token),
+                REFERENCE_CANDIDATES,
+                json!({ "query": typed }),
+            )
+            .await;
+        assert!(
+            answer.get("errors").is_none(),
+            "a miss must not error, for {typed:?}: {answer}"
+        );
+        assert_eq!(
+            answer["data"]["referenceCandidates"],
+            json!([]),
+            "for {typed:?}"
+        );
+    }
+}
+
+/// `limit` carries the list contract the topic surfaces already use:
+/// bounded by it, and over-asking refuses rather than silently clamping.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_finder_bounds_itself_by_the_list_limit(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+
+    let none = rig
+        .gql(
+            Some(&token),
+            REFERENCE_CANDIDATES,
+            json!({ "query": "alice", "limit": 0 }),
+        )
+        .await;
+    assert_eq!(none["referenceCandidates"], json!([]));
+
+    let one = rig
+        .gql(
+            Some(&token),
+            REFERENCE_CANDIDATES,
+            json!({ "query": "alice", "limit": 1 }),
+        )
+        .await;
+    assert_eq!(
+        one["referenceCandidates"].as_array().expect("list").len(),
+        1
+    );
+
+    let refused = rig
+        .gql_raw(
+            Some(&token),
+            REFERENCE_CANDIDATES,
+            json!({ "query": "alice", "limit": 101 }),
+        )
+        .await;
+    assert!(
+        refused.get("errors").is_some(),
+        "over-asking refuses: {refused}"
+    );
+}
+
+/// Reads are public — the shared graph is (api-spec.md) — and the finder
+/// adds no gate of its own: an anonymous picker resolves what an
+/// authenticated one does, with the private fields still authorized on
+/// the types themselves.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_finder_resolves_for_an_anonymous_viewer_too(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (alice, _) = rig.member("alice", "alice@example.test").await;
+
+    let found = rig
+        .gql(None, REFERENCE_CANDIDATES, json!({ "query": "alice" }))
+        .await;
+    assert_eq!(found["referenceCandidates"][0]["targetId"], json!(alice));
+}
