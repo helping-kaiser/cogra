@@ -33,6 +33,7 @@ function postNode(id: string, title: string) {
     moderationStatus: "NORMAL",
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
+    references: [],
   };
 }
 

@@ -318,10 +318,14 @@ export function PostView({
   const editTextChanged = editing !== null && editing.draft !== editing.loadedDraft;
   const commentActions = 1 + draftTags.length + draftReferences.length;
   const replyActions = 1 + replyTags.length + replyReferences.length;
-  // A withdrawal is only lower-bounded here — the server's prepared
-  // batch is the truthful quote, and the confirm reports that instead.
   const editActions =
     (editTextChanged ? 1 : 0) + editChanges.length + referenceActs(editReferenceChanges);
+  // A withdrawal's cost is a batch only the server can size: a claim
+  // serves the CLIPPED fold, not the raw sums, so `editActions` merely
+  // lower-bounds it. Such an edit therefore prepares before it asks, and
+  // the confirm reports the server's quote. Every other edit keeps
+  // asking first, exactly as it did before references existed.
+  const editWithdraws = editReferenceChanges.some((change) => change.kind === "withdraw");
 
   /** Splits a refusal into per-chip field errors and the general line. */
   const routeRefusal = (
@@ -528,7 +532,7 @@ export function PostView({
     // The batch is staged and unsigned, so it can now be quoted exactly
     // — a withdrawal's cost is knowable no earlier. Writes nobody signs
     // are collected by the server's own GC.
-    if (writes.length > 1 && confirmMultiAction && pendingEditWrites === null) {
+    if (editWithdraws && writes.length > 1 && confirmMultiAction && pendingEditWrites === null) {
       setEditSubmitting(false);
       setPendingEditWrites(writes);
       setConfirming("edit");
@@ -564,11 +568,15 @@ export function PostView({
     }
   };
 
-  // The edit prepares before it asks — a withdrawal's batch is not
-  // knowable client-side — so `runEdit` raises the confirm itself.
   const onSubmitEdit = async () => {
     if (editing === null || editSubmitting || editing.draft.trim() === "") return;
     if (editActions === 0) return;
+    // An edit staging a withdrawal prepares before it asks, so `runEdit`
+    // raises the confirm itself once the server has quoted the batch.
+    if (!editWithdraws && editActions > 1 && confirmMultiAction) {
+      setConfirming("edit");
+      return;
+    }
     await runEdit();
   };
 
