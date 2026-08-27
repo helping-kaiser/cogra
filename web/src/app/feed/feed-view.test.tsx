@@ -72,6 +72,7 @@ function post(id: string, title: string, pending = false, topics: ReturnType<typ
     moderationStatus: "NORMAL",
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics,
+    references: [],
   };
 }
 
