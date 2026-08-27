@@ -25,9 +25,14 @@ import {
   type ReplyView,
 } from "@/lib/api/content-api";
 import { appendDeduped } from "@/lib/api/pagination";
+import type { StagedWriteView } from "@/lib/api/writes-api";
+import { prepareTag } from "@/lib/api/topics-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
+import { tagChanges, WITHDRAWN_RELEVANCE, type TagDraft } from "@/lib/topics/draft";
+import { TAG_BATCH_CAP } from "@/lib/topics/normalize";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
+import { useConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { ActorChip } from "@/lib/ui/actor-chip";
 import { Button, buttonClassName } from "@/lib/ui/button";
@@ -35,8 +40,10 @@ import { Card } from "@/lib/ui/card";
 import { LicenseChooser, LicenseTerms } from "@/lib/ui/license-fields";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PendingMarker } from "@/lib/ui/pending-marker";
+import { MultiActionConfirm, SignedActionsIndicator } from "@/lib/ui/signed-actions";
 import { SigningPending } from "@/lib/ui/signing-pending";
 import { StanceControl } from "@/lib/ui/stance-control";
+import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { TopicChipRow, type TopicChipEntry } from "@/lib/ui/topic-chip-row";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
@@ -76,6 +83,31 @@ type ReplyThread = {
 /** Nesting indents up to three levels, then flattens (design.md §6). */
 const MAX_INDENT_DEPTH = 3;
 
+/** A comment's claims as the tag section drafts them. */
+function tagDrafts(
+  topics: readonly {
+    hashtag: { name: { value?: string | null } };
+    relevance: number;
+    confidence: number;
+  }[],
+): readonly TagDraft[] {
+  return topics.map((claim) => ({
+    name: claim.hashtag.name.value ?? "",
+    relevance: claim.relevance,
+    confidence: claim.confidence,
+  }));
+}
+
+/** Parses a `["tags", i, "name"]`-shaped refusal path down to the index. */
+function tagErrorIndex(field: readonly string[] | null): number | null {
+  if (field === null || field.length < 2 || field[0] !== "tags") return null;
+  const index = Number(field[1]);
+  return Number.isInteger(index) ? index : null;
+}
+
+/** Which composer on this page a confirmation is standing in front of. */
+type PendingSubmit = "comment" | "reply" | "edit";
+
 function prefetchedReplies(comment: ThreadComment): {
   items: readonly ThreadComment[];
   endCursor: string | null;
@@ -113,6 +145,8 @@ export function PostView({
   const [transportFault, setTransportFault] = useState<TransportFault | null>(null);
 
   const [draft, setDraft] = useState("");
+  const [draftTags, setDraftTags] = useState<readonly TagDraft[]>([]);
+  const [draftTagErrors, setDraftTagErrors] = useState<Readonly<Record<number, string>>>({});
   const [license, setLicense] = useState<License>(PUBLIC_DOMAIN);
   const [submitting, setSubmitting] = useState(false);
   const [refusedMessage, setRefusedMessage] = useState<string | null>(null);
@@ -124,15 +158,33 @@ export function PostView({
 
   // Reply threads expanded past their prefetched page, keyed by comment.
   const [replyThreads, setReplyThreads] = useState<Record<string, ReplyThread>>({});
-  // The inline comment edit — the affordance renders on own comments only.
-  const [editing, setEditing] = useState<{ id: string; draft: string } | null>(null);
+  // The inline comment edit — the affordance renders on own comments
+  // only. It carries what the comment LOADED with beside what the editor
+  // holds now: the baseline both the tag changes and the "did the text
+  // move at all" question read (F10, the post-edit precedent).
+  const [editing, setEditing] = useState<{
+    id: string;
+    draft: string;
+    loadedDraft: string;
+    loadedTags: readonly TagDraft[];
+    tags: readonly TagDraft[];
+  } | null>(null);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editFailed, setEditFailed] = useState(false);
+  const [editRefusedMessage, setEditRefusedMessage] = useState<string | null>(null);
+  const [editTagErrors, setEditTagErrors] = useState<Readonly<Record<number, string>>>({});
   // The inline reply — a genesis Review targeting the comment.
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState("");
+  const [replyTags, setReplyTags] = useState<readonly TagDraft[]>([]);
+  const [replyTagErrors, setReplyTagErrors] = useState<Readonly<Record<number, string>>>({});
   const [replySubmitting, setReplySubmitting] = useState(false);
   const [replyFailed, setReplyFailed] = useState(false);
+  const [replyRefusedMessage, setReplyRefusedMessage] = useState<string | null>(null);
+  // F4: a submit staging more than one act asks first — one dialog for
+  // whichever composer on this page raised it.
+  const [confirmMultiAction, setConfirmMultiAction] = useConfirmMultiAction();
+  const [confirming, setConfirming] = useState<PendingSubmit | null>(null);
 
   const refresh = useCallback(() => {
     let cancelled = false;
@@ -205,7 +257,12 @@ export function PostView({
     }));
   };
 
-  const signAll = async (writes: readonly Parameters<typeof signer.signStaged>[0][]) => {
+  /**
+   * Signs the WHOLE staged batch, never just its head: a comment that
+   * mints with tags comes back as the record plus one act per tag, and
+   * all of them are this device's to sign.
+   */
+  const signAll = async (writes: readonly StagedWriteView[]): Promise<boolean> => {
     const results = [];
     for (const staged of writes) {
       results.push(await signer.signStaged(staged));
@@ -213,10 +270,34 @@ export function PostView({
     return results.every((result) => result.kind === "done");
   };
 
-  const onSubmitComment = async () => {
-    if (submitting || draft.trim() === "") return;
+  // What pressing each submit right now would sign (F4). A comment or a
+  // reply mints its record and batches one act per drafted topic; an
+  // edit signs the edit record only if the text moved, plus one act per
+  // tag change.
+  const editChanges = editing === null ? [] : tagChanges(editing.loadedTags, editing.tags);
+  const editTextChanged = editing !== null && editing.draft !== editing.loadedDraft;
+  const commentActions = 1 + draftTags.length;
+  const replyActions = 1 + replyTags.length;
+  const editActions = (editTextChanged ? 1 : 0) + editChanges.length;
+
+  /** Splits a refusal into per-chip field errors and the general line. */
+  const routeRefusal = (
+    errors: readonly { message: string; field: readonly string[] | null }[],
+  ): { perTag: Record<number, string>; general: string | null } => {
+    const perTag: Record<number, string> = {};
+    let general: string | null = null;
+    for (const error of errors) {
+      const index = tagErrorIndex(error.field);
+      if (index !== null) perTag[index] = error.message;
+      else general = general ?? error.message;
+    }
+    return { perTag, general };
+  };
+
+  const runComment = async () => {
     setSubmitting(true);
     setRefusedMessage(null);
+    setDraftTagErrors({});
     setSignIncomplete(false);
     setSubmitFailed(false);
     setCommentSigned(false);
@@ -225,11 +306,18 @@ export function PostView({
         target: postId,
         content: draft,
         license,
+        tags: draftTags,
       }),
     );
     if (prepared.kind === "refused") {
       setSubmitting(false);
-      setRefusedMessage(prepared.errors[0]?.message ?? "The server refused this write.");
+      // A batched tag's field error lands at ["tags", i, "name"] and
+      // reads on that exact chip; everything else is the general line.
+      const { perTag, general } = routeRefusal(prepared.errors);
+      setDraftTagErrors(perTag);
+      setRefusedMessage(
+        general ?? (Object.keys(perTag).length > 0 ? null : "The server refused this write."),
+      );
       return;
     }
     if (prepared.kind === "failed") {
@@ -241,6 +329,7 @@ export function PostView({
     setSubmitting(false);
     if (done) {
       setDraft("");
+      setDraftTags([]);
       setCommentSigned(true);
       // The comment is content from the moment it is signed, so re-read
       // the thread and show it rather than sending the author away to
@@ -254,19 +343,86 @@ export function PostView({
     }
   };
 
-  const onSubmitEdit = async () => {
-    if (editing === null || editSubmitting || editing.draft.trim() === "") return;
-    setEditSubmitting(true);
-    setEditFailed(false);
-    const prepared = await guard.run(() =>
-      prepareCommentEdit(client, { id: editing.id, content: editing.draft }),
-    );
-    if (prepared.kind !== "success") {
-      setEditSubmitting(false);
-      setEditFailed(true);
+  const onSubmitComment = async () => {
+    if (submitting || draft.trim() === "") return;
+    if (commentActions > 1 && confirmMultiAction) {
+      setConfirming("comment");
       return;
     }
-    const done = await signAll(prepared.value.writes);
+    await runComment();
+  };
+
+  /**
+   * F10: prepares EVERYTHING before signing anything — a refusal on the
+   * third tag must not leave the first two signed. The edit record is
+   * staged only when the text actually moved (post-edit precedent);
+   * staged writes nobody signs are collected by the server's own GC.
+   */
+  const runEdit = async () => {
+    if (editing === null) return;
+    setEditSubmitting(true);
+    setEditFailed(false);
+    setEditRefusedMessage(null);
+    setEditTagErrors({});
+    const writes: StagedWriteView[] = [];
+    const perTag: Record<number, string> = {};
+    let general: string | null = null;
+
+    if (editTextChanged) {
+      const prepared = await guard.run(() =>
+        prepareCommentEdit(client, { id: editing.id, content: editing.draft }),
+      );
+      if (prepared.kind === "failed") {
+        setEditSubmitting(false);
+        setEditFailed(true);
+        return;
+      }
+      if (prepared.kind === "refused") {
+        general = prepared.errors[0]?.message ?? "The server refused this write.";
+      } else {
+        writes.push(...prepared.value.writes);
+      }
+    }
+
+    for (const change of editChanges) {
+      const prepared = await guard.run(() =>
+        prepareTag(client, {
+          target: editing.id,
+          name: change.kind === "tag" ? change.tag.name : change.name,
+          // Withdrawing is a Tag act at relevance 0 (hashtag.md §4).
+          relevance: change.kind === "tag" ? change.tag.relevance : WITHDRAWN_RELEVANCE,
+          confidence: change.kind === "tag" ? change.tag.confidence : undefined,
+        }),
+      );
+      if (prepared.kind === "failed") {
+        setEditSubmitting(false);
+        setEditFailed(true);
+        return;
+      }
+      if (prepared.kind === "refused") {
+        // A PRE-STAGING refusal is a field error, never the signing line
+        // (F2). An added tag carries it on its own chip; a withdrawal has
+        // no chip left to carry it, so it reads on the general line.
+        const message = prepared.errors[0]?.message ?? "The server refused this write.";
+        const index =
+          change.kind === "tag"
+            ? editing.tags.findIndex((tag) => tag.name === change.tag.name)
+            : -1;
+        if (index >= 0) perTag[index] = message;
+        else general = general ?? message;
+      } else {
+        writes.push(...prepared.value);
+      }
+    }
+
+    if (general !== null || Object.keys(perTag).length > 0) {
+      setEditSubmitting(false);
+      setEditTagErrors(perTag);
+      setEditRefusedMessage(general);
+      return;
+    }
+
+    const done = await signAll(writes);
     setEditSubmitting(false);
     if (done) {
       setEditing(null);
@@ -277,18 +433,40 @@ export function PostView({
     }
   };
 
-  const onSubmitReply = async () => {
-    if (replyingTo === null || replySubmitting || replyDraft.trim() === "") return;
+  const onSubmitEdit = async () => {
+    if (editing === null || editSubmitting || editing.draft.trim() === "") return;
+    if (editActions === 0) return;
+    if (editActions > 1 && confirmMultiAction) {
+      setConfirming("edit");
+      return;
+    }
+    await runEdit();
+  };
+
+  const runReply = async () => {
+    if (replyingTo === null) return;
     setReplySubmitting(true);
     setReplyFailed(false);
+    setReplyRefusedMessage(null);
+    setReplyTagErrors({});
     const prepared = await guard.run(() =>
       prepareComment(client, {
         target: replyingTo,
         content: replyDraft,
         license,
+        tags: replyTags,
       }),
     );
-    if (prepared.kind !== "success") {
+    if (prepared.kind === "refused") {
+      setReplySubmitting(false);
+      const { perTag, general } = routeRefusal(prepared.errors);
+      setReplyTagErrors(perTag);
+      setReplyRefusedMessage(
+        general ?? (Object.keys(perTag).length > 0 ? null : "The server refused this write."),
+      );
+      return;
+    }
+    if (prepared.kind === "failed") {
       setReplySubmitting(false);
       setReplyFailed(true);
       return;
@@ -298,11 +476,28 @@ export function PostView({
     if (done) {
       setReplyingTo(null);
       setReplyDraft("");
+      setReplyTags([]);
       setCommentSigned(true);
       refresh();
     } else {
       setReplyFailed(true);
     }
+  };
+
+  const onSubmitReply = async () => {
+    if (replyingTo === null || replySubmitting || replyDraft.trim() === "") return;
+    if (replyActions > 1 && confirmMultiAction) {
+      setConfirming("reply");
+      return;
+    }
+    await runReply();
+  };
+
+  /** The dialog's own numbers and the run it stands in front of. */
+  const confirmed = (kind: PendingSubmit) => {
+    if (kind === "comment") return { count: commentActions, busy: submitting, run: runComment };
+    if (kind === "reply") return { count: replyActions, busy: replySubmitting, run: runReply };
+    return { count: editActions, busy: editSubmitting, run: runEdit };
   };
 
   // The header rides every branch — a dead end (not found, transport
@@ -395,23 +590,51 @@ export function PostView({
             <div className="flex flex-col gap-2">
               <textarea
                 value={editing.draft}
-                onChange={(event) => setEditing({ id: comment.id, draft: event.target.value })}
+                onChange={(event) =>
+                  setEditing({ ...editing, draft: event.target.value })
+                }
                 rows={3}
                 aria-label="Edit comment"
                 data-testid="comment-edit-input"
                 className="rounded-extra-small border border-outline p-2"
               />
+              {/* F10: the same section the post edit carries — current
+                  claims at their real values, each change its own act, so
+                  the tags are not fields of the edit record (D14). No
+                  batch here, so no batch cap. */}
+              <TagEntryField
+                tags={editing.tags}
+                onChange={(tags) => setEditing({ ...editing, tags })}
+                fieldErrors={editTagErrors}
+                cap={null}
+                testIdPrefix="comment-edit"
+              />
+              {editRefusedMessage && (
+                <p
+                  role="alert"
+                  data-testid="comment-edit-refused"
+                  className="text-body-small text-error"
+                >
+                  {editRefusedMessage}
+                </p>
+              )}
               {editFailed && (
                 <p role="alert" data-testid="comment-edit-failed" className="text-body-small text-error">
                   That didn&apos;t save. Try again.
                 </p>
               )}
+              <SignedActionsIndicator
+                count={editActions}
+                testId="comment-edit-signed-actions"
+              />
               <div className="flex gap-2">
                 <Button
                   testId="comment-edit-save"
                   size="sm"
                   onClick={() => void onSubmitEdit()}
-                  disabled={editSubmitting || editing.draft.trim() === ""}
+                  disabled={
+                    editSubmitting || editing.draft.trim() === "" || editActions === 0
+                  }
                 >
                   Save
                 </Button>
@@ -468,6 +691,9 @@ export function PostView({
                     onClick={() => {
                       setReplyingTo(comment.id);
                       setReplyDraft("");
+                      setReplyTags([]);
+                      setReplyTagErrors({});
+                      setReplyRefusedMessage(null);
                       setEditing(null);
                     }}
                   >
@@ -480,7 +706,21 @@ export function PostView({
                     variant="text"
                     size="sm"
                     onClick={() => {
-                      setEditing({ id: comment.id, draft: comment.content.value ?? "" });
+                      // The editor opens on what the comment actually
+                      // carries — text and claims alike — so an untouched
+                      // editor stages nothing (F10).
+                      const loadedDraft = comment.content.value ?? "";
+                      const loaded = tagDrafts(comment.topics);
+                      setEditing({
+                        id: comment.id,
+                        draft: loadedDraft,
+                        loadedDraft,
+                        loadedTags: loaded,
+                        tags: loaded,
+                      });
+                      setEditTagErrors({});
+                      setEditRefusedMessage(null);
+                      setEditFailed(false);
                       setReplyingTo(null);
                     }}
                   >
@@ -501,11 +741,34 @@ export function PostView({
               data-testid="comment-reply-input"
               className="rounded-extra-small border border-outline p-2"
             />
+            {/* Tagging is part of the compose gesture, on a reply as on
+                anything else (F9) — one batch on the minting record, so
+                the batch cap applies. */}
+            <TagEntryField
+              tags={replyTags}
+              onChange={setReplyTags}
+              fieldErrors={replyTagErrors}
+              cap={TAG_BATCH_CAP}
+              testIdPrefix="comment-reply"
+            />
+            {replyRefusedMessage && (
+              <p
+                role="alert"
+                data-testid="comment-reply-refused"
+                className="text-body-small text-error"
+              >
+                {replyRefusedMessage}
+              </p>
+            )}
             {replyFailed && (
               <p role="alert" data-testid="comment-reply-failed" className="text-body-small text-error">
                 That didn&apos;t send. Try again.
               </p>
             )}
+            <SignedActionsIndicator
+              count={replyActions}
+              testId="comment-reply-signed-actions"
+            />
             <div className="flex gap-2">
               <Button
                 testId="comment-reply-submit"
@@ -655,6 +918,16 @@ export function PostView({
             rows={3}
             className="rounded-extra-small border border-outline p-2"
           />
+          {/* F9: the comment compose box tags like any other composer —
+              the same gated entry, chips, and per-chip sliders, batched
+              onto the minting record under the batch cap. */}
+          <TagEntryField
+            tags={draftTags}
+            onChange={setDraftTags}
+            fieldErrors={draftTagErrors}
+            cap={TAG_BATCH_CAP}
+            testIdPrefix="comment"
+          />
           <LicenseChooser value={license} onChange={setLicense} testIdPrefix="comment" />
           {refusedMessage && (
             <p role="alert" data-testid="comment-refused" className="text-body-medium text-error">
@@ -670,6 +943,8 @@ export function PostView({
               Signed — it&apos;s in the thread now, still settling.
             </p>
           )}
+          {/* The cost, beside the control that pays it (F4). */}
+          <SignedActionsIndicator count={commentActions} testId="comment-signed-actions" />
           <Button
             testId="comment-submit"
             onClick={() => void onSubmitComment()}
@@ -678,6 +953,26 @@ export function PostView({
             Sign comment
           </Button>
         </div>
+      )}
+      {confirming !== null && (
+        <MultiActionConfirm
+          count={confirmed(confirming).count}
+          busy={confirmed(confirming).busy}
+          testIdPrefix={
+            confirming === "comment"
+              ? "comment"
+              : confirming === "reply"
+                ? "comment-reply"
+                : "comment-edit"
+          }
+          onCancel={() => setConfirming(null)}
+          onConfirm={(stopAsking) => {
+            const proceed = confirmed(confirming).run;
+            if (stopAsking) setConfirmMultiAction(false);
+            setConfirming(null);
+            void proceed();
+          }}
+        />
       )}
     </main>
   );
