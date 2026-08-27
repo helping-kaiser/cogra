@@ -1,0 +1,73 @@
+{
+  "artboards": [
+    { "file": "Theme.dc.html", "title": "Canvas theme", "x": 1440, "y": 0, "w": 300, "h": 180, "is_interactive": true },
+
+    { "file": "Main.dc.html", "title": "Feed · from @mira's view", "x": 0, "y": 0, "w": 390, "h": 844 },
+    { "file": "FeedBare.dc.html", "title": "Feed · bare arrival", "x": 480, "y": 0, "w": 390, "h": 844 },
+    { "file": "InviteEntry.dc.html", "title": "Enter your invite", "x": 960, "y": 0, "w": 390, "h": 844 },
+
+    { "file": "Join.dc.html", "title": "Join · @mira vouches", "x": 0, "y": 1060, "w": 390, "h": 844 },
+    { "file": "JoinInvalid.dc.html", "title": "Join · unusable link", "x": 480, "y": 1060, "w": 390, "h": 844 },
+    { "file": "Verified.dc.html", "title": "Email verified", "x": 960, "y": 1060, "w": 390, "h": 844 },
+
+    { "file": "KeyCeremony.dc.html", "title": "Your key", "x": 0, "y": 2120, "w": 390, "h": 844 },
+    { "file": "KeyConfirm.dc.html", "title": "Ready to record?", "x": 480, "y": 2120, "w": 390, "h": 844 },
+    { "file": "RecoveryCode.dc.html", "title": "Recovery code", "x": 960, "y": 2120, "w": 390, "h": 844 },
+    { "file": "KeyDecline.dc.html", "title": "Decline backup", "x": 1440, "y": 2120, "w": 390, "h": 844 },
+
+    { "file": "ApplicantFeed.dc.html", "title": "Applicant · first steps", "x": 0, "y": 3180, "w": 390, "h": 844 },
+    { "file": "ApplicantWaiting.dc.html", "title": "Applicant · waiting", "x": 480, "y": 3180, "w": 390, "h": 844 },
+    { "file": "VouchBack.dc.html", "title": "Landed · vouch back", "x": 960, "y": 3180, "w": 390, "h": 844 },
+    { "file": "VouchBackPad.dc.html", "title": "First vouch · the pad", "x": 1440, "y": 3180, "w": 390, "h": 844 },
+
+    { "file": "SignIn.dc.html", "title": "Sign in", "x": 0, "y": 4240, "w": 390, "h": 844 },
+    { "file": "Reset.dc.html", "title": "Reset password", "x": 480, "y": 4240, "w": 390, "h": 844 },
+    { "file": "Restore.dc.html", "title": "Restore your key", "x": 960, "y": 4240, "w": 390, "h": 844 },
+    { "file": "KeyElsewhere.dc.html", "title": "Key elsewhere", "x": 1440, "y": 4240, "w": 390, "h": 844 }
+  ],
+  "annotations": [
+    {
+      "id": "canonical",
+      "x": 0,
+      "y": -240,
+      "w": 560,
+      "text": "CANONICAL — the decided CoGra app. Each row is a section; this canvas grows as sections are decided. Options and ideation live on standalone canvases ('CoGra entry' holds this section's three directions).\n\nSection ENTRY, decided 2026-08-27: the landing is the live public feed (Open door) with a borrowed-view band; every ceremonial step is a full-focus screen. People and photos are mock; @mira is the inviter, @noa stands in for the genesis moderator.\n\nTheme: use the 'Canvas theme' board to the right — one tap themes every screen. A screen's own chip can pin light or dark; 'auto' follows your system."
+    },
+    {
+      "id": "sec-arrive",
+      "x": -340,
+      "y": 0,
+      "w": 290,
+      "text": "ENTRY · Arrive & browse\n\nA guest feed is ranked from a borrowed vantage point: an invite link carries its inviter's view, a bare arrival borrows the genesis moderator's. The band names the borrowed view and carries the one join entry. The APK line rides the collapsing top (dev phase; a store link later)."
+    },
+    {
+      "id": "sec-join",
+      "x": -340,
+      "y": 1060,
+      "w": 290,
+      "text": "ENTRY · Join\n\nInvite entry, the vouch screen (the inviter's face leads), the unusable-link state, and the landing page of the verification mail. Handle 3–30 chars a–z 0–9 _, password 12+, both checked at the form."
+    },
+    {
+      "id": "sec-key",
+      "x": -340,
+      "y": 2120,
+      "w": 290,
+      "text": "ENTRY · Your key\n\nCreated on this device, never held by CoGra. 'Create my recovery code' first opens the think-twice dialog — Cancel falls back to Your key, 'Show my code' commits. The code screen is a TRAP: no back arrow, the only way out is the code typed or pasted back ('I've written it down'). Copy stays — pasting into a password manager is a legitimate keeping. Declining backup is a destructive dialog whose SAFE action is filled."
+    },
+    {
+      "id": "sec-applicant",
+      "x": -340,
+      "y": 3180,
+      "w": 290,
+      "text": "ENTRY · Applicant days\n\nSame shell as a member, application riding as cards: verify + key first, then waiting on the inviter, then the landing moment. The first vouch opens the STANCE PAD (not sliders), preloaded at +0.10 / +0.10, resting 16px above the bottom bar. Onboarding is per-control and the pad is the ONLY control on these screens that gets first-time explainers: what it is for, how it opens (hold a face; a plain tap signs +0.10 / +0.10), that nothing signs until Set, and that the input can be swapped in settings. Acting is gated but visible (compose at 38%). The borrowed view persists until this first stance."
+    },
+    {
+      "id": "sec-signin",
+      "x": -340,
+      "y": 4240,
+      "w": 290,
+      "text": "ENTRY · Sign in & restore\n\nSign in (with the APK line), password reset (no account enumeration; reset revokes every session), restoring the key, and the key-elsewhere banner. 'Restore your key' and 'Key elsewhere' carry a wording tweak: browser ('on this browser') vs app ('in this app') — the Android app says app, the web says browser. Login restores the service session; only the recovery code restores the key."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}
