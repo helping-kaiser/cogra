@@ -7,3 +7,8 @@
 
 # Claude Code local permission settings — per-machine, never committed
 .claude/settings.local.json
+
+# Design-canvas build artifacts — regenerable; the live canvases are the published Artifacts
+design/_build/node_modules/
+design/designs/entry/cogra-entry.html
+design/designs/canonical/cogra.html

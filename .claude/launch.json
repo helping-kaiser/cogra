@@ -1,0 +1,41 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "design-root",
+      "runtimeExecutable": "wsl",
+      "runtimeArgs": [
+        "-d",
+        "claude-cogra",
+        "--cd",
+        "C:\\Users\\peerp\\dev\\cogra_design\\design",
+        "--",
+        "python3",
+        "-m",
+        "http.server",
+        "8124",
+        "--bind",
+        "127.0.0.1"
+      ],
+      "port": 8124
+    },
+    {
+      "name": "canvas-static",
+      "runtimeExecutable": "wsl",
+      "runtimeArgs": [
+        "-d",
+        "claude-cogra",
+        "--cd",
+        "C:\\Users\\peerp\\dev\\cogra_design\\design\\designs\\canonical",
+        "--",
+        "python3",
+        "-m",
+        "http.server",
+        "8123",
+        "--bind",
+        "127.0.0.1"
+      ],
+      "port": 8123
+    }
+  ]
+}
