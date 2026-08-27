@@ -207,10 +207,8 @@ fun ComposePostScreen(
             // section stages its own Tag acts, which ride the same
             // submit and the same signing pass.
             TopicEntry(
-                tagInput = state.tagInput,
-                tags = state.tags,
-                capReached = state.tagCapReached,
-                tagBeingTuned = state.tagBeingTuned,
+                section = state.tagSection,
+                testTagPrefix = "compose",
                 onTagInputChange = onTagInputChange,
                 onAddTag = onAddTag,
                 onRemoveTag = onRemoveTag,
@@ -248,17 +246,10 @@ fun ComposePostScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(
-                    text = pluralStringResource(
-                        R.plurals.content_signed_actions,
-                        state.signedActionCount,
-                        state.signedActionCount,
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag("compose_signed_actions"),
+                SignedActionsLine(
+                    count = state.signedActionCount,
+                    testTag = "compose_signed_actions",
+                    modifier = Modifier.weight(1f),
                 )
                 Button(
                     onClick = onSubmit,
@@ -277,10 +268,30 @@ fun ComposePostScreen(
     if (state.confirmPending) {
         MultiActionConfirm(
             count = state.signedActionCount,
+            testTagPrefix = "compose",
             onConfirm = onConfirmSubmit,
             onDismiss = onDismissConfirm,
         )
     }
+}
+
+/**
+ * What signing this will cost, beside the button that does it: every
+ * record in the batch is its own priced act, so the count is the thing
+ * to read BEFORE signing (F4). Live, so it moves as the author types.
+ */
+@Composable
+internal fun SignedActionsLine(
+    count: Int,
+    testTag: String,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = pluralStringResource(R.plurals.content_signed_actions, count, count),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier.testTag(testTag),
+    )
 }
 
 /**
@@ -289,21 +300,22 @@ fun ComposePostScreen(
  * which `AlertDialog` does for us (F7).
  */
 @Composable
-private fun MultiActionConfirm(
+internal fun MultiActionConfirm(
     count: Int,
+    testTagPrefix: String,
     onConfirm: (Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var dontAskAgain by rememberSaveable { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        modifier = Modifier.testTag("compose_confirm"),
+        modifier = Modifier.testTag("${testTagPrefix}_confirm"),
         title = { Text(stringResource(R.string.content_confirm_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = pluralStringResource(R.plurals.content_confirm_body, count, count),
-                    modifier = Modifier.testTag("compose_confirm_body"),
+                    modifier = Modifier.testTag("${testTagPrefix}_confirm_body"),
                 )
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -315,7 +327,7 @@ private fun MultiActionConfirm(
                             role = Role.Checkbox,
                             onValueChange = { dontAskAgain = it },
                         )
-                        .testTag("compose_confirm_dont_ask"),
+                        .testTag("${testTagPrefix}_confirm_dont_ask"),
                 ) {
                     Checkbox(checked = dontAskAgain, onCheckedChange = null)
                     Text(
@@ -328,13 +340,16 @@ private fun MultiActionConfirm(
         confirmButton = {
             TextButton(
                 onClick = { onConfirm(dontAskAgain) },
-                modifier = Modifier.testTag("compose_confirm_proceed"),
+                modifier = Modifier.testTag("${testTagPrefix}_confirm_proceed"),
             ) {
                 Text(stringResource(R.string.content_confirm_proceed))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss, modifier = Modifier.testTag("compose_confirm_cancel")) {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.testTag("${testTagPrefix}_confirm_cancel"),
+            ) {
                 Text(stringResource(R.string.content_confirm_cancel))
             }
         },
@@ -351,10 +366,8 @@ private fun MultiActionConfirm(
  */
 @Composable
 internal fun TopicEntry(
-    tagInput: String,
-    tags: List<TagRow>,
-    capReached: Boolean,
-    tagBeingTuned: String?,
+    section: TagSectionState,
+    testTagPrefix: String,
     onTagInputChange: (String) -> Unit,
     onAddTag: () -> Unit,
     onRemoveTag: (String) -> Unit,
@@ -362,40 +375,45 @@ internal fun TopicEntry(
     onDoneTuningTag: () -> Unit,
     onTagRelevanceChange: (String, Double) -> Unit,
     onTagConfidenceChange: (String, Double) -> Unit,
+    /** The comment surfaces sit inside a card; the heading would only repeat. */
+    showHeading: Boolean = true,
 ) {
+    val tagInput = section.input
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            stringResource(R.string.content_topics_heading),
-            style = MaterialTheme.typography.titleSmall,
-        )
-        if (tags.isNotEmpty()) {
+        if (showHeading) {
+            Text(
+                stringResource(R.string.content_topics_heading),
+                style = MaterialTheme.typography.titleSmall,
+            )
+        }
+        if (section.tags.isNotEmpty()) {
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.testTag("compose_tags"),
+                modifier = Modifier.testTag("${testTagPrefix}_tags"),
             ) {
-                tags.forEach { row ->
+                section.tags.forEach { row ->
                     TopicChip(
                         name = row.name,
                         onClick = { onTuneTag(row.name) },
                         onRemove = { onRemoveTag(row.name) },
-                        testTag = "compose_tag_${row.name}",
+                        testTag = "${testTagPrefix}_tag_${row.name}",
                     )
                 }
             }
             // Verbatim, on the chip the server named (F2).
-            tags.forEach { row ->
+            section.tags.forEach { row ->
                 row.error?.let { message ->
-                    ErrorLine(message, "compose_tag_error_${row.name}")
+                    ErrorLine(message, "${testTagPrefix}_tag_error_${row.name}")
                 }
             }
         }
-        if (capReached) {
+        if (section.capReached) {
             Text(
                 stringResource(R.string.content_topics_cap_reached, MAX_TAGS),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.testTag("compose_tags_cap"),
+                modifier = Modifier.testTag("${testTagPrefix}_tags_cap"),
             )
         } else {
             val problem = tagNameProblem(tagInput)
@@ -412,7 +430,7 @@ internal fun TopicEntry(
                     isError = problem != null,
                     modifier = Modifier
                         .weight(1f)
-                        .testTag("compose_tag_input"),
+                        .testTag("${testTagPrefix}_tag_input"),
                 )
                 // The gate is UX, not validation — the server stays the
                 // authority — but a name the substrate cannot carry
@@ -420,26 +438,27 @@ internal fun TopicEntry(
                 TextButton(
                     onClick = onAddTag,
                     enabled = isAddableTagName(tagInput),
-                    modifier = Modifier.testTag("compose_tag_add"),
+                    modifier = Modifier.testTag("${testTagPrefix}_tag_add"),
                 ) {
                     Text(stringResource(R.string.content_topics_add))
                 }
             }
             if (problem != null) {
-                ErrorLine(problem.message(), "compose_tag_illegal")
+                ErrorLine(problem.message(), "${testTagPrefix}_tag_illegal")
             } else if (tagInput.isNotBlank()) {
                 Text(
                     stringResource(R.string.content_topics_preview, canonicalTagName(tagInput)),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.testTag("compose_tag_preview"),
+                    modifier = Modifier.testTag("${testTagPrefix}_tag_preview"),
                 )
             }
         }
     }
-    tags.firstOrNull { it.name == tagBeingTuned }?.let { row ->
+    section.tags.firstOrNull { it.name == section.tuning }?.let { row ->
         TagParametersDialog(
             row = row,
+            testTagPrefix = testTagPrefix,
             onRelevanceChange = { onTagRelevanceChange(row.name, it) },
             onConfidenceChange = { onTagConfidenceChange(row.name, it) },
             onDone = onDoneTuningTag,
@@ -464,13 +483,14 @@ private fun TagNameProblem.message(): String = stringResource(
 @Composable
 private fun TagParametersDialog(
     row: TagRow,
+    testTagPrefix: String,
     onRelevanceChange: (Double) -> Unit,
     onConfidenceChange: (Double) -> Unit,
     onDone: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDone,
-        modifier = Modifier.testTag("compose_tag_params"),
+        modifier = Modifier.testTag("${testTagPrefix}_tag_params"),
         title = { Text("#${row.name}") },
         text = {
             TagParameterSliders(
@@ -478,11 +498,14 @@ private fun TagParametersDialog(
                 confidence = row.confidence,
                 onRelevanceChange = onRelevanceChange,
                 onConfidenceChange = onConfidenceChange,
-                testTagPrefix = "compose_tag_params",
+                testTagPrefix = "${testTagPrefix}_tag_params",
             )
         },
         confirmButton = {
-            TextButton(onClick = onDone, modifier = Modifier.testTag("compose_tag_params_done")) {
+            TextButton(
+                onClick = onDone,
+                modifier = Modifier.testTag("${testTagPrefix}_tag_params_done"),
+            ) {
                 Text(stringResource(R.string.content_topics_params_done))
             }
         },
