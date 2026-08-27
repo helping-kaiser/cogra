@@ -11,6 +11,7 @@ pub mod content;
 pub mod ingest;
 pub mod l1;
 pub mod mailer;
+pub mod nodes;
 pub mod onboarding;
 pub mod prepare;
 pub mod profile;
