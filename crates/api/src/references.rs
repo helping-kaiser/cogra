@@ -1,0 +1,619 @@
+//! ´mod:module:references´
+//!
+//! Citations — the Reference act (edges.md §3; layer1-interface.md §9.6): a
+//! hyper-edge Actor → citing artifact → cited target, one priced act per
+//! citation, staged either inside a content-creation batch or on its own.
+//!
+//! One family covers all three gestures — quoting, embedding, mentioning —
+//! and the target's node class is the whole distinction (D2): a Reference
+//! whose target is a Profile *is* a mention. Nothing is minted; both
+//! endpoints pre-exist.
+//!
+//! # Which slot carries what
+//!
+//! Reference is Review with its legs transposed, so the census row reads
+//! `A: p_d = f, p_i = e` — and since the A-leg renders the act tuple
+//! verbatim (`census::leg_params`), **the act tuple is (effort,
+//! enthusiasm)**. This inverts the repo's general reading, where `p_d` is
+//! the valence slot: on a Reference the valence-shaped quantity sits in
+//! `p_i`. It is the single easiest thing in this slice to get backwards.
+//!
+//! | census name | act slot | user-facing label (D1) | meaning |
+//! |---|---|---|---|
+//! | effort `f`     | `p_d` | relevance | how load-bearing the cited thing is here |
+//! | enthusiasm `e` | `p_i` | support   | endorsing vs refuting |
+//!
+//! "Relevance" lands in `p_d` for both Tag and Reference, which is why the
+//! word carries over from the 2.3 sliders unchanged. The gesture builder
+//! writes the act tuple and never a leg rendering — the transposition is
+//! the census's, and duplicating it would double-apply it.
+//!
+//! Both parameters span `[−1, 1]` (unlike Tag's confidence), so withdrawal
+//! is *netted* rather than declared: an un-reference is the severance
+//! shape, counter-records until the bundle reaches `(0,0)` (D11).
+//!
+//! Everything a client can get wrong is refused *before* anything is
+//! staged, as a field-level `userError`: a malformed batch must not leave
+//! half its acts in flight (api-spec.md "Conventions").
+
+use common::l1::census::Family;
+use common::l1::identifier::{ActId, NodeId};
+use postgres_store::references::ReferenceView;
+use postgres_store::{PgPool, auth as store, content as content_store, references as store_refs};
+use uuid::Uuid;
+
+use crate::l1::L1Boundary;
+use crate::nodes::{self, NodeError};
+use crate::prepare::{self, Gesture, PrepareError, Target};
+
+/// Citations per creation batch (D7). Each is its own priced act, so a
+/// maximal creation batch is 1 minting record + 10 tags + 10 references =
+/// 21 acts through one prepare: θ prices the author's cost, but not the
+/// prepare-side work an unbounded batch demands of the server.
+pub const MAX_REFERENCES_PER_BATCH: usize = 10;
+
+/// Default relevance — effort `f`, the `p_d` slot (D3).
+///
+/// Effort is not Tag's confidence: it is signed, spans `[−1, 1]`, and
+/// multiplies the act's coefficient `√|e·f|`, so the low-defaults policy
+/// applies to it as it does to any stance-shaped quantity.
+pub const DEFAULT_RELEVANCE: f64 = 0.1;
+
+/// Default support — enthusiasm `e`, the `p_i` slot (D3).
+///
+/// Strictly positive on both axes by default, which means **a default
+/// mention vouches** — weakly, at coefficient `√0.01 = 0.1`. Defaulting
+/// effort to 0 instead would make the default gesture contribute to no
+/// standing entry and reach its target through no channel at all, i.e. a
+/// decorative act.
+pub const DEFAULT_SUPPORT: f64 = 0.1;
+
+/// A field-level refusal, carrying the path into the input that names the
+/// offender (api-spec.md "Conventions" — `userErrors[].field`).
+#[derive(Debug, thiserror::Error)]
+#[error("{message}")]
+pub struct ReferenceError {
+    pub path: Vec<String>,
+    pub message: String,
+}
+
+impl ReferenceError {
+    fn at(path: Vec<String>, message: impl Into<String>) -> Self {
+        Self {
+            path,
+            message: message.into(),
+        }
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum ReferencesError {
+    #[error(transparent)]
+    BadInput(#[from] ReferenceError),
+    #[error(transparent)]
+    Prepare(#[from] PrepareError),
+    #[error(transparent)]
+    Storage(#[from] sqlx::Error),
+    #[error("internal: {0}")]
+    Internal(String),
+}
+
+impl From<NodeError> for ReferencesError {
+    fn from(e: NodeError) -> Self {
+        match e {
+            NodeError::Storage(e) => Self::Storage(e),
+            NodeError::Internal(m) => Self::Internal(m),
+        }
+    }
+}
+
+impl From<store_refs::ReferencesError> for ReferencesError {
+    fn from(e: store_refs::ReferencesError) -> Self {
+        match e {
+            store_refs::ReferencesError::Storage(e) => Self::Storage(e),
+        }
+    }
+}
+
+/// One citation as the wire carries it: the target's L2 id plus the
+/// optional parameter pair.
+#[derive(Debug, Clone)]
+pub struct ReferenceDraft {
+    pub target: Uuid,
+    /// Effort `f` — the `p_d` slot. See the module header.
+    pub relevance: Option<f64>,
+    /// Enthusiasm `e` — the `p_i` slot.
+    pub support: Option<f64>,
+}
+
+/// A checked citation: the resolved target node and the act tuple that
+/// will be written verbatim.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlannedReference {
+    /// The target as the client named it, kept so a refusal can quote it.
+    pub target_id: Uuid,
+    pub target: NodeId,
+    /// Effort `f` — written to `p_d`.
+    pub relevance: f64,
+    /// Enthusiasm `e` — written to `p_i`.
+    pub support: f64,
+}
+
+/// The number of priced acts a planned batch stages — one θ-debit per
+/// citation (api-spec.md "Content authoring").
+///
+/// D19's cumulative pre-check prices the whole creation batch — the
+/// minting record plus its tags plus its references — before staging any
+/// act, so the batch either goes through entirely or not at all. This is
+/// the reference half of that count.
+pub fn act_count(planned: &[PlannedReference]) -> usize {
+    planned.len()
+}
+
+/// Range-checks one citation's parameters, returning the offending leaf
+/// field on refusal.
+///
+/// Both parameters span the census's whole `[−1, 1]` — Reference narrows
+/// neither, unlike Tag's `c ∈ [0, 1]`. The check is here rather than left
+/// to `params_check` so an out-of-range value surfaces as an actionable
+/// field refusal rather than a formation fault.
+fn check(draft: &ReferenceDraft) -> Result<(f64, f64), (&'static str, String)> {
+    let relevance = draft.relevance.unwrap_or(DEFAULT_RELEVANCE);
+    let support = draft.support.unwrap_or(DEFAULT_SUPPORT);
+    if !(-1.0..=1.0).contains(&relevance) {
+        return Err((
+            "pDirected",
+            "reference relevance must lie in [-1, 1]".to_string(),
+        ));
+    }
+    if !(-1.0..=1.0).contains(&support) {
+        return Err((
+            "pInterest",
+            "reference support must lie in [-1, 1]".to_string(),
+        ));
+    }
+    Ok((relevance, support))
+}
+
+/// Resolves one citation's target, refusing an id nothing answers to.
+///
+/// CoGra "refuses to prepare a record its published fold would never read"
+/// (api-spec.md "Conventions"): L1 would admit a dangling target as
+/// fold-neutral, but an author who cited nothing at all has paid θ for a
+/// record no read surface will ever show them.
+async fn resolve(
+    pool: &PgPool,
+    draft: &ReferenceDraft,
+) -> Result<Result<PlannedReference, (&'static str, String)>, ReferencesError> {
+    let (relevance, support) = match check(draft) {
+        Ok(pair) => pair,
+        Err(e) => return Ok(Err(e)),
+    };
+    let Some(target) = nodes::resolve_id(pool, draft.target).await? else {
+        return Ok(Err(("target", "no such reference target".to_string())));
+    };
+    Ok(Ok(PlannedReference {
+        target_id: draft.target,
+        target,
+        relevance,
+        support,
+    }))
+}
+
+/// Checks a standalone citation, with the refusal rooted at the mutation
+/// input's own fields.
+pub async fn plan_one(
+    pool: &PgPool,
+    draft: &ReferenceDraft,
+) -> Result<PlannedReference, ReferencesError> {
+    resolve(pool, draft)
+        .await?
+        .map_err(|(field, message)| ReferenceError::at(vec![field.to_string()], message).into())
+}
+
+/// Checks a whole creation batch before a single act is staged.
+///
+/// The cap is checked first: an over-long batch is refused as a batch, not
+/// as whichever of its entries happens to also be malformed. Targets are
+/// compared *after* resolution, so two ids naming the same node are one
+/// citation submitted twice — refused rather than deduplicated, because
+/// silently dropping an act the author asked for is the helpfulness the
+/// write path exists to avoid, and staging both charges two θ for one
+/// bundle the fold reads once.
+pub async fn plan_batch(
+    pool: &PgPool,
+    drafts: &[ReferenceDraft],
+) -> Result<Vec<PlannedReference>, ReferencesError> {
+    if drafts.len() > MAX_REFERENCES_PER_BATCH {
+        return Err(ReferenceError::at(
+            vec!["references".to_string()],
+            format!(
+                "at most {MAX_REFERENCES_PER_BATCH} references per batch, got {}",
+                drafts.len()
+            ),
+        )
+        .into());
+    }
+    let mut planned: Vec<PlannedReference> = Vec::with_capacity(drafts.len());
+    for (i, draft) in drafts.iter().enumerate() {
+        let reference = resolve(pool, draft)
+            .await?
+            .map_err(|(field, message)| ReferenceError::at(path(i, field), message))?;
+        if planned.iter().any(|p| p.target == reference.target) {
+            return Err(ReferenceError::at(
+                path(i, "target"),
+                "this target is cited twice in this batch",
+            )
+            .into());
+        }
+        planned.push(reference);
+    }
+    Ok(planned)
+}
+
+fn path(index: usize, field: &str) -> Vec<String> {
+    vec![
+        "references".to_string(),
+        index.to_string(),
+        field.to_string(),
+    ]
+}
+
+/// The Reference gesture: the act tuple `(effort, enthusiasm)` toward the
+/// citing artifact, terminating at the cited target. `deps` orders the act
+/// behind the records it must not be ordered ahead of — the act that mints
+/// its middle, and the act that mints a still-pending target (D17).
+///
+/// The payload stays empty (D14). A note would make the record
+/// payload-marked, and payload-marked records are read individually and
+/// never through the author's netted bundle — so attaching one would
+/// silently remove the record from the very fold the read side is built on.
+pub fn reference_gesture(
+    author: &str,
+    middle: NodeId,
+    reference: &PlannedReference,
+    deps: Vec<ActId>,
+) -> Gesture {
+    Gesture {
+        author: author.to_string(),
+        family: Family::Reference,
+        middle: Some(middle),
+        target: Target::Node(reference.target.clone()),
+        p_d: reference.relevance,
+        p_i: reference.support,
+        settlement_ref: None,
+        license: None,
+        asserted_parents: vec![],
+        deps,
+        payload: vec![],
+        node: None,
+    }
+}
+
+/// Where a batch of Reference acts attaches: who authors them, the artifact
+/// they cite from, and the acts they must not be ordered ahead of.
+#[derive(Debug, Clone, Copy)]
+pub struct ReferenceSite<'a> {
+    /// The citing author's L0 address atom.
+    pub author: &'a str,
+    /// The middle node — the artifact the citations are hung off.
+    pub middle: &'a NodeId,
+    pub deps: &'a [ActId],
+}
+
+/// Stages one Reference act per citation, all at the same site.
+///
+/// The self-citation check runs over the whole batch before anything is
+/// staged. A creation batch cannot express one — the minting node's id is
+/// allocated server-side — so this guards the standalone path and anything
+/// that later hands a caller-named artifact in.
+pub async fn stage_references<B: L1Boundary>(
+    pool: &PgPool,
+    boundary: &B,
+    gc_after_epochs: i64,
+    viewer: Uuid,
+    site: ReferenceSite<'_>,
+    planned: &[PlannedReference],
+) -> Result<Vec<prepare::Prepared>, ReferencesError> {
+    refuse_self_citation(site.middle, planned)?;
+    let mut staged = Vec::with_capacity(planned.len());
+    for reference in planned {
+        let gesture = reference_gesture(
+            site.author,
+            site.middle.clone(),
+            reference,
+            site.deps.to_vec(),
+        );
+        staged.push(prepare::prepare(boundary, pool, gc_after_epochs, viewer, gesture).await?);
+    }
+    Ok(staged)
+}
+
+/// An artifact citing itself carries no information a reader could use:
+/// the citation's whole content is the pair it relates, and a self-citation
+/// relates a node to itself. L1 would admit it — it resolves to the
+/// author's own self-retention channel rather than dangling — so this is
+/// CoGra's API surface being narrower than the substrate, as it is for Tag.
+fn refuse_self_citation(
+    middle: &NodeId,
+    planned: &[PlannedReference],
+) -> Result<(), ReferenceError> {
+    match planned.iter().position(|p| p.target == *middle) {
+        Some(i) => Err(ReferenceError::at(
+            path(i, "target"),
+            "an artifact cannot cite itself",
+        )),
+        None => Ok(()),
+    }
+}
+
+/// Prepares one standalone citation — the gesture that hangs a reference
+/// off existing content, which post.md §3 and comment.md §3 both promise
+/// ("alongside the Publish or later") and which D10 adds to the contract.
+///
+/// Citing is unconstrained by the artifact's ownership: anyone can hang a
+/// citation off anyone's content, and the read side is what gates the
+/// difference (D12 serves the carrier author's own citations alone).
+pub async fn prepare_reference<B: L1Boundary>(
+    pool: &PgPool,
+    boundary: &B,
+    gc_after_epochs: i64,
+    viewer: Uuid,
+    artifact: Uuid,
+    draft: &ReferenceDraft,
+) -> Result<prepare::Prepared, ReferencesError> {
+    let reference = plan_one(pool, draft).await?;
+    let middle = citing_node(pool, artifact).await?;
+    refuse_self_citation(&middle, std::slice::from_ref(&reference))
+        .map_err(|e| ReferenceError::at(vec!["target".to_string()], e.message))?;
+    let author = author_address(pool, viewer).await?;
+    let gesture = reference_gesture(&author, middle, &reference, vec![]);
+    Ok(prepare::prepare(boundary, pool, gc_after_epochs, viewer, gesture).await?)
+}
+
+/// Prepares the withdrawal of one citation: the counter-records that net
+/// the author's `(author, artifact, target)` bundle to `(0, 0)` (D11).
+///
+/// Records are never deleted, and Reference withdrawal is per-leg net
+/// stance — not Tag's newest-wins-at-relevance-0, which exists only
+/// because Tag's confidence is census-bounded to `[0, 1]` and cannot be
+/// netted. Both Reference parameters are signed, so netting is expressible
+/// here, and the cost is `⌈max(|Σ_d|, |Σ_i|)⌉` acts rather than one.
+///
+/// The batch is computed against the pending-inclusive view, so a
+/// withdrawal followed by a refetch reads as withdrawn at once rather than
+/// after the acts land.
+pub async fn prepare_reference_withdrawal<B: L1Boundary>(
+    pool: &PgPool,
+    boundary: &B,
+    gc_after_epochs: i64,
+    viewer: Uuid,
+    artifact: Uuid,
+    target: Uuid,
+) -> Result<Vec<prepare::Prepared>, ReferencesError> {
+    let middle = citing_node(pool, artifact).await?;
+    let Some(target_node) = nodes::resolve_id(pool, target).await? else {
+        return Err(
+            ReferenceError::at(vec!["target".to_string()], "no such reference target").into(),
+        );
+    };
+    let author = author_address(pool, viewer).await?;
+    let sum = store_refs::bundle(
+        pool,
+        &author,
+        &middle.to_string(),
+        &target_node.to_string(),
+        ReferenceView::IncludingPending { actor: &author },
+    )
+    .await?;
+    let batch = sum.severance_batch();
+    if batch.is_empty() {
+        return Err(ReferenceError::at(
+            vec!["target".to_string()],
+            "the citation bundle toward this target already nets to (0, 0)",
+        )
+        .into());
+    }
+    let mut prepared = Vec::with_capacity(batch.len());
+    for (relevance, support) in batch {
+        let counter = PlannedReference {
+            target_id: target,
+            target: target_node.clone(),
+            relevance,
+            support,
+        };
+        let gesture = reference_gesture(&author, middle.clone(), &counter, vec![]);
+        prepared.push(prepare::prepare(boundary, pool, gc_after_epochs, viewer, gesture).await?);
+    }
+    Ok(prepared)
+}
+
+/// The minted node a citation hangs off. The substrate admits every
+/// passive node as a citing artifact (layer1-interface.md §9.3); the
+/// classes with an API surface to cite from are the content nodes this
+/// slice carries, exactly as `taggable_node` narrows Tag.
+async fn citing_node(pool: &PgPool, artifact: Uuid) -> Result<NodeId, ReferencesError> {
+    let node = match content_store::content_kind(pool, artifact)
+        .await
+        .map_err(|e| ReferencesError::Internal(e.to_string()))?
+    {
+        Some("post") => content_store::post(pool, artifact)
+            .await
+            .map_err(|e| ReferencesError::Internal(e.to_string()))?
+            .map(|p| p.l1_node_id),
+        Some("comment") => content_store::comment(pool, artifact)
+            .await
+            .map_err(|e| ReferencesError::Internal(e.to_string()))?
+            .map(|c| c.l1_node_id),
+        _ => None,
+    };
+    let node = node.ok_or_else(|| {
+        ReferenceError::at(vec!["artifact".to_string()], "no such citing artifact")
+    })?;
+    NodeId::parse(&node).map_err(|e| ReferencesError::Internal(format!("stored node id: {e}")))
+}
+
+async fn author_address(pool: &PgPool, viewer: Uuid) -> Result<String, ReferencesError> {
+    store::actor_identity(pool, viewer)
+        .await
+        .map_err(|e| ReferencesError::Internal(e.to_string()))?
+        .and_then(|identity| identity.l0_address)
+        .ok_or_else(|| ReferencesError::Internal("viewer without an attached address".into()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use common::l1::census::{LegRole, leg_params};
+
+    fn planned(target: &str, relevance: f64, support: f64) -> PlannedReference {
+        PlannedReference {
+            target_id: Uuid::nil(),
+            target: NodeId::parse(target).expect("node"),
+            relevance,
+            support,
+        }
+    }
+
+    fn middle() -> NodeId {
+        NodeId::parse("mint:act:alice:0:publish").expect("node")
+    }
+
+    /// The claim-9 trap, pinned against the census itself rather than
+    /// against a remembered orientation: the A-leg renders the act tuple
+    /// verbatim, and the census row for Reference reads `A: p_d = f,
+    /// p_i = e`. So the tuple this gesture writes must be
+    /// (effort, enthusiasm) = (relevance, support).
+    #[test]
+    fn the_gesture_writes_the_act_tuple_never_a_leg_rendering() {
+        let reference = planned("prof:bob", -0.25, 0.75);
+        let g = reference_gesture("alice", middle(), &reference, vec![]);
+
+        assert_eq!(g.p_d, -0.25, "p_d carries relevance (effort f)");
+        assert_eq!(g.p_i, 0.75, "p_i carries support (enthusiasm e)");
+
+        let (a_pd, a_pi) = leg_params(LegRole::A, g.p_d, g.p_i);
+        assert_eq!(
+            (a_pd, a_pi),
+            (reference.relevance, reference.support),
+            "the A-leg renders the act tuple verbatim"
+        );
+        let (t_pd, t_pi) = leg_params(LegRole::T, g.p_d, g.p_i);
+        assert_eq!(
+            (t_pd, t_pi),
+            (reference.support, reference.relevance),
+            "the T-leg transposes, so a read of it must swap back"
+        );
+    }
+
+    #[test]
+    fn the_gesture_is_a_well_formed_reference() {
+        let reference = planned("prof:bob", 1.0, -1.0);
+        let g = reference_gesture("alice", middle(), &reference, vec![]);
+        g.family.params_check(g.p_d, g.p_i).expect("params");
+        let target = match &g.target {
+            Target::Node(n) => n.clone(),
+            Target::OwnMint => panic!("a reference never targets its own mint"),
+        };
+        g.family
+            .endpoint_check(
+                "alice",
+                &NodeId::Addr("alice".into()),
+                g.middle.as_ref(),
+                &target,
+            )
+            .expect("endpoints");
+        assert_eq!(g.family, Family::Reference);
+        assert!(g.payload.is_empty(), "a citation carries no payload (D14)");
+    }
+
+    /// A (0,0) citation is legitimate — priced, admitted, structurally
+    /// permanent, and routing-inert (claim 12). It is the proposal- and
+    /// campaign-targeting gesture, so formation must admit it.
+    #[test]
+    fn a_zero_zero_citation_is_well_formed() {
+        let g = reference_gesture("alice", middle(), &planned("prof:bob", 0.0, 0.0), vec![]);
+        g.family.params_check(g.p_d, g.p_i).expect("params");
+    }
+
+    #[test]
+    fn omitted_parameters_take_the_declared_defaults() {
+        let (relevance, support) = check(&ReferenceDraft {
+            target: Uuid::nil(),
+            relevance: None,
+            support: None,
+        })
+        .expect("legal");
+        assert_eq!(relevance, DEFAULT_RELEVANCE);
+        assert_eq!(support, DEFAULT_SUPPORT);
+        assert!(
+            relevance > 0.0 && support > 0.0,
+            "a default mention vouches weakly (D3)"
+        );
+    }
+
+    #[test]
+    fn out_of_range_parameters_name_their_own_field() {
+        let over = ReferenceDraft {
+            target: Uuid::nil(),
+            relevance: Some(1.5),
+            support: None,
+        };
+        assert_eq!(check(&over).expect_err("refused").0, "pDirected");
+
+        let under = ReferenceDraft {
+            target: Uuid::nil(),
+            relevance: None,
+            support: Some(-1.5),
+        };
+        assert_eq!(check(&under).expect_err("refused").0, "pInterest");
+    }
+
+    #[test]
+    fn the_whole_signed_range_is_accepted_on_both_axes() {
+        for v in [-1.0, -0.5, 0.0, 0.5, 1.0] {
+            let d = ReferenceDraft {
+                target: Uuid::nil(),
+                relevance: Some(v),
+                support: Some(v),
+            };
+            assert_eq!(check(&d).expect("legal"), (v, v));
+        }
+    }
+
+    #[test]
+    fn an_artifact_citing_itself_is_refused_at_its_own_index() {
+        let batch = [
+            planned("prof:bob", 0.1, 0.1),
+            planned(&middle().to_string(), 0.1, 0.1),
+        ];
+        let e = refuse_self_citation(&middle(), &batch).expect_err("refused");
+        assert_eq!(
+            e.path,
+            vec![
+                "references".to_string(),
+                "1".to_string(),
+                "target".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn a_batch_that_cites_others_passes_the_self_check() {
+        let batch = [
+            planned("prof:bob", 0.1, 0.1),
+            planned("name:rust", 0.1, 0.1),
+        ];
+        refuse_self_citation(&middle(), &batch).expect("legal");
+    }
+
+    #[test]
+    fn the_act_count_is_one_per_citation() {
+        let batch = [
+            planned("prof:bob", 0.1, 0.1),
+            planned("name:rust", 0.1, 0.1),
+        ];
+        assert_eq!(act_count(&batch), 2);
+        assert_eq!(act_count(&[]), 0);
+    }
+}
