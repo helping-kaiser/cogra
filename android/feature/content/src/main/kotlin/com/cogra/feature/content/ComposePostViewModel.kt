@@ -6,6 +6,7 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.UserError
+import com.cogra.domain.valueOrNull
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
@@ -139,8 +140,14 @@ class ComposePostViewModel @Inject constructor(
         }
     }
 
-    /** Route entry: null for create, a post id for edit (pre-fills). */
-    fun start(postId: String?) {
+    /**
+     * Route entry: null [postId] for create, a post id for edit
+     * (pre-fills). [referenceTargetId] arrives from the Reference
+     * affordance on a content node (D20) — the composer opens with
+     * that node already staged as a chip.
+     */
+    fun start(postId: String?, referenceTargetId: String? = null) {
+        prefillReference(referenceTargetId)
         if (postId == null || _state.value.editingId == postId) return
         _state.update { it.copy(editingId = postId, loading = true) }
         viewModelScope.launch {
@@ -185,6 +192,32 @@ class ComposePostViewModel @Inject constructor(
                 }
                 is Outcome.Refused -> _state.update { it.copy(loading = false, notFound = true) }
                 is Outcome.Failed -> _state.update { it.copy(loading = false, transportFailed = true) }
+            }
+        }
+    }
+
+    /**
+     * Stages the node the Reference affordance named. Its typed form
+     * comes from the finder's own lookup — a UUID is one of the shapes
+     * that query resolves — so the affordance needs no second endpoint
+     * and the chip reads the same as a picked one. A target that will
+     * not resolve is still staged: the citation names it by id, and the
+     * chip says so rather than silently dropping the author's gesture.
+     */
+    private fun prefillReference(targetId: String?) {
+        if (targetId == null) return
+        if (_state.value.referenceSection.references.any { it.targetId == targetId }) return
+        updateReferences { it.added(targetId, target = null) }
+        viewModelScope.launch {
+            val resolved = references.candidateRows(targetId).valueOrNull()
+                ?.firstOrNull { it.targetId == targetId }
+                ?: return@launch
+            updateReferences { section ->
+                section.copy(
+                    references = section.references.map { row ->
+                        if (row.targetId == targetId) row.copy(target = resolved.target) else row
+                    },
+                )
             }
         }
     }
