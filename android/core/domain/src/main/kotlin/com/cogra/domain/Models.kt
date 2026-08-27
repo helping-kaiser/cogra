@@ -316,6 +316,9 @@ data class ReferenceClaimView(
  * What a citation points at. The target's node class is the whole
  * distinction between quoting, embedding and mentioning (D2), so the
  * render reads this and nothing else to decide which chip to draw.
+ *
+ * Topics are deliberately absent: tagging is what a topic is for, and
+ * referencing covers every other passive node (D21).
  */
 sealed interface ReferenceTargetView {
     /** A person — the citation is a mention, and the chip opens their profile. */
@@ -334,9 +337,6 @@ sealed interface ReferenceTargetView {
         val authorHandle: String?,
         val authorDisplayName: String?,
     ) : ReferenceTargetView
-
-    /** A topic — the chip is the one the tag row already uses. */
-    data class Topic(val hashtag: HashtagView) : ReferenceTargetView
 }
 
 /** Which content class a [ReferenceTargetView.Content] names. */
