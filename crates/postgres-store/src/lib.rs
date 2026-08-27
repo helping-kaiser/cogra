@@ -13,6 +13,7 @@ pub mod mirror;
 pub mod params;
 pub mod profile;
 pub mod rate_limit;
+pub mod references;
 pub mod staged;
 pub mod stance;
 pub mod topics;
