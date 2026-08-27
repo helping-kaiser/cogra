@@ -1904,7 +1904,7 @@ pub struct TaggedContent {
 /// a render question, not a wire one.
 ///
 /// A `Hashtag` is absent, and that absence is the contract: a topic is
-/// tagged, never referenced (D21). The write path refuses a Type target,
+/// tagged, never referenced. The write path refuses a Type target,
 /// so no citation this instance prepares can have one.
 #[derive(async_graphql::Union)]
 pub enum ReferenceTarget {
@@ -2027,7 +2027,7 @@ async fn viewer_address(ctx: &Context<'_>) -> async_graphql::Result<Option<Strin
 }
 
 /// The chip row shared by every taggable content node: the content
-/// author's own current topics (D8).
+/// author's own current topics.
 ///
 /// The pending half counts only when the viewer *is* the author —
 /// `topics_of` attributes every row it returns to the author it was
@@ -2067,7 +2067,7 @@ async fn topic_claims(
 }
 
 /// The reference row shared by every citing artifact: the carrier
-/// author's own current citations (D12).
+/// author's own current citations.
 ///
 /// Only the content-intrinsic channel this slice — the citations the
 /// carrier's own author built into it, which need no forward-path weight
@@ -2123,7 +2123,7 @@ async fn reference_claims(
 /// it rather than probing every table: `prof:` is a person, `name:` a
 /// Type, and a minted identifier is content.
 ///
-/// A Type types as nothing (D21). The mirror reaches further than
+/// A Type types as nothing. The mirror reaches further than
 /// CoGra's own policy — the substrate admits a Type-target Reference
 /// that this instance would refuse to prepare, and a record authored
 /// elsewhere can land in the mirror regardless — so the fold may hand

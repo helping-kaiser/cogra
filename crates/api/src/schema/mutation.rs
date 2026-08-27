@@ -397,9 +397,9 @@ fn tag_drafts(tags: &Option<Vec<TagInput>>) -> Vec<crate::topics::TagDraft> {
 /// it cites.
 #[derive(InputObject)]
 struct ReferenceInput {
-    /// The cited node — a post, a comment, a person's profile, or a
-    /// topic. External links are body text, never citations: both
-    /// endpoints of a Reference are nodes on the graph.
+    /// The cited node — a post, a comment, or a person's profile.
+    /// External links are body text, never citations: both endpoints
+    /// of a Reference are nodes on the graph.
     target: Uuid,
     /// How load-bearing the cited thing is to this artifact, `[-1, 1]`;
     /// defaults to +0.1. The census calls this **effort `f`**, and it
@@ -578,8 +578,9 @@ struct PrepareProfileUpdateInput {
 /// A prepared content write: the staged batch plus `node` — the L2
 /// id the envelope binds to the minted node, and the id the content
 /// reads serve once the record lands. `writes` carries the minting
-/// record first, then one Tag record per declared topic, each its own
-/// priced act. Null when `userErrors` is non-empty.
+/// record first, then one Tag record per declared topic and one
+/// Reference record per declared citation, each its own priced act.
+/// Null when `userErrors` is non-empty.
 #[derive(SimpleObject)]
 struct PrepareContentPayload {
     node: Option<Uuid>,
