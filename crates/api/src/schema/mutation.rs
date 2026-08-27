@@ -36,6 +36,7 @@ use crate::mailer::{Mail, Mailer, WebOrigin};
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 use crate::profile::ProfileError;
 use crate::ratelimit::{self, RateLimitConfig, RequestIp, Window, scope};
+use crate::references::ReferencesError;
 use crate::relay::{self, RelayError};
 use crate::stance::{self, StanceError};
 
@@ -163,6 +164,25 @@ fn stance_refusal(e: StanceError) -> PreparePayload {
                 UserError::at(ErrorCode::BadInput, message, vec![field.to_string()])
             }
             StanceError::Prepare(e) => UserError::from_onboarding(&OnboardingError::from(e), ""),
+            e => internal(e),
+        }],
+    }
+}
+
+/// A refused citation gesture as its payload. Both citation mutations map
+/// every refusal the same way, so the mapping lives once.
+///
+/// `BadInput` already carries the path into the input that names the
+/// offender — `target`, `artifact`, `relevance`, `support` — so it is
+/// forwarded rather than flattened onto a single field.
+fn reference_refusal(e: ReferencesError) -> PreparePayload {
+    PreparePayload {
+        writes: None,
+        user_errors: vec![match e {
+            ReferencesError::BadInput(e) => UserError::at(ErrorCode::BadInput, e.message, e.path),
+            ReferencesError::Prepare(e) => {
+                UserError::from_onboarding(&OnboardingError::from(e), "")
+            }
             e => internal(e),
         }],
     }
@@ -491,6 +511,50 @@ impl PrepareTagInput {
             confidence: self.p_interest.map(|d| d.0),
         }
     }
+}
+
+/// One standalone citation on existing content — the gesture that adds a
+/// quote, embed or mention after publishing, which post.md §3 and
+/// comment.md §3 both promise ("alongside the Publish or later").
+/// Citations are never edit fields: changing what a post cites is its own
+/// priced act.
+///
+/// Citing is unconstrained by the artifact's ownership — anyone may hang
+/// a citation off anyone's content — and the read side is what separates
+/// the carrier author's own citations from third-party ones.
+#[derive(InputObject)]
+struct PrepareReferenceInput {
+    /// The citing artifact — the post or comment the citation hangs off.
+    artifact: Uuid,
+    /// The cited node. An artifact cannot cite itself.
+    target: Uuid,
+    /// Effort `f`, the `pDirected` slot; defaults to +0.1.
+    relevance: Option<Dimension>,
+    /// Enthusiasm `e`, the `pInterest` slot; defaults to +0.1.
+    support: Option<Dimension>,
+}
+
+impl PrepareReferenceInput {
+    fn to_draft(&self) -> crate::references::ReferenceDraft {
+        crate::references::ReferenceDraft {
+            target: self.target,
+            relevance: self.relevance.map(|d| d.0),
+            support: self.support.map(|d| d.0),
+        }
+    }
+}
+
+/// Withdrawing one citation. Records are never deleted, and Reference
+/// withdrawal is per-leg net stance — not the Tag rule beside it, which
+/// is newest-wins at relevance 0 only because a tag's confidence cannot
+/// be netted. Both citation parameters are signed, so a withdrawal is the
+/// severance shape: counter-records until the bundle reaches `(0, 0)`.
+#[derive(InputObject)]
+struct PrepareReferenceWithdrawalInput {
+    /// The citing artifact the citation hangs off.
+    artifact: Uuid,
+    /// The cited node whose bundle is netted away.
+    target: Uuid,
 }
 
 /// A Comment edit: the complete new body (comment.md §4).
@@ -1888,6 +1952,77 @@ impl Mutation {
                 writes: None,
                 user_errors: vec![internal(e)],
             }),
+        }
+    }
+
+    /// Prepares one standalone citation on existing content — a quote,
+    /// an embed, or a mention, which are all one record distinguished
+    /// only by the target's node class. Citing is not restricted to the
+    /// artifact's author; the read side is what separates the carrier
+    /// author's own citations from third-party ones.
+    async fn prepare_reference(
+        &self,
+        ctx: &Context<'_>,
+        input: PrepareReferenceInput,
+    ) -> async_graphql::Result<PreparePayload> {
+        let v = member_viewer(ctx).await?;
+        let pool = ctx.data::<PgPool>()?;
+        let boundary = ctx.data::<StandInBoundary>()?;
+        let cfg = ctx.data::<OnboardingConfig>()?;
+        match crate::references::prepare_reference(
+            pool,
+            boundary,
+            cfg.gc_after_epochs,
+            v.user_id,
+            input.artifact,
+            &input.to_draft(),
+        )
+        .await
+        {
+            Ok(prepared) => Ok(PreparePayload {
+                writes: Some(vec![PreparedWrite::from_prepared(prepared)]),
+                user_errors: vec![],
+            }),
+            Err(e) => Ok(reference_refusal(e)),
+        }
+    }
+
+    /// Prepares the withdrawal of one citation: the counter-records that
+    /// net the viewer's `(artifact, target)` citation bundle to `(0, 0)`.
+    /// Each is its own priced act, so the batch length is the gesture's
+    /// cost — a citation revised upward several times needs more than one
+    /// record to walk back, and quoting that count is the whole point of
+    /// assembling the batch server-side rather than letting a client
+    /// author a single negating record that would silently under-net.
+    async fn prepare_reference_withdrawal(
+        &self,
+        ctx: &Context<'_>,
+        input: PrepareReferenceWithdrawalInput,
+    ) -> async_graphql::Result<PreparePayload> {
+        let v = member_viewer(ctx).await?;
+        let pool = ctx.data::<PgPool>()?;
+        let boundary = ctx.data::<StandInBoundary>()?;
+        let cfg = ctx.data::<OnboardingConfig>()?;
+        match crate::references::prepare_reference_withdrawal(
+            pool,
+            boundary,
+            cfg.gc_after_epochs,
+            v.user_id,
+            input.artifact,
+            input.target,
+        )
+        .await
+        {
+            Ok(prepared) => Ok(PreparePayload {
+                writes: Some(
+                    prepared
+                        .into_iter()
+                        .map(PreparedWrite::from_prepared)
+                        .collect(),
+                ),
+                user_errors: vec![],
+            }),
+            Err(e) => Ok(reference_refusal(e)),
         }
     }
 
