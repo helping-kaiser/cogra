@@ -203,10 +203,16 @@ interface ContentRepository {
         content: String,
     ): Outcome<PreparedContentView>
 
+    /**
+     * [tags] are the topics declared at creation, exactly as on a post
+     * (F9): the server stages one Tag write per claim beside the minting
+     * Review, and the whole batch is signed in the one pass.
+     */
     suspend fun prepareComment(
         target: String,
         content: String,
         license: LicenseChoice,
+        tags: List<TagClaim> = emptyList(),
     ): Outcome<PreparedContentView>
 
     suspend fun prepareCommentEdit(id: String, content: String): Outcome<PreparedContentView>

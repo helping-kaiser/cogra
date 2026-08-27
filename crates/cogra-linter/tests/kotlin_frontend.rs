@@ -346,20 +346,29 @@ fn an_occurrence_in_kdoc_after_a_multibyte_character_locates_exactly() {
     assert_eq!(&text[at.start..at.end], "\u{b4}def:android:widget\u{b4}");
 }
 
+/// A top-level statement is what a script is made of, and the grammar's one
+/// root takes the specification's wider `script` shape, so it parses like any
+/// other source rather than reporting anything.
+#[test]
+fn a_top_level_statement_is_not_a_finding() {
+    let parsed = frontend_kotlin::parse(&source("val x = 1\nprintln(x)\n"), adoption())
+        .expect("the grammar loads");
+    assert!(
+        parsed.diagnostics.is_empty(),
+        "a script-shaped source reported {:?}",
+        parsed.diagnostics
+    );
+}
+
 /// A syntax error is a hard, located diagnostic and never a silently skipped
 /// region (´[ARCH-req:linter:diagnostics-not-panics]´).
-///
-/// The fixture is a top-level statement, which is exactly what `.kts` admits
-/// and `kotlinFile` does not — so this test doubles as the record of why
-/// `.kts` has no frontend: the grammar implements the declaration-only file
-/// production, and a script's statement is an error node to it.
 #[test]
-fn a_top_level_statement_is_a_located_diagnostic() {
-    let parsed = frontend_kotlin::parse(&source("val x = 1\nprintln(x)\n"), adoption())
+fn a_kotlin_syntax_error_is_a_located_diagnostic() {
+    let parsed = frontend_kotlin::parse(&source("val x = 1\nclass ) {\n"), adoption())
         .expect("the grammar loads, whatever it makes of the bytes");
     assert!(
         !parsed.diagnostics.is_empty(),
-        "a script-shaped source reported nothing"
+        "a broken source reported nothing"
     );
     assert!(
         parsed
@@ -378,7 +387,7 @@ fn a_top_level_statement_is_a_located_diagnostic() {
 /// file with an error node still yields every comment that parsed.
 #[test]
 fn regions_survive_an_error_node() {
-    let parsed = frontend_kotlin::parse(&source("// kept\nval x = 1\nprintln(x)\n"), adoption())
+    let parsed = frontend_kotlin::parse(&source("// kept\nval x = 1\nclass ) {\n"), adoption())
         .expect("the grammar loads");
     assert!(!parsed.diagnostics.is_empty());
     assert_eq!(

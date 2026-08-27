@@ -3,6 +3,7 @@ import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { writeConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
 import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
@@ -23,6 +24,22 @@ function landing(pending = false) {
   return { __typename: "Landing", state: pending ? "PENDING" : "LANDED" };
 }
 
+function topicClaim(name: string, relevance = 0.4, confidence = 0.9) {
+  return {
+    __typename: "TopicClaim",
+    hashtag: {
+      __typename: "Hashtag",
+      id: `ht-${name}`,
+      name: { __typename: "ModeratedText", value: name, status: "NORMAL" },
+    },
+    relevance,
+    confidence,
+    pending: false,
+  };
+}
+
+type TopicFixture = ReturnType<typeof topicClaim>;
+
 type FixtureComment = {
   id: string;
   body: string;
@@ -31,6 +48,7 @@ type FixtureComment = {
   pending?: boolean;
   replies?: FixtureComment[];
   repliesHaveMore?: boolean;
+  topics?: TopicFixture[];
 };
 
 function commentNode(comment: FixtureComment, withReplies = true): Record<string, unknown> {
@@ -49,7 +67,7 @@ function commentNode(comment: FixtureComment, withReplies = true): Record<string
     landing: landing(comment.pending),
     moderationStatus: "NORMAL",
     license: { __typename: "License", attribution: 0, provenance: 0 },
-    topics: [],
+    topics: comment.topics ?? [],
     ...(withReplies
       ? {
           replies: {
@@ -77,6 +95,7 @@ function detail(
     endCursor: null,
   },
   postPending = false,
+  postTopics: TopicFixture[] = [],
 ) {
   return {
     post: {
@@ -96,7 +115,7 @@ function detail(
       landing: landing(postPending),
       moderationStatus: "NORMAL",
       license: { __typename: "License", attribution: 0, provenance: 0 },
-      topics: [],
+      topics: postTopics,
       comments: {
         __typename: "CommentConnection",
         edges: comments.map((comment) => ({
@@ -314,6 +333,9 @@ describe("PostView", () => {
           target: "p1",
           content: "Nice one",
           license: { attribution: 1, provenance: 0 },
+          // The composer always sends its list; empty is "no topics",
+          // the shape `preparePost` already uses.
+          tags: [],
         },
       }),
     );
@@ -870,5 +892,596 @@ describe("PostView", () => {
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId("post-author")).toHaveAttribute("href", "/u/alice");
     expect(screen.getByTestId("comment-author-c1")).toHaveAttribute("href", "/u/bob");
+  });
+
+  // F8: the detail view is where a reader may ask how strongly a topic
+  // is claimed — on the post and on every comment in the thread.
+  it("reveals the post's topic values on request", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: detail("u1", [], { hasNextPage: false, endCursor: null }, false, [
+            topicClaim("rust", 0.4, 0.9),
+          ]),
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    const toggle = await screen.findByTestId("post-topics-reveal");
+    expect(screen.queryByTestId("post-topic-rust-values")).not.toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(screen.getByTestId("post-topic-rust-values")).toHaveTextContent("+0.40 · 0.90");
+  });
+
+  it("reveals a comment's topic values independently of the post's", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: detail(
+            "u1",
+            [{ id: "c1", body: "First!", topics: [topicClaim("wasm", -0.25, 0.5)] }],
+            { hasNextPage: false, endCursor: null },
+            false,
+            [topicClaim("rust", 0.4, 0.9)],
+          ),
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    fireEvent.click(await screen.findByTestId("comment-c1-topics-reveal"));
+    expect(screen.getByTestId("comment-c1-topic-wasm-values")).toHaveTextContent("-0.25 · 0.50");
+    // Each row answers for itself; revealing one does not reveal the rest.
+    expect(screen.queryByTestId("post-topic-rust-values")).not.toBeInTheDocument();
+  });
+
+  // ---- F9: tagging is part of the comment compose gesture ----
+
+  describe("tagging as part of the compose gesture", () => {
+    /** A minting payload whose batch is the record plus one act per tag. */
+    function commentPayload(writeIds: readonly string[]) {
+      return {
+        prepareComment: {
+          __typename: "PrepareContentPayload",
+          node: "c-node",
+          writes: writeIds.map((id, index) => ({
+            __typename: "PreparedWrite",
+            id,
+            family: index === 0 ? "REVIEW" : "TAG",
+            canonicalProposal: "cHJvcG9zYWw=",
+            gcAfterEpochs: 8,
+          })),
+          userErrors: [],
+        },
+      };
+    }
+
+    beforeEach(() => {
+      // The confirmation has its own tests below; everywhere else it
+      // would only stand between the test and the submit.
+      writeConfirmMultiAction(false);
+    });
+
+    it("rides the drafted tags on the comment-create input", async () => {
+      let variables: Record<string, unknown> | null = null;
+      server.use(
+        graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
+        graphql.mutation("PrepareComment", ({ variables: v }) => {
+          variables = v;
+          return HttpResponse.json({ data: commentPayload(["w1", "w2"]) });
+        }),
+      );
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+      fireEvent.change(await screen.findByTestId("comment-draft"), {
+        target: { value: "Nice one" },
+      });
+      fireEvent.change(screen.getByTestId("comment-tag-input"), { target: { value: "rust" } });
+      fireEvent.click(screen.getByTestId("comment-tag-add"));
+      fireEvent.click(screen.getByTestId("comment-submit"));
+
+      expect(await screen.findByTestId("comment-signed")).toBeInTheDocument();
+      await waitFor(() =>
+        expect((variables as unknown as { input: { tags: unknown } })?.input.tags).toEqual([
+          { name: "rust", pDirected: 0.1, pInterest: 1 },
+        ]),
+      );
+    });
+
+    // The batch is the record AND its tag acts — every one of them is
+    // this device's to sign, not just the head.
+    it("signs the whole returned batch, not only its first write", async () => {
+      server.use(
+        graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
+        graphql.mutation("PrepareComment", () =>
+          HttpResponse.json({ data: commentPayload(["w1", "w2", "w3"]) }),
+        ),
+      );
+      const signer = fakeWriteSigner();
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: signer,
+      });
+      fireEvent.change(await screen.findByTestId("comment-draft"), { target: { value: "hi" } });
+      fireEvent.change(screen.getByTestId("comment-tag-input"), { target: { value: "rust" } });
+      fireEvent.click(screen.getByTestId("comment-tag-add"));
+      fireEvent.change(screen.getByTestId("comment-tag-input"), { target: { value: "wasm" } });
+      fireEvent.click(screen.getByTestId("comment-tag-add"));
+      fireEvent.click(screen.getByTestId("comment-submit"));
+
+      await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(3));
+    });
+
+    it("clears the drafted tags once the comment is signed", async () => {
+      server.use(
+        graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
+        graphql.mutation("PrepareComment", () =>
+          HttpResponse.json({ data: commentPayload(["w1", "w2"]) }),
+        ),
+      );
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+      fireEvent.change(await screen.findByTestId("comment-draft"), { target: { value: "hi" } });
+      fireEvent.change(screen.getByTestId("comment-tag-input"), { target: { value: "rust" } });
+      fireEvent.click(screen.getByTestId("comment-tag-add"));
+      expect(screen.getByTestId("comment-tag-0")).toHaveTextContent("#rust");
+      fireEvent.click(screen.getByTestId("comment-submit"));
+
+      await waitFor(() => expect(screen.queryByTestId("comment-tag-0")).not.toBeInTheDocument());
+    });
+
+    it("tags a reply the same way, targeting the comment", async () => {
+      let variables: Record<string, unknown> | null = null;
+      server.use(
+        graphql.query("PostDetail", () =>
+          HttpResponse.json({ data: detail("author-1", [{ id: "c1", body: "top" }]) }),
+        ),
+        graphql.mutation("PrepareComment", ({ variables: v }) => {
+          variables = v;
+          return HttpResponse.json({ data: commentPayload(["w1", "w2"]) });
+        }),
+      );
+      const signer = fakeWriteSigner();
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: signer,
+      });
+      fireEvent.click(await screen.findByTestId("comment-reply-c1"));
+      fireEvent.change(screen.getByTestId("comment-reply-input"), { target: { value: "me too" } });
+      fireEvent.change(screen.getByTestId("comment-reply-tag-input"), {
+        target: { value: "wasm" },
+      });
+      fireEvent.click(screen.getByTestId("comment-reply-tag-add"));
+      fireEvent.click(screen.getByTestId("comment-reply-submit"));
+
+      await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(2));
+      expect(variables as unknown as { input: { target: string; tags: unknown } }).toMatchObject({
+        input: { target: "c1", tags: [{ name: "wasm", pDirected: 0.1, pInterest: 1 }] },
+      });
+    });
+
+    // F2: a batched tag's field error lands on its own chip, and the
+    // general refusal line stays empty.
+    it("routes a refused tag onto its chip, signing nothing", async () => {
+      server.use(
+        graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
+        graphql.mutation("PrepareComment", () =>
+          HttpResponse.json({
+            data: {
+              prepareComment: {
+                __typename: "PrepareContentPayload",
+                node: null,
+                writes: null,
+                userErrors: [
+                  {
+                    __typename: "UserError",
+                    message: "`rust` is not a legal topic name: reserved",
+                    code: "BAD_INPUT",
+                    field: ["tags", "0", "name"],
+                  },
+                ],
+              },
+            },
+          }),
+        ),
+      );
+      const signer = fakeWriteSigner();
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: signer,
+      });
+      fireEvent.change(await screen.findByTestId("comment-draft"), { target: { value: "hi" } });
+      fireEvent.change(screen.getByTestId("comment-tag-input"), { target: { value: "rust" } });
+      fireEvent.click(screen.getByTestId("comment-tag-add"));
+      fireEvent.click(screen.getByTestId("comment-submit"));
+
+      expect(await screen.findByTestId("comment-tag-error-0")).toHaveTextContent(
+        "`rust` is not a legal topic name: reserved",
+      );
+      expect(screen.queryByTestId("comment-refused")).not.toBeInTheDocument();
+      expect(signer.signStaged).not.toHaveBeenCalled();
+    });
+
+    // F4: the cost is on screen before the press.
+    it("counts the signed actions a comment would stage, live", async () => {
+      server.use(
+        graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
+      );
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+      expect(await screen.findByTestId("comment-signed-actions")).toHaveTextContent(
+        "creates 1 signed action",
+      );
+      fireEvent.change(screen.getByTestId("comment-tag-input"), { target: { value: "rust" } });
+      fireEvent.click(screen.getByTestId("comment-tag-add"));
+      expect(screen.getByTestId("comment-signed-actions")).toHaveTextContent(
+        "creates 2 signed actions",
+      );
+      fireEvent.click(screen.getByTestId("comment-tag-0-remove"));
+      expect(screen.getByTestId("comment-signed-actions")).toHaveTextContent(
+        "creates 1 signed action",
+      );
+    });
+
+    it("asks before a comment submit that signs more than one action", async () => {
+      writeConfirmMultiAction(true);
+      server.use(
+        graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
+        graphql.mutation("PrepareComment", () =>
+          HttpResponse.json({ data: commentPayload(["w1", "w2"]) }),
+        ),
+      );
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+      fireEvent.change(await screen.findByTestId("comment-draft"), { target: { value: "hi" } });
+      fireEvent.change(screen.getByTestId("comment-tag-input"), { target: { value: "rust" } });
+      fireEvent.click(screen.getByTestId("comment-tag-add"));
+      fireEvent.click(screen.getByTestId("comment-submit"));
+
+      expect(screen.getByTestId("comment-multi-action-count")).toHaveTextContent(
+        "creates 2 signed actions",
+      );
+      fireEvent.click(screen.getByTestId("comment-multi-action-proceed"));
+      expect(await screen.findByTestId("comment-signed")).toBeInTheDocument();
+    });
+
+    it("does not ask for an untagged comment", async () => {
+      writeConfirmMultiAction(true);
+      server.use(
+        graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
+        graphql.mutation("PrepareComment", () =>
+          HttpResponse.json({ data: commentPayload(["w1"]) }),
+        ),
+      );
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+      fireEvent.change(await screen.findByTestId("comment-draft"), { target: { value: "hi" } });
+      fireEvent.click(screen.getByTestId("comment-submit"));
+      expect(screen.queryByTestId("comment-multi-action-confirm")).not.toBeInTheDocument();
+      expect(await screen.findByTestId("comment-signed")).toBeInTheDocument();
+    });
+
+    it("cancelling the comment confirmation signs nothing", async () => {
+      writeConfirmMultiAction(true);
+      server.use(
+        graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
+      );
+      const signer = fakeWriteSigner();
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: signer,
+      });
+      fireEvent.change(await screen.findByTestId("comment-draft"), { target: { value: "hi" } });
+      fireEvent.change(screen.getByTestId("comment-tag-input"), { target: { value: "rust" } });
+      fireEvent.click(screen.getByTestId("comment-tag-add"));
+      fireEvent.click(screen.getByTestId("comment-submit"));
+      fireEvent.click(screen.getByTestId("comment-multi-action-cancel"));
+      expect(screen.queryByTestId("comment-multi-action-confirm")).not.toBeInTheDocument();
+      expect(signer.signStaged).not.toHaveBeenCalled();
+    });
+
+    it("asks on a tagged reply too, under its own dialog", async () => {
+      writeConfirmMultiAction(true);
+      server.use(
+        graphql.query("PostDetail", () =>
+          HttpResponse.json({ data: detail("author-1", [{ id: "c1", body: "top" }]) }),
+        ),
+        graphql.mutation("PrepareComment", () =>
+          HttpResponse.json({ data: commentPayload(["w1", "w2"]) }),
+        ),
+      );
+      const signer = fakeWriteSigner();
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: signer,
+      });
+      fireEvent.click(await screen.findByTestId("comment-reply-c1"));
+      fireEvent.change(screen.getByTestId("comment-reply-input"), { target: { value: "me too" } });
+      fireEvent.change(screen.getByTestId("comment-reply-tag-input"), {
+        target: { value: "wasm" },
+      });
+      fireEvent.click(screen.getByTestId("comment-reply-tag-add"));
+      expect(screen.getByTestId("comment-reply-signed-actions")).toHaveTextContent(
+        "creates 2 signed actions",
+      );
+      fireEvent.click(screen.getByTestId("comment-reply-submit"));
+      expect(screen.getByTestId("comment-reply-multi-action-count")).toHaveTextContent(
+        "creates 2 signed actions",
+      );
+      fireEvent.click(screen.getByTestId("comment-reply-multi-action-proceed"));
+      await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(2));
+    });
+  });
+
+  // ---- F10: the inline comment edit tags like the post edit ----
+
+  describe("editing a comment's tags", () => {
+    function tagPayload(id: string) {
+      return {
+        prepareTag: {
+          __typename: "PreparePayload",
+          writes: [
+            {
+              __typename: "PreparedWrite",
+              id,
+              family: "TAG",
+              canonicalProposal: "cHJvcG9zYWw=",
+            },
+          ],
+          userErrors: [],
+        },
+      };
+    }
+
+    function editPayload() {
+      return {
+        prepareCommentEdit: {
+          __typename: "PrepareContentPayload",
+          node: "c1",
+          writes: [
+            {
+              __typename: "PreparedWrite",
+              id: "w-edit",
+              family: "REVIEW",
+              canonicalProposal: "cHJvcG9zYWw=",
+              gcAfterEpochs: 8,
+            },
+          ],
+          userErrors: [],
+        },
+      };
+    }
+
+    /** The viewer's own comment, carrying whatever claims it was given. */
+    function ownComment(topics: TopicFixture[]) {
+      return detail("author-1", [
+        { id: "c1", body: "old words", authorId: "acct-1", topics },
+      ]);
+    }
+
+    beforeEach(() => {
+      writeConfirmMultiAction(false);
+    });
+
+    it("opens the editor on the claims the comment actually carries", async () => {
+      server.use(
+        graphql.query("PostDetail", () =>
+          HttpResponse.json({ data: ownComment([topicClaim("rust", 0.4, 0.8)]) }),
+        ),
+      );
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+      fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+      expect(screen.getByTestId("comment-edit-tag-0")).toHaveTextContent("#rust");
+      // The chip opens on the values the claim actually carries — real
+      // ones, never the entry defaults.
+      fireEvent.click(screen.getByTestId("comment-edit-tag-0-select"));
+      expect(screen.getByTestId("comment-edit-tag-0-relevance")).toHaveValue("0.4");
+      expect(screen.getByTestId("comment-edit-tag-0-confidence")).toHaveValue("0.8");
+      // No creation batch here, so no batch cap.
+      expect(screen.queryByTestId("comment-edit-tag-cap")).not.toBeInTheDocument();
+    });
+
+    it("stages the edit record and one Tag act per change, in one signing pass", async () => {
+      const tagInputs: Record<string, unknown>[] = [];
+      let editCalled = false;
+      server.use(
+        graphql.query("PostDetail", () =>
+          HttpResponse.json({ data: ownComment([topicClaim("wasm", 0.1, 1)]) }),
+        ),
+        graphql.mutation("PrepareCommentEdit", () => {
+          editCalled = true;
+          return HttpResponse.json({ data: editPayload() });
+        }),
+        graphql.mutation("PrepareTag", ({ variables }) => {
+          tagInputs.push(variables.input as Record<string, unknown>);
+          return HttpResponse.json({ data: tagPayload(`w-tag-${tagInputs.length}`) });
+        }),
+      );
+      const signer = fakeWriteSigner();
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: signer,
+      });
+      fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+        target: { value: "better words" },
+      });
+      fireEvent.change(screen.getByTestId("comment-edit-tag-input"), { target: { value: "rust" } });
+      fireEvent.click(screen.getByTestId("comment-edit-tag-add"));
+      // Drop the tag the comment came with.
+      fireEvent.click(screen.getByTestId("comment-edit-tag-0-remove"));
+      fireEvent.click(screen.getByTestId("comment-edit-save"));
+
+      await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(3));
+      expect(editCalled).toBe(true);
+      expect(tagInputs).toEqual([
+        { target: "c1", name: "rust", pDirected: 0.1, pInterest: 1 },
+        // A withdrawal is a Tag act at relevance 0, never a deletion.
+        { target: "c1", name: "wasm", pDirected: 0, pInterest: null },
+      ]);
+    });
+
+    it("stages no edit record when only the tags moved", async () => {
+      let editCalled = false;
+      server.use(
+        graphql.query("PostDetail", () => HttpResponse.json({ data: ownComment([]) })),
+        graphql.mutation("PrepareCommentEdit", () => {
+          editCalled = true;
+          return HttpResponse.json({ data: editPayload() });
+        }),
+        graphql.mutation("PrepareTag", () => HttpResponse.json({ data: tagPayload("w-tag-1") })),
+      );
+      const signer = fakeWriteSigner();
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: signer,
+      });
+      fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+      fireEvent.change(screen.getByTestId("comment-edit-tag-input"), { target: { value: "rust" } });
+      fireEvent.click(screen.getByTestId("comment-edit-tag-add"));
+      fireEvent.click(screen.getByTestId("comment-edit-save"));
+
+      await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(1));
+      expect(editCalled).toBe(false);
+    });
+
+    // Re-tuning is its own act: a fresh declaration at the new values.
+    it("stages a re-tune as its own Tag act", async () => {
+      const tagInputs: Record<string, unknown>[] = [];
+      server.use(
+        graphql.query("PostDetail", () =>
+          HttpResponse.json({ data: ownComment([topicClaim("rust", 0.4, 0.8)]) }),
+        ),
+        graphql.mutation("PrepareTag", ({ variables }) => {
+          tagInputs.push(variables.input as Record<string, unknown>);
+          return HttpResponse.json({ data: tagPayload("w-tag-1") });
+        }),
+      );
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+      fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+      fireEvent.click(screen.getByTestId("comment-edit-tag-0-select"));
+      fireEvent.change(screen.getByTestId("comment-edit-tag-0-relevance"), {
+        target: { value: "0.75" },
+      });
+      fireEvent.click(screen.getByTestId("comment-edit-save"));
+
+      await waitFor(() =>
+        expect(tagInputs).toEqual([
+          { target: "c1", name: "rust", pDirected: 0.75, pInterest: 0.8 },
+        ]),
+      );
+    });
+
+    // F2: prepared fully before signing — a refusal on a tag leaves
+    // nothing signed at all.
+    it("signs nothing when a Tag act is refused", async () => {
+      server.use(
+        graphql.query("PostDetail", () => HttpResponse.json({ data: ownComment([]) })),
+        graphql.mutation("PrepareCommentEdit", () => HttpResponse.json({ data: editPayload() })),
+        graphql.mutation("PrepareTag", () =>
+          HttpResponse.json({
+            data: {
+              prepareTag: {
+                __typename: "PreparePayload",
+                writes: null,
+                userErrors: [
+                  {
+                    __typename: "UserError",
+                    message: "`a-b` is not a legal topic name: reserved",
+                    code: "BAD_INPUT",
+                    field: ["name"],
+                  },
+                ],
+              },
+            },
+          }),
+        ),
+      );
+      const signer = fakeWriteSigner();
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: signer,
+      });
+      fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+      fireEvent.change(screen.getByTestId("comment-edit-input"), { target: { value: "moved" } });
+      fireEvent.change(screen.getByTestId("comment-edit-tag-input"), { target: { value: "a-b" } });
+      fireEvent.click(screen.getByTestId("comment-edit-tag-add"));
+      fireEvent.click(screen.getByTestId("comment-edit-save"));
+
+      expect(await screen.findByTestId("comment-edit-tag-error-0")).toHaveTextContent(
+        "`a-b` is not a legal topic name: reserved",
+      );
+      expect(signer.signStaged).not.toHaveBeenCalled();
+      // The editor stays open on the work that was refused.
+      expect(screen.getByTestId("comment-edit-input")).toBeInTheDocument();
+    });
+
+    it("counts the edit as the record only when the text moved", async () => {
+      server.use(
+        graphql.query("PostDetail", () =>
+          HttpResponse.json({ data: ownComment([topicClaim("wasm", 0.1, 1)]) }),
+        ),
+      );
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+      fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+      // Untouched: nothing to sign, and nothing to press.
+      expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
+        "creates no signed actions",
+      );
+      expect(screen.getByTestId("comment-edit-save")).toBeDisabled();
+
+      fireEvent.click(screen.getByTestId("comment-edit-tag-0-remove"));
+      expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
+        "creates 1 signed action",
+      );
+      fireEvent.change(screen.getByTestId("comment-edit-input"), { target: { value: "moved" } });
+      expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
+        "creates 2 signed actions",
+      );
+    });
+
+    it("asks before an edit that signs more than one action", async () => {
+      writeConfirmMultiAction(true);
+      server.use(
+        graphql.query("PostDetail", () => HttpResponse.json({ data: ownComment([]) })),
+        graphql.mutation("PrepareCommentEdit", () => HttpResponse.json({ data: editPayload() })),
+        graphql.mutation("PrepareTag", () => HttpResponse.json({ data: tagPayload("w-tag-1") })),
+      );
+      const signer = fakeWriteSigner();
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: signer,
+      });
+      fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+      fireEvent.change(screen.getByTestId("comment-edit-input"), { target: { value: "moved" } });
+      fireEvent.change(screen.getByTestId("comment-edit-tag-input"), { target: { value: "rust" } });
+      fireEvent.click(screen.getByTestId("comment-edit-tag-add"));
+      fireEvent.click(screen.getByTestId("comment-edit-save"));
+
+      expect(screen.getByTestId("comment-edit-multi-action-count")).toHaveTextContent(
+        "creates 2 signed actions",
+      );
+      expect(signer.signStaged).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByTestId("comment-edit-multi-action-proceed"));
+      await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(2));
+    });
   });
 });
