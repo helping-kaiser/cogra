@@ -1,0 +1,357 @@
+================================================================
+A build script is top-level statements, not declarations
+================================================================
+
+plugins {
+    alias(libs.plugins.android.library)
+    id("cogra.android.module")
+}
+
+android {
+    namespace = "com.cogra.feature.topics"
+
+    buildFeatures {
+        compose = true
+    }
+}
+
+----
+
+(source_file
+  (postfix_expression
+    (simple_identifier)
+    (postfix_unary_suffix
+      (call_suffix
+        (annotated_lambda
+          (lambda_literal
+            (statements
+              (postfix_expression
+                (simple_identifier)
+                (postfix_unary_suffix
+                  (call_suffix
+                    (value_arguments
+                      (value_argument
+                        (postfix_expression
+                          (postfix_expression
+                            (postfix_expression
+                              (simple_identifier)
+                              (postfix_unary_suffix
+                                (navigation_suffix
+                                  (member_access_operator)
+                                  (simple_identifier))))
+                            (postfix_unary_suffix
+                              (navigation_suffix
+                                (member_access_operator)
+                                (simple_identifier))))
+                          (postfix_unary_suffix
+                            (navigation_suffix
+                              (member_access_operator)
+                              (simple_identifier)))))))))
+              (postfix_expression
+                (simple_identifier)
+                (postfix_unary_suffix
+                  (call_suffix
+                    (value_arguments
+                      (value_argument
+                        (string_literal
+                          (line_string_literal)))))))))))))
+  (postfix_expression
+    (simple_identifier)
+    (postfix_unary_suffix
+      (call_suffix
+        (annotated_lambda
+          (lambda_literal
+            (statements
+              (assignment
+                (simple_identifier)
+                (string_literal
+                  (line_string_literal)))
+              (postfix_expression
+                (simple_identifier)
+                (postfix_unary_suffix
+                  (call_suffix
+                    (annotated_lambda
+                      (lambda_literal
+                        (statements
+                          (assignment
+                            (simple_identifier)
+                            (boolean_literal)))))))))))))))
+
+================================================================
+A dependencies block
+================================================================
+
+dependencies {
+    implementation(project(":core:designsystem"))
+    implementation(platform(libs.androidx.compose.bom))
+    ksp(libs.hilt.compiler)
+    testImplementation(testFixtures(project(":core:domain")))
+}
+
+----
+
+(source_file
+  (postfix_expression
+    (simple_identifier)
+    (postfix_unary_suffix
+      (call_suffix
+        (annotated_lambda
+          (lambda_literal
+            (statements
+              (postfix_expression
+                (simple_identifier)
+                (postfix_unary_suffix
+                  (call_suffix
+                    (value_arguments
+                      (value_argument
+                        (postfix_expression
+                          (simple_identifier)
+                          (postfix_unary_suffix
+                            (call_suffix
+                              (value_arguments
+                                (value_argument
+                                  (string_literal
+                                    (line_string_literal))))))))))))
+              (postfix_expression
+                (simple_identifier)
+                (postfix_unary_suffix
+                  (call_suffix
+                    (value_arguments
+                      (value_argument
+                        (postfix_expression
+                          (simple_identifier)
+                          (postfix_unary_suffix
+                            (call_suffix
+                              (value_arguments
+                                (value_argument
+                                  (postfix_expression
+                                    (postfix_expression
+                                      (postfix_expression
+                                        (simple_identifier)
+                                        (postfix_unary_suffix
+                                          (navigation_suffix
+                                            (member_access_operator)
+                                            (simple_identifier))))
+                                      (postfix_unary_suffix
+                                        (navigation_suffix
+                                          (member_access_operator)
+                                          (simple_identifier))))
+                                    (postfix_unary_suffix
+                                      (navigation_suffix
+                                        (member_access_operator)
+                                        (simple_identifier))))))))))))))
+              (postfix_expression
+                (simple_identifier)
+                (postfix_unary_suffix
+                  (call_suffix
+                    (value_arguments
+                      (value_argument
+                        (postfix_expression
+                          (postfix_expression
+                            (simple_identifier)
+                            (postfix_unary_suffix
+                              (navigation_suffix
+                                (member_access_operator)
+                                (simple_identifier))))
+                          (postfix_unary_suffix
+                            (navigation_suffix
+                              (member_access_operator)
+                              (simple_identifier)))))))))
+              (postfix_expression
+                (simple_identifier)
+                (postfix_unary_suffix
+                  (call_suffix
+                    (value_arguments
+                      (value_argument
+                        (postfix_expression
+                          (simple_identifier)
+                          (postfix_unary_suffix
+                            (call_suffix
+                              (value_arguments
+                                (value_argument
+                                  (postfix_expression
+                                    (simple_identifier)
+                                    (postfix_unary_suffix
+                                      (call_suffix
+                                        (value_arguments
+                                          (value_argument
+                                            (string_literal
+                                              (line_string_literal))))))))))))))))))))))))
+
+================================================================
+A settings script with nested blocks and a call on a receiver
+================================================================
+
+pluginManagement {
+    includeBuild("build-logic")
+    repositories {
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+            }
+        }
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+}
+
+----
+
+(source_file
+  (postfix_expression
+    (simple_identifier)
+    (postfix_unary_suffix
+      (call_suffix
+        (annotated_lambda
+          (lambda_literal
+            (statements
+              (postfix_expression
+                (simple_identifier)
+                (postfix_unary_suffix
+                  (call_suffix
+                    (value_arguments
+                      (value_argument
+                        (string_literal
+                          (line_string_literal)))))))
+              (postfix_expression
+                (simple_identifier)
+                (postfix_unary_suffix
+                  (call_suffix
+                    (annotated_lambda
+                      (lambda_literal
+                        (statements
+                          (postfix_expression
+                            (simple_identifier)
+                            (postfix_unary_suffix
+                              (call_suffix
+                                (annotated_lambda
+                                  (lambda_literal
+                                    (statements
+                                      (postfix_expression
+                                        (simple_identifier)
+                                        (postfix_unary_suffix
+                                          (call_suffix
+                                            (annotated_lambda
+                                              (lambda_literal
+                                                (statements
+                                                  (postfix_expression
+                                                    (simple_identifier)
+                                                    (postfix_unary_suffix
+                                                      (call_suffix
+                                                        (value_arguments
+                                                          (value_argument
+                                                            (string_literal
+                                                              (line_string_literal
+                                                                (escape_sequence))))))))))))))))))))
+                          (postfix_expression
+                            (simple_identifier)
+                            (postfix_unary_suffix
+                              (call_suffix
+                                (value_arguments))))))))))))))))
+  (postfix_expression
+    (simple_identifier)
+    (postfix_unary_suffix
+      (call_suffix
+        (annotated_lambda
+          (lambda_literal
+            (statements
+              (postfix_expression
+                (postfix_expression
+                  (simple_identifier)
+                  (postfix_unary_suffix
+                    (navigation_suffix
+                      (member_access_operator)
+                      (simple_identifier))))
+                (postfix_unary_suffix
+                  (call_suffix
+                    (value_arguments
+                      (value_argument
+                        (postfix_expression
+                          (simple_identifier)
+                          (postfix_unary_suffix
+                            (navigation_suffix
+                              (member_access_operator)
+                              (simple_identifier))))))))))))))))
+
+================================================================
+A comment above a script's first statement is a comment
+================================================================
+
+// why this module exists
+plugins {
+    id("cogra.android.module")
+}
+
+----
+
+(source_file
+  (line_comment)
+  (postfix_expression
+    (simple_identifier)
+    (postfix_unary_suffix
+      (call_suffix
+        (annotated_lambda
+          (lambda_literal
+            (statements
+              (postfix_expression
+                (simple_identifier)
+                (postfix_unary_suffix
+                  (call_suffix
+                    (value_arguments
+                      (value_argument
+                        (string_literal
+                          (line_string_literal))))))))))))))
+
+================================================================
+A script mixes declarations with statements
+================================================================
+
+val versionName = "1.0"
+
+tasks.register("x") {
+    doLast {
+        println(versionName)
+    }
+}
+
+----
+
+(source_file
+  (property_declaration
+    (variable_declaration
+      (simple_identifier))
+    (string_literal
+      (line_string_literal)))
+  (postfix_expression
+    (postfix_expression
+      (simple_identifier)
+      (postfix_unary_suffix
+        (navigation_suffix
+          (member_access_operator)
+          (simple_identifier))))
+    (postfix_unary_suffix
+      (call_suffix
+        (value_arguments
+          (value_argument
+            (string_literal
+              (line_string_literal))))
+        (annotated_lambda
+          (lambda_literal
+            (statements
+              (postfix_expression
+                (simple_identifier)
+                (postfix_unary_suffix
+                  (call_suffix
+                    (annotated_lambda
+                      (lambda_literal
+                        (statements
+                          (postfix_expression
+                            (simple_identifier)
+                            (postfix_unary_suffix
+                              (call_suffix
+                                (value_arguments
+                                  (value_argument
+                                    (simple_identifier)))))))))))))))))))
