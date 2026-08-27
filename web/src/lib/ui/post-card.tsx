@@ -8,9 +8,11 @@
 import Link from "next/link";
 
 import { isPending, type PostView } from "@/lib/api/content-api";
+import { referenceChipEntries } from "@/lib/references/claims";
 import { ActorChip } from "./actor-chip";
 import { Card } from "./card";
 import { PendingMarker } from "./pending-marker";
+import { ReferenceChipRow } from "./reference-chip-row";
 import { StanceControl } from "./stance-control";
 import { TopicChipRow, type TopicChipEntry } from "./topic-chip-row";
 
@@ -44,6 +46,12 @@ export function PostCard({
           is real content whose place in the order is not yet fixed. */}
       {isPending(post) && <PendingMarker testId={`${prefix}-pending-${post.id}`} />}
       <TopicChipRow topics={chipEntries(post)} testIdPrefix={testId} />
+      {/* The reference row under the body (D16). A card stays plain —
+          the values toggle is a detail-surface affordance. */}
+      <ReferenceChipRow
+        references={referenceChipEntries(post.references)}
+        testIdPrefix={testId}
+      />
       {/* Part of the post card's own inventory (design.md §6), outside
           the link: it acts, it does not navigate. */}
       <StanceControl

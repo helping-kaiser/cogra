@@ -58,8 +58,31 @@ function topicClaim(name: string, relevance = 0.1, confidence = 1) {
   };
 }
 
-/** The edit screen's own read, with whatever tags the post carries. */
-function editablePost(topics: ReturnType<typeof topicClaim>[] = []) {
+/**
+ * A `ReferenceClaim` as the wire serves it: the L1 identifier beside the
+ * TYPED target, whose own `id` is the L2 one the prepare verbs take.
+ */
+function referenceClaim(id: string, handle: string, relevance = 0.1, support = 0.1) {
+  return {
+    __typename: "ReferenceClaim",
+    targetId: `l1-${id}`,
+    relevance,
+    support,
+    pending: false,
+    target: {
+      __typename: "User",
+      id,
+      handle,
+      displayName: { __typename: "ModeratedText", value: handle },
+    },
+  };
+}
+
+/** The edit screen's own read, with whatever claims the post carries. */
+function editablePost(
+  topics: ReturnType<typeof topicClaim>[] = [],
+  references: ReturnType<typeof referenceClaim>[] = [],
+) {
   return {
     post: {
       __typename: "Post",
@@ -74,6 +97,7 @@ function editablePost(topics: ReturnType<typeof topicClaim>[] = []) {
       moderationStatus: "NORMAL",
       license: { __typename: "License", attribution: 0, provenance: 0 },
       topics,
+      references,
       comments: {
         __typename: "CommentConnection",
         edges: [],
@@ -162,6 +186,7 @@ describe("ComposeForm", () => {
         content: "The body",
         license: { attribution: 1, provenance: 0.5 },
         tags: [],
+        references: [],
       },
     });
   });
@@ -322,6 +347,7 @@ describe("ComposeForm", () => {
               moderationStatus: "NORMAL",
               license: { __typename: "License", attribution: 0, provenance: 0 },
               topics: [],
+              references: [],
               comments: {
                 __typename: "CommentConnection",
                 edges: [],
@@ -689,5 +715,310 @@ describe("ComposeForm", () => {
     expect(alert).toHaveTextContent("Restore your key");
     expect(screen.queryByTestId("compose-signing-failed")).not.toBeInTheDocument();
     expect(push).not.toHaveBeenCalled();
+  });
+});
+
+// Slice 2.4. Named apart from the tag suite above: the two sections are
+// siblings on this screen, and a failure should say which one broke.
+describe("ComposeForm — references", () => {
+  beforeEach(() => {
+    searchParams = new URLSearchParams();
+    window.localStorage.clear();
+    // Asking is the default; the tests that care turn it back on.
+    writeConfirmMultiAction(false);
+  });
+
+  function candidatesRespond(id: string, handle: string) {
+    return graphql.query("ReferenceCandidates", () =>
+      HttpResponse.json({
+        data: {
+          referenceCandidates: [
+            {
+              __typename: "ReferenceCandidate",
+              targetId: id,
+              target: {
+                __typename: "User",
+                id,
+                handle,
+                displayName: { __typename: "ModeratedText", value: handle },
+              },
+            },
+          ],
+        },
+      }),
+    );
+  }
+
+  function referenceWrites(count: number) {
+    return Array.from({ length: count }, (_, i) => ({
+      __typename: "PreparedWrite",
+      id: `r${i}`,
+      family: "REFERENCE",
+      canonicalProposal: "cHJvcG9zYWw=",
+      gcAfterEpochs: 8,
+    }));
+  }
+
+  async function draftOneReference(id = "u-ada", handle = "ada") {
+    server.use(candidatesRespond(id, handle));
+    fireEvent.click(screen.getByTestId("compose-reference-add"));
+    fireEvent.change(screen.getByTestId("compose-finder-query"), {
+      target: { value: handle },
+    });
+    fireEvent.click(await screen.findByTestId(`compose-finder-candidate-${id}`));
+  }
+
+  it("counts a drafted reference beside the mint and the tags", async () => {
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    expect(screen.getByTestId("compose-signed-actions")).toHaveTextContent(
+      "creates 1 signed action",
+    );
+    fireEvent.change(screen.getByTestId("compose-tag-input"), { target: { value: "rust" } });
+    fireEvent.click(screen.getByTestId("compose-tag-add"));
+    await draftOneReference();
+    // 1 mint + 1 tag + 1 reference.
+    await waitFor(() =>
+      expect(screen.getByTestId("compose-signed-actions")).toHaveTextContent(
+        "creates 3 signed actions",
+      ),
+    );
+    fireEvent.click(screen.getByTestId("compose-reference-0-remove"));
+    expect(screen.getByTestId("compose-signed-actions")).toHaveTextContent(
+      "creates 2 signed actions",
+    );
+  });
+
+  it("sends the drafted references on the minting batch, at their own values", async () => {
+    let sent: Record<string, unknown> | undefined;
+    server.use(
+      graphql.mutation("PreparePost", ({ variables }) => {
+        sent = variables;
+        return HttpResponse.json({ data: preparedPayload("preparePost", "node-1") });
+      }),
+    );
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "b" } });
+    await draftOneReference();
+    fireEvent.click(await screen.findByTestId("compose-reference-0-select"));
+    fireEvent.change(screen.getByTestId("compose-reference-0-support"), {
+      target: { value: "-0.5" },
+    });
+    fireEvent.click(screen.getByTestId("compose-submit"));
+
+    await waitFor(() => expect(sent).toBeDefined());
+    const input = (sent as { input: { references: unknown[] } }).input;
+    expect(input.references).toEqual([
+      { target: "u-ada", relevance: 0.1, support: -0.5 },
+    ]);
+  });
+
+  it("routes a batched reference's refusal onto that exact chip", async () => {
+    server.use(
+      graphql.mutation("PreparePost", () =>
+        HttpResponse.json({
+          data: {
+            preparePost: {
+              __typename: "PrepareContentPayload",
+              node: null,
+              writes: null,
+              userErrors: [
+                {
+                  __typename: "UserError",
+                  message: "A post cannot reference itself.",
+                  code: "INVALID_ARGUMENT",
+                  field: ["references", "0", "target"],
+                },
+              ],
+            },
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "b" } });
+    await draftOneReference();
+    fireEvent.click(screen.getByTestId("compose-submit"));
+
+    expect(await screen.findByTestId("compose-reference-error-0")).toHaveTextContent(
+      "A post cannot reference itself.",
+    );
+    expect(screen.queryByTestId("compose-refused")).not.toBeInTheDocument();
+  });
+
+  it("surfaces a whole-batch refusal as one clear line, not on a chip", async () => {
+    // D19: the balance is checked against the whole bundle, and a batch
+    // it cannot carry is refused before any act is staged.
+    server.use(
+      graphql.mutation("PreparePost", () =>
+        HttpResponse.json({
+          data: {
+            preparePost: {
+              __typename: "PrepareContentPayload",
+              node: null,
+              writes: null,
+              userErrors: [
+                {
+                  __typename: "UserError",
+                  message: "Your balance can't carry all 3 actions.",
+                  code: "INSUFFICIENT_BALANCE",
+                  field: null,
+                },
+              ],
+            },
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "b" } });
+    await draftOneReference();
+    fireEvent.click(screen.getByTestId("compose-submit"));
+
+    expect(await screen.findByTestId("compose-refused")).toHaveTextContent(
+      "Your balance can't carry all 3 actions.",
+    );
+    expect(screen.queryByTestId("compose-reference-error-0")).not.toBeInTheDocument();
+  });
+
+  it("prefills the chip the Reference affordance sent it", async () => {
+    searchParams = new URLSearchParams("reference=p-quoted");
+    server.use(
+      graphql.query("ReferenceCandidates", () =>
+        HttpResponse.json({
+          data: {
+            referenceCandidates: [
+              {
+                __typename: "ReferenceCandidate",
+                targetId: "p-quoted",
+                target: {
+                  __typename: "Post",
+                  id: "p-quoted",
+                  title: { __typename: "ModeratedText", value: "On folding" },
+                  content: { __typename: "ModeratedText", value: "body" },
+                  author: { __typename: "User", handle: "carol" },
+                },
+              },
+            ],
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    expect(await screen.findByTestId("compose-reference-0")).toHaveTextContent(
+      "@carol: On folding",
+    );
+    // The mint plus the prefilled reference.
+    expect(screen.getByTestId("compose-signed-actions")).toHaveTextContent(
+      "creates 2 signed actions",
+    );
+  });
+
+  it("stages nothing for an untouched reference section on an edit", async () => {
+    searchParams = new URLSearchParams("post=p1");
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: editablePost([], [referenceClaim("u-ada", "ada")]) }),
+      ),
+    );
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    expect(await screen.findByTestId("compose-signed-actions")).toHaveTextContent(
+      "creates no signed actions",
+    );
+    expect(screen.getByTestId("compose-reference-0")).toHaveTextContent("@ada");
+  });
+
+  it("stages a removal as a withdrawal and confirms the server's own quote", async () => {
+    // D11: withdrawal is per-leg net stance, so the cost is a BATCH the
+    // server assembles — and the confirm reports that, not the client's
+    // lower bound of one.
+    writeConfirmMultiAction(true);
+    searchParams = new URLSearchParams("post=p1");
+    let withdrawalInput: Record<string, unknown> | undefined;
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: editablePost([], [referenceClaim("u-ada", "ada")]) }),
+      ),
+      graphql.mutation("PrepareReferenceWithdrawal", ({ variables }) => {
+        withdrawalInput = variables;
+        return HttpResponse.json({
+          data: {
+            prepareReferenceWithdrawal: {
+              __typename: "PreparePayload",
+              writes: referenceWrites(3),
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const signer = fakeWriteSigner();
+    renderWithProviders(<ComposeForm />, { store: signedInStore(), writeSigner: signer });
+
+    fireEvent.click(await screen.findByTestId("compose-reference-0-remove"));
+    fireEvent.click(screen.getByTestId("compose-submit"));
+
+    // The withdrawal names the L2 id, never the claim's L1 identifier.
+    await waitFor(() => expect(withdrawalInput).toBeDefined());
+    expect((withdrawalInput as { input: { target: string } }).input.target).toBe("u-ada");
+
+    const count = await screen.findByTestId("compose-multi-action-count");
+    expect(count).toHaveTextContent("creates 3 signed actions");
+    // Nothing is signed while the reader is still deciding.
+    expect(signer.signStaged).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByTestId("compose-multi-action-proceed"));
+    await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(3));
+  });
+
+  it("stages an added reference on an edit as its own act", async () => {
+    searchParams = new URLSearchParams("post=p1");
+    let referenceInput: Record<string, unknown> | undefined;
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
+      graphql.mutation("PrepareReference", ({ variables }) => {
+        referenceInput = variables;
+        return HttpResponse.json({
+          data: {
+            prepareReference: {
+              __typename: "PreparePayload",
+              writes: referenceWrites(1),
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const signer = fakeWriteSigner();
+    renderWithProviders(<ComposeForm />, { store: signedInStore(), writeSigner: signer });
+    await screen.findByTestId("compose-body");
+    await draftOneReference();
+    fireEvent.click(screen.getByTestId("compose-submit"));
+
+    await waitFor(() => expect(referenceInput).toBeDefined());
+    expect((referenceInput as { input: Record<string, unknown> }).input).toMatchObject({
+      artifact: "p1",
+      target: "u-ada",
+      relevance: 0.1,
+      support: 0.1,
+    });
+    await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(1));
   });
 });

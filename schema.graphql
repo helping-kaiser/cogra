@@ -1456,9 +1456,9 @@ type Query {
 	**Exact-match resolution only.** Real search — prefix matching,
 	ranking, snippets — arrives with slice 2.7 *behind this same
 	field*, so a client binds to it once and does not change when the
-	implementation is replaced. Three shapes resolve today: a handle,
-	bare or `@`-sigilled, names a person; a `#name` names a topic; a
-	UUID names whatever node it addresses.
+	implementation is replaced. Two shapes resolve today: a handle,
+	bare or `@`-sigilled, names a person; a UUID names whatever node
+	it addresses.
 	
 	An empty or unresolvable query yields an empty list, never an
 	error. A finder runs on every keystroke, so most of what it is
@@ -1468,12 +1468,12 @@ type Query {
 	A candidate is offerable only if `prepareReference` would accept
 	it: resolution runs through the write path's own resolver, so the
 	picker cannot hand back a target the mutation then refuses. Two
-	classes narrow for exactly that reason. A Type is offered only
-	once the registry can invert its name — a `ReferenceInput` names
-	its target by L2 id, and the name → id derivation is one-way, so
-	a name no record has referenced yet has no id to name. And a
-	keyless account fronts no Profile on the graph, so it resolves
-	nowhere for the write path and must not be offered here either.
+	classes narrow for exactly that reason. A topic is never offered
+	— it is tagged, not referenced (D21) — which is why a `#`-typed
+	query finds nothing and a UUID naming a Type yields no candidate.
+	And a keyless account fronts no Profile on the graph, so it
+	resolves nowhere for the write path and must not be offered here
+	either.
 	"""
 	referenceCandidates(query: String!, limit: Int): [ReferenceCandidate!]!
 	"""
@@ -1646,9 +1646,10 @@ withdrawn and never appears here.
 """
 type ReferenceClaim {
 	"""
-	The cited node, typed. Null when CoGra carries no display row for
-	it — the fold reads the mirror, which reaches further than the
-	display store — in which case `targetId` still names it.
+	The cited node, typed. Null when this instance cannot type the far
+	end — the fold reads the mirror, which reaches further than both
+	the display store and CoGra's own target policy — in which case
+	`targetId` still names it.
 	"""
 	target: ReferenceTarget
 	"""
@@ -1722,16 +1723,15 @@ input ReferenceInput {
 """
 What a citation may point at. Quoting, embedding and mentioning are
 one record, and this union *is* the distinction between them: a
-citation whose target is a `User` is a mention, one whose target is a
-`Hashtag` is a topic citation, and one whose target is a `Post` or
-`Comment` is a quote or embed — which of those two is a render
-question, not a wire one.
+citation whose target is a `User` is a mention, and one whose target
+is a `Post` or `Comment` is a quote or embed — which of those two is
+a render question, not a wire one.
 
-A union rather than the `Node` interface because a `Hashtag` is
-deliberately not a `Node` — it has no minting record, nothing to date
-and nothing to land — and a Type is a legal citation target.
+A `Hashtag` is absent, and that absence is the contract: a topic is
+tagged, never referenced (D21). The write path refuses a Type target,
+so no citation this instance prepares can have one.
 """
-union ReferenceTarget = Post | Comment | User | Hashtag
+union ReferenceTarget = Post | Comment | User
 
 type RefreshPayload {
 	"""
