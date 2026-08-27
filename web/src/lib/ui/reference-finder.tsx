@@ -49,47 +49,50 @@ export function ReferenceFinder({
   const client = useApolloClient();
   const ref = useRef<HTMLDialogElement>(null);
   const [query, setQuery] = useState("");
-  const [candidates, setCandidates] = useState<readonly ReferenceDraft[]>([]);
-  const [looking, setLooking] = useState(false);
-  const [failed, setFailed] = useState(false);
-  // Whether a lookup has answered for the query currently typed — an
-  // unanswered query must not read as "nothing matches".
-  const [answered, setAnswered] = useState(false);
+  // The last lookup that came back, TAGGED with the query it answered.
+  // Everything the list renders is derived from it, so nothing has to be
+  // reset as the reader types — React's own "you might not need an
+  // effect" shape, and the reason this effect never sets state in its
+  // body, only in the callback that resolves.
+  const [answer, setAnswer] = useState<{
+    query: string;
+    candidates: readonly ReferenceDraft[];
+    failed: boolean;
+  } | null>(null);
 
   useEffect(() => {
     const dialog = ref.current;
     if (dialog !== null && !dialog.open) dialog.showModal();
   }, []);
 
+  const trimmed = query.trim();
+  const queryable = isQueryable(query);
+
   useEffect(() => {
-    if (!isQueryable(query)) {
-      setCandidates([]);
-      setLooking(false);
-      setFailed(false);
-      setAnswered(false);
-      return;
-    }
+    if (!queryable) return;
     let cancelled = false;
-    setLooking(true);
-    setFailed(false);
     const timer = setTimeout(() => {
-      void fetchReferenceCandidates(client, query).then((outcome) => {
+      void fetchReferenceCandidates(client, trimmed).then((outcome) => {
         if (cancelled) return;
-        setLooking(false);
-        setAnswered(true);
-        if (outcome.kind === "success") {
-          setCandidates(outcome.value);
-        } else {
-          setCandidates([]);
-          setFailed(true);
-        }
+        setAnswer(
+          outcome.kind === "success"
+            ? { query: trimmed, candidates: outcome.value, failed: false }
+            : { query: trimmed, candidates: [], failed: true },
+        );
       });
     }, debounceMs);
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [client, query, debounceMs]);
+  }, [client, trimmed, queryable, debounceMs]);
+
+  // An answer counts only for the query currently typed, so a stale one
+  // never reads as "nothing matches" for what is being typed now.
+  const answered = queryable && answer !== null && answer.query === trimmed;
+  const looking = queryable && !answered;
+  const candidates = answered ? answer.candidates : [];
+  const failed = answered && answer.failed;
 
   const drafted = new Set(alreadyDrafted);
 
@@ -118,7 +121,7 @@ export function ReferenceFinder({
       {/* Live, so a screen reader hears the list change as it is typed
           rather than only on focusing it. */}
       <div role="status" aria-live="polite" className="mt-3 flex flex-col gap-2">
-        {!isQueryable(query) && (
+        {!queryable && (
           <p
             data-testid={`${testIdPrefix}-finder-hint`}
             className="text-body-small text-on-surface-variant"

@@ -186,6 +186,7 @@ describe("ComposeForm", () => {
         content: "The body",
         license: { attribution: 1, provenance: 0.5 },
         tags: [],
+        references: [],
       },
     });
   });
