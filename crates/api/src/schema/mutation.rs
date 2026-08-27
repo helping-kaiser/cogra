@@ -355,6 +355,65 @@ fn tag_drafts(tags: &Option<Vec<TagInput>>) -> Vec<crate::topics::TagDraft> {
     tags.iter().flatten().map(TagInput::to_draft).collect()
 }
 
+/// A citation — one Reference record from the authored artifact to the
+/// target. Quoting, embedding and mentioning are all this one record, and
+/// the target's node class is the whole distinction: a Reference whose
+/// target is a person's Profile *is* a mention. Nothing is minted; both
+/// endpoints pre-exist.
+///
+/// Both parameters are optional and default to +0.1, so a plain citation
+/// needs only its target. The defaults are strictly positive on both
+/// axes, which means a default mention vouches — weakly, at coefficient
+/// `√0.01 = 0.1`.
+///
+/// A citation carries no note. A payload would make the record
+/// payload-marked, and payload-marked records are read individually and
+/// never through the author's netted bundle — so a note would silently
+/// remove the citation from the very fold that renders it.
+///
+/// The target may still be in flight when it is the viewer's own: a
+/// citation toward a pending node declares that node's act as a
+/// dependency, so the epoch close cannot order the citation ahead of what
+/// it cites.
+#[derive(InputObject)]
+struct ReferenceInput {
+    /// The cited node — a post, a comment, a person's profile, or a
+    /// topic. External links are body text, never citations: both
+    /// endpoints of a Reference are nodes on the graph.
+    target: Uuid,
+    /// How load-bearing the cited thing is to this artifact, `[-1, 1]`;
+    /// defaults to +0.1. The census calls this **effort `f`**, and it
+    /// occupies the `pDirected` slot — the same slot relevance occupies
+    /// on a tag.
+    relevance: Option<Dimension>,
+    /// Endorsing versus refuting, `[-1, 1]`; defaults to +0.1. The census
+    /// calls this **enthusiasm `e`**, and it occupies the `pInterest`
+    /// slot. This is the axis that decides whether a mention vouches: a
+    /// citation strictly positive on both axes resolves its fold cell to
+    /// the cited person, and every other citation resolves home.
+    support: Option<Dimension>,
+}
+
+impl ReferenceInput {
+    fn to_draft(&self) -> crate::references::ReferenceDraft {
+        crate::references::ReferenceDraft {
+            target: self.target,
+            relevance: self.relevance.map(|d| d.0),
+            support: self.support.map(|d| d.0),
+        }
+    }
+}
+
+fn reference_drafts(
+    references: &Option<Vec<ReferenceInput>>,
+) -> Vec<crate::references::ReferenceDraft> {
+    references
+        .iter()
+        .flatten()
+        .map(ReferenceInput::to_draft)
+        .collect()
+}
+
 /// A new Post: one genesis Publish whose envelope carries the display
 /// fields (post.md §1), plus one Tag record per declared topic — each
 /// its own priced act. Fields are raw scalars; moderation is
@@ -373,6 +432,11 @@ struct PreparePostInput {
     /// decoupled. At most 10 per batch; two names that canonicalize
     /// alike are refused rather than deduplicated.
     tags: Option<Vec<TagInput>>,
+    /// Citations declared at creation — quotes, embeds and mentions.
+    /// Structured input like tags and for the same reason. At most 10 per
+    /// batch; citing the same target twice is refused rather than
+    /// deduplicated, and a post cannot cite itself.
+    references: Option<Vec<ReferenceInput>>,
 }
 
 /// A Post edit: the complete new content state, the same field set a
@@ -400,6 +464,8 @@ struct PrepareCommentInput {
     p_interest: Option<Dimension>,
     /// Topics declared at creation; same rules as on a Post.
     tags: Option<Vec<TagInput>>,
+    /// Citations declared at creation; same rules as on a Post.
+    references: Option<Vec<ReferenceInput>>,
 }
 
 /// One standalone topic declaration on existing content — the gesture
@@ -492,6 +558,7 @@ impl PrepareContentPayload {
                 "only the creator's edits win the fold",
             ),
             ContentError::Tags(e) => UserError::at(ErrorCode::BadInput, e.message, e.path),
+            ContentError::References(e) => UserError::at(ErrorCode::BadInput, e.message, e.path),
             ContentError::Prepare(e) => UserError::from_onboarding(&OnboardingError::from(e), ""),
             e @ ContentError::Internal(_) => internal(e),
         }])
@@ -1705,6 +1772,7 @@ impl Mutation {
             license,
             p_directed: input.p_directed.map(|d| d.0),
             tags: tag_drafts(&input.tags),
+            references: reference_drafts(&input.references),
         };
         match crate::content::prepare_post(pool, boundary, cfg.gc_after_epochs, v.user_id, draft)
             .await
@@ -1769,6 +1837,7 @@ impl Mutation {
             p_directed: input.p_directed.map(|d| d.0),
             p_interest: input.p_interest.map(|d| d.0),
             tags: tag_drafts(&input.tags),
+            references: reference_drafts(&input.references),
         };
         match crate::content::prepare_comment(pool, boundary, cfg.gc_after_epochs, v.user_id, draft)
             .await

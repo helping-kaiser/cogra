@@ -22,6 +22,7 @@ use uuid::Uuid;
 use crate::ingest::PromotionFailure;
 use crate::l1::L1Boundary;
 use crate::prepare::{self, Gesture, PrepareError, Target};
+use crate::references::{self, ReferenceDraft, ReferenceError, ReferencesError};
 use crate::topics::{self, TagDraft, TagError, TopicsError};
 
 /// The low-defaults stance value (invitations.md §3): defaults sit low
@@ -227,6 +228,10 @@ pub enum ContentError {
     /// names the offending entry.
     #[error(transparent)]
     Tags(#[from] TagError),
+    /// A citation in the creation batch was refused; the path names the
+    /// offending entry.
+    #[error(transparent)]
+    References(#[from] ReferenceError),
     #[error(transparent)]
     Prepare(#[from] PrepareError),
     #[error("internal: {0}")]
@@ -239,6 +244,17 @@ impl From<TopicsError> for ContentError {
             TopicsError::BadInput(e) => Self::Tags(e),
             TopicsError::Prepare(e) => Self::Prepare(e),
             TopicsError::Internal(m) => Self::Internal(m),
+        }
+    }
+}
+
+impl From<ReferencesError> for ContentError {
+    fn from(e: ReferencesError) -> Self {
+        match e {
+            ReferencesError::BadInput(e) => Self::References(e),
+            ReferencesError::Prepare(e) => Self::Prepare(e),
+            ReferencesError::Storage(e) => Self::Internal(e.to_string()),
+            ReferencesError::Internal(m) => Self::Internal(m),
         }
     }
 }
@@ -271,6 +287,13 @@ pub struct PostDraft {
     /// parsed from the body, so display content and graph structure stay
     /// decoupled (api-spec.md "Content authoring").
     pub tags: Vec<TagDraft>,
+    /// The citations declared at creation — quotes, embeds and mentions
+    /// alike, since the target's class is the whole distinction (D2).
+    /// Structured input for the same reason tags are, and for one more: a
+    /// mention resolves at render time against the actor's *current*
+    /// handle, which a name frozen into the body could not do
+    /// (erasure.md §3).
+    pub references: Vec<ReferenceDraft>,
 }
 
 /// An edit's complete field set: the payload is the Post's whole new
@@ -292,6 +315,9 @@ pub struct CommentDraft {
     /// The topics declared at creation — a Comment is Taggable like any
     /// other passive node (layer1-interface.md §9).
     pub tags: Vec<TagDraft>,
+    /// The citations declared at creation — a Comment is a citing
+    /// artifact like any other passive node (comment.md §3).
+    pub references: Vec<ReferenceDraft>,
 }
 
 pub struct CommentEditDraft {
@@ -341,8 +367,16 @@ async fn author_address(pool: &PgPool, viewer: Uuid) -> Result<String, ContentEr
 }
 
 /// Prepares a new Post: one genesis Publish whose envelope carries the
-/// display fields (post.md §1), plus one Tag act per declared topic. The
-/// attachment defaults low; `p_i` is census-fixed at 1.
+/// display fields (post.md §1), plus one Tag act per declared topic and
+/// one Reference act per declared citation. The attachment defaults low;
+/// `p_i` is census-fixed at 1.
+///
+/// Everything the batch could be refused for is checked before the
+/// minting record is staged — the topic names, the citation targets, and
+/// the balance against the batch's whole price. A refusal therefore
+/// leaves nothing in flight, which is what "a malformed batch must not
+/// leave half its acts in flight" means once a batch can reach 21 acts
+/// (api-spec.md "Conventions"; D19).
 pub async fn prepare_post<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -353,7 +387,9 @@ pub async fn prepare_post<B: L1Boundary>(
     let p_d = draft.p_directed.unwrap_or(DEFAULT_STANCE);
     stance_range("pDirected", p_d)?;
     let tags = topics::plan_batch(&draft.tags)?;
+    let citations = references::plan_batch(pool, &draft.references).await?;
     let address = author_address(pool, viewer).await?;
+    prepare::check_batch_solvency(boundary, &address, batch_acts(&tags, &citations)).await?;
     let node = Uuid::new_v4();
     let payload = CograContent {
         node,
@@ -393,9 +429,30 @@ pub async fn prepare_post<B: L1Boundary>(
         &tags,
     )
     .await?;
+    let reference_writes = stage_references(
+        pool,
+        boundary,
+        gc_after_epochs,
+        viewer,
+        &address,
+        &prepared,
+        &citations,
+    )
+    .await?;
     let mut writes = vec![prepared];
     writes.extend(tag_writes);
+    writes.extend(reference_writes);
     Ok(PreparedContent { node, writes })
+}
+
+/// How many priced acts a creation batch stages: the minting record, plus
+/// one per topic and one per citation (api-spec.md "Content authoring").
+///
+/// This is the number D19's pre-check prices, and the number the composer
+/// shows as "creates N signed actions" — one gesture to the author, N
+/// θ-debits to the substrate.
+fn batch_acts(tags: &[topics::PlannedTag], citations: &[references::PlannedReference]) -> usize {
+    1 + tags.len() + references::act_count(citations)
 }
 
 /// The tag half of a creation batch: one Tag per topic, each entering the
@@ -427,6 +484,40 @@ async fn stage_tags<B: L1Boundary>(
         deps: &deps,
     };
     Ok(topics::stage_tags(pool, boundary, gc_after_epochs, viewer, site, tags).await?)
+}
+
+/// The citation half of a creation batch: one Reference per cited target,
+/// each hung off the node the minting record mints.
+///
+/// The middle comes off the minting record's own target for the same
+/// reason the tags' does — for a genesis act that target *is* the node's
+/// identifier, and it exists only once prepare has allocated the sequence
+/// value. Each citation declares the minting act as a dependency, so the
+/// epoch close cannot order a citation ahead of the artifact it cites
+/// from (D17: an own in-flight target declares the dep).
+async fn stage_references<B: L1Boundary>(
+    pool: &PgPool,
+    boundary: &B,
+    gc_after_epochs: i64,
+    viewer: Uuid,
+    address: &str,
+    minting: &prepare::Prepared,
+    citations: &[references::PlannedReference],
+) -> Result<Vec<prepare::Prepared>, ContentError> {
+    if citations.is_empty() {
+        return Ok(Vec::new());
+    }
+    let middle = minting.proposal.body.target.clone();
+    let deps = vec![minting.proposal.body.act_id()];
+    let site = references::ReferenceSite {
+        author: address,
+        middle: &middle,
+        deps: &deps,
+    };
+    Ok(
+        references::stage_references(pool, boundary, gc_after_epochs, viewer, site, citations)
+            .await?,
+    )
 }
 
 /// Prepares a Post edit: an ordinary-role Publish toward the existing
@@ -484,9 +575,12 @@ pub async fn prepare_post_edit<B: L1Boundary>(
 
 /// Prepares a new Comment: one genesis Review — A leg to the parent,
 /// terminal leg minting the Comment (comment.md §1) — plus one Tag act
-/// per declared topic. This slice offers the comment box on Posts and
-/// Comments (which parents the UI offers is product policy, never a
-/// substrate limit — comment.md §1).
+/// per declared topic and one Reference act per declared citation. This
+/// slice offers the comment box on Posts and Comments (which parents the
+/// UI offers is product policy, never a substrate limit — comment.md §1).
+///
+/// The same whole-batch discipline as `prepare_post`: everything
+/// refusable is refused before the minting record is staged.
 pub async fn prepare_comment<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -499,8 +593,10 @@ pub async fn prepare_comment<B: L1Boundary>(
     stance_range("pDirected", p_d)?;
     stance_range("pInterest", p_i)?;
     let tags = topics::plan_batch(&draft.tags)?;
+    let citations = references::plan_batch(pool, &draft.references).await?;
     let parent = parent_node(pool, draft.target).await?;
     let address = author_address(pool, viewer).await?;
+    prepare::check_batch_solvency(boundary, &address, batch_acts(&tags, &citations)).await?;
     let node = Uuid::new_v4();
     let payload = CograContent {
         node,
@@ -540,8 +636,19 @@ pub async fn prepare_comment<B: L1Boundary>(
         &tags,
     )
     .await?;
+    let reference_writes = stage_references(
+        pool,
+        boundary,
+        gc_after_epochs,
+        viewer,
+        &address,
+        &prepared,
+        &citations,
+    )
+    .await?;
     let mut writes = vec![prepared];
     writes.extend(tag_writes);
+    writes.extend(reference_writes);
     Ok(PreparedContent { node, writes })
 }
 

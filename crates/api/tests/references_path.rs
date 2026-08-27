@@ -114,6 +114,7 @@ impl Rig {
                 license: license(),
                 p_directed: None,
                 tags: vec![],
+                references: vec![],
             },
         )
         .await
