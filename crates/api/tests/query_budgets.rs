@@ -69,14 +69,19 @@ async fn a_query_within_the_depth_budget_passes_validation(pool: PgPool) {
     assert!(response.errors.is_empty(), "{:?}", response.errors);
 }
 
-/// 100 links × (100 applications × ~4) is roughly 40k fields — the
-/// multiplicative blowup the complexity budget exists to refuse.
+/// 100 posts × 100 comments × 100 replies is over a million fields —
+/// the multiplicative blowup the complexity budget exists to refuse.
+/// Two connection levels no longer reach it: the clients themselves
+/// page three deep, so the ceiling that admits them sits above any
+/// two-level product.
 #[sqlx::test(migrations = "../../migrations")]
 async fn nested_full_page_connections_exceed_the_complexity_budget(pool: PgPool) {
     let schema = schema(pool, QueryBudgets::release());
-    let query = "{ me { inviteLinks(first: 100) { edges { node {
-        applications(first: 100) { edges { node { id status } } }
-    } } } } }";
+    let query = "{ posts(first: 100) { edges { node {
+        comments(first: 100) { edges { node {
+            replies(first: 100) { edges { node { id } } }
+        } } }
+    } } } }";
     let response = execute(&schema, query).await;
     assert_eq!(first_error(&response), "Query is too complex.");
 }
@@ -179,8 +184,9 @@ fragment TypeRef on __Type {
 "#;
 
 /// The regression guard for async-graphql's limits, which carve out
-/// nothing for introspection: the dev budgets have to stay wide enough
-/// that the playground's own schema fetch keeps working.
+/// nothing for introspection: the dev budgets have to keep admitting the
+/// playground's own schema fetch. Depth is what that costs — 13 `ofType`
+/// levels — not complexity, which comes to 181.
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_dev_budgets_admit_the_standard_introspection_query(pool: PgPool) {
     let schema = schema(pool, QueryBudgets::dev());
