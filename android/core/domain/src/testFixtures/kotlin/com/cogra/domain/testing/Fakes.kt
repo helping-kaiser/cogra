@@ -417,6 +417,7 @@ open class ThrowingContentRepository : ContentRepository {
         target: String,
         content: String,
         license: LicenseChoice,
+        tags: List<TagClaim>,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun prepareCommentEdit(id: String, content: String): Outcome<PreparedContentView> =
         throw UnsupportedOperationException()

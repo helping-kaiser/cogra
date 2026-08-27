@@ -12,32 +12,12 @@ import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.store.IdentityStore
-import com.cogra.domain.topics.TAG_DEFAULT_CONFIDENCE
-import com.cogra.domain.topics.TAG_DEFAULT_RELEVANCE
-import com.cogra.domain.topics.TagClaim
-import com.cogra.domain.topics.canonicalTagName
-import com.cogra.domain.topics.isAddableTagName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
-/**
- * One tag this submit will declare: the canonical name, the two
- * parameters its sliders carry, and the server's own words about it
- * when the write was refused on this chip (F2).
- */
-data class TagRow(
-    val name: String,
-    val relevance: Double = TAG_DEFAULT_RELEVANCE,
-    val confidence: Double = TAG_DEFAULT_CONFIDENCE,
-    val error: String? = null,
-) {
-    fun sameClaimAs(other: TagRow): Boolean =
-        name == other.name && relevance == other.relevance && confidence == other.confidence
-}
 
 data class ComposePostUiState(
     /** Null for a new post; the edited post's id otherwise. */
@@ -47,21 +27,15 @@ data class ComposePostUiState(
     val description: String = "",
     val body: String = "",
     val license: LicenseChoice = LicenseChoice.PublicDomain,
-    /** The tag entry field's raw text — [canonicalTagName] shows what it will become. */
-    val tagInput: String = "",
     /**
      * The topics this post will carry once the submit lands: staged
      * chips when creating, the post's current tags plus the author's
      * changes when editing (F3).
      */
-    val tags: List<TagRow> = emptyList(),
-    /** What the edit loaded — what a change is measured against. */
-    val loadedTags: List<TagRow> = emptyList(),
+    val tagSection: TagSectionState = TagSectionState(),
     val loadedTitle: String = "",
     val loadedDescription: String = "",
     val loadedBody: String = "",
-    /** Which chip has its parameter sliders open; null when none. */
-    val tagBeingTuned: String? = null,
     val submitting: Boolean = false,
     val emptyBody: Boolean = false,
     /** A refusal that named no chip of its own, in the server's words (F2). */
@@ -80,9 +54,6 @@ data class ComposePostUiState(
 ) {
     val creating: Boolean get() = editingId == null
 
-    /** The batch cap (D18) — the composer blocks the 11th chip itself. */
-    val tagCapReached: Boolean get() = tags.size >= MAX_TAGS
-
     /** Whether the edit record has anything to carry (F4's count depends on it). */
     val contentChanged: Boolean
         get() = creating ||
@@ -91,31 +62,22 @@ data class ComposePostUiState(
             body != loadedBody
 
     /**
-     * Every tag this submit declares: on the edit screen, the ones the
-     * post did not already carry at these parameters — re-declaring a
-     * tag at a new relevance is its own Tag act, not a no-op.
-     */
-    val tagAdds: List<TagRow>
-        get() = if (creating) tags else tags.filter { row -> loadedTags.none { it.sameClaimAs(row) } }
-
-    /** Tags the author took off — each a further Tag at relevance 0 (hashtag.md §4). */
-    val tagRemoves: List<String>
-        get() = if (creating) emptyList() else loadedTags.map { it.name }.filter { name -> tags.none { it.name == name } }
-
-    /**
      * What this submit will stage, counted the way the batch is priced —
      * each record its own signed act (F4). Live, so the reader watches
-     * it move as they type.
+     * it move as they type. A creation's tags ride the minting write's
+     * own input, so the server stages one Tag record per declared topic
+     * beside it; an edit stages each change as its own standalone act.
      */
     val signedActionCount: Int
-        get() = if (creating) 1 + tags.size else (if (contentChanged) 1 else 0) + tagAdds.size + tagRemoves.size
+        get() = if (creating) {
+            1 + tagSection.tags.size
+        } else {
+            (if (contentChanged) 1 else 0) + tagSection.changeCount
+        }
 
     /** Nothing to sign: an edit opened and left alone stages no record. */
     val nothingToSign: Boolean get() = signedActionCount == 0
 }
-
-/** Mirrors the API's batch cap (D18) so the composer refuses locally, not with a round trip. */
-const val MAX_TAGS = 10
 
 /**
  * The composer, in create and edit mode. Create is a genesis Publish;
@@ -174,8 +136,7 @@ class ComposePostViewModel @Inject constructor(
                                 loadedTitle = post.title.value.orEmpty(),
                                 loadedDescription = post.description.value.orEmpty(),
                                 loadedBody = post.content.value.orEmpty(),
-                                tags = tags,
-                                loadedTags = tags,
+                                tagSection = TagSectionState(tags = tags, loaded = tags),
                             )
                         }
                     }
@@ -192,42 +153,23 @@ class ComposePostViewModel @Inject constructor(
     fun onLicenseChange(v: LicenseChoice) = _state.update { it.copy(license = v) }
     fun onSavedConsumed() = _state.update { it.copy(saved = false) }
 
-    fun onTagInputChange(v: String) = _state.update { it.copy(tagInput = v) }
+    fun onTagInputChange(v: String) = updateTags { it.withInput(v) }
 
-    /**
-     * Adds the current entry as a chip: canonical, capped at 10 (D18),
-     * legal by L1's atom rule (F1), and never duplicated — re-entering a
-     * name already staged just clears the field, the same as a
-     * successful add would.
-     */
-    fun onAddTag() {
-        val s = _state.value
-        if (s.tagCapReached) return
-        if (!isAddableTagName(s.tagInput)) return
-        val name = canonicalTagName(s.tagInput)
-        _state.update {
-            it.copy(
-                tagInput = "",
-                tags = if (it.tags.any { row -> row.name == name }) it.tags else it.tags + TagRow(name),
-            )
-        }
-    }
+    fun onAddTag() = updateTags { it.added() }
 
-    fun onRemoveTag(name: String) = _state.update {
-        it.copy(tags = it.tags.filterNot { row -> row.name == name }, tagBeingTuned = null)
-    }
+    fun onRemoveTag(name: String) = updateTags { it.removed(name) }
 
     /** Tapping a staged chip opens its parameters (F6). */
-    fun onTuneTag(name: String) = _state.update { it.copy(tagBeingTuned = name) }
+    fun onTuneTag(name: String) = updateTags { it.tuned(name) }
 
-    fun onDoneTuningTag() = _state.update { it.copy(tagBeingTuned = null) }
+    fun onDoneTuningTag() = updateTags { it.tuned(null) }
 
-    fun onTagRelevanceChange(name: String, value: Double) = updateTag(name) { it.copy(relevance = value) }
+    fun onTagRelevanceChange(name: String, value: Double) = updateTags { it.withRelevance(name, value) }
 
-    fun onTagConfidenceChange(name: String, value: Double) = updateTag(name) { it.copy(confidence = value) }
+    fun onTagConfidenceChange(name: String, value: Double) = updateTags { it.withConfidence(name, value) }
 
-    private fun updateTag(name: String, block: (TagRow) -> TagRow) = _state.update { st ->
-        st.copy(tags = st.tags.map { if (it.name == name) block(it) else it })
+    private fun updateTags(block: (TagSectionState) -> TagSectionState) = _state.update {
+        it.copy(tagSection = block(it.tagSection))
     }
 
     /**
@@ -271,7 +213,7 @@ class ComposePostViewModel @Inject constructor(
                 signingFailed = false,
                 signingNeedsKey = false,
                 transportFailed = false,
-                tags = it.tags.map { row -> row.copy(error = null) },
+                tagSection = it.tagSection.withoutErrors(),
             )
         }
         viewModelScope.launch {
@@ -283,7 +225,7 @@ class ComposePostViewModel @Inject constructor(
                     description = s.description.ifBlank { null },
                     content = s.body,
                     license = s.license,
-                    tags = s.tags.map { TagClaim(it.name, it.relevance, it.confidence) },
+                    tags = s.tagSection.tags.map { it.toClaim() },
                 )) {
                     is Outcome.Success -> writes += outcome.value.writes
                     is Outcome.Refused -> return@launch refuse(outcome.errors)
@@ -302,14 +244,14 @@ class ComposePostViewModel @Inject constructor(
                         is Outcome.Failed -> return@launch failTransport()
                     }
                 }
-                for (row in s.tagAdds) {
+                for (row in s.tagSection.adds) {
                     when (val outcome = topics.prepareTag(editingId, row.name, row.relevance, row.confidence)) {
                         is Outcome.Success -> writes += outcome.value
                         is Outcome.Refused -> return@launch refuseTag(row.name, outcome.errors)
                         is Outcome.Failed -> return@launch failTransport()
                     }
                 }
-                for (name in s.tagRemoves) {
+                for (name in s.tagSection.removes) {
                     when (val outcome = topics.prepareTag(editingId, name, pDirected = WITHDRAWN)) {
                         is Outcome.Success -> writes += outcome.value
                         is Outcome.Refused -> return@launch refuseTag(name, outcome.errors)
@@ -342,17 +284,19 @@ class ComposePostViewModel @Inject constructor(
      * chip i and everything else says its piece once (F2).
      */
     private fun refuse(errors: List<UserError>) = _state.update { st ->
-        val tags = st.tags.toMutableList()
+        var section = st.tagSection
         val unplaced = mutableListOf<String>()
         for (error in errors) {
-            val index = tagIndex(error.field)
-            if (index != null && index in tags.indices) {
-                tags[index] = tags[index].copy(error = error.message)
+            val index = tagFieldIndex(error.field)
+            val (next, left) = if (index == null) {
+                section to error.message
             } else {
-                unplaced += error.message
+                section.withErrorAt(index, error.message)
             }
+            section = next
+            left?.let { unplaced += it }
         }
-        st.copy(submitting = false, tags = tags, refusal = unplaced.firstOrNull())
+        st.copy(submitting = false, tagSection = section, refusal = unplaced.firstOrNull())
     }
 
     /**
@@ -361,13 +305,8 @@ class ComposePostViewModel @Inject constructor(
      * left to carry the message, so that one surfaces on its own.
      */
     private fun refuseTag(name: String, errors: List<UserError>) = _state.update { st ->
-        val message = errors.firstOrNull()?.message
-        val placed = st.tags.any { it.name == name }
-        st.copy(
-            submitting = false,
-            tags = st.tags.map { if (it.name == name) it.copy(error = message) else it },
-            refusal = if (placed) null else message,
-        )
+        val (section, unplaced) = st.tagSection.withError(name, errors.firstOrNull()?.message)
+        st.copy(submitting = false, tagSection = section, refusal = unplaced)
     }
 
     private fun failTransport() = _state.update { it.copy(submitting = false, transportFailed = true) }
@@ -375,11 +314,5 @@ class ComposePostViewModel @Inject constructor(
     private companion object {
         /** A tag withdrawal is a Tag act at relevance 0 (hashtag.md §4). */
         const val WITHDRAWN = 0.0
-
-        /** `["tags", i, "name"]` — the chip the server is talking about. */
-        fun tagIndex(field: List<String>?): Int? {
-            if (field == null || field.size < 2 || field[0] != "tags") return null
-            return field[1].toIntOrNull()
-        }
     }
 }
