@@ -19,6 +19,7 @@ import {
   type PostsQuery,
 } from "@/__generated__/graphql";
 import type { License } from "@/lib/license";
+import type { ReferenceDraft } from "@/lib/references/draft";
 import type { TagDraft } from "@/lib/topics/draft";
 import { failed, fetchOutcome, payloadOutcome, success, type Outcome } from "./outcome";
 import { stagedFromPrepared, type StagedWriteView } from "./writes-api";
@@ -61,6 +62,22 @@ export type PreparedContent = {
   node: string;
   writes: readonly StagedWriteView[];
 };
+
+/**
+ * The wire form of a drafted reference (`ReferenceInput`). The composer's
+ * references are explicit structured input, never parsed from the body
+ * (D15) — the same rule tags follow, and for the same reason: display
+ * content and graph structure stay decoupled.
+ */
+function referenceInputs(references: readonly ReferenceDraft[] | undefined) {
+  return (
+    references?.map((reference) => ({
+      target: reference.targetId,
+      relevance: reference.relevance,
+      support: reference.support,
+    })) ?? null
+  );
+}
 
 /** One page per fetch; the server default is the same number. */
 export const CONTENT_PAGE_SIZE = 20;
@@ -186,6 +203,7 @@ export async function preparePost(
     content: string;
     license: LicenseChoice;
     tags?: readonly TagDraft[];
+    references?: readonly ReferenceDraft[];
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -207,6 +225,7 @@ export async function preparePost(
                 pDirected: tag.relevance,
                 pInterest: tag.confidence,
               })) ?? null,
+            references: referenceInputs(fields.references),
           },
         },
       }),
@@ -249,6 +268,7 @@ export async function prepareComment(
     content: string;
     license: LicenseChoice;
     tags?: readonly TagDraft[];
+    references?: readonly ReferenceDraft[];
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -269,6 +289,9 @@ export async function prepareComment(
                 pDirected: tag.relevance,
                 pInterest: tag.confidence,
               })) ?? null,
+            // Referencing is part of the same gesture, under its own
+            // ten-per-batch cap (D7).
+            references: referenceInputs(fields.references),
           },
         },
       }),

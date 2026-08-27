@@ -38,6 +38,7 @@ function post(id: string, overrides: Record<string, unknown> = {}) {
     moderationStatus: "NORMAL",
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
+    references: [],
     ...overrides,
   };
 }
@@ -131,6 +132,7 @@ describe("fetchPostDetail", () => {
                               provenance: 0,
                             },
                             topics: [],
+                            references: [],
                           },
                         },
                       ],
@@ -286,6 +288,7 @@ describe("prepareComment", () => {
         content: "First!",
         license: { attribution: 0, provenance: 0.5 },
         tags: null,
+        references: null,
       },
     });
   });
