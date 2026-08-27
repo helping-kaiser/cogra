@@ -16,6 +16,7 @@ pub mod onboarding;
 pub mod prepare;
 pub mod profile;
 pub mod ratelimit;
+pub mod references;
 pub mod relay;
 pub mod schema;
 pub mod stance;
