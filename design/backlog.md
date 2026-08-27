@@ -104,6 +104,16 @@ restore.
 filter's `Chip` — same pill, told apart by what they do. The `#` is part
 of the word, not an icon.
 
+### 17 · Prototype screens consume the master components · *system* —
+**pulled ahead: the next session's first task (jakob, 2026-08-27)**
+The canonical artboards hand-copy component markup, so system updates
+don't propagate — the entry-session post cards already drifted
+(missing elements newer boards carry). Change the authoring model so
+prototype screens are built from the design system's actual
+components and variants; updating a component then updates every
+screen that uses it. Applies to the canonical canvas first; the
+ideation canvases stay frozen records.
+
 ### 9 · Search + results · *design*
 Topics, post titles, usernames, item names. Produces a search field
 variant of `TextField` and result-row treatments per node type — a
