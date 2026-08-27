@@ -64,7 +64,21 @@ taken"** (the repo's own word for the link is banned on screen, and
 "followers" would describe a different product); `own` changes the row,
 not the layout; no cover image. The monogram stays the fallback.
 
-### 6 · Compose + signing + pending · *design*
+### 6 · Compose + signing + pending · *design* · **built**
+`designs/canonical/` — the canonical canvas's Compose rows
+(2026-08-27), grown well past this item's scope by jakob's direction:
+the body-first wizard (pick with tray + photos-app door, crop at
+4:5/1:1/1.91:1, video cover, one details screen, the seal as a
+place), the seal's sheets and pads, restore-first key absence with
+local drafts, landing + the did-not-land notice, the reply flow with
+its disclosed parent stance, edit as one batch with a breakdown
+sheet, remove with distinct marks, the reference explorer, the post
+ladder with the height cap, and the feed's rounded full-width cards.
+Three ideation rounds live on the "CoGra compose" canvas. Ported
+back: readme §13 rulings, the "?" dialog texts in copy-voice.md,
+`Button` true heights + 64px min width, and the product-side flags
+(body XOR, sensitive self-mark, default-license setting, edit
+batches, Q43 resolved).
 Writing, pricing shown before signing, the key-not-on-this-browser path,
 and the pending marker arriving in the thread. Exercises `TextField`,
 `LicenseChooser`, `RecoveryCode`, `SigningPending`, `PendingMarker` —
@@ -97,11 +111,14 @@ result list is a list of ranked nodes, so the row work is reused by the
 feed later.
 
 ### 10 · Sensitive veil treatment · *system*, has open questions
-Granularity is settled (blur only what is marked, reveal per post). Open
-and to be decided in this item: blur radius, overlay wash, whether a
-reveal survives leaving and returning to the post, what the veil says
-when the author gave a reason, and how the reader's 0–10 severity setting
-maps to blur-or-not. No `error` colouring, no warning glyph.
+Granularity is settled (blur only what is marked, reveal per post),
+and the compose session (item 6) settled more: the author's self-mark
+veils body + description with the title readable, the author's reason
+shows on the veil under a `Sensitive — tap to view` chip, and the
+canonical veiled card (14px blur, a neutral 28% wash) is drawn on the
+post-ladder row. Still open in this item: whether a reveal survives
+leaving and returning to the post, and how the reader's 0–10 severity
+setting maps to blur-or-not. No `error` colouring, no warning glyph.
 
 ### 11 · Money & CGT figures · *system*
 Balances, earnings, campaign amounts: how a figure is formatted, when it
