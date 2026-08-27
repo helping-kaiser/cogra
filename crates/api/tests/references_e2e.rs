@@ -373,7 +373,6 @@ const POST_REFERENCES: &str = r#"query($id: UUID!) {
         ... on Post { id title { value } }
         ... on Comment { id }
         ... on User { id handle }
-        ... on Hashtag { id name { value } }
       }
     }
   }
@@ -742,16 +741,18 @@ async fn a_mention_types_as_the_person_it_names(pool: PgPool) {
     );
 }
 
-/// A Type is a legal citation target, and it is the reason the served
-/// target is a union: a Hashtag is deliberately not a Node.
+/// A topic is tagged, never referenced (D21) — refused on every write
+/// shape that names a target, and refused *before* anything is staged.
 ///
 /// The topic is tagged onto a throwaway post first, because a Type's L2
 /// id is what a client would cite it by and the registry row is what
-/// makes that id resolvable back to a name.
+/// makes that id resolvable at all. So this is the strongest form of the
+/// refusal: a topic that plainly exists, named by the id the finder
+/// itself would once have handed back.
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_topic_citation_types_as_a_hashtag(pool: PgPool) {
+async fn a_topic_is_refused_as_a_citation_target(pool: PgPool) {
     let rig = Citer::new(pool).await;
-    let (_, key) = rig.member("alice", "alice@example.test").await;
+    let (alice, key) = rig.member("alice", "alice@example.test").await;
     let token = rig.log_in("alice@example.test").await;
 
     let tagged = rig
@@ -780,13 +781,106 @@ async fn a_topic_citation_types_as_a_hashtag(pool: PgPool) {
         .expect("topic id")
         .to_string();
 
-    let carrier = rig
-        .landed_post_citing(&token, &key, "carrier", json!([{ "target": topic }]))
+    let in_flight_before = rig.writes_in_flight(alice).await;
+
+    let batch = rig
+        .prepare_post_citing(&token, "carrier", json!([{ "target": topic }]))
         .await;
+    let refused = refusals(&batch, "preparePost");
+    assert_eq!(refused.len(), 1, "creation batch refused: {batch}");
+    assert_eq!(
+        refused[0]["field"],
+        json!(["references", "0", "target"]),
+        "the refusal names the entry the client sent: {batch}"
+    );
+    assert_eq!(
+        rig.writes_in_flight(alice).await,
+        in_flight_before,
+        "a refused batch stages nothing"
+    );
+
+    let carrier = rig.plain_post(&token, &key, "carrier").await;
+    let standalone = rig.cite_from(&token, &carrier, &topic, json!({})).await;
+    let refused = refusals(&standalone, "prepareReference");
+    assert_eq!(refused.len(), 1, "standalone refused: {standalone}");
+    assert_eq!(refused[0]["field"], json!(["target"]));
+
+    let withdrawal = rig
+        .gql(
+            Some(&token),
+            WITHDRAW_REFERENCE,
+            json!({ "input": { "artifact": carrier, "target": topic }}),
+        )
+        .await;
+    let refused = refusals(&withdrawal, "prepareReferenceWithdrawal");
+    assert_eq!(refused.len(), 1, "withdrawal refused: {withdrawal}");
+    assert_eq!(refused[0]["field"], json!(["target"]));
+}
+
+/// The mirror reaches further than CoGra's own target policy: L1's
+/// incidence admits a Type-target Reference, so one authored where this
+/// narrowing does not run can still land in the mirror. The read side
+/// must degrade rather than fail — a null `target` beside a `targetId`
+/// that still names the far end, exactly as an untypeable node does.
+///
+/// The gesture is staged straight at the boundary because the planning
+/// layer is precisely what refuses it; nothing reachable through the
+/// GraphQL write path can produce this record.
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_topic_target_record_serves_a_null_target_beside_its_id(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (alice, key) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+    let carrier = rig.plain_post(&token, &key, "carrier").await;
+
+    let carrier_id = Uuid::parse_str(&carrier).expect("carrier uuid");
+    let middle = postgres_store::content::post(&rig.pool, carrier_id)
+        .await
+        .expect("post")
+        .expect("row")
+        .l1_node_id;
+    let reference = api::references::PlannedReference {
+        target_id: Uuid::nil(),
+        target: common::l1::identifier::NodeId::name("rust").expect("node"),
+        relevance: 0.5,
+        support: 0.5,
+    };
+    let gesture = api::references::reference_gesture(
+        &key.address(),
+        common::l1::identifier::NodeId::parse(&middle).expect("node"),
+        &reference,
+        vec![],
+    );
+    let prepared = api::prepare::prepare(
+        &api::l1::StandInBoundary(rig.standin.clone()),
+        &rig.pool,
+        GC,
+        alice,
+        gesture,
+    )
+    .await
+    .expect("the substrate admits what CoGra declines to prepare");
+
+    rig.land(
+        &token,
+        &key,
+        &json!([{
+            "id": prepared.id,
+            "canonicalProposal": B64.encode(wire::encode_proposal(&prepared.proposal)),
+        }]),
+    )
+    .await;
 
     let rows = rig.references_of_post(Some(&token), &carrier).await;
-    assert_eq!(rows[0]["target"]["__typename"], "Hashtag");
-    assert_eq!(rows[0]["target"]["name"]["value"], "rust");
+    assert_eq!(rows.as_array().expect("rows").len(), 1, "{rows}");
+    assert_eq!(rows[0]["target"], json!(null), "{rows}");
+    assert!(
+        rows[0]["targetId"]
+            .as_str()
+            .expect("targetId")
+            .starts_with("name:"),
+        "the citation still names its far end: {rows}"
+    );
 }
 
 /// Only the carrier author's own citations (D12). A stranger's citation
@@ -927,7 +1021,6 @@ const REFERENCE_CANDIDATES: &str = r#"query($query: String!, $limit: Int) {
       ... on Post { id title { value } }
       ... on Comment { id }
       ... on User { id handle }
-      ... on Hashtag { id name { value } }
     }
   }
 }"#;
@@ -988,28 +1081,10 @@ async fn the_finder_offers_each_target_class_by_its_id(pool: PgPool) {
     rig.land(&token, &key, &prepared["prepareComment"]["writes"])
         .await;
 
-    let tagged = rig
-        .gql(
-            Some(&token),
-            PREPARE_POST,
-            json!({ "input": {
-                "title": "tagged",
-                "content": "a body",
-                "license": { "attribution": 1.0, "provenance": 0.0 },
-                "tags": [{ "name": "rust" }],
-            }}),
-        )
-        .await;
-    rig.land(&token, &key, &tagged["preparePost"]["writes"])
-        .await;
-    let topic = common::hashtag_uuid("rust").to_string();
-
     for (query, expected) in [
         (post.clone(), "Post"),
         (comment.clone(), "Comment"),
         (alice.to_string(), "User"),
-        (topic.clone(), "Hashtag"),
-        ("#rust".to_string(), "Hashtag"),
     ] {
         let found = rig
             .gql(
@@ -1025,9 +1100,61 @@ async fn the_finder_offers_each_target_class_by_its_id(pool: PgPool) {
             "for {query}: {found}"
         );
         assert_eq!(found[0]["target"]["__typename"], expected, "for {query}");
-        if query != "#rust" {
-            assert_eq!(found[0]["targetId"], json!(query), "for {query}");
-        }
+        assert_eq!(found[0]["targetId"], json!(query), "for {query}");
+    }
+}
+
+/// The finder may only offer what `prepareReference` accepts, so a topic
+/// is unofferable however it is named (D21) — by its `#name` and by the
+/// very L2 id the registry makes resolvable. A topic that plainly
+/// exists is the case worth pinning: the miss test covers names nothing
+/// answers to, and an absence that held only for unregistered topics
+/// would be no narrowing at all.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_finder_never_offers_a_topic(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (_, key) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+
+    let tagged = rig
+        .gql(
+            Some(&token),
+            PREPARE_POST,
+            json!({ "input": {
+                "title": "tagged",
+                "content": "a body",
+                "license": { "attribution": 1.0, "provenance": 0.0 },
+                "tags": [{ "name": "rust" }],
+            }}),
+        )
+        .await;
+    rig.land(&token, &key, &tagged["preparePost"]["writes"])
+        .await;
+
+    let topic = rig
+        .gql(
+            Some(&token),
+            "query { hashtag(name: \"rust\") { id } }",
+            json!({}),
+        )
+        .await["hashtag"]["id"]
+        .as_str()
+        .expect("topic id")
+        .to_string();
+
+    for query in ["#rust", topic.as_str()] {
+        let found = rig
+            .gql(
+                Some(&token),
+                REFERENCE_CANDIDATES,
+                json!({ "query": query }),
+            )
+            .await;
+        assert_eq!(
+            found["referenceCandidates"],
+            json!([]),
+            "a topic is not offerable, for {query}"
+        );
     }
 }
 
