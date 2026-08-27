@@ -1,4 +1,4 @@
-<!-- @dsCard group="Components" viewport="700x400" name="Forms" subtitle="Text field, password field, license axes, recovery code" -->
+<!-- @dsCard group="Components" viewport="700x440" name="Forms" subtitle="Text field, password field, checkbox, license axes, recovery code" -->
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -8,10 +8,11 @@
 <style>body{padding:16px}.grid{display:grid;grid-template-columns:300px 320px;gap:24px;align-items:start}.col{display:flex;flex-direction:column;gap:12px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { TextField, PasswordField, LicenseChooser, LicenseTerms, RecoveryCode, Card } = window.CoGraDesignSystem_9084ba;
+const { TextField, PasswordField, Checkbox, LicenseChooser, LicenseTerms, RecoveryCode, Card } = window.CoGraDesignSystem_9084ba;
 function Demo(){
   const [email,setEmail]=React.useState("ada@example.org");
   const [pw,setPw]=React.useState("hunter2hunter2");
+  const [forget,setForget]=React.useState(false);
   const [body,setBody]=React.useState("Walked the long way home and the whole street smelled of rain.");
   const [license,setLicense]=React.useState({attribution:0.5,provenance:0});
   return (
@@ -19,6 +20,7 @@ function Demo(){
     <div className="col">
       <TextField label="Email" type="email" value={email} onChange={setEmail}/>
       <PasswordField label="Password" value={pw} onChange={setPw}/>
+      <Checkbox label="Don't remember this account on this device" checked={forget} onChange={setForget}/>
       <TextField label="What do you want to publish?" rows={3} value={body} onChange={setBody}/>
     </div>
     <div className="col">
@@ -27,7 +29,7 @@ function Demo(){
       <LicenseTerms license={license}/>
       <span className="lbl">Recovery code, inside a card</span>
       <Card>
-        <RecoveryCode code="K7QF-2M9X-4TVB-8RJD" explainer="This is the only way to restore your key. We can't show it again."/>
+        <RecoveryCode code="7Q3ZD-XK9P2-M4TVE-0RH8N-1WYB6C" explainer="This is the only way to restore your key. We can't show it again."/>
       </Card>
     </div>
   </div>)}

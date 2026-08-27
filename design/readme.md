@@ -237,8 +237,9 @@ never below **48px**, the stance control's resting state included.
 Fixed elements: the bottom bar (64px, `surfaceContainer`, hairline top
 border, `env(safe-area-inset-bottom)` padding) and the collapsing top
 region (sticky, `surface`). The stance pad is `position: fixed` at the
-**lower centre of the viewport**, 16px off the bottom edge — the same
-place every time, because muscle memory is part of the control.
+**lower centre of the viewport**, 16px above the bottom bar — 16px off
+the bottom edge where no bar exists — the same place every time,
+because muscle memory is part of the control (§13).
 
 ### Corner radii and cards
 
@@ -374,8 +375,9 @@ fills is the most common way an icon set starts to look accidental.
 | `chat_bubble` | the comments affordance on a card |
 | `volume_up` / `volume_off` | a video's sound toggle |
 | `graph_3` | the Post Score |
+| `check` | the checkbox's mark — the system's own addition (§13's entry screens), not yet in the product's set |
 
-**All fourteen are inlined** — path data in `Icon`, reference copies in
+**All fifteen are inlined** — path data in `Icon`, reference copies in
 `assets/icons/`. All but `graph_3` are the classic **filled** 24px
 variant, verbatim from `material-design-icons`, which is the exact set
 and variant the product itself inlines, so web and Android match. **The hosted-font
@@ -434,8 +436,8 @@ exists in `web/src/lib/ui/` (and, unless noted, in Android's
 |---|---|
 | `components/core/` | `Button`, `Card`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip` |
 | `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu` |
-| `components/forms/` | `TextField`, `PasswordField`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode` |
-| `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter` |
+| `components/forms/` | `TextField`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode` |
+| `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `BorrowedViewBand` |
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader` |
 | `components/states/` | `EmptyState`, `LoadingState` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending` |
@@ -565,6 +567,15 @@ paper over:
 - `StanceReadout` — the one-line "face, words, pair" reading the product
   builds with its `reading()` / `standingReading()` helpers, exposed as a
   component because designs need it outside the pad.
+- `Checkbox` — the entry screens needed a binary opt-in ("Don't remember
+  this account on this device") and neither the system nor the product had
+  one styled. 18px box on the extra-small rung with the system's 1px
+  hairline (M3's 2px checkbox border loses to §4's one-weight rule),
+  `primary` fill with the inlined `check` glyph when checked, and the whole
+  row — label included — as the 48px target.
+- `BorrowedViewBand` — §13's borrowed vantage point, as a component: names
+  whose view a guest or applicant feed is ranked from, carries the one
+  sign-in-or-join entry, and subsumes the guest notice on those surfaces.
 
 ---
 
@@ -693,8 +704,7 @@ component carries `cg-state cg-focus`.
 **Icons are inlined, all of them** (2026-08-26). The product had exported
 four; the rest arrived as SVG and went straight into `Icon`, so the
 hosted-font substitution is gone and this system matches the product's
-own no-external-request rule. One seam remains: `graph_3` is a Symbols
-drawing beside seven classic filled ones, so it never shares a row.
+own no-external-request rule.
 
 ### Dialogs
 
@@ -820,6 +830,11 @@ product puts the picture first.
 - `Snackbar`'s bottom offset is a prop. The source hardcodes 80px to
   clear the bottom bar, which leaves it floating on every task flow that
   has none.
+- `RecoveryCode` sets the code in `body-large` mono, not `design.md`'s
+  `title-large`: a real code is 26 Crockford characters in 5-5-5-5-6
+  groups, which cannot hold one line at 22px inside a card at mobile
+  width — and the one-line grouping is the point. The size gives way, the
+  wider tracking stays. Found while building the entry section.
 
 
 ---
@@ -930,7 +945,49 @@ only in the browser around the web one.
 
 ---
 
-## 13. Index
+## 13. Decided in design sessions
+
+### Guest and applicant feeds borrow a vantage point — 2026-08-27
+
+A feed is ranked from the viewer's own outgoing stances, and a guest
+has none — so an anonymous reader would have no order but newest. The
+substrate already permits the fix: reading is public, and a frontend
+may serve any actor's view of the shared record to any reader. So:
+
+- **An invite link carries its inviter's perspective.** A visitor who
+  arrives through one browses the feed as the inviter sees it.
+- **A bare arrival borrows the genesis moderator's view** — a human
+  account, never a system one.
+- **The borrowed view is always named**, in the top region, in place
+  of the guest notice (which it subsumes): *"Browsing from @mira's
+  view — join to build your own."* The label is what makes the
+  ranking honest (§9); it exposes nothing the public record does not
+  already carry.
+- **The borrowed view persists through the applicant days** and hands
+  over to the member's own view the moment their first stance exists —
+  the vouch-back — which the inviter seeded anyway, so the feed barely
+  moves at the handover.
+
+To port to the product docs as an open-questions resolution.
+
+### The entry flow — 2026-08-27
+
+The landing is the live public feed; every ceremonial step (invite
+entry, the vouch screen, the key ceremony, recovery code, sign-in,
+restore) is a full-focus task screen with a back arrow, never a
+bottom sheet. Canonical screens: `designs/canonical/`. During the
+dev phase the collapsing top and the sign-in screen carry an APK
+download line.
+
+The recovery-code screen is a trap: no back affordance, and the only
+way out is the code typed or pasted back. A think-twice dialog gates
+entry to it. Where a bottom bar exists, the stance pad rests 16px
+above the bar rather than the screen edge. First-time onboarding is
+per-control, never a tour, and on the entry screens only the pad
+carries it — what it is for, how it opens, that nothing signs until
+Set, and that the input can be swapped in settings.
+
+## 14. Index
 
 **Root**
 - `styles.css` — the entry point consumers link. `@import` lines only.
@@ -938,6 +995,11 @@ only in the browser around the web one.
 - `backlog.md` — the ordered queue sessions pull from.
 - `SKILL.md` — the Agent Skills wrapper.
 - `thumbnail.html` — the homepage tile.
+- `_build/bundle.mjs` — regenerates `_ds_bundle.js` (which the `@dsCard`
+  HTMLs load) from the component sources after any `.jsx` edit:
+  `npm install` once in `_build/`, then `node _build/bundle.mjs`.
+  `_ds_manifest.json` is the claude.ai Design app's own metadata and is
+  refreshed only by that app, on an explicit sync-back.
 
 **`tokens/`** — `fonts.css`, `colors.css`, `typography.css`,
 `shape.css`, `spacing.css`, `motion.css`, `transitions.css`,

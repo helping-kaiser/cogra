@@ -1,0 +1,44 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Open door · Feed as landing", "x": 0, "y": 0, "w": 390, "h": 844 },
+    { "file": "DoorJoin.dc.html", "title": "Open door · Join", "x": 480, "y": 0, "w": 390, "h": 844 },
+    { "file": "DoorLogin.dc.html", "title": "Open door · Sign in", "x": 960, "y": 0, "w": 390, "h": 844 },
+    { "file": "VouchLanding.dc.html", "title": "Vouched in · Landing", "x": 0, "y": 1040, "w": 390, "h": 844 },
+    { "file": "VouchJoin.dc.html", "title": "Vouched in · Join", "x": 480, "y": 1040, "w": 390, "h": 844 },
+    { "file": "VouchLogin.dc.html", "title": "Vouched in · Sign in", "x": 960, "y": 1040, "w": 390, "h": 844 },
+    { "file": "MarkLanding.dc.html", "title": "The mark · Landing", "x": 0, "y": 2080, "w": 390, "h": 844 },
+    { "file": "MarkJoin.dc.html", "title": "The mark · Join", "x": 480, "y": 2080, "w": 390, "h": 844 },
+    { "file": "MarkLogin.dc.html", "title": "The mark · Sign in", "x": 960, "y": 2080, "w": 390, "h": 844 }
+  ],
+  "annotations": [
+    {
+      "id": "brief",
+      "x": 0,
+      "y": -220,
+      "w": 480,
+      "text": "Three directions for the way into CoGra — landing, join, sign in. Same flow and components everywhere; what varies is where the door is and how loud the brand speaks. Every screen has a 'dark' toggle in its tweak row. People and photos are mock material; @mira stands in for the inviter."
+    },
+    {
+      "id": "dir-open-door",
+      "x": -340,
+      "y": 0,
+      "w": 290,
+      "text": "OPEN DOOR (recommended)\n\nThe landing is the feed itself: reading needs no account, so the product greets you by showing itself. Join and sign-in are sheets over the read — you never leave what you were looking at.\n\nTruest to the architecture and the most unusual first impression.\nTradeoff: the brand stays quiet, and there is no ceremonial 'moment' of arrival."
+    },
+    {
+      "id": "dir-vouched-in",
+      "x": -340,
+      "y": 1040,
+      "w": 290,
+      "text": "VOUCHED IN\n\nA warm dedicated welcome, and joining led by the person vouching for you — their face first, the form second. The most human telling of invite-only.\n\nTradeoff: adds a screen the architecture does not need, and the most conventional of the three."
+    },
+    {
+      "id": "dir-the-mark",
+      "x": -340,
+      "y": 2080,
+      "w": 290,
+      "text": "THE MARK\n\nThe app-tile colorway at screen scale: one orange block that stays identical in light and dark, then quiet type-led forms carrying a 4px orange thread.\n\nStrongest identity from ten feet away.\nTradeoff: spends the loud surface (primaryContainer) on decoration, which the system otherwise reserves for compose and a committed stance — a deliberate rule stretch to decide on."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}
