@@ -422,6 +422,36 @@ pub async fn chain_head(
     .await?)
 }
 
+/// The epoch in which the record that minted this node landed, or None
+/// while it has not landed.
+///
+/// The minting record is the earliest one whose own leg *targets* the
+/// node — a genesis act's target is the node's identifier. Ordering by
+/// the causal key and taking the first is what makes "earliest" the
+/// substrate's answer rather than an insertion-order accident.
+///
+/// This is the landing fact for nodes CoGra does not carry a
+/// landing-order column for. Content nodes do carry one, promoted onto
+/// their display rows, and read it from there instead of paying for this.
+pub async fn minting_epoch(
+    pool: &PgPool,
+    family: Family,
+    node: &str,
+) -> Result<Option<i64>, MirrorError> {
+    Ok(sqlx::query_scalar!(
+        "SELECT r.epoch
+         FROM mirror_records r
+         JOIN mirror_record_legs l ON l.record_id = r.record_id
+         WHERE r.family = $1 AND l.leg IN ('binary', 't') AND l.target = $2
+         ORDER BY r.epoch ASC, r.act_time ASC, r.position ASC
+         LIMIT 1",
+        family.as_str(),
+        node,
+    )
+    .fetch_optional(pool)
+    .await?)
+}
+
 /// Whether any accepted Opinion by the author toward the node is in the
 /// mirror — existence, not net: a bundle netting to zero still holds the
 /// gesture (auth.md "Reciprocation is the joiner's own act").
