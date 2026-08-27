@@ -10,7 +10,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -447,6 +449,7 @@ class ContentScreensTest {
         onSubmitCommentEdit: () -> Unit = {},
         onStartReply: (String) -> Unit = {},
         onSubmitReply: () -> Unit = {},
+        onToggleTagValues: (String) -> Unit = {},
         onStance: (String, String) -> Unit = { _, _ -> },
     ) {
         compose.setContent {
@@ -470,6 +473,7 @@ class ContentScreensTest {
                 onReplyDraftChange = {},
                 onCancelReply = {},
                 onSubmitReply = onSubmitReply,
+                onToggleTagValues = onToggleTagValues,
                 onEdit = onEdit,
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
@@ -871,6 +875,149 @@ class ContentScreensTest {
             ),
         )
         compose.onNodeWithTag("feed_post_p1_topic_rust").assertExists()
+    }
+
+    // -- Topic value reveal (F8): the detail view only, on demand --
+
+    /** A card is for reading; the reveal belongs where the reader chose the content. */
+    @Test
+    fun aFeedCardOffersNoValueReveal() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(testPost("p1").copy(topics = listOf(testTopicClaim("rust")))),
+            ),
+        )
+        compose.onNodeWithTag("feed_post_p1_topics_reveal").assertDoesNotExist()
+    }
+
+    @Test
+    fun theDetailViewOffersTheRevealOnThePostAndOnEveryComment() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(topics = listOf(testTopicClaim("rust"))),
+                comments = listOf(comment("c1").copy(topics = listOf(testTopicClaim("kotlin")))),
+            ),
+        )
+        compose.onNodeWithTag("detail_post_topics_reveal").assertExists()
+        compose.onNodeWithTag("comment_c1_topics_reveal").assertExists()
+    }
+
+    /** Default is the plain name chip — nobody sees the numbers unasked. */
+    @Test
+    fun anUnrevealedChipShowsOnlyItsName() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    topics = listOf(testTopicClaim("rust", relevance = 0.4, confidence = 0.9)),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("detail_post_topic_rust").assertTextEquals("#rust")
+    }
+
+    @Test
+    fun revealingTheRowShowsEachClaimCompactlyAndSigned() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    topics = listOf(testTopicClaim("rust", relevance = 0.4, confidence = 0.9)),
+                ),
+                revealedTagRows = setOf("p1"),
+            ),
+        )
+        compose.onNodeWithTag("detail_post_topic_rust").assertTextContains("+0.40 · 0.90")
+    }
+
+    /** Bipolar relevance keeps its sign; a withdrawal-ward claim reads negative. */
+    @Test
+    fun aNegativeRelevanceRevealsWithItsSign() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    topics = listOf(testTopicClaim("rust", relevance = -0.5, confidence = 1.0)),
+                ),
+                revealedTagRows = setOf("p1"),
+            ),
+        )
+        compose.onNodeWithTag("detail_post_topic_rust").assertTextContains("-0.50 · 1.00")
+    }
+
+    /**
+     * The compact form is an abbreviation, so the revealed chip names
+     * both parameters for assistive tech rather than leaving TalkBack to
+     * read "+0.40 · 0.90" after a name.
+     */
+    @Test
+    fun aRevealedChipNamesBothParametersForScreenReaders() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    topics = listOf(testTopicClaim("rust", relevance = 0.4, confidence = 0.9)),
+                ),
+                revealedTagRows = setOf("p1"),
+            ),
+        )
+        compose.onNodeWithTag("detail_post_topic_rust")
+            .assertContentDescriptionEquals("#rust, relevance +0.40, confidence 0.90")
+    }
+
+    /** The chip stays the way to the topic screen, revealed or not (F8). */
+    @Test
+    fun aRevealedChipStillNavigatesToItsTopic() {
+        var opened: String? = null
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(topics = listOf(testTopicClaim("rust"))),
+                revealedTagRows = setOf("p1"),
+            ),
+            onOpenTopic = { opened = it },
+        )
+        compose.onNodeWithTag("detail_post_topic_rust").performClick()
+        assertThat(opened).isEqualTo("rust")
+    }
+
+    @Test
+    fun tappingTheRevealReportsTheRowItBelongsTo() {
+        val toggled = mutableListOf<String>()
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(topics = listOf(testTopicClaim("rust"))),
+                comments = listOf(comment("c1").copy(topics = listOf(testTopicClaim("kotlin")))),
+            ),
+            onToggleTagValues = { toggled += it },
+        )
+        compose.onNodeWithTag("detail_post_topics_reveal").performClick()
+        compose.onNodeWithTag("comment_c1_topics_reveal").performClick()
+        assertThat(toggled).containsExactly("p1", "c1").inOrder()
+    }
+
+    /** One row's answer says nothing about the next row's. */
+    @Test
+    fun revealingOneRowLeavesTheOtherRowsPlain() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    topics = listOf(testTopicClaim("rust", relevance = 0.4, confidence = 0.9)),
+                ),
+                comments = listOf(
+                    comment("c1").copy(
+                        topics = listOf(testTopicClaim("kotlin", relevance = 0.4, confidence = 0.9)),
+                    ),
+                ),
+                revealedTagRows = setOf("p1"),
+            ),
+        )
+        compose.onNodeWithTag("detail_post_topic_rust").assertTextContains("+0.40 · 0.90")
+        compose.onNodeWithTag("comment_c1_topic_kotlin").assertTextEquals("#kotlin")
     }
 
     @Test

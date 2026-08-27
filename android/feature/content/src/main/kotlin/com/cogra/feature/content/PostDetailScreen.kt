@@ -92,6 +92,7 @@ fun PostDetailRoute(
         onReplyDraftChange = viewModel::onReplyDraftChange,
         onCancelReply = viewModel::onCancelReply,
         onSubmitReply = viewModel::onSubmitReply,
+        onToggleTagValues = viewModel::onToggleTagValues,
         onEdit = onEdit,
         onOpenActor = onOpenActor,
         onOpenTopic = onOpenTopic,
@@ -122,6 +123,8 @@ fun PostDetailScreen(
     onReplyDraftChange: (String) -> Unit,
     onCancelReply: () -> Unit,
     onSubmitReply: () -> Unit,
+    /** One chip row asking to show its claim parameters, by owner id (F8). */
+    onToggleTagValues: (String) -> Unit,
     onEdit: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
@@ -253,6 +256,7 @@ fun PostDetailScreen(
                             onReplyDraftChange = onReplyDraftChange,
                             onCancelReply = onCancelReply,
                             onSubmitReply = onSubmitReply,
+                            onToggleTagValues = onToggleTagValues,
                             onOpenActor = onOpenActor,
                             onOpenTopic = onOpenTopic,
                             onSignInOrJoin = onSignInOrJoin,
@@ -284,6 +288,7 @@ private fun PostWithThread(
     onReplyDraftChange: (String) -> Unit,
     onCancelReply: () -> Unit,
     onSubmitReply: () -> Unit,
+    onToggleTagValues: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
@@ -323,7 +328,15 @@ private fun PostWithThread(
                 if (post.landing.isPending) {
                     PendingMarker(testTag = "detail_pending")
                 }
-                TopicChipRow(post.topics, onOpenTopic, "detail_post")
+                // The reveal is a detail-view gesture (F8): here the
+                // reader has already chosen this piece of content.
+                TopicChipRow(
+                    topics = post.topics,
+                    onOpenTopic = onOpenTopic,
+                    testTagPrefix = "detail_post",
+                    valuesRevealed = post.id in state.revealedTagRows,
+                    onToggleValues = { onToggleTagValues(post.id) },
+                )
                 // The stance control rides the post itself here, the way
                 // it rides the card in the feed (design.md §6).
                 stanceControl(post.id, "detail_post")
@@ -358,6 +371,7 @@ private fun PostWithThread(
                 onReplyDraftChange = onReplyDraftChange,
                 onCancelReply = onCancelReply,
                 onSubmitReply = onSubmitReply,
+                onToggleTagValues = onToggleTagValues,
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
                 stanceControl = stanceControl,
@@ -466,6 +480,7 @@ private fun CommentThread(
     onReplyDraftChange: (String) -> Unit,
     onCancelReply: () -> Unit,
     onSubmitReply: () -> Unit,
+    onToggleTagValues: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
@@ -553,7 +568,13 @@ private fun CommentThread(
                     if (comment.landing.isPending) {
                         PendingMarker(testTag = "comment_pending_${comment.id}")
                     }
-                    TopicChipRow(comment.topics, onOpenTopic, "comment_${comment.id}")
+                    TopicChipRow(
+                        topics = comment.topics,
+                        onOpenTopic = onOpenTopic,
+                        testTagPrefix = "comment_${comment.id}",
+                        valuesRevealed = comment.id in state.revealedTagRows,
+                        onToggleValues = { onToggleTagValues(comment.id) },
+                    )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         // A comment carries the control too (design.md §6).
                         stanceControl(comment.id, "comment_${comment.id}")
@@ -639,6 +660,7 @@ private fun CommentThread(
                 onReplyDraftChange = onReplyDraftChange,
                 onCancelReply = onCancelReply,
                 onSubmitReply = onSubmitReply,
+                onToggleTagValues = onToggleTagValues,
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
                 stanceControl = stanceControl,
