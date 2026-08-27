@@ -341,6 +341,10 @@ can land in any order — 2.3 (topics) needs only the text core.
   titles and the name-class fields ([api-spec.md](api-spec.md)
   "Search"). Kinds grow with later slices: collectives, chats,
   and items index when their slices land.
+- Search replaces the reference finder's exact-match lookup
+  *behind* `referenceCandidates`, the field the clients already
+  bind to — prefix matching and ranking arrive without a client
+  change.
 - **Hand test:** find a post by a title word; find a person by
   handle.
 - **Surfaces:** backend, API, Android, web.
@@ -366,6 +370,19 @@ can land in any order — 2.3 (topics) needs only the text core.
   servable with the weight this slice computes
   ([hashtag.md §4](../instances/hashtag.md#4-the-current-topics-fold),
   [feed-ranking.md §4](../primitive/feed-ranking.md#4-the-path-set)).
+- **Inbound "cited by"** joins the same rework, for the same
+  reason: a citation hung off a post by someone other than its
+  author reaches a viewer only through the citer, at a weight
+  this slice computes, so 2.4 serves the carrier author's own
+  citations alone. Backwards traversal of references belongs
+  here, alongside the searching and traversal options this slice
+  introduces.
+- **Severance informs about the bundles it does not net.**
+  Severance is an action on one bundle and stays one. What it
+  gains is a report: it checks for other edges the author
+  controls toward the same node — the references they authored
+  toward that Profile — and tells them, so the author can close
+  those through the citation withdrawal that owns them.
 - **Unhide topic follow** — the follow/unfollow control, backend-
   accepted since 2.3 (`prepareStance` toward the Hashtag) but
   hidden from the client until the topic feed exists to receive it.

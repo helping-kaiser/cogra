@@ -329,7 +329,7 @@ impl Query {
         Ok(keyset_connection(rows, &page, record_cursor, Record))
     }
 
-    /// Candidate targets for the reference picker (D20).
+    /// Candidate targets for the reference picker.
     ///
     /// **Exact-match resolution only.** Real search — prefix matching,
     /// ranking, snippets — arrives with slice 2.7 *behind this same
@@ -347,7 +347,7 @@ impl Query {
     /// it: resolution runs through the write path's own resolver, so the
     /// picker cannot hand back a target the mutation then refuses. Two
     /// classes narrow for exactly that reason. A topic is never offered
-    /// — it is tagged, not referenced (D21) — which is why a `#`-typed
+    /// — it is tagged, not referenced — which is why a `#`-typed
     /// query finds nothing and a UUID naming a Type yields no candidate.
     /// And a keyless account fronts no Profile on the graph, so it
     /// resolves nowhere for the write path and must not be offered here

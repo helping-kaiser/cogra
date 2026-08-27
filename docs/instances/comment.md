@@ -87,9 +87,12 @@ signs ([feed-ranking.md](../primitive/feed-ranking.md)).
   author ([hashtag.md](hashtag.md)).
 - **Quoting and mentioning** — Reference hyper-edges with the
   Comment as citing artifact: the original of an image it
-  re-posts, a person named in its body (a Profile-targeting
-  mention), a proposal anchor cited in debate. Nothing is minted;
-  each reference is its own priced act.
+  re-posts, a mention targeting a person's Profile, a proposal
+  anchor cited in debate. Nothing is minted; each reference is its
+  own priced act. A mention is a structured input naming the
+  Profile, never text parsed out of the body — which is also what
+  lets it resolve at render time against the person's current
+  handle, including the redaction marker after erasure.
 
 **By anyone, toward the Comment:**
 

@@ -27,7 +27,6 @@ within a phase, order is flexible.
 | 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
 | 2a. Stance control (slice 2.2, both clients) | 1 | **Q42** | The resting face an unauthored stance target wears. Cheap to answer and worth answering soon: the two clients are shipping the control now, and a face is a shared contract exactly as §8.4's anchor table is. |
 | 2b. Profile surface (with slice 2.2) | 3 | **Q35, Q36, Q41** | The profile header's connection count (which fold counts as a connection — answerable now that every passive class rides one stance control), the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without all three. |
-| 2c. Batched creation (with slice 2.4) | 1 | **Q43** | Whether a creation batch quotes its total θ before staging any of it — the write rule is checked per act, so a batch can stage part of itself and refuse the rest. References batch exactly as tags do, which makes 2.4 the moment. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
@@ -37,6 +36,7 @@ questions are closed.
 
 **Resolved:**
 
+- Q43 — see [api-spec.md "Conventions"](implementation/api-spec.md) (a batch is priced whole before any of it is staged). Prepare reads the balance once and prices the whole batch — N acts at the current θ — refusing it entire before staging a single act, so an author never holds half a gesture they authored as one. It is a **pre-check, never a reservation**, exactly like the per-act W1 check it generalizes: nothing holds the balance, so it can still move before the acts land and a batch that passes can still take a per-act refusal later. The alternatives were declined — a client-side quote promises what no server stands behind, and leaving the per-act check alone keeps the failure the composer's one-gesture framing hides, now that a creation batch reaches 21 acts (1 minting record + 10 tags + 10 references).
 - Q34 — see [hashtag.md §4](instances/hashtag.md#4-the-current-topics-fold), pointed at from [post.md §3](instances/post.md#3-acts-around-a-post), [edges.md §3](primitive/edges.md#3-hyper-edge-families-cogra-authors), and [graph-model.md §3](primitive/graph-model.md#3-revision-and-current-state)'s declared-fold index. The fold is **newest-wins per (author, content, Type) bundle** — a Tag is a standing claim about the content-topic relevance, not an event, so the author's latest declaration is their current one, the same snapshot reading content edits carry. **Relevance `0` reads as withdrawn:** the un-tag gesture is re-tagging at relevance 0, a visible priced record like any other rather than an erasure — the `[0, 1]`-bounded family's analog of the `(0,0)` severance shape, which confidence's non-negative bound cannot otherwise express. A content node's current topics are the union of the current non-zero bundles across authors. A net-over-bundle fold (the Opinion shape) was rejected: it fits signed axes, and with confidence census-bounded to `c ∈ [0, 1]` no counter-record can net an accumulated bundle back down, so withdrawal would have needed special-casing.
 - Q39 — see [platform-guidelines.md §5](instances/platform-guidelines.md#5-license-and-provenance-obligations) and [layer1-interface.md §10](primitive/layer1-interface.md#10-content-governance-metadata-pn-full-9-seccontent--full-paper-only): both axes are degrees on `[0, 1]` — attribution `a` credits the maker, provenance `o` requires a public, auditable record of uses — and ``prop:content:closure-exclusion`` grants their whole interpretation to Layer 2. CoGra publishes a reading for three degrees per axis (0, 0.5 "commercial uses only", 1), offers exactly those in its composers, defaults to Public Domain `(0, 0)`, and shows the pair on every content surface.
 - Q37 — see [design.md §6](implementation/design.md#6-components), [android.md "Screens"](implementation/android.md#screens), and [web.md "Routes"](implementation/web.md#routes): the bar rides every **read** surface — the tab roots and the read drill-ins (post detail, any actor's profile) — and leaves the **task** flows (compose, profile edit, settings, invites, the key and auth surfaces), which carry a back arrow instead. A read drill-in is still reading, so the frame that got the reader there stays; a flow owns the screen until it finishes or is backed out of, and a tab tap mid-write is an accidental abandon. One rule for both clients, purely presentational — no graph or economics contact.
@@ -202,43 +202,6 @@ face reads as "nothing here yet" better than 😐's neutrality.
 Caveat that defers the call: 🫥 renders very differently across
 platforms (the WhatsApp glyph is not the system one), so the
 choice wants a cross-device look first. 😐 stays until then.
-
----
-
-## Q43 — Does a creation batch quote its total cost?
-
-**Where it shows up:**
-[api-spec.md "Content authoring"](implementation/api-spec.md) (the
-creation batch),
-[substrate.md §6](primitive/substrate.md#6-authoring-path-and-admission)
-(the write rule)
-**Status:** open (surfaced by slice 2.3's tag batches)
-
-### Context
-
-Creating content stages a batch — the minting record plus one Tag
-per declared topic and one Reference per citation, each its own
-priced act. The write rule is checked **per act**, against the
-balance as it stands, and staging reserves nothing: an author
-holding a single θ stages a batch of ten, and an author whose
-balance falls mid-batch keeps the acts already staged and takes a
-refusal on the rest. Each act commits its own transaction, so
-there is no batch to roll back. Severance is the precedent — its
-`(0,0)` batch stages act by act on the same rule.
-
-The arithmetic is coherent, since only landing debits. What it is
-not is visible: the composer asks for one gesture and the author
-pays N times what one gesture costs.
-
-### The question
-
-Should a prepare quote the batch's total — N acts at the current θ
-— and refuse the whole batch when the balance cannot carry it?
-The alternatives are a cumulative pre-check in the API, a
-client-side quote with no server guarantee behind it, and leaving
-the per-act check as the only rule with the count shown in the
-composer. Slice 2.4 doubles the surface: references batch exactly
-as tags do.
 
 ---
 
