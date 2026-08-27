@@ -334,9 +334,9 @@ impl Query {
     /// **Exact-match resolution only.** Real search — prefix matching,
     /// ranking, snippets — arrives with slice 2.7 *behind this same
     /// field*, so a client binds to it once and does not change when the
-    /// implementation is replaced. Three shapes resolve today: a handle,
-    /// bare or `@`-sigilled, names a person; a `#name` names a topic; a
-    /// UUID names whatever node it addresses.
+    /// implementation is replaced. Two shapes resolve today: a handle,
+    /// bare or `@`-sigilled, names a person; a UUID names whatever node
+    /// it addresses.
     ///
     /// An empty or unresolvable query yields an empty list, never an
     /// error. A finder runs on every keystroke, so most of what it is
@@ -346,12 +346,12 @@ impl Query {
     /// A candidate is offerable only if `prepareReference` would accept
     /// it: resolution runs through the write path's own resolver, so the
     /// picker cannot hand back a target the mutation then refuses. Two
-    /// classes narrow for exactly that reason. A Type is offered only
-    /// once the registry can invert its name — a `ReferenceInput` names
-    /// its target by L2 id, and the name → id derivation is one-way, so
-    /// a name no record has referenced yet has no id to name. And a
-    /// keyless account fronts no Profile on the graph, so it resolves
-    /// nowhere for the write path and must not be offered here either.
+    /// classes narrow for exactly that reason. A topic is never offered
+    /// — it is tagged, not referenced (D21) — which is why a `#`-typed
+    /// query finds nothing and a UUID naming a Type yields no candidate.
+    /// And a keyless account fronts no Profile on the graph, so it
+    /// resolves nowhere for the write path and must not be offered here
+    /// either.
     #[graphql(complexity = "list_cost(limit, child_complexity)")]
     async fn reference_candidates(
         &self,
@@ -367,16 +367,10 @@ impl Query {
         }
 
         let mut out = Vec::new();
-        if let Some(name) = query.strip_prefix('#') {
-            if let Ok(canonical) = common::hashtag::canonicalize(name)
-                && let Some(id) = postgres_store::hashtag::id_by_name(pool, &canonical).await?
-            {
-                out.push(ReferenceCandidate {
-                    target: ReferenceTarget::Topic(HashtagType { name: canonical }),
-                    target_id: id,
-                });
-            }
-        } else if let Ok(id) = Uuid::parse_str(query) {
+        if query.starts_with('#') {
+            return Ok(Vec::new());
+        }
+        if let Ok(id) = Uuid::parse_str(query) {
             if let Some(node) = crate::nodes::resolve_id(pool, id)
                 .await
                 .map_err(|e| async_graphql::Error::new(e.to_string()))?
