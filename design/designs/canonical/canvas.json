@@ -23,7 +23,41 @@
     { "file": "SignIn.dc.html", "title": "Sign in", "x": 0, "y": 4240, "w": 390, "h": 844 },
     { "file": "Reset.dc.html", "title": "Reset password", "x": 480, "y": 4240, "w": 390, "h": 844 },
     { "file": "Restore.dc.html", "title": "Restore your key", "x": 960, "y": 4240, "w": 390, "h": 844 },
-    { "file": "KeyElsewhere.dc.html", "title": "Key elsewhere", "x": 1440, "y": 4240, "w": 390, "h": 844 }
+    { "file": "KeyElsewhere.dc.html", "title": "Key elsewhere", "x": 1440, "y": 4240, "w": 390, "h": 844 },
+
+    { "file": "ComposePick.dc.html", "title": "Compose · pick the body", "x": 0, "y": 5560, "w": 390, "h": 844 },
+    { "file": "ComposeCrop.dc.html", "title": "Compose · the crop", "x": 480, "y": 5560, "w": 390, "h": 844 },
+    { "file": "ComposeCover.dc.html", "title": "Compose · the video's face", "x": 960, "y": 5560, "w": 390, "h": 844 },
+    { "file": "ComposeDetails.dc.html", "title": "Compose · details", "x": 1440, "y": 5560, "w": 390, "h": 844 },
+    { "file": "ComposeSeal.dc.html", "title": "Compose · what you sign", "x": 1920, "y": 5560, "w": 390, "h": 844 },
+
+    { "file": "ComposeLicense.dc.html", "title": "Seal · license sheet", "x": 0, "y": 6620, "w": 390, "h": 844 },
+    { "file": "ComposePad.dc.html", "title": "Seal · your stance on it", "x": 480, "y": 6620, "w": 390, "h": 844 },
+    { "file": "ComposeSensitive.dc.html", "title": "Seal · sensitive sheet", "x": 960, "y": 6620, "w": 390, "h": 844 },
+    { "file": "ComposeKeyAbsent.dc.html", "title": "Seal · key absent", "x": 1440, "y": 6620, "w": 390, "h": 844 },
+
+    { "file": "ComposeWords.dc.html", "title": "Compose · words body", "x": 0, "y": 7680, "w": 390, "h": 844 },
+    { "file": "ComposeDraft.dc.html", "title": "Compose · draft kept", "x": 480, "y": 7680, "w": 390, "h": 844 },
+    { "file": "ComposeLanded.dc.html", "title": "Signed · still settling", "x": 960, "y": 7680, "w": 390, "h": 844 },
+    { "file": "ComposeExpired.dc.html", "title": "Didn't land · the notice", "x": 1440, "y": 7680, "w": 390, "h": 844 },
+
+    { "file": "ReplyEntry.dc.html", "title": "Thread · comment entry", "x": 0, "y": 8740, "w": 390, "h": 844 },
+    { "file": "ReplyCompose.dc.html", "title": "Reply · write", "x": 480, "y": 8740, "w": 390, "h": 844 },
+    { "file": "ReplySeal.dc.html", "title": "Reply · what you sign", "x": 960, "y": 8740, "w": 390, "h": 844 },
+    { "file": "ReplyPad.dc.html", "title": "Reply · the pad", "x": 1440, "y": 8740, "w": 390, "h": 844 },
+
+    { "file": "EditCompose.dc.html", "title": "Edit post", "x": 0, "y": 9800, "w": 390, "h": 844 },
+    { "file": "RemoveMenu.dc.html", "title": "Own post · menu", "x": 480, "y": 9800, "w": 390, "h": 844 },
+    { "file": "RemoveConfirm.dc.html", "title": "Remove · think twice", "x": 960, "y": 9800, "w": 390, "h": 844 },
+    { "file": "EditActs.dc.html", "title": "Edit · the actions", "x": 1920, "y": 9800, "w": 390, "h": 844 },
+    { "file": "Removed.dc.html", "title": "Removed by its author", "x": 1440, "y": 9800, "w": 390, "h": 844 },
+
+    { "file": "ReferencePicker.dc.html", "title": "Cite something", "x": 2400, "y": 5560, "w": 390, "h": 844 },
+    { "file": "HelpDialog.dc.html", "title": "The ? dialog", "x": 2400, "y": 6620, "w": 390, "h": 844 },
+
+    { "file": "LadderSmall.dc.html", "title": "Post ladder · small forms", "x": 0, "y": 10860, "w": 390, "h": 844 },
+    { "file": "LadderMax.dc.html", "title": "Post ladder · the cap", "x": 480, "y": 10860, "w": 390, "h": 844 },
+    { "file": "LadderStates.dc.html", "title": "Post ladder · veiled & removed", "x": 960, "y": 10860, "w": 390, "h": 844 }
   ],
   "annotations": [
     {
@@ -31,7 +65,7 @@
       "x": 0,
       "y": -240,
       "w": 560,
-      "text": "CANONICAL — the decided CoGra app. Each row is a section; this canvas grows as sections are decided. Options and ideation live on standalone canvases ('CoGra entry' holds this section's three directions).\n\nSection ENTRY, decided 2026-08-27: the landing is the live public feed (Open door) with a borrowed-view band; every ceremonial step is a full-focus screen. People and photos are mock; @mira is the inviter, @noa stands in for the genesis moderator.\n\nTheme: use the 'Canvas theme' board to the right — one tap themes every screen. A screen's own chip can pin light or dark; 'auto' follows your system."
+      "text": "CANONICAL — the decided CoGra app. Each row is a section; this canvas grows as sections are decided. Options and ideation live on standalone canvases ('CoGra entry' holds the entry section's three directions; 'CoGra compose' holds the compose rounds).\n\nSection ENTRY, decided 2026-08-27: the landing is the live public feed (Open door) with a borrowed-view band; every ceremonial step is a full-focus screen. People and photos are mock; @mira is the inviter, @noa stands in for the genesis moderator.\n\nSection COMPOSE, decided 2026-08-27 (rows below Entry): the body-first wizard — pick the body, cover for video, one details screen, then the seal. @sol is the member writing.\n\nTheme: use the 'Canvas theme' board to the right — one tap themes every screen. A screen's own chip can pin light or dark; 'auto' follows your system."
     },
     {
       "id": "sec-arrive",
@@ -67,6 +101,62 @@
       "y": 4240,
       "w": 290,
       "text": "ENTRY · Sign in & restore\n\nSign in (with the APK line), password reset (no account enumeration; reset revokes every session), restoring the key, and the key-elsewhere banner. 'Restore your key' and 'Key elsewhere' carry a wording tweak: browser ('on this browser') vs app ('in this app') — the Android app says app, the web says browser. Login restores the service session; only the recovery code restores the key."
+    },
+    {
+      "id": "sec-compose-wizard",
+      "x": -340,
+      "y": 5560,
+      "w": 290,
+      "text": "COMPOSE · The wizard\n\nBody first (the Instagram/YouTube spine): pick the body → crop → (cover, video only) → details → the seal; 'Write words instead' is the text path and skips crop and cover. The body is words OR what you show, never both. The pick screen: a PICKED TRAY on top (one line, 'Show all' on overflow) over the newest-first grid; the grid's first tile opens the device's own photos app, and picks made there land in the tray. THE CROP (Instagram's model): one shape for the whole post — Tall 4:5, Square 1:1, or Wide 1.91:1 — with drag-to-move and pinch-to-zoom per picture; 4:5 as the tallest shape is what guarantees the post ladder's height cap. Screens carry no step numbers (paths differ in length; the title names the stage, only the seal says 'Last step'). COPY RULE (2026-08-27): captions are one short line; the full explanation lives behind a small ? that opens a plain dialog — AT MOST ONE ? PER SCREEN, top-right of the header (or of the sheet/card it explains: the pads carry their own). It covers every compose explainer: cost and the community pool, the all-or-nothing batch, license terms and immutability, the stance side effects, the pending lifecycle, edit history. BUTTONS: filled and outlined pills carry 24px side padding and a 64px minimum width, so short labels (Next, Set, Done) keep their weight. The example everywhere: 1 post + 2 topics + 1 reference = 4 signed actions."
+    },
+    {
+      "id": "sec-compose-seal",
+      "x": -340,
+      "y": 6620,
+      "w": 290,
+      "text": "COMPOSE · The seal\n\n'What you sign' is a place, not a popup — no 'don't ask again'. The manifest lists every act with its cost; the batch lands whole or not at all (resolves Q43). The three row-openers present ONE way (decided 2026-08-27): license and sensitive rise as BOTTOM SHEETS; the stance keeps the pad's own floating card, which is deliberately the same pad as everywhere else. License reads your default (a settings entry — new ruling), immutable after signing. Every stance the write signs is shown and adjustable: the post's own attachment is a ONE-AXIS pad (For/Against only — your own post always reaches you fully). Sensitive is one switch with a fixed per-field policy: it veils the BODY and the DESCRIPTION; the title and topics stay readable so choosing to look is informed. Optional reason, shown on the veil (new product decision — API field to add). Key absent = restore first: nothing staged, the draft stays on device, tertiary colouring — a waiting state, never error."
+    },
+    {
+      "id": "sec-compose-after",
+      "x": -340,
+      "y": 7680,
+      "w": 290,
+      "text": "COMPOSE · Words, drafts, and after\n\nThe words body is the same wizard minus the cover step. Leaving mid-write keeps ONE local draft per target, on this device only — no discard confirm, the draft IS the safety. Signing exits to the post's own detail view: the post at top wearing 'Still settling' (its place in the feed comes as it settles), snackbar 'Signed — it's in the thread now, still settling.' If the act expires unlanded (Q38): a calm notice card in the shell — content left every reader's view, nothing was spent, the draft is saved. Never error colouring."
+    },
+    {
+      "id": "sec-compose-reply",
+      "x": -340,
+      "y": 8740,
+      "w": 290,
+      "text": "COMPOSE · Replying\n\nThe comment box in the thread is an ENTRY, not a composer: tapping it opens the same full-focus flow, pre-targeted, parent pinned. Two steps — words, then the seal. A comment is TEXT PLUS OPTIONAL MEDIA (comment.md: body text and media digests; text required) — deliberately asymmetric to the post's words-XOR-media body, because an answer is words first; '+ Add pictures' rides the writing step. The reply's stance on its parent (+0.10 / +0.10 default) is DISCLOSED on the seal and adjustable on the full two-axis pad: 'Replying also signs where you stand on the post it answers.' Topics and citations can join a comment from its seal, each row raising the count."
+    },
+    {
+      "id": "sec-compose-edit",
+      "x": -340,
+      "y": 9800,
+      "w": 290,
+      "text": "COMPOSE · Edit & remove\n\nAn edit is one screen and one batch (ruled 2026-08-27): the content edit PLUS topic and citation changes ride together — each add or withdrawal is its own priced act, the cost line reads the live total, and tapping it opens the breakdown sheet ('Edit · 1, Topic added · 1, Topic withdrawn · 1'), landing whole or not at all like every batch. License shown read-only with a lock. Earlier versions stay public under 'Edited'. Remove is the erasure path: own-post menu (a bottom sheet) → a think-twice dialog whose SAFE action is filled → the visible mark. 'Removed by its author' must never read like a moderation verdict — the two marks stay distinct. The thread and every response remain."
+    },
+    {
+      "id": "help-contents",
+      "x": 640,
+      "y": -300,
+      "w": 640,
+      "text": "THE ? CONTENTS — each ? opens a plain dialog (see 'The ? dialog' board): title, at most two short paragraphs, Close. The copy, verbatim:\n\nSEAL (post + reply) · 'Signed actions': Each piece of a post — the post itself, every topic, every citation — is its own signed action, written in your name. They sign together: all of them land, or none does. / You don't pay for these — a shared community pool covers members' signings. The pool is real and finite, so each action still counts.\n\nLICENSE SHEET · 'The license': Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it. / The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.\n\nSENSITIVE SHEET · 'Marking as sensitive': The mark veils the pictures and the description until a reader chooses to look. The title stays readable, so choosing is informed. / Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.\n\nKEY ABSENT · 'Your key': Signing needs your key, and it isn't on this browser. Nothing is signed or sent without it — the draft stays on this device. / Restore the key with your recovery code to finish. Restoring here is the only way to complete this write.\n\nPOST PAD · 'Where you stand on it': Publishing also signs where you stand on your own post — for or against, from a gentle +0.10 by default. / Your own post always reaches you in full, so only for-or-against is yours to set. Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.\n\nREPLY PAD · 'Toward what you answer': Replying also signs where you stand on the post you answer — for or against, and how much of it reaches you. It starts at a gentle +0.10 / +0.10 and rides the same signature as your reply. / Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nEDIT · 'Editing': An edit replaces the whole post; earlier versions stay public under 'Edited' unless you remove them. An edit never bumps the post as new. / Topic and citation changes ride the same signing, each as its own signed action. The license never changes.\n\nCITE · 'Citing': A citation is its own signed action and carries where you stand on what you cite. You can cite anything on CoGra. / Comments and chat messages are cited from themselves — open one and choose 'Cite in a new post'."
+    },
+    {
+      "id": "note-cite",
+      "x": 2880,
+      "y": 5560,
+      "w": 290,
+      "text": "Citing — reached from Details. Searches everything citable: posts by title, people by name/handle, items by name, proposals by title, chats by name, campaigns by anchor, offers via their item. Comments and chat messages are cited from themselves — every content's overflow menu carries 'Cite in a new post'. These result rows are the seed of item 9's search."
+    },
+    {
+      "id": "sec-compose-ladder",
+      "x": -340,
+      "y": 10860,
+      "w": 290,
+      "text": "COMPOSE · The post ladder — every container state in one place\n\nFrom the smallest form (one line of words, nothing else) through bare media to the maximal collapsed container, plus the marked states: sensitive-veiled (blur + neutral wash + the author's reason; title and interaction row stay readable), removed by its author, and removed under the platform's rules — the two removal marks deliberately read differently.\n\nTHE HEIGHT RULE (2026-08-27): a post card's collapsed form never exceeds the screen height minus the bottom bar and the top safe zone — designed against the app / downloadable-webapp viewport, not browser chrome. Collapse order: the media and the interaction row NEVER shrink; tags and references collapse to one line under the description; the title clamps to one line; the description to two. The expanded detail view may be taller than the screen."
     }
   ],
   "launch": { "view": "canvas" }

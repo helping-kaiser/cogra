@@ -1,0 +1,133 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300..900&amp;display=swap">
+  <style>
+    body { margin: 0; }
+    .screen {
+      --primary: #9f4100; --on-primary: #ffffff;
+      --primary-container: #ef6c1a; --on-primary-container: #4f1d00;
+      --secondary-container: #feaa81; --on-secondary-container: #783c1c;
+      --surface: #fff8f6; --on-surface: #251913; --on-surface-variant: #584237;
+      --surface-container: #ffeae1; --surface-container-high: #fbe3d9; --surface-container-highest: #f5ded4;
+      --outline: #8c7165; --outline-variant: #e0c0b2;
+      font-family: 'Figtree', 'Segoe UI', system-ui, sans-serif;
+    }
+    .screen[data-theme="dark"] {
+      --primary: #ff8d50; --on-primary: #341100;
+      --secondary-container: #743918; --on-secondary-container: #f8a57b;
+      --surface: #151312; --on-surface: #e8e1df; --on-surface-variant: #cdc5c2;
+      --surface-container: #221f1e; --surface-container-high: #2c2928; --surface-container-highest: #373433;
+      --outline: #968f8d; --outline-variant: #4b4644;
+    }
+  </style>
+</helmet>
+<div class="screen" data-theme="{{theme}}" style="width: 390px; height: 844px; display: flex; flex-direction: column; background: var(--surface); color: var(--on-surface); overflow: hidden; box-sizing: border-box; position: relative;">
+
+  <div style="min-height: 48px; display: flex; align-items: center; gap: 4px; padding: 0 12px; flex: none;">
+    <span style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></span>
+    <span style="flex: 1;"></span>
+    <span style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"></path></svg></span>
+  </div>
+
+  <div style="flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 12px; padding: 8px 24px 0 24px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 8px; min-height: 24px;">
+        <span style="width: 24px; height: 24px; border-radius: 9999px; background: var(--secondary-container); color: var(--on-secondary-container); display: flex; align-items: center; justify-content: center; font-size: 11px; line-height: 16px; font-weight: 500; flex: none;">S</span>
+        <span style="font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Sol Ferreira</span>
+        <span style="font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; color: var(--on-surface-variant);">@sol</span>
+      </div>
+      <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">3d</span>
+    </div>
+    <h2 style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 500;">Salt maps of the coast road</h2>
+    <div style="display: flex; gap: 4px; margin: 0 -24px;">
+      <img src="post-photo.jpg" alt="" style="display: block; width: 50%; height: 180px; object-fit: cover;">
+      <img src="inviter.jpg" alt="" style="display: block; width: 50%; height: 180px; object-fit: cover;">
+    </div>
+    <p style="margin: 0; font-size: 14px; line-height: 20px; letter-spacing: 0.25px; color: var(--on-surface-variant);">Rubbings from three weekends at low tide — paper against the salt crust, the side of a wax stick, and whatever the wind allowed.</p>
+    <div style="flex: 1;"></div>
+  </div>
+
+  <div style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5);"></div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; border-radius: 28px 28px 0 0; background: var(--surface-container-high); color: var(--on-surface); padding: 8px 8px 16px 8px; display: flex; flex-direction: column; box-sizing: border-box;">
+    <span style="align-self: center; width: 32px; height: 4px; border-radius: 9999px; background: var(--outline-variant); margin-bottom: 4px;"></span>
+    <div style="display: flex; align-items: center; gap: 16px; min-height: 48px; padding: 0 16px; border-radius: 8px;">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="var(--on-surface-variant)" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path></svg>
+      <span style="font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">Edit</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 16px; min-height: 48px; padding: 0 16px; border-radius: 8px;">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="var(--on-surface-variant)" aria-hidden="true"><path d="M12 6.5c2.76 0 5 2.24 5 5 0 .51-.1 1-.24 1.46l3.06 3.06c1.39-1.23 2.49-2.77 3.18-4.53C21.27 7.11 17 4 12 4c-1.27 0-2.49.2-3.64.57l2.17 2.17c.47-.14.96-.24 1.47-.24zM2.71 3.16c-.39.39-.39 1.02 0 1.41l1.97 1.97C3.06 7.83 1.77 9.53 1 11.5 2.73 15.89 7 19 12 19c1.52 0 2.98-.29 4.32-.82l2.72 2.72c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L4.13 3.16c-.39-.39-1.03-.39-1.42 0zM12 16.5c-2.76 0-5-2.24-5-5 0-.77.18-1.5.49-2.14l1.57 1.57c-.03.18-.06.37-.06.57 0 1.66 1.34 3 3 3 .2 0 .38-.03.57-.07L14.14 16c-.65.32-1.37.5-2.14.5zm2.97-5.33c-.15-1.4-1.25-2.49-2.64-2.64l2.64 2.64z"></path></svg>
+      <span style="font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">Mark as sensitive</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 16px; min-height: 48px; padding: 0 16px; border-radius: 8px;">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="var(--on-surface-variant)" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>
+      <span style="font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">Remove</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 16px; min-height: 48px; padding: 0 16px; border-radius: 8px;">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="var(--on-surface-variant)" aria-hidden="true"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"></path></svg>
+      <span style="font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">License terms</span>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"theme":{"editor":"enum","options":["auto","light","dark"],"default":"auto"}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    this.media = window.matchMedia("(prefers-color-scheme: dark)");
+    this.onScheme = () => this.forceUpdate();
+    this.media.addEventListener("change", this.onScheme);
+    this.onMsg = (event) => {
+      const d = event.data;
+      if (d && (d.cograTheme === "light" || d.cograTheme === "dark" || d.cograTheme === "auto")) {
+        if (!this.state || this.state.remote !== d.cograTheme) this.setState({ remote: d.cograTheme });
+      } else if (d && d.cograThemeQuery && this.state && this.state.remote && event.source) {
+        try { event.source.postMessage({ cograTheme: this.state.remote }, "*"); } catch (e) {}
+      }
+    };
+    window.addEventListener("message", this.onMsg);
+    try {
+      const askWalk = (w, depth) => {
+        if (depth > 5) return;
+        let n = 0;
+        try { n = w.length; } catch (e) { n = 0; }
+        for (let i = 0; i < n; i++) {
+          let c = null;
+          try { c = w[i]; } catch (e) { c = null; }
+          if (c) {
+            try { c.postMessage({ cograThemeQuery: true }, "*"); } catch (e) {}
+            askWalk(c, depth + 1);
+          }
+        }
+      };
+      askWalk(window.top, 0);
+    } catch (e) {}
+  }
+  componentDidUpdate(prevProps) {
+    if (prevProps.theme !== this.props.theme && this.state && this.state.remote) {
+      this.setState({ remote: null });
+    }
+  }
+  componentWillUnmount() {
+    if (this.media) this.media.removeEventListener("change", this.onScheme);
+    window.removeEventListener("message", this.onMsg);
+  }
+  renderVals() {
+    const remote = this.state ? this.state.remote : null;
+    const mode = remote ?? this.props.theme ?? "auto";
+    const dark = mode === "auto"
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+      : mode === "dark";
+    return { theme: dark ? "dark" : "light" };
+  }
+}
+</script>
+</body>
+</html>
