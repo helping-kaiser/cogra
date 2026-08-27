@@ -1,0 +1,9 @@
+{
+  "name": "cogra-design-bundle",
+  "private": true,
+  "type": "module",
+  "description": "Regenerates design/_ds_bundle.js from component sources (node bundle.mjs).",
+  "dependencies": {
+    "@babel/standalone": "^7.29.0"
+  }
+}

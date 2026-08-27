@@ -10,8 +10,10 @@ import { TextField } from "./TextField.jsx";
    Monospace is design.md §3's one exception to Figtree — read character by
    character, where 0/O and l/1 have to separate and a mistyped code is
    unrecoverable. Wider tracking is the same legibility device, not styling.
-   `title-large` carries it: the largest role that still sits inside a card, so a
-   code being copied by hand is the biggest thing on the surface.
+   `body-large` carries it, not design.md's `title-large`: a real code is 26
+   Crockford characters in 5-5-5-5-6 groups, which cannot hold one line at
+   22px inside a card at mobile width — and the one-line grouping is the
+   point. The size gives way, the tracking stays (§11, Small fixes).
 
    It draws NO BOX of its own — it belongs inside a Card, and a bordered box on a
    filled card is a second surface saying the same thing twice. */
@@ -37,8 +39,8 @@ export function RecoveryCode({ code, explainer, onConfirmed }) {
           margin: 0,
           textAlign: "center",
           fontFamily: "var(--font-mono)",
-          fontSize: "var(--text-title-large)",
-          lineHeight: "var(--text-title-large--line-height)",
+          fontSize: "var(--text-body-large)",
+          lineHeight: "var(--text-body-large--line-height)",
           letterSpacing: "0.05em",
         }}
       >

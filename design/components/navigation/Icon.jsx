@@ -57,6 +57,9 @@ const PATHS = {
   /* The comments affordance on a card. Filled, so it sits at the same weight as
      the rest of the row. */
   chat_bubble: ["M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"],
+  /* The checkbox's mark, and only that: never a selection indicator on a chip
+     (a check reflows every label in the row) and never decoration. */
+  check: ["M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"],
   /* The one control a video wears. `volume_up` means sound is ON — the glyph shows
      the CURRENT state, and the accessible name says what the tap will do. */
   volume_up: [
