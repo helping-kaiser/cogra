@@ -1,0 +1,43 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Desk · compose", "x": 0, "y": 0, "w": 390, "h": 844 },
+    { "file": "DeskSign.dc.html", "title": "Desk · sign", "x": 480, "y": 0, "w": 390, "h": 844 },
+    { "file": "DeskKey.dc.html", "title": "Desk · key absent", "x": 960, "y": 0, "w": 390, "h": 844 },
+    { "file": "SealWrite.dc.html", "title": "Seal · write", "x": 0, "y": 1060, "w": 390, "h": 844 },
+    { "file": "SealSign.dc.html", "title": "Seal · what you sign", "x": 480, "y": 1060, "w": 390, "h": 844 },
+    { "file": "SealKey.dc.html", "title": "Seal · key absent", "x": 960, "y": 1060, "w": 390, "h": 844 },
+    { "file": "MarginWrite.dc.html", "title": "Margin · compose", "x": 0, "y": 2120, "w": 390, "h": 844 },
+    { "file": "MarginSign.dc.html", "title": "Margin · sign", "x": 480, "y": 2120, "w": 390, "h": 844 },
+    { "file": "MarginKey.dc.html", "title": "Margin · key absent", "x": 960, "y": 2120, "w": 390, "h": 844 },
+    { "file": "ForkKind.dc.html", "title": "Fork · kind + title", "x": 0, "y": 3440, "w": 390, "h": 844 },
+    { "file": "ForkBody.dc.html", "title": "Fork · body as pictures", "x": 480, "y": 3440, "w": 390, "h": 844 },
+    { "file": "ForkDetails.dc.html", "title": "Fork · details", "x": 960, "y": 3440, "w": 390, "h": 844 },
+    { "file": "PickGrid.dc.html", "title": "Pick · camera roll", "x": 0, "y": 4500, "w": 390, "h": 844 },
+    { "file": "PickCover.dc.html", "title": "Pick · the video's face", "x": 480, "y": 4500, "w": 390, "h": 844 },
+    { "file": "PickDetails.dc.html", "title": "Pick · details", "x": 960, "y": 4500, "w": 390, "h": 844 },
+    { "file": "PaperFork.dc.html", "title": "Paper · the fork", "x": 0, "y": 5560, "w": 390, "h": 844 },
+    { "file": "PaperWrite.dc.html", "title": "Paper · written", "x": 480, "y": 5560, "w": 390, "h": 844 },
+    { "file": "PaperSeal.dc.html", "title": "Paper · what you sign", "x": 960, "y": 5560, "w": 390, "h": 844 },
+    { "file": "SealShared.dc.html", "title": "Shared · what you sign", "x": 0, "y": 6620, "w": 390, "h": 844 },
+
+    { "file": "FeedCards.dc.html", "title": "Feed · inset cards (current)", "x": 0, "y": 7680, "w": 390, "h": 844 },
+    { "file": "FeedFullCards.dc.html", "title": "Feed · full-width cards", "x": 480, "y": 7680, "w": 390, "h": 844 },
+    { "file": "FeedBand.dc.html", "title": "Feed · full-bleed + band", "x": 960, "y": 7680, "w": 390, "h": 844 },
+    { "file": "FeedHairline.dc.html", "title": "Feed · full-bleed + hairline", "x": 1440, "y": 7680, "w": 390, "h": 844 },
+    { "file": "FeedFullCardsRounded.dc.html", "title": "Feed · full-width cards, rounded", "x": 2400, "y": 7680, "w": 390, "h": 844 },
+    { "file": "Theme.dc.html", "title": "Canvas theme", "x": 1440, "y": 0, "w": 300, "h": 180, "is_interactive": true }
+  ],
+  "annotations": [
+    { "id": "compose-overview", "x": 0, "y": -260, "w": 760, "text": "ROUND 1 — three directions for backlog item 6, drawn before the content-model ruling (their boards mix words and a photo in one body). Same example throughout: a post with two topics and one reference = 4 signed actions. Baked into all: all-or-nothing quote before signing; the count of signed actions is the only cost unit; the community pool named at the sign moment; license collapsed to one line reading your default; every stance a write signs is shown and adjustable; sensitive self-marking is in; key absent = restore first — the draft stays on this device, nothing is staged, tertiary, never error. Browser wording shown; the app variant swaps the noun." },
+    { "id": "desk-note", "x": 1440, "y": 300, "w": 300, "text": "1 · The desk — one quiet form. Everything on one scrolling screen; license, stance, and sensitive as list rows; the sign dialog carries the quote. A comment is the same form pre-targeted: parent quoted on top, the stance-on-parent row opens the pad." },
+    { "id": "seal-note", "x": 1440, "y": 1060, "w": 300, "text": "2 · Write, then seal — two steps. Writing is full-bleed paper with a counters rail; Next opens the seal: a manifest of everything the signature covers. The quote is a place, not a popup — so 'don't show this again' disappears. A comment pins the parent at the top of the paper; the seal is identical." },
+    { "id": "margin-note", "x": 1440, "y": 2120, "w": 300, "text": "3 · The margin — one surface, freight in the text. The photo, topics, and reference live inline as objects; the tray adds them; the sign action never leaves the header; the quote rises as a sheet. A comment is the same surface with the parent chip pinned above the text." },
+    { "id": "round2-overview", "x": 0, "y": 3180, "w": 760, "text": "ROUND 2 — multi-step flows, after the content-model ruling: the body is words OR pictures/video (one picture, a set, or one video with a cover), never both; title and description optional; references reach any content on CoGra. Researched lineages: Reddit forks on post kind up front; Instagram and YouTube run media-first wizards (pick, cover, details, publish); Medium keeps the paper clean and moves tags into the publish step. All three options end in the seal — options 1 and 2 share the bottom board; option 3 folds the freight INTO its seal." },
+    { "id": "fork-note", "x": 1440, "y": 3440, "w": 300, "text": "1 · Fork first (Reddit lineage) — 3 steps. Step 1 asks what the body is, takes the title, and the chosen editor grows in place. Step 2 the details (description, topics, references). Step 3 the seal. The either-or is the first thing the author meets, so no work is ever thrown away by switching." },
+    { "id": "pick-note", "x": 1440, "y": 4500, "w": 300, "text": "2 · Body first (Instagram/YouTube lineage) — 4 steps. Compose opens straight into the camera roll; 'Write words instead' is the text path. A video takes a cover step — a frame or a picture of your own. Then details, then the seal. Fastest into media, and the wizard spine is the one media authors already know." },
+    { "id": "paper-note", "x": 1440, "y": 5560, "w": 300, "text": "3 · Paper, then seal (Medium lineage) — 2 steps. The paper holds only the post: title, body, description. Everything that costs a signed action — topics, references — is added ON the seal, where each add visibly appends a row and raises the count. The shortest flow, and the cost surface and the freight surface are the same surface." },
+    { "id": "shared-note", "x": 480, "y": 6620, "w": 300, "text": "The seal — the last step of options 1 and 2 (option 3 carries its own, with the add rows). Same content as round 1's direction-2 seal: the manifest, the all-or-nothing line, license, stance, sensitive, the community pool, sign." },
+    { "id": "feed-note", "x": 1920, "y": 7680, "w": 300, "text": "ROUND 3 — how a post sits in the feed. Same two posts in four treatments: 1 · Inset cards — the current form: 24px gutters, 12px corners, filled tone. Calmest, but the gutters cost the content ~50px of width. 2 · Full-width cards — the container keeps its tone and padding but spans the screen; media runs true edge to edge; 8px of background is the seam. Containers AND full width. 3 · Full-bleed + band — no containers: content owns the surface, and an 8px tonal band is the seam between posts. 4 · Full-bleed + hairline — the quietest seam: a 1px line. Media is full width in 2–4; text keeps a 16px inset everywhere (words never touch the edge)." }
+  ],
+  "launch": { "view": "canvas" }
+}
