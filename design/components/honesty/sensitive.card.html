@@ -1,0 +1,89 @@
+<!-- @dsCard group="Content states" viewport="1240x900" name="Sensitive & removed" subtitle="§9 — sensitive is per field and per attachment; redaction takes the whole record and leaves its skeleton." -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{padding:16px;font-family:var(--font-sans)}
+.grid{display:grid;grid-template-columns:330px 330px 1fr;gap:24px;align-items:start}
+.col{display:flex;flex-direction:column;gap:10px}
+.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}
+.hd{font-size:var(--text-title-small);font-weight:var(--text-title-small--font-weight);color:var(--on-surface);padding-bottom:6px;border-bottom:1px solid var(--border-hairline)}
+.open{font-size:12px;color:var(--text-secondary);line-height:1.55}
+.open b{color:var(--on-surface);font-weight:500}.open p{margin:0 0 9px}.open ul{margin:0 0 9px;padding-left:16px}.open li{margin-bottom:5px}
+a{color:var(--text-secondary)}a:hover{color:var(--on-surface)}
+</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { Card, ActorChip, PostCard, SensitiveScope, SensitiveVeil, RedactedContent, MediaAttachment, StanceControl } = window.CoGraDesignSystem_9084ba;
+const P = "../../assets/photos/";
+const mira = {handle:"mira_l",displayName:"Mira Lindqvist"};
+const rey = {handle:"rey",displayName:"Rey Alvarez"};
+const jun = {handle:"jun",displayName:"Jun Watanabe"};
+const menu = [{label:"Report this"},{label:"Copy link"}];
+function Demo(){return (
+<div className="grid">
+  <div className="col">
+    <span className="hd">Sensitive — per field, per attachment</span>
+    <span className="lbl">Two of three tiles veiled, one untouched — tap either and the whole post reveals</span>
+    <Card>
+      <SensitiveScope>
+        <ActorChip {...mira}/>
+        <div style={{margin:"0 calc(-1 * var(--card-padding))"}}>
+          <div style={{display:"flex",flexDirection:"column",gap:"2px"}}>
+            <SensitiveVeil radius="0px"><MediaAttachment src={P+"07-portrait-2x3.jpg"} ratio="portrait" maxHeight="200px"/></SensitiveVeil>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"2px"}}>
+              <MediaAttachment src={P+"01-landscape-4x3.jpg"} ratio="square" fit="cover" radius="0px" maxHeight="130px"/>
+              <SensitiveVeil radius="0px"><MediaAttachment src={P+"10-square-1x1.jpg"} ratio="square" fit="cover" maxHeight="130px"/></SensitiveVeil>
+            </div>
+          </div>
+        </div>
+        <p style={{margin:0}} className="text-body-medium">Three from the walk. <SensitiveVeil kind="text">Two of them are grim.</SensitiveVeil></p>
+      </SensitiveScope>
+    </Card>
+    <span className="lbl">The title veiled, the description not</span>
+    <Card>
+      <ActorChip {...rey}/>
+      <SensitiveScope>
+        <h3 style={{margin:0}} className="text-title-medium"><SensitiveVeil kind="text">What they found in the yard</SensitiveVeil></h3>
+        <p style={{margin:0}} className="text-body-medium">The council came out the same afternoon and it was over by five.</p>
+      </SensitiveScope>
+    </Card>
+    <span className="lbl">A text post's body — the field that carries it</span>
+    <Card>
+      <ActorChip {...jun}/>
+      <SensitiveScope>
+        <h3 style={{margin:0}} className="text-title-medium">Two weeks after</h3>
+        <p style={{margin:0}} className="text-body-medium"><SensitiveVeil kind="text">The wound had opened again and this time it went to the bone.</SensitiveVeil></p>
+      </SensitiveScope>
+    </Card>
+  </div>
+  <div className="col">
+    <span className="hd">Redacted — the whole record</span>
+    <span className="lbl">Removed for cause. Nothing authored survives — no title, body, description, or media</span>
+    <PostCard author={mira} timestamp="4d" score="2" menuItems={menu} comments={7}
+      title="A title that is gone" content="A body that is gone." media={[{src:P+"02-landscape-3x2.jpg"}]}
+      redacted={{reason:"illegal",when:"Removed 22 Aug"}}/>
+    <span className="lbl">Removed by the author — reads differently, deliberately</span>
+    <PostCard author={rey} timestamp="2w" score="−1" menuItems={menu} comments={0}
+      redacted={{reason:"author",when:"Removed 12 Aug"}}/>
+    <span className="lbl">The placeholder alone — for a comment or any other node</span>
+    <RedactedContent reason="illegal" when="Removed 22 Aug"/>
+  </div>
+  <div className="open">
+    <p><b>The two states have opposite granularity, and that is the whole design.</b> Reading them as one family is the mistake this card exists to prevent.</p>
+    <p><b>Sensitive is per field.</b> <code>FieldModerationStatus</code> exists per field for exactly this: a title, a description, a text body, and <i>each</i> media attachment can be veiled alone (a gallery cannot wrap generically, so it carries a sibling status for the list). The docs are explicit — per-field granularity exists for sensitive only. Blanketing a post would throw away the one thing the data model went out of its way to keep.</p>
+    <p><b>Reveal, though, is per post.</b> One tap reveals everything veiled in that post — the first specimen has two veiled tiles and a veiled clause in one scope, and tapping any of them clears all three while the untouched tile never changes. The reader answered the question once; asking again per item turns one decision into five. A veil outside a <code>SensitiveScope</code> governs only itself — the right default for a lone tile.</p>
+    <p><b>Revealing moves nothing.</b> Content stays mounted under the veil and keeps its exact space. That is also why text is blurred in place rather than replaced: the reader can see there <i>is</i> a sentence, only not read it.</p>
+    <p><b>Redaction is record-granular.</b> An illegal verdict removes the <i>payload</i> of the record — "the binding content commitment forbids partial rewrite, so there is no per-field redaction". One illegal attachment takes everything authored with it: no title, no body, no description, no media, and no licence. There is no redacted title beside a surviving body, and no redaction inside a sentence. Anything that offers field-level redaction is lying about the substrate.</p>
+    <p><b>What is left is the skeleton, and the skeleton is the point.</b> The structural record, its witness, and everything it does on L1 survive: author, timestamp, thread position, standing, the stance a reader can still take, the score, the comments. No record ever leaves the graph and every redaction leaves a visible mark — so a reader is never left wondering whether something was quietly deleted.</p>
+    <p><b>Two reasons, two wordings.</b> Removed for cause by a passing proposal, or removed by the author's own choice. The docs require these to be distinguishable; collapsing them lets a moderation verdict hide behind an author's decision, or the reverse.</p>
+    <p><b>A redacted node is not feed material.</b> It is reached by direct link, by structure still pointing at it, or by a reader whose filter admits it. Whoever is looking arrived on purpose — so the placeholder says what happened and stops.</p>
+    <p><b>Neither state uses <code>error</code> colouring.</b> A neutral scrim wash and a <code>visibility</code> chip for sensitive; the same reserved surface an unloaded media tile uses for redacted, because both are a space <i>kept</i>. No red, no triangle. These are facts about content, not alarms.</p>
+    <p><b>The reader's severity level is not read.</b> The stored 0–10 is for a future where someone accepts one category and refuses another. Today the product asks only "show sensitive content or not", so a veil either exists or does not.</p>
+    <p><b>Still open:</b> whether a reveal survives leaving and returning to a post, and whether a redacted node's comments read any differently from a live post's.</p>
+  </div>
+</div>)}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script></body></html>

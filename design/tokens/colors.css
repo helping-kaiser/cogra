@@ -1,0 +1,118 @@
+/* The palette of design.md §2, orange-led from the #EF6C1A seed, generated with
+   material-color-utilities (SchemeContent, contrast 0.0) — never hand-picked. The
+   values here are transcribed from the repo-root design-tokens.json, the contract
+   both clients pin to.
+
+   Screens never name a colour — they read a role. A literal hex in a component is
+   a bug (design.md §2.3).
+
+   Both themes are designed, not derived by inversion (§10): the dark neutrals are
+   rebuilt at chroma 1.5 / 2.5 and dark `primary` is taken at tone 70, not
+   Material's 80. `success` is a CoGra role outside Material's set; `error`
+   departs from Material in hue (5, not 25) and tone (35 / 65). */
+
+:root {
+  --seed: #ef6c1a;
+
+  --primary: #9f4100;
+  --on-primary: #ffffff;
+  --primary-container: #ef6c1a;
+  --on-primary-container: #4f1d00;
+  --inverse-primary: #ffb692;
+
+  --secondary: #8e4d2b;
+  --on-secondary: #ffffff;
+  --secondary-container: #feaa81;
+  --on-secondary-container: #783c1c;
+
+  --tertiary: #666000;
+  --on-tertiary: #ffffff;
+  --tertiary-container: #b7af26;
+  --on-tertiary-container: #454100;
+
+  --background: #fff8f6;
+  --on-background: #251913;
+  --surface: #fff8f6;
+  --on-surface: #251913;
+  --surface-variant: #fddccd;
+  --on-surface-variant: #584237;
+  --surface-tint: #9f4100;
+  --inverse-surface: #3b2d27;
+  --inverse-on-surface: #ffede6;
+
+  --surface-bright: #fff8f6;
+  --surface-dim: #edd5cb;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #fff1eb;
+  --surface-container: #ffeae1;
+  --surface-container-high: #fbe3d9;
+  --surface-container-highest: #f5ded4;
+
+  --error: #a5004a;
+  --on-error: #ffffff;
+  --error-container: #ffd9df;
+  --on-error-container: #8f003f;
+
+  --success: #006c4f;
+  --on-success: #ffffff;
+  --success-container: #98f5ce;
+  --on-success-container: #002116;
+
+  --outline: #8c7165;
+  --outline-variant: #e0c0b2;
+  --scrim: #000000;
+  --shadow: #000000;
+}
+
+/* The dark theme, applied by scope rather than by inversion. Attach
+   `data-theme="dark"` to <html> or any container. */
+[data-theme="dark"] {
+  --primary: #ff8d50;
+  --on-primary: #341100;
+  --primary-container: #ef6c1a;
+  --on-primary-container: #4f1d00;
+  --inverse-primary: #9f4100;
+
+  --secondary: #ffb692;
+  --on-secondary: #542103;
+  --secondary-container: #743918;
+  --on-secondary-container: #f8a57b;
+
+  --tertiary: #d3cb42;
+  --on-tertiary: #343200;
+  --tertiary-container: #b7af26;
+  --on-tertiary-container: #454100;
+
+  --background: #151312;
+  --on-background: #e8e1df;
+  --surface: #151312;
+  --on-surface: #e8e1df;
+  --surface-variant: #4b4644;
+  --on-surface-variant: #cdc5c2;
+  --surface-tint: #ff8d50;
+  --inverse-surface: #e8e1df;
+  --inverse-on-surface: #33302f;
+
+  --surface-bright: #3c3837;
+  --surface-dim: #151312;
+  --surface-container-lowest: #100e0d;
+  --surface-container-low: #1e1b1a;
+  --surface-container: #221f1e;
+  --surface-container-high: #2c2928;
+  --surface-container-highest: #373433;
+
+  --error: #ff6b95;
+  --on-error: #66002b;
+  --error-container: #8f003f;
+  --on-error-container: #ffd9df;
+
+  --success: #7cd8b3;
+  --on-success: #003828;
+  --success-container: #00513b;
+  --on-success-container: #98f5ce;
+
+  --outline: #968f8d;
+  --outline-variant: #4b4644;
+  --scrim: #000000;
+  --shadow: #000000;
+}

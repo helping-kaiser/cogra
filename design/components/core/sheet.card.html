@@ -1,0 +1,56 @@
+<!-- @dsCard group="Components" viewport="760x520" name="The bottom sheet" subtitle="A drawer of choices the reader opened and can drop — up from the bottom edge, back down to it" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+body{padding:16px;display:flex;gap:24px;align-items:flex-start}
+#root{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+.frame{position:relative;width:260px;height:440px;flex:none;border-radius:var(--radius-extra-large);background:var(--surface);outline:1px solid var(--border-hairline);overflow:hidden;transform:translateZ(0)}
+.inner{position:absolute;inset:0;padding:16px;display:flex;flex-direction:column;gap:12px}
+.col{display:flex;flex-direction:column;gap:12px;max-width:400px}
+.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}
+p{margin:0;font-size:12px;color:var(--text-secondary);line-height:1.55}b{color:var(--on-surface);font-weight:500}
+</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { BottomSheet, SheetItem, SheetTitle, Card, Button, PostCard, BottomNav } = window.CoGraDesignSystem_9084ba;
+function Demo(){
+  const [open,setOpen]=React.useState(false);
+  return (
+  <>
+  <div className="frame">
+    <div className="inner">
+      <PostCard author={{handle:"ada",displayName:"Ada Okonkwo"}} timestamp="2h" score="15.20" comments={3}
+                content="Took the coast road instead of the tunnel. Four hours longer, worth every minute."
+                menuItems={[{label:"Copy link"},{label:"Report"}]}/>
+      <Button variant="outline" size="sm" selfStart onClick={()=>setOpen(true)}>Open a sheet</Button>
+    </div>
+    <BottomNav slots={["feed","compose","profile"]} active="feed"/>
+    <BottomSheet open={open} onClose={()=>setOpen(false)} ariaLabel="This post">
+      <SheetTitle>This post</SheetTitle>
+      <SheetItem label="Licence terms" onSelect={()=>setOpen(false)}/>
+      <SheetItem label="Copy link" onSelect={()=>setOpen(false)}/>
+      <SheetItem label="Report" onSelect={()=>setOpen(false)}/>
+    </BottomSheet>
+  </div>
+  <div className="col">
+    <span className="lbl">The overflow menu on the card above opens the same sheet — that is its default presentation on both clients</span>
+    <p><b>It covers the bottom bar.</b> A sheet is a decision surface; a navigation bar under it offers to leave mid-decision.</p>
+    <p><b>Top corners only</b>, at the 28px rung. The bottom edge is the screen's — a rounded bottom flush to the edge draws a gap that is not there.</p>
+    <p><b>The grab handle is not a control.</b> It says which edge this came from and which way it goes back.</p>
+    <p><b>Nothing behind it is inert.</b> Escape closes, the scrim closes, and the reader can look away. If the choice truly cannot be deferred, that is a dialog — <code>DialogSurface</code>.</p>
+    <p><b>Never beside the stance pad.</b> One parked surface at a time; the pad owns the same corner.</p>
+    <span className="lbl">In flow, for a specimen — inline drops the scrim and the animation</span>
+    <div style={{borderRadius:"var(--radius-extra-large)",overflow:"hidden",maxWidth:260}}>
+      <BottomSheet inline ariaLabel="Specimen">
+        <SheetItem label="Licence terms"/>
+        <SheetItem label="Copy link"/>
+      </BottomSheet>
+    </div>
+  </div>
+  </>)}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script></body></html>

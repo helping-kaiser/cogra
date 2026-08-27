@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>CoGra — core loop</title>
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+body{min-height:100dvh;background:var(--surface-container-low);display:grid;place-items:center;padding:32px}
+.desk{display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;justify-content:center}
+/* The transform makes the frame the containing block for the components that
+   position themselves against "the viewport" — the bar, the parked pad, the
+   snackbar, the dialogs. On a phone that IS the viewport. */
+.phone{position:relative;width:390px;height:844px;transform:translateZ(0);overflow:hidden;border-radius:40px;background:var(--surface);outline:1px solid var(--border-hairline)}
+.screen{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.notes{width:300px;display:flex;flex-direction:column;gap:16px}
+.ctl{display:flex;flex-direction:column;gap:6px}
+.ctl-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary)}
+.ctl-row{display:flex;gap:6px;flex-wrap:wrap}
+.ctl-btn{font:inherit;font-size:var(--text-label-large);padding:6px 12px;border-radius:var(--radius-full);border:1px solid var(--border-field);background:none;color:var(--text-body);cursor:pointer}
+.ctl-btn.on{background:var(--secondary-container);color:var(--on-secondary-container);border-color:transparent}
+.ctl-btn.wide{align-self:flex-start}
+</style>
+</head><body>
+<div id="root"></div>
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
+</body></html>

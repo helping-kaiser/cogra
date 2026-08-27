@@ -1,0 +1,53 @@
+/* A 4dp/4px base grid (design.md §4). Screen gutters and list spacing follow M3
+   defaults; the values below are the ones the two clients actually use.
+
+   Observed in the web client: screen gutter 24px (px-6), card padding 16px (p-4),
+   card inner gap 12px (gap-3), screen stack gap 16px (gap-4), list gap 12px. */
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Layout constants read off the clients. */
+  --screen-gutter: var(--space-6);
+  --screen-max-width: 42rem;
+  --card-padding: var(--space-4);
+  --card-gap: var(--space-3);
+  --stack-gap: var(--space-4);
+  /* 48dp minimum touch TARGET — the stance control's resting state included, and
+     enforced by hit area rather than drawn height: `.cg-hit` in states.css expands
+     a 33px small button to a 48px target without moving its ink. */
+  --touch-target-min: 48px;
+  /* The short navigation bar, and the small top app bar's band. */
+  --bottom-bar-height: 64px;
+  --top-bar-height: 48px;
+
+  /* A POST MUST FIT ON THE SCREEN. The whole card — author row, media, text,
+     affordances — has to sit inside the phone's height minus the top safe area
+     and the bottom bar, or the reader never sees a post whole and never sees the
+     affordance row without scrolling. Media is the only part that can flex, so
+     the cap lands on it.
+
+     THE CHROME FIGURE IS THE WORST CASE, NOT THE AVERAGE — measured on the
+     heaviest post the system can produce: author row, title, a two-line caption,
+     a `More` opener, an honesty marker, the 52px affordance row, and the card's
+     own 2×16px padding. Budgeting for the average is how you ship a layout that
+     fits four posts out of five, and the fifth is the one with something to say.
+     A short post simply never reaches the cap; it is a maximum, not a target.
+
+     The floor keeps media from collapsing to a sliver on a short viewport — a
+     landscape phone or a desktop panel — where scrolling is the lesser evil. */
+  --safe-area-top: env(safe-area-inset-top, 44px);
+  --post-chrome-height: 360px;
+  --media-max-height: max(
+    180px,
+    calc(100dvh - var(--safe-area-top) - var(--bottom-bar-height) - var(--post-chrome-height))
+  );
+}
