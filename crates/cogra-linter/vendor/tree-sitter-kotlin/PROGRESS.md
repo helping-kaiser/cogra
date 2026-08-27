@@ -27,53 +27,75 @@ grammar parsing the whole Android corpus to **zero error nodes**.
 `rep:linter:kotlin-parser-study`.
 
 The corpus has **grown since the study**: the study measured 138 `.kt`
-files, the tree now holds **170** (plus 18 `.kts`, which are a separate
-and undecided question). The precondition is measured against what is
+files, the tree now holds **173**, and the 18 `.kts` build scripts are
+read by the same grammar. The precondition is measured against what is
 there, never against the study's number.
 
-### Met
+### Met, on both file kinds
 
 ```
 --- ARCH dec:linter:kotlin-tree-sitter precondition (.kt) ---
-files parsed:        170
+files parsed:        173
+files with errors:   0
+total ERROR/MISSING: 0
+
+--- ARCH dec:linter:kotlin-tree-sitter precondition (.kts) ---
+files parsed:        18
 files with errors:   0
 total ERROR/MISSING: 0
 ```
 
-Parsing all 170 files (1.27 MB) takes **0.07 s** in one batch. The
-parser is 2,905 states and a 5.4 MB `src/parser.c`.
+The parser is 2,934 states and a 5.5 MB `src/parser.c`.
 
 ### The comment census, as a cross-check
 
 The frontend's whole interest is that comments arrive as named nodes, so
 the grammar's own count is worth comparing with the study's:
 
-| | this grammar, 170 files | study, 138 files |
-|---|---:|---:|
-| `line_comment` | 1,708 | 964 |
-| `block_comment` (not KDoc) | **0** | 0 |
-| `kdoc` | 681 | 441 |
+| | `.kt`, 173 files | `.kts`, 18 files | study, 138 `.kt` |
+|---|---:|---:|---:|
+| `line_comment` | 1,741 | 104 | 964 |
+| `block_comment` (not KDoc) | **0** | **0** | 0 |
+| `kdoc` | 720 | 0 | 441 |
 
 The qualitative finding is reproduced exactly and independently: **every
-block comment in this corpus is KDoc**. The line-comment count matches a
-raw count of lines beginning with `//` exactly (1,708), and the corpus
-contains no trailing comments at all, so the two should agree — and do.
+block comment in this corpus is KDoc**, and the build scripts carry none
+at all — a Gradle file explains itself in line comments.
 
-### `.kts`, measured but not ruled on
+### One root for both file kinds
+
+The specification defines two entry points over one grammar:
 
 ```
---- ARCH dec:linter:kotlin-tree-sitter precondition (.kts) ---
-files parsed:        18
-files with errors:   18
-total ERROR/MISSING: 43
+kotlinFile : shebangLine? fileAnnotation* packageHeader importList
+             topLevelObject* EOF          // topLevelObject : declaration
+script     : shebangLine? fileAnnotation* packageHeader importList
+             (statement semi)* EOF
 ```
 
-Expected, and not a defect: the specification parses scripts with its
-`script` production, which admits statements at the top level, while
-this grammar implements `kotlinFile`, which admits only declarations.
-Supporting `.kts` means adding that production, not fixing a bug. The
-adoption data is deliberately untouched — that ruling is jakob's, and
-this measurement is only its input.
+They share their whole prelude, and `statement` already admits
+`declaration`, so `script` accepts a strict superset of `kotlinFile`.
+
+tree-sitter settles the rest: "the start rule for the grammar is the
+first property in the `rules` object" — one start rule, with no second
+entry point and no per-extension root documented. So the single root
+takes the wider shape and reads both kinds. The alternatives were
+weighed and rejected: two grammars means two generated parsers to keep
+in step for one shared language, and a root that switches on a leading
+token has nothing to switch on, since these Gradle scripts carry no
+shebang (checked, not assumed: none of the 18 has one).
+
+The cost, stated where it is taken: a `.kt` file whose top level holds a
+bare expression parses here, where the compiler rejects it. That is the
+safe direction for a linter — an error node is a finding, so the risk
+worth avoiding is rejecting valid source, not accepting invalid source —
+and no single-root grammar can draw a distinction the specification
+draws with two entry points.
+
+It cost 29 states and one precedence: `import` is a soft keyword, so
+with statements at the top level a leading `import` could equally open
+an infix call over a variable of that name. A line that starts with it
+is an import.
 
 ## The lesson that shaped this grammar
 
@@ -278,8 +300,6 @@ content ends in a literal quote.
   named scanner scope disagree. The corpus contains no instance —
   measured, not assumed — so it is deferred rather than guessed at.
 - **Definitely-non-nullable types** (`T & Any`).
-- **`.kts`**, which the adoption data defers to this slice and which is
-  jakob's ruling to make; this lane only measures.
 
 ### A comment found while deciding a statement end
 
@@ -295,11 +315,13 @@ comment supplies one if it is still wanted.
 
 ## Status
 
-**The precondition is met.** The grammar parses the whole Android corpus
-to zero error nodes, comments and KDoc arrive as named nodes, and the
-corpus tests pin the behaviour that got it there.
+**The precondition is met, on both file kinds.** The grammar parses the
+whole Android corpus — sources and build scripts alike — to zero error
+nodes, comments and KDoc arrive as named nodes, and the corpus tests pin
+the behaviour that got it there.
 
-Coverage: packages, imports, file annotations, classes, interfaces,
+Coverage: both file shapes the specification defines, and within them
+packages, imports, file annotations, classes, interfaces,
 objects, companions, enums, type aliases, primary and secondary
 constructors, initialisers, properties with accessors and delegates,
 functions, extension receivers, type parameters and constraints,
@@ -308,9 +330,9 @@ expression cascade, lambdas and trailing lambdas, anonymous functions,
 object literals, control flow, jumps, labels, string templates, raw
 strings, and every numeric literal form.
 
-Not covered, and deliberate: multi-dollar interpolation, definitely
-non-nullable types (`T & Any`), and the `script` production `.kts`
-needs. See "Not yet covered" above.
+Not covered, and deliberate: multi-dollar interpolation and definitely
+non-nullable types (`T & Any`). See "Not yet covered" above.
 
-`test/corpus/` holds 30 tests. They are what a future change should be
-measured against, together with `scripts/measure.sh`.
+`test/corpus/` holds 39 tests. They are what a future change should be
+measured against, together with `scripts/measure.sh`, which takes `kt`
+or `kts`.
