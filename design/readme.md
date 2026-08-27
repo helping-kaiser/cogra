@@ -987,6 +987,100 @@ per-control, never a tour, and on the entry screens only the pad
 carries it — what it is for, how it opens, that nothing signs until
 Set, and that the input can be swapped in settings.
 
+### The compose flow — 2026-08-27
+
+Canonical screens: the COMPOSE rows of `designs/canonical/`; the
+three ideation rounds live on the standalone "CoGra compose" canvas.
+
+**The wizard is body-first** (the Instagram/YouTube spine): pick the
+body → crop → (cover, video only) → details → the seal. "Write words
+instead" is the text path and skips crop and cover. A post's body is
+words OR media (one picture, a set, or one video with a cover),
+never both — words beside pictures go in the description. Title and
+description are optional. The pick screen splits into a picked tray
+(one line, "Show all" on overflow; the first pick is the cover) over
+the newest-first device grid, whose first tile opens the device's
+own photos app — picks made there land in the tray. **The crop** is
+Instagram's model: one shape for the whole post — Tall 4:5, Square
+1:1, or Wide 1.91:1 — with drag-to-move and pinch-to-zoom framing
+per picture; 4:5 as the tallest shape is what guarantees the feed
+card's height cap (below). Wizard screens carry no step numbers
+(paths differ in length; the title names the stage, only the seal
+says "Last step").
+
+**The seal is a place, not a popup.** "What you sign" lists every
+act with its cost, aggregated per kind — one row per kind, its items
+as small chips in one line, the sum at the row's end — and the batch
+lands whole or not at all (resolves Q43). License collapses to one
+line reading the author's default (an account setting; Public domain
+until changed) and opens as a bottom sheet — immutable after
+signing. Sensitive self-marking is one switch opening a bottom
+sheet: it veils the body and the description; the title and topics
+stay readable so choosing to look is informed; an optional reason is
+shown on the veil. Every stance a write signs is disclosed and
+adjustable: the post's own attachment on a one-axis pad (For/Against
+only — your own post always reaches you in full), a reply's stance
+on its parent on the full two-axis pad. The pad keeps its floating
+card form everywhere; only license and sensitive present as sheets.
+
+**Key absent is restore-first.** Nothing is staged server-side and
+nothing is signed; the draft stays on the device, and the state
+wears `tertiary` — a waiting state, never `error`. Leaving mid-write
+keeps one local draft per target, on-device only; the draft is the
+safety, so there is no discard confirm. Signing exits to the post's
+own detail view wearing *Still settling*, with the snackbar
+"Signed — it's in the thread now, still settling." An act that
+expires unlanded gets a calm notice card in the shell: content left
+every reader's view, nothing was spent, the draft is saved.
+
+**A comment is text plus optional media** (deliberately asymmetric
+to the post's XOR — an answer is words first), entered through the
+thread's comment box, which is an entry, not a composer: it opens
+the same full-focus flow pre-targeted, parent pinned — words, then a
+one-act seal that discloses the stance on the parent. **An edit is
+one screen and one batch**: the content edit plus topic and citation
+changes ride together, the cost line reads the live total, and
+tapping it opens the breakdown sheet. The license row shows
+read-only with a lock. **Remove** is the erasure path: own-post
+sheet → a think-twice dialog whose safe action is filled → the
+visible mark. "Removed by its author" and "Removed under the
+platform's rules" must never read alike.
+
+**Citing** gets an explorer (posts by title, people by name/handle,
+items by name, proposals by title, chats by name, campaigns by
+anchor, offers via their item); comments and chat messages are cited
+from themselves — every content's overflow menu carries "Cite in a
+new post". Its result rows are the seed of the search design (item
+9).
+
+**Copy rule:** captions are one short line; the full explanation
+lives behind a small "?" — at most one per screen, top-right of the
+header or of the sheet/card it explains (the pads carry their own) —
+opening a plain dialog: title, at most two short paragraphs, Close.
+The eight dialog texts live in
+[guidelines/copy-voice.md](guidelines/copy-voice.md). **Button
+rule:** filled and outlined pills render a TRUE 40px tall (border
+box) with 24px side padding and a 64px minimum width; header pills
+render a compact true 32px; `sm` buttons 32px with 16px padding.
+
+**Feed containers — rounded full-width cards.** A feed post is a
+full-width container: the filled card keeps its 12px corners, tone,
+and 16px text inset, but spans the screen edge to edge; media runs
+the full width; 8px of surface between cards is the seam. Words
+never touch the screen edge — only media does. **The height cap:** a
+post card's collapsed form never exceeds the screen height minus the
+bottom bar and the top safe zone — designed against the app /
+downloadable-webapp viewport, not browser chrome. Collapse order:
+media and the interaction row never shrink; tags and references
+collapse to one line under the description; the title clamps to one
+line, the description to two. The expanded detail view may exceed
+the screen.
+
+To port to the product docs: the body XOR (the API today has
+`content` required with attachments beside it), the sensitive
+self-mark field and its fixed per-field policy, the default-license
+account setting, and the edit batch carrying topic/citation acts.
+
 ## 14. Index
 
 **Root**
