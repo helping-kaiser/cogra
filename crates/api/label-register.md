@@ -244,6 +244,7 @@ label.
 | `test:integration:the-registration-form-refuses-each-named-failure`                         | the_registration_form_refuses_each_named_failure                         |
 | `test:integration:the-release-posture-serves-no-introspection`                              | the_release_posture_serves_no_introspection                              |
 | `test:integration:the-same-target-from-two-artifacts-is-two-bundles`                        | the_same_target_from_two_artifacts_is_two_bundles                        |
+| `test:integration:the-stored-legs-carry-the-census-orientation`                             | the_stored_legs_carry_the_census_orientation                             |
 | `test:integration:the-sweep-removes-idle-rows-and-keeps-blocking-ones`                      | the_sweep_removes_idle_rows_and_keeps_blocking_ones                      |
 | `test:integration:the-tagged-content-limit-refuses-over-asking`                             | the_tagged_content_limit_refuses_over_asking                             |
 | `test:integration:the-view-constructor-needs-both-the-flag-and-a-viewer`                    | the_view_constructor_needs_both_the_flag_and_a_viewer                    |

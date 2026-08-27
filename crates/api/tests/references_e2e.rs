@@ -745,12 +745,11 @@ async fn the_stored_legs_carry_the_census_orientation(pool: PgPool) {
         )
         .await;
 
-    let staged: (f64, f64) = sqlx::query_as(
-        "SELECT p_d, p_i FROM staged_writes WHERE family = 'reference'",
-    )
-    .fetch_one(&rig.pool)
-    .await
-    .expect("staged write");
+    let staged: (f64, f64) =
+        sqlx::query_as("SELECT p_d, p_i FROM staged_writes WHERE family = 'reference'")
+            .fetch_one(&rig.pool)
+            .await
+            .expect("staged write");
     assert_eq!(
         staged,
         (-0.75, 0.25),

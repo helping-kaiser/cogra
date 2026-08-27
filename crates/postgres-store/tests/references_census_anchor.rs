@@ -121,7 +121,7 @@ async fn fixture(pool: &PgPool) {
 ///
 /// Ordered by target, that is carol then zoe.
 #[sqlx::test(migrations = "../../migrations")]
-async fn hand_computed_fold_agrees(pool: PgPool) {
+async fn hand_computed_reference_fold_agrees(pool: PgPool) {
     fixture(&pool).await;
 
     let raw: Vec<RawLeg> = sqlx::query_as(
@@ -160,10 +160,7 @@ async fn hand_computed_fold_agrees(pool: PgPool) {
         .collect();
     assert_eq!(
         got,
-        vec![
-            (CAROL, 1.0, 0.55, 2, false),
-            (ZOE, 0.70, 0.40, 2, false),
-        ],
+        vec![(CAROL, 1.0, 0.55, 2, false), (ZOE, 0.70, 0.40, 2, false),],
         "references_of disagrees with the hand-computed fold"
     );
 }
