@@ -9,14 +9,21 @@ import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ReferenceCandidateView
+import com.cogra.domain.ReferenceClaimView
 import com.cogra.domain.TopicClaimView
 import com.cogra.domain.UserError
+import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingContentRepository
+import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingTopicRepository
+import com.cogra.domain.testing.testContentTarget
+import com.cogra.domain.testing.testMentionTarget
 import com.cogra.domain.testing.testPost
+import com.cogra.domain.testing.testReferenceClaim
 import com.cogra.domain.testing.testTopicClaim
 import com.cogra.domain.topics.TAG_DEFAULT_CONFIDENCE
 import com.cogra.domain.topics.TAG_DEFAULT_RELEVANCE
@@ -45,11 +52,15 @@ class ComposePostViewModelTest {
         var prepareOutcome: Outcome<PreparedContentView>? = null
         var editOutcome: Outcome<PreparedContentView>? = null
         var lastCreate: List<Any?> = emptyList()
+        var lastCreateReferences: List<ReferenceClaim> = emptyList()
         var lastEdit: List<Any?> = emptyList()
         var editCalls = 0
 
         /** The topics the edited post already carries. */
         var loadedTopics: List<TopicClaimView> = emptyList()
+
+        /** The references the edited post already carries. */
+        var loadedReferences: List<ReferenceClaimView> = emptyList()
 
         override suspend fun post(
             id: String,
@@ -59,7 +70,7 @@ class ComposePostViewModelTest {
         ): Outcome<PostDetail?> = Outcome.Success(
             PostDetail(
                 post = testPost(id, title = "Loaded title", body = "Loaded body")
-                    .copy(topics = loadedTopics),
+                    .copy(topics = loadedTopics, references = loadedReferences),
                 comments = Page(emptyList(), null, hasNextPage = false),
             ),
         )
@@ -70,8 +81,10 @@ class ComposePostViewModelTest {
             content: String,
             license: LicenseChoice,
             tags: List<TagClaim>,
+            references: List<ReferenceClaim>,
         ): Outcome<PreparedContentView> {
             lastCreate = listOf(title, description, content, license, tags)
+            lastCreateReferences = references
             return prepareOutcome ?: Outcome.Success(
                 PreparedContentView("node-1", listOf(sealer.stage(Family.PUBLISH))),
             )
@@ -106,8 +119,52 @@ class ComposePostViewModelTest {
         }
     }
 
+    private val references = object : ThrowingReferenceRepository() {
+        val added = mutableListOf<ReferenceCall>()
+        val withdrawn = mutableListOf<Pair<String, String>>()
+        var candidates: List<ReferenceCandidateView> = emptyList()
+        var candidatesFail = false
+        var lastQuery: String? = null
+
+        /** How many counter-records a withdrawal costs; the batch length is the quote (D11). */
+        var withdrawalRecords = 1
+        var addOutcomeFor: (String) -> Outcome<List<PreparedWriteView>>? = { null }
+        var withdrawOutcomeFor: (String) -> Outcome<List<PreparedWriteView>>? = { null }
+
+        override suspend fun referenceCandidates(
+            query: String,
+            limit: Int?,
+        ): Outcome<List<ReferenceCandidateView>> {
+            lastQuery = query
+            return if (candidatesFail) {
+                Outcome.Failed(IOException("offline"))
+            } else {
+                Outcome.Success(candidates)
+            }
+        }
+
+        override suspend fun prepareReference(
+            artifact: String,
+            target: String,
+            relevance: Double?,
+            support: Double?,
+        ): Outcome<List<PreparedWriteView>> {
+            added += ReferenceCall(artifact, target, relevance, support)
+            return addOutcomeFor(target) ?: Outcome.Success(listOf(sealer.stage(Family.REFERENCE)))
+        }
+
+        override suspend fun prepareReferenceWithdrawal(
+            artifact: String,
+            target: String,
+        ): Outcome<List<PreparedWriteView>> {
+            withdrawn += artifact to target
+            return withdrawOutcomeFor(target)
+                ?: Outcome.Success(List(withdrawalRecords) { sealer.stage(Family.REFERENCE) })
+        }
+    }
+
     private fun viewModel() =
-        ComposePostViewModel(content, topics, WriteSigner(sealer, identity), identity)
+        ComposePostViewModel(content, topics, references, WriteSigner(sealer, identity), identity)
 
     /**
      * Most tests exercise the staging, not the confirm (F4): the device
@@ -662,5 +719,363 @@ class ComposePostViewModelTest {
         identity.setConfirmMultiActionSubmits(true)
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.confirmMultiActionSubmits).isTrue()
+    }
+
+    // -- References (D10, D11, D20) --
+
+    private fun ComposePostViewModel.stageOneReference(targetId: String = "u1") {
+        references.candidates = listOf(ReferenceCandidateView(testMentionTarget("ada"), targetId))
+        onOpenFinder()
+        onFinderQueryChange("@ada")
+        dispatcher.scheduler.advanceUntilIdle()
+        onPickReference(state.value.referenceSection.finder!!.candidates.single())
+    }
+
+    @Test
+    fun theFinderResolvesAHandleAndPickingItStagesAChip() = runTest(dispatcher) {
+        val vm = viewModelWithoutConfirm()
+        vm.stageOneReference()
+        assertThat(vm.state.value.referenceSection.references.map { it.targetId })
+            .containsExactly("u1")
+        // The finder closes behind a pick.
+        assertThat(vm.state.value.referenceSection.finder).isNull()
+        assertThat(references.lastQuery).isEqualTo("@ada")
+    }
+
+    /** A lookup that fell over is distinct from one that matched nothing. */
+    @Test
+    fun aFinderLookupThatFailedSaysSoRatherThanShowingAnEmptyList() = runTest(dispatcher) {
+        references.candidatesFail = true
+        val vm = viewModelWithoutConfirm()
+        vm.onOpenFinder()
+        vm.onFinderQueryChange("@ada")
+        dispatcher.scheduler.advanceUntilIdle()
+        val finder = vm.state.value.referenceSection.finder!!
+        assertThat(finder.failed).isTrue()
+        assertThat(finder.foundNothing).isFalse()
+    }
+
+    /** The finder runs per keystroke, so only the last query's answer lands. */
+    @Test
+    fun theFinderAsksOnceForAQueryTypedInOneBurst() = runTest(dispatcher) {
+        references.candidates = listOf(ReferenceCandidateView(testMentionTarget("ada"), "u1"))
+        val vm = viewModelWithoutConfirm()
+        vm.onOpenFinder()
+        vm.onFinderQueryChange("@a")
+        vm.onFinderQueryChange("@ad")
+        vm.onFinderQueryChange("@ada")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(references.lastQuery).isEqualTo("@ada")
+        assertThat(vm.state.value.referenceSection.finder!!.candidates).hasSize(1)
+    }
+
+    @Test
+    fun submittingSendsTheStagedReferencesWithTheirParameters() = runTest(dispatcher) {
+        val vm = viewModelWithoutConfirm()
+        vm.onBodyChange("The body")
+        vm.stageOneReference()
+        vm.onReferenceRelevanceChange("u1", 0.8)
+        vm.onReferenceSupportChange("u1", -0.3)
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.lastCreateReferences)
+            .containsExactly(ReferenceClaim("u1", relevance = 0.8, support = -0.3))
+    }
+
+    /** A creation prices the minting record, each tag, and each citation (D7, F4). */
+    @Test
+    fun aCreateCountsTheMintingRecordEachTagAndEachReference() = runTest(dispatcher) {
+        val vm = viewModelWithoutConfirm()
+        vm.onBodyChange("The body")
+        vm.onTagInputChange("rust")
+        vm.onAddTag()
+        vm.stageOneReference()
+        assertThat(vm.state.value.signedActionCount).isEqualTo(3)
+    }
+
+    @Test
+    fun theReferenceCapRefusesTheEleventhLocally() = runTest(dispatcher) {
+        val vm = viewModelWithoutConfirm()
+        repeat(11) { i ->
+            references.candidates =
+                listOf(ReferenceCandidateView(testContentTarget("p$i"), "p$i"))
+            vm.onOpenFinder()
+            vm.onFinderQueryChange("p$i")
+            dispatcher.scheduler.advanceUntilIdle()
+            vm.state.value.referenceSection.finder?.candidates?.singleOrNull()
+                ?.let { vm.onPickReference(it) }
+        }
+        assertThat(vm.state.value.referenceSection.references).hasSize(10)
+        assertThat(vm.state.value.referenceSection.capReached).isTrue()
+    }
+
+    @Test
+    fun theEditScreenLoadsTheCurrentReferences() = runTest(dispatcher) {
+        content.loadedReferences =
+            listOf(testReferenceClaim(testMentionTarget("ada"), relevance = 0.4, support = 0.6))
+        val vm = viewModelWithoutConfirm()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        val row = vm.state.value.referenceSection.references.single()
+        // The L2 id the write names, not the claim's L1 identifier.
+        assertThat(row.targetId).isEqualTo("user-ada")
+        assertThat(row.relevance).isEqualTo(0.4)
+        assertThat(row.support).isEqualTo(0.6)
+        // Loaded and unchanged: the edit stages nothing.
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+    }
+
+    /**
+     * A citation this instance could not type carries no L2 id, so no
+     * write could name it. It never reaches the editable section, and
+     * its absence there must not be read as the author dropping it.
+     */
+    @Test
+    fun anUntypeableCitationNeverEntersTheEditableSection() = runTest(dispatcher) {
+        content.loadedReferences = listOf(
+            testReferenceClaim(testMentionTarget("ada")),
+            testReferenceClaim(target = null),
+        )
+        val vm = viewModelWithoutConfirm()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.referenceSection.references.map { it.targetId })
+            .containsExactly("user-ada")
+        assertThat(vm.state.value.referenceSection.removes).isEmpty()
+
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(references.withdrawn).isEmpty()
+    }
+
+    @Test
+    fun anAddedReferenceOnTheEditScreenStagesItsOwnReferenceAct() = runTest(dispatcher) {
+        val vm = viewModelWithoutConfirm()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.stageOneReference()
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(references.added)
+            .containsExactly(ReferenceCall("post-1", "u1", 0.1, 0.1))
+        assertThat(content.editCalls).isEqualTo(0)
+    }
+
+    /**
+     * Dropping a citation is a withdrawal, not a relevance-zero act: the
+     * bundle nets to (0, 0), which may take several counter-records
+     * (D11).
+     */
+    @Test
+    fun aDroppedReferenceStagesAWithdrawal() = runTest(dispatcher) {
+        content.loadedReferences = listOf(testReferenceClaim(testMentionTarget("ada")))
+        val vm = viewModelWithoutConfirm()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onRemoveReference("user-ada")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(references.withdrawn).containsExactly("post-1" to "user-ada")
+        assertThat(references.added).isEmpty()
+    }
+
+    /** The count the author reads is the batch the server assembled, not a guess. */
+    @Test
+    fun aWithdrawalQuotesTheServersOwnRecordCount() = runTest(dispatcher) {
+        content.loadedReferences = listOf(testReferenceClaim(testMentionTarget("ada")))
+        references.withdrawalRecords = 3
+        val vm = viewModelWithoutConfirm()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onRemoveReference("user-ada")
+        // Before staging, the section can only assume one act per drop.
+        assertThat(vm.state.value.signedActionCount).isEqualTo(1)
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.withdrawalCost).isEqualTo(3)
+    }
+
+    /**
+     * A withdrawal stages before it asks, because its cost is knowable
+     * only once the server has assembled the batch. Staging signs
+     * nothing, so nothing is committed by asking second (D11).
+     */
+    @Test
+    fun aWithdrawalAsksWithTheQuotedCountAndSignsOnlyOnConfirm() = runTest(dispatcher) {
+        content.loadedReferences = listOf(testReferenceClaim(testMentionTarget("ada")))
+        references.withdrawalRecords = 4
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onRemoveReference("user-ada")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.confirmPending).isTrue()
+        assertThat(vm.state.value.withdrawalCost).isEqualTo(4)
+        assertThat(vm.state.value.saved).isFalse()
+
+        vm.onConfirmSubmit(dontAskAgain = false)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.saved).isTrue()
+        // Staged once, signed once — the confirm did not re-stage.
+        assertThat(references.withdrawn).hasSize(1)
+    }
+
+    @Test
+    fun dismissingAWithdrawalConfirmSignsNothing() = runTest(dispatcher) {
+        content.loadedReferences = listOf(testReferenceClaim(testMentionTarget("ada")))
+        // More than one counter-record, so the batch earns a confirm.
+        references.withdrawalRecords = 2
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onRemoveReference("user-ada")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onDismissConfirm()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.saved).isFalse()
+        assertThat(vm.state.value.confirmPending).isFalse()
+        assertThat(vm.state.value.submitting).isFalse()
+    }
+
+    @Test
+    fun aFieldRefusalLandsOnTheReferenceChipTheServerNamed() = runTest(dispatcher) {
+        val vm = viewModelWithoutConfirm()
+        vm.onBodyChange("The body")
+        vm.stageOneReference()
+        content.prepareOutcome = Outcome.Refused(
+            listOf(
+                UserError(
+                    message = "An artifact cannot cite itself.",
+                    code = ErrorCode.UNKNOWN,
+                    field = listOf("references", "0", "target"),
+                ),
+            ),
+        )
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.referenceSection.references.single().error)
+            .isEqualTo("An artifact cannot cite itself.")
+        assertThat(vm.state.value.refusal).isNull()
+    }
+
+    /** A tag path and a reference path name different chips in one batch. */
+    @Test
+    fun refusalsSplitBetweenTheTagChipAndTheReferenceChip() = runTest(dispatcher) {
+        val vm = viewModelWithoutConfirm()
+        vm.onBodyChange("The body")
+        vm.onTagInputChange("rust")
+        vm.onAddTag()
+        vm.stageOneReference()
+        content.prepareOutcome = Outcome.Refused(
+            listOf(
+                UserError(ErrorCode.UNKNOWN, "bad tag", listOf("tags", "0", "name")),
+                UserError(ErrorCode.UNKNOWN, "bad reference", listOf("references", "0", "target")),
+            ),
+        )
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.tagSection.tags.single().error).isEqualTo("bad tag")
+        assertThat(vm.state.value.referenceSection.references.single().error)
+            .isEqualTo("bad reference")
+    }
+
+    /**
+     * A whole-batch refusal names no field — the balance could not carry
+     * every act, so nothing was staged (D19). It says its piece once
+     * rather than smearing across every chip.
+     */
+    @Test
+    fun aWholeBatchRefusalSurfacesOnceAndMarksNoChip() = runTest(dispatcher) {
+        val vm = viewModelWithoutConfirm()
+        vm.onBodyChange("The body")
+        vm.onTagInputChange("rust")
+        vm.onAddTag()
+        vm.stageOneReference()
+        content.prepareOutcome = Outcome.Refused(
+            listOf(
+                UserError(
+                    message = "Your balance cannot carry all 3 actions.",
+                    code = ErrorCode.UNKNOWN,
+                    field = null,
+                ),
+            ),
+        )
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.refusal).isEqualTo("Your balance cannot carry all 3 actions.")
+        assertThat(vm.state.value.tagSection.tags.single().error).isNull()
+        assertThat(vm.state.value.referenceSection.references.single().error).isNull()
+    }
+
+    /** A standalone Reference's refusal lands on the chip it was staged for. */
+    @Test
+    fun aStandaloneReferenceRefusalLandsOnItsOwnChipAndSignsNothing() = runTest(dispatcher) {
+        val vm = viewModelWithoutConfirm()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.stageOneReference()
+        references.addOutcomeFor = { target ->
+            if (target == "u1") {
+                Outcome.Refused(listOf(UserError(ErrorCode.UNKNOWN, "no such node", null)))
+            } else {
+                null
+            }
+        }
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.referenceSection.references.single().error)
+            .isEqualTo("no such node")
+        assertThat(vm.state.value.saved).isFalse()
+        assertThat(vm.state.value.signingFailed).isFalse()
+    }
+
+    // -- The Reference affordance (D20) --
+
+    /**
+     * The affordance opens the composer with the node staged. Its typed
+     * form comes from the finder's own lookup, so the chip reads the
+     * same as a picked one.
+     */
+    @Test
+    fun theReferenceAffordancePrefillsAChipAndResolvesItsLabel() = runTest(dispatcher) {
+        references.candidates =
+            listOf(ReferenceCandidateView(testContentTarget("p9"), "p9"))
+        val vm = viewModelWithoutConfirm()
+        vm.start(postId = null, referenceTargetId = "p9")
+        dispatcher.scheduler.advanceUntilIdle()
+        val row = vm.state.value.referenceSection.references.single()
+        assertThat(row.targetId).isEqualTo("p9")
+        assertThat(row.target).isEqualTo(testContentTarget("p9"))
+    }
+
+    /**
+     * A prefill the lookup cannot type is still staged: the citation
+     * names its target by id, and dropping the gesture silently would
+     * be worse than a chip with no label.
+     */
+    @Test
+    fun anUnresolvablePrefillIsStillStagedByItsId() = runTest(dispatcher) {
+        references.candidates = emptyList()
+        val vm = viewModelWithoutConfirm()
+        vm.start(postId = null, referenceTargetId = "p9")
+        dispatcher.scheduler.advanceUntilIdle()
+        val row = vm.state.value.referenceSection.references.single()
+        assertThat(row.targetId).isEqualTo("p9")
+        assertThat(row.target).isNull()
+    }
+
+    @Test
+    fun theAffordanceStagesTheSameNodeOnlyOnce() = runTest(dispatcher) {
+        references.candidates = listOf(ReferenceCandidateView(testContentTarget("p9"), "p9"))
+        val vm = viewModelWithoutConfirm()
+        vm.start(postId = null, referenceTargetId = "p9")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.start(postId = null, referenceTargetId = "p9")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.referenceSection.references).hasSize(1)
     }
 }

@@ -1,14 +1,21 @@
 package com.cogra.core.designsystem
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.testTag
 import java.util.Locale
 
 /**
@@ -65,5 +72,35 @@ internal fun LabeledSlider(
                 },
         )
         scale?.invoke()
+    }
+}
+
+private val BIPOLAR_SCALE = listOf(
+    R.string.scale_min,
+    R.string.scale_zero,
+    R.string.scale_max,
+)
+
+/**
+ * The marks under a bipolar parameter's track. Its centre is the
+ * meaningful one: zero is withdrawal, not "a little". The endpoints
+ * and that centre ride as plain text — the slider itself already
+ * announces its value, so the scale stays out of the semantics tree.
+ */
+@Composable
+internal fun BipolarScale(testTag: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clearAndSetSemantics { this.testTag = testTag },
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        for (mark in BIPOLAR_SCALE) {
+            Text(
+                stringResource(mark),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
