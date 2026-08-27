@@ -27,7 +27,6 @@ within a phase, order is flexible.
 | 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
 | 2a. Stance control (slice 2.2, both clients) | 1 | **Q42** | The resting face an unauthored stance target wears. Cheap to answer and worth answering soon: the two clients are shipping the control now, and a face is a shared contract exactly as §8.4's anchor table is. |
 | 2b. Profile surface (with slice 2.2) | 3 | **Q35, Q36, Q41** | The profile header's connection count (which fold counts as a connection — answerable now that every passive class rides one stance control), the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without all three. |
-| 2c. Batched creation (with slice 2.4) | 1 | **Q43** | Whether a creation batch quotes its total θ before staging any of it — the write rule is checked per act, so a batch can stage part of itself and refuse the rest. References batch exactly as tags do, which makes 2.4 the moment. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
@@ -70,6 +69,8 @@ questions are closed.
 - Q31 — see [nodes.md §1](primitive/nodes.md#1-l1-node-types-the-shared-graph). L1 rules genesis **per record**: `mint` takes an *act* identifier, so a per-family reading would falsify the identifier algebra's arity. An act of a mint-capable family whose terminal target equals the mint of its own identifier is the genesis act and mints; an act of the same family toward an existing node mints nothing — it is an update record, the formation footing under [substrate.md §9](primitive/substrate.md#9-node-values-and-updates)'s per-family carriers. [layer1-interface.md §8.1](primitive/layer1-interface.md#81-acts-projections-partition-and-passivity) carries the rule.
 - Q32 — see [auth.md "Tokens"](implementation/auth.md#tokens) ("Reuse detection" and "The security notice"). The promise gained its carrier as a narrow field: refresh-token reuse stamps `user_credentials.reuse_detected_at`, and the first successful login after detection carries the stamp as `LogInPayload.reuseDetectedAt` — read-and-cleared atomically behind the verified password, delivered exactly once, never on a refusal. Refresh-time codes stay collapsed into `REFRESH_TOKEN_INVALID` so the presenter — possibly the thief — never learns detection fired. Clients render a dismissible alert on the signed-in shell via an in-memory hand-off; a client death before rendering loses the notice, the accepted narrow-carrier trade-off. If more security-event kinds ever arise, the narrow field is removed in favor of a general security-event surface, not extended field-by-field. (The other gap the web port surfaced — a dedicated `RESET_TOKEN_INVALID` code — had already shipped with slice 1.1's custody change.) When revocation reasons landed (auth.md "Reuse detection"), a second notice kind — "you signed this device out from elsewhere" for benign owner-revoked replays — was considered and declined: those replays now refuse plainly without the theft alarm, and a distinct notice is exactly the general security-event surface this record reserves, so it waits until that surface is warranted.
 - Q44 — raised and resolved in one design session (2026-08-27); the ruling is recorded in [design/readme.md §13](../design/readme.md#13-decided-in-design-sessions) until it moves into the product docs. **An anonymous or applicant reader's feed borrows a vantage point.** Ranking consumes only viewer-rooted forward paths and a guest has none, so a guest feed would have no order but newest. Decided: an invite link carries its inviter's perspective — the visitor browses the feed as the inviter sees it, which [auth.md](implementation/auth.md)'s "a frontend can serve any actor's view of it to any reader" already licenses; a bare arrival borrows the genesis moderator's view (a human account, never a system one); the borrowed view is always named on screen ("Browsing from @mira's view — join to build your own."), persists through the applicant days, and hands over at the member's first stance, the vouch-back — which the inviter seeded, so the feed barely moves at the handover. No new exposure: everything a borrowed view reveals is derivable from the public record. Carriers to update at implementation time: [feed-ranking.md](primitive/feed-ranking.md) (the anonymous read path) and [auth.md](implementation/auth.md) (the applicant shell).
+- Q43 — resolved in the compose design session (2026-08-27): **a creation batch is all-or-nothing.** The prepare quotes the whole batch and refuses it whole when the balance cannot carry it — an author never keeps a half-staged batch. On screen the count of signed actions is the only cost unit ("This creates 4 signed actions"), stated before signing with "they land together, or none does"; θ is never rendered, and the community pool that covers members' signings is named at the seal ([design/readme.md §13](../design/readme.md#13-decided-in-design-sessions)). The server-side cumulative pre-check is in implementation as of this ruling. Carrier to update: [api-spec.md](implementation/api-spec.md) (the write flow's batch semantics).
+- Q45 — raised and resolved in the compose design session (2026-08-27); rulings recorded in [design/readme.md §13](../design/readme.md#13-decided-in-design-sessions) until they move into the product docs. **The compose flow's product rulings:** (1) a post's body is words OR media — one picture, a set, or one video with a cover — never both; words beside media go in the description; title and description stay optional. The current API (`content` required, `attachments` beside it) needs the XOR. (2) Media carries one crop per post: Tall 4:5, Square 1:1, or Wide 1.91:1, section chosen per picture. (3) A comment stays text plus optional media. (4) Authors can self-mark content sensitive with an optional public reason; the mark veils body and description per the per-field model while the title stays readable — a new field on the creation inputs and a policy for [moderation.md](instances/moderation.md)'s read-side flags. (5) Accounts carry a default-license setting (Public domain until changed) that the composer reads. (6) An edit is one batch: the content edit plus topic/citation adds and withdrawals sign together under the all-or-nothing rule. (7) Drafts are local-only, one per target, kept automatically on leaving. (8) The did-not-land notice (Q38) is a calm card in the shell naming the post, that nothing was spent, and that the draft is saved. Carriers at implementation time: [api-spec.md](implementation/api-spec.md), [post.md](instances/post.md), [comment.md](instances/comment.md), [moderation.md](instances/moderation.md).
 - Q28 — closed on both sides with the L1 author. **Standing:** v0.23's initiator-owned rebase compiles a Reference into standing only as a complete act through the source's view of its *author*, and self-reference is compiler-excluded. **Feed:** [feed-ranking.md §4](primitive/feed-ranking.md#4-the-path-set)'s two-channel rule — for a jailed reference author, the content-intrinsic channel never opens (author ≠ carrier author) and the initiator-owned channel crosses at the viewer's forward weight to the jailed author, which is dead. **Self-invitation is an accepted residual:** a confederate account reproduces the geometry legally, so no self-guard closes it; CoGra declines to render such interactions as read-side policy, and the earnings side is closed by economics.md's exclusion rules ([economics.md §8.2](primitive/economics.md#82-players-exclusions-sign)). Accepted leftover geometry, on record: the Invitation T-leg twin persists in the feed (hyper-edge legs traverse ordinarily; Marginal tier; severance cannot net the inviter's own leg) — covered by the same read-side policy, with extending the two-channel rule to Invitation T-legs available if it ever matters — and a jailed author's minted Comments stay reachable via Review T-legs (commentary visibility, moderation's domain).
 
 ---
@@ -202,43 +203,6 @@ face reads as "nothing here yet" better than 😐's neutrality.
 Caveat that defers the call: 🫥 renders very differently across
 platforms (the WhatsApp glyph is not the system one), so the
 choice wants a cross-device look first. 😐 stays until then.
-
----
-
-## Q43 — Does a creation batch quote its total cost?
-
-**Where it shows up:**
-[api-spec.md "Content authoring"](implementation/api-spec.md) (the
-creation batch),
-[substrate.md §6](primitive/substrate.md#6-authoring-path-and-admission)
-(the write rule)
-**Status:** open (surfaced by slice 2.3's tag batches)
-
-### Context
-
-Creating content stages a batch — the minting record plus one Tag
-per declared topic and one Reference per citation, each its own
-priced act. The write rule is checked **per act**, against the
-balance as it stands, and staging reserves nothing: an author
-holding a single θ stages a batch of ten, and an author whose
-balance falls mid-batch keeps the acts already staged and takes a
-refusal on the rest. Each act commits its own transaction, so
-there is no batch to roll back. Severance is the precedent — its
-`(0,0)` batch stages act by act on the same rule.
-
-The arithmetic is coherent, since only landing debits. What it is
-not is visible: the composer asks for one gesture and the author
-pays N times what one gesture costs.
-
-### The question
-
-Should a prepare quote the batch's total — N acts at the current θ
-— and refuse the whole batch when the balance cannot carry it?
-The alternatives are a cumulative pre-check in the API, a
-client-side quote with no server guarantee behind it, and leaving
-the per-act check as the only rule with the count shown in the
-composer. Slice 2.4 doubles the surface: references batch exactly
-as tags do.
 
 ---
 
