@@ -98,6 +98,19 @@ and creation surfaces get their full redesign when media lands
 (2.5) and the ranked-feed rework (slice 3). The rest of the
 content era is sliced below (2.3–2.7).
 
+**Slice 2.3 is closed** (hand-tested 2026-08-27, two rounds): Tag
+hyper-edges on posts and comments — at creation and from the edit
+surfaces, each tag its own priced act with relevance/confidence
+sliders — the hashtag registry and `hashtag(name)`, topic chips
+with on-demand value reveal on detail views, the current-topics
+fold (newest-wins, relevance-0 un-tag), and the topic page. Every
+submit shows how many signed actions it stages, with a
+multi-action confirm. Topic follow is backend-accepted but
+client-hidden until the topic feed lands (slice 3, where the
+"topics you follow" list and third-party tag claims also arrive).
+Web/Android visual divergence is accepted as interim per the same
+redesign note as 2.2.
+
 ## The stand-in and the swap
 
 Until PeerNetworks Layer 1 ships, the backend runs an **L1 stand-in**
