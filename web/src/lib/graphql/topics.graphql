@@ -66,6 +66,65 @@ query HashtagDetail($name: String!, $includePending: Boolean! = true) {
             confidence
             pending
           }
+          # The reference row (D12, D16): the author's own current
+          # citations only — the content-intrinsic channel, the one that
+          # needs no forward-path weight. The target is typed so a chip
+          # renders without a second read; it is null when CoGra carries
+          # no display row for what the citation names.
+          references(includePending: $includePending) {
+            targetId
+            relevance
+            support
+            pending
+            target {
+              __typename
+              ... on User {
+                id
+                handle
+                displayName {
+                  value
+                }
+              }
+              ... on Post {
+                id
+                title {
+                  value
+                }
+                content {
+                  value
+                }
+                author {
+                  handle
+                }
+              }
+              # A referenced comment opens the post carrying it —
+              # comment permalinks are a parked item — so the selection
+              # walks up far enough to find one.
+              ... on Comment {
+                id
+                content {
+                  value
+                }
+                author {
+                  handle
+                }
+                target {
+                  __typename
+                  ... on Post {
+                    id
+                  }
+                  ... on Comment {
+                    target {
+                      __typename
+                      ... on Post {
+                        id
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
         ... on Comment {
           id
