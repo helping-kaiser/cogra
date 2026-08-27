@@ -20,11 +20,7 @@ import {
   RELEVANCE_MIN,
 } from "@/lib/topics/draft";
 import { formatDimension } from "@/lib/ui/stance-format";
-
-/** Confidence never goes negative, so it reads without a forced sign. */
-function formatConfidence(value: number): string {
-  return value.toFixed(2);
-}
+import { formatConfidence } from "@/lib/ui/tag-format";
 
 export function TagParamSliders({
   relevance,
