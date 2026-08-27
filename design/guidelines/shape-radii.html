@@ -1,0 +1,13 @@
+<!-- @dsCard group="Shape" viewport="700x200" name="Radius rungs" subtitle="Five rungs and the pill. An off-scale corner is a bug; a square corner should look like a mistake." -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>body{margin:0;padding:16px;background:var(--surface)}.row{display:flex;gap:10px;align-items:flex-end;flex-wrap:nowrap}.r{width:96px}.box{height:88px;background:var(--surface-card);border-radius:var(--r)}.cap{font-size:11px;color:var(--text-secondary);margin-top:6px;line-height:1.35}.cap b{display:block;color:var(--on-surface);font-weight:500}</style>
+</head><body><div class="row">
+<div class="r"><div class="box" style="--r:var(--radius-extra-small)"></div><div class="cap"><b>4px</b>text fields</div></div>
+<div class="r"><div class="box" style="--r:var(--radius-small)"></div><div class="cap"><b>8px</b>small containers</div></div>
+<div class="r"><div class="box" style="--r:var(--radius-medium)"></div><div class="cap"><b>12px</b>cards</div></div>
+<div class="r"><div class="box" style="--r:var(--radius-large)"></div><div class="cap"><b>16px</b>the pad's field</div></div>
+<div class="r"><div class="box" style="--r:var(--radius-extra-large)"></div><div class="cap"><b>28px</b>dialogs, the pad</div></div>
+<div class="r"><div class="box" style="--r:var(--radius-full)"></div><div class="cap"><b>pill</b>every button</div></div>
+</div>
+<p style="font-size:11px;color:var(--text-secondary);margin:12px 0 0">The rungs are absolute; the pill is half the box's shorter side, so it grows with the control. On a short control — a 32px button — the pill and the 28px rung land in the same place, which is why buttons name the pill rather than borrowing a rung.</p></body></html>

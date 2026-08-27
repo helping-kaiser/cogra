@@ -1,0 +1,80 @@
+<!-- @dsCard group="Motion" viewport="760x460" name="Screen transitions" subtitle="Forward, back, and a dismissal. A transition says where a screen came from, and nothing else." -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+body{margin:0;padding:16px;background:var(--surface);display:flex;gap:24px;align-items:flex-start}
+.frame{position:relative;width:220px;height:400px;flex:none;border-radius:var(--radius-extra-large);background:var(--surface);outline:1px solid var(--border-hairline);overflow:hidden;transform:translateZ(0)}
+.layer{position:absolute;inset:0;padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--surface)}
+.bar{height:48px;display:flex;align-items:center;gap:8px;color:var(--text-secondary);font-size:var(--text-title-large);font-weight:500}
+.bar .t{color:var(--on-surface)}
+.blk{border-radius:var(--radius-medium);background:var(--surface-card);padding:12px;display:flex;flex-direction:column;gap:8px}
+.line{height:8px;border-radius:var(--radius-full);background:var(--border-hairline)}
+.sheet{position:absolute;left:0;right:0;bottom:0;border-radius:var(--radius-extra-large) var(--radius-extra-large) 0 0;background:var(--surface-dialog);padding:16px 16px 24px;display:flex;flex-direction:column;gap:12px}
+.grab{width:32px;height:4px;border-radius:var(--radius-full);background:var(--border-hairline);align-self:center}
+.scrim{position:absolute;inset:0;background:var(--scrim-dialog)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:inherit;font-size:var(--text-label-large);font-weight:500;padding:8px 16px;border-radius:var(--radius-full);border:1px solid var(--border-field);background:none;color:var(--primary);cursor:pointer}
+.notes{max-width:420px;display:flex;flex-direction:column;gap:12px}
+table{border-collapse:collapse;font-size:12px}td{padding:3px 14px 3px 0;vertical-align:top}td:first-child{color:var(--text-secondary);white-space:nowrap}code{font-size:11px}
+p{margin:0;font-size:12px;color:var(--text-secondary);line-height:1.55}b{color:var(--on-surface);font-weight:500}
+</style>
+</head><body>
+<div class="frame" id="frame">
+<div class="layer" id="feed"><div class="bar"><span class="t">cogra</span></div><div class="blk"><div class="line" style="width:70%"></div><div class="line" style="width:100%"></div><div class="line" style="width:45%"></div></div><div class="blk"><div class="line" style="width:55%"></div><div class="line" style="width:90%"></div></div></div>
+</div>
+<div class="notes">
+<div class="row">
+<button class="btn" id="fwd">Open a post</button>
+<button class="btn" id="back">Back</button>
+<button class="btn" id="sheet">Open a sheet</button>
+</div>
+<table>
+<tr><td>forward</td><td><code>300ms</code> emphasized-decelerate</td><td>in from <code>12%</code> + fade; the outgoing screen leaves half as far, accelerating</td></tr>
+<tr><td>back</td><td><code>200ms</code></td><td>the same motion reversed — shorter, because returning is retracing</td></tr>
+<tr><td>sheet</td><td><code>400ms</code> in / <code>200ms</code> out</td><td>up from the bottom edge, down to it</td></tr>
+<tr><td>dialog</td><td><code>200ms</code></td><td>fade plus an 8px rise, in place. No scale — a scale performs</td></tr>
+<tr><td>scrim</td><td><code>200ms</code> linear</td><td>with the surface it belongs to</td></tr>
+<tr><td>reduced motion</td><td><code>none</code></td><td>the swap still happens; it does not travel or fade</td></tr>
+</table>
+<p><b>A dismissal exits the edge it entered from.</b> A sheet came up, so it goes down; a dialog faded in place, so it fades. Nothing is dismissed sideways — sideways means "another screen at the same level", and a sheet is not one.</p>
+<p><b>Nothing inside an arriving screen animates.</b> No list entrance, no staggered cards: the screen arrives whole. One transition is on screen at a time.</p>
+<p>Classes: <code>cg-nav-in</code> · <code>cg-nav-out</code> · <code>cg-nav-back-in</code> · <code>cg-nav-back-out</code> · <code>cg-sheet-in</code> · <code>cg-sheet-out</code> · <code>cg-dialog-in</code> · <code>cg-scrim-in</code>.</p>
+</div>
+<script>
+const frame = document.getElementById("frame"), feed = document.getElementById("feed");
+let post = null, sheet = null, scrim = null;
+const POST = '<div class="bar">\u2190 <span class="t">Post</span></div><div class="blk"><div class="line" style="width:80%"></div><div class="line" style="width:100%"></div><div class="line" style="width:100%"></div><div class="line" style="width:35%"></div></div>';
+function forward(){
+  if (post) return;
+  post = document.createElement("div");
+  post.className = "layer cg-nav-in";
+  post.innerHTML = POST;
+  feed.className = "layer cg-nav-out";
+  frame.appendChild(post);
+}
+function back(){
+  if (!post) return;
+  const leaving = post; post = null;
+  leaving.className = "layer cg-nav-back-out";
+  feed.className = "layer cg-nav-back-in";
+  setTimeout(() => leaving.remove(), 220);
+}
+function openSheet(){
+  if (sheet) return;
+  scrim = document.createElement("div"); scrim.className = "scrim cg-scrim-in";
+  scrim.onclick = closeSheet;
+  sheet = document.createElement("div"); sheet.className = "sheet cg-sheet-in";
+  sheet.innerHTML = '<div class="grab"></div><div class="line" style="width:60%"></div><div class="line" style="width:75%"></div><div class="line" style="width:40%"></div>';
+  frame.append(scrim, sheet);
+}
+function closeSheet(){
+  if (!sheet) return;
+  const s = sheet, k = scrim; sheet = null; scrim = null;
+  s.className = "sheet cg-sheet-out"; k.className = "scrim cg-scrim-out";
+  setTimeout(() => { s.remove(); k.remove(); }, 220);
+}
+document.getElementById("fwd").onclick = forward;
+document.getElementById("back").onclick = back;
+document.getElementById("sheet").onclick = () => (sheet ? closeSheet() : openSheet());
+</script>
+</body></html>
