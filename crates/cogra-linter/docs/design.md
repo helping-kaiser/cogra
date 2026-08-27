@@ -1387,24 +1387,24 @@ The first four rows are the calculus's metatheory made executable, one property 
 
 **Table (Budgets)** · `tab:lint:budgets`
 
-(`req:lint:timing`) and (`[ARCH-req:linter:timing]`) require a budget beside every recurring action; a recurring action with no budget is itself a defect. The numbers below are measurements, taken at commissioning over the 891-source carrier in the `claude-cogra` toolbox with the worktree on `/mnt/c`, debug build, warm. Each is the range of repeated runs, and each budget sits just above it. Exceeding a budget is a finding, not a cost to absorb.
+(`req:lint:timing`) and (`[ARCH-req:linter:timing]`) require a budget beside every recurring action; a recurring action with no budget is itself a defect. The numbers below are measurements, taken on 2026-08-27 over the 952-source carrier in the `claude-cogra` toolbox with the worktree on `/mnt/c`, debug build, warm. Each is the range of repeated runs, and each budget sits just above it. Exceeding a budget is a finding, not a cost to absorb.
 
 | Action | Budget | Tolerance | Measured |
 | --- | --- | --- | --- |
-| full-corpus `check`, warm | 5 s | +50% | 4.55–4.73 s |
-| — the walk (pre-tokenize and harvest) | 4.9 s | +50% | 4.52–4.71 s |
-| — the analysis (resolve and judge) | 30 ms | +100% | 25–26 ms |
+| full-corpus `check`, warm | 6.5 s | +50% | 5.74–6.10 s |
+| — the walk (pre-tokenize and harvest) | 6.0 s | +50% | 5.49–5.85 s |
+| — the analysis (resolve and judge) | 320 ms | +100% | 253–278 ms |
 | per-phase report | every phase named and timed | — | (`[ARCH-req:linter:timing]`) fixes the five phases |
-| the crate's suite (`cargo test -p cogra-linter`) | 23 s | +50% | 19.9–22.6 s |
-| — the four corpus-reading binaries | 18 s | +50% | 17.4–17.9 s |
-| — the property lane at 256 cases | 1 s | +50% | 0.85–0.88 s |
-| the linter's addition to `make ci` | 5.5 s | +50% | 5.04–5.11 s |
+| the crate's suite (`cargo test -p cogra-linter`) | 48 s | +50% | 39.5–44.7 s |
+| — the four corpus-reading binaries | 28 s | +50% | 25.2–27.0 s |
+| — the property lane at 256 cases | 1 s | +50% | 0.78–0.85 s |
+| the linter's addition to `make ci` | 6.9 s | +50% | 6.36–6.44 s |
 
-The walk is timed apart from the analysis because the two grow for different reasons and a single total hides both. The walk is the whole cost — reading 891 sources and parsing them through the two frontends — and it scales with the corpus; the analysis over the finished graph is two orders of magnitude smaller, so a resolution or judgment that turned superlinear would stay invisible inside a total the walk dominates. That is the regression the split exists to catch.
+The walk is timed apart from the analysis because the two grow for different reasons and a single total hides both. The walk is the whole cost — reading 952 sources and parsing them through the four frontends — and it scales with the corpus; the analysis over the finished graph remains over an order of magnitude smaller, so a resolution or judgment that turned superlinear would stay invisible inside a total the walk dominates. That is the regression the split exists to catch.
 
-The suite splits on the same principle. The property lane is timed on its own because a case count raised without notice is exactly the regression the rule exists to catch — it holds under a second, and an explicit `PROPTEST_CASES=256` measures the same, which confirms the default the framework documents. What dominates the suite is instead the four binaries that read the real tree rather than a fixture — `corpus_acceptance`, `migrations`, `registers`, `registry_as_data` — at some 17.5 s of the 21, because three of them run their own full check. That concentration is why the pipeline runs this suite in the corpus lane rather than behind the Rust gate, which the commissioning note records.
+The suite splits on the same principle. The property lane is timed on its own because a case count raised without notice is exactly the regression the rule exists to catch — it holds under a second, and an explicit `PROPTEST_CASES=256` measures the same, which confirms the default the framework documents. What dominates the suite is instead the four binaries that read the real tree rather than a fixture — `corpus_acceptance`, `migrations`, `registers`, `registry_as_data` — at some 26 s of the 41, because three of them run their own full check. That concentration is why the pipeline runs this suite in the corpus lane rather than behind the Rust gate, which the commissioning note records.
 
-Two figures locate the budget in its environment rather than treating it as portable. The same warm check on the distro's native filesystem runs in 2.41 s, so roughly half the budget above is `/mnt/c` crossing rather than work. And the release binary runs it in 0.30 s natively against debug's 2.41 s: the walk is dominated by parsing, which optimizes by about 8×. The lane still builds debug, because it compiles the crate in debug for the suite regardless and a release profile would be a second build and a second cache for two seconds of runtime.
+Two figures locate the budget in its environment rather than treating it as portable. The same warm check on the distro's native filesystem runs in 3.65 s, so a bit over a third of the recorded budget above is `/mnt/c` crossing rather than work. And the release binary runs it in 0.63 s natively against debug's 3.65 s: the walk is dominated by parsing, which optimizes by about 6×. The lane still builds debug, because it compiles the crate in debug for the suite regardless and a release profile would be a second build and a second cache for three seconds of runtime.
 
 **Preview (Fuzzing, deferred to audit)** · `preview:lint:fuzz-plan`
 
