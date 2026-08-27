@@ -375,7 +375,10 @@ note  = """
 ONE owner for the whole Gradle build, though android/ has 12 modules
 (:app, :core:crypto|designsystem|domain|network,
 :feature:auth|content|home|invites|onboarding|profile|settings).
-The Kotlin frontend has landed and the 170 .kt sources are scanned,
+The Kotlin frontend has landed and the whole tree is scanned — the
+173 .kt sources and, since the script production, the 18 .kts build
+files, which live here and nowhere else, so no Gradle script ever
+falls to the repo-root residual owner of rule 20 —
 but the modules carry NO labels: zero occurrences across the tree. A
 12-way split would still buy 12 prefixes and 12 rules over an empty
 occurrence set. The revisit is a conjunction and only half of it has
