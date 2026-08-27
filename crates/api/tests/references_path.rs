@@ -184,14 +184,12 @@ fn draft(target: Uuid) -> ReferenceDraft {
     }
 }
 
-// --- planning refusals ------------------------------------------------
-
 /// The cap is a batch fault, so it is reported against the `references`
 /// path rather than against whichever entry happens to sit at the limit —
 /// and it is checked before any entry is resolved, so an over-long batch
 /// carrying an unresolvable target still reports the cap.
 #[sqlx::test(migrations = "../../migrations")]
-async fn the_batch_cap_admits_ten_and_refuses_eleven(pool: PgPool) {
+async fn the_reference_batch_cap_admits_ten_and_refuses_eleven(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (alice, key) = rig.funded_actor("alice").await;
     let mut targets = Vec::new();
@@ -360,8 +358,6 @@ async fn a_mention_resolves_its_target_to_a_profile(pool: PgPool) {
         .expect("a Profile is a legal terminal target");
 }
 
-// --- the act tuple as the write path really stores it ------------------
-
 /// The claim-9 trap, verified against the real write path rather than a
 /// hand-built row: a citation authored at (relevance, support) must read
 /// back at exactly that pair, which it can only do if the gesture writes
@@ -392,8 +388,6 @@ async fn a_landed_citation_reads_back_at_the_parameters_it_was_authored_with(poo
     assert!(!claims[0].pending);
     assert_eq!(claims[0].records, 1);
 
-    // And the storage orientation is the census's, not a coincidence: the
-    // T-leg row holds the pair swapped.
     let leg = sqlx::query_as::<_, (f64, f64)>(
         "SELECT l.p_d, l.p_i FROM mirror_record_legs l
          WHERE l.leg = 't' AND l.family = 'reference' AND l.source = $1",
@@ -425,8 +419,6 @@ async fn a_citation_commits_an_empty_payload(pool: PgPool) {
     assert!(prepared.proposal.payload.is_empty());
     assert_eq!(prepared.proposal.body.family, Family::Reference);
 }
-
-// --- the fold ----------------------------------------------------------
 
 /// Inserts one landed Reference record straight into the mirror, deriving
 /// the T-leg's stored orientation from the census so the fixture cannot
@@ -589,8 +581,6 @@ async fn a_third_party_citation_is_not_folded_into_the_authors(pool: PgPool) {
     assert_eq!(claims[0].author, "alice");
 }
 
-// --- the landed / pending split ----------------------------------------
-
 /// A staged citation is invisible to the L1 view and visible to its own
 /// author's L2 view, from the pre-commitment onward.
 #[sqlx::test(migrations = "../../migrations")]
@@ -617,8 +607,6 @@ async fn a_pending_citation_shows_only_in_the_pending_inclusive_view(pool: PgPoo
     .await
     .expect("prepares");
 
-    // Staged but not yet pre-signed: not on the graph, and not yet the
-    // author's own in-flight act either.
     let early = references_of(
         &rig.pool,
         &artifact,
@@ -678,8 +666,6 @@ async fn the_view_constructor_needs_both_the_flag_and_a_viewer(pool: PgPool) {
     );
 }
 
-// --- withdrawal ---------------------------------------------------------
-
 /// The bundle read returns raw sums in act-tuple space, which is what
 /// withdrawal needs: a clipped sum has already lost how far from zero the
 /// bundle really sits.
@@ -706,7 +692,6 @@ async fn withdrawal_stages_the_counter_records_that_net_the_bundle(pool: PgPool)
     let carrier = rig.post(alice, &key, "carrier").await;
     let cited = rig.post(alice, &key, "cited").await;
 
-    // Three citations summing past what one counter-record can cancel.
     rig.cite(alice, &key, carrier, cited, 0.9, 0.5).await;
     rig.cite(alice, &key, carrier, cited, 0.9, 0.5).await;
     rig.cite(alice, &key, carrier, cited, 0.7, 0.3).await;

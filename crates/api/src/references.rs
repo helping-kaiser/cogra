@@ -485,7 +485,7 @@ mod tests {
     /// p_i = e`. So the tuple this gesture writes must be
     /// (effort, enthusiasm) = (relevance, support).
     #[test]
-    fn the_gesture_writes_the_act_tuple_never_a_leg_rendering() {
+    fn the_reference_gesture_writes_the_act_tuple_never_a_leg_rendering() {
         let reference = planned("prof:bob", -0.25, 0.75);
         let g = reference_gesture("alice", middle(), &reference, vec![]);
 
@@ -537,7 +537,7 @@ mod tests {
     }
 
     #[test]
-    fn omitted_parameters_take_the_declared_defaults() {
+    fn omitted_reference_parameters_take_the_declared_defaults() {
         let (relevance, support) = check(&ReferenceDraft {
             target: Uuid::nil(),
             relevance: None,
