@@ -1451,6 +1451,32 @@ type Query {
 	"""
 	records(author: UUID, target: UUID, terminal: UUID, family: RecordFamily, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, after: String, before: String, first: Int, last: Int): RecordConnection!
 	"""
+	Candidate targets for the reference picker (D20).
+	
+	**Exact-match resolution only.** Real search — prefix matching,
+	ranking, snippets — arrives with slice 2.7 *behind this same
+	field*, so a client binds to it once and does not change when the
+	implementation is replaced. Three shapes resolve today: a handle,
+	bare or `@`-sigilled, names a person; a `#name` names a topic; a
+	UUID names whatever node it addresses.
+	
+	An empty or unresolvable query yields an empty list, never an
+	error. A finder runs on every keystroke, so most of what it is
+	asked is a prefix of something the user is still typing — failing
+	those would make error noise the normal case.
+	
+	A candidate is offerable only if `prepareReference` would accept
+	it: resolution runs through the write path's own resolver, so the
+	picker cannot hand back a target the mutation then refuses. Two
+	classes narrow for exactly that reason. A Type is offered only
+	once the registry can invert its name — a `ReferenceInput` names
+	its target by L2 id, and the name → id derivation is one-way, so
+	a name no record has referenced yet has no id to name. And a
+	keyless account fronts no Profile on the graph, so it resolves
+	nowhere for the write path and must not be offered here either.
+	"""
+	referenceCandidates(query: String!, limit: Int): [ReferenceCandidate!]!
+	"""
 	The chronological listing (roadmap "Slice 2"): every post,
 	newest-first — pending entries, then landed entries in landing
 	order, the record set's own order, never wall clock
@@ -1578,6 +1604,37 @@ enum RecordFamily {
 }
 
 scalar RecordId
+
+"""
+One thing the reference finder offers as a citation target.
+
+The pairing mirrors `ReferenceClaim` — the typed node for the chip,
+its raw id beside it — with two deliberate differences, both following
+from a candidate being a thing about to be *cited* rather than a
+citation already standing.
+
+`targetId` is the L2 `Uuid` rather than the claim's L1 identifier
+string, because `ReferenceInput.target` takes the L2 id: the picker
+hands back exactly what the mutation consumes, with nothing for the
+client to translate.
+
+`target` is non-null where a claim's is nullable. A claim is a
+substrate fact that can outrun the display store, so its far end may
+be untypeable; a candidate is only ever built *from* what CoGra can
+display, and one it could not render would be unofferable anyway.
+"""
+type ReferenceCandidate {
+	"""
+	The candidate node, typed — the same union a standing citation
+	carries, so the picker renders with the components already built
+	for the reference row.
+	"""
+	target: ReferenceTarget!
+	"""
+	The candidate's L2 id: what a `ReferenceInput` names to cite it.
+	"""
+	targetId: UUID!
+}
 
 """
 One standing citation from an artifact — a chip in the reference row.

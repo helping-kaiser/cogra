@@ -1941,10 +1941,36 @@ pub struct ReferenceClaim {
     pub pending: bool,
 }
 
+/// One thing the reference finder offers as a citation target.
+///
+/// The pairing mirrors `ReferenceClaim` — the typed node for the chip,
+/// its raw id beside it — with two deliberate differences, both following
+/// from a candidate being a thing about to be *cited* rather than a
+/// citation already standing.
+///
+/// `targetId` is the L2 `Uuid` rather than the claim's L1 identifier
+/// string, because `ReferenceInput.target` takes the L2 id: the picker
+/// hands back exactly what the mutation consumes, with nothing for the
+/// client to translate.
+///
+/// `target` is non-null where a claim's is nullable. A claim is a
+/// substrate fact that can outrun the display store, so its far end may
+/// be untypeable; a candidate is only ever built *from* what CoGra can
+/// display, and one it could not render would be unofferable anyway.
+#[derive(SimpleObject)]
+pub struct ReferenceCandidate {
+    /// The candidate node, typed — the same union a standing citation
+    /// carries, so the picker renders with the components already built
+    /// for the reference row.
+    pub target: ReferenceTarget,
+    /// The candidate's L2 id: what a `ReferenceInput` names to cite it.
+    pub target_id: Uuid,
+}
+
 /// The `limit` a topic list accepts: at most [`MAX_PAGE_SIZE`],
 /// [`DEFAULT_PAGE_SIZE`] when unset. Over-asking refuses rather than
 /// silently clamping, the same contract the connections carry.
-fn list_limit(limit: Option<i32>) -> async_graphql::Result<u32> {
+pub(super) fn list_limit(limit: Option<i32>) -> async_graphql::Result<u32> {
     let limit = limit.unwrap_or(DEFAULT_PAGE_SIZE);
     if !(0..=MAX_PAGE_SIZE).contains(&limit) {
         return Err(async_graphql::Error::new(format!(
@@ -1955,7 +1981,7 @@ fn list_limit(limit: Option<i32>) -> async_graphql::Result<u32> {
 }
 
 /// What a `limit`-bounded list field charges, priced like a connection.
-fn list_cost(limit: Option<i32>, child_complexity: usize) -> usize {
+pub(super) fn list_cost(limit: Option<i32>, child_complexity: usize) -> usize {
     let requested = limit.unwrap_or(DEFAULT_PAGE_SIZE).clamp(0, MAX_PAGE_SIZE);
     requested as usize * child_complexity + 1
 }
@@ -2072,7 +2098,7 @@ async fn reference_claims(
 /// lookup at all — a Hashtag is served for any well-formed name, because
 /// a Type exists as soon as an accepted record names it and reads never
 /// write the registry.
-async fn resolve_reference_target(
+pub(super) async fn resolve_reference_target(
     ctx: &Context<'_>,
     l1_node_id: &str,
 ) -> async_graphql::Result<Option<ReferenceTarget>> {
