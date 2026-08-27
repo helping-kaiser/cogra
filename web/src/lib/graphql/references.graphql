@@ -9,9 +9,10 @@
 # minting record. Field selections are inlined per the house style.
 
 # D20's finder. Exact-match resolution only today — a handle bare or
-# `@`-sigilled, a `#name`, or a UUID — with real search arriving in
-# slice 2.7 BEHIND THIS SAME FIELD, so this document does not change
-# when the implementation is replaced. An empty or unresolvable query
+# `@`-sigilled, or a UUID — with real search arriving in slice 2.7
+# BEHIND THIS SAME FIELD, so this document does not change when the
+# implementation is replaced. D21: a topic is tagged, never referenced,
+# so no topic is ever offered. An empty or unresolvable query
 # answers with an empty list, never an error: a finder runs on every
 # keystroke, so most of what it is asked is a prefix of something still
 # being typed.
