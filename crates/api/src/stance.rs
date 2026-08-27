@@ -19,13 +19,11 @@ use common::l1::census::Family;
 use common::l1::fold::BundleSum;
 use common::l1::identifier::NodeId;
 use postgres_store::stance::BundleView;
-use postgres_store::{
-    PgPool, auth as store, content as content_store, hashtag as hashtag_store,
-    stance as stance_store,
-};
+use postgres_store::{PgPool, auth as store, stance as stance_store};
 use uuid::Uuid;
 
 use crate::l1::L1Boundary;
+use crate::nodes::{self, NodeError};
 use crate::prepare::{self, Gesture, PrepareError, Target};
 
 #[derive(Debug, thiserror::Error)]
@@ -41,6 +39,15 @@ pub enum StanceError {
     Storage(#[from] sqlx::Error),
     #[error("internal: {0}")]
     Internal(String),
+}
+
+impl From<NodeError> for StanceError {
+    fn from(e: NodeError) -> Self {
+        match e {
+            NodeError::Storage(e) => Self::Storage(e),
+            NodeError::Internal(m) => Self::Internal(m),
+        }
+    }
 }
 
 /// A resolved stance target: the node the record points at, and the family
@@ -105,40 +112,15 @@ pub async fn resolve_target(
     Ok(StanceTarget { node, family })
 }
 
-/// Resolves an L2 id to the node it names, trying each class in turn.
-///
-/// A keyless account — an applicant before its ceremony — has no Profile
-/// on the graph to point at, and so meets the same refusal as an unknown
-/// id. A Type is reached last and only through the registry: the row is
-/// what makes the one-way derivation invertible, so a name with no row
-/// yet is reachable by `topicName` alone.
+/// Resolves an L2 id to the node a stance points at, naming `target` as
+/// the offending field when nothing answers to the id.
 async fn resolve_id(pool: &PgPool, target: Uuid) -> Result<NodeId, StanceError> {
-    if let Some(address) = store::actor_identity(pool, target)
+    nodes::resolve_id(pool, target)
         .await?
-        .and_then(|identity| identity.l0_address)
-    {
-        return Ok(NodeId::Prof(address));
-    }
-    let minted = match content_store::post(pool, target)
-        .await
-        .map_err(|e| StanceError::Internal(e.to_string()))?
-    {
-        Some(post) => Some(post.l1_node_id),
-        None => content_store::comment(pool, target)
-            .await
-            .map_err(|e| StanceError::Internal(e.to_string()))?
-            .map(|comment| comment.l1_node_id),
-    };
-    if let Some(minted) = minted {
-        return NodeId::parse(&minted).map_err(|e| StanceError::Internal(e.to_string()));
-    }
-    if let Some(name) = hashtag_store::name_by_id(pool, target).await? {
-        return NodeId::name(&name).map_err(|e| StanceError::Internal(e.to_string()));
-    }
-    Err(StanceError::BadInput {
-        field: "target",
-        message: "no such stance target".into(),
-    })
+        .ok_or_else(|| StanceError::BadInput {
+            field: "target",
+            message: "no such stance target".into(),
+        })
 }
 
 /// The family the target's node class fixes. Domain, mask and tier follow
