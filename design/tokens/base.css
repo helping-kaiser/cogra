@@ -1,0 +1,20 @@
+/* The page ground and the default type role. `body-large` is Material's role for
+   reading content, so it is what unclassed text lands on. */
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--on-surface);
+  font-family: var(--font-sans);
+  font-size: var(--text-body-large);
+  line-height: var(--text-body-large--line-height);
+  letter-spacing: var(--text-body-large--letter-spacing);
+  font-weight: var(--text-body-large--font-weight);
+  -webkit-font-smoothing: antialiased;
+  text-wrap: pretty;
+}
+
+a { color: var(--primary); text-decoration-color: color-mix(in srgb, var(--primary) 40%, transparent) }
+a:hover { color: color-mix(in srgb, var(--primary) 84%, var(--on-surface)); text-decoration-color: currentColor }
+
+code, kbd, samp, pre { font-family: var(--font-mono) }

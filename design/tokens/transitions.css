@@ -1,0 +1,56 @@
+/* Screen transitions (backlog item 2). The source defines none — every consumer
+   was inventing its own, which is how two screens end up sliding different ways.
+
+   THE RULE: a transition says where a screen came from, and nothing else. So the
+   travel is a hint (12% of the screen's width, not a full slide), the fade carries
+   most of the change, and back is the forward motion run in reverse at the shorter
+   duration — returning is retracing, and a shorter move reads as backward without
+   needing a different drawing.
+
+   A DISMISSAL EXITS THE EDGE IT ENTERED FROM. A sheet came up, so it goes down; a
+   dialog faded in place, so it fades. Nothing is ever dismissed sideways: sideways
+   means "another screen at the same level", and a sheet is not one.
+
+   Never animated: the content inside an arriving screen. No list entrance, no
+   staggered cards — the screen arrives whole, which is also why one transition is
+   ever on screen at a time. */
+
+:root {
+  /* Forward is the longer move because it introduces something new. */
+  --duration-nav-forward: 300ms; /* @kind other */
+  --duration-nav-back: 200ms; /* @kind other */
+  --duration-sheet-in: 400ms; /* @kind other */
+  --duration-sheet-out: 200ms; /* @kind other */
+  --duration-dialog-in: 200ms; /* @kind other */
+  --duration-scrim: 200ms; /* @kind other */
+  /* How far a screen travels: a hint of origin, not a slide show. */
+  --nav-travel: 12%; /* @kind other */
+}
+
+@keyframes cg-nav-in { from { opacity: 0; transform: translateX(var(--nav-travel)) } to { opacity: 1; transform: none } }
+@keyframes cg-nav-out { from { opacity: 1; transform: none } to { opacity: 0; transform: translateX(calc(var(--nav-travel) * -0.5)) } }
+@keyframes cg-nav-back-in { from { opacity: 0; transform: translateX(calc(var(--nav-travel) * -0.5)) } to { opacity: 1; transform: none } }
+@keyframes cg-nav-back-out { from { opacity: 1; transform: none } to { opacity: 0; transform: translateX(var(--nav-travel)) } }
+@keyframes cg-sheet-in { from { transform: translateY(100%) } to { transform: none } }
+@keyframes cg-sheet-out { from { transform: none } to { transform: translateY(100%) } }
+@keyframes cg-dialog-in { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+@keyframes cg-fade-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes cg-fade-out { from { opacity: 1 } to { opacity: 0 } }
+
+.cg-nav-in { animation: cg-nav-in var(--duration-nav-forward) var(--ease-emphasized-decelerate) both }
+.cg-nav-out { animation: cg-nav-out var(--duration-nav-back) var(--ease-emphasized-accelerate) both }
+.cg-nav-back-in { animation: cg-nav-back-in var(--duration-nav-back) var(--ease-emphasized-decelerate) both }
+.cg-nav-back-out { animation: cg-nav-back-out var(--duration-nav-back) var(--ease-emphasized-accelerate) both }
+.cg-sheet-in { animation: cg-sheet-in var(--duration-sheet-in) var(--ease-emphasized-decelerate) both }
+.cg-sheet-out { animation: cg-sheet-out var(--duration-sheet-out) var(--ease-emphasized-accelerate) both }
+.cg-dialog-in { animation: cg-dialog-in var(--duration-dialog-in) var(--ease-standard-decelerate) both }
+.cg-scrim-in { animation: cg-fade-in var(--duration-scrim) linear both }
+.cg-scrim-out { animation: cg-fade-out var(--duration-scrim) linear both }
+
+/* Reduced motion: the swap still happens, it just does not travel or fade.
+   A transition is an explanation, and a reader who has asked for stillness has
+   declined the explanation, not the navigation. */
+@media (prefers-reduced-motion: reduce) {
+  .cg-nav-in, .cg-nav-out, .cg-nav-back-in, .cg-nav-back-out,
+  .cg-sheet-in, .cg-sheet-out, .cg-dialog-in, .cg-scrim-in, .cg-scrim-out { animation: none }
+}

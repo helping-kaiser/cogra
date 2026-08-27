@@ -1,0 +1,45 @@
+<!-- @dsCard group="Components" viewport="700x430" name="Stance control" subtitle="The resting target, the coach mark, and the bloomed pad — the signature interaction" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;padding:16px;background:var(--surface)}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}.grid{display:grid;grid-template-columns:1fr 250px;gap:22px;align-items:start}.col{display:flex;flex-direction:column;gap:10px;align-items:flex-start}.pad{display:flex;flex-direction:column;gap:12px;width:100%;border-radius:var(--radius-extra-large);background:var(--surface-dialog);padding:16px;box-sizing:border-box;position:relative}.acts{display:flex;align-items:center;gap:8px}.help{position:absolute;top:4px;right:4px;display:grid;place-items:center;height:48px;width:48px;border:0;background:none;border-radius:var(--radius-full);cursor:pointer}.help span{display:grid;place-items:center;height:32px;width:32px;border-radius:var(--radius-full);border:1px solid var(--border-hairline);color:var(--primary);font-size:var(--text-label-large);font-weight:500}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const NS = window.CoGraDesignSystem_9084ba;
+const { StanceControl, StancePad, StanceStanding, StanceLandingLine, StanceCoachMark, Button } = NS;
+const clip=(v)=>(v===0?0:Math.min(1,Math.max(-1,v)));
+const landingOf=(rawSum,pick)=>{const landing={pDirected:clip(rawSum.pDirected+pick.pDirected),pInterest:clip(rawSum.pInterest+pick.pInterest)};return{landing,inert:landing.pDirected===0||landing.pInterest===0,severed:landing.pDirected===0&&landing.pInterest===0}};
+const standing={current:{pDirected:0.55,pInterest:0.2},rawSum:{pDirected:0.55,pInterest:0.2},records:2,severed:false,severance:{records:2}};
+function Demo(){
+  const [pick,setPick]=React.useState({pDirected:0.4,pInterest:0.2});
+  return (
+  <div className="grid">
+    <div className="col">
+      <span className="lbl">At rest — no standing yet</span>
+      <StanceControl targetLabel="this post" taught/>
+      <span className="lbl">At rest — with a standing</span>
+      <StanceControl targetLabel="this post" bundle={standing} taught/>
+      <span className="lbl">The coach mark — the first tap ever, which signs nothing</span>
+      <StanceCoachMark/>
+    </div>
+    <div className="col">
+      <span className="lbl">The bloomed pad</span>
+      <div className="pad">
+        <button className="help cg-state cg-focus" aria-label="How stances work"><span aria-hidden="true">?</span></button>
+        <StanceStanding pick={pick} bundle={standing} targetLabel="this post" style={{paddingRight:40}}/>
+        <StancePad value={pick} onChange={setPick}/>
+        <StanceLandingLine landing={landingOf(standing.rawSum,pick)}/>
+        {/* Releasing never commits: Set is the only thing on the pad that signs. */}
+        <div className="acts">
+          <Button variant="text" size="sm" style={{marginRight:"auto"}}>Sever</Button>
+          <Button variant="text" size="sm">Cancel</Button>
+          <Button size="sm">Set</Button>
+        </div>
+      </div>
+    </div>
+  </div>)}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script></body></html>

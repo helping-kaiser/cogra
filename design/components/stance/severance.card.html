@@ -1,0 +1,44 @@
+<!-- @dsCard group="Components" viewport="800x560" name="Severance" subtitle="Confirmed with its cost, never refused. Both routes to (0, 0), with arithmetic that holds." -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{padding:16px}.row{display:flex;gap:20px;align-items:flex-start}.col{display:flex;flex-direction:column;gap:10px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary);max-width:352px}.note{font-size:11px;color:var(--text-secondary);max-width:352px;line-height:1.5}.note b{color:var(--on-surface);font-weight:500}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { SeveranceConfirm } = window.CoGraDesignSystem_9084ba;
+
+// Reached BY A PICK. The arithmetic has to hold for the specimen to mean anything:
+// one +1.00/+1.00 edge stands, and a −1.00/−1.00 pick nets it to exactly (0, 0).
+// The cost is ONE signed action — the pick itself — which is what StanceControl
+// passes on this route.
+const oneEdge = {
+  current:{pDirected:1,pInterest:1}, rawSum:{pDirected:1,pInterest:1},
+  records:1, severed:false, severance:{records:1},
+};
+
+// The EXPLICIT route. Four edges stand, and their raw sum lies BEYOND the clip:
+// the fold reads +1.00/+0.85 while the history is +1.40/+0.85. The walk back is
+// the raw sum, which is why the dialog states it.
+const longHistory = {
+  current:{pDirected:1,pInterest:0.85}, rawSum:{pDirected:1.4,pInterest:0.85},
+  records:4, severed:false, severance:{records:4},
+};
+
+function Demo(){return (
+<div className="row">
+  <div className="col">
+    <span className="lbl">Reached by a pick — confirmed, never refused</span>
+    <SeveranceConfirm inline pick={{pDirected:-1,pInterest:-1}} targetLabel="@ada" bundle={oneEdge} records={1}/>
+    <p className="note"><b>+1.00 / +1.00</b> stands, the pick is <b>−1.00 / −1.00</b>, so the bundle nets to exactly <b>(0, 0)</b>. Against a short history a single pick can reach severance, and the protection is not arithmetic — it is telling people where they are about to land.</p>
+  </div>
+  <div className="col">
+    <span className="lbl">The explicit route — no pick line, and a total beyond the cap</span>
+    <SeveranceConfirm inline targetLabel="@ada" bundle={longHistory} records={4}/>
+    <p className="note"><b>Clipped is not hidden — but the total leads.</b> The reader has said <b>+1.40 / +0.85</b> in all, and that is what severing walks back; the aside notes that routing reads it capped at +1.00 / +0.85. Stated the other way round — fold first, sum second — it reads as broken arithmetic: "my stance is +1.00, so why does going back take 1.40?" Four signed actions, each paid for separately.</p>
+  </div>
+</div>)}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script></body></html>

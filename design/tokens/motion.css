@@ -1,0 +1,38 @@
+/* M3 motion, standard easing and durations (design.md §4). Motion clarifies where
+   something came from; it never performs. Reduced-motion preferences are honoured
+   on both platforms.
+
+   The one bespoke value is the collapsing top's 200ms translate — the transition
+   that covers the vacated header slot as the region leaves. */
+
+:root {
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1); /* @kind other */
+  --ease-standard-decelerate: cubic-bezier(0, 0, 0, 1); /* @kind other */
+  --ease-standard-accelerate: cubic-bezier(0.3, 0, 1, 1); /* @kind other */
+  --ease-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1); /* @kind other */
+  --ease-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15); /* @kind other */
+
+  --duration-short-2: 100ms; /* @kind other */
+  --duration-short-4: 200ms; /* @kind other */
+  --duration-medium-2: 300ms; /* @kind other */
+  --duration-medium-4: 400ms; /* @kind other */
+  --duration-long-2: 500ms; /* @kind other */
+
+  /* The collapsing top's own transition (collapsing-top.tsx). */
+  --duration-collapsing-top: 200ms; /* @kind other */
+  /* Material's short snackbar duration; the confirmation clears itself. */
+  --duration-snackbar: 4000ms; /* @kind other */
+  /* Android's platform long-press timeout — what the pad's bloom waits for. */
+  --duration-long-press: 500ms; /* @kind other */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-short-2: 0ms; /* @kind other */
+    --duration-short-4: 0ms; /* @kind other */
+    --duration-medium-2: 0ms; /* @kind other */
+    --duration-medium-4: 0ms; /* @kind other */
+    --duration-long-2: 0ms; /* @kind other */
+    --duration-collapsing-top: 0ms; /* @kind other */
+  }
+}

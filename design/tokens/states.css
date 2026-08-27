@@ -1,0 +1,110 @@
+/* Interaction states.
+
+   THIS IS A DIVERGENCE FROM THE SOURCE, and a deliberate one. `design.md` §4 is
+   silent on hover, press, and focus, and the web client defines none — so every
+   consumer invents its own, which is how a system starts to look accidental. The
+   values below are Material's own documented state-layer opacities, so this fills
+   the gap the way the rest of the system already resolves silences: "where this
+   doc is silent, M3 is the answer".
+
+   The layer is `currentColor` over the control, which is correct for all three
+   button variants without a second token: on a filled button `currentColor` is
+   `onPrimary`, on an unfilled one it is `primary`.
+
+   Press is never a scale-down and never a shadow change — the direction is calm,
+   and a control that shrinks under the thumb performs. */
+
+:root {
+  --state-hover: 0.08; /* @kind other */
+  --state-press: 0.1; /* @kind other */
+  --state-drag: 0.16; /* @kind other */
+  /* Material's disabled opacity. Exempt from the AA guarantee by convention:
+     a disabled control is not an available target. */
+  --state-disabled: 0.38; /* @kind other */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+}
+
+/* Any pressable surface: buttons, bar slots, actor chips, cards that open. */
+.cg-state {
+  position: relative;
+  isolation: isolate;
+}
+
+.cg-state::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity var(--duration-short-2) var(--ease-standard);
+  pointer-events: none;
+}
+
+.cg-state:hover::after { opacity: var(--state-hover) }
+.cg-state:active::after { opacity: var(--state-press) }
+.cg-state:disabled::after, .cg-state[aria-disabled="true"]::after { opacity: 0 }
+
+/* The focus indicator is `onSurface` rather than `primary`: a primary ring
+   disappears against a filled primary button, and this one reads on the page
+   ground and on the loud surface alike, in both themes. Nothing removes it. */
+.cg-focus:focus-visible {
+  outline: var(--focus-ring-width) solid var(--on-surface);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* Visually hidden until focused — the skip-link pattern. A non-drag equivalent for
+   a drag gesture has to be reachable by keyboard, switch, and screen reader (§10),
+   but it does not have to sit on screen beside every instance of the control: a
+   feed of twenty posts would carry twenty copies of it, competing with the thing
+   they duplicate. Pointer users get the gesture and the settings preference; a
+   focus ring brings this into view for everyone else. */
+.cg-sr-focusable {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.cg-sr-focusable:focus-visible {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+}
+
+/* The 48px promise, kept without inflating dense rows.
+
+   `readme.md` §4 and §10 state a 48px minimum target unconditionally, and the
+   small button is 33px tall drawn — which is Material's own dense button size, and
+   right for the pad's action row and a dialog's footer. So the TARGET is expanded
+   rather than the button: a transparent £before overlay centred on the control
+   reaches 48px on both axes while the ink stays where it was.
+
+   This is what Material does for dense controls, and it is why the rule can stay
+   unconditional: nothing in the product is tappable below 48px, whatever it looks
+   like. `min-height/min-width: 100%` keeps the overlay from ever shrinking a
+   control that is already larger. */
+.cg-hit::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  height: var(--touch-target-min);
+  width: var(--touch-target-min);
+  min-height: 100%;
+  min-width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cg-state::after { transition: none }
+}
