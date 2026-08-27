@@ -847,6 +847,49 @@ impl User {
         self.identity.id
     }
 
+    /// When this node was created — when the account row that fronts the
+    /// Profile was written, which precedes the Registration record
+    /// landing.
+    async fn created_at(&self) -> DateTime<Utc> {
+        self.identity.created_at
+    }
+
+    /// The most recent profile version's authoring instant; equals
+    /// `createdAt` for an actor whose profile has never changed.
+    async fn updated_at(&self, ctx: &Context<'_>) -> async_graphql::Result<DateTime<Utc>> {
+        Ok(match self.profile(ctx).await? {
+            Some(p) => p.created_at.max(self.identity.created_at),
+            None => self.identity.created_at,
+        })
+    }
+
+    /// Where this actor's Profile stands relative to L1 finality. A
+    /// Profile is minted by its own Registration record, so it pends
+    /// between the key ceremony — which is where the address is bound —
+    /// and that record landing.
+    async fn landing(&self, ctx: &Context<'_>) -> async_graphql::Result<Landing> {
+        let Some(address) = self.identity.l0_address.as_deref() else {
+            return Ok(Landing {
+                state: LandingState::Pending,
+                epoch: None,
+            });
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let node = NodeId::Prof(address.to_string()).to_string();
+        Ok(
+            match mirror::minting_epoch(pool, Family::Registration, &node).await? {
+                Some(epoch) => Landing {
+                    state: LandingState::Landed,
+                    epoch: Some(epoch),
+                },
+                None => Landing {
+                    state: LandingState::Pending,
+                    epoch: None,
+                },
+            },
+        )
+    }
+
     /// The account's name in the one actor namespace: 3–30 characters of
     /// [a-z0-9_], case-folded.
     async fn handle(&self) -> String {
@@ -2047,6 +2090,7 @@ async fn resolve_reference_target(
         _ => Ok(match resolve_node_id(ctx, l1_node_id).await? {
             Some(Node::Post(post)) => Some(ReferenceTarget::Post(post)),
             Some(Node::Comment(comment)) => Some(ReferenceTarget::Comment(comment)),
+            Some(Node::Profile(user)) => Some(ReferenceTarget::Profile(user)),
             None => None,
         }),
     }
@@ -2083,6 +2127,11 @@ async fn resolve_reference_target(
 pub enum Node {
     Post(PostType),
     Comment(CommentType),
+    /// A person's Profile — the node a mention targets. A Reference
+    /// never targets an Actor; it targets the Profile the actor fronts,
+    /// which is why the variant carries a `User` rather than an actor
+    /// abstraction.
+    Profile(User),
 }
 
 /// What a Review can respond to (comment.md §1). Every passive node
@@ -2105,12 +2154,28 @@ async fn author_user(ctx: &Context<'_>, author_id: Uuid) -> async_graphql::Resul
 }
 
 /// Resolves a raw L1 node identifier to a typed node, when CoGra
-/// carries a display row for it (content nodes this slice).
+/// carries a display row for it.
+///
+/// The Profile arm is what makes a mention render: a Reference toward a
+/// person targets their Profile, so without it `Record.terminal` served
+/// null for every mention on the chronicle. `prof:` is answered from the
+/// identifier's own grammar rather than by probing, since an address is
+/// not something the content tables could answer to.
 pub async fn resolve_node_id(
     ctx: &Context<'_>,
     l1_node_id: &str,
 ) -> async_graphql::Result<Option<Node>> {
     let pool = ctx.data::<PgPool>()?;
+    if let Ok(NodeId::Prof(address)) = NodeId::parse(l1_node_id) {
+        return Ok(store::actor_identity_by_address(pool, &address)
+            .await?
+            .map(|identity| {
+                Node::Profile(User {
+                    identity,
+                    viewer_session: None,
+                })
+            }));
+    }
     if let Some(post) = postgres_store::content::post_by_node(pool, l1_node_id)
         .await
         .map_err(|e| async_graphql::Error::new(e.to_string()))?
