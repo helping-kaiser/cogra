@@ -9,6 +9,11 @@
 //! whose target is a Profile *is* a mention. Nothing is minted; both
 //! endpoints pre-exist.
 //!
+//! Every passive class is a target except one: a Type is tagged, never
+//! referenced (D21). Tagging is the gesture that relates content to a
+//! topic, and a second gesture spanning the same pair would split one
+//! relation across two families the fold reads apart.
+//!
 //! # Which slot carries what
 //!
 //! Reference is Review with its legs transposed, so the census row reads
@@ -196,6 +201,9 @@ async fn resolve(
     let Some(target) = nodes::resolve_id(pool, draft.target).await? else {
         return Ok(Err(("target", "no such reference target".to_string())));
     };
+    if let Err(e) = refuse_topic_target(&target) {
+        return Ok(Err(e));
+    }
     Ok(Ok(PlannedReference {
         target_id: draft.target,
         target,
@@ -351,6 +359,25 @@ fn refuse_self_citation(
     }
 }
 
+/// A Type is tagged, never referenced (D21): topics are the Tag family's
+/// business, and every *other* passive class is the Reference family's.
+/// Two gestures spanning the same (content, topic) pair would divide one
+/// relation between two folds that read it apart — a topic's standing on a
+/// node would then depend on which gesture its author happened to pick.
+///
+/// L1's incidence admits a Type target like any other passive node, so
+/// this is CoGra declining to prepare what the substrate would accept —
+/// the same narrowing shape as the self-citation refusal above.
+///
+/// The offending field is `target` on both write shapes; `plan_batch`
+/// re-roots it at the entry's index.
+fn refuse_topic_target(target: &NodeId) -> Result<(), (&'static str, String)> {
+    match target {
+        NodeId::Name(_) => Err(("target", "a topic is tagged, never referenced".to_string())),
+        _ => Ok(()),
+    }
+}
+
 /// Prepares one standalone citation — the gesture that hangs a reference
 /// off existing content, which post.md §3 and comment.md §3 both promise
 /// ("alongside the Publish or later") and which D10 adds to the contract.
@@ -401,6 +428,8 @@ pub async fn prepare_reference_withdrawal<B: L1Boundary>(
             ReferenceError::at(vec!["target".to_string()], "no such reference target").into(),
         );
     };
+    refuse_topic_target(&target_node)
+        .map_err(|(field, message)| ReferenceError::at(vec![field.to_string()], message))?;
     let author = author_address(pool, viewer).await?;
     let sum = store_refs::bundle(
         pool,
@@ -609,7 +638,7 @@ mod tests {
     fn a_batch_that_cites_others_passes_the_self_check() {
         let batch = [
             planned("prof:bob", 0.1, 0.1),
-            planned("name:rust", 0.1, 0.1),
+            planned("mint:act:carol:0:publish", 0.1, 0.1),
         ];
         refuse_self_citation(&middle(), &batch).expect("legal");
     }
@@ -618,9 +647,29 @@ mod tests {
     fn the_act_count_is_one_per_citation() {
         let batch = [
             planned("prof:bob", 0.1, 0.1),
-            planned("name:rust", 0.1, 0.1),
+            planned("mint:act:carol:0:publish", 0.1, 0.1),
         ];
         assert_eq!(act_count(&batch), 2);
         assert_eq!(act_count(&[]), 0);
+    }
+
+    /// D21: the one passive class the Reference family does not reach.
+    /// L1 would admit the record — a Type is a passive node like any
+    /// other — so nothing but this refusal keeps the gesture out.
+    #[test]
+    fn a_topic_is_refused_as_a_reference_target() {
+        let (field, message) =
+            refuse_topic_target(&NodeId::name("rust").expect("node")).expect_err("refused");
+        assert_eq!(field, "target");
+        assert!(message.contains("tagged"), "{message}");
+    }
+
+    /// Every other passive class stays a target — the narrowing is one
+    /// class wide, not a general suspicion of non-content targets.
+    #[test]
+    fn the_other_passive_classes_stay_reference_targets() {
+        for target in ["prof:bob", "mint:act:carol:0:publish"] {
+            refuse_topic_target(&NodeId::parse(target).expect("node")).expect("legal");
+        }
     }
 }
