@@ -248,6 +248,7 @@ export async function prepareComment(
     target: string;
     content: string;
     license: LicenseChoice;
+    tags?: readonly TagDraft[];
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -259,6 +260,15 @@ export async function prepareComment(
             target: fields.target,
             content: fields.content,
             license: fields.license,
+            // Tagging is part of the compose gesture on a comment as on
+            // a post (api-spec.md `PrepareCommentInput.tags`, "same rules
+            // as on a Post") — one batch on the minting record.
+            tags:
+              fields.tags?.map((tag) => ({
+                name: tag.name,
+                pDirected: tag.relevance,
+                pInterest: tag.confidence,
+              })) ?? null,
           },
         },
       }),

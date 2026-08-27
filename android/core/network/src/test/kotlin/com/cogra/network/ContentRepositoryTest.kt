@@ -14,6 +14,7 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.topics.TagClaim
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.auth.SessionRefresher
 import com.cogra.network.repo.ContentRepositoryImpl
@@ -227,5 +228,71 @@ class ContentRepositoryTest {
         assertThat(body).contains("\"title\":null")
         assertThat(body).contains("\"description\":null")
         assertThat(body).contains("\"content\":\"B\"")
+    }
+
+    /**
+     * A comment declares its topics on the creation input, the way a
+     * post does (F9), and both parameters ride explicitly so an
+     * untouched slider says what omitting it would.
+     */
+    @Test
+    fun aCommentCarriesItsDeclaredTopicsOnTheWire() = runTest {
+        enqueue(
+            """{"data":{"prepareComment":{"__typename":"PrepareContentPayload",
+               "node":"c1",
+               "writes":[{"__typename":"PreparedWrite","id":"w1","family":"REVIEW",
+                          "canonicalProposal":"AA==","gcAfterEpochs":8},
+                         {"__typename":"PreparedWrite","id":"w2","family":"TAG",
+                          "canonicalProposal":"AQ==","gcAfterEpochs":8}],
+               "userErrors":[]}}}""",
+        )
+        val prepared = repo().prepareComment(
+            target = "p1",
+            content = "Nice",
+            license = LicenseChoice.PublicDomain,
+            tags = listOf(TagClaim("rust", relevance = 0.4, confidence = 0.9)),
+        )
+        val body = server.takeRequest().body.readUtf8()
+        assertThat(body).contains("\"name\":\"rust\"")
+        assertThat(body).contains("\"pDirected\":0.4")
+        assertThat(body).contains("\"pInterest\":0.9")
+        // The minting Review and its Tag record both come back to sign.
+        assertThat((prepared as Outcome.Success).value.writes.map { it.id })
+            .containsExactly("w1", "w2").inOrder()
+    }
+
+    /** No topics declared means no `tags` key at all, not an empty list. */
+    @Test
+    fun aCommentWithoutTopicsSendsNoTagsKey() = runTest {
+        enqueue(
+            """{"data":{"prepareComment":{"__typename":"PrepareContentPayload",
+               "node":"c1",
+               "writes":[{"__typename":"PreparedWrite","id":"w1","family":"REVIEW",
+                          "canonicalProposal":"AA==","gcAfterEpochs":8}],
+               "userErrors":[]}}}""",
+        )
+        repo().prepareComment("p1", "Nice", LicenseChoice.PublicDomain)
+        assertThat(server.takeRequest().body.readUtf8()).doesNotContain("\"tags\"")
+    }
+
+    /** The server names the offending chip by path, and it survives the mapping (F2). */
+    @Test
+    fun aRefusedTopicNamesItsChipByPath() = runTest {
+        enqueue(
+            """{"data":{"prepareComment":{"__typename":"PrepareContentPayload",
+               "node":null,"writes":null,
+               "userErrors":[{"__typename":"UserError",
+                              "message":"`x y` is not a legal topic name",
+                              "code":"BAD_INPUT","field":["tags","0","name"]}]}}}""",
+        )
+        val refused = repo().prepareComment(
+            target = "p1",
+            content = "Nice",
+            license = LicenseChoice.PublicDomain,
+            tags = listOf(TagClaim("x y")),
+        )
+        val error = (refused as Outcome.Refused).errors.single()
+        assertThat(error.code).isEqualTo(ErrorCode.BAD_INPUT)
+        assertThat(error.field).containsExactly("tags", "0", "name").inOrder()
     }
 }

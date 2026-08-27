@@ -10,6 +10,9 @@
 
     <!-- The topic chip (design.md §6). -->
     <string name="topic_chip_remove">Remove %1$s</string>
+    <!-- A revealed claim: compact on screen, spelled out for TalkBack (F8). -->
+    <string name="topic_chip_values">%1$s · %2$s</string>
+    <string name="topic_chip_values_description">#%1$s, relevance %2$s, confidence %3$s</string>
 
     <!-- A Tag act's two parameters (api-spec.md `TagInput`). -->
     <string name="tag_relevance">Relevance</string>

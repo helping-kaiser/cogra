@@ -614,19 +614,7 @@ class ContentRepositoryImpl @Inject constructor(
                     description = Optional.presentIfNotNull(description),
                     content = content,
                     license = license.toInput(),
-                    // Both parameters ride explicitly: the composer's
-                    // sliders start at the server's own defaults, so an
-                    // untouched slider says exactly what omitting it
-                    // would (api-spec.md `TagInput`).
-                    tags = Optional.presentIfNotNull(
-                        tags.takeIf { it.isNotEmpty() }?.map {
-                            TagInput(
-                                name = it.name,
-                                pDirected = Optional.present(it.relevance),
-                                pInterest = Optional.present(it.confidence),
-                            )
-                        },
-                    ),
+                    tags = tags.toInput(),
                 ),
             ),
         ).payloadOutcome({ it.preparePost.userErrors.map { e -> e.userErrorFields } }) { data ->
@@ -669,10 +657,16 @@ class ContentRepositoryImpl @Inject constructor(
         target: String,
         content: String,
         license: LicenseChoice,
+        tags: List<TagClaim>,
     ): Outcome<PreparedContentView> = guard.run {
         client.mutation(
             PrepareCommentMutation(
-                PrepareCommentInput(target = target, content = content, license = license.toInput()),
+                PrepareCommentInput(
+                    target = target,
+                    content = content,
+                    license = license.toInput(),
+                    tags = tags.toInput(),
+                ),
             ),
         ).payloadOutcome({ it.prepareComment.userErrors.map { e -> e.userErrorFields } }) { data ->
             data.prepareComment.node?.let { node ->
@@ -703,6 +697,22 @@ class ContentRepositoryImpl @Inject constructor(
         const val REPLIES_FIRST = 3
     }
 }
+
+/**
+ * The topics a creation declares, as the API takes them. Both parameters
+ * ride explicitly: the sliders start at the server's own defaults, so an
+ * untouched slider says exactly what omitting it would (api-spec.md
+ * `TagInput`). An empty list stays absent rather than riding as `[]`.
+ */
+private fun List<TagClaim>.toInput(): Optional<List<TagInput>?> = Optional.presentIfNotNull(
+    takeIf { it.isNotEmpty() }?.map {
+        TagInput(
+            name = it.name,
+            pDirected = Optional.present(it.relevance),
+            pInterest = Optional.present(it.confidence),
+        )
+    },
+)
 
 @Singleton
 class ProfileRepositoryImpl @Inject constructor(
