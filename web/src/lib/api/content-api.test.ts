@@ -288,6 +288,7 @@ describe("prepareComment", () => {
         content: "First!",
         license: { attribution: 0, provenance: 0.5 },
         tags: null,
+        references: null,
       },
     });
   });
