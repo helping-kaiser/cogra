@@ -91,6 +91,28 @@ module.exports = grammar({
   ],
 
   rules: {
+    // One root, covering both file shapes the specification defines.
+    //
+    // KotlinParser.g4 has two entry points over one grammar:
+    //
+    //   kotlinFile : shebangLine? fileAnnotation* packageHeader importList
+    //                topLevelObject* EOF        // topLevelObject : declaration
+    //   script     : shebangLine? fileAnnotation* packageHeader importList
+    //                (statement semi)* EOF
+    //
+    // They share their whole prelude and differ only in the body — and
+    // `statement` already admits `declaration`, so `script` accepts a
+    // strict superset of `kotlinFile`. tree-sitter has exactly one start
+    // rule ("the start rule for the grammar is the first property in the
+    // `rules` object") and documents no second entry point, so the one
+    // root takes the wider shape and covers both.
+    //
+    // The cost is stated rather than hidden: a `.kt` file whose top level
+    // holds a bare expression parses here, where the compiler would
+    // reject it. That costs this linter nothing — an error node is a
+    // finding, so what must be avoided is rejecting valid source, not
+    // accepting invalid source — and no single-root grammar can draw a
+    // distinction the specification draws with two entry points.
     source_file: $ => seq(
       optional($.shebang_line),
       repeat($.file_annotation),
@@ -98,10 +120,10 @@ module.exports = grammar({
       repeat($.import_header),
       // The separator is required, not optional. Kotlin always has one
       // — the scanner infers it from the newline — and making it
-      // optional would let a declaration abut the expression before it,
+      // optional would let a statement abut the expression before it,
       // which is what makes `val x = a` followed by `enum class F`
       // ambiguous with an infix call named `enum`.
-      repeat(seq($._declaration, $._semi)),
+      repeat(seq($._statement, $._semi)),
     ),
 
     shebang_line: _ => token(seq('#!', /[^\r\n]*/)),
@@ -134,12 +156,15 @@ module.exports = grammar({
 
     package_header: $ => seq('package', $.qualified_identifier, $._semi),
 
-    import_header: $ => seq(
+    // `import` is a soft keyword, and with statements at the top level it
+    // could equally open an infix call whose left operand is a variable
+    // named `import`. A line that starts with it is an import.
+    import_header: $ => prec(1, seq(
       'import',
       $.qualified_identifier,
       optional(choice($.import_wildcard, $.import_alias)),
       $._semi,
-    ),
+    )),
 
     import_wildcard: _ => token(seq('.', '*')),
     import_alias: $ => seq('as', $.simple_identifier),
