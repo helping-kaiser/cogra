@@ -378,9 +378,10 @@ describe("PostView", () => {
           target: "p1",
           content: "Nice one",
           license: { attribution: 1, provenance: 0 },
-          // The composer always sends its list; empty is "no topics",
-          // the shape `preparePost` already uses.
+          // The composer always sends its lists; empty is "no topics"
+          // and "no references", the shape `preparePost` already uses.
           tags: [],
+          references: [],
         },
       }),
     );
