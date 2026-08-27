@@ -7,6 +7,7 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.UserError
 import com.cogra.domain.repo.ContentRepository
+import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
@@ -14,6 +15,8 @@ import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.store.IdentityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -33,6 +36,19 @@ data class ComposePostUiState(
      * changes when editing (F3).
      */
     val tagSection: TagSectionState = TagSectionState(),
+    /**
+     * The references this post will carry once the submit lands:
+     * staged chips when creating, the post's current citations plus the
+     * author's changes when editing (D10, D11).
+     */
+    val referenceSection: ReferenceSectionState = ReferenceSectionState(),
+    /**
+     * What the withdrawals in this submit will cost, once the server
+     * has assembled them — a citation revised upward several times
+     * needs more than one counter-record to walk back (D11). Null
+     * until the batch has been staged.
+     */
+    val withdrawalCost: Int? = null,
     val loadedTitle: String = "",
     val loadedDescription: String = "",
     val loadedBody: String = "",
@@ -70,9 +86,12 @@ data class ComposePostUiState(
      */
     val signedActionCount: Int
         get() = if (creating) {
-            1 + tagSection.tags.size
+            1 + tagSection.tags.size + referenceSection.references.size
         } else {
-            (if (contentChanged) 1 else 0) + tagSection.changeCount
+            (if (contentChanged) 1 else 0) +
+                tagSection.changeCount +
+                referenceSection.adds.size +
+                (withdrawalCost ?: referenceSection.removes.size)
         }
 
     /** Nothing to sign: an edit opened and left alone stages no record. */
@@ -94,12 +113,23 @@ data class ComposePostUiState(
 class ComposePostViewModel @Inject constructor(
     private val content: ContentRepository,
     private val topics: TopicRepository,
+    private val references: ReferenceRepository,
     private val signer: WriteSigner,
     private val identity: IdentityStore,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ComposePostUiState())
     val state = _state.asStateFlow()
+
+    /**
+     * A batch staged before the confirm, held while the author reads
+     * the quoted cost. Never UI state: it is the signing input, and a
+     * dismissed confirm drops it.
+     */
+    private var quotedWrites: List<PreparedWriteView>? = null
+
+    /** Debounces the finder, which runs on every keystroke (D20). */
+    private var finderJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -127,6 +157,14 @@ class ComposePostViewModel @Inject constructor(
                                 confidence = claim.confidence,
                             )
                         }
+                        val refs = post.references.map { claim ->
+                            ReferenceRow(
+                                targetId = claim.targetId,
+                                target = claim.target,
+                                relevance = claim.relevance,
+                                support = claim.support,
+                            )
+                        }
                         _state.update {
                             it.copy(
                                 loading = false,
@@ -137,6 +175,10 @@ class ComposePostViewModel @Inject constructor(
                                 loadedDescription = post.description.value.orEmpty(),
                                 loadedBody = post.content.value.orEmpty(),
                                 tagSection = TagSectionState(tags = tags, loaded = tags),
+                                referenceSection = ReferenceSectionState(
+                                    references = refs,
+                                    loaded = refs,
+                                ),
                             )
                         }
                     }
@@ -172,9 +214,77 @@ class ComposePostViewModel @Inject constructor(
         it.copy(tagSection = block(it.tagSection))
     }
 
+    // -- References (D10, D20) --
+
+    fun onOpenFinder() = updateReferences { it.withFinder(ReferenceFinderState()) }
+
+    fun onCloseFinder() {
+        finderJob?.cancel()
+        updateReferences { it.withFinder(null) }
+    }
+
+    fun onFinderQueryChange(query: String) {
+        finderJob?.cancel()
+        updateReferences { section ->
+            section.withFinder(
+                (section.finder ?: ReferenceFinderState()).copy(
+                    query = query,
+                    searching = query.isNotBlank(),
+                    failed = false,
+                ),
+            )
+        }
+        finderJob = viewModelScope.launch {
+            delay(FINDER_DEBOUNCE_MILLIS)
+            when (val outcome = references.candidateRows(query)) {
+                is Outcome.Success -> updateReferences { section ->
+                    // A result that arrived after the author typed on
+                    // is stale — only the current query's answer lands.
+                    section.finder?.takeIf { it.query == query }?.let {
+                        section.withFinder(
+                            it.copy(candidates = outcome.value, searching = false, failed = false),
+                        )
+                    } ?: section
+                }
+                is Outcome.Refused, is Outcome.Failed -> updateReferences { section ->
+                    section.finder?.takeIf { it.query == query }?.let {
+                        section.withFinder(it.copy(searching = false, failed = true))
+                    } ?: section
+                }
+            }
+        }
+    }
+
+    /** Picking a candidate stages it and closes the finder. */
+    fun onPickReference(row: ReferenceCandidateRow) {
+        finderJob?.cancel()
+        updateReferences { it.added(row.targetId, row.target).withFinder(null) }
+    }
+
+    fun onRemoveReference(targetId: String) = updateReferences { it.removed(targetId) }
+
+    fun onTuneReference(targetId: String) = updateReferences { it.tuned(targetId) }
+
+    fun onDoneTuningReference() = updateReferences { it.tuned(null) }
+
+    fun onReferenceRelevanceChange(targetId: String, value: Double) =
+        updateReferences { it.withRelevance(targetId, value) }
+
+    fun onReferenceSupportChange(targetId: String, value: Double) =
+        updateReferences { it.withSupport(targetId, value) }
+
+    private fun updateReferences(block: (ReferenceSectionState) -> ReferenceSectionState) =
+        _state.update { it.copy(referenceSection = block(it.referenceSection)) }
+
     /**
      * The submit gate (F4): a batch of more than one signed act asks
      * first, unless this device has been told not to.
+     *
+     * A submit carrying a reference withdrawal is the one exception to
+     * that order. A withdrawal's cost is the server's to quote — the
+     * bundle may need several counter-records to reach `(0, 0)` (D11) —
+     * so those stage first and ask with the true count. Staging signs
+     * nothing, so nothing is committed by asking second.
      */
     fun onSubmit() {
         val s = _state.value
@@ -184,6 +294,10 @@ class ComposePostViewModel @Inject constructor(
             return
         }
         if (s.nothingToSign) return
+        if (s.referenceSection.removes.isNotEmpty()) {
+            stage(askOnceQuoted = true)
+            return
+        }
         if (s.confirmMultiActionSubmits && s.signedActionCount > 1) {
             _state.update { it.copy(confirmPending = true) }
             return
@@ -194,17 +308,26 @@ class ComposePostViewModel @Inject constructor(
     fun onConfirmSubmit(dontAskAgain: Boolean) {
         if (dontAskAgain) viewModelScope.launch { identity.setConfirmMultiActionSubmits(false) }
         _state.update { it.copy(confirmPending = false) }
-        stage()
+        val quoted = quotedWrites
+        if (quoted != null) {
+            quotedWrites = null
+            viewModelScope.launch { sign(quoted) }
+        } else {
+            stage()
+        }
     }
 
-    fun onDismissConfirm() = _state.update { it.copy(confirmPending = false) }
+    fun onDismissConfirm() {
+        quotedWrites = null
+        _state.update { it.copy(confirmPending = false, submitting = false, withdrawalCost = null) }
+    }
 
     /**
      * Stages every record this submit carries, then signs them together.
      * A refusal from any prepare stops before signing: nothing was
      * signed, so nothing may claim signing failed (F2).
      */
-    private fun stage() {
+    private fun stage(askOnceQuoted: Boolean = false) {
         val s = _state.value
         _state.update {
             it.copy(
@@ -213,11 +336,14 @@ class ComposePostViewModel @Inject constructor(
                 signingFailed = false,
                 signingNeedsKey = false,
                 transportFailed = false,
+                withdrawalCost = null,
                 tagSection = it.tagSection.withoutErrors(),
+                referenceSection = it.referenceSection.withoutErrors(),
             )
         }
         viewModelScope.launch {
             val writes = mutableListOf<PreparedWriteView>()
+            var withdrawn = 0
             val editingId = s.editingId
             if (editingId == null) {
                 when (val outcome = content.preparePost(
@@ -226,6 +352,7 @@ class ComposePostViewModel @Inject constructor(
                     content = s.body,
                     license = s.license,
                     tags = s.tagSection.tags.map { it.toClaim() },
+                    references = s.referenceSection.references.map { it.toClaim() },
                 )) {
                     is Outcome.Success -> writes += outcome.value.writes
                     is Outcome.Refused -> return@launch refuse(outcome.errors)
@@ -258,23 +385,64 @@ class ComposePostViewModel @Inject constructor(
                         is Outcome.Failed -> return@launch failTransport()
                     }
                 }
-            }
-            val results = try {
-                signer.sign(writes)
-            } catch (_: NoActorKeyException) {
-                // A husk device: the write waits on the reader restoring
-                // the key, not on time passing (the invites twin) —
-                // without the catch the coroutine would die unreported.
-                _state.update {
-                    it.copy(submitting = false, signingFailed = true, signingNeedsKey = true)
+                // Citations are never edit fields, so each change is its
+                // own priced act staged beside the edit (post.md §3).
+                for (row in s.referenceSection.adds) {
+                    when (val outcome =
+                        references.prepareReference(editingId, row.targetId, row.relevance, row.support)) {
+                        is Outcome.Success -> writes += outcome.value
+                        is Outcome.Refused -> return@launch refuseReference(row.targetId, outcome.errors)
+                        is Outcome.Failed -> return@launch failTransport()
+                    }
                 }
-                return@launch
+                for (row in s.referenceSection.removes) {
+                    when (val outcome =
+                        references.prepareReferenceWithdrawal(editingId, row.targetId)) {
+                        is Outcome.Success -> {
+                            writes += outcome.value
+                            withdrawn += outcome.value.size
+                        }
+                        is Outcome.Refused -> return@launch refuseReference(row.targetId, outcome.errors)
+                        is Outcome.Failed -> return@launch failTransport()
+                    }
+                }
             }
-            if (results.all { it is WriteResult.Done }) {
-                _state.update { it.copy(submitting = false, saved = true) }
-            } else {
-                _state.update { it.copy(submitting = false, signingFailed = true) }
+            // The withdrawal batch is assembled; its length is the cost
+            // the author is owed before signing (D11).
+            if (askOnceQuoted) {
+                _state.update { it.copy(withdrawalCost = withdrawn) }
+                if (_state.value.confirmMultiActionSubmits && writes.size > 1) {
+                    quotedWrites = writes
+                    _state.update { it.copy(confirmPending = true) }
+                    return@launch
+                }
             }
+            sign(writes)
+        }
+    }
+
+    /**
+     * Signs a staged batch. A refusal from any prepare stops before
+     * this: nothing was signed, so nothing may claim signing failed
+     * (F2).
+     */
+    private suspend fun sign(writes: List<PreparedWriteView>) {
+        _state.update { it.copy(submitting = true) }
+        val results = try {
+            signer.sign(writes)
+        } catch (_: NoActorKeyException) {
+            // A husk device: the write waits on the reader restoring
+            // the key, not on time passing (the invites twin) —
+            // without the catch the coroutine would die unreported.
+            _state.update {
+                it.copy(submitting = false, signingFailed = true, signingNeedsKey = true)
+            }
+            return
+        }
+        if (results.all { it is WriteResult.Done }) {
+            _state.update { it.copy(submitting = false, saved = true) }
+        } else {
+            _state.update { it.copy(submitting = false, signingFailed = true) }
         }
     }
 
@@ -284,19 +452,35 @@ class ComposePostViewModel @Inject constructor(
      * chip i and everything else says its piece once (F2).
      */
     private fun refuse(errors: List<UserError>) = _state.update { st ->
-        var section = st.tagSection
+        var tags = st.tagSection
+        var refs = st.referenceSection
         val unplaced = mutableListOf<String>()
         for (error in errors) {
-            val index = tagFieldIndex(error.field)
-            val (next, left) = if (index == null) {
-                section to error.message
-            } else {
-                section.withErrorAt(index, error.message)
+            val tagIndex = tagFieldIndex(error.field)
+            val referenceIndex = referenceFieldIndex(error.field)
+            when {
+                tagIndex != null -> {
+                    val (next, left) = tags.withErrorAt(tagIndex, error.message)
+                    tags = next
+                    left?.let { unplaced += it }
+                }
+                referenceIndex != null -> {
+                    val (next, left) = refs.withErrorAt(referenceIndex, error.message)
+                    refs = next
+                    left?.let { unplaced += it }
+                }
+                // A whole-batch refusal names no field — the balance
+                // could not carry every act, so nothing was staged
+                // (D19). It says its piece once, not per chip.
+                else -> unplaced += error.message
             }
-            section = next
-            left?.let { unplaced += it }
         }
-        st.copy(submitting = false, tagSection = section, refusal = unplaced.firstOrNull())
+        st.copy(
+            submitting = false,
+            tagSection = tags,
+            referenceSection = refs,
+            refusal = unplaced.firstOrNull(),
+        )
     }
 
     /**
@@ -307,6 +491,17 @@ class ComposePostViewModel @Inject constructor(
     private fun refuseTag(name: String, errors: List<UserError>) = _state.update { st ->
         val (section, unplaced) = st.tagSection.withError(name, errors.firstOrNull()?.message)
         st.copy(submitting = false, tagSection = section, refusal = unplaced)
+    }
+
+    /**
+     * A refusal from a standalone Reference or its withdrawal: the
+     * chip it was staged for is the offender — a withdrawal has no chip
+     * left to carry the message, so that one surfaces on its own.
+     */
+    private fun refuseReference(targetId: String, errors: List<UserError>) = _state.update { st ->
+        val (section, unplaced) =
+            st.referenceSection.withError(targetId, errors.firstOrNull()?.message)
+        st.copy(submitting = false, referenceSection = section, refusal = unplaced)
     }
 
     private fun failTransport() = _state.update { it.copy(submitting = false, transportFailed = true) }

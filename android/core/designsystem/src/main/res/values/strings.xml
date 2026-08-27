@@ -32,11 +32,6 @@
 
     <!-- The reference chip (design.md §6, D16). -->
     <string name="reference_chip_remove">Remove reference to %1$s</string>
-    <string name="reference_chip_mention">@%1$s</string>
-    <!-- A post or comment with no readable text of its own. -->
-    <string name="reference_chip_untitled">Untitled</string>
-    <!-- A target the display store cannot type: the citation stands, the far end is unnamed. -->
-    <string name="reference_chip_unresolved">Referenced node</string>
     <!-- A revealed claim: compact on screen, spelled out for TalkBack (D16). -->
     <string name="reference_chip_values">%1$s · %2$s</string>
     <string name="reference_chip_values_description">%1$s, relevance %2$s, support %3$s</string>
