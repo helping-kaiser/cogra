@@ -2515,6 +2515,27 @@ and confidence outside `[0, 1]`, which the census would refuse as a
 formation fault, refused on the `pInterest` path instead. A
 malformed batch must not leave half its acts in flight.
 
+A reference batch is checked the same way and carries its own cap:
+at most **ten** citations per batch, a named constant, so a
+maximal creation batch is 1 minting record + 10 tags + 10
+references = **21 priced acts** through one prepare. The cap is
+checked first, as a batch — an over-long batch is refused as a
+batch, not as whichever of its entries happens to also be
+malformed. Then per entry, each refusal a field-level `userError`
+rooted at `references.<index>.<field>`: a target nothing answers
+to, a parameter outside `[-1, 1]` named on its own `relevance` or
+`support` path, and a target already cited by another entry —
+compared *after* resolution, so two ids naming the same node are
+one citation submitted twice, refused rather than deduplicated.
+Two targets are refused outright and are CoGra's API being
+narrower than the substrate, which admits both: an artifact
+cannot cite itself, and a Type is tagged, never referenced.
+
+Everything the batch could be refused for — the topic names, the
+citation targets, and the balance against the batch's whole price
+— is checked before the minting record is staged, so a refusal
+leaves nothing in flight.
+
 ```graphql
 "One attachment placement within a gallery. Assets are uploaded
  first via uploadMedia; the envelope commits their digests."
@@ -2541,12 +2562,38 @@ input TagInput {
 }
 
 "A citation — one Reference record from the authored artifact to
- the target. A mention is a Reference targeting the person's
- Profile."
+ the target. Quoting, embedding and mentioning are all this one
+ record, and the target's node class is the whole distinction: a
+ Reference whose target is a person's Profile *is* a mention.
+ Nothing is minted; both endpoints pre-exist.
+
+ A citation carries no note. A payload would make the record
+ payload-marked, and payload-marked records are read individually
+ and never through the author's netted bundle — so a note would
+ silently remove the citation from the very fold that renders it.
+
+ The target may still be in flight when it is the viewer's own: a
+ citation toward a pending node declares that node's act as a
+ dependency, so the epoch close cannot order the citation ahead of
+ what it cites."
 input ReferenceInput {
+  "The cited node — a post, a comment, or a person's profile.
+   External links are body text, never citations: both endpoints of
+   a Reference are nodes on the graph."
   target: UUID!
-  pDirected: Dimension!
-  pInterest: Dimension!
+  "How load-bearing the cited thing is to this artifact, `[-1, 1]`;
+   defaults to +0.1. The census calls this **effort `f`**, and it
+   occupies the `pDirected` slot — the same slot relevance occupies
+   on a tag."
+  relevance: Dimension
+  "Endorsing versus refuting, `[-1, 1]`; defaults to +0.1. The
+   census calls this **enthusiasm `e`**, and it occupies the
+   `pInterest` slot. This is the axis that decides whether a mention
+   vouches: a citation strictly positive on both axes resolves its
+   fold cell to the cited person, and every other citation resolves
+   home. Both defaults are strictly positive, so a default mention
+   vouches — weakly, at coefficient `√0.01 = 0.1`."
+  support: Dimension
 }
 
 "The qualifiers a content node was minted with
