@@ -939,23 +939,22 @@ note = "ARCH conv:linter:web-frontend: web = comments, all forms. No ban applies
 
 [[scanned-regions.language]]
 language   = "kotlin"
-extensions = [".kt"]
+extensions = [".kt", ".kts"]
 frontend   = "tree-sitter, first-party grammar"
 slice      = 3
 scanned    = ["line comments (//)", "block comments (/* ... */)", "KDoc (/** ... */)"]
 not_scanned = ["string literals including templates and multi-dollar interpolation", "character literals"]
 region_unit = "one comment node from the grammar, leaders resolved away"
 precondition = "the first-party grammar parses the whole Android corpus to ZERO error nodes (ARCH dec:linter:kotlin-tree-sitter)"
-note = "MEASURED by the grammar itself over the tree it now parses: 170 .kt files, 1708 line comments, 0 non-KDoc block comments, 681 KDoc, ZERO error nodes. The precondition is met and the frontend is wired. .kts is not Kotlin for the linter's purposes in v1 — see the no-frontend entry below"
-defect_note = "PARKED, not reached by this corpus: the grammar lexes a comment leader at a TOKEN BOUNDARY inside a line string as a comment — right after the opening quote, or right after an interpolation's closing brace. The block-comment half produces a comment node inside the string with no error node, which would make a label written there an occurrence this row promises cannot exist. Corpus today: zero such nodes (a guard test in tests/kotlin_frontend.rs fails the day one appears), because every string with // in this tree has it mid-content, where the lexer never stops. Three ignored tests in that suite carry the repro"
+note = "MEASURED by the grammar itself over the tree it now parses: 173 .kt and 18 .kts files, ZERO error nodes in both. The precondition is met and the frontend is wired"
+script_note = "RULED 2026-08-26: both extensions are Kotlin here. KotlinParser.g4 defines two entry points over one grammar — kotlinFile, whose body is declarations, and script, whose body is statements — and a statement already admits a declaration, so script accepts a strict superset. tree-sitter has one start rule and no second entry point, so the grammar's root takes the wider shape and reads both. The cost is stated where it is taken (the grammar's source_file): a .kt file whose top level holds a bare expression parses here, where the compiler would reject it. That is the safe direction for a linter, whose error nodes are findings"
 
 # --- Languages present with NO frontend, hence no scanned regions ---
 # Listed so their absence is a decision rather than an oversight.
 [[scanned-regions.none]]
-languages  = ["sql", "graphql", "toml", "kotlin-script", "shell", "properties", "json", "yaml", "svg"]
-extensions = [".sql", ".graphql", ".toml", ".kts", ".sh", ".properties", ".json", ".yaml", ".yml", ".svg"]
+languages  = ["sql", "graphql", "toml", "shell", "properties", "json", "yaml", "svg"]
+extensions = [".sql", ".graphql", ".toml", ".sh", ".properties", ".json", ".yaml", ".yml", ".svg"]
 reason     = "no frontend exists; ARCH dec:linter:ast-frontends forbids analysing them as raw text. Files stay in the carrier and stay owned, carrying no occurrences"
-kts_note   = "the Gradle scripts (build.gradle.kts, settings.gradle.kts, build-logic/) are build infrastructure, not app source. The grammar that would parse them now exists but does not: it implements kotlinFile, which admits only declarations, where a script needs the specification's `script` production, which admits statements at the top level. Measured, not assumed — 18 .kts files, 43 error nodes. Supporting them means ADDING that production, not fixing a bug, and whether to is jakob's ruling"
 # LaTeX is absent from the corpus tree today; ARCH
 # open:linter:latex-frontend keeps its frontend deferred.
 
