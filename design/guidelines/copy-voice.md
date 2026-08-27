@@ -33,8 +33,9 @@ another tool. Codes, keys, and recovery are the reader's own vocabulary
 on those surfaces. Plain language frames the block; the precise label
 sits on it.
 
-This is greppable and is enforced as a check over Android's `strings.xml`
-and the web copy, rather than left to review.
+This is greppable and should be enforced as a check over Android's
+`strings.xml` and the web copy, rather than left to review — the check
+does not exist yet.
 
 ## Register
 
@@ -83,3 +84,11 @@ punctuation.
 The product is **CoGra** in prose. The wordmark is lowercase `cogra`.
 Handles are shown with `@`. A person or group is an *actor* internally
 and never on screen — on screen they have a name and a handle.
+
+## Platform nouns
+
+The key lives on a device, and the device is named as the reader sees
+it: **"this browser"** on web, **"this app"** on Android — never a bare
+"device" where the concrete noun exists, and each noun carries its own
+preposition. One line, two renderings:
+`Your key isn't on this browser` · `Your key isn't in this app`.
