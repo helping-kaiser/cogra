@@ -40,9 +40,25 @@ import { StanceControl } from "@/lib/ui/stance-control";
 import { TopicChipRow, type TopicChipEntry } from "@/lib/ui/topic-chip-row";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
-/** `TopicClaim[]` off any content node, projected down to the chip row's shape. */
-function chipEntries(topics: readonly { hashtag: { name: { value?: string | null } }; pending: boolean }[]): readonly TopicChipEntry[] {
-  return topics.map((claim) => ({ name: claim.hashtag.name.value ?? "", pending: claim.pending }));
+/**
+ * `TopicClaim[]` off any content node, projected down to the chip row's
+ * shape. The detail view carries the values along (F8) — the row shows
+ * them only once a reader asks.
+ */
+function chipEntries(
+  topics: readonly {
+    hashtag: { name: { value?: string | null } };
+    pending: boolean;
+    relevance: number;
+    confidence: number;
+  }[],
+): readonly TopicChipEntry[] {
+  return topics.map((claim) => ({
+    name: claim.hashtag.name.value ?? "",
+    pending: claim.pending,
+    relevance: claim.relevance,
+    confidence: claim.confidence,
+  }));
 }
 
 /** Any node of the thread tree — a comment or a nested reply. */
@@ -431,10 +447,12 @@ export function PostView({
                 <PendingMarker testId={`comment-pending-${comment.id}`} />
               )}
               {/* Read-only everywhere on a card or a detail view (F3):
-                  the plain, tappable chip row (design.md §6). */}
+                  the plain, tappable chip row (design.md §6) — here on
+                  the detail surface, with the F8 values toggle. */}
               <TopicChipRow
                 topics={chipEntries(comment.topics)}
                 testIdPrefix={`comment-${comment.id}`}
+                revealable
               />
               {/* The comment carries its own stance control (design.md §6). */}
               <StanceControl
@@ -575,7 +593,7 @@ export function PostView({
       {/* Read-only here for everyone, the author included (F3): the
           author changes their tags on the edit screen, where the rest of
           the post is changed. */}
-      <TopicChipRow topics={chipEntries(post.topics)} testIdPrefix="post" />
+      <TopicChipRow topics={chipEntries(post.topics)} testIdPrefix="post" revealable />
       {/* The post card's stance control, on the detail surface (design.md §6). */}
       <StanceControl target={{ id: postId, kind: "post", label: "this post" }} testIdPrefix="post-stance" />
       <hr className="border-outline-variant" />

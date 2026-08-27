@@ -23,6 +23,22 @@ function landing(pending = false) {
   return { __typename: "Landing", state: pending ? "PENDING" : "LANDED" };
 }
 
+function topicClaim(name: string, relevance = 0.4, confidence = 0.9) {
+  return {
+    __typename: "TopicClaim",
+    hashtag: {
+      __typename: "Hashtag",
+      id: `ht-${name}`,
+      name: { __typename: "ModeratedText", value: name, status: "NORMAL" },
+    },
+    relevance,
+    confidence,
+    pending: false,
+  };
+}
+
+type TopicFixture = ReturnType<typeof topicClaim>;
+
 type FixtureComment = {
   id: string;
   body: string;
@@ -31,6 +47,7 @@ type FixtureComment = {
   pending?: boolean;
   replies?: FixtureComment[];
   repliesHaveMore?: boolean;
+  topics?: TopicFixture[];
 };
 
 function commentNode(comment: FixtureComment, withReplies = true): Record<string, unknown> {
@@ -49,7 +66,7 @@ function commentNode(comment: FixtureComment, withReplies = true): Record<string
     landing: landing(comment.pending),
     moderationStatus: "NORMAL",
     license: { __typename: "License", attribution: 0, provenance: 0 },
-    topics: [],
+    topics: comment.topics ?? [],
     ...(withReplies
       ? {
           replies: {
@@ -77,6 +94,7 @@ function detail(
     endCursor: null,
   },
   postPending = false,
+  postTopics: TopicFixture[] = [],
 ) {
   return {
     post: {
@@ -96,7 +114,7 @@ function detail(
       landing: landing(postPending),
       moderationStatus: "NORMAL",
       license: { __typename: "License", attribution: 0, provenance: 0 },
-      topics: [],
+      topics: postTopics,
       comments: {
         __typename: "CommentConnection",
         edges: comments.map((comment) => ({
@@ -870,5 +888,45 @@ describe("PostView", () => {
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId("post-author")).toHaveAttribute("href", "/u/alice");
     expect(screen.getByTestId("comment-author-c1")).toHaveAttribute("href", "/u/bob");
+  });
+
+  // F8: the detail view is where a reader may ask how strongly a topic
+  // is claimed — on the post and on every comment in the thread.
+  it("reveals the post's topic values on request", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: detail("u1", [], { hasNextPage: false, endCursor: null }, false, [
+            topicClaim("rust", 0.4, 0.9),
+          ]),
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    const toggle = await screen.findByTestId("post-topics-reveal");
+    expect(screen.queryByTestId("post-topic-rust-values")).not.toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(screen.getByTestId("post-topic-rust-values")).toHaveTextContent("+0.40 · 0.90");
+  });
+
+  it("reveals a comment's topic values independently of the post's", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: detail(
+            "u1",
+            [{ id: "c1", body: "First!", topics: [topicClaim("wasm", -0.25, 0.5)] }],
+            { hasNextPage: false, endCursor: null },
+            false,
+            [topicClaim("rust", 0.4, 0.9)],
+          ),
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    fireEvent.click(await screen.findByTestId("comment-c1-topics-reveal"));
+    expect(screen.getByTestId("comment-c1-topic-wasm-values")).toHaveTextContent("-0.25 · 0.50");
+    // Each row answers for itself; revealing one does not reveal the rest.
+    expect(screen.queryByTestId("post-topic-rust-values")).not.toBeInTheDocument();
   });
 });
