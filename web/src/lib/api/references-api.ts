@@ -51,7 +51,10 @@ export async function fetchReferenceCandidates(
   // target is non-null — the picker hands back a chip ready to draft.
   return success(
     fetched.value.referenceCandidates.map((candidate) =>
-      newReferenceDraft(candidate.targetId, targetView(candidate.target)),
+      newReferenceDraft(
+        candidate.targetId,
+        targetView(candidate.target, candidate.targetId),
+      ),
     ),
   );
 }

@@ -19,8 +19,9 @@ describe("queryShape", () => {
     expect(queryShape("@ada")).toBe("handle");
   });
 
-  it("reads a #-sigilled word as a topic", () => {
-    expect(queryShape("#rust")).toBe("topic");
+  it("resolves nothing for a #-sigilled query — a topic is tagged, not referenced", () => {
+    expect(queryShape("#rust")).toBeNull();
+    expect(queryShape("#")).toBeNull();
   });
 
   it("reads a UUID as an id", () => {
@@ -32,16 +33,15 @@ describe("queryShape", () => {
     expect(queryShape("   ")).toBeNull();
   });
 
-  it("resolves nothing for a bare sigil still being typed", () => {
+  it("resolves nothing for a bare @ still being typed", () => {
     expect(queryShape("@")).toBeNull();
-    expect(queryShape("#")).toBeNull();
   });
 });
 
 describe("isQueryable", () => {
   it("gates the lookup on a query that resolves nothing", () => {
     expect(isQueryable("")).toBe(false);
-    expect(isQueryable("#")).toBe(false);
+    expect(isQueryable("#rust")).toBe(false);
     expect(isQueryable("ada")).toBe(true);
   });
 });
@@ -65,75 +65,92 @@ describe("snippet", () => {
 
 describe("targetView", () => {
   it("renders a User as a mention opening the profile", () => {
-    const view = targetView({ __typename: "User", handle: "ada" });
+    const view = targetView({ __typename: "User", handle: "ada" }, "u1");
     expect(view).toEqual({ kind: "User", label: "@ada", href: "/u/ada" });
   });
 
-  it("renders a Hashtag as a topic chip opening the topic route", () => {
-    const view = targetView({ __typename: "Hashtag", name: { value: "rust" } });
-    expect(view).toEqual({ kind: "Hashtag", label: "#rust", href: "/topics/rust" });
-  });
-
   it("prefers a post's title over its body for the chip label", () => {
-    const view = targetView({
-      __typename: "Post",
-      id: "p1",
-      title: { value: "On folding" },
-      content: { value: "the body" },
-      author: { handle: "ada" },
-    });
+    const view = targetView(
+      {
+        __typename: "Post",
+        id: "p1",
+        title: { value: "On folding" },
+        content: { value: "the body" },
+        author: { handle: "ada" },
+      },
+      "p1",
+    );
     expect(view.label).toBe("@ada: On folding");
     expect(view.href).toBe("/posts/p1");
   });
 
   it("falls back to a post's body when it carries no title", () => {
-    const view = targetView({
-      __typename: "Post",
-      id: "p1",
-      title: { value: null },
-      content: { value: "the body" },
-      author: { handle: "ada" },
-    });
+    const view = targetView(
+      {
+        __typename: "Post",
+        id: "p1",
+        title: { value: null },
+        content: { value: "the body" },
+        author: { handle: "ada" },
+      },
+      "p1",
+    );
     expect(view.label).toBe("@ada: the body");
   });
 
   it("opens a referenced comment on the post carrying it", () => {
-    const view = targetView({
-      __typename: "Comment",
-      id: "c1",
-      content: { value: "a reply" },
-      author: { handle: "bob" },
-      target: { __typename: "Post", id: "p1" },
-    });
+    const view = targetView(
+      {
+        __typename: "Comment",
+        id: "c1",
+        content: { value: "a reply" },
+        author: { handle: "bob" },
+        target: { __typename: "Post", id: "p1" },
+      },
+      "c1",
+    );
     expect(view.kind).toBe("Comment");
     expect(view.label).toBe("@bob: a reply");
     expect(view.href).toBe("/posts/p1");
   });
 
   it("walks a nested reply up to the post it reads on", () => {
-    const view = targetView({
-      __typename: "Comment",
-      id: "c2",
-      content: { value: "deep" },
-      author: { handle: "bob" },
-      target: {
+    const view = targetView(
+      {
         __typename: "Comment",
-        target: { __typename: "Post", id: "p9" },
+        id: "c2",
+        content: { value: "deep" },
+        author: { handle: "bob" },
+        target: {
+          __typename: "Comment",
+          target: { __typename: "Post", id: "p9" },
+        },
       },
-    });
+      "c2",
+    );
     expect(view.href).toBe("/posts/p9");
   });
 
   it("navigates nowhere when no post is reachable from the comment", () => {
-    const view = targetView({
-      __typename: "Comment",
-      id: "c1",
-      content: { value: "orphan" },
-      author: null,
-      target: null,
-    });
+    const view = targetView(
+      {
+        __typename: "Comment",
+        id: "c1",
+        content: { value: "orphan" },
+        author: null,
+        target: null,
+      },
+      "c1",
+    );
     expect(view.href).toBeNull();
     expect(view.label).toBe("orphan");
+  });
+
+  it("falls back to the untyped chip for a class this client does not render", () => {
+    // D21 removes Hashtag from the union; anything unrecognised must
+    // degrade to the plain chip rather than fail to render.
+    const view = targetView({ __typename: "Something", id: "x1" }, "x1");
+    expect(view).toEqual({ kind: null, label: "x1", href: null });
   });
 });
 
@@ -153,7 +170,7 @@ describe("targetKindWord", () => {
   });
 
   it("never says cite or citation in a reader-facing word", () => {
-    for (const kind of ["User", "Post", "Comment", "Hashtag", null] as const) {
+    for (const kind of ["User", "Post", "Comment", null] as const) {
       expect(targetKindWord(kind)).not.toMatch(/cit/i);
     }
   });

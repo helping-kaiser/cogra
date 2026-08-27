@@ -1,15 +1,19 @@
 // The client-side reading of a reference target: what class it is, what
 // a chip calls it, and where the chip goes (D16, D20). Every destination
-// already exists — `/u/[handle]`, `/posts/[id]`, `/topics/[name]` — so
-// references add components, never a route (D18).
+// already exists — `/u/[handle]` and `/posts/[id]` — so references add
+// components, never a route (D18).
+//
+// D21: topics are NOT reference targets. Tagging is what a topic is for;
+// referencing is for the other passive node classes. A reference points
+// at a person's profile — that is a MENTION — or at a post or comment.
 //
 // The query shapes here MIRROR the finder's own resolution
-// (`Query.referenceCandidates`): a handle bare or `@`-sigilled, a
-// `#name` for a topic, a UUID for whatever node it addresses. This is a
-// PREVIEW, not a validator — it tells the reader what a query will be
-// read as and gates the lookup on an obviously-empty one. The server's
-// exact-match resolution stays the authority, and an unresolvable query
-// answers with an empty list rather than an error.
+// (`Query.referenceCandidates`): a handle bare or `@`-sigilled, or a
+// UUID for whatever node it addresses. This is a PREVIEW, not a
+// validator — it tells the reader what a query will be read as and gates
+// the lookup on one that resolves nothing. The server's exact-match
+// resolution stays the authority, and an unresolvable query answers with
+// an empty list rather than an error.
 
 import type { ReferenceTargetKind, ReferenceTargetView } from "./draft";
 
@@ -22,23 +26,22 @@ export const SNIPPET_MAX = 48;
 const UUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
 /** What the finder will read a query as; `null` when it resolves nothing. */
-export type QueryShape = "handle" | "topic" | "id" | null;
+export type QueryShape = "handle" | "id" | null;
 
 /**
- * The shape the finder will read a raw query as. Order matters: the
- * sigils are unambiguous, a bare UUID is next, and anything else left
- * over is tried as a handle — which is what the server does too.
+ * The shape the finder will read a raw query as. A `#`-sigilled query
+ * resolves nothing: a topic is tagged, never referenced (D21).
  */
 export function queryShape(raw: string): QueryShape {
   const trimmed = raw.trim();
   if (trimmed === "") return null;
-  if (trimmed.startsWith("#")) return trimmed.length > 1 ? "topic" : null;
+  if (trimmed.startsWith("#")) return null;
   if (trimmed.startsWith("@")) return trimmed.length > 1 ? "handle" : null;
   if (UUID.test(trimmed)) return "id";
   return "handle";
 }
 
-/** Whether a query is worth sending — an empty one resolves nothing. */
+/** Whether a query is worth sending — one that resolves nothing is not. */
 export function isQueryable(raw: string): boolean {
   return queryShape(raw) !== null;
 }
@@ -51,40 +54,30 @@ export function snippet(text: string | null | undefined): string {
 }
 
 /**
- * The `ReferenceTarget` union as this client reads it, structurally —
- * so the projection is testable without the generated types and stays
- * one function for claims and candidates alike.
+ * A `ReferenceTarget` as this client reads it off the wire. Structural
+ * rather than a discriminated union on purpose: this is the projection
+ * boundary from a GraphQL union whose membership is not this client's to
+ * fix, so an unrecognised class falls through to the untyped chip
+ * instead of failing to compile.
  */
-export type ReferenceTargetNode =
-  | {
-      readonly __typename: "User";
-      readonly handle: string;
-      readonly displayName?: { readonly value?: string | null } | null;
-    }
-  | {
-      readonly __typename: "Hashtag";
-      readonly name?: { readonly value?: string | null } | null;
-    }
-  | {
-      readonly __typename: "Post";
-      readonly id: string;
-      readonly title?: { readonly value?: string | null } | null;
-      readonly content?: { readonly value?: string | null } | null;
-      readonly author?: { readonly handle: string } | null;
-    }
-  | {
-      readonly __typename: "Comment";
-      readonly id: string;
-      readonly content?: { readonly value?: string | null } | null;
-      readonly author?: { readonly handle: string } | null;
-      /** Where the comment hangs — walked up to find the post it reads on. */
-      readonly target?: CommentTargetNode | null;
-    };
+export type ReferenceTargetNode = {
+  readonly __typename: string;
+  readonly id?: string;
+  /** `User`. */
+  readonly handle?: string;
+  /** `Post`. */
+  readonly title?: { readonly value?: string | null } | null;
+  /** `Post`, `Comment`. */
+  readonly content?: { readonly value?: string | null } | null;
+  readonly author?: { readonly handle: string } | null;
+  /** `Comment` — where it hangs, walked up to find the post it reads on. */
+  readonly target?: CommentTargetNode;
+};
 
 type CommentTargetNode =
-  | { readonly __typename: "Post"; readonly id: string }
-  | { readonly __typename: "Comment"; readonly target?: CommentTargetNode | null }
-  | null;
+  | { readonly __typename: string; readonly id?: string; readonly target?: CommentTargetNode }
+  | null
+  | undefined;
 
 /**
  * The post a comment reads on. Comment permalinks are a parked item, so
@@ -92,10 +85,10 @@ type CommentTargetNode =
  * up until it finds one. Null when the selection did not reach a post,
  * which renders as a plain non-navigating chip.
  */
-function carryingPost(target: CommentTargetNode | null | undefined): string | null {
+function carryingPost(target: CommentTargetNode): string | null {
   let node = target ?? null;
-  while (node !== null) {
-    if (node.__typename === "Post") return node.id;
+  while (node !== null && node !== undefined) {
+    if (node.__typename === "Post" && node.id !== undefined) return node.id;
     node = node.target ?? null;
   }
   return null;
@@ -107,26 +100,20 @@ function attribution(handle: string | null | undefined): string {
 }
 
 /**
- * A typed target projected down to the chip's shape (D16). A `User` is
- * a MENTION and reads as its handle; a `Hashtag` reads as `#name`; a
- * `Post` or `Comment` reads as its author plus a snippet.
+ * A typed target projected down to the chip's shape (D16). A `User` is a
+ * MENTION and reads as its handle; a `Post` or `Comment` reads as its
+ * author plus a snippet. Anything else — a class this client does not
+ * render — falls back to the untyped chip.
  */
-export function targetView(node: ReferenceTargetNode): ReferenceTargetView {
+export function targetView(
+  node: ReferenceTargetNode,
+  targetId: string,
+): ReferenceTargetView {
   switch (node.__typename) {
     case "User": {
-      return {
-        kind: "User",
-        label: `@${node.handle}`,
-        href: `/u/${node.handle}`,
-      };
-    }
-    case "Hashtag": {
-      const name = node.name?.value ?? "";
-      return {
-        kind: "Hashtag",
-        label: `#${name}`,
-        href: name === "" ? null : `/topics/${name}`,
-      };
+      const handle = node.handle;
+      if (handle === undefined) break;
+      return { kind: "User", label: `@${handle}`, href: `/u/${handle}` };
     }
     case "Post": {
       const title = node.title?.value?.trim();
@@ -134,7 +121,7 @@ export function targetView(node: ReferenceTargetNode): ReferenceTargetView {
       return {
         kind: "Post",
         label: `${attribution(node.author?.handle)}${text}`,
-        href: `/posts/${node.id}`,
+        href: node.id === undefined ? null : `/posts/${node.id}`,
       };
     }
     case "Comment": {
@@ -146,11 +133,12 @@ export function targetView(node: ReferenceTargetNode): ReferenceTargetView {
       };
     }
   }
+  return untypedTargetView(targetId);
 }
 
 /**
  * The fallback view for a claim CoGra carries no display row for: the
- * citation stands as a substrate fact whether or not this instance can
+ * reference stands as a substrate fact whether or not this instance can
  * type its far end (`ReferenceClaim.target` is nullable), so the chip
  * renders off the raw identifier and navigates nowhere.
  */
@@ -163,8 +151,6 @@ export function targetKindWord(kind: ReferenceTargetKind | null): string {
   switch (kind) {
     case "User":
       return "mention";
-    case "Hashtag":
-      return "topic reference";
     case "Post":
       return "post reference";
     case "Comment":

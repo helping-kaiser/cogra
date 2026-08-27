@@ -85,12 +85,6 @@ query HashtagDetail($name: String!, $includePending: Boolean! = true) {
                   value
                 }
               }
-              ... on Hashtag {
-                id
-                name {
-                  value
-                }
-              }
               ... on Post {
                 id
                 title {
