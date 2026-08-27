@@ -10,7 +10,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -447,6 +449,16 @@ class ContentScreensTest {
         onSubmitCommentEdit: () -> Unit = {},
         onStartReply: (String) -> Unit = {},
         onSubmitReply: () -> Unit = {},
+        onToggleTagValues: (String) -> Unit = {},
+        onTagInputChange: (TagTarget, String) -> Unit = { _, _ -> },
+        onAddTag: (TagTarget) -> Unit = {},
+        onRemoveTag: (TagTarget, String) -> Unit = { _, _ -> },
+        onTuneTag: (TagTarget, String) -> Unit = { _, _ -> },
+        onDoneTuningTag: (TagTarget) -> Unit = {},
+        onTagRelevanceChange: (TagTarget, String, Double) -> Unit = { _, _, _ -> },
+        onTagConfidenceChange: (TagTarget, String, Double) -> Unit = { _, _, _ -> },
+        onConfirmSubmit: (Boolean) -> Unit = {},
+        onDismissConfirm: () -> Unit = {},
         onStance: (String, String) -> Unit = { _, _ -> },
     ) {
         compose.setContent {
@@ -470,6 +482,16 @@ class ContentScreensTest {
                 onReplyDraftChange = {},
                 onCancelReply = {},
                 onSubmitReply = onSubmitReply,
+                onToggleTagValues = onToggleTagValues,
+                onTagInputChange = onTagInputChange,
+                onAddTag = onAddTag,
+                onRemoveTag = onRemoveTag,
+                onTuneTag = onTuneTag,
+                onDoneTuningTag = onDoneTuningTag,
+                onTagRelevanceChange = onTagRelevanceChange,
+                onTagConfidenceChange = onTagConfidenceChange,
+                onConfirmSubmit = onConfirmSubmit,
+                onDismissConfirm = onDismissConfirm,
                 onEdit = onEdit,
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
@@ -873,12 +895,311 @@ class ContentScreensTest {
         compose.onNodeWithTag("feed_post_p1_topic_rust").assertExists()
     }
 
+    // -- Topic value reveal (F8): the detail view only, on demand --
+
+    /** A card is for reading; the reveal belongs where the reader chose the content. */
+    @Test
+    fun aFeedCardOffersNoValueReveal() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(testPost("p1").copy(topics = listOf(testTopicClaim("rust")))),
+            ),
+        )
+        compose.onNodeWithTag("feed_post_p1_topics_reveal").assertDoesNotExist()
+    }
+
+    @Test
+    fun theDetailViewOffersTheRevealOnThePostAndOnEveryComment() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(topics = listOf(testTopicClaim("rust"))),
+                comments = listOf(comment("c1").copy(topics = listOf(testTopicClaim("kotlin")))),
+            ),
+        )
+        compose.onNodeWithTag("detail_post_topics_reveal").assertExists()
+        compose.onNodeWithTag("comment_c1_topics_reveal").assertExists()
+    }
+
+    /** Default is the plain name chip — nobody sees the numbers unasked. */
+    @Test
+    fun anUnrevealedChipShowsOnlyItsName() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    topics = listOf(testTopicClaim("rust", relevance = 0.4, confidence = 0.9)),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("detail_post_topic_rust").assertTextEquals("#rust")
+    }
+
+    @Test
+    fun revealingTheRowShowsEachClaimCompactlyAndSigned() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    topics = listOf(testTopicClaim("rust", relevance = 0.4, confidence = 0.9)),
+                ),
+                revealedTagRows = setOf("p1"),
+            ),
+        )
+        compose.onNodeWithTag("detail_post_topic_rust").assertTextContains("+0.40 · 0.90")
+    }
+
+    /** Bipolar relevance keeps its sign; a withdrawal-ward claim reads negative. */
+    @Test
+    fun aNegativeRelevanceRevealsWithItsSign() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    topics = listOf(testTopicClaim("rust", relevance = -0.5, confidence = 1.0)),
+                ),
+                revealedTagRows = setOf("p1"),
+            ),
+        )
+        compose.onNodeWithTag("detail_post_topic_rust").assertTextContains("-0.50 · 1.00")
+    }
+
+    /**
+     * The compact form is an abbreviation, so the revealed chip names
+     * both parameters for assistive tech rather than leaving TalkBack to
+     * read "+0.40 · 0.90" after a name.
+     */
+    @Test
+    fun aRevealedChipNamesBothParametersForScreenReaders() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    topics = listOf(testTopicClaim("rust", relevance = 0.4, confidence = 0.9)),
+                ),
+                revealedTagRows = setOf("p1"),
+            ),
+        )
+        compose.onNodeWithTag("detail_post_topic_rust")
+            .assertContentDescriptionEquals("#rust, relevance +0.40, confidence 0.90")
+    }
+
+    /** The chip stays the way to the topic screen, revealed or not (F8). */
+    @Test
+    fun aRevealedChipStillNavigatesToItsTopic() {
+        var opened: String? = null
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(topics = listOf(testTopicClaim("rust"))),
+                revealedTagRows = setOf("p1"),
+            ),
+            onOpenTopic = { opened = it },
+        )
+        compose.onNodeWithTag("detail_post_topic_rust").performClick()
+        assertThat(opened).isEqualTo("rust")
+    }
+
+    @Test
+    fun tappingTheRevealReportsTheRowItBelongsTo() {
+        val toggled = mutableListOf<String>()
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(topics = listOf(testTopicClaim("rust"))),
+                comments = listOf(comment("c1").copy(topics = listOf(testTopicClaim("kotlin")))),
+            ),
+            onToggleTagValues = { toggled += it },
+        )
+        compose.onNodeWithTag("detail_post_topics_reveal").performClick()
+        compose.onNodeWithTag("comment_c1_topics_reveal").performClick()
+        assertThat(toggled).containsExactly("p1", "c1").inOrder()
+    }
+
+    /** One row's answer says nothing about the next row's. */
+    @Test
+    fun revealingOneRowLeavesTheOtherRowsPlain() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    topics = listOf(testTopicClaim("rust", relevance = 0.4, confidence = 0.9)),
+                ),
+                comments = listOf(
+                    comment("c1").copy(
+                        topics = listOf(testTopicClaim("kotlin", relevance = 0.4, confidence = 0.9)),
+                    ),
+                ),
+                revealedTagRows = setOf("p1"),
+            ),
+        )
+        compose.onNodeWithTag("detail_post_topic_rust").assertTextContains("+0.40 · 0.90")
+        compose.onNodeWithTag("comment_c1_topic_kotlin").assertTextEquals("#kotlin")
+    }
+
+    // -- Comment compose gains tags (F9) and the editor gains them (F10) --
+
+    @Test
+    fun theCommentBoxCarriesATagEntry() {
+        renderDetail(PostDetailUiState(loading = false, post = testPost("p1")))
+        compose.onNodeWithTag("detail_comment_tag_input").assertExists()
+        compose.onNodeWithTag("detail_comment_tag_add").assertExists()
+    }
+
+    @Test
+    fun anAnonymousReaderGetsNoTagEntry() {
+        renderDetail(
+            PostDetailUiState(loading = false, post = testPost("p1")),
+            signedIn = false,
+        )
+        compose.onNodeWithTag("detail_comment_tag_input").assertDoesNotExist()
+    }
+
+    @Test
+    fun typingIntoTheCommentTagFieldNamesItsSection() {
+        val typed = mutableListOf<Pair<TagTarget, String>>()
+        renderDetail(
+            PostDetailUiState(loading = false, post = testPost("p1")),
+            onTagInputChange = { target, text -> typed += target to text },
+        )
+        compose.onNodeWithTag("detail_comment_tag_input").performTextInput("Rust")
+        assertThat(typed).containsExactly(TagTarget.COMMENT to "Rust")
+    }
+
+    @Test
+    fun theCommentBoxRendersItsStagedChips() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                commentTags = TagSectionState(tags = tagRows("rust")),
+            ),
+        )
+        compose.onNodeWithTag("detail_comment_tag_rust").assertExists()
+    }
+
+    /** The indicator counts the minting write and each declared topic (F4). */
+    @Test
+    fun theCommentSubmitSaysWhatItWillSign() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                commentTags = TagSectionState(tags = tagRows("rust", "kotlin")),
+            ),
+        )
+        compose.onNodeWithTag("detail_comment_signed_actions")
+            .assertTextContains("3", substring = true)
+    }
+
+    @Test
+    fun theReplyBoxCarriesItsOwnTagEntry() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(comment("c1")),
+                replyingToId = "c1",
+            ),
+        )
+        compose.onNodeWithTag("comment_reply_tag_input").assertExists()
+        compose.onNodeWithTag("comment_reply_signed_actions").assertExists()
+    }
+
+    @Test
+    fun theInlineEditorCarriesTheCommentsTags() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(comment("c1")),
+                editingCommentId = "c1",
+                editDraft = "text",
+                editLoadedText = "text",
+                editTags = TagSectionState(tags = tagRows("rust"), loaded = tagRows("rust")),
+            ),
+            viewerId = "author-1",
+        )
+        compose.onNodeWithTag("comment_edit_tag_rust").assertExists()
+        compose.onNodeWithTag("comment_edit_tag_input").assertExists()
+    }
+
+    /** An edit that changed nothing has nothing to sign (F10). */
+    @Test
+    fun anUnchangedEditCannotBeSubmitted() {
+        val loaded = tagRows("rust")
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(comment("c1")),
+                editingCommentId = "c1",
+                editDraft = "text",
+                editLoadedText = "text",
+                editTags = TagSectionState(tags = loaded, loaded = loaded),
+            ),
+            viewerId = "author-1",
+        )
+        compose.onNodeWithTag("comment_edit_signed_actions").assertTextContains("0", substring = true)
+        compose.onNodeWithTag("comment_edit_save").assertIsNotEnabled()
+    }
+
+    @Test
+    fun aTagOnlyEditIsSubmittable() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(comment("c1")),
+                editingCommentId = "c1",
+                editDraft = "text",
+                editLoadedText = "text",
+                editTags = TagSectionState(tags = tagRows("rust"), loaded = emptyList()),
+            ),
+            viewerId = "author-1",
+        )
+        compose.onNodeWithTag("comment_edit_signed_actions").assertTextContains("1", substring = true)
+        compose.onNodeWithTag("comment_edit_save").assertIsEnabled()
+    }
+
+    @Test
+    fun aMultiActionCommentSubmitAsksFirst() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                commentTags = TagSectionState(tags = tagRows("rust")),
+                confirmPending = TagTarget.COMMENT,
+            ),
+        )
+        compose.onNodeWithTag("detail_confirm").assertExists()
+        compose.onNodeWithTag("detail_confirm_body").assertTextContains("2", substring = true)
+    }
+
+    @Test
+    fun confirmingTheBatchReportsTheDontAskChoice() {
+        var confirmed: Boolean? = null
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                commentTags = TagSectionState(tags = tagRows("rust")),
+                confirmPending = TagTarget.COMMENT,
+            ),
+            onConfirmSubmit = { confirmed = it },
+        )
+        compose.onNodeWithTag("detail_confirm_dont_ask").performClick()
+        compose.onNodeWithTag("detail_confirm_proceed").performClick()
+        assertThat(confirmed).isTrue()
+    }
+
     @Test
     fun theComposerPreviewsTheNormalizedName() {
         // Stateless by design (android/CLAUDE.md "Stateless screens"): the
         // preview reads straight off state.tagInput, so a state carrying
         // the raw text is enough to assert the normalization it renders.
-        renderComposer(ComposePostUiState(tagInput = "#Rust"))
+        renderComposer(ComposePostUiState(tagSection = TagSectionState(input = "#Rust")))
         compose.onNodeWithTag("compose_tag_preview").assertTextContains("rust", substring = true)
     }
 
@@ -892,14 +1213,14 @@ class ContentScreensTest {
 
     @Test
     fun stagedTagsRenderAsRemovableChips() {
-        renderComposer(ComposePostUiState(tags = tagRows("rust", "kotlin")))
+        renderComposer(ComposePostUiState(tagSection = TagSectionState(tags = tagRows("rust", "kotlin"))))
         compose.onNodeWithTag("compose_tag_rust").assertExists()
         compose.onNodeWithTag("compose_tag_kotlin").assertExists()
     }
 
     @Test
     fun aStagedChipOffersARemoveAffordance() {
-        renderComposer(ComposePostUiState(tags = tagRows("rust")))
+        renderComposer(ComposePostUiState(tagSection = TagSectionState(tags = tagRows("rust"))))
         compose.onNodeWithTag("compose_tag_rust_remove")
             .assertExists()
             .assert(hasClickAction())
@@ -907,7 +1228,11 @@ class ContentScreensTest {
 
     @Test
     fun reachingTheCapHidesTheEntryFieldAndShowsTheLimit() {
-        renderComposer(ComposePostUiState(tags = tagRows(*(1..10).map { "tag$it" }.toTypedArray())))
+        renderComposer(
+            ComposePostUiState(
+                tagSection = TagSectionState(tags = tagRows(*(1..10).map { "tag$it" }.toTypedArray())),
+            ),
+        )
         compose.onNodeWithTag("compose_tag_input").assertDoesNotExist()
         compose.onNodeWithTag("compose_tags_cap").assertExists()
     }
@@ -915,7 +1240,7 @@ class ContentScreensTest {
     /** F3: tag editing moved ONTO the edit screen — it is no longer hidden there. */
     @Test
     fun theEditScreenCarriesTheTagsSection() {
-        renderComposer(ComposePostUiState(editingId = "p1", tags = tagRows("rust")))
+        renderComposer(ComposePostUiState(editingId = "p1", tagSection = TagSectionState(tags = tagRows("rust"))))
         compose.onNodeWithTag("compose_tags").assertExists()
         compose.onNodeWithTag("compose_tag_rust").assertExists()
         compose.onNodeWithTag("compose_tag_input").assertExists()
@@ -924,7 +1249,7 @@ class ContentScreensTest {
     /** F1: the Add action refuses a name L1's atom rule cannot carry. */
     @Test
     fun anIllegalNameDisablesAddAndSaysWhy() {
-        renderComposer(ComposePostUiState(tagInput = "two words"))
+        renderComposer(ComposePostUiState(tagSection = TagSectionState(input = "two words")))
         compose.onNodeWithTag("compose_tag_add").assertIsNotEnabled()
         compose.onNodeWithTag("compose_tag_illegal").assertExists()
         compose.onNodeWithTag("compose_tag_preview").assertDoesNotExist()
@@ -932,14 +1257,14 @@ class ContentScreensTest {
 
     @Test
     fun aNonAsciiNameIsRefusedAtInputTime() {
-        renderComposer(ComposePostUiState(tagInput = "café"))
+        renderComposer(ComposePostUiState(tagSection = TagSectionState(input = "café")))
         compose.onNodeWithTag("compose_tag_add").assertIsNotEnabled()
         compose.onNodeWithTag("compose_tag_illegal").assertExists()
     }
 
     @Test
     fun aLegalNameEnablesAdd() {
-        renderComposer(ComposePostUiState(tagInput = "#Rust"))
+        renderComposer(ComposePostUiState(tagSection = TagSectionState(input = "#Rust")))
         compose.onNodeWithTag("compose_tag_add").assertIsEnabled()
         compose.onNodeWithTag("compose_tag_illegal").assertDoesNotExist()
     }
@@ -949,9 +1274,11 @@ class ContentScreensTest {
     fun aFieldRefusalLandsOnItsChip() {
         renderComposer(
             ComposePostUiState(
-                tags = listOf(
-                    TagRow("rust"),
-                    TagRow("kotlin", error = "`kotlin` is not a legal topic name: nope"),
+                tagSection = TagSectionState(
+                    tags = listOf(
+                        TagRow("rust"),
+                        TagRow("kotlin", error = "`kotlin` is not a legal topic name: nope"),
+                    ),
                 ),
             ),
         )
@@ -966,7 +1293,7 @@ class ContentScreensTest {
     @Test
     fun tappingAChipReportsItForTuning() {
         var tuned: String? = null
-        renderComposer(ComposePostUiState(tags = tagRows("rust")), onTuneTag = { tuned = it })
+        renderComposer(ComposePostUiState(tagSection = TagSectionState(tags = tagRows("rust"))), onTuneTag = { tuned = it })
         compose.onNodeWithTag("compose_tag_rust_open").performScrollTo().performClick()
         assertThat(tuned).isEqualTo("rust")
     }
@@ -974,7 +1301,7 @@ class ContentScreensTest {
     @Test
     fun theTunedChipShowsBothSliders() {
         renderComposer(
-            ComposePostUiState(tags = tagRows("rust"), tagBeingTuned = "rust"),
+            ComposePostUiState(tagSection = TagSectionState(tags = tagRows("rust"), tuning = "rust")),
         )
         compose.onNodeWithTag("compose_tag_params").assertExists()
         compose.onNodeWithTag("compose_tag_params_relevance").assertExists()
@@ -985,7 +1312,7 @@ class ContentScreensTest {
 
     @Test
     fun theIndicatorCountsTheMintingRecordAndEachTag() {
-        renderComposer(ComposePostUiState(tags = tagRows("rust", "kotlin")))
+        renderComposer(ComposePostUiState(tagSection = TagSectionState(tags = tagRows("rust", "kotlin"))))
         compose.onNodeWithTag("compose_signed_actions").assertTextContains("3", substring = true)
     }
 
@@ -1006,7 +1333,7 @@ class ContentScreensTest {
     fun theConfirmNamesTheCountAndProceedCarriesTheCheckbox() {
         var confirmed: Boolean? = null
         renderComposer(
-            ComposePostUiState(tags = tagRows("rust"), confirmPending = true),
+            ComposePostUiState(tagSection = TagSectionState(tags = tagRows("rust")), confirmPending = true),
             onConfirmSubmit = { confirmed = it },
         )
         compose.onNodeWithTag("compose_confirm").assertExists()
@@ -1020,7 +1347,7 @@ class ContentScreensTest {
     fun theConfirmProceedsWithoutTheCheckboxByDefault() {
         var confirmed: Boolean? = null
         renderComposer(
-            ComposePostUiState(tags = tagRows("rust"), confirmPending = true),
+            ComposePostUiState(tagSection = TagSectionState(tags = tagRows("rust")), confirmPending = true),
             onConfirmSubmit = { confirmed = it },
         )
         compose.onNodeWithTag("compose_confirm_proceed").performClick()
@@ -1032,7 +1359,7 @@ class ContentScreensTest {
         var dismissed = false
         var confirmed = false
         renderComposer(
-            ComposePostUiState(tags = tagRows("rust"), confirmPending = true),
+            ComposePostUiState(tagSection = TagSectionState(tags = tagRows("rust")), confirmPending = true),
             onConfirmSubmit = { confirmed = true },
             onDismissConfirm = { dismissed = true },
         )
