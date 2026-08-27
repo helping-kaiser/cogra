@@ -34,6 +34,10 @@ import com.cogra.domain.PostView
 import com.cogra.domain.ProfileView
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ReferenceCandidateView
+import com.cogra.domain.ReferenceClaimView
+import com.cogra.domain.ReferenceContentKind
+import com.cogra.domain.ReferenceTargetView
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.TaggedContentKind
 import com.cogra.domain.TaggedContentView
@@ -42,10 +46,13 @@ import com.cogra.domain.UserError
 import com.cogra.domain.WriteState
 import com.cogra.domain.flatMap
 import com.cogra.network.graphql.HashtagQuery
+import com.cogra.network.graphql.ReferenceCandidatesQuery
 import com.cogra.network.graphql.fragment.ApplicationFields
 import com.cogra.network.graphql.fragment.CommentFields
 import com.cogra.network.graphql.fragment.HashtagFields
 import com.cogra.network.graphql.fragment.PostFields
+import com.cogra.network.graphql.fragment.ReferenceClaimFields
+import com.cogra.network.graphql.fragment.ReferenceTargetFields
 import com.cogra.network.graphql.fragment.ProfileFields
 import com.cogra.network.graphql.fragment.PreparedWriteFields
 import com.cogra.network.graphql.fragment.StagedWriteFields
@@ -232,6 +239,61 @@ internal fun HashtagQuery.TaggedContent.toDomain(): TaggedContentView? {
     }
 }
 
+/**
+ * The typed far end of a citation, or null for a node class this
+ * build does not render — which is also what a target the display
+ * store cannot type arrives as, so both collapse to the same plain
+ * chip (D16).
+ */
+internal fun ReferenceTargetFields.toDomain(): ReferenceTargetView? {
+    val post = onPost
+    val comment = onComment
+    val user = onUser
+    return when {
+        post != null -> ReferenceTargetView.Content(
+            kind = ReferenceContentKind.POST,
+            id = post.id,
+            title = post.title.value,
+            snippet = post.content.value,
+            authorHandle = post.author?.handle,
+            authorDisplayName = post.author?.displayName?.value,
+        )
+        comment != null -> ReferenceTargetView.Content(
+            kind = ReferenceContentKind.COMMENT,
+            id = comment.id,
+            title = null,
+            snippet = comment.content.value,
+            authorHandle = comment.author?.handle,
+            authorDisplayName = comment.author?.displayName?.value,
+            // The post that carries it, walked up: directly, or through
+            // one further comment for a reply to a reply.
+            containingPostId = comment.target?.onPost?.id
+                ?: comment.target?.onComment?.target?.onPost?.id,
+        )
+        user != null -> ReferenceTargetView.Profile(
+            id = user.id,
+            handle = user.handle,
+            displayName = user.displayName.value,
+        )
+        else -> null
+    }
+}
+
+internal fun ReferenceClaimFields.toDomain(): ReferenceClaimView = ReferenceClaimView(
+    target = target?.referenceTargetFields?.toDomain(),
+    targetId = targetId,
+    relevance = relevance,
+    support = support,
+    pending = pending,
+)
+
+/**
+ * Null for a candidate whose class this build cannot render — the
+ * finder never offers it rather than showing a chip with no far end.
+ */
+internal fun ReferenceCandidatesQuery.ReferenceCandidate.toDomain(): ReferenceCandidateView? =
+    target.referenceTargetFields.toDomain()?.let { ReferenceCandidateView(it, targetId) }
+
 /** An unknown state is never presented as pending. */
 internal fun com.cogra.network.graphql.type.LandingState.toDomain(): LandingState =
     runCatching { LandingState.valueOf(rawValue) }.getOrDefault(LandingState.UNKNOWN)
@@ -250,6 +312,7 @@ internal fun PostFields.toDomain(): PostView = PostView(
     landing = landing.toDomain(),
     license = LicenseChoice(license.attribution, license.provenance),
     topics = topics.map { it.toDomain() },
+    references = references.map { it.referenceClaimFields.toDomain() },
 )
 
 internal fun CommentFields.toDomain(): CommentView = CommentView(
@@ -261,6 +324,7 @@ internal fun CommentFields.toDomain(): CommentView = CommentView(
     landing = landing.toDomain(),
     license = LicenseChoice(license.attribution, license.provenance),
     topics = topics.map { it.toDomain() },
+    references = references.map { it.referenceClaimFields.toDomain() },
 )
 
 internal fun LicenseChoice.toInput(): LicenseInput = LicenseInput(

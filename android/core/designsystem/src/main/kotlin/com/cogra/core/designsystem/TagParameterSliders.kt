@@ -9,15 +9,9 @@ package com.cogra.core.designsystem
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -37,7 +31,7 @@ fun TagParameterSliders(
             testTag = "${testTagPrefix}_relevance",
             valueRange = -1f..1f,
         ) {
-            RelevanceScale(testTagPrefix)
+            BipolarScale("${testTagPrefix}_relevance_scale")
         }
         LabeledSlider(
             label = stringResource(R.string.tag_confidence),
@@ -49,32 +43,3 @@ fun TagParameterSliders(
     }
 }
 
-private val RELEVANCE_SCALE = listOf(
-    R.string.tag_relevance_min,
-    R.string.tag_relevance_zero,
-    R.string.tag_relevance_max,
-)
-
-/**
- * Relevance is bipolar, so its centre is the meaningful mark: zero is
- * withdrawal, not "a little". The endpoints and that centre ride as
- * plain text under the track — the slider itself already announces its
- * value, so the scale stays out of the semantics tree.
- */
-@Composable
-private fun RelevanceScale(testTagPrefix: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clearAndSetSemantics { testTag = "${testTagPrefix}_relevance_scale" },
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        for (mark in RELEVANCE_SCALE) {
-            Text(
-                stringResource(mark),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}

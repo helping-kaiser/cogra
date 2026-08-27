@@ -35,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -61,6 +62,10 @@ fun PostDetailRoute(
     onEdit: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
+    /** A referenced post opens on its own detail. */
+    onOpenPost: (String) -> Unit,
+    /** The Reference affordance (D20): compose a post citing this node. */
+    onReference: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
     onBack: () -> Unit,
     refreshSignal: Boolean = false,
@@ -100,11 +105,23 @@ fun PostDetailRoute(
         onDoneTuningTag = viewModel::onDoneTuningTag,
         onTagRelevanceChange = viewModel::onTagRelevanceChange,
         onTagConfidenceChange = viewModel::onTagConfidenceChange,
+        onToggleReferenceValues = viewModel::onToggleReferenceValues,
+        onOpenFinder = viewModel::onOpenFinder,
+        onCloseFinder = viewModel::onCloseFinder,
+        onFinderQueryChange = viewModel::onFinderQueryChange,
+        onPickReference = viewModel::onPickReference,
+        onRemoveReference = viewModel::onRemoveReference,
+        onTuneReference = viewModel::onTuneReference,
+        onDoneTuningReference = viewModel::onDoneTuningReference,
+        onReferenceRelevanceChange = viewModel::onReferenceRelevanceChange,
+        onReferenceSupportChange = viewModel::onReferenceSupportChange,
         onConfirmSubmit = viewModel::onConfirmSubmit,
         onDismissConfirm = viewModel::onDismissConfirm,
         onEdit = onEdit,
         onOpenActor = onOpenActor,
         onOpenTopic = onOpenTopic,
+        onOpenPost = onOpenPost,
+        onReference = onReference,
         onSignInOrJoin = onSignInOrJoin,
         onBack = onBack,
         stanceControl = { target, tag -> StanceControlRoute(target = target, testTagPrefix = tag) },
@@ -143,11 +160,25 @@ fun PostDetailScreen(
     onDoneTuningTag: (TagTarget) -> Unit,
     onTagRelevanceChange: (TagTarget, String, Double) -> Unit,
     onTagConfidenceChange: (TagTarget, String, Double) -> Unit,
+    /** A reference row asking to show its parameters, by owner id (D16). */
+    onToggleReferenceValues: (String) -> Unit,
+    // The reference twin of the tag callbacks above (D10, D20).
+    onOpenFinder: (TagTarget) -> Unit,
+    onCloseFinder: (TagTarget) -> Unit,
+    onFinderQueryChange: (TagTarget, String) -> Unit,
+    onPickReference: (TagTarget, ReferenceCandidateRow) -> Unit,
+    onRemoveReference: (TagTarget, String) -> Unit,
+    onTuneReference: (TagTarget, String) -> Unit,
+    onDoneTuningReference: (TagTarget) -> Unit,
+    onReferenceRelevanceChange: (TagTarget, String, Double) -> Unit,
+    onReferenceSupportChange: (TagTarget, String, Double) -> Unit,
     onConfirmSubmit: (Boolean) -> Unit,
     onDismissConfirm: () -> Unit,
     onEdit: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
+    onOpenPost: (String) -> Unit,
+    onReference: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
     onBack: () -> Unit,
     /** The stance control the post and every comment carry (design.md §6). */
@@ -178,6 +209,29 @@ fun PostDetailScreen(
             onDoneTuning = onDoneTuningTag,
             onRelevanceChange = onTagRelevanceChange,
             onConfidenceChange = onTagConfidenceChange,
+        )
+    }
+    val references = remember(
+        onOpenFinder,
+        onCloseFinder,
+        onFinderQueryChange,
+        onPickReference,
+        onRemoveReference,
+        onTuneReference,
+        onDoneTuningReference,
+        onReferenceRelevanceChange,
+        onReferenceSupportChange,
+    ) {
+        ReferenceCallbacks(
+            onOpenFinder = onOpenFinder,
+            onCloseFinder = onCloseFinder,
+            onQueryChange = onFinderQueryChange,
+            onPick = onPickReference,
+            onRemove = onRemoveReference,
+            onTune = onTuneReference,
+            onDoneTuning = onDoneTuningReference,
+            onRelevanceChange = onReferenceRelevanceChange,
+            onSupportChange = onReferenceSupportChange,
         )
     }
     val collapsingTop = rememberCollapsingTop()
@@ -296,9 +350,13 @@ fun PostDetailScreen(
                             onCancelReply = onCancelReply,
                             onSubmitReply = onSubmitReply,
                             onToggleTagValues = onToggleTagValues,
+                            onToggleReferenceValues = onToggleReferenceValues,
                             tags = tags,
+                            references = references,
                             onOpenActor = onOpenActor,
                             onOpenTopic = onOpenTopic,
+                            onOpenPost = onOpenPost,
+                            onReference = onReference,
                             onSignInOrJoin = onSignInOrJoin,
                             stanceControl = stanceControl,
                         )
@@ -339,9 +397,13 @@ private fun PostWithThread(
     onCancelReply: () -> Unit,
     onSubmitReply: () -> Unit,
     onToggleTagValues: (String) -> Unit,
+    onToggleReferenceValues: (String) -> Unit,
     tags: TagCallbacks,
+    references: ReferenceCallbacks,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
+    onOpenPost: (String) -> Unit,
+    onReference: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
 ) {
@@ -388,9 +450,32 @@ private fun PostWithThread(
                     valuesRevealed = post.id in state.revealedTagRows,
                     onToggleValues = { onToggleTagValues(post.id) },
                 )
+                ReferenceChipRow(
+                    references = post.references,
+                    onOpenActor = onOpenActor,
+                    onOpenPost = onOpenPost,
+                    testTagPrefix = "detail_post",
+                    valuesRevealed = post.id in state.revealedReferenceRows,
+                    onToggleValues = { onToggleReferenceValues(post.id) },
+                )
                 // The stance control rides the post itself here, the way
-                // it rides the card in the feed (design.md §6).
-                stanceControl(post.id, "detail_post")
+                // it rides the card in the feed (design.md §6), and the
+                // Reference affordance sits beside it exactly as it does
+                // on a comment: every content node can be referenced, so
+                // the affordance lives on the node and opens the
+                // composer with the chip already staged (D20).
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    stanceControl(post.id, "detail_post")
+                    TextButton(
+                        onClick = { onReference(post.id) },
+                        modifier = Modifier.testTag("detail_post_reference_action"),
+                    ) {
+                        Text(stringResource(R.string.content_reference_action))
+                    }
+                }
                 HorizontalDivider()
                 Text(
                     stringResource(R.string.content_comments_heading),
@@ -423,9 +508,13 @@ private fun PostWithThread(
                 onCancelReply = onCancelReply,
                 onSubmitReply = onSubmitReply,
                 onToggleTagValues = onToggleTagValues,
+                onToggleReferenceValues = onToggleReferenceValues,
                 tags = tags,
+                references = references,
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
+                onOpenPost = onOpenPost,
+                onReference = onReference,
                 stanceControl = stanceControl,
             )
         }
@@ -482,6 +571,12 @@ private fun PostWithThread(
                     section = state.commentTags,
                     target = TagTarget.COMMENT,
                     tags = tags,
+                    testTagPrefix = "detail_comment",
+                )
+                CommentReferenceSection(
+                    section = state.commentReferences,
+                    target = TagTarget.COMMENT,
+                    references = references,
                     testTagPrefix = "detail_comment",
                 )
                 LicenseControls(license = state.license, onLicenseChange = onLicenseChange)
@@ -542,6 +637,50 @@ internal class TagCallbacks(
     val onConfidenceChange: (TagTarget, String, Double) -> Unit,
 )
 
+/** The reference twin of [TagCallbacks], bundled for the same reason. */
+internal class ReferenceCallbacks(
+    val onOpenFinder: (TagTarget) -> Unit,
+    val onCloseFinder: (TagTarget) -> Unit,
+    val onQueryChange: (TagTarget, String) -> Unit,
+    val onPick: (TagTarget, ReferenceCandidateRow) -> Unit,
+    val onRemove: (TagTarget, String) -> Unit,
+    val onTune: (TagTarget, String) -> Unit,
+    val onDoneTuning: (TagTarget) -> Unit,
+    val onRelevanceChange: (TagTarget, String, Double) -> Unit,
+    val onSupportChange: (TagTarget, String, Double) -> Unit,
+)
+
+/**
+ * The composer's reference section, compact, inside a comment surface:
+ * the same chips, finder, and per-chip sliders the post composer
+ * carries — no heading, because the box it sits in already says what
+ * it is.
+ */
+@Composable
+private fun CommentReferenceSection(
+    section: ReferenceSectionState,
+    target: TagTarget,
+    references: ReferenceCallbacks,
+    testTagPrefix: String,
+) {
+    ReferenceEntry(
+        section = section,
+        testTagPrefix = testTagPrefix,
+        showHeading = false,
+        onOpenFinder = { references.onOpenFinder(target) },
+        onCloseFinder = { references.onCloseFinder(target) },
+        onFinderQueryChange = { references.onQueryChange(target, it) },
+        onPickReference = { references.onPick(target, it) },
+        onRemoveReference = { references.onRemove(target, it) },
+        onTuneReference = { references.onTune(target, it) },
+        onDoneTuningReference = { references.onDoneTuning(target) },
+        onReferenceRelevanceChange = { id, value ->
+            references.onRelevanceChange(target, id, value)
+        },
+        onReferenceSupportChange = { id, value -> references.onSupportChange(target, id, value) },
+    )
+}
+
 /**
  * The composer's tag section, compact, inside a comment surface: the
  * same gated entry, chips, and per-chip sliders the post composer got in
@@ -595,9 +734,13 @@ private fun CommentThread(
     onCancelReply: () -> Unit,
     onSubmitReply: () -> Unit,
     onToggleTagValues: (String) -> Unit,
+    onToggleReferenceValues: (String) -> Unit,
     tags: TagCallbacks,
+    references: ReferenceCallbacks,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
+    onOpenPost: (String) -> Unit,
+    onReference: (String) -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
 ) {
     val indent = (minOf(depth, MAX_INDENT_DEPTH) * 12).dp
@@ -643,6 +786,28 @@ private fun CommentThread(
                         tags = tags,
                         testTagPrefix = "comment_edit",
                     )
+                    // The editor carries the comment's citations too;
+                    // dropping one stages its withdrawal, whose cost
+                    // the server quotes before anything signs (D11).
+                    CommentReferenceSection(
+                        section = state.editReferences,
+                        target = TagTarget.EDIT,
+                        references = references,
+                        testTagPrefix = "comment_edit",
+                    )
+                    val withdrawalCost = state.editWithdrawalCost
+                    if (withdrawalCost != null && withdrawalCost > 0) {
+                        Text(
+                            text = pluralStringResource(
+                                R.plurals.content_references_withdrawal_cost,
+                                withdrawalCost,
+                                withdrawalCost,
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.testTag("comment_edit_withdrawal_cost"),
+                        )
+                    }
                     if (state.editRefused) {
                         ErrorLine(R.string.content_error_refused, "comment_edit_refused")
                     }
@@ -707,6 +872,14 @@ private fun CommentThread(
                         valuesRevealed = comment.id in state.revealedTagRows,
                         onToggleValues = { onToggleTagValues(comment.id) },
                     )
+                    ReferenceChipRow(
+                        references = comment.references,
+                        onOpenActor = onOpenActor,
+                        onOpenPost = onOpenPost,
+                        testTagPrefix = "comment_${comment.id}",
+                        valuesRevealed = comment.id in state.revealedReferenceRows,
+                        onToggleValues = { onToggleReferenceValues(comment.id) },
+                    )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         // A comment carries the control too (design.md §6).
                         stanceControl(comment.id, "comment_${comment.id}")
@@ -716,6 +889,16 @@ private fun CommentThread(
                                 modifier = Modifier.testTag("comment_reply_${comment.id}"),
                             ) {
                                 Text(stringResource(R.string.content_comment_reply))
+                            }
+                            // A comment is a content node like any
+                            // other, so it carries the affordance too
+                            // (D20).
+                            TextButton(
+                                onClick = { onReference(comment.id) },
+                                modifier = Modifier
+                                    .testTag("comment_reference_${comment.id}"),
+                            ) {
+                                Text(stringResource(R.string.content_reference_action))
                             }
                         }
                         if (viewerId != null && comment.author?.id == viewerId) {
@@ -744,6 +927,12 @@ private fun CommentThread(
                     section = state.replyTags,
                     target = TagTarget.REPLY,
                     tags = tags,
+                    testTagPrefix = "comment_reply",
+                )
+                CommentReferenceSection(
+                    section = state.replyReferences,
+                    target = TagTarget.REPLY,
+                    references = references,
                     testTagPrefix = "comment_reply",
                 )
                 if (state.replyRefused) {
@@ -803,9 +992,13 @@ private fun CommentThread(
                 onCancelReply = onCancelReply,
                 onSubmitReply = onSubmitReply,
                 onToggleTagValues = onToggleTagValues,
+                onToggleReferenceValues = onToggleReferenceValues,
                 tags = tags,
+                references = references,
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
+                onOpenPost = onOpenPost,
+                onReference = onReference,
                 stanceControl = stanceControl,
             )
         }
