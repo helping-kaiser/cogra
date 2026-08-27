@@ -1136,8 +1136,9 @@ input PrepareCommentInput {
 A prepared content write: the staged batch plus `node` — the L2
 id the envelope binds to the minted node, and the id the content
 reads serve once the record lands. `writes` carries the minting
-record first, then one Tag record per declared topic, each its own
-priced act. Null when `userErrors` is non-empty.
+record first, then one Tag record per declared topic and one
+Reference record per declared citation, each its own priced act.
+Null when `userErrors` is non-empty.
 """
 type PrepareContentPayload {
 	node: UUID
@@ -1451,7 +1452,7 @@ type Query {
 	"""
 	records(author: UUID, target: UUID, terminal: UUID, family: RecordFamily, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, after: String, before: String, first: Int, last: Int): RecordConnection!
 	"""
-	Candidate targets for the reference picker (D20).
+	Candidate targets for the reference picker.
 	
 	**Exact-match resolution only.** Real search — prefix matching,
 	ranking, snippets — arrives with slice 2.7 *behind this same
@@ -1469,7 +1470,7 @@ type Query {
 	it: resolution runs through the write path's own resolver, so the
 	picker cannot hand back a target the mutation then refuses. Two
 	classes narrow for exactly that reason. A topic is never offered
-	— it is tagged, not referenced (D21) — which is why a `#`-typed
+	— it is tagged, not referenced — which is why a `#`-typed
 	query finds nothing and a UUID naming a Type yields no candidate.
 	And a keyless account fronts no Profile on the graph, so it
 	resolves nowhere for the write path and must not be offered here
@@ -1698,9 +1699,9 @@ it cites.
 """
 input ReferenceInput {
 	"""
-	The cited node — a post, a comment, a person's profile, or a
-	topic. External links are body text, never citations: both
-	endpoints of a Reference are nodes on the graph.
+	The cited node — a post, a comment, or a person's profile.
+	External links are body text, never citations: both endpoints
+	of a Reference are nodes on the graph.
 	"""
 	target: UUID!
 	"""
@@ -1728,7 +1729,7 @@ is a `Post` or `Comment` is a quote or embed — which of those two is
 a render question, not a wire one.
 
 A `Hashtag` is absent, and that absence is the contract: a topic is
-tagged, never referenced (D21). The write path refuses a Type target,
+tagged, never referenced. The write path refuses a Type target,
 so no citation this instance prepares can have one.
 """
 union ReferenceTarget = Post | Comment | User
