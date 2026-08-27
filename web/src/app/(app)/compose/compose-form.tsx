@@ -222,6 +222,10 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
     editingId === null
       ? 1 + tags.length + references.length
       : (contentChanged ? 1 : 0) + changes.length + referenceActs(refChanges);
+  // The one case `signedActions` can only lower-bound: an edit staging a
+  // withdrawal prepares before it asks, so the confirm can report the
+  // server's quote. Every other submit keeps asking first.
+  const withdraws = refChanges.some((change) => change.kind === "withdraw");
 
   const signAll = async (writes: readonly StagedWriteView[]): Promise<boolean> => {
     const results = [];
@@ -407,7 +411,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
     // be quoted EXACTLY — a withdrawal's cost is knowable no earlier.
     // Staged writes nobody signs are collected by the server's own GC,
     // so standing here and asking costs nothing.
-    if (writes.length > 1 && confirmMultiAction) {
+    if (withdraws && writes.length > 1 && confirmMultiAction && pendingWrites === null) {
       setSubmitting(false);
       setPendingWrites(writes);
       setConfirming(true);
@@ -438,11 +442,10 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
     // about before it is signed (F4) — unless the reader turned the
     // asking off.
     //
-    // A CREATION batch's cost is exact client-side — the minting record
-    // plus one act per tag and per reference — so it asks first. An EDIT
-    // can stage a withdrawal, whose batch only the server can quote, so
-    // it prepares first and asks with the real number in hand.
-    if (editingId === null && signedActions > 1 && confirmMultiAction) {
+    // An edit staging a withdrawal is the exception: its batch is only
+    // knowable once the server has assembled the counter-records, so it
+    // prepares first and asks with the real number in hand.
+    if (!withdraws && signedActions > 1 && confirmMultiAction) {
       setConfirming(true);
       return;
     }
