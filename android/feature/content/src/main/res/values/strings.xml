@@ -17,6 +17,10 @@
     <string name="content_topics_preview">Will be added as #%1$s</string>
     <string name="content_topics_cap_reached">Up to %1$d topics per post</string>
     <string name="content_topics_params_done">Done</string>
+    <!-- The detail view\'s on-demand reveal of how strongly each topic
+         is claimed (F8) — never on by default. -->
+    <string name="content_topics_show_values">Show how strongly these topics are claimed</string>
+    <string name="content_topics_hide_values">Hide how strongly these topics are claimed</string>
     <!-- What a topic name may be — L1\'s identifier atom (D3). -->
     <string name="content_topics_illegal_whitespace">Spaces aren\'t allowed in topic names.</string>
     <string name="content_topics_illegal_charset">Only ASCII letters, digits, and . _ -</string>

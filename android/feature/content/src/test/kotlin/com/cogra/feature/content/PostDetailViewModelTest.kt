@@ -467,4 +467,28 @@ class PostDetailViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.replyThreads["c1"]?.failed).isTrue()
     }
+
+    // -- The value reveal (F8) --
+
+    /** Nobody sees how strongly a topic is claimed unasked. */
+    @Test
+    fun noChipRowStartsRevealed() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.revealedTagRows).isEmpty()
+    }
+
+    @Test
+    fun theRevealTogglesPerRowAndBackAgain() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onToggleTagValues("post-1")
+        assertThat(vm.state.value.revealedTagRows).containsExactly("post-1")
+
+        vm.onToggleTagValues("c1")
+        assertThat(vm.state.value.revealedTagRows).containsExactly("post-1", "c1")
+
+        vm.onToggleTagValues("post-1")
+        assertThat(vm.state.value.revealedTagRows).containsExactly("c1")
+    }
 }

@@ -69,6 +69,13 @@ data class PostDetailUiState(
     val replyRefused: Boolean = false,
     val replySigningFailed: Boolean = false,
     val replyTransportFailed: Boolean = false,
+    /**
+     * Which chip rows have been asked to show their claim parameters
+     * (F8), keyed by the post or comment the row belongs to. Anyone may
+     * see how strongly a tag is claimed — but only when they ask, so
+     * the set starts empty on every visit.
+     */
+    val revealedTagRows: Set<String> = emptySet(),
 )
 
 /**
@@ -346,6 +353,17 @@ class PostDetailViewModel @Inject constructor(
                 _state.update { it.copy(replySubmitting = false, replySigningFailed = true) }
             }
         }
+    }
+
+    /** The reveal is per row and per reading (F8) — one row saying yes says nothing about the next. */
+    fun onToggleTagValues(ownerId: String) = _state.update {
+        it.copy(
+            revealedTagRows = if (ownerId in it.revealedTagRows) {
+                it.revealedTagRows - ownerId
+            } else {
+                it.revealedTagRows + ownerId
+            },
+        )
     }
 
     fun onDraftChange(v: String) = _state.update { it.copy(draft = v) }
