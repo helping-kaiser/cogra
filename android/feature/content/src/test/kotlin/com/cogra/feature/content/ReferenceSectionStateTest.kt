@@ -1,5 +1,6 @@
 package com.cogra.feature.content
 
+import com.cogra.domain.ReferenceClaimView
 import com.cogra.domain.ReferenceContentKind
 import com.cogra.domain.ReferenceTargetView
 import com.cogra.domain.references.MAX_REFERENCES
@@ -141,11 +142,57 @@ class ReferenceSectionStateTest {
         assertThat(state.removes.single().target).isEqualTo(profile("u1", "ada"))
     }
 
-    /** A citation whose far end the display store never typed is still withdrawable. */
+    // -- Which claims an authoring section may carry --
+
+    /**
+     * A claim's own `targetId` is the raw L1 identifier and addresses
+     * no mutation; the row must carry the L2 id, which only the typed
+     * target holds.
+     */
     @Test
-    fun anUnresolvedLoadedReferenceCanStillBeDropped() {
-        val state = sectionWith(ReferenceRow("unknown-id", target = null)).removed("unknown-id")
-        assertThat(state.removes.map { it.targetId }).containsExactly("unknown-id")
+    fun anEditableRowCarriesTheL2IdRatherThanTheClaimsL1Identifier() {
+        val claim = ReferenceClaimView(
+            target = profile("u1", "ada"),
+            targetId = "l1-identifier-not-a-uuid",
+            relevance = 0.4,
+            support = 0.6,
+            pending = false,
+        )
+        val row = claim.editableRow()!!
+        assertThat(row.targetId).isEqualTo("u1")
+        assertThat(row.relevance).isEqualTo(0.4)
+        assertThat(row.support).isEqualTo(0.6)
+    }
+
+    /**
+     * An untypeable claim is unaddressable — no withdrawal could name
+     * it — so it never reaches an authoring section at all, and its
+     * absence there is never read as a removal.
+     */
+    @Test
+    fun anUntypeableClaimIsNotEditableAtAll() {
+        val claim = ReferenceClaimView(
+            target = null,
+            targetId = "l1-identifier-only",
+            relevance = 0.1,
+            support = 0.1,
+            pending = false,
+        )
+        assertThat(claim.editableRow()).isNull()
+    }
+
+    /** Left out of both baseline and draft, it stages nothing either way. */
+    @Test
+    fun aSectionBuiltWithoutUntypeableClaimsStagesNoWithdrawalForThem() {
+        val claims = listOf(
+            ReferenceClaimView(profile("u1", "ada"), "l1-a", 0.1, 0.1, pending = false),
+            ReferenceClaimView(null, "l1-b", 0.1, 0.1, pending = false),
+        )
+        val rows = claims.mapNotNull { it.editableRow() }
+        val state = ReferenceSectionState(references = rows, loaded = rows)
+        assertThat(state.references.map { it.targetId }).containsExactly("u1")
+        assertThat(state.removes).isEmpty()
+        assertThat(state.changeCount).isEqualTo(0)
     }
 
     @Test

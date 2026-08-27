@@ -206,6 +206,13 @@ class PostDetailViewModel @Inject constructor(
     /** Debounces the finder, which runs on every keystroke (D20). */
     private var finderJob: Job? = null
 
+    /**
+     * An edit batch staged before the confirm, held while the author
+     * reads the quoted withdrawal cost. Never UI state: it is the
+     * signing input, and a dismissed confirm drops it.
+     */
+    private var quotedEditWrites: List<PreparedWriteView>? = null
+
     private var postId: String? = null
 
     init {
@@ -357,14 +364,10 @@ class PostDetailViewModel @Inject constructor(
                 confidence = claim.confidence,
             )
         }
-        val refs = comment.references.map { claim ->
-            ReferenceRow(
-                targetId = claim.targetId,
-                target = claim.target,
-                relevance = claim.relevance,
-                support = claim.support,
-            )
-        }
+        // A citation this instance could not type is unaddressable — no
+        // write could name it — so it stays out of the editable section
+        // entirely and its absence is never read as a removal.
+        val refs = comment.references.mapNotNull { it.editableRow() }
         it.copy(
             editingCommentId = comment.id,
             editDraft = loaded,
@@ -396,6 +399,15 @@ class PostDetailViewModel @Inject constructor(
         if (s.editingCommentId == null || s.editSubmitting || s.editDraft.isBlank()) return
         // An edit opened and left alone stages no record at all.
         if (s.editSignedActions == 0) return
+        // A withdrawal's cost is the server's to quote — the bundle may
+        // need several counter-records to reach (0, 0) (D11) — so an
+        // edit carrying one stages first and asks with the true count.
+        // Staging signs nothing, so nothing is committed by asking
+        // second. Every other edit keeps the ask-first order.
+        if (s.editReferences.removes.isNotEmpty()) {
+            stageCommentEdit(askOnceQuoted = true)
+            return
+        }
         if (gateOnConfirm(TagTarget.EDIT, s)) return
         stageCommentEdit()
     }
@@ -407,7 +419,7 @@ class PostDetailViewModel @Inject constructor(
      * relevance 0. A refusal from any prepare stops before signing, so
      * nothing may claim signing failed (F2).
      */
-    private fun stageCommentEdit() {
+    private fun stageCommentEdit(askOnceQuoted: Boolean = false) {
         val s = _state.value
         val id = s.editingCommentId ?: return
         _state.update {
@@ -471,34 +483,48 @@ class PostDetailViewModel @Inject constructor(
             // The withdrawal batch is assembled; its length is the cost
             // the author is owed before signing (D11).
             if (withdrawn > 0) _state.update { it.copy(editWithdrawalCost = withdrawn) }
-            val results = try {
-                signer.sign(writes)
-            } catch (_: NoActorKeyException) {
-                // A husk device: the write waits on the reader restoring
-                // the key, not on time passing (the invites twin) —
-                // without the catch the coroutine would die unreported.
-                _state.update {
-                    it.copy(editSubmitting = false, editSigningFailed = true, signingNeedsKey = true)
-                }
+            if (askOnceQuoted &&
+                _state.value.confirmMultiActionSubmits &&
+                writes.size > 1
+            ) {
+                quotedEditWrites = writes
+                _state.update { it.copy(confirmPending = TagTarget.EDIT) }
                 return@launch
             }
-            if (results.all { it is WriteResult.Done }) {
-                _state.update {
-                    it.copy(
-                        editSubmitting = false,
-                        editingCommentId = null,
-                        editDraft = "",
-                        editLoadedText = "",
-                        editTags = TagSectionState(),
-                        editReferences = ReferenceSectionState(),
-                        editWithdrawalCost = null,
-                        commentSigned = true,
-                    )
-                }
-                refresh()
-            } else {
-                _state.update { it.copy(editSubmitting = false, editSigningFailed = true) }
+            signCommentEdit(writes)
+        }
+    }
+
+    /** Signs a staged edit batch, whether it was quoted first or not. */
+    private suspend fun signCommentEdit(writes: List<PreparedWriteView>) {
+        _state.update { it.copy(editSubmitting = true) }
+        val results = try {
+            signer.sign(writes)
+        } catch (_: NoActorKeyException) {
+            // A husk device: the write waits on the reader restoring
+            // the key, not on time passing (the invites twin) —
+            // without the catch the coroutine would die unreported.
+            _state.update {
+                it.copy(editSubmitting = false, editSigningFailed = true, signingNeedsKey = true)
             }
+            return
+        }
+        if (results.all { it is WriteResult.Done }) {
+            _state.update {
+                it.copy(
+                    editSubmitting = false,
+                    editingCommentId = null,
+                    editDraft = "",
+                    editLoadedText = "",
+                    editTags = TagSectionState(),
+                    editReferences = ReferenceSectionState(),
+                    editWithdrawalCost = null,
+                    commentSigned = true,
+                )
+            }
+            refresh()
+        } else {
+            _state.update { it.copy(editSubmitting = false, editSigningFailed = true) }
         }
     }
 
@@ -807,6 +833,14 @@ class PostDetailViewModel @Inject constructor(
         val target = _state.value.confirmPending ?: return
         if (dontAskAgain) viewModelScope.launch { identity.setConfirmMultiActionSubmits(false) }
         _state.update { it.copy(confirmPending = null) }
+        // An edit whose withdrawal was quoted is already staged; it
+        // signs what it quoted rather than preparing a second time.
+        val quoted = quotedEditWrites
+        if (target == TagTarget.EDIT && quoted != null) {
+            quotedEditWrites = null
+            viewModelScope.launch { signCommentEdit(quoted) }
+            return
+        }
         when (target) {
             TagTarget.COMMENT -> stageComment()
             TagTarget.REPLY -> stageReply()
@@ -814,7 +848,12 @@ class PostDetailViewModel @Inject constructor(
         }
     }
 
-    fun onDismissConfirm() = _state.update { it.copy(confirmPending = null) }
+    fun onDismissConfirm() {
+        quotedEditWrites = null
+        _state.update {
+            it.copy(confirmPending = null, editSubmitting = false, editWithdrawalCost = null)
+        }
+    }
 
     /**
      * A refusal from a creation whose input carries the whole batch: the

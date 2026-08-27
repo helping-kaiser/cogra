@@ -164,14 +164,11 @@ class ComposePostViewModel @Inject constructor(
                                 confidence = claim.confidence,
                             )
                         }
-                        val refs = post.references.map { claim ->
-                            ReferenceRow(
-                                targetId = claim.targetId,
-                                target = claim.target,
-                                relevance = claim.relevance,
-                                support = claim.support,
-                            )
-                        }
+                        // A citation this instance could not type is
+                        // unaddressable — no write could name it — so it
+                        // stays out of the editable section entirely and
+                        // its absence is never read as a removal.
+                        val refs = post.references.mapNotNull { it.editableRow() }
                         _state.update {
                             it.copy(
                                 loading = false,

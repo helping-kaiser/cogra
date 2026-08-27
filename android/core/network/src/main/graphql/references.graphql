@@ -49,6 +49,23 @@ fragment ReferenceTargetFields on ReferenceTarget {
         value
       }
     }
+    # A comment is read inside the post that carries it, and there is
+    # no comment permalink — so the chip needs that post walked up
+    # from here. Two levels covers a reply to a reply; deeper than
+    # that the chip renders without a destination rather than
+    # recursing forever.
+    target {
+      ... on Post {
+        id
+      }
+      ... on Comment {
+        target {
+          ... on Post {
+            id
+          }
+        }
+      }
+    }
   }
   ... on User {
     id

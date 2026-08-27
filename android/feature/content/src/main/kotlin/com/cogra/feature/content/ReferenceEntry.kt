@@ -293,11 +293,12 @@ internal fun referenceRoute(target: ReferenceTargetView?): ReferenceDestination?
     is ReferenceTargetView.Profile -> ReferenceDestination.Profile(target.handle)
     is ReferenceTargetView.Content -> when (target.kind) {
         ReferenceContentKind.POST -> ReferenceDestination.Post(target.id)
-        // A comment has no route of its own — it is read inside the
-        // post that carries it, and the citation does not name that
-        // post. The chip stays readable and inert, exactly as a
-        // comment entry does on the topic screen.
-        ReferenceContentKind.COMMENT -> null
+        // A comment has no permalink — it is read inside the post that
+        // carries it, so the chip lands there. When the walk ran out of
+        // levels the chip renders without a destination rather than
+        // guessing at one.
+        ReferenceContentKind.COMMENT ->
+            target.containingPostId?.let { ReferenceDestination.Post(it) }
     }
     null -> null
 }

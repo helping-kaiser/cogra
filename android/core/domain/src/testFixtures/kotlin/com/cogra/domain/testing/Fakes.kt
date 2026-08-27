@@ -583,12 +583,18 @@ fun testContentTarget(
     authorDisplayName = authorHandle?.replaceFirstChar { it.uppercase() },
 )
 
+/**
+ * A standing citation. [targetId] defaults to an L1-shaped identifier
+ * deliberately distinct from the typed target's L2 id: the two are not
+ * the same string, and a fixture that conflated them would hide the
+ * bug where a write names the wrong one.
+ */
 fun testReferenceClaim(
     target: ReferenceTargetView?,
     targetId: String = when (target) {
-        is ReferenceTargetView.Profile -> target.id
-        is ReferenceTargetView.Content -> target.id
-        null -> "unresolved-target"
+        is ReferenceTargetView.Profile -> "l1-${target.id}"
+        is ReferenceTargetView.Content -> "l1-${target.id}"
+        null -> "l1-untypeable"
     },
     relevance: Double = 0.1,
     support: Double = 0.1,
