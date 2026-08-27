@@ -239,6 +239,64 @@ class CograNavGraphTest {
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
     }
 
+    // A mention chip reaches the profile it names, from the card it
+    // renders on — the hand test's "mention a person and land on their
+    // profile from the render" (D16).
+    @Test
+    fun aPostCardsMentionChipOpensTheProfileItNames() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        content.listing = listOf(
+            com.cogra.domain.testing.testPost("p1").copy(
+                references = listOf(
+                    com.cogra.domain.testing.testReferenceClaim(
+                        com.cogra.domain.testing.testMentionTarget("ada"),
+                    ),
+                ),
+            ),
+        )
+        profiles.others["ada"] = com.cogra.domain.testing.testProfile(
+            id = "user-ada",
+            handle = "ada",
+            displayName = "Ada",
+        )
+        render()
+        waitForTag("feed_post_p1_reference_l1-user-ada")
+
+        compose.onNodeWithTag("feed_post_p1_reference_l1-user-ada").performClick()
+        compose.waitForIdle()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Profile>()).isTrue()
+    }
+
+    // The Reference affordance opens the composer with the node staged,
+    // so the author writes the citing post rather than hunting for an
+    // id to paste (D20).
+    @Test
+    fun theReferenceAffordanceOpensTheComposerCarryingTheNode() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        val post = com.cogra.domain.testing.testPost("p1")
+        content.listing = listOf(post)
+        content.details["p1"] = com.cogra.domain.PostDetail(
+            post = post,
+            comments = com.cogra.domain.Page(emptyList(), null, hasNextPage = false),
+        )
+        render()
+        waitForTag("feed_post_p1")
+
+        compose.onNodeWithTag("feed_post_p1").performClick()
+        waitForTag("detail_post_reference_action")
+        compose.onNodeWithTag("detail_post_reference_action").performClick()
+        compose.waitForIdle()
+
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ComposePost>())
+            .isTrue()
+        assertThat(navController.currentBackStackEntry?.toRoute<ComposePost>()?.referenceTargetId)
+            .isEqualTo("p1")
+    }
+
     // The reader drills into a still-settling post and reads it landed
     // there; the card they come back to already knows. The listing
     // itself is untouched — the fake still serves the pending page —
