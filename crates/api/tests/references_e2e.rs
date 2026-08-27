@@ -718,6 +718,66 @@ async fn the_reference_row_serves_relevance_and_support_the_right_way_round(pool
     assert_eq!(rows[0]["target"]["title"]["value"], "cited");
 }
 
+/// The orientation, checked from the side the resolver never touches.
+///
+/// `the_reference_row_serves_relevance_and_support_the_right_way_round`
+/// writes through the gesture builder and reads through the fold, so a
+/// transposition present in *both* halves cancels and the assertion still
+/// passes. This one writes through the API and reads the mirror raw,
+/// asserting each of the three renderings the census fixes separately:
+/// the staged act tuple and the A-leg carry `(relevance, support)`
+/// verbatim, and the T-leg carries them transposed. A single-sided error
+/// moves exactly one of the three.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_stored_legs_carry_the_census_orientation(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (_, key) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+    let cited = rig.plain_post(&token, &key, "cited").await;
+    let carrier = rig.plain_post(&token, &key, "carrier").await;
+
+    let prepared = rig
+        .cite_from(
+            &token,
+            &carrier,
+            &cited,
+            json!({ "relevance": -0.75, "support": 0.25 }),
+        )
+        .await;
+
+    let staged: (f64, f64) = sqlx::query_as(
+        "SELECT p_d, p_i FROM staged_writes WHERE family = 'reference'",
+    )
+    .fetch_one(&rig.pool)
+    .await
+    .expect("staged write");
+    assert_eq!(
+        staged,
+        (-0.75, 0.25),
+        "the staged act tuple is (relevance, support), never a leg rendering"
+    );
+
+    rig.land(&token, &key, &prepared["prepareReference"]["writes"])
+        .await;
+
+    let legs: Vec<(String, f64, f64)> = sqlx::query_as(
+        "SELECT leg, p_d, p_i FROM mirror_record_legs
+         WHERE family = 'reference' ORDER BY leg",
+    )
+    .fetch_all(&rig.pool)
+    .await
+    .expect("legs");
+    assert_eq!(
+        legs,
+        vec![
+            ("a".to_string(), -0.75, 0.25),
+            ("t".to_string(), 0.25, -0.75),
+        ],
+        "the A-leg renders the act tuple verbatim and the T-leg transposes \
+         it (layer1-interface.md §9.6)"
+    );
+}
+
 /// The hand test's second half: a mention must type as a person, or the
 /// render has nothing to send the reader to.
 #[sqlx::test(migrations = "../../migrations")]
