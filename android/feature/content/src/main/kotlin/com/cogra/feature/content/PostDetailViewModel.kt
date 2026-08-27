@@ -10,6 +10,7 @@ import com.cogra.domain.content.LandingSignal
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.UserError
 import com.cogra.domain.repo.ContentRepository
+import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
@@ -17,6 +18,8 @@ import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.store.IdentityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -87,12 +90,29 @@ data class PostDetailUiState(
      * the set starts empty on every visit.
      */
     val revealedTagRows: Set<String> = emptySet(),
+    /**
+     * Which reference rows have been asked to show their parameters,
+     * keyed the same way [revealedTagRows] is. A citation's two
+     * parameters are its own question, so the two rows reveal apart.
+     */
+    val revealedReferenceRows: Set<String> = emptySet(),
     /** The topics the comment box will declare (F9). */
     val commentTags: TagSectionState = TagSectionState(),
     /** The topics the reply box will declare (F9). */
     val replyTags: TagSectionState = TagSectionState(),
     /** The edited comment's topics, loaded at their real values (F10). */
     val editTags: TagSectionState = TagSectionState(),
+    /** The references the comment box will declare (D10). */
+    val commentReferences: ReferenceSectionState = ReferenceSectionState(),
+    /** The references the reply box will declare. */
+    val replyReferences: ReferenceSectionState = ReferenceSectionState(),
+    /** The edited comment's references, loaded at their real values. */
+    val editReferences: ReferenceSectionState = ReferenceSectionState(),
+    /**
+     * What the edit's reference withdrawals cost, once the server has
+     * assembled them (D11). Null until the batch has been staged.
+     */
+    val editWithdrawalCost: Int? = null,
     /** What the edit opened with — text unchanged stages no edit record (F10). */
     val editLoadedText: String = "",
     /** Which submit the multi-action confirm is holding; null when none (F4). */
@@ -105,16 +125,26 @@ data class PostDetailUiState(
      * stages one Tag record per declared topic beside the Review — each
      * its own priced act (F4).
      */
-    val commentSignedActions: Int get() = 1 + commentTags.tags.size
+    val commentSignedActions: Int
+        get() = 1 + commentTags.tags.size + commentReferences.references.size
 
-    val replySignedActions: Int get() = 1 + replyTags.tags.size
+    val replySignedActions: Int
+        get() = 1 + replyTags.tags.size + replyReferences.references.size
 
     /** An edit with unchanged text stages no edit record (F10). */
     val editContentChanged: Boolean get() = editDraft != editLoadedText
 
-    /** The edit's changes are standalone Tag acts beside an optional edit record. */
+    /**
+     * The edit's changes are standalone Tag and Reference acts beside
+     * an optional edit record. A withdrawal's true cost is the
+     * server's to quote, so until it has the count stands at one per
+     * dropped citation (D11).
+     */
     val editSignedActions: Int
-        get() = (if (editContentChanged) 1 else 0) + editTags.changeCount
+        get() = (if (editContentChanged) 1 else 0) +
+            editTags.changeCount +
+            editReferences.adds.size +
+            (editWithdrawalCost ?: editReferences.removes.size)
 
     fun tagSection(target: TagTarget): TagSectionState = when (target) {
         TagTarget.COMMENT -> commentTags
@@ -126,6 +156,21 @@ data class PostDetailUiState(
         TagTarget.COMMENT -> commentSignedActions
         TagTarget.REPLY -> replySignedActions
         TagTarget.EDIT -> editSignedActions
+    }
+
+    fun referenceSection(target: TagTarget): ReferenceSectionState = when (target) {
+        TagTarget.COMMENT -> commentReferences
+        TagTarget.REPLY -> replyReferences
+        TagTarget.EDIT -> editReferences
+    }
+
+    fun withReferenceSection(
+        target: TagTarget,
+        section: ReferenceSectionState,
+    ): PostDetailUiState = when (target) {
+        TagTarget.COMMENT -> copy(commentReferences = section)
+        TagTarget.REPLY -> copy(replyReferences = section)
+        TagTarget.EDIT -> copy(editReferences = section)
     }
 
     fun withTagSection(target: TagTarget, section: TagSectionState): PostDetailUiState = when (target) {
@@ -149,6 +194,7 @@ data class PostDetailUiState(
 class PostDetailViewModel @Inject constructor(
     private val content: ContentRepository,
     private val topics: TopicRepository,
+    private val references: ReferenceRepository,
     private val signer: WriteSigner,
     private val landings: LandingSignal,
     private val identity: IdentityStore,
@@ -156,6 +202,9 @@ class PostDetailViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(PostDetailUiState())
     val state = _state.asStateFlow()
+
+    /** Debounces the finder, which runs on every keystroke (D20). */
+    private var finderJob: Job? = null
 
     private var postId: String? = null
 
@@ -308,11 +357,21 @@ class PostDetailViewModel @Inject constructor(
                 confidence = claim.confidence,
             )
         }
+        val refs = comment.references.map { claim ->
+            ReferenceRow(
+                targetId = claim.targetId,
+                target = claim.target,
+                relevance = claim.relevance,
+                support = claim.support,
+            )
+        }
         it.copy(
             editingCommentId = comment.id,
             editDraft = loaded,
             editLoadedText = loaded,
             editTags = TagSectionState(tags = tags, loaded = tags),
+            editReferences = ReferenceSectionState(references = refs, loaded = refs),
+            editWithdrawalCost = null,
             editRefused = false,
             editSigningFailed = false,
             replyingToId = null,
@@ -327,6 +386,8 @@ class PostDetailViewModel @Inject constructor(
             editDraft = "",
             editLoadedText = "",
             editTags = TagSectionState(),
+            editReferences = ReferenceSectionState(),
+            editWithdrawalCost = null,
         )
     }
 
@@ -355,7 +416,9 @@ class PostDetailViewModel @Inject constructor(
                 editRefused = false,
                 editSigningFailed = false,
                 signingNeedsKey = false,
+                editWithdrawalCost = null,
                 editTags = it.editTags.withoutErrors(),
+                editReferences = it.editReferences.withoutErrors(),
             )
         }
         viewModelScope.launch {
@@ -384,6 +447,30 @@ class PostDetailViewModel @Inject constructor(
                     is Outcome.Failed -> return@launch failEdit()
                 }
             }
+            // Citations are never edit fields, so each change is its own
+            // priced act staged beside the edit (post.md §3).
+            for (row in s.editReferences.adds) {
+                when (val outcome =
+                    references.prepareReference(id, row.targetId, row.relevance, row.support)) {
+                    is Outcome.Success -> writes += outcome.value
+                    is Outcome.Refused -> return@launch refuseEditReference(row.targetId, outcome.errors)
+                    is Outcome.Failed -> return@launch failEdit()
+                }
+            }
+            var withdrawn = 0
+            for (row in s.editReferences.removes) {
+                when (val outcome = references.prepareReferenceWithdrawal(id, row.targetId)) {
+                    is Outcome.Success -> {
+                        writes += outcome.value
+                        withdrawn += outcome.value.size
+                    }
+                    is Outcome.Refused -> return@launch refuseEditReference(row.targetId, outcome.errors)
+                    is Outcome.Failed -> return@launch failEdit()
+                }
+            }
+            // The withdrawal batch is assembled; its length is the cost
+            // the author is owed before signing (D11).
+            if (withdrawn > 0) _state.update { it.copy(editWithdrawalCost = withdrawn) }
             val results = try {
                 signer.sign(writes)
             } catch (_: NoActorKeyException) {
@@ -403,6 +490,8 @@ class PostDetailViewModel @Inject constructor(
                         editDraft = "",
                         editLoadedText = "",
                         editTags = TagSectionState(),
+                        editReferences = ReferenceSectionState(),
+                        editWithdrawalCost = null,
                         commentSigned = true,
                     )
                 }
@@ -421,6 +510,13 @@ class PostDetailViewModel @Inject constructor(
         st.copy(editSubmitting = false, editTags = section, editRefused = unplaced != null)
     }
 
+    /** The same shape for a citation: its chip, or the editor's own line. */
+    private fun refuseEditReference(targetId: String, errors: List<UserError>) = _state.update { st ->
+        val (section, unplaced) =
+            st.editReferences.withError(targetId, errors.firstOrNull()?.message)
+        st.copy(editSubmitting = false, editReferences = section, editRefused = unplaced != null)
+    }
+
     // The inline reply — a genesis Review targeting the comment
     // (comment.md §1); it shares the composer's license controls.
     fun onStartReply(commentId: String) = _state.update {
@@ -428,6 +524,7 @@ class PostDetailViewModel @Inject constructor(
             replyingToId = commentId,
             replyDraft = "",
             replyTags = TagSectionState(),
+            replyReferences = ReferenceSectionState(),
             replyRefused = false,
             replySigningFailed = false,
             replyTransportFailed = false,
@@ -438,7 +535,12 @@ class PostDetailViewModel @Inject constructor(
     fun onReplyDraftChange(v: String) = _state.update { it.copy(replyDraft = v) }
 
     fun onCancelReply() = _state.update {
-        it.copy(replyingToId = null, replyDraft = "", replyTags = TagSectionState())
+        it.copy(
+            replyingToId = null,
+            replyDraft = "",
+            replyTags = TagSectionState(),
+            replyReferences = ReferenceSectionState(),
+        )
     }
 
     fun onSubmitReply() {
@@ -459,6 +561,7 @@ class PostDetailViewModel @Inject constructor(
                 signingNeedsKey = false,
                 replyTransportFailed = false,
                 replyTags = it.replyTags.withoutErrors(),
+                replyReferences = it.replyReferences.withoutErrors(),
             )
         }
         viewModelScope.launch {
@@ -468,6 +571,7 @@ class PostDetailViewModel @Inject constructor(
                     content = s.replyDraft,
                     license = s.license,
                     tags = s.replyTags.tags.map { it.toClaim() },
+                    references = s.replyReferences.references.map { it.toClaim() },
                 )
             ) {
                 is Outcome.Success -> outcome.value
@@ -497,6 +601,7 @@ class PostDetailViewModel @Inject constructor(
                         replyingToId = null,
                         replyDraft = "",
                         replyTags = TagSectionState(),
+                        replyReferences = ReferenceSectionState(),
                         commentSigned = true,
                     )
                 }
@@ -540,6 +645,7 @@ class PostDetailViewModel @Inject constructor(
                 signingNeedsKey = false,
                 submitTransportFailed = false,
                 commentTags = it.commentTags.withoutErrors(),
+                commentReferences = it.commentReferences.withoutErrors(),
             )
         }
         viewModelScope.launch {
@@ -549,6 +655,7 @@ class PostDetailViewModel @Inject constructor(
                     content = s.draft,
                     license = s.license,
                     tags = s.commentTags.tags.map { it.toClaim() },
+                    references = s.commentReferences.references.map { it.toClaim() },
                 )
             ) {
                 is Outcome.Success -> outcome.value
@@ -575,6 +682,7 @@ class PostDetailViewModel @Inject constructor(
                         submitting = false,
                         draft = "",
                         commentTags = TagSectionState(),
+                        commentReferences = ReferenceSectionState(),
                         commentSigned = true,
                     )
                 }
@@ -605,6 +713,83 @@ class PostDetailViewModel @Inject constructor(
 
     private fun updateTags(target: TagTarget, block: (TagSectionState) -> TagSectionState) =
         _state.update { it.withTagSection(target, block(it.tagSection(target))) }
+
+    // -- The reference sections and their finder (D10, D20) --
+
+    fun onOpenFinder(target: TagTarget) =
+        updateReferences(target) { it.withFinder(ReferenceFinderState()) }
+
+    fun onCloseFinder(target: TagTarget) {
+        finderJob?.cancel()
+        updateReferences(target) { it.withFinder(null) }
+    }
+
+    fun onFinderQueryChange(target: TagTarget, query: String) {
+        finderJob?.cancel()
+        updateReferences(target) { section ->
+            section.withFinder(
+                (section.finder ?: ReferenceFinderState()).copy(
+                    query = query,
+                    searching = query.isNotBlank(),
+                    failed = false,
+                ),
+            )
+        }
+        finderJob = viewModelScope.launch {
+            delay(FINDER_DEBOUNCE_MILLIS)
+            when (val outcome = references.candidateRows(query)) {
+                is Outcome.Success -> updateReferences(target) { section ->
+                    // A result that arrived after the author typed on
+                    // is stale — only the current query's answer lands.
+                    section.finder?.takeIf { it.query == query }?.let {
+                        section.withFinder(
+                            it.copy(candidates = outcome.value, searching = false, failed = false),
+                        )
+                    } ?: section
+                }
+                is Outcome.Refused, is Outcome.Failed -> updateReferences(target) { section ->
+                    section.finder?.takeIf { it.query == query }?.let {
+                        section.withFinder(it.copy(searching = false, failed = true))
+                    } ?: section
+                }
+            }
+        }
+    }
+
+    fun onPickReference(target: TagTarget, row: ReferenceCandidateRow) {
+        finderJob?.cancel()
+        updateReferences(target) { it.added(row.targetId, row.target).withFinder(null) }
+    }
+
+    fun onRemoveReference(target: TagTarget, targetId: String) =
+        updateReferences(target) { it.removed(targetId) }
+
+    fun onTuneReference(target: TagTarget, targetId: String) =
+        updateReferences(target) { it.tuned(targetId) }
+
+    fun onDoneTuningReference(target: TagTarget) = updateReferences(target) { it.tuned(null) }
+
+    fun onReferenceRelevanceChange(target: TagTarget, targetId: String, value: Double) =
+        updateReferences(target) { it.withRelevance(targetId, value) }
+
+    fun onReferenceSupportChange(target: TagTarget, targetId: String, value: Double) =
+        updateReferences(target) { it.withSupport(targetId, value) }
+
+    private fun updateReferences(
+        target: TagTarget,
+        block: (ReferenceSectionState) -> ReferenceSectionState,
+    ) = _state.update { it.withReferenceSection(target, block(it.referenceSection(target))) }
+
+    /** The reference row's reveal, which toggles apart from the tag row's. */
+    fun onToggleReferenceValues(ownerId: String) = _state.update {
+        it.copy(
+            revealedReferenceRows = if (ownerId in it.revealedReferenceRows) {
+                it.revealedReferenceRows - ownerId
+            } else {
+                it.revealedReferenceRows + ownerId
+            },
+        )
+    }
 
     /**
      * A batch of more than one signed act asks first, unless this device
@@ -638,20 +823,31 @@ class PostDetailViewModel @Inject constructor(
      */
     private fun refuseCreation(target: TagTarget, errors: List<UserError>) = _state.update { st ->
         var section = st.tagSection(target)
+        var refs = st.referenceSection(target)
         var unplaced = false
         for (error in errors) {
-            val index = tagFieldIndex(error.field)
-            if (index == null) {
-                unplaced = true
-            } else {
-                val (next, left) = section.withErrorAt(index, error.message)
-                section = next
-                if (left != null) unplaced = true
+            val tagIndex = tagFieldIndex(error.field)
+            val referenceIndex = referenceFieldIndex(error.field)
+            when {
+                tagIndex != null -> {
+                    val (next, left) = section.withErrorAt(tagIndex, error.message)
+                    section = next
+                    if (left != null) unplaced = true
+                }
+                referenceIndex != null -> {
+                    val (next, left) = refs.withErrorAt(referenceIndex, error.message)
+                    refs = next
+                    if (left != null) unplaced = true
+                }
+                // A whole-batch refusal names no field — the balance
+                // could not carry every act, so nothing was staged
+                // (D19). It says its piece once, not per chip.
+                else -> unplaced = true
             }
         }
         // Errors that named nothing at all still have to say something.
         if (errors.isEmpty()) unplaced = true
-        val withSection = st.withTagSection(target, section)
+        val withSection = st.withTagSection(target, section).withReferenceSection(target, refs)
         when (target) {
             TagTarget.COMMENT -> withSection.copy(submitting = false, refused = unplaced)
             TagTarget.REPLY -> withSection.copy(replySubmitting = false, replyRefused = unplaced)

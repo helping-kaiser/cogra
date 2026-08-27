@@ -61,6 +61,8 @@ import com.cogra.feature.content.R
 @Composable
 fun ComposePostRoute(
     postId: String?,
+    /** The node the Reference affordance named, staged on entry (D20). */
+    referenceTargetId: String? = null,
     /** The write signed; the caller decides where the author lands. */
     onSaved: () -> Unit,
     onBack: () -> Unit,
@@ -68,7 +70,7 @@ fun ComposePostRoute(
     viewModel: ComposePostViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    LaunchedEffect(postId) { viewModel.start(postId) }
+    LaunchedEffect(postId, referenceTargetId) { viewModel.start(postId, referenceTargetId) }
     // A one-shot: leaving the composer is an effect of the signature
     // landing in state, not something composition itself performs.
     LaunchedEffect(state.saved) {

@@ -201,6 +201,7 @@ fun FeedScreen(
                                     onClick = { onOpenPost(post.id) },
                                     onOpenActor = onOpenActor,
                                     onOpenTopic = onOpenTopic,
+                                    onOpenPost = onOpenPost,
                                     stanceControl = stanceControl,
                                 )
                             }
@@ -275,6 +276,8 @@ private fun PostCard(
     onClick: () -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
+    /** A referenced post opens on its own detail, not this card's. */
+    onOpenPost: (String) -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
 ) {
     Card(
@@ -312,6 +315,12 @@ private fun PostCard(
                 PendingMarker(testTag = "feed_post_pending_${post.id}")
             }
             TopicChipRow(post.topics, onOpenTopic, "feed_post_${post.id}")
+            ReferenceChipRow(
+                references = post.references,
+                onOpenActor = onOpenActor,
+                onOpenPost = onOpenPost,
+                testTagPrefix = "feed_post_${post.id}",
+            )
             // The post card carries the stance control (design.md §6).
             stanceControl(post.id, "feed_post_${post.id}")
         }

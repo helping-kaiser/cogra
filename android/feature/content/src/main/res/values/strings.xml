@@ -26,6 +26,9 @@
          Reference — a reference to a profile is a mention — and never
          "cite", because every content node can be referenced. -->
     <string name="content_references_heading">References</string>
+    <!-- The affordance on a content node itself (D20). Every content
+         node can be referenced, which is why the verb is Reference. -->
+    <string name="content_reference_action">Reference</string>
     <!-- How a target reads. A mention must resolve against the actor's
          CURRENT handle, which is why the body is never parsed for one
          (D15). -->
