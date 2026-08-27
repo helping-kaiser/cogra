@@ -11,16 +11,22 @@ import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ReferenceCandidateView
 import com.cogra.domain.UserError
 import com.cogra.domain.content.LandingSignal
 import com.cogra.domain.content.NodeLanding
+import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingContentRepository
+import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingTopicRepository
 import com.cogra.domain.testing.testComment
+import com.cogra.domain.testing.testContentTarget
+import com.cogra.domain.testing.testMentionTarget
 import com.cogra.domain.testing.testPost
+import com.cogra.domain.testing.testReferenceClaim
 import com.cogra.domain.testing.testTopicClaim
 import com.cogra.domain.topics.TagClaim
 import com.google.common.truth.Truth.assertThat
@@ -112,24 +118,32 @@ class PostDetailViewModelTest {
         /** A refusal the creation path hands back, when set (F2). */
         var commentRefusal: List<UserError>? = null
 
+        /** The references the last comment/reply creation declared. */
+        var lastCommentReferences: List<ReferenceClaim> = emptyList()
+
         override suspend fun prepareComment(
             target: String,
             content: String,
             license: LicenseChoice,
             tags: List<TagClaim>,
+            references: List<ReferenceClaim>,
         ): Outcome<PreparedContentView> {
             replyTargets += target
             commentPrepared += 1
             lastCommentTags = tags
+            lastCommentReferences = references
             if (prepareFails) return Outcome.Failed(IOException("offline"))
             commentRefusal?.let { return Outcome.Refused(it) }
             return Outcome.Success(
                 PreparedContentView(
                     "comment-node",
                     // The server stages the minting Review, then one Tag
-                    // record per declared topic — the whole batch signs
-                    // in the one pass.
-                    listOf(sealer.stage(Family.REVIEW)) + tags.map { sealer.stage(Family.TAG) },
+                    // record per declared topic and one Reference per
+                    // declared citation — the whole batch signs in the
+                    // one pass.
+                    listOf(sealer.stage(Family.REVIEW)) +
+                        tags.map { sealer.stage(Family.TAG) } +
+                        references.map { sealer.stage(Family.REFERENCE) },
                 ),
             )
         }
@@ -150,8 +164,46 @@ class PostDetailViewModelTest {
         }
     }
 
-    private fun viewModel() =
-        PostDetailViewModel(content, topics, WriteSigner(sealer, identity), landings, identity)
+    private val references = object : ThrowingReferenceRepository() {
+        val added = mutableListOf<ReferenceCall>()
+        val withdrawn = mutableListOf<Pair<String, String>>()
+        var candidates: List<ReferenceCandidateView> = emptyList()
+
+        /** How many counter-records a withdrawal costs; the batch length is the quote (D11). */
+        var withdrawalRecords = 1
+
+        override suspend fun referenceCandidates(
+            query: String,
+            limit: Int?,
+        ): Outcome<List<ReferenceCandidateView>> = Outcome.Success(candidates)
+
+        override suspend fun prepareReference(
+            artifact: String,
+            target: String,
+            relevance: Double?,
+            support: Double?,
+        ): Outcome<List<PreparedWriteView>> {
+            added += ReferenceCall(artifact, target, relevance, support)
+            return Outcome.Success(listOf(sealer.stage(Family.REFERENCE)))
+        }
+
+        override suspend fun prepareReferenceWithdrawal(
+            artifact: String,
+            target: String,
+        ): Outcome<List<PreparedWriteView>> {
+            withdrawn += artifact to target
+            return Outcome.Success(List(withdrawalRecords) { sealer.stage(Family.REFERENCE) })
+        }
+    }
+
+    private fun viewModel() = PostDetailViewModel(
+        content,
+        topics,
+        references,
+        WriteSigner(sealer, identity),
+        landings,
+        identity,
+    )
 
     /**
      * Most tests exercise the staging, not the confirm (F4): the device

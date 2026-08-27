@@ -9,14 +9,21 @@ import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ReferenceCandidateView
+import com.cogra.domain.ReferenceClaimView
 import com.cogra.domain.TopicClaimView
 import com.cogra.domain.UserError
+import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingContentRepository
+import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingTopicRepository
+import com.cogra.domain.testing.testContentTarget
+import com.cogra.domain.testing.testMentionTarget
 import com.cogra.domain.testing.testPost
+import com.cogra.domain.testing.testReferenceClaim
 import com.cogra.domain.testing.testTopicClaim
 import com.cogra.domain.topics.TAG_DEFAULT_CONFIDENCE
 import com.cogra.domain.topics.TAG_DEFAULT_RELEVANCE
@@ -112,8 +119,52 @@ class ComposePostViewModelTest {
         }
     }
 
+    private val references = object : ThrowingReferenceRepository() {
+        val added = mutableListOf<ReferenceCall>()
+        val withdrawn = mutableListOf<Pair<String, String>>()
+        var candidates: List<ReferenceCandidateView> = emptyList()
+        var candidatesFail = false
+        var lastQuery: String? = null
+
+        /** How many counter-records a withdrawal costs; the batch length is the quote (D11). */
+        var withdrawalRecords = 1
+        var addOutcomeFor: (String) -> Outcome<List<PreparedWriteView>>? = { null }
+        var withdrawOutcomeFor: (String) -> Outcome<List<PreparedWriteView>>? = { null }
+
+        override suspend fun referenceCandidates(
+            query: String,
+            limit: Int?,
+        ): Outcome<List<ReferenceCandidateView>> {
+            lastQuery = query
+            return if (candidatesFail) {
+                Outcome.Failed(IOException("offline"))
+            } else {
+                Outcome.Success(candidates)
+            }
+        }
+
+        override suspend fun prepareReference(
+            artifact: String,
+            target: String,
+            relevance: Double?,
+            support: Double?,
+        ): Outcome<List<PreparedWriteView>> {
+            added += ReferenceCall(artifact, target, relevance, support)
+            return addOutcomeFor(target) ?: Outcome.Success(listOf(sealer.stage(Family.REFERENCE)))
+        }
+
+        override suspend fun prepareReferenceWithdrawal(
+            artifact: String,
+            target: String,
+        ): Outcome<List<PreparedWriteView>> {
+            withdrawn += artifact to target
+            return withdrawOutcomeFor(target)
+                ?: Outcome.Success(List(withdrawalRecords) { sealer.stage(Family.REFERENCE) })
+        }
+    }
+
     private fun viewModel() =
-        ComposePostViewModel(content, topics, WriteSigner(sealer, identity), identity)
+        ComposePostViewModel(content, topics, references, WriteSigner(sealer, identity), identity)
 
     /**
      * Most tests exercise the staging, not the confirm (F4): the device
