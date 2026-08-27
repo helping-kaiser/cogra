@@ -15,6 +15,7 @@ import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.StanceRepository
+import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.store.IdentityStore
@@ -27,6 +28,7 @@ import com.cogra.network.repo.ProfileRepositoryImpl
 import com.cogra.network.repo.OnboardingRepositoryImpl
 import com.cogra.network.repo.SessionRepositoryImpl
 import com.cogra.network.repo.StanceRepositoryImpl
+import com.cogra.network.repo.ReferenceRepositoryImpl
 import com.cogra.network.repo.TopicRepositoryImpl
 import com.cogra.network.repo.WriteRepositoryImpl
 import com.cogra.network.store.EncryptedStore
@@ -117,4 +119,7 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun topicRepository(impl: TopicRepositoryImpl): TopicRepository
+
+    @Binds
+    abstract fun referenceRepository(impl: ReferenceRepositoryImpl): ReferenceRepository
 }
