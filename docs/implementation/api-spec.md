@@ -458,11 +458,12 @@ enum ErrorCode {
 
 ```graphql
 "Anything with a graph identity — implemented by every node type.
- It exists so heterogeneous endpoints (a record's ends, a reference
- target, a comment's parent) are typed without a sprawling union.
- It is a type-modeling device, not a navigation mandate: typed
- entry points are free to exist and nothing is forced through a
- single node(id) accessor."
+ It exists so heterogeneous endpoints (a record's ends, a comment's
+ parent) are typed without a sprawling union. It is a type-modeling
+ device, not a navigation mandate: typed entry points are free to
+ exist and nothing is forced through a single node(id) accessor.
+ Where an endpoint's target set is small and closed, a named union
+ carries it instead — ReferenceTarget is the citation's."
 interface Node {
   id: UUID!
   "When this node was created — when its minting record was
@@ -936,6 +937,14 @@ type Post implements Node {
    Third-party claims wait on the forward-path weight that gates
    them (slice 3)."
   topics(includePending: Boolean! = true): [TopicClaim!]!
+  "This post's current citations — quotes, embeds and mentions the
+   author built into it, as the current-references fold reads them:
+   the (author, artifact, target) bundle summed then clipped, a
+   bundle netting to (0, 0) read as withdrawn. The author's own
+   citations only; a stranger's citation off this post reaches a
+   viewer through the citer, at the forward-path weight that gates
+   them (slice 3)."
+  references(includePending: Boolean! = true): [ReferenceClaim!]!
 }
 
 "A threaded response — minted by a Review record targeting whatever
@@ -959,6 +968,10 @@ type Comment implements Node {
    author-owned channel as `Post.topics`; a Comment is Taggable
    like any other content node."
   topics(includePending: Boolean! = true): [TopicClaim!]!
+  "This comment's current citations — the same fold and the same
+   author-owned channel as `Post.references`; a Comment is a citing
+   artifact like any other passive node."
+  references(includePending: Boolean! = true): [ReferenceClaim!]!
 }
 
 "What a Review can respond to — root content, another Comment, a
@@ -1121,6 +1134,61 @@ type TopicClaim {
   "True while the winning record is still in flight."
   pending: Boolean!
 }
+
+"One standing citation from an artifact — a chip in the reference
+ row. The bundle key is (author, citing artifact, target) and its
+ records *net*: a citation revised twice folds to the sum of all
+ three records, clipped to the census range, and a bundle netting
+ to (0, 0) is withdrawn and never appears here."
+type ReferenceClaim {
+  "The cited node, typed. Null when this instance cannot type the
+   far end — the fold reads the mirror, which reaches further than
+   both the display store and CoGra's own target policy — in which
+   case targetId still names it."
+  target: ReferenceTarget
+  "The cited node's raw L1 identifier, always present: the citation
+   stands as a substrate fact whether or not this instance can type
+   its far end."
+  targetId: String!
+  "How load-bearing the cited thing is to this artifact — effort
+   `f`, folded and clipped to [-1, 1]."
+  relevance: Dimension!
+  "Endorsing versus refuting — enthusiasm `e`, folded and clipped.
+   Strictly positive on both axes is what makes a mention a vouch."
+  support: Dimension!
+  "True while any record in the bundle is still in flight."
+  pending: Boolean!
+}
+
+"One thing the reference finder offers as a citation target. The
+ pairing mirrors ReferenceClaim — the typed node for the chip, its
+ raw id beside it — with two differences, both following from a
+ candidate being a thing about to be *cited* rather than a citation
+ already standing. targetId is the L2 UUID rather than the claim's
+ L1 identifier string, because ReferenceInput.target takes the L2
+ id: the picker hands back exactly what the mutation consumes. And
+ target is non-null where a claim's is nullable: a claim is a
+ substrate fact that can outrun the display store, while a
+ candidate is only ever built from what CoGra can display."
+type ReferenceCandidate {
+  "The candidate node, typed — the same union a standing citation
+   carries, so the picker renders with the components already built
+   for the reference row."
+  target: ReferenceTarget!
+  "The candidate's L2 id: what a ReferenceInput names to cite it."
+  targetId: UUID!
+}
+
+"What a citation may point at. Quoting, embedding and mentioning
+ are one record, and this union *is* the distinction between them:
+ a citation whose target is a User is a mention, and one whose
+ target is a Post or Comment is a quote or embed — which of those
+ two is a render question, not a wire one.
+
+ A Hashtag is absent, and that absence is the contract: a topic is
+ tagged, never referenced. The write path refuses a Type target, so
+ no citation this instance prepares can have one."
+union ReferenceTarget = Post | Comment | User
 ```
 
 The registry row is written where a record first names the Type,
@@ -1837,6 +1905,31 @@ type Query {
    (graph-model.md §2). Deliberately not the ranked feed."
   posts(first: Int, after: String, last: Int, before: String, includePending: Boolean! = true): PostConnection!
 
+  "Candidate targets for the reference picker.
+
+   **Exact-match resolution only.** Real search — prefix matching,
+   ranking, snippets — arrives with slice 2.7 *behind this same
+   field*, so a client binds to it once and does not change when
+   the implementation is replaced. Two shapes resolve today: a
+   handle, bare or @-sigilled, names a person; a UUID names
+   whatever node it addresses.
+
+   An empty or unresolvable query yields an empty list, never an
+   error. A finder runs on every keystroke, so most of what it is
+   asked is a prefix of something the user is still typing —
+   failing those would make error noise the normal case.
+
+   A candidate is offerable only if prepareReference would accept
+   it: resolution runs through the write path's own resolver, so
+   the picker cannot hand back a target the mutation then refuses.
+   Two classes narrow for exactly that reason. A topic is never
+   offered — it is tagged, not referenced — which is why a
+   #-typed query finds nothing and a UUID naming a Type yields no
+   candidate. And a keyless account fronts no Profile on the graph,
+   so it resolves nowhere for the write path and must not be
+   offered here either."
+  referenceCandidates(query: String!, limit: Int): [ReferenceCandidate!]!
+
   "One staged write by id — the confirm-side observation point of
    the write path. Field-level: resolves only for the staging
    actor's session; null otherwise."
@@ -2105,6 +2198,20 @@ These bind every mutation below.
   fact alone, and the flow state advances per record at confirm.
   The batch size is visible to the client, so the total cost is
   legible before signing.
+- **A batch is priced whole before any of it is staged.** Staging
+  reserves nothing and every act commits its own transaction, so
+  without a cumulative check a batch could stage part of itself
+  and refuse the rest — leaving the author holding half a gesture
+  they authored as one. Prepare therefore reads the balance once
+  and prices the whole batch — N acts at the current θ — refusing
+  it entire before staging a single act. **Best-effort, never a
+  reservation**, exactly like the per-act W1 check it generalizes:
+  nothing holds the balance, so it can still move between the
+  check and the acts landing, and a batch that passes here can
+  still take a per-act refusal later. What it buys is that the
+  common failure — an author who plainly cannot afford the batch —
+  is refused whole and up front rather than discovered halfway
+  through.
 - **The viewer is the actor; `actAs` names a Collective acting
   through them.** No mutation takes an author argument — the
   authenticated viewer in the execution context initiates every
@@ -2138,7 +2245,12 @@ These bind every mutation below.
   priced act
   ([feed-ranking.md §8.1](../primitive/feed-ranking.md#81-the-act)).
   The batch is therefore the gesture's cost, legible before
-  signing like any other prepare batch.
+  signing like any other prepare batch. Severance resolves **one
+  family** and nets that family's bundle: severing a person nets
+  the Opinion bundle, and a mention of them — a Reference from an
+  artifact toward their Profile — is a bundle of its own, keyed by
+  the full incidence and withdrawn by
+  `prepareReferenceWithdrawal`.
 - **Write inputs are raw scalars; moderation is server-assigned.**
   A field read as `ModeratedText` is *written* as a plain `String`:
   the caller never sets a moderation status, so there is no
@@ -2427,6 +2539,9 @@ viewer's own bundle as a field, folded by the published rule —
 same-author sum-then-clip, keyed (author, target, family), with
 payload-marked records excluded
 ([feed-ranking.md §3.2](../primitive/feed-ranking.md#32-the-fold--per-author-net-stance)).
+A hyper family keys its bundles by the full incidence instead: a
+citation's is (author, citing artifact, target), so the same author
+citing the same target from two posts holds two bundles.
 
 ```graphql
 "A candidate pick, for projecting where it would land the bundle
@@ -2515,6 +2630,27 @@ and confidence outside `[0, 1]`, which the census would refuse as a
 formation fault, refused on the `pInterest` path instead. A
 malformed batch must not leave half its acts in flight.
 
+A reference batch is checked the same way and carries its own cap:
+at most **ten** citations per batch, a named constant, so a
+maximal creation batch is 1 minting record + 10 tags + 10
+references = **21 priced acts** through one prepare. The cap is
+checked first, as a batch — an over-long batch is refused as a
+batch, not as whichever of its entries happens to also be
+malformed. Then per entry, each refusal a field-level `userError`
+rooted at `references.<index>.<field>`: a target nothing answers
+to, a parameter outside `[-1, 1]` named on its own `relevance` or
+`support` path, and a target already cited by another entry —
+compared *after* resolution, so two ids naming the same node are
+one citation submitted twice, refused rather than deduplicated.
+Two targets are refused outright and are CoGra's API being
+narrower than the substrate, which admits both: an artifact
+cannot cite itself, and a Type is tagged, never referenced.
+
+Everything the batch could be refused for — the topic names, the
+citation targets, and the balance against the batch's whole price
+— is checked before the minting record is staged, so a refusal
+leaves nothing in flight.
+
 ```graphql
 "One attachment placement within a gallery. Assets are uploaded
  first via uploadMedia; the envelope commits their digests."
@@ -2541,12 +2677,38 @@ input TagInput {
 }
 
 "A citation — one Reference record from the authored artifact to
- the target. A mention is a Reference targeting the person's
- Profile."
+ the target. Quoting, embedding and mentioning are all this one
+ record, and the target's node class is the whole distinction: a
+ Reference whose target is a person's Profile *is* a mention.
+ Nothing is minted; both endpoints pre-exist.
+
+ A citation carries no note. A payload would make the record
+ payload-marked, and payload-marked records are read individually
+ and never through the author's netted bundle — so a note would
+ silently remove the citation from the very fold that renders it.
+
+ The target may still be in flight when it is the viewer's own: a
+ citation toward a pending node declares that node's act as a
+ dependency, so the epoch close cannot order the citation ahead of
+ what it cites."
 input ReferenceInput {
+  "The cited node — a post, a comment, or a person's profile.
+   External links are body text, never citations: both endpoints of
+   a Reference are nodes on the graph."
   target: UUID!
-  pDirected: Dimension!
-  pInterest: Dimension!
+  "How load-bearing the cited thing is to this artifact, `[-1, 1]`;
+   defaults to +0.1. The census calls this **effort `f`**, and it
+   occupies the `pDirected` slot — the same slot relevance occupies
+   on a tag."
+  relevance: Dimension
+  "Endorsing versus refuting, `[-1, 1]`; defaults to +0.1. The
+   census calls this **enthusiasm `e`**, and it occupies the
+   `pInterest` slot. This is the axis that decides whether a mention
+   vouches: a citation strictly positive on both axes resolves its
+   fold cell to the cited person, and every other citation resolves
+   home. Both defaults are strictly positive, so a default mention
+   vouches — weakly, at coefficient `√0.01 = 0.1`."
+  support: Dimension
 }
 
 "The qualifiers a content node was minted with
@@ -2640,6 +2802,49 @@ input PrepareTagInput {
   pInterest: Dimension
 }
 
+"One standalone citation on existing content — the gesture that
+ adds a quote, embed or mention after publishing, which post.md §3
+ and comment.md §3 both promise (\"alongside the Publish or
+ later\"). Citations are never edit fields: changing what a post
+ cites is its own priced act. Citing is unconstrained by the
+ artifact's ownership — anyone may hang a citation off anyone's
+ content — and the read side is what separates the carrier
+ author's own citations from third-party ones."
+input PrepareReferenceInput {
+  "The citing artifact — the post or comment the citation hangs
+   off."
+  artifact: UUID!
+  "The cited node. An artifact cannot cite itself."
+  target: UUID!
+  "Effort `f`, the `pDirected` slot; defaults to +0.1."
+  relevance: Dimension
+  "Enthusiasm `e`, the `pInterest` slot; defaults to +0.1."
+  support: Dimension
+}
+
+"Withdrawing one citation. Records are never deleted, and
+ Reference withdrawal is per-leg net stance — not the Tag rule
+ beside it, which is newest-wins at relevance 0 only because a
+ tag's confidence cannot be netted. Both citation parameters are
+ signed, so a withdrawal is the severance shape: the counter-records
+ that net the viewer's (artifact, target) bundle to `(0, 0)`. Each
+ is its own priced act, so the batch length is the gesture's cost
+ — a citation revised upward several times needs more than one
+ record to walk back, and quoting that count is why the batch is
+ assembled server-side rather than left to a client that would
+ author a single negating record and silently under-net.
+
+ A citation whose target this instance cannot type is not
+ addressable here: the mutation names its target by L2 id, and a
+ claim serving only its L1 identifier has none to name. Clients
+ exclude such citations from editing."
+input PrepareReferenceWithdrawalInput {
+  "The citing artifact the citation hangs off."
+  artifact: UUID!
+  "The cited node whose bundle is netted away."
+  target: UUID!
+}
+
 "Update the acting identity's profile — stages a parallel
  Registration: L1's own profile-update idiom, payload only, never
  identity (substrate.md §9). Covers the display fields and the
@@ -2686,6 +2891,8 @@ extend type Mutation {
   preparePostEdit(input: PreparePostEditInput!): PrepareContentPayload!
   prepareComment(input: PrepareCommentInput!): PrepareContentPayload!
   prepareTag(input: PrepareTagInput!): PreparePayload!
+  prepareReference(input: PrepareReferenceInput!): PreparePayload!
+  prepareReferenceWithdrawal(input: PrepareReferenceWithdrawalInput!): PreparePayload!
   prepareCommentEdit(input: PrepareCommentEditInput!): PrepareContentPayload!
   prepareProfileUpdate(input: PrepareProfileUpdateInput!): PreparePayload!
   uploadMedia(input: UploadMediaInput!): UploadMediaPayload!
@@ -2935,6 +3142,9 @@ input PrepareItemInput {
   description: String
   attachments: [AttachmentInput!]
   tags: [TagInput!]
+  "Citations declared at creation; same rules as on a Post. An Item
+   is a passive node like any other, so it cites its source."
+  references: [ReferenceInput!]
   license: LicenseInput!
   "CGT amount, rail-precision string; omitted = not offered for
    sale (items.md §6)."
