@@ -1467,7 +1467,13 @@ type Query {
 	
 	A candidate is offerable only if `prepareReference` would accept
 	it: resolution runs through the write path's own resolver, so the
-	picker cannot hand back a target the mutation then refuses.
+	picker cannot hand back a target the mutation then refuses. Two
+	classes narrow for exactly that reason. A Type is offered only
+	once the registry can invert its name — a `ReferenceInput` names
+	its target by L2 id, and the name → id derivation is one-way, so
+	a name no record has referenced yet has no id to name. And a
+	keyless account fronts no Profile on the graph, so it resolves
+	nowhere for the write path and must not be offered here either.
 	"""
 	referenceCandidates(query: String!, limit: Int): [ReferenceCandidate!]!
 	"""
