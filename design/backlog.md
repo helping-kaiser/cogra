@@ -70,7 +70,17 @@ and the pending marker arriving in the thread. Exercises `TextField`,
 `LicenseChooser`, `RecoveryCode`, `SigningPending`, `PendingMarker` —
 the honesty surfaces get their first real test here.
 
-### 7 · Join / invite / applicant onboarding · *design*
+### 7 · Join / invite / applicant onboarding · *design* · **built**
+`designs/canonical/` — the canonical canvas's Entry section (2026-08-27),
+grown past this item's scope by jakob's direction: the landing is the
+public feed from a borrowed vantage point (readme §13), plus invite
+entry, the vouch screen, the key ceremony with its think-twice gate and
+recovery-code trap, the applicant cards, the landing moment with the
+first vouch on the pad, sign-in, reset, and restore. Ported back:
+`Checkbox`, `BorrowedViewBand`, the `check` glyph, `RecoveryCode` at
+`body-large`, and the §13 rulings (borrowed vantage point, pad above the
+bar, per-control onboarding). The three-direction ideation lives on the
+standalone "CoGra entry" canvas.
 Applicant vs member expressed as cards in the same shell, never as
 different navigation. Invitation, approval waiting, key creation and
 restore.
