@@ -3,20 +3,26 @@ package com.cogra.feature.content
 import com.cogra.crypto.ActorKey
 import com.cogra.crypto.Family
 import com.cogra.domain.CommentView
+import com.cogra.domain.ErrorCode
 import com.cogra.domain.Landing
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PreparedContentView
+import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.UserError
 import com.cogra.domain.content.LandingSignal
 import com.cogra.domain.content.NodeLanding
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingContentRepository
+import com.cogra.domain.testing.ThrowingTopicRepository
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testPost
+import com.cogra.domain.testing.testTopicClaim
+import com.cogra.domain.topics.TagClaim
 import com.google.common.truth.Truth.assertThat
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
@@ -100,21 +106,62 @@ class PostDetailViewModelTest {
             includePending: Boolean,
         ): Outcome<Page<CommentView>> = repliesPage
 
+        /** The topics the last comment/reply creation declared (F9). */
+        var lastCommentTags: List<TagClaim> = emptyList()
+
+        /** A refusal the creation path hands back, when set (F2). */
+        var commentRefusal: List<UserError>? = null
+
         override suspend fun prepareComment(
             target: String,
             content: String,
             license: LicenseChoice,
+            tags: List<TagClaim>,
         ): Outcome<PreparedContentView> {
             replyTargets += target
             commentPrepared += 1
+            lastCommentTags = tags
             if (prepareFails) return Outcome.Failed(IOException("offline"))
+            commentRefusal?.let { return Outcome.Refused(it) }
             return Outcome.Success(
-                PreparedContentView("comment-node", listOf(sealer.stage(Family.REVIEW))),
+                PreparedContentView(
+                    "comment-node",
+                    // The server stages the minting Review, then one Tag
+                    // record per declared topic — the whole batch signs
+                    // in the one pass.
+                    listOf(sealer.stage(Family.REVIEW)) + tags.map { sealer.stage(Family.TAG) },
+                ),
             )
         }
     }
 
-    private fun viewModel() = PostDetailViewModel(content, WriteSigner(sealer, identity), landings)
+    private val topics = object : ThrowingTopicRepository() {
+        val calls = mutableListOf<TagCall>()
+        var outcomeFor: (String) -> Outcome<List<PreparedWriteView>>? = { null }
+
+        override suspend fun prepareTag(
+            target: String,
+            name: String,
+            pDirected: Double?,
+            pInterest: Double?,
+        ): Outcome<List<PreparedWriteView>> {
+            calls += TagCall(target, name, pDirected, pInterest)
+            return outcomeFor(name) ?: Outcome.Success(listOf(sealer.stage(Family.TAG)))
+        }
+    }
+
+    private fun viewModel() =
+        PostDetailViewModel(content, topics, WriteSigner(sealer, identity), landings, identity)
+
+    /**
+     * Most tests exercise the staging, not the confirm (F4): the device
+     * has already said "don't ask", and the collector has read that
+     * before the first submit.
+     */
+    private fun viewModelWithoutConfirm(): PostDetailViewModel {
+        identity.confirmMultiAction.value = false
+        return viewModel().also { dispatcher.scheduler.advanceUntilIdle() }
+    }
 
     @Before
     fun setUp() {
@@ -490,5 +537,344 @@ class PostDetailViewModelTest {
 
         vm.onToggleTagValues("post-1")
         assertThat(vm.state.value.revealedTagRows).containsExactly("c1")
+    }
+
+    // -- Comment compose gains tags (F9) --
+
+    private fun startedVm(): PostDetailViewModel = viewModelWithoutConfirm().also {
+        it.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+    }
+
+    @Test
+    fun aCommentDeclaresItsTopicsOnTheCreationInput() = runTest(dispatcher) {
+        val vm = startedVm()
+        vm.onDraftChange("Great post")
+        vm.onTagInputChange(TagTarget.COMMENT, "#Rust")
+        vm.onAddTag(TagTarget.COMMENT)
+        vm.onTagRelevanceChange(TagTarget.COMMENT, "rust", 0.7)
+        vm.onSubmitComment()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.lastCommentTags).containsExactly(TagClaim("rust", 0.7, 1.0))
+        assertThat(vm.state.value.commentSigned).isTrue()
+        // The tags rode the mutation, so no standalone Tag was staged.
+        assertThat(topics.calls).isEmpty()
+    }
+
+    /** The whole batch — the Review and every Tag beside it — signs in one pass. */
+    @Test
+    fun everyWriteInACommentBatchIsSigned() = runTest(dispatcher) {
+        val vm = startedVm()
+        vm.onDraftChange("Great post")
+        vm.onTagInputChange(TagTarget.COMMENT, "rust")
+        vm.onAddTag(TagTarget.COMMENT)
+        vm.onTagInputChange(TagTarget.COMMENT, "kotlin")
+        vm.onAddTag(TagTarget.COMMENT)
+        vm.onSubmitComment()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // Three staged writes, three completed handshakes.
+        assertThat(sealer.staged).hasSize(3)
+        assertThat(vm.state.value.commentSigned).isTrue()
+        assertThat(vm.state.value.commentTags.tags).isEmpty()
+    }
+
+    @Test
+    fun theCommentIndicatorCountsTheMintingWriteAndEachTopic() = runTest(dispatcher) {
+        val vm = startedVm()
+        assertThat(vm.state.value.commentSignedActions).isEqualTo(1)
+        vm.onTagInputChange(TagTarget.COMMENT, "rust")
+        vm.onAddTag(TagTarget.COMMENT)
+        assertThat(vm.state.value.commentSignedActions).isEqualTo(2)
+    }
+
+    @Test
+    fun aReplyDeclaresItsOwnTopics() = runTest(dispatcher) {
+        val vm = startedVm()
+        vm.onStartReply("c1")
+        vm.onReplyDraftChange("me too")
+        vm.onTagInputChange(TagTarget.REPLY, "kotlin")
+        vm.onAddTag(TagTarget.REPLY)
+        vm.onSubmitReply()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.lastCommentTags.map { it.name }).containsExactly("kotlin")
+        assertThat(vm.state.value.replyTags.tags).isEmpty()
+    }
+
+    /** Each box holds its own chips: a reply's topics are not the comment box's. */
+    @Test
+    fun theCommentAndReplySectionsStaySeparate() = runTest(dispatcher) {
+        val vm = startedVm()
+        vm.onTagInputChange(TagTarget.COMMENT, "rust")
+        vm.onAddTag(TagTarget.COMMENT)
+        vm.onStartReply("c1")
+        vm.onTagInputChange(TagTarget.REPLY, "kotlin")
+        vm.onAddTag(TagTarget.REPLY)
+
+        assertThat(vm.state.value.commentTags.tags.map { it.name }).containsExactly("rust")
+        assertThat(vm.state.value.replyTags.tags.map { it.name }).containsExactly("kotlin")
+    }
+
+    @Test
+    fun openingAFreshReplyBoxStartsWithNoChips() = runTest(dispatcher) {
+        val vm = startedVm()
+        vm.onStartReply("c1")
+        vm.onTagInputChange(TagTarget.REPLY, "rust")
+        vm.onAddTag(TagTarget.REPLY)
+        vm.onStartReply("c2")
+        assertThat(vm.state.value.replyTags.tags).isEmpty()
+    }
+
+    /** F2: the server's own words land on the chip its path names. */
+    @Test
+    fun aRefusedTopicLandsOnItsChip() = runTest(dispatcher) {
+        content.commentRefusal = listOf(
+            UserError(ErrorCode.BAD_INPUT, "`x` is not a legal topic name", listOf("tags", "0", "name")),
+        )
+        val vm = startedVm()
+        vm.onDraftChange("Great post")
+        vm.onTagInputChange(TagTarget.COMMENT, "rust")
+        vm.onAddTag(TagTarget.COMMENT)
+        vm.onSubmitComment()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.commentTags.tags.single().error)
+            .isEqualTo("`x` is not a legal topic name")
+        // Nothing was staged, so nothing may claim the write was refused
+        // without saying why — the chip carries it.
+        assertThat(vm.state.value.refused).isFalse()
+        assertThat(vm.state.value.signingFailed).isFalse()
+    }
+
+    @Test
+    fun aRefusalNamingNoChipStillSurfaces() = runTest(dispatcher) {
+        content.commentRefusal = listOf(UserError(ErrorCode.FORBIDDEN, "not a member", null))
+        val vm = startedVm()
+        vm.onDraftChange("Great post")
+        vm.onSubmitComment()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.refused).isTrue()
+    }
+
+    // -- The multi-action confirm on the comment surfaces (F4) --
+
+    @Test
+    fun aSingleActionCommentNeverAsks() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onDraftChange("Great post")
+        vm.onSubmitComment()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.confirmPending).isNull()
+        assertThat(vm.state.value.commentSigned).isTrue()
+    }
+
+    @Test
+    fun aTaggedCommentAsksBeforeSigning() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onDraftChange("Great post")
+        vm.onTagInputChange(TagTarget.COMMENT, "rust")
+        vm.onAddTag(TagTarget.COMMENT)
+        vm.onSubmitComment()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.confirmPending).isEqualTo(TagTarget.COMMENT)
+        assertThat(content.commentPrepared).isEqualTo(0)
+
+        vm.onConfirmSubmit(dontAskAgain = false)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.confirmPending).isNull()
+        assertThat(vm.state.value.commentSigned).isTrue()
+    }
+
+    @Test
+    fun dismissingTheConfirmStagesNothing() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onDraftChange("Great post")
+        vm.onTagInputChange(TagTarget.COMMENT, "rust")
+        vm.onAddTag(TagTarget.COMMENT)
+        vm.onSubmitComment()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onDismissConfirm()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.confirmPending).isNull()
+        assertThat(content.commentPrepared).isEqualTo(0)
+        assertThat(vm.state.value.draft).isEqualTo("Great post")
+    }
+
+    @Test
+    fun theDontAskAgainCheckboxIsRememberedOnTheDevice() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onDraftChange("Great post")
+        vm.onTagInputChange(TagTarget.COMMENT, "rust")
+        vm.onAddTag(TagTarget.COMMENT)
+        vm.onSubmitComment()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onConfirmSubmit(dontAskAgain = true)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(identity.confirmMultiAction.value).isFalse()
+    }
+
+    // -- Comment tags editable (F10) --
+
+    private fun taggedComment() = testComment("c1").copy(
+        topics = listOf(testTopicClaim("rust", relevance = 0.4, confidence = 0.9)),
+    )
+
+    @Test
+    fun theEditorOpensOnTheCommentsRealStoredValues() = runTest(dispatcher) {
+        val vm = startedVm()
+        vm.onStartEditComment(taggedComment())
+        val row = vm.state.value.editTags.tags.single()
+        assertThat(row.name).isEqualTo("rust")
+        assertThat(row.relevance).isEqualTo(0.4)
+        assertThat(row.confidence).isEqualTo(0.9)
+        // Loaded at those values, so leaving them alone declares nothing.
+        assertThat(vm.state.value.editTags.changeCount).isEqualTo(0)
+        assertThat(vm.state.value.editSignedActions).isEqualTo(0)
+    }
+
+    /** The post-edit precedent: an edit that changed nothing stages no record. */
+    @Test
+    fun anUnchangedEditStagesNothing() = runTest(dispatcher) {
+        val vm = startedVm()
+        vm.onStartEditComment(taggedComment())
+        vm.onSubmitCommentEdit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.editPrepared).isEqualTo(0)
+        assertThat(topics.calls).isEmpty()
+    }
+
+    /** Tags change, text does not: Tag acts only, no edit record. */
+    @Test
+    fun aTagOnlyEditStagesNoEditRecord() = runTest(dispatcher) {
+        val vm = startedVm()
+        vm.onStartEditComment(taggedComment())
+        vm.onTagInputChange(TagTarget.EDIT, "kotlin")
+        vm.onAddTag(TagTarget.EDIT)
+        assertThat(vm.state.value.editSignedActions).isEqualTo(1)
+
+        vm.onSubmitCommentEdit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.editPrepared).isEqualTo(0)
+        assertThat(topics.calls.map { it.name }).containsExactly("kotlin")
+        assertThat(vm.state.value.commentSigned).isTrue()
+    }
+
+    /** Text change plus tag change: the edit record and each Tag act. */
+    @Test
+    fun aTextAndTagEditStagesBothKindsOfRecord() = runTest(dispatcher) {
+        val vm = startedVm()
+        vm.onStartEditComment(taggedComment())
+        vm.onEditDraftChange("reworded")
+        vm.onTagInputChange(TagTarget.EDIT, "kotlin")
+        vm.onAddTag(TagTarget.EDIT)
+        assertThat(vm.state.value.editSignedActions).isEqualTo(2)
+
+        vm.onSubmitCommentEdit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.editPrepared).isEqualTo(1)
+        assertThat(topics.calls.map { it.name }).containsExactly("kotlin")
+    }
+
+    /** A withdrawal is a Tag act at relevance 0 (hashtag.md §4). */
+    @Test
+    fun unTaggingStagesARelevanceZeroAct() = runTest(dispatcher) {
+        val vm = startedVm()
+        vm.onStartEditComment(taggedComment())
+        vm.onRemoveTag(TagTarget.EDIT, "rust")
+        vm.onSubmitCommentEdit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val call = topics.calls.single()
+        assertThat(call.target).isEqualTo("c1")
+        assertThat(call.name).isEqualTo("rust")
+        assertThat(call.pDirected).isEqualTo(0.0)
+    }
+
+    /** Re-declaring at new parameters is its own act, not a no-op. */
+    @Test
+    fun reTuningALoadedTagStagesItsOwnAct() = runTest(dispatcher) {
+        val vm = startedVm()
+        vm.onStartEditComment(taggedComment())
+        vm.onTagRelevanceChange(TagTarget.EDIT, "rust", 0.8)
+        assertThat(vm.state.value.editSignedActions).isEqualTo(1)
+
+        vm.onSubmitCommentEdit()
+        dispatcher.scheduler.advanceUntilIdle()
+        val call = topics.calls.single()
+        assertThat(call.name).isEqualTo("rust")
+        assertThat(call.pDirected).isEqualTo(0.8)
+        assertThat(call.pInterest).isEqualTo(0.9)
+    }
+
+    /**
+     * Every record is prepared before anything is signed, so a refusal
+     * partway through leaves no half-signed batch (F10).
+     */
+    @Test
+    fun aRefusedTagStopsTheEditBeforeAnySigning() = runTest(dispatcher) {
+        topics.outcomeFor = { name ->
+            if (name == "kotlin") {
+                Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "no", null)))
+            } else {
+                null
+            }
+        }
+        val vm = startedVm()
+        vm.onStartEditComment(taggedComment())
+        vm.onEditDraftChange("reworded")
+        vm.onTagInputChange(TagTarget.EDIT, "kotlin")
+        vm.onAddTag(TagTarget.EDIT)
+        vm.onSubmitCommentEdit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.editTags.tags.single { it.name == "kotlin" }.error).isEqualTo("no")
+        // Nothing was signed, so nothing claims signing failed (F2).
+        assertThat(vm.state.value.editSigningFailed).isFalse()
+        assertThat(sealer.staged).isEmpty()
+        assertThat(vm.state.value.editingCommentId).isEqualTo("c1")
+    }
+
+    @Test
+    fun cancellingTheEditDropsItsStagedTags() = runTest(dispatcher) {
+        val vm = startedVm()
+        vm.onStartEditComment(taggedComment())
+        vm.onTagInputChange(TagTarget.EDIT, "kotlin")
+        vm.onAddTag(TagTarget.EDIT)
+        vm.onCancelEditComment()
+        assertThat(vm.state.value.editTags.tags).isEmpty()
+        assertThat(vm.state.value.editingCommentId).isNull()
+    }
+
+    @Test
+    fun aMultiActionEditAsksBeforeSigning() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onStartEditComment(taggedComment())
+        vm.onEditDraftChange("reworded")
+        vm.onTagInputChange(TagTarget.EDIT, "kotlin")
+        vm.onAddTag(TagTarget.EDIT)
+        vm.onSubmitCommentEdit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.confirmPending).isEqualTo(TagTarget.EDIT)
+        assertThat(content.editPrepared).isEqualTo(0)
+
+        vm.onConfirmSubmit(dontAskAgain = false)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.editPrepared).isEqualTo(1)
+        assertThat(vm.state.value.commentSigned).isTrue()
     }
 }

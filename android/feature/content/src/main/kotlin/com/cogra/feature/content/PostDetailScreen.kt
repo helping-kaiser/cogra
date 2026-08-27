@@ -93,6 +93,15 @@ fun PostDetailRoute(
         onCancelReply = viewModel::onCancelReply,
         onSubmitReply = viewModel::onSubmitReply,
         onToggleTagValues = viewModel::onToggleTagValues,
+        onTagInputChange = viewModel::onTagInputChange,
+        onAddTag = viewModel::onAddTag,
+        onRemoveTag = viewModel::onRemoveTag,
+        onTuneTag = viewModel::onTuneTag,
+        onDoneTuningTag = viewModel::onDoneTuningTag,
+        onTagRelevanceChange = viewModel::onTagRelevanceChange,
+        onTagConfidenceChange = viewModel::onTagConfidenceChange,
+        onConfirmSubmit = viewModel::onConfirmSubmit,
+        onDismissConfirm = viewModel::onDismissConfirm,
         onEdit = onEdit,
         onOpenActor = onOpenActor,
         onOpenTopic = onOpenTopic,
@@ -125,6 +134,17 @@ fun PostDetailScreen(
     onSubmitReply: () -> Unit,
     /** One chip row asking to show its claim parameters, by owner id (F8). */
     onToggleTagValues: (String) -> Unit,
+    // The three authoring surfaces share one set of tag callbacks, each
+    // naming the section it belongs to (F9, F10).
+    onTagInputChange: (TagTarget, String) -> Unit,
+    onAddTag: (TagTarget) -> Unit,
+    onRemoveTag: (TagTarget, String) -> Unit,
+    onTuneTag: (TagTarget, String) -> Unit,
+    onDoneTuningTag: (TagTarget) -> Unit,
+    onTagRelevanceChange: (TagTarget, String, Double) -> Unit,
+    onTagConfidenceChange: (TagTarget, String, Double) -> Unit,
+    onConfirmSubmit: (Boolean) -> Unit,
+    onDismissConfirm: () -> Unit,
     onEdit: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
@@ -140,6 +160,25 @@ fun PostDetailScreen(
             snackbar.showSnackbar(signedCopy)
             onCommentSignedShown()
         }
+    }
+    val tags = remember(
+        onTagInputChange,
+        onAddTag,
+        onRemoveTag,
+        onTuneTag,
+        onDoneTuningTag,
+        onTagRelevanceChange,
+        onTagConfidenceChange,
+    ) {
+        TagCallbacks(
+            onInputChange = onTagInputChange,
+            onAdd = onAddTag,
+            onRemove = onRemoveTag,
+            onTune = onTuneTag,
+            onDoneTuning = onDoneTuningTag,
+            onRelevanceChange = onTagRelevanceChange,
+            onConfidenceChange = onTagConfidenceChange,
+        )
     }
     val collapsingTop = rememberCollapsingTop()
     Scaffold(
@@ -257,6 +296,7 @@ fun PostDetailScreen(
                             onCancelReply = onCancelReply,
                             onSubmitReply = onSubmitReply,
                             onToggleTagValues = onToggleTagValues,
+                            tags = tags,
                             onOpenActor = onOpenActor,
                             onOpenTopic = onOpenTopic,
                             onSignInOrJoin = onSignInOrJoin,
@@ -266,6 +306,16 @@ fun PostDetailScreen(
                 }
             }
         }
+    }
+    // The confirm a batch earns, whichever of the three submits staged
+    // it (F4).
+    state.confirmPending?.let { pending ->
+        MultiActionConfirm(
+            count = state.signedActions(pending),
+            testTagPrefix = "detail",
+            onConfirm = onConfirmSubmit,
+            onDismiss = onDismissConfirm,
+        )
     }
 }
 
@@ -289,6 +339,7 @@ private fun PostWithThread(
     onCancelReply: () -> Unit,
     onSubmitReply: () -> Unit,
     onToggleTagValues: (String) -> Unit,
+    tags: TagCallbacks,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
@@ -372,6 +423,7 @@ private fun PostWithThread(
                 onCancelReply = onCancelReply,
                 onSubmitReply = onSubmitReply,
                 onToggleTagValues = onToggleTagValues,
+                tags = tags,
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
                 stanceControl = stanceControl,
@@ -424,6 +476,14 @@ private fun PostWithThread(
                         .fillMaxWidth()
                         .testTag("detail_comment_input"),
                 )
+                // Declaring a topic is part of the compose gesture, not a
+                // second step afterwards (F9).
+                CommentTagSection(
+                    section = state.commentTags,
+                    target = TagTarget.COMMENT,
+                    tags = tags,
+                    testTagPrefix = "detail_comment",
+                )
                 LicenseControls(license = state.license, onLicenseChange = onLicenseChange)
                 if (state.refused) {
                     ErrorLine(R.string.content_error_refused, "detail_refused")
@@ -441,18 +501,72 @@ private fun PostWithThread(
                 if (state.submitTransportFailed) {
                     ErrorLine(R.string.content_error_transport, "detail_comment_transport")
                 }
-                Button(
-                    onClick = onSubmitComment,
-                    enabled = !state.submitting && state.draft.isNotBlank(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("detail_comment_submit"),
+                // What this submit will sign, beside the button that
+                // signs it (F4).
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(stringResource(R.string.content_comment_submit))
+                    SignedActionsLine(
+                        count = state.commentSignedActions,
+                        testTag = "detail_comment_signed_actions",
+                        modifier = Modifier.weight(1f),
+                    )
+                    Button(
+                        onClick = onSubmitComment,
+                        enabled = !state.submitting && state.draft.isNotBlank(),
+                        modifier = Modifier.testTag("detail_comment_submit"),
+                    ) {
+                        Text(stringResource(R.string.content_comment_submit))
+                    }
                 }
             }
         }
     }
+}
+
+/**
+ * The tag callbacks the detail view's three authoring sections share,
+ * bundled so the composables carrying them stay readable. Each names the
+ * section it acts on, so one set serves the comment box, the reply box,
+ * and the inline editor alike (F9, F10).
+ */
+internal class TagCallbacks(
+    val onInputChange: (TagTarget, String) -> Unit,
+    val onAdd: (TagTarget) -> Unit,
+    val onRemove: (TagTarget, String) -> Unit,
+    val onTune: (TagTarget, String) -> Unit,
+    val onDoneTuning: (TagTarget) -> Unit,
+    val onRelevanceChange: (TagTarget, String, Double) -> Unit,
+    val onConfidenceChange: (TagTarget, String, Double) -> Unit,
+)
+
+/**
+ * The composer's tag section, compact, inside a comment surface: the
+ * same gated entry, chips, and per-chip sliders the post composer got in
+ * round 1 (F9) — no heading, because the box it sits in already says
+ * what it is.
+ */
+@Composable
+private fun CommentTagSection(
+    section: TagSectionState,
+    target: TagTarget,
+    tags: TagCallbacks,
+    testTagPrefix: String,
+) {
+    TopicEntry(
+        section = section,
+        testTagPrefix = testTagPrefix,
+        showHeading = false,
+        onTagInputChange = { tags.onInputChange(target, it) },
+        onAddTag = { tags.onAdd(target) },
+        onRemoveTag = { tags.onRemove(target, it) },
+        onTuneTag = { tags.onTune(target, it) },
+        onDoneTuningTag = { tags.onDoneTuning(target) },
+        onTagRelevanceChange = { name, value -> tags.onRelevanceChange(target, name, value) },
+        onTagConfidenceChange = { name, value -> tags.onConfidenceChange(target, name, value) },
+    )
 }
 
 /** Nesting indents up to three levels, then flattens (design.md §6). */
@@ -481,6 +595,7 @@ private fun CommentThread(
     onCancelReply: () -> Unit,
     onSubmitReply: () -> Unit,
     onToggleTagValues: (String) -> Unit,
+    tags: TagCallbacks,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
@@ -519,6 +634,15 @@ private fun CommentThread(
                             .fillMaxWidth()
                             .testTag("comment_edit_input"),
                     )
+                    // The editor carries the comment's topics at their
+                    // real stored values; every change is its own Tag
+                    // act, staged beside the edit record (F10).
+                    CommentTagSection(
+                        section = state.editTags,
+                        target = TagTarget.EDIT,
+                        tags = tags,
+                        testTagPrefix = "comment_edit",
+                    )
                     if (state.editRefused) {
                         ErrorLine(R.string.content_error_refused, "comment_edit_refused")
                     }
@@ -532,6 +656,10 @@ private fun CommentThread(
                             "comment_edit_signing_failed",
                         )
                     }
+                    SignedActionsLine(
+                        count = state.editSignedActions,
+                        testTag = "comment_edit_signed_actions",
+                    )
                     // The confirming action sits on the right (F7).
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         TextButton(
@@ -542,7 +670,11 @@ private fun CommentThread(
                         }
                         Button(
                             onClick = onSubmitCommentEdit,
-                            enabled = !state.editSubmitting && state.editDraft.isNotBlank(),
+                            // An edit that changed nothing has nothing
+                            // to sign (F10).
+                            enabled = !state.editSubmitting &&
+                                state.editDraft.isNotBlank() &&
+                                state.editSignedActions > 0,
                             modifier = Modifier.testTag("comment_edit_save"),
                         ) {
                             Text(stringResource(R.string.content_comment_edit_save))
@@ -608,6 +740,12 @@ private fun CommentThread(
                         .fillMaxWidth()
                         .testTag("comment_reply_input"),
                 )
+                CommentTagSection(
+                    section = state.replyTags,
+                    target = TagTarget.REPLY,
+                    tags = tags,
+                    testTagPrefix = "comment_reply",
+                )
                 if (state.replyRefused) {
                     ErrorLine(R.string.content_error_refused, "comment_reply_refused")
                 }
@@ -624,6 +762,10 @@ private fun CommentThread(
                 if (state.replyTransportFailed) {
                     ErrorLine(R.string.content_error_transport, "comment_reply_transport")
                 }
+                SignedActionsLine(
+                    count = state.replySignedActions,
+                    testTag = "comment_reply_signed_actions",
+                )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TextButton(
                         onClick = onCancelReply,
@@ -661,6 +803,7 @@ private fun CommentThread(
                 onCancelReply = onCancelReply,
                 onSubmitReply = onSubmitReply,
                 onToggleTagValues = onToggleTagValues,
+                tags = tags,
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
                 stanceControl = stanceControl,

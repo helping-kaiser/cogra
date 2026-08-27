@@ -450,6 +450,15 @@ class ContentScreensTest {
         onStartReply: (String) -> Unit = {},
         onSubmitReply: () -> Unit = {},
         onToggleTagValues: (String) -> Unit = {},
+        onTagInputChange: (TagTarget, String) -> Unit = { _, _ -> },
+        onAddTag: (TagTarget) -> Unit = {},
+        onRemoveTag: (TagTarget, String) -> Unit = { _, _ -> },
+        onTuneTag: (TagTarget, String) -> Unit = { _, _ -> },
+        onDoneTuningTag: (TagTarget) -> Unit = {},
+        onTagRelevanceChange: (TagTarget, String, Double) -> Unit = { _, _, _ -> },
+        onTagConfidenceChange: (TagTarget, String, Double) -> Unit = { _, _, _ -> },
+        onConfirmSubmit: (Boolean) -> Unit = {},
+        onDismissConfirm: () -> Unit = {},
         onStance: (String, String) -> Unit = { _, _ -> },
     ) {
         compose.setContent {
@@ -474,6 +483,15 @@ class ContentScreensTest {
                 onCancelReply = {},
                 onSubmitReply = onSubmitReply,
                 onToggleTagValues = onToggleTagValues,
+                onTagInputChange = onTagInputChange,
+                onAddTag = onAddTag,
+                onRemoveTag = onRemoveTag,
+                onTuneTag = onTuneTag,
+                onDoneTuningTag = onDoneTuningTag,
+                onTagRelevanceChange = onTagRelevanceChange,
+                onTagConfidenceChange = onTagConfidenceChange,
+                onConfirmSubmit = onConfirmSubmit,
+                onDismissConfirm = onDismissConfirm,
                 onEdit = onEdit,
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
@@ -1018,6 +1036,162 @@ class ContentScreensTest {
         )
         compose.onNodeWithTag("detail_post_topic_rust").assertTextContains("+0.40 · 0.90")
         compose.onNodeWithTag("comment_c1_topic_kotlin").assertTextEquals("#kotlin")
+    }
+
+    // -- Comment compose gains tags (F9) and the editor gains them (F10) --
+
+    @Test
+    fun theCommentBoxCarriesATagEntry() {
+        renderDetail(PostDetailUiState(loading = false, post = testPost("p1")))
+        compose.onNodeWithTag("detail_comment_tag_input").assertExists()
+        compose.onNodeWithTag("detail_comment_tag_add").assertExists()
+    }
+
+    @Test
+    fun anAnonymousReaderGetsNoTagEntry() {
+        renderDetail(
+            PostDetailUiState(loading = false, post = testPost("p1")),
+            signedIn = false,
+        )
+        compose.onNodeWithTag("detail_comment_tag_input").assertDoesNotExist()
+    }
+
+    @Test
+    fun typingIntoTheCommentTagFieldNamesItsSection() {
+        val typed = mutableListOf<Pair<TagTarget, String>>()
+        renderDetail(
+            PostDetailUiState(loading = false, post = testPost("p1")),
+            onTagInputChange = { target, text -> typed += target to text },
+        )
+        compose.onNodeWithTag("detail_comment_tag_input").performTextInput("Rust")
+        assertThat(typed).containsExactly(TagTarget.COMMENT to "Rust")
+    }
+
+    @Test
+    fun theCommentBoxRendersItsStagedChips() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                commentTags = TagSectionState(tags = tagRows("rust")),
+            ),
+        )
+        compose.onNodeWithTag("detail_comment_tag_rust").assertExists()
+    }
+
+    /** The indicator counts the minting write and each declared topic (F4). */
+    @Test
+    fun theCommentSubmitSaysWhatItWillSign() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                commentTags = TagSectionState(tags = tagRows("rust", "kotlin")),
+            ),
+        )
+        compose.onNodeWithTag("detail_comment_signed_actions")
+            .assertTextContains("3", substring = true)
+    }
+
+    @Test
+    fun theReplyBoxCarriesItsOwnTagEntry() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(comment("c1")),
+                replyingToId = "c1",
+            ),
+        )
+        compose.onNodeWithTag("comment_reply_tag_input").assertExists()
+        compose.onNodeWithTag("comment_reply_signed_actions").assertExists()
+    }
+
+    @Test
+    fun theInlineEditorCarriesTheCommentsTags() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(comment("c1")),
+                editingCommentId = "c1",
+                editDraft = "text",
+                editLoadedText = "text",
+                editTags = TagSectionState(tags = tagRows("rust"), loaded = tagRows("rust")),
+            ),
+            viewerId = "author-1",
+        )
+        compose.onNodeWithTag("comment_edit_tag_rust").assertExists()
+        compose.onNodeWithTag("comment_edit_tag_input").assertExists()
+    }
+
+    /** An edit that changed nothing has nothing to sign (F10). */
+    @Test
+    fun anUnchangedEditCannotBeSubmitted() {
+        val loaded = tagRows("rust")
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(comment("c1")),
+                editingCommentId = "c1",
+                editDraft = "text",
+                editLoadedText = "text",
+                editTags = TagSectionState(tags = loaded, loaded = loaded),
+            ),
+            viewerId = "author-1",
+        )
+        compose.onNodeWithTag("comment_edit_signed_actions").assertTextContains("0", substring = true)
+        compose.onNodeWithTag("comment_edit_save").assertIsNotEnabled()
+    }
+
+    @Test
+    fun aTagOnlyEditIsSubmittable() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(comment("c1")),
+                editingCommentId = "c1",
+                editDraft = "text",
+                editLoadedText = "text",
+                editTags = TagSectionState(tags = tagRows("rust"), loaded = emptyList()),
+            ),
+            viewerId = "author-1",
+        )
+        compose.onNodeWithTag("comment_edit_signed_actions").assertTextContains("1", substring = true)
+        compose.onNodeWithTag("comment_edit_save").assertIsEnabled()
+    }
+
+    @Test
+    fun aMultiActionCommentSubmitAsksFirst() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                commentTags = TagSectionState(tags = tagRows("rust")),
+                confirmPending = TagTarget.COMMENT,
+            ),
+        )
+        compose.onNodeWithTag("detail_confirm").assertExists()
+        compose.onNodeWithTag("detail_confirm_body").assertTextContains("2", substring = true)
+    }
+
+    @Test
+    fun confirmingTheBatchReportsTheDontAskChoice() {
+        var confirmed: Boolean? = null
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                commentTags = TagSectionState(tags = tagRows("rust")),
+                confirmPending = TagTarget.COMMENT,
+            ),
+            onConfirmSubmit = { confirmed = it },
+        )
+        compose.onNodeWithTag("detail_confirm_dont_ask").performClick()
+        compose.onNodeWithTag("detail_confirm_proceed").performClick()
+        assertThat(confirmed).isTrue()
     }
 
     @Test

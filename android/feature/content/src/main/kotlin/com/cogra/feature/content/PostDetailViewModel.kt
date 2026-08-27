@@ -7,10 +7,14 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
 import com.cogra.domain.PostView
 import com.cogra.domain.content.LandingSignal
+import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.UserError
 import com.cogra.domain.repo.ContentRepository
+import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.store.IdentityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +34,13 @@ data class ReplyThread(
     val loading: Boolean = false,
     val failed: Boolean = false,
 )
+
+/**
+ * Which of the detail view's three authoring surfaces a tag gesture
+ * belongs to (F9, F10). One set of callbacks serves all three — the
+ * sections differ only in which submit they ride.
+ */
+enum class TagTarget { COMMENT, REPLY, EDIT }
 
 data class PostDetailUiState(
     val loading: Boolean = true,
@@ -76,7 +87,53 @@ data class PostDetailUiState(
      * the set starts empty on every visit.
      */
     val revealedTagRows: Set<String> = emptySet(),
-)
+    /** The topics the comment box will declare (F9). */
+    val commentTags: TagSectionState = TagSectionState(),
+    /** The topics the reply box will declare (F9). */
+    val replyTags: TagSectionState = TagSectionState(),
+    /** The edited comment's topics, loaded at their real values (F10). */
+    val editTags: TagSectionState = TagSectionState(),
+    /** What the edit opened with — text unchanged stages no edit record (F10). */
+    val editLoadedText: String = "",
+    /** Which submit the multi-action confirm is holding; null when none (F4). */
+    val confirmPending: TagTarget? = null,
+    /** The device preference behind that confirm. */
+    val confirmMultiActionSubmits: Boolean = true,
+) {
+    /**
+     * A comment's tags ride the minting write's own input, so the server
+     * stages one Tag record per declared topic beside the Review — each
+     * its own priced act (F4).
+     */
+    val commentSignedActions: Int get() = 1 + commentTags.tags.size
+
+    val replySignedActions: Int get() = 1 + replyTags.tags.size
+
+    /** An edit with unchanged text stages no edit record (F10). */
+    val editContentChanged: Boolean get() = editDraft != editLoadedText
+
+    /** The edit's changes are standalone Tag acts beside an optional edit record. */
+    val editSignedActions: Int
+        get() = (if (editContentChanged) 1 else 0) + editTags.changeCount
+
+    fun tagSection(target: TagTarget): TagSectionState = when (target) {
+        TagTarget.COMMENT -> commentTags
+        TagTarget.REPLY -> replyTags
+        TagTarget.EDIT -> editTags
+    }
+
+    fun signedActions(target: TagTarget): Int = when (target) {
+        TagTarget.COMMENT -> commentSignedActions
+        TagTarget.REPLY -> replySignedActions
+        TagTarget.EDIT -> editSignedActions
+    }
+
+    fun withTagSection(target: TagTarget, section: TagSectionState): PostDetailUiState = when (target) {
+        TagTarget.COMMENT -> copy(commentTags = section)
+        TagTarget.REPLY -> copy(replyTags = section)
+        TagTarget.EDIT -> copy(editTags = section)
+    }
+}
 
 /**
  * One post and its direct thread (comment.md §2), with the comment box
@@ -91,14 +148,24 @@ data class PostDetailUiState(
 @HiltViewModel
 class PostDetailViewModel @Inject constructor(
     private val content: ContentRepository,
+    private val topics: TopicRepository,
     private val signer: WriteSigner,
     private val landings: LandingSignal,
+    private val identity: IdentityStore,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(PostDetailUiState())
     val state = _state.asStateFlow()
 
     private var postId: String? = null
+
+    init {
+        viewModelScope.launch {
+            identity.confirmMultiActionSubmits.collect { on ->
+                _state.update { it.copy(confirmMultiActionSubmits = on) }
+            }
+        }
+    }
 
     fun start(id: String) {
         if (postId == id) return
@@ -230,9 +297,22 @@ class PostDetailViewModel @Inject constructor(
     // The inline comment edit — creator-only upstream; the affordance
     // only renders on the viewer's own comments (comment.md §4).
     fun onStartEditComment(comment: CommentView) = _state.update {
+        val loaded = comment.content.value.orEmpty()
+        // The editor opens on what the comment actually carries — real
+        // stored parameters, not the defaults a fresh chip would take
+        // (F10), so leaving a tag alone re-declares nothing.
+        val tags = comment.topics.map { claim ->
+            TagRow(
+                name = claim.hashtag.name.value.orEmpty(),
+                relevance = claim.relevance,
+                confidence = claim.confidence,
+            )
+        }
         it.copy(
             editingCommentId = comment.id,
-            editDraft = comment.content.value.orEmpty(),
+            editDraft = loaded,
+            editLoadedText = loaded,
+            editTags = TagSectionState(tags = tags, loaded = tags),
             editRefused = false,
             editSigningFailed = false,
             replyingToId = null,
@@ -241,29 +321,71 @@ class PostDetailViewModel @Inject constructor(
 
     fun onEditDraftChange(v: String) = _state.update { it.copy(editDraft = v) }
 
-    fun onCancelEditComment() = _state.update { it.copy(editingCommentId = null, editDraft = "") }
+    fun onCancelEditComment() = _state.update {
+        it.copy(
+            editingCommentId = null,
+            editDraft = "",
+            editLoadedText = "",
+            editTags = TagSectionState(),
+        )
+    }
 
     fun onSubmitCommentEdit() {
         val s = _state.value
+        if (s.editingCommentId == null || s.editSubmitting || s.editDraft.isBlank()) return
+        // An edit opened and left alone stages no record at all.
+        if (s.editSignedActions == 0) return
+        if (gateOnConfirm(TagTarget.EDIT, s)) return
+        stageCommentEdit()
+    }
+
+    /**
+     * Every record this edit carries, staged before anything is signed
+     * (F10): the edit record only when the text moved, then one Tag act
+     * per change — an add or a re-tune at its parameters, a removal at
+     * relevance 0. A refusal from any prepare stops before signing, so
+     * nothing may claim signing failed (F2).
+     */
+    private fun stageCommentEdit() {
+        val s = _state.value
         val id = s.editingCommentId ?: return
-        if (s.editSubmitting || s.editDraft.isBlank()) return
         _state.update {
-            it.copy(editSubmitting = true, editRefused = false, editSigningFailed = false, signingNeedsKey = false)
+            it.copy(
+                editSubmitting = true,
+                editRefused = false,
+                editSigningFailed = false,
+                signingNeedsKey = false,
+                editTags = it.editTags.withoutErrors(),
+            )
         }
         viewModelScope.launch {
-            val prepared = when (val outcome = content.prepareCommentEdit(id, s.editDraft)) {
-                is Outcome.Success -> outcome.value
-                is Outcome.Refused -> {
-                    _state.update { it.copy(editSubmitting = false, editRefused = true) }
-                    return@launch
+            val writes = mutableListOf<PreparedWriteView>()
+            if (s.editContentChanged) {
+                when (val outcome = content.prepareCommentEdit(id, s.editDraft)) {
+                    is Outcome.Success -> writes += outcome.value.writes
+                    // The edit prepare has no per-chip field to name, so
+                    // a refusal and a transport fault both land on the
+                    // editor's own line, as they did before tags.
+                    is Outcome.Refused -> return@launch failEdit()
+                    is Outcome.Failed -> return@launch failEdit()
                 }
-                is Outcome.Failed -> {
-                    _state.update { it.copy(editSubmitting = false, editRefused = true) }
-                    return@launch
+            }
+            for (row in s.editTags.adds) {
+                when (val outcome = topics.prepareTag(id, row.name, row.relevance, row.confidence)) {
+                    is Outcome.Success -> writes += outcome.value
+                    is Outcome.Refused -> return@launch refuseEditTag(row.name, outcome.errors)
+                    is Outcome.Failed -> return@launch failEdit()
+                }
+            }
+            for (name in s.editTags.removes) {
+                when (val outcome = topics.prepareTag(id, name, pDirected = WITHDRAWN)) {
+                    is Outcome.Success -> writes += outcome.value
+                    is Outcome.Refused -> return@launch refuseEditTag(name, outcome.errors)
+                    is Outcome.Failed -> return@launch failEdit()
                 }
             }
             val results = try {
-                signer.sign(prepared.writes)
+                signer.sign(writes)
             } catch (_: NoActorKeyException) {
                 // A husk device: the write waits on the reader restoring
                 // the key, not on time passing (the invites twin) —
@@ -279,6 +401,8 @@ class PostDetailViewModel @Inject constructor(
                         editSubmitting = false,
                         editingCommentId = null,
                         editDraft = "",
+                        editLoadedText = "",
+                        editTags = TagSectionState(),
                         commentSigned = true,
                     )
                 }
@@ -289,11 +413,21 @@ class PostDetailViewModel @Inject constructor(
         }
     }
 
+    private fun failEdit() = _state.update { it.copy(editSubmitting = false, editRefused = true) }
+
+    /** A standalone Tag's refusal names one chip; a withdrawal has none left. */
+    private fun refuseEditTag(name: String, errors: List<UserError>) = _state.update { st ->
+        val (section, unplaced) = st.editTags.withError(name, errors.firstOrNull()?.message)
+        st.copy(editSubmitting = false, editTags = section, editRefused = unplaced != null)
+    }
+
     // The inline reply — a genesis Review targeting the comment
     // (comment.md §1); it shares the composer's license controls.
     fun onStartReply(commentId: String) = _state.update {
         it.copy(
             replyingToId = commentId,
+            replyDraft = "",
+            replyTags = TagSectionState(),
             replyRefused = false,
             replySigningFailed = false,
             replyTransportFailed = false,
@@ -303,12 +437,20 @@ class PostDetailViewModel @Inject constructor(
 
     fun onReplyDraftChange(v: String) = _state.update { it.copy(replyDraft = v) }
 
-    fun onCancelReply() = _state.update { it.copy(replyingToId = null, replyDraft = "") }
+    fun onCancelReply() = _state.update {
+        it.copy(replyingToId = null, replyDraft = "", replyTags = TagSectionState())
+    }
 
     fun onSubmitReply() {
         val s = _state.value
+        if (s.replyingToId == null || s.replySubmitting || s.replyDraft.isBlank()) return
+        if (gateOnConfirm(TagTarget.REPLY, s)) return
+        stageReply()
+    }
+
+    private fun stageReply() {
+        val s = _state.value
         val target = s.replyingToId ?: return
-        if (s.replySubmitting || s.replyDraft.isBlank()) return
         _state.update {
             it.copy(
                 replySubmitting = true,
@@ -316,6 +458,7 @@ class PostDetailViewModel @Inject constructor(
                 replySigningFailed = false,
                 signingNeedsKey = false,
                 replyTransportFailed = false,
+                replyTags = it.replyTags.withoutErrors(),
             )
         }
         viewModelScope.launch {
@@ -324,11 +467,12 @@ class PostDetailViewModel @Inject constructor(
                     target = target,
                     content = s.replyDraft,
                     license = s.license,
+                    tags = s.replyTags.tags.map { it.toClaim() },
                 )
             ) {
                 is Outcome.Success -> outcome.value
                 is Outcome.Refused -> {
-                    _state.update { it.copy(replySubmitting = false, replyRefused = true) }
+                    refuseCreation(TagTarget.REPLY, outcome.errors)
                     return@launch
                 }
                 is Outcome.Failed -> {
@@ -336,6 +480,8 @@ class PostDetailViewModel @Inject constructor(
                     return@launch
                 }
             }
+            // The whole batch — the minting Review and every Tag record
+            // beside it — goes through the one signing pass (F9).
             val results = try {
                 signer.sign(prepared.writes)
             } catch (_: NoActorKeyException) {
@@ -346,7 +492,13 @@ class PostDetailViewModel @Inject constructor(
             }
             if (results.all { it is WriteResult.Done }) {
                 _state.update {
-                    it.copy(replySubmitting = false, replyingToId = null, replyDraft = "", commentSigned = true)
+                    it.copy(
+                        replySubmitting = false,
+                        replyingToId = null,
+                        replyDraft = "",
+                        replyTags = TagSectionState(),
+                        commentSigned = true,
+                    )
                 }
                 refresh()
             } else {
@@ -371,9 +523,15 @@ class PostDetailViewModel @Inject constructor(
     fun onCommentSignedShown() = _state.update { it.copy(commentSigned = false) }
 
     fun onSubmitComment() {
+        val s = _state.value
+        if (postId == null || s.submitting || s.draft.isBlank()) return
+        if (gateOnConfirm(TagTarget.COMMENT, s)) return
+        stageComment()
+    }
+
+    private fun stageComment() {
         val id = postId ?: return
         val s = _state.value
-        if (s.submitting || s.draft.isBlank()) return
         _state.update {
             it.copy(
                 submitting = true,
@@ -381,6 +539,7 @@ class PostDetailViewModel @Inject constructor(
                 signingFailed = false,
                 signingNeedsKey = false,
                 submitTransportFailed = false,
+                commentTags = it.commentTags.withoutErrors(),
             )
         }
         viewModelScope.launch {
@@ -389,11 +548,12 @@ class PostDetailViewModel @Inject constructor(
                     target = id,
                     content = s.draft,
                     license = s.license,
+                    tags = s.commentTags.tags.map { it.toClaim() },
                 )
             ) {
                 is Outcome.Success -> outcome.value
                 is Outcome.Refused -> {
-                    _state.update { it.copy(submitting = false, refused = true) }
+                    refuseCreation(TagTarget.COMMENT, outcome.errors)
                     return@launch
                 }
                 is Outcome.Failed -> {
@@ -410,11 +570,97 @@ class PostDetailViewModel @Inject constructor(
                 return@launch
             }
             if (results.all { it is WriteResult.Done }) {
-                _state.update { it.copy(submitting = false, draft = "", commentSigned = true) }
+                _state.update {
+                    it.copy(
+                        submitting = false,
+                        draft = "",
+                        commentTags = TagSectionState(),
+                        commentSigned = true,
+                    )
+                }
                 refresh()
             } else {
                 _state.update { it.copy(submitting = false, signingFailed = true) }
             }
         }
+    }
+
+    // -- The tag sections, and the gate every submit passes (F4, F9, F10) --
+
+    fun onTagInputChange(target: TagTarget, v: String) = updateTags(target) { it.withInput(v) }
+
+    fun onAddTag(target: TagTarget) = updateTags(target) { it.added() }
+
+    fun onRemoveTag(target: TagTarget, name: String) = updateTags(target) { it.removed(name) }
+
+    fun onTuneTag(target: TagTarget, name: String) = updateTags(target) { it.tuned(name) }
+
+    fun onDoneTuningTag(target: TagTarget) = updateTags(target) { it.tuned(null) }
+
+    fun onTagRelevanceChange(target: TagTarget, name: String, value: Double) =
+        updateTags(target) { it.withRelevance(name, value) }
+
+    fun onTagConfidenceChange(target: TagTarget, name: String, value: Double) =
+        updateTags(target) { it.withConfidence(name, value) }
+
+    private fun updateTags(target: TagTarget, block: (TagSectionState) -> TagSectionState) =
+        _state.update { it.withTagSection(target, block(it.tagSection(target))) }
+
+    /**
+     * A batch of more than one signed act asks first, unless this device
+     * has been told not to (F4). True when the confirm now holds the
+     * submit, so the caller stops.
+     */
+    private fun gateOnConfirm(target: TagTarget, s: PostDetailUiState): Boolean {
+        if (s.confirmPending != null) return true
+        if (!s.confirmMultiActionSubmits || s.signedActions(target) <= 1) return false
+        _state.update { it.copy(confirmPending = target) }
+        return true
+    }
+
+    fun onConfirmSubmit(dontAskAgain: Boolean) {
+        val target = _state.value.confirmPending ?: return
+        if (dontAskAgain) viewModelScope.launch { identity.setConfirmMultiActionSubmits(false) }
+        _state.update { it.copy(confirmPending = null) }
+        when (target) {
+            TagTarget.COMMENT -> stageComment()
+            TagTarget.REPLY -> stageReply()
+            TagTarget.EDIT -> stageCommentEdit()
+        }
+    }
+
+    fun onDismissConfirm() = _state.update { it.copy(confirmPending = null) }
+
+    /**
+     * A refusal from a creation whose input carries the whole batch: the
+     * server names the offender by path, so `["tags", i, …]` lands on
+     * chip i and anything unplaced falls back to the box's own line (F2).
+     */
+    private fun refuseCreation(target: TagTarget, errors: List<UserError>) = _state.update { st ->
+        var section = st.tagSection(target)
+        var unplaced = false
+        for (error in errors) {
+            val index = tagFieldIndex(error.field)
+            if (index == null) {
+                unplaced = true
+            } else {
+                val (next, left) = section.withErrorAt(index, error.message)
+                section = next
+                if (left != null) unplaced = true
+            }
+        }
+        // Errors that named nothing at all still have to say something.
+        if (errors.isEmpty()) unplaced = true
+        val withSection = st.withTagSection(target, section)
+        when (target) {
+            TagTarget.COMMENT -> withSection.copy(submitting = false, refused = unplaced)
+            TagTarget.REPLY -> withSection.copy(replySubmitting = false, replyRefused = unplaced)
+            TagTarget.EDIT -> withSection.copy(editSubmitting = false, editRefused = unplaced)
+        }
+    }
+
+    private companion object {
+        /** A tag withdrawal is a Tag act at relevance 0 (hashtag.md §4). */
+        const val WITHDRAWN = 0.0
     }
 }
