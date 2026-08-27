@@ -1,0 +1,11 @@
+<!-- @dsCard group="Motion" viewport="700x180" name="Easing & duration" subtitle="M3 standard easing. Motion clarifies where something came from; it never performs." -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>body{margin:0;padding:16px;background:var(--surface)}table{border-collapse:collapse;font-size:12px}td{padding:3px 14px 3px 0;vertical-align:top}td:first-child{color:var(--text-secondary)}code{font-size:11px}</style>
+</head><body><table>
+<tr><td>standard</td><td><code>cubic-bezier(0.2, 0, 0, 1)</code></td><td>the default for everything</td></tr>
+<tr><td>collapsing top</td><td><code>200ms</code> translateY(-110%)</td><td>hides at half its own slot; returns after ⅓ screen of upward scroll</td></tr>
+<tr><td>long press</td><td><code>500ms</code></td><td>the pad's bloom — Android's platform timeout</td></tr>
+<tr><td>snackbar</td><td><code>4000ms</code></td><td>Material's short duration</td></tr>
+<tr><td>reduced motion</td><td><code>0ms</code></td><td>honoured on both platforms; durations collapse</td></tr>
+</table><p style="font-size:11px;color:var(--text-secondary)">No bounce, no spring, no parallax, no list entrance animation.</p></body></html>

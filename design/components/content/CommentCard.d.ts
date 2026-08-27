@@ -1,0 +1,35 @@
+import type { StanceBundle } from "../stance/StanceReadout";
+import type { License } from "../forms/LicenseChooser";
+import type { PostAuthor } from "./PostCard";
+
+/** The comment of design.md §6 — top-level and nested. Renders as an `li`. */
+export interface CommentCardProps {
+  author?: PostAuthor;
+  content: string;
+  timestamp?: string;
+  license?: License;
+  pending?: boolean;
+  edited?: boolean;
+  bundle?: StanceBundle | null;
+  /** Indents 12px per level, flattening past three. */
+  depth?: number;
+  replies?: readonly (CommentCardProps & { id: string })[];
+  signedIn?: boolean;
+  /** Owned by the shell, like `PostCard.taught`. Defaults to true. */
+  taught?: boolean;
+  /** Fires when a stance on this comment is signed. */
+  onCommit?: (pick: import("../stance/StanceReadout").StancePair, bundle: StanceBundle) => void;
+  onReply?: () => void;
+  onEdit?: () => void;
+  /** The viewer authored this comment, so the edit affordance shows. */
+  own?: boolean;
+  targetLabel?: string;
+  /** Extra affordances in the same row as the stance control, Reply and Edit. */
+  actions?: React.ReactNode;
+  /** Extra overflow-menu items, appended after the licence entry. */
+  menuItems?: readonly { label: string; onSelect?: () => void }[];
+  /** An open reply or edit composer, rendered between the card and its replies. */
+  children?: React.ReactNode;
+}
+
+export declare function CommentCard(props: CommentCardProps): JSX.Element;
