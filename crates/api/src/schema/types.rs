@@ -301,7 +301,7 @@ impl UserError {
                 UserError::new(ErrorCode::VerificationTokenInvalid, e.to_string())
             }
             OnboardingError::Forbidden => UserError::new(ErrorCode::Forbidden, e.to_string()),
-            OnboardingError::WriteRule { .. } => {
+            OnboardingError::WriteRule { .. } | OnboardingError::BatchWriteRule { .. } => {
                 UserError::new(ErrorCode::WriteRuleFailed, e.to_string())
             }
             OnboardingError::SignatureInvalid(_) => {
