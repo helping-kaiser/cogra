@@ -379,10 +379,6 @@ const POST_REFERENCES: &str = r#"query($id: UUID!) {
   }
 }"#;
 
-// ---------------------------------------------------------------------
-// The creation batch
-// ---------------------------------------------------------------------
-
 /// One priced act per citation, on top of the minting record — and the
 /// citations come after the mint in relay order, because each declares it
 /// as a dependency.
@@ -529,13 +525,13 @@ async fn the_citation_cap_refuses_the_batch_as_a_batch(pool: PgPool) {
     assert_eq!(rig.writes_in_flight(alice).await, before);
 }
 
-// ---------------------------------------------------------------------
-// D19 — the whole batch is priced before any of it is staged
-// ---------------------------------------------------------------------
-
 /// Either the balance carries the whole gesture or none of it is staged.
 /// Without this the author reads one gesture and gets an arbitrary prefix
 /// of it — a post whose citations silently went missing.
+///
+/// Bob is funded for exactly two acts, which is what makes the pair of
+/// attempts a clean split: a post with one citation is two acts and goes
+/// through, a post with two is three and is refused entire.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_balance_that_cannot_carry_the_batch_refuses_all_of_it(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -544,8 +540,6 @@ async fn a_balance_that_cannot_carry_the_batch_refuses_all_of_it(pool: PgPool) {
     let one = rig.plain_post(&alice_token, &alice_key, "one").await;
     let two = rig.plain_post(&alice_token, &alice_key, "two").await;
 
-    // Two acts' worth of θ: a post with one citation fits, a post with
-    // two does not.
     let (bob, _) = rig.member_funded_for("bob", "bob@example.test", 2).await;
     let bob_token = rig.log_in("bob@example.test").await;
 
@@ -582,10 +576,6 @@ async fn a_balance_that_cannot_carry_the_batch_refuses_all_of_it(pool: PgPool) {
         "what the balance does carry still goes through: {accepted}"
     );
 }
-
-// ---------------------------------------------------------------------
-// The standalone gestures
-// ---------------------------------------------------------------------
 
 /// Citing after publishing is what post.md §3 promises with "or later",
 /// and the parameters default so a plain citation needs only its target.
@@ -702,10 +692,6 @@ async fn a_parameter_outside_the_census_range_never_reaches_the_write_path(pool:
     assert_eq!(rig.writes_in_flight(alice).await, before);
 }
 
-// ---------------------------------------------------------------------
-// The read side
-// ---------------------------------------------------------------------
-
 /// The orientation trap, asserted through the whole stack: a citation
 /// authored at (relevance, support) must read back at exactly that pair,
 /// which it can only do if the gesture writes the act tuple and the fold
@@ -758,13 +744,16 @@ async fn a_mention_types_as_the_person_it_names(pool: PgPool) {
 
 /// A Type is a legal citation target, and it is the reason the served
 /// target is a union: a Hashtag is deliberately not a Node.
+///
+/// The topic is tagged onto a throwaway post first, because a Type's L2
+/// id is what a client would cite it by and the registry row is what
+/// makes that id resolvable back to a name.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_topic_citation_types_as_a_hashtag(pool: PgPool) {
     let rig = Citer::new(pool).await;
     let (_, key) = rig.member("alice", "alice@example.test").await;
     let token = rig.log_in("alice@example.test").await;
 
-    // A Type gets an L2 id once a record names it, so tag something first.
     let tagged = rig
         .gql(
             Some(&token),
