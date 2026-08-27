@@ -49,8 +49,17 @@ pub struct ApiContext {
 /// "Query budgets"), enforced in validation before any resolver runs:
 /// depth caps nesting, complexity caps total field count with
 /// connection fields priced at page size × item cost
-/// (`types::connection_cost`). A tripped budget is a message-only
-/// validation error.
+/// (`types::connection_cost`) and author-owned fold lists at their
+/// stated bound (`types::fold_cost`). A tripped budget is a
+/// message-only validation error.
+///
+/// Both numbers are measured, not chosen: the ceilings below come from
+/// replaying every committed client document against this schema, and
+/// `tests/client_operations.rs` fails by operation name if either
+/// posture stops admitting one. The heaviest operation either client
+/// sends is the Android post-detail read at **70 088** complexity and
+/// **12** levels; the standard introspection query is cheap (181) but
+/// deep (13).
 #[derive(Debug, Clone, Copy)]
 pub struct QueryBudgets {
     pub depth: usize,
@@ -59,25 +68,33 @@ pub struct QueryBudgets {
 }
 
 impl QueryBudgets {
-    /// The production posture: budgets sized for the real clients'
-    /// queries, introspection off — the schema is already public as
-    /// the checked-in `schema.graphql`.
+    /// The production posture: introspection off — the schema is
+    /// already public as the checked-in `schema.graphql`.
+    ///
+    /// 100 000 clears the heaviest client operation with ~1.4×
+    /// headroom, and 15 levels clear the deepest with three to spare.
     pub fn release() -> Self {
         Self {
             depth: 15,
-            complexity: 1000,
+            complexity: 100_000,
             introspection_enabled: false,
         }
     }
 
-    /// The dev posture: same depth (15 admits the standard
-    /// introspection query's ~13 ofType levels), but a loose complexity
-    /// ceiling — async-graphql applies the limits to introspection too,
-    /// and the playground's schema fetch far exceeds any real budget.
+    /// The dev posture: the same ceilings, introspection on for the
+    /// playground.
+    ///
+    /// The ceilings are deliberately identical. A dev posture looser
+    /// than release stops being a preview of it — a client document
+    /// can then sail through every dev build and be refused only in
+    /// production, which is exactly how the release ceiling went a
+    /// whole slice without admitting the clients' own reads. Depth 15
+    /// is what introspection needs (13 `ofType` levels); its
+    /// complexity is smaller than any content read's.
     pub fn dev() -> Self {
         Self {
             depth: 15,
-            complexity: 50_000,
+            complexity: 100_000,
             introspection_enabled: true,
         }
     }

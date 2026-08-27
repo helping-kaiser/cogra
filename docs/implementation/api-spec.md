@@ -245,23 +245,43 @@ it, where the entry stays put.
 
 Every request is priced in validation, before any resolver runs
 (roadmap.md slice 1.1): query **depth** is capped at 15 levels,
-and total **complexity** at 1000 fields, with connection fields
-costing their requested (or default) page size times the per-item
-cost — so a nested full-page-connections query prices
-multiplicatively and refuses. A tripped budget is a message-only
-GraphQL validation error ("Query is nested too deep." / "Query is
-too complex."), with no `extensions.code` — clients treat it as a
-generic transport failure, and the budgets are sized so no real
-client query ever meets it. **Introspection is disabled in release
-builds** — not secrecy (the repo is public; the contract travels
-as the checked-in `schema.graphql`, which both clients generate
-from) but cost-benefit: the budgets apply to introspection
-queries too, and admitting the standard introspection query
-would take a ~50× looser complexity ceiling, which under
-multiplicative connection pricing admits genuinely expensive
-queries. Live introspection buys nothing the checked-in SDL
-doesn't already give. Dev builds keep introspection on, with
-that loose ceiling, for the playground.
+and total **complexity** at 100 000 fields. A connection field
+costs its requested (or default) page size times the per-item
+cost, so a nested full-page-connections query prices
+multiplicatively; an author-owned fold list (`topics`,
+`references`) takes no page argument and costs a stated bound of
+20 rows times the per-row cost. A tripped budget is a
+message-only GraphQL validation error ("Query is nested too
+deep." / "Query is too complex."), with no `extensions.code` —
+clients treat it as a generic transport failure.
+
+**The ceilings are measured, not chosen.** Both are derived from
+replaying every committed operation of both clients against the
+schema; the heaviest is the Android post-detail read at 70 088
+complexity and 12 levels, and 100 000 leaves it ~1.4× headroom.
+A standing test replays the whole corpus under both postures and
+fails by operation name, so a client document that outgrows a
+ceiling is caught in CI rather than on a device. Both postures
+carry the *same* ceilings: a looser dev budget stops being a
+preview of release, and a document refused only in production is
+the failure this rule exists to prevent.
+
+The multiplicative pricing is a demand bound, not a promise about
+the server's work. A post-detail read may legitimately demand up
+to 20 comments × 4 (itself plus three replies) × 20 standing
+citations, and each citation resolves its target separately —
+bounding that is the serving question the fold lists leave open
+(they return the author's whole standing set, with no cap to
+price against).
+
+**Introspection is disabled in release builds** — not secrecy
+(the repo is public; the contract travels as the checked-in
+`schema.graphql`, which both clients generate from) but
+cost-benefit: live introspection buys nothing the checked-in SDL
+doesn't already give. It is not a budget matter — the standard
+introspection query costs 181, well under any content read; what
+it needs is *depth*, 13 `ofType` levels, which is what fixes the
+depth cap at 15. Dev builds keep introspection on.
 
 **Feed ranking and cursors.** The backend does not rank
 ([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)): it serves the
