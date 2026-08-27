@@ -368,8 +368,8 @@ interface TopicRepository {
 interface ReferenceRepository {
     /**
      * What the finder offers for [query] — exact matches only: a handle
-     * bare or `@`-sigilled, a `#name`, or a UUID. An empty or
-     * unresolvable query yields an empty list rather than an error,
+     * bare or `@`-sigilled, or a UUID. Topics are not offered (D21).
+     * An empty or unresolvable query yields an empty list rather than an error,
      * because a finder runs on every keystroke and most of what it is
      * asked is a prefix of something still being typed. Real search
      * arrives in slice 2.7 behind this same call.

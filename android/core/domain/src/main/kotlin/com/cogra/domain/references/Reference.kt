@@ -5,7 +5,8 @@
 // what to call it.
 //
 // The user-facing word is Reference, never "cite" (D20); a reference
-// whose target is a profile is a mention.
+// whose target is a profile is a mention. Topics are not reference
+// targets: tagging is what a topic is for (D21).
 
 package com.cogra.domain.references
 

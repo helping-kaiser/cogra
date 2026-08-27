@@ -7,15 +7,15 @@
 # node class is the whole distinction (D2) — so there is one fragment
 # for the target union, and the render decides which chip to draw. A
 # reference whose target is a person is a mention; the user-facing
-# word is always Reference, never "cite" (D20).
+# word is always Reference, never "cite" (D20). Topics are not
+# reference targets — tagging is what a topic is for (D21).
 #
 # References declared at creation ride `PreparePostInput` /
 # `PrepareCommentInput` instead (content.graphql), exactly as tags do.
 
-# The four node classes a citation may point at. `Hashtag` is
-# deliberately not a `Node` — a Type anchors vacuously, with no
-# minting record — which is why this is a union rather than the
-# interface.
+# The node classes a citation may point at. Topics are not among
+# them: tagging is what a topic is for, and referencing covers every
+# other passive node (D21).
 fragment ReferenceTargetFields on ReferenceTarget {
   __typename
   ... on Post {
@@ -57,9 +57,6 @@ fragment ReferenceTargetFields on ReferenceTarget {
       value
     }
   }
-  ... on Hashtag {
-    ...HashtagFields
-  }
 }
 
 # One standing citation. `target` is nullable and `targetId` is not:
@@ -76,12 +73,12 @@ fragment ReferenceClaimFields on ReferenceClaim {
   pending
 }
 
-# Exact-match resolution only: a handle bare or `@`-sigilled, a
-# `#name`, or a UUID. An empty or unresolvable query yields an empty
-# list rather than an error — a finder runs on every keystroke, so
-# most of what it is asked is a prefix of something still being typed
-# (D20). Real search replaces the implementation in slice 2.7 behind
-# this same field.
+# Exact-match resolution only: a handle bare or `@`-sigilled, or a
+# UUID. An empty or unresolvable query yields an empty list rather
+# than an error — a finder runs on every keystroke, so most of what it
+# is asked is a prefix of something still being typed (D20). Real
+# search replaces the implementation in slice 2.7 behind this same
+# field.
 query ReferenceCandidates($query: String!, $limit: Int) {
   referenceCandidates(query: $query, limit: $limit) {
     target {
