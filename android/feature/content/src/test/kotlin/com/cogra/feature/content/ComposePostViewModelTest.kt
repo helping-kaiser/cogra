@@ -239,8 +239,8 @@ class ComposePostViewModelTest {
         val vm = viewModel()
         vm.onTagInputChange("  #Rust  ")
         vm.onAddTag()
-        assertThat(vm.state.value.tags.map { it.name }).containsExactly("rust")
-        assertThat(vm.state.value.tagInput).isEmpty()
+        assertThat(vm.state.value.tagSection.tags.map { it.name }).containsExactly("rust")
+        assertThat(vm.state.value.tagSection.input).isEmpty()
     }
 
     @Test
@@ -248,7 +248,7 @@ class ComposePostViewModelTest {
         val vm = viewModel()
         vm.onTagInputChange("rust")
         vm.onAddTag()
-        val row = vm.state.value.tags.single()
+        val row = vm.state.value.tagSection.tags.single()
         assertThat(row.relevance).isEqualTo(TAG_DEFAULT_RELEVANCE)
         assertThat(row.confidence).isEqualTo(TAG_DEFAULT_CONFIDENCE)
     }
@@ -260,7 +260,7 @@ class ComposePostViewModelTest {
         vm.onAddTag()
         vm.onTagInputChange("#")
         vm.onAddTag()
-        assertThat(vm.state.value.tags).isEmpty()
+        assertThat(vm.state.value.tagSection.tags).isEmpty()
     }
 
     /** F1: the atom rule refuses before anything is staged. */
@@ -271,9 +271,9 @@ class ComposePostViewModelTest {
         vm.onAddTag()
         vm.onTagInputChange("café")
         vm.onAddTag()
-        assertThat(vm.state.value.tags).isEmpty()
+        assertThat(vm.state.value.tagSection.tags).isEmpty()
         // The text stays put, so the reader can fix it.
-        assertThat(vm.state.value.tagInput).isEqualTo("café")
+        assertThat(vm.state.value.tagSection.input).isEqualTo("café")
     }
 
     @Test
@@ -283,7 +283,7 @@ class ComposePostViewModelTest {
         vm.onAddTag()
         vm.onTagInputChange("RUST")
         vm.onAddTag()
-        assertThat(vm.state.value.tags.map { it.name }).containsExactly("rust")
+        assertThat(vm.state.value.tagSection.tags.map { it.name }).containsExactly("rust")
     }
 
     @Test
@@ -294,7 +294,7 @@ class ComposePostViewModelTest {
         vm.onTagInputChange("kotlin")
         vm.onAddTag()
         vm.onRemoveTag("rust")
-        assertThat(vm.state.value.tags.map { it.name }).containsExactly("kotlin")
+        assertThat(vm.state.value.tagSection.tags.map { it.name }).containsExactly("kotlin")
     }
 
     @Test
@@ -304,10 +304,10 @@ class ComposePostViewModelTest {
             vm.onTagInputChange("tag$i")
             vm.onAddTag()
         }
-        assertThat(vm.state.value.tags).hasSize(10)
-        assertThat(vm.state.value.tagCapReached).isTrue()
+        assertThat(vm.state.value.tagSection.tags).hasSize(10)
+        assertThat(vm.state.value.tagSection.capReached).isTrue()
         // The 11th entry's text is still sitting in the field, unconsumed.
-        assertThat(vm.state.value.tagInput).isEqualTo("tag10")
+        assertThat(vm.state.value.tagSection.input).isEqualTo("tag10")
     }
 
     /** F6: the sliders' values ride the create mutation. */
@@ -360,7 +360,7 @@ class ComposePostViewModelTest {
         vm.start("post-9")
         dispatcher.scheduler.advanceUntilIdle()
 
-        val row = vm.state.value.tags.single()
+        val row = vm.state.value.tagSection.tags.single()
         assertThat(row.name).isEqualTo("rust")
         assertThat(row.relevance).isEqualTo(0.4)
         assertThat(row.confidence).isEqualTo(0.9)
@@ -478,8 +478,8 @@ class ComposePostViewModelTest {
         vm.onSubmit()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.tags[1].error).isEqualTo("`kotlin` is not a legal topic name: bad")
-        assertThat(vm.state.value.tags[0].error).isNull()
+        assertThat(vm.state.value.tagSection.tags[1].error).isEqualTo("`kotlin` is not a legal topic name: bad")
+        assertThat(vm.state.value.tagSection.tags[0].error).isNull()
         // A pre-staging refusal never claims signing failed.
         assertThat(vm.state.value.signingFailed).isFalse()
         assertThat(vm.state.value.refusal).isNull()
@@ -520,7 +520,7 @@ class ComposePostViewModelTest {
         vm.onSubmit()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.tags.single().error)
+        assertThat(vm.state.value.tagSection.tags.single().error)
             .isEqualTo("`kotlin` is not a legal topic name")
         assertThat(vm.state.value.signingFailed).isFalse()
         assertThat(vm.state.value.saved).isFalse()
@@ -537,13 +537,13 @@ class ComposePostViewModelTest {
         vm.onAddTag()
         vm.onSubmit()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.tags.single().error).isEqualTo("no")
+        assertThat(vm.state.value.tagSection.tags.single().error).isEqualTo("no")
 
         content.prepareOutcome = null
         vm.onSubmit()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.saved).isTrue()
-        assertThat(vm.state.value.tags.single().error).isNull()
+        assertThat(vm.state.value.tagSection.tags.single().error).isNull()
     }
 
     // -- The signed-action count and its confirm (F4) --
