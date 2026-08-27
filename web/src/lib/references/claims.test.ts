@@ -27,7 +27,13 @@ describe("referenceChipEntries", () => {
   it("renders a typed claim as its target's chip, keyed by the L1 identifier", () => {
     const [entry] = referenceChipEntries([typedClaim]);
     expect(entry.targetId).toBe("l1-record-1");
-    expect(entry.target).toEqual({ kind: "User", label: "@ada", href: "/u/ada" });
+    expect(entry.target).toEqual({
+      kind: "User",
+      label: "@ada",
+      href: "/u/ada",
+      handle: "ada",
+      displayName: null,
+    });
     expect(entry.relevance).toBe(0.4);
     expect(entry.support).toBe(-0.2);
   });

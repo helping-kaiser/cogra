@@ -6,7 +6,13 @@ import { ReferenceChipRow, type ReferenceChipEntry } from "./reference-chip-row"
 function mention(targetId = "l1-u1", relevance = 0.4, support = -0.2): ReferenceChipEntry {
   return {
     targetId,
-    target: { kind: "User", label: "@ada", href: "/u/ada" },
+    target: {
+      kind: "User",
+      label: "@ada",
+      href: "/u/ada",
+      handle: "ada",
+      displayName: "Ada",
+    },
     pending: false,
     relevance,
     support,
@@ -29,12 +35,14 @@ describe("ReferenceChipRow", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("opens a mention on the referenced profile", () => {
+  // D16: a profile target is a mention, and it wears the actor chip the
+  // rest of the app attributes with — display name beside the handle.
+  it("renders a mention as the actor chip, opening the profile", () => {
     render(<ReferenceChipRow references={[mention()]} testIdPrefix="post" />);
-    expect(screen.getByTestId("post-reference-l1-u1-link")).toHaveAttribute(
-      "href",
-      "/u/ada",
-    );
+    const chip = screen.getByTestId("post-reference-l1-u1-link");
+    expect(chip).toHaveAttribute("href", "/u/ada");
+    expect(chip).toHaveTextContent("Ada");
+    expect(chip).toHaveTextContent("@ada");
   });
 
   it("opens a referenced post on its detail", () => {
