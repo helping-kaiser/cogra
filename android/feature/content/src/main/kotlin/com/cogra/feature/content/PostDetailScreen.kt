@@ -459,16 +459,22 @@ private fun PostWithThread(
                     onToggleValues = { onToggleReferenceValues(post.id) },
                 )
                 // The stance control rides the post itself here, the way
-                // it rides the card in the feed (design.md §6).
-                stanceControl(post.id, "detail_post")
-                // Every content node can be referenced, so the
-                // affordance sits on the node itself and opens the
+                // it rides the card in the feed (design.md §6), and the
+                // Reference affordance sits beside it exactly as it does
+                // on a comment: every content node can be referenced, so
+                // the affordance lives on the node and opens the
                 // composer with the chip already staged (D20).
-                TextButton(
-                    onClick = { onReference(post.id) },
-                    modifier = Modifier.testTag("detail_post_reference_action"),
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text(stringResource(R.string.content_reference_action))
+                    stanceControl(post.id, "detail_post")
+                    TextButton(
+                        onClick = { onReference(post.id) },
+                        modifier = Modifier.testTag("detail_post_reference_action"),
+                    ) {
+                        Text(stringResource(R.string.content_reference_action))
+                    }
                 }
                 HorizontalDivider()
                 Text(

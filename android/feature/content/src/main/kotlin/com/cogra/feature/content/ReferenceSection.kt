@@ -13,6 +13,7 @@
 package com.cogra.feature.content
 
 import com.cogra.domain.Outcome
+import com.cogra.domain.ReferenceClaimView
 import com.cogra.domain.ReferenceTargetView
 import com.cogra.domain.map
 import com.cogra.domain.references.MAX_REFERENCES
@@ -22,14 +23,20 @@ import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.repo.ReferenceRepository
 
 /**
- * One citation a submit will declare: the target's id, the typed
- * target the chip renders from, the two parameters its sliders carry,
- * and the server's own words about it when a write was refused on this
- * chip.
+ * One citation a submit will declare: the target's **L2 id**, the
+ * typed target the chip renders from, the two parameters its sliders
+ * carry, and the server's own words about it when a write was refused
+ * on this chip.
  *
- * [target] is null only for a citation loaded from content whose far
- * end the display store could not type — it still has an id, so it can
- * still be withdrawn.
+ * [targetId] is what `ReferenceInput.target` and the withdrawal
+ * mutation name — deliberately *not* a claim's `targetId`, which is
+ * the raw L1 identifier and addresses no mutation. Only a typed target
+ * carries the L2 id, which is why a claim this instance could not type
+ * never reaches an authoring section (see [editableRow]).
+ *
+ * [target] is null only for a chip the Reference affordance staged
+ * before its label resolved; the citation is still addressable,
+ * because the affordance was handed an L2 id to begin with.
  */
 data class ReferenceRow(
     val targetId: String,
@@ -174,6 +181,32 @@ data class ReferenceCandidateRow(
     val targetId: String,
     val target: ReferenceTargetView,
 )
+
+/**
+ * This claim as a row an authoring section can carry, or null when it
+ * cannot carry one.
+ *
+ * A claim's `targetId` is the raw L1 identifier, while every write
+ * names its target by L2 id — which only the typed target holds. So a
+ * claim whose far end the display store could not type is
+ * *unaddressable*: no withdrawal could be staged for it. It is left
+ * out of the editable section entirely, both baseline and draft, so
+ * its absence is never read as the author having removed it. It still
+ * renders read-only in the reference row, because the citation stands.
+ */
+internal fun ReferenceClaimView.editableRow(): ReferenceRow? {
+    val id = when (val t = target) {
+        is ReferenceTargetView.Profile -> t.id
+        is ReferenceTargetView.Content -> t.id
+        null -> return null
+    }
+    return ReferenceRow(
+        targetId = id,
+        target = target,
+        relevance = relevance,
+        support = support,
+    )
+}
 
 /** `["references", i, "target"]` — the chip the server is talking about. */
 internal fun referenceFieldIndex(field: List<String>?): Int? {

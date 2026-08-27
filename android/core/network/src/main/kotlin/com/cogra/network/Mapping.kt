@@ -265,6 +265,10 @@ internal fun ReferenceTargetFields.toDomain(): ReferenceTargetView? {
             snippet = comment.content.value,
             authorHandle = comment.author?.handle,
             authorDisplayName = comment.author?.displayName?.value,
+            // The post that carries it, walked up: directly, or through
+            // one further comment for a reply to a reply.
+            containingPostId = comment.target?.onPost?.id
+                ?: comment.target?.onComment?.target?.onPost?.id,
         )
         user != null -> ReferenceTargetView.Profile(
             id = user.id,

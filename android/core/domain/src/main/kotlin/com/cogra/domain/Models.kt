@@ -336,6 +336,13 @@ sealed interface ReferenceTargetView {
         val snippet: String?,
         val authorHandle: String?,
         val authorDisplayName: String?,
+        /**
+         * For a comment, the post that carries it — a comment is read
+         * inside its post and has no permalink, so this is where its
+         * chip lands. Null when the walk ran out of levels; the chip
+         * then renders without a destination.
+         */
+        val containingPostId: String? = null,
     ) : ReferenceTargetView
 }
 
