@@ -1,0 +1,177 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300..900&amp;display=swap">
+  <style>
+    body { margin: 0; }
+    .screen {
+      --primary: #9f4100; --on-primary: #ffffff;
+      --primary-container: #ef6c1a; --on-primary-container: #4f1d00;
+      --secondary-container: #feaa81; --on-secondary-container: #783c1c;
+      --surface: #fff8f6; --on-surface: #251913; --on-surface-variant: #584237;
+      --surface-container: #ffeae1; --surface-container-high: #fbe3d9; --surface-container-highest: #f5ded4;
+      --outline: #8c7165; --outline-variant: #e0c0b2;
+      font-family: 'Figtree', 'Segoe UI', system-ui, sans-serif;
+    }
+    .screen[data-theme="dark"] {
+      --primary: #ff8d50; --on-primary: #341100;
+      --secondary-container: #743918; --on-secondary-container: #f8a57b;
+      --surface: #151312; --on-surface: #e8e1df; --on-surface-variant: #cdc5c2;
+      --surface-container: #221f1e; --surface-container-high: #2c2928; --surface-container-highest: #373433;
+      --outline: #968f8d; --outline-variant: #4b4644;
+    }
+  </style>
+</helmet>
+<div class="screen" data-theme="{{theme}}" style="width: 390px; height: 844px; display: flex; flex-direction: column; background: var(--surface); color: var(--on-surface); overflow: hidden; box-sizing: border-box;">
+
+  <div style="min-height: 48px; display: flex; align-items: center; gap: 4px; padding: 0 12px; flex: none;">
+    <span style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></span>
+    <h1 style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 400;">Cite something</h1>
+    <span style="flex: 1;"></span>
+    <span style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; border: 1px solid var(--outline); color: var(--on-surface-variant); font-size: 12px; line-height: 16px; font-weight: 500; flex: none; margin-right: 12px;">?</span>
+  </div>
+
+  <div style="flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 8px 24px 16px 24px; overflow: hidden;">
+
+    <div style="min-height: 44px; display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 4px; border: 1px solid var(--outline); box-sizing: border-box;">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--on-surface-variant)" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path></svg>
+      <span style="font-size: 16px; line-height: 24px; letter-spacing: 0.5px;">salt<span style="display: inline-block; width: 2px; height: 20px; background: var(--primary); vertical-align: text-bottom; margin-left: 1px;"></span></span>
+    </div>
+
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <span style="display: inline-flex; align-items: center; min-height: 32px; padding: 4px 12px; border-radius: 9999px; background: var(--secondary-container); color: var(--on-secondary-container); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Everything</span>
+      <span style="display: inline-flex; align-items: center; min-height: 32px; padding: 4px 12px; border-radius: 9999px; border: 1px solid var(--outline); color: var(--on-surface-variant); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Posts</span>
+      <span style="display: inline-flex; align-items: center; min-height: 32px; padding: 4px 12px; border-radius: 9999px; border: 1px solid var(--outline); color: var(--on-surface-variant); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">People</span>
+      <span style="display: inline-flex; align-items: center; min-height: 32px; padding: 4px 12px; border-radius: 9999px; border: 1px solid var(--outline); color: var(--on-surface-variant); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Items</span>
+      <span style="display: inline-flex; align-items: center; min-height: 32px; padding: 4px 12px; border-radius: 9999px; border: 1px solid var(--outline); color: var(--on-surface-variant); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Proposals</span>
+      <span style="display: inline-flex; align-items: center; min-height: 32px; padding: 4px 12px; border-radius: 9999px; border: 1px solid var(--outline); color: var(--on-surface-variant); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Chats</span>
+      <span style="display: inline-flex; align-items: center; min-height: 32px; padding: 4px 12px; border-radius: 9999px; border: 1px solid var(--outline); color: var(--on-surface-variant); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Campaigns</span>
+      <span style="display: inline-flex; align-items: center; min-height: 32px; padding: 4px 12px; border-radius: 9999px; border: 1px solid var(--outline); color: var(--on-surface-variant); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Offers</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column;">
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 56px; border-bottom: 1px solid var(--outline-variant);">
+        <span style="width: 32px; height: 32px; border-radius: 9999px; background: var(--secondary-container); color: var(--on-secondary-container); display: flex; align-items: center; justify-content: center; font-size: 12px; line-height: 16px; font-weight: 500; flex: none;">S</span>
+        <span style="flex: 1; display: flex; flex-direction: column;">
+          <span style="font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">Salt maps of the coast road</span>
+          <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">Post · @sol · 3d</span>
+        </span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--primary)" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 56px; border-bottom: 1px solid var(--outline-variant);">
+        <span style="width: 32px; height: 32px; border-radius: 9999px; background: var(--secondary-container); color: var(--on-secondary-container); display: flex; align-items: center; justify-content: center; font-size: 12px; line-height: 16px; font-weight: 500; flex: none;">S</span>
+        <span style="flex: 1; display: flex; flex-direction: column;">
+          <span style="font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">Sal Torres</span>
+          <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">Person · @saltorres</span>
+        </span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--primary)" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 56px; border-bottom: 1px solid var(--outline-variant);">
+        <span style="width: 32px; height: 32px; border-radius: 8px; background: var(--surface-container-highest); color: var(--on-surface-variant); display: flex; align-items: center; justify-content: center; flex: none;"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M17.21 9l-4.38-6.56c-.19-.28-.51-.42-.83-.42-.32 0-.64.14-.83.43L6.79 9H2c-.55 0-1 .45-1 1 0 .09.01.18.04.27l2.54 9.27c.23.84 1 1.46 1.92 1.46h13c.92 0 1.69-.62 1.93-1.46l2.54-9.27L23 10c0-.55-.45-1-1-1h-4.79zM9 9l3-4.4L15 9H9zm3 8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"></path></svg></span>
+        <span style="flex: 1; display: flex; flex-direction: column;">
+          <span style="font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">Salt cellar, hand-carved</span>
+          <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">Item · offered by @tobias</span>
+        </span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--primary)" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 56px; border-bottom: 1px solid var(--outline-variant);">
+        <span style="width: 32px; height: 32px; border-radius: 8px; background: var(--surface-container-highest); color: var(--on-surface-variant); display: flex; align-items: center; justify-content: center; flex: none;"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M18 13h-5v5c0 .55-.45 1-1 1s-1-.45-1-1v-5H6c-.55 0-1-.45-1-1s.45-1 1-1h5V6c0-.55.45-1 1-1s1 .45 1 1v5h5c.55 0 1 .45 1 1s-.45 1-1 1z" transform="rotate(45 12 12)"></path></svg></span>
+        <span style="flex: 1; display: flex; flex-direction: column;">
+          <span style="font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">Keep the salt flats path open</span>
+          <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">Proposal · open for votes</span>
+        </span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--primary)" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 56px; border-bottom: 1px solid var(--outline-variant);">
+        <span style="width: 32px; height: 32px; border-radius: 8px; background: var(--surface-container-highest); color: var(--on-surface-variant); display: flex; align-items: center; justify-content: center; flex: none;"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"></path></svg></span>
+        <span style="flex: 1; display: flex; flex-direction: column;">
+          <span style="font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">Salt marsh survey crew</span>
+          <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">Chat · 12 people</span>
+        </span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--primary)" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 56px; border-bottom: 1px solid var(--outline-variant);">
+        <span style="width: 32px; height: 32px; border-radius: 8px; background: var(--surface-container-highest); color: var(--on-surface-variant); display: flex; align-items: center; justify-content: center; flex: none;"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M18 11v2h4v-2h-4zm-2 6.61c.96.71 2.21 1.65 3.2 2.39.4-.53.8-1.07 1.2-1.6-.99-.74-2.24-1.68-3.2-2.4-.4.54-.8 1.08-1.2 1.61zM20.4 5.6c-.4-.53-.8-1.07-1.2-1.6-.99.74-2.24 1.68-3.2 2.4.4.53.8 1.07 1.2 1.6.96-.72 2.21-1.65 3.2-2.4zM4 9c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h1v4h2v-4h1l5 3V6L8 9H4zm11.5 3c0-1.33-.58-2.53-1.5-3.35v6.69c.92-.81 1.5-2.01 1.5-3.34z"></path></svg></span>
+        <span style="flex: 1; display: flex; flex-direction: column;">
+          <span style="font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">Sea salt collective — autumn run</span>
+          <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">Campaign · anchored by @seasaltco</span>
+        </span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--primary)" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 56px;">
+        <span style="width: 32px; height: 32px; border-radius: 8px; background: var(--surface-container-highest); color: var(--on-surface-variant); display: flex; align-items: center; justify-content: center; flex: none;"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M16 6V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H2v13c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6h-6zm-6-2h4v2h-4V4z"></path></svg></span>
+        <span style="flex: 1; display: flex; flex-direction: column;">
+          <span style="font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">Offer on Salt cellar, hand-carved</span>
+          <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">Offer · by @ada</span>
+        </span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--primary)" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>
+      </div>
+    </div>
+
+    <div style="flex: 1;"></div>
+
+    <p style="margin: 0; font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">Comments and chat messages are cited from themselves.</p>
+
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"theme":{"editor":"enum","options":["auto","light","dark"],"default":"auto"}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    this.media = window.matchMedia("(prefers-color-scheme: dark)");
+    this.onScheme = () => this.forceUpdate();
+    this.media.addEventListener("change", this.onScheme);
+    this.onMsg = (event) => {
+      const d = event.data;
+      if (d && (d.cograTheme === "light" || d.cograTheme === "dark" || d.cograTheme === "auto")) {
+        if (!this.state || this.state.remote !== d.cograTheme) this.setState({ remote: d.cograTheme });
+      } else if (d && d.cograThemeQuery && this.state && this.state.remote && event.source) {
+        try { event.source.postMessage({ cograTheme: this.state.remote }, "*"); } catch (e) {}
+      }
+    };
+    window.addEventListener("message", this.onMsg);
+    try {
+      const askWalk = (w, depth) => {
+        if (depth > 5) return;
+        let n = 0;
+        try { n = w.length; } catch (e) { n = 0; }
+        for (let i = 0; i < n; i++) {
+          let c = null;
+          try { c = w[i]; } catch (e) { c = null; }
+          if (c) {
+            try { c.postMessage({ cograThemeQuery: true }, "*"); } catch (e) {}
+            askWalk(c, depth + 1);
+          }
+        }
+      };
+      askWalk(window.top, 0);
+    } catch (e) {}
+  }
+  componentDidUpdate(prevProps) {
+    if (prevProps.theme !== this.props.theme && this.state && this.state.remote) {
+      this.setState({ remote: null });
+    }
+  }
+  componentWillUnmount() {
+    if (this.media) this.media.removeEventListener("change", this.onScheme);
+    window.removeEventListener("message", this.onMsg);
+  }
+  renderVals() {
+    const remote = this.state ? this.state.remote : null;
+    const mode = remote ?? this.props.theme ?? "auto";
+    const dark = mode === "auto"
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+      : mode === "dark";
+    return { theme: dark ? "dark" : "light" };
+  }
+}
+</script>
+</body>
+</html>
