@@ -285,7 +285,56 @@ describe("prepareComment", () => {
         target: "p1",
         content: "First!",
         license: { attribution: 0, provenance: 0.5 },
+        tags: null,
       },
     });
+  });
+
+  // A comment tags at creation on the same terms as a post
+  // (api-spec.md `PrepareCommentInput.tags`).
+  it("carries drafted tags as structured input", async () => {
+    let variables: Record<string, unknown> | null = null;
+    server.use(
+      graphql.mutation("PrepareComment", ({ variables: v }) => {
+        variables = v;
+        return HttpResponse.json({
+          data: {
+            prepareComment: {
+              __typename: "PrepareContentPayload",
+              node: "c-node",
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: "w1",
+                  family: "REVIEW",
+                  canonicalProposal: "cHJvcG9zYWw=",
+                  gcAfterEpochs: 8,
+                },
+                {
+                  __typename: "PreparedWrite",
+                  id: "w2",
+                  family: "TAG",
+                  canonicalProposal: "cHJvcG9zYWw=",
+                  gcAfterEpochs: 8,
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const outcome = await prepareComment(client(), {
+      target: "p1",
+      content: "First!",
+      license: { attribution: 0, provenance: 0.5 },
+      tags: [{ name: "rust", relevance: 0.4, confidence: 0.8 }],
+    });
+    expect(outcome.kind).toBe("success");
+    expect(
+      (variables as unknown as { input: { tags: unknown } } | null)?.input.tags,
+    ).toEqual([{ name: "rust", pDirected: 0.4, pInterest: 0.8 }]);
+    // The whole batch comes back for the one signing pass.
+    if (outcome.kind === "success") expect(outcome.value.writes).toHaveLength(2);
   });
 });
