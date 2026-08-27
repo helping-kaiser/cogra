@@ -33,14 +33,6 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-/** One staged Tag act, as the fake saw it. */
-private data class TagCall(
-    val target: String,
-    val name: String,
-    val pDirected: Double?,
-    val pInterest: Double?,
-)
-
 @OptIn(ExperimentalCoroutinesApi::class)
 class ComposePostViewModelTest {
 
