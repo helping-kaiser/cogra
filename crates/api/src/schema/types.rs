@@ -1899,20 +1899,18 @@ pub struct TaggedContent {
 
 /// What a citation may point at. Quoting, embedding and mentioning are
 /// one record, and this union *is* the distinction between them: a
-/// citation whose target is a `User` is a mention, one whose target is a
-/// `Hashtag` is a topic citation, and one whose target is a `Post` or
-/// `Comment` is a quote or embed — which of those two is a render
-/// question, not a wire one.
+/// citation whose target is a `User` is a mention, and one whose target
+/// is a `Post` or `Comment` is a quote or embed — which of those two is
+/// a render question, not a wire one.
 ///
-/// A union rather than the `Node` interface because a `Hashtag` is
-/// deliberately not a `Node` — it has no minting record, nothing to date
-/// and nothing to land — and a Type is a legal citation target.
+/// A `Hashtag` is absent, and that absence is the contract: a topic is
+/// tagged, never referenced (D21). The write path refuses a Type target,
+/// so no citation this instance prepares can have one.
 #[derive(async_graphql::Union)]
 pub enum ReferenceTarget {
     Post(PostType),
     Comment(CommentType),
     Profile(User),
-    Topic(HashtagType),
 }
 
 /// One standing citation from an artifact — a chip in the reference row.
@@ -1923,9 +1921,10 @@ pub enum ReferenceTarget {
 /// withdrawn and never appears here.
 #[derive(SimpleObject)]
 pub struct ReferenceClaim {
-    /// The cited node, typed. Null when CoGra carries no display row for
-    /// it — the fold reads the mirror, which reaches further than the
-    /// display store — in which case `targetId` still names it.
+    /// The cited node, typed. Null when this instance cannot type the far
+    /// end — the fold reads the mirror, which reaches further than both
+    /// the display store and CoGra's own target policy — in which case
+    /// `targetId` still names it.
     pub target: Option<ReferenceTarget>,
     /// The cited node's raw L1 identifier, always present: the citation
     /// stands as a substrate fact whether or not this instance can type
@@ -2094,10 +2093,15 @@ async fn reference_claims(
 ///
 /// The identifier's own grammar carries the class, so this dispatches on
 /// it rather than probing every table: `prof:` is a person, `name:` a
-/// Type, and a minted identifier is content. A Type resolves without any
-/// lookup at all — a Hashtag is served for any well-formed name, because
-/// a Type exists as soon as an accepted record names it and reads never
-/// write the registry.
+/// Type, and a minted identifier is content.
+///
+/// A Type types as nothing (D21). The mirror reaches further than
+/// CoGra's own policy — the substrate admits a Type-target Reference
+/// that this instance would refuse to prepare, and a record authored
+/// elsewhere can land in the mirror regardless — so the fold may hand
+/// one here. It degrades the way any untypeable far end does: `target`
+/// null, `targetId` still naming it. The citation stands as a substrate
+/// fact; CoGra simply serves no topic chip for it.
 pub(super) async fn resolve_reference_target(
     ctx: &Context<'_>,
     l1_node_id: &str,
@@ -2112,7 +2116,7 @@ pub(super) async fn resolve_reference_target(
                     viewer_session: None,
                 })
             })),
-        Ok(NodeId::Name(name)) => Ok(Some(ReferenceTarget::Topic(HashtagType { name }))),
+        Ok(NodeId::Name(_)) => Ok(None),
         _ => Ok(match resolve_node_id(ctx, l1_node_id).await? {
             Some(Node::Post(post)) => Some(ReferenceTarget::Post(post)),
             Some(Node::Comment(comment)) => Some(ReferenceTarget::Comment(comment)),
