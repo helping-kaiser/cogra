@@ -6,8 +6,8 @@
 // untouched pair commits exactly what omitting the fields would have.
 //
 // D20 fixes the vocabulary: the user-facing word is Reference, never
-// "cite" or "citation" — every content node can be referenced, and a
-// reference whose target is a person is a MENTION.
+// "cite" or "citation", and a reference whose target is a person is a
+// MENTION. D21 fixes the range: topics are TAGGED, not referenced.
 //
 // A reference is never withdrawn by deletion. Reference withdrawal is
 // per-leg net stance (D4, D11), so a removal is the severance shape:
@@ -15,8 +15,12 @@
 // `(0, 0)`. That is why the edit surfaces come out of here as acts
 // rather than as a diff to apply.
 
-/** The classes a reference may point at (`union ReferenceTarget`). */
-export type ReferenceTargetKind = "Post" | "Comment" | "User" | "Hashtag";
+/**
+ * The classes a reference may point at (`union ReferenceTarget`).
+ * D21: a topic is TAGGED, never referenced — referencing is for the
+ * other passive node classes.
+ */
+export type ReferenceTargetKind = "Post" | "Comment" | "User";
 
 /**
  * What a chip needs to render without re-reading the target: its class,

@@ -143,12 +143,6 @@ query Posts($first: Int!, $after: String, $includePending: Boolean! = true) {
                 value
               }
             }
-            ... on Hashtag {
-              id
-              name {
-                value
-              }
-            }
             ... on Post {
               id
               title {
@@ -267,12 +261,6 @@ query PostDetail(
             value
           }
         }
-        ... on Hashtag {
-          id
-          name {
-            value
-          }
-        }
         ... on Post {
           id
           title {
@@ -373,12 +361,6 @@ query PostDetail(
                   value
                 }
               }
-              ... on Hashtag {
-                id
-                name {
-                  value
-                }
-              }
               ... on Post {
                 id
                 title {
@@ -472,12 +454,6 @@ query PostDetail(
                       id
                       handle
                       displayName {
-                        value
-                      }
-                    }
-                    ... on Hashtag {
-                      id
-                      name {
                         value
                       }
                     }
@@ -605,12 +581,6 @@ query CommentReplies(
                   value
                 }
               }
-              ... on Hashtag {
-                id
-                name {
-                  value
-                }
-              }
               ... on Post {
                 id
                 title {
@@ -704,12 +674,6 @@ query CommentReplies(
                       id
                       handle
                       displayName {
-                        value
-                      }
-                    }
-                    ... on Hashtag {
-                      id
-                      name {
                         value
                       }
                     }

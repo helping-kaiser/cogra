@@ -27,12 +27,6 @@ query ReferenceCandidates($query: String!, $limit: Int) {
           value
         }
       }
-      ... on Hashtag {
-        id
-        name {
-          value
-        }
-      }
       ... on Post {
         id
         title {
