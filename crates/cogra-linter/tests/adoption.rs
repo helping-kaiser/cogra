@@ -625,8 +625,13 @@ fn the_scanned_region_section_round_trips() {
     assert_eq!(markdown.not_scanned.len(), 2);
     let kotlin = &scanned.languages[3];
     assert!(kotlin.precondition.is_some());
+    assert_eq!(
+        kotlin.extensions,
+        vec![Box::from(".kt"), Box::from(".kts")],
+        "both file shapes are Kotlin, and one grammar root reads them"
+    );
     assert_eq!(scanned.none.len(), 1);
-    assert_eq!(scanned.none[0].languages.len(), 9);
+    assert_eq!(scanned.none[0].languages.len(), 8);
 }
 
 #[test]
@@ -639,6 +644,11 @@ fn a_language_is_named_only_where_a_frontend_reads_it() {
     assert_eq!(
         scanned.language_of(Path::new("crates/api/src/lib.rs")),
         Some(Language::new("rust"))
+    );
+    assert_eq!(
+        scanned.language_of(Path::new("android/settings.gradle.kts")),
+        Some(Language::new("kotlin")),
+        "a script is Kotlin, read by the same grammar as a source"
     );
     assert_eq!(
         scanned.language_of(Path::new("migrations/0001_up.sql")),
