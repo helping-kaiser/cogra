@@ -269,7 +269,7 @@ were added because participation needs them:
   consecutive `///` lines is ONE logical region" is the practical
   consequence for Rust);
 - an explicit **languages with no frontend** entry, so that SQL,
-  GraphQL, TOML, shell, JSON and `.kts` having no scanned regions is a
+  GraphQL, TOML, shell and JSON having no scanned regions is a
   recorded decision rather than a gap. Those files stay in the carrier
   and stay owned; ``judg:labels:minting`` makes a file with no
   occurrences "vacuously in good standing".
@@ -500,14 +500,18 @@ such a profile is the revisit condition; nothing else reopens it.
 documentation comments only, and both bans stand on that one decision.
 Measured cost to adopt: zero occurrences under `crates/`.
 
-**R17 — `.kts` files are not scanned in v1.** They are build
-infrastructure rather than app source. Revisited at the Kotlin slice as
-promised, and the answer is that the grammar which parses `.kt` does
-not parse them: it implements `kotlinFile`, which admits declarations,
-where a script needs the specification's `script` production, which
-admits statements at the top level. Measured over the tree: 18 `.kts`
-files, 43 error nodes. Supporting them is an addition to the grammar
-rather than a fix to it, and whether to make it is jakob's ruling.
+**R17 — `.kts` files are Kotlin and are scanned.** Revisited at the
+Kotlin slice as promised, and ruled 2026-08-26. The specification
+defines two entry points over one grammar: `kotlinFile`, whose body is
+declarations, and `script`, whose body is statements. A statement
+already admits a declaration, so `script` accepts a strict superset,
+and tree-sitter has exactly one start rule with no second entry point —
+so the grammar's root takes the wider shape and reads both file kinds.
+Measured over the tree afterwards: 173 `.kt` and 18 `.kts`, zero error
+nodes in both, and zero occurrences in the scripts. The cost is stated
+where it is taken: a `.kt` file whose top level holds a bare expression
+parses here, where the compiler would reject it — the safe direction
+for a tool whose error nodes are findings.
 
 **R18 — The kind registry's adoption takes the registry's own
 defaults.** jakob is the acceptee, owning X_A, E_A, σ_A, G_A and Ê_A;
@@ -625,7 +629,7 @@ corpus: a slice that adds Rust sources re-measures them.
 | Plain `//` comment occurrences | ~1210 |
 | Plain `/*` occurrences under `crates/` (2026-08-21) | 0 |
 | Files in `docs/primitive/` (2026-08-21) | 18, of which 1 (`layer1-interface.md`) is outside the carrier |
-| Kotlin sources (2026-08-26) | 170 `.kt`, all scanned and none carrying an occurrence, holding 1708 line comments and 681 KDoc and no other block comment; 18 `.kts`, unscanned (R17); 12 Gradle modules |
+| Kotlin sources (2026-08-27) | 191 files, all scanned and none carrying an occurrence: 173 `.kt` holding 1741 line comments and 720 KDoc, and 18 `.kts` holding 104 line comments; no plain block comment anywhere in either; 12 Gradle modules |
 | TypeScript sources (2026-08-26) | 215: 105 `.ts` and 110 `.tsx`, all under `web/`, all scanned, and none carrying an occurrence |
 | Markdown in carrier | 58 files (4 more in the working-note trees) |
 | Files carrying label-shaped spans (2026-08-25) | 29 in the carrier: 10 under `crates/`, written under the discipline; 19 under `docs/`, displayed under R20 |
