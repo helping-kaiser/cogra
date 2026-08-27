@@ -554,9 +554,13 @@ confederate-invitation trolling (resolved
 ### 8.1 The act
 
 Severance is write-side: author counter-records until your bundle
-toward the target nets to `(0,0)`. That single act is
-routing-inert everywhere at once — feed (§3.2), standing
-projection (L1 math), attribution (§6.4) — and it is priced:
+toward the target nets to `(0,0)`. A bundle is per family, so the
+gesture cuts the one it names: severing a person nets your Opinion
+bundle toward them, while a mention you authored toward their
+Profile is a bundle of its own and is walked back by its own
+withdrawal. The netted bundle is routing-inert in all three
+consumers at once — feed (§3.2), standing projection (L1 math),
+attribution (§6.4) — and it is priced:
 each counter-record debits `θ`, in proportion to the conviction
 being walked back. It is simultaneously the community defense and
 the economic one: a bridge into a bot cluster keeps *earning* from
