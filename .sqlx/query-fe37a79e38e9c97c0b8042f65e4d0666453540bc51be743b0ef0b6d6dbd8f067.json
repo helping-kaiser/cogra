@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, kind, handle, actor_pubkey, l0_address FROM actors WHERE id = $1",
+  "query": "SELECT id, kind, handle, actor_pubkey, l0_address, created_at\n         FROM actors WHERE l0_address = $1",
   "describe": {
     "columns": [
       {
@@ -27,11 +27,16 @@
         "ordinal": 4,
         "name": "l0_address",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Text"
       ]
     },
     "nullable": [
@@ -39,8 +44,9 @@
       false,
       false,
       true,
-      true
+      true,
+      false
     ]
   },
-  "hash": "97ceeece0044c7a8304b320791f7e45e4a443b89d47ea0ef3737e6cc96eb60a4"
+  "hash": "fe37a79e38e9c97c0b8042f65e4d0666453540bc51be743b0ef0b6d6dbd8f067"
 }

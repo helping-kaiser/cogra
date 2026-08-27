@@ -17,9 +17,11 @@ use common::hashtag_uuid;
 use common::l1::census::Family;
 use common::l1::identifier::NodeId;
 use common::l1::{crypto, wire};
+use postgres_store::references::ReferenceView;
 use postgres_store::topics::{TagChannel, TopicView};
 use postgres_store::{
-    PgPool, auth as store, mirror, profile as profile_store, staged, topics as topics_store,
+    PgPool, auth as store, mirror, profile as profile_store, references as references_store,
+    staged, topics as topics_store,
 };
 use uuid::Uuid;
 
@@ -301,7 +303,7 @@ impl UserError {
                 UserError::new(ErrorCode::VerificationTokenInvalid, e.to_string())
             }
             OnboardingError::Forbidden => UserError::new(ErrorCode::Forbidden, e.to_string()),
-            OnboardingError::WriteRule { .. } => {
+            OnboardingError::WriteRule { .. } | OnboardingError::BatchWriteRule { .. } => {
                 UserError::new(ErrorCode::WriteRuleFailed, e.to_string())
             }
             OnboardingError::SignatureInvalid(_) => {
@@ -843,6 +845,49 @@ impl User {
 impl User {
     async fn id(&self) -> Uuid {
         self.identity.id
+    }
+
+    /// When this node was created — when the account row that fronts the
+    /// Profile was written, which precedes the Registration record
+    /// landing.
+    async fn created_at(&self) -> DateTime<Utc> {
+        self.identity.created_at
+    }
+
+    /// The most recent profile version's authoring instant; equals
+    /// `createdAt` for an actor whose profile has never changed.
+    async fn updated_at(&self, ctx: &Context<'_>) -> async_graphql::Result<DateTime<Utc>> {
+        Ok(match self.profile(ctx).await? {
+            Some(p) => p.created_at.max(self.identity.created_at),
+            None => self.identity.created_at,
+        })
+    }
+
+    /// Where this actor's Profile stands relative to L1 finality. A
+    /// Profile is minted by its own Registration record, so it pends
+    /// between the key ceremony — which is where the address is bound —
+    /// and that record landing.
+    async fn landing(&self, ctx: &Context<'_>) -> async_graphql::Result<Landing> {
+        let Some(address) = self.identity.l0_address.as_deref() else {
+            return Ok(Landing {
+                state: LandingState::Pending,
+                epoch: None,
+            });
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let node = NodeId::Prof(address.to_string()).to_string();
+        Ok(
+            match mirror::minting_epoch(pool, Family::Registration, &node).await? {
+                Some(epoch) => Landing {
+                    state: LandingState::Landed,
+                    epoch: Some(epoch),
+                },
+                None => Landing {
+                    state: LandingState::Pending,
+                    epoch: None,
+                },
+            },
+        )
     }
 
     /// The account's name in the one actor namespace: 3–30 characters of
@@ -1563,6 +1608,26 @@ impl PostType {
         topic_claims(ctx, &self.0.l1_node_id, self.0.author_id, include_pending).await
     }
 
+    /// This post's current citations — quotes, embeds and mentions the
+    /// author built into it, as the current-references fold reads them:
+    /// the (author, artifact, target) bundle summed then clipped, a
+    /// bundle netting to `(0, 0)` read as withdrawn.
+    ///
+    /// The author's own citations only. A stranger's citation off this
+    /// post reaches a viewer through the citer, at a forward-path weight
+    /// the ranker computes, and the ranker arrives in slice 3.
+    /// `includePending: false` serves only what has landed on L1; the
+    /// pending half is the viewer's own in-flight citations on their own
+    /// content.
+    #[graphql(complexity = "list_cost(None, child_complexity)")]
+    async fn references(
+        &self,
+        ctx: &Context<'_>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<Vec<ReferenceClaim>> {
+        reference_claims(ctx, &self.0.l1_node_id, self.0.author_id, include_pending).await
+    }
+
     /// The viewer's own stance bundle toward this post, and — with
     /// `pick` — where a candidate stance would land it. Null for a
     /// viewer with no bundle to read. `includePending: false` folds
@@ -1666,6 +1731,18 @@ impl CommentType {
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<Vec<TopicClaim>> {
         topic_claims(ctx, &self.0.l1_node_id, self.0.author_id, include_pending).await
+    }
+
+    /// This comment's current citations — the same fold and the same
+    /// author-owned channel as `Post.references`; a Comment is a citing
+    /// artifact like any other passive node.
+    #[graphql(complexity = "list_cost(None, child_complexity)")]
+    async fn references(
+        &self,
+        ctx: &Context<'_>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<Vec<ReferenceClaim>> {
+        reference_claims(ctx, &self.0.l1_node_id, self.0.author_id, include_pending).await
     }
 
     /// The viewer's own stance bundle toward this comment, and — with
@@ -1820,6 +1897,50 @@ pub struct TaggedContent {
     pub pending: bool,
 }
 
+/// What a citation may point at. Quoting, embedding and mentioning are
+/// one record, and this union *is* the distinction between them: a
+/// citation whose target is a `User` is a mention, one whose target is a
+/// `Hashtag` is a topic citation, and one whose target is a `Post` or
+/// `Comment` is a quote or embed — which of those two is a render
+/// question, not a wire one.
+///
+/// A union rather than the `Node` interface because a `Hashtag` is
+/// deliberately not a `Node` — it has no minting record, nothing to date
+/// and nothing to land — and a Type is a legal citation target.
+#[derive(async_graphql::Union)]
+pub enum ReferenceTarget {
+    Post(PostType),
+    Comment(CommentType),
+    Profile(User),
+    Topic(HashtagType),
+}
+
+/// One standing citation from an artifact — a chip in the reference row.
+///
+/// The bundle key is (author, citing artifact, target) and its records
+/// *net*: a citation revised twice folds to the sum of all three records,
+/// clipped to the census range, and a bundle netting to `(0, 0)` is
+/// withdrawn and never appears here.
+#[derive(SimpleObject)]
+pub struct ReferenceClaim {
+    /// The cited node, typed. Null when CoGra carries no display row for
+    /// it — the fold reads the mirror, which reaches further than the
+    /// display store — in which case `targetId` still names it.
+    pub target: Option<ReferenceTarget>,
+    /// The cited node's raw L1 identifier, always present: the citation
+    /// stands as a substrate fact whether or not this instance can type
+    /// its far end.
+    pub target_id: String,
+    /// How load-bearing the cited thing is to this artifact — effort `f`,
+    /// folded and clipped to `[-1, 1]`.
+    pub relevance: Dimension,
+    /// Endorsing versus refuting — enthusiasm `e`, folded and clipped.
+    /// Strictly positive on both axes is what makes a mention a vouch.
+    pub support: Dimension,
+    /// True while any record in the bundle is still in flight.
+    pub pending: bool,
+}
+
 /// The `limit` a topic list accepts: at most [`MAX_PAGE_SIZE`],
 /// [`DEFAULT_PAGE_SIZE`] when unset. Over-asking refuses rather than
 /// silently clamping, the same contract the connections carry.
@@ -1892,6 +2013,89 @@ async fn topic_claims(
         .collect())
 }
 
+/// The reference row shared by every citing artifact: the carrier
+/// author's own current citations (D12).
+///
+/// Only the content-intrinsic channel this slice — the citations the
+/// carrier's own author built into it, which need no forward-path weight
+/// because any path reaching the carrier already reached its author.
+/// Every other author's citation reaches a viewer only through *that*
+/// author, at a weight the ranker computes, and the ranker arrives in
+/// slice 3.
+///
+/// The pending half counts only when the viewer *is* the author, for the
+/// same reason it does on the topic row: `references_of` attributes every
+/// row it returns to the author it was asked about, and an in-flight act
+/// belongs to whoever staged it.
+async fn reference_claims(
+    ctx: &Context<'_>,
+    l1_node_id: &str,
+    author_id: Uuid,
+    include_pending: bool,
+) -> async_graphql::Result<Vec<ReferenceClaim>> {
+    let pool = ctx.data::<PgPool>()?;
+    let Some(author) = store::actor_identity(pool, author_id)
+        .await?
+        .and_then(|identity| identity.l0_address)
+    else {
+        return Ok(Vec::new());
+    };
+    let viewer = viewer_address(ctx).await?;
+    let counts_pending = include_pending && viewer.as_deref() == Some(author.as_str());
+    let rows = references_store::references_of(
+        pool,
+        l1_node_id,
+        &author,
+        ReferenceView::from_include_pending(counts_pending, Some(author.as_str())),
+    )
+    .await
+    .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+
+    let mut claims = Vec::with_capacity(rows.len());
+    for row in rows {
+        claims.push(ReferenceClaim {
+            target: resolve_reference_target(ctx, &row.target).await?,
+            target_id: row.target,
+            relevance: Dimension(row.relevance),
+            support: Dimension(row.support),
+            pending: row.pending,
+        });
+    }
+    Ok(claims)
+}
+
+/// Types one citation's far end from its raw L1 identifier.
+///
+/// The identifier's own grammar carries the class, so this dispatches on
+/// it rather than probing every table: `prof:` is a person, `name:` a
+/// Type, and a minted identifier is content. A Type resolves without any
+/// lookup at all — a Hashtag is served for any well-formed name, because
+/// a Type exists as soon as an accepted record names it and reads never
+/// write the registry.
+async fn resolve_reference_target(
+    ctx: &Context<'_>,
+    l1_node_id: &str,
+) -> async_graphql::Result<Option<ReferenceTarget>> {
+    let pool = ctx.data::<PgPool>()?;
+    match NodeId::parse(l1_node_id) {
+        Ok(NodeId::Prof(address)) => Ok(store::actor_identity_by_address(pool, &address)
+            .await?
+            .map(|identity| {
+                ReferenceTarget::Profile(User {
+                    identity,
+                    viewer_session: None,
+                })
+            })),
+        Ok(NodeId::Name(name)) => Ok(Some(ReferenceTarget::Topic(HashtagType { name }))),
+        _ => Ok(match resolve_node_id(ctx, l1_node_id).await? {
+            Some(Node::Post(post)) => Some(ReferenceTarget::Post(post)),
+            Some(Node::Comment(comment)) => Some(ReferenceTarget::Comment(comment)),
+            Some(Node::Profile(user)) => Some(ReferenceTarget::Profile(user)),
+            None => None,
+        }),
+    }
+}
+
 /// Every graph-backed thing with an identity and a lifecycle
 /// (api-spec.md "Identity and actor interfaces"). Coverage grows with
 /// the slices; slice 2 carries the content nodes.
@@ -1923,6 +2127,11 @@ async fn topic_claims(
 pub enum Node {
     Post(PostType),
     Comment(CommentType),
+    /// A person's Profile — the node a mention targets. A Reference
+    /// never targets an Actor; it targets the Profile the actor fronts,
+    /// which is why the variant carries a `User` rather than an actor
+    /// abstraction.
+    Profile(User),
 }
 
 /// What a Review can respond to (comment.md §1). Every passive node
@@ -1945,12 +2154,28 @@ async fn author_user(ctx: &Context<'_>, author_id: Uuid) -> async_graphql::Resul
 }
 
 /// Resolves a raw L1 node identifier to a typed node, when CoGra
-/// carries a display row for it (content nodes this slice).
+/// carries a display row for it.
+///
+/// The Profile arm is what makes a mention render: a Reference toward a
+/// person targets their Profile, so without it `Record.terminal` served
+/// null for every mention on the chronicle. `prof:` is answered from the
+/// identifier's own grammar rather than by probing, since an address is
+/// not something the content tables could answer to.
 pub async fn resolve_node_id(
     ctx: &Context<'_>,
     l1_node_id: &str,
 ) -> async_graphql::Result<Option<Node>> {
     let pool = ctx.data::<PgPool>()?;
+    if let Ok(NodeId::Prof(address)) = NodeId::parse(l1_node_id) {
+        return Ok(store::actor_identity_by_address(pool, &address)
+            .await?
+            .map(|identity| {
+                Node::Profile(User {
+                    identity,
+                    viewer_session: None,
+                })
+            }));
+    }
     if let Some(post) = postgres_store::content::post_by_node(pool, l1_node_id)
         .await
         .map_err(|e| async_graphql::Error::new(e.to_string()))?
