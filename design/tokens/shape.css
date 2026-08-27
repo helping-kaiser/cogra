@@ -1,0 +1,21 @@
+/* The M3 shape scale (design.md §4) — 4 / 8 / 12 / 16 / 28dp, plus the full pill.
+   These five rungs are the only radius names that exist; an off-scale corner is a
+   bug. The direction is rounded and soft, and a square corner should look like a
+   mistake.
+
+   Which rung a surface takes:
+     text fields, snackbar   extra-small (4px)
+     small containers        small (8px)
+     cards, inline blocks    medium (12px)
+     the stance pad's field  large (16px)
+     dialogs, the pad itself extra-large (28px)
+     buttons at every size   the pill (Material's button shape, not a rung) */
+
+:root {
+  --radius-extra-small: 4px;
+  --radius-small: 8px;
+  --radius-medium: 12px;
+  --radius-large: 16px;
+  --radius-extra-large: 28px;
+  --radius-full: 9999px;
+}

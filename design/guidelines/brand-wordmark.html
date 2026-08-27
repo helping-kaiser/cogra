@@ -1,0 +1,21 @@
+<!-- @dsCard group="Brand" viewport="700x190" name="Wordmark" subtitle="'cogra' set in Figtree, lowercase. The mark may stand in for the g, taking the real glyph's metrics." -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+body{margin:0;padding:16px;background:var(--surface)}
+/* The substituted mark takes the real glyph's own metrics from design.md §11 —
+   advance 601, left sidebearing 30, x-height 500 with 12 overshoot, descender 213,
+   all per 1000 units of em. The span occupies exactly the advance, so "co" and
+   "ra" keep the font's own spacing; the image is positioned off the x-height line
+   and the descender, so the mark's bowl tops out level with the o and the r. */
+.mark{font-size:72px;font-weight:700;line-height:1;letter-spacing:-0.01em;color:var(--primary)}
+.g{position:relative;display:inline-block;width:0.601em;height:1px;vertical-align:baseline}
+.g img{position:absolute;left:-0.140em;bottom:-0.282em;height:0.863em;width:0.863em}
+.rule{position:relative;margin-top:22px}
+.rule .line{position:absolute;left:0;right:0;border-top:1px dashed var(--outline-variant)}
+.note{font-size:12px;color:var(--text-secondary);margin:26px 0 0;max-width:520px}
+</style>
+</head><body>
+<div class="mark">co<span class="g"><img src="../assets/cogra-mark.svg" alt="g"></span>ra</div>
+<p class="note">Lowercase always. The mark stands in for the <code>g</code> at its real advance (601) and left sidebearing (30), so the spacing matches rather than approximates it; the bowl's top sits on the x-height line with the font's own 12-unit overshoot, and the tail drops the glyph's 213 units below the baseline. Never set the wordmark in another family, and never capitalise it — the product name in prose is "CoGra".</p>
+</body></html>

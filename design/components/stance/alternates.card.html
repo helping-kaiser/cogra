@@ -1,0 +1,35 @@
+<!-- @dsCard group="Components" viewport="840x470" name="Stance alternates" subtitle="The non-drag path. One control at a time — sliders lead, typing is a tap away." -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{padding:16px}.row{display:flex;gap:20px;align-items:flex-start}.col{display:flex;flex-direction:column;gap:10px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const NS = window.CoGraDesignSystem_9084ba;
+const { StanceAlternates, StanceStanding, StanceLandingLine } = NS;
+const clip=(v)=>(v===0?0:Math.min(1,Math.max(-1,v)));
+const landingOf=(rawSum,pick)=>{const landing={pDirected:clip(rawSum.pDirected+pick.pDirected),pInterest:clip(rawSum.pInterest+pick.pInterest)};return{landing,inert:landing.pDirected===0||landing.pInterest===0,severed:landing.pDirected===0&&landing.pInterest===0}};
+const standing={current:{pDirected:0.55,pInterest:0.2},rawSum:{pDirected:0.55,pInterest:0.2},records:2,severed:false,severance:{records:2}};
+function Demo(){
+  const [a,setA]=React.useState({pDirected:0.4,pInterest:0.2});
+  const [b,setB]=React.useState({pDirected:-0.35,pInterest:0.75});
+  return (
+  <div className="row">
+    <div className="col">
+      <span className="lbl">Sliders — what opens by default</span>
+      <StanceAlternates inline pick={a} onPick={setA} landing={<StanceLandingLine landing={landingOf(standing.rawSum,a)}/>}>
+        <StanceStanding pick={a} bundle={standing} targetLabel="this post"/>
+      </StanceAlternates>
+    </div>
+    <div className="col">
+      <span className="lbl">Typed — for a reader who has chosen exact values</span>
+      <StanceAlternates inline mode="entry" pick={b} onPick={setB} landing={<StanceLandingLine landing={landingOf(standing.rawSum,b)}/>}>
+        <StanceStanding pick={b} bundle={standing} targetLabel="this post"/>
+      </StanceAlternates>
+    </div>
+  </div>)}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script></body></html>

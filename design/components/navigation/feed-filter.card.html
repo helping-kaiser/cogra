@@ -1,0 +1,61 @@
+<!-- @dsCard group="Components" viewport="900x620" name="What your feed shows" subtitle="The filter is a trigger plus a sheet: seven kinds that combine, forms of post, order, and what else is admitted" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+body{padding:16px;display:flex;gap:24px;align-items:flex-start}
+#root{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+.frame{position:relative;width:300px;height:560px;flex:none;border-radius:var(--radius-extra-large);background:var(--surface);outline:1px solid var(--border-hairline);overflow:hidden;transform:translateZ(0)}
+.inner{position:absolute;inset:0;padding:16px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;height:48px}
+.wordmark{font-size:var(--text-title-large);font-weight:600}
+.col{display:flex;flex-direction:column;gap:12px;max-width:420px}
+.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}
+p{margin:0;font-size:12px;color:var(--text-secondary);line-height:1.55}b{color:var(--on-surface);font-weight:500}
+.now{font-family:var(--font-mono);font-size:11px;color:var(--text-secondary)}
+</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { FeedFilter, FEED_FILTER_DEFAULT, Chip, TopicChip, PostCard, EmptyState } = window.CoGraDesignSystem_9084ba;
+function Demo(){
+  const [filter,setFilter]=React.useState({...FEED_FILTER_DEFAULT, kinds:["posts","comments"]});
+  const nothing=(filter.kinds||[]).length===0;
+  return (
+  <>
+  <div className="frame">
+    <div className="inner">
+      <div className="top"><span className="wordmark">cogra</span><FeedFilter value={filter} onChange={setFilter}/></div>
+      {nothing ? (
+        <EmptyState title="Your feed admits nothing right now — every kind is switched off." actionLabel="Show posts again" onAction={()=>setFilter({...filter,kinds:["posts"]})}/>
+      ) : (
+        <>
+        <PostCard author={{handle:"ada",displayName:"Ada Okonkwo"}} timestamp="2h" score="15.20" comments={3}
+                  content="Took the coast road instead of the tunnel. Four hours longer, worth every minute."/>
+        <PostCard author={{handle:"tobias",displayName:"Tobias Lindqvist"}} timestamp="5h" score="8.40" comments={1}
+                  content="Half of what we argued about turned out to be the same disagreement wearing two different words."/>
+        </>
+      )}
+    </div>
+  </div>
+  <div className="col">
+    <span className="lbl">The trigger reads back the view — tap it to open the sheet</span>
+    <p><b>What replaced what.</b> A three-segment row (Posts / Comments / Stances) was wrong twice: a stance is not a thing that gets ranked, and the real set is seven kinds that <b>combine</b>. A segmented row cannot express a combination.</p>
+    <p><b>Kinds combine, order does not.</b> Posts, comments, chats, profiles, proposals, topics, items are chips; ranked-versus-newest is a two-option segmented control. Forms of post combine too — photos and video with no text posts is a legitimate feed.</p>
+    <p><b>It applies live and it is never permanently on screen.</b> One chip in the top region, everything else a tap away in the sheet. No Apply button: that asks the reader to commit to a guess about their own feed.</p>
+    <p><b>Switching everything off is allowed.</b> The feed says what is off and offers to switch it back — the chip does not refuse the tap.</p>
+    <p><b>"Also show" is not a warning.</b> Sensitive arrives veiled; a removed record arrives as its skeleton. No <code>error</code> colouring in either.</p>
+    <span className="lbl">The chips themselves — a filter, and a topic that opens</span>
+    <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+      <Chip label="Photos" selected onToggle={()=>{}}/>
+      <Chip label="Video" onToggle={()=>{}}/>
+      <Chip label="Text" disabled/>
+      <TopicChip topic="coastroads"/>
+      <TopicChip topic="#routing"/>
+    </div>
+  </div>
+  </>)}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script></body></html>

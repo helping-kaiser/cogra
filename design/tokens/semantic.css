@@ -1,0 +1,38 @@
+/* Semantic aliases over the Material roles. These name where a role is spent
+   (design.md §2.4) rather than introducing a second vocabulary — every one of them
+   resolves to a role above, and a screen may read either.
+
+   `primaryContainer` is the loudest surface in the app: the bar's compose action
+   and a committed stance. One place per screen. */
+
+:root {
+  /* Ground and raised regions. */
+  --surface-page: var(--surface);
+  --surface-card: var(--surface-container-highest);
+  --surface-dialog: var(--surface-container-high);
+  --surface-bar: var(--surface-container);
+  --surface-field: var(--surface-container-highest);
+  --surface-loud: var(--primary-container);
+  --on-surface-loud: var(--on-primary-container);
+  --surface-snackbar: var(--inverse-surface);
+  --on-surface-snackbar: var(--inverse-on-surface);
+
+  /* Text. Secondary text is `onSurfaceVariant`, never `onSurface` at reduced
+     opacity — opacity breaks the contrast guarantee the token carries. */
+  --text-body: var(--on-surface);
+  --text-secondary: var(--on-surface-variant);
+  --text-link: var(--primary);
+  --text-on-loud: var(--on-primary-container);
+  --text-failure: var(--error);
+  --text-landed: var(--success);
+
+  /* Lines. Elevation is tonal; shadows stay soft and never manufacture urgency. */
+  --border-hairline: var(--outline-variant);
+  --border-field: var(--outline);
+  --scrim-dialog: color-mix(in srgb, var(--scrim) 50%, transparent);
+
+  /* Disabled state, as the clients draw it. */
+  --opacity-disabled: 0.4; /* @kind other */
+  /* The resting stance face with no standing behind it: muted and translucent. */
+  --opacity-resting-face: 0.4; /* @kind other */
+}

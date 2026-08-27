@@ -1,0 +1,102 @@
+/* Material 3's fifteen type roles, unmodified (design.md §3) — sizes, line heights,
+   tracking, and weight are Material's; only the family is CoGra's. Values are
+   @material/web's generated typescale tokens, transcribed from the web client's
+   globals.css. Deviating from the scale is a decision to raise, not a per-screen
+   liberty.
+
+   Each role carries its whole style, so a surface reads a role once and gets size,
+   leading, tracking, and weight together. Unclassed text lands on body-large.
+
+   Which role a surface takes (design.md §3):
+     page titles          headline-small
+     card/section heads   title-medium
+     form labels, buttons label-large
+     body and status      body-medium
+     captions, bylines    body-small
+     reading content      body-large
+     a recovery code      title-large, in the platform monospace, wider tracking */
+
+:root {
+  --text-display-large: 3.5625rem;
+  --text-display-large--line-height: 4rem;
+  --text-display-large--letter-spacing: -0.015625rem;
+  --text-display-large--font-weight: 400;
+  --text-display-medium: 2.8125rem;
+  --text-display-medium--line-height: 3.25rem;
+  --text-display-medium--letter-spacing: 0rem;
+  --text-display-medium--font-weight: 400;
+  --text-display-small: 2.25rem;
+  --text-display-small--line-height: 2.75rem;
+  --text-display-small--letter-spacing: 0rem;
+  --text-display-small--font-weight: 400;
+
+  --text-headline-large: 2rem;
+  --text-headline-large--line-height: 2.5rem;
+  --text-headline-large--letter-spacing: 0rem;
+  --text-headline-large--font-weight: 400;
+  --text-headline-medium: 1.75rem;
+  --text-headline-medium--line-height: 2.25rem;
+  --text-headline-medium--letter-spacing: 0rem;
+  --text-headline-medium--font-weight: 400;
+  --text-headline-small: 1.5rem;
+  --text-headline-small--line-height: 2rem;
+  --text-headline-small--letter-spacing: 0rem;
+  --text-headline-small--font-weight: 400;
+
+  --text-title-large: 1.375rem;
+  --text-title-large--line-height: 1.75rem;
+  --text-title-large--letter-spacing: 0rem;
+  --text-title-large--font-weight: 400;
+  --text-title-medium: 1rem;
+  --text-title-medium--line-height: 1.5rem;
+  --text-title-medium--letter-spacing: 0.009375rem;
+  --text-title-medium--font-weight: 500;
+  --text-title-small: 0.875rem;
+  --text-title-small--line-height: 1.25rem;
+  --text-title-small--letter-spacing: 0.00625rem;
+  --text-title-small--font-weight: 500;
+
+  --text-body-large: 1rem;
+  --text-body-large--line-height: 1.5rem;
+  --text-body-large--letter-spacing: 0.03125rem;
+  --text-body-large--font-weight: 400;
+  --text-body-medium: 0.875rem;
+  --text-body-medium--line-height: 1.25rem;
+  --text-body-medium--letter-spacing: 0.015625rem;
+  --text-body-medium--font-weight: 400;
+  --text-body-small: 0.75rem;
+  --text-body-small--line-height: 1rem;
+  --text-body-small--letter-spacing: 0.025rem;
+  --text-body-small--font-weight: 400;
+
+  --text-label-large: 0.875rem;
+  --text-label-large--line-height: 1.25rem;
+  --text-label-large--letter-spacing: 0.00625rem;
+  --text-label-large--font-weight: 500;
+  --text-label-medium: 0.75rem;
+  --text-label-medium--line-height: 1rem;
+  --text-label-medium--letter-spacing: 0.03125rem;
+  --text-label-medium--font-weight: 500;
+  --text-label-small: 0.6875rem;
+  --text-label-small--line-height: 1rem;
+  --text-label-small--letter-spacing: 0.03125rem;
+  --text-label-small--font-weight: 500;
+}
+
+/* Role classes, so HTML outside a React component can read a role the same way
+   a component does. */
+.text-display-large { font-size: var(--text-display-large); line-height: var(--text-display-large--line-height); letter-spacing: var(--text-display-large--letter-spacing); font-weight: var(--text-display-large--font-weight) }
+.text-display-medium { font-size: var(--text-display-medium); line-height: var(--text-display-medium--line-height); letter-spacing: var(--text-display-medium--letter-spacing); font-weight: var(--text-display-medium--font-weight) }
+.text-display-small { font-size: var(--text-display-small); line-height: var(--text-display-small--line-height); letter-spacing: var(--text-display-small--letter-spacing); font-weight: var(--text-display-small--font-weight) }
+.text-headline-large { font-size: var(--text-headline-large); line-height: var(--text-headline-large--line-height); letter-spacing: var(--text-headline-large--letter-spacing); font-weight: var(--text-headline-large--font-weight) }
+.text-headline-medium { font-size: var(--text-headline-medium); line-height: var(--text-headline-medium--line-height); letter-spacing: var(--text-headline-medium--letter-spacing); font-weight: var(--text-headline-medium--font-weight) }
+.text-headline-small { font-size: var(--text-headline-small); line-height: var(--text-headline-small--line-height); letter-spacing: var(--text-headline-small--letter-spacing); font-weight: var(--text-headline-small--font-weight) }
+.text-title-large { font-size: var(--text-title-large); line-height: var(--text-title-large--line-height); letter-spacing: var(--text-title-large--letter-spacing); font-weight: var(--text-title-large--font-weight) }
+.text-title-medium { font-size: var(--text-title-medium); line-height: var(--text-title-medium--line-height); letter-spacing: var(--text-title-medium--letter-spacing); font-weight: var(--text-title-medium--font-weight) }
+.text-title-small { font-size: var(--text-title-small); line-height: var(--text-title-small--line-height); letter-spacing: var(--text-title-small--letter-spacing); font-weight: var(--text-title-small--font-weight) }
+.text-body-large { font-size: var(--text-body-large); line-height: var(--text-body-large--line-height); letter-spacing: var(--text-body-large--letter-spacing); font-weight: var(--text-body-large--font-weight) }
+.text-body-medium { font-size: var(--text-body-medium); line-height: var(--text-body-medium--line-height); letter-spacing: var(--text-body-medium--letter-spacing); font-weight: var(--text-body-medium--font-weight) }
+.text-body-small { font-size: var(--text-body-small); line-height: var(--text-body-small--line-height); letter-spacing: var(--text-body-small--letter-spacing); font-weight: var(--text-body-small--font-weight) }
+.text-label-large { font-size: var(--text-label-large); line-height: var(--text-label-large--line-height); letter-spacing: var(--text-label-large--letter-spacing); font-weight: var(--text-label-large--font-weight) }
+.text-label-medium { font-size: var(--text-label-medium); line-height: var(--text-label-medium--line-height); letter-spacing: var(--text-label-medium--letter-spacing); font-weight: var(--text-label-medium--font-weight) }
+.text-label-small { font-size: var(--text-label-small); line-height: var(--text-label-small--line-height); letter-spacing: var(--text-label-small--letter-spacing); font-weight: var(--text-label-small--font-weight) }
