@@ -1,0 +1,35 @@
+<!-- @dsCard group="Motion" viewport="700x200" name="Interaction states" subtitle="Hover 8%, press 10%, focus a 2px onSurface ring, disabled 38%. Defined here, not in the source." -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+body{margin:0;padding:16px;background:var(--surface)}
+.row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid transparent;border-radius:var(--radius-full);padding:8px 16px;font:inherit;font-size:var(--text-label-large);font-weight:500;background:var(--primary);color:var(--on-primary)}
+.btn.out{background:transparent;border-color:var(--outline);color:var(--primary)}
+.layer{position:relative;isolation:isolate}
+.layer::after{content:"";position:absolute;inset:0;border-radius:inherit;background:currentColor;pointer-events:none}
+.h::after{opacity:var(--state-hover)}
+.p::after{opacity:var(--state-press)}
+.f{outline:var(--focus-ring-width) solid var(--on-surface);outline-offset:var(--focus-ring-offset)}
+.d{opacity:var(--state-disabled)}
+.cap{font-size:11px;color:var(--text-secondary);margin-top:6px}
+.item{display:flex;flex-direction:column;align-items:flex-start}
+.note{font-size:12px;color:var(--text-secondary);margin:18px 0 0;max-width:560px}
+</style>
+</head><body>
+<div class="row">
+  <div class="item"><button class="btn">Sign it</button><span class="cap">enabled</span></div>
+  <div class="item"><button class="btn layer h">Sign it</button><span class="cap">hover · 8%</span></div>
+  <div class="item"><button class="btn layer p">Sign it</button><span class="cap">press · 10%</span></div>
+  <div class="item"><button class="btn f">Sign it</button><span class="cap">focus-visible</span></div>
+  <div class="item"><button class="btn d">Sign it</button><span class="cap">disabled · 38%</span></div>
+</div>
+<div class="row" style="margin-top:14px">
+  <div class="item"><button class="btn out">Retry</button><span class="cap">enabled</span></div>
+  <div class="item"><button class="btn out layer h">Retry</button><span class="cap">hover</span></div>
+  <div class="item"><button class="btn out layer p">Retry</button><span class="cap">press</span></div>
+  <div class="item"><button class="btn out f">Retry</button><span class="cap">focus-visible</span></div>
+  <div class="item"><button class="btn out d">Retry</button><span class="cap">disabled</span></div>
+</div>
+<p class="note">The layer is <code>currentColor</code>, which is the right ink for every variant without a second token: <code>onPrimary</code> on a filled button, <code>primary</code> on an unfilled one. The focus ring is <code>onSurface</code>, not <code>primary</code> — a primary ring disappears against a filled primary button. Press is never a scale-down and never a shadow change. Any pressable element gets all of this from <code>class="cg-state cg-focus"</code>.</p>
+</body></html>

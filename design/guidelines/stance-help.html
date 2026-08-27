@@ -1,0 +1,39 @@
+<!-- @dsCard group="Stance" viewport="700x480" name="The pad's help" subtitle="What the ? opens: four lines in place of the field, with Set disabled while it shows." -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+body{margin:0;padding:16px;background:var(--surface)}
+.wrap{display:flex;gap:22px;align-items:flex-start}
+.pad{position:relative;width:240px;border-radius:var(--radius-extra-large);background:var(--surface-dialog);padding:16px;display:flex;flex-direction:column;gap:12px;flex:none}
+.help{position:absolute;top:4px;right:4px;display:grid;place-items:center;height:48px;width:48px;border:0;background:none;border-radius:var(--radius-full);cursor:pointer}
+.help span{display:grid;place-items:center;height:32px;width:32px;border-radius:var(--radius-full);border:1px solid var(--primary);color:var(--primary);font-size:var(--text-label-large);font-weight:500}
+.blk{display:flex;flex-direction:column}.blk .k{font-size:var(--text-label-small);font-weight:500;color:var(--text-secondary)}.blk .v{display:inline-flex;align-items:baseline;gap:8px}
+.dim{color:var(--text-secondary)}
+.lines{display:flex;flex-direction:column;gap:8px}
+.acts{display:flex;align-items:center;gap:8px}
+.tb{border:0;background:none;padding:6px 12px;border-radius:var(--radius-full);color:var(--primary);font:inherit;font-size:var(--text-label-large);font-weight:500;cursor:pointer}
+.fb{border:0;padding:6px 12px;border-radius:var(--radius-full);background:var(--primary);color:var(--on-primary);font:inherit;font-size:var(--text-label-large);font-weight:500;opacity:var(--state-disabled)}
+.notes{font-size:12px;color:var(--text-secondary);max-width:360px;line-height:1.55}.notes b{color:var(--on-surface);font-weight:500}.notes p{margin:0 0 10px}
+</style>
+</head><body>
+<div class="wrap">
+<div class="pad">
+<button class="help" aria-label="How stances work"><span aria-hidden="true">?</span></button>
+<div class="blk" style="padding-right:40px"><span class="k">Current stance</span><span class="v"><span class="text-title-medium">😊</span><span class="text-body-small dim">+0.55 / +0.20</span></span></div>
+<div class="blk"><span class="k">Your pick</span><span class="v"><span class="text-title-large">😊</span><span class="text-body-small">+0.40 / +0.20</span></span></div>
+<div class="lines">
+<p class="text-body-small dim" style="margin:0">Drag the knob to where you stand. Left to right is against to for; bottom to top is how much more of it you want reaching you.</p>
+<p class="text-body-small dim" style="margin:0">Letting go changes nothing. Set signs it, Cancel leaves without signing.</p>
+<p class="text-body-small dim" style="margin:0">Your pick is one new thing you're saying. It adds to what you've said before, which is why the resulting stance is a different number.</p>
+<p class="text-body-small dim" style="margin:0">Sever walks everything you've said back to nothing. It has its own confirmation, and it costs one signed action per record.</p>
+</div>
+<button class="tb" style="align-self:flex-start">Back to the pad</button>
+<div class="acts"><button class="tb" style="margin-right:auto">Sever</button><button class="tb">Cancel</button><button class="fb">Set</button></div>
+</div>
+<div class="notes">
+<p><b>The help replaces the pad's body.</b> The readouts stay, the actions stay exactly where they were, and <b>Set is disabled</b> while the help shows — the panel can never be signed through by accident.</p>
+<p><b>Nothing moves.</b> The pad is parked at one fixed spot so the thumb learns where Set is. Growing the panel downward pushes Sever, Cancel and Set away from the thumb — on a small viewport the actions leave the pad entirely. A separate sheet keeps the pad intact but opens two surfaces at once, on a control where one gesture must mean one thing, and costs a dismissal to get back to the field.</p>
+<p><b>Four lines, in this order:</b> what the field means · what commits · why the pick and the resulting stance differ · what severing costs. The voice is plain, not warm: the reader opened help because something was unclear.</p>
+</div>
+</div>
+</body></html>

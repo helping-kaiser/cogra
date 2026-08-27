@@ -1,0 +1,58 @@
+<!-- @dsCard group="Components" viewport="860x560" name="People" subtitle="The profile header, the actor chip, and the avatar — a photo where there is one, the monogram where there is not" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+body{padding:16px;display:flex;gap:28px;align-items:flex-start}
+#root{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.pane{width:360px;flex:none;position:relative;transform:translateZ(0)}
+.col{display:flex;flex-direction:column;gap:12px;max-width:380px}
+.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}
+p{margin:0;font-size:12px;color:var(--text-secondary);line-height:1.55}b{color:var(--on-surface);font-weight:500}
+hr{border:0;border-top:1px solid var(--border-hairline);margin:4px 0}
+</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { ProfileHeader, ActorChip, MonogramAvatar } = window.CoGraDesignSystem_9084ba;
+const PHOTO = "../../assets/photos/06-portrait-3x4.jpg";
+const bundle = { current:{pDirected:0.55,pInterest:0.2}, rawSum:{pDirected:0.9,pInterest:0.3}, records:4, severance:{records:4} };
+function Demo(){return (
+<>
+<div className="pane">
+  <span className="lbl">Someone else's profile — the stance on the person leads</span>
+  <ProfileHeader handle="ada" displayName="Ada Okonkwo" avatarSrc={PHOTO}
+                 bio="Coast roads, long exposures, and the occasional argument about routing."
+                 stancesOn="128" stancesTaken="341" bundle={bundle}
+                 menuItems={[{label:"Copy link"},{label:"Report"}]}/>
+  <hr/>
+  <span className="lbl">Your own — no stance to take, so the row is what you do to your own record</span>
+  <ProfileHeader handle="juno" displayName="Juno Baptiste" own stancesOn="12" stancesTaken="96"
+                 onEdit={()=>{}} onSettings={()=>{}}/>
+  <hr/>
+  <span className="lbl">No photo, no words yet — the monogram is the design, not a gap</span>
+  <ProfileHeader handle="tobias" stancesOn="0" stancesTaken="3"/>
+</div>
+<div className="col">
+  <span className="lbl">Actor chip — with a photo, and without</span>
+  <ActorChip handle="ada" displayName="Ada Okonkwo" avatarSrc={PHOTO}/>
+  <ActorChip handle="mira_l" displayName="Mira Lindqvist"/>
+  <span className="lbl">No display name — the handle stands in</span>
+  <ActorChip handle="tobias"/>
+  <span className="lbl">Avatars, 24px and 64px</span>
+  <div style={{display:"flex",gap:12,alignItems:"center"}}>
+    <MonogramAvatar name="Ada Okonkwo" src={PHOTO}/>
+    <MonogramAvatar name="Ada Okonkwo"/>
+    <MonogramAvatar name="?"/>
+    <MonogramAvatar name="Ada Okonkwo" size="lg" src={PHOTO}/>
+    <MonogramAvatar name="Mira Lindqvist" size="lg"/>
+  </div>
+  <p><b>Two counts, each labelled, never merged.</b> "Stances on them" and "Stances they've taken". Not "followers" — there is no following here — and not the repo's own word for the link, which is banned vocabulary.</p>
+  <p><b>The avatar is decorative at every size.</b> The adjacent text names the actor, so a photo carries no alt text and never becomes the only way to tell two people apart. A broken image falls back to the monogram silently.</p>
+  <p><b>No cover image, no banner.</b> The largest thing on a person's screen should not be decoration.</p>
+</div>
+</>)}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script></body></html>

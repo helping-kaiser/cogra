@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-labelledby="t">
+  <title id="t">CoGra</title>
+  <rect width="100" height="100" rx="22" fill="#EF6C1A"></rect>
+  <circle cx="50.00" cy="40.21" r="18.94" fill="none" stroke="#4F1D00" stroke-width="13.17"></circle>
+  <path d="M68.937 22.447 L68.937 60.574 C68.879 61.179 68.786 63.012 68.576 64.198 C68.357 65.392 68.063 66.586 67.642 67.713 C67.213 68.840 66.675 69.958 66.028 70.967 C65.372 71.985 64.598 72.952 63.732 73.784 C62.866 74.625 61.865 75.365 60.831 75.988 C59.805 76.602 58.670 77.098 57.526 77.501 C56.391 77.905 55.197 78.182 54.003 78.384 C52.809 78.586 51.589 78.670 50.378 78.721 C49.167 78.771 47.948 78.746 46.737 78.679 C45.526 78.620 43.710 78.401 43.113 78.342" fill="none" stroke="#4F1D00" stroke-width="13.17" stroke-linecap="round" stroke-linejoin="round"></path>
+  <circle cx="52.97" cy="37.24" r="7.16" fill="#FFF8F6"></circle>
+</svg>

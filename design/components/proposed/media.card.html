@@ -1,0 +1,70 @@
+<!-- @dsCard group="Proposed" viewport="1000x1000" name="Post media" subtitle="NOT SHIPPED — the media post, full-bleed and dominant, at true ratios with the card's full inventory around it." -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{padding:16px}.row{display:flex;gap:20px;align-items:flex-start}.col{display:flex;flex-direction:column;gap:10px;width:400px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}
+.open{font-size:12px;color:var(--text-secondary);line-height:1.55;width:420px}.open b{color:var(--on-surface);font-weight:500}.open p{margin:0 0 10px}.open ul{margin:0 0 10px;padding-left:16px}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { PostCard } = window.CoGraDesignSystem_9084ba;
+const ada = { handle: "ada", displayName: "Ada Okonkwo" };
+const mira = { handle: "mira_l", displayName: "Mira Lindqvist" };
+const b = (d,i,n) => ({current:{pDirected:d,pInterest:i},rawSum:{pDirected:d,pInterest:i},records:n,severed:false,severance:{records:n}});
+const menu = [{label:"Report this"},{label:"Copy link"}];
+const P = "../../assets/photos/";
+
+function Demo(){return (
+<div className="row">
+  <div className="col">
+    <span className="lbl">One image — the media is the card</span>
+    <PostCard author={ada} timestamp="2h" score="15" license={{attribution:0.5,provenance:0}} menuItems={menu}
+      bundle={b(0.55,0.2,2)} onOpen={()=>{}}
+      title="The long way home"
+      content="Took the long way home and the whole street smelled of rain on warm stone. Stopped at the corner for ten minutes just to stand in it, and then the light changed and everyone moved at once."
+      comments={12} media={[{src:P+"03-landscape-16x9.jpg",alt:"A canoe on a mountain lake at dusk",ratio:"landscape"}]}/>
+    <span className="lbl">Portrait — the tile caps at 4:5, the 9:16 frame is fitted whole inside it</span>
+    <PostCard author={mira} timestamp="5h" score="8" license={{attribution:0,provenance:0}} menuItems={menu} comments={0}
+      content="Six seconds of the shelf not falling over. The 9:16 original is fitted inside a 4:5 tile rather than cut or shown tall — the cap bounds the tile, not the picture."
+      media={[{src:P+"08-portrait-9x16.jpg",alt:"A man standing at the edge of a lake",ratio:"portrait"}]}/>
+  </div>
+  <div className="col">
+    <span className="lbl">Gallery — lead tile, two squares, +n, pending</span>
+    <PostCard author={mira} timestamp="1d" score="-4" license={{attribution:1,provenance:1}} menuItems={menu} pending
+      title="Everything the bakery corner did in September"
+      description="Five of about forty."
+      content="Same route, same time, six weeks. Week one I noticed the bakery. Week four I noticed the woman who feeds the cats behind it. This week she told me their names, and I wrote them down."
+      comments={143} media={[{src:P+"01-landscape-4x3.jpg",alt:"Strawberries on a market stall"},{src:P+"04-square-1x1.jpg",alt:"A jar of honey"},{src:P+"10-square-1x1.jpg",alt:"Hands holding grapes"},{src:P+"02-landscape-3x2.jpg"},{src:P+"09-landscape-4x3.jpg"}]}/>
+    <span className="lbl">No src — the reserved region, still the honest placeholder</span>
+    <PostCard author={ada} timestamp="3d" score="2" menuItems={menu} comments={4}
+      content="A tile with no source reserves its space and says what belongs there."
+      media={[{label:"Photo",ratio:"landscape"}]}/>
+  </div>
+  <div className="open">
+    <p><b>Decided, and drawn here.</b></p>
+    <ul>
+      <li><b>Full-bleed.</b> The media cancels the card's 16px padding and drops its side radii — it meets the card's straight sides, never its corners, so nothing needs clipping.</li>
+      <li><b>Space is reserved before load</b>, always. The tile owns an aspect-ratio, so the feed never jumps. That is the whole reason this exists ahead of the feature.</li>
+      <li><b>People still lead.</b> The author chip stays above the picture, where every other product would put the picture first. §1 is not negotiable for a media post.</li>
+      <li><b>Title above, caption below.</b> A title titles the thing; under the media it reads as a caption and the caption reads as a second one. The title is never truncated — a title that needs cutting is a body.</li>
+      <li><b>The caption is clamped to two lines with <i>More</i></b>, which opens it in place and never navigates. The description clamps to one.</li>
+      <li><b>The card's whole inventory is here:</b> author, timestamp, the ⋮ menu carrying the licence, the honesty markers, then the affordance row — stance first, Post Score second.</li>
+      <li><b>Gallery:</b> one lead tile plus two squares and a <code>+n</code>, hairline 2px gutters. Reserved height is a function of the count alone.</li>
+      <li><b>Alt text is authored or absent</b> — never generated. A tile without it is <code>aria-hidden</code>.</li>
+      <li><b>A post fits the screen.</b> Media is capped at <code>--media-max-height</code>: viewport, less the top safe area, the bottom bar, and the <i>worst-case</i> non-media chrome — measured on the heaviest post the system can produce, not the average one. Budgeting for the average ships a layout that fits four posts in five, and the fifth is the one with something to say. A gallery splits the budget ~60/40 between lead and strip.</li><li><b>The affordance row is one line, never wrapping.</b> A second row reads as a second kind of thing, and costs height the post does not have. That is why every affordance there is glyph-plus-number rather than words.</li><li><b>Portrait caps at 4:5 — and the cap bounds the tile, not the picture.</b> A taller frame is fitted inside it, with the reserved surface showing at the sides; the layout never decides the author's crop. Plain bars, never a blurred enlargement of the photo — that invents image where there is none.</li><li><b>Only a gallery's secondary squares crop.</b> They are an index into the set, not the media itself, and a ragged grid of fitted thumbnails reads as a mistake. The whole frame is one tap away.</li><li><b>Tapping media in the detail view opens it full-size</b> (<code>MediaViewer</code>) — contain, as large as the screen allows, backed out of with <code>arrow_back</code>, Escape, or the backdrop. In the feed the same tap opens the post: a reader scrolling is choosing between posts, not looking at one picture.</li>
+      <li><b>Video autoplays, muted, while on screen</b> — and the mute decision is <b>global and sticky</b>: unmute one clip and the next one down is already unmuted. Tapping every clip is friction with no upside; a per-video mute makes the reader re-decide the same thing on every scroll. Half-visible starts it, leaving stops it.</li>
+      <li><b>One control on a video</b> — sound. No play/pause: it plays when it is on screen, and that is the whole policy. It is <code>volume_up</code>/<code>volume_off</code> on a 36px inverse disc — the one icon button in the system with a background, because it sits on photography.</li>
+      <li><b>Tapping the card opens the post</b>, media included — a tap that lands on nothing with its own meaning goes to the detail view.</li>
+      <li><b>Comments are their own affordance</b>, third in the row — glyph plus count, like the score beside it. It opens the same detail view, scrolled so the comments lead.</li>
+    </ul>
+    <p><b>Still open.</b></p>
+    <ul>
+      <li><b>The sensitive blur treatment</b> (§9): radius, overlay, and whether reveal is per-item or session-sticky. Its <i>granularity</i> is settled — blur only what is marked, one attachment or one field at a time, so a single image in a gallery can blur alone and so can a title or a description.</li>
+    </ul>
+    <p>Photography here is real, at true ratios, from <code>assets/photos/</code> — mock material, not brand stock.</p>
+  </div>
+</div>)}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script></body></html>
