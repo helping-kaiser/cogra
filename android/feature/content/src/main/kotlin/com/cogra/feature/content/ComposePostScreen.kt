@@ -90,6 +90,15 @@ fun ComposePostRoute(
         onDoneTuningTag = viewModel::onDoneTuningTag,
         onTagRelevanceChange = viewModel::onTagRelevanceChange,
         onTagConfidenceChange = viewModel::onTagConfidenceChange,
+        onOpenFinder = viewModel::onOpenFinder,
+        onCloseFinder = viewModel::onCloseFinder,
+        onFinderQueryChange = viewModel::onFinderQueryChange,
+        onPickReference = viewModel::onPickReference,
+        onRemoveReference = viewModel::onRemoveReference,
+        onTuneReference = viewModel::onTuneReference,
+        onDoneTuningReference = viewModel::onDoneTuningReference,
+        onReferenceRelevanceChange = viewModel::onReferenceRelevanceChange,
+        onReferenceSupportChange = viewModel::onReferenceSupportChange,
         onSubmit = viewModel::onSubmit,
         onConfirmSubmit = viewModel::onConfirmSubmit,
         onDismissConfirm = viewModel::onDismissConfirm,
@@ -113,6 +122,15 @@ fun ComposePostScreen(
     onDoneTuningTag: () -> Unit,
     onTagRelevanceChange: (String, Double) -> Unit,
     onTagConfidenceChange: (String, Double) -> Unit,
+    onOpenFinder: () -> Unit,
+    onCloseFinder: () -> Unit,
+    onFinderQueryChange: (String) -> Unit,
+    onPickReference: (ReferenceCandidateRow) -> Unit,
+    onRemoveReference: (String) -> Unit,
+    onTuneReference: (String) -> Unit,
+    onDoneTuningReference: () -> Unit,
+    onReferenceRelevanceChange: (String, Double) -> Unit,
+    onReferenceSupportChange: (String, Double) -> Unit,
     onSubmit: () -> Unit,
     onConfirmSubmit: (Boolean) -> Unit,
     onDismissConfirm: () -> Unit,
@@ -217,6 +235,23 @@ fun ComposePostScreen(
                 onTagRelevanceChange = onTagRelevanceChange,
                 onTagConfidenceChange = onTagConfidenceChange,
             )
+            // Citations are never fields of the post record either
+            // (post.md §3) — the section stages its own Reference acts
+            // beside the tags, on the same submit and the same signing
+            // pass (D10).
+            ReferenceEntry(
+                section = state.referenceSection,
+                testTagPrefix = "compose",
+                onOpenFinder = onOpenFinder,
+                onCloseFinder = onCloseFinder,
+                onFinderQueryChange = onFinderQueryChange,
+                onPickReference = onPickReference,
+                onRemoveReference = onRemoveReference,
+                onTuneReference = onTuneReference,
+                onDoneTuningReference = onDoneTuningReference,
+                onReferenceRelevanceChange = onReferenceRelevanceChange,
+                onReferenceSupportChange = onReferenceSupportChange,
+            )
             // License qualifiers are genesis-only and immutable
             // (post.md §4) — the edit form carries none.
             if (!editing) {
@@ -271,6 +306,7 @@ fun ComposePostScreen(
             testTagPrefix = "compose",
             onConfirm = onConfirmSubmit,
             onDismiss = onDismissConfirm,
+            withdrawalCost = state.withdrawalCost,
         )
     }
 }
@@ -305,6 +341,13 @@ internal fun MultiActionConfirm(
     testTagPrefix: String,
     onConfirm: (Boolean) -> Unit,
     onDismiss: () -> Unit,
+    /**
+     * What the withdrawals in this batch cost, once the server has
+     * assembled them — a citation revised upward several times needs
+     * more than one counter-record to walk back (D11). Null when the
+     * batch withdraws nothing.
+     */
+    withdrawalCost: Int? = null,
 ) {
     var dontAskAgain by rememberSaveable { mutableStateOf(false) }
     AlertDialog(
@@ -317,6 +360,18 @@ internal fun MultiActionConfirm(
                     text = pluralStringResource(R.plurals.content_confirm_body, count, count),
                     modifier = Modifier.testTag("${testTagPrefix}_confirm_body"),
                 )
+                if (withdrawalCost != null && withdrawalCost > 0) {
+                    Text(
+                        text = pluralStringResource(
+                            R.plurals.content_references_withdrawal_cost,
+                            withdrawalCost,
+                            withdrawalCost,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.testTag("${testTagPrefix}_confirm_withdrawal"),
+                    )
+                }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier

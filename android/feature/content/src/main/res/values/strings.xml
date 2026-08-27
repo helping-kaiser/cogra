@@ -22,6 +22,36 @@
     <string name="content_topics_show_values">Show how strongly these topics are claimed</string>
     <string name="content_topics_hide_values">Hide how strongly these topics are claimed</string>
     <!-- What a topic name may be — L1\'s identifier atom (D3). -->
+    <!-- The references section (D18, D20). The word is always
+         Reference — a reference to a profile is a mention — and never
+         "cite", because every content node can be referenced. -->
+    <string name="content_references_heading">References</string>
+    <!-- How a target reads. A mention must resolve against the actor's
+         CURRENT handle, which is why the body is never parsed for one
+         (D15). -->
+    <string name="reference_chip_mention">@%1$s</string>
+    <!-- A post or comment with no readable text of its own. -->
+    <string name="reference_chip_untitled">Untitled</string>
+    <!-- A target the display store cannot type: the citation stands, the far end is unnamed. -->
+    <string name="reference_chip_unresolved">Referenced node</string>
+    <string name="content_references_add">Add a reference</string>
+    <string name="content_references_cap_reached">Up to %1$d references per post</string>
+    <string name="content_references_params_done">Done</string>
+    <string name="content_references_finder_title">Find something to reference</string>
+    <string name="content_references_finder_field">Handle or id</string>
+    <string name="content_references_finder_hint">Type a full handle, like @ada, or paste an id.</string>
+    <string name="content_references_finder_empty">Nothing matched that yet.</string>
+    <string name="content_references_finder_failed">Couldn\'t look that up. Check your connection.</string>
+    <string name="content_references_finder_cancel">Cancel</string>
+    <string name="content_references_show_values">Show how strongly these references are made</string>
+    <string name="content_references_hide_values">Hide how strongly these references are made</string>
+    <!-- A withdrawal nets the citation bundle to zero, which may take
+         more than one counter-record (D11). -->
+    <plurals name="content_references_withdrawal_cost">
+        <item quantity="one">Removing a reference signs %d action.</item>
+        <item quantity="other">Removing references signs %d actions.</item>
+    </plurals>
+
     <string name="content_topics_illegal_whitespace">Spaces aren\'t allowed in topic names.</string>
     <string name="content_topics_illegal_charset">Only ASCII letters, digits, and . _ -</string>
     <string name="content_topics_illegal_too_long">That name is too long.</string>

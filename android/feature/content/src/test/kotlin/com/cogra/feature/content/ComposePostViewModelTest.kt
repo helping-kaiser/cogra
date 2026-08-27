@@ -45,11 +45,15 @@ class ComposePostViewModelTest {
         var prepareOutcome: Outcome<PreparedContentView>? = null
         var editOutcome: Outcome<PreparedContentView>? = null
         var lastCreate: List<Any?> = emptyList()
+        var lastCreateReferences: List<ReferenceClaim> = emptyList()
         var lastEdit: List<Any?> = emptyList()
         var editCalls = 0
 
         /** The topics the edited post already carries. */
         var loadedTopics: List<TopicClaimView> = emptyList()
+
+        /** The references the edited post already carries. */
+        var loadedReferences: List<ReferenceClaimView> = emptyList()
 
         override suspend fun post(
             id: String,
@@ -59,7 +63,7 @@ class ComposePostViewModelTest {
         ): Outcome<PostDetail?> = Outcome.Success(
             PostDetail(
                 post = testPost(id, title = "Loaded title", body = "Loaded body")
-                    .copy(topics = loadedTopics),
+                    .copy(topics = loadedTopics, references = loadedReferences),
                 comments = Page(emptyList(), null, hasNextPage = false),
             ),
         )
@@ -70,8 +74,10 @@ class ComposePostViewModelTest {
             content: String,
             license: LicenseChoice,
             tags: List<TagClaim>,
+            references: List<ReferenceClaim>,
         ): Outcome<PreparedContentView> {
             lastCreate = listOf(title, description, content, license, tags)
+            lastCreateReferences = references
             return prepareOutcome ?: Outcome.Success(
                 PreparedContentView("node-1", listOf(sealer.stage(Family.PUBLISH))),
             )

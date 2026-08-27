@@ -36,6 +36,10 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PostView
+import com.cogra.domain.ReferenceCandidateView
+import com.cogra.domain.ReferenceClaimView
+import com.cogra.domain.ReferenceContentKind
+import com.cogra.domain.ReferenceTargetView
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
 import com.cogra.domain.PreparedContentView
@@ -52,6 +56,7 @@ import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.StanceRepository
+import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.stance.SeveranceQuote
@@ -62,6 +67,7 @@ import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
+import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.topics.TagClaim
 import java.time.Instant
 import kotlinx.coroutines.flow.Flow
@@ -406,6 +412,7 @@ open class ThrowingContentRepository : ContentRepository {
         content: String,
         license: LicenseChoice,
         tags: List<TagClaim>,
+        references: List<ReferenceClaim>,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun preparePostEdit(
         id: String,
@@ -418,6 +425,7 @@ open class ThrowingContentRepository : ContentRepository {
         content: String,
         license: LicenseChoice,
         tags: List<TagClaim>,
+        references: List<ReferenceClaim>,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun prepareCommentEdit(id: String, content: String): Outcome<PreparedContentView> =
         throw UnsupportedOperationException()
@@ -461,6 +469,23 @@ open class ThrowingTopicRepository : TopicRepository {
         name: String,
         pDirected: Double?,
         pInterest: Double?,
+    ): Outcome<List<PreparedWriteView>> = throw UnsupportedOperationException()
+}
+
+open class ThrowingReferenceRepository : ReferenceRepository {
+    override suspend fun referenceCandidates(
+        query: String,
+        limit: Int?,
+    ): Outcome<List<ReferenceCandidateView>> = throw UnsupportedOperationException()
+    override suspend fun prepareReference(
+        artifact: String,
+        target: String,
+        relevance: Double?,
+        support: Double?,
+    ): Outcome<List<PreparedWriteView>> = throw UnsupportedOperationException()
+    override suspend fun prepareReferenceWithdrawal(
+        artifact: String,
+        target: String,
     ): Outcome<List<PreparedWriteView>> = throw UnsupportedOperationException()
 }
 
@@ -529,6 +554,50 @@ fun testTopicClaim(
     hashtag = testHashtag(name),
     relevance = relevance,
     confidence = confidence,
+    pending = pending,
+)
+
+/** A citation toward a person — the target class that makes it a mention. */
+fun testMentionTarget(
+    handle: String,
+    id: String = "user-$handle",
+): ReferenceTargetView.Profile = ReferenceTargetView.Profile(
+    id = id,
+    handle = handle,
+    displayName = handle.replaceFirstChar { it.uppercase() },
+)
+
+/** A citation toward a post or comment — a quote or an embed. */
+fun testContentTarget(
+    id: String,
+    kind: ReferenceContentKind = ReferenceContentKind.POST,
+    title: String? = "Title $id",
+    snippet: String? = "Body $id",
+    authorHandle: String? = "author",
+): ReferenceTargetView.Content = ReferenceTargetView.Content(
+    kind = kind,
+    id = id,
+    title = if (kind == ReferenceContentKind.POST) title else null,
+    snippet = snippet,
+    authorHandle = authorHandle,
+    authorDisplayName = authorHandle?.replaceFirstChar { it.uppercase() },
+)
+
+fun testReferenceClaim(
+    target: ReferenceTargetView?,
+    targetId: String = when (target) {
+        is ReferenceTargetView.Profile -> target.id
+        is ReferenceTargetView.Content -> target.id
+        null -> "unresolved-target"
+    },
+    relevance: Double = 0.1,
+    support: Double = 0.1,
+    pending: Boolean = false,
+): ReferenceClaimView = ReferenceClaimView(
+    target = target,
+    targetId = targetId,
+    relevance = relevance,
+    support = support,
     pending = pending,
 )
 
