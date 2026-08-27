@@ -8,7 +8,9 @@ use std::sync::Arc;
 
 use sqlx::PgPool;
 
-use api::schema::types::{DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, connection_cost, offset_connection};
+use api::schema::types::{
+    DEFAULT_PAGE_SIZE, FOLD_LIST_BOUND, MAX_PAGE_SIZE, connection_cost, offset_connection,
+};
 use api::schema::{ApiSchema, QueryBudgets, build_with};
 
 mod rig;
@@ -84,6 +86,30 @@ async fn a_modest_connection_query_fits_the_budget(pool: PgPool) {
     let schema = schema(pool, QueryBudgets::release());
     let query = "{ me { inviteLinks(first: 20) { edges { node { id singleUse } } } } }";
     let response = execute(&schema, query).await;
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+}
+
+/// An author-owned fold list takes no page argument, so nothing in the
+/// query says what it costs — `FOLD_LIST_BOUND` does. Pinning the exact
+/// flip point is what keeps that bound from drifting silently: one
+/// `relevance` per row prices the whole read at `1 + (20 + 1)` — the
+/// `post` field, then the fold field plus its bound many one-cost rows.
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_fold_list_charges_its_stated_bound(pool: PgPool) {
+    let query = "{ post(id: \"00000000-0000-0000-0000-000000000000\") { topics { relevance } } }";
+    let cost = 1 + (FOLD_LIST_BOUND as usize + 1);
+    let budgets = |complexity| QueryBudgets {
+        depth: 15,
+        complexity,
+        introspection_enabled: false,
+    };
+    let under = schema(pool.clone(), budgets(cost - 1));
+    assert_eq!(
+        first_error(&execute(&under, query).await),
+        "Query is too complex."
+    );
+    let exact = schema(pool, budgets(cost));
+    let response = execute(&exact, query).await;
     assert!(response.errors.is_empty(), "{:?}", response.errors);
 }
 

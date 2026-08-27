@@ -1599,7 +1599,7 @@ impl PostType {
     /// `includePending: false` serves only what has landed on L1; the
     /// pending half is the viewer's own in-flight tags on their own
     /// content.
-    #[graphql(complexity = "list_cost(None, child_complexity)")]
+    #[graphql(complexity = "fold_cost(child_complexity)")]
     async fn topics(
         &self,
         ctx: &Context<'_>,
@@ -1619,7 +1619,7 @@ impl PostType {
     /// `includePending: false` serves only what has landed on L1; the
     /// pending half is the viewer's own in-flight citations on their own
     /// content.
-    #[graphql(complexity = "list_cost(None, child_complexity)")]
+    #[graphql(complexity = "fold_cost(child_complexity)")]
     async fn references(
         &self,
         ctx: &Context<'_>,
@@ -1724,7 +1724,7 @@ impl CommentType {
     /// This comment's current topics — the same fold and the same
     /// author-owned channel as `Post.topics`; a Comment is Taggable
     /// like any other passive node.
-    #[graphql(complexity = "list_cost(None, child_complexity)")]
+    #[graphql(complexity = "fold_cost(child_complexity)")]
     async fn topics(
         &self,
         ctx: &Context<'_>,
@@ -1736,7 +1736,7 @@ impl CommentType {
     /// This comment's current citations — the same fold and the same
     /// author-owned channel as `Post.references`; a Comment is a citing
     /// artifact like any other passive node.
-    #[graphql(complexity = "list_cost(None, child_complexity)")]
+    #[graphql(complexity = "fold_cost(child_complexity)")]
     async fn references(
         &self,
         ctx: &Context<'_>,
@@ -1983,6 +1983,34 @@ pub(super) fn list_limit(limit: Option<i32>) -> async_graphql::Result<u32> {
 pub(super) fn list_cost(limit: Option<i32>, child_complexity: usize) -> usize {
     let requested = limit.unwrap_or(DEFAULT_PAGE_SIZE).clamp(0, MAX_PAGE_SIZE);
     requested as usize * child_complexity + 1
+}
+
+/// The row count an author-owned fold list is *budgeted* at
+/// ([`fold_cost`]).
+///
+/// `Post.topics`, `Post.references` and their `Comment` twins take no
+/// page argument, so there is no requested size to price and no served
+/// ceiling to price against: the fold returns whatever the author has
+/// standing. This constant is therefore an assumption, and it is stated
+/// here rather than borrowed: the per-gesture caps
+/// (`topics::MAX_TAGS_PER_BATCH`, `references::MAX_REFERENCES_PER_BATCH`,
+/// both 10) bound one batch, not the standing set an author accumulates
+/// across batches, so the budget assumes twice a full batch. A standing
+/// set past this costs the server more than it was charged — capping
+/// what the folds serve is the open serving question api-spec.md
+/// "Query budgets" records.
+pub const FOLD_LIST_BOUND: i32 = 20;
+
+/// What an author-owned fold list charges: [`FOLD_LIST_BOUND`] rows times
+/// the per-row cost, plus one for the field itself.
+///
+/// Separate from [`list_cost`], whose contract is a `limit`-bounded list:
+/// passing it `None` charges [`DEFAULT_PAGE_SIZE`], which reads as a page
+/// size on a field that has no page. The two happen to agree today; they
+/// answer different questions, and a change to the pagination default
+/// must not silently reprice the folds.
+pub(super) fn fold_cost(child_complexity: usize) -> usize {
+    FOLD_LIST_BOUND as usize * child_complexity + 1
 }
 
 /// The requesting viewer's L0 address, when they have one. Pending rows
