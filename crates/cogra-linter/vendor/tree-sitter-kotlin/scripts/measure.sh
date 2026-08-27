@@ -8,12 +8,12 @@
 # counted as several.
 #
 # Usage: scripts/measure.sh [kt|kts]
-#   kt  (default) the app source, which the precondition is about
-#   kts the 18 Gradle scripts, which are a separate and undecided
-#       question — the specification parses those with its `script`
-#       production, not `kotlinFile`, and this grammar implements
-#       `kotlinFile`. Measured here as input to that decision, nothing
-#       more.
+#   kt  (default) the app sources
+#   kts the Gradle build scripts
+#
+# Both must reach zero. One grammar root reads both, taking the
+# specification's wider `script` shape, so a regression in either is a
+# regression in the same parser.
 set -uo pipefail
 
 ext="${1:-kt}"
