@@ -15,8 +15,9 @@ use uuid::Uuid;
 
 use super::types::{
     Actor, CommentType, CursorKey, HashtagType, InviteLinkCheck, KeysetConnection, Node, PostType,
-    Record, RecordFamily, RecordId, StagedWriteType, User, connection_cost, content_cursor,
-    content_cursor_key, keyset_connection, keyset_page,
+    Record, RecordFamily, RecordId, ReferenceCandidate, ReferenceTarget, StagedWriteType, User,
+    connection_cost, content_cursor, content_cursor_key, keyset_connection, keyset_page, list_cost,
+    list_limit, resolve_reference_target,
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
@@ -326,6 +327,80 @@ impl Query {
         .await
         .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         Ok(keyset_connection(rows, &page, record_cursor, Record))
+    }
+
+    /// Candidate targets for the reference picker (D20).
+    ///
+    /// **Exact-match resolution only.** Real search — prefix matching,
+    /// ranking, snippets — arrives with slice 2.7 *behind this same
+    /// field*, so a client binds to it once and does not change when the
+    /// implementation is replaced. Three shapes resolve today: a handle,
+    /// bare or `@`-sigilled, names a person; a `#name` names a topic; a
+    /// UUID names whatever node it addresses.
+    ///
+    /// An empty or unresolvable query yields an empty list, never an
+    /// error. A finder runs on every keystroke, so most of what it is
+    /// asked is a prefix of something the user is still typing — failing
+    /// those would make error noise the normal case.
+    ///
+    /// A candidate is offerable only if `prepareReference` would accept
+    /// it: resolution runs through the write path's own resolver, so the
+    /// picker cannot hand back a target the mutation then refuses.
+    #[graphql(complexity = "list_cost(limit, child_complexity)")]
+    async fn reference_candidates(
+        &self,
+        ctx: &Context<'_>,
+        query: String,
+        limit: Option<i32>,
+    ) -> async_graphql::Result<Vec<ReferenceCandidate>> {
+        let pool = ctx.data::<PgPool>()?;
+        let limit = list_limit(limit)? as usize;
+        let query = query.trim();
+        if query.is_empty() || limit == 0 {
+            return Ok(Vec::new());
+        }
+
+        let mut out = Vec::new();
+        if let Some(name) = query.strip_prefix('#') {
+            // A Type is offerable only once the registry can invert its
+            // name: `ReferenceInput` names a target by L2 id, and a name
+            // with no row yet has none to name.
+            if let Ok(canonical) = common::hashtag::canonicalize(name)
+                && let Some(id) = postgres_store::hashtag::id_by_name(pool, &canonical).await?
+            {
+                out.push(ReferenceCandidate {
+                    target: ReferenceTarget::Topic(HashtagType { name: canonical }),
+                    target_id: id,
+                });
+            }
+        } else if let Ok(id) = Uuid::parse_str(query) {
+            if let Some(node) = crate::nodes::resolve_id(pool, id)
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?
+                && let Some(target) = resolve_reference_target(ctx, &node.to_string()).await?
+            {
+                out.push(ReferenceCandidate {
+                    target,
+                    target_id: id,
+                });
+            }
+        } else if let Ok(folded) = crate::auth::normalize_handle(query.trim_start_matches('@'))
+            && let Some(identity) = store::actor_identity_by_handle(pool, &folded).await?
+        {
+            // A keyless account fronts no Profile on the graph, so it is
+            // unresolvable to the write path and must not be offered.
+            if identity.kind == "user" && identity.l0_address.is_some() {
+                out.push(ReferenceCandidate {
+                    target_id: identity.id,
+                    target: ReferenceTarget::Profile(User {
+                        identity,
+                        viewer_session: None,
+                    }),
+                });
+            }
+        }
+        out.truncate(limit);
+        Ok(out)
     }
 
     /// The chronological listing (roadmap "Slice 2"): every post,
