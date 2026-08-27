@@ -10,6 +10,7 @@ package com.cogra.app.di
 import com.cogra.domain.AccountState
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.HashtagView
+import com.cogra.domain.ReferenceCandidateView
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
@@ -30,6 +31,7 @@ import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.StanceRepository
+import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.stance.SeveranceQuote
@@ -39,6 +41,7 @@ import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
+import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.topics.TagClaim
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeStorageHealth
@@ -47,6 +50,7 @@ import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingOnboardingRepository
 import com.cogra.domain.testing.ThrowingProfileRepository
+import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingTopicRepository
 import com.cogra.domain.testing.testModeratedField
 import com.cogra.domain.testing.ThrowingSessionRepository
@@ -110,6 +114,7 @@ class ScriptedContentRepository : ThrowingContentRepository() {
         content: String,
         license: LicenseChoice,
         tags: List<TagClaim>,
+        references: List<ReferenceClaim>,
     ): Outcome<PreparedContentView> {
         pendingAfterPrepare?.let { listing = listOf(it) + listing }
         return Outcome.Success(PreparedContentView(preparedNode, emptyList()))
@@ -273,6 +278,46 @@ class ScriptedTopicRepository(private val writes: WriteRepository) : ThrowingTop
     ): Outcome<List<PreparedWriteView>> = writes.prepareStance(target, pDirected ?: 0.1, pInterest ?: 1.0)
 }
 
+/**
+ * Scriptable reference surface: what the finder offers, and staged
+ * citations that complete trivially. A withdrawal's batch length is
+ * scriptable, since quoting that count is the gesture's whole point
+ * (D11).
+ */
+class ScriptedReferenceRepository(
+    private val writes: WriteRepository,
+) : ThrowingReferenceRepository() {
+    var candidates: MutableMap<String, List<ReferenceCandidateView>> = mutableMapOf()
+    var withdrawalRecords = 1
+
+    override suspend fun referenceCandidates(
+        query: String,
+        limit: Int?,
+    ): Outcome<List<ReferenceCandidateView>> = Outcome.Success(candidates[query].orEmpty())
+
+    override suspend fun prepareReference(
+        artifact: String,
+        target: String,
+        relevance: Double?,
+        support: Double?,
+    ): Outcome<List<PreparedWriteView>> =
+        writes.prepareStance(target, relevance ?: 0.1, support ?: 0.1)
+
+    override suspend fun prepareReferenceWithdrawal(
+        artifact: String,
+        target: String,
+    ): Outcome<List<PreparedWriteView>> {
+        val staged = mutableListOf<PreparedWriteView>()
+        repeat(withdrawalRecords) {
+            when (val outcome = writes.prepareStance(target, 0.0, 0.0)) {
+                is Outcome.Success -> staged += outcome.value
+                else -> return outcome
+            }
+        }
+        return Outcome.Success(staged)
+    }
+}
+
 @Module
 @TestInstallIn(
     components = [SingletonComponent::class],
@@ -361,4 +406,12 @@ object FakeBindingsModule {
 
     @Provides
     fun topicRepository(fake: ScriptedTopicRepository): TopicRepository = fake
+
+    @Provides
+    @Singleton
+    fun scriptedReferenceRepository(writes: WriteRepository): ScriptedReferenceRepository =
+        ScriptedReferenceRepository(writes)
+
+    @Provides
+    fun referenceRepository(fake: ScriptedReferenceRepository): ReferenceRepository = fake
 }
