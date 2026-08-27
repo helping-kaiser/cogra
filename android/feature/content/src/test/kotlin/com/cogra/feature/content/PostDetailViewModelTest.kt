@@ -1040,8 +1040,8 @@ class PostDetailViewModelTest {
 
     // -- The inline editor manages citations after publication (F10, D11) --
 
-    private fun editingComment(vararg claims: ReferenceClaimView): CommentView {
-        val comment = testComment("c1").copy(references = claims.toList())
+    private fun editingComment(claims: List<ReferenceClaimView>): CommentView {
+        val comment = testComment("c1").copy(references = claims)
         content.detail = Outcome.Success(
             PostDetail(
                 post = testPost("post-1"),
@@ -1052,7 +1052,7 @@ class PostDetailViewModelTest {
     }
 
     private fun startedVmEditing(vararg claims: ReferenceClaimView): PostDetailViewModel {
-        val comment = editingComment(*claims)
+        val comment = editingComment(claims.toList())
         return startedVm().also {
             it.onStartEditComment(comment)
             dispatcher.scheduler.advanceUntilIdle()
@@ -1061,7 +1061,7 @@ class PostDetailViewModelTest {
 
     /** The confirm left on, for the batches that have to ask (D11). */
     private fun viewModelWithConfirm(vararg claims: ReferenceClaimView): PostDetailViewModel {
-        val comment = editingComment(*claims)
+        val comment = editingComment(claims.toList())
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         vm.start("post-1")
