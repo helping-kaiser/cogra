@@ -345,7 +345,13 @@ impl Query {
     ///
     /// A candidate is offerable only if `prepareReference` would accept
     /// it: resolution runs through the write path's own resolver, so the
-    /// picker cannot hand back a target the mutation then refuses.
+    /// picker cannot hand back a target the mutation then refuses. Two
+    /// classes narrow for exactly that reason. A Type is offered only
+    /// once the registry can invert its name — a `ReferenceInput` names
+    /// its target by L2 id, and the name → id derivation is one-way, so
+    /// a name no record has referenced yet has no id to name. And a
+    /// keyless account fronts no Profile on the graph, so it resolves
+    /// nowhere for the write path and must not be offered here either.
     #[graphql(complexity = "list_cost(limit, child_complexity)")]
     async fn reference_candidates(
         &self,
@@ -362,9 +368,6 @@ impl Query {
 
         let mut out = Vec::new();
         if let Some(name) = query.strip_prefix('#') {
-            // A Type is offerable only once the registry can invert its
-            // name: `ReferenceInput` names a target by L2 id, and a name
-            // with no row yet has none to name.
             if let Ok(canonical) = common::hashtag::canonicalize(name)
                 && let Some(id) = postgres_store::hashtag::id_by_name(pool, &canonical).await?
             {
@@ -386,18 +389,16 @@ impl Query {
             }
         } else if let Ok(folded) = crate::auth::normalize_handle(query.trim_start_matches('@'))
             && let Some(identity) = store::actor_identity_by_handle(pool, &folded).await?
+            && identity.kind == "user"
+            && identity.l0_address.is_some()
         {
-            // A keyless account fronts no Profile on the graph, so it is
-            // unresolvable to the write path and must not be offered.
-            if identity.kind == "user" && identity.l0_address.is_some() {
-                out.push(ReferenceCandidate {
-                    target_id: identity.id,
-                    target: ReferenceTarget::Profile(User {
-                        identity,
-                        viewer_session: None,
-                    }),
-                });
-            }
+            out.push(ReferenceCandidate {
+                target_id: identity.id,
+                target: ReferenceTarget::Profile(User {
+                    identity,
+                    viewer_session: None,
+                }),
+            });
         }
         out.truncate(limit);
         Ok(out)
