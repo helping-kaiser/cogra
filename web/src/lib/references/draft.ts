@@ -30,10 +30,17 @@ export type ReferenceTargetKind = "Post" | "Comment" | "User";
  */
 export type ReferenceTargetView = {
   readonly kind: ReferenceTargetKind | null;
-  /** `@handle`, a snippet, `#name` — already in the reader's words. */
+  /** `@handle` or a snippet — already in the reader's words. */
   readonly label: string;
   /** Where the chip navigates; null for a target with no route. */
   readonly href: string | null;
+  /**
+   * A profile target renders as the ACTOR CHIP (D16), which needs the
+   * handle and display name rather than a flat label. Absent for every
+   * other class, and for a target with no display row.
+   */
+  readonly handle?: string;
+  readonly displayName?: string | null;
 };
 
 export type ReferenceDraft = {

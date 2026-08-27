@@ -65,6 +65,7 @@ export type ReferenceTargetNode = {
   readonly id?: string;
   /** `User`. */
   readonly handle?: string;
+  readonly displayName?: { readonly value?: string | null } | null;
   /** `Post`. */
   readonly title?: { readonly value?: string | null } | null;
   /** `Post`, `Comment`. */
@@ -113,7 +114,13 @@ export function targetView(
     case "User": {
       const handle = node.handle;
       if (handle === undefined) break;
-      return { kind: "User", label: `@${handle}`, href: `/u/${handle}` };
+      return {
+        kind: "User",
+        label: `@${handle}`,
+        href: `/u/${handle}`,
+        handle,
+        displayName: node.displayName?.value ?? null,
+      };
     }
     case "Post": {
       const title = node.title?.value?.trim();

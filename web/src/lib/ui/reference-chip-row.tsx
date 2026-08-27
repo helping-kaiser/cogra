@@ -21,6 +21,7 @@
 import { useId, useState } from "react";
 
 import type { ReferenceTargetView } from "@/lib/references/draft";
+import { ActorChip } from "./actor-chip";
 import { ReferenceChip } from "./reference-chip";
 import { formatReferenceParams, formatReferenceParamWords } from "./reference-format";
 
@@ -56,11 +57,37 @@ export function ReferenceChipRow({
       >
         {references.map((reference) => (
           <li key={reference.targetId} className="flex items-center gap-1">
-            <ReferenceChip
-              target={reference.target}
-              pending={reference.pending}
-              testId={`${testIdPrefix}-reference-${reference.targetId}`}
-            />
+            {/* A profile target is a MENTION, and it renders as the actor
+                chip the rest of the app attributes with (D16) — the
+                monogram and display name, not a flat handle. Every other
+                class gets the compact content chip. */}
+            {reference.target.kind === "User" && reference.target.handle !== undefined ? (
+              <span
+                data-testid={`${testIdPrefix}-reference-${reference.targetId}`}
+                className="inline-flex items-center gap-1"
+              >
+                <ActorChip
+                  handle={reference.target.handle}
+                  displayName={reference.target.displayName}
+                  testId={`${testIdPrefix}-reference-${reference.targetId}-link`}
+                />
+                {reference.pending && (
+                  <span
+                    aria-hidden="true"
+                    data-testid={`${testIdPrefix}-reference-${reference.targetId}-pending`}
+                    className="text-on-surface-variant"
+                  >
+                    …
+                  </span>
+                )}
+              </span>
+            ) : (
+              <ReferenceChip
+                target={reference.target}
+                pending={reference.pending}
+                testId={`${testIdPrefix}-reference-${reference.targetId}`}
+              />
+            )}
             {revealable && revealed && (
               <span
                 data-testid={`${testIdPrefix}-reference-${reference.targetId}-values`}

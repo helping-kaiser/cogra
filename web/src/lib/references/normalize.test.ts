@@ -65,8 +65,24 @@ describe("snippet", () => {
 
 describe("targetView", () => {
   it("renders a User as a mention opening the profile", () => {
+    const view = targetView(
+      { __typename: "User", handle: "ada", displayName: { value: "Ada" } },
+      "u1",
+    );
+    // The actor chip needs the pair, not a flat label (D16).
+    expect(view).toEqual({
+      kind: "User",
+      label: "@ada",
+      href: "/u/ada",
+      handle: "ada",
+      displayName: "Ada",
+    });
+  });
+
+  it("carries a null display name through, so the chip falls back to the handle", () => {
     const view = targetView({ __typename: "User", handle: "ada" }, "u1");
-    expect(view).toEqual({ kind: "User", label: "@ada", href: "/u/ada" });
+    expect(view.handle).toBe("ada");
+    expect(view.displayName).toBeNull();
   });
 
   it("prefers a post's title over its body for the chip label", () => {
