@@ -25,9 +25,22 @@ import {
 } from "@/lib/api/content-api";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { prepareTag } from "@/lib/api/topics-api";
+import {
+  fetchReferenceCandidates,
+  prepareReference,
+  prepareReferenceWithdrawal,
+} from "@/lib/api/references-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { tagChanges, WITHDRAWN_RELEVANCE, type TagDraft } from "@/lib/topics/draft";
 import { TAG_BATCH_CAP } from "@/lib/topics/normalize";
+import { referenceDrafts } from "@/lib/references/claims";
+import {
+  referenceActs,
+  referenceChanges,
+  type ReferenceDraft,
+} from "@/lib/references/draft";
+import { REFERENCE_BATCH_CAP } from "@/lib/references/normalize";
+import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
@@ -45,7 +58,16 @@ import { TransportError } from "@/lib/ui/transport-error";
 
 /** Parses a `["tags", i, "name"]`-shaped refusal path down to the index. */
 function tagErrorIndex(field: readonly string[] | null): number | null {
-  if (field === null || field.length < 2 || field[0] !== "tags") return null;
+  return pathIndex(field, "tags");
+}
+
+/** Parses a `["references", i, …]`-shaped refusal path down to the index. */
+function referenceErrorIndex(field: readonly string[] | null): number | null {
+  return pathIndex(field, "references");
+}
+
+function pathIndex(field: readonly string[] | null, head: string): number | null {
+  if (field === null || field.length < 2 || field[0] !== head) return null;
   const index = Number(field[1]);
   return Number.isInteger(index) ? index : null;
 }
@@ -68,7 +90,11 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   const guard = useAuthGuard();
   const signer = useWriteSigner();
   const router = useRouter();
-  const editingId = useSearchParams().get("post");
+  const params = useSearchParams();
+  const editingId = params.get("post");
+  // D20's Reference affordance: a detail surface sends the author here
+  // with the node it wants referenced, and the chip arrives prefilled.
+  const prefillReference = params.get("reference");
   const keyOnDevice = useKeyOnDevice(store);
 
   const [loading, setLoading] = useState(editingId !== null);
@@ -78,15 +104,21 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   const [body, setBody] = useState("");
   const [license, setLicense] = useState<License>(PUBLIC_DOMAIN);
   const [tags, setTags] = useState<readonly TagDraft[]>([]);
-  // What the post carried when it loaded: the baseline both the tag
-  // changes and the "did the content change at all" question read.
+  const [references, setReferences] = useState<readonly ReferenceDraft[]>([]);
+  // What the post carried when it loaded: the baseline the tag changes,
+  // the reference changes, and the "did the content change at all"
+  // question all read.
   const [loadedTags, setLoadedTags] = useState<readonly TagDraft[]>([]);
+  const [loadedReferences, setLoadedReferences] = useState<readonly ReferenceDraft[]>([]);
   const [loadedContent, setLoadedContent] = useState<{
     title: string;
     description: string;
     body: string;
   } | null>(null);
   const [tagErrors, setTagErrors] = useState<Readonly<Record<number, string>>>({});
+  const [referenceErrors, setReferenceErrors] = useState<Readonly<Record<number, string>>>(
+    {},
+  );
   const [submitting, setSubmitting] = useState(false);
   const [emptyBody, setEmptyBody] = useState(false);
   const [refusedMessage, setRefusedMessage] = useState<string | null>(null);
@@ -95,6 +127,11 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   const [transportFailed, setTransportFailed] = useState(false);
   const [confirmMultiAction, setConfirmMultiAction] = useConfirmMultiAction();
   const [confirming, setConfirming] = useState(false);
+  // An edit's batch is quoted by the server before it is confirmed, so
+  // the staged writes wait here while the reader decides.
+  const [pendingWrites, setPendingWrites] = useState<readonly StagedWriteView[] | null>(
+    null,
+  );
 
   useEffect(() => {
     if (editingId === null) return;
@@ -125,6 +162,12 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
         }));
         setLoadedTags(current);
         setTags(current);
+        // A claim CoGra cannot type is dropped here: it has no L2 id to
+        // name it back by, so it renders on the detail view but is never
+        // staged — and never mistaken for one the author removed.
+        const currentReferences = referenceDrafts(post.references);
+        setLoadedReferences(currentReferences);
+        setReferences(currentReferences);
       }
     });
     return () => {
@@ -132,9 +175,34 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
     };
   }, [client, editingId]);
 
+  // The prefill resolves through the finder's OWN lookup — an exact
+  // UUID is one of the three shapes it answers — so the affordance
+  // needs no second endpoint and cannot offer a target the mutation
+  // would then refuse. A miss simply leaves the section empty.
+  useEffect(() => {
+    if (prefillReference === null || editingId !== null) return;
+    let cancelled = false;
+    void fetchReferenceCandidates(client, prefillReference, 1).then((outcome) => {
+      if (cancelled || outcome.kind !== "success") return;
+      const candidate = outcome.value[0];
+      if (candidate === undefined) return;
+      setReferences((current) =>
+        current.some((reference) => reference.targetId === candidate.targetId)
+          ? current
+          : [...current, candidate],
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [client, prefillReference, editingId]);
+
   // What an edit would actually stage: the record only when the content
-  // moved, and one Tag act per tag change.
+  // moved, one Tag act per tag change, and one Reference act per
+  // reference change — except a withdrawal, which is a whole batch.
   const changes = editingId === null ? [] : tagChanges(loadedTags, tags);
+  const refChanges =
+    editingId === null ? [] : referenceChanges(loadedReferences, references);
   const contentChanged =
     loadedContent === null ||
     title !== loadedContent.title ||
@@ -142,10 +210,18 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
     body !== loadedContent.body;
 
   // What pressing submit right now would sign (F4). Creating mints the
-  // post and batches one Tag act per drafted topic; editing signs the
-  // edit record only if the content moved, plus one act per tag change.
+  // post and batches one act per drafted topic and per drafted
+  // reference; editing signs the edit record only if the content moved,
+  // plus one act per change.
+  //
+  // A WITHDRAWAL is only lower-bounded here: `ReferenceClaim` serves the
+  // clipped fold rather than the raw sums, so the true batch is known
+  // only once `prepareReferenceWithdrawal` has quoted it. The confirm
+  // reports that quote before anything is signed.
   const signedActions =
-    editingId === null ? 1 + tags.length : (contentChanged ? 1 : 0) + changes.length;
+    editingId === null
+      ? 1 + tags.length + references.length
+      : (contentChanged ? 1 : 0) + changes.length + referenceActs(refChanges);
 
   const signAll = async (writes: readonly StagedWriteView[]): Promise<boolean> => {
     const results = [];
@@ -174,23 +250,33 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
         content: body,
         license,
         tags,
+        references,
       }),
     );
     if (prepared.kind === "refused") {
       setSubmitting(false);
-      // Field errors on a batched tag land at ["tags", i, "name"] —
-      // surfaced on that exact chip; everything else is the general
-      // refusal line.
+      // Field errors on a batched tag land at ["tags", i, "name"] and a
+      // batched reference's at ["references", i, …] — each surfaced on
+      // that exact chip; everything else is the general refusal line.
+      // D19: a batch the balance cannot carry is refused WHOLE, before
+      // any act is staged, and reads on that same general line.
       const perTag: Record<number, string> = {};
+      const perReference: Record<number, string> = {};
       let general: string | null = null;
       for (const error of prepared.errors) {
-        const index = tagErrorIndex(error.field);
-        if (index !== null) perTag[index] = error.message;
+        const tagIndex = tagErrorIndex(error.field);
+        const referenceIndex = referenceErrorIndex(error.field);
+        if (tagIndex !== null) perTag[tagIndex] = error.message;
+        else if (referenceIndex !== null) perReference[referenceIndex] = error.message;
         else general = general ?? error.message;
       }
       setTagErrors(perTag);
+      setReferenceErrors(perReference);
       setRefusedMessage(
-        general ?? (Object.keys(perTag).length > 0 ? null : "The server refused this write."),
+        general ??
+          (Object.keys(perTag).length + Object.keys(perReference).length > 0
+            ? null
+            : "The server refused this write."),
       );
       return;
     }
@@ -263,10 +349,68 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
       }
     }
 
-    if (general !== null || Object.keys(perTag).length > 0) {
+    // One Reference act per added or re-tuned reference; a REMOVAL is a
+    // withdrawal, and the server assembles its counter-records — the
+    // returned batch is the only truthful quote of what it costs (D11).
+    const perReference: Record<number, string> = {};
+    for (const change of refChanges) {
+      const prepared = await guard.run(() =>
+        change.kind === "reference"
+          ? prepareReference(client, {
+              artifact: id,
+              target: change.reference.targetId,
+              relevance: change.reference.relevance,
+              support: change.reference.support,
+            })
+          : prepareReferenceWithdrawal(client, {
+              artifact: id,
+              target: change.reference.targetId,
+            }),
+      );
+      if (prepared.kind === "failed") {
+        setSubmitting(false);
+        setTransportFailed(true);
+        return;
+      }
+      if (prepared.kind === "refused") {
+        // A PRE-STAGING refusal is a field error, never the signing line
+        // (F2): nothing was staged, so nothing stays pending. An added
+        // reference carries it on its own chip; a withdrawal has no chip
+        // left to carry it, so it reads on the general line.
+        const message = prepared.errors[0]?.message ?? "The server refused this write.";
+        const index =
+          change.kind === "reference"
+            ? references.findIndex(
+                (reference) => reference.targetId === change.reference.targetId,
+              )
+            : -1;
+        if (index >= 0) perReference[index] = message;
+        else general = general ?? message;
+      } else {
+        writes.push(...prepared.value);
+      }
+    }
+
+    if (
+      general !== null ||
+      Object.keys(perTag).length > 0 ||
+      Object.keys(perReference).length > 0
+    ) {
       setSubmitting(false);
       setTagErrors(perTag);
+      setReferenceErrors(perReference);
       setRefusedMessage(general);
+      return;
+    }
+
+    // Everything is staged and nothing is signed, so the batch can now
+    // be quoted EXACTLY — a withdrawal's cost is knowable no earlier.
+    // Staged writes nobody signs are collected by the server's own GC,
+    // so standing here and asking costs nothing.
+    if (writes.length > 1 && confirmMultiAction) {
+      setSubmitting(false);
+      setPendingWrites(writes);
+      setConfirming(true);
       return;
     }
     await finish(writes);
@@ -276,8 +420,10 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
     setSubmitting(true);
     setRefusedMessage(null);
     setTagErrors({});
+    setReferenceErrors({});
     setSignIncomplete(false);
     setTransportFailed(false);
+    setPendingWrites(null);
     if (editingId === null) await submitCreate();
     else await submitEdit(editingId);
   };
@@ -291,12 +437,20 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
     // More than one signed action is more than one price, so it is asked
     // about before it is signed (F4) — unless the reader turned the
     // asking off.
-    if (signedActions > 1 && confirmMultiAction) {
+    //
+    // A CREATION batch's cost is exact client-side — the minting record
+    // plus one act per tag and per reference — so it asks first. An EDIT
+    // can stage a withdrawal, whose batch only the server can quote, so
+    // it prepares first and asks with the real number in hand.
+    if (editingId === null && signedActions > 1 && confirmMultiAction) {
       setConfirming(true);
       return;
     }
     await run();
   };
+
+  /** What the confirm reports: the server's quote when it has one. */
+  const confirmCount = pendingWrites?.length ?? signedActions;
 
   // Leaving is plain back navigation, no discard confirm — the Android
   // composer's behavior. A post that no longer resolves backs to the
@@ -375,6 +529,16 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
         cap={editingId === null ? TAG_BATCH_CAP : null}
         testIdPrefix="compose"
       />
+      {/* The reference section, sibling to the tag section (D18). Same
+          batch rule: creation carries its own ten-per-batch cap (D7),
+          an edit stages one act per change and carries none. */}
+      <ReferenceEntryField
+        references={references}
+        onChange={setReferences}
+        fieldErrors={referenceErrors}
+        cap={editingId === null ? REFERENCE_BATCH_CAP : null}
+        testIdPrefix="compose"
+      />
       {editingId === null && (
         <LicenseChooser value={license} onChange={setLicense} testIdPrefix="compose" />
       )}
@@ -398,14 +562,26 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
       </Button>
       {confirming && (
         <MultiActionConfirm
-          count={signedActions}
+          count={confirmCount}
           busy={submitting}
           testIdPrefix="compose"
-          onCancel={() => setConfirming(false)}
+          onCancel={() => {
+            setConfirming(false);
+            // Abandoning the staged batch is safe: nothing was signed,
+            // and the server collects writes nobody signs.
+            setPendingWrites(null);
+          }}
           onConfirm={(stopAsking) => {
+            const staged = pendingWrites;
             if (stopAsking) setConfirmMultiAction(false);
             setConfirming(false);
-            void run();
+            setPendingWrites(null);
+            if (staged !== null) {
+              setSubmitting(true);
+              void finish(staged);
+            } else {
+              void run();
+            }
           }}
         />
       )}
