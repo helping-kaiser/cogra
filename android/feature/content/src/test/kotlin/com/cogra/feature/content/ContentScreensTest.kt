@@ -1666,14 +1666,22 @@ class ContentScreensTest {
             .assertTextEquals("An artifact cannot cite itself.")
     }
 
-    /** The count a withdrawal costs, quoted in the confirm before signing (D11). */
+    /**
+     * The count a withdrawal costs, quoted in the confirm before
+     * anything is staged: the claim served it, so the dialog can name
+     * it the first time it opens (B4).
+     */
     @Test
     fun theConfirmQuotesWhatAWithdrawalCosts() {
+        val standing = ReferenceRow("u1", testMentionTarget("ada"), withdrawalCost = 3)
         renderComposer(
             ComposePostUiState(
                 editingId = "p1",
                 confirmPending = true,
-                withdrawalCost = 3,
+                referenceSection = ReferenceSectionState(
+                    references = emptyList(),
+                    loaded = listOf(standing),
+                ),
             ),
         )
         compose.onNodeWithTag("compose_confirm_withdrawal").assertExists()

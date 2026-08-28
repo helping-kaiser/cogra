@@ -1104,14 +1104,16 @@ class PostDetailViewModelTest {
     }
 
     /**
-     * The count the editor shows is the batch the server assembled, and
-     * the author reads it before signing: an edit carrying a withdrawal
-     * stages first, then asks with the true count (D11).
+     * The count the editor shows is the claim's own served cost, so an
+     * edit carrying a withdrawal asks before it stages anything — the
+     * same order every other multi-act submit follows (B4).
      */
     @Test
-    fun aCommentWithdrawalStagesFirstThenAsksWithTheQuotedCount() = runTest(dispatcher) {
+    fun aCommentWithdrawalAsksBeforeItStages() = runTest(dispatcher) {
         references.withdrawalRecords = 3
-        val vm = viewModelWithConfirm(testReferenceClaim(testMentionTarget("ada")))
+        val vm = viewModelWithConfirm(
+            testReferenceClaim(testMentionTarget("ada"), withdrawalCost = 3),
+        )
         vm.onRemoveReference(TagTarget.EDIT, "user-ada")
         vm.onSubmitCommentEdit()
         dispatcher.scheduler.advanceUntilIdle()
@@ -1119,18 +1121,20 @@ class PostDetailViewModelTest {
         assertThat(vm.state.value.confirmPending).isEqualTo(TagTarget.EDIT)
         assertThat(vm.state.value.editWithdrawalCost).isEqualTo(3)
         assertThat(vm.state.value.commentSigned).isFalse()
+        assertThat(references.withdrawn).isEmpty()
 
         vm.onConfirmSubmit(dontAskAgain = false)
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.commentSigned).isTrue()
-        // Staged once, signed once — the confirm did not re-stage.
         assertThat(references.withdrawn).hasSize(1)
     }
 
     @Test
-    fun dismissingACommentWithdrawalConfirmSignsNothing() = runTest(dispatcher) {
+    fun dismissingACommentWithdrawalConfirmStagesNothing() = runTest(dispatcher) {
         references.withdrawalRecords = 2
-        val vm = viewModelWithConfirm(testReferenceClaim(testMentionTarget("ada")))
+        val vm = viewModelWithConfirm(
+            testReferenceClaim(testMentionTarget("ada"), withdrawalCost = 2),
+        )
         vm.onRemoveReference(TagTarget.EDIT, "user-ada")
         vm.onSubmitCommentEdit()
         dispatcher.scheduler.advanceUntilIdle()
@@ -1139,6 +1143,7 @@ class PostDetailViewModelTest {
         assertThat(vm.state.value.commentSigned).isFalse()
         assertThat(vm.state.value.confirmPending).isNull()
         assertThat(vm.state.value.editSubmitting).isFalse()
+        assertThat(references.withdrawn).isEmpty()
     }
 
     @Test

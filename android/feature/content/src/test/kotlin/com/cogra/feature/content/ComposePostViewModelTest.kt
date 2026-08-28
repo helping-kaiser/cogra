@@ -879,30 +879,33 @@ class ComposePostViewModelTest {
         assertThat(references.added).isEmpty()
     }
 
-    /** The count the author reads is the batch the server assembled, not a guess. */
+    /**
+     * The count the author reads is the claim's own served cost, known
+     * before a single act is staged (B4) — so the section quotes the
+     * whole batch the moment the chip comes off.
+     */
     @Test
-    fun aWithdrawalQuotesTheServersOwnRecordCount() = runTest(dispatcher) {
-        content.loadedReferences = listOf(testReferenceClaim(testMentionTarget("ada")))
-        references.withdrawalRecords = 3
+    fun aWithdrawalQuotesTheServedCountBeforeAnythingIsStaged() = runTest(dispatcher) {
+        content.loadedReferences =
+            listOf(testReferenceClaim(testMentionTarget("ada"), withdrawalCost = 3))
         val vm = viewModelWithoutConfirm()
         vm.start("post-1")
         dispatcher.scheduler.advanceUntilIdle()
         vm.onRemoveReference("user-ada")
-        // Before staging, the section can only assume one act per drop.
-        assertThat(vm.state.value.signedActionCount).isEqualTo(1)
-        vm.onSubmit()
-        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.signedActionCount).isEqualTo(3)
         assertThat(vm.state.value.withdrawalCost).isEqualTo(3)
+        assertThat(references.withdrawn).isEmpty()
     }
 
     /**
-     * A withdrawal stages before it asks, because its cost is knowable
-     * only once the server has assembled the batch. Staging signs
-     * nothing, so nothing is committed by asking second (D11).
+     * Ask first, then stage: the served cost means a withdrawal needs
+     * nothing prepared to name its price, so it follows the same order
+     * as every other multi-act submit (B4).
      */
     @Test
-    fun aWithdrawalAsksWithTheQuotedCountAndSignsOnlyOnConfirm() = runTest(dispatcher) {
-        content.loadedReferences = listOf(testReferenceClaim(testMentionTarget("ada")))
+    fun aWithdrawalAsksBeforeItStagesAndSignsOnlyOnConfirm() = runTest(dispatcher) {
+        content.loadedReferences =
+            listOf(testReferenceClaim(testMentionTarget("ada"), withdrawalCost = 4))
         references.withdrawalRecords = 4
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
@@ -914,19 +917,19 @@ class ComposePostViewModelTest {
         assertThat(vm.state.value.confirmPending).isTrue()
         assertThat(vm.state.value.withdrawalCost).isEqualTo(4)
         assertThat(vm.state.value.saved).isFalse()
+        // Nothing is prepared, let alone signed, while the confirm stands.
+        assertThat(references.withdrawn).isEmpty()
 
         vm.onConfirmSubmit(dontAskAgain = false)
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.saved).isTrue()
-        // Staged once, signed once — the confirm did not re-stage.
         assertThat(references.withdrawn).hasSize(1)
     }
 
     @Test
-    fun dismissingAWithdrawalConfirmSignsNothing() = runTest(dispatcher) {
-        content.loadedReferences = listOf(testReferenceClaim(testMentionTarget("ada")))
-        // More than one counter-record, so the batch earns a confirm.
-        references.withdrawalRecords = 2
+    fun dismissingAWithdrawalConfirmStagesNothing() = runTest(dispatcher) {
+        content.loadedReferences =
+            listOf(testReferenceClaim(testMentionTarget("ada"), withdrawalCost = 2))
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         vm.start("post-1")
@@ -939,6 +942,7 @@ class ComposePostViewModelTest {
         assertThat(vm.state.value.saved).isFalse()
         assertThat(vm.state.value.confirmPending).isFalse()
         assertThat(vm.state.value.submitting).isFalse()
+        assertThat(references.withdrawn).isEmpty()
     }
 
     @Test

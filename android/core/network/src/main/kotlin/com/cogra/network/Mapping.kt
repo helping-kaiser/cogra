@@ -284,6 +284,7 @@ internal fun ReferenceClaimFields.toDomain(): ReferenceClaimView = ReferenceClai
     targetId = targetId,
     relevance = relevance,
     support = support,
+    withdrawalCost = withdrawalCost,
     pending = pending,
 )
 

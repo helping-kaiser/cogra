@@ -100,6 +100,22 @@ impl BundleSum {
         let i = walk_back(self.p_i, n);
         d.into_iter().zip(i).collect()
     }
+
+    /// How many counter-records [`severance_batch`] would stage —
+    /// `⌈max(|Σ_d|, |Σ_i|)⌉`, and 0 for a bundle already netted.
+    ///
+    /// This is the *cost* half of the same answer, so read surfaces that
+    /// only quote a number take it from here rather than assembling a
+    /// batch they then measure and drop.
+    ///
+    /// [`severance_batch`]: BundleSum::severance_batch
+    pub fn severance_cost(&self) -> usize {
+        let reach = self.p_d.abs().max(self.p_i.abs());
+        if reach == 0.0 {
+            return 0;
+        }
+        (reach.ceil() as usize).max(1)
+    }
 }
 
 /// One axis's walk-back: `n` values summing to exactly `-total`, each in
@@ -126,6 +142,29 @@ mod tests {
             p_d,
             p_i,
             records: 1,
+        }
+    }
+
+    /// The quoted cost and the staged batch answer the same question, so
+    /// they may never disagree — a read surface quoting one number while
+    /// the write path stages another is the failure this pins.
+    #[test]
+    fn the_severance_cost_is_the_length_of_the_batch_it_prices() {
+        for (p_d, p_i) in [
+            (0.0, 0.0),
+            (0.05, 0.0),
+            (0.5, 0.5),
+            (1.0, -1.0),
+            (2.5, -1.2),
+            (-3.4, 2.9),
+            (0.0, 7.1),
+        ] {
+            let bundle = sum(p_d, p_i);
+            assert_eq!(
+                bundle.severance_cost(),
+                bundle.severance_batch().len(),
+                "at ({p_d}, {p_i})"
+            );
         }
     }
 

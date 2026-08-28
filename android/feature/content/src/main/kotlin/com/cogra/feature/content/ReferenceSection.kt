@@ -43,6 +43,13 @@ data class ReferenceRow(
     val target: ReferenceTargetView?,
     val relevance: Double = REFERENCE_DEFAULT_RELEVANCE,
     val support: Double = REFERENCE_DEFAULT_SUPPORT,
+    /**
+     * What withdrawing this citation costs, as the claim served it
+     * (B4). One for anything not yet standing: a chip staged in this
+     * session nets in a single record, and taking it off again before
+     * the submit stages nothing at all.
+     */
+    val withdrawalCost: Int = 1,
     val error: String? = null,
 ) {
     fun sameClaimAs(other: ReferenceRow): Boolean =
@@ -80,21 +87,26 @@ data class ReferenceSectionState(
         get() = references.filter { row -> loaded.none { it.sameClaimAs(row) } }
 
     /**
-     * Citations the author took off. Each is a *withdrawal*, whose cost
-     * the server quotes — the bundle nets to (0, 0) and that may take
-     * more than one record (D11).
+     * Citations the author took off. Each is a *withdrawal*: the bundle
+     * nets to (0, 0), which may take more than one record (D11), and
+     * each row carries the count the claim served.
      */
     val removes: List<ReferenceRow>
         get() = loaded.filter { row -> references.none { it.targetId == row.targetId } }
 
     /**
-     * How many prepare calls this section stages against existing
-     * content. A withdrawal is one call whose batch may be longer than
-     * one record, so this counts gestures, not signed acts — the true
-     * cost is known only once the server has assembled the batch
-     * (D11), which is why the confirm quotes it after staging.
+     * What the removals in this section cost in signed acts — the sum
+     * of the served withdrawal counts, not one per gesture (B4).
      */
-    val changeCount: Int get() = adds.size + removes.size
+    val withdrawalActs: Int get() = removes.sumOf { it.withdrawalCost }
+
+    /**
+     * How many signed acts this section stages against existing
+     * content: one per declaration, and a withdrawal's whole
+     * counter-record batch per removal. Exact before anything is
+     * staged, which is what lets the confirm come first.
+     */
+    val changeCount: Int get() = adds.size + withdrawalActs
 
     /**
      * Adds a target as a chip: capped at ten (D7) and never duplicated —
@@ -205,6 +217,7 @@ internal fun ReferenceClaimView.editableRow(): ReferenceRow? {
         target = target,
         relevance = relevance,
         support = support,
+        withdrawalCost = withdrawalCost,
     )
 }
 

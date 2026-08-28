@@ -281,6 +281,100 @@ async fn the_dev_budgets_admit_every_client_operation(pool: PgPool) {
     assert_corpus_fits(&schema, "dev").await;
 }
 
+/// One operation's exact cost: the smallest ceiling that admits it,
+/// found by bisection.
+///
+/// async-graphql reports a tripped budget and nothing else — there is no
+/// public accessor for the number the complexity visitor computed — so
+/// the flip point *is* the measurement. `probe` decides which posture
+/// axis is being narrowed; the other is left wide so it cannot be the
+/// one that refuses.
+async fn measured(
+    pool: &PgPool,
+    name: &str,
+    document: &str,
+    probe: fn(usize) -> QueryBudgets,
+) -> usize {
+    let mut refused = 0;
+    let mut admitted = 1_000_000;
+    while admitted - refused > 1 {
+        let middle = refused + (admitted - refused) / 2;
+        let schema = schema(pool.clone(), probe(middle));
+        if budget_errors(&schema, name, document).await.is_empty() {
+            admitted = middle;
+        } else {
+            refused = middle;
+        }
+    }
+    admitted
+}
+
+fn complexity_probe(complexity: usize) -> QueryBudgets {
+    QueryBudgets {
+        depth: 64,
+        complexity,
+        introspection_enabled: false,
+    }
+}
+
+fn depth_probe(depth: usize) -> QueryBudgets {
+    QueryBudgets {
+        depth,
+        complexity: usize::MAX,
+        introspection_enabled: false,
+    }
+}
+
+/// The ceilings are measured, not chosen — and this is the measurement,
+/// re-run on every CI pass rather than recorded once and trusted.
+///
+/// It fails when the heaviest committed operation grows into the stated
+/// headroom, which is the moment the ceilings are owed a deliberate
+/// re-derivation. The guards above only ask whether the corpus still
+/// fits; a corpus that fits with nothing to spare is one client document
+/// away from the failure this whole suite exists to prevent, and only a
+/// measurement can see that coming.
+///
+/// The numbers themselves are printed, so `--nocapture` reads out the
+/// table a re-derivation works from.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_budget_ceilings_keep_their_stated_headroom(pool: PgPool) {
+    let mut heaviest = (String::new(), 0usize);
+    let mut deepest = (String::new(), 0usize);
+    for (client, relative) in [
+        ("android", "android/core/network/src/main/graphql"),
+        ("web", "web/src/lib/graphql"),
+    ] {
+        for (name, document) in client_operations(relative) {
+            let complexity = measured(&pool, &name, &document, complexity_probe).await;
+            let depth = measured(&pool, &name, &document, depth_probe).await;
+            println!("{client:8} {name:24} complexity {complexity:7}  depth {depth:3}");
+            if complexity > heaviest.1 {
+                heaviest = (format!("{client} {name}"), complexity);
+            }
+            if depth > deepest.1 {
+                deepest = (format!("{client} {name}"), depth);
+            }
+        }
+    }
+
+    let budgets = QueryBudgets::release();
+    assert!(
+        budgets.complexity * 5 >= heaviest.1 * 7,
+        "the complexity ceiling {} leaves under 1.4x over {} at {}",
+        budgets.complexity,
+        heaviest.0,
+        heaviest.1,
+    );
+    assert!(
+        budgets.depth >= deepest.1 + 3,
+        "the depth ceiling {} leaves under three levels over {} at {}",
+        budgets.depth,
+        deepest.0,
+        deepest.1,
+    );
+}
+
 /// The extraction is load-bearing — an operation silently dropped would
 /// make the guards above pass by not looking. Both corpora carry the
 /// post-detail read, which is the heaviest document either client sends.

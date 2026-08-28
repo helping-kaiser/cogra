@@ -95,6 +95,7 @@ label.
 | `test:unit:t-leg-transposes-params`                                      | t_leg_transposes_params                                      |
 | `test:unit:tampering-anywhere-refuses`                                   | tampering_anywhere_refuses                                   |
 | `test:unit:the-length-bound-is-the-atom-bound`                           | the_length_bound_is_the_atom_bound                           |
+| `test:unit:the-severance-cost-is-the-length-of-the-batch-it-prices`      | the_severance_cost_is_the_length_of_the_batch_it_prices      |
 | `test:unit:the-upload-tag-is-domain-separated-from-the-l1-act-tags`      | the_upload_tag_is_domain_separated_from_the_l1_act_tags      |
 | `test:unit:the-wire-body-is-the-canonical-signing-base`                  | the_wire_body_is_the_canonical_signing_base                  |
 | `test:unit:unparseable-forms-rejected`                                   | unparseable_forms_rejected                                   |

@@ -57,6 +57,21 @@ use crate::prepare::{self, Gesture, PrepareError, Target};
 /// prepare-side work an unbounded batch demands of the server.
 pub const MAX_REFERENCES_PER_BATCH: usize = 10;
 
+/// Citations one author may have *standing* on one artifact (D22).
+///
+/// [`MAX_REFERENCES_PER_BATCH`] bounds a gesture; this bounds the set a
+/// gesture accumulates into. Without it the standing set is unbounded, and
+/// the read side has no honest number to price a fold list at — every
+/// citation past what the budget assumed is server work nothing charged
+/// for. It is CoGra's narrowing, not the substrate's: L1 admits any number
+/// of Reference records toward any number of targets.
+///
+/// "Standing" is what the D4 fold serves — a bundle netted to `(0, 0)` has
+/// left the set and freed its slot — so the cap is a live-set cap, never a
+/// record count. Fifty is five full batches, which is what the widest
+/// realistic gesture (mentioning everyone in a group photo) needs.
+pub const MAX_LIVE_REFERENCES_PER_ARTIFACT: usize = 50;
+
 /// Default relevance — effort `f`, the `p_d` slot (D3).
 ///
 /// Effort is not Tag's confidence: it is signed, spans `[−1, 1]`, and
@@ -378,9 +393,65 @@ fn refuse_topic_target(target: &NodeId) -> Result<(), (&'static str, String)> {
     }
 }
 
+/// The refusal message when a batch would leave the author standing past
+/// [`MAX_LIVE_REFERENCES_PER_ARTIFACT`] citations on one artifact, or
+/// `None` when it fits (D22). The caller roots the path, because the field
+/// that names the offender differs between the write shapes.
+///
+/// `live` is the fold's own current view of the author's set on this
+/// artifact — read pending-inclusive, or fifty staged citations would sail
+/// through one after another while none of them had landed yet.
+///
+/// A citation claims a slot only when it is toward a target the author is
+/// not already standing on *and* carries something to stand on. Both
+/// conditions are exact rather than conservative: a target absent from the
+/// fold has no records or has netted to `(0, 0)`, so the new record's own
+/// pair is the whole resulting bundle, and a `(0, 0)` citation therefore
+/// leaves the set exactly as it found it — priced, admitted, and
+/// routing-inert, which is what the proposal-targeting gesture wants.
+fn over_the_standing_cap(live: &[String], planned: &[PlannedReference]) -> Option<String> {
+    let claiming = planned
+        .iter()
+        .filter(|p| {
+            (p.relevance != 0.0 || p.support != 0.0) && !live.contains(&p.target.to_string())
+        })
+        .count();
+    (live.len() + claiming > MAX_LIVE_REFERENCES_PER_ARTIFACT).then(|| {
+        format!(
+            "at most {MAX_LIVE_REFERENCES_PER_ARTIFACT} references may stand \
+             on one artifact at once; withdraw one first"
+        )
+    })
+}
+
+/// The author's standing citations on one artifact, as the fold serves
+/// them — the input [`over_the_standing_cap`] measures against.
+async fn live_targets(
+    pool: &PgPool,
+    author: &str,
+    middle: &NodeId,
+) -> Result<Vec<String>, ReferencesError> {
+    Ok(store_refs::references_of(
+        pool,
+        &middle.to_string(),
+        author,
+        ReferenceView::IncludingPending { actor: author },
+    )
+    .await?
+    .into_iter()
+    .map(|claim| claim.target)
+    .collect())
+}
+
 /// Prepares one standalone citation — the gesture that hangs a reference
 /// off existing content, which post.md §3 and comment.md §3 both promise
 /// ("alongside the Publish or later") and which D10 adds to the contract.
+///
+/// The standing cap is checked here and not on the creation path because a
+/// creation batch mints the artifact it cites from: its set starts empty,
+/// and [`MAX_REFERENCES_PER_BATCH`] already bounds it well under
+/// [`MAX_LIVE_REFERENCES_PER_ARTIFACT`]. This is the only gesture that can
+/// reach the cap, and it is refused before anything is staged.
 ///
 /// Citing is unconstrained by the artifact's ownership: anyone can hang a
 /// citation off anyone's content, and the read side is what gates the
@@ -398,6 +469,10 @@ pub async fn prepare_reference<B: L1Boundary>(
     refuse_self_citation(&middle, std::slice::from_ref(&reference))
         .map_err(|e| ReferenceError::at(vec!["target".to_string()], e.message))?;
     let author = author_address(pool, viewer).await?;
+    let live = live_targets(pool, &author, &middle).await?;
+    if let Some(message) = over_the_standing_cap(&live, std::slice::from_ref(&reference)) {
+        return Err(ReferenceError::at(vec!["target".to_string()], message).into());
+    }
     let gesture = reference_gesture(&author, middle, &reference, vec![]);
     Ok(prepare::prepare(boundary, pool, gc_after_epochs, viewer, gesture).await?)
 }
@@ -662,6 +737,58 @@ mod tests {
             refuse_topic_target(&NodeId::name("rust").expect("node")).expect_err("refused");
         assert_eq!(field, "target");
         assert!(message.contains("tagged"), "{message}");
+    }
+
+    fn standing(n: usize) -> Vec<String> {
+        (0..n).map(|i| format!("prof:p{i}")).collect()
+    }
+
+    /// The boundary itself: the fiftieth citation is the last one the
+    /// artifact carries, and the fifty-first is refused rather than
+    /// clamped or silently dropped.
+    #[test]
+    fn the_standing_cap_admits_the_fiftieth_citation_and_refuses_the_next() {
+        let fresh = [planned("prof:new", 0.1, 0.1)];
+        assert!(
+            over_the_standing_cap(&standing(MAX_LIVE_REFERENCES_PER_ARTIFACT - 1), &fresh)
+                .is_none(),
+            "the set reaches exactly the cap"
+        );
+        let refusal = over_the_standing_cap(&standing(MAX_LIVE_REFERENCES_PER_ARTIFACT), &fresh)
+            .expect("refused");
+        assert!(refusal.contains("withdraw one first"), "{refusal}");
+    }
+
+    /// The cap counts what stands, not what was ever authored: the fold
+    /// drops a bundle netted to `(0, 0)`, so a withdrawal hands its slot
+    /// back and the next citation fits.
+    #[test]
+    fn a_withdrawn_citation_frees_its_slot_under_the_standing_cap() {
+        let mut live = standing(MAX_LIVE_REFERENCES_PER_ARTIFACT);
+        live.pop();
+        assert!(
+            over_the_standing_cap(&live, &[planned("prof:new", 0.1, 0.1)]).is_none(),
+            "the withdrawn bundle is not in the fold's view"
+        );
+    }
+
+    /// Revising a citation the author already stands on claims no slot —
+    /// the bundle it folds into is already counted.
+    #[test]
+    fn re_citing_a_standing_target_claims_no_further_slot() {
+        let live = standing(MAX_LIVE_REFERENCES_PER_ARTIFACT);
+        assert!(
+            over_the_standing_cap(&live, &[planned("prof:p7", 0.5, 0.5)]).is_none(),
+            "a revision is the same bundle"
+        );
+    }
+
+    /// A `(0, 0)` citation toward a fresh target leaves the fold exactly
+    /// as it found it, so the cap has nothing to refuse.
+    #[test]
+    fn an_inert_citation_does_not_claim_a_slot() {
+        let live = standing(MAX_LIVE_REFERENCES_PER_ARTIFACT);
+        assert!(over_the_standing_cap(&live, &[planned("prof:new", 0.0, 0.0)]).is_none());
     }
 
     /// Every other passive class stays a target — the narrowing is one
