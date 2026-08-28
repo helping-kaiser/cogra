@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   cssRatio,
   fitFor,
+  parseAspectRatio,
   PORTRAIT_CAP,
   POST_SHAPES,
   POST_SHAPE_ORDER,
@@ -74,5 +75,24 @@ describe("cssRatio", () => {
   it("renders a ratio the way CSS reserves space with it", () => {
     expect(cssRatio(1)).toBe("1 / 1");
     expect(cssRatio(1.91)).toBe("1.91 / 1");
+  });
+});
+
+describe("parseAspectRatio", () => {
+  it("reads the lowest-terms shape the server states", () => {
+    expect(parseAspectRatio("4:5")).toBeCloseTo(0.8, 10);
+    expect(parseAspectRatio("1:1")).toBe(1);
+    expect(parseAspectRatio("540:283")).toBeCloseTo(540 / 283, 10);
+    expect(parseAspectRatio("16:9")).toBeCloseTo(16 / 9, 10);
+  });
+
+  it("answers null for a shape it cannot use, never a NaN", () => {
+    for (const bad of [null, undefined, "", "4", "4:0", "0:5", "a:b", "4:5:6", "-4:5"]) {
+      expect(parseAspectRatio(bad)).toBeNull();
+    }
+  });
+
+  it("feeds tileRatio the fallback it already knows how to handle", () => {
+    expect(tileRatio(parseAspectRatio("bogus"))).toBe(1);
   });
 });

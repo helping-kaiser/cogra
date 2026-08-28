@@ -23,9 +23,11 @@ import {
   MAX_LONG_EDGE,
   MAX_WIDTH,
   OUTPUT_TYPE,
+  sourceRect,
   targetSize,
   WEBP_QUALITY,
 } from "./encode-image";
+import { CENTERED } from "./crop";
 
 describe("the pinned parameters", () => {
   it("holds the numbers the PR cites, so a silent edit fails here", () => {
@@ -37,6 +39,71 @@ describe("the pinned parameters", () => {
     // generation encode.
     expect(WEBP_QUALITY).toBe(0.8);
     expect(OUTPUT_TYPE).toBe("image/webp");
+  });
+});
+
+// The crop has to survive the trip to the server as PIXELS (D17), so what is
+// asserted here is that the rectangle handed to the encoder is the same region
+// `cropStyle` puts on screen. The invariant that carries the whole model: the
+// rectangle never leaves the source, at any zoom, at any focal point.
+describe("sourceRect", () => {
+  it("centres the cover fit and trims the longer axis", () => {
+    // 4:5 out of a 1000x1000 square: the width is what gives.
+    expect(sourceRect(1000, 1000, 4 / 5)).toEqual({ x: 100, y: 0, width: 800, height: 1000 });
+    // 1.91:1 out of the same square: the height gives instead.
+    const wide = sourceRect(1000, 1000, 1.91);
+    expect(wide.width).toBe(1000);
+    expect(wide.height).toBeCloseTo(1000 / 1.91, 6);
+    expect(wide.x).toBe(0);
+    expect(wide.y).toBeCloseTo((1000 - 1000 / 1.91) / 2, 6);
+  });
+
+  it("keeps the whole source when the shapes already agree", () => {
+    expect(sourceRect(800, 1000, 4 / 5)).toEqual({ x: 0, y: 0, width: 800, height: 1000 });
+  });
+
+  it("halves the window at zoom 2 and anchors it on the focal point", () => {
+    const left = sourceRect(800, 1000, 4 / 5, { zoom: 2, x: 0, y: 0 });
+    expect(left).toEqual({ x: 0, y: 0, width: 400, height: 500 });
+    const right = sourceRect(800, 1000, 4 / 5, { zoom: 2, x: 1, y: 1 });
+    expect(right).toEqual({ x: 400, y: 500, width: 400, height: 500 });
+    const middle = sourceRect(800, 1000, 4 / 5, { zoom: 2, x: 0.5, y: 0.5 });
+    expect(middle).toEqual({ x: 200, y: 250, width: 400, height: 500 });
+  });
+
+  it("ignores the focal point at zoom 1, because nothing can be panned there", () => {
+    expect(sourceRect(1000, 1000, 1, { zoom: 1, x: 0, y: 1 })).toEqual(
+      sourceRect(1000, 1000, 1, CENTERED),
+    );
+  });
+
+  it("never leaves the source, for any reachable crop", () => {
+    for (const [w, h] of [
+      [1000, 1000],
+      [4000, 500],
+      [500, 4000],
+      [1080, 1350],
+    ]) {
+      for (const ratio of [4 / 5, 1, 1.91]) {
+        for (const zoom of [1, 1.4, 2, 3]) {
+          for (const x of [0, 0.37, 0.5, 1]) {
+            for (const y of [0, 0.63, 1]) {
+              const rect = sourceRect(w, h, ratio, { zoom, x, y });
+              expect(rect.x).toBeGreaterThanOrEqual(-1e-9);
+              expect(rect.y).toBeGreaterThanOrEqual(-1e-9);
+              expect(rect.x + rect.width).toBeLessThanOrEqual(w + 1e-9);
+              expect(rect.y + rect.height).toBeLessThanOrEqual(h + 1e-9);
+              expect(rect.width / rect.height).toBeCloseTo(ratio, 6);
+            }
+          }
+        }
+      }
+    }
+  });
+
+  it("refuses a ratio it cannot use", () => {
+    expect(() => sourceRect(100, 100, 0)).toThrow(/ratio/);
+    expect(() => sourceRect(100, 100, Number.NaN)).toThrow(/ratio/);
   });
 });
 
@@ -117,8 +184,14 @@ function contains(haystack: Uint8Array, needle: Uint8Array): boolean {
  * this test turns on: `convertToBlob` encodes THE PIXELS IT WAS DRAWN, and has
  * no access to the file the pixels were decoded from.
  */
+type Drawn = {
+  width: number;
+  height: number;
+  from: { x: number; y: number; width: number; height: number };
+};
+
 function installFakeCanvas(pixelSeed: number) {
-  const drawn: { width: number; height: number }[] = [];
+  const drawn: Drawn[] = [];
   class FakeOffscreenCanvas {
     constructor(
       public width: number,
@@ -126,8 +199,20 @@ function installFakeCanvas(pixelSeed: number) {
     ) {}
     getContext() {
       return {
-        drawImage: (_bitmap: unknown, _x: number, _y: number, w: number, h: number) => {
-          drawn.push({ width: w, height: h });
+        // The nine-argument form: the crop rides the SOURCE rectangle, so both
+        // halves of the call are worth recording.
+        drawImage: (
+          _bitmap: unknown,
+          sx: number,
+          sy: number,
+          sw: number,
+          sh: number,
+          _dx: number,
+          _dy: number,
+          dw: number,
+          dh: number,
+        ) => {
+          drawn.push({ width: dw, height: dh, from: { x: sx, y: sy, width: sw, height: sh } });
         },
       };
     }
@@ -197,9 +282,56 @@ describe("encodeForUpload", () => {
 
     const result = await encodeForUpload(new Blob([new Uint8Array([0]) as BlobPart]));
 
-    expect(drawn).toEqual([{ width: 1080, height: 810 }]);
+    expect(drawn).toEqual([
+      { width: 1080, height: 810, from: { x: 0, y: 0, width: 4032, height: 3024 } },
+    ]);
     expect(result.width).toBe(1080);
     expect(result.height).toBe(810);
+  });
+
+  it("bakes the crop into the pixels, at the post shape's own size", async () => {
+    const drawn = installFakeCanvas(3);
+    vi.stubGlobal(
+      "createImageBitmap",
+      vi.fn(async () => ({ width: 4032, height: 3024, close: () => {} })),
+    );
+
+    // Tall 4:5 out of a landscape original, framed hard right.
+    const result = await encodeForUpload(new Blob([new Uint8Array([0]) as BlobPart]), {
+      ratio: 4 / 5,
+      crop: { zoom: 2, x: 1, y: 1 },
+    });
+
+    // The cover fit trims the width to 3024 * 4/5 = 2419.2 FIRST, so the window
+    // pans inside that trimmed region and not across the whole original — the
+    // strip the shape already cut away stays unreachable at every zoom.
+    const from = drawn[0]!.from;
+    expect(from.width).toBeCloseTo(1209.6, 4);
+    expect(from.height).toBeCloseTo(1512, 4);
+    expect(from.x + from.width).toBeCloseTo((4032 - 2419.2) / 2 + 2419.2, 4);
+    expect(from.y + from.height).toBeCloseTo(3024, 4);
+    // The output is the SHAPE's, not the original's: 1209.6x1512 is inside the
+    // 1080 width cap, so it scales down to it rather than keeping 4032 wide.
+    expect(result.width).toBe(1080);
+    expect(result.height).toBe(1350);
+  });
+
+  it("leaves the shape alone when no ratio is asked for", async () => {
+    const drawn = installFakeCanvas(4);
+    vi.stubGlobal(
+      "createImageBitmap",
+      vi.fn(async () => ({ width: 600, height: 400, close: () => {} })),
+    );
+
+    // A crop with no ratio has nothing to crop TO, so it is ignored rather than
+    // silently reshaping the picture.
+    const result = await encodeForUpload(new Blob([new Uint8Array([0]) as BlobPart]), {
+      crop: { zoom: 3, x: 0, y: 0 },
+    });
+
+    expect(drawn[0]!.from).toEqual({ x: 0, y: 0, width: 600, height: 400 });
+    expect(result.width).toBe(600);
+    expect(result.height).toBe(400);
   });
 
   it("releases the decoded bitmap even when the encode fails", async () => {

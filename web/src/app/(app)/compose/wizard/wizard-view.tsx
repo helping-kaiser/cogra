@@ -1,0 +1,446 @@
+"use client";
+
+// The compose wizard: pick → (crop) → details → seal.
+//
+// This component owns the three things a step cannot: the draft on the device,
+// the uploads in flight, and the one signing pass at the end. The steps
+// themselves are given values and callbacks and hold nothing, which is what
+// keeps the flow's rules in `lib/compose/wizard.ts` where they can be tested.
+//
+// The wizard replaces the composer for CREATION only. Editing an existing post
+// is still the 1.0 form: an edit is a different act with a different batch rule
+// (D19 split it out as its own bite), and routing it through a body-first pick
+// screen would ask an author to re-choose a body they already have.
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useApolloClient } from "@apollo/client/react";
+
+import { HeaderBar } from "@/lib/ui2/header-bar";
+import { PillButton } from "@/lib/ui2/pill-button";
+import { preparePost } from "@/lib/api/content-api";
+import { fetchReferenceCandidates } from "@/lib/api/references-api";
+import { identityStore, type IdentityStore } from "@/lib/identity/store";
+import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
+import { useAuthGuard } from "@/lib/session/runtime";
+import { useWriteSigner } from "@/lib/signing/provider";
+import type { StagedWriteView } from "@/lib/api/writes-api";
+import { TransportError } from "@/lib/ui/transport-error";
+import {
+  advanceGate,
+  attachmentIds,
+  bodyContent,
+  emptyWizard,
+  sealGate,
+  shapeRatio,
+  wizardReducer,
+  type WizardAction,
+  type WizardState,
+} from "@/lib/compose/wizard";
+import {
+  composeDraftStore,
+  draftIsWorthKeeping,
+  draftSummary,
+  type ComposeDraftStore,
+} from "@/lib/compose/draft-store";
+import { runUpload } from "@/lib/compose/uploads";
+import { usePreviewUrls } from "@/lib/compose/previews";
+import { PickAction, PickStep } from "./pick-step";
+import { CropStep } from "./crop-step";
+import { DetailsStep } from "./details-step";
+import { SealStep, type SealSheet } from "./seal-step";
+
+/** The refusal path shapes the batched sections use, down to their index. */
+function pathIndex(field: readonly string[] | null, head: string): number | null {
+  if (field === null || field.length < 2 || field[0] !== head) return null;
+  const index = Number(field[1]);
+  return Number.isInteger(index) ? index : null;
+}
+
+const HEADINGS: Record<WizardState["step"], string> = {
+  pick: "New post",
+  crop: "Crop",
+  details: "Details",
+  seal: "What you sign",
+};
+
+export function ComposeWizard({
+  store = identityStore,
+  drafts = composeDraftStore,
+}: {
+  /** Test injection. */
+  store?: IdentityStore;
+  drafts?: ComposeDraftStore;
+}) {
+  const client = useApolloClient();
+  const router = useRouter();
+  const guard = useAuthGuard();
+  const signer = useWriteSigner();
+  const keyOnDevice = useKeyOnDevice(store);
+
+  const [state, setState] = useState<WizardState>(emptyWizard);
+  const dispatch = useCallback((action: WizardAction) => {
+    setState((current) => wizardReducer(current, action));
+  }, []);
+
+  /** A draft found on this device, offered before it is adopted. */
+  const [offered, setOffered] = useState<WizardState | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [sheet, setSheet] = useState<SealSheet>("none");
+  const [busy, setBusy] = useState(false);
+  const [refusal, setRefusal] = useState<string | null>(null);
+  const [transportFailed, setTransportFailed] = useState(false);
+  const [tagErrors, setTagErrors] = useState<Readonly<Record<number, string>>>({});
+  const [referenceErrors, setReferenceErrors] = useState<Readonly<Record<number, string>>>({});
+
+  const previews = usePreviewUrls(state.assets);
+
+  // The Reference affordance: a detail surface sends the author here with the
+  // node it wants cited, and the chip arrives prefilled. It resolves through
+  // the finder's own lookup, so a miss simply leaves the section empty.
+  const prefill = useSearchParams().get("reference");
+  useEffect(() => {
+    if (prefill === null) return;
+    let cancelled = false;
+    void fetchReferenceCandidates(client, prefill, 1).then((outcome) => {
+      if (cancelled || outcome.kind !== "success") return;
+      const candidate = outcome.value[0];
+      if (candidate === undefined) return;
+      setState((current) =>
+        current.references.some((reference) => reference.targetId === candidate.targetId)
+          ? current
+          : { ...current, references: [...current.references, candidate] },
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [client, prefill]);
+
+  // ---- the draft on this device -------------------------------------------
+
+  useEffect(() => {
+    let cancelled = false;
+    void drafts.load().then((draft) => {
+      if (cancelled) return;
+      if (draft !== null && draftIsWorthKeeping(draft)) setOffered(draft);
+      setLoaded(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [drafts]);
+
+  // Saved on a timer rather than on every keystroke: the draft carries the
+  // picked bytes, and writing several megabytes per character typed would make
+  // the title field stutter. Nothing is saved until the reader has done
+  // something worth keeping.
+  useEffect(() => {
+    if (!loaded || offered !== null || !draftIsWorthKeeping(state)) return;
+    const timer = setTimeout(() => void drafts.save(state), 800);
+    return () => clearTimeout(timer);
+  }, [state, loaded, offered, drafts]);
+
+  // ---- the uploads ---------------------------------------------------------
+
+  // Which assets have been handed to `runUpload` already. A ref rather than
+  // state because it must not re-run the effect that writes it — and because
+  // React mounts effects twice in development, which without this would upload
+  // every picture twice.
+  const started = useRef(new Set<string>());
+  const ratio = shapeRatio(state);
+  // The crop is fixed once the reader leaves the crop screen, so that is when
+  // the bytes can be encoded — earlier and every nudge would invalidate an
+  // upload in flight.
+  const uploading = state.step === "details" || state.step === "seal";
+
+  useEffect(() => {
+    if (!uploading) return;
+    for (const asset of state.assets) {
+      if (asset.upload.kind !== "waiting" || started.current.has(asset.id)) continue;
+      started.current.add(asset.id);
+      void runUpload(client, asset, ratio, (upload) =>
+        dispatch({ type: "upload", id: asset.id, upload }),
+      );
+    }
+  }, [uploading, state.assets, ratio, client, dispatch]);
+
+  const retry = (id: string) => {
+    started.current.delete(id);
+    dispatch({ type: "upload", id, upload: { kind: "waiting" } });
+  };
+
+  // Going back to re-crop invalidates the bytes that were uploaded from the old
+  // framing, so everything starts again. The orphaned assets are the server's to
+  // sweep — they are attached to nothing (D5).
+  const backToCrop = () => {
+    started.current.clear();
+    setState((current) => ({
+      ...current,
+      step: "crop",
+      assets: current.assets.map((asset) => ({ ...asset, upload: { kind: "waiting" } })),
+    }));
+  };
+
+  // ---- signing -------------------------------------------------------------
+
+  const submit = async () => {
+    setBusy(true);
+    setRefusal(null);
+    setTagErrors({});
+    setReferenceErrors({});
+    setTransportFailed(false);
+
+    const prepared = await guard.run(() =>
+      preparePost(client, {
+        title: state.title.trim() === "" ? null : state.title,
+        description: state.description.trim() === "" ? null : state.description,
+        content: bodyContent(state),
+        license: state.license,
+        tags: state.tags,
+        references: state.references,
+        attachments: attachmentIds(state) ?? undefined,
+      }),
+    );
+
+    if (prepared.kind === "failed") {
+      setBusy(false);
+      setTransportFailed(true);
+      return;
+    }
+    if (prepared.kind === "refused") {
+      setBusy(false);
+      const perTag: Record<number, string> = {};
+      const perReference: Record<number, string> = {};
+      let general: string | null = null;
+      for (const error of prepared.errors) {
+        const tag = pathIndex(error.field, "tags");
+        const reference = pathIndex(error.field, "references");
+        if (tag !== null) perTag[tag] = error.message;
+        else if (reference !== null) perReference[reference] = error.message;
+        else general = general ?? error.message;
+      }
+      setTagErrors(perTag);
+      setReferenceErrors(perReference);
+      // A refusal that landed on a section is shown on that section's own chip,
+      // so the seal only speaks when nothing else can.
+      setRefusal(
+        general ??
+          (Object.keys(perTag).length + Object.keys(perReference).length > 0
+            ? "Something in the details was refused."
+            : "The server refused this write."),
+      );
+      if (Object.keys(perTag).length + Object.keys(perReference).length > 0) {
+        dispatch({ type: "goto", step: "details" });
+      }
+      return;
+    }
+
+    await finish(prepared.value.writes);
+  };
+
+  const finish = async (writes: readonly StagedWriteView[]) => {
+    const results = [];
+    for (const staged of writes) results.push(await signer.signStaged(staged));
+    setBusy(false);
+
+    if (results.every((result) => result.kind === "done")) {
+      // The draft has become a post, so it stops being a draft.
+      await drafts.clear();
+      router.push("/feed?compose=landed");
+      return;
+    }
+
+    // The batch lands together or not at all, so one unlanded write means the
+    // post did not land — and nothing was spent. The draft is kept exactly
+    // because this screen promises it is.
+    const expired = results.some(
+      (result) =>
+        result.kind === "refused" &&
+        result.errors.some((error) => error.code === "STAGED_WRITE_EXPIRED"),
+    );
+    await drafts.save(state);
+    if (expired) {
+      router.push("/feed?compose=expired");
+      return;
+    }
+    const refused = results.find((result) => result.kind === "refused");
+    setRefusal(
+      refused && refused.kind === "refused"
+        ? (refused.errors[0]?.message ?? "The post wasn't signed.")
+        : "The post wasn't signed. Nothing was spent.",
+    );
+  };
+
+  // ---- rendering -----------------------------------------------------------
+
+  const gate = advanceGate(state);
+  const seal = sealGate(state);
+
+  const leave = () => {
+    const previous = state.step;
+    dispatch({ type: "back" });
+    // Already on the first screen: leaving the wizard is leaving the surface.
+    if (previous === "pick") router.push("/feed");
+  };
+
+  if (!loaded) {
+    return (
+      <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col">
+        <HeaderBar title="New post" onBack={() => router.push("/feed")} backLabel="Back to feed" />
+        <p className="px-6">Loading…</p>
+      </main>
+    );
+  }
+
+  return (
+    <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col">
+      <HeaderBar
+        title={HEADINGS[state.step]}
+        onBack={leave}
+        backLabel={state.step === "pick" ? "Back to feed" : "Back a step"}
+        // The seal board carries a `?`. It opens the help dialog of HelpDialog,
+        // which has no 2.0 component yet — so the slot stays empty rather than
+        // holding a control that does nothing when pressed.
+        action={
+          state.step === "pick" ? (
+            <PickAction onNext={() => dispatch({ type: "advance" })} disabled={!gate.ok} />
+          ) : state.step === "crop" ? (
+            <PillButton testId="wizard-next" size="sm" onClick={() => dispatch({ type: "advance" })}>
+              Next
+            </PillButton>
+          ) : undefined
+        }
+        testId="wizard-header"
+      />
+
+      {offered !== null && (
+        <DraftCard
+          draft={offered}
+          onContinue={() => {
+            setState(offered);
+            setOffered(null);
+          }}
+          onDiscard={() => {
+            setOffered(null);
+            void drafts.clear();
+          }}
+        />
+      )}
+
+      {transportFailed && (
+        <div className="px-6">
+          <TransportError testId="wizard-transport-error" />
+        </div>
+      )}
+
+      {state.step === "pick" && (
+        <PickStep
+          mode={state.mode}
+          words={state.words}
+          assets={state.assets}
+          previews={previews}
+          error={gate.ok ? null : gate.reason}
+          onWords={(words) => dispatch({ type: "words", words })}
+          onMode={(mode) => dispatch({ type: "mode", mode })}
+          onPick={(files) =>
+            dispatch({
+              type: "pick",
+              assets: files.map((file, index) => ({
+                id: `${Date.now()}-${index}-${file.name}`,
+                file,
+              })),
+            })
+          }
+          onUnpick={(id) => dispatch({ type: "unpick", id })}
+        />
+      )}
+
+      {state.step === "crop" && (
+        <CropStep
+          assets={state.assets}
+          previews={previews}
+          shape={state.shape}
+          focused={state.focused}
+          onShape={(shape) => dispatch({ type: "shape", shape })}
+          onFocus={(index) => dispatch({ type: "focus", index })}
+          onCrop={(id, crop) => dispatch({ type: "crop", id, crop })}
+          onAltText={(id, altText) => dispatch({ type: "altText", id, altText })}
+        />
+      )}
+
+      {state.step === "details" && (
+        <DetailsStep
+          mode={state.mode}
+          assets={state.assets}
+          previews={previews}
+          title={state.title}
+          description={state.description}
+          tags={state.tags}
+          references={state.references}
+          tagErrors={tagErrors}
+          referenceErrors={referenceErrors}
+          onTitle={(title) => dispatch({ type: "title", title })}
+          onDescription={(description) => dispatch({ type: "description", description })}
+          onTags={(tags) => dispatch({ type: "tags", tags })}
+          onReferences={(references) => dispatch({ type: "references", references })}
+          onCrop={backToCrop}
+          onEdit={() => dispatch({ type: "goto", step: "pick" })}
+          onRetry={retry}
+          onNext={() => dispatch({ type: "advance" })}
+        />
+      )}
+
+      {state.step === "seal" && (
+        <SealStep
+          state={state}
+          sheet={sheet}
+          blocked={seal.ok ? null : seal.reason}
+          busy={busy}
+          keyOnDevice={keyOnDevice}
+          refusal={refusal}
+          onSheet={setSheet}
+          onLicense={(license) => dispatch({ type: "license", license })}
+          onPDirected={(pDirected) => dispatch({ type: "pDirected", pDirected })}
+          onSign={() => void submit()}
+          onBack={() => dispatch({ type: "back" })}
+          onRestoreKey={() => router.push("/restore")}
+        />
+      )}
+    </main>
+  );
+}
+
+// ComposeDraft — the card that sits above a fresh pick screen when this device
+// is already holding an unpublished post.
+function DraftCard({
+  draft,
+  onContinue,
+  onDiscard,
+}: {
+  draft: WizardState;
+  onContinue: () => void;
+  onDiscard: () => void;
+}) {
+  const summary = draftSummary(draft);
+  return (
+    <div
+      data-testid="wizard-draft-card"
+      className="mx-6 my-2 flex flex-none flex-col gap-2 rounded-medium bg-surface-container-highest p-4"
+    >
+      <h2 className="m-0 text-title-small">Your draft is here</h2>
+      <div className="flex flex-col">
+        <span className="text-body-medium">{summary.title}</span>
+        <span className="text-label-small text-on-surface-variant">{summary.detail}</span>
+      </div>
+      <div className="flex justify-end gap-2">
+        <PillButton testId="wizard-draft-discard" variant="text" onClick={onDiscard}>
+          Discard
+        </PillButton>
+        <PillButton testId="wizard-draft-continue" onClick={onContinue}>
+          Continue
+        </PillButton>
+      </div>
+    </div>
+  );
+}

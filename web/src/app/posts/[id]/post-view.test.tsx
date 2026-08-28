@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -50,6 +50,8 @@ type FixtureComment = {
   repliesHaveMore?: boolean;
   topics?: TopicFixture[];
   references?: ReferenceFixture[];
+  attachments?: unknown[];
+  attachmentsStatus?: string;
 };
 
 /**
@@ -100,11 +102,14 @@ function commentNode(comment: FixtureComment, withReplies = true): Record<string
     __typename: "Comment",
     id: comment.id,
     content: moderated(comment.body),
+    attachments: comment.attachments ?? [],
+    attachmentsStatus: comment.attachmentsStatus ?? "NORMAL",
     author: {
       __typename: "User",
       id: comment.authorId ?? "u2",
       handle: "bob",
       displayName: { __typename: "ModeratedText", value: "Bob" },
+      avatar: null,
     },
     createdAt: "2026-08-12T10:05:00Z",
     updatedAt: comment.edited ? "2026-08-12T11:00:00Z" : "2026-08-12T10:05:00Z",
@@ -142,24 +147,34 @@ function detail(
   postPending = false,
   postTopics: TopicFixture[] = [],
   postReferences: ReferenceFixture[] = [],
+  body: {
+    description?: string | null;
+    content?: string | null;
+    attachments?: unknown[];
+    attachmentsStatus?: string;
+    moderationStatus?: string;
+  } = {},
 ) {
   return {
     post: {
       __typename: "Post",
       id: "p1",
       title: moderated("The title"),
-      description: moderated(null),
-      content: moderated("The body"),
+      description: moderated(body.description ?? null),
+      content: moderated(body.content === undefined ? "The body" : body.content),
+      attachments: body.attachments ?? [],
+      attachmentsStatus: body.attachmentsStatus ?? "NORMAL",
       author: {
         __typename: "User",
         id: authorId,
         handle: "alice",
         displayName: { __typename: "ModeratedText", value: "Alice" },
+        avatar: null,
       },
       createdAt: "2026-08-12T10:00:00Z",
       updatedAt: "2026-08-12T10:00:00Z",
       landing: landing(postPending),
-      moderationStatus: "NORMAL",
+      moderationStatus: body.moderationStatus ?? "NORMAL",
       license: { __typename: "License", attribution: 0, provenance: 0 },
       topics: postTopics,
       references: postReferences,
@@ -1815,5 +1830,111 @@ describe("PostView — references", () => {
       "That target can't be referenced.",
     );
     expect(screen.queryByTestId("comment-refused")).not.toBeInTheDocument();
+  });
+
+  // The gallery on the read side: what a media post looks like when the body
+  // is pictures, what happens when the bytes are gone, and what the veil
+  // covers.
+  describe("the gallery", () => {
+    const picture = (id: string, altText: string | null, status = "NORMAL") => ({
+      __typename: "MediaAttachment",
+      id,
+      url: `https://media.test/${id}.webp`,
+      altText,
+      status,
+      options: { __typename: "MediaOptions", aspectRatio: "4:5" },
+    });
+
+    const withBody = (body: Parameters<typeof detail>[6]) =>
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u1", [], undefined, false, [], [], body) }),
+      );
+
+    it("renders a media post's gallery and no words body", async () => {
+      server.use(
+        withBody({
+          content: null,
+          description: "Rubbings from three weekends.",
+          attachments: [picture("m1", "paper against the salt crust"), picture("m2", null)],
+        }),
+      );
+      renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+      expect(await screen.findByTestId("post-title")).toHaveTextContent("The title");
+      expect(screen.getByTestId("post-media")).toBeInTheDocument();
+      // The XOR: a media post has no words half at all.
+      expect(screen.queryByTestId("post-body")).not.toBeInTheDocument();
+      // The described picture reads as its description; the undescribed one is
+      // decorative rather than announced as "image".
+      expect(screen.getByAltText("paper against the salt crust")).toBeInTheDocument();
+    });
+
+    it("shows the Removed mark in place of bytes that are gone", async () => {
+      server.use(
+        withBody({
+          content: null,
+          attachments: [picture("m1", null, "REDACTED")],
+          attachmentsStatus: "REDACTED",
+        }),
+      );
+      renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+      const mark = await screen.findByTestId("post-media");
+      expect(mark).toHaveTextContent("Removed by its author");
+      expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    });
+
+    it("names a platform removal differently from an author's own", async () => {
+      server.use(
+        withBody({
+          content: null,
+          attachments: [picture("m1", null, "REDACTED")],
+          attachmentsStatus: "REDACTED",
+          moderationStatus: "ILLEGAL",
+        }),
+      );
+      renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+      expect(await screen.findByTestId("post-media")).toHaveTextContent(
+        "Removed under the platform's rules",
+      );
+    });
+
+    it("veils the body as one and leaves the title readable", async () => {
+      server.use(
+        withBody({
+          description: "Rubbings from three weekends.",
+          attachments: [picture("m1", null)],
+          attachmentsStatus: "SENSITIVE",
+        }),
+      );
+      renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+      // The title is outside the veil, so the choice to look is informed.
+      expect(await screen.findByTestId("post-title")).toHaveTextContent("The title");
+      const veil = screen.getByTestId("post-veil");
+      expect(veil).toBeInTheDocument();
+      // One reveal answers for the whole body, media and words together.
+      fireEvent.click(within(veil).getByRole("button"));
+      expect(screen.getByTestId("post-media")).toBeInTheDocument();
+      expect(screen.getByTestId("post-body")).toHaveTextContent("The body");
+    });
+
+    it("renders a comment's picture beside its words, which a comment keeps", async () => {
+      server.use(
+        graphql.query("PostDetail", () =>
+          HttpResponse.json({
+            data: detail("u1", [
+              { id: "c1", body: "Look at this", attachments: [picture("mc", "a salt flat")] },
+            ]),
+          }),
+        ),
+      );
+      renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+      expect(await screen.findByTestId("post-comment-c1")).toHaveTextContent("Look at this");
+      expect(screen.getByTestId("comment-media-c1")).toBeInTheDocument();
+      expect(screen.getByAltText("a salt flat")).toBeInTheDocument();
+    });
   });
 });

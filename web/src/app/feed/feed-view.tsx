@@ -8,6 +8,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
 import { fetchPosts, type PostView } from "@/lib/api/content-api";
@@ -22,6 +23,7 @@ import { Card } from "@/lib/ui/card";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PostCard } from "@/lib/ui/post-card";
+import { ComposeNotice, composeOutcomeOf } from "./compose-notice";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
 function GuestBanner() {
@@ -52,6 +54,8 @@ export function FeedView({
   const keyOnDevice = useKeyOnDevice(store);
   const client = useApolloClient();
   const phase = useAuthPhase();
+  const router = useRouter();
+  const outcome = composeOutcomeOf(useSearchParams().get("compose"));
   const [posts, setPosts] = useState<readonly PostView[]>([]);
   const [endCursor, setEndCursor] = useState<string | null>(null);
   const [hasNextPage, setHasNextPage] = useState(false);
@@ -114,6 +118,14 @@ export function FeedView({
       </CollapsingTop>
       {/* The account-status banners ride the active tab (design.md §6). */}
       {phase === "signedIn" && <StatusBanners />}
+      {/* What the wizard just did, if anything. Dismissing drops the query
+          value, so the notice cannot come back on a reload. */}
+      {outcome !== null && (
+        <ComposeNotice
+          outcome={outcome}
+          onDismiss={() => router.replace("/feed")}
+        />
+      )}
       {transportFault === "refresh" && (
         <div className="flex items-center gap-3">
           {/* With posts on screen the fault means "stale", not "gone":
