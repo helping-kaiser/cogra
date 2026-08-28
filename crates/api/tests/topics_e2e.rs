@@ -6,11 +6,11 @@
 
 use std::sync::Arc;
 
+use api::topics::MAX_LIVE_TOPICS_PER_ARTIFACT;
 use axum::body::Body;
 use axum::http::Request;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
-use api::topics::MAX_LIVE_TOPICS_PER_ARTIFACT;
 use common::l1::census::{LegRole, leg_params};
 use common::l1::client::ActorKey;
 use common::l1::wire;
@@ -1361,7 +1361,14 @@ async fn follow_and_unfollow_round_trip_through_the_topic_page(pool: PgPool) {
 /// Inserts one landed Tag record straight into the mirror, deriving the
 /// T-leg's stored orientation from the census so the fixture cannot
 /// disagree with the write path about which column is which.
-async fn seed_tag(pool: &PgPool, record: &str, author: &str, node: &str, name: &str, relevance: f64) {
+async fn seed_tag(
+    pool: &PgPool,
+    record: &str,
+    author: &str,
+    node: &str,
+    name: &str,
+    relevance: f64,
+) {
     sqlx::query(
         "INSERT INTO mirror_records
              (record_id, family, author, epoch, act_time, position,
