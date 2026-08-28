@@ -73,8 +73,9 @@ export interface PostCardProps {
   sensitive?: { reason?: string };
   /**
    * Topic names, with or without the `#`. One line with the citation count at
-   * its end — clipped in the summary card (readme §13's collapse order),
-   * wrapping only on the detail variant.
+   * its end, clipped on both variants (readme §13's collapse order) — the
+   * topics-and-references sheet is the full set's home. On detail the whole
+   * line opens the sheet.
    */
   topics?: readonly string[];
   /** The citation count, riding the end of the topics line. */

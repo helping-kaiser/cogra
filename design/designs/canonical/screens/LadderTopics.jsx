@@ -1,6 +1,6 @@
-/* The post ladder — a post wearing MANY topics (50 is legal). The summary
-   card keeps its one clipped line whatever the count; the detail card wears
-   the whole set, wrapped, and is allowed to exceed the screen. */
+/* The post ladder — a post wearing MANY topics (50 is legal). ONE clipped
+   line whatever the count, on both variants; on detail the line is the
+   topics-and-references sheet's opener — the sheet is the full set's home. */
 const MANY_TOPICS = [
   "coastroad", "saltmarsh", "headland", "lowtide", "fieldnotes", "placenames",
   "ferrylanding", "springtide", "waxstick", "rubbings", "papercraft", "maps",

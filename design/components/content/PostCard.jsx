@@ -235,7 +235,17 @@ export function PostCard({
       {redacted ? <RedactedContent {...(redacted === true ? {} : redacted)} /> : linkedText}
       {!redacted && opener}
       {license && showLicense && !redacted && <LicenseTerms license={license} />}
-      {!redacted && <TopicsLine topics={topics} references={references} wrap={detail} onOpenReferences={onOpenReferences} />}
+      {/* ONE LINE on both variants — the sheet is the full set's home. On
+          detail the whole line is the sheet's opener; in the feed the chips
+          navigate and only the count opens it. */}
+      {!redacted && (
+        <TopicsLine
+          topics={topics}
+          references={references}
+          onOpen={detail ? (onOpenReferences ?? (() => {})) : undefined}
+          onOpenReferences={onOpenReferences}
+        />
+      )}
       {edited && <EditedMarker />}
       {pending && <PendingMarker />}
       {/* THE AFFORDANCE ROW. The stance control leads — it is the gesture the
