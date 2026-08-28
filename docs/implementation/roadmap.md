@@ -111,6 +111,22 @@ client-hidden until the topic feed lands (slice 3, where the
 Web/Android visual divergence is accepted as interim per the same
 redesign note as 2.2.
 
+**Slice 2.4 is closed** (hand-tested 2026-08-28, one fix round):
+Reference hyper-edges on posts and comments — citations and
+mentions authored at creation, from the edit surfaces, and via a
+Reference affordance on every content detail, each its own priced
+act with relevance/support sliders and a whole-batch solvency
+pre-check. The exact-match reference finder ships as structure
+(real search replaces its lookup in 2.7, behind the same field);
+topics are not reference targets — tagging is the topic gesture.
+Reads serve the carrier author's netted current references with
+batched target resolution; withdrawal nets the bundle, its act
+count quoted before anything signs. Live sets are capped at fifty
+references and fifty topics per artifact, and the query budgets
+are derived from measured client operations under a standing
+guard. Inbound "cited by" and third-party reference claims wait
+for slice 3 with their tag siblings.
+
 ## The stand-in and the swap
 
 Until PeerNetworks Layer 1 ships, the backend runs an **L1 stand-in**
