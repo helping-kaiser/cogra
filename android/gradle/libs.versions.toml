@@ -35,6 +35,9 @@ datastore = "1.1.1"
 # fragment, which is why the app's activity is a FragmentActivity.
 biometric = "1.1.0"
 fragment = "1.9.0"
+# The AndroidX ExifInterface, not the framework one: it reads and writes the
+# tag set on every supported API level, which the platform class does not.
+exifinterface = "1.4.1"
 
 # DI
 hilt = "2.58"
@@ -112,6 +115,7 @@ androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lif
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 androidx-fragment = { group = "androidx.fragment", name = "fragment", version.ref = "fragment" }
+androidx-exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exifinterface" }
 
 # Compose (BOM-managed — no versions on the individual artifacts)
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
