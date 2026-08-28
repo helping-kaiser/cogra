@@ -598,12 +598,14 @@ fun testReferenceClaim(
     },
     relevance: Double = 0.1,
     support: Double = 0.1,
+    withdrawalCost: Int = 1,
     pending: Boolean = false,
 ): ReferenceClaimView = ReferenceClaimView(
     target = target,
     targetId = targetId,
     relevance = relevance,
     support = support,
+    withdrawalCost = withdrawalCost,
     pending = pending,
 )
 

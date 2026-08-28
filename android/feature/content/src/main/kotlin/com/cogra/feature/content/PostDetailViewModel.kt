@@ -108,11 +108,6 @@ data class PostDetailUiState(
     val replyReferences: ReferenceSectionState = ReferenceSectionState(),
     /** The edited comment's references, loaded at their real values. */
     val editReferences: ReferenceSectionState = ReferenceSectionState(),
-    /**
-     * What the edit's reference withdrawals cost, once the server has
-     * assembled them (D11). Null until the batch has been staged.
-     */
-    val editWithdrawalCost: Int? = null,
     /** What the edit opened with — text unchanged stages no edit record (F10). */
     val editLoadedText: String = "",
     /** Which submit the multi-action confirm is holding; null when none (F4). */
@@ -136,15 +131,20 @@ data class PostDetailUiState(
 
     /**
      * The edit's changes are standalone Tag and Reference acts beside
-     * an optional edit record. A withdrawal's true cost is the
-     * server's to quote, so until it has the count stands at one per
-     * dropped citation (D11).
+     * an optional edit record. Exact before anything is staged: a
+     * withdrawal's batch is the count the claim served (B4).
      */
     val editSignedActions: Int
         get() = (if (editContentChanged) 1 else 0) +
             editTags.changeCount +
-            editReferences.adds.size +
-            (editWithdrawalCost ?: editReferences.removes.size)
+            editReferences.changeCount
+
+    /**
+     * What the edit's reference withdrawals cost, or null when it
+     * withdraws nothing — the confirm names it beside the total so a
+     * multi-record removal explains itself (B4).
+     */
+    val editWithdrawalCost: Int? get() = editReferences.withdrawalActs.takeIf { it > 0 }
 
     fun tagSection(target: TagTarget): TagSectionState = when (target) {
         TagTarget.COMMENT -> commentTags
@@ -205,13 +205,6 @@ class PostDetailViewModel @Inject constructor(
 
     /** Debounces the finder, which runs on every keystroke (D20). */
     private var finderJob: Job? = null
-
-    /**
-     * An edit batch staged before the confirm, held while the author
-     * reads the quoted withdrawal cost. Never UI state: it is the
-     * signing input, and a dismissed confirm drops it.
-     */
-    private var quotedEditWrites: List<PreparedWriteView>? = null
 
     private var postId: String? = null
 
@@ -374,7 +367,6 @@ class PostDetailViewModel @Inject constructor(
             editLoadedText = loaded,
             editTags = TagSectionState(tags = tags, loaded = tags),
             editReferences = ReferenceSectionState(references = refs, loaded = refs),
-            editWithdrawalCost = null,
             editRefused = false,
             editSigningFailed = false,
             replyingToId = null,
@@ -390,7 +382,6 @@ class PostDetailViewModel @Inject constructor(
             editLoadedText = "",
             editTags = TagSectionState(),
             editReferences = ReferenceSectionState(),
-            editWithdrawalCost = null,
         )
     }
 
@@ -399,15 +390,6 @@ class PostDetailViewModel @Inject constructor(
         if (s.editingCommentId == null || s.editSubmitting || s.editDraft.isBlank()) return
         // An edit opened and left alone stages no record at all.
         if (s.editSignedActions == 0) return
-        // A withdrawal's cost is the server's to quote — the bundle may
-        // need several counter-records to reach (0, 0) (D11) — so an
-        // edit carrying one stages first and asks with the true count.
-        // Staging signs nothing, so nothing is committed by asking
-        // second. Every other edit keeps the ask-first order.
-        if (s.editReferences.removes.isNotEmpty()) {
-            stageCommentEdit(askOnceQuoted = true)
-            return
-        }
         if (gateOnConfirm(TagTarget.EDIT, s)) return
         stageCommentEdit()
     }
@@ -419,7 +401,7 @@ class PostDetailViewModel @Inject constructor(
      * relevance 0. A refusal from any prepare stops before signing, so
      * nothing may claim signing failed (F2).
      */
-    private fun stageCommentEdit(askOnceQuoted: Boolean = false) {
+    private fun stageCommentEdit() {
         val s = _state.value
         val id = s.editingCommentId ?: return
         _state.update {
@@ -428,7 +410,6 @@ class PostDetailViewModel @Inject constructor(
                 editRefused = false,
                 editSigningFailed = false,
                 signingNeedsKey = false,
-                editWithdrawalCost = null,
                 editTags = it.editTags.withoutErrors(),
                 editReferences = it.editReferences.withoutErrors(),
             )
@@ -469,27 +450,12 @@ class PostDetailViewModel @Inject constructor(
                     is Outcome.Failed -> return@launch failEdit()
                 }
             }
-            var withdrawn = 0
             for (row in s.editReferences.removes) {
                 when (val outcome = references.prepareReferenceWithdrawal(id, row.targetId)) {
-                    is Outcome.Success -> {
-                        writes += outcome.value
-                        withdrawn += outcome.value.size
-                    }
+                    is Outcome.Success -> writes += outcome.value
                     is Outcome.Refused -> return@launch refuseEditReference(row.targetId, outcome.errors)
                     is Outcome.Failed -> return@launch failEdit()
                 }
-            }
-            // The withdrawal batch is assembled; its length is the cost
-            // the author is owed before signing (D11).
-            if (withdrawn > 0) _state.update { it.copy(editWithdrawalCost = withdrawn) }
-            if (askOnceQuoted &&
-                _state.value.confirmMultiActionSubmits &&
-                writes.size > 1
-            ) {
-                quotedEditWrites = writes
-                _state.update { it.copy(confirmPending = TagTarget.EDIT) }
-                return@launch
             }
             signCommentEdit(writes)
         }
@@ -518,7 +484,6 @@ class PostDetailViewModel @Inject constructor(
                     editLoadedText = "",
                     editTags = TagSectionState(),
                     editReferences = ReferenceSectionState(),
-                    editWithdrawalCost = null,
                     commentSigned = true,
                 )
             }
@@ -833,14 +798,6 @@ class PostDetailViewModel @Inject constructor(
         val target = _state.value.confirmPending ?: return
         if (dontAskAgain) viewModelScope.launch { identity.setConfirmMultiActionSubmits(false) }
         _state.update { it.copy(confirmPending = null) }
-        // An edit whose withdrawal was quoted is already staged; it
-        // signs what it quoted rather than preparing a second time.
-        val quoted = quotedEditWrites
-        if (target == TagTarget.EDIT && quoted != null) {
-            quotedEditWrites = null
-            viewModelScope.launch { signCommentEdit(quoted) }
-            return
-        }
         when (target) {
             TagTarget.COMMENT -> stageComment()
             TagTarget.REPLY -> stageReply()
@@ -849,10 +806,7 @@ class PostDetailViewModel @Inject constructor(
     }
 
     fun onDismissConfirm() {
-        quotedEditWrites = null
-        _state.update {
-            it.copy(confirmPending = null, editSubmitting = false, editWithdrawalCost = null)
-        }
+        _state.update { it.copy(confirmPending = null, editSubmitting = false) }
     }
 
     /**

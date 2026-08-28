@@ -25,6 +25,14 @@ export type ReferenceClaimNode = {
   readonly targetId: string;
   readonly relevance: number;
   readonly support: number;
+  /**
+   * What removing this citation costs, off the raw bundle sums. Every
+   * document selects it, read-only rows included: the content types
+   * are shared across surfaces — the feed's `PostView` is what the
+   * detail's post is read through — so a claim that could reach an
+   * editing surface has to carry the number that surface confirms on.
+   */
+  readonly withdrawalCost: number;
   readonly pending: boolean;
   /** Null when CoGra carries no display row for the referenced node. */
   readonly target?: ReferenceTargetNode | null;
@@ -63,6 +71,7 @@ export function referenceDrafts(
       ...newReferenceDraft(id, targetView(target, claim.targetId)),
       relevance: claim.relevance,
       support: claim.support,
+      withdrawalCost: claim.withdrawalCost,
     });
   }
   return drafts;
@@ -70,5 +79,5 @@ export function referenceDrafts(
 
 /** How many of a node's claims the editable section cannot address. */
 export function unaddressableClaims(claims: readonly ReferenceClaimNode[]): number {
-  return claims.length - referenceDrafts(claims).length;
+  return claims.filter((claim) => claim.target?.id === undefined).length;
 }

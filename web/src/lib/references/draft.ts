@@ -51,6 +51,15 @@ export type ReferenceDraft = {
   readonly relevance: number;
   /** Enthusiasm `e`, the `pInterest` slot, bipolar over the census range. */
   readonly support: number;
+  /**
+   * How many counter-records withdrawing this reference stages —
+   * `ReferenceClaim.withdrawalCost`, served off the RAW bundle sums the
+   * clipped pair above has already lost. One for anything not yet
+   * standing: a reference the author drafted in this session nets in a
+   * single record, and dropping one before submitting stages nothing at
+   * all.
+   */
+  readonly withdrawalCost: number;
 };
 
 export const DEFAULT_RELEVANCE = 0.1;
@@ -70,6 +79,7 @@ export function newReferenceDraft(
     target,
     relevance: DEFAULT_RELEVANCE,
     support: DEFAULT_SUPPORT,
+    withdrawalCost: 1,
   };
 }
 
@@ -85,8 +95,8 @@ function sameParameters(a: ReferenceDraft, b: ReferenceDraft): boolean {
 /**
  * What an edit surface has to stage: a reference the author added, one
  * whose parameters they moved (a fresh declaration at the new values),
- * and one they took off (a withdrawal, which is a BATCH — see
- * `withdrawalActs`). An untouched section yields nothing.
+ * and one they took off (a withdrawal, which is a BATCH of
+ * `withdrawalCost` records). An untouched section yields nothing.
  */
 export function referenceChanges(
   original: readonly ReferenceDraft[],
@@ -108,32 +118,19 @@ export function referenceChanges(
 }
 
 /**
- * A PREVIEW of what withdrawing one reference costs, in the same spirit
- * as `previewTagName` (topics/normalize.ts): it shows the reader a
- * number while they decide, and the server's prepared batch stays the
- * authority.
+ * The act count for a set of staged changes: one act per declaration,
+ * and a withdrawal's whole counter-record batch per removal.
  *
- * Walking a bundle to `(0, 0)` takes `⌈max(|Σ_d|, |Σ_i|)⌉` counter-
- * records, but a `ReferenceClaim` serves the CLIPPED fold, not the raw
- * sums — unlike `StanceBundle`, which serves `severance.records`
- * outright. So this is a LOWER BOUND: exact whenever the bundle is one
- * record (the common case, and always so at the +0.1 defaults), never
- * an over-quote. `prepareReferenceWithdrawal` returns the true batch,
- * and the confirm quotes THAT before anything is signed.
- */
-export function withdrawalActs(reference: ReferenceDraft): number {
-  const reach = Math.max(Math.abs(reference.relevance), Math.abs(reference.support));
-  return Math.max(1, Math.ceil(reach));
-}
-
-/**
- * The lower-bound act count for a set of staged changes: one act per
- * declaration, a withdrawal's own batch estimate per removal.
+ * Exact, because the server quotes it: `ReferenceClaim.withdrawalCost`
+ * is `⌈max(|Σ_d|, |Σ_i|)⌉` off the raw bundle sums, the same number
+ * `prepareReferenceWithdrawal` then stages. So a removal can be
+ * confirmed BEFORE anything is prepared, the order every other
+ * multi-act gesture follows.
  */
 export function referenceActs(changes: readonly ReferenceChange[]): number {
   return changes.reduce(
     (total, change) =>
-      total + (change.kind === "withdraw" ? withdrawalActs(change.reference) : 1),
+      total + (change.kind === "withdraw" ? change.reference.withdrawalCost : 1),
     0,
   );
 }

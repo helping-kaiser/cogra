@@ -133,6 +133,11 @@ query Posts($first: Int!, $after: String, $includePending: Boolean! = true) {
           targetId
           relevance
           support
+          # The feed's own row never edits, but `PostView` is the type
+          # the detail's post is read through, and the compose edit
+          # surface builds its drafts from that — so the field the
+          # withdrawal confirm reads has to be on this selection too.
+          withdrawalCost
           pending
           target {
             __typename
@@ -251,6 +256,11 @@ query PostDetail(
       targetId
       relevance
       support
+      # What removing this citation costs: the counter-records that net
+      # its bundle to (0, 0), off the RAW sums the clipped pair above
+      # has already lost. An editing surface confirms against this
+      # BEFORE it prepares anything.
+      withdrawalCost
       pending
       target {
         __typename
@@ -351,6 +361,7 @@ query PostDetail(
             targetId
             relevance
             support
+            withdrawalCost
             pending
             target {
               __typename
@@ -447,6 +458,7 @@ query PostDetail(
                   targetId
                   relevance
                   support
+                  withdrawalCost
                   pending
                   target {
                     __typename
@@ -571,6 +583,7 @@ query CommentReplies(
             targetId
             relevance
             support
+            withdrawalCost
             pending
             target {
               __typename
@@ -667,6 +680,7 @@ query CommentReplies(
                   targetId
                   relevance
                   support
+                  withdrawalCost
                   pending
                   target {
                     __typename
