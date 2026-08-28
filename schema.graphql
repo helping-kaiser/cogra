@@ -660,6 +660,53 @@ type LogInPayload {
 	userErrors: [UserError!]!
 }
 
+type MediaAttachment {
+	id: UUID!
+	"""
+	Absolute, and minted per read from the media origin's configured
+	base rather than stored on the row: the origin is a deployment
+	fact, and a baked URL would rot the moment the store moved.
+	"""
+	url: String!
+	"""
+	The digest the payload envelope commits, lowercase hex. Exposed so
+	the transitive witness is checkable rather than asserted: a reader
+	can hash the bytes it was served and compare them against the
+	record that carries them.
+	"""
+	digest: String!
+	"""
+	The algorithm `digest` is under — `sha256` today. It rides beside
+	the digest so a reader never infers it from a length.
+	"""
+	digestAlgo: String!
+	mimeType: String!
+	"""
+	The stored size. `Int` is 32-bit per the GraphQL specification
+	while the column is 64-bit, so a value past that range reads null
+	rather than wrapping into a wrong number — unreachable under the
+	upload cap, and the honest answer if the cap ever moves.
+	"""
+	sizeBytes: Int
+	altText: String
+	options: MediaOptions!
+	"""
+	The account that uploaded the asset.
+	"""
+	author: User
+	createdAt: DateTime!
+}
+
+"""
+Layout hints the frontend reads to reserve space before load, so a
+gallery never jumps as its pictures arrive. Derived by the server from
+the bytes, never supplied — `durationMs` reads null until video lands.
+"""
+type MediaOptions {
+	aspectRatio: String
+	durationMs: Int
+}
+
 """
 Text carrying its own moderation status. `value` is null when the
 field is redacted, or unset where the field is optional — `status`
@@ -865,6 +912,20 @@ type Mutation {
 	(feed-ranking.md §8.1).
 	"""
 	prepareSeverance(input: PrepareSeveranceInput!): PreparePayload!
+	"""
+	Uploads a single media asset.
+	
+	A pure L2 operation: it mints no record, authors nothing, and
+	costs no θ — the asset's digest enters a payload envelope later,
+	at prepare time, and it is *that* Publish the author pays for. A
+	twenty-photo post and a text post cost the same.
+	
+	The binary rides the multipart request. One file per call, by
+	design: a client sends its gallery concurrently, and each upload
+	then retries on its own instead of a ten-photo request failing
+	whole on the tenth picture.
+	"""
+	uploadMedia(input: UploadMediaInput!): UploadMediaPayload!
 	"""
 	Prepares a new Post: one genesis Publish through the ordinary
 	write path — the returned write pre-signs, seals, and approves
@@ -1132,14 +1193,6 @@ input PrepareCommentInput {
 	references: [ReferenceInput!]
 }
 
-"""
-A prepared content write: the staged batch plus `node` — the L2
-id the envelope binds to the minted node, and the id the content
-reads serve once the record lands. `writes` carries the minting
-record first, then one Tag record per declared topic and one
-Reference record per declared citation, each its own priced act.
-Null when `userErrors` is non-empty.
-"""
 type PrepareContentPayload {
 	node: UUID
 	writes: [PreparedWrite!]
@@ -2112,6 +2165,11 @@ entities without requiring a central allocating authority.
 """
 scalar UUID
 
+"""
+A multipart file upload
+"""
+scalar Upload
+
 input UploadKeyBackupInput {
 	"""
 	The client-encrypted key-backup blob (base64) — ciphertext under
@@ -2133,6 +2191,33 @@ input UploadKeyBackupInput {
 
 type UploadKeyBackupPayload {
 	ok: Boolean
+	userErrors: [UserError!]!
+}
+
+"""
+A prepared content write: the staged batch plus `node` — the L2
+id the envelope binds to the minted node, and the id the content
+reads serve once the record lands. `writes` carries the minting
+record first, then one Tag record per declared topic and one
+Reference record per declared citation, each its own priced act.
+Null when `userErrors` is non-empty.
+Uploads one asset. `altText` is the one layout-adjacent fact the
+server cannot infer and the author must supply; aspect ratio and
+duration are derived from the bytes.
+
+`actAs` is not here: a Collective is the only non-user actor there is
+and Collectives arrive with slice 5, so the uploader is the viewer.
+"""
+input UploadMediaInput {
+	file: Upload!
+	altText: String
+}
+
+"""
+The asset, or the refusal that explains what was wrong with the file.
+"""
+type UploadMediaPayload {
+	media: MediaAttachment
 	userErrors: [UserError!]!
 }
 
