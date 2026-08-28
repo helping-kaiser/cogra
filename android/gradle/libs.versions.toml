@@ -47,7 +47,16 @@ apollo = "4.4.3"
 # point at, and the one the media slice's D20 ruling names. Coil 3 ships no
 # network fetcher by default, so `coil-network-okhttp` is required as well
 # to load over HTTP — see https://coil-kt.github.io/coil/network/.
-coil = "3.6.0"
+#
+# 3.4.0 rather than the newest 3.6.0 because Coil tracks Compose and Kotlin
+# closely and this is the release built for the pair we are on: 3.4.0 targets
+# Compose 1.9.3 / Kotlin 2.3.10 against our Compose 1.9.4 (BOM 2025.10.01) and
+# Kotlin 2.3.21. 3.5.0 moves to Compose 1.11.1 / Kotlin 2.4.0 and 3.6.0 to
+# Compose 1.12.0 / Kotlin 2.4.10, whose artifacts refuse to resolve under
+# AGP 8.13.2 ("requires Android Gradle plugin 9.1.0 or higher"). Moving up
+# is a toolchain migration — AGP 9 + Kotlin 2.4 + a new Compose BOM — not a
+# dependency bump, so it rides with that migration and Coil follows it.
+coil = "3.4.0"
 
 # Crypto — Tink backs the encrypted token store (EncryptedSharedPreferences
 # is deprecated in current androidx.security-crypto). BouncyCastle's
