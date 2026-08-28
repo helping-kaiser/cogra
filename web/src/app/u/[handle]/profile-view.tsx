@@ -28,6 +28,8 @@ import { useAuthGuard } from "@/lib/session/runtime";
 import { useAuthPhase } from "@/lib/session/provider";
 import { StatusBanners } from "@/app/status-banners";
 import { MonogramAvatar } from "@/lib/ui/actor-chip";
+import { MediaTile } from "@/lib/ui2/media/media-tile";
+import { COVER_RATIO } from "@/lib/ui2/media/aspect";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
@@ -185,9 +187,25 @@ export function ProfileScreen({
       )}
       {profile && (
         <>
+          {/* The cover leads, at its own wide shape, and only where there is
+              one — a reserved band over an actor who set none would be a gap
+              rather than a design. */}
+          {profile.cover && (
+            <div className="-mx-6" data-testid="profile-cover">
+              <MediaTile
+                src={profile.cover.url}
+                altText=""
+                ratio={COVER_RATIO}
+                fit="cover"
+                radius="0px"
+                preload
+                testId="profile-cover-tile"
+              />
+            </div>
+          )}
           <div className="flex flex-col gap-2 px-2">
             <span data-testid="profile-avatar">
-              <MonogramAvatar name={name ?? "?"} size="lg" />
+              <MonogramAvatar name={name ?? "?"} size="lg" src={profile.avatar?.url} />
             </span>
             <h2 data-testid="profile-display-name" className="text-headline-small">
               {name}

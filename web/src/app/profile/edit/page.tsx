@@ -9,13 +9,25 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
-import { fetchMyProfile, prepareProfileUpdate } from "@/lib/api/profile-api";
+import {
+  fetchMyProfile,
+  prepareProfileUpdate,
+  type MediaSelection,
+} from "@/lib/api/profile-api";
+import { uploadMedia } from "@/lib/api/media-api";
+import { encodeForUpload } from "@/lib/ui2/media/encode-image";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useAuthPhase } from "@/lib/session/provider";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
 import { PageHeader } from "@/lib/ui/page-header";
 import { TransportError } from "@/lib/ui/transport-error";
+import {
+  PROFILE_RATIOS,
+  ProfileMediaField,
+  UNCHANGED,
+  type ProfileMediaChoice,
+} from "./profile-media-field";
 
 export default function ProfileEditPage() {
   const phase = useAuthPhase();
@@ -33,6 +45,10 @@ export default function ProfileEditPage() {
   const [emptyName, setEmptyName] = useState(false);
   const [refusedMessage, setRefusedMessage] = useState<string | null>(null);
   const [signIncomplete, setSignIncomplete] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [avatar, setAvatar] = useState<ProfileMediaChoice>(UNCHANGED);
+  const [cover, setCover] = useState<ProfileMediaChoice>(UNCHANGED);
 
   useEffect(() => {
     if (phase === "signedOut") router.replace("/login");
@@ -50,6 +66,8 @@ export default function ProfileEditPage() {
           setDisplayName(outcome.value.displayName.value ?? "");
           setBio(outcome.value.bio.value ?? "");
           setWebsiteUrl(outcome.value.websiteUrl.value ?? "");
+          setAvatarUrl(outcome.value.avatar?.url ?? null);
+          setCoverUrl(outcome.value.cover?.url ?? null);
         } else {
           setTransportFailed(true);
         }
@@ -60,6 +78,36 @@ export default function ProfileEditPage() {
   }, [client, guard, phase]);
 
   if (phase !== "signedIn") return null;
+
+  /**
+   * One field's choice, turned into the value the update carries.
+   *
+   * The mapping is the whole three-valued rule in four lines: untouched stays
+   * `unchanged` and serialises to an absent field, cleared becomes an explicit
+   * null, and a pick becomes the id of the asset its bytes just made.
+   */
+  const resolve = async (
+    choice: ProfileMediaChoice,
+    ratio: number,
+  ): Promise<{ selection: MediaSelection; error?: string }> => {
+    if (choice.kind === "unchanged") return { selection: "unchanged" };
+    if (choice.kind === "cleared") return { selection: { clear: true } };
+    let encoded;
+    try {
+      encoded = await encodeForUpload(choice.file, { ratio, crop: choice.crop });
+    } catch {
+      return { selection: "unchanged", error: "This browser couldn't read that picture." };
+    }
+    const result = await uploadMedia(client, { blob: encoded.blob, altText: null });
+    if (result.kind === "success") return { selection: { mediaId: result.value.id } };
+    return {
+      selection: "unchanged",
+      error:
+        result.kind === "refused"
+          ? (result.errors[0]?.message ?? "The server refused that picture.")
+          : "Couldn't reach the server.",
+    };
+  };
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -72,11 +120,28 @@ export default function ProfileEditPage() {
     setRefusedMessage(null);
     setSignIncomplete(false);
     setTransportFailed(false);
+
+    // The pictures go up BEFORE the record is prepared: an update naming an
+    // asset id that does not exist yet would be refused, and a refusal at that
+    // point would have already cost the author their framing.
+    const uploaded = await Promise.all([
+      resolve(avatar, PROFILE_RATIOS.avatar),
+      resolve(cover, PROFILE_RATIOS.cover),
+    ]);
+    const failure = uploaded.find((result) => result.error !== undefined);
+    if (failure?.error !== undefined) {
+      setSubmitting(false);
+      setRefusedMessage(failure.error);
+      return;
+    }
+
     const prepared = await guard.run(() =>
       prepareProfileUpdate(client, {
         displayName: displayName.trim(),
         bio: bio.trim() === "" ? null : bio,
         websiteUrl: websiteUrl.trim() === "" ? null : websiteUrl.trim(),
+        avatar: uploaded[0].selection,
+        cover: uploaded[1].selection,
       }),
     );
     if (prepared.kind === "refused") {
@@ -118,6 +183,22 @@ export default function ProfileEditPage() {
       )}
       {!loading && (
         <form className="flex flex-col gap-4" onSubmit={(event) => void onSubmit(event)}>
+          <ProfileMediaField
+            kind="avatar"
+            name={displayName}
+            currentUrl={avatarUrl}
+            choice={avatar}
+            onChoice={setAvatar}
+            testIdPrefix="profile-edit"
+          />
+          <ProfileMediaField
+            kind="cover"
+            name={displayName}
+            currentUrl={coverUrl}
+            choice={cover}
+            onChoice={setCover}
+            testIdPrefix="profile-edit"
+          />
           <label className="flex flex-col gap-1 text-label-large">
             Display name
             <input
