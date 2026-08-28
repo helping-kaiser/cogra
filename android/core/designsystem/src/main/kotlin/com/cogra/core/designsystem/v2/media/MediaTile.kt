@@ -11,8 +11,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import coil3.compose.AsyncImage
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.ThemePreviews
@@ -61,17 +59,11 @@ fun MediaTile(
             model = item.url,
             contentDescription = item.altText,
             contentScale = if (fitted) ContentScale.Fit else ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxSize()
-                // A decorative tile must not appear in the accessibility tree
-                // at all; Coil still needs the null description above.
-                .then(
-                    if (item.altText == null) {
-                        Modifier.semantics { contentDescription = "" }
-                    } else {
-                        Modifier
-                    },
-                ),
+            // A null description is what marks an image decorative — it keeps
+            // the node out of the accessibility tree entirely, which is the
+            // documented behaviour and the right answer for an asset whose
+            // author wrote no alt text. Never a fabricated one.
+            modifier = Modifier.fillMaxSize(),
         )
     }
 }

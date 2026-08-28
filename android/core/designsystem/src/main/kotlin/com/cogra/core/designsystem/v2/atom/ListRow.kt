@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -113,12 +114,12 @@ fun SummaryRow(
 /** The one hairline weight, for structural separation. */
 @Composable
 fun Hairline(modifier: Modifier = Modifier) {
-    Column(
+    Spacer(
         modifier
             .fillMaxWidth()
             .height(1.dp)
             .background(MaterialTheme.colorScheme.outlineVariant),
-    ) {}
+    )
 }
 
 @ThemePreviews

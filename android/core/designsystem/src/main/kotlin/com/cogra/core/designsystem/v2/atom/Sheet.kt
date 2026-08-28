@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -62,15 +63,14 @@ fun CograSheetSurface(
         verticalArrangement = Arrangement.spacedBy(Space.x3),
     ) {
         if (showHandle) {
-            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                Column(
-                    Modifier
-                        .width(32.dp)
-                        .height(4.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.outlineVariant),
-                ) {}
-            }
+            Spacer(
+                Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .width(32.dp)
+                    .height(4.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.outlineVariant),
+            )
         }
         content()
     }

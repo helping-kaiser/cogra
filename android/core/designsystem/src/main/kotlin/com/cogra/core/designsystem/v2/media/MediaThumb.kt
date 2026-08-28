@@ -66,8 +66,12 @@ sealed interface ThumbBadge {
  * A thumbnail is an *index* into the set rather than the media itself, so it
  * crops. That is the same exception the gallery's secondary squares take.
  *
- * @param selected draws the filmstrip's ring; unselected frames dim instead,
- *   which is how the canonical crop board separates them.
+ * @param selected draws the filmstrip's ring.
+ * @param dimmed the other half of how the canonical crop board separates a
+ *   filmstrip's frames: the selected one wears the ring, the rest fade. It is
+ *   a separate parameter rather than `!selected` because most uses — the
+ *   picked tray, the details row — have no selection at all and must not fade
+ *   everything.
  */
 @Composable
 fun MediaThumb(
@@ -76,6 +80,7 @@ fun MediaThumb(
     size: Dp = Layout.ThumbSize,
     badge: ThumbBadge? = null,
     selected: Boolean = false,
+    dimmed: Boolean = false,
     onClick: (() -> Unit)? = null,
     contentDescription: String? = null,
     testTag: String? = null,
@@ -108,7 +113,7 @@ fun MediaThumb(
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxSize()
-                .alpha(if (selected || badge is ThumbBadge.Order && badge.position == null) 1f else 1f),
+                .alpha(if (dimmed) 0.65f else 1f),
         )
         when (badge) {
             is ThumbBadge.Order -> OrderBadge(badge.position)
@@ -219,8 +224,10 @@ private fun MediaThumbBadges() {
             Row(horizontalArrangement = Arrangement.spacedBy(Space.x2)) {
                 MediaThumb(item, badge = ThumbBadge.Cover)
                 MediaThumb(item, badge = ThumbBadge.Remove {})
+                // The crop filmstrip: the framed one wears the ring, the
+                // rest fade.
                 MediaThumb(item, selected = true)
-                MediaThumb(item)
+                MediaThumb(item, dimmed = true)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(Space.x2)) {
                 MediaThumb(item, size = 125.dp, badge = ThumbBadge.Order(1))
