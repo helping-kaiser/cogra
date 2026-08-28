@@ -42,8 +42,6 @@ data class ComposeDraft(
     val assets: List<DraftAsset> = emptyList(),
     /** The post-wide shape, by [com.cogra.domain.compose.DraftShape] name. */
     val shape: DraftShape = DraftShape.Tall,
-    val sensitive: Boolean = false,
-    val sensitiveReason: String = "",
 ) {
     /**
      * What the draft card shows as its one line of identity: the title

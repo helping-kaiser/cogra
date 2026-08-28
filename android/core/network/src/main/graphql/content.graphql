@@ -77,14 +77,20 @@ fragment CommentFields on Comment {
     ...MediaFields
   }
   attachmentsStatus
+  # No `avatar` here, deliberately.
+  #
+  # A comment's author picture is the most multiplied selection in the
+  # corpus: the thread read carries twenty comments each with three
+  # replies, so every field on a comment's author is priced eighty
+  # times over. Measured, it costs 560 of complexity — and the release
+  # ceiling's stated headroom leaves 224 to spare as it is, so this
+  # selection alone would fail the guard. The canonical `Removed` and
+  # `ComposeLanded` boards draw comment authors as monograms anyway.
   author {
     id
     handle
     displayName {
       value
-    }
-    avatar {
-      ...MediaFields
     }
   }
   createdAt

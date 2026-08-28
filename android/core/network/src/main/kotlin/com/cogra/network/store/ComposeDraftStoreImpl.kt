@@ -31,8 +31,6 @@ private data class StoredDraft(
     val description: String = "",
     val assets: List<StoredAsset> = emptyList(),
     val shape: String = "Tall",
-    val sensitive: Boolean = false,
-    val sensitiveReason: String = "",
 )
 
 @Singleton
@@ -71,8 +69,6 @@ class ComposeDraftStoreImpl @Inject constructor(
             assets = stored.assets.map { DraftAsset(it.uri, it.altText) },
             shape = runCatching { DraftShape.valueOf(stored.shape) }
                 .getOrDefault(DraftShape.Tall),
-            sensitive = stored.sensitive,
-            sensitiveReason = stored.sensitiveReason,
         )
     }
 
@@ -89,8 +85,6 @@ class ComposeDraftStoreImpl @Inject constructor(
             description = draft.description,
             assets = draft.assets.map { StoredAsset(it.uri, it.altText) },
             shape = draft.shape.name,
-            sensitive = draft.sensitive,
-            sensitiveReason = draft.sensitiveReason,
         )
         store.put(name, json.encodeToString(StoredDraft.serializer(), stored).encodeToByteArray())
     }

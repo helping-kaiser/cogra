@@ -59,8 +59,6 @@ class ComposeWizardScreenTest {
             onOpenSheet = { sheets += it },
             onCloseSheet = {},
             onLicenseChange = {},
-            onSensitiveChange = {},
-            onSensitiveReasonChange = {},
             onPDirectedChange = {},
             onNext = { nexts += 1 },
             onBack = { backs += 1 },
@@ -186,12 +184,20 @@ class ComposeWizardScreenTest {
     // -- The details stage --
 
     @Test
-    fun theDetailsStageDescribesEveryPicture() {
-        compose.setContent { Wizard(withPicks.copy(step = WizardStep.Details)) }
-        // One alt-text field per pick — the addition that keeps a
-        // gallery readable to someone who cannot see it.
-        compose.onNodeWithTag("wizard_alt_0", useUnmergedTree = true).performScrollTo()
-        compose.onNodeWithTag("wizard_alt_1", useUnmergedTree = true).assertExists()
+    fun theCropStageDescribesThePictureBeingFramed() {
+        compose.setContent { Wizard(withPicks.copy(step = WizardStep.Crop)) }
+        // The description sits beside the picture it describes, and it
+        // has to exist before the bytes move: `uploadMedia` takes the
+        // alt text and there is no `updateMedia`.
+        compose.onNodeWithTag("wizard_alt_0").assertExists()
+        // The second picture's field appears when it is the one framed.
+        compose.onNodeWithTag("wizard_alt_1").assertDoesNotExist()
+    }
+
+    @Test
+    fun theSecondPicturesDescriptionFollowsTheFilmstrip() {
+        compose.setContent { Wizard(withPicks.copy(step = WizardStep.Crop, framingIndex = 1)) }
+        compose.onNodeWithTag("wizard_alt_1").assertExists()
     }
 
     @Test
@@ -234,8 +240,16 @@ class ComposeWizardScreenTest {
     fun theSealsRowsOpenTheirOwnSheets() {
         compose.setContent { Wizard(ComposeWizardState(body = "x", step = WizardStep.Seal)) }
         compose.onNodeWithTag("wizard_seal_license_action").performClick()
-        compose.onNodeWithTag("wizard_seal_sensitive_action").performClick()
-        assertThat(sheets).containsExactly(SealSheet.License, SealSheet.Sensitive).inOrder()
+        compose.onNodeWithTag("wizard_seal_stance_action").performClick()
+        assertThat(sheets).containsExactly(SealSheet.License, SealSheet.Stance).inOrder()
+    }
+
+    @Test
+    fun theSealOffersNoSensitiveMarkItCannotSend() {
+        // The contract carries no author self-mark, so a row promising
+        // one would be a lie told to the person trusting it.
+        compose.setContent { Wizard(ComposeWizardState(body = "x", step = WizardStep.Seal)) }
+        compose.onNodeWithTag("wizard_seal_sensitive").assertDoesNotExist()
     }
 
     @Test

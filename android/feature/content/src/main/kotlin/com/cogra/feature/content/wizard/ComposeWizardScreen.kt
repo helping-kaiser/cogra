@@ -52,6 +52,13 @@ fun ComposeWizardRoute(
     onExpired: (label: String) -> Unit,
     onLeave: () -> Unit,
     onRestoreKey: () -> Unit,
+    /**
+     * The husk banner the shell rides above every write surface until
+     * the key is restored. The seal's own `ComposeKeyAbsent` card is
+     * the *last* word on a missing key; this is the first, and a
+     * writer should learn before they have filled in four stages.
+     */
+    keyBanner: @Composable () -> Unit = {},
     viewModel: ComposeWizardViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -105,8 +112,6 @@ fun ComposeWizardRoute(
         onOpenSheet = viewModel::onOpenSheet,
         onCloseSheet = viewModel::onCloseSheet,
         onLicenseChange = viewModel::onLicenseChange,
-        onSensitiveChange = viewModel::onSensitiveChange,
-        onSensitiveReasonChange = viewModel::onSensitiveReasonChange,
         onPDirectedChange = viewModel::onPDirectedChange,
         onNext = viewModel::onNext,
         onBack = { if (!viewModel.onBack()) viewModel.onLeave() },
@@ -131,6 +136,7 @@ fun ComposeWizardRoute(
         onDoneTuningReference = viewModel::onDoneTuningReference,
         onReferenceRelevanceChange = viewModel::onReferenceRelevanceChange,
         onReferenceSupportChange = viewModel::onReferenceSupportChange,
+        keyBanner = keyBanner,
     )
 }
 
@@ -161,8 +167,6 @@ internal fun ComposeWizardScreen(
     onOpenSheet: (SealSheet) -> Unit,
     onCloseSheet: () -> Unit,
     onLicenseChange: (LicenseChoice) -> Unit,
-    onSensitiveChange: (Boolean) -> Unit,
-    onSensitiveReasonChange: (String) -> Unit,
     onPDirectedChange: (Double) -> Unit,
     onNext: () -> Unit,
     onBack: () -> Unit,
@@ -187,6 +191,7 @@ internal fun ComposeWizardScreen(
     onDoneTuningReference: () -> Unit,
     onReferenceRelevanceChange: (String, Double) -> Unit,
     onReferenceSupportChange: (String, Double) -> Unit,
+    keyBanner: @Composable () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     // Back is the header's arrow and the system gesture alike: one
@@ -208,6 +213,8 @@ internal fun ComposeWizardScreen(
             trailingNote = if (state.step == WizardStep.Seal) "Last step" else null,
             testTag = "wizard_header",
         )
+
+        keyBanner()
 
         state.draftOffer?.let { held ->
             DraftOffer(draft = held, onContinue = onContinueDraft, onDiscard = onDiscardDraft)
@@ -231,7 +238,13 @@ internal fun ComposeWizardScreen(
                 )
 
                 WizardStep.Crop -> WizardBody(scrollable = true) {
-                    CropStepBody(state, onShapeChange, onFrameAsset, onCropsChanged)
+                    CropStepBody(
+                        state = state,
+                        onShapeChange = onShapeChange,
+                        onFrameAsset = onFrameAsset,
+                        onAltTextChange = onAltTextChange,
+                        onCropsChanged = onCropsChanged,
+                    )
                 }
 
                 WizardStep.Details -> WizardBody {
@@ -239,7 +252,6 @@ internal fun ComposeWizardScreen(
                         state = state,
                         onTitleChange = onTitleChange,
                         onDescriptionChange = onDescriptionChange,
-                        onAltTextChange = onAltTextChange,
                         onRetryUpload = onRetryUpload,
                         onEditBody = onBack,
                         onEditCrop = onBack,
@@ -316,13 +328,6 @@ internal fun ComposeWizardScreen(
         ModalBottomSheet(onDismissRequest = onCloseSheet, sheetState = sheetState) {
             when (state.sheet) {
                 SealSheet.License -> LicenseSheet(state.license, onLicenseChange, onCloseSheet)
-                SealSheet.Sensitive -> SensitiveSheet(
-                    marked = state.sensitive,
-                    reason = state.sensitiveReason,
-                    onMarkedChange = onSensitiveChange,
-                    onReasonChange = onSensitiveReasonChange,
-                    onDone = onCloseSheet,
-                )
                 SealSheet.Stance -> StanceSheet(
                     pDirected = state.pDirected,
                     onChange = onPDirectedChange,

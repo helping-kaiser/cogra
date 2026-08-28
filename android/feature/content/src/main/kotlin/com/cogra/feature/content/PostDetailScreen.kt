@@ -766,11 +766,14 @@ private fun CommentThread(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 comment.author?.let { author ->
+                    // No picture: the thread read does not ask for one
+                    // (see `CommentFields`), so a comment author is the
+                    // monogram — which is what the canonical boards
+                    // draw for them anyway.
                     ActorChip(
                         handle = author.handle,
                         displayName = author.displayName,
                         onOpen = { onOpenActor(author.handle) },
-                        avatarUrl = author.avatar?.url,
                         testTag = "comment_author_${comment.id}",
                     )
                 }

@@ -28,16 +28,16 @@ import com.cogra.core.designsystem.v2.token.Space
  * `ComposeDetails` — the optional title and description, the topics and
  * references sections, and (on the media path) the picked row.
  *
- * Two things are additions to the board rather than matches, and both
- * are named where they are built: the per-asset upload state, and the
- * alt-text fields.
+ * One thing here is an addition to the board rather than a match, and
+ * it is named where it is built: the per-asset upload state. The
+ * pictures' descriptions live on the crop stage, beside the picture
+ * being described.
  */
 @Composable
 internal fun ColumnScope.DetailsStepBody(
     state: ComposeWizardState,
     onTitleChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
-    onAltTextChange: (String, String) -> Unit,
     onRetryUpload: (String) -> Unit,
     onEditBody: () -> Unit,
     onEditCrop: () -> Unit,
@@ -55,7 +55,6 @@ internal fun ColumnScope.DetailsStepBody(
         if (state.mode == BodyMode.Media) {
             PickedRow(state, onEditBody, onEditCrop)
             UploadStatus(state, onRetryUpload)
-            AltTextSection(state, onAltTextChange)
         }
 
         CograTextField(
@@ -157,45 +156,6 @@ private fun UploadStatus(state: ComposeWizardState, onRetry: (String) -> Unit) {
                 text = "Retry",
                 onClick = { onRetry(asset.uri) },
                 testTag = "wizard_upload_retry_$index",
-            )
-        }
-    }
-}
-
-/**
- * One alt-text field per picked asset.
- *
- * **An addition.** No canonical board carries a place to describe a
- * picture, and `uploadMedia` takes `altText` at upload time — so
- * without this the app would publish galleries that a blind reader
- * cannot read at all, which android.md rules out from day one
- * ("Accessibility … part of the bar from day one, never retrofitted").
- * It is optional, exactly as the contract has it: a null alt text makes
- * an asset decorative rather than fabricating a description (D20).
- */
-@Composable
-private fun AltTextSection(state: ComposeWizardState, onAltTextChange: (String, String) -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(Space.x2),
-    ) {
-        Text(
-            text = "Describe your pictures",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Text(
-            text = "What a reader who cannot see them would need to know.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        state.picked.forEachIndexed { index, asset ->
-            CograTextField(
-                value = asset.altText,
-                onValueChange = { onAltTextChange(asset.uri, it) },
-                label = "Picture ${index + 1}",
-                optional = true,
-                testTag = "wizard_alt_$index",
             )
         }
     }
