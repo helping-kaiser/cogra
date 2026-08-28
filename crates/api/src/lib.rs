@@ -10,6 +10,7 @@ pub mod breach;
 pub mod content;
 pub mod ingest;
 pub mod l1;
+pub mod loaders;
 pub mod mailer;
 pub mod nodes;
 pub mod onboarding;

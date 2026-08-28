@@ -413,8 +413,7 @@ fn over_the_standing_cap(live: &[String], planned: &[PlannedReference]) -> Optio
     let claiming = planned
         .iter()
         .filter(|p| {
-            (p.relevance != 0.0 || p.support != 0.0)
-                && !live.iter().any(|target| *target == p.target.to_string())
+            (p.relevance != 0.0 || p.support != 0.0) && !live.contains(&p.target.to_string())
         })
         .count();
     (live.len() + claiming > MAX_LIVE_REFERENCES_PER_ARTIFACT).then(|| {

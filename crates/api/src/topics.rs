@@ -249,7 +249,7 @@ pub async fn stage_tags<B: L1Boundary>(
 fn over_the_standing_cap(live: &[String], planned: &[PlannedTag]) -> Option<String> {
     let claiming = planned
         .iter()
-        .filter(|t| t.relevance != 0.0 && !live.iter().any(|name| *name == t.name))
+        .filter(|t| t.relevance != 0.0 && !live.contains(&t.name))
         .count();
     (live.len() + claiming > MAX_LIVE_TOPICS_PER_ARTIFACT).then(|| {
         format!(
@@ -265,19 +265,17 @@ async fn live_names(
     author: &str,
     middle: &NodeId,
 ) -> Result<Vec<String>, TopicsError> {
-    Ok(
-        topics_store::topics_of(
-            pool,
-            &middle.to_string(),
-            author,
-            topics_store::TopicView::IncludingPending { actor: author },
-        )
-        .await
-        .map_err(|e| TopicsError::Internal(e.to_string()))?
-        .into_iter()
-        .map(|claim| claim.name)
-        .collect(),
+    Ok(topics_store::topics_of(
+        pool,
+        &middle.to_string(),
+        author,
+        topics_store::TopicView::IncludingPending { actor: author },
     )
+    .await
+    .map_err(|e| TopicsError::Internal(e.to_string()))?
+    .into_iter()
+    .map(|claim| claim.name)
+    .collect())
 }
 
 /// Prepares one standalone Tag — the gesture that adds a topic to
@@ -451,8 +449,8 @@ mod tests {
             over_the_standing_cap(&standing(MAX_LIVE_TOPICS_PER_ARTIFACT - 1), &fresh).is_none(),
             "the set reaches exactly the cap"
         );
-        let refusal =
-            over_the_standing_cap(&standing(MAX_LIVE_TOPICS_PER_ARTIFACT), &fresh).expect("refused");
+        let refusal = over_the_standing_cap(&standing(MAX_LIVE_TOPICS_PER_ARTIFACT), &fresh)
+            .expect("refused");
         assert!(refusal.contains("withdraw one first"), "{refusal}");
     }
 

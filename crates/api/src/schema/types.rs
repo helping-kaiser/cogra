@@ -6,6 +6,7 @@
 //! when `userErrors` is non-empty (the conventions section).
 
 use async_graphql::connection::{Connection, Edge};
+use async_graphql::dataloader::DataLoader;
 use async_graphql::{
     Context, Enum, InputValueError, InputValueResult, Interface, Object, Scalar, ScalarType,
     SimpleObject, Value,
@@ -29,6 +30,7 @@ use l1_standin::StandIn;
 
 use crate::auth::Viewer;
 use crate::l1::StandInBoundary;
+use crate::loaders::{ActorByAddressLoader, CommentByNodeLoader, PostByNodeLoader};
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 
 /// A stance dimension: a float constrained to the closed range
@@ -138,10 +140,7 @@ impl StanceBundle {
     /// (feed-ranking.md §8.1). Zero when the bundle already nets to
     /// `(0, 0)`.
     async fn severance_cost(&self) -> i32 {
-        self.sum
-            .severance_cost()
-            .try_into()
-            .unwrap_or(i32::MAX)
+        self.sum.severance_cost().try_into().unwrap_or(i32::MAX)
     }
 
     /// Where the supplied `pick` would land the bundle; null when the
@@ -1918,23 +1917,52 @@ pub enum ReferenceTarget {
 /// *net*: a citation revised twice folds to the sum of all three records,
 /// clipped to the census range, and a bundle netting to `(0, 0)` is
 /// withdrawn and never appears here.
-#[derive(SimpleObject)]
+/// The fold's own row, carried untyped: what the far end resolves to is
+/// the resolver's question, and the contract's own words for this type
+/// sit on the `#[Object]` impl below.
 pub struct ReferenceClaim {
+    pub target_id: String,
+    pub relevance: Dimension,
+    pub support: Dimension,
+    pub withdrawal_cost: i32,
+    pub pending: bool,
+}
+
+/// One standing citation from an artifact — a chip in the reference row.
+///
+/// The bundle key is (author, citing artifact, target) and its records
+/// *net*: a citation revised twice folds to the sum of all three records,
+/// clipped to the census range, and a bundle netting to `(0, 0)` is
+/// withdrawn and never appears here.
+#[Object]
+impl ReferenceClaim {
     /// The cited node, typed. Null when this instance cannot type the far
     /// end — the fold reads the mirror, which reaches further than both
     /// the display store and CoGra's own target policy — in which case
     /// `targetId` still names it.
-    pub target: Option<ReferenceTarget>,
+    async fn target(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<ReferenceTarget>> {
+        resolve_reference_target(ctx, &self.target_id).await
+    }
+
     /// The cited node's raw L1 identifier, always present: the citation
     /// stands as a substrate fact whether or not this instance can type
     /// its far end.
-    pub target_id: String,
+    async fn target_id(&self) -> &str {
+        &self.target_id
+    }
+
     /// How load-bearing the cited thing is to this artifact — effort `f`,
     /// folded and clipped to `[-1, 1]`.
-    pub relevance: Dimension,
+    async fn relevance(&self) -> Dimension {
+        self.relevance
+    }
+
     /// Endorsing versus refuting — enthusiasm `e`, folded and clipped.
     /// Strictly positive on both axes is what makes a mention a vouch.
-    pub support: Dimension,
+    async fn support(&self) -> Dimension {
+        self.support
+    }
+
     /// How many counter-records withdrawing this citation stages right
     /// now — the gesture's cost, since each is its own priced act
     /// (D11). Never zero: a bundle already netted to `(0, 0)` has left
@@ -1945,9 +1973,14 @@ pub struct ReferenceClaim {
     /// *before* it is confirmed. The clipped `relevance` and `support`
     /// beside it cannot answer this — the clip has already lost how far
     /// past `1` the raw sums reach.
-    pub withdrawal_cost: i32,
+    async fn withdrawal_cost(&self) -> i32 {
+        self.withdrawal_cost
+    }
+
     /// True while any record in the bundle is still in flight.
-    pub pending: bool,
+    async fn pending(&self) -> bool {
+        self.pending
+    }
 }
 
 /// One thing the reference finder offers as a citation target.
@@ -2090,6 +2123,13 @@ async fn topic_claims(
 /// same reason it does on the topic row: `references_of` attributes every
 /// row it returns to the author it was asked about, and an in-flight act
 /// belongs to whoever staged it.
+///
+/// The rows come back untyped: `ReferenceClaim.target` is a resolver, and
+/// that is what closes the N+1. async-graphql resolves list elements
+/// concurrently, so every claim on a page reaches the loaders inside one
+/// batching window and the whole page's far ends come back in a handful
+/// of queries (`crate::loaders`). Typing them here instead would put the
+/// same reads in a sequential loop, which no loader can batch.
 async fn reference_claims(
     ctx: &Context<'_>,
     l1_node_id: &str,
@@ -2114,18 +2154,16 @@ async fn reference_claims(
     .await
     .map_err(|e| async_graphql::Error::new(e.to_string()))?;
 
-    let mut claims = Vec::with_capacity(rows.len());
-    for row in rows {
-        claims.push(ReferenceClaim {
-            target: resolve_reference_target(ctx, &row.target).await?,
+    Ok(rows
+        .into_iter()
+        .map(|row| ReferenceClaim {
             target_id: row.target,
             relevance: Dimension(row.relevance),
             support: Dimension(row.support),
             withdrawal_cost: row.withdrawal_cost.try_into().unwrap_or(i32::MAX),
             pending: row.pending,
-        });
-    }
-    Ok(claims)
+        })
+        .collect())
 }
 
 /// Types one citation's far end from its raw L1 identifier.
@@ -2145,9 +2183,10 @@ pub(super) async fn resolve_reference_target(
     ctx: &Context<'_>,
     l1_node_id: &str,
 ) -> async_graphql::Result<Option<ReferenceTarget>> {
-    let pool = ctx.data::<PgPool>()?;
     match NodeId::parse(l1_node_id) {
-        Ok(NodeId::Prof(address)) => Ok(store::actor_identity_by_address(pool, &address)
+        Ok(NodeId::Prof(address)) => Ok(ctx
+            .data::<DataLoader<ActorByAddressLoader>>()?
+            .load_one(address)
             .await?
             .map(|identity| {
                 ReferenceTarget::Profile(User {
@@ -2234,9 +2273,10 @@ pub async fn resolve_node_id(
     ctx: &Context<'_>,
     l1_node_id: &str,
 ) -> async_graphql::Result<Option<Node>> {
-    let pool = ctx.data::<PgPool>()?;
     if let Ok(NodeId::Prof(address)) = NodeId::parse(l1_node_id) {
-        return Ok(store::actor_identity_by_address(pool, &address)
+        return Ok(ctx
+            .data::<DataLoader<ActorByAddressLoader>>()?
+            .load_one(address)
             .await?
             .map(|identity| {
                 Node::Profile(User {
@@ -2245,15 +2285,17 @@ pub async fn resolve_node_id(
                 })
             }));
     }
-    if let Some(post) = postgres_store::content::post_by_node(pool, l1_node_id)
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+    if let Some(post) = ctx
+        .data::<DataLoader<PostByNodeLoader>>()?
+        .load_one(l1_node_id.to_string())
+        .await?
     {
         return Ok(Some(Node::Post(PostType(post))));
     }
-    if let Some(comment) = postgres_store::content::comment_by_node(pool, l1_node_id)
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+    if let Some(comment) = ctx
+        .data::<DataLoader<CommentByNodeLoader>>()?
+        .load_one(l1_node_id.to_string())
+        .await?
     {
         return Ok(Some(Node::Comment(CommentType(comment))));
     }

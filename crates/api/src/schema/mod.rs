@@ -115,7 +115,11 @@ pub fn build(ctx: ApiContext) -> ApiSchema {
 /// Builds the schema under explicit budgets — the seam the budget tests
 /// drive both postures through.
 pub fn build_with(ctx: ApiContext, budgets: QueryBudgets) -> ApiSchema {
+    let loaders = crate::loaders::NodeLoaders::new(ctx.pool.clone());
     let mut builder = Schema::build(Query, Mutation, EmptySubscription)
+        .data(loaders.posts)
+        .data(loaders.comments)
+        .data(loaders.actors)
         .data(ctx.pool)
         .data(ctx.boundary)
         .data(ctx.funding)

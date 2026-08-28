@@ -1,7 +1,8 @@
 //! Slice 2.4 — the Reference act and its declared fold (roadmap "Slice
 //! 2.4"): planning refusals, the act tuple as the write path really
-//! stores it, the netting fold, the landed/pending split, and the
-//! withdrawal batch.
+//! stores it, the netting fold, the landed/pending split, the withdrawal
+//! batch, and the batched resolution the fold's far ends come back
+//! through.
 //!
 //! The orientation is the thing under test throughout. Reference is Review
 //! with its legs transposed, so the act tuple is (effort, enthusiasm) and
@@ -11,11 +12,17 @@
 //! fixtures that need controlled sums derive their storage orientation
 //! from `census::leg_params` rather than restating it.
 
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
+
 use api::l1::{L1Boundary, StandInBoundary};
+use api::loaders::NodeLoaders;
 use api::references::{
     self, MAX_LIVE_REFERENCES_PER_ARTIFACT, MAX_REFERENCES_PER_BATCH, ReferenceDraft,
     ReferenceError, ReferencesError,
 };
+use async_graphql::dataloader::{DataLoader, Loader};
 use common::l1::census::{Family, LegRole, leg_params};
 use common::l1::client::ActorKey;
 use l1_standin::{StandIn, StandInConfig};
@@ -478,7 +485,13 @@ async fn seed_reference(
 /// landed sequence out of the mirror by splitting the identifier, so a
 /// fixture that seeds under an author who then prepares has to speak the
 /// same grammar the write path allocates in.
-async fn seed_standing_set(pool: &PgPool, author: &str, artifact: &str, live: usize, netted: usize) {
+async fn seed_standing_set(
+    pool: &PgPool,
+    author: &str,
+    artifact: &str,
+    live: usize,
+    netted: usize,
+) {
     let mut seq = 9000;
     for i in 0..live {
         seed_reference(
@@ -535,9 +548,16 @@ async fn the_standing_reference_cap_refuses_the_citation_past_fifty(pool: PgPool
     .await;
 
     let e = bad_input(
-        references::prepare_reference(&rig.pool, &rig.boundary, GC, alice, artifact, &draft(target))
-            .await
-            .expect_err("refused"),
+        references::prepare_reference(
+            &rig.pool,
+            &rig.boundary,
+            GC,
+            alice,
+            artifact,
+            &draft(target),
+        )
+        .await
+        .expect_err("refused"),
     );
     assert_eq!(e.path, vec!["target".to_string()]);
     assert!(e.message.contains("withdraw one first"), "{}", e.message);
@@ -563,9 +583,16 @@ async fn a_netted_bundle_frees_a_slot_under_the_standing_reference_cap(pool: PgP
     )
     .await;
 
-    references::prepare_reference(&rig.pool, &rig.boundary, GC, alice, artifact, &draft(target))
-        .await
-        .expect("the freed slot admits the citation");
+    references::prepare_reference(
+        &rig.pool,
+        &rig.boundary,
+        GC,
+        alice,
+        artifact,
+        &draft(target),
+    )
+    .await
+    .expect("the freed slot admits the citation");
 }
 
 /// The cap is per (author, artifact): another author's fifty citations
@@ -939,6 +966,135 @@ async fn a_default_citation_quotes_a_one_act_withdrawal(pool: PgPool) {
         .await
         .expect("folds");
     assert_eq!(claims[0].withdrawal_cost, 1);
+}
+
+/// A loader that answers out of the same batched store call the real one
+/// does, while recording the key counts it was handed.
+///
+/// The real loaders hold a private pool and cannot be instrumented, so
+/// the property under test — that concurrent `load_one` calls arrive at
+/// `load` as ONE slice of many keys — is pinned against a delegate. What
+/// it proves is the library behaviour the read side depends on; the
+/// tests below it prove the production loaders answer correctly over the
+/// same store call.
+struct CountingPostLoader {
+    pool: PgPool,
+    batches: Arc<Mutex<Vec<usize>>>,
+}
+
+impl Loader<String> for CountingPostLoader {
+    type Value = content_store::Post;
+    type Error = String;
+
+    async fn load(
+        &self,
+        keys: &[String],
+    ) -> Result<HashMap<String, content_store::Post>, Self::Error> {
+        self.batches.lock().expect("lock").push(keys.len());
+        Ok(content_store::posts_by_nodes(&self.pool, keys)
+            .await
+            .map_err(|e| e.to_string())?
+            .into_iter()
+            .map(|post| (post.l1_node_id.clone(), post))
+            .collect())
+    }
+}
+
+/// The N+1 fix, at the level it actually happens: eight far ends asked
+/// for concurrently reach the batch function once, as eight keys — not
+/// eight times as one. A sequential loop would show eight batches of
+/// one, which is the shape this replaces.
+///
+/// The batching window is widened well past its default so the eight
+/// tasks are certainly all in flight when it closes: what is under test
+/// is what a batch collects, not how fast a test machine schedules.
+#[sqlx::test(migrations = "../../migrations")]
+async fn concurrent_target_resolutions_reach_the_loader_as_one_batch(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, key) = rig.funded_actor("alice").await;
+    let mut nodes = Vec::new();
+    for i in 0..8 {
+        let post = rig.post(alice, &key, &format!("t{i}")).await;
+        nodes.push(rig.node_of(post).await);
+    }
+    let batches = Arc::new(Mutex::new(Vec::new()));
+    let loader = Arc::new(
+        DataLoader::new(
+            CountingPostLoader {
+                pool: rig.pool.clone(),
+                batches: Arc::clone(&batches),
+            },
+            tokio::spawn,
+        )
+        .delay(Duration::from_millis(200)),
+    );
+
+    let mut handles = Vec::new();
+    for node in nodes {
+        let loader = Arc::clone(&loader);
+        handles.push(tokio::spawn(async move { loader.load_one(node).await }));
+    }
+    let mut resolved = 0;
+    for handle in handles {
+        if handle.await.expect("join").expect("loads").is_some() {
+            resolved += 1;
+        }
+    }
+
+    assert_eq!(resolved, 8);
+    let seen = batches.lock().expect("lock").clone();
+    assert_eq!(seen, vec![8], "one batch carrying every key");
+}
+
+/// The production loaders, over the same store calls: every identifier
+/// that names something comes back, and one that names nothing is simply
+/// absent rather than an error.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_node_loaders_answer_for_what_exists_and_stay_silent_otherwise(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, key) = rig.funded_actor("alice").await;
+    let post = rig.post(alice, &key, "one").await;
+    let node = rig.node_of(post).await;
+    let address = rig.address(alice).await;
+    let loaders = NodeLoaders::new(rig.pool.clone());
+
+    assert_eq!(
+        loaders
+            .posts
+            .load_one(node.clone())
+            .await
+            .expect("loads")
+            .expect("post")
+            .id,
+        post,
+    );
+    assert!(
+        loaders
+            .posts
+            .load_one("mint:act:nobody:0:publish".to_string())
+            .await
+            .expect("loads")
+            .is_none(),
+    );
+    assert!(
+        loaders
+            .comments
+            .load_one(node)
+            .await
+            .expect("loads")
+            .is_none(),
+        "a post's identifier answers to no comment",
+    );
+    assert_eq!(
+        loaders
+            .actors
+            .load_one(address)
+            .await
+            .expect("loads")
+            .expect("actor")
+            .id,
+        alice,
+    );
 }
 
 /// Withdrawing what is not there stages nothing and says so, rather than
