@@ -215,6 +215,7 @@ label.
 | `test:integration:the-backoff-arms-at-the-threshold-doubles-and-caps`                       | the_backoff_arms_at_the_threshold_doubles_and_caps                       |
 | `test:integration:the-batch-cap-admits-ten-and-refuses-eleven`                              | the_batch_cap_admits_ten_and_refuses_eleven                              |
 | `test:integration:the-batch-lands-whole`                                                    | the_batch_lands_whole                                                    |
+| `test:integration:the-budget-ceilings-keep-their-stated-headroom`                           | the_budget_ceilings_keep_their_stated_headroom                           |
 | `test:integration:the-bundle-is-per-viewer`                                                 | the_bundle_is_per_viewer                                                 |
 | `test:integration:the-bundle-read-returns-raw-unclipped-sums`                               | the_bundle_read_returns_raw_unclipped_sums                               |
 | `test:integration:the-cap-is-checked-before-the-entries`                                    | the_cap_is_checked_before_the_entries                                    |

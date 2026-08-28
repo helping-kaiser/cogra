@@ -97,7 +97,7 @@ async fn a_modest_connection_query_fits_the_budget(pool: PgPool) {
 /// An author-owned fold list takes no page argument, so nothing in the
 /// query says what it costs — `FOLD_LIST_BOUND` does. Pinning the exact
 /// flip point is what keeps that bound from drifting silently: one
-/// `relevance` per row prices the whole read at `1 + (20 + 1)` — the
+/// `relevance` per row prices the whole read at `1 + (50 + 1)` — the
 /// `post` field, then the fold field plus its bound many one-cost rows.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_fold_list_charges_its_stated_bound(pool: PgPool) {

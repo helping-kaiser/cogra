@@ -245,34 +245,39 @@ it, where the entry stays put.
 
 Every request is priced in validation, before any resolver runs
 (roadmap.md slice 1.1): query **depth** is capped at 15 levels,
-and total **complexity** at 100 000 fields. A connection field
+and total **complexity** at 250 000 fields. A connection field
 costs its requested (or default) page size times the per-item
 cost, so a nested full-page-connections query prices
 multiplicatively; an author-owned fold list (`topics`,
 `references`) takes no page argument and costs a stated bound of
-20 rows times the per-row cost. A tripped budget is a
+50 rows times the per-row cost. A tripped budget is a
 message-only GraphQL validation error ("Query is nested too
 deep." / "Query is too complex."), with no `extensions.code` —
 clients treat it as a generic transport failure.
 
+**The fold bound is enforced, not assumed.** Fifty is the
+write-side cap on one author's standing set per artifact, per
+fold family — so a fold list cannot serve more rows than it was
+priced for, and the budget is a bound on the server's work rather
+than a hope about it.
+
 **The ceilings are measured, not chosen.** Both are derived from
 replaying every committed operation of both clients against the
-schema; the heaviest is the Android post-detail read at 70 088
-complexity and 12 levels, and 100 000 leaves it ~1.4× headroom.
+schema; the heaviest is the Android post-detail read at 176 198
+complexity and 12 levels, and 250 000 leaves it ~1.4× headroom.
 A standing test replays the whole corpus under both postures and
-fails by operation name, so a client document that outgrows a
-ceiling is caught in CI rather than on a device. Both postures
-carry the *same* ceilings: a looser dev budget stops being a
-preview of release, and a document refused only in production is
-the failure this rule exists to prevent.
+fails by operation name, and re-measures it by bisection so a
+document growing *into* the headroom fails before it grows past
+the ceiling. Both postures carry the *same* ceilings: a looser dev
+budget stops being a preview of release, and a document refused
+only in production is the failure this rule exists to prevent.
 
-The multiplicative pricing is a demand bound, not a promise about
-the server's work. A post-detail read may legitimately demand up
-to 20 comments × 4 (itself plus three replies) × 20 standing
-citations, and each citation resolves its target separately —
-bounding that is the serving question the fold lists leave open
-(they return the author's whole standing set, with no cap to
-price against).
+The multiplicative pricing is a demand bound on what a query may
+ask for, and the server's own work is bounded separately: a
+post-detail read may legitimately demand up to 20 comments × 4
+(itself plus three replies) × 50 standing citations, and the far
+ends of all of them are resolved in batches — one read per node
+class per page, not one per citation.
 
 **Introspection is disabled in release builds** — not secrecy
 (the repo is public; the contract travels as the checked-in

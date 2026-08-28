@@ -54,12 +54,13 @@ pub struct ApiContext {
 /// message-only validation error.
 ///
 /// Both numbers are measured, not chosen: the ceilings below come from
-/// replaying every committed client document against this schema, and
+/// replaying every committed client document against this schema.
 /// `tests/client_operations.rs` fails by operation name if either
-/// posture stops admitting one. The heaviest operation either client
-/// sends is the Android post-detail read at **70 088** complexity and
-/// **12** levels; the standard introspection query is cheap (181) but
-/// deep (13).
+/// posture stops admitting one, and re-measures the corpus by bisection
+/// so a document growing into the headroom fails before it grows past
+/// the ceiling. The heaviest operation either client sends is the
+/// Android post-detail read at **176 198** complexity and **12** levels;
+/// the standard introspection query is cheap (181) but deep (13).
 #[derive(Debug, Clone, Copy)]
 pub struct QueryBudgets {
     pub depth: usize,
@@ -71,12 +72,12 @@ impl QueryBudgets {
     /// The production posture: introspection off — the schema is
     /// already public as the checked-in `schema.graphql`.
     ///
-    /// 100 000 clears the heaviest client operation with ~1.4×
+    /// 250 000 clears the heaviest client operation with ~1.4×
     /// headroom, and 15 levels clear the deepest with three to spare.
     pub fn release() -> Self {
         Self {
             depth: 15,
-            complexity: 100_000,
+            complexity: 250_000,
             introspection_enabled: false,
         }
     }
@@ -94,7 +95,7 @@ impl QueryBudgets {
     pub fn dev() -> Self {
         Self {
             depth: 15,
-            complexity: 100_000,
+            complexity: 250_000,
             introspection_enabled: true,
         }
     }
