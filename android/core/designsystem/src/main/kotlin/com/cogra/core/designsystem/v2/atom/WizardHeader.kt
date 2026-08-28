@@ -44,6 +44,7 @@ fun WizardHeader(
     actionText: String? = null,
     onAction: (() -> Unit)? = null,
     actionEnabled: Boolean = true,
+    trailingNote: String? = null,
     testTag: String? = null,
 ) {
     Row(
@@ -85,6 +86,16 @@ fun WizardHeader(
 
         Box(Modifier.weight(1f))
 
+        // The seal's "Last step" — the one place a wizard header states where
+        // the reader is, and it is a plain note rather than a step count.
+        if (trailingNote != null) {
+            Text(
+                text = trailingNote,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
         if (actionText != null && onAction != null) {
             CograButton(
                 text = actionText,
@@ -111,6 +122,7 @@ private fun WizardHeaderVariants() {
             )
             WizardHeader(title = "Crop", onBack = {}, actionText = "Next", onAction = {})
             WizardHeader(title = "Details", onBack = {})
+            WizardHeader(title = "What you sign", onBack = {}, trailingNote = "Last step")
             WizardHeader(
                 title = "New post",
                 onBack = {},
