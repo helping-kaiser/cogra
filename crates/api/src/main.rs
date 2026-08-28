@@ -137,9 +137,8 @@ async fn main() -> anyhow::Result<()> {
         .map_err(|e| anyhow::anyhow!("CLIENT_IP_SOURCE unrecognized: {e}"))?;
 
     let media = api::media::MediaConfig::from_env()?;
-    let blobs: Arc<dyn api::media::BlobStore> = Arc::new(
-        api::media::blob::s3(&media.s3).context("building the media store client")?,
-    );
+    let blobs: Arc<dyn api::media::BlobStore> =
+        Arc::new(api::media::blob::s3(&media.s3).context("building the media store client")?);
     tracing::info!(
         endpoint = %media.s3.endpoint,
         bucket = %media.s3.bucket,

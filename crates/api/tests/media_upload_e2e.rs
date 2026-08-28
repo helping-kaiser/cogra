@@ -242,7 +242,9 @@ async fn an_upload_stores_stripped_bytes_under_their_own_digest(pool: PgPool) {
     rig.seed_member("author", "author@example.com").await;
     let token = rig.log_in("author@example.com").await;
 
-    let uploaded = rig.upload(&token, Some("  A sunset  "), &photo_with_location()).await;
+    let uploaded = rig
+        .upload(&token, Some("  A sunset  "), &photo_with_location())
+        .await;
     assert_eq!(
         uploaded["userErrors"].as_array().map(Vec::len),
         Some(0),
@@ -298,8 +300,12 @@ async fn re_uploading_the_same_picture_returns_the_same_asset(pool: PgPool) {
     rig.seed_member("author", "author@example.com").await;
     let token = rig.log_in("author@example.com").await;
 
-    let first = rig.upload(&token, Some("Once"), &photo_with_location()).await;
-    let second = rig.upload(&token, Some("Twice"), &photo_with_location()).await;
+    let first = rig
+        .upload(&token, Some("Once"), &photo_with_location())
+        .await;
+    let second = rig
+        .upload(&token, Some("Twice"), &photo_with_location())
+        .await;
 
     let first_id = first["media"]["id"].as_str().expect("id");
     assert_eq!(

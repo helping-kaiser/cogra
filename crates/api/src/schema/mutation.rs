@@ -1859,6 +1859,11 @@ impl Mutation {
     /// design: a client sends its gallery concurrently, and each upload
     /// then retries on its own instead of a ten-photo request failing
     /// whole on the tenth picture.
+    ///
+    /// Reading the spooled temporary file and decoding the picture are
+    /// both blocking work, so they run on the blocking pool — left on
+    /// the async runtime, one upload would stall every other request
+    /// behind it.
     async fn upload_media(
         &self,
         ctx: &Context<'_>,
@@ -1892,9 +1897,6 @@ impl Mutation {
         let value = input.file.value(ctx)?;
         let max_upload_bytes = config.max_upload_bytes;
 
-        // Reading a spooled temp file and decoding a picture are both
-        // blocking work; running them on the async runtime would stall
-        // every other request behind one upload.
         let processed = tokio::task::spawn_blocking(move || {
             use std::io::Read;
             let mut bytes = Vec::new();

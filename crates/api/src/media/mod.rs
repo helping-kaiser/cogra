@@ -140,10 +140,7 @@ impl MediaConfig {
                 endpoint: env_or("MEDIA_S3_ENDPOINT", &base.s3.endpoint),
                 bucket: env_or("MEDIA_BUCKET", &base.s3.bucket),
                 access_key_id: env_or("MEDIA_ACCESS_KEY_ID", &base.s3.access_key_id),
-                secret_access_key: env_or(
-                    "MEDIA_SECRET_ACCESS_KEY",
-                    &base.s3.secret_access_key,
-                ),
+                secret_access_key: env_or("MEDIA_SECRET_ACCESS_KEY", &base.s3.secret_access_key),
                 region: env_or("MEDIA_REGION", &base.s3.region),
             },
             base_url: env_or("MEDIA_BASE_URL", &base.base_url)
@@ -154,10 +151,7 @@ impl MediaConfig {
                 "MEDIA_ORPHAN_REAPER_INTERVAL_SECS",
                 base.orphan_reaper_interval_secs,
             )?,
-            orphan_max_age_secs: env_parsed(
-                "MEDIA_ORPHAN_MAX_AGE_SECS",
-                base.orphan_max_age_secs,
-            )?,
+            orphan_max_age_secs: env_parsed("MEDIA_ORPHAN_MAX_AGE_SECS", base.orphan_max_age_secs)?,
         })
     }
 
