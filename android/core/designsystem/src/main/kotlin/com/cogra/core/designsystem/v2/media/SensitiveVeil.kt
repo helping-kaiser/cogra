@@ -55,6 +55,11 @@ import com.cogra.core.designsystem.v2.token.Veil
  *    pixels does nothing for a screen reader, so the veil replaces the
  *    subtree's semantics with its own description and its reveal action.
  *
+ * The veil never grows what it covers — that is what makes revealing move
+ * nothing — so its chrome is bounded by the body's own size. It is sized for
+ * a post's body region, which always carries media or several lines of text;
+ * wrapping a single line would clip the chrome rather than expand it.
+ *
  * @param reason the author's optional stated reason, shown on the veil when
  *   they self-marked the post (design/readme.md §13).
  */
