@@ -329,15 +329,71 @@ can land in any order — 2.3 (topics) needs only the text core.
   land on their profile from the render.
 - **Surfaces:** backend, API, Android, web.
 
-### Slice 2.5 — Media
+### Slice 2.5.1 — Images and galleries
 
-- `uploadMedia` and blob storage — the slice's new
-  infrastructure — envelope media digests, the attachment
-  junctions, and the gallery surfaces
-  ([data-model.md](data-model.md),
-  [post.md](../instances/post.md)).
+The media service is built whole here — it is video-ready from
+the start — and delivery splits by content kind.
+
+- **The media service**: a standalone S3-compatible object store
+  as its own container, behind a `BlobStore` trait that speaks
+  S3 because the store eventually leaves this machine
+  ([architecture.md](architecture.md)). Uploads enter through
+  `uploadMedia`, which sniffs, strips metadata, probes by
+  decoding, digests, and writes the object before the row.
+- **The envelope's media manifest** (guild key 5) and the
+  profile's avatar and cover slots (keys 11 and 12) — digest,
+  mime and alt text per asset, array position carrying order
+  ([data-model.md](data-model.md)).
+- **Version-keyed galleries**: post and comment attachment rows
+  key on the version row, so the gallery follows the winning
+  version as the text does, with the reverse index the junction
+  design is justified by ([post.md §4](../instances/post.md)).
+- **The body XOR**: a post's body is words or media, never both;
+  a comment stays words plus optional media
+  ([api-spec.md](api-spec.md)).
+- **Galleries as bounded fold lists**, ten per post and four per
+  comment, priced at their caps rather than a page size.
+- **Avatars and covers** through the same upload path, with
+  three-valued profile updates and the monogram as the permanent
+  no-picture fallback.
+- **The compose wizard**, built as ruled and visually matched to
+  the design canvas — body-first pick, crop, details, licence
+  sheet, sensitive self-mark, seal screen — layered atoms →
+  master components → variants → screens. Components that
+  diverge from the old ones ship beside them as the **2.0
+  components**; old screens migrate in their own later passes.
+- Clients downscale, re-encode to WebP, and bake the author's
+  crop on device, so EXIF never reaches the wire and the server
+  strips again rather than trusting that.
 - **Hand test:** post a photo from the phone; see it in the
   feed on the web.
+- **Surfaces:** backend, API, Android, web.
+
+### Slice 2.5.2 — Video
+
+- Video through the same service: the per-asset poster as a real
+  foreign key on the asset row, so a poster is redacted with its
+  video ([data-model.md](data-model.md)); container and codec
+  validation; per-type size caps; `durationMs` reading a value.
+- The wizard's cover step, and animated WebP and GIF.
+- Autoplay muted on visibility with one global sticky mute, and
+  the viewer's real controls — settled design, unbuilt.
+- **Hand test:** post a video from the phone; watch it autoplay
+  muted in the web feed and take sound on tap.
+- **Surfaces:** backend, API, Android, web.
+
+### Slice 2.5.3 — The seal-adjacent settings
+
+The non-media rulings the compose session produced, separable
+from the media path and carrying their own doc write-back:
+
+- The **default-license account setting** and the sensitive
+  self-mark's contract field, which the wizard needs and the
+  contract does not yet carry.
+- **Edit as one batch**: an edit carrying its topic and citation
+  acts together.
+- Media in the **comment composer**, the **media viewer**, and
+  the full feed-card redesign pass.
 - **Surfaces:** backend, API, Android, web.
 
 ### Slice 2.6 — Private viewer state
@@ -470,7 +526,10 @@ can land in any order — 2.3 (topics) needs only the text core.
   ([collectives.md §2](../instances/collectives.md)) — the
   member-held splits are the Q30-gated workstream below.
 - Chats: creation, membership flows, messaging, E2EE with client-side
-  keys ([chats.md](../instances/chats.md)).
+  keys ([chats.md](../instances/chats.md)). The chat-message
+  attachment junction is re-keyed on the version row and gains
+  its reverse index here, with the write path that measures it
+  ([data-model.md](data-model.md)).
 - `actAs` across the write surface — posting, tagging, and
   stancing as a Collective ([api-spec.md](api-spec.md)
   "Conventions") — moved here from slice 2: a Collective is the
@@ -506,6 +565,9 @@ can land in any order — 2.3 (topics) needs only the text core.
   ([ledger.md](ledger.md), [items.md](../instances/items.md)).
 - No fee lines on either flow — protocol income stays at the ladder
   gate ([economics.md §7](../primitive/economics.md#7-the-conservation-equation)).
+- The item attachment junction is re-keyed on the version row and
+  gains its reverse index here, with the write path that measures
+  it ([data-model.md](data-model.md)).
 - **Hand test:** tip a post and see the public stance land with its
   pointer; buy an Item end to end — fund, bid, accept, ratify,
   title moving at the boundary, the covenant paying out.
