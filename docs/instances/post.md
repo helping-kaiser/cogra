@@ -52,8 +52,17 @@ The Publish record carries:
   [platform-guidelines.md §5](platform-guidelines.md#5-license-and-provenance-obligations).
 - **The payload envelope.** The Peer Content Envelope carries the
   Post's structured fields — title, description, body — and the
-  digests of attached media; media bytes live in blob storage,
-  witnessed transitively through the digests.
+  media manifest; media bytes live in the media store, witnessed
+  transitively through the digests the manifest commits. One
+  manifest entry per asset: the digest of the bytes, the type
+  they are read as, and the alt text describing them, with the
+  entry's position carrying gallery order.
+
+A Post's **body is words or media, never both** — one picture, a
+set, or one video with a cover. Words that belong beside a
+picture are the description. Title and description stay optional;
+the body is the one thing a Post cannot go without, and the
+envelope carries either a body text or a manifest.
 
 One act, two homes. L1 accepts the structural record with the
 payload witness; CoGra — the carriage service — holds the payload
@@ -76,7 +85,7 @@ social-contract governance, per
 | Piece | Home |
 |---|---|
 | Title, description, body | Envelope fields on the Publish (and edit) payloads; Postgres display rows for query and render |
-| Media | Bytes in blob storage; digests committed in the envelope |
+| Media | Bytes in the media store; the envelope's manifest commits each asset's digest, type and alt text; Postgres junction rows on the version carry the gallery's order and cover |
 | Topics | Tag hyper-edges toward Types (§3) |
 | Quotes, embeds, mentions | Reference hyper-edges with the Post as citing artifact (§3) |
 | Stances | Opinion records toward the node |
@@ -160,6 +169,18 @@ The instantiation of the node-value update rule
   a field the payload omits is a Post without that field.
   Replacing media is new digests in a new edit payload; the old
   bytes' digests stay committed on the superseded record.
+  Reordering a gallery is an edit like any other and costs one
+  act, because the order rides the payload with everything else —
+  never one act per picture moved. An edit may swap words for
+  pictures or pictures for words; the body stays exactly one of
+  the two.
+- **The gallery follows the winning version.** A post's
+  attachment rows are keyed on its version row, so the rendered
+  gallery is the winning version's gallery and nothing else's. A
+  pending edit that changes the pictures and then expires takes
+  its gallery with it, leaving the previous version's words and
+  pictures together; a superseded version keeps its own rows and
+  renders as it stood.
 
 Every edit is a priced act — `θ`-debited, permanently counted.
 History is public: superseded payloads remain published unless
