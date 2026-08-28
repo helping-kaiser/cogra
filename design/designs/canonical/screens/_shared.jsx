@@ -31,6 +31,10 @@ const {
   SheetItem,
   SheetTitle,
   TextField,
+  SearchBar,
+  Chip,
+  SegmentedFilter,
+  Checkbox,
   StancePad,
   StanceReadout,
   SensitiveVeil,
@@ -167,6 +171,169 @@ const READER_POST_MENU = [
   { label: "Cite in a new post", onSelect: () => {} },
   { label: "License terms", onSelect: () => {} },
 ];
+
+/* A quiet section caption (the references sheet's groups, Explore's recents,
+   the sectioned surfaces). */
+function SectionLabel({ children }) {
+  return (
+    <span
+      style={{
+        display: "block",
+        padding: "12px 24px 4px",
+        fontSize: "var(--text-label-small)",
+        lineHeight: "var(--text-label-small--line-height)",
+        fontWeight: "var(--text-label-small--font-weight)",
+        letterSpacing: "var(--text-label-small--letter-spacing, 0.5px)",
+        color: "var(--text-secondary)",
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
+/* A device-local recent query — a quiet row, never a record (readme §13). */
+function RecentRow({ text }) {
+  return (
+    <button
+      type="button"
+      className="cg-state cg-focus"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        minHeight: "var(--touch-target-min)",
+        width: "100%",
+        border: 0,
+        background: "none",
+        padding: "0 24px",
+        cursor: "pointer",
+        fontFamily: "var(--font-sans)",
+        color: "var(--on-surface)",
+        textAlign: "left",
+      }}
+    >
+      <span style={{ display: "inline-flex", color: "var(--text-secondary)" }}>
+        <Icon name="search" size={18} />
+      </span>
+      <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{text}</span>
+    </button>
+  );
+}
+
+/* The orbit teaser — token colours only: item 16's galaxy, hinted. */
+function OrbitField({ height = 180 }) {
+  return (
+    <Raw
+      style={{ display: "block", lineHeight: 0 }}
+      html={`<svg viewBox="0 0 358 ${height}" width="100%" height="${height}" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
+        <line x1="40" y1="${height * 0.55}" x2="140" y2="${height * 0.3}" stroke="var(--border-hairline)" stroke-width="1"/>
+        <line x1="140" y1="${height * 0.3}" x2="230" y2="${height * 0.62}" stroke="var(--border-hairline)" stroke-width="1"/>
+        <line x1="230" y1="${height * 0.62}" x2="318" y2="${height * 0.38}" stroke="var(--border-hairline)" stroke-width="1"/>
+        <line x1="140" y1="${height * 0.3}" x2="196" y2="${height * 0.14}" stroke="var(--border-hairline)" stroke-width="1"/>
+        <circle cx="40" cy="${height * 0.55}" r="7" fill="var(--secondary-container)"/>
+        <circle cx="140" cy="${height * 0.3}" r="12" fill="var(--primary)"/>
+        <circle cx="196" cy="${height * 0.14}" r="4" fill="var(--outline)"/>
+        <circle cx="230" cy="${height * 0.62}" r="9" fill="var(--primary-container)"/>
+        <circle cx="318" cy="${height * 0.38}" r="6" fill="var(--secondary-container)"/>
+        <circle cx="286" cy="${height * 0.78}" r="3" fill="var(--outline)"/>
+        <circle cx="90" cy="${height * 0.82}" r="4" fill="var(--outline)"/>
+      </svg>`}
+    />
+  );
+}
+
+/* The seam — where the ranked results end and the newest tail begins. */
+function Seam() {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 24px" }}>
+      <span style={{ flex: 1, height: 1, background: "var(--border-hairline)" }} />
+      <span
+        style={{
+          flex: "none",
+          fontSize: "var(--text-label-small)",
+          lineHeight: "var(--text-label-small--line-height)",
+          fontWeight: "var(--text-label-small--font-weight)",
+          color: "var(--text-secondary)",
+        }}
+      >
+        Beyond your graph — newest first
+      </span>
+      <span style={{ flex: 1, height: 1, background: "var(--border-hairline)" }} />
+    </div>
+  );
+}
+
+/* The searching view's ONE trigger, reading the whole view back in words (the
+   FeedFilter idiom) — it opens the filter sheet. */
+function SearchFilterTrigger({ reading }) {
+  return (
+    <button
+      type="button"
+      className="cg-state cg-focus"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        flex: 1,
+        minHeight: 40,
+        padding: "0 16px",
+        border: "1px solid var(--border-field)",
+        borderRadius: "var(--radius-full)",
+        background: "none",
+        cursor: "pointer",
+        fontFamily: "var(--font-sans)",
+        color: "var(--text-secondary)",
+        fontSize: "var(--text-body-small)",
+        lineHeight: "var(--text-body-small--line-height)",
+        textAlign: "left",
+        boxSizing: "border-box",
+      }}
+    >
+      {reading}
+    </button>
+  );
+}
+
+/* The "?" affordance — one per screen (readme §13), 32px ring in a 48px target. */
+function HelpDot() {
+  return (
+    <button
+      type="button"
+      aria-label="How searching works"
+      className="cg-focus"
+      style={{
+        display: "grid",
+        placeItems: "center",
+        height: "var(--touch-target-min)",
+        width: "var(--touch-target-min)",
+        border: 0,
+        background: "none",
+        borderRadius: "var(--radius-full)",
+        cursor: "pointer",
+        flex: "none",
+      }}
+    >
+      <span
+        aria-hidden="true"
+        style={{
+          display: "grid",
+          placeItems: "center",
+          height: "32px",
+          width: "32px",
+          borderRadius: "var(--radius-full)",
+          border: "1px solid var(--border-hairline)",
+          color: "var(--primary)",
+          fontFamily: "var(--font-sans)",
+          fontSize: "var(--text-label-large)",
+          fontWeight: "var(--text-label-large--font-weight)",
+        }}
+      >
+        ?
+      </span>
+    </button>
+  );
+}
 
 /* The post-detail column: the read surface a card opens into. */
 function DetailColumn({ children }) {

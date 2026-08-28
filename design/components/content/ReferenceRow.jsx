@@ -26,6 +26,7 @@ const KIND_GLYPHS = {
   campaign: "campaign",
   offer: "sell",
   chat: "forum",
+  message: "send",
 };
 
 function LeadingMark({ kind, name, src }) {
@@ -63,7 +64,7 @@ function LeadingMark({ kind, name, src }) {
    edge: the signed pair in the references sheet, the viewer-relative rank in
    ranked search results, the age past the seam. (`pair` remains as its old
    name.) */
-export function ReferenceRow({ kind = "post", name, sub, src, pair, value, onOpen }) {
+export function ReferenceRow({ kind = "post", name, sub, src, pair, value, rank, onOpen }) {
   const edge = value ?? pair;
   return (
     <button
@@ -113,18 +114,39 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, value, onOpe
           </span>
         )}
       </span>
-      {edge && (
+      {/* A RANK wears the score's own glyph, so the number is recognized before
+          it is read — the same graph mark the post card's affordance row
+          carries. A plain `value` (the signed pair, an age) stays bare. */}
+      {rank ? (
         <span
           style={{
             flex: "none",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "4px",
             fontSize: "var(--text-body-small)",
             lineHeight: "var(--text-body-small--line-height)",
             color: "var(--text-secondary)",
             whiteSpace: "nowrap",
           }}
         >
-          {edge}
+          <Icon name="graph" size={14} />
+          {rank}
         </span>
+      ) : (
+        edge && (
+          <span
+            style={{
+              flex: "none",
+              fontSize: "var(--text-body-small)",
+              lineHeight: "var(--text-body-small--line-height)",
+              color: "var(--text-secondary)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {edge}
+          </span>
+        )
       )}
     </button>
   );

@@ -436,7 +436,7 @@ exists in `web/src/lib/ui/` (and, unless noted, in Android's
 |---|---|
 | `components/core/` | `Button`, `Card`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip` |
 | `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow` |
-| `components/forms/` | `TextField`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode` |
+| `components/forms/` | `TextField`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
 | `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `BorrowedViewBand`, `CograBand` |
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader` |
 | `components/states/` | `EmptyState`, `LoadingState` |
@@ -1161,6 +1161,12 @@ as Q46 in docs/open-questions.md):
   edge; the screen becomes kinds filter, order controls, results.
 - **Chats are public reads**: a chat result opens the chat's read
   surface for anyone; E2E chats show ciphertext but they show.
+- **Built as the hybrid** (2026-08-28, after ideation): direction 1's
+  rest (the orbit hero card) with direction 2's searching (the band
+  gives way to the field; ONE worded trigger + sheet for kinds,
+  order, and the seen toggle). A rank on a row wears the score's
+  graph glyph, so the number is recognized before it is read. A chat
+  message's mark is `send`; the chat that holds it stays `forum`.
 
 ### Masters, variants, and screens — 2026-08-28
 

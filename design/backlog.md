@@ -148,12 +148,16 @@ picked chip shows its default pair, tap edits via the reader's
 chosen stance input) lands when the compose wizard boards convert
 to the screens pipeline (item 17).
 
-### 9 · Search + results · *design* · **in progress (2026-08-28)**
-Rulings settled (readme §13 *The search rulings*, Q46): ranked-first
-ordering with the seam, seen toggle, `@handle` / `#topic` scope
-operators, ranks on every kind, the Explore tab sharing its slot
-with the orbit entry. Produces the search field variant of
-`TextField`; the result rows are `ReferenceRow` (item 18).
+### 9 · Search + results · *design* · **built**
+`designs/canonical/` — the Explore row (2026-08-28): at rest (the
+field, the orbit hero, device-local recents), searching (worded
+filter trigger + sheet, ranked rows wearing the graph glyph, the
+seam, the aged tail, @/# scope operators with two-line indirect
+hits), the filter sheet, and nothing-found. Rulings in readme §13 +
+Q46; ideation on the "CoGra search" canvas (hybrid of directions
+1 + 2 chosen). Ported back: `SearchBar` (forms/), `CograBand`
+(navigation/), `ReferenceRow` `rank`/`sub`/`message`, the `send`
+glyph, the Searching "?" text in copy-voice.md.
 
 ### 19 · The feed's filter + ordering on the canonical screens · *design*
 Item 4 built `FeedFilter` (kinds, forms, Ranked/Newest order, the
