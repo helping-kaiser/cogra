@@ -334,9 +334,12 @@ async fn refuses_an_update_without_the_anchoring_registration(pool: PgPool) {
     }
 }
 
-/// The avatar and cover slots, whose three values differ from every other
-/// profile field's two.
 mod pictures {
+    //! ´mod:module:pictures´
+    //!
+    //! The avatar and cover slots, whose three values differ from every
+    //! other profile field's two.
+
     use super::*;
     use postgres_store::media as media_store;
 
