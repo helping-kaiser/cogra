@@ -60,13 +60,14 @@ export function Chip({ label, selected = false, onToggle, ariaLabel, disabled = 
 
 /* A topic. The `#` is part of the word, not an icon: readers type it, and a topic
    without it reads as a name. It navigates, so it is an anchor. */
-export function TopicChip({ topic, href, onClick, inert = false }) {
+export function TopicChip({ topic, href, onClick, inert = false, style: override }) {
   const name = topic.replace(/^#/, "");
   const style = {
     ...PILL,
     border: "1px solid var(--border-hairline)",
     background: "var(--surface-card)",
     color: "var(--text-body)",
+    ...override,
   };
   // The inert cut: the same pill inside a larger tap target (the detail card's
   // topics line is ONE control opening the sheet) — a link nested in a button

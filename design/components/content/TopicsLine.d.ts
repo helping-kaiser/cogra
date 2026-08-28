@@ -1,7 +1,8 @@
 /**
  * The topics-and-citations line a content card wears — shared by `PostCard`
- * and `CommentCard`. One line on every variant, the citation count riding its
- * end; the topics-and-references sheet is the full set's home.
+ * and `CommentCard`. One line on every variant: at most two chips, then the
+ * counts in words ("· 23 topics · 3 references"); the topics-and-references
+ * sheet is the full set's home.
  */
 export interface TopicsLineProps {
   /** Topic names, with or without the `#`. */
@@ -13,7 +14,7 @@ export interface TopicsLineProps {
    * topics-and-references sheet, the chips inert inside it.
    */
   onOpen?: () => void;
-  /** Without `onOpen`: chips navigate, and only the count opens the sheet. */
+  /** Without `onOpen`: chips navigate, and only the counts open the sheet. */
   onOpenReferences?: () => void;
 }
 
