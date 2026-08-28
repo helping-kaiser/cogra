@@ -31,6 +31,13 @@ apollo {
         mapScalar("RecordId", "kotlin.String", "com.apollographql.apollo.api.StringAdapter")
         mapScalar("Dimension", "kotlin.Double", "com.apollographql.apollo.api.DoubleAdapter")
         mapScalar("DateTime", "java.time.Instant", "com.cogra.network.InstantAdapter")
+        // `uploadMedia` is the one operation carrying binary, and the
+        // binary rides the GraphQL multipart request (api-spec.md).
+        // `mapScalarToUpload` is Apollo's own hook for that scalar —
+        // it wires the multipart body and the `map`/`variables` parts
+        // without a hand-written adapter
+        // (apollographql.com/docs/kotlin/advanced/upload).
+        mapScalarToUpload("Upload")
     }
 }
 

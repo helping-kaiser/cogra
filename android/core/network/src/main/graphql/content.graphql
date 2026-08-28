@@ -17,11 +17,24 @@ fragment PostFields on Post {
     value
     status
   }
+  # The other half of the body: a post is words XOR media (D16), so a
+  # media post's `content.value` is null and this carries it instead.
+  # A bounded fold list, not a connection — the write side caps a post
+  # at ten, so the whole gallery is always servable (D9).
+  attachments {
+    ...MediaFields
+  }
+  # One state for the whole set: the veil covers the body as a unit
+  # (D12), so there is nothing per-asset to read.
+  attachmentsStatus
   author {
     id
     handle
     displayName {
       value
+    }
+    avatar {
+      ...MediaFields
     }
   }
   createdAt
@@ -58,11 +71,20 @@ fragment CommentFields on Comment {
     value
     status
   }
+  # A comment is text **plus** optional media — deliberately not the
+  # post's exclusive-or (D16) — capped at four.
+  attachments {
+    ...MediaFields
+  }
+  attachmentsStatus
   author {
     id
     handle
     displayName {
       value
+    }
+    avatar {
+      ...MediaFields
     }
   }
   createdAt

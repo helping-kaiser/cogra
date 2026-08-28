@@ -22,9 +22,16 @@ import com.cogra.crypto.encodeProposal
 import com.cogra.crypto.encodeVerifiedAct
 import com.cogra.domain.ActorRef
 import com.cogra.domain.ApplicationStatus
+import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.CommentView
 import com.cogra.domain.FieldStatus
+import com.cogra.domain.MediaAssetView
+import com.cogra.domain.MediaFieldUpdate
+import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.MediaProcessor
+import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.HashtagView
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
@@ -409,10 +416,11 @@ open class ThrowingContentRepository : ContentRepository {
     override suspend fun preparePost(
         title: String?,
         description: String?,
-        content: String,
+        content: String?,
         license: LicenseChoice,
         tags: List<TagClaim>,
         references: List<ReferenceClaim>,
+        attachments: List<AttachmentClaim>,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun preparePostEdit(
         id: String,
@@ -453,7 +461,25 @@ open class ThrowingProfileRepository : ProfileRepository {
         displayName: String,
         bio: String?,
         websiteUrl: String?,
+        avatar: MediaFieldUpdate,
+        cover: MediaFieldUpdate,
     ): Outcome<List<PreparedWriteView>> = throw UnsupportedOperationException()
+}
+
+/** Media-repository base: the upload throws until a test scripts it. */
+open class ThrowingMediaRepository : MediaRepository {
+    override suspend fun uploadMedia(
+        picture: ProcessedPicture,
+        altText: String?,
+    ): Outcome<MediaAssetView> = throw UnsupportedOperationException()
+}
+
+/** Media-processor base: the pipeline throws until a test scripts it. */
+open class ThrowingMediaProcessor : MediaProcessor {
+    override suspend fun process(uri: String, crop: CropSpec): ProcessedPicture? =
+        throw UnsupportedOperationException()
+
+    override suspend fun aspectRatio(uri: String): Float? = throw UnsupportedOperationException()
 }
 
 /** Topic-repository base: every call throws until overridden. */
