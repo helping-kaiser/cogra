@@ -53,11 +53,14 @@ export type PickedAsset = {
   readonly upload: AssetUpload;
 };
 
-export type SensitiveMark = {
-  readonly marked: boolean;
-  /** Shown on the veil; optional, so the empty string is a real state. */
-  readonly reason: string;
-};
+// THE SENSITIVE SELF-MARK IS NOT HERE, and its absence is deliberate.
+// ComposeSensitive draws it and D19 puts it in the wizard's scope, but the
+// contract has no way to carry it: `PreparePostInput` has no sensitive field
+// and there is no mutation that sets one — `SENSITIVE` exists only as a
+// read-side `FieldModerationStatus`. A toggle whose value is dropped on the
+// floor would tell an author their post is veiled when it is not, which is the
+// one kind of wrong this particular control must never be. It lands when the
+// contract can carry it; reported as a blocked item rather than faked.
 
 export type WizardState = {
   readonly step: Step;
@@ -73,8 +76,16 @@ export type WizardState = {
   readonly tags: readonly TagDraft[];
   readonly references: readonly ReferenceDraft[];
   readonly license: License;
-  readonly sensitive: SensitiveMark;
+  /**
+   * Where the author stands on their own post — the Publish record's `pDirected`.
+   * `pInterest` is census-fixed at 1 for Publish, so there is one free number
+   * here and not a pair; the low-defaults policy value is +0.1.
+   */
+  readonly pDirected: number;
 };
+
+/** The policy default the seal shows before anyone touches it. */
+export const DEFAULT_P_DIRECTED = 0.1;
 
 export function emptyWizard(): WizardState {
   return {
@@ -89,7 +100,7 @@ export function emptyWizard(): WizardState {
     tags: [],
     references: [],
     license: PUBLIC_DOMAIN,
-    sensitive: { marked: false, reason: "" },
+    pDirected: DEFAULT_P_DIRECTED,
   };
 }
 
@@ -244,7 +255,7 @@ export type WizardAction =
   | { type: "tags"; tags: readonly TagDraft[] }
   | { type: "references"; references: readonly ReferenceDraft[] }
   | { type: "license"; license: License }
-  | { type: "sensitive"; sensitive: SensitiveMark }
+  | { type: "pDirected"; pDirected: number }
   | { type: "goto"; step: Step }
   | { type: "advance" }
   | { type: "back" };
@@ -322,8 +333,10 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
     case "license":
       return { ...state, license: action.license };
 
-    case "sensitive":
-      return { ...state, sensitive: action.sensitive };
+    case "pDirected":
+      // Clamped here rather than trusted from a control: the contract's
+      // Dimension is the closed interval, and a slider is not the only caller.
+      return { ...state, pDirected: Math.min(1, Math.max(-1, action.pDirected)) };
 
     case "goto":
       // Only backwards, and only to a step this mode has: the seal's "Crop" and
