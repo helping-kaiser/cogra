@@ -17,13 +17,16 @@ export function Screen() {
       <BottomNav active="search" slots={ALL_SLOTS} inline />
 
       <BottomSheet open ariaLabel="What the search shows">
+        <div style={{ position: "absolute", top: "var(--space-1)", right: "var(--space-2)" }}>
+          <HelpDot ariaLabel="How the filter works" />
+        </div>
         <SheetTitle>What the search shows</SheetTitle>
         <FilterSection label="Kinds" hint="Combine as many as you like. All, until you narrow it.">
           {FEED_KINDS.map((kind) => (
             <Chip key={kind.value} label={kind.label} selected={false} />
           ))}
         </FilterSection>
-        <OrderSection order="ranked" seen />
+        <OrderSection order="ranked" />
       </BottomSheet>
     </>
   );

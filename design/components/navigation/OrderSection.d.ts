@@ -7,9 +7,10 @@ export interface OrderSectionProps {
   /** "ranked" (default) or "newest". */
   order?: string;
   onOrder?: (order: string) => void;
-  /** The seen toggle, default true. Seen = the card's impression entered the
-   *  viewport; device-local, never a record, shared transiently with the
-   *  viewer's chosen ranker. */
+  /** The seen toggle, default false — what you've seen stays out until you ask
+   *  for it back. Seen = the card's impression entered the viewport;
+   *  device-local, never a record, shared transiently with the viewer's
+   *  chosen ranker. */
   seen?: boolean;
   onSeen?: (seen: boolean) => void;
 }

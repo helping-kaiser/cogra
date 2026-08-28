@@ -41,6 +41,7 @@ const {
   OrderSection,
   FEED_KINDS,
   FEED_FILTER_DEFAULT,
+  HelpDot: SystemHelpDot,
   StancePad,
   StanceReadout,
   SensitiveVeil,
@@ -263,7 +264,7 @@ function Seam() {
           color: "var(--text-secondary)",
         }}
       >
-        Beyond your graph — newest first
+        Beyond your reach — newest first
       </span>
       <span style={{ flex: 1, height: 1, background: "var(--border-hairline)" }} />
     </div>
@@ -281,44 +282,9 @@ function SearchTriggerRow({ reading }) {
   );
 }
 
-/* The "?" affordance — one per screen (readme §13), 32px ring in a 48px target. */
-function HelpDot() {
-  return (
-    <button
-      type="button"
-      aria-label="How searching works"
-      className="cg-focus"
-      style={{
-        display: "grid",
-        placeItems: "center",
-        height: "var(--touch-target-min)",
-        width: "var(--touch-target-min)",
-        border: 0,
-        background: "none",
-        borderRadius: "var(--radius-full)",
-        cursor: "pointer",
-        flex: "none",
-      }}
-    >
-      <span
-        aria-hidden="true"
-        style={{
-          display: "grid",
-          placeItems: "center",
-          height: "32px",
-          width: "32px",
-          borderRadius: "var(--radius-full)",
-          border: "1px solid var(--border-hairline)",
-          color: "var(--primary)",
-          fontFamily: "var(--font-sans)",
-          fontSize: "var(--text-label-large)",
-          fontWeight: "var(--text-label-large--font-weight)",
-        }}
-      >
-        ?
-      </span>
-    </button>
-  );
+/* The "?" — the master, defaulted to this canvas's usual label. */
+function HelpDot({ ariaLabel = "How searching works" }) {
+  return <SystemHelpDot ariaLabel={ariaLabel} />;
 }
 
 /* The post-detail column: the read surface a card opens into. */
