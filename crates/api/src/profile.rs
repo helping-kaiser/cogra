@@ -29,10 +29,22 @@ pub enum ProfileError {
         field: &'static str,
         message: String,
     },
+    /// A profile picture was refused; the path names the offending field.
+    #[error(transparent)]
+    Media(#[from] crate::media::GalleryError),
     #[error(transparent)]
     Prepare(#[from] PrepareError),
     #[error("internal: {0}")]
     Internal(String),
+}
+
+impl From<crate::media::GalleryPlanError> for ProfileError {
+    fn from(e: crate::media::GalleryPlanError) -> Self {
+        match e {
+            crate::media::GalleryPlanError::BadInput(e) => Self::Media(e),
+            crate::media::GalleryPlanError::Internal(m) => Self::Internal(m),
+        }
+    }
 }
 
 impl From<sqlx::Error> for ProfileError {
@@ -67,6 +79,14 @@ pub struct ProfileUpdateDraft {
     pub display_name: Option<String>,
     pub bio: Option<String>,
     pub website_url: Option<String>,
+    /// The avatar, three-valued: `None` untouched, `Some(None)` cleared
+    /// back to the monogram, `Some(Some(id))` replaced. The text fields
+    /// above are two-valued and encode their clear as the empty string; a
+    /// picture has no empty string, so the two shapes stay apart rather
+    /// than one pretending to be the other.
+    pub avatar_media_id: Option<Option<Uuid>>,
+    /// The cover, same three values.
+    pub cover_media_id: Option<Option<Uuid>>,
 }
 
 /// Prepares a profile update: a parallel Registration toward the
@@ -86,7 +106,12 @@ pub async fn prepare_profile_update<B: L1Boundary>(
     viewer: Uuid,
     draft: ProfileUpdateDraft,
 ) -> Result<prepare::Prepared, ProfileError> {
-    if draft.display_name.is_none() && draft.bio.is_none() && draft.website_url.is_none() {
+    if draft.display_name.is_none()
+        && draft.bio.is_none()
+        && draft.website_url.is_none()
+        && draft.avatar_media_id.is_none()
+        && draft.cover_media_id.is_none()
+    {
         return Err(ProfileError::BadInput {
             field: "input",
             message: "an update must change at least one field".into(),
@@ -117,11 +142,18 @@ pub async fn prepare_profile_update<B: L1Boundary>(
         })?;
     let parent = ActId::parse(&head)
         .map_err(|e| ProfileError::Internal(format!("chain head unparseable: {e}")))?;
+    let avatar =
+        crate::media::plan_profile_image(pool, viewer, "avatarMediaId", draft.avatar_media_id)
+            .await?;
+    let cover =
+        crate::media::plan_profile_image(pool, viewer, "coverMediaId", draft.cover_media_id).await?;
     let payload = CograProfile {
         node: viewer,
         display_name: draft.display_name,
         bio: draft.bio,
         website_url: draft.website_url,
+        avatar,
+        cover,
     }
     .encode_payload();
     let prepared = prepare::prepare(
@@ -227,6 +259,14 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
     };
     let bio = merge_optional(&update.bio, &current.bio);
     let website_url = merge_optional(&update.website_url, &current.website_url);
+    let avatar_id = merge_image(
+        crate::media::resolve_profile_image(pool, write.actor_id, &update.avatar).await?,
+        current.avatar_id,
+    );
+    let cover_id = merge_image(
+        crate::media::resolve_profile_image(pool, write.actor_id, &update.cover).await?,
+        current.cover_id,
+    );
     let mut tx = pool
         .begin()
         .await
@@ -238,8 +278,8 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
         write.actor_id,
         &display_name,
         bio.as_deref(),
-        current.avatar_id,
-        current.cover_id,
+        avatar_id,
+        cover_id,
         website_url.as_deref(),
         order,
     )
@@ -257,5 +297,19 @@ fn merge_optional(update: &Option<String>, current: &Option<String>) -> Option<S
         None => current.clone(),
         Some(s) if s.is_empty() => None,
         Some(s) => Some(s.clone()),
+    }
+}
+
+/// An update's image slot against the current version: absent keeps,
+/// cleared writes NULL, an asset replaces.
+///
+/// A slot the payload set but whose asset CoGra no longer holds resolves
+/// to `Some(None)` and therefore clears — the honest answer, since the
+/// picture the record named is not there to show. The record stands
+/// either way; what CoGra can render is a carriage question.
+fn merge_image(update: Option<Option<Uuid>>, current: Option<Uuid>) -> Option<Uuid> {
+    match update {
+        None => current,
+        Some(chosen) => chosen,
     }
 }

@@ -21,6 +21,9 @@ use uuid::Uuid;
 
 use crate::ingest::PromotionFailure;
 use crate::l1::L1Boundary;
+use crate::media::{
+    self, AttachmentDraft, GalleryError, GalleryKind, GalleryPlanError, PlannedGallery,
+};
 use crate::prepare::{self, Gesture, PrepareError, Target};
 use crate::references::{self, ReferenceDraft, ReferenceError, ReferencesError};
 use crate::topics::{self, TagDraft, TagError, TopicsError};
@@ -232,10 +235,29 @@ pub enum ContentError {
     /// offending entry.
     #[error(transparent)]
     References(#[from] ReferenceError),
+    /// An attachment in the gallery was refused; the path names the
+    /// offending entry.
+    #[error(transparent)]
+    Gallery(#[from] GalleryError),
     #[error(transparent)]
     Prepare(#[from] PrepareError),
     #[error("internal: {0}")]
     Internal(String),
+}
+
+impl From<GalleryPlanError> for ContentError {
+    fn from(e: GalleryPlanError) -> Self {
+        match e {
+            GalleryPlanError::BadInput(e) => Self::Gallery(e),
+            GalleryPlanError::Internal(m) => Self::Internal(m),
+        }
+    }
+}
+
+impl From<sqlx::Error> for ContentError {
+    fn from(e: sqlx::Error) -> Self {
+        Self::Internal(e.to_string())
+    }
 }
 
 impl From<TopicsError> for ContentError {
@@ -280,7 +302,10 @@ impl From<mirror::MirrorError> for ContentError {
 pub struct PostDraft {
     pub title: Option<String>,
     pub description: Option<String>,
-    pub content: String,
+    /// The words half of the body. A post's body is words **or** media,
+    /// never both — words beside a picture go in the description — so this
+    /// is absent exactly when the gallery carries the body.
+    pub content: Option<String>,
     pub license: License,
     pub p_directed: Option<f64>,
     /// The topics declared at creation. Explicit structured input, never
@@ -294,6 +319,11 @@ pub struct PostDraft {
     /// handle, which a name frozen into the body could not do
     /// (erasure.md §3).
     pub references: Vec<ReferenceDraft>,
+    /// The gallery at creation — the full intended arrangement,
+    /// referencing assets already uploaded. Attaching mints no record and
+    /// costs no θ: the digests ride the Publish that is already being
+    /// paid for.
+    pub attachments: Vec<AttachmentDraft>,
 }
 
 /// An edit's complete field set: the payload is the Post's whole new
@@ -303,7 +333,12 @@ pub struct PostEditDraft {
     pub id: Uuid,
     pub title: Option<String>,
     pub description: Option<String>,
-    pub content: String,
+    pub content: Option<String>,
+    /// The gallery the edit leaves standing — the complete arrangement,
+    /// not a delta. Reordering five pictures is this one act, priced once:
+    /// the order is written with the rest of the post, and per-picture
+    /// pricing has never existed.
+    pub attachments: Vec<AttachmentDraft>,
 }
 
 pub struct CommentDraft {
@@ -318,11 +353,16 @@ pub struct CommentDraft {
     /// The citations declared at creation — a Comment is a citing
     /// artifact like any other passive node (comment.md §3).
     pub references: Vec<ReferenceDraft>,
+    /// The gallery at creation. A comment is text **plus** optional media,
+    /// deliberately asymmetric to a post's XOR: an answer is words first.
+    pub attachments: Vec<AttachmentDraft>,
 }
 
 pub struct CommentEditDraft {
     pub id: Uuid,
     pub content: String,
+    /// The gallery the edit leaves standing, complete.
+    pub attachments: Vec<AttachmentDraft>,
 }
 
 /// A prepared content write: the staged batch plus the L2 node id the
@@ -358,6 +398,38 @@ fn stance_range(field: &'static str, v: f64) -> Result<(), ContentError> {
     }
 }
 
+/// The post body's exclusive-or (Q45(1)): a body is **words or media**,
+/// one picture, a set, or one video with a cover — never both, and never
+/// neither. Words beside media are a description, which stays optional
+/// alongside the title.
+///
+/// Returns the words the version row stores: the author's text, or the
+/// empty string for a media body. Empty is how "this post has no words"
+/// is stored and how the read side answers a null `content` value — the
+/// same rule the envelope runs, where absent and present-and-empty both
+/// render as nothing.
+///
+/// A comment does not come through here: its body is text plus optional
+/// media, and the asymmetry is the design's, not an oversight.
+fn post_body(content: Option<String>, gallery: &PlannedGallery) -> Result<String, ContentError> {
+    let words = content.filter(|c| !c.trim().is_empty());
+    let has_media = !gallery.attachment_ids.is_empty();
+    match (words, has_media) {
+        (Some(_), true) => Err(ContentError::BadInput {
+            field: "content",
+            message: "a post's body is words or media, not both — words beside media \
+                      go in the description"
+                .into(),
+        }),
+        (None, false) => Err(ContentError::BadInput {
+            field: "content",
+            message: "a post needs a body: words or at least one attachment".into(),
+        }),
+        (Some(words), false) => Ok(words),
+        (None, true) => Ok(String::new()),
+    }
+}
+
 async fn author_address(pool: &PgPool, viewer: Uuid) -> Result<String, ContentError> {
     store::actor_identity(pool, viewer)
         .await
@@ -388,6 +460,8 @@ pub async fn prepare_post<B: L1Boundary>(
     stance_range("pDirected", p_d)?;
     let tags = topics::plan_batch(&draft.tags)?;
     let citations = references::plan_batch(pool, &draft.references).await?;
+    let gallery = media::plan_gallery(pool, viewer, GalleryKind::Post, &draft.attachments).await?;
+    let body = post_body(draft.content, &gallery)?;
     let address = author_address(pool, viewer).await?;
     prepare::check_batch_solvency(boundary, &address, batch_acts(&tags, &citations)).await?;
     let node = Uuid::new_v4();
@@ -395,8 +469,8 @@ pub async fn prepare_post<B: L1Boundary>(
         node,
         title: draft.title,
         description: draft.description,
-        body: Some(draft.content),
-        media: Vec::new(),
+        body: Some(body),
+        media: gallery.manifest,
     }
     .encode_payload();
     let prepared = prepare::prepare(
@@ -540,6 +614,8 @@ pub async fn prepare_post_edit<B: L1Boundary>(
     if post.author_id != viewer {
         return Err(ContentError::NotCreator);
     }
+    let gallery = media::plan_gallery(pool, viewer, GalleryKind::Post, &draft.attachments).await?;
+    let body = post_body(draft.content, &gallery)?;
     let address = author_address(pool, viewer).await?;
     let node =
         chained_edit_target(pool, viewer, Family::Publish, &post.l1_node_id, &address).await?;
@@ -547,8 +623,8 @@ pub async fn prepare_post_edit<B: L1Boundary>(
         node: post.id,
         title: draft.title,
         description: draft.description,
-        body: Some(draft.content),
-        media: Vec::new(),
+        body: Some(body),
+        media: gallery.manifest,
     }
     .encode_payload();
     let prepared = prepare::prepare(
@@ -596,6 +672,8 @@ pub async fn prepare_comment<B: L1Boundary>(
     stance_range("pInterest", p_i)?;
     let tags = topics::plan_batch(&draft.tags)?;
     let citations = references::plan_batch(pool, &draft.references).await?;
+    let gallery =
+        media::plan_gallery(pool, viewer, GalleryKind::Comment, &draft.attachments).await?;
     let parent = parent_node(pool, draft.target).await?;
     let address = author_address(pool, viewer).await?;
     prepare::check_batch_solvency(boundary, &address, batch_acts(&tags, &citations)).await?;
@@ -605,7 +683,7 @@ pub async fn prepare_comment<B: L1Boundary>(
         title: None,
         description: None,
         body: Some(draft.content),
-        media: Vec::new(),
+        media: gallery.manifest,
     }
     .encode_payload();
     let prepared = prepare::prepare(
@@ -671,6 +749,8 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
     if comment.author_id != viewer {
         return Err(ContentError::NotCreator);
     }
+    let gallery =
+        media::plan_gallery(pool, viewer, GalleryKind::Comment, &draft.attachments).await?;
     let address = author_address(pool, viewer).await?;
     let node =
         chained_edit_target(pool, viewer, Family::Review, &comment.l1_node_id, &address).await?;
@@ -680,7 +760,7 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
         title: None,
         description: None,
         body: Some(draft.content),
-        media: Vec::new(),
+        media: gallery.manifest,
     }
     .encode_payload();
     let prepared = prepare::prepare(
@@ -807,6 +887,7 @@ pub async fn stage_pending(
     .to_string();
     let target = body.target.to_string();
     let is_genesis = target == own_mint;
+    let gallery = media::resolve_manifest(pool, write.actor_id, &content.media).await?;
 
     let mut tx = pool
         .begin()
@@ -814,7 +895,7 @@ pub async fn stage_pending(
         .map_err(|e| ContentError::Internal(e.to_string()))?;
     match (family, is_genesis) {
         (Family::Publish, true) => {
-            content_store::insert_post(
+            let version = content_store::insert_post(
                 &mut tx,
                 content.node,
                 write.actor_id,
@@ -825,14 +906,15 @@ pub async fn stage_pending(
                 clear_to_null(&content.title),
                 clear_to_null(&content.description),
                 content.body.as_deref().unwrap_or_default(),
-            )
+                )
             .await?;
+            attach_post(&mut tx, version, &gallery).await?;
         }
         (Family::Publish, false) => {
             let post = content_store::post(pool, content.node)
                 .await?
                 .ok_or(ContentError::NotFound)?;
-            content_store::insert_post_version(
+            let version = content_store::insert_post_version(
                 &mut tx,
                 post.id,
                 clear_to_null(&content.title),
@@ -842,10 +924,11 @@ pub async fn stage_pending(
                 created_at,
             )
             .await?;
+            attach_post(&mut tx, version, &gallery).await?;
         }
         (Family::Review, true) => {
             let (target_id, target_type) = comment_parent(pool, body).await?;
-            content_store::insert_comment(
+            let version = content_store::insert_comment(
                 &mut tx,
                 content.node,
                 target_id,
@@ -858,12 +941,13 @@ pub async fn stage_pending(
                 content.body.as_deref().unwrap_or_default(),
             )
             .await?;
+            attach_comment(&mut tx, version, &gallery).await?;
         }
         (Family::Review, false) => {
             let comment = content_store::comment(pool, content.node)
                 .await?
                 .ok_or(ContentError::NotFound)?;
-            content_store::insert_comment_version(
+            let version = content_store::insert_comment_version(
                 &mut tx,
                 comment.id,
                 content.body.as_deref().unwrap_or_default(),
@@ -871,12 +955,44 @@ pub async fn stage_pending(
                 created_at,
             )
             .await?;
+            attach_comment(&mut tx, version, &gallery).await?;
         }
         _ => unreachable!("filtered to content families above"),
     }
     tx.commit()
         .await
         .map_err(|e| ContentError::Internal(e.to_string()))?;
+    Ok(())
+}
+
+/// Hangs a gallery off a post version row, when one was written.
+///
+/// A `None` version is a write whose rows were already there — a retried
+/// pre-sign, or a promotion of a record already staged — and its gallery
+/// is already there with them. Re-inserting would be harmless (the
+/// junction insert is idempotent), but there is no version id to insert
+/// against, and inventing one by re-reading the winning version would be a
+/// different question than the one asked.
+async fn attach_post(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    version: Option<i64>,
+    gallery: &[Uuid],
+) -> Result<(), ContentError> {
+    if let Some(version) = version {
+        postgres_store::media::attach_to_post_version(tx, version, gallery).await?;
+    }
+    Ok(())
+}
+
+/// The comment side of [`attach_post`].
+async fn attach_comment(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    version: Option<i64>,
+    gallery: &[Uuid],
+) -> Result<(), ContentError> {
+    if let Some(version) = version {
+        postgres_store::media::attach_to_comment_version(tx, version, gallery).await?;
+    }
     Ok(())
 }
 
@@ -987,6 +1103,7 @@ async fn land_one(
     let is_genesis = target == own_mint;
 
     let created_at = staged_row.pre_signed_at.unwrap_or_else(chrono::Utc::now);
+    let gallery = media::resolve_manifest(pool, write.actor_id, &content.media).await?;
 
     let mut tx = pool
         .begin()
@@ -999,7 +1116,7 @@ async fn land_one(
             if content_store::land_post(&mut tx, content.node, order).await? {
                 content_store::land_post_version(&mut tx, content.node, created_at, order).await?;
             } else {
-                content_store::insert_post(
+                let version = content_store::insert_post(
                     &mut tx,
                     content.node,
                     write.actor_id,
@@ -1012,6 +1129,7 @@ async fn land_one(
                     content.body.as_deref().unwrap_or_default(),
                 )
                 .await?;
+                attach_post(&mut tx, version, &gallery).await?;
             }
         }
         (Family::Publish, false) => {
@@ -1019,7 +1137,7 @@ async fn land_one(
                 .await?
                 .ok_or_else(|| ContentError::Internal("edited post has no display row".into()))?;
             if !content_store::land_post_version(&mut tx, post.id, created_at, order).await? {
-                content_store::insert_post_version(
+                let version = content_store::insert_post_version(
                     &mut tx,
                     post.id,
                     clear_to_null(&content.title),
@@ -1029,6 +1147,7 @@ async fn land_one(
                     created_at,
                 )
                 .await?;
+                attach_post(&mut tx, version, &gallery).await?;
             }
         }
         (Family::Review, true) => {
@@ -1037,7 +1156,7 @@ async fn land_one(
                     .await?;
             } else {
                 let (target_id, target_type) = comment_parent(pool, body).await?;
-                content_store::insert_comment(
+                let version = content_store::insert_comment(
                     &mut tx,
                     content.node,
                     target_id,
@@ -1050,6 +1169,7 @@ async fn land_one(
                     content.body.as_deref().unwrap_or_default(),
                 )
                 .await?;
+                attach_comment(&mut tx, version, &gallery).await?;
             }
         }
         (Family::Review, false) => {
@@ -1059,7 +1179,7 @@ async fn land_one(
                     ContentError::Internal("edited comment has no display row".into())
                 })?;
             if !content_store::land_comment_version(&mut tx, comment.id, created_at, order).await? {
-                content_store::insert_comment_version(
+                let version = content_store::insert_comment_version(
                     &mut tx,
                     comment.id,
                     content.body.as_deref().unwrap_or_default(),
@@ -1067,6 +1187,7 @@ async fn land_one(
                     created_at,
                 )
                 .await?;
+                attach_comment(&mut tx, version, &gallery).await?;
             }
         }
         _ => unreachable!("filtered to content families above"),

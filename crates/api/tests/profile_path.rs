@@ -167,6 +167,8 @@ fn draft(
         display_name: display_name.map(Into::into),
         bio: bio.map(Into::into),
         website_url: website_url.map(Into::into),
+        avatar_media_id: None,
+        cover_media_id: None,
     }
 }
 

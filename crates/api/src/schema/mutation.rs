@@ -441,6 +441,45 @@ fn reference_drafts(
         .collect()
 }
 
+/// One attachment placement within a gallery. Assets are uploaded first
+/// via `uploadMedia`; the envelope commits their digests.
+///
+/// The list is the gallery in order, so `displayOrder` states the entry's
+/// own index and `isCover` is true on the first entry and nowhere else —
+/// the payload envelope carries order as array position and has no room
+/// for a second, disagreeing index. A value that contradicts its position
+/// is refused rather than silently overridden. `isCover` applies to post
+/// galleries only; a comment gallery ignores it.
+#[derive(InputObject)]
+struct AttachmentInput {
+    /// An asset **this author uploaded**. Cross-author re-use is not
+    /// supported through this path: sharing someone else's picture is a
+    /// link to their post, never a reference to their asset.
+    media_id: Uuid,
+    display_order: i32,
+    is_cover: Option<bool>,
+}
+
+impl AttachmentInput {
+    fn to_draft(&self) -> crate::media::AttachmentDraft {
+        crate::media::AttachmentDraft {
+            media_id: self.media_id,
+            display_order: self.display_order,
+            is_cover: self.is_cover,
+        }
+    }
+}
+
+fn attachment_drafts(
+    attachments: &Option<Vec<AttachmentInput>>,
+) -> Vec<crate::media::AttachmentDraft> {
+    attachments
+        .iter()
+        .flatten()
+        .map(AttachmentInput::to_draft)
+        .collect()
+}
+
 /// A new Post: one genesis Publish whose envelope carries the display
 /// fields (post.md §1), plus one Tag record per declared topic — each
 /// its own priced act. Fields are raw scalars; moderation is
@@ -449,7 +488,11 @@ fn reference_drafts(
 struct PreparePostInput {
     title: Option<String>,
     description: Option<String>,
-    content: String,
+    /// The words half of the body. A post's body is **words or media**,
+    /// never both and never neither: supply `content` or `attachments`,
+    /// and put words that belong beside a picture in `description`.
+    /// Breaking the rule is a field-level refusal on `content`.
+    content: Option<String>,
     license: LicenseInput,
     /// The author's attachment; defaults to the low-defaults policy
     /// value (+0.1). `pInterest` is census-fixed at 1 for Publish.
@@ -464,6 +507,11 @@ struct PreparePostInput {
     /// batch; citing the same target twice is refused rather than
     /// deduplicated, and a post cannot cite itself.
     references: Option<Vec<ReferenceInput>>,
+    /// The gallery, in order — the full intended arrangement, referencing
+    /// assets already uploaded. At most 10; the same asset twice is
+    /// refused rather than deduplicated. Attaching mints no record and
+    /// adds nothing to the batch's cost.
+    attachments: Option<Vec<AttachmentInput>>,
 }
 
 /// A Post edit: the complete new content state, the same field set a
@@ -474,7 +522,12 @@ struct PreparePostEditInput {
     id: Uuid,
     title: Option<String>,
     description: Option<String>,
-    content: String,
+    /// The words half of the body, under the same exclusive-or a create
+    /// carries.
+    content: Option<String>,
+    /// The gallery the edit leaves standing — complete, not a delta.
+    /// Reordering pictures is this one act, priced once.
+    attachments: Option<Vec<AttachmentInput>>,
 }
 
 /// A new Comment: one genesis Review — A leg to the target, terminal
@@ -493,6 +546,10 @@ struct PrepareCommentInput {
     tags: Option<Vec<TagInput>>,
     /// Citations declared at creation; same rules as on a Post.
     references: Option<Vec<ReferenceInput>>,
+    /// The gallery, in order — at most 4. A comment is text **plus**
+    /// optional media, deliberately asymmetric to a post's exclusive-or:
+    /// an answer is words first.
+    attachments: Option<Vec<AttachmentInput>>,
 }
 
 /// One standalone topic declaration on existing content — the gesture
@@ -569,6 +626,8 @@ struct PrepareReferenceWithdrawalInput {
 struct PrepareCommentEditInput {
     id: Uuid,
     content: String,
+    /// The gallery the edit leaves standing — complete, not a delta.
+    attachments: Option<Vec<AttachmentInput>>,
 }
 
 /// A profile update's field set — omitted = untouched, explicit null =
@@ -580,14 +639,14 @@ struct PrepareProfileUpdateInput {
     display_name: async_graphql::MaybeUndefined<String>,
     bio: async_graphql::MaybeUndefined<String>,
     website_url: async_graphql::MaybeUndefined<String>,
+    /// The avatar — an asset this account uploaded. Explicit null clears
+    /// it back to the monogram, which is the designed placeholder rather
+    /// than a gap.
+    avatar_media_id: async_graphql::MaybeUndefined<Uuid>,
+    /// The profile cover, same three values.
+    cover_media_id: async_graphql::MaybeUndefined<Uuid>,
 }
 
-/// A prepared content write: the staged batch plus `node` — the L2
-/// id the envelope binds to the minted node, and the id the content
-/// reads serve once the record lands. `writes` carries the minting
-/// record first, then one Tag record per declared topic and one
-/// Reference record per declared citation, each its own priced act.
-/// Null when `userErrors` is non-empty.
 /// Uploads one asset. `altText` is the one layout-adjacent fact the
 /// server cannot infer and the author must supply; aspect ratio and
 /// duration are derived from the bytes.
@@ -616,6 +675,13 @@ impl UploadMediaPayload {
     }
 }
 
+/// A prepared content write: the staged batch plus `node` — the L2 id the
+/// envelope binds to the minted node, and the id the content reads serve
+/// once the record lands. `writes` carries the minting record first, then
+/// one Tag record per declared topic and one Reference record per declared
+/// citation, each its own priced act. A gallery adds none: attaching
+/// media mints nothing, so a twenty-photo post is still one Publish.
+/// Null when `userErrors` is non-empty.
 #[derive(SimpleObject)]
 struct PrepareContentPayload {
     node: Option<Uuid>,
@@ -659,6 +725,7 @@ impl PrepareContentPayload {
             ),
             ContentError::Tags(e) => UserError::at(ErrorCode::BadInput, e.message, e.path),
             ContentError::References(e) => UserError::at(ErrorCode::BadInput, e.message, e.path),
+            ContentError::Gallery(e) => UserError::at(ErrorCode::BadInput, e.message, e.path),
             ContentError::Prepare(e) => UserError::from_onboarding(&OnboardingError::from(e), ""),
             e @ ContentError::Internal(_) => internal(e),
         }])
@@ -672,6 +739,17 @@ fn edit_field(v: async_graphql::MaybeUndefined<String>) -> Option<String> {
         async_graphql::MaybeUndefined::Undefined => None,
         async_graphql::MaybeUndefined::Null => Some(String::new()),
         async_graphql::MaybeUndefined::Value(s) => Some(s),
+    }
+}
+
+/// A profile-update image slot from the wire. The same three values
+/// [`edit_field`] carries, kept as a nested option instead of collapsing
+/// the clear onto an empty value: a picture has no empty string to borrow.
+fn image_field(v: async_graphql::MaybeUndefined<Uuid>) -> Option<Option<Uuid>> {
+    match v {
+        async_graphql::MaybeUndefined::Undefined => None,
+        async_graphql::MaybeUndefined::Null => Some(None),
+        async_graphql::MaybeUndefined::Value(id) => Some(Some(id)),
     }
 }
 
@@ -1949,6 +2027,7 @@ impl Mutation {
             p_directed: input.p_directed.map(|d| d.0),
             tags: tag_drafts(&input.tags),
             references: reference_drafts(&input.references),
+            attachments: attachment_drafts(&input.attachments),
         };
         match crate::content::prepare_post(pool, boundary, cfg.gc_after_epochs, v.user_id, draft)
             .await
@@ -1976,6 +2055,7 @@ impl Mutation {
             title: input.title,
             description: input.description,
             content: input.content,
+            attachments: attachment_drafts(&input.attachments),
         };
         match crate::content::prepare_post_edit(
             pool,
@@ -2014,6 +2094,7 @@ impl Mutation {
             p_interest: input.p_interest.map(|d| d.0),
             tags: tag_drafts(&input.tags),
             references: reference_drafts(&input.references),
+            attachments: attachment_drafts(&input.attachments),
         };
         match crate::content::prepare_comment(pool, boundary, cfg.gc_after_epochs, v.user_id, draft)
             .await
@@ -2153,6 +2234,7 @@ impl Mutation {
         let draft = crate::content::CommentEditDraft {
             id: input.id,
             content: input.content,
+            attachments: attachment_drafts(&input.attachments),
         };
         match crate::content::prepare_comment_edit(
             pool,
@@ -2185,6 +2267,8 @@ impl Mutation {
             display_name: edit_field(input.display_name),
             bio: edit_field(input.bio),
             website_url: edit_field(input.website_url),
+            avatar_media_id: image_field(input.avatar_media_id),
+            cover_media_id: image_field(input.cover_media_id),
         };
         match crate::profile::prepare_profile_update(
             pool,
@@ -2206,6 +2290,10 @@ impl Mutation {
                     message,
                     vec![field.to_string()],
                 )],
+            }),
+            Err(ProfileError::Media(e)) => Ok(PreparePayload {
+                writes: None,
+                user_errors: vec![UserError::at(ErrorCode::BadInput, e.message, e.path)],
             }),
             Err(ProfileError::Prepare(e)) => Ok(PreparePayload {
                 writes: None,

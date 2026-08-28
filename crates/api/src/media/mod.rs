@@ -214,6 +214,317 @@ pub fn process(bytes: &[u8], max_upload_bytes: usize) -> Result<ProcessedAsset, 
     })
 }
 
+/// Assets one post's gallery may carry.
+///
+/// Ten is the batch cap an author already knows from tags and citations,
+/// and it covers the widest realistic gesture — a group photo set. It is
+/// also a **query-budget input**: the read side prices `Post.attachments`
+/// at this many rows, so raising it reprices every read that carries a
+/// gallery and the budget suite has to be re-measured, never assumed.
+///
+/// Uploading is not an act, so θ prices none of this. A count cap is one
+/// of the only three cost controls media has (size, count, rate).
+pub const MAX_POST_ATTACHMENTS: usize = 10;
+
+/// Assets one comment's gallery may carry. A comment gallery is a
+/// supporting picture, not an album — comments are text-plus-optional
+/// media, deliberately asymmetric to a post's words-or-media body.
+pub const MAX_COMMENT_ATTACHMENTS: usize = 4;
+
+/// Which parent a gallery is being planned for. The two differ in how
+/// many assets they take and in whether a cover means anything.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GalleryKind {
+    Post,
+    Comment,
+}
+
+impl GalleryKind {
+    fn bound(self) -> usize {
+        match self {
+            Self::Post => MAX_POST_ATTACHMENTS,
+            Self::Comment => MAX_COMMENT_ATTACHMENTS,
+        }
+    }
+
+    /// Whether a cover means anything here. `isCover` applies to post
+    /// galleries only; a comment gallery ignores it (api-spec.md
+    /// "Content authoring").
+    fn has_cover(self) -> bool {
+        matches!(self, Self::Post)
+    }
+}
+
+/// One attachment placement as the wire states it — an asset already
+/// uploaded, and where it sits in the gallery.
+#[derive(Debug, Clone)]
+pub struct AttachmentDraft {
+    pub media_id: Uuid,
+    pub display_order: i32,
+    pub is_cover: Option<bool>,
+}
+
+/// A field-level refusal carrying the path into the input that names the
+/// offender (api-spec.md "Error types", whose own example path is a media
+/// one). Same shape as a tag's or a citation's, so the clients' existing
+/// field-error plumbing reaches a gallery without learning anything new.
+#[derive(Debug, thiserror::Error)]
+#[error("{message}")]
+pub struct GalleryError {
+    pub path: Vec<String>,
+    pub message: String,
+}
+
+impl GalleryError {
+    fn at(path: Vec<String>, message: impl Into<String>) -> Self {
+        Self {
+            path,
+            message: message.into(),
+        }
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum GalleryPlanError {
+    #[error(transparent)]
+    BadInput(#[from] GalleryError),
+    #[error("internal: {0}")]
+    Internal(String),
+}
+
+/// A checked gallery: the asset ids in gallery order, and the manifest
+/// those assets produce for the payload envelope.
+///
+/// The two are the same gallery said twice — once for Postgres and once
+/// for the record — and they are built together here so they cannot come
+/// apart. The manifest is what the winning record witnesses; the ids are
+/// what the junction rows point at.
+#[derive(Debug, Clone, Default)]
+pub struct PlannedGallery {
+    pub attachment_ids: Vec<Uuid>,
+    pub manifest: Vec<common::envelope::MediaAsset>,
+}
+
+fn gallery_path(index: usize, field: &str) -> Vec<String> {
+    vec![
+        "attachments".to_string(),
+        index.to_string(),
+        field.to_string(),
+    ]
+}
+
+/// Checks a gallery whole and resolves it, before anything is staged.
+///
+/// Three rules, in the order a client wants to hear them:
+///
+/// 1. **The count.** Checked over the whole list first, so an eleventh
+///    picture refuses the gesture rather than being silently dropped from
+///    the middle of it.
+/// 2. **The stated order.** `displayOrder` names the entry's position and
+///    the envelope's manifest carries order as array position; requiring
+///    the two to agree is what stops Postgres and the witnessed record
+///    from telling a reader two different stories. Same for `isCover`,
+///    which the manifest expresses as "index 0".
+/// 3. **The assets.** Every id must name an un-redacted asset **this
+///    author uploaded** — the anti-hijack rule (data-model.md "Why parents
+///    point at attachments"). Cross-author re-use is not a permission this
+///    path can grant: sharing someone else's picture is a link to their
+///    post, never a reference to their asset.
+///
+/// The ownership comparison is written against the author rather than
+/// against "the viewer" even though this slice has no `actAs` and the two
+/// are always the same actor — so the Collectives slice adds a parameter
+/// rather than a rule.
+pub async fn plan_gallery(
+    pool: &PgPool,
+    author: Uuid,
+    kind: GalleryKind,
+    drafts: &[AttachmentDraft],
+) -> Result<PlannedGallery, GalleryPlanError> {
+    if drafts.is_empty() {
+        return Ok(PlannedGallery::default());
+    }
+    let bound = kind.bound();
+    if drafts.len() > bound {
+        return Err(GalleryError::at(
+            vec!["attachments".to_string()],
+            format!("at most {bound} attachments, got {}", drafts.len()),
+        )
+        .into());
+    }
+
+    let mut ids: Vec<Uuid> = Vec::with_capacity(drafts.len());
+    for (i, draft) in drafts.iter().enumerate() {
+        if draft.display_order != i as i32 {
+            return Err(GalleryError::at(
+                gallery_path(i, "displayOrder"),
+                format!(
+                    "attachments are in gallery order, so displayOrder here is {i}, not {}",
+                    draft.display_order
+                ),
+            )
+            .into());
+        }
+        if let Some(is_cover) = draft.is_cover
+            && kind.has_cover()
+            && is_cover != (i == 0)
+        {
+            return Err(GalleryError::at(
+                gallery_path(i, "isCover"),
+                "the first attachment is the cover",
+            )
+            .into());
+        }
+        if ids.contains(&draft.media_id) {
+            return Err(GalleryError::at(
+                gallery_path(i, "mediaId"),
+                "this asset is already in the gallery",
+            )
+            .into());
+        }
+        ids.push(draft.media_id);
+    }
+
+    let rows = store::assets_by_ids(pool, &ids)
+        .await
+        .map_err(|e| GalleryPlanError::Internal(e.to_string()))?;
+    let mut manifest = Vec::with_capacity(ids.len());
+    for (i, id) in ids.iter().enumerate() {
+        let Some(asset) = rows.iter().find(|a| a.id == *id) else {
+            return Err(GalleryError::at(gallery_path(i, "mediaId"), "no such asset").into());
+        };
+        if asset.author_id != author {
+            return Err(GalleryError::at(
+                gallery_path(i, "mediaId"),
+                "an attachment must be an asset you uploaded",
+            )
+            .into());
+        }
+        if asset.redacted_at.is_some() {
+            return Err(GalleryError::at(
+                gallery_path(i, "mediaId"),
+                "this asset has been removed",
+            )
+            .into());
+        }
+        manifest.push(manifest_entry(asset)?);
+    }
+    Ok(PlannedGallery {
+        attachment_ids: ids,
+        manifest,
+    })
+}
+
+/// One asset's manifest entry — the three facts a reader needs to render
+/// it honestly. Everything the server measured (aspect ratio, byte size,
+/// duration) stays out: an author signs what they wrote, never a
+/// measurement.
+fn manifest_entry(
+    asset: &store::MediaAttachment,
+) -> Result<common::envelope::MediaAsset, GalleryPlanError> {
+    let digest = asset.digest.as_slice().try_into().map_err(|_| {
+        GalleryPlanError::Internal(format!("asset {} carries a mis-sized digest", asset.id))
+    })?;
+    Ok(common::envelope::MediaAsset {
+        digest,
+        mime: asset.mime_type.clone(),
+        alt_text: asset.alt_text.clone().filter(|t| !t.is_empty()),
+    })
+}
+
+/// Checks one profile image slot — the avatar or the cover.
+///
+/// Three-valued, and the three values are kept apart end to end: absent
+/// leaves the picture as it stands, an explicit null clears it back to the
+/// monogram, an id replaces it. That is the profile-update rule
+/// (api-spec.md "Content authoring") and it differs from a content edit's
+/// two-valued one, which is exactly why it is written out rather than
+/// folded into the gallery path.
+///
+/// The same anti-hijack rule a gallery runs: the picture must be one this
+/// author uploaded, and it must not have been removed.
+pub async fn plan_profile_image(
+    pool: &PgPool,
+    author: Uuid,
+    field: &'static str,
+    slot: Option<Option<Uuid>>,
+) -> Result<Option<Option<common::envelope::MediaAsset>>, GalleryPlanError> {
+    let Some(chosen) = slot else {
+        return Ok(None);
+    };
+    let Some(id) = chosen else {
+        return Ok(Some(None));
+    };
+    let path = vec![field.to_string()];
+    let rows = store::assets_by_ids(pool, std::slice::from_ref(&id))
+        .await
+        .map_err(|e| GalleryPlanError::Internal(e.to_string()))?;
+    let Some(asset) = rows.first() else {
+        return Err(GalleryError::at(path, "no such asset").into());
+    };
+    if asset.author_id != author {
+        return Err(GalleryError::at(path, "a profile picture must be an asset you uploaded").into());
+    }
+    if asset.redacted_at.is_some() {
+        return Err(GalleryError::at(path, "this asset has been removed").into());
+    }
+    Ok(Some(Some(manifest_entry(asset)?)))
+}
+
+/// The asset one profile image slot's manifest entry names, resolved the
+/// way a gallery's is — from the record, so a promotion reconstructs the
+/// row without the request that produced it.
+///
+/// The outer option is the slot's three-valuedness; the inner one is
+/// whether the digest still answers to a row.
+pub async fn resolve_profile_image(
+    pool: &PgPool,
+    author: Uuid,
+    slot: &Option<Option<common::envelope::MediaAsset>>,
+) -> Result<Option<Option<Uuid>>, sqlx::Error> {
+    let Some(chosen) = slot else {
+        return Ok(None);
+    };
+    let Some(asset) = chosen else {
+        return Ok(Some(None));
+    };
+    let ids = resolve_manifest(pool, author, std::slice::from_ref(asset)).await?;
+    Ok(Some(ids.first().copied()))
+}
+
+/// The asset ids a landed or staged payload's manifest names, in the
+/// manifest's own order — how a gallery is written from the record rather
+/// than from the request that produced it.
+///
+/// The manifest carries digests, and `(author, digest)` names at most one
+/// asset, so the record is the source the junction rows are derived from.
+/// That is what makes a gallery rebuildable: a mirror rebuild replays the
+/// payload and reconstructs the same rows without the original request.
+///
+/// A digest with no row is dropped rather than failing the promotion. The
+/// record is ordered fact whatever CoGra holds; a manifest entry whose
+/// asset is gone renders as one fewer picture, not as a post that will not
+/// load.
+pub async fn resolve_manifest(
+    pool: &PgPool,
+    author: Uuid,
+    manifest: &[common::envelope::MediaAsset],
+) -> Result<Vec<Uuid>, sqlx::Error> {
+    if manifest.is_empty() {
+        return Ok(Vec::new());
+    }
+    let digests: Vec<Vec<u8>> = manifest.iter().map(|a| a.digest.to_vec()).collect();
+    let rows = store::assets_by_digests(pool, author, &digests).await?;
+    Ok(manifest
+        .iter()
+        .filter_map(|entry| {
+            rows.iter()
+                .find(|row| row.digest == entry.digest)
+                .map(|row| row.id)
+        })
+        .collect())
+}
+
 /// The object key for an asset id. Server-generated end to end: nothing
 /// a client sent reaches it, so a traversal or a collision with someone
 /// else's object is unrepresentable rather than defended against.
