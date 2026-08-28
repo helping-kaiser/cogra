@@ -6,6 +6,7 @@ import { PendingMarker, EditedMarker } from "../honesty/PendingMarker.jsx";
 import { LicenseTerms } from "../forms/LicenseChooser.jsx";
 import { StanceControl } from "../stance/StanceControl.jsx";
 import { OverflowMenu } from "./OverflowMenu.jsx";
+import { TopicsLine } from "./TopicsLine.jsx";
 
 /* The comment of design.md §6 — "author, body, timestamp, media, nested replies,
    stance control", in its top-level and nested variants. Extracted from
@@ -56,6 +57,9 @@ export function CommentCard({
   targetLabel = "this comment",
   actions,
   menuItems = [],
+  topics = [],
+  references = 0,
+  onOpenReferences,
   children,
 }) {
   // Same rule as PostCard: the licence is a rare read, so it arrives from the
@@ -83,6 +87,9 @@ export function CommentCard({
           </div>
         </div>
         <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{withMentions(content)}</p>
+        {/* The same topics-and-citations line a post wears, one line, clipped —
+            a comment is content like any other and signs the same acts. */}
+        <TopicsLine topics={topics} references={references} onOpenReferences={onOpenReferences} />
         {license && showLicense && <LicenseTerms license={license} />}
         {edited && <EditedMarker />}
         {pending && <PendingMarker />}

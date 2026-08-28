@@ -13,6 +13,8 @@ export function Screen() {
           bundle={mkBundle(0.1, 0.1)}
           score="11.40"
           comments={2}
+          license={{ attribution: 1, provenance: 0 }}
+          menuItems={CITE_MENU}
         />
         <PostCard
           author={SOL}
@@ -21,6 +23,8 @@ export function Screen() {
           timestamp="6h"
           score="4.20"
           comments={0}
+          license={{ attribution: 0, provenance: 0 }}
+          menuItems={CITE_MENU}
         />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />

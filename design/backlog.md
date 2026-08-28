@@ -135,16 +135,18 @@ components and variants; updating a component then updates every
 screen that uses it. Applies to the canonical canvas first; the
 ideation canvases stay frozen records.
 
-### 18 · Reference rows + per-act standing display · *system*, awaiting rulings
-Two questions from the 2026-08-28 review, options presented, jakob
-to rule. (a) How a REFERENCE looks on a card: people are `@handle`,
-but posts, items, proposals, chats, campaigns and offers need a
-distinguishable form — today the card shows only "n references".
-(b) The standing pair signed on every topic and reference — set at
-compose with a changeable default, displayed in the detail view
-(jakob's steer) — has no drawn form in either place. Both interact
-with item 9's result-row-per-node-type work; build after the
-rulings, not before.
+### 18 · Reference rows + per-act standing display · *system* · **built**
+Ruled and built 2026-08-28 (readme §13 *Reference rows and signed
+pairs*): the counts open the topics-and-references sheet;
+`ReferenceRow` is the one row shape (leading mark · name · signed
+pair) with glyph-led kinds (five node-type glyphs exported verbatim
+from material-design-icons; a text post wears a T tile, a person
+their avatar, a media post its cover); `TopicsLine` is shared by
+post and comment cards. Drawn on the "Topics & references · the
+sheet" board. **Remaining:** the compose-side pair setting (each
+picked chip shows its default pair, tap edits via the reader's
+chosen stance input) lands when the compose wizard boards convert
+to the screens pipeline (item 17).
 
 ### 9 · Search + results · *design*
 Topics, post titles, usernames, item names. Produces a search field
@@ -155,10 +157,10 @@ feed later.
 ### 10 · Sensitive veil treatment · *system*, has open questions
 Granularity is settled (blur only what is marked, reveal per post),
 and the compose session (item 6) settled more: the author's self-mark
-veils body + description with the title readable, the author's reason
-shows on the veil under a `Sensitive — tap to view` chip, and the
-canonical veiled card (14px blur, a neutral 28% wash) is drawn on the
-post-ladder row. Still open in this item: whether a reveal survives
+veils body + description with the title readable, and the veil's face
+is the pattern every large product uses — the visibility glyph,
+`Sensitive — tap to view`, and the author's reason, centred in white
+on the wash, no surface of their own. Drawn on the post-ladder row. Still open in this item: whether a reveal survives
 leaving and returning to the post, and how the reader's 0–10 severity
 setting maps to blur-or-not. No `error` colouring, no warning glyph.
 

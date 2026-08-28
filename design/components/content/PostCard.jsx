@@ -10,7 +10,7 @@ import { MediaViewer } from "../proposed/MediaViewer.jsx";
 import { RedactedContent, SensitiveScope, SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
 import { OverflowMenu } from "./OverflowMenu.jsx";
 import { Icon } from "../navigation/Icon.jsx";
-import { TopicChip } from "../core/Chip.jsx";
+import { TopicsLine } from "./TopicsLine.jsx";
 
 /* The post card of design.md §6 — "author (avatar, display name, handle,
    timestamp), optional title, optional description, body, media gallery, stance
@@ -63,6 +63,7 @@ export function PostCard({
   onOpenScore,
   comments,
   onOpenComments,
+  onOpenReferences,
   media,
   actions,
   onOpenMedia,
@@ -75,8 +76,9 @@ export function PostCard({
   const detail = variant === "detail";
   // THE AUTHOR'S SELF-MARK (readme §13): one flag veils the BODY and the
   // DESCRIPTION while the title stays readable, and the author's own reason
-  // rides the veil. One reveal answers for the whole card (SensitiveScope).
-  const veil = !redacted && sensitive ? { label: sensitive.label ?? "Sensitive — tap to view" } : null;
+  // rides the veil under its standard line. One reveal answers for the whole
+  // card (SensitiveScope).
+  const veil = !redacted && sensitive ? { reason: sensitive.reason ?? sensitive.label } : null;
   // REDACTION IS RECORD-GRANULAR. An illegal verdict removes the payload, so
   // every authored field goes at once — there is no redacted title beside a
   // surviving body. The card renders its skeleton instead: author, timestamp,
@@ -221,7 +223,7 @@ export function PostCard({
           }}
         >
           {veil ? (
-            <SensitiveVeil kind="media" label={veil.label} radius="0px">
+            <SensitiveVeil kind="media" reason={veil.reason} radius="0px">
               <MediaGallery items={media} radius="0px" />
             </SensitiveVeil>
           ) : (
@@ -233,40 +235,7 @@ export function PostCard({
       {redacted ? <RedactedContent {...(redacted === true ? {} : redacted)} /> : linkedText}
       {!redacted && opener}
       {license && showLicense && !redacted && <LicenseTerms license={license} />}
-      {/* TOPICS AND CITATIONS, ONE LINE (readme §13's collapse order: they give
-          way before media or the affordance row ever shrink). The summary card
-          never wraps them — overflow is simply clipped, the detail view is where
-          the full set lives — and a citation count rides the end of the same
-          line rather than earning a row of its own. */}
-      {!redacted && (topics.length > 0 || references > 0) && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "var(--space-2)",
-            flexWrap: detail ? "wrap" : "nowrap",
-            overflow: "hidden",
-            minWidth: 0,
-          }}
-        >
-          {topics.map((topic) => (
-            <TopicChip key={topic} topic={topic} />
-          ))}
-          {references > 0 && (
-            <span
-              style={{
-                flex: "none",
-                color: "var(--text-secondary)",
-                fontSize: "var(--text-body-small)",
-                lineHeight: "var(--text-body-small--line-height)",
-                whiteSpace: "nowrap",
-              }}
-            >
-              · {references === 1 ? "1 reference" : `${references} references`}
-            </span>
-          )}
-        </div>
-      )}
+      {!redacted && <TopicsLine topics={topics} references={references} wrap={detail} onOpenReferences={onOpenReferences} />}
       {edited && <EditedMarker />}
       {pending && <PendingMarker />}
       {/* THE AFFORDANCE ROW. The stance control leads — it is the gesture the

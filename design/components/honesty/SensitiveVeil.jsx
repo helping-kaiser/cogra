@@ -57,7 +57,7 @@ export function SensitiveScope({ children }) {
  * Veils ONE field or ONE attachment — a title, a description, a body, a single
  * tile. Never a whole post.
  */
-export function SensitiveVeil({ children, kind = "media", label = "Sensitive", revealLabel = "Show", radius }) {
+export function SensitiveVeil({ children, kind = "media", label = "Sensitive — tap to view", reason, revealLabel = "Show", radius }) {
   const scope = React.useContext(RevealContext);
   const [local, setLocal] = React.useState(false);
   const revealed = scope ? scope.revealed : local;
@@ -124,7 +124,7 @@ export function SensitiveVeil({ children, kind = "media", label = "Sensitive", r
       <button
         type="button"
         onClick={reveal}
-        aria-label={`${label} — ${revealLabel.toLowerCase()}`}
+        aria-label={`${label}${reason ? ` — ${reason}` : ""}`}
         className="cg-focus"
         style={{
           position: "absolute",
@@ -140,22 +140,31 @@ export function SensitiveVeil({ children, kind = "media", label = "Sensitive", r
           padding: 0,
         }}
       >
+        {/* No surface of its own — the wash IS the surface, and the words sit
+            directly on it, centred: the pattern every large product uses for
+            this exact moment, so the reader has met it before. Fixed white,
+            deliberately theme-independent: the wash is dark in both themes.
+            The author's reason, when there is one, is the second, smaller
+            line. */}
         <span
           style={{
-            display: "inline-flex",
+            display: "flex",
+            flexDirection: "column",
             alignItems: "center",
             gap: "var(--space-2)",
-            borderRadius: "var(--radius-full)",
-            background: "var(--surface-snackbar)",
-            color: "var(--on-surface-snackbar)",
-            padding: "8px 14px",
+            padding: "0 var(--space-6)",
+            color: "#fff",
             fontFamily: "var(--font-sans)",
-            fontSize: "var(--text-label-large)",
-            fontWeight: "var(--text-label-large--font-weight)",
+            textAlign: "center",
           }}
         >
-          <Icon name="visibility" size={18} />
-          {label}
+          <Icon name="visibility" size={24} />
+          <span style={{ fontSize: "var(--text-label-large)", fontWeight: "var(--text-label-large--font-weight)" }}>{label}</span>
+          {reason && (
+            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", opacity: 0.85, textWrap: "pretty" }}>
+              {reason}
+            </span>
+          )}
         </span>
       </button>
     </div>

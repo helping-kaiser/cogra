@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"MediaAttachment","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/proposed/MediaViewer.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"}],"sourceHashes":{"components/content/CommentCard.jsx":"ae05b5d581c2","components/content/OverflowMenu.jsx":"5a5ff330770c","components/content/PostCard.jsx":"0b9e64397444","components/core/BottomSheet.jsx":"04aa46ec17d9","components/core/Button.jsx":"ff5a90231bbe","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"3c8d1c835bb0","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c3fc1cd30267","components/forms/PasswordField.jsx":"38bf37cacbb0","components/forms/RecoveryCode.jsx":"b89705800497","components/forms/TextField.jsx":"ad5b7c03b0c1","components/honesty/PendingMarker.jsx":"28eaaf4ffa77","components/honesty/SensitiveVeil.jsx":"d8981eab839b","components/honesty/TransportError.jsx":"2f66269a8f3c","components/navigation/BorrowedViewBand.jsx":"66c07c53862e","components/navigation/BottomNav.jsx":"53a749d4ddf1","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"a5d1696ddb4e","components/navigation/Icon.jsx":"101bee8e291d","components/navigation/PageHeader.jsx":"be9af2dd1404","components/navigation/SegmentedFilter.jsx":"430fc566a8ce","components/people/ActorChip.jsx":"c896c8c4aaeb","components/people/ProfileHeader.jsx":"f6159ea12140","components/proposed/ExplainableNumber.jsx":"b29af54b996a","components/proposed/MediaAttachment.jsx":"fa1b541a8999","components/proposed/MediaViewer.jsx":"3a09af18787e","components/stance/SeveranceConfirm.jsx":"1a0dbafb9e95","components/stance/StanceAlternates.jsx":"0b50770f4aa0","components/stance/StanceCoachMark.jsx":"4d4cfdcab8db","components/stance/StanceControl.jsx":"2b4d515f933a","components/stance/StancePad.jsx":"f6eda3aa07e3","components/stance/StanceReadout.jsx":"004726c35cdd","components/stance/StanceSlider.jsx":"325286a6b95d","components/states/EmptyState.jsx":"ada7c8e59cc9","designs/core-loop/app.jsx":"44ff990afba5","designs/core-loop/data.jsx":"534511e4e114"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/proposed/MediaAttachment.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"MediaAttachment","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/proposed/MediaViewer.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"}],"sourceHashes":{"components/content/CommentCard.jsx":"d9862de81cc2","components/content/OverflowMenu.jsx":"5a5ff330770c","components/content/PostCard.jsx":"602b0aca6dc5","components/content/ReferenceRow.jsx":"bd1330d6e151","components/content/TopicsLine.jsx":"5c371361b06a","components/core/BottomSheet.jsx":"04aa46ec17d9","components/core/Button.jsx":"ff5a90231bbe","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"3c8d1c835bb0","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c3fc1cd30267","components/forms/PasswordField.jsx":"38bf37cacbb0","components/forms/RecoveryCode.jsx":"b89705800497","components/forms/TextField.jsx":"ad5b7c03b0c1","components/honesty/PendingMarker.jsx":"28eaaf4ffa77","components/honesty/SensitiveVeil.jsx":"92e923dee41b","components/honesty/TransportError.jsx":"2f66269a8f3c","components/navigation/BorrowedViewBand.jsx":"66c07c53862e","components/navigation/BottomNav.jsx":"53a749d4ddf1","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"a5d1696ddb4e","components/navigation/Icon.jsx":"a832d92b80d9","components/navigation/PageHeader.jsx":"be9af2dd1404","components/navigation/SegmentedFilter.jsx":"430fc566a8ce","components/people/ActorChip.jsx":"924eeeb34308","components/people/ProfileHeader.jsx":"f6159ea12140","components/proposed/ExplainableNumber.jsx":"b29af54b996a","components/proposed/MediaAttachment.jsx":"fa1b541a8999","components/proposed/MediaViewer.jsx":"3a09af18787e","components/stance/SeveranceConfirm.jsx":"1a0dbafb9e95","components/stance/StanceAlternates.jsx":"0b50770f4aa0","components/stance/StanceCoachMark.jsx":"4d4cfdcab8db","components/stance/StanceControl.jsx":"2b4d515f933a","components/stance/StancePad.jsx":"f6eda3aa07e3","components/stance/StanceReadout.jsx":"004726c35cdd","components/stance/StanceSlider.jsx":"325286a6b95d","components/states/EmptyState.jsx":"ada7c8e59cc9","designs/core-loop/app.jsx":"44ff990afba5","designs/core-loop/data.jsx":"534511e4e114"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/proposed/MediaAttachment.jsx"}]} */
 
 (() => {
 
@@ -175,6 +175,10 @@ function MonogramAvatar({
     height: "64px",
     width: "64px",
     fontSize: "var(--text-headline-small)"
+  } : size === "md" ? {
+    height: "32px",
+    width: "32px",
+    fontSize: "var(--text-label-medium)"
   } : {
     height: "24px",
     width: "24px",
@@ -2391,6 +2395,16 @@ const PATHS = {
      the CURRENT state, and the accessible name says what the tap will do. */
   volume_up: ["M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"],
   volume_off: ["M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"],
+  /* THE NODE-TYPE GLYPHS (readme §13, 2026-08-28): a reference row leads with
+     its node's kind. People wear their avatar and a media post its cover, so
+     these cover the rest — proposal, item, campaign, offer, chat — one per
+     kind, silhouettes deliberately distinct (an item is a box, an offer the
+     price tag). A text post wears the letter T as a tile, not a glyph. */
+  how_to_vote: ["M18 13h-.68l-2 2h1.91L19 17H5l1.78-2h2.05l-2-2H6l-3 3v4c0 1.1.89 2 1.99 2H19c1.1 0 2-.89 2-2v-4l-3-3zm-1-5.05l-4.95 4.95-3.54-3.54 4.95-4.95L17 7.95zm-4.24-5.66L6.39 8.66c-.39.39-.39 1.02 0 1.41l4.95 4.95c.39.39 1.02.39 1.41 0l6.36-6.36c.39-.39.39-1.02 0-1.41L14.16 2.3c-.38-.4-1.01-.4-1.4-.01z"],
+  inventory_2: ["M20,2H4C3,2,2,2.9,2,4v3.01C2,7.73,2.43,8.35,3,8.7V20c0,1.1,1.1,2,2,2h14c0.9,0,2-0.9,2-2V8.7c0.57-0.35,1-0.97,1-1.69V4 C22,2.9,21,2,20,2z M15,14H9v-2h6V14z M20,7H4V4h16V7z"],
+  campaign: ["M18 11v2h4v-2h-4zm-2 6.61c.96.71 2.21 1.65 3.2 2.39.4-.53.8-1.07 1.2-1.6-.99-.74-2.24-1.68-3.2-2.4-.4.54-.8 1.08-1.2 1.61zM20.4 5.6c-.4-.53-.8-1.07-1.2-1.6-.99.74-2.24 1.68-3.2 2.4.4.53.8 1.07 1.2 1.6.96-.72 2.21-1.65 3.2-2.4zM4 9c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h1v4h2v-4h1l5 3V6L8 9H4zm11.5 3c0-1.33-.58-2.53-1.5-3.35v6.69c.92-.81 1.5-2.01 1.5-3.34z"],
+  sell: ["M21.41,11.41l-8.83-8.83C12.21,2.21,11.7,2,11.17,2H4C2.9,2,2,2.9,2,4v7.17c0,0.53,0.21,1.04,0.59,1.41l8.83,8.83 c0.78,0.78,2.05,0.78,2.83,0l7.17-7.17C22.2,13.46,22.2,12.2,21.41,11.41z M6.5,8C5.67,8,5,7.33,5,6.5S5.67,5,6.5,5S8,5.67,8,6.5 S7.33,8,6.5,8z"],
+  forum: ["M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"],
   /* The Post Score's glyph. A branching graph: the score comes out of the graph,
      and the branches hint at the paths folded up behind the number. Material
      Symbols only, and the FILL-1 cut is derived (see the top of this file) —
@@ -2789,9 +2803,156 @@ function OverflowMenu({
 __ds_scope.OverflowMenu = OverflowMenu;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/OverflowMenu.jsx", error: String((e && e.message) || e) }); }
 
+// components/core/Chip.jsx
+try { (() => {
+/* Chips (backlog items 4 and 8).
+
+   TWO CHIPS, ONE SHAPE. A `Chip` is a filter the reader turns on and off; a
+   `TopicChip` is a topic that goes somewhere. They look alike on purpose — both
+   are a word in a pill — and they are told apart by what they do, which is the
+   same test that separates a button from a link (§7).
+
+   WHEN A CHIP AND NOT A SEGMENTED FILTER. Chips are for a set the reader can
+   combine, or one that grows: seven kinds of ranked content, an open list of
+   topics. A segmented filter is for two to four alternatives where exactly one
+   is true. Using chips for the exclusive case loses "one of these" ; using a
+   segmented row for the combinable case loses the combination.
+
+   32px drawn, 48px tapped: `cg-hit` grows the target without inflating a row of
+   seven of them past the height of the screen. Selection is
+   `secondaryContainer`, colour only \u2014 no check glyph, because a leading check on
+   the selected chips reflows every label in the row as the reader picks. */
+
+const PILL = {
+  display: "inline-flex",
+  alignItems: "center",
+  position: "relative",
+  height: "32px",
+  padding: "0 var(--space-3)",
+  borderRadius: "var(--radius-full)",
+  fontFamily: "var(--font-sans)",
+  fontSize: "var(--text-label-large)",
+  lineHeight: "var(--text-label-large--line-height)",
+  letterSpacing: "var(--text-label-large--letter-spacing)",
+  fontWeight: "var(--text-label-large--font-weight)",
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+  textDecoration: "none"
+};
+function Chip({
+  label,
+  selected = false,
+  onToggle,
+  ariaLabel,
+  disabled = false
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    role: "switch",
+    "aria-checked": selected,
+    "aria-label": ariaLabel,
+    disabled: disabled,
+    onClick: onToggle,
+    className: "cg-state cg-focus cg-hit",
+    style: {
+      ...PILL,
+      border: selected ? "1px solid transparent" : "1px solid var(--border-field)",
+      background: selected ? "var(--secondary-container)" : "transparent",
+      color: selected ? "var(--on-secondary-container)" : "var(--text-body)",
+      opacity: disabled ? "var(--state-disabled)" : 1
+    }
+  }, label);
+}
+
+/* A topic. The `#` is part of the word, not an icon: readers type it, and a topic
+   without it reads as a name. It navigates, so it is an anchor. */
+function TopicChip({
+  topic,
+  href,
+  onClick
+}) {
+  const name = topic.replace(/^#/, "");
+  return /*#__PURE__*/React.createElement("a", {
+    href: href ?? `/t/${name}`,
+    onClick: onClick,
+    className: "cg-state cg-focus cg-hit",
+    style: {
+      ...PILL,
+      border: "1px solid var(--border-hairline)",
+      background: "var(--surface-card)",
+      color: "var(--text-body)"
+    }
+  }, "#", name);
+}
+__ds_scope.Chip = Chip;
+__ds_scope.TopicChip = TopicChip;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/Chip.jsx", error: String((e && e.message) || e) }); }
+
+// components/content/TopicsLine.jsx
+try { (() => {
+const { TopicChip } = __ds_scope;
+/* The topics-and-citations line a content card wears, shared by PostCard and
+   CommentCard — it appeared on a second surface, so it moved here (the repo's
+   own rule; a copy is never the answer).
+
+   ONE LINE with the citation count riding its end. In a summary card it never
+   wraps — overflow is simply clipped (readme §13's collapse order: this line
+   gives way before media or the affordance row ever shrink); `wrap` is the
+   detail variant's full set. The count opens the topics-and-references sheet,
+   where every entry has room to be a full row (readme §13, 2026-08-28). */
+
+function TopicsLine({
+  topics = [],
+  references = 0,
+  wrap = false,
+  onOpenReferences
+}) {
+  if (topics.length === 0 && references === 0) return null;
+  const count = references === 1 ? "1 reference" : `${references} references`;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-2)",
+      flexWrap: wrap ? "wrap" : "nowrap",
+      overflow: "hidden",
+      minWidth: 0
+    }
+  }, topics.map(topic => /*#__PURE__*/React.createElement(TopicChip, {
+    key: topic,
+    topic: topic
+  })), references > 0 && (onOpenReferences ? /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onOpenReferences,
+    className: "cg-state cg-focus",
+    style: {
+      flex: "none",
+      border: 0,
+      background: "none",
+      padding: 0,
+      cursor: "pointer",
+      fontFamily: "var(--font-sans)",
+      color: "var(--text-secondary)",
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
+      whiteSpace: "nowrap"
+    }
+  }, "\xB7 ", count) : /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: "none",
+      color: "var(--text-secondary)",
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
+      whiteSpace: "nowrap"
+    }
+  }, "\xB7 ", count)));
+}
+__ds_scope.TopicsLine = TopicsLine;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/TopicsLine.jsx", error: String((e && e.message) || e) }); }
+
 // components/content/CommentCard.jsx
 try { (() => {
-const { Card, Button, ActorChip, PendingMarker, EditedMarker, LicenseTerms, StanceControl, OverflowMenu } = __ds_scope;
+const { Card, Button, ActorChip, PendingMarker, EditedMarker, LicenseTerms, StanceControl, OverflowMenu, TopicsLine } = __ds_scope;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* The comment of design.md §6 — "author, body, timestamp, media, nested replies,
    stance control", in its top-level and nested variants. Extracted from
@@ -2839,6 +3000,9 @@ function CommentCard({
   targetLabel = "this comment",
   actions,
   menuItems = [],
+  topics = [],
+  references = 0,
+  onOpenReferences,
   children
 }) {
   // Same rule as PostCard: the licence is a rare read, so it arrives from the
@@ -2887,7 +3051,11 @@ function CommentCard({
       fontSize: "var(--text-body-medium)",
       lineHeight: "var(--text-body-medium--line-height)"
     }
-  }, withMentions(content)), license && showLicense && /*#__PURE__*/React.createElement(LicenseTerms, {
+  }, withMentions(content)), /*#__PURE__*/React.createElement(TopicsLine, {
+    topics: topics,
+    references: references,
+    onOpenReferences: onOpenReferences
+  }), license && showLicense && /*#__PURE__*/React.createElement(LicenseTerms, {
     license: license
   }), edited && /*#__PURE__*/React.createElement(EditedMarker, null), pending && /*#__PURE__*/React.createElement(PendingMarker, null), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -3518,7 +3686,8 @@ function SensitiveScope({
 function SensitiveVeil({
   children,
   kind = "media",
-  label = "Sensitive",
+  label = "Sensitive — tap to view",
+  reason,
   revealLabel = "Show",
   radius
 }) {
@@ -3599,7 +3768,7 @@ function SensitiveVeil({
   }, veiled), /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: reveal,
-    "aria-label": `${label} — ${revealLabel.toLowerCase()}`,
+    "aria-label": `${label}${reason ? ` — ${reason}` : ""}`,
     className: "cg-focus",
     style: {
       position: "absolute",
@@ -3616,21 +3785,31 @@ function SensitiveVeil({
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      display: "inline-flex",
+      display: "flex",
+      flexDirection: "column",
       alignItems: "center",
       gap: "var(--space-2)",
-      borderRadius: "var(--radius-full)",
-      background: "var(--surface-snackbar)",
-      color: "var(--on-surface-snackbar)",
-      padding: "8px 14px",
+      padding: "0 var(--space-6)",
+      color: "#fff",
       fontFamily: "var(--font-sans)",
-      fontSize: "var(--text-label-large)",
-      fontWeight: "var(--text-label-large--font-weight)"
+      textAlign: "center"
     }
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "visibility",
-    size: 18
-  }), label)));
+    size: 24
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-large)",
+      fontWeight: "var(--text-label-large--font-weight)"
+    }
+  }, label), reason && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
+      opacity: 0.85,
+      textWrap: "pretty"
+    }
+  }, reason))));
 }
 const REASONS = {
   /* Removed for cause, by a passing proposal. Says what happened in the reader's
@@ -3699,94 +3878,9 @@ __ds_scope.SensitiveVeil = SensitiveVeil;
 __ds_scope.RedactedContent = RedactedContent;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/honesty/SensitiveVeil.jsx", error: String((e && e.message) || e) }); }
 
-// components/core/Chip.jsx
-try { (() => {
-/* Chips (backlog items 4 and 8).
-
-   TWO CHIPS, ONE SHAPE. A `Chip` is a filter the reader turns on and off; a
-   `TopicChip` is a topic that goes somewhere. They look alike on purpose — both
-   are a word in a pill — and they are told apart by what they do, which is the
-   same test that separates a button from a link (§7).
-
-   WHEN A CHIP AND NOT A SEGMENTED FILTER. Chips are for a set the reader can
-   combine, or one that grows: seven kinds of ranked content, an open list of
-   topics. A segmented filter is for two to four alternatives where exactly one
-   is true. Using chips for the exclusive case loses "one of these" ; using a
-   segmented row for the combinable case loses the combination.
-
-   32px drawn, 48px tapped: `cg-hit` grows the target without inflating a row of
-   seven of them past the height of the screen. Selection is
-   `secondaryContainer`, colour only \u2014 no check glyph, because a leading check on
-   the selected chips reflows every label in the row as the reader picks. */
-
-const PILL = {
-  display: "inline-flex",
-  alignItems: "center",
-  position: "relative",
-  height: "32px",
-  padding: "0 var(--space-3)",
-  borderRadius: "var(--radius-full)",
-  fontFamily: "var(--font-sans)",
-  fontSize: "var(--text-label-large)",
-  lineHeight: "var(--text-label-large--line-height)",
-  letterSpacing: "var(--text-label-large--letter-spacing)",
-  fontWeight: "var(--text-label-large--font-weight)",
-  cursor: "pointer",
-  whiteSpace: "nowrap",
-  textDecoration: "none"
-};
-function Chip({
-  label,
-  selected = false,
-  onToggle,
-  ariaLabel,
-  disabled = false
-}) {
-  return /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    role: "switch",
-    "aria-checked": selected,
-    "aria-label": ariaLabel,
-    disabled: disabled,
-    onClick: onToggle,
-    className: "cg-state cg-focus cg-hit",
-    style: {
-      ...PILL,
-      border: selected ? "1px solid transparent" : "1px solid var(--border-field)",
-      background: selected ? "var(--secondary-container)" : "transparent",
-      color: selected ? "var(--on-secondary-container)" : "var(--text-body)",
-      opacity: disabled ? "var(--state-disabled)" : 1
-    }
-  }, label);
-}
-
-/* A topic. The `#` is part of the word, not an icon: readers type it, and a topic
-   without it reads as a name. It navigates, so it is an anchor. */
-function TopicChip({
-  topic,
-  href,
-  onClick
-}) {
-  const name = topic.replace(/^#/, "");
-  return /*#__PURE__*/React.createElement("a", {
-    href: href ?? `/t/${name}`,
-    onClick: onClick,
-    className: "cg-state cg-focus cg-hit",
-    style: {
-      ...PILL,
-      border: "1px solid var(--border-hairline)",
-      background: "var(--surface-card)",
-      color: "var(--text-body)"
-    }
-  }, "#", name);
-}
-__ds_scope.Chip = Chip;
-__ds_scope.TopicChip = TopicChip;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/Chip.jsx", error: String((e && e.message) || e) }); }
-
 // components/content/PostCard.jsx
 try { (() => {
-const { Card, ActorChip, PendingMarker, EditedMarker, LicenseTerms, StanceControl, ExplainableNumber, MediaGallery, MediaViewer, RedactedContent, SensitiveScope, SensitiveVeil, OverflowMenu, Icon, TopicChip } = __ds_scope;
+const { Card, ActorChip, PendingMarker, EditedMarker, LicenseTerms, StanceControl, ExplainableNumber, MediaGallery, MediaViewer, RedactedContent, SensitiveScope, SensitiveVeil, OverflowMenu, Icon, TopicsLine } = __ds_scope;
 /* The post card of design.md §6 — "author (avatar, display name, handle,
    timestamp), optional title, optional description, body, media gallery, stance
    control", with the text-only, single-image, gallery, with-title and
@@ -3837,6 +3931,7 @@ function PostCard({
   onOpenScore,
   comments,
   onOpenComments,
+  onOpenReferences,
   media,
   actions,
   onOpenMedia,
@@ -3849,9 +3944,10 @@ function PostCard({
   const detail = variant === "detail";
   // THE AUTHOR'S SELF-MARK (readme §13): one flag veils the BODY and the
   // DESCRIPTION while the title stays readable, and the author's own reason
-  // rides the veil. One reveal answers for the whole card (SensitiveScope).
+  // rides the veil under its standard line. One reveal answers for the whole
+  // card (SensitiveScope).
   const veil = !redacted && sensitive ? {
-    label: sensitive.label ?? "Sensitive — tap to view"
+    reason: sensitive.reason ?? sensitive.label
   } : null;
   // REDACTION IS RECORD-GRANULAR. An illegal verdict removes the payload, so
   // every authored field goes at once — there is no redacted title beside a
@@ -4001,7 +4097,7 @@ function PostCard({
     }
   }, veil ? /*#__PURE__*/React.createElement(SensitiveVeil, {
     kind: "media",
-    label: veil.label,
+    reason: veil.reason,
     radius: "0px"
   }, /*#__PURE__*/React.createElement(MediaGallery, {
     items: media,
@@ -4015,27 +4111,12 @@ function PostCard({
     onClose: () => setViewing(null)
   }), redacted ? /*#__PURE__*/React.createElement(RedactedContent, redacted === true ? {} : redacted) : linkedText, !redacted && opener, license && showLicense && !redacted && /*#__PURE__*/React.createElement(LicenseTerms, {
     license: license
-  }), !redacted && (topics.length > 0 || references > 0) && /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: "var(--space-2)",
-      flexWrap: detail ? "wrap" : "nowrap",
-      overflow: "hidden",
-      minWidth: 0
-    }
-  }, topics.map(topic => /*#__PURE__*/React.createElement(TopicChip, {
-    key: topic,
-    topic: topic
-  })), references > 0 && /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: "none",
-      color: "var(--text-secondary)",
-      fontSize: "var(--text-body-small)",
-      lineHeight: "var(--text-body-small--line-height)",
-      whiteSpace: "nowrap"
-    }
-  }, "\xB7 ", references === 1 ? "1 reference" : `${references} references`)), edited && /*#__PURE__*/React.createElement(EditedMarker, null), pending && /*#__PURE__*/React.createElement(PendingMarker, null), (showStance || score !== undefined || comments !== undefined || actions) && /*#__PURE__*/React.createElement("div", {
+  }), !redacted && /*#__PURE__*/React.createElement(TopicsLine, {
+    topics: topics,
+    references: references,
+    wrap: detail,
+    onOpenReferences: onOpenReferences
+  }), edited && /*#__PURE__*/React.createElement(EditedMarker, null), pending && /*#__PURE__*/React.createElement(PendingMarker, null), (showStance || score !== undefined || comments !== undefined || actions) && /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       flexWrap: "nowrap",
@@ -4083,6 +4164,135 @@ function PostCard({
 }
 __ds_scope.PostCard = PostCard;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/PostCard.jsx", error: String((e && e.message) || e) }); }
+
+// components/content/ReferenceRow.jsx
+try { (() => {
+const { Icon, MonogramAvatar } = __ds_scope;
+/* One row of the topics-and-references sheet (readme §13, 2026-08-28), and the
+   result-row shape search reuses: EVERY row is leading mark · name · value, so
+   a heterogeneous list reads as one list.
+
+   THE LEADING MARK SAYS THE KIND, without a word beside it. A person keeps
+   their avatar — people are circles everywhere in this system. Every other
+   kind is a 32px tile at the small rung: a media post wears its cover, a text
+   post the letter T (a tile, not a glyph — no icon set has "text post"), and
+   the rest carry their node-type glyph — proposal `how_to_vote`, item
+   `inventory_2`, campaign `campaign`, offer `sell`, chat `forum`, comment
+   `chat_bubble`. A topic's tile is the same # its chip wears. Silhouettes are
+   deliberately distinct: an item is a box, an offer the price tag.
+
+   THE VALUE is the pair the author signed on this act — set at compose (a
+   changeable default), shown here for any reader: a signed act is public
+   record. Right-aligned, `body-small`, never coloured. */
+
+const KIND_GLYPHS = {
+  comment: "chat_bubble",
+  proposal: "how_to_vote",
+  item: "inventory_2",
+  campaign: "campaign",
+  offer: "sell",
+  chat: "forum"
+};
+function LeadingMark({
+  kind,
+  name,
+  src
+}) {
+  if (kind === "person") return /*#__PURE__*/React.createElement(MonogramAvatar, {
+    name: name,
+    src: src,
+    size: "md"
+  });
+  const tile = {
+    height: "32px",
+    width: "32px",
+    flex: "none",
+    display: "grid",
+    placeItems: "center",
+    borderRadius: "var(--radius-small)",
+    background: "var(--surface-container-highest)",
+    color: "var(--text-secondary)",
+    overflow: "hidden"
+  };
+  if (kind === "post" && src) {
+    return /*#__PURE__*/React.createElement("span", {
+      style: tile,
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("img", {
+      src: src,
+      alt: "",
+      style: {
+        height: "100%",
+        width: "100%",
+        objectFit: "cover"
+      }
+    }));
+  }
+  const letter = kind === "topic" ? "#" : kind === "post" ? "T" : null;
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...tile,
+      fontFamily: "var(--font-sans)",
+      fontSize: "var(--text-title-medium)",
+      fontWeight: "var(--text-title-medium--font-weight)"
+    },
+    "aria-hidden": "true"
+  }, letter ?? /*#__PURE__*/React.createElement(Icon, {
+    name: KIND_GLYPHS[kind],
+    size: 18
+  }));
+}
+function ReferenceRow({
+  kind = "post",
+  name,
+  src,
+  pair,
+  onOpen
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onOpen,
+    className: "cg-state cg-focus",
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-3)",
+      minHeight: "var(--touch-target-min)",
+      width: "100%",
+      border: 0,
+      background: "none",
+      padding: "var(--space-1) var(--space-6)",
+      cursor: "pointer",
+      fontFamily: "var(--font-sans)",
+      color: "var(--on-surface)",
+      textAlign: "left"
+    }
+  }, /*#__PURE__*/React.createElement(LeadingMark, {
+    kind: kind,
+    name: name,
+    src: src
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      minWidth: 0,
+      fontSize: "var(--text-body-medium)",
+      lineHeight: "var(--text-body-medium--line-height)",
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis"
+    }
+  }, name), pair && /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: "none",
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
+      color: "var(--text-secondary)",
+      whiteSpace: "nowrap"
+    }
+  }, pair));
+}
+__ds_scope.ReferenceRow = ReferenceRow;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/ReferenceRow.jsx", error: String((e && e.message) || e) }); }
 
 // components/forms/Checkbox.jsx
 try { (() => {
@@ -5335,6 +5545,10 @@ __ds_ns.CommentCard = __ds_scope.CommentCard;
 __ds_ns.OverflowMenu = __ds_scope.OverflowMenu;
 
 __ds_ns.PostCard = __ds_scope.PostCard;
+
+__ds_ns.ReferenceRow = __ds_scope.ReferenceRow;
+
+__ds_ns.TopicsLine = __ds_scope.TopicsLine;
 
 __ds_ns.BottomSheet = __ds_scope.BottomSheet;
 
