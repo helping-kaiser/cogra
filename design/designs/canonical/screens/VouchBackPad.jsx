@@ -13,7 +13,7 @@ function PadLine({ children }) {
 export function Screen() {
   return (
     <>
-      <CograBand>
+      <CograBand trailing={<FeedFilter />}>
         <BorrowedViewBand handle="mira" displayName="Mira Voss" avatarSrc="inviter.jpg" line="Browsing from @mira's view — vouch back to start your own." />
       </CograBand>
       <FeedList>
