@@ -21,7 +21,18 @@ function signedInStore() {
   return store;
 }
 
-function myProfileHandler() {
+function asset(id: string) {
+  return {
+    __typename: "MediaAttachment",
+    id,
+    url: `https://media.test/${id}.webp`,
+    altText: null,
+    status: "NORMAL",
+    options: { __typename: "MediaOptions", aspectRatio: "1:1" },
+  };
+}
+
+function myProfileHandler({ avatar = null }: { avatar?: unknown } = {}) {
   return graphql.query("MyProfile", () =>
     HttpResponse.json({
       data: {
@@ -32,10 +43,36 @@ function myProfileHandler() {
           displayName: { __typename: "ModeratedText", value: "Ada", status: "NORMAL" },
           bio: { __typename: "ModeratedText", value: "Old bio", status: "NORMAL" },
           websiteUrl: { __typename: "ModeratedText", value: null, status: "NORMAL" },
+          avatar,
+          cover: null,
         },
       },
     }),
   );
+}
+
+/** Captures what the update actually carried, which is the whole question. */
+function capturingUpdate(seen: { input?: Record<string, unknown> }) {
+  return graphql.mutation("PrepareProfileUpdate", ({ variables }) => {
+    seen.input = (variables as { input: Record<string, unknown> }).input;
+    return HttpResponse.json({
+      data: {
+        prepareProfileUpdate: {
+          __typename: "PreparePayload",
+          writes: [
+            {
+              __typename: "PreparedWrite",
+              id: "w1",
+              family: "REGISTRATION",
+              canonicalProposal: "cHJvcG9zYWw=",
+              gcAfterEpochs: 8,
+            },
+          ],
+          userErrors: [],
+        },
+      },
+    });
+  });
 }
 
 beforeEach(() => {
@@ -143,5 +180,72 @@ describe("ProfileEditPage", () => {
       "at least one field",
     );
     expect(push).not.toHaveBeenCalled();
+  });
+
+  // A profile update is THREE-valued where a content edit is two-valued, and
+  // the failure that matters is the silent one: sending null for a picture the
+  // author never touched would clear it.
+  describe("the avatar's three values", () => {
+    it("sends nothing at all for a picture the author left alone", async () => {
+      const seen: { input?: Record<string, unknown> } = {};
+      server.use(myProfileHandler({ avatar: asset("m-old") }), capturingUpdate(seen));
+      renderWithProviders(<ProfileEditPage />, {
+        store: signedInStore(),
+        writeSigner: fakeWriteSigner(),
+      });
+
+      fireEvent.change(await screen.findByTestId("profile-edit-bio"), {
+        target: { value: "A new bio" },
+      });
+      fireEvent.click(screen.getByTestId("profile-edit-save"));
+
+      await waitFor(() => expect(seen.input).toBeDefined());
+      expect(seen.input).not.toHaveProperty("avatarMediaId");
+      expect(seen.input).not.toHaveProperty("coverMediaId");
+    });
+
+    it("sends an explicit null to clear one", async () => {
+      const seen: { input?: Record<string, unknown> } = {};
+      server.use(myProfileHandler({ avatar: asset("m-old") }), capturingUpdate(seen));
+      renderWithProviders(<ProfileEditPage />, {
+        store: signedInStore(),
+        writeSigner: fakeWriteSigner(),
+      });
+
+      fireEvent.click(await screen.findByTestId("profile-edit-avatar-remove"));
+      fireEvent.click(screen.getByTestId("profile-edit-save"));
+
+      await waitFor(() => expect(seen.input).toBeDefined());
+      expect(seen.input).toHaveProperty("avatarMediaId", null);
+      // The cover was untouched, and must not be dragged along.
+      expect(seen.input).not.toHaveProperty("coverMediaId");
+    });
+
+    it("offers the removal back before it is saved", async () => {
+      server.use(myProfileHandler({ avatar: asset("m-old") }));
+      renderWithProviders(<ProfileEditPage />, {
+        store: signedInStore(),
+        writeSigner: fakeWriteSigner(),
+      });
+
+      fireEvent.click(await screen.findByTestId("profile-edit-avatar-remove"));
+      expect(screen.getByText("Saving replaces it with your monogram.")).toBeInTheDocument();
+      fireEvent.click(screen.getByTestId("profile-edit-avatar-remove"));
+      expect(
+        screen.queryByText("Saving replaces it with your monogram."),
+      ).not.toBeInTheDocument();
+    });
+
+    it("offers no removal where there is nothing to remove", async () => {
+      server.use(myProfileHandler());
+      renderWithProviders(<ProfileEditPage />, {
+        store: signedInStore(),
+        writeSigner: fakeWriteSigner(),
+      });
+
+      await screen.findByTestId("profile-edit-avatar-preview");
+      expect(screen.queryByTestId("profile-edit-avatar-remove")).not.toBeInTheDocument();
+      expect(screen.getByTestId("profile-edit-avatar-choose")).toHaveTextContent("Choose");
+    });
   });
 });

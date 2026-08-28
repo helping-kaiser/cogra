@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
@@ -8,6 +8,15 @@ import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
 import { FeedView } from "./feed-view";
+
+// The feed reads `?compose=` to say whether the last post landed, and rewrites
+// the URL when the notice is dismissed.
+const replace = vi.fn();
+let searchParams = new URLSearchParams();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace }),
+  useSearchParams: () => searchParams,
+}));
 
 // Every signed-in card reads its own standing, so the read is a default
 // rather than something each test remembers: an unhandled one degrades
@@ -60,11 +69,14 @@ function post(id: string, title: string, pending = false, topics: ReturnType<typ
     title: moderated(title),
     description: moderated(null),
     content: moderated(`body of ${id}`),
+    attachments: [],
+    attachmentsStatus: "NORMAL",
     author: {
       __typename: "User",
       id: "u1",
       handle: "alice",
       displayName: { __typename: "ModeratedText", value: "Alice" },
+      avatar: null,
     },
     createdAt: "2026-08-12T10:00:00Z",
     updatedAt: "2026-08-12T10:00:00Z",
@@ -89,6 +101,8 @@ function postsPage(nodes: ReturnType<typeof post>[], endCursor: string | null, h
 describe("FeedView", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    searchParams = new URLSearchParams();
+    replace.mockClear();
   });
 
   it("lists posts newest-first as served and links the composer when signed in", async () => {

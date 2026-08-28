@@ -55,6 +55,27 @@ export function cssRatio(ratio: number): string {
 }
 
 /**
+ * `MediaOptions.aspectRatio` as a number.
+ *
+ * The server derives the shape from the bytes and states it in lowest terms —
+ * "4:5", "1:1", "540:283". Null comes back where the asset has no probed shape,
+ * and a malformed or degenerate value is treated the same way rather than
+ * producing a NaN that would collapse a tile: the caller's own fallback (a
+ * square) is the honest reservation for "shape unknown".
+ */
+export function parseAspectRatio(text: string | null | undefined): number | null {
+  if (typeof text !== "string") return null;
+  const parts = text.split(":");
+  // Exactly two parts. Reading the first two of three would silently accept
+  // "4:5:6" as 4:5, which is a shape nobody stated.
+  if (parts.length !== 2) return null;
+  const w = Number(parts[0]);
+  const h = Number(parts[1]);
+  if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) return null;
+  return w / h;
+}
+
+/**
  * Whether the frame is fitted whole inside the tile (letterboxed) or fills it.
  *
  * `contain` is the default for a lead tile and any lone attachment, because the

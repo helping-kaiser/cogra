@@ -55,6 +55,15 @@
 //   redaction path short, and WebP is the one modern format with universal
 //   support that every browser can also ENCODE from a canvas.
 
+// · THE CROP IS BAKED HERE, not layered on top. D17 rules that the client
+//   crops and the uploaded bytes ARE the post's bytes, so the framing has to
+//   reach the encoder rather than staying a display transform. Doing it in this
+//   one pass matters: cropping to an intermediate blob and re-encoding it would
+//   put a third lossy generation between the phone and the feed, and would decode
+//   the same picture twice for no gain.
+
+import { CENTERED, clampCrop, type Crop } from "./crop";
+
 export const MAX_WIDTH = 1080;
 export const MAX_LONG_EDGE = 1440;
 export const WEBP_QUALITY = 0.8;
@@ -70,7 +79,50 @@ export type EncodeOptions = {
   maxWidth?: number;
   maxLongEdge?: number;
   quality?: number;
+  /**
+   * The output's aspect ratio (width / height). Omitted, the source's own
+   * shape is kept — the path a picture that never went through the crop step
+   * takes.
+   */
+  ratio?: number;
+  /** The framing inside that ratio; ignored without `ratio`. */
+  crop?: Crop;
 };
+
+/**
+ * The rectangle of the source the frame actually shows, in source pixels.
+ *
+ * It inverts what `cropStyle` does on screen, so what uploads is what the
+ * author framed. Two steps, in the order the browser applies them: the picture
+ * is cover-fitted to the frame, then scaled about the focal point. Cover-fitting
+ * first is what bounds the result — every focal point in the unit square keeps
+ * the frame covered, so the rectangle can never run off the source.
+ */
+export function sourceRect(
+  imageWidth: number,
+  imageHeight: number,
+  ratio: number,
+  crop: Crop = CENTERED,
+): { x: number; y: number; width: number; height: number } {
+  if (!Number.isFinite(ratio) || ratio <= 0) throw new Error("crop ratio is not usable");
+  const { zoom, x, y } = clampCrop(crop);
+  // The cover fit, expressed as the source region the frame sees at zoom 1:
+  // whichever axis is proportionally longer than the frame gets trimmed.
+  const sourceRatio = imageWidth / imageHeight;
+  const coverWidth = sourceRatio > ratio ? imageHeight * ratio : imageWidth;
+  const coverHeight = sourceRatio > ratio ? imageHeight : imageWidth / ratio;
+  const width = coverWidth / zoom;
+  const height = coverHeight / zoom;
+  // `transform-origin` keeps the focal point fixed, so the window slides across
+  // the trimmed region in proportion to how much slack the zoom opened up.
+  const slack = 1 - 1 / zoom;
+  return {
+    x: (imageWidth - coverWidth) / 2 + x * slack * coverWidth,
+    y: (imageHeight - coverHeight) / 2 + y * slack * coverHeight,
+    width,
+    height,
+  };
+}
 
 /**
  * The scaled size for a source, honouring both caps and never enlarging.
@@ -100,12 +152,16 @@ async function drawToCanvas(
   bitmap: ImageBitmap,
   width: number,
   height: number,
+  from: { x: number; y: number; width: number; height: number },
 ): Promise<OffscreenCanvas | HTMLCanvasElement> {
+  const paint = (context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) => {
+    context.drawImage(bitmap, from.x, from.y, from.width, from.height, 0, 0, width, height);
+  };
   if (typeof OffscreenCanvas !== "undefined") {
     const canvas = new OffscreenCanvas(width, height);
     const context = canvas.getContext("2d");
     if (!context) throw new Error("no 2d context");
-    context.drawImage(bitmap, 0, 0, width, height);
+    paint(context);
     return canvas;
   }
   const canvas = document.createElement("canvas");
@@ -113,7 +169,7 @@ async function drawToCanvas(
   canvas.height = height;
   const context = canvas.getContext("2d");
   if (!context) throw new Error("no 2d context");
-  context.drawImage(bitmap, 0, 0, width, height);
+  paint(context);
   return canvas;
 }
 
@@ -156,8 +212,16 @@ export async function encodeForUpload(
   // because the whole orientation argument rests on it.
   const bitmap = await createImageBitmap(source, { imageOrientation: "from-image" });
   try {
-    const { width, height } = targetSize(bitmap.width, bitmap.height, options);
-    const canvas = await drawToCanvas(bitmap, width, height);
+    const from =
+      options.ratio === undefined
+        ? { x: 0, y: 0, width: bitmap.width, height: bitmap.height }
+        : sourceRect(bitmap.width, bitmap.height, options.ratio, options.crop);
+    // The caps apply to what is being WRITTEN, so they read the cropped size:
+    // a wide crop out of a tall original is a wide picture, and capping the
+    // original's dimensions instead would shrink it for a height it no longer
+    // has.
+    const { width, height } = targetSize(from.width, from.height, options);
+    const canvas = await drawToCanvas(bitmap, width, height, from);
     const blob = await toBlob(canvas, options.quality ?? WEBP_QUALITY);
     return { blob, width, height };
   } finally {
