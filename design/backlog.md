@@ -148,11 +148,21 @@ picked chip shows its default pair, tap edits via the reader's
 chosen stance input) lands when the compose wizard boards convert
 to the screens pipeline (item 17).
 
-### 9 · Search + results · *design*
-Topics, post titles, usernames, item names. Produces a search field
-variant of `TextField` and result-row treatments per node type — a
-result list is a list of ranked nodes, so the row work is reused by the
-feed later.
+### 9 · Search + results · *design* · **in progress (2026-08-28)**
+Rulings settled (readme §13 *The search rulings*, Q46): ranked-first
+ordering with the seam, seen toggle, `@handle` / `#topic` scope
+operators, ranks on every kind, the Explore tab sharing its slot
+with the orbit entry. Produces the search field variant of
+`TextField`; the result rows are `ReferenceRow` (item 18).
+
+### 19 · The feed's filter + ordering on the canonical screens · *design*
+Item 4 built `FeedFilter` (kinds, forms, Ranked/Newest order, the
+trigger reading the view in words) — and no canonical feed board
+ever drew the trigger; it slipped while compose had the focus. Put
+the filter on the canonical feed screens, and grow its Order
+section with the search rulings' controls: the seen toggle
+("show already seen", default on, impression-based, device-local)
+rides beside the order swap, identical on feed and search.
 
 ### 10 · Sensitive veil treatment · *system*, has open questions
 Granularity is settled (blur only what is marked, reveal per post),
