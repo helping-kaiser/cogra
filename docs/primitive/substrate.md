@@ -297,11 +297,16 @@ CoGra is the carriage service for its users' content. The model is
   CoGra's fields ride in the guild keyspace; any L2 can parse and
   round-trip the container, but CoGra's fields are opaque to
   non-CoGra L2s — interop is structural, not semantic.
-- **Big bytes live external.** Media sits in CoGra blob storage,
-  verifiable against the committed digests. The witness covers the
-  envelope bytes; external resources are witnessed transitively
-  through their digests — substitution or rot is publicly
-  detectable evidence, not prevented delivery.
+- **Big bytes live external.** Media sits in the CoGra media
+  store, verifiable against the committed digests. The witness
+  covers the envelope bytes; external resources are witnessed
+  transitively through their digests — substitution or rot is
+  publicly detectable evidence, not prevented delivery. The
+  transitive witness is **CoGra's guarantee, not the container's**:
+  the envelope format registers no digest affordance and treats a
+  referent as opaque, so the digests ride CoGra's own guild
+  keyspace and a non-CoGra L2 reads the manifest as bytes it
+  cannot interpret.
 - **Node type is never in the payload.** Type is fixed by the
   authoring L1 edge (declarative identity); envelope conformance is
   a binary L2 admission check, never a ranking or reward signal.

@@ -20,9 +20,13 @@ operates is deliberately small:
   [data-model.md](data-model.md) is the schema;
   [graph-db-options.md](graph-db-options.md) records why no graph
   database is in the stack.
-- **Blob storage** for media bytes, verifiable against the digests
-  committed in payload envelopes
+- **The media service** — a standalone S3-compatible object store
+  holding media bytes, verifiable against the digests committed in
+  payload envelopes
   ([substrate.md §7](../primitive/substrate.md#7-payload-carriage)).
+  Its own service with its own volume and lifecycle: never inside
+  the API process, never in Postgres. The API is a client of it
+  and readers fetch from its origin directly.
 - **The CGT rail** — the chain carrying CoGra's reward economy:
   balances, escrow, transfers, payouts. The graph carries pointers
   to it, never amounts ([ledger.md](ledger.md)).
@@ -35,7 +39,7 @@ authors L0 records. The two moneys never mix — admission money is
 Layer 0's, reward money is CGT on CoGra's own rail.
 
 Vocabulary used throughout: **display content** is what UIs render
-(bodies, names, media URLs); **operational metadata** is what
+(bodies, names, galleries); **operational metadata** is what
 drives flows without being rendered (staging state, moderation
 flags, retention bookkeeping). Both are Postgres rows. Neither is
 ever what a record *is* — that is always the L1 record itself.
@@ -51,9 +55,9 @@ ever what a record *is* — that is always the L1 record itself.
 │ actor key, │              └───────┬───────────────┬───────┘
 │   signs)   │                      │               │
 └────────────┘              ┌───────▼───────┐  ┌────▼─────┐
-                            │  PostgreSQL   │  │   Blob   │
-                            │ record mirror │  │ storage  │
-                            │ overlay + L2  │  │ (media)  │
+                            │  PostgreSQL   │  │  Media   │
+                            │ record mirror │  │ service  │
+                            │ overlay + L2  │  │ (S3 API) │
                             │     truth     │  └──────────┘
                             └───────▲───────┘
                                     │ ingest accepted records
@@ -72,7 +76,7 @@ ever what a record *is* — that is always the L1 record itself.
 | Backend language | Rust — latest stable toolchain (`rust-toolchain.toml` tracks `stable`), 2024 edition |
 | API | Axum + async-graphql |
 | Store | PostgreSQL 16 (SQLx) — record mirror, overlay, L2 truth |
-| Media | Blob storage, digest-verified against payload envelopes |
+| Media | A standalone S3-compatible object store, digest-verified against payload envelopes |
 | Graph substrate | PeerNetworks Layer 1, behind one interface boundary |
 | Admission balance | Layer 0 export `B_i`, consume-only |
 | Money store | CGT rail — on-chain ledger ([ledger.md](ledger.md)) |
@@ -134,8 +138,8 @@ tables (L1's truth, cached), overlay tables (CoGra's own
 machinery, itself derived from public records), and authoritative
 L2 tables (identity association, display content, honor ledgers,
 staged applicants). Money sits in none of them; payload bytes and
-salts sit in the carriage tables and blob storage
-([data-model.md](data-model.md)).
+salts sit in the carriage tables, and media bytes in the media
+service ([data-model.md](data-model.md)).
 
 ### 3. Writes are client-signed, backend-relayed
 
@@ -410,6 +414,21 @@ Local development runs PostgreSQL via Docker Compose with named
 volumes, so data persists across `make down` / `make up`
 ([development.md](development.md) has the commands and
 environment); CI pins the same engine version, so dev and CI test
-against the same store. Media blobs use a local volume in
-development. The L1 substrate sits behind the §5 boundary in every
-environment.
+against the same store. The L1 substrate sits behind the §5
+boundary in every environment.
+
+The **media service** runs beside it as its own container — MinIO
+in development, any S3-compatible store in production — with its
+own volume and its own lifecycle. The API reaches it through a
+`BlobStore` trait that speaks the S3 object protocol rather than
+a filesystem, because that is the boundary that survives the
+store leaving this machine: another host, another provider, or a
+federated peer serving its own members' media. Objects are
+written before the row that points at them, since an orphaned
+object is collectable garbage while a row pointing at nothing is
+a render that can never succeed. Storage keys are
+server-generated, so nothing a client sent reaches a key and path
+traversal is unrepresentable rather than defended against.
+Readers fetch bytes from the media origin directly, never through
+the API; in development the web dev server proxies `/media/*` to
+it so a phone loads media from the same origin it already trusts.

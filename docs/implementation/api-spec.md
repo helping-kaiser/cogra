@@ -250,21 +250,31 @@ costs its requested (or default) page size times the per-item
 cost, so a nested full-page-connections query prices
 multiplicatively; an author-owned fold list (`topics`,
 `references`) takes no page argument and costs a stated bound of
-50 rows times the per-row cost. A tripped budget is a
-message-only GraphQL validation error ("Query is nested too
-deep." / "Query is too complex."), with no `extensions.code` —
-clients treat it as a generic transport failure.
+50 rows times the per-row cost, and a **gallery** costs its
+parent's write-side cap — ten for a post, four for a comment —
+times the per-item cost. A tripped budget is a message-only
+GraphQL validation error ("Query is nested too deep." / "Query is
+too complex."), with no `extensions.code` — clients treat it as a
+generic transport failure.
 
 **The fold bound is enforced, not assumed.** Fifty is the
 write-side cap on one author's standing set per artifact, per
 fold family — so a fold list cannot serve more rows than it was
 priced for, and the budget is a bound on the server's work rather
-than a hope about it.
+than a hope about it. A gallery's bound is enforced the same way,
+by the cap prepare refuses past.
 
 **The ceilings are measured, not chosen.** Both are derived from
 replaying every committed operation of both clients against the
-schema; the heaviest is the Android post-detail read at 176 198
+schema; the heaviest is the Android post-detail read at 178 347
 complexity and 12 levels, and 250 000 leaves it ~1.4× headroom.
+That headroom is now thin: the stated ratio admits 178 571, so
+the heaviest operation clears it by 224. A selection that
+multiplies across the thread — a comment author's avatar costs
+560, priced eighty times over — no longer fits, and the ceilings
+are owed a deliberate re-derivation rather than another
+selection squeezed under them
+([open-questions.md](../open-questions.md)).
 A standing test replays the whole corpus under both postures and
 fails by operation name, and re-measures it by bisection so a
 document growing *into* the headroom fails before it grows past
@@ -738,9 +748,15 @@ enum FieldModerationStatus { NORMAL SENSITIVE REDACTED }
 
 A media *gallery* (a list) can't wrap generically, so those fields
 keep their list and carry a sibling
-`attachmentsStatus: FieldModerationStatus!`. Every content-bearing
-node also keeps the node-level `moderationStatus: ModerationStatus!`
-cache — the cheap "is anything wrong here" check. The
+`attachmentsStatus: FieldModerationStatus!` — **one state for the
+whole set**. There is no per-asset sensitivity, because a reader
+never sees one: a sensitive post blurs as one region across
+media, text and description together, with the title outside it.
+A `MediaAttachment`'s own `status` carries redaction only, so the
+client can place the "Removed" mark on the picture it belongs to.
+Every content-bearing node also keeps the node-level
+`moderationStatus: ModerationStatus!` cache — the cheap "is
+anything wrong here" check. The
 substrate-visible verdict behind these flags is The Moderator's
 Tag record toward a named moderation Type; the flags are the
 Postgres projection of it
@@ -820,28 +836,56 @@ Two consequences of earlier principles show up throughout:
 ```graphql
 "A media asset (image / video / audio). Not a graph node — parents
  point at it and it never points back — so it carries no records.
- Bytes live in blob storage, verifiable against the digests
+ Bytes live in the media store, verifiable against the digests
  committed in the referencing payload envelope (substrate.md §7)."
 type MediaAttachment {
   id: UUID!
+  "Absolute, minted per read from the media origin's configured base."
   url: String!
+  "The digest the payload envelope commits, lowercase hex."
+  digest: String!
+  "The algorithm `digest` is under — `sha256` today."
+  digestAlgo: String!
   mimeType: String!
+  "Null past 32 bits rather than wrapping: the column is 64-bit."
   sizeBytes: Int
+  "Null once the asset is removed — redaction takes the description
+   with the picture."
   altText: String
+  "NORMAL, or REDACTED once the bytes are removed. Never SENSITIVE."
+  status: FieldModerationStatus!
   "Layout hints the frontend reads to reserve space before load."
   options: MediaOptions!
-  "The actor that uploaded the asset."
-  author: Actor!
+  "The account that uploaded the asset."
+  author: User
   createdAt: DateTime!
 }
 
 type MediaOptions {
   "Container aspect ratio as \"W:H\", so layout reserves space pre-load."
   aspectRatio: String
-  "Duration in milliseconds, for video / audio."
+  "Duration in milliseconds; null until video lands."
   durationMs: Int
 }
 ```
+
+`digest` and `digestAlgo` are exposed so the transitive witness is
+**checkable rather than asserted**: a reader hashes the bytes it
+was served and compares them against the record that carries
+them. The algorithm rides beside the digest so a reader never
+infers it from a length.
+
+`url` is absolute because the bytes come from the media store's
+own origin rather than the API's. It is minted per read from a
+configured base and never stored on the row — a stored URL would
+bake a deployment's address into the data and rot the moment the
+store moved.
+
+`status` is the visible mark for a removed asset, carried on the
+contract rather than left to a failed fetch: the store answers a
+removed object with a 404, which renders as a broken image, and
+this field is what lets a client draw the calm "Removed"
+placeholder instead of a silent gap.
 
 ### Actors
 
@@ -942,10 +986,13 @@ type Post implements Node {
   title: ModeratedText!
   "Optional short summary or subtitle."
   description: ModeratedText!
-  "The body."
+  "The words half of the body; value null on a media post, whose
+   body is its gallery. Exactly one of content.value and
+   attachments carries the body."
   content: ModeratedText!
   author: Actor!
-  attachments(first: Int, after: String, last: Int, before: String): PostAttachmentConnection!
+  "The gallery, in the author's order, the first entry the cover."
+  attachments: [MediaAttachment!]!
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
@@ -981,7 +1028,8 @@ type Comment implements Node {
   author: Actor!
   "The node this comment is on — the Review's parent."
   target: CommentTarget!
-  attachments(first: Int, after: String, last: Int, before: String): CommentAttachmentConnection!
+  "The gallery, in the author's order; a comment gallery has no cover."
+  attachments: [MediaAttachment!]!
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
@@ -1066,7 +1114,7 @@ type ChatMessage implements Node {
   author: Actor!
   "The chat this message belongs to."
   chat: Chat!
-  attachments(first: Int, after: String, last: Int, before: String): ChatMessageAttachmentConnection!
+  attachments: [MediaAttachment!]!
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
@@ -1087,7 +1135,7 @@ type Item implements Node {
   "The current certified owner — owner^(k), consumed read-only from
    L1's published title certificate; never a CoGra-authored fact."
   currentOwner: Actor!
-  attachments(first: Int, after: String, last: Int, before: String): ItemAttachmentConnection!
+  attachments: [MediaAttachment!]!
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
@@ -1283,61 +1331,35 @@ type CollectiveMemberEdge {
 }
 ```
 
-### Attachment connections
+### Galleries
 
-Per-parent media lists. Relationship facts (`displayOrder`,
-`isCover`) ride the connection edge, the idiomatic place for
-edge metadata.
+A parent's gallery is a **bounded list**, not a connection:
 
 ```graphql
-type PostAttachmentConnection {
-  edges: [PostAttachmentEdge!]!
-  pageInfo: PageInfo!
-  totalCount: Int
-}
-type PostAttachmentEdge {
-  cursor: String!
-  node: MediaAttachment!
-  "Order within the gallery."
-  displayOrder: Int!
-  "Whether this asset leads the gallery."
-  isCover: Boolean!
-}
-
-type CommentAttachmentConnection {
-  edges: [CommentAttachmentEdge!]!
-  pageInfo: PageInfo!
-  totalCount: Int
-}
-type CommentAttachmentEdge {
-  cursor: String!
-  node: MediaAttachment!
-  displayOrder: Int!
-}
-
-type ChatMessageAttachmentConnection {
-  edges: [ChatMessageAttachmentEdge!]!
-  pageInfo: PageInfo!
-  totalCount: Int
-}
-type ChatMessageAttachmentEdge {
-  cursor: String!
-  node: MediaAttachment!
-  displayOrder: Int!
-}
-
-type ItemAttachmentConnection {
-  edges: [ItemAttachmentEdge!]!
-  pageInfo: PageInfo!
-  totalCount: Int
-}
-type ItemAttachmentEdge {
-  cursor: String!
-  node: MediaAttachment!
-  displayOrder: Int!
-  isCover: Boolean!
-}
+attachments: [MediaAttachment!]!
+attachmentsStatus: FieldModerationStatus!
 ```
+
+The write side caps a post at ten attachments and a comment at
+four, so the whole gallery is always servable and a page argument
+would promise a pagination the read cannot honour. It is the
+shape `topics` and `references` carry, for the same reason and
+with the same pricing: a fold list takes no page argument and
+costs its stated bound, so a gallery inside a nested comment read
+adds a bounded cost instead of multiplying by a requested page
+size.
+
+The list is the gallery in the author's order and the first entry
+is the cover, so the relationship facts a connection edge would
+carry need no edge to ride on: order is position, and `isCover`
+is the first entry. `isCover` applies to post galleries only; a
+comment gallery ignores it and has no cover.
+
+`attachmentsStatus` is the gallery's moderation state — one state
+for the whole set, never one per picture. A `MediaAttachment`
+carries no sensitivity of its own: sensitivity is a whole-body
+state a reader sees as one blur across media, text and
+description together.
 
 ### Private viewer state
 
@@ -2706,8 +2728,17 @@ photo — needs.
 
 ```graphql
 "One attachment placement within a gallery. Assets are uploaded
- first via uploadMedia; the envelope commits their digests."
+ first via uploadMedia; the envelope commits their digests.
+
+ The list is the gallery in order, so displayOrder states the
+ entry's own index and isCover is true on the first entry and
+ nowhere else — the envelope carries order as array position and
+ has no room for a second, disagreeing index. A value that
+ contradicts its position is refused rather than silently
+ overridden. isCover applies to post galleries only."
 input AttachmentInput {
+  "An asset this author uploaded. Cross-author re-use is not
+   supported through this path."
   mediaId: UUID!
   displayOrder: Int!
   isCover: Boolean
@@ -2793,7 +2824,13 @@ input LicenseInput {
 input PreparePostInput {
   title: String
   description: String
-  content: String!
+  "The words half of the body. A post's body is words or media,
+   never both and never neither: supply content or attachments,
+   and put words that belong beside a picture in description.
+   Breaking the rule is a field-level refusal on content."
+  content: String
+  "The gallery, in order. At most 10; the same asset twice is
+   refused rather than deduplicated."
   attachments: [AttachmentInput!]
   tags: [TagInput!]
   references: [ReferenceInput!]
@@ -2929,8 +2966,6 @@ input PrepareProfileUpdateInput {
 input UploadMediaInput {
   file: Upload!
   altText: String
-  "Act as this Collective; null = the viewer is the asset's author."
-  actAs: UUID
 }
 type UploadMediaPayload { media: MediaAttachment! }
 
@@ -2972,6 +3007,58 @@ them ([substrate.md §7](../primitive/substrate.md#7-payload-carriage)).
 Messages have no edit surface: Message bodies are not among the
 declared updatable values
 ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
+
+**The body XOR.** A post's body is words or media, never both and
+never neither. `content` is nullable and the rule is enforced
+server-side, refusing with a field-level error on `["content"]` —
+the same way every other cross-field rule is enforced, because
+the API is the contract and a client is not where a rule lives.
+A `oneOf` input object would encode the rule in the type system,
+and it was checked first and rejected: Apollo Kotlin 4.4.3 marks
+`@oneOf` experimental and enforces it only at runtime, so the
+typing the feature exists to buy is exactly what it does not
+deliver on one of the two codegen paths. On the read side,
+`Post.content.value` is null on a media post. A comment is
+unaffected — words plus optional media, deliberately asymmetric,
+because an answer is words first.
+
+**Upload and gallery limits.** Uploading mints no record and costs
+no θ, so every control on it is an L2 policy limit rather than an
+economic one — a gallery of ten photos and a bare text post cost
+their author exactly the same single act, and the seal screen
+says so.
+
+- **One stored format: WebP.** Sniffed from the bytes, never
+  trusted from the declared content type, and refused if it does
+  not decode — a file that does not decode is not an image
+  whatever its header says. Clients re-encode on device, so no
+  other container reaches the server.
+- **10 MiB per asset**, refused at the transport with a
+  field-level error on `["file"]`.
+- **Ten attachments per post, four per comment**, checked whole
+  before a single act is staged, each refusal naming the offender
+  at `["attachments", "<i>", "mediaId"]`. The caps are what make
+  the gallery a bounded fold list rather than a connection.
+- **Sixty uploads per account per hour**
+  (`RATE_LIMIT_UPLOAD_PER_ACCOUNT`) — well above the widest
+  gallery gesture, well below a script. An upload precedes any
+  prepare, so θ gates nothing here and this limit is the only
+  thing that does.
+- **Metadata is stripped**, client-side and again server-side
+  before the digest is computed. A phone photo carries GPS
+  coordinates and a device serial, and reads are public and
+  unauthenticated, so publishing one untouched would publish where
+  its author lives.
+
+**Media serving.** Bytes are served by the **media origin**, not
+by the API: the store is its own service, so `MediaAttachment.url`
+is absolute and minted per read from a configured base. Objects
+carry `Cache-Control: public, max-age=31536000, immutable`, which
+is safe because an asset is immutable after upload, and the store
+answers ranged requests natively. A removed object answers 404 —
+the visible mark for a redaction rides
+`MediaAttachment.status` and the client placeholder it drives,
+never a failed fetch.
 
 ### Chats
 

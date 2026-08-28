@@ -456,7 +456,25 @@ behaviour and matching names:
   look changes without the clients rebinding.
 - **Media attachment** — aspect-ratio-reserved tile with
   optional alt text; gallery layout for multiples. Space is
-  reserved before load so content never jumps.
+  reserved before load so content never jumps. Portrait caps at
+  4:5 and a taller frame is fitted whole inside it, plain surface
+  showing at the sides — the layout never decides the author's
+  crop. A gallery's secondary squares are the one thing that
+  crops, because they are an index into the set rather than the
+  picture itself.
+- **Media viewer** — the full-size view a tap opens from the
+  detail surface: contained, as large as the screen allows,
+  dismissed with back, Escape, or the backdrop, and the route
+  never changes. In the feed the same tap opens the post.
+- **Picker and crop step** — the compose wizard's body-first
+  pick: a picked tray over a newest-first device grid, the first
+  pick the cover. The crop offers one shape for the whole post —
+  4:5, 1:1, or 1.91:1 — with framing chosen per picture and a
+  complete non-drag route through discrete move and zoom
+  controls.
+- **Body veil** — the sensitive state. The body blurs as one
+  region: media, text, and description together, with the title
+  outside it. Tap reveals.
 - **Empty, loading, and error states** for every list surface.
   Designed, not blank.
 - **Scaffolding** — top app bars, bottom navigation, bottom

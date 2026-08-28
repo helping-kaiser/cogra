@@ -41,12 +41,19 @@ The record carries:
 - **License qualifiers** — declared at authoring time, immutable,
   same rule as every content-creation flow
   ([platform-guidelines.md §5](platform-guidelines.md#5-license-and-provenance-obligations)).
-- **The payload envelope** — body text and media digests in the
-  Peer Content Envelope
-  ([substrate.md §7](../primitive/substrate.md#7-payload-carriage)).
+- **The payload envelope** — body text and the media manifest in
+  the Peer Content Envelope
+  ([substrate.md §7](../primitive/substrate.md#7-payload-carriage)),
+  one entry per asset carrying its digest, type and alt text.
   The witness lands on L1; the bytes and salt live in CoGra
   carriage — their only home, verifiable against the witness —
   and the mirror caches the structural record.
+
+A Comment is **words plus optional media** — deliberately
+asymmetric to the Post's body XOR, because an answer is words
+first. A picture supports the words; it never replaces them.
+A comment gallery has no cover: nothing leads a set that only
+ever accompanies a body.
 
 A Collective commenting is the same gesture by the Collective's
 own actor ([collectives.md](collectives.md)).
@@ -124,7 +131,11 @@ instantiated for Comments:
   incumbent holds
   ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
 - **Granularity:** the whole Comment — body and media manifest
-  together, the winning payload read as the complete state.
+  together, the winning payload read as the complete state. The
+  attachment rows are keyed on the version row, so the gallery
+  follows the winning version as the body does: a pending edit
+  that expires takes its gallery with it, and a superseded
+  version keeps its own rows.
 
 **The parent is genesis-fixed.** The Comment's parent is its
 **genesis** Review's A-leg target. Formation cannot check that an
