@@ -1,0 +1,146 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300..900&amp;display=swap">
+  <style>
+    body { margin: 0; }
+    .screen {
+      --primary: #9f4100; --on-primary: #ffffff;
+      --primary-container: #ef6c1a; --on-primary-container: #4f1d00;
+      --secondary-container: #feaa81; --on-secondary-container: #783c1c;
+      --surface: #fff8f6; --on-surface: #251913; --on-surface-variant: #584237;
+      --surface-container: #ffeae1; --surface-container-high: #fbe3d9; --surface-container-highest: #f5ded4;
+      --outline: #8c7165; --outline-variant: #e0c0b2;
+      --tile-a: #e8d5c8; --tile-b: #d9c2b0; --tile-c: #cbb39e; --tile-d: #bfa38c;
+      font-family: 'Figtree', 'Segoe UI', system-ui, sans-serif;
+    }
+    .screen[data-theme="dark"] {
+      --primary: #ff8d50; --on-primary: #341100;
+      --secondary-container: #743918; --on-secondary-container: #f8a57b;
+      --surface: #151312; --on-surface: #e8e1df; --on-surface-variant: #cdc5c2;
+      --surface-container: #221f1e; --surface-container-high: #2c2928; --surface-container-highest: #373433;
+      --outline: #968f8d; --outline-variant: #4b4644;
+      --tile-a: #3a332e; --tile-b: #453c35; --tile-c: #50453c; --tile-d: #5b4e43;
+    }
+  </style>
+</helmet>
+<div class="screen" data-theme="{{theme}}" style="width: 390px; height: 844px; display: flex; flex-direction: column; background: var(--surface); color: var(--on-surface); overflow: hidden; box-sizing: border-box;">
+
+  <div style="min-height: 48px; display: flex; align-items: center; gap: 4px; padding: 0 12px; flex: none;">
+    <span style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></span>
+    <h1 style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 400;">New post</h1>
+    <span style="flex: 1;"></span>
+    <span style="display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 32px; padding: 6px 16px; min-width: 64px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Next</span>
+  </div>
+
+  <div style="flex: none; display: flex; align-items: center; gap: 8px; padding: 8px 24px;">
+    <p style="margin: 0; flex: 1; font-size: 14px; line-height: 20px; letter-spacing: 0.25px; color: var(--on-surface-variant);">Pick one picture, several, or one video.</p>
+    <span style="font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; color: var(--primary);">Write words instead</span>
+  </div>
+
+  <div style="flex: none; display: flex; flex-direction: column; gap: 6px; padding: 4px 24px 12px 24px; border-bottom: 1px solid var(--outline-variant);">
+    <div style="display: flex; align-items: baseline; gap: 8px;">
+      <span style="flex: 1; font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; color: var(--on-surface-variant);">Picked · 2</span>
+      <span style="font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; color: var(--primary);">Show all</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="position: relative; width: 48px; height: 48px; border-radius: 8px; overflow: hidden; flex: none;">
+        <img src="post-photo.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+        <span style="position: absolute; left: 3px; bottom: 3px; padding: 0 5px; border-radius: 9999px; background: rgba(0,0,0,0.55); color: #ffffff; font-size: 10px; line-height: 14px; font-weight: 500; letter-spacing: 0.5px;">Cover</span>
+      </div>
+      <div style="position: relative; width: 48px; height: 48px; border-radius: 8px; overflow: hidden; flex: none;">
+        <img src="inviter.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+        <span style="position: absolute; right: 3px; top: 3px; width: 16px; height: 16px; border-radius: 9999px; background: rgba(0,0,0,0.55); color: #ffffff; display: flex; align-items: center; justify-content: center;"><svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg></span>
+      </div>
+      <span style="flex: 1; font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">The first one is the cover.</span>
+    </div>
+  </div>
+
+  <div style="flex: 1; display: flex; flex-wrap: wrap; gap: 3px; padding: 4px 4px 0 4px; overflow: hidden; align-content: flex-start;">
+    <div style="width: 125px; height: 125px; border: 1px dashed var(--outline); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--primary); box-sizing: border-box;">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6 8h-2v2h-2v-2H8v-2h2v-2h2v2h2v2z"></path></svg>
+      <span style="font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; text-align: center;">Your photos app</span>
+    </div>
+    <div style="position: relative; width: 125px; height: 125px; overflow: hidden;">
+      <img src="post-photo.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+      <span style="position: absolute; right: 6px; top: 6px; width: 20px; height: 20px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); display: flex; align-items: center; justify-content: center; font-size: 11px; line-height: 16px; font-weight: 500;">1</span>
+    </div>
+    <div style="position: relative; width: 125px; height: 125px; overflow: hidden;">
+      <img src="inviter.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+      <span style="position: absolute; right: 6px; top: 6px; width: 20px; height: 20px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); display: flex; align-items: center; justify-content: center; font-size: 11px; line-height: 16px; font-weight: 500;">2</span>
+    </div>
+    <div style="position: relative; width: 125px; height: 125px; background: var(--tile-a);">
+      <span style="position: absolute; right: 6px; top: 6px; width: 20px; height: 20px; border-radius: 9999px; border: 1px solid #ffffff; box-sizing: border-box;"></span>
+      <span style="position: absolute; left: 6px; bottom: 6px; padding: 1px 6px; border-radius: 4px; background: rgba(0,0,0,0.55); color: #ffffff; font-size: 11px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 3px;"><svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>0:42</span>
+    </div>
+    <div style="position: relative; width: 125px; height: 125px; background: var(--tile-b);"><span style="position: absolute; right: 6px; top: 6px; width: 20px; height: 20px; border-radius: 9999px; border: 1px solid #ffffff; box-sizing: border-box;"></span></div>
+    <div style="position: relative; width: 125px; height: 125px; background: var(--tile-c);"><span style="position: absolute; right: 6px; top: 6px; width: 20px; height: 20px; border-radius: 9999px; border: 1px solid #ffffff; box-sizing: border-box;"></span></div>
+    <div style="position: relative; width: 125px; height: 125px; background: var(--tile-d);"><span style="position: absolute; right: 6px; top: 6px; width: 20px; height: 20px; border-radius: 9999px; border: 1px solid #ffffff; box-sizing: border-box;"></span></div>
+    <div style="position: relative; width: 125px; height: 125px; background: var(--tile-b);"><span style="position: absolute; right: 6px; top: 6px; width: 20px; height: 20px; border-radius: 9999px; border: 1px solid #ffffff; box-sizing: border-box;"></span></div>
+    <div style="position: relative; width: 125px; height: 125px; background: var(--tile-d);"><span style="position: absolute; right: 6px; top: 6px; width: 20px; height: 20px; border-radius: 9999px; border: 1px solid #ffffff; box-sizing: border-box;"></span></div>
+    <div style="position: relative; width: 125px; height: 125px; background: var(--tile-a);"><span style="position: absolute; right: 6px; top: 6px; width: 20px; height: 20px; border-radius: 9999px; border: 1px solid #ffffff; box-sizing: border-box;"></span></div>
+    <div style="position: relative; width: 125px; height: 125px; background: var(--tile-c);"><span style="position: absolute; right: 6px; top: 6px; width: 20px; height: 20px; border-radius: 9999px; border: 1px solid #ffffff; box-sizing: border-box;"></span></div>
+    <div style="position: relative; width: 125px; height: 125px; background: var(--tile-a);"><span style="position: absolute; right: 6px; top: 6px; width: 20px; height: 20px; border-radius: 9999px; border: 1px solid #ffffff; box-sizing: border-box;"></span></div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"theme":{"editor":"enum","options":["auto","light","dark"],"default":"auto"}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    this.media = window.matchMedia("(prefers-color-scheme: dark)");
+    this.onScheme = () => this.forceUpdate();
+    this.media.addEventListener("change", this.onScheme);
+    this.onMsg = (event) => {
+      const d = event.data;
+      if (d && (d.cograTheme === "light" || d.cograTheme === "dark" || d.cograTheme === "auto")) {
+        if (!this.state || this.state.remote !== d.cograTheme) this.setState({ remote: d.cograTheme });
+      } else if (d && d.cograThemeQuery && this.state && this.state.remote && event.source) {
+        try { event.source.postMessage({ cograTheme: this.state.remote }, "*"); } catch (e) {}
+      }
+    };
+    window.addEventListener("message", this.onMsg);
+    try {
+      const askWalk = (w, depth) => {
+        if (depth > 5) return;
+        let n = 0;
+        try { n = w.length; } catch (e) { n = 0; }
+        for (let i = 0; i < n; i++) {
+          let c = null;
+          try { c = w[i]; } catch (e) { c = null; }
+          if (c) {
+            try { c.postMessage({ cograThemeQuery: true }, "*"); } catch (e) {}
+            askWalk(c, depth + 1);
+          }
+        }
+      };
+      askWalk(window.top, 0);
+    } catch (e) {}
+  }
+  componentDidUpdate(prevProps) {
+    if (prevProps.theme !== this.props.theme && this.state && this.state.remote) {
+      this.setState({ remote: null });
+    }
+  }
+  componentWillUnmount() {
+    if (this.media) this.media.removeEventListener("change", this.onScheme);
+    window.removeEventListener("message", this.onMsg);
+  }
+  renderVals() {
+    const remote = this.state ? this.state.remote : null;
+    const mode = remote ?? this.props.theme ?? "auto";
+    const dark = mode === "auto"
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+      : mode === "dark";
+    return { theme: dark ? "dark" : "light" };
+  }
+}
+</script>
+</body>
+</html>

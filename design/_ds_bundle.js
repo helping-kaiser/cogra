@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"MediaAttachment","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/proposed/MediaViewer.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"}],"sourceHashes":{"components/content/CommentCard.jsx":"d3b668887d51","components/content/OverflowMenu.jsx":"5a5ff330770c","components/content/PostCard.jsx":"a2c9703eb2d5","components/core/BottomSheet.jsx":"61c3f29397e6","components/core/Button.jsx":"5db26ffc9a7f","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"3c8d1c835bb0","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c3fc1cd30267","components/forms/PasswordField.jsx":"38bf37cacbb0","components/forms/RecoveryCode.jsx":"b89705800497","components/forms/TextField.jsx":"ad5b7c03b0c1","components/honesty/PendingMarker.jsx":"28eaaf4ffa77","components/honesty/SensitiveVeil.jsx":"7ed73023e4d5","components/honesty/TransportError.jsx":"2f66269a8f3c","components/navigation/BorrowedViewBand.jsx":"66c07c53862e","components/navigation/BottomNav.jsx":"53a749d4ddf1","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"a5d1696ddb4e","components/navigation/Icon.jsx":"101bee8e291d","components/navigation/PageHeader.jsx":"be9af2dd1404","components/navigation/SegmentedFilter.jsx":"430fc566a8ce","components/people/ActorChip.jsx":"c896c8c4aaeb","components/people/ProfileHeader.jsx":"f6159ea12140","components/proposed/ExplainableNumber.jsx":"b29af54b996a","components/proposed/MediaAttachment.jsx":"fa1b541a8999","components/proposed/MediaViewer.jsx":"3a09af18787e","components/stance/SeveranceConfirm.jsx":"1a0dbafb9e95","components/stance/StanceAlternates.jsx":"0b50770f4aa0","components/stance/StanceCoachMark.jsx":"4d4cfdcab8db","components/stance/StanceControl.jsx":"d1100f70b806","components/stance/StancePad.jsx":"f6eda3aa07e3","components/stance/StanceReadout.jsx":"004726c35cdd","components/stance/StanceSlider.jsx":"325286a6b95d","components/states/EmptyState.jsx":"ada7c8e59cc9","designs/core-loop/app.jsx":"44ff990afba5","designs/core-loop/data.jsx":"534511e4e114"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/proposed/MediaAttachment.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"MediaAttachment","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/proposed/MediaViewer.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"}],"sourceHashes":{"components/content/CommentCard.jsx":"d9862de81cc2","components/content/OverflowMenu.jsx":"5a5ff330770c","components/content/PostCard.jsx":"0c4b5b373a10","components/content/ReferenceRow.jsx":"bd1330d6e151","components/content/TopicsLine.jsx":"b3bfa12c4d86","components/core/BottomSheet.jsx":"04aa46ec17d9","components/core/Button.jsx":"ff5a90231bbe","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"48c703bd16e0","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c3fc1cd30267","components/forms/PasswordField.jsx":"38bf37cacbb0","components/forms/RecoveryCode.jsx":"b89705800497","components/forms/TextField.jsx":"ad5b7c03b0c1","components/honesty/PendingMarker.jsx":"28eaaf4ffa77","components/honesty/SensitiveVeil.jsx":"92e923dee41b","components/honesty/TransportError.jsx":"2f66269a8f3c","components/navigation/BorrowedViewBand.jsx":"66c07c53862e","components/navigation/BottomNav.jsx":"53a749d4ddf1","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"a5d1696ddb4e","components/navigation/Icon.jsx":"a832d92b80d9","components/navigation/PageHeader.jsx":"be9af2dd1404","components/navigation/SegmentedFilter.jsx":"430fc566a8ce","components/people/ActorChip.jsx":"924eeeb34308","components/people/ProfileHeader.jsx":"f6159ea12140","components/proposed/ExplainableNumber.jsx":"b29af54b996a","components/proposed/MediaAttachment.jsx":"fa1b541a8999","components/proposed/MediaViewer.jsx":"3a09af18787e","components/stance/SeveranceConfirm.jsx":"1a0dbafb9e95","components/stance/StanceAlternates.jsx":"0b50770f4aa0","components/stance/StanceCoachMark.jsx":"4d4cfdcab8db","components/stance/StanceControl.jsx":"2b4d515f933a","components/stance/StancePad.jsx":"f6eda3aa07e3","components/stance/StanceReadout.jsx":"004726c35cdd","components/stance/StanceSlider.jsx":"325286a6b95d","components/states/EmptyState.jsx":"ada7c8e59cc9","designs/core-loop/app.jsx":"44ff990afba5","designs/core-loop/data.jsx":"534511e4e114"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/proposed/MediaAttachment.jsx"}]} */
 
 (() => {
 
@@ -49,7 +49,9 @@ try { (() => {
    border, and a body-coloured label on an outlined button reads as disabled.
 
    The pill at every size (Material's button shape, not a rung of the shape
-   scale); both sizes carry `label-large` and differ only in padding. */
+   scale); both sizes carry `label-large`. Heights are TRUE heights (border-box):
+   40px `lg`, 32px `sm` — and every pill holds a 64px minimum width so short
+   labels (Next, Set, Done) keep their weight (readme §13, 2026-08-27). */
 
 const VARIANTS = {
   primary: {
@@ -70,10 +72,10 @@ const VARIANTS = {
 };
 const SIZES = {
   sm: {
-    padding: "6px 12px"
+    padding: "6px 16px"
   },
   lg: {
-    padding: "8px 16px"
+    padding: "10px 24px"
   }
 };
 function buttonStyle({
@@ -99,7 +101,9 @@ function buttonStyle({
     alignItems: "center",
     justifyContent: "center",
     gap: "var(--space-2)",
-    minHeight: size === "sm" ? "32px" : "40px"
+    minHeight: size === "sm" ? "32px" : "40px",
+    minWidth: "64px",
+    boxSizing: "border-box"
   };
 }
 
@@ -171,6 +175,10 @@ function MonogramAvatar({
     height: "64px",
     width: "64px",
     fontSize: "var(--text-headline-small)"
+  } : size === "md" ? {
+    height: "32px",
+    width: "32px",
+    fontSize: "var(--text-label-medium)"
   } : {
     height: "24px",
     width: "24px",
@@ -1948,12 +1956,23 @@ function parkedPadStyle(inset = 16) {
     maxHeight: `calc(100dvh - ${inset * 2}px)`
   };
 }
+
+/* `defaultOpen`/`defaultPick` exist for STATES A CLICK CANNOT REACH: the
+   prototype boards are server-rendered, so a screen showing the parked pad asks
+   the MASTER for it instead of copying the card — the copy is never the answer.
+   `padInset` lifts the parked card clear of a bottom bar (the pad sits above the
+   bar, readme §13); `padNote` is the shell's one-time coaching slot — the first
+   vouch speaks there, between the field and the landing line. */
 function StanceControl({
   targetLabel = "this post",
   bundle: supplied,
   signedIn = true,
   taught: taughtProp,
-  onCommit
+  onCommit,
+  defaultOpen = false,
+  defaultPick,
+  padInset = 16,
+  padNote
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
   React.useEffect(() => {
@@ -1965,11 +1984,11 @@ function StanceControl({
   React.useEffect(() => {
     if (taughtProp) setTaught(true);
   }, [taughtProp]);
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(defaultOpen);
   const [alternates, setAlternates] = React.useState(false);
   const [coach, setCoach] = React.useState(false);
   const [explaining, setExplaining] = React.useState(false);
-  const [pick, setPick] = React.useState(ORIGIN);
+  const [pick, setPick] = React.useState(defaultPick ?? ORIGIN);
   const [confirming, setConfirming] = React.useState(null);
   const [signed, setSigned] = React.useState(null);
   const [joinPrompt, setJoinPrompt] = React.useState(false);
@@ -2173,7 +2192,7 @@ function StanceControl({
     role: "group",
     "aria-label": `Stance pad for ${targetLabel}`,
     style: {
-      ...parkedPadStyle(),
+      ...parkedPadStyle(padInset),
       zIndex: 20,
       display: "flex",
       width: "17rem",
@@ -2254,15 +2273,16 @@ function StanceControl({
     value: pick,
     onChange: setPick,
     fieldRef: fieldRef
-  }), /*#__PURE__*/React.createElement(StanceLandingLine, {
+  }), padNote, /*#__PURE__*/React.createElement(StanceLandingLine, {
     landing: landing
   })), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
+      justifyContent: "flex-end",
       gap: "var(--space-2)"
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, (bundle.records > 0 || bundle.severed === true) && /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: openSeverance,
     className: BUTTON_CLASS,
@@ -2375,6 +2395,16 @@ const PATHS = {
      the CURRENT state, and the accessible name says what the tap will do. */
   volume_up: ["M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"],
   volume_off: ["M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"],
+  /* THE NODE-TYPE GLYPHS (readme §13, 2026-08-28): a reference row leads with
+     its node's kind. People wear their avatar and a media post its cover, so
+     these cover the rest — proposal, item, campaign, offer, chat — one per
+     kind, silhouettes deliberately distinct (an item is a box, an offer the
+     price tag). A text post wears the letter T as a tile, not a glyph. */
+  how_to_vote: ["M18 13h-.68l-2 2h1.91L19 17H5l1.78-2h2.05l-2-2H6l-3 3v4c0 1.1.89 2 1.99 2H19c1.1 0 2-.89 2-2v-4l-3-3zm-1-5.05l-4.95 4.95-3.54-3.54 4.95-4.95L17 7.95zm-4.24-5.66L6.39 8.66c-.39.39-.39 1.02 0 1.41l4.95 4.95c.39.39 1.02.39 1.41 0l6.36-6.36c.39-.39.39-1.02 0-1.41L14.16 2.3c-.38-.4-1.01-.4-1.4-.01z"],
+  inventory_2: ["M20,2H4C3,2,2,2.9,2,4v3.01C2,7.73,2.43,8.35,3,8.7V20c0,1.1,1.1,2,2,2h14c0.9,0,2-0.9,2-2V8.7c0.57-0.35,1-0.97,1-1.69V4 C22,2.9,21,2,20,2z M15,14H9v-2h6V14z M20,7H4V4h16V7z"],
+  campaign: ["M18 11v2h4v-2h-4zm-2 6.61c.96.71 2.21 1.65 3.2 2.39.4-.53.8-1.07 1.2-1.6-.99-.74-2.24-1.68-3.2-2.4-.4.54-.8 1.08-1.2 1.61zM20.4 5.6c-.4-.53-.8-1.07-1.2-1.6-.99.74-2.24 1.68-3.2 2.4.4.53.8 1.07 1.2 1.6.96-.72 2.21-1.65 3.2-2.4zM4 9c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h1v4h2v-4h1l5 3V6L8 9H4zm11.5 3c0-1.33-.58-2.53-1.5-3.35v6.69c.92-.81 1.5-2.01 1.5-3.34z"],
+  sell: ["M21.41,11.41l-8.83-8.83C12.21,2.21,11.7,2,11.17,2H4C2.9,2,2,2.9,2,4v7.17c0,0.53,0.21,1.04,0.59,1.41l8.83,8.83 c0.78,0.78,2.05,0.78,2.83,0l7.17-7.17C22.2,13.46,22.2,12.2,21.41,11.41z M6.5,8C5.67,8,5,7.33,5,6.5S5.67,5,6.5,5S8,5.67,8,6.5 S7.33,8,6.5,8z"],
+  forum: ["M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"],
   /* The Post Score's glyph. A branching graph: the score comes out of the graph,
      and the branches hint at the paths folded up behind the number. Material
      Symbols only, and the FILL-1 cut is derived (see the top of this file) —
@@ -2481,13 +2511,18 @@ try { (() => {
    · Enters over 400ms from the bottom, leaves over 200ms to the bottom
      (`tokens/transitions.css`) — a dismissal exits the edge it entered from. */
 
+/* `height` pins the sheet at a fixed size instead of letting content set it —
+   the comments sheet fills the screen up to a sliver below the top (readme §13,
+   2026-08-28), and a pinned input row at its foot needs the surface itself to
+   own the height. The children then manage their own scrolling. */
 function BottomSheet({
   open = false,
   onClose,
   ariaLabel,
   children,
   inline = false,
-  maxHeight = "62%"
+  maxHeight = "62%",
+  height
 }) {
   const [shown, setShown] = React.useState(open);
   const [closing, setClosing] = React.useState(false);
@@ -2535,8 +2570,13 @@ function BottomSheet({
         right: 0,
         bottom: 0,
         zIndex: 41,
-        maxHeight,
-        overflowY: "auto"
+        ...(height ? {
+          height,
+          overflow: "hidden"
+        } : {
+          maxHeight,
+          overflowY: "auto"
+        })
       })
     }
   }, /*#__PURE__*/React.createElement("span", {
@@ -2763,19 +2803,241 @@ function OverflowMenu({
 __ds_scope.OverflowMenu = OverflowMenu;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/OverflowMenu.jsx", error: String((e && e.message) || e) }); }
 
+// components/core/Chip.jsx
+try { (() => {
+/* Chips (backlog items 4 and 8).
+
+   TWO CHIPS, ONE SHAPE. A `Chip` is a filter the reader turns on and off; a
+   `TopicChip` is a topic that goes somewhere. They look alike on purpose — both
+   are a word in a pill — and they are told apart by what they do, which is the
+   same test that separates a button from a link (§7).
+
+   WHEN A CHIP AND NOT A SEGMENTED FILTER. Chips are for a set the reader can
+   combine, or one that grows: seven kinds of ranked content, an open list of
+   topics. A segmented filter is for two to four alternatives where exactly one
+   is true. Using chips for the exclusive case loses "one of these" ; using a
+   segmented row for the combinable case loses the combination.
+
+   32px drawn, 48px tapped: `cg-hit` grows the target without inflating a row of
+   seven of them past the height of the screen. Selection is
+   `secondaryContainer`, colour only \u2014 no check glyph, because a leading check on
+   the selected chips reflows every label in the row as the reader picks. */
+
+const PILL = {
+  display: "inline-flex",
+  alignItems: "center",
+  position: "relative",
+  height: "32px",
+  padding: "0 var(--space-3)",
+  borderRadius: "var(--radius-full)",
+  fontFamily: "var(--font-sans)",
+  fontSize: "var(--text-label-large)",
+  lineHeight: "var(--text-label-large--line-height)",
+  letterSpacing: "var(--text-label-large--letter-spacing)",
+  fontWeight: "var(--text-label-large--font-weight)",
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+  textDecoration: "none"
+};
+function Chip({
+  label,
+  selected = false,
+  onToggle,
+  ariaLabel,
+  disabled = false
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    role: "switch",
+    "aria-checked": selected,
+    "aria-label": ariaLabel,
+    disabled: disabled,
+    onClick: onToggle,
+    className: "cg-state cg-focus cg-hit",
+    style: {
+      ...PILL,
+      border: selected ? "1px solid transparent" : "1px solid var(--border-field)",
+      background: selected ? "var(--secondary-container)" : "transparent",
+      color: selected ? "var(--on-secondary-container)" : "var(--text-body)",
+      opacity: disabled ? "var(--state-disabled)" : 1
+    }
+  }, label);
+}
+
+/* A topic. The `#` is part of the word, not an icon: readers type it, and a topic
+   without it reads as a name. It navigates, so it is an anchor. */
+function TopicChip({
+  topic,
+  href,
+  onClick,
+  inert = false,
+  style: override
+}) {
+  const name = topic.replace(/^#/, "");
+  const style = {
+    ...PILL,
+    border: "1px solid var(--border-hairline)",
+    background: "var(--surface-card)",
+    color: "var(--text-body)",
+    ...override
+  };
+  // The inert cut: the same pill inside a larger tap target (the detail card's
+  // topics line is ONE control opening the sheet) — a link nested in a button
+  // is two controls fighting over one press, and invalid markup besides.
+  if (inert) return /*#__PURE__*/React.createElement("span", {
+    style: style
+  }, "#", name);
+  return /*#__PURE__*/React.createElement("a", {
+    href: href ?? `/t/${name}`,
+    onClick: onClick,
+    className: "cg-state cg-focus cg-hit",
+    style: style
+  }, "#", name);
+}
+__ds_scope.Chip = Chip;
+__ds_scope.TopicChip = TopicChip;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/Chip.jsx", error: String((e && e.message) || e) }); }
+
+// components/content/TopicsLine.jsx
+try { (() => {
+const { TopicChip } = __ds_scope;
+/* The topics-and-citations line a content card wears, shared by PostCard and
+   CommentCard — it appeared on a second surface, so it moved here (the repo's
+   own rule; a copy is never the answer).
+
+   AT MOST TWO CHIPS, THEN THE COUNTS (readme §13, 2026-08-28): a clipped
+   parade of half-chips says nothing, so the line shows up to two topics whole
+   — each capped so both always fit beside the counts — and states the rest in
+   words: "· 23 topics · 3 references". The counts are the readable fact AND
+   the way in: the topics-and-references sheet is the full set's home. Never a
+   wrap, never a second row (readme §13's collapse order).
+
+   Two tap models, never mixed: in a summary card the chips navigate to their
+   topics and the counts open the sheet; on a detail surface pass `onOpen` and
+   the WHOLE LINE is one control opening the sheet, the chips inert inside it. */
+
+const VISIBLE_CHIPS = 2;
+/* Two capped chips + the counts fit a 390px card at its 16px insets. */
+const CHIP_CAP = {
+  display: "inline-block",
+  boxSizing: "border-box",
+  maxWidth: "96px",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  lineHeight: "30px"
+};
+const COUNT_STYLE = {
+  flex: "none",
+  color: "var(--text-secondary)",
+  fontSize: "var(--text-body-small)",
+  lineHeight: "var(--text-body-small--line-height)",
+  whiteSpace: "nowrap"
+};
+function countsText(hiddenTopics, references) {
+  const parts = [];
+  if (hiddenTopics > 0) parts.push(hiddenTopics === 1 ? "1 topic" : `${hiddenTopics} topics`);
+  if (references > 0) parts.push(references === 1 ? "1 reference" : `${references} references`);
+  if (parts.length === 0) return null;
+  return `· ${parts.join(" · ")}`;
+}
+const LINE = {
+  display: "flex",
+  alignItems: "center",
+  gap: "var(--space-2)",
+  flexWrap: "nowrap",
+  overflow: "hidden",
+  minWidth: 0
+};
+function TopicsLine({
+  topics = [],
+  references = 0,
+  onOpen,
+  onOpenReferences
+}) {
+  if (topics.length === 0 && references === 0) return null;
+  const visible = topics.slice(0, VISIBLE_CHIPS);
+  const counts = countsText(topics.length - visible.length, references);
+  if (onOpen) {
+    return /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: onOpen,
+      "aria-label": "Topics and references",
+      className: "cg-state cg-focus",
+      style: {
+        ...LINE,
+        width: "100%",
+        border: 0,
+        background: "none",
+        padding: 0,
+        cursor: "pointer",
+        fontFamily: "var(--font-sans)",
+        textAlign: "left"
+      }
+    }, visible.map(topic => /*#__PURE__*/React.createElement(TopicChip, {
+      key: topic,
+      topic: topic,
+      inert: true,
+      style: CHIP_CAP
+    })), counts && /*#__PURE__*/React.createElement("span", {
+      style: COUNT_STYLE
+    }, counts));
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    style: LINE
+  }, visible.map(topic => /*#__PURE__*/React.createElement(TopicChip, {
+    key: topic,
+    topic: topic,
+    style: CHIP_CAP
+  })), counts && (onOpenReferences ? /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onOpenReferences,
+    className: "cg-state cg-focus",
+    style: {
+      flex: "none",
+      border: 0,
+      background: "none",
+      padding: 0,
+      cursor: "pointer",
+      fontFamily: "var(--font-sans)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: COUNT_STYLE
+  }, counts)) : /*#__PURE__*/React.createElement("span", {
+    style: COUNT_STYLE
+  }, counts)));
+}
+__ds_scope.TopicsLine = TopicsLine;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/TopicsLine.jsx", error: String((e && e.message) || e) }); }
+
 // components/content/CommentCard.jsx
 try { (() => {
-const { Card, Button, ActorChip, PendingMarker, EditedMarker, LicenseTerms, StanceControl, OverflowMenu } = __ds_scope;
+const { Card, Button, ActorChip, PendingMarker, EditedMarker, LicenseTerms, StanceControl, OverflowMenu, TopicsLine } = __ds_scope;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* The comment of design.md §6 — "author, body, timestamp, media, nested replies,
    stance control", in its top-level and nested variants. Extracted from
    `post-view.tsx` for the same reason as PostCard: it is the product's own
    "second surface" rule, and the recursion was previously inline.
 
-   Nesting indents 12px per level up to three levels, then flattens — a thread
-   that indents forever ends up a column one word wide. */
+   THE THREAD IS TWO LEVELS DEEP ON SCREEN (readme §13, 2026-08-28): a comment,
+   and its replies indented once. Anything deeper flattens into that one reply
+   level and opens with the @handle it answers — the mention IS the structure,
+   so the column never narrows to a word. Replies arrive COLLAPSED behind a
+   "View n replies" line (`replyCount`); `replies` renders them expanded. */
 
-const MAX_INDENT_DEPTH = 3;
+const MAX_INDENT_DEPTH = 1;
+
+/* @handle tokens read as what they are — a reference to a person. */
+function withMentions(text) {
+  const parts = String(text).split(/(@[a-z0-9_]+)/gi);
+  if (parts.length === 1) return text;
+  return parts.map((part, index) => part.startsWith("@") ? /*#__PURE__*/React.createElement("span", {
+    key: index,
+    style: {
+      color: "var(--primary)",
+      fontWeight: "var(--text-label-large--font-weight)"
+    }
+  }, part) : part);
+}
 function CommentCard({
   author,
   content,
@@ -2786,6 +3048,8 @@ function CommentCard({
   bundle,
   depth = 0,
   replies = [],
+  replyCount = 0,
+  onOpenReplies,
   signedIn = true,
   taught = true,
   onCommit,
@@ -2795,6 +3059,9 @@ function CommentCard({
   targetLabel = "this comment",
   actions,
   menuItems = [],
+  topics = [],
+  references = 0,
+  onOpenReferences,
   children
 }) {
   // Same rule as PostCard: the licence is a rare read, so it arrives from the
@@ -2843,7 +3110,11 @@ function CommentCard({
       fontSize: "var(--text-body-medium)",
       lineHeight: "var(--text-body-medium--line-height)"
     }
-  }, content), license && showLicense && /*#__PURE__*/React.createElement(LicenseTerms, {
+  }, withMentions(content)), /*#__PURE__*/React.createElement(TopicsLine, {
+    topics: topics,
+    references: references,
+    onOpenReferences: onOpenReferences
+  }), license && showLicense && /*#__PURE__*/React.createElement(LicenseTerms, {
     license: license
   }), edited && /*#__PURE__*/React.createElement(EditedMarker, null), pending && /*#__PURE__*/React.createElement(PendingMarker, null), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -2867,7 +3138,33 @@ function CommentCard({
     variant: "text",
     size: "sm",
     onClick: onEdit
-  }, "Edit"), actions)), children, replies.length > 0 && /*#__PURE__*/React.createElement("ul", {
+  }, "Edit"), actions)), children, replyCount > 0 && replies.length === 0 && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onOpenReplies,
+    className: "cg-state cg-focus cg-hit",
+    style: {
+      alignSelf: "flex-start",
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-3)",
+      border: 0,
+      background: "none",
+      padding: "4px 8px 4px 0",
+      marginLeft: "28px",
+      cursor: "pointer",
+      fontFamily: "var(--font-sans)",
+      fontSize: "var(--text-label-medium)",
+      fontWeight: "var(--text-label-medium--font-weight)",
+      color: "var(--text-secondary)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      width: "24px",
+      height: "1px",
+      background: "var(--border-hairline)"
+    }
+  }), "View ", replyCount === 1 ? "1 reply" : `${replyCount} replies`), replies.length > 0 && /*#__PURE__*/React.createElement("ul", {
     style: {
       display: "flex",
       flexDirection: "column",
@@ -3448,7 +3745,8 @@ function SensitiveScope({
 function SensitiveVeil({
   children,
   kind = "media",
-  label = "Sensitive",
+  label = "Sensitive — tap to view",
+  reason,
   revealLabel = "Show",
   radius
 }) {
@@ -3513,7 +3811,9 @@ function SensitiveVeil({
     style: {
       position: "relative",
       display: "flex",
-      minWidth: 0
+      minWidth: 0,
+      overflow: "hidden",
+      borderRadius: radius ?? 0
     }
   }, /*#__PURE__*/React.createElement("div", {
     "aria-hidden": "true",
@@ -3527,7 +3827,7 @@ function SensitiveVeil({
   }, veiled), /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: reveal,
-    "aria-label": `${label} — ${revealLabel.toLowerCase()}`,
+    "aria-label": `${label}${reason ? ` — ${reason}` : ""}`,
     className: "cg-focus",
     style: {
       position: "absolute",
@@ -3544,36 +3844,47 @@ function SensitiveVeil({
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      display: "inline-flex",
+      display: "flex",
+      flexDirection: "column",
       alignItems: "center",
       gap: "var(--space-2)",
-      borderRadius: "var(--radius-full)",
-      background: "var(--surface-snackbar)",
-      color: "var(--on-surface-snackbar)",
-      padding: "8px 14px",
+      padding: "0 var(--space-6)",
+      color: "#fff",
       fontFamily: "var(--font-sans)",
-      fontSize: "var(--text-label-large)",
-      fontWeight: "var(--text-label-large--font-weight)"
+      textAlign: "center"
     }
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "visibility",
-    size: 18
-  }), label)));
+    size: 24
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-large)",
+      fontWeight: "var(--text-label-large--font-weight)"
+    }
+  }, label), reason && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
+      opacity: 0.85,
+      textWrap: "pretty"
+    }
+  }, reason))));
 }
 const REASONS = {
   /* Removed for cause, by a passing proposal. Says what happened in the reader's
      words — "found illegal" is the verdict, not an accusation of the author, and
      the vote is what makes it a public fact rather than a moderator's opinion. */
   illegal: {
-    line: "The content of this post was removed",
-    detail: "A community proposal found it illegal. The post stays in place, and what it does in the graph is unchanged."
+    line: "Removed under the platform's rules",
+    detail: "A passed proposal removed it. The decision is public."
   },
   /* Removed by choice (erasure §1). The docs are explicit that this must read
      differently from removed-for-cause — collapsing the two would let a
-     moderation verdict hide behind an author's own decision, or the reverse. */
+     moderation verdict hide behind an author's own decision, or the reverse.
+     Both texts are the decided marks of guidelines/copy-voice.md. */
   author: {
-    line: "The author removed this post's content",
-    detail: "The post stays in place, and what it does in the graph is unchanged."
+    line: "Removed by its author",
+    detail: "The post's place in the thread, and every response, remain."
   }
 };
 
@@ -3628,7 +3939,7 @@ __ds_scope.RedactedContent = RedactedContent;
 
 // components/content/PostCard.jsx
 try { (() => {
-const { Card, ActorChip, PendingMarker, EditedMarker, LicenseTerms, StanceControl, ExplainableNumber, MediaGallery, MediaViewer, RedactedContent, OverflowMenu, Icon } = __ds_scope;
+const { Card, ActorChip, PendingMarker, EditedMarker, LicenseTerms, StanceControl, ExplainableNumber, MediaGallery, MediaViewer, RedactedContent, SensitiveScope, SensitiveVeil, OverflowMenu, Icon, TopicsLine } = __ds_scope;
 /* The post card of design.md §6 — "author (avatar, display name, handle,
    timestamp), optional title, optional description, body, media gallery, stance
    control", with the text-only, single-image, gallery, with-title and
@@ -3679,13 +3990,24 @@ function PostCard({
   onOpenScore,
   comments,
   onOpenComments,
+  onOpenReferences,
   media,
   actions,
   onOpenMedia,
   redacted,
+  sensitive,
+  topics = [],
+  references = 0,
   menuItems = []
 }) {
   const detail = variant === "detail";
+  // THE AUTHOR'S SELF-MARK (readme §13): one flag veils the BODY and the
+  // DESCRIPTION while the title stays readable, and the author's own reason
+  // rides the veil under its standard line. One reveal answers for the whole
+  // card (SensitiveScope).
+  const veil = !redacted && sensitive ? {
+    reason: sensitive.reason ?? sensitive.label
+  } : null;
   // REDACTION IS RECORD-GRANULAR. An illegal verdict removes the payload, so
   // every authored field goes at once — there is no redacted title beside a
   // surviving body. The card renders its skeleton instead: author, timestamp,
@@ -3696,9 +4018,9 @@ function PostCard({
   // readings — so it is not on the initial view. It arrives when asked for, from
   // the overflow menu, and stays until the reader is done with it.
   const [showLicense, setShowLicense] = React.useState(false);
-  // A media post's caption is clamped and openable in place. The title never is:
-  // a title that needs truncating is a body, and cutting it costs the reader the
-  // orientation they opened the card for.
+  // A media post's caption is clamped and openable in place. The SUMMARY title
+  // clamps to one line (readme §13's collapse order: the title gives way before
+  // media or the affordance row ever shrink); the detail title never clamps.
   const [open, setOpen] = React.useState(false);
   // The detail view's media opens full-size in place. In the feed the same tap
   // opens the post instead: a reader scrolling is choosing between posts, not
@@ -3715,26 +4037,38 @@ function PostCard({
       margin: 0,
       fontSize: detail ? "var(--text-headline-small)" : "var(--text-title-medium)",
       lineHeight: detail ? "var(--text-headline-small--line-height)" : "var(--text-title-medium--line-height)",
-      fontWeight: detail ? "var(--text-headline-small--font-weight)" : "var(--text-title-medium--font-weight)"
+      fontWeight: detail ? "var(--text-headline-small--font-weight)" : "var(--text-title-medium--font-weight)",
+      ...(detail ? {} : {
+        ...CLAMP(1),
+        wordBreak: "break-word"
+      })
     }
   }, title) : null;
-  const caption = /*#__PURE__*/React.createElement(React.Fragment, null, description && /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: 0,
-      fontSize: "var(--text-body-medium)",
-      color: "var(--text-secondary)",
-      ...(hasMedia && !open && !detail ? CLAMP(1) : null)
-    }
-  }, description), content && /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: 0,
-      fontSize: detail ? "var(--text-body-large)" : "var(--text-body-medium)",
-      lineHeight: detail ? "var(--text-body-large--line-height)" : "var(--text-body-medium--line-height)",
-      ...(detail ? {
-        whiteSpace: "pre-wrap"
-      } : CLAMP(hasMedia && !open ? 2 : 4))
-    }
-  }, content));
+  const descriptionStyle = {
+    margin: 0,
+    fontSize: "var(--text-body-medium)",
+    color: "var(--text-secondary)",
+    ...(hasMedia && !open && !detail ? CLAMP(1) : null)
+  };
+  const contentStyle = {
+    margin: 0,
+    fontSize: detail ? "var(--text-body-large)" : "var(--text-body-medium)",
+    lineHeight: detail ? "var(--text-body-large--line-height)" : "var(--text-body-medium--line-height)",
+    ...(detail ? {
+      whiteSpace: "pre-wrap"
+    } : CLAMP(hasMedia && !open ? 2 : 4))
+  };
+  // THE VEIL WRAPS THE PARAGRAPH, never the text inside it: the clamp's
+  // `overflow: hidden` then clips the TEXT before the blur applies, so the halo
+  // stays soft on every side instead of being cut at the box's edge.
+  const veiledParagraph = node => veil ? /*#__PURE__*/React.createElement(SensitiveVeil, {
+    kind: "text"
+  }, node) : node;
+  const caption = /*#__PURE__*/React.createElement(React.Fragment, null, description && veiledParagraph(/*#__PURE__*/React.createElement("p", {
+    style: descriptionStyle
+  }, description)), content && veiledParagraph(/*#__PURE__*/React.createElement("p", {
+    style: contentStyle
+  }, content)));
 
   // Only where there is something folded away. "More" is a text control, not a
   // link: it opens the text in place and never navigates.
@@ -3776,7 +4110,7 @@ function PostCard({
       textDecoration: "none"
     }
   }, textBlock);
-  return /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement("div", {
+  const body = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
@@ -3798,7 +4132,7 @@ function PostCard({
       fontSize: "var(--text-body-small)",
       color: "var(--text-secondary)"
     }
-  }, timestamp), /*#__PURE__*/React.createElement(OverflowMenu, {
+  }, timestamp), !detail && /*#__PURE__*/React.createElement(OverflowMenu, {
     items: items,
     ariaLabel: "More on this post"
   }))), hasMedia && heading, hasMedia &&
@@ -3820,7 +4154,14 @@ function PostCard({
         if (onOpenMedia) onOpenMedia(0);else setViewing(0);
       }
     }
+  }, veil ? /*#__PURE__*/React.createElement(SensitiveVeil, {
+    kind: "media",
+    reason: veil.reason,
+    radius: "0px"
   }, /*#__PURE__*/React.createElement(MediaGallery, {
+    items: media,
+    radius: "0px"
+  })) : /*#__PURE__*/React.createElement(MediaGallery, {
     items: media,
     radius: "0px"
   })), viewing !== null && /*#__PURE__*/React.createElement(MediaViewer, {
@@ -3829,6 +4170,11 @@ function PostCard({
     onClose: () => setViewing(null)
   }), redacted ? /*#__PURE__*/React.createElement(RedactedContent, redacted === true ? {} : redacted) : linkedText, !redacted && opener, license && showLicense && !redacted && /*#__PURE__*/React.createElement(LicenseTerms, {
     license: license
+  }), !redacted && /*#__PURE__*/React.createElement(TopicsLine, {
+    topics: topics,
+    references: references,
+    onOpen: detail ? onOpenReferences ?? (() => {}) : undefined,
+    onOpenReferences: onOpenReferences
   }), edited && /*#__PURE__*/React.createElement(EditedMarker, null), pending && /*#__PURE__*/React.createElement(PendingMarker, null), (showStance || score !== undefined || comments !== undefined || actions) && /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -3848,7 +4194,7 @@ function PostCard({
     label: "Post Score",
     value: score,
     onOpenDetail: onOpenScore ?? (() => {})
-  }), comments !== undefined && !detail && /*#__PURE__*/React.createElement("button", {
+  }), comments !== undefined && /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onOpenComments ?? onOpen,
     "aria-label": comments === 1 ? "1 comment" : `${comments} comments`,
@@ -3873,94 +4219,139 @@ function PostCard({
   }), comments > 0 && /*#__PURE__*/React.createElement("span", {
     "aria-hidden": "true"
   }, comments)), actions));
+  return /*#__PURE__*/React.createElement(Card, null, veil ? /*#__PURE__*/React.createElement(SensitiveScope, null, body) : body);
 }
 __ds_scope.PostCard = PostCard;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/PostCard.jsx", error: String((e && e.message) || e) }); }
 
-// components/core/Chip.jsx
+// components/content/ReferenceRow.jsx
 try { (() => {
-/* Chips (backlog items 4 and 8).
+const { Icon, MonogramAvatar } = __ds_scope;
+/* One row of the topics-and-references sheet (readme §13, 2026-08-28), and the
+   result-row shape search reuses: EVERY row is leading mark · name · value, so
+   a heterogeneous list reads as one list.
 
-   TWO CHIPS, ONE SHAPE. A `Chip` is a filter the reader turns on and off; a
-   `TopicChip` is a topic that goes somewhere. They look alike on purpose — both
-   are a word in a pill — and they are told apart by what they do, which is the
-   same test that separates a button from a link (§7).
+   THE LEADING MARK SAYS THE KIND, without a word beside it. A person keeps
+   their avatar — people are circles everywhere in this system. Every other
+   kind is a 32px tile at the small rung: a media post wears its cover, a text
+   post the letter T (a tile, not a glyph — no icon set has "text post"), and
+   the rest carry their node-type glyph — proposal `how_to_vote`, item
+   `inventory_2`, campaign `campaign`, offer `sell`, chat `forum`, comment
+   `chat_bubble`. A topic's tile is the same # its chip wears. Silhouettes are
+   deliberately distinct: an item is a box, an offer the price tag.
 
-   WHEN A CHIP AND NOT A SEGMENTED FILTER. Chips are for a set the reader can
-   combine, or one that grows: seven kinds of ranked content, an open list of
-   topics. A segmented filter is for two to four alternatives where exactly one
-   is true. Using chips for the exclusive case loses "one of these" ; using a
-   segmented row for the combinable case loses the combination.
+   THE VALUE is the pair the author signed on this act — set at compose (a
+   changeable default), shown here for any reader: a signed act is public
+   record. Right-aligned, `body-small`, never coloured. */
 
-   32px drawn, 48px tapped: `cg-hit` grows the target without inflating a row of
-   seven of them past the height of the screen. Selection is
-   `secondaryContainer`, colour only \u2014 no check glyph, because a leading check on
-   the selected chips reflows every label in the row as the reader picks. */
-
-const PILL = {
-  display: "inline-flex",
-  alignItems: "center",
-  position: "relative",
-  height: "32px",
-  padding: "0 var(--space-3)",
-  borderRadius: "var(--radius-full)",
-  fontFamily: "var(--font-sans)",
-  fontSize: "var(--text-label-large)",
-  lineHeight: "var(--text-label-large--line-height)",
-  letterSpacing: "var(--text-label-large--letter-spacing)",
-  fontWeight: "var(--text-label-large--font-weight)",
-  cursor: "pointer",
-  whiteSpace: "nowrap",
-  textDecoration: "none"
+const KIND_GLYPHS = {
+  comment: "chat_bubble",
+  proposal: "how_to_vote",
+  item: "inventory_2",
+  campaign: "campaign",
+  offer: "sell",
+  chat: "forum"
 };
-function Chip({
-  label,
-  selected = false,
-  onToggle,
-  ariaLabel,
-  disabled = false
+function LeadingMark({
+  kind,
+  name,
+  src
+}) {
+  if (kind === "person") return /*#__PURE__*/React.createElement(MonogramAvatar, {
+    name: name,
+    src: src,
+    size: "md"
+  });
+  const tile = {
+    height: "32px",
+    width: "32px",
+    flex: "none",
+    display: "grid",
+    placeItems: "center",
+    borderRadius: "var(--radius-small)",
+    background: "var(--surface-container-highest)",
+    color: "var(--text-secondary)",
+    overflow: "hidden"
+  };
+  if (kind === "post" && src) {
+    return /*#__PURE__*/React.createElement("span", {
+      style: tile,
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("img", {
+      src: src,
+      alt: "",
+      style: {
+        height: "100%",
+        width: "100%",
+        objectFit: "cover"
+      }
+    }));
+  }
+  const letter = kind === "topic" ? "#" : kind === "post" ? "T" : null;
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...tile,
+      fontFamily: "var(--font-sans)",
+      fontSize: "var(--text-title-medium)",
+      fontWeight: "var(--text-title-medium--font-weight)"
+    },
+    "aria-hidden": "true"
+  }, letter ?? /*#__PURE__*/React.createElement(Icon, {
+    name: KIND_GLYPHS[kind],
+    size: 18
+  }));
+}
+function ReferenceRow({
+  kind = "post",
+  name,
+  src,
+  pair,
+  onOpen
 }) {
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
-    role: "switch",
-    "aria-checked": selected,
-    "aria-label": ariaLabel,
-    disabled: disabled,
-    onClick: onToggle,
-    className: "cg-state cg-focus cg-hit",
+    onClick: onOpen,
+    className: "cg-state cg-focus",
     style: {
-      ...PILL,
-      border: selected ? "1px solid transparent" : "1px solid var(--border-field)",
-      background: selected ? "var(--secondary-container)" : "transparent",
-      color: selected ? "var(--on-secondary-container)" : "var(--text-body)",
-      opacity: disabled ? "var(--state-disabled)" : 1
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-3)",
+      minHeight: "var(--touch-target-min)",
+      width: "100%",
+      border: 0,
+      background: "none",
+      padding: "var(--space-1) var(--space-6)",
+      cursor: "pointer",
+      fontFamily: "var(--font-sans)",
+      color: "var(--on-surface)",
+      textAlign: "left"
     }
-  }, label);
-}
-
-/* A topic. The `#` is part of the word, not an icon: readers type it, and a topic
-   without it reads as a name. It navigates, so it is an anchor. */
-function TopicChip({
-  topic,
-  href,
-  onClick
-}) {
-  const name = topic.replace(/^#/, "");
-  return /*#__PURE__*/React.createElement("a", {
-    href: href ?? `/t/${name}`,
-    onClick: onClick,
-    className: "cg-state cg-focus cg-hit",
+  }, /*#__PURE__*/React.createElement(LeadingMark, {
+    kind: kind,
+    name: name,
+    src: src
+  }), /*#__PURE__*/React.createElement("span", {
     style: {
-      ...PILL,
-      border: "1px solid var(--border-hairline)",
-      background: "var(--surface-card)",
-      color: "var(--text-body)"
+      flex: 1,
+      minWidth: 0,
+      fontSize: "var(--text-body-medium)",
+      lineHeight: "var(--text-body-medium--line-height)",
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis"
     }
-  }, "#", name);
+  }, name), pair && /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: "none",
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
+      color: "var(--text-secondary)",
+      whiteSpace: "nowrap"
+    }
+  }, pair));
 }
-__ds_scope.Chip = Chip;
-__ds_scope.TopicChip = TopicChip;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/Chip.jsx", error: String((e && e.message) || e) }); }
+__ds_scope.ReferenceRow = ReferenceRow;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/ReferenceRow.jsx", error: String((e && e.message) || e) }); }
 
 // components/forms/Checkbox.jsx
 try { (() => {
@@ -5213,6 +5604,10 @@ __ds_ns.CommentCard = __ds_scope.CommentCard;
 __ds_ns.OverflowMenu = __ds_scope.OverflowMenu;
 
 __ds_ns.PostCard = __ds_scope.PostCard;
+
+__ds_ns.ReferenceRow = __ds_scope.ReferenceRow;
+
+__ds_ns.TopicsLine = __ds_scope.TopicsLine;
 
 __ds_ns.BottomSheet = __ds_scope.BottomSheet;
 

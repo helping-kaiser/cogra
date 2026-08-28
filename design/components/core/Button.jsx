@@ -7,7 +7,9 @@ import React from "react";
    border, and a body-coloured label on an outlined button reads as disabled.
 
    The pill at every size (Material's button shape, not a rung of the shape
-   scale); both sizes carry `label-large` and differ only in padding. */
+   scale); both sizes carry `label-large`. Heights are TRUE heights (border-box):
+   40px `lg`, 32px `sm` — and every pill holds a 64px minimum width so short
+   labels (Next, Set, Done) keep their weight (readme §13, 2026-08-27). */
 
 const VARIANTS = {
   primary: { background: "var(--primary)", color: "var(--on-primary)", border: "1px solid transparent" },
@@ -16,8 +18,8 @@ const VARIANTS = {
 };
 
 const SIZES = {
-  sm: { padding: "6px 12px" },
-  lg: { padding: "8px 16px" },
+  sm: { padding: "6px 16px" },
+  lg: { padding: "10px 24px" },
 };
 
 export function buttonStyle({ variant = "primary", size = "lg", selfStart = false, disabled = false } = {}) {
@@ -39,6 +41,8 @@ export function buttonStyle({ variant = "primary", size = "lg", selfStart = fals
     justifyContent: "center",
     gap: "var(--space-2)",
     minHeight: size === "sm" ? "32px" : "40px",
+    minWidth: "64px",
+    boxSizing: "border-box",
   };
 }
 

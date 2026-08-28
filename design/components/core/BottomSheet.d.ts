@@ -12,6 +12,12 @@ export interface BottomSheetProps {
   inline?: boolean;
   /** Cap before the sheet scrolls internally. Default "62%". */
   maxHeight?: string;
+  /**
+   * Pin the sheet at a fixed size (overrides `maxHeight`) — the comments sheet
+   * fills the screen up to a sliver below the top, and its pinned entry row
+   * needs the surface to own the height. Children manage their own scrolling.
+   */
+  height?: string;
 }
 
 export declare function BottomSheet(props: BottomSheetProps): JSX.Element | null;

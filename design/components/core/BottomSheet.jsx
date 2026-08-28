@@ -25,7 +25,11 @@ import React from "react";
    · Enters over 400ms from the bottom, leaves over 200ms to the bottom
      (`tokens/transitions.css`) — a dismissal exits the edge it entered from. */
 
-export function BottomSheet({ open = false, onClose, ariaLabel, children, inline = false, maxHeight = "62%" }) {
+/* `height` pins the sheet at a fixed size instead of letting content set it —
+   the comments sheet fills the screen up to a sliver below the top (readme §13,
+   2026-08-28), and a pinned input row at its foot needs the surface itself to
+   own the height. The children then manage their own scrolling. */
+export function BottomSheet({ open = false, onClose, ariaLabel, children, inline = false, maxHeight = "62%", height }) {
   const [shown, setShown] = React.useState(open);
   const [closing, setClosing] = React.useState(false);
 
@@ -69,7 +73,14 @@ export function BottomSheet({ open = false, onClose, ariaLabel, children, inline
         padding: "var(--space-2) 0 calc(var(--space-6) + env(safe-area-inset-bottom, 0px))",
         ...(inline
           ? { position: "relative", width: "100%" }
-          : { position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 41, maxHeight, overflowY: "auto" }),
+          : {
+              position: "fixed",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 41,
+              ...(height ? { height, overflow: "hidden" } : { maxHeight, overflowY: "auto" }),
+            }),
       }}
     >
       <span aria-hidden="true" style={{ alignSelf: "center", height: "4px", width: "32px", flex: "none", borderRadius: "var(--radius-full)", background: "var(--border-hairline)", marginBottom: "var(--space-3)" }} />

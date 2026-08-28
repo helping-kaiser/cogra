@@ -4,6 +4,8 @@
   "type": "module",
   "description": "Regenerates design/_ds_bundle.js from component sources (node bundle.mjs).",
   "dependencies": {
-    "@babel/standalone": "^7.29.0"
+    "@babel/standalone": "^7.29.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   }
 }
