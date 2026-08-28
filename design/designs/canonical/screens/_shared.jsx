@@ -48,6 +48,11 @@ const TOBIAS = { handle: "tobias", displayName: "Tobias Lindqvist" };
 const SOL = { handle: "sol", displayName: "Sol Ferreira" };
 const MIRA = { handle: "mira", displayName: "Mira Voss" };
 
+/* Genesis content always declares a licence, so every card has at least that
+   menu entry — without one the dot vanishes, and it must not. Citing rides the
+   same menu on every content (readme §13). */
+const CITE_MENU = [{ label: "Cite in a new post", onSelect: () => {} }];
+
 const ADA_POST = {
   author: ADA,
   title: "The long way home",
@@ -60,6 +65,8 @@ const ADA_POST = {
   references: 1,
   score: "15.20",
   comments: 3,
+  license: { attribution: 1, provenance: 0 },
+  menuItems: CITE_MENU,
 };
 
 const TOBIAS_POST = {
@@ -68,6 +75,8 @@ const TOBIAS_POST = {
   timestamp: "1h",
   score: "3.10",
   comments: 1,
+  license: { attribution: 0, provenance: 0 },
+  menuItems: CITE_MENU,
 };
 
 const SOL_POST = {
@@ -83,6 +92,8 @@ const SOL_POST = {
   topics: ["fieldnotes", "saltmaps"],
   score: "9.10",
   comments: 2,
+  license: { attribution: 0.5, provenance: 0.5 },
+  menuItems: CITE_MENU,
 };
 
 /* The cogra wordmark band — the read shell's top-left identity. */

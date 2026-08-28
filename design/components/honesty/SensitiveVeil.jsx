@@ -112,10 +112,12 @@ export function SensitiveVeil({ children, kind = "media", label = "Sensitive", r
   }
 
   return (
-    <div style={{ position: "relative", display: "flex", minWidth: 0 }}>
+    <div style={{ position: "relative", display: "flex", minWidth: 0, overflow: "hidden", borderRadius: radius ?? 0 }}>
       {/* The content still renders and still reserves its exact space — the veil
           is over it, not instead of it, so revealing moves nothing. `scale` hides
-          the transparent edge a blur leaves at the bounds. */}
+          the transparent edge a blur leaves at the bounds — and the WRAPPER clips
+          it: the scaled halo must never paint outside the tile's own box, into
+          the title above or the caption below. */}
       <div aria-hidden="true" style={{ filter: "blur(24px)", transform: "scale(1.06)", flex: 1, minWidth: 0, overflow: "hidden" }}>
         {veiled}
       </div>

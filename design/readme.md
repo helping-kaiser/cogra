@@ -1081,6 +1081,24 @@ To port to the product docs: the body XOR (the API today has
 self-mark field and its fixed per-field policy, the default-license
 account setting, and the edit batch carrying topic/citation acts.
 
+### Comments live in a sheet — 2026-08-28
+
+The thread moves out of the detail view into a bottom sheet, opened
+by the comment affordance from the feed and the detail view alike —
+the detail view is just about the post.
+
+- **The sheet may fill the screen** up to a sliver below the top:
+  the rounded corners keep a strip of the surface behind visible.
+  The entry row (avatar + "Add a comment") is pinned at its foot.
+- **Replies arrive collapsed** behind a "View n replies" line.
+- **The thread is two levels deep on screen**: a comment and its
+  replies, indented once. A reply to a reply flattens into the same
+  level and opens with the @handle it answers — the mention is the
+  structure. Mentions render in `primary`.
+- The comment affordance is uniform everywhere: glyph plus count,
+  muted, opens the sheet. (Supersedes the one-day-old where-you-are
+  detail state — there is no "already among the comments" anymore.)
+
 ### Masters, variants, and screens — 2026-08-28
 
 The Figma discipline, applied here: a component's ONE

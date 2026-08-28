@@ -135,6 +135,17 @@ components and variants; updating a component then updates every
 screen that uses it. Applies to the canonical canvas first; the
 ideation canvases stay frozen records.
 
+### 18 · Reference rows + per-act standing display · *system*, awaiting rulings
+Two questions from the 2026-08-28 review, options presented, jakob
+to rule. (a) How a REFERENCE looks on a card: people are `@handle`,
+but posts, items, proposals, chats, campaigns and offers need a
+distinguishable form — today the card shows only "n references".
+(b) The standing pair signed on every topic and reference — set at
+compose with a changeable default, displayed in the detail view
+(jakob's steer) — has no drawn form in either place. Both interact
+with item 9's result-row-per-node-type work; build after the
+rulings, not before.
+
 ### 9 · Search + results · *design*
 Topics, post titles, usernames, item names. Produces a search field
 variant of `TextField` and result-row treatments per node type — a
