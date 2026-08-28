@@ -915,6 +915,24 @@ impl User {
         })
     }
 
+    /// The profile picture (the newest profile version); null for an
+    /// account that has never set one, which is the monogram circle — the
+    /// designed placeholder, not a gap.
+    async fn avatar(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<MediaAttachmentType>> {
+        let Some(id) = self.profile(ctx).await?.and_then(|p| p.avatar_id) else {
+            return Ok(None);
+        };
+        profile_image(ctx, id).await
+    }
+
+    /// The profile's cover image; null when never set.
+    async fn cover(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<MediaAttachmentType>> {
+        let Some(id) = self.profile(ctx).await?.and_then(|p| p.cover_id) else {
+            return Ok(None);
+        };
+        profile_image(ctx, id).await
+    }
+
     /// The profile's website link (the newest profile version); value
     /// null when never set.
     async fn website_url(&self, ctx: &Context<'_>) -> async_graphql::Result<ModeratedText> {
@@ -1549,11 +1567,36 @@ impl PostType {
         )
     }
 
+    /// The words half of the body; **value null on a media post**, whose
+    /// body is its gallery. A post's body is words or media and never
+    /// both, so exactly one of `content.value` and `attachments` carries
+    /// it. Words that belong beside a picture are the `description`.
     async fn content(&self) -> ModeratedText {
         ModeratedText::from_version(
-            Some(self.0.content.clone()),
+            Some(self.0.content.clone()).filter(|c| !c.is_empty()),
             self.0.redaction_reason.is_some(),
         )
+    }
+
+    /// The gallery, in the author's order, the first entry the cover.
+    ///
+    /// A bounded list rather than a connection: the write side caps a post
+    /// at ten attachments, so the whole gallery is always servable and a
+    /// page argument would promise a pagination this read cannot honour —
+    /// the same shape `topics` and `references` carry, for the same
+    /// reason.
+    #[graphql(complexity = "gallery_cost(crate::media::MAX_POST_ATTACHMENTS, child_complexity)")]
+    async fn attachments(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Vec<MediaAttachmentType>> {
+        post_gallery(ctx, self.0.version_id).await
+    }
+
+    /// The gallery's moderation state — one state for the whole set, not
+    /// one per picture.
+    async fn attachments_status(&self) -> FieldModerationStatus {
+        attachments_status(self.0.redaction_reason.is_some())
     }
 
     async fn author(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<User>> {
@@ -1672,6 +1715,22 @@ impl CommentType {
             Some(self.0.content.clone()),
             self.0.redaction_reason.is_some(),
         )
+    }
+
+    /// The gallery, in the author's order — at most four, and no cover: a
+    /// comment's media supports its words rather than replacing them, so
+    /// nothing here leads the way a post's first picture does.
+    #[graphql(complexity = "gallery_cost(crate::media::MAX_COMMENT_ATTACHMENTS, child_complexity)")]
+    async fn attachments(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Vec<MediaAttachmentType>> {
+        comment_gallery(ctx, self.0.version_id).await
+    }
+
+    /// The gallery's moderation state — one state for the whole set.
+    async fn attachments_status(&self) -> FieldModerationStatus {
+        attachments_status(self.0.redaction_reason.is_some())
     }
 
     async fn author(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<User>> {
@@ -2051,6 +2110,93 @@ pub const FOLD_LIST_BOUND: i32 = 50;
 /// must not silently reprice the folds.
 pub(super) fn fold_cost(child_complexity: usize) -> usize {
     FOLD_LIST_BOUND as usize * child_complexity + 1
+}
+
+/// What a gallery charges: its parent's write-side cap times the per-item
+/// cost, plus one for the field itself.
+///
+/// A gallery takes no page argument, for the reason `topics` and
+/// `references` take none: the list is bounded by what the write side
+/// admits, so there is nothing to page through and a connection would
+/// promise a pagination the read cannot honour. Pricing it at the cap is
+/// what keeps a nested read finite — a paginated gallery inside a
+/// twenty-comment detail read would have multiplied its requested page
+/// size across every comment on the page.
+///
+/// The bound is `media::MAX_POST_ATTACHMENTS` or
+/// `media::MAX_COMMENT_ATTACHMENTS`, enforced at prepare, so it is the
+/// same number in both directions rather than a hope about read sizes.
+pub(super) fn gallery_cost(bound: usize, child_complexity: usize) -> usize {
+    bound * child_complexity + 1
+}
+
+/// One profile picture by the direct foreign key the version row holds.
+///
+/// A direct read rather than a loader: a profile carries at most two
+/// pictures and a page carries few profiles, so there is no fan-out here
+/// of the shape a gallery has. A row the FK names but the store no longer
+/// holds reads null rather than failing the profile.
+async fn profile_image(
+    ctx: &Context<'_>,
+    id: Uuid,
+) -> async_graphql::Result<Option<MediaAttachmentType>> {
+    let pool = ctx.data::<PgPool>()?;
+    Ok(postgres_store::media::by_id(pool, id)
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        .map(MediaAttachmentType))
+}
+
+/// One node's gallery, in gallery order, through the loader that batches
+/// every gallery on a page into one query.
+async fn post_gallery(
+    ctx: &Context<'_>,
+    version_id: i64,
+) -> async_graphql::Result<Vec<MediaAttachmentType>> {
+    let loaders = ctx.data::<crate::loaders::NodeLoaders>()?;
+    Ok(loaders
+        .post_galleries
+        .load_one(version_id)
+        .await?
+        .unwrap_or_default()
+        .into_iter()
+        .map(|entry| MediaAttachmentType(entry.asset))
+        .collect())
+}
+
+/// The comment side of [`post_gallery`].
+async fn comment_gallery(
+    ctx: &Context<'_>,
+    version_id: i64,
+) -> async_graphql::Result<Vec<MediaAttachmentType>> {
+    let loaders = ctx.data::<crate::loaders::NodeLoaders>()?;
+    Ok(loaders
+        .comment_galleries
+        .load_one(version_id)
+        .await?
+        .unwrap_or_default()
+        .into_iter()
+        .map(|entry| MediaAttachmentType(entry.asset))
+        .collect())
+}
+
+/// The gallery's own moderation state, beside the list rather than on the
+/// items in it.
+///
+/// A list cannot wrap in `ModeratedText` the way a scalar field does, so
+/// the status rides alongside — and it is one state for the whole gallery
+/// because that is what a reader is shown: a sensitive verdict blurs the
+/// body as a unit, media and text and description together, never one
+/// picture inside a set.
+///
+/// Constant NORMAL until the moderation slice stores verdicts, like every
+/// other status on a content node.
+fn attachments_status(redacted: bool) -> FieldModerationStatus {
+    if redacted {
+        FieldModerationStatus::Redacted
+    } else {
+        FieldModerationStatus::Normal
+    }
 }
 
 /// The requesting viewer's L0 address, when they have one. Pending rows
@@ -2567,8 +2713,33 @@ impl MediaAttachmentType {
         self.0.size_bytes.and_then(|n| i32::try_from(n).ok())
     }
 
+    /// Null once the asset is removed: alt text is what a blind reader
+    /// *reads*, so redaction takes it with the picture rather than leaving
+    /// a description of bytes that are gone.
     async fn alt_text(&self) -> Option<&str> {
+        if self.0.redacted_at.is_some() {
+            return None;
+        }
         self.0.alt_text.as_deref()
+    }
+
+    /// NORMAL, or REDACTED once the bytes are removed — the visible mark
+    /// the design requires, carried on the contract rather than left to a
+    /// failed fetch. The store answers a removed object with a 404, which
+    /// reads as a broken image; this field is what lets a client render
+    /// the calm "Removed" placeholder instead of a silent gap.
+    ///
+    /// Never SENSITIVE. Sensitivity is a whole-body state a reader sees as
+    /// one blur across media, text and description together, and it is
+    /// carried by the parent's `attachmentsStatus` and field statuses —
+    /// per-asset sensitivity was ruled against, one image blurring alone
+    /// being the UI the product does not want.
+    async fn status(&self) -> FieldModerationStatus {
+        if self.0.redacted_at.is_some() {
+            FieldModerationStatus::Redacted
+        } else {
+            FieldModerationStatus::Normal
+        }
     }
 
     async fn options(&self) -> MediaOptions {

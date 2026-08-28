@@ -18,7 +18,7 @@
 //! rules, and the reserved-range rejection.
 //!
 //! Inside the guild map, keys 2–6 ride Publish/Review payloads and keys
-//! 7–10 the parallel-Registration profile payload, each family's reader
+//! 7–12 the parallel-Registration profile payload, each family's reader
 //! rejecting the other's keys. Two of those are declared but not built:
 //! key 6 (provenance chain, platform-guidelines.md §5 plank 4) and key 10
 //! (payout address, which arrives with the rail — ledger.md). Neither is
@@ -32,6 +32,12 @@
 //! aspect ratio, size, and duration are derived, so they stay out of what
 //! the author signs. The nested map runs the same reserved-key discipline
 //! the outer envelope runs, so a v2 grows it additively.
+//!
+//! Keys 11 and 12 carry the profile's avatar and cover as that same
+//! per-asset map, one deep. An avatar is a picture a reader is shown, so
+//! it is witnessed like any other; and a profile payload being a delta
+//! rather than complete state, each slot is three-valued — the empty array
+//! is how an update says "cleared".
 
 use std::collections::BTreeMap;
 
@@ -74,6 +80,8 @@ const ASSET_KEY_ALT_TEXT: u64 = 2;
 pub const MEDIA_DIGEST_LEN: usize = 32;
 const COGRA_KEY_BIO: u64 = 8;
 const COGRA_KEY_WEBSITE_URL: u64 = 9;
+const COGRA_KEY_AVATAR: u64 = 11;
+const COGRA_KEY_COVER: u64 = 12;
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum EnvelopeError {
@@ -441,6 +449,42 @@ fn guild_media(cogra: &BTreeMap<u64, Value>) -> Result<Vec<MediaAsset>, Envelope
     }
 }
 
+/// One profile image slot — the avatar or the cover — under a profile
+/// family key.
+///
+/// A profile payload is a **delta**: a key that is absent leaves the field
+/// as it stands, and a key present-and-empty clears it. The text fields
+/// already run that rule with the empty string; a slot runs it with an
+/// empty array, so all three states an update can mean have exactly one
+/// encoding each — absent (untouched), `[]` (cleared), `[asset]` (set).
+///
+/// The content family's manifest refuses an in-band empty for the opposite
+/// reason and it is not an inconsistency: a content act carries the
+/// complete content state, so "no gallery" is the absent key and there is
+/// no third state to distinguish.
+///
+/// An image slot carries a whole [`MediaAsset`] rather than a bare digest,
+/// so the same reader that renders a gallery renders an avatar, and so an
+/// avatar's alt text is witnessed like any other picture's.
+fn encode_profile_image(slot: Option<Option<MediaAsset>>) -> Option<Value> {
+    slot.map(|asset| Value::Array(asset.iter().map(MediaAsset::encode).collect()))
+}
+
+fn guild_profile_image(
+    cogra: &BTreeMap<u64, Value>,
+    key: u64,
+) -> Result<Option<Option<MediaAsset>>, EnvelopeError> {
+    match cogra.get(&key) {
+        None => Ok(None),
+        Some(Value::Array(items)) if items.is_empty() => Ok(Some(None)),
+        Some(Value::Array(items)) if items.len() == 1 => {
+            Ok(Some(Some(MediaAsset::decode(&items[0])?)))
+        }
+        Some(Value::Array(_)) => Err(EnvelopeError::Guild("a profile image is a single asset")),
+        Some(_) => Err(EnvelopeError::Guild("a profile image must be an array")),
+    }
+}
+
 /// CoGra's guild fields, as carried under `COGRA_GUILD_KEY`
 /// (data-model.md "CoGra's guild schema"). Field presence is meaningful:
 /// on a genesis act every supplied field is present; on an edit only the
@@ -536,6 +580,15 @@ pub struct CograProfile {
     pub display_name: Option<String>,
     pub bio: Option<String>,
     pub website_url: Option<String>,
+    /// The avatar slot, three-valued: None leaves it alone, `Some(None)`
+    /// clears it back to the monogram, `Some(Some(asset))` replaces it.
+    /// The asset rides here rather than staying Postgres-side because
+    /// erasure removes an avatar's bytes and leaves its digest committed
+    /// in the witnessed payload (erasure.md §2) — which is only true if
+    /// the payload carries one.
+    pub avatar: Option<Option<MediaAsset>>,
+    /// The cover slot, same three values.
+    pub cover: Option<Option<MediaAsset>>,
 }
 
 impl CograProfile {
@@ -553,6 +606,12 @@ impl CograProfile {
         }
         if let Some(website_url) = self.website_url {
             cogra.insert(COGRA_KEY_WEBSITE_URL, Value::Text(website_url));
+        }
+        if let Some(avatar) = encode_profile_image(self.avatar) {
+            cogra.insert(COGRA_KEY_AVATAR, avatar);
+        }
+        if let Some(cover) = encode_profile_image(self.cover) {
+            cogra.insert(COGRA_KEY_COVER, cover);
         }
         let mut extensions = BTreeMap::new();
         extensions.insert(COGRA_GUILD_KEY, Value::Map(cogra));
@@ -582,6 +641,8 @@ impl CograProfile {
                     | COGRA_KEY_DISPLAY_NAME
                     | COGRA_KEY_BIO
                     | COGRA_KEY_WEBSITE_URL
+                    | COGRA_KEY_AVATAR
+                    | COGRA_KEY_COVER
             );
             if !known {
                 return Err(EnvelopeError::Guild("unknown cogra profile field"));
@@ -592,6 +653,8 @@ impl CograProfile {
             display_name: guild_text_field(cogra, COGRA_KEY_DISPLAY_NAME)?,
             bio: guild_text_field(cogra, COGRA_KEY_BIO)?,
             website_url: guild_text_field(cogra, COGRA_KEY_WEBSITE_URL)?,
+            avatar: guild_profile_image(cogra, COGRA_KEY_AVATAR)?,
+            cover: guild_profile_image(cogra, COGRA_KEY_COVER)?,
         })
     }
 
@@ -1188,6 +1251,117 @@ mod tests {
             display_name: display_name.map(Into::into),
             bio: bio.map(Into::into),
             website_url: website_url.map(Into::into),
+            avatar: None,
+            cover: None,
+        }
+    }
+
+    /// The three states an image slot carries, on both slots and in every
+    /// combination that means something: untouched, replaced, and cleared.
+    #[test]
+    fn profile_round_trips_every_image_slot_state() {
+        let cases = [
+            (None, None),
+            (Some(Some(asset(4, "image/webp", Some("Ada, smiling")))), None),
+            (None, Some(Some(asset(5, "image/webp", None)))),
+            (Some(None), Some(None)),
+            (Some(None), Some(Some(asset(6, "image/webp", None)))),
+        ];
+        for (avatar, cover) in cases {
+            let mut content = profile(None, None, None);
+            content.avatar = avatar;
+            content.cover = cover;
+            let bytes = content.clone().encode_payload();
+            assert_eq!(
+                CograProfile::decode_payload(&bytes).expect("valid"),
+                content
+            );
+        }
+    }
+
+    /// An untouched slot rides no key at all, so "leave the avatar alone"
+    /// and "clear the avatar" cannot collide on the wire.
+    #[test]
+    fn an_untouched_image_slot_omits_its_key() {
+        let bytes = profile(Some("Ada"), None, None).encode_payload();
+        let decoded = Envelope::decode(&bytes).expect("valid");
+        let Some(Value::Map(guild)) = decoded.extensions.get(&COGRA_GUILD_KEY) else {
+            panic!("the guild map");
+        };
+        assert!(!guild.contains_key(&COGRA_KEY_AVATAR));
+        assert!(!guild.contains_key(&COGRA_KEY_COVER));
+    }
+
+    fn refuses_profile_image(slot: Value, message: &'static str) {
+        let mut inner = BTreeMap::new();
+        inner.insert(COGRA_KEY_VERSION, Value::Uint(1));
+        inner.insert(COGRA_KEY_NODE, Value::Bytes(vec![9; 16]));
+        inner.insert(COGRA_KEY_AVATAR, slot);
+        let mut ext = BTreeMap::new();
+        ext.insert(COGRA_GUILD_KEY, Value::Map(inner));
+        assert_eq!(
+            CograProfile::decode_payload(&envelope("", ext).encode()),
+            Err(EnvelopeError::Guild(message))
+        );
+    }
+
+    /// A slot holds one picture. Two would make "the avatar" ambiguous,
+    /// and a bare map would be a second encoding of the one-asset case.
+    #[test]
+    fn profile_rejects_an_image_slot_that_is_not_one_asset() {
+        refuses_profile_image(
+            Value::Array(vec![
+                asset(1, "image/webp", None).encode(),
+                asset(2, "image/webp", None).encode(),
+            ]),
+            "a profile image is a single asset",
+        );
+        refuses_profile_image(
+            asset(1, "image/webp", None).encode(),
+            "a profile image must be an array",
+        );
+        refuses_profile_image(
+            Value::Bytes(vec![1; MEDIA_DIGEST_LEN]),
+            "a profile image must be an array",
+        );
+    }
+
+    /// The entry inside a slot is the same admission a gallery entry gets:
+    /// one reader, one rule, whichever key the asset arrived under.
+    #[test]
+    fn profile_image_entries_run_the_manifest_admission() {
+        refuses_profile_image(
+            Value::Array(vec![media_entry(vec![(
+                ASSET_KEY_MIME,
+                Value::Text("image/webp".into()),
+            )])]),
+            "missing media digest",
+        );
+        refuses_profile_image(
+            Value::Array(vec![media_entry(vec![
+                (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
+                (ASSET_KEY_MIME, Value::Text("image/webp".into())),
+                (3, Value::Uint(1)),
+            ])]),
+            "unknown media entry field",
+        );
+    }
+
+    /// The content family refuses the profile's image keys the way the
+    /// profile family refuses the content family's manifest.
+    #[test]
+    fn content_rejects_the_profile_image_keys() {
+        for key in [COGRA_KEY_AVATAR, COGRA_KEY_COVER] {
+            let mut inner = BTreeMap::new();
+            inner.insert(COGRA_KEY_VERSION, Value::Uint(1));
+            inner.insert(COGRA_KEY_NODE, Value::Bytes(vec![7; 16]));
+            inner.insert(key, Value::Array(vec![asset(1, "image/webp", None).encode()]));
+            let mut ext = BTreeMap::new();
+            ext.insert(COGRA_GUILD_KEY, Value::Map(inner));
+            assert_eq!(
+                CograContent::decode_payload(&envelope("", ext).encode()),
+                Err(EnvelopeError::Guild("unknown cogra field"))
+            );
         }
     }
 

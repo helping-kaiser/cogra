@@ -381,6 +381,8 @@ async fn relay_operator_profile_update(host: &StandIn, pool: &PgPool) -> (Uuid, 
             display_name: Some("The Operator, edited".into()),
             bio: None,
             website_url: None,
+            avatar_media_id: None,
+            cover_media_id: None,
         },
     )
     .await

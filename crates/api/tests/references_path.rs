@@ -118,11 +118,12 @@ impl Rig {
             api::content::PostDraft {
                 title: Some(title.into()),
                 description: None,
-                content: "body".into(),
+                content: Some("body".into()),
                 license: license(),
                 p_directed: None,
                 tags: vec![],
                 references: vec![],
+                attachments: vec![],
             },
         )
         .await

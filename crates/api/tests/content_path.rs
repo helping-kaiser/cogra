@@ -118,11 +118,12 @@ impl Rig {
             PostDraft {
                 title: Some(title.into()),
                 description: None,
-                content: body.into(),
+                content: Some(body.into()),
                 license: license(),
                 p_directed: None,
                 tags: vec![],
                 references: vec![],
+                attachments: vec![],
             },
         )
         .await
@@ -151,11 +152,12 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
         PostDraft {
             title: Some("First".into()),
             description: Some("hello".into()),
-            content: "The body".into(),
+            content: Some("The body".into()),
             license: license(),
             p_directed: Some(0.4),
             tags: vec![],
             references: vec![],
+            attachments: vec![],
         },
     )
     .await
@@ -230,7 +232,8 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
             id: post_id,
             title: Some("New title".into()),
             description: None,
-            content: "Old body".into(),
+            content: Some("Old body".into()),
+            attachments: vec![],
         },
     )
     .await
@@ -257,7 +260,8 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
             id: post_id,
             title: None,
             description: None,
-            content: "New body".into(),
+            content: Some("New body".into()),
+            attachments: vec![],
         },
     )
     .await
@@ -284,7 +288,8 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
             id: post_id,
             title: Some(String::new()),
             description: Some("Sub".into()),
-            content: "Newer body".into(),
+            content: Some("Newer body".into()),
+            attachments: vec![],
         },
     )
     .await
@@ -329,7 +334,8 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             id: post_id,
             title: Some("Hijack".into()),
             description: None,
-            content: "Body".into(),
+            content: Some("Body".into()),
+            attachments: vec![],
         },
     )
     .await;
@@ -344,7 +350,8 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             id: Uuid::new_v4(),
             title: Some("x".into()),
             description: None,
-            content: "Body".into(),
+            content: Some("Body".into()),
+            attachments: vec![],
         },
     )
     .await;
@@ -359,7 +366,8 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             id: post_id,
             title: Some("One".into()),
             description: None,
-            content: "Body".into(),
+            content: Some("Body".into()),
+            attachments: vec![],
         },
     )
     .await
@@ -373,7 +381,8 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             id: post_id,
             title: Some("Two".into()),
             description: None,
-            content: "Body".into(),
+            content: Some("Body".into()),
+            attachments: vec![],
         },
     )
     .await;
@@ -389,7 +398,8 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             id: post_id,
             title: Some("Three".into()),
             description: None,
-            content: "Body".into(),
+            content: Some("Body".into()),
+            attachments: vec![],
         },
     )
     .await
@@ -423,6 +433,7 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
             tags: vec![],
             references: vec![],
             p_interest: Some(0.6),
+            attachments: vec![],
         },
     )
     .await
@@ -456,6 +467,7 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
             tags: vec![],
             references: vec![],
             p_interest: None,
+            attachments: vec![],
         },
     )
     .await
@@ -489,6 +501,7 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
         CommentEditDraft {
             id: comment.node,
             content: "First! (edited)".into(),
+            attachments: vec![],
         },
     )
     .await
@@ -523,6 +536,7 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
             tags: vec![],
             references: vec![],
             p_interest: None,
+            attachments: vec![],
         },
     )
     .await;
@@ -616,7 +630,8 @@ async fn the_chain_head_tracks_the_newest_landed_edit(pool: PgPool) {
             id: post_id,
             title: Some("T2".into()),
             description: None,
-            content: "B".into(),
+            content: Some("B".into()),
+            attachments: vec![],
         },
     )
     .await
@@ -670,6 +685,7 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
             tags: vec![],
             references: vec![],
             p_interest: None,
+            attachments: vec![],
         },
     )
     .await

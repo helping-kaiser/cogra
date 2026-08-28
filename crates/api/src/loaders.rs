@@ -39,7 +39,8 @@ use std::sync::Arc;
 use async_graphql::dataloader::{DataLoader, Loader};
 use postgres_store::auth::ActorIdentity;
 use postgres_store::content::{Comment, Post};
-use postgres_store::{PgPool, auth as store, content as content_store};
+use postgres_store::media::GalleryEntry;
+use postgres_store::{PgPool, auth as store, content as content_store, media as media_store};
 
 /// A batch read's failure, shared out to every key that was waiting on
 /// it. `Loader::Error` must be `Clone`, and neither store error is, so
@@ -112,6 +113,62 @@ impl Loader<String> for ActorByAddressLoader {
     }
 }
 
+/// Post galleries by the version row they hang off.
+///
+/// The gallery is a per-node list, so a feed page of twenty posts asks
+/// twenty times and a detail read asks once per comment on the page. That
+/// is the N+1 this loader closes: every `attachments` field on a page
+/// reaches it inside one batching window and the whole page's galleries
+/// come back in a single query.
+///
+/// Keyed on the version rather than the post because the gallery belongs
+/// to the version — the read that produced the node already resolved which
+/// version wins, and re-deciding here could disagree with the text on
+/// screen.
+pub struct PostGalleryLoader(PgPool);
+
+impl Loader<i64> for PostGalleryLoader {
+    type Value = Vec<GalleryEntry>;
+    type Error = LoadError;
+
+    async fn load(&self, keys: &[i64]) -> Result<HashMap<i64, Vec<GalleryEntry>>, LoadError> {
+        Ok(collect_galleries(
+            media_store::post_galleries(&self.0, keys)
+                .await
+                .map_err(LoadError::from_display)?,
+        ))
+    }
+}
+
+/// Comment galleries, keyed the same way.
+pub struct CommentGalleryLoader(PgPool);
+
+impl Loader<i64> for CommentGalleryLoader {
+    type Value = Vec<GalleryEntry>;
+    type Error = LoadError;
+
+    async fn load(&self, keys: &[i64]) -> Result<HashMap<i64, Vec<GalleryEntry>>, LoadError> {
+        Ok(collect_galleries(
+            media_store::comment_galleries(&self.0, keys)
+                .await
+                .map_err(LoadError::from_display)?,
+        ))
+    }
+}
+
+/// Groups a flat gallery read back into one list per version, preserving
+/// the query's own ordering — which is gallery order.
+///
+/// A version with no gallery is simply absent from the map, and the
+/// resolver reads that as the empty gallery it is.
+fn collect_galleries(rows: Vec<(i64, GalleryEntry)>) -> HashMap<i64, Vec<GalleryEntry>> {
+    let mut out: HashMap<i64, Vec<GalleryEntry>> = HashMap::new();
+    for (version_id, entry) in rows {
+        out.entry(version_id).or_default().push(entry);
+    }
+    out
+}
+
 /// Every loader a request may reach, built over one pool.
 ///
 /// Returned as a bundle rather than registered here so the schema
@@ -120,6 +177,8 @@ pub struct NodeLoaders {
     pub posts: DataLoader<PostByNodeLoader>,
     pub comments: DataLoader<CommentByNodeLoader>,
     pub actors: DataLoader<ActorByAddressLoader>,
+    pub post_galleries: DataLoader<PostGalleryLoader>,
+    pub comment_galleries: DataLoader<CommentGalleryLoader>,
 }
 
 impl NodeLoaders {
@@ -127,7 +186,9 @@ impl NodeLoaders {
         Self {
             posts: DataLoader::new(PostByNodeLoader(pool.clone()), tokio::spawn),
             comments: DataLoader::new(CommentByNodeLoader(pool.clone()), tokio::spawn),
-            actors: DataLoader::new(ActorByAddressLoader(pool), tokio::spawn),
+            actors: DataLoader::new(ActorByAddressLoader(pool.clone()), tokio::spawn),
+            post_galleries: DataLoader::new(PostGalleryLoader(pool.clone()), tokio::spawn),
+            comment_galleries: DataLoader::new(CommentGalleryLoader(pool), tokio::spawn),
         }
     }
 }
