@@ -56,6 +56,7 @@ import com.cogra.feature.auth.LoginRoute
 import com.cogra.feature.auth.PasswordResetRoute
 import com.cogra.feature.auth.RestoreRoute
 import com.cogra.feature.content.ComposePostRoute
+import com.cogra.feature.content.wizard.ComposeWizardRoute
 import com.cogra.feature.content.FeedRoute
 import com.cogra.feature.content.PostDetailRoute
 import com.cogra.feature.home.KeyRestoreBannerRoute
@@ -149,6 +150,13 @@ private const val HANDLE_CHANGED_RESULT = "handle_changed"
 
 /** The Compose→(Feed|PostDetail) result key: a write signed, re-read. */
 private const val CONTENT_SIGNED_RESULT = "content_signed"
+
+/**
+ * The Wizard→Feed result key: a staged act was collected before it
+ * landed. The value is the post's own label, so the feed's calm notice
+ * can name what did not land (`ComposeExpired`).
+ */
+private const val CONTENT_EXPIRED_RESULT = "content_expired"
 
 /** The ProfileEdit→Profile result key: the update signed, re-read. */
 private const val PROFILE_SAVED_RESULT = "profile_saved"
@@ -409,7 +417,18 @@ private fun CograNavGraphContent(
                 val actorRestoredResult by entry.savedStateHandle
                     .getStateFlow(ACTOR_RESTORED_RESULT, false)
                     .collectAsStateWithLifecycle()
+                val expiredLabel by entry.savedStateHandle
+                    .getStateFlow<String?>(CONTENT_EXPIRED_RESULT, null)
+                    .collectAsStateWithLifecycle()
                 FeedRoute(
+                    expiredLabel = expiredLabel,
+                    onExpiredDismissed = {
+                        entry.savedStateHandle[CONTENT_EXPIRED_RESULT] = null
+                    },
+                    onOpenDraft = {
+                        entry.savedStateHandle[CONTENT_EXPIRED_RESULT] = null
+                        navController.navigate(ComposePost())
+                    },
                     signedIn = signedIn,
                     onOpenPost = { id -> navController.navigate(PostDetail(id)) },
                     onOpenActor = { handle -> navController.navigate(Profile(handle)) },
@@ -444,6 +463,39 @@ private fun CograNavGraphContent(
             }
             composable<ComposePost> { entry ->
                 val editing = entry.toRoute<ComposePost>().postId != null
+                // Creating a post runs the wizard (D19); editing one
+                // still runs the shipped composer, whose batching is
+                // its own ruled bite. Both live behind the same
+                // destination so the bottom bar's centre action and the
+                // post menu's Edit keep their routes.
+                if (!editing) {
+                    ComposeWizardRoute(
+                        referenceTargetId = entry.toRoute<ComposePost>().referenceTargetId,
+                        // The wizard's signed post lands on the feed for
+                        // the same reason the composer's does: content
+                        // exists at authoring, not at landing
+                        // (substrate.md §6), and the author finds it at
+                        // the top still settling.
+                        onSigned = {
+                            navController.popBackStack<Feed>(inclusive = false)
+                            navController.currentBackStackEntry
+                                ?.savedStateHandle
+                                ?.set(CONTENT_SIGNED_RESULT, true)
+                        },
+                        // "Nothing was spent — your draft is saved": the
+                        // notice belongs on the feed, which is where the
+                        // canonical `ComposeExpired` board draws it.
+                        onExpired = { label ->
+                            navController.popBackStack<Feed>(inclusive = false)
+                            navController.currentBackStackEntry
+                                ?.savedStateHandle
+                                ?.set(CONTENT_EXPIRED_RESULT, label)
+                        },
+                        onLeave = { navController.navigateUp() },
+                        onRestoreKey = { navController.navigate(Restore) },
+                    )
+                    return@composable
+                }
                 ComposePostRoute(
                     postId = entry.toRoute<ComposePost>().postId,
                     referenceTargetId = entry.toRoute<ComposePost>().referenceTargetId,

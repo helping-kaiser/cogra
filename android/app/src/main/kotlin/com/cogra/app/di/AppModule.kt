@@ -3,13 +3,17 @@
 
 package com.cogra.app.di
 
+import android.content.Context
 import com.cogra.app.BuildConfig
+import com.cogra.core.media.AndroidMediaProcessor
 import com.cogra.domain.di.ApplicationScope
 import com.cogra.domain.di.WebOrigin
+import com.cogra.domain.media.MediaProcessor
 import com.cogra.network.di.GraphqlEndpoint
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
@@ -36,4 +40,17 @@ object AppModule {
     @Singleton
     @ApplicationScope
     fun applicationScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    /**
+     * The on-device image pipeline (D11, D17).
+     *
+     * The binding lives here rather than in `core:media` so that module
+     * stays a plain library — Bitmap, ExifInterface and nothing else —
+     * which is what its own docstring promises and what keeps a DI
+     * graph out of the one place the pixels are handled.
+     */
+    @Provides
+    @Singleton
+    fun mediaProcessor(@ApplicationContext context: Context): MediaProcessor =
+        AndroidMediaProcessor(context.contentResolver)
 }

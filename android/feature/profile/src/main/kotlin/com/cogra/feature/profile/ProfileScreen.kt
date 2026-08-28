@@ -46,7 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.CollapsingTopBanner
-import com.cogra.core.designsystem.MonogramAvatar
+import com.cogra.core.designsystem.v2.media.CograAvatar
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
@@ -303,10 +303,14 @@ private fun ProfileHeader(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        MonogramAvatar(
+        // The actor's picture when they have one, the monogram when
+        // they do not — and the monogram is where a failed load lands
+        // too, so "no picture" and "broken picture" look alike (D13).
+        CograAvatar(
             name = name,
             size = 64.dp,
-            modifier = Modifier.testTag("profile_avatar"),
+            url = profile.avatar?.url,
+            testTag = "profile_avatar",
         )
         Column {
             Text(
