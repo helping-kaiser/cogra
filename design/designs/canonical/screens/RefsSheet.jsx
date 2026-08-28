@@ -2,23 +2,6 @@
    open it, and every signed act gets a full row — leading mark, name, and the
    pair the author signed on it. One row shape across every node kind; search
    (backlog item 9) reuses it. */
-function GroupLabel({ children }) {
-  return (
-    <span
-      style={{
-        padding: "12px 24px 4px",
-        fontSize: "var(--text-label-small)",
-        lineHeight: "var(--text-label-small--line-height)",
-        fontWeight: "var(--text-label-small--font-weight)",
-        letterSpacing: "var(--text-label-small--letter-spacing, 0.5px)",
-        color: "var(--text-secondary)",
-      }}
-    >
-      {children}
-    </span>
-  );
-}
-
 export function Screen() {
   return (
     <>
@@ -31,10 +14,10 @@ export function Screen() {
       <BottomSheet open ariaLabel="Topics and references" maxHeight="88%">
         <SheetTitle>Topics &amp; references</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          <GroupLabel>Topics</GroupLabel>
+          <SectionLabel>Topics</SectionLabel>
           <ReferenceRow kind="topic" name="photography" pair="+0.40 / +0.20" onOpen={() => {}} />
           <ReferenceRow kind="topic" name="coastroad" pair="+0.10 / +0.10" onOpen={() => {}} />
-          <GroupLabel>References</GroupLabel>
+          <SectionLabel>References</SectionLabel>
           <ReferenceRow kind="person" name="Mira Voss" src="inviter.jpg" pair="+0.10 / +0.10" onOpen={() => {}} />
           <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" pair="+0.55 / +0.20" onOpen={() => {}} />
           <ReferenceRow kind="post" name="Low tide at six tomorrow — anyone walking the flats?" pair="+0.10 / +0.10" onOpen={() => {}} />

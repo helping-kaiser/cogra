@@ -11,7 +11,8 @@ export type ReferenceKind =
   | "item"
   | "campaign"
   | "offer"
-  | "chat";
+  | "chat"
+  | "message";
 
 export interface ReferenceRowProps {
   /** Decides the leading mark: avatar, cover, T tile, # tile, or node glyph. */
@@ -32,6 +33,11 @@ export interface ReferenceRowProps {
   value?: string;
   /** Old name of `value`; still accepted. */
   pair?: string;
+  /**
+   * A viewer-relative rank: rendered with the score's graph glyph so the
+   * number is recognized before it is read. Wins over `value`.
+   */
+  rank?: string;
   /** The row navigates to the node it names. */
   onOpen?: () => void;
 }

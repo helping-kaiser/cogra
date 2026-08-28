@@ -384,6 +384,38 @@
       "y": 10860,
       "w": 390,
       "h": 844
+    },
+    {
+      "file": "Explore.dc.html",
+      "title": "Explore · at rest",
+      "x": 0,
+      "y": 11920,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ExploreSearch.dc.html",
+      "title": "Explore · searching",
+      "x": 480,
+      "y": 11920,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ExploreFilter.dc.html",
+      "title": "Explore · the filter sheet",
+      "x": 960,
+      "y": 11920,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ExploreNone.dc.html",
+      "title": "Explore · nothing found",
+      "x": 1440,
+      "y": 11920,
+      "w": 390,
+      "h": 844
     }
   ],
   "annotations": [
@@ -484,6 +516,13 @@
       "y": 10860,
       "w": 290,
       "text": "COMPOSE · The post ladder — every container state in one place\n\nFrom the smallest form (one line of words, nothing else) through bare media to the maximal collapsed container, plus the marked states: sensitive-veiled (blur + neutral wash + the author's reason; title and interaction row stay readable), removed by its author, and removed under the platform's rules — the two removal marks deliberately read differently.\n\nTHE HEIGHT RULE (2026-08-27): a post card's collapsed form never exceeds the screen height minus the bottom bar and the top safe zone — designed against the app / downloadable-webapp viewport, not browser chrome. Collapse order: the media and the interaction row NEVER shrink; tags and references collapse to one line under the description; the title clamps to one line; the description to two. The expanded detail view may be taller than the screen."
+    },
+    {
+      "id": "sec-search",
+      "x": -340,
+      "y": 11920,
+      "w": 280,
+      "text": "SEARCH — the Explore tab (item 9, rulings in readme §13 / Q46). At rest: the field, the orbit hero (item 16’s future 3D view), device-local recents. Searching: the worded filter trigger + the one “?”, ranked rows wearing the graph glyph, the seam, the aged tail. Scope operators @handle / #topic; indirect hits say their target on the second line."
     }
   ],
   "launch": {
