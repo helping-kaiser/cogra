@@ -43,6 +43,7 @@ product already inlines, so web and Android match.
 | `campaign` | a campaign's node-type mark | `<Icon name="campaign" />` |
 | `sell` | an offer's node-type mark | `<Icon name="sell" />` |
 | `forum` | a chat's node-type mark | `<Icon name="forum" />` |
+| `send` | a chat message's node-type mark | `<Icon name="send" />` |
 
 The web client's interim words (`Show` / `Hide`, `Settings`) and its `←`
 character were placeholders for icons it had not inlined. **The icons now

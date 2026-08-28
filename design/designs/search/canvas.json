@@ -1,0 +1,16 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "1 · The observatory · at rest", "x": 0, "y": 0, "w": 390, "h": 844 },
+    { "file": "ObservatorySearch.dc.html", "title": "1 · The observatory · searching", "x": 480, "y": 0, "w": 390, "h": 844 },
+    { "file": "FieldFirst.dc.html", "title": "2 · Field first · at rest", "x": 0, "y": 1060, "w": 390, "h": 844 },
+    { "file": "FieldFirstSearch.dc.html", "title": "2 · Field first · searching", "x": 480, "y": 1060, "w": 390, "h": 844 },
+    { "file": "TwoRooms.dc.html", "title": "3 · Two rooms · at rest", "x": 0, "y": 2120, "w": 390, "h": 844 },
+    { "file": "TwoRoomsSearch.dc.html", "title": "3 · Two rooms · searching", "x": 480, "y": 2120, "w": 390, "h": 844 }
+  ],
+  "annotations": [
+    { "id": "brief", "x": 0, "y": -280, "w": 420, "text": "Search ideation — three directions for the Explore tab (item 9, rulings in readme §13 / Q46). Every direction shows: rest (recents + the orbit entry) and searching (kinds, order swap + seen toggle, ranked rows with viewer-relative ranks, the seam, the aged tail, @/# scope operators with two-line indirect hits). They differ in WHERE the orbit lives and HOW kinds are filtered: 1 · orbit as hero card, kinds as a chips row. 2 · field first, orbit docked above the bar, filters as one worded trigger + sheet. 3 · two equal rooms, results sectioned by kind instead of filtered." },
+    { "id": "note-ops", "x": 960, "y": 0, "w": 300, "text": "The operators: \"@sol salt\" scopes to @sol's acts — direct hits match their own content's name; INDIRECT hits match the act's target (the comment found through its post, the offer through its item) and say so on the second line. \"#saltmaps <text>\" scopes to tagged content the same way." },
+    { "id": "note-seam", "x": 960, "y": 1060, "w": 300, "text": "The seam: above it, rows carry the viewer-relative rank (quiet numbers, drill-down waits for item 13). Below it, nothing is rankable from this vantage — rows carry their age instead, relative to a year, absolute past it." }
+  ],
+  "launch": { "view": "canvas" }
+}

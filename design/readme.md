@@ -436,8 +436,8 @@ exists in `web/src/lib/ui/` (and, unless noted, in Android's
 |---|---|
 | `components/core/` | `Button`, `Card`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip` |
 | `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow` |
-| `components/forms/` | `TextField`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode` |
-| `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `BorrowedViewBand` |
+| `components/forms/` | `TextField`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
+| `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `BorrowedViewBand`, `CograBand` |
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader` |
 | `components/states/` | `EmptyState`, `LoadingState` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending` |
@@ -1128,6 +1128,46 @@ kind (`ReferenceRow`), reused by search's results (item 9).
 - Comments wear the same topics-and-citations line as posts
   (`TopicsLine`, shared) and the same overflow menu.
 
+### The search rulings — 2026-08-28
+
+Decided ahead of the search section's drawing (product side mirrored
+as Q46 in docs/open-questions.md):
+
+- **Order**: full match, then partial match, each tier ordered by
+  the viewer's ranker — never newest by default. What the ranker
+  cannot score falls to newest behind a **visible seam**; past the
+  seam a row's rank gives way to its age (relative to one year, an
+  absolute date after).
+- **Controls**: an order swap (Ranked / Newest) and a "show already
+  seen" toggle, default on. Seen = the card's impression entered
+  the viewport; device-local, never a record, shared transiently
+  with the viewer's chosen ranker. **The feed carries this same
+  ordering section** (backlog item 19 — the canonical feed screens
+  never drew the filter at all).
+- **Scope operators**: `@handle <text>` and `#topic <text>` scope
+  the query; the remainder matches the scoped author's own content
+  AND the names of their acts' targets — a comment through its
+  post's title, an offer through its item's name, a message through
+  its chat's name. Comments, messages, and offers are thereby
+  searchable and citable. Indirect hits are `ReferenceRow`'s
+  two-line variant: the second line names the target ("on *Salt
+  maps of the coast road*").
+- **Ranks on every kind**, quiet viewer-relative numbers on the
+  row's right edge; explained by the "?", drill-down waits for the
+  Post Score screens (item 13).
+- **The Explore tab at rest**: recent searches (device-local) plus
+  a PROMINENT entry into THE SKY — the 3D graph view (item 16) — never a
+  small side thing. Typing drops the Sky entry off the bottom
+  edge; the screen becomes kinds filter, order controls, results.
+- **Chats are public reads**: a chat result opens the chat's read
+  surface for anyone; E2E chats show ciphertext but they show.
+- **Built as the hybrid** (2026-08-28, after ideation): direction 1's
+  rest (the Sky hero card) with direction 2's searching (the band
+  gives way to the field; ONE worded trigger + sheet for kinds,
+  order, and the seen toggle). A rank on a row wears the score's
+  graph glyph, so the number is recognized before it is read. A chat
+  message's mark is `send`; the chat that holds it stays `forum`.
+
 ### Masters, variants, and screens — 2026-08-28
 
 The Figma discipline, applied here: a component's ONE
@@ -1148,6 +1188,22 @@ drift, always. Concretely:
 - `Raw` markup in a screen is for the genuinely screen-local —
   content that exists nowhere else. The moment it appears on a
   second screen it becomes a component or a `_shared.jsx` helper.
+
+**Below the masters sit the ATOMS** (2026-08-28) — the smallest
+units, each assigned in exactly one place so swapping one updates
+every surface that draws its meaning:
+
+- **Colour, type, spacing, radius, motion** are already atoms: the
+  CSS tokens (`tokens/*.css`). A component never states a raw value.
+- **Glyphs** are atoms in `Icon.jsx` — path data assigned per name —
+  and MEANINGS are assigned their glyph once in `NODE_GLYPHS` (a
+  chat is `forum`, a chat message is `send`, …). A surface asks the
+  map; it never picks a glyph for a node kind on its own. Kinds
+  whose mark is not a glyph (avatar, cover, the T tile, the #) live
+  once in `NodeMark` (`content/ReferenceRow.jsx`).
+- The stance **anchor table** (`StanceReadout.jsx`) and the decided
+  **copy strings** (`guidelines/copy-voice.md`) are atoms of the
+  same kind: one assignment, many surfaces.
 
 ## 14. Index
 
