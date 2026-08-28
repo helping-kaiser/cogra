@@ -33,6 +33,7 @@ pub mod scope {
     pub const RESET_EMAIL: &str = "reset_email";
     pub const RESEND_EMAIL: &str = "resend_email";
     pub const CONFIRM_IP: &str = "confirm_ip";
+    pub const UPLOAD_ACCOUNT: &str = "upload_account";
 }
 
 /// One fixed-window budget: at most `limit` attempts per `window_secs`.
@@ -69,6 +70,10 @@ pub struct RateLimitConfig {
     /// Token confirmations (verifyEmail, confirmPasswordReset,
     /// confirmEmailChange) per IP.
     pub confirm_ip: Window,
+    /// Media uploads per account. Uploading is not an act, so θ prices
+    /// nothing about it and an insolvent actor can still fill the store —
+    /// this is the only cost control media has.
+    pub upload_account: Window,
 }
 
 impl Default for RateLimitConfig {
@@ -105,6 +110,10 @@ impl Default for RateLimitConfig {
                 limit: 30,
                 window_secs: 900.0,
             },
+            upload_account: Window {
+                limit: 60,
+                window_secs: 3600.0,
+            },
         }
     }
 }
@@ -123,6 +132,10 @@ impl RateLimitConfig {
             ("RATE_LIMIT_RESET_PER_EMAIL", &mut cfg.reset_email.limit),
             ("RATE_LIMIT_RESEND_PER_EMAIL", &mut cfg.resend_email.limit),
             ("RATE_LIMIT_CONFIRM_PER_IP", &mut cfg.confirm_ip.limit),
+            (
+                "RATE_LIMIT_UPLOAD_PER_ACCOUNT",
+                &mut cfg.upload_account.limit,
+            ),
         ] {
             if let Ok(raw) = std::env::var(var) {
                 *limit = raw
@@ -151,6 +164,7 @@ impl RateLimitConfig {
             reset_email: generous,
             resend_email: generous,
             confirm_ip: generous,
+            upload_account: generous,
         }
     }
 }

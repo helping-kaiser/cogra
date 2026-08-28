@@ -20,6 +20,10 @@ unwrap_used = "deny"
 [workspace.dependencies]
 # Async runtime
 tokio = { version = "1", features = ["full"] }
+# The body-stream-to-AsyncRead bridge the GraphQL multipart parse needs —
+# the same two adapters async-graphql-axum's own extractor uses, pulled in
+# directly because that extractor cannot be given upload limits.
+tokio-util = { version = "0.7", features = ["io", "compat"] }
 
 # Web framework + GraphQL
 # axum 0.8 matches the version async-graphql-axum 7 builds against, so the
