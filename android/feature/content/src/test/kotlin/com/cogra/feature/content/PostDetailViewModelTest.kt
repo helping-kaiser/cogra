@@ -11,16 +11,23 @@ import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ReferenceCandidateView
+import com.cogra.domain.ReferenceClaimView
 import com.cogra.domain.UserError
 import com.cogra.domain.content.LandingSignal
 import com.cogra.domain.content.NodeLanding
+import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingContentRepository
+import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingTopicRepository
 import com.cogra.domain.testing.testComment
+import com.cogra.domain.testing.testContentTarget
+import com.cogra.domain.testing.testMentionTarget
 import com.cogra.domain.testing.testPost
+import com.cogra.domain.testing.testReferenceClaim
 import com.cogra.domain.testing.testTopicClaim
 import com.cogra.domain.topics.TagClaim
 import com.google.common.truth.Truth.assertThat
@@ -112,24 +119,32 @@ class PostDetailViewModelTest {
         /** A refusal the creation path hands back, when set (F2). */
         var commentRefusal: List<UserError>? = null
 
+        /** The references the last comment/reply creation declared. */
+        var lastCommentReferences: List<ReferenceClaim> = emptyList()
+
         override suspend fun prepareComment(
             target: String,
             content: String,
             license: LicenseChoice,
             tags: List<TagClaim>,
+            references: List<ReferenceClaim>,
         ): Outcome<PreparedContentView> {
             replyTargets += target
             commentPrepared += 1
             lastCommentTags = tags
+            lastCommentReferences = references
             if (prepareFails) return Outcome.Failed(IOException("offline"))
             commentRefusal?.let { return Outcome.Refused(it) }
             return Outcome.Success(
                 PreparedContentView(
                     "comment-node",
                     // The server stages the minting Review, then one Tag
-                    // record per declared topic — the whole batch signs
-                    // in the one pass.
-                    listOf(sealer.stage(Family.REVIEW)) + tags.map { sealer.stage(Family.TAG) },
+                    // record per declared topic and one Reference per
+                    // declared citation — the whole batch signs in the
+                    // one pass.
+                    listOf(sealer.stage(Family.REVIEW)) +
+                        tags.map { sealer.stage(Family.TAG) } +
+                        references.map { sealer.stage(Family.REFERENCE) },
                 ),
             )
         }
@@ -150,8 +165,46 @@ class PostDetailViewModelTest {
         }
     }
 
-    private fun viewModel() =
-        PostDetailViewModel(content, topics, WriteSigner(sealer, identity), landings, identity)
+    private val references = object : ThrowingReferenceRepository() {
+        val added = mutableListOf<ReferenceCall>()
+        val withdrawn = mutableListOf<Pair<String, String>>()
+        var candidates: List<ReferenceCandidateView> = emptyList()
+
+        /** How many counter-records a withdrawal costs; the batch length is the quote (D11). */
+        var withdrawalRecords = 1
+
+        override suspend fun referenceCandidates(
+            query: String,
+            limit: Int?,
+        ): Outcome<List<ReferenceCandidateView>> = Outcome.Success(candidates)
+
+        override suspend fun prepareReference(
+            artifact: String,
+            target: String,
+            relevance: Double?,
+            support: Double?,
+        ): Outcome<List<PreparedWriteView>> {
+            added += ReferenceCall(artifact, target, relevance, support)
+            return Outcome.Success(listOf(sealer.stage(Family.REFERENCE)))
+        }
+
+        override suspend fun prepareReferenceWithdrawal(
+            artifact: String,
+            target: String,
+        ): Outcome<List<PreparedWriteView>> {
+            withdrawn += artifact to target
+            return Outcome.Success(List(withdrawalRecords) { sealer.stage(Family.REFERENCE) })
+        }
+    }
+
+    private fun viewModel() = PostDetailViewModel(
+        content,
+        topics,
+        references,
+        WriteSigner(sealer, identity),
+        landings,
+        identity,
+    )
 
     /**
      * Most tests exercise the staging, not the confirm (F4): the device
@@ -876,5 +929,259 @@ class PostDetailViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(content.editPrepared).isEqualTo(1)
         assertThat(vm.state.value.commentSigned).isTrue()
+    }
+
+    // -- Comment references (D10, D11, D20) --
+
+    private fun PostDetailViewModel.stageReferenceOn(
+        target: TagTarget,
+        targetId: String = "u1",
+    ) {
+        references.candidates = listOf(ReferenceCandidateView(testMentionTarget("ada"), targetId))
+        onOpenFinder(target)
+        onFinderQueryChange(target, "@ada")
+        dispatcher.scheduler.advanceUntilIdle()
+        onPickReference(target, state.value.referenceSection(target).finder!!.candidates.single())
+    }
+
+    @Test
+    fun aCommentDeclaresItsReferencesOnTheCreationInput() = runTest(dispatcher) {
+        val vm = startedVm()
+        vm.onDraftChange("Great post")
+        vm.stageReferenceOn(TagTarget.COMMENT)
+        vm.onReferenceSupportChange(TagTarget.COMMENT, "u1", -0.5)
+        vm.onSubmitComment()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.lastCommentReferences)
+            .containsExactly(ReferenceClaim("u1", relevance = 0.1, support = -0.5))
+        // The references rode the mutation, so no standalone act was staged.
+        assertThat(references.added).isEmpty()
+    }
+
+    @Test
+    fun aReplyDeclaresItsOwnReferences() = runTest(dispatcher) {
+        val vm = startedVm()
+        vm.onStartReply("c1")
+        vm.onReplyDraftChange("Replying")
+        vm.stageReferenceOn(TagTarget.REPLY, "u2")
+        vm.onSubmitReply()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.lastCommentReferences.map { it.targetId }).containsExactly("u2")
+    }
+
+    /** Each section holds its own citations; one does not leak into another. */
+    @Test
+    fun theCommentAndReplyReferenceSectionsStaySeparate() = runTest(dispatcher) {
+        val vm = startedVm()
+        vm.stageReferenceOn(TagTarget.COMMENT, "u1")
+        vm.onStartReply("c1")
+        vm.stageReferenceOn(TagTarget.REPLY, "u2")
+        assertThat(vm.state.value.commentReferences.references.map { it.targetId })
+            .containsExactly("u1")
+        assertThat(vm.state.value.replyReferences.references.map { it.targetId })
+            .containsExactly("u2")
+    }
+
+    @Test
+    fun theCommentIndicatorCountsTheMintingWriteEachTopicAndEachReference() =
+        runTest(dispatcher) {
+            val vm = startedVm()
+            vm.onTagInputChange(TagTarget.COMMENT, "rust")
+            vm.onAddTag(TagTarget.COMMENT)
+            vm.stageReferenceOn(TagTarget.COMMENT)
+            assertThat(vm.state.value.commentSignedActions).isEqualTo(3)
+        }
+
+    @Test
+    fun everyWriteInAReferencedCommentBatchIsSigned() = runTest(dispatcher) {
+        val vm = startedVm()
+        vm.onDraftChange("Great post")
+        vm.stageReferenceOn(TagTarget.COMMENT)
+        vm.onSubmitComment()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.commentSigned).isTrue()
+        assertThat(vm.state.value.signingFailed).isFalse()
+    }
+
+    @Test
+    fun aRefusedReferenceLandsOnItsChip() = runTest(dispatcher) {
+        val vm = startedVm()
+        vm.onDraftChange("Great post")
+        vm.stageReferenceOn(TagTarget.COMMENT)
+        content.commentRefusal = listOf(
+            UserError(
+                code = ErrorCode.UNKNOWN,
+                message = "An artifact cannot cite itself.",
+                field = listOf("references", "0", "target"),
+            ),
+        )
+        vm.onSubmitComment()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.commentReferences.references.single().error)
+            .isEqualTo("An artifact cannot cite itself.")
+        assertThat(vm.state.value.refused).isFalse()
+    }
+
+    /** A whole-batch refusal names no field and says its piece once (D19). */
+    @Test
+    fun aWholeBatchRefusalOnACommentMarksNoReferenceChip() = runTest(dispatcher) {
+        val vm = startedVm()
+        vm.onDraftChange("Great post")
+        vm.stageReferenceOn(TagTarget.COMMENT)
+        content.commentRefusal = listOf(
+            UserError(ErrorCode.UNKNOWN, "Your balance cannot carry all 2 actions.", null),
+        )
+        vm.onSubmitComment()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.refused).isTrue()
+        assertThat(vm.state.value.commentReferences.references.single().error).isNull()
+    }
+
+    // -- The inline editor manages citations after publication (F10, D11) --
+
+    private fun editingComment(claims: List<ReferenceClaimView>): CommentView {
+        val comment = testComment("c1").copy(references = claims)
+        content.detail = Outcome.Success(
+            PostDetail(
+                post = testPost("post-1"),
+                comments = Page(listOf(comment), "cc1", hasNextPage = false),
+            ),
+        )
+        return comment
+    }
+
+    private fun startedVmEditing(vararg claims: ReferenceClaimView): PostDetailViewModel {
+        val comment = editingComment(claims.toList())
+        return startedVm().also {
+            it.onStartEditComment(comment)
+            dispatcher.scheduler.advanceUntilIdle()
+        }
+    }
+
+    /** The confirm left on, for the batches that have to ask (D11). */
+    private fun viewModelWithConfirm(vararg claims: ReferenceClaimView): PostDetailViewModel {
+        val comment = editingComment(claims.toList())
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onStartEditComment(comment)
+        dispatcher.scheduler.advanceUntilIdle()
+        return vm
+    }
+
+    @Test
+    fun theEditorOpensOnTheCommentsStoredCitations() = runTest(dispatcher) {
+        val vm = startedVmEditing(
+            testReferenceClaim(testMentionTarget("ada"), relevance = 0.7, support = -0.2),
+        )
+        val row = vm.state.value.editReferences.references.single()
+        assertThat(row.targetId).isEqualTo("user-ada")
+        assertThat(row.relevance).isEqualTo(0.7)
+        assertThat(row.support).isEqualTo(-0.2)
+        // Opened and left alone: nothing staged.
+        assertThat(vm.state.value.editSignedActions).isEqualTo(0)
+    }
+
+    @Test
+    fun aReferenceOnlyCommentEditStagesNoEditRecord() = runTest(dispatcher) {
+        val vm = startedVmEditing()
+        vm.stageReferenceOn(TagTarget.EDIT)
+        vm.onSubmitCommentEdit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.editPrepared).isEqualTo(0)
+        assertThat(references.added).containsExactly(ReferenceCall("c1", "u1", 0.1, 0.1))
+    }
+
+    @Test
+    fun unReferencingACommentStagesAWithdrawal() = runTest(dispatcher) {
+        val vm = startedVmEditing(testReferenceClaim(testMentionTarget("ada")))
+        vm.onRemoveReference(TagTarget.EDIT, "user-ada")
+        vm.onSubmitCommentEdit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(references.withdrawn).containsExactly("c1" to "user-ada")
+    }
+
+    /**
+     * The count the editor shows is the claim's own served cost, so an
+     * edit carrying a withdrawal asks before it stages anything — the
+     * same order every other multi-act submit follows (B4).
+     */
+    @Test
+    fun aCommentWithdrawalAsksBeforeItStages() = runTest(dispatcher) {
+        references.withdrawalRecords = 3
+        val vm = viewModelWithConfirm(
+            testReferenceClaim(testMentionTarget("ada"), withdrawalCost = 3),
+        )
+        vm.onRemoveReference(TagTarget.EDIT, "user-ada")
+        vm.onSubmitCommentEdit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.confirmPending).isEqualTo(TagTarget.EDIT)
+        assertThat(vm.state.value.editWithdrawalCost).isEqualTo(3)
+        assertThat(vm.state.value.commentSigned).isFalse()
+        assertThat(references.withdrawn).isEmpty()
+
+        vm.onConfirmSubmit(dontAskAgain = false)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.commentSigned).isTrue()
+        assertThat(references.withdrawn).hasSize(1)
+    }
+
+    @Test
+    fun dismissingACommentWithdrawalConfirmStagesNothing() = runTest(dispatcher) {
+        references.withdrawalRecords = 2
+        val vm = viewModelWithConfirm(
+            testReferenceClaim(testMentionTarget("ada"), withdrawalCost = 2),
+        )
+        vm.onRemoveReference(TagTarget.EDIT, "user-ada")
+        vm.onSubmitCommentEdit()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onDismissConfirm()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.commentSigned).isFalse()
+        assertThat(vm.state.value.confirmPending).isNull()
+        assertThat(vm.state.value.editSubmitting).isFalse()
+        assertThat(references.withdrawn).isEmpty()
+    }
+
+    @Test
+    fun cancellingTheCommentEditDropsItsStagedReferences() = runTest(dispatcher) {
+        val vm = startedVmEditing()
+        vm.stageReferenceOn(TagTarget.EDIT)
+        vm.onCancelEditComment()
+        assertThat(vm.state.value.editReferences.references).isEmpty()
+        assertThat(vm.state.value.editWithdrawalCost).isNull()
+    }
+
+    /**
+     * An untypeable citation carries no L2 id, so no write could name
+     * it — it never enters the editor, and its absence there must not
+     * be read as a removal.
+     */
+    @Test
+    fun anUntypeableCitationNeverEntersTheCommentEditor() = runTest(dispatcher) {
+        val vm = startedVmEditing(
+            testReferenceClaim(testMentionTarget("ada")),
+            testReferenceClaim(target = null),
+        )
+        assertThat(vm.state.value.editReferences.references.map { it.targetId })
+            .containsExactly("user-ada")
+        vm.onSubmitCommentEdit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(references.withdrawn).isEmpty()
+    }
+
+    /** The reference row's reveal is its own; the tag row's stays shut. */
+    @Test
+    fun theReferenceRevealTogglesApartFromTheTagReveal() = runTest(dispatcher) {
+        val vm = startedVm()
+        vm.onToggleReferenceValues("post-1")
+        assertThat(vm.state.value.revealedReferenceRows).containsExactly("post-1")
+        assertThat(vm.state.value.revealedTagRows).isEmpty()
+
+        vm.onToggleReferenceValues("post-1")
+        assertThat(vm.state.value.revealedReferenceRows).isEmpty()
     }
 }

@@ -6,6 +6,7 @@
 //! when `userErrors` is non-empty (the conventions section).
 
 use async_graphql::connection::{Connection, Edge};
+use async_graphql::dataloader::DataLoader;
 use async_graphql::{
     Context, Enum, InputValueError, InputValueResult, Interface, Object, Scalar, ScalarType,
     SimpleObject, Value,
@@ -17,9 +18,11 @@ use common::hashtag_uuid;
 use common::l1::census::Family;
 use common::l1::identifier::NodeId;
 use common::l1::{crypto, wire};
+use postgres_store::references::ReferenceView;
 use postgres_store::topics::{TagChannel, TopicView};
 use postgres_store::{
-    PgPool, auth as store, mirror, profile as profile_store, staged, topics as topics_store,
+    PgPool, auth as store, mirror, profile as profile_store, references as references_store,
+    staged, topics as topics_store,
 };
 use uuid::Uuid;
 
@@ -27,6 +30,7 @@ use l1_standin::StandIn;
 
 use crate::auth::Viewer;
 use crate::l1::StandInBoundary;
+use crate::loaders::{ActorByAddressLoader, CommentByNodeLoader, PostByNodeLoader};
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 
 /// A stance dimension: a float constrained to the closed range
@@ -136,11 +140,7 @@ impl StanceBundle {
     /// (feed-ranking.md §8.1). Zero when the bundle already nets to
     /// `(0, 0)`.
     async fn severance_cost(&self) -> i32 {
-        self.sum
-            .severance_batch()
-            .len()
-            .try_into()
-            .unwrap_or(i32::MAX)
+        self.sum.severance_cost().try_into().unwrap_or(i32::MAX)
     }
 
     /// Where the supplied `pick` would land the bundle; null when the
@@ -301,7 +301,7 @@ impl UserError {
                 UserError::new(ErrorCode::VerificationTokenInvalid, e.to_string())
             }
             OnboardingError::Forbidden => UserError::new(ErrorCode::Forbidden, e.to_string()),
-            OnboardingError::WriteRule { .. } => {
+            OnboardingError::WriteRule { .. } | OnboardingError::BatchWriteRule { .. } => {
                 UserError::new(ErrorCode::WriteRuleFailed, e.to_string())
             }
             OnboardingError::SignatureInvalid(_) => {
@@ -843,6 +843,49 @@ impl User {
 impl User {
     async fn id(&self) -> Uuid {
         self.identity.id
+    }
+
+    /// When this node was created — when the account row that fronts the
+    /// Profile was written, which precedes the Registration record
+    /// landing.
+    async fn created_at(&self) -> DateTime<Utc> {
+        self.identity.created_at
+    }
+
+    /// The most recent profile version's authoring instant; equals
+    /// `createdAt` for an actor whose profile has never changed.
+    async fn updated_at(&self, ctx: &Context<'_>) -> async_graphql::Result<DateTime<Utc>> {
+        Ok(match self.profile(ctx).await? {
+            Some(p) => p.created_at.max(self.identity.created_at),
+            None => self.identity.created_at,
+        })
+    }
+
+    /// Where this actor's Profile stands relative to L1 finality. A
+    /// Profile is minted by its own Registration record, so it pends
+    /// between the key ceremony — which is where the address is bound —
+    /// and that record landing.
+    async fn landing(&self, ctx: &Context<'_>) -> async_graphql::Result<Landing> {
+        let Some(address) = self.identity.l0_address.as_deref() else {
+            return Ok(Landing {
+                state: LandingState::Pending,
+                epoch: None,
+            });
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let node = NodeId::Prof(address.to_string()).to_string();
+        Ok(
+            match mirror::minting_epoch(pool, Family::Registration, &node).await? {
+                Some(epoch) => Landing {
+                    state: LandingState::Landed,
+                    epoch: Some(epoch),
+                },
+                None => Landing {
+                    state: LandingState::Pending,
+                    epoch: None,
+                },
+            },
+        )
     }
 
     /// The account's name in the one actor namespace: 3–30 characters of
@@ -1554,13 +1597,33 @@ impl PostType {
     /// `includePending: false` serves only what has landed on L1; the
     /// pending half is the viewer's own in-flight tags on their own
     /// content.
-    #[graphql(complexity = "list_cost(None, child_complexity)")]
+    #[graphql(complexity = "fold_cost(child_complexity)")]
     async fn topics(
         &self,
         ctx: &Context<'_>,
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<Vec<TopicClaim>> {
         topic_claims(ctx, &self.0.l1_node_id, self.0.author_id, include_pending).await
+    }
+
+    /// This post's current citations — quotes, embeds and mentions the
+    /// author built into it, as the current-references fold reads them:
+    /// the (author, artifact, target) bundle summed then clipped, a
+    /// bundle netting to `(0, 0)` read as withdrawn.
+    ///
+    /// The author's own citations only. A stranger's citation off this
+    /// post reaches a viewer through the citer, at a forward-path weight
+    /// the ranker computes, and the ranker arrives in slice 3.
+    /// `includePending: false` serves only what has landed on L1; the
+    /// pending half is the viewer's own in-flight citations on their own
+    /// content.
+    #[graphql(complexity = "fold_cost(child_complexity)")]
+    async fn references(
+        &self,
+        ctx: &Context<'_>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<Vec<ReferenceClaim>> {
+        reference_claims(ctx, &self.0.l1_node_id, self.0.author_id, include_pending).await
     }
 
     /// The viewer's own stance bundle toward this post, and — with
@@ -1659,13 +1722,25 @@ impl CommentType {
     /// This comment's current topics — the same fold and the same
     /// author-owned channel as `Post.topics`; a Comment is Taggable
     /// like any other passive node.
-    #[graphql(complexity = "list_cost(None, child_complexity)")]
+    #[graphql(complexity = "fold_cost(child_complexity)")]
     async fn topics(
         &self,
         ctx: &Context<'_>,
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<Vec<TopicClaim>> {
         topic_claims(ctx, &self.0.l1_node_id, self.0.author_id, include_pending).await
+    }
+
+    /// This comment's current citations — the same fold and the same
+    /// author-owned channel as `Post.references`; a Comment is a citing
+    /// artifact like any other passive node.
+    #[graphql(complexity = "fold_cost(child_complexity)")]
+    async fn references(
+        &self,
+        ctx: &Context<'_>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<Vec<ReferenceClaim>> {
+        reference_claims(ctx, &self.0.l1_node_id, self.0.author_id, include_pending).await
     }
 
     /// The viewer's own stance bundle toward this comment, and — with
@@ -1820,10 +1895,124 @@ pub struct TaggedContent {
     pub pending: bool,
 }
 
+/// What a citation may point at. Quoting, embedding and mentioning are
+/// one record, and this union *is* the distinction between them: a
+/// citation whose target is a `User` is a mention, and one whose target
+/// is a `Post` or `Comment` is a quote or embed — which of those two is
+/// a render question, not a wire one.
+///
+/// A `Hashtag` is absent, and that absence is the contract: a topic is
+/// tagged, never referenced. The write path refuses a Type target,
+/// so no citation this instance prepares can have one.
+#[derive(async_graphql::Union)]
+pub enum ReferenceTarget {
+    Post(PostType),
+    Comment(CommentType),
+    Profile(User),
+}
+
+/// One standing citation from an artifact — a chip in the reference row.
+///
+/// The bundle key is (author, citing artifact, target) and its records
+/// *net*: a citation revised twice folds to the sum of all three records,
+/// clipped to the census range, and a bundle netting to `(0, 0)` is
+/// withdrawn and never appears here.
+/// The fold's own row, carried untyped: what the far end resolves to is
+/// the resolver's question, and the contract's own words for this type
+/// sit on the `#[Object]` impl below.
+pub struct ReferenceClaim {
+    pub target_id: String,
+    pub relevance: Dimension,
+    pub support: Dimension,
+    pub withdrawal_cost: i32,
+    pub pending: bool,
+}
+
+/// One standing citation from an artifact — a chip in the reference row.
+///
+/// The bundle key is (author, citing artifact, target) and its records
+/// *net*: a citation revised twice folds to the sum of all three records,
+/// clipped to the census range, and a bundle netting to `(0, 0)` is
+/// withdrawn and never appears here.
+#[Object]
+impl ReferenceClaim {
+    /// The cited node, typed. Null when this instance cannot type the far
+    /// end — the fold reads the mirror, which reaches further than both
+    /// the display store and CoGra's own target policy — in which case
+    /// `targetId` still names it.
+    async fn target(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<ReferenceTarget>> {
+        resolve_reference_target(ctx, &self.target_id).await
+    }
+
+    /// The cited node's raw L1 identifier, always present: the citation
+    /// stands as a substrate fact whether or not this instance can type
+    /// its far end.
+    async fn target_id(&self) -> &str {
+        &self.target_id
+    }
+
+    /// How load-bearing the cited thing is to this artifact — effort `f`,
+    /// folded and clipped to `[-1, 1]`.
+    async fn relevance(&self) -> Dimension {
+        self.relevance
+    }
+
+    /// Endorsing versus refuting — enthusiasm `e`, folded and clipped.
+    /// Strictly positive on both axes is what makes a mention a vouch.
+    async fn support(&self) -> Dimension {
+        self.support
+    }
+
+    /// How many counter-records withdrawing this citation stages right
+    /// now — the gesture's cost, since each is its own priced act
+    /// (D11). Never zero: a bundle already netted to `(0, 0)` has left
+    /// the fold and is not served here.
+    ///
+    /// Served for the same reason `StanceBundle.severanceCost` is: a
+    /// removal that costs more than one act must be able to say so
+    /// *before* it is confirmed. The clipped `relevance` and `support`
+    /// beside it cannot answer this — the clip has already lost how far
+    /// past `1` the raw sums reach.
+    async fn withdrawal_cost(&self) -> i32 {
+        self.withdrawal_cost
+    }
+
+    /// True while any record in the bundle is still in flight.
+    async fn pending(&self) -> bool {
+        self.pending
+    }
+}
+
+/// One thing the reference finder offers as a citation target.
+///
+/// The pairing mirrors `ReferenceClaim` — the typed node for the chip,
+/// its raw id beside it — with two deliberate differences, both following
+/// from a candidate being a thing about to be *cited* rather than a
+/// citation already standing.
+///
+/// `targetId` is the L2 `Uuid` rather than the claim's L1 identifier
+/// string, because `ReferenceInput.target` takes the L2 id: the picker
+/// hands back exactly what the mutation consumes, with nothing for the
+/// client to translate.
+///
+/// `target` is non-null where a claim's is nullable. A claim is a
+/// substrate fact that can outrun the display store, so its far end may
+/// be untypeable; a candidate is only ever built *from* what CoGra can
+/// display, and one it could not render would be unofferable anyway.
+#[derive(SimpleObject)]
+pub struct ReferenceCandidate {
+    /// The candidate node, typed — the same union a standing citation
+    /// carries, so the picker renders with the components already built
+    /// for the reference row.
+    pub target: ReferenceTarget,
+    /// The candidate's L2 id: what a `ReferenceInput` names to cite it.
+    pub target_id: Uuid,
+}
+
 /// The `limit` a topic list accepts: at most [`MAX_PAGE_SIZE`],
 /// [`DEFAULT_PAGE_SIZE`] when unset. Over-asking refuses rather than
 /// silently clamping, the same contract the connections carry.
-fn list_limit(limit: Option<i32>) -> async_graphql::Result<u32> {
+pub(super) fn list_limit(limit: Option<i32>) -> async_graphql::Result<u32> {
     let limit = limit.unwrap_or(DEFAULT_PAGE_SIZE);
     if !(0..=MAX_PAGE_SIZE).contains(&limit) {
         return Err(async_graphql::Error::new(format!(
@@ -1834,9 +2023,34 @@ fn list_limit(limit: Option<i32>) -> async_graphql::Result<u32> {
 }
 
 /// What a `limit`-bounded list field charges, priced like a connection.
-fn list_cost(limit: Option<i32>, child_complexity: usize) -> usize {
+pub(super) fn list_cost(limit: Option<i32>, child_complexity: usize) -> usize {
     let requested = limit.unwrap_or(DEFAULT_PAGE_SIZE).clamp(0, MAX_PAGE_SIZE);
     requested as usize * child_complexity + 1
+}
+
+/// The row count an author-owned fold list is *budgeted* at
+/// ([`fold_cost`]).
+///
+/// `Post.topics`, `Post.references` and their `Comment` twins take no
+/// page argument, so there is no requested size to price: the fold
+/// returns whatever the author has standing. What makes that priceable
+/// is the write side — `references::MAX_LIVE_REFERENCES_PER_ARTIFACT`
+/// and `topics::MAX_LIVE_TOPICS_PER_ARTIFACT`, both 50, refuse the
+/// gesture that would push a standing set past this many (D22). So the
+/// bound is enforced rather than assumed, and it is stated here as one
+/// number because both fold families carry the same cap.
+pub const FOLD_LIST_BOUND: i32 = 50;
+
+/// What an author-owned fold list charges: [`FOLD_LIST_BOUND`] rows times
+/// the per-row cost, plus one for the field itself.
+///
+/// Separate from [`list_cost`], whose contract is a `limit`-bounded list:
+/// passing it `None` charges [`DEFAULT_PAGE_SIZE`], which reads as a page
+/// size on a field that has no page. The two happen to agree today; they
+/// answer different questions, and a change to the pagination default
+/// must not silently reprice the folds.
+pub(super) fn fold_cost(child_complexity: usize) -> usize {
+    FOLD_LIST_BOUND as usize * child_complexity + 1
 }
 
 /// The requesting viewer's L0 address, when they have one. Pending rows
@@ -1853,7 +2067,7 @@ async fn viewer_address(ctx: &Context<'_>) -> async_graphql::Result<Option<Strin
 }
 
 /// The chip row shared by every taggable content node: the content
-/// author's own current topics (D8).
+/// author's own current topics.
 ///
 /// The pending half counts only when the viewer *is* the author —
 /// `topics_of` attributes every row it returns to the author it was
@@ -1892,6 +2106,101 @@ async fn topic_claims(
         .collect())
 }
 
+/// The reference row shared by every citing artifact: the carrier
+/// author's own current citations.
+///
+/// Only the content-intrinsic channel this slice — the citations the
+/// carrier's own author built into it, which need no forward-path weight
+/// because any path reaching the carrier already reached its author.
+/// Every other author's citation reaches a viewer only through *that*
+/// author, at a weight the ranker computes, and the ranker arrives in
+/// slice 3.
+///
+/// The pending half counts only when the viewer *is* the author, for the
+/// same reason it does on the topic row: `references_of` attributes every
+/// row it returns to the author it was asked about, and an in-flight act
+/// belongs to whoever staged it.
+///
+/// The rows come back untyped: `ReferenceClaim.target` is a resolver, and
+/// that is what closes the N+1. async-graphql resolves list elements
+/// concurrently, so every claim on a page reaches the loaders inside one
+/// batching window and the whole page's far ends come back in a handful
+/// of queries (`crate::loaders`). Typing them here instead would put the
+/// same reads in a sequential loop, which no loader can batch.
+async fn reference_claims(
+    ctx: &Context<'_>,
+    l1_node_id: &str,
+    author_id: Uuid,
+    include_pending: bool,
+) -> async_graphql::Result<Vec<ReferenceClaim>> {
+    let pool = ctx.data::<PgPool>()?;
+    let Some(author) = store::actor_identity(pool, author_id)
+        .await?
+        .and_then(|identity| identity.l0_address)
+    else {
+        return Ok(Vec::new());
+    };
+    let viewer = viewer_address(ctx).await?;
+    let counts_pending = include_pending && viewer.as_deref() == Some(author.as_str());
+    let rows = references_store::references_of(
+        pool,
+        l1_node_id,
+        &author,
+        ReferenceView::from_include_pending(counts_pending, Some(author.as_str())),
+    )
+    .await
+    .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+
+    Ok(rows
+        .into_iter()
+        .map(|row| ReferenceClaim {
+            target_id: row.target,
+            relevance: Dimension(row.relevance),
+            support: Dimension(row.support),
+            withdrawal_cost: row.withdrawal_cost.try_into().unwrap_or(i32::MAX),
+            pending: row.pending,
+        })
+        .collect())
+}
+
+/// Types one citation's far end from its raw L1 identifier.
+///
+/// The identifier's own grammar carries the class, so this dispatches on
+/// it rather than probing every table: `prof:` is a person, `name:` a
+/// Type, and a minted identifier is content.
+///
+/// A Type types as nothing. The mirror reaches further than
+/// CoGra's own policy — the substrate admits a Type-target Reference
+/// that this instance would refuse to prepare, and a record authored
+/// elsewhere can land in the mirror regardless — so the fold may hand
+/// one here. It degrades the way any untypeable far end does: `target`
+/// null, `targetId` still naming it. The citation stands as a substrate
+/// fact; CoGra simply serves no topic chip for it.
+pub(super) async fn resolve_reference_target(
+    ctx: &Context<'_>,
+    l1_node_id: &str,
+) -> async_graphql::Result<Option<ReferenceTarget>> {
+    match NodeId::parse(l1_node_id) {
+        Ok(NodeId::Prof(address)) => Ok(ctx
+            .data::<DataLoader<ActorByAddressLoader>>()?
+            .load_one(address)
+            .await?
+            .map(|identity| {
+                ReferenceTarget::Profile(User {
+                    identity,
+                    viewer_session: None,
+                })
+            })),
+        Ok(NodeId::Name(_)) => Ok(None),
+        _ => Ok(match resolve_node_id(ctx, l1_node_id).await? {
+            Some(Node::Post(post)) => Some(ReferenceTarget::Post(post)),
+            Some(Node::Comment(comment)) => Some(ReferenceTarget::Comment(comment)),
+            Some(Node::Profile(user)) => Some(ReferenceTarget::Profile(user)),
+            None => None,
+        }),
+    }
+}
+
 /// Every graph-backed thing with an identity and a lifecycle
 /// (api-spec.md "Identity and actor interfaces"). Coverage grows with
 /// the slices; slice 2 carries the content nodes.
@@ -1923,6 +2232,11 @@ async fn topic_claims(
 pub enum Node {
     Post(PostType),
     Comment(CommentType),
+    /// A person's Profile — the node a mention targets. A Reference
+    /// never targets an Actor; it targets the Profile the actor fronts,
+    /// which is why the variant carries a `User` rather than an actor
+    /// abstraction.
+    Profile(User),
 }
 
 /// What a Review can respond to (comment.md §1). Every passive node
@@ -1945,21 +2259,40 @@ async fn author_user(ctx: &Context<'_>, author_id: Uuid) -> async_graphql::Resul
 }
 
 /// Resolves a raw L1 node identifier to a typed node, when CoGra
-/// carries a display row for it (content nodes this slice).
+/// carries a display row for it.
+///
+/// The Profile arm is what makes a mention render: a Reference toward a
+/// person targets their Profile, so without it `Record.terminal` served
+/// null for every mention on the chronicle. `prof:` is answered from the
+/// identifier's own grammar rather than by probing, since an address is
+/// not something the content tables could answer to.
 pub async fn resolve_node_id(
     ctx: &Context<'_>,
     l1_node_id: &str,
 ) -> async_graphql::Result<Option<Node>> {
-    let pool = ctx.data::<PgPool>()?;
-    if let Some(post) = postgres_store::content::post_by_node(pool, l1_node_id)
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+    if let Ok(NodeId::Prof(address)) = NodeId::parse(l1_node_id) {
+        return Ok(ctx
+            .data::<DataLoader<ActorByAddressLoader>>()?
+            .load_one(address)
+            .await?
+            .map(|identity| {
+                Node::Profile(User {
+                    identity,
+                    viewer_session: None,
+                })
+            }));
+    }
+    if let Some(post) = ctx
+        .data::<DataLoader<PostByNodeLoader>>()?
+        .load_one(l1_node_id.to_string())
+        .await?
     {
         return Ok(Some(Node::Post(PostType(post))));
     }
-    if let Some(comment) = postgres_store::content::comment_by_node(pool, l1_node_id)
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+    if let Some(comment) = ctx
+        .data::<DataLoader<CommentByNodeLoader>>()?
+        .load_one(l1_node_id.to_string())
+        .await?
     {
         return Ok(Some(Node::Comment(CommentType(comment))));
     }

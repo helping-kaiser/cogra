@@ -263,6 +263,8 @@ data class PostView(
      * and the ranker arrives in slice 3.
      */
     val topics: List<TopicClaimView> = emptyList(),
+    /** This post's current references — the same author-owned channel as [topics] (D12). */
+    val references: List<ReferenceClaimView> = emptyList(),
 )
 
 /** One comment with its current display version. */
@@ -284,6 +286,89 @@ data class CommentView(
     val replies: Page<CommentView>? = null,
     /** This comment's current topics — the same author-owned channel as [PostView.topics]. */
     val topics: List<TopicClaimView> = emptyList(),
+    /** This comment's current references — the same author-owned channel (D12). */
+    val references: List<ReferenceClaimView> = emptyList(),
+)
+
+/**
+ * One standing citation on a piece of content — a chip in the
+ * reference row (D16). The bundle key is (author, citing artifact,
+ * target) and its records *net*: a bundle reaching `(0, 0)` is
+ * withdrawn and never appears here.
+ */
+data class ReferenceClaimView(
+    /**
+     * The cited node, typed. Null when CoGra carries no display row for
+     * it — the fold reads the record mirror, which reaches further than
+     * the display store — in which case [targetId] still names it.
+     */
+    val target: ReferenceTargetView?,
+    /** The cited node's raw L1 identifier, present whether or not [target] resolved. */
+    val targetId: String,
+    /** How load-bearing the cited thing is here — effort `f`, folded and clipped. */
+    val relevance: Double,
+    /** Endorsing versus refuting — enthusiasm `e`, folded and clipped. */
+    val support: Double,
+    /**
+     * How many counter-records withdrawing this citation stages — one
+     * priced act each (B4). Read off the RAW bundle sums, which is why
+     * [relevance] and [support] cannot imply it: the clip has already
+     * lost how far past `1` the bundle reaches, and that distance is
+     * exactly what decides whether one record can walk it back.
+     */
+    val withdrawalCost: Int,
+    val pending: Boolean,
+)
+
+/**
+ * What a citation points at. The target's node class is the whole
+ * distinction between quoting, embedding and mentioning (D2), so the
+ * render reads this and nothing else to decide which chip to draw.
+ *
+ * Topics are deliberately absent: tagging is what a topic is for, and
+ * referencing covers every other passive node (D21).
+ */
+sealed interface ReferenceTargetView {
+    /** A person — the citation is a mention, and the chip opens their profile. */
+    data class Profile(
+        val id: String,
+        val handle: String,
+        val displayName: String?,
+    ) : ReferenceTargetView
+
+    /** A post or a comment — a quote or an embed, which differ only in the render. */
+    data class Content(
+        val kind: ReferenceContentKind,
+        val id: String,
+        val title: String?,
+        val snippet: String?,
+        val authorHandle: String?,
+        val authorDisplayName: String?,
+        /**
+         * For a comment, the post that carries it — a comment is read
+         * inside its post and has no permalink, so this is where its
+         * chip lands. Null when the walk ran out of levels; the chip
+         * then renders without a destination.
+         */
+        val containingPostId: String? = null,
+    ) : ReferenceTargetView
+}
+
+/** Which content class a [ReferenceTargetView.Content] names. */
+enum class ReferenceContentKind {
+    POST,
+    COMMENT,
+}
+
+/**
+ * One offer from the reference finder (D20): the typed node for the
+ * chip and the L2 id a `ReferenceInput` names it by. The target is
+ * non-null where a claim's is nullable — a candidate is only ever
+ * built from what CoGra can display.
+ */
+data class ReferenceCandidateView(
+    val target: ReferenceTargetView,
+    val targetId: String,
 )
 
 /**

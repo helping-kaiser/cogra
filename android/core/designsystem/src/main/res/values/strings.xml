@@ -17,9 +17,24 @@
     <!-- A Tag act's two parameters (api-spec.md `TagInput`). -->
     <string name="tag_relevance">Relevance</string>
     <string name="tag_confidence">Confidence</string>
-    <string name="tag_relevance_min">−1.0</string>
-    <string name="tag_relevance_zero">0</string>
-    <string name="tag_relevance_max">+1.0</string>
+
+    <!-- The marks under any bipolar parameter's track. -->
+    <string name="scale_min">−1.0</string>
+    <string name="scale_zero">0</string>
+    <string name="scale_max">+1.0</string>
+
+    <!-- A Reference act's two parameters (api-spec.md `ReferenceInput`).
+         Relevance is the same slot the tag sliders name, so it keeps the
+         word; support is the axis that decides whether a mention
+         vouches (D1). -->
+    <string name="reference_relevance">Relevance</string>
+    <string name="reference_support">Support</string>
+
+    <!-- The reference chip (design.md §6, D16). -->
+    <string name="reference_chip_remove">Remove reference to %1$s</string>
+    <!-- A revealed claim: compact on screen, spelled out for TalkBack (D16). -->
+    <string name="reference_chip_values">%1$s · %2$s</string>
+    <string name="reference_chip_values_description">%1$s, relevance %2$s, support %3$s</string>
 
     <!-- The stance control (design.md §8). The twenty readout anchors
          are the doc's table; a change there changes both apps. -->

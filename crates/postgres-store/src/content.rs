@@ -704,6 +704,41 @@ pub async fn post_by_node(pool: &PgPool, l1_node_id: &str) -> Result<Option<Post
     Ok(row.map(post_from_row))
 }
 
+/// Every post among `l1_node_ids`, in one round trip — the batched twin
+/// of [`post_by_node`], for a read holding many identifiers at once. An
+/// identifier no post answers to is simply absent from the result.
+pub async fn posts_by_nodes(
+    pool: &PgPool,
+    l1_node_ids: &[String],
+) -> Result<Vec<Post>, ContentError> {
+    let rows = sqlx::query_as!(
+        PostRow,
+        r#"SELECT p.id, p.author_id, p.l1_node_id, p.license,
+                  p.landed_epoch, p.act_time, p.position, p.created_at,
+                  v.title, v.description,
+                  v.content AS "content!", v.redaction_reason,
+                  v.pending AS "version_pending!",
+                  v.created_at AS "version_created_at!"
+           FROM posts p
+           JOIN LATERAL (
+               SELECT title, description, content, redaction_reason, pending,
+                      created_at
+               FROM post_versions WHERE post_id = p.id
+               ORDER BY pending DESC,
+                        landed_epoch DESC NULLS LAST,
+                        act_time DESC NULLS LAST,
+                        position DESC NULLS LAST,
+                        created_at DESC, version_id DESC
+               LIMIT 1
+           ) v ON TRUE
+           WHERE p.l1_node_id = ANY($1)"#,
+        l1_node_ids,
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows.into_iter().map(post_from_row).collect())
+}
+
 /// The chronological listing (roadmap "Slice 2"): global, newest-first —
 /// pending entries, then landed entries in landing order (api-spec.md
 /// "The record"). `cursor` is the exclusive keyset cursor in either
@@ -1057,6 +1092,40 @@ pub async fn comment_by_node(
     .fetch_optional(pool)
     .await?;
     Ok(row.map(comment_from_row))
+}
+
+/// Every comment among `l1_node_ids`, in one round trip — the batched
+/// twin of [`comment_by_node`]. An identifier no comment answers to is
+/// simply absent from the result.
+pub async fn comments_by_nodes(
+    pool: &PgPool,
+    l1_node_ids: &[String],
+) -> Result<Vec<Comment>, ContentError> {
+    let rows = sqlx::query_as!(
+        CommentRow,
+        r#"SELECT c.id, c.target_id, c.target_type, c.author_id,
+                  c.l1_node_id, c.license, c.landed_epoch, c.act_time,
+                  c.position, c.created_at,
+                  v.content AS "content!", v.redaction_reason,
+                  v.pending AS "version_pending!",
+                  v.created_at AS "version_created_at!"
+           FROM comments c
+           JOIN LATERAL (
+               SELECT content, redaction_reason, pending, created_at
+               FROM comment_versions WHERE comment_id = c.id
+               ORDER BY pending DESC,
+                        landed_epoch DESC NULLS LAST,
+                        act_time DESC NULLS LAST,
+                        position DESC NULLS LAST,
+                        created_at DESC, version_id DESC
+               LIMIT 1
+           ) v ON TRUE
+           WHERE c.l1_node_id = ANY($1)"#,
+        l1_node_ids,
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows.into_iter().map(comment_from_row).collect())
 }
 
 /// A target's comments — the thread read (comment.md §2): direct

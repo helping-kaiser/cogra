@@ -36,6 +36,7 @@ import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.WriteRepository
+import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.topics.TagClaim
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
@@ -106,6 +107,7 @@ import com.cogra.network.graphql.type.ResendVerificationEmailInput
 import com.cogra.network.graphql.type.RevokeInviteLinkInput
 import com.cogra.network.graphql.type.RevokeSessionInput
 import com.cogra.network.graphql.type.SubmitProposalsInput
+import com.cogra.network.graphql.type.ReferenceInput
 import com.cogra.network.graphql.type.TagInput
 import com.cogra.network.graphql.type.UploadKeyBackupInput
 import com.cogra.network.graphql.type.VerifyEmailInput
@@ -606,6 +608,7 @@ class ContentRepositoryImpl @Inject constructor(
         content: String,
         license: LicenseChoice,
         tags: List<TagClaim>,
+        references: List<ReferenceClaim>,
     ): Outcome<PreparedContentView> = guard.run {
         client.mutation(
             PreparePostMutation(
@@ -615,6 +618,7 @@ class ContentRepositoryImpl @Inject constructor(
                     content = content,
                     license = license.toInput(),
                     tags = tags.toInput(),
+                    references = references.toInput(),
                 ),
             ),
         ).payloadOutcome({ it.preparePost.userErrors.map { e -> e.userErrorFields } }) { data ->
@@ -658,6 +662,7 @@ class ContentRepositoryImpl @Inject constructor(
         content: String,
         license: LicenseChoice,
         tags: List<TagClaim>,
+        references: List<ReferenceClaim>,
     ): Outcome<PreparedContentView> = guard.run {
         client.mutation(
             PrepareCommentMutation(
@@ -666,6 +671,7 @@ class ContentRepositoryImpl @Inject constructor(
                     content = content,
                     license = license.toInput(),
                     tags = tags.toInput(),
+                    references = references.toInput(),
                 ),
             ),
         ).payloadOutcome({ it.prepareComment.userErrors.map { e -> e.userErrorFields } }) { data ->
@@ -713,6 +719,24 @@ private fun List<TagClaim>.toInput(): Optional<List<TagInput>?> = Optional.prese
         )
     },
 )
+
+/**
+ * The references a creation declares, as the API takes them — the
+ * same shape the tags beside them ride (api-spec.md `ReferenceInput`).
+ * Both parameters go explicitly for the same reason: an untouched
+ * slider sits on the server's own default and says so.
+ */
+@JvmName("referenceClaimsToInput")
+private fun List<ReferenceClaim>.toInput(): Optional<List<ReferenceInput>?> =
+    Optional.presentIfNotNull(
+        takeIf { it.isNotEmpty() }?.map {
+            ReferenceInput(
+                target = it.targetId,
+                relevance = Optional.present(it.relevance),
+                support = Optional.present(it.support),
+            )
+        },
+    )
 
 @Singleton
 class ProfileRepositoryImpl @Inject constructor(

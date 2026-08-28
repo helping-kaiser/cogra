@@ -28,6 +28,16 @@ pub enum PrepareError {
     /// never an auth fault (architecture.md "Write eligibility").
     #[error("write rule: balance {balance} is below the act price {theta}")]
     WriteRule { balance: f64, theta: f64 },
+    /// The same rule, priced over a whole batch before any of it is
+    /// staged (D19).
+    #[error(
+        "write rule: balance {balance} cannot carry this batch — {acts} acts at the act price {theta}"
+    )]
+    BatchWriteRule {
+        balance: f64,
+        theta: f64,
+        acts: usize,
+    },
     #[error(transparent)]
     Boundary(#[from] BoundaryError),
     #[error(transparent)]
@@ -82,6 +92,44 @@ pub struct Prepared {
     /// The GC bound the staged write lives under (api-spec.md
     /// `PreparedWrite.gcAfterEpochs`).
     pub gc_after_epochs: i64,
+}
+
+/// Prices a whole batch against the author's balance before a single act
+/// of it is staged (D19, closing open-questions.md Q43).
+///
+/// Staging reserves nothing and every act commits its own transaction, so
+/// without this a batch of `1 + tags + references` acts can stage part of
+/// itself and refuse the rest — leaving the author with some of the
+/// gesture they authored and no way to tell which half. The author reads a
+/// creation batch as one gesture, so it is priced as one: either the
+/// balance carries the whole thing or nothing is staged.
+///
+/// **Best-effort, never a reservation** — exactly like the per-act W1
+/// check it generalizes. The balance is read once here from the last
+/// published values, and nothing holds it: a balance can still move
+/// between this check and the acts landing, and a batch that passes here
+/// can still take a per-act refusal later. What this buys is that the
+/// *common* failure — an author who plainly cannot afford 21 acts — is
+/// refused whole and up front rather than discovered halfway through.
+pub async fn check_batch_solvency<B: L1Boundary>(
+    boundary: &B,
+    author: &str,
+    acts: usize,
+) -> Result<(), PrepareError> {
+    if acts == 0 {
+        return Ok(());
+    }
+    let theta = boundary.current_theta().await?;
+    let balance = boundary.balance(author).await?;
+    let price = theta * acts as f64;
+    if balance.balance < price {
+        return Err(PrepareError::BatchWriteRule {
+            balance: balance.balance,
+            theta,
+            acts,
+        });
+    }
+    Ok(())
 }
 
 /// Prepares one gesture: formation checks, the write-rule pre-check, seq

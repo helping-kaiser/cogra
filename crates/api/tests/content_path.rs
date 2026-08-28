@@ -122,6 +122,7 @@ impl Rig {
                 license: license(),
                 p_directed: None,
                 tags: vec![],
+                references: vec![],
             },
         )
         .await
@@ -154,6 +155,7 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
             license: license(),
             p_directed: Some(0.4),
             tags: vec![],
+            references: vec![],
         },
     )
     .await
@@ -419,6 +421,7 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
             license: license(),
             p_directed: None,
             tags: vec![],
+            references: vec![],
             p_interest: Some(0.6),
         },
     )
@@ -451,6 +454,7 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
             license: license(),
             p_directed: None,
             tags: vec![],
+            references: vec![],
             p_interest: None,
         },
     )
@@ -517,6 +521,7 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
             license: license(),
             p_directed: None,
             tags: vec![],
+            references: vec![],
             p_interest: None,
         },
     )
@@ -663,6 +668,7 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
             license: license(),
             p_directed: None,
             tags: vec![],
+            references: vec![],
             p_interest: None,
         },
     )

@@ -99,8 +99,16 @@ data object KeyCeremony
 @Serializable
 data object Feed
 
+/**
+ * The composer. [postId] names an edit target; [referenceTargetId]
+ * arrives from a node's Reference affordance and opens a fresh post
+ * with that node already staged as a chip (D20).
+ */
 @Serializable
-data class ComposePost(val postId: String? = null)
+data class ComposePost(
+    val postId: String? = null,
+    val referenceTargetId: String? = null,
+)
 
 @Serializable
 data class PostDetail(val postId: String)
@@ -438,6 +446,7 @@ private fun CograNavGraphContent(
                 val editing = entry.toRoute<ComposePost>().postId != null
                 ComposePostRoute(
                     postId = entry.toRoute<ComposePost>().postId,
+                    referenceTargetId = entry.toRoute<ComposePost>().referenceTargetId,
                     // A new post lands on the feed, where the author
                     // finds it at the top marked as still settling —
                     // content exists at authoring, not at landing
@@ -483,6 +492,10 @@ private fun CograNavGraphContent(
                     onEdit = { id -> navController.navigate(ComposePost(id)) },
                     onOpenActor = { handle -> navController.navigate(Profile(handle)) },
                     onOpenTopic = { name -> navController.navigate(Topic(name)) },
+                    onOpenPost = { id -> navController.navigate(PostDetail(id)) },
+                    onReference = { id ->
+                        navController.navigate(ComposePost(referenceTargetId = id))
+                    },
                     onSignInOrJoin = { navController.navigate(Login) },
                     onBack = { navController.navigateUp() },
                     refreshSignal = signedResult,

@@ -682,7 +682,7 @@ pub async fn inviter_of(
     account_id: Uuid,
 ) -> Result<Option<ActorIdentity>, sqlx::Error> {
     Ok(sqlx::query!(
-        "SELECT i.id, i.kind, i.handle, i.actor_pubkey, i.l0_address
+        "SELECT i.id, i.kind, i.handle, i.actor_pubkey, i.l0_address, i.created_at
          FROM auth_applications ap
          JOIN auth_invite_links l ON l.id = ap.invite_link_id
          JOIN actors i ON i.id = l.inviter_id
@@ -698,6 +698,7 @@ pub async fn inviter_of(
         handle: r.handle,
         actor_pubkey: r.actor_pubkey,
         l0_address: r.l0_address,
+        created_at: r.created_at,
     }))
 }
 
@@ -1328,11 +1329,14 @@ pub struct ActorIdentity {
     pub handle: String,
     pub actor_pubkey: Option<Vec<u8>>,
     pub l0_address: Option<String>,
+    /// When the account row was written — the authoring instant of the
+    /// Profile this actor fronts, which precedes its landing.
+    pub created_at: chrono::DateTime<chrono::Utc>,
 }
 
 pub async fn actor_identity(pool: &PgPool, id: Uuid) -> Result<Option<ActorIdentity>, sqlx::Error> {
     Ok(sqlx::query!(
-        "SELECT id, kind, handle, actor_pubkey, l0_address FROM actors WHERE id = $1",
+        "SELECT id, kind, handle, actor_pubkey, l0_address, created_at FROM actors WHERE id = $1",
         id,
     )
     .fetch_optional(pool)
@@ -1343,6 +1347,7 @@ pub async fn actor_identity(pool: &PgPool, id: Uuid) -> Result<Option<ActorIdent
         handle: r.handle,
         actor_pubkey: r.actor_pubkey,
         l0_address: r.l0_address,
+        created_at: r.created_at,
     }))
 }
 
@@ -1354,7 +1359,7 @@ pub async fn actor_identity_by_handle(
     handle: &str,
 ) -> Result<Option<ActorIdentity>, sqlx::Error> {
     Ok(sqlx::query!(
-        "SELECT id, kind, handle, actor_pubkey, l0_address
+        "SELECT id, kind, handle, actor_pubkey, l0_address, created_at
          FROM actors WHERE handle = $1",
         handle,
     )
@@ -1366,6 +1371,7 @@ pub async fn actor_identity_by_handle(
         handle: r.handle,
         actor_pubkey: r.actor_pubkey,
         l0_address: r.l0_address,
+        created_at: r.created_at,
     }))
 }
 
@@ -1377,7 +1383,7 @@ pub async fn actor_identity_by_address(
     l0_address: &str,
 ) -> Result<Option<ActorIdentity>, sqlx::Error> {
     Ok(sqlx::query!(
-        "SELECT id, kind, handle, actor_pubkey, l0_address
+        "SELECT id, kind, handle, actor_pubkey, l0_address, created_at
          FROM actors WHERE l0_address = $1",
         l0_address,
     )
@@ -1389,5 +1395,33 @@ pub async fn actor_identity_by_address(
         handle: r.handle,
         actor_pubkey: r.actor_pubkey,
         l0_address: r.l0_address,
+        created_at: r.created_at,
     }))
+}
+
+/// Every actor among `l0_addresses`, in one round trip — the batched
+/// twin of [`actor_identity_by_address`], for a read holding many
+/// addresses at once (a page of mentions resolving their profiles).
+/// An address nothing answers to is simply absent from the result.
+pub async fn actor_identities_by_addresses(
+    pool: &PgPool,
+    l0_addresses: &[String],
+) -> Result<Vec<ActorIdentity>, sqlx::Error> {
+    Ok(sqlx::query!(
+        "SELECT id, kind, handle, actor_pubkey, l0_address, created_at
+         FROM actors WHERE l0_address = ANY($1)",
+        l0_addresses,
+    )
+    .fetch_all(pool)
+    .await?
+    .into_iter()
+    .map(|r| ActorIdentity {
+        id: r.id,
+        kind: r.kind,
+        handle: r.handle,
+        actor_pubkey: r.actor_pubkey,
+        l0_address: r.l0_address,
+        created_at: r.created_at,
+    })
+    .collect())
 }

@@ -1,0 +1,137 @@
+# The reference surface (api-spec.md "Content authoring", roadmap
+# "Slice 2.4"): the finder that turns what an author types into a
+# citable target, the standalone gesture that hangs a citation off
+# already-published content, and the withdrawal that nets one away.
+#
+# Quoting, embedding and mentioning are one record and the target's
+# node class is the whole distinction (D2) — so there is one fragment
+# for the target union, and the render decides which chip to draw. A
+# reference whose target is a person is a mention; the user-facing
+# word is always Reference, never "cite" (D20). Topics are not
+# reference targets — tagging is what a topic is for (D21).
+#
+# References declared at creation ride `PreparePostInput` /
+# `PrepareCommentInput` instead (content.graphql), exactly as tags do.
+
+# The node classes a citation may point at. Topics are not among
+# them: tagging is what a topic is for, and referencing covers every
+# other passive node (D21).
+fragment ReferenceTargetFields on ReferenceTarget {
+  __typename
+  ... on Post {
+    id
+    title {
+      value
+      status
+    }
+    content {
+      value
+      status
+    }
+    author {
+      id
+      handle
+      displayName {
+        value
+      }
+    }
+  }
+  ... on Comment {
+    id
+    content {
+      value
+      status
+    }
+    author {
+      id
+      handle
+      displayName {
+        value
+      }
+    }
+    # A comment is read inside the post that carries it, and there is
+    # no comment permalink — so the chip needs that post walked up
+    # from here. Two levels covers a reply to a reply; deeper than
+    # that the chip renders without a destination rather than
+    # recursing forever.
+    target {
+      ... on Post {
+        id
+      }
+      ... on Comment {
+        target {
+          ... on Post {
+            id
+          }
+        }
+      }
+    }
+  }
+  ... on User {
+    id
+    handle
+    displayName {
+      value
+    }
+  }
+}
+
+# One standing citation. `target` is nullable and `targetId` is not:
+# the fold reads the record mirror, which reaches further than the
+# display store, so a citation can stand as a substrate fact this
+# instance cannot type.
+fragment ReferenceClaimFields on ReferenceClaim {
+  target {
+    ...ReferenceTargetFields
+  }
+  targetId
+  relevance
+  support
+  # What removing this citation costs: the counter-records that net its
+  # bundle to (0, 0), off the RAW sums the clipped pair above has
+  # already lost. An editing surface confirms against this BEFORE it
+  # prepares anything.
+  withdrawalCost
+  pending
+}
+
+# Exact-match resolution only: a handle bare or `@`-sigilled, or a
+# UUID. An empty or unresolvable query yields an empty list rather
+# than an error — a finder runs on every keystroke, so most of what it
+# is asked is a prefix of something still being typed (D20). Real
+# search replaces the implementation in slice 2.7 behind this same
+# field.
+query ReferenceCandidates($query: String!, $limit: Int) {
+  referenceCandidates(query: $query, limit: $limit) {
+    target {
+      ...ReferenceTargetFields
+    }
+    targetId
+  }
+}
+
+mutation PrepareReference($input: PrepareReferenceInput!) {
+  prepareReference(input: $input) {
+    writes {
+      ...PreparedWriteFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+# The counter-records that net one citation bundle to (0, 0). The
+# batch length *is* the gesture's cost — a citation revised upward
+# several times needs more than one record to walk back — which is
+# why the count is quoted before anything signs (D11).
+mutation PrepareReferenceWithdrawal($input: PrepareReferenceWithdrawalInput!) {
+  prepareReferenceWithdrawal(input: $input) {
+    writes {
+      ...PreparedWriteFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
