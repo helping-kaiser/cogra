@@ -1,4 +1,10 @@
 @import "tailwindcss";
+/*
+ * The 2.0 token layer: the layout constants, motion, semantic aliases, and
+ * interaction states `design/tokens/` carries and this file never had. Purely
+ * additive — it redefines nothing below, so the 1.0 screens are untouched.
+ */
+@import "./tokens-2.css";
 
 /*
  * The palette of design.md §2.3, orange-led from the #EF6C1A seed. Values are

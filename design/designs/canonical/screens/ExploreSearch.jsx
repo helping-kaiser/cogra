@@ -9,10 +9,7 @@ export function Screen() {
     <>
       <div style={{ flex: "none", paddingTop: 12 }}>
         <SearchBar query="@sol salt" />
-        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 16px 8px 16px" }}>
-          <SearchFilterTrigger reading="All kinds · ranked · showing seen" />
-          <HelpDot />
-        </div>
+        <SearchTriggerRow reading="Everything" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" rank="9.10" onOpen={() => {}} />

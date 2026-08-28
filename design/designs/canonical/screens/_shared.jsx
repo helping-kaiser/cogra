@@ -35,6 +35,13 @@ const {
   Chip,
   SegmentedFilter,
   Checkbox,
+  FeedFilter,
+  FilterTrigger,
+  FilterSection,
+  OrderSection,
+  FEED_KINDS,
+  FEED_FILTER_DEFAULT,
+  HelpDot: SystemHelpDot,
   StancePad,
   StanceReadout,
   SensitiveVeil,
@@ -257,82 +264,27 @@ function Seam() {
           color: "var(--text-secondary)",
         }}
       >
-        Beyond your graph — newest first
+        Beyond your reach — newest first
       </span>
       <span style={{ flex: 1, height: 1, background: "var(--border-hairline)" }} />
     </div>
   );
 }
 
-/* The searching view's ONE trigger, reading the whole view back in words (the
-   FeedFilter idiom) — it opens the filter sheet. */
-function SearchFilterTrigger({ reading }) {
+/* The searching view's trigger row: the master FilterTrigger (the FeedFilter
+   idiom — deviations only, "Everything" at rest) with the "?" on the far edge. */
+function SearchTriggerRow({ reading }) {
   return (
-    <button
-      type="button"
-      className="cg-state cg-focus"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        flex: 1,
-        minHeight: 40,
-        padding: "0 16px",
-        border: "1px solid var(--border-field)",
-        borderRadius: "var(--radius-full)",
-        background: "none",
-        cursor: "pointer",
-        fontFamily: "var(--font-sans)",
-        color: "var(--text-secondary)",
-        fontSize: "var(--text-body-small)",
-        lineHeight: "var(--text-body-small--line-height)",
-        textAlign: "left",
-        boxSizing: "border-box",
-      }}
-    >
-      {reading}
-    </button>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4, padding: "0 16px 8px 16px" }}>
+      <FilterTrigger reading={reading} ariaLabel="What the search shows" />
+      <HelpDot />
+    </div>
   );
 }
 
-/* The "?" affordance — one per screen (readme §13), 32px ring in a 48px target. */
-function HelpDot() {
-  return (
-    <button
-      type="button"
-      aria-label="How searching works"
-      className="cg-focus"
-      style={{
-        display: "grid",
-        placeItems: "center",
-        height: "var(--touch-target-min)",
-        width: "var(--touch-target-min)",
-        border: 0,
-        background: "none",
-        borderRadius: "var(--radius-full)",
-        cursor: "pointer",
-        flex: "none",
-      }}
-    >
-      <span
-        aria-hidden="true"
-        style={{
-          display: "grid",
-          placeItems: "center",
-          height: "32px",
-          width: "32px",
-          borderRadius: "var(--radius-full)",
-          border: "1px solid var(--border-hairline)",
-          color: "var(--primary)",
-          fontFamily: "var(--font-sans)",
-          fontSize: "var(--text-label-large)",
-          fontWeight: "var(--text-label-large--font-weight)",
-        }}
-      >
-        ?
-      </span>
-    </button>
-  );
+/* The "?" — the master, defaulted to this canvas's usual label. */
+function HelpDot({ ariaLabel = "How searching works" }) {
+  return <SystemHelpDot ariaLabel={ariaLabel} />;
 }
 
 /* The post-detail column: the read surface a card opens into. */
