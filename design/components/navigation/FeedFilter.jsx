@@ -1,14 +1,14 @@
 import React from "react";
 import { BottomSheet } from "../core/BottomSheet.jsx";
 import { Chip } from "../core/Chip.jsx";
-import { SegmentedFilter } from "./SegmentedFilter.jsx";
 import { Button } from "../core/Button.jsx";
+import { FilterSection, OrderSection, FILTER_ORDER } from "./OrderSection.jsx";
 
-/* The feed filter (backlog item 4, second pass).
+/* The feed filter (backlog item 4, second pass; grown by item 19).
 
    WHAT THIS REPLACED. A three-segment row — Posts / Comments / Stances — which was
    wrong twice over: a stance is not a thing that gets ranked, and the real set is
-   seven kinds that COMBINE. A segmented row cannot express a combination, so it
+   ten kinds that COMBINE. A segmented row cannot express a combination, so it
    was the wrong control for the job, not a badly drawn one. Sorting, forms of
    post, and what the feed also admits piled on top; none of it fits in a row of
    pills across the top of a screen.
@@ -17,7 +17,14 @@ import { Button } from "../core/Button.jsx";
    back the current view in a few words; everything else lives in a sheet a tap
    away. That is the whole point of the sheet (item 3) — the filter is not what the
    reader came for, and a feed that spends its top region on its own settings has
-   less feed in it.
+   less feed in it. The trigger sits on the right edge of the `CograBand` (ruled
+   2026-08-28) and scrolls away and back with it. Search wears the same trigger
+   under its field — the idiom is one.
+
+   THE TRIGGER SPEAKS DEVIATIONS. At the default it says only the kinds; order
+   and the seen toggle enter its words when flipped ("newest", "hiding seen"),
+   never when at rest. The filter you have forgotten about is the one that
+   confuses you — the default is silence.
 
    NO GLYPH ON THE TRIGGER. There is no filter icon in the product's inlined set
    and §5 forbids drawing one, so the trigger says its state in words — which is
@@ -31,14 +38,19 @@ import { Button } from "../core/Button.jsx";
    a feed admitting nothing shows the empty state, which says what is switched off
    and offers to switch it back — it is not refused at the chip. */
 
+/* Every kind the network ranks — ONE list, shared by the feed and search
+   (ruled 2026-08-28: parity, and the word is "Profiles" everywhere). */
 export const FEED_KINDS = [
   { value: "posts", label: "Posts" },
   { value: "comments", label: "Comments" },
   { value: "chats", label: "Chats" },
+  { value: "messages", label: "Messages" },
   { value: "profiles", label: "Profiles" },
   { value: "proposals", label: "Proposals" },
   { value: "topics", label: "Topics" },
   { value: "items", label: "Items" },
+  { value: "campaigns", label: "Campaigns" },
+  { value: "offers", label: "Offers" },
 ];
 
 export const FEED_FORMS = [
@@ -47,17 +59,14 @@ export const FEED_FORMS = [
   { value: "video", label: "Video" },
 ];
 
-export const FEED_ORDER = [
-  { value: "ranked", label: "Ranked" },
-  { value: "newest", label: "Newest" },
-];
+export const FEED_ORDER = FILTER_ORDER;
 
 export const FEED_ALSO = [
   { value: "sensitive", label: "Sensitive" },
   { value: "removed", label: "Removed" },
 ];
 
-export const FEED_FILTER_DEFAULT = { kinds: ["posts"], forms: ["text", "photos", "video"], order: "ranked", also: [] };
+export const FEED_FILTER_DEFAULT = { kinds: ["posts"], forms: ["text", "photos", "video"], order: "ranked", seen: true, also: [] };
 
 const labelOf = (set, value) => (set.find((entry) => entry.value === value) || {}).label;
 
@@ -83,25 +92,52 @@ export function feedFilterSummary(value = FEED_FILTER_DEFAULT, budget = 26) {
   const extras = [];
   if (forms.length > 0 && forms.length < FEED_FORMS.length) extras.push(forms.map((form) => labelOf(FEED_FORMS, form).toLowerCase()).join(" + "));
   if (value.order && value.order !== "ranked") extras.push(labelOf(FEED_ORDER, value.order).toLowerCase());
+  if (value.seen === false) extras.push("hiding seen");
   if (also.length > 0) extras.push("+ " + also.map((entry) => labelOf(FEED_ALSO, entry).toLowerCase()).join(", "));
   if (extras.length === 0) return head;
-  const spelled = [head, ...extras].join(" \u00b7 ");
+  const spelled = [head, ...extras].join(" · ");
   if (spelled.length <= budget) return spelled;
-  return head + " \u00b7 " + extras.length + (extras.length === 1 ? " change" : " changes");
+  return head + " · " + extras.length + (extras.length === 1 ? " change" : " changes");
 }
 
-function Section({ label, hint, children }) {
+/* The worded trigger alone — for surfaces that own their sheet (search draws
+   its own, with its own kind semantics) but must wear the same pill. */
+export function FilterTrigger({ reading, onOpen, expanded = false, ariaLabel = "What this shows" }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", padding: "0 var(--space-6) var(--space-4)" }}>
-      <span style={{ fontSize: "var(--text-label-large)", fontWeight: 500 }}>{label}</span>
-      {hint && <span style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>{hint}</span>}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)" }}>{children}</div>
-    </div>
+    <button
+      type="button"
+      aria-expanded={expanded}
+      aria-label={ariaLabel}
+      onClick={onOpen}
+      className="cg-state cg-focus cg-hit"
+      style={{
+        position: "relative",
+        display: "inline-flex",
+        alignItems: "center",
+        maxWidth: "14rem",
+        minWidth: 0,
+        height: "32px",
+        padding: "0 var(--space-3)",
+        border: "1px solid var(--border-field)",
+        borderRadius: "var(--radius-full)",
+        background: "transparent",
+        color: "var(--text-body)",
+        fontFamily: "var(--font-sans)",
+        fontSize: "var(--text-label-large)",
+        fontWeight: "var(--text-label-large--font-weight)",
+        cursor: "pointer",
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+      }}
+    >
+      {reading}
+    </button>
   );
 }
 
-export function FeedFilter({ value = FEED_FILTER_DEFAULT, onChange, ariaLabel = "What your feed shows" }) {
-  const [open, setOpen] = React.useState(false);
+export function FeedFilter({ value = FEED_FILTER_DEFAULT, onChange, defaultOpen = false, ariaLabel = "What your feed shows" }) {
+  const [open, setOpen] = React.useState(defaultOpen);
   const set = (patch) => onChange && onChange({ ...value, ...patch });
   const toggle = (key, entry) => {
     const list = value[key] || [];
@@ -111,54 +147,27 @@ export function FeedFilter({ value = FEED_FILTER_DEFAULT, onChange, ariaLabel = 
 
   return (
     <>
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-label={ariaLabel}
-        onClick={() => setOpen(true)}
-        className="cg-state cg-focus cg-hit"
-        style={{
-          position: "relative",
-          display: "inline-flex",
-          alignItems: "center",
-          maxWidth: "14rem",
-          minWidth: 0,
-          height: "32px",
-          padding: "0 var(--space-3)",
-          border: "1px solid var(--border-field)",
-          borderRadius: "var(--radius-full)",
-          background: "transparent",
-          color: "var(--text-body)",
-          fontFamily: "var(--font-sans)",
-          fontSize: "var(--text-label-large)",
-          fontWeight: "var(--text-label-large--font-weight)",
-          cursor: "pointer",
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-        }}
-      >
-        {feedFilterSummary(value)}
-      </button>
-      <BottomSheet open={open} onClose={() => setOpen(false)} ariaLabel={ariaLabel}>
-        <Section label="What gets ranked" hint="Anything the network ranks can be in your feed. Combine as many as you like.">
+      <FilterTrigger reading={feedFilterSummary(value)} onOpen={() => setOpen(true)} expanded={open} ariaLabel={ariaLabel} />
+      {/* Ten kinds plus four sections outgrow the sheet's 62% default — the
+          filter opens taller so the whole control is present; it still scrolls
+          on shorter screens. */}
+      <BottomSheet open={open} onClose={() => setOpen(false)} ariaLabel={ariaLabel} maxHeight="88%">
+        <FilterSection label="What gets ranked" hint="Anything the network ranks can be in your feed. Combine as many as you like.">
           {FEED_KINDS.map((kind) => (
             <Chip key={kind.value} label={kind.label} selected={(value.kinds || []).includes(kind.value)} onToggle={() => toggle("kinds", kind.value)} />
           ))}
-        </Section>
-        <Section label="Kinds of post" hint={postsish ? "Combine them: photos and video with no text posts is a legitimate feed." : "Applies once posts or comments are in."}>
+        </FilterSection>
+        <FilterSection label="Kinds of post" hint={postsish ? "Combine them: photos and video with no text posts is a legitimate feed." : "Applies once posts or comments are in."}>
           {FEED_FORMS.map((form) => (
             <Chip key={form.value} label={form.label} selected={(value.forms || []).includes(form.value)} onToggle={() => toggle("forms", form.value)} disabled={!postsish} />
           ))}
-        </Section>
-        <Section label="Order" hint="Ranked is the default. Newest ignores ranking and lists by time.">
-          <SegmentedFilter ariaLabel="Order" options={FEED_ORDER} value={value.order} onChange={(order) => set({ order })} />
-        </Section>
-        <Section label="Also show" hint="Sensitive content stays veiled until you tap it. A removed record shows its skeleton — author, time, and place in the thread — never the content.">
+        </FilterSection>
+        <OrderSection order={value.order} onOrder={(order) => set({ order })} seen={value.seen !== false} onSeen={(seen) => set({ seen })} />
+        <FilterSection label="Also show" hint="Sensitive content stays veiled until you tap it. A removed record shows its skeleton — author, time, and place in the thread — never the content.">
           {FEED_ALSO.map((entry) => (
             <Chip key={entry.value} label={entry.label} selected={(value.also || []).includes(entry.value)} onToggle={() => toggle("also", entry.value)} />
           ))}
-        </Section>
+        </FilterSection>
         <div style={{ padding: "0 var(--space-6)" }}>
           <Button variant="text" size="sm" selfStart onClick={() => onChange && onChange(FEED_FILTER_DEFAULT)}>Reset</Button>
         </div>
