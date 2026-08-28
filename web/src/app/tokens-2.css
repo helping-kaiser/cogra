@@ -1,0 +1,209 @@
+/*
+ * The 2.0 token layer — the part of `design/tokens/` the shipped web client
+ * never had.
+ *
+ * WHAT IS NOT HERE, AND WHY. Colour, type, and the shape scale already live in
+ * globals.css and are pinned by palette.test.ts and type.test.ts to the
+ * generated `design-tokens.json` and `@material/web`'s typescale. They are
+ * contracts, not styling, so this file does not restate them — a second
+ * declaration is how two sources of truth start to drift. design/readme.md's
+ * own precedence rule ("where a value here differs from the product source,
+ * the product source wins") points the same way.
+ *
+ * So this file carries only what `design/tokens/` adds beyond the shipped
+ * three: the layout constants, motion, the semantic aliases, and the
+ * interaction-state utilities. Every one of them is additive — nothing below
+ * redefines a token globals.css already sets, which is what lets the 2.0
+ * components sit beside the 1.0 screens without touching them.
+ *
+ * Theme mechanism: the semantic aliases resolve to roles rather than hexes, so
+ * they follow whichever theme globals.css resolved. The design system scopes
+ * dark with `[data-theme="dark"]` and the product uses
+ * `prefers-color-scheme` — the product's mechanism wins here, and nothing in
+ * this file needs a dark branch as a result.
+ */
+
+/* ---------------------------------------------------------------- spacing --
+ * A 4px base grid (design.md §4). Tailwind's own spacing scale is already the
+ * 4px grid, so the utilities carry the ordinary steps and only the NAMED
+ * layout constants need to exist as properties — a component reads them as
+ * `h-[var(--bottom-bar-height)]`, never as a magic number.
+ */
+:root {
+  --screen-gutter: 24px;
+  --screen-max-width: 42rem;
+  --card-padding: 16px;
+  --card-gap: 12px;
+  --stack-gap: 16px;
+
+  /* The 48px minimum touch TARGET — enforced by hit area rather than by drawn
+     height, so a 32px chip can keep its ink and still be a legal target. See
+     `.cg-hit` below. */
+  --touch-target-min: 48px;
+  --bottom-bar-height: 64px;
+  --top-bar-height: 48px;
+
+  /* A POST MUST FIT ON THE SCREEN. The collapsed card — author row, media,
+     text, affordances — has to sit inside the viewport minus the top safe area
+     and the bottom bar, or the reader never sees a post whole and never
+     reaches the affordance row without scrolling. Media is the only part that
+     can flex, so the cap lands on it.
+
+     The chrome figure is the WORST CASE, not the average: author row, title, a
+     two-line caption, a `More` opener, an honesty marker, the affordance row,
+     and the card's own 2x16px padding. Budgeting for the average ships a
+     layout that fits four posts in five, and the fifth is the one with
+     something to say. The floor keeps media from collapsing to a sliver on a
+     short viewport, where scrolling is the lesser evil. */
+  --safe-area-top: env(safe-area-inset-top, 44px);
+  --post-chrome-height: 360px;
+  --media-max-height: max(
+    180px,
+    calc(100dvh - var(--safe-area-top) - var(--bottom-bar-height) - var(--post-chrome-height))
+  );
+}
+
+/* ----------------------------------------------------------------- motion --
+ * M3 standard easing and durations. Motion clarifies where something came
+ * from; it never performs. Reduced motion is honoured by zeroing the
+ * durations, so a transition still *happens* — it just does not travel.
+ */
+:root {
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-standard-decelerate: cubic-bezier(0, 0, 0, 1);
+  --ease-standard-accelerate: cubic-bezier(0.3, 0, 1, 1);
+  --ease-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+
+  --duration-short-2: 100ms;
+  --duration-short-4: 200ms;
+  --duration-medium-2: 300ms;
+  --duration-medium-4: 400ms;
+  --duration-long-2: 500ms;
+
+  /* Android's platform long-press timeout — what the stance pad's bloom waits
+     for, and the figure any hold gesture on either client matches. */
+  --duration-long-press: 500ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-short-2: 0ms;
+    --duration-short-4: 0ms;
+    --duration-medium-2: 0ms;
+    --duration-medium-4: 0ms;
+    --duration-long-2: 0ms;
+  }
+}
+
+/* --------------------------------------------------------------- semantic --
+ * Aliases naming where a role is SPENT (design.md §2.4) rather than a second
+ * colour vocabulary — every one resolves to a role globals.css already
+ * defines, and a component may read either.
+ */
+:root {
+  --surface-page: var(--surface);
+  --surface-card: var(--surface-container-highest);
+  --surface-dialog: var(--surface-container-high);
+  --surface-bar: var(--surface-container);
+  --surface-field: var(--surface-container-highest);
+  --surface-reserved: var(--surface-container-high);
+  --surface-loud: var(--primary-container);
+  --on-surface-loud: var(--on-primary-container);
+  --surface-snackbar: var(--inverse-surface);
+  --on-surface-snackbar: var(--inverse-on-surface);
+
+  /* Secondary text is `onSurfaceVariant`, never `onSurface` at reduced
+     opacity — opacity breaks the contrast guarantee the token carries. */
+  --text-body-role: var(--on-surface);
+  --text-secondary: var(--on-surface-variant);
+  --text-link: var(--primary);
+  --text-failure: var(--error);
+  --text-landed: var(--success);
+
+  --border-hairline: var(--outline-variant);
+  --border-field: var(--outline);
+  --scrim-dialog: color-mix(in srgb, var(--scrim) 50%, transparent);
+
+  --opacity-disabled: 0.4;
+}
+
+/* ----------------------------------------------------------------- states --
+ * design.md is silent on hover, press, and focus, which left every surface to
+ * invent one. Filled with Material's own documented state-layer opacities,
+ * applied as a `currentColor` overlay so a single rule covers all three button
+ * variants: on a filled button `currentColor` is `onPrimary`, on an unfilled
+ * one it is `primary`.
+ */
+:root {
+  --state-hover: 0.08;
+  --state-press: 0.1;
+  --state-disabled: 0.38;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+}
+
+/* Any pressable surface. `isolation` keeps the overlay from escaping into a
+   parent stacking context. */
+.cg-state {
+  position: relative;
+  isolation: isolate;
+}
+
+.cg-state::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity var(--duration-short-2) var(--ease-standard);
+  pointer-events: none;
+}
+
+.cg-state:hover::after {
+  opacity: var(--state-hover);
+}
+
+/* Press is never a scale-down and never a shadow change: the direction is
+   calm, and a control that shrinks under the thumb performs. */
+.cg-state:active::after {
+  opacity: var(--state-press);
+}
+
+.cg-state:disabled::after,
+.cg-state[aria-disabled="true"]::after {
+  opacity: 0;
+}
+
+/* `onSurface` rather than `primary`: a primary ring disappears against a
+   filled primary button, and this one reads on the page ground and on the loud
+   surface alike, in both themes. Nothing removes it. */
+.cg-focus:focus-visible {
+  outline: var(--focus-ring-width) solid var(--on-surface);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* The 48px promise, kept without inflating dense rows. A chip is 32px drawn —
+   Material's own dense size, and right for a wrapping row of them — so the
+   TARGET is expanded rather than the ink: a transparent overlay centred on the
+   control reaches 48px on both axes while the drawing stays put. The
+   `min-height/min-width: 100%` keeps it from ever shrinking a control that is
+   already larger. */
+.cg-hit::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  height: var(--touch-target-min);
+  width: var(--touch-target-min);
+  min-height: 100%;
+  min-width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cg-state::after {
+    transition: none;
+  }
+}
