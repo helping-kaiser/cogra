@@ -25,6 +25,7 @@ within a phase, order is flexible.
 |:---:|:---:|:---:|---|
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
 | 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
+| 1a. Media follow-ups (with the next media bite) | 4 | **Q47, Q48, Q49, Q50** | The sensitive self-mark's missing contract field (a ruled product behaviour nothing can reach), the profile envelope keys' ratification (built and encoded against by both clients), the query-budget re-derivation (the heaviest read clears the stated headroom by 224), and where a landed compose returns the author. All four are cheap to answer and all four block or shape the follow-up slice. |
 | 2a. Stance control (slice 2.2, both clients) | 1 | **Q42** | The resting face an unauthored stance target wears. Cheap to answer and worth answering soon: the two clients are shipping the control now, and a face is a shared contract exactly as §8.4's anchor table is. |
 | 2b. Profile surface (with slice 2.2) | 3 | **Q35, Q36, Q41** | The profile header's connection count (which fold counts as a connection — answerable now that every passive class rides one stance control), the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without all three. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
@@ -71,7 +72,7 @@ questions are closed.
 - Q32 — see [auth.md "Tokens"](implementation/auth.md#tokens) ("Reuse detection" and "The security notice"). The promise gained its carrier as a narrow field: refresh-token reuse stamps `user_credentials.reuse_detected_at`, and the first successful login after detection carries the stamp as `LogInPayload.reuseDetectedAt` — read-and-cleared atomically behind the verified password, delivered exactly once, never on a refusal. Refresh-time codes stay collapsed into `REFRESH_TOKEN_INVALID` so the presenter — possibly the thief — never learns detection fired. Clients render a dismissible alert on the signed-in shell via an in-memory hand-off; a client death before rendering loses the notice, the accepted narrow-carrier trade-off. If more security-event kinds ever arise, the narrow field is removed in favor of a general security-event surface, not extended field-by-field. (The other gap the web port surfaced — a dedicated `RESET_TOKEN_INVALID` code — had already shipped with slice 1.1's custody change.) When revocation reasons landed (auth.md "Reuse detection"), a second notice kind — "you signed this device out from elsewhere" for benign owner-revoked replays — was considered and declined: those replays now refuse plainly without the theft alarm, and a distinct notice is exactly the general security-event surface this record reserves, so it waits until that surface is warranted.
 - Q44 — raised and resolved in one design session (2026-08-27); the ruling is recorded in [design/readme.md §13](../design/readme.md#13-decided-in-design-sessions) until it moves into the product docs. **An anonymous or applicant reader's feed borrows a vantage point.** Ranking consumes only viewer-rooted forward paths and a guest has none, so a guest feed would have no order but newest. Decided: an invite link carries its inviter's perspective — the visitor browses the feed as the inviter sees it, which [auth.md](implementation/auth.md)'s "a frontend can serve any actor's view of it to any reader" already licenses; a bare arrival borrows the genesis moderator's view (a human account, never a system one); the borrowed view is always named on screen ("Browsing from @mira's view — join to build your own."), persists through the applicant days, and hands over at the member's first stance, the vouch-back — which the inviter seeded, so the feed barely moves at the handover. No new exposure: everything a borrowed view reveals is derivable from the public record. Carriers to update at implementation time: [feed-ranking.md](primitive/feed-ranking.md) (the anonymous read path) and [auth.md](implementation/auth.md) (the applicant shell).
 - Q43 — resolved in the compose design session (2026-08-27): **a creation batch is all-or-nothing.** The prepare quotes the whole batch and refuses it whole when the balance cannot carry it — an author never keeps a half-staged batch. On screen the count of signed actions is the only cost unit ("This creates 4 signed actions"), stated before signing with "they land together, or none does"; θ is never rendered, and the community pool that covers members' signings is named at the seal ([design/readme.md §13](../design/readme.md#13-decided-in-design-sessions)). The server-side cumulative pre-check is in implementation as of this ruling. Carrier to update: [api-spec.md](implementation/api-spec.md) (the write flow's batch semantics).
-- Q45 — raised and resolved in the compose design session (2026-08-27); rulings recorded in [design/readme.md §13](../design/readme.md#13-decided-in-design-sessions) until they move into the product docs. **The compose flow's product rulings:** (1) a post's body is words OR media — one picture, a set, or one video with a cover — never both; words beside media go in the description; title and description stay optional. The current API (`content` required, `attachments` beside it) needs the XOR. (2) Media carries one crop per post: Tall 4:5, Square 1:1, or Wide 1.91:1, section chosen per picture. (3) A comment stays text plus optional media. (4) Authors can self-mark content sensitive with an optional public reason; the mark veils body and description per the per-field model while the title stays readable — a new field on the creation inputs and a policy for [moderation.md](instances/moderation.md)'s read-side flags. (5) Accounts carry a default-license setting (Public domain until changed) that the composer reads. (6) An edit is one batch: the content edit plus topic/citation adds and withdrawals sign together under the all-or-nothing rule. (7) Drafts are local-only, one per target, kept automatically on leaving. (8) The did-not-land notice (Q38) is a calm card in the shell naming the post, that nothing was spent, and that the draft is saved. Carriers at implementation time: [api-spec.md](implementation/api-spec.md), [post.md](instances/post.md), [comment.md](instances/comment.md), [moderation.md](instances/moderation.md).
+- Q45 — raised and resolved in the compose design session (2026-08-27); rulings recorded in [design/readme.md §13](../design/readme.md#13-decided-in-design-sessions) until they move into the product docs. **The compose flow's product rulings:** (1) a post's body is words OR media — one picture, a set, or one video with a cover — never both; words beside media go in the description; title and description stay optional. The current API (`content` required, `attachments` beside it) needs the XOR. (2) Media carries one crop per post: Tall 4:5, Square 1:1, or Wide 1.91:1, section chosen per picture. (3) A comment stays text plus optional media. (4) Authors can self-mark content sensitive with an optional public reason; the mark veils body and description per the per-field model while the title stays readable — a new field on the creation inputs and a policy for [moderation.md](instances/moderation.md)'s read-side flags. (5) Accounts carry a default-license setting (Public domain until changed) that the composer reads. (6) An edit is one batch: the content edit plus topic/citation adds and withdrawals sign together under the all-or-nothing rule. (7) Drafts are local-only, one per target, kept automatically on leaving. (8) The did-not-land notice (Q38) is a calm card in the shell naming the post, that nothing was spent, and that the draft is saved. **Ported:** (1) the body XOR to [api-spec.md](implementation/api-spec.md) and [post.md §1](instances/post.md), (2) the per-post crop to [design.md §6](implementation/design.md#6-components), (3) the comment's text-plus-media asymmetry to [comment.md §1](instances/comment.md), (6)–(8) as built. **Still unported:** (4) the sensitive self-mark — see Q47 — and (5) the default-license account setting, both carried by the follow-up slice.
 - Q46 — raised and resolved in the search design session (2026-08-28); rulings recorded in [design/readme.md §13](../design/readme.md#13-decided-in-design-sessions) until they move into the product docs. **The search rulings:** (1) The default result order is full-match tier then partial-match tier, each ordered by the viewer's ranker; the backend stays viewer-blind exactly as [feed-ranking.md §11](primitive/feed-ranking.md#11-where-ranking-runs) demands — the ranked default runs client-side or through the miner's `rankSearch` — and results the ranker cannot score (every path below dust) fall to newest-first behind a visible seam. The reader can swap the order to newest and toggle "show already seen" (default off since the feed-filter session, 2026-08-28 — what you've seen stays out until you ask for it back). (2) A **seen-list** exists: a card whose impression entered the viewer's viewport counts as seen. It is device-local session state, never a graph record ([graph-model.md](primitive/graph-model.md)'s rule stands); it is shared *transiently* with the viewer's chosen ranker — sent with requests, or held by a delegated miner, which sharpens Q25's "miner-held seen-list" from convenience to necessity: without it, a stable graph metric re-serves the same top results forever. graph-model.md's "the frontend keeps session data local" needs the refinement *local, shared transiently with the viewer's chosen ranker, never a record*. The feed shares this whole ordering section (order swap + seen toggle) — and, ruled in the feed-filter session (2026-08-28, backlog item 19), the full kind list too: messages, campaigns, and offers become feed-admittable kinds, one shared list on both surfaces, with "Profiles" as the on-screen word for the person kind everywhere. (3) The global index **grows**: proposals and campaigns become indexed, searchable kinds (their name-class field from the terms payload / display content). (4) **Scoped-search operators**: a query may open with `@handle` (author scope) or `#topic` (topic scope), and the remainder matches both the scoped author's own indexed content *and the indexed name of the target of their acts* — a comment found through its post's title, an offer through its item's name, a chat message through its chat's name — all as a relational join, with bodies staying unindexed. This returns comments, chat messages, and offers to scope for search *and* the reference explorer; the "casual conversation doesn't surface to strangers by keyword" rationale in [api-spec.md](implementation/api-spec.md)'s Search section survives narrowed (bodies still never match globally) and needs rewording. `search()` grows scope arguments; clients parse the operators. (5) Every result kind carries its viewer-relative rank on the row (quiet numbers; drill-down arrives with the Post Score screens); the unranked tail shows age instead — relative to one year, an absolute date past it. Carriers at implementation time: [api-spec.md](implementation/api-spec.md) (index, kinds, scope arguments, ordering prose), [miner-api.md](implementation/miner-api.md) (`rankSearch` + the transient seen-list), [graph-model.md](primitive/graph-model.md) (the session-data sentence), [hashtag.md](instances/hashtag.md) (topic-scoped search).
 - Q28 — closed on both sides with the L1 author. **Standing:** v0.23's initiator-owned rebase compiles a Reference into standing only as a complete act through the source's view of its *author*, and self-reference is compiler-excluded. **Feed:** [feed-ranking.md §4](primitive/feed-ranking.md#4-the-path-set)'s two-channel rule — for a jailed reference author, the content-intrinsic channel never opens (author ≠ carrier author) and the initiator-owned channel crosses at the viewer's forward weight to the jailed author, which is dead. **Self-invitation is an accepted residual:** a confederate account reproduces the geometry legally, so no self-guard closes it; CoGra declines to render such interactions as read-side policy, and the earnings side is closed by economics.md's exclusion rules ([economics.md §8.2](primitive/economics.md#82-players-exclusions-sign)). Accepted leftover geometry, on record: the Invitation T-leg twin persists in the feed (hyper-edge legs traverse ordinarily; Marginal tier; severance cannot net the inviter's own leg) — covered by the same read-side policy, with extending the two-channel rule to Invitation T-legs available if it ever matters — and a jailed author's minted Comments stay reachable via Review T-legs (commentary visibility, moderation's domain).
 
@@ -163,6 +164,135 @@ signed" to "what SOME holder of this key signed", so it is a
 deliberate design change, not an implementation shortcut. The
 whole interim handshake is stand-in-scoped (Q30); decide only if
 the wait proves painful before the substrate swap.
+
+---
+
+## Q47 — The sensitive self-mark has no contract field
+
+**Where it shows up:**
+[api-spec.md "Content authoring"](implementation/api-spec.md)
+(the prepare inputs),
+[moderation.md §1](instances/moderation.md) (read-side flags)
+**Status:** open; both clients shipped the compose wizard without
+the sheet
+
+### Context
+
+Q45(4) rules that authors can self-mark content sensitive with an
+optional public reason, and that the mark veils body and
+description while the title stays readable. The veil itself is
+built — a sensitive post blurs as one region — but nothing an
+author sends can *set* it: `PreparePostInput` carries no
+sensitivity field and no reason, so the only route to the state
+is a moderation verdict.
+
+The wizard shipped without the sheet on both platforms rather
+than shipping a control that writes nowhere. That is the honest
+interim, and it leaves a ruled product behaviour unreachable.
+
+### The question
+
+What shape does the self-mark take on the write surface — a
+boolean plus an optional reason string on the content inputs, or
+a small input object — and does an author's own mark read back
+differently from a moderator's, given that
+`FieldModerationStatus` carries one `SENSITIVE` for both? The
+second half is the real question: the reader-facing difference
+between "the author warned you" and "the platform did" is a
+product decision, not a schema one.
+
+---
+
+## Q48 — The profile's envelope keys await ratification
+
+**Where it shows up:**
+[data-model.md "The payload envelope"](implementation/data-model.md#the-payload-envelope)
+(guild keys 11 and 12)
+**Status:** built and in use; the allocation itself is unratified
+
+### Context
+
+The profile payload carries the avatar at guild key 11 and the
+cover at key 12, each a one-asset slot encoded as a 0-or-1-entry
+array so all three update states have exactly one encoding —
+absent leaves the slot alone, `[]` clears it, `[asset]` sets it.
+An avatar is a picture a reader is shown, so witnessing it like
+any other picture follows from the manifest's own rule, and alt
+text rides with it.
+
+The shape is built, tested, and documented as the current state.
+What has not happened is the ruling: the key allocation was made
+by the build lane inside the profile family's reserved range, not
+decided in a design session the way keys 2–10 were.
+
+### The question
+
+Are 11 and 12 the right allocation, and is the one-asset slot the
+right shape for a profile picture — or should a profile image
+carry more than a gallery entry does? The keyspace is CoGra's own
+and additive, so a different answer is a schema-version bump
+rather than a rewrite; the cost of deciding late is that both
+clients already encode against it.
+
+---
+
+## Q49 — The query-budget ceilings are owed a re-derivation
+
+**Where it shows up:**
+[api-spec.md "Query budgets"](implementation/api-spec.md)
+**Status:** open; the guard passes, with 224 of margin
+
+### Context
+
+The complexity ceiling is 250 000 and the stated headroom is
+~1.4×, which admits a heaviest operation of 178 571. The Android
+post-detail read now measures 178 347 — inside the ceiling, but
+clearing the *stated ratio* by 224 out of 178 571.
+
+The margin is thin enough to have shaped a client decision
+already: comment author avatars are deliberately unselected,
+because a comment's author fields price eighty times over in the
+thread read and the avatar alone would cost 560. The monogram is
+canvas-consistent, so nothing was lost — but the next selection
+that multiplies across the thread has nowhere to go.
+
+### The question
+
+Does the ceiling move, does the headroom ratio change, or does
+the post-detail read get restructured? Raising 250 000 is the
+cheap answer and the least honest one: the number is supposed to
+be measured against traffic rather than raised to fit it. The
+alternative is to stop pricing nested comment reads at their
+worst case — a second page of comments is a second request, and
+the detail read could ask for fewer.
+
+---
+
+## Q50 — Where a landed compose returns the author
+
+**Where it shows up:**
+[design/readme.md §13](../design/readme.md#13-decided-in-design-sessions)
+(the compose flow), both clients' compose wizards
+**Status:** open; both clients return to the feed
+
+### Context
+
+The wizard's seal screen ends in a landing state, and the
+canonical `ComposeLanded` board shows the author what landed.
+Where they go when they leave it is not ruled: back to the feed
+they came from, or into the detail view of the post they just
+made.
+
+Both clients return to the feed, which is the safer default and
+matches where the gesture started.
+
+### The question
+
+Feed or detail? Detail is the surface that shows the author what
+they actually published, which is the whole point of the landing
+state; the feed is where they were and where they will keep
+reading. It is a small decision that both clients have to make
+the same way.
 
 ---
 
