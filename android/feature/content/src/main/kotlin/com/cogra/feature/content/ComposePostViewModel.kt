@@ -43,13 +43,6 @@ data class ComposePostUiState(
      * author's changes when editing (D10, D11).
      */
     val referenceSection: ReferenceSectionState = ReferenceSectionState(),
-    /**
-     * What the withdrawals in this submit will cost, once the server
-     * has assembled them — a citation revised upward several times
-     * needs more than one counter-record to walk back (D11). Null
-     * until the batch has been staged.
-     */
-    val withdrawalCost: Int? = null,
     val loadedTitle: String = "",
     val loadedDescription: String = "",
     val loadedBody: String = "",
@@ -91,12 +84,18 @@ data class ComposePostUiState(
         } else {
             (if (contentChanged) 1 else 0) +
                 tagSection.changeCount +
-                referenceSection.adds.size +
-                (withdrawalCost ?: referenceSection.removes.size)
+                referenceSection.changeCount
         }
 
     /** Nothing to sign: an edit opened and left alone stages no record. */
     val nothingToSign: Boolean get() = signedActionCount == 0
+
+    /**
+     * What the withdrawals in this submit cost, or null when it
+     * withdraws nothing — the confirm names it beside the total so a
+     * multi-record removal explains itself (B4).
+     */
+    val withdrawalCost: Int? get() = referenceSection.withdrawalActs.takeIf { it > 0 }
 }
 
 /**
@@ -121,13 +120,6 @@ class ComposePostViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(ComposePostUiState())
     val state = _state.asStateFlow()
-
-    /**
-     * A batch staged before the confirm, held while the author reads
-     * the quoted cost. Never UI state: it is the signing input, and a
-     * dismissed confirm drops it.
-     */
-    private var quotedWrites: List<PreparedWriteView>? = null
 
     /** Debounces the finder, which runs on every keystroke (D20). */
     private var finderJob: Job? = null
@@ -310,11 +302,10 @@ class ComposePostViewModel @Inject constructor(
      * The submit gate (F4): a batch of more than one signed act asks
      * first, unless this device has been told not to.
      *
-     * A submit carrying a reference withdrawal is the one exception to
-     * that order. A withdrawal's cost is the server's to quote — the
-     * bundle may need several counter-records to reach `(0, 0)` (D11) —
-     * so those stage first and ask with the true count. Staging signs
-     * nothing, so nothing is committed by asking second.
+     * Withdrawals ask first too. Their cost is a batch — a citation
+     * revised upward several times needs several counter-records to
+     * reach `(0, 0)` (D11) — but the claim serves that count off the
+     * raw bundle sums (B4), so nothing has to be staged to learn it.
      */
     fun onSubmit() {
         val s = _state.value
@@ -324,10 +315,6 @@ class ComposePostViewModel @Inject constructor(
             return
         }
         if (s.nothingToSign) return
-        if (s.referenceSection.removes.isNotEmpty()) {
-            stage(askOnceQuoted = true)
-            return
-        }
         if (s.confirmMultiActionSubmits && s.signedActionCount > 1) {
             _state.update { it.copy(confirmPending = true) }
             return
@@ -338,18 +325,11 @@ class ComposePostViewModel @Inject constructor(
     fun onConfirmSubmit(dontAskAgain: Boolean) {
         if (dontAskAgain) viewModelScope.launch { identity.setConfirmMultiActionSubmits(false) }
         _state.update { it.copy(confirmPending = false) }
-        val quoted = quotedWrites
-        if (quoted != null) {
-            quotedWrites = null
-            viewModelScope.launch { sign(quoted) }
-        } else {
-            stage()
-        }
+        stage()
     }
 
     fun onDismissConfirm() {
-        quotedWrites = null
-        _state.update { it.copy(confirmPending = false, submitting = false, withdrawalCost = null) }
+        _state.update { it.copy(confirmPending = false, submitting = false) }
     }
 
     /**
@@ -357,7 +337,7 @@ class ComposePostViewModel @Inject constructor(
      * A refusal from any prepare stops before signing: nothing was
      * signed, so nothing may claim signing failed (F2).
      */
-    private fun stage(askOnceQuoted: Boolean = false) {
+    private fun stage() {
         val s = _state.value
         _state.update {
             it.copy(
@@ -366,14 +346,12 @@ class ComposePostViewModel @Inject constructor(
                 signingFailed = false,
                 signingNeedsKey = false,
                 transportFailed = false,
-                withdrawalCost = null,
                 tagSection = it.tagSection.withoutErrors(),
                 referenceSection = it.referenceSection.withoutErrors(),
             )
         }
         viewModelScope.launch {
             val writes = mutableListOf<PreparedWriteView>()
-            var withdrawn = 0
             val editingId = s.editingId
             if (editingId == null) {
                 when (val outcome = content.preparePost(
@@ -428,23 +406,10 @@ class ComposePostViewModel @Inject constructor(
                 for (row in s.referenceSection.removes) {
                     when (val outcome =
                         references.prepareReferenceWithdrawal(editingId, row.targetId)) {
-                        is Outcome.Success -> {
-                            writes += outcome.value
-                            withdrawn += outcome.value.size
-                        }
+                        is Outcome.Success -> writes += outcome.value
                         is Outcome.Refused -> return@launch refuseReference(row.targetId, outcome.errors)
                         is Outcome.Failed -> return@launch failTransport()
                     }
-                }
-            }
-            // The withdrawal batch is assembled; its length is the cost
-            // the author is owed before signing (D11).
-            if (askOnceQuoted) {
-                _state.update { it.copy(withdrawalCost = withdrawn) }
-                if (_state.value.confirmMultiActionSubmits && writes.size > 1) {
-                    quotedWrites = writes
-                    _state.update { it.copy(confirmPending = true) }
-                    return@launch
                 }
             }
             sign(writes)

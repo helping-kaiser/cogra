@@ -309,6 +309,14 @@ data class ReferenceClaimView(
     val relevance: Double,
     /** Endorsing versus refuting — enthusiasm `e`, folded and clipped. */
     val support: Double,
+    /**
+     * How many counter-records withdrawing this citation stages — one
+     * priced act each (B4). Read off the RAW bundle sums, which is why
+     * [relevance] and [support] cannot imply it: the clip has already
+     * lost how far past `1` the bundle reaches, and that distance is
+     * exactly what decides whether one record can walk it back.
+     */
+    val withdrawalCost: Int,
     val pending: Boolean,
 )
 

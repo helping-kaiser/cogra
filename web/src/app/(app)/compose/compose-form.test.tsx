@@ -62,12 +62,19 @@ function topicClaim(name: string, relevance = 0.1, confidence = 1) {
  * A `ReferenceClaim` as the wire serves it: the L1 identifier beside the
  * TYPED target, whose own `id` is the L2 one the prepare verbs take.
  */
-function referenceClaim(id: string, handle: string, relevance = 0.1, support = 0.1) {
+function referenceClaim(
+  id: string,
+  handle: string,
+  relevance = 0.1,
+  support = 0.1,
+  withdrawalCost = 1,
+) {
   return {
     __typename: "ReferenceClaim",
     targetId: `l1-${id}`,
     relevance,
     support,
+    withdrawalCost,
     pending: false,
     target: {
       __typename: "User",
@@ -945,16 +952,18 @@ describe("ComposeForm — references", () => {
     expect(screen.getByTestId("compose-reference-0")).toHaveTextContent("@ada");
   });
 
-  it("stages a removal as a withdrawal and confirms the server's own quote", async () => {
-    // D11: withdrawal is per-leg net stance, so the cost is a BATCH the
-    // server assembles — and the confirm reports that, not the client's
-    // lower bound of one.
+  it("asks before it prepares, on the withdrawal cost the claim serves", async () => {
+    // B4: withdrawal is per-leg net stance, so the cost is a BATCH — and
+    // the claim quotes it, so the confirm comes first and nothing is
+    // staged until the author has agreed to the price.
     writeConfirmMultiAction(true);
     searchParams = new URLSearchParams("post=p1");
     let withdrawalInput: Record<string, unknown> | undefined;
     server.use(
       graphql.query("PostDetail", () =>
-        HttpResponse.json({ data: editablePost([], [referenceClaim("u-ada", "ada")]) }),
+        HttpResponse.json({
+          data: editablePost([], [referenceClaim("u-ada", "ada", 1, 1, 3)]),
+        }),
       ),
       graphql.mutation("PrepareReferenceWithdrawal", ({ variables }) => {
         withdrawalInput = variables;
@@ -975,17 +984,16 @@ describe("ComposeForm — references", () => {
     fireEvent.click(await screen.findByTestId("compose-reference-0-remove"));
     fireEvent.click(screen.getByTestId("compose-submit"));
 
-    // The withdrawal names the L2 id, never the claim's L1 identifier.
-    await waitFor(() => expect(withdrawalInput).toBeDefined());
-    expect((withdrawalInput as { input: { target: string } }).input.target).toBe("u-ada");
-
     const count = await screen.findByTestId("compose-multi-action-count");
     expect(count).toHaveTextContent("creates 3 signed actions");
-    // Nothing is signed while the reader is still deciding.
+    // Nothing is staged, let alone signed, while the reader decides.
+    expect(withdrawalInput).toBeUndefined();
     expect(signer.signStaged).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByTestId("compose-multi-action-proceed"));
     await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(3));
+    // The withdrawal names the L2 id, never the claim's L1 identifier.
+    expect((withdrawalInput as { input: { target: string } }).input.target).toBe("u-ada");
   });
 
   it("stages an added reference on an edit as its own act", async () => {

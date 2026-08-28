@@ -61,12 +61,14 @@ function referenceClaim(
   relevance = 0.1,
   support = 0.1,
   pending = false,
+  withdrawalCost = 1,
 ) {
   return {
     __typename: "ReferenceClaim",
     targetId: `l1-${target.id as string}`,
     relevance,
     support,
+    withdrawalCost,
     pending,
     target,
   };
@@ -1684,7 +1686,7 @@ describe("PostView — references", () => {
     );
   });
 
-  it("stages a comment's removed reference as a withdrawal, quoted by the server", async () => {
+  it("asks before it prepares a comment's withdrawal, on the served cost", async () => {
     writeConfirmMultiAction(true);
     let withdrawalInput: Record<string, unknown> | undefined;
     server.use(
@@ -1695,7 +1697,7 @@ describe("PostView — references", () => {
               id: "c1",
               body: "First!",
               authorId: "u1",
-              references: [referenceClaim(userTarget("u-ada", "ada"))],
+              references: [referenceClaim(userTarget("u-ada", "ada"), 1, 1, false, 2)],
             },
           ]),
         }),
@@ -1723,16 +1725,16 @@ describe("PostView — references", () => {
     fireEvent.click(screen.getByTestId("comment-edit-reference-0-remove"));
     fireEvent.click(screen.getByTestId("comment-edit-save"));
 
-    // The withdrawal names the L2 id, never the claim's L1 identifier.
-    await waitFor(() => expect(withdrawalInput).toBeDefined());
-    expect((withdrawalInput as { input: { target: string } }).input.target).toBe("u-ada");
-
     const count = await screen.findByTestId("comment-edit-multi-action-count");
     expect(count).toHaveTextContent("creates 2 signed actions");
+    // Nothing is staged, let alone signed, while the reader decides.
+    expect(withdrawalInput).toBeUndefined();
     expect(signer.signStaged).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByTestId("comment-edit-multi-action-proceed"));
     await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(2));
+    // The withdrawal names the L2 id, never the claim's L1 identifier.
+    expect((withdrawalInput as { input: { target: string } }).input.target).toBe("u-ada");
   });
 
   it("stages nothing for an untouched reference section on a comment edit", async () => {

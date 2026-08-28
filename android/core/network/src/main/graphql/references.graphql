@@ -87,6 +87,11 @@ fragment ReferenceClaimFields on ReferenceClaim {
   targetId
   relevance
   support
+  # What removing this citation costs: the counter-records that net its
+  # bundle to (0, 0), off the RAW sums the clipped pair above has
+  # already lost. An editing surface confirms against this BEFORE it
+  # prepares anything.
+  withdrawalCost
   pending
 }
 

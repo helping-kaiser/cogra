@@ -6,15 +6,24 @@ import {
   newReferenceDraft,
   referenceActs,
   referenceChanges,
-  withdrawalActs,
   type ReferenceDraft,
 } from "./draft";
 
 const postTarget = { kind: "Post" as const, label: "@ada: a post", href: "/posts/p1" };
 const userTarget = { kind: "User" as const, label: "@ada", href: "/u/ada" };
 
-function draft(targetId: string, relevance = DEFAULT_RELEVANCE, support = DEFAULT_SUPPORT) {
-  return { ...newReferenceDraft(targetId, postTarget), relevance, support };
+function draft(
+  targetId: string,
+  relevance = DEFAULT_RELEVANCE,
+  support = DEFAULT_SUPPORT,
+  withdrawalCost = 1,
+) {
+  return {
+    ...newReferenceDraft(targetId, postTarget),
+    relevance,
+    support,
+    withdrawalCost,
+  };
 }
 
 describe("newReferenceDraft", () => {
@@ -67,29 +76,24 @@ describe("referenceChanges", () => {
   });
 });
 
-describe("withdrawalActs", () => {
-  it("quotes one act for a single default record — the common case", () => {
-    expect(withdrawalActs(draft("a"))).toBe(1);
-  });
-
-  it("walks the further leg back, so a heavier bundle costs more", () => {
-    expect(withdrawalActs(draft("a", 1, 0.2))).toBe(1);
-    expect(withdrawalActs(draft("a", 0.2, -1))).toBe(1);
-  });
-
-  it("never quotes zero, even for a bundle folded to nothing on both axes", () => {
-    expect(withdrawalActs(draft("a", 0, 0))).toBe(1);
-  });
-});
-
 describe("referenceActs", () => {
   it("counts one act per declaration", () => {
     expect(referenceActs(referenceChanges([], [draft("a"), draft("b")]))).toBe(2);
   });
 
-  it("counts a withdrawal's own batch estimate beside the declarations", () => {
+  it("counts a withdrawal's own batch beside the declarations", () => {
     const changes = referenceChanges([draft("a")], [draft("b")]);
     expect(referenceActs(changes)).toBe(2);
+  });
+
+  it("counts the served cost of a withdrawal, not one act per removal", () => {
+    const heavy = draft("a", 1, 1, 3);
+    expect(referenceActs(referenceChanges([heavy], []))).toBe(3);
+  });
+
+  it("counts a heavy withdrawal alongside a fresh declaration", () => {
+    const changes = referenceChanges([draft("a", 1, 1, 4)], [draft("b")]);
+    expect(referenceActs(changes)).toBe(5);
   });
 
   it("counts nothing for an untouched section", () => {

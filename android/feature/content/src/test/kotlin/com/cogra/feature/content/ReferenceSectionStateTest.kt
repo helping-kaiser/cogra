@@ -156,12 +156,52 @@ class ReferenceSectionStateTest {
             targetId = "l1-identifier-not-a-uuid",
             relevance = 0.4,
             support = 0.6,
+            withdrawalCost = 2,
             pending = false,
         )
         val row = claim.editableRow()!!
         assertThat(row.targetId).isEqualTo("u1")
         assertThat(row.relevance).isEqualTo(0.4)
         assertThat(row.support).isEqualTo(0.6)
+    }
+
+    /**
+     * The served cost rides onto the row, because the clipped pair
+     * beside it cannot imply it: a claim folded to `1.0` may cost one
+     * counter-record to withdraw or five (B4).
+     */
+    @Test
+    fun anEditableRowCarriesTheServedWithdrawalCost() {
+        val claim = ReferenceClaimView(
+            target = profile("u1", "ada"),
+            targetId = "l1-a",
+            relevance = 1.0,
+            support = 1.0,
+            withdrawalCost = 4,
+            pending = false,
+        )
+        assertThat(claim.editableRow()!!.withdrawalCost).isEqualTo(4)
+    }
+
+    /**
+     * A removal costs its whole batch, so the section's own count is
+     * the sum of what the claims quoted — never one per gesture.
+     */
+    @Test
+    fun aRemovalCostsTheServedBatchRatherThanOneAct() {
+        val heavy = ReferenceRow("u1", profile("u1", "ada"), withdrawalCost = 3)
+        val light = ReferenceRow("u2", profile("u2", "bob"), withdrawalCost = 1)
+        val state = ReferenceSectionState(references = emptyList(), loaded = listOf(heavy, light))
+        assertThat(state.removes).hasSize(2)
+        assertThat(state.withdrawalActs).isEqualTo(4)
+        assertThat(state.changeCount).isEqualTo(4)
+    }
+
+    /** A chip staged in this session nets in one record if ever removed. */
+    @Test
+    fun aFreshChipQuotesASingleActWithdrawal() {
+        val state = ReferenceSectionState().added("p1", post("p1", "One"))
+        assertThat(state.references.single().withdrawalCost).isEqualTo(1)
     }
 
     /**
@@ -176,6 +216,7 @@ class ReferenceSectionStateTest {
             targetId = "l1-identifier-only",
             relevance = 0.1,
             support = 0.1,
+            withdrawalCost = 1,
             pending = false,
         )
         assertThat(claim.editableRow()).isNull()
@@ -185,8 +226,8 @@ class ReferenceSectionStateTest {
     @Test
     fun aSectionBuiltWithoutUntypeableClaimsStagesNoWithdrawalForThem() {
         val claims = listOf(
-            ReferenceClaimView(profile("u1", "ada"), "l1-a", 0.1, 0.1, pending = false),
-            ReferenceClaimView(null, "l1-b", 0.1, 0.1, pending = false),
+            ReferenceClaimView(profile("u1", "ada"), "l1-a", 0.1, 0.1, 1, pending = false),
+            ReferenceClaimView(null, "l1-b", 0.1, 0.1, 1, pending = false),
         )
         val rows = claims.mapNotNull { it.editableRow() }
         val state = ReferenceSectionState(references = rows, loaded = rows)
