@@ -50,6 +50,14 @@ fun CograTextField(
     optionalLabel: String = "Optional",
     singleLine: Boolean = true,
     minLines: Int = 1,
+    /**
+     * Stretches the box to whatever height the caller gave the field —
+     * what `ComposeWords` draws, where the body's box takes the rest of
+     * the screen rather than a line count. Off by default, because a
+     * field that fills its parent inside a `Column` with no weight
+     * would take the whole screen.
+     */
+    fillHeight: Boolean = false,
     testTag: String? = null,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -87,6 +95,7 @@ fun CograTextField(
             cursorBrush = SolidColor(colors.primary),
             modifier = Modifier
                 .fillMaxWidth()
+                .then(if (fillHeight) Modifier.weight(1f) else Modifier)
                 .defaultMinSize(minHeight = Layout.FieldHeight)
                 .border(
                     BorderStroke(1.dp, colors.outline),
