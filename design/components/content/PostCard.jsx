@@ -115,32 +115,26 @@ export function PostCard({
     </h2>
   ) : null;
 
+  const descriptionStyle = {
+    margin: 0,
+    fontSize: "var(--text-body-medium)",
+    color: "var(--text-secondary)",
+    ...(hasMedia && !open && !detail ? CLAMP(1) : null),
+  };
+  const contentStyle = {
+    margin: 0,
+    fontSize: detail ? "var(--text-body-large)" : "var(--text-body-medium)",
+    lineHeight: detail ? "var(--text-body-large--line-height)" : "var(--text-body-medium--line-height)",
+    ...(detail ? { whiteSpace: "pre-wrap" } : CLAMP(hasMedia && !open ? 2 : 4)),
+  };
+  // THE VEIL WRAPS THE PARAGRAPH, never the text inside it: the clamp's
+  // `overflow: hidden` then clips the TEXT before the blur applies, so the halo
+  // stays soft on every side instead of being cut at the box's edge.
+  const veiledParagraph = (node) => (veil ? <SensitiveVeil kind="text">{node}</SensitiveVeil> : node);
   const caption = (
     <>
-      {description && (
-        <p
-          style={{
-            margin: 0,
-            fontSize: "var(--text-body-medium)",
-            color: "var(--text-secondary)",
-            ...(hasMedia && !open && !detail ? CLAMP(1) : null),
-          }}
-        >
-          {veil ? <SensitiveVeil kind="text">{description}</SensitiveVeil> : description}
-        </p>
-      )}
-      {content && (
-        <p
-          style={{
-            margin: 0,
-            fontSize: detail ? "var(--text-body-large)" : "var(--text-body-medium)",
-            lineHeight: detail ? "var(--text-body-large--line-height)" : "var(--text-body-medium--line-height)",
-            ...(detail ? { whiteSpace: "pre-wrap" } : CLAMP(hasMedia && !open ? 2 : 4)),
-          }}
-        >
-          {veil ? <SensitiveVeil kind="text">{content}</SensitiveVeil> : content}
-        </p>
-      )}
+      {description && veiledParagraph(<p style={descriptionStyle}>{description}</p>)}
+      {content && veiledParagraph(<p style={contentStyle}>{content}</p>)}
     </>
   );
 
@@ -294,23 +288,18 @@ export function PostCard({
           )}
           {/* COMMENTS get their own affordance rather than living behind a tap on
               the card, because "read the replies" is a different intent from
-              "read the post" and the count is information in itself. It opens the
-              SAME detail view as the card, scrolled so the comments lead — never
-              a separate screen. Glyph plus number, exactly like the score beside
-              it; the count is spoken by the accessible name.
-
-              ON THE DETAIL VIEW IT STAYS — the count is still information — but
-              reads as WHERE YOU ARE: `primary` instead of muted, `aria-current`,
-              and no navigation, because the comments are already on screen. A
-              vanished glyph reads as a post that lost its comments, not as an
-              arrival. */}
+              "read the post" and the count is information in itself. It opens
+              THE COMMENTS SHEET (readme §13, 2026-08-28) — the thread lives in a
+              near-full-height bottom sheet, never a separate screen — and it
+              does so from the feed and the detail view alike, because the detail
+              view is just about the post. Glyph plus number, exactly like the
+              score beside it; the count is spoken by the accessible name. */}
           {comments !== undefined && (
             <button
               type="button"
-              onClick={detail ? undefined : (onOpenComments ?? onOpen)}
+              onClick={onOpenComments ?? onOpen}
               aria-label={comments === 1 ? "1 comment" : `${comments} comments`}
-              aria-current={detail ? "location" : undefined}
-              className={detail ? "cg-focus" : "cg-state cg-focus cg-hit"}
+              className="cg-state cg-focus cg-hit"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -319,11 +308,11 @@ export function PostCard({
                 background: "transparent",
                 borderRadius: "var(--radius-full)",
                 padding: "6px 8px",
-                color: detail ? "var(--primary)" : "var(--text-secondary)",
+                color: "var(--text-secondary)",
                 fontFamily: "var(--font-sans)",
                 fontSize: "var(--text-label-large)",
                 fontWeight: "var(--text-label-large--font-weight)",
-                cursor: detail ? "default" : "pointer",
+                cursor: "pointer",
               }}
             >
               <Icon name="chat_bubble" size={18} />

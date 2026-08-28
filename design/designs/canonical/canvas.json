@@ -1,63 +1,382 @@
 {
   "artboards": [
-    { "file": "Theme.dc.html", "title": "Canvas theme", "x": 1440, "y": 0, "w": 300, "h": 180, "is_interactive": true },
-
-    { "file": "Main.dc.html", "title": "Feed · from @mira's view", "x": 0, "y": 0, "w": 390, "h": 844 },
-    { "file": "FeedBare.dc.html", "title": "Feed · bare arrival", "x": 480, "y": 0, "w": 390, "h": 844 },
-    { "file": "InviteEntry.dc.html", "title": "Enter your invite", "x": 960, "y": 0, "w": 390, "h": 844 },
-
-    { "file": "Join.dc.html", "title": "Join · @mira vouches", "x": 0, "y": 1060, "w": 390, "h": 844 },
-    { "file": "JoinInvalid.dc.html", "title": "Join · unusable link", "x": 480, "y": 1060, "w": 390, "h": 844 },
-    { "file": "Verified.dc.html", "title": "Email verified", "x": 960, "y": 1060, "w": 390, "h": 844 },
-
-    { "file": "KeyCeremony.dc.html", "title": "Your key", "x": 0, "y": 2120, "w": 390, "h": 844 },
-    { "file": "KeyConfirm.dc.html", "title": "Ready to record?", "x": 480, "y": 2120, "w": 390, "h": 844 },
-    { "file": "RecoveryCode.dc.html", "title": "Recovery code", "x": 960, "y": 2120, "w": 390, "h": 844 },
-    { "file": "KeyDecline.dc.html", "title": "Decline backup", "x": 1440, "y": 2120, "w": 390, "h": 844 },
-
-    { "file": "ApplicantFeed.dc.html", "title": "Applicant · first steps", "x": 0, "y": 3180, "w": 390, "h": 844 },
-    { "file": "ApplicantWaiting.dc.html", "title": "Applicant · waiting", "x": 480, "y": 3180, "w": 390, "h": 844 },
-    { "file": "VouchBack.dc.html", "title": "Landed · vouch back", "x": 960, "y": 3180, "w": 390, "h": 844 },
-    { "file": "VouchBackPad.dc.html", "title": "First vouch · the pad", "x": 1440, "y": 3180, "w": 390, "h": 844 },
-
-    { "file": "SignIn.dc.html", "title": "Sign in", "x": 0, "y": 4240, "w": 390, "h": 844 },
-    { "file": "Reset.dc.html", "title": "Reset password", "x": 480, "y": 4240, "w": 390, "h": 844 },
-    { "file": "Restore.dc.html", "title": "Restore your key", "x": 960, "y": 4240, "w": 390, "h": 844 },
-    { "file": "KeyElsewhere.dc.html", "title": "Key elsewhere", "x": 1440, "y": 4240, "w": 390, "h": 844 },
-
-    { "file": "ComposePick.dc.html", "title": "Compose · pick the body", "x": 0, "y": 5560, "w": 390, "h": 844 },
-    { "file": "ComposeCrop.dc.html", "title": "Compose · the crop", "x": 480, "y": 5560, "w": 390, "h": 844 },
-    { "file": "ComposeCover.dc.html", "title": "Compose · the video's face", "x": 960, "y": 5560, "w": 390, "h": 844 },
-    { "file": "ComposeDetails.dc.html", "title": "Compose · details", "x": 1440, "y": 5560, "w": 390, "h": 844 },
-    { "file": "ComposeSeal.dc.html", "title": "Compose · what you sign", "x": 1920, "y": 5560, "w": 390, "h": 844 },
-
-    { "file": "ComposeLicense.dc.html", "title": "Seal · license sheet", "x": 0, "y": 6620, "w": 390, "h": 844 },
-    { "file": "ComposePad.dc.html", "title": "Seal · your stance on it", "x": 480, "y": 6620, "w": 390, "h": 844 },
-    { "file": "ComposeSensitive.dc.html", "title": "Seal · sensitive sheet", "x": 960, "y": 6620, "w": 390, "h": 844 },
-    { "file": "ComposeKeyAbsent.dc.html", "title": "Seal · key absent", "x": 1440, "y": 6620, "w": 390, "h": 844 },
-
-    { "file": "ComposeWords.dc.html", "title": "Compose · words body", "x": 0, "y": 7680, "w": 390, "h": 844 },
-    { "file": "ComposeDraft.dc.html", "title": "Compose · draft kept", "x": 480, "y": 7680, "w": 390, "h": 844 },
-    { "file": "ComposeLanded.dc.html", "title": "Signed · still settling", "x": 960, "y": 7680, "w": 390, "h": 844 },
-    { "file": "ComposeExpired.dc.html", "title": "Didn't land · the notice", "x": 1440, "y": 7680, "w": 390, "h": 844 },
-
-    { "file": "ReplyEntry.dc.html", "title": "Thread · comment entry", "x": 0, "y": 8740, "w": 390, "h": 844 },
-    { "file": "ReplyCompose.dc.html", "title": "Reply · write", "x": 480, "y": 8740, "w": 390, "h": 844 },
-    { "file": "ReplySeal.dc.html", "title": "Reply · what you sign", "x": 960, "y": 8740, "w": 390, "h": 844 },
-    { "file": "ReplyPad.dc.html", "title": "Reply · the pad", "x": 1440, "y": 8740, "w": 390, "h": 844 },
-
-    { "file": "EditCompose.dc.html", "title": "Edit post", "x": 0, "y": 9800, "w": 390, "h": 844 },
-    { "file": "RemoveMenu.dc.html", "title": "Own post · menu", "x": 480, "y": 9800, "w": 390, "h": 844 },
-    { "file": "RemoveConfirm.dc.html", "title": "Remove · think twice", "x": 960, "y": 9800, "w": 390, "h": 844 },
-    { "file": "EditActs.dc.html", "title": "Edit · the actions", "x": 1920, "y": 9800, "w": 390, "h": 844 },
-    { "file": "Removed.dc.html", "title": "Removed by its author", "x": 1440, "y": 9800, "w": 390, "h": 844 },
-
-    { "file": "ReferencePicker.dc.html", "title": "Cite something", "x": 2400, "y": 5560, "w": 390, "h": 844 },
-    { "file": "HelpDialog.dc.html", "title": "The ? dialog", "x": 2400, "y": 6620, "w": 390, "h": 844 },
-
-    { "file": "LadderSmall.dc.html", "title": "Post ladder · small forms", "x": 0, "y": 10860, "w": 390, "h": 844 },
-    { "file": "LadderMax.dc.html", "title": "Post ladder · the cap", "x": 480, "y": 10860, "w": 390, "h": 844 },
-    { "file": "LadderStates.dc.html", "title": "Post ladder · veiled & removed", "x": 960, "y": 10860, "w": 390, "h": 844 }
+    {
+      "file": "Theme.dc.html",
+      "title": "Canvas theme",
+      "x": 1440,
+      "y": 0,
+      "w": 300,
+      "h": 180,
+      "is_interactive": true
+    },
+    {
+      "file": "Main.dc.html",
+      "title": "Feed · from @mira's view",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "FeedBare.dc.html",
+      "title": "Feed · bare arrival",
+      "x": 480,
+      "y": 0,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "InviteEntry.dc.html",
+      "title": "Enter your invite",
+      "x": 960,
+      "y": 0,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "Join.dc.html",
+      "title": "Join · @mira vouches",
+      "x": 0,
+      "y": 1060,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "JoinInvalid.dc.html",
+      "title": "Join · unusable link",
+      "x": 480,
+      "y": 1060,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "Verified.dc.html",
+      "title": "Email verified",
+      "x": 960,
+      "y": 1060,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "KeyCeremony.dc.html",
+      "title": "Your key",
+      "x": 0,
+      "y": 2120,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "KeyConfirm.dc.html",
+      "title": "Ready to record?",
+      "x": 480,
+      "y": 2120,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "RecoveryCode.dc.html",
+      "title": "Recovery code",
+      "x": 960,
+      "y": 2120,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "KeyDecline.dc.html",
+      "title": "Decline backup",
+      "x": 1440,
+      "y": 2120,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ApplicantFeed.dc.html",
+      "title": "Applicant · first steps",
+      "x": 0,
+      "y": 3180,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ApplicantWaiting.dc.html",
+      "title": "Applicant · waiting",
+      "x": 480,
+      "y": 3180,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "VouchBack.dc.html",
+      "title": "Landed · vouch back",
+      "x": 960,
+      "y": 3180,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "VouchBackPad.dc.html",
+      "title": "First vouch · the pad",
+      "x": 1440,
+      "y": 3180,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "SignIn.dc.html",
+      "title": "Sign in",
+      "x": 0,
+      "y": 4240,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "Reset.dc.html",
+      "title": "Reset password",
+      "x": 480,
+      "y": 4240,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "Restore.dc.html",
+      "title": "Restore your key",
+      "x": 960,
+      "y": 4240,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "KeyElsewhere.dc.html",
+      "title": "Key elsewhere",
+      "x": 1440,
+      "y": 4240,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ComposePick.dc.html",
+      "title": "Compose · pick the body",
+      "x": 0,
+      "y": 5560,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ComposeCrop.dc.html",
+      "title": "Compose · the crop",
+      "x": 480,
+      "y": 5560,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ComposeCover.dc.html",
+      "title": "Compose · the video's face",
+      "x": 960,
+      "y": 5560,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ComposeDetails.dc.html",
+      "title": "Compose · details",
+      "x": 1440,
+      "y": 5560,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ComposeSeal.dc.html",
+      "title": "Compose · what you sign",
+      "x": 1920,
+      "y": 5560,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ComposeLicense.dc.html",
+      "title": "Seal · license sheet",
+      "x": 0,
+      "y": 6620,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ComposePad.dc.html",
+      "title": "Seal · your stance on it",
+      "x": 480,
+      "y": 6620,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ComposeSensitive.dc.html",
+      "title": "Seal · sensitive sheet",
+      "x": 960,
+      "y": 6620,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ComposeKeyAbsent.dc.html",
+      "title": "Seal · key absent",
+      "x": 1440,
+      "y": 6620,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ComposeWords.dc.html",
+      "title": "Compose · words body",
+      "x": 0,
+      "y": 7680,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ComposeDraft.dc.html",
+      "title": "Compose · draft kept",
+      "x": 480,
+      "y": 7680,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ComposeLanded.dc.html",
+      "title": "Signed · still settling",
+      "x": 960,
+      "y": 7680,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ComposeExpired.dc.html",
+      "title": "Didn't land · the notice",
+      "x": 1440,
+      "y": 7680,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ReplyEntry.dc.html",
+      "title": "Comments · the sheet",
+      "x": 0,
+      "y": 8740,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ReplyCompose.dc.html",
+      "title": "Reply · write",
+      "x": 480,
+      "y": 8740,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ReplySeal.dc.html",
+      "title": "Reply · what you sign",
+      "x": 960,
+      "y": 8740,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ReplyPad.dc.html",
+      "title": "Reply · the pad",
+      "x": 1440,
+      "y": 8740,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "EditCompose.dc.html",
+      "title": "Edit post",
+      "x": 0,
+      "y": 9800,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "RemoveMenu.dc.html",
+      "title": "Own post · menu",
+      "x": 480,
+      "y": 9800,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "RemoveConfirm.dc.html",
+      "title": "Remove · think twice",
+      "x": 960,
+      "y": 9800,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "EditActs.dc.html",
+      "title": "Edit · the actions",
+      "x": 1920,
+      "y": 9800,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "Removed.dc.html",
+      "title": "Removed by its author",
+      "x": 1440,
+      "y": 9800,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ReferencePicker.dc.html",
+      "title": "Cite something",
+      "x": 2400,
+      "y": 5560,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "HelpDialog.dc.html",
+      "title": "The ? dialog",
+      "x": 2400,
+      "y": 6620,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "LadderSmall.dc.html",
+      "title": "Post ladder · small forms",
+      "x": 0,
+      "y": 10860,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "LadderMax.dc.html",
+      "title": "Post ladder · the cap",
+      "x": 480,
+      "y": 10860,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "LadderStates.dc.html",
+      "title": "Post ladder · veiled & removed",
+      "x": 960,
+      "y": 10860,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "LadderTopics.dc.html",
+      "title": "Post ladder · many topics",
+      "x": 1440,
+      "y": 10860,
+      "w": 390,
+      "h": 844
+    }
   ],
   "annotations": [
     {
@@ -159,5 +478,7 @@
       "text": "COMPOSE · The post ladder — every container state in one place\n\nFrom the smallest form (one line of words, nothing else) through bare media to the maximal collapsed container, plus the marked states: sensitive-veiled (blur + neutral wash + the author's reason; title and interaction row stay readable), removed by its author, and removed under the platform's rules — the two removal marks deliberately read differently.\n\nTHE HEIGHT RULE (2026-08-27): a post card's collapsed form never exceeds the screen height minus the bottom bar and the top safe zone — designed against the app / downloadable-webapp viewport, not browser chrome. Collapse order: the media and the interaction row NEVER shrink; tags and references collapse to one line under the description; the title clamps to one line; the description to two. The expanded detail view may be taller than the screen."
     }
   ],
-  "launch": { "view": "canvas" }
+  "launch": {
+    "view": "canvas"
+  }
 }

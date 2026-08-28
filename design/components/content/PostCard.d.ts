@@ -51,14 +51,10 @@ export interface PostCardProps {
   /**
    * The comment count. Third in the affordance row: `chat_bubble` plus the
    * number, the same shape as the score beside it. Zero shows the glyph alone.
-   * On the detail variant it stays but reads as WHERE YOU ARE: `primary`,
-   * `aria-current`, no navigation.
+   * Opens the comments sheet, from the feed and the detail view alike.
    */
   comments?: number;
-  /**
-   * Opens the SAME detail view as the card, scrolled so the comments lead.
-   * Defaults to `onOpen`.
-   */
+  /** Opens the comments sheet. Defaults to `onOpen`. */
   onOpenComments?: () => void;
   /**
    * Renders the record's SKELETON instead of its content: an illegal verdict
