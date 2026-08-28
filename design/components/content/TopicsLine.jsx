@@ -5,26 +5,73 @@ import { TopicChip } from "../core/Chip.jsx";
    CommentCard — it appeared on a second surface, so it moved here (the repo's
    own rule; a copy is never the answer).
 
-   ONE LINE with the citation count riding its end. In a summary card it never
-   wraps — overflow is simply clipped (readme §13's collapse order: this line
-   gives way before media or the affordance row ever shrink); `wrap` is the
-   detail variant's full set. The count opens the topics-and-references sheet,
-   where every entry has room to be a full row (readme §13, 2026-08-28). */
+   ONE LINE, ON EVERY VARIANT, with the citation count riding its end — never a
+   wrap: overflow is simply clipped (readme §13's collapse order: this line
+   gives way before media or the affordance row ever shrink), and the
+   topics-and-references SHEET is the full set's home (readme §13, 2026-08-28).
 
-export function TopicsLine({ topics = [], references = 0, wrap = false, onOpenReferences }) {
-  if (topics.length === 0 && references === 0) return null;
-  const count = references === 1 ? "1 reference" : `${references} references`;
+   Two tap models, never mixed: in a summary card the chips navigate to their
+   topics and only the count opens the sheet; on a detail surface pass `onOpen`
+   and the WHOLE LINE is one control opening the sheet, the chips inert inside
+   it — fifty chips are fifty reasons not to make each its own target there. */
+
+function Count({ references }) {
+  if (references === 0) return null;
   return (
-    <div
+    <span
       style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--space-2)",
-        flexWrap: wrap ? "wrap" : "nowrap",
-        overflow: "hidden",
-        minWidth: 0,
+        flex: "none",
+        color: "var(--text-secondary)",
+        fontSize: "var(--text-body-small)",
+        lineHeight: "var(--text-body-small--line-height)",
+        whiteSpace: "nowrap",
       }}
     >
+      · {references === 1 ? "1 reference" : `${references} references`}
+    </span>
+  );
+}
+
+const LINE = {
+  display: "flex",
+  alignItems: "center",
+  gap: "var(--space-2)",
+  flexWrap: "nowrap",
+  overflow: "hidden",
+  minWidth: 0,
+};
+
+export function TopicsLine({ topics = [], references = 0, onOpen, onOpenReferences }) {
+  if (topics.length === 0 && references === 0) return null;
+
+  if (onOpen) {
+    return (
+      <button
+        type="button"
+        onClick={onOpen}
+        aria-label="Topics and references"
+        className="cg-state cg-focus"
+        style={{
+          ...LINE,
+          width: "100%",
+          border: 0,
+          background: "none",
+          padding: 0,
+          cursor: "pointer",
+          fontFamily: "var(--font-sans)",
+          textAlign: "left",
+        }}
+      >
+        {topics.map((topic) => (
+          <TopicChip key={topic} topic={topic} inert />
+        ))}
+        <Count references={references} />
+      </button>
+    );
+  }
+
+  return (
+    <div style={LINE}>
       {topics.map((topic) => (
         <TopicChip key={topic} topic={topic} />
       ))}
@@ -34,33 +81,12 @@ export function TopicsLine({ topics = [], references = 0, wrap = false, onOpenRe
             type="button"
             onClick={onOpenReferences}
             className="cg-state cg-focus"
-            style={{
-              flex: "none",
-              border: 0,
-              background: "none",
-              padding: 0,
-              cursor: "pointer",
-              fontFamily: "var(--font-sans)",
-              color: "var(--text-secondary)",
-              fontSize: "var(--text-body-small)",
-              lineHeight: "var(--text-body-small--line-height)",
-              whiteSpace: "nowrap",
-            }}
+            style={{ flex: "none", border: 0, background: "none", padding: 0, cursor: "pointer", fontFamily: "var(--font-sans)" }}
           >
-            · {count}
+            <Count references={references} />
           </button>
         ) : (
-          <span
-            style={{
-              flex: "none",
-              color: "var(--text-secondary)",
-              fontSize: "var(--text-body-small)",
-              lineHeight: "var(--text-body-small--line-height)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            · {count}
-          </span>
+          <Count references={references} />
         ))}
     </div>
   );

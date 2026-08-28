@@ -1101,11 +1101,14 @@ the detail view is just about the post.
 
 ### Reference rows and signed pairs — 2026-08-28
 
-A card never lists its references inline — the topics line's count
-opens the **topics-and-references sheet**, and every signed act gets
-one row there: **leading mark · name · the signed pair**. One row
-shape across every node kind (`ReferenceRow`), reused by search's
-results (item 9).
+A card never lists its references inline, and its topics line is
+**one clipped line on every variant** — the detail view does not
+wrap the set; there, the whole line is one control opening the
+**topics-and-references sheet** (in a feed, chips navigate and only
+the count opens it). The sheet is the full set's home: every signed
+act gets one row — **leading mark · name · the signed pair** — one
+row shape across every node kind (`ReferenceRow`), reused by
+search's results (item 9).
 
 - **The leading mark says the kind, without a word beside it.** A
   person keeps their avatar; a media post its cover; a text post the
