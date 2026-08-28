@@ -1128,6 +1128,40 @@ kind (`ReferenceRow`), reused by search's results (item 9).
 - Comments wear the same topics-and-citations line as posts
   (`TopicsLine`, shared) and the same overflow menu.
 
+### The search rulings — 2026-08-28
+
+Decided ahead of the search section's drawing (product side mirrored
+as Q46 in docs/open-questions.md):
+
+- **Order**: full match, then partial match, each tier ordered by
+  the viewer's ranker — never newest by default. What the ranker
+  cannot score falls to newest behind a **visible seam**; past the
+  seam a row's rank gives way to its age (relative to one year, an
+  absolute date after).
+- **Controls**: an order swap (Ranked / Newest) and a "show already
+  seen" toggle, default on. Seen = the card's impression entered
+  the viewport; device-local, never a record, shared transiently
+  with the viewer's chosen ranker. **The feed carries this same
+  ordering section** (backlog item 19 — the canonical feed screens
+  never drew the filter at all).
+- **Scope operators**: `@handle <text>` and `#topic <text>` scope
+  the query; the remainder matches the scoped author's own content
+  AND the names of their acts' targets — a comment through its
+  post's title, an offer through its item's name, a message through
+  its chat's name. Comments, messages, and offers are thereby
+  searchable and citable. Indirect hits are `ReferenceRow`'s
+  two-line variant: the second line names the target ("on *Salt
+  maps of the coast road*").
+- **Ranks on every kind**, quiet viewer-relative numbers on the
+  row's right edge; explained by the "?", drill-down waits for the
+  Post Score screens (item 13).
+- **The Explore tab at rest**: recent searches (device-local) plus
+  a PROMINENT entry into the orbit/3D view (item 16) — never a
+  small side thing. Typing drops the orbit entry off the bottom
+  edge; the screen becomes kinds filter, order controls, results.
+- **Chats are public reads**: a chat result opens the chat's read
+  surface for anyone; E2E chats show ciphertext but they show.
+
 ### Masters, variants, and screens — 2026-08-28
 
 The Figma discipline, applied here: a component's ONE
