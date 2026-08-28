@@ -217,12 +217,6 @@ export function PostView({
   // whichever composer on this page raised it.
   const [confirmMultiAction, setConfirmMultiAction] = useConfirmMultiAction();
   const [confirming, setConfirming] = useState<PendingSubmit | null>(null);
-  // An edit's batch is quoted by the server before it is confirmed —
-  // only a prepared withdrawal knows its own cost — so the staged
-  // writes wait here while the reader decides.
-  const [pendingEditWrites, setPendingEditWrites] = useState<
-    readonly StagedWriteView[] | null
-  >(null);
 
   const refresh = useCallback(() => {
     let cancelled = false;
@@ -318,14 +312,12 @@ export function PostView({
   const editTextChanged = editing !== null && editing.draft !== editing.loadedDraft;
   const commentActions = 1 + draftTags.length + draftReferences.length;
   const replyActions = 1 + replyTags.length + replyReferences.length;
+  // A withdrawal is a whole counter-record batch, and the claim quotes
+  // it: `withdrawalCost` comes off the raw bundle sums the clipped pair
+  // has already lost, so this count is exact and every edit asks before
+  // it prepares.
   const editActions =
     (editTextChanged ? 1 : 0) + editChanges.length + referenceActs(editReferenceChanges);
-  // A withdrawal's cost is a batch only the server can size: a claim
-  // serves the CLIPPED fold, not the raw sums, so `editActions` merely
-  // lower-bounds it. Such an edit therefore prepares before it asks, and
-  // the confirm reports the server's quote. Every other edit keeps
-  // asking first, exactly as it did before references existed.
-  const editWithdraws = editReferenceChanges.some((change) => change.kind === "withdraw");
 
   /** Splits a refusal into per-chip field errors and the general line. */
   const routeRefusal = (
@@ -529,36 +521,8 @@ export function PostView({
       return;
     }
 
-    // The batch is staged and unsigned, so it can now be quoted exactly
-    // — a withdrawal's cost is knowable no earlier. Writes nobody signs
-    // are collected by the server's own GC.
-    if (editWithdraws && writes.length > 1 && confirmMultiAction && pendingEditWrites === null) {
-      setEditSubmitting(false);
-      setPendingEditWrites(writes);
-      setConfirming("edit");
-      return;
-    }
-
     const done = await signAll(writes);
     setEditSubmitting(false);
-    setPendingEditWrites(null);
-    if (done) {
-      setEditing(null);
-      setCommentSigned(true);
-      refresh();
-    } else {
-      setEditFailed(true);
-    }
-  };
-
-  /** Signs a batch the reader has now seen quoted, without re-staging it. */
-  const signPendingEdit = async () => {
-    const staged = pendingEditWrites;
-    if (staged === null) return;
-    setEditSubmitting(true);
-    const done = await signAll(staged);
-    setEditSubmitting(false);
-    setPendingEditWrites(null);
     if (done) {
       setEditing(null);
       setCommentSigned(true);
@@ -571,9 +535,7 @@ export function PostView({
   const onSubmitEdit = async () => {
     if (editing === null || editSubmitting || editing.draft.trim() === "") return;
     if (editActions === 0) return;
-    // An edit staging a withdrawal prepares before it asks, so `runEdit`
-    // raises the confirm itself once the server has quoted the batch.
-    if (!editWithdraws && editActions > 1 && confirmMultiAction) {
+    if (editActions > 1 && confirmMultiAction) {
       setConfirming("edit");
       return;
     }
@@ -641,11 +603,7 @@ export function PostView({
   const confirmed = (kind: PendingSubmit) => {
     if (kind === "comment") return { count: commentActions, busy: submitting, run: runComment };
     if (kind === "reply") return { count: replyActions, busy: replySubmitting, run: runReply };
-    // An edit that has already staged its batch reports the server's
-    // quote and signs what is standing rather than staging it twice.
-    return pendingEditWrites !== null
-      ? { count: pendingEditWrites.length, busy: editSubmitting, run: signPendingEdit }
-      : { count: editActions, busy: editSubmitting, run: runEdit };
+    return { count: editActions, busy: editSubmitting, run: runEdit };
   };
 
   // The header rides every branch — a dead end (not found, transport
@@ -1189,12 +1147,7 @@ export function PostView({
                 ? "comment-reply"
                 : "comment-edit"
           }
-          onCancel={() => {
-            setConfirming(null);
-            // Abandoning a staged batch is safe: nothing was signed, and
-            // the server collects writes nobody signs.
-            setPendingEditWrites(null);
-          }}
+          onCancel={() => setConfirming(null)}
           onConfirm={(stopAsking) => {
             const proceed = confirmed(confirming).run;
             if (stopAsking) setConfirmMultiAction(false);

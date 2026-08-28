@@ -75,6 +75,7 @@ query HashtagDetail($name: String!, $includePending: Boolean! = true) {
             targetId
             relevance
             support
+            withdrawalCost
             pending
             target {
               __typename

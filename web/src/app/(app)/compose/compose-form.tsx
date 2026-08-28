@@ -127,11 +127,6 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   const [transportFailed, setTransportFailed] = useState(false);
   const [confirmMultiAction, setConfirmMultiAction] = useConfirmMultiAction();
   const [confirming, setConfirming] = useState(false);
-  // An edit's batch is quoted by the server before it is confirmed, so
-  // the staged writes wait here while the reader decides.
-  const [pendingWrites, setPendingWrites] = useState<readonly StagedWriteView[] | null>(
-    null,
-  );
 
   useEffect(() => {
     if (editingId === null) return;
@@ -199,7 +194,8 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
 
   // What an edit would actually stage: the record only when the content
   // moved, one Tag act per tag change, and one Reference act per
-  // reference change — except a withdrawal, which is a whole batch.
+  // reference change — a withdrawal being the whole counter-record
+  // batch the claim quotes.
   const changes = editingId === null ? [] : tagChanges(loadedTags, tags);
   const refChanges =
     editingId === null ? [] : referenceChanges(loadedReferences, references);
@@ -214,18 +210,13 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   // reference; editing signs the edit record only if the content moved,
   // plus one act per change.
   //
-  // A WITHDRAWAL is only lower-bounded here: `ReferenceClaim` serves the
-  // clipped fold rather than the raw sums, so the true batch is known
-  // only once `prepareReferenceWithdrawal` has quoted it. The confirm
-  // reports that quote before anything is signed.
+  // Exact, withdrawals included: a claim serves `withdrawalCost` off the
+  // raw bundle sums, which is the batch `prepareReferenceWithdrawal`
+  // then stages — so every submit can ask before it prepares.
   const signedActions =
     editingId === null
       ? 1 + tags.length + references.length
       : (contentChanged ? 1 : 0) + changes.length + referenceActs(refChanges);
-  // The one case `signedActions` can only lower-bound: an edit staging a
-  // withdrawal prepares before it asks, so the confirm can report the
-  // server's quote. Every other submit keeps asking first.
-  const withdraws = refChanges.some((change) => change.kind === "withdraw");
 
   const signAll = async (writes: readonly StagedWriteView[]): Promise<boolean> => {
     const results = [];
@@ -407,16 +398,6 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
       return;
     }
 
-    // Everything is staged and nothing is signed, so the batch can now
-    // be quoted EXACTLY — a withdrawal's cost is knowable no earlier.
-    // Staged writes nobody signs are collected by the server's own GC,
-    // so standing here and asking costs nothing.
-    if (withdraws && writes.length > 1 && confirmMultiAction && pendingWrites === null) {
-      setSubmitting(false);
-      setPendingWrites(writes);
-      setConfirming(true);
-      return;
-    }
     await finish(writes);
   };
 
@@ -427,7 +408,6 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
     setReferenceErrors({});
     setSignIncomplete(false);
     setTransportFailed(false);
-    setPendingWrites(null);
     if (editingId === null) await submitCreate();
     else await submitEdit(editingId);
   };
@@ -440,20 +420,14 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
     }
     // More than one signed action is more than one price, so it is asked
     // about before it is signed (F4) — unless the reader turned the
-    // asking off.
-    //
-    // An edit staging a withdrawal is the exception: its batch is only
-    // knowable once the server has assembled the counter-records, so it
-    // prepares first and asks with the real number in hand.
-    if (!withdraws && signedActions > 1 && confirmMultiAction) {
+    // asking off. Every submit asks first, withdrawals included: the
+    // count is served, so nothing has to be staged to learn it.
+    if (signedActions > 1 && confirmMultiAction) {
       setConfirming(true);
       return;
     }
     await run();
   };
-
-  /** What the confirm reports: the server's quote when it has one. */
-  const confirmCount = pendingWrites?.length ?? signedActions;
 
   // Leaving is plain back navigation, no discard confirm — the Android
   // composer's behavior. A post that no longer resolves backs to the
@@ -565,26 +539,14 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
       </Button>
       {confirming && (
         <MultiActionConfirm
-          count={confirmCount}
+          count={signedActions}
           busy={submitting}
           testIdPrefix="compose"
-          onCancel={() => {
-            setConfirming(false);
-            // Abandoning the staged batch is safe: nothing was signed,
-            // and the server collects writes nobody signs.
-            setPendingWrites(null);
-          }}
+          onCancel={() => setConfirming(false)}
           onConfirm={(stopAsking) => {
-            const staged = pendingWrites;
             if (stopAsking) setConfirmMultiAction(false);
             setConfirming(false);
-            setPendingWrites(null);
-            if (staged !== null) {
-              setSubmitting(true);
-              void finish(staged);
-            } else {
-              void run();
-            }
+            void run();
           }}
         />
       )}

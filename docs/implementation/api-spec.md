@@ -245,34 +245,39 @@ it, where the entry stays put.
 
 Every request is priced in validation, before any resolver runs
 (roadmap.md slice 1.1): query **depth** is capped at 15 levels,
-and total **complexity** at 100 000 fields. A connection field
+and total **complexity** at 250 000 fields. A connection field
 costs its requested (or default) page size times the per-item
 cost, so a nested full-page-connections query prices
 multiplicatively; an author-owned fold list (`topics`,
 `references`) takes no page argument and costs a stated bound of
-20 rows times the per-row cost. A tripped budget is a
+50 rows times the per-row cost. A tripped budget is a
 message-only GraphQL validation error ("Query is nested too
 deep." / "Query is too complex."), with no `extensions.code` —
 clients treat it as a generic transport failure.
 
+**The fold bound is enforced, not assumed.** Fifty is the
+write-side cap on one author's standing set per artifact, per
+fold family — so a fold list cannot serve more rows than it was
+priced for, and the budget is a bound on the server's work rather
+than a hope about it.
+
 **The ceilings are measured, not chosen.** Both are derived from
 replaying every committed operation of both clients against the
-schema; the heaviest is the Android post-detail read at 70 088
-complexity and 12 levels, and 100 000 leaves it ~1.4× headroom.
+schema; the heaviest is the Android post-detail read at 176 198
+complexity and 12 levels, and 250 000 leaves it ~1.4× headroom.
 A standing test replays the whole corpus under both postures and
-fails by operation name, so a client document that outgrows a
-ceiling is caught in CI rather than on a device. Both postures
-carry the *same* ceilings: a looser dev budget stops being a
-preview of release, and a document refused only in production is
-the failure this rule exists to prevent.
+fails by operation name, and re-measures it by bisection so a
+document growing *into* the headroom fails before it grows past
+the ceiling. Both postures carry the *same* ceilings: a looser dev
+budget stops being a preview of release, and a document refused
+only in production is the failure this rule exists to prevent.
 
-The multiplicative pricing is a demand bound, not a promise about
-the server's work. A post-detail read may legitimately demand up
-to 20 comments × 4 (itself plus three replies) × 20 standing
-citations, and each citation resolves its target separately —
-bounding that is the serving question the fold lists leave open
-(they return the author's whole standing set, with no cap to
-price against).
+The multiplicative pricing is a demand bound on what a query may
+ask for, and the server's own work is bounded separately: a
+post-detail read may legitimately demand up to 20 comments × 4
+(itself plus three replies) × 50 standing citations, and the far
+ends of all of them are resolved in batches — one read per node
+class per page, not one per citation.
 
 **Introspection is disabled in release builds** — not secrecy
 (the repo is public; the contract travels as the checked-in
@@ -1176,6 +1181,14 @@ type ReferenceClaim {
   "Endorsing versus refuting — enthusiasm `e`, folded and clipped.
    Strictly positive on both axes is what makes a mention a vouch."
   support: Dimension!
+  "How many counter-records withdrawing this citation stages right
+   now — the gesture's cost, since each is its own priced act.
+   Never zero: a bundle already netted to (0,0) has left the fold.
+   Served for the same reason StanceBundle.severanceCost is: a
+   removal costing more than one act must say so before it is
+   confirmed, and the clipped pair beside it cannot answer that —
+   the clip has lost how far past 1 the raw sums reach."
+  withdrawalCost: Int!
   "True while any record in the bundle is still in flight."
   pending: Boolean!
 }
@@ -2671,6 +2684,26 @@ citation targets, and the balance against the batch's whole price
 — is checked before the minting record is staged, so a refusal
 leaves nothing in flight.
 
+**Fifty stand on an artifact.** The batch caps bound a gesture;
+one author's *standing* set on one artifact is capped at **fifty**
+references and, separately, fifty topics — named constants, and
+CoGra's narrowing over a substrate that admits any number of
+records toward any number of targets. The cap counts what the
+folds serve, not what was ever authored: a reference bundle netted
+to `(0,0)` and a topic withdrawn at relevance 0 have both left the
+set and freed their slots. The standing set is read
+pending-inclusive, so an author's own in-flight acts count against
+it. Only `prepareReference` and `prepareTag` can reach the cap — a
+creation batch mints the artifact it declares about, so its set
+starts empty and the batch cap of ten already bounds it — and both
+refuse before staging, with a field-level `userError` on `target`
+(a citation) or `name` (a topic) telling the author to withdraw
+one first. Withdrawing is never refused for want of room: an
+un-tag and a citation at `(0,0)` claim no slot, so a full artifact
+can always be emptied. Fifty is five full batches, which is what
+the widest realistic gesture — mentioning everyone in a group
+photo — needs.
+
 ```graphql
 "One attachment placement within a gallery. Assets are uploaded
  first via uploadMedia; the envelope commits their digests."
@@ -2853,6 +2886,11 @@ input PrepareReferenceInput {
  record to walk back, and quoting that count is why the batch is
  assembled server-side rather than left to a client that would
  author a single negating record and silently under-net.
+
+ The count is knowable before the gesture: `ReferenceClaim.
+ withdrawalCost` serves it on the read side, so a client asks for
+ confirmation first and prepares only once the author has agreed —
+ the same order every other multi-act gesture follows.
 
  A citation whose target this instance cannot type is not
  addressable here: the mutation names its target by L2 id, and a
