@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT p.id, p.author_id, p.l1_node_id, p.license,\n                  p.landed_epoch, p.act_time, p.position, p.created_at,\n                  v.title, v.description,\n                  v.content AS \"content!\", v.redaction_reason,\n                  v.pending AS \"version_pending!\",\n                  v.created_at AS \"version_created_at!\"\n           FROM posts p\n           JOIN LATERAL (\n               SELECT title, description, content, redaction_reason, pending,\n                      created_at\n               FROM post_versions WHERE post_id = p.id\n               ORDER BY pending DESC,\n                        landed_epoch DESC NULLS LAST,\n                        act_time DESC NULLS LAST,\n                        position DESC NULLS LAST,\n                        created_at DESC, version_id DESC\n               LIMIT 1\n           ) v ON TRUE\n           WHERE p.l1_node_id = $1",
+  "query": "SELECT p.id, p.author_id, p.l1_node_id, p.license,\n                  p.landed_epoch, p.act_time, p.position, p.created_at,\n                  v.title, v.description,\n                  v.content AS \"content!\", v.redaction_reason,\n                  v.pending AS \"version_pending!\",\n                  v.created_at AS \"version_created_at!\",\n                  v.version_id AS \"version_id!\"\n           FROM posts p\n           JOIN LATERAL (\n               SELECT title, description, content, redaction_reason, pending,\n                      created_at, version_id\n               FROM post_versions WHERE post_id = p.id\n               ORDER BY pending DESC,\n                        landed_epoch DESC NULLS LAST,\n                        act_time DESC NULLS LAST,\n                        position DESC NULLS LAST,\n                        created_at DESC, version_id DESC\n               LIMIT 1\n           ) v ON TRUE\n           WHERE p.l1_node_id = $1",
   "describe": {
     "columns": [
       {
@@ -72,6 +72,11 @@
         "ordinal": 13,
         "name": "version_created_at!",
         "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 14,
+        "name": "version_id!",
+        "type_info": "Int8"
       }
     ],
     "parameters": {
@@ -93,8 +98,9 @@
       false,
       true,
       false,
+      false,
       false
     ]
   },
-  "hash": "12c5af4b29eeeaed3a5193feb838d05fac029370fac123b346ab060d31b08618"
+  "hash": "efef1da219b6907753875617a81fa917f6fcb3e1ae99c50d0a8cef50f3883bb4"
 }

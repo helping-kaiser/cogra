@@ -906,7 +906,7 @@ pub async fn stage_pending(
                 clear_to_null(&content.title),
                 clear_to_null(&content.description),
                 content.body.as_deref().unwrap_or_default(),
-                )
+            )
             .await?;
             attach_post(&mut tx, version, &gallery).await?;
         }

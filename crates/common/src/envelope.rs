@@ -1262,7 +1262,10 @@ mod tests {
     fn profile_round_trips_every_image_slot_state() {
         let cases = [
             (None, None),
-            (Some(Some(asset(4, "image/webp", Some("Ada, smiling")))), None),
+            (
+                Some(Some(asset(4, "image/webp", Some("Ada, smiling")))),
+                None,
+            ),
             (None, Some(Some(asset(5, "image/webp", None)))),
             (Some(None), Some(None)),
             (Some(None), Some(Some(asset(6, "image/webp", None)))),
@@ -1355,7 +1358,10 @@ mod tests {
             let mut inner = BTreeMap::new();
             inner.insert(COGRA_KEY_VERSION, Value::Uint(1));
             inner.insert(COGRA_KEY_NODE, Value::Bytes(vec![7; 16]));
-            inner.insert(key, Value::Array(vec![asset(1, "image/webp", None).encode()]));
+            inner.insert(
+                key,
+                Value::Array(vec![asset(1, "image/webp", None).encode()]),
+            );
             let mut ext = BTreeMap::new();
             ext.insert(COGRA_GUILD_KEY, Value::Map(inner));
             assert_eq!(
