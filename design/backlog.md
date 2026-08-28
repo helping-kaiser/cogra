@@ -104,8 +104,22 @@ restore.
 filter's `Chip` — same pill, told apart by what they do. The `#` is part
 of the word, not an icon.
 
-### 17 · Prototype screens consume the master components · *system* —
-**pulled ahead: the next session's first task (jakob, 2026-08-27)**
+### 17 · Prototype screens consume the master components · *system* ·
+**first pass built (2026-08-28)**
+`_build/render-screens.mjs`: every `designs/canonical/screens/*.jsx`
+is a screen definition composed from the REAL components, rendered
+against the live `_ds_bundle.js` and written out as its `.dc.html`
+artboard — update a component, re-run bundle + render, and every
+screen that uses it updates. The fifteen feed/thread boards are
+converted (landing, bare arrival, the applicant days, vouch-back and
+its pad, expired/landed, the thread, removal, the post ladder), and
+the conversion immediately caught real drift: `RedactedContent` said
+"graph" on screen and predated the decided removal marks — fixed once
+in the component, propagated everywhere. Ported into components on
+the way: `PostCard` topics + citation line and the one-line summary
+title clamp. **Remaining:** the task-flow boards (compose wizard,
+seals, key/auth ceremony screens) are still hand-authored `.dc.html`
+— convert them as their sections are next touched.
 The canonical artboards hand-copy component markup, so system updates
 don't propagate — the entry-session post cards already drifted
 (missing elements newer boards carry). Change the authoring model so
