@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -44,11 +44,7 @@ describe("TextField", () => {
   it("reports what the reader typed", () => {
     const onChange = vi.fn();
     render(<TextField label="Title" value="" onChange={onChange} testId="title" />);
-    const input = screen.getByTestId("title") as HTMLInputElement;
-    input.focus();
-    // React's onChange rides the input event.
-    input.value = "Salt maps";
-    input.dispatchEvent(new Event("input", { bubbles: true }));
+    fireEvent.change(screen.getByTestId("title"), { target: { value: "Salt maps" } });
     expect(onChange).toHaveBeenCalledWith("Salt maps");
   });
 
