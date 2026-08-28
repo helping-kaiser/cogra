@@ -146,16 +146,45 @@ integer-keyed map — the guild schema:
 | 2 | title | tstr |
 | 3 | description | tstr |
 | 4 | body | tstr |
-| 5 | media manifest — **reserved**, arrives with media | — |
+| 5 | media manifest — one entry per asset, array position carrying gallery order | array of maps |
 | 6 | provenance chain — **reserved** ([platform-guidelines.md §5](../instances/platform-guidelines.md#5-license-and-provenance-obligations) plank 4) | — |
 | 7 | display name (profile) | tstr |
 | 8 | bio (profile) | tstr |
 | 9 | website URL (profile) | tstr |
 | 10 | payout address (profile) — **assigned**, arrives with the rail ([ledger.md](ledger.md)) | tstr |
+| 11 | avatar (profile) — a one-asset slot | array of maps |
+| 12 | cover (profile) — a one-asset slot | array of maps |
 
-Keys 2–6 ride Publish/Review payloads; keys 7–10 ride the
+Keys 2–6 ride Publish/Review payloads; keys 7–12 ride the
 parallel-Registration profile payload ([user.md §4](../primitive/user.md#4-postgres-side-content),
 [substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
+
+A manifest entry is a nested integer-keyed map: key 0 the
+**digest** of the bytes (32-byte bstr, SHA-256), key 1 the
+**mime** they are to be read as (tstr), key 2 the **alt text**
+describing them (tstr, omitted when there is none). That is what
+a reader needs to render honestly — which bytes, what type, what
+the picture is of. Alt text is witnessed alongside the body
+because it is what a blind reader *reads*; everything a server
+measured — aspect ratio, size, duration — stays out, so the
+author signs nothing they did not author. Gallery order is the
+array position, so no index rides that could disagree with the
+order it is stored in. The nested map runs the same reserved-key
+discipline the outer envelope runs: an unknown key is refused
+rather than ignored, so a v2 field cannot be silently dropped by
+a v1 reader that would then render an asset it did not fully
+understand.
+
+Keys 11 and 12 carry the profile's avatar and cover as that same
+per-asset map, one deep — the same reader renders a gallery and
+an avatar, and an avatar's alt text is witnessed like any other
+picture's. A profile payload is a delta, so each slot is
+three-valued and each state has exactly one encoding: absent
+leaves the slot alone, `[]` clears it, `[asset]` sets it. The
+content family's manifest refuses an in-band empty for the
+opposite reason — a content act carries the complete content
+state, so "no gallery" is the absent key and there is no third
+state to distinguish.
 For a profile payload, key 1 carries the actor's UUID — the key
 `actor_profile_versions` shares with the graph's Profile node.
 The admission Registration keeps its interim pre-PCE payload
@@ -380,12 +409,31 @@ junctions, etc.), so it is defined first. The asset row never
 points at a parent — see "Why parents point at attachments" below.
 
 ```sql
--- Media attachments: asset metadata only (URL, mime, size, alt text,
--- display options, uploader). Parents (posts, comments, chat messages,
--- items, actor profiles, chats) point at attachments via either a
--- junction table (1:N) or a direct FK column (1:1). The asset row
--- never points at a parent — see "Why parents point at attachments"
+-- Media attachments: asset metadata only (digest, storage key, mime,
+-- size, alt text, display options, uploader). Parents (posts, comments,
+-- chat messages, items, actor profiles, chats) point at attachments via
+-- either a junction table (1:N) or a direct FK column (1:1). The asset
+-- row never points at a parent — see "Why parents point at attachments"
 -- below.
+--
+-- An asset row is immutable after upload: there is no update surface,
+-- and a corrected caption or a re-crop is a new asset. Alt text rides
+-- the payload envelope, so editing it has to be a new record anyway —
+-- the same cost a typo in the body already carries.
+--
+-- digest is SHA-256 over the stored bytes, computed after metadata
+-- stripping so it describes exactly what the store holds and what a
+-- reader can recompute from what it was served. digest_algo rides
+-- beside it so a future change is a migration rather than a
+-- reinterpretation of existing rows.
+--
+-- storage_key is opaque and server-generated, deliberately not the
+-- digest: identical bytes from two authors get two objects, so
+-- removing one author's asset can never break the other's. Nothing a
+-- client sent reaches a key, which makes traversal unrepresentable
+-- rather than defended against. The public URL is minted per read from
+-- the media origin's configured base — a stored URL would bake a
+-- deployment's address into the row.
 --
 -- options carries display hints the frontend reads to lay out the
 -- container before the media finishes loading. Validated in the
@@ -402,18 +450,31 @@ points at a parent — see "Why parents point at attachments" below.
 -- and to find an actor's media when redacting their account (see
 -- instances/erasure.md).
 CREATE TABLE media_attachments (
-    id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-    author_id   UUID         NOT NULL REFERENCES actors(id),
-    url         TEXT         NOT NULL,
-    mime_type   TEXT         NOT NULL,
-    size_bytes  BIGINT,
-    alt_text    TEXT,
-    options     JSONB        NOT NULL DEFAULT '{}'::jsonb,
-    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    id               UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    author_id        UUID         NOT NULL REFERENCES actors(id),
+    digest           BYTEA        NOT NULL,
+    digest_algo      TEXT         NOT NULL DEFAULT 'sha256',
+    storage_key      TEXT         NOT NULL UNIQUE,
+    mime_type        TEXT         NOT NULL,
+    size_bytes       BIGINT,
+    alt_text         TEXT,
+    options          JSONB        NOT NULL DEFAULT '{}'::jsonb,
+    -- The tombstone shape every version table uses: redaction removes
+    -- the bytes and leaves the mark (primitive/layers.md §5).
+    redaction_reason TEXT,
+    redacted_at      TIMESTAMPTZ,
+    created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    -- One asset per author per digest: a retried upload of the same
+    -- picture resolves to the row that already exists instead of a
+    -- second object. The upload returns that row rather than erroring.
+    UNIQUE (author_id, digest)
 );
-CREATE INDEX media_attachments_author_idx
-    ON media_attachments (author_id);
 ```
+
+That unique constraint's index leads with `author_id`, so it
+serves every author-keyed lookup — the account-redaction sweep of
+[erasure.md](../instances/erasure.md) among them — as a prefix
+scan, and no separate author index is carried.
 
 ### Actors
 
@@ -784,33 +845,52 @@ CREATE TABLE hashtags (
 ### Content–attachment junctions
 
 Per-parent join tables connecting content nodes to media assets
-(see "Why parents point at attachments" below). Junction rows
-reference the **entity** row and hold the parent's *current*
-gallery: an edit may add and remove junction rows. Gallery
-composition is arrangement state, not versioned content — a named
-carve-out in [layers.md](../primitive/layers.md); the assets
-themselves are never deleted (redaction tombstones them in place),
-so no content is lost when an arrangement changes.
+(see "Why parents point at attachments" below). A post's or
+comment's junction rows are keyed on the **version** row, so the
+gallery follows the winning version exactly the way the text
+does: the manifest a content act witnesses is part of the
+complete content state the winning record renders
+([post.md §4](../instances/post.md#4-editing)), and a rendering
+that could diverge from it would contradict the record. The rows
+arrive with their version and go with it — which is what
+`ON DELETE CASCADE` says here: the pending-discard path deletes
+the version row and the gallery follows without a statement of
+its own. The assets themselves are never deleted (redaction
+tombstones them in place), so a superseded version keeps its
+gallery rows and renders as it stood.
 
 ```sql
--- Junction: posts → attachments (ordered, optionally a cover).
+-- Junction: post versions → attachments (ordered, optionally a cover).
 -- display_order and is_cover are parent-specific facts about the
 -- relationship, not properties of the asset.
 CREATE TABLE post_attachments (
-    post_id       UUID     NOT NULL REFERENCES posts(id),
-    attachment_id UUID     NOT NULL REFERENCES media_attachments(id),
-    display_order SMALLINT NOT NULL DEFAULT 0,
-    is_cover      BOOLEAN  NOT NULL DEFAULT FALSE,
-    PRIMARY KEY (post_id, attachment_id)
+    post_version_id BIGINT   NOT NULL
+        REFERENCES post_versions(version_id) ON DELETE CASCADE,
+    attachment_id   UUID     NOT NULL REFERENCES media_attachments(id),
+    display_order   SMALLINT NOT NULL DEFAULT 0,
+    is_cover        BOOLEAN  NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (post_version_id, attachment_id)
 );
 
--- Junction: comments → attachments (ordered).
+-- Junction: comment versions → attachments (ordered).
 CREATE TABLE comment_attachments (
-    comment_id    UUID     NOT NULL REFERENCES comments(id),
-    attachment_id UUID     NOT NULL REFERENCES media_attachments(id),
-    display_order SMALLINT NOT NULL DEFAULT 0,
-    PRIMARY KEY (comment_id, attachment_id)
+    comment_version_id BIGINT   NOT NULL
+        REFERENCES comment_versions(version_id) ON DELETE CASCADE,
+    attachment_id      UUID     NOT NULL REFERENCES media_attachments(id),
+    display_order      SMALLINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (comment_version_id, attachment_id)
 );
+
+-- The reverse index the junction design is justified by: "find all
+-- parents using attachment X", which ownership tracing on redaction
+-- walks and which every media_attachments delete performs as its
+-- foreign-key check. The primary key leads with the parent, Postgres
+-- has no index skip scan, and no index is created behind a foreign
+-- key — so without these both are sequential scans.
+CREATE INDEX post_attachments_attachment_idx
+    ON post_attachments (attachment_id);
+CREATE INDEX comment_attachments_attachment_idx
+    ON comment_attachments (attachment_id);
 
 -- Junction: chat messages → attachments (ordered).
 CREATE TABLE chat_message_attachments (
@@ -829,6 +909,14 @@ CREATE TABLE item_attachments (
     PRIMARY KEY (item_id, attachment_id)
 );
 ```
+
+The chat and item junctions carry no write path yet, and are
+still keyed on the entity row. Each is re-keyed on its version
+row, and gains its reverse index, in the slice that writes it
+([roadmap.md](roadmap.md) slices 5 and 7) — so the index is
+measured against the traffic that produced it rather than guessed
+at now, and the gallery-follows-the-version rule arrives with the
+code that can honor it.
 
 ### Personal frontend state
 
@@ -1288,10 +1376,15 @@ Validation lives in the service layer that writes the row. A
 Postgres-side CHECK was rejected as too rigid for a field expected
 to evolve.
 
-**Deferred:** a per-asset cover field (video poster, music cover art)
-is a real need but not yet designed. The existing junction-side
-`is_cover` selects which attachment leads a multi-asset parent — a
-different concern from per-asset cover.
+`duration_ms` reads null while the stored format is a still
+image; it carries a value when video lands.
+
+**Arrives with video:** a per-asset cover (the video poster) is a
+`cover_media_id` foreign key to `media_attachments` — an asset
+pointing at another asset, so the poster is redacted with its
+video and the removal cascade can see it. The junction-side
+`is_cover` is a different concern: it selects which attachment
+leads a multi-asset parent.
 
 ### User-scoped FKs are defense-in-depth, not deletion mechanics
 
@@ -1382,7 +1475,21 @@ junction row is FK-enforced, supports per-relationship metadata
 without table churn, and makes "find all parents using
 attachment X" a normal indexed lookup (relevant for ownership
 tracing on account redaction — see
-[erasure.md](../instances/erasure.md)).
+[erasure.md](../instances/erasure.md)). That lookup is indexed
+because each junction carries an explicit index on
+`attachment_id`: the primary key leads with the parent, and
+Postgres neither skip-scans nor indexes a foreign key on its own,
+so the reverse direction is a sequential scan until the index is
+declared. The same index serves the foreign-key check every
+`media_attachments` delete performs, which redaction runs in
+bulk.
+
+An asset row is **immutable after upload**. There is no update
+surface for one, and a corrected caption or a different crop is a
+new asset rather than an edit of an old one — alt text rides the
+payload envelope, so changing it is a new record either way. That
+is what makes the served bytes cacheable forever and what lets a
+reader treat a digest as a permanent name for them.
 
 **Anti-hijack** is enforced at the API layer: when a parent
 references an attachment, the API checks
