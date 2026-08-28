@@ -109,6 +109,11 @@ pub struct Post {
     /// from `created_at` (data-model.md: updated_at is derived, never
     /// stored).
     pub version_created_at: Timestamp,
+    /// The current version row's own key — what the gallery hangs off.
+    /// The rendered gallery is that version's junction rows, so the read
+    /// side carries the id the same read already resolved rather than
+    /// picking the winning version a second time.
+    pub version_id: i64,
 }
 
 impl Post {
@@ -136,6 +141,9 @@ pub struct Comment {
     pub redaction_reason: Option<String>,
     pub version_pending: bool,
     pub version_created_at: Timestamp,
+    /// The current version row's own key; the gallery hangs off it, the
+    /// same way a post's does.
+    pub version_id: i64,
 }
 
 impl Comment {
@@ -147,9 +155,12 @@ impl Comment {
 
 /// Inserts a post's entity row and its first version row. `order` is None
 /// at the pre-commitment — the row is pending — and Some for a genesis
-/// promoted without one (a mirror rebuild). Returns false when the row is
-/// already there, so a retried pre-sign neither duplicates the version row
-/// nor moves the authoring instant.
+/// promoted without one (a mirror rebuild).
+///
+/// Returns the new version row's id, or None when the entity row was
+/// already there — so a retried pre-sign neither duplicates the version
+/// row nor moves the authoring instant. The caller needs the id because a
+/// gallery hangs off the version, not the post.
 #[allow(clippy::too_many_arguments)]
 pub async fn insert_post(
     tx: &mut Transaction<'_, Postgres>,
@@ -162,7 +173,7 @@ pub async fn insert_post(
     title: Option<&str>,
     description: Option<&str>,
     content: &str,
-) -> Result<bool, ContentError> {
+) -> Result<Option<i64>, ContentError> {
     let inserted = sqlx::query!(
         "INSERT INTO posts
              (id, author_id, l1_node_id, license, landed_epoch, act_time,
@@ -183,13 +194,14 @@ pub async fn insert_post(
     .rows_affected()
         == 1;
     if !inserted {
-        return Ok(false);
+        return Ok(None);
     }
-    sqlx::query!(
+    let version_id = sqlx::query_scalar!(
         "INSERT INTO post_versions
              (post_id, title, description, content, pending, created_at,
               landed_epoch, act_time, position)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         RETURNING version_id",
         id,
         title,
         description,
@@ -200,9 +212,9 @@ pub async fn insert_post(
         order.map(|o| o.act_time),
         order.map(|o| o.position),
     )
-    .execute(&mut **tx)
+    .fetch_one(&mut **tx)
     .await?;
-    Ok(true)
+    Ok(Some(version_id))
 }
 
 /// Appends a post version row — an edit. The caller supplies the full
@@ -210,6 +222,9 @@ pub async fn insert_post(
 /// newest row alone renders the post — data-model.md "Display-content
 /// versioning"). `order` is None at the pre-commitment — the version is
 /// pending — and Some for an edit promoted without one.
+///
+/// Returns the new row's id, or None when a row for this authoring instant
+/// was already there; the caller hangs the edit's gallery off the id.
 #[allow(clippy::too_many_arguments)]
 pub async fn insert_post_version(
     tx: &mut Transaction<'_, Postgres>,
@@ -219,13 +234,14 @@ pub async fn insert_post_version(
     content: &str,
     order: Option<LandingOrder>,
     created_at: Timestamp,
-) -> Result<(), ContentError> {
-    sqlx::query!(
+) -> Result<Option<i64>, ContentError> {
+    Ok(sqlx::query_scalar!(
         "INSERT INTO post_versions
              (post_id, title, description, content, pending, created_at,
               landed_epoch, act_time, position)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-         ON CONFLICT (post_id, created_at) DO NOTHING",
+         ON CONFLICT (post_id, created_at) DO NOTHING
+         RETURNING version_id",
         post_id,
         title,
         description,
@@ -236,9 +252,8 @@ pub async fn insert_post_version(
         order.map(|o| o.act_time),
         order.map(|o| o.position),
     )
-    .execute(&mut **tx)
-    .await?;
-    Ok(())
+    .fetch_optional(&mut **tx)
+    .await?)
 }
 
 /// Inserts a comment's entity row and its first version row; same
@@ -255,7 +270,7 @@ pub async fn insert_comment(
     order: Option<LandingOrder>,
     created_at: Timestamp,
     content: &str,
-) -> Result<bool, ContentError> {
+) -> Result<Option<i64>, ContentError> {
     let inserted = sqlx::query!(
         "INSERT INTO comments
              (id, target_id, target_type, author_id, l1_node_id, license,
@@ -278,13 +293,14 @@ pub async fn insert_comment(
     .rows_affected()
         == 1;
     if !inserted {
-        return Ok(false);
+        return Ok(None);
     }
-    sqlx::query!(
+    let version_id = sqlx::query_scalar!(
         "INSERT INTO comment_versions
              (comment_id, content, pending, created_at,
               landed_epoch, act_time, position)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)",
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING version_id",
         id,
         content,
         order.is_none(),
@@ -293,25 +309,27 @@ pub async fn insert_comment(
         order.map(|o| o.act_time),
         order.map(|o| o.position),
     )
-    .execute(&mut **tx)
+    .fetch_one(&mut **tx)
     .await?;
-    Ok(true)
+    Ok(Some(version_id))
 }
 
-/// Appends a comment version row — an edit, full merged fields.
+/// Appends a comment version row — an edit, full merged fields; same
+/// version-id contract as [`insert_post_version`].
 pub async fn insert_comment_version(
     tx: &mut Transaction<'_, Postgres>,
     comment_id: Uuid,
     content: &str,
     order: Option<LandingOrder>,
     created_at: Timestamp,
-) -> Result<(), ContentError> {
-    sqlx::query!(
+) -> Result<Option<i64>, ContentError> {
+    Ok(sqlx::query_scalar!(
         "INSERT INTO comment_versions
              (comment_id, content, pending, created_at,
               landed_epoch, act_time, position)
          VALUES ($1, $2, $3, $4, $5, $6, $7)
-         ON CONFLICT (comment_id, created_at) DO NOTHING",
+         ON CONFLICT (comment_id, created_at) DO NOTHING
+         RETURNING version_id",
         comment_id,
         content,
         order.is_none(),
@@ -320,9 +338,8 @@ pub async fn insert_comment_version(
         order.map(|o| o.act_time),
         order.map(|o| o.position),
     )
-    .execute(&mut **tx)
-    .await?;
-    Ok(())
+    .fetch_optional(&mut **tx)
+    .await?)
 }
 
 /// Confirm: writes the genesis record's landing coordinates onto the
@@ -423,9 +440,18 @@ pub async fn land_comment_version(
 }
 
 /// Expiry: removes whatever a never-landed write put on screen under
-/// `node_id` — a pending entity row with its versions and junctions, or
-/// the pending version row of an unlanded edit, which leaves the previous
-/// version rendered. `created_at` is the write's own authoring instant,
+/// `node_id` — a pending entity row with its versions, or the pending
+/// version row of an unlanded edit, which leaves the previous version
+/// rendered.
+///
+/// A version's gallery goes with the version, without a statement here:
+/// the junctions are keyed on the version row and cascade from it. That is
+/// what makes an expired edit roll back *whole* — before the gallery was
+/// versioned, the text returned to the previous version and the new
+/// pictures stayed, so a reader saw the old words under the new gallery
+/// and the winning record's manifest disagreed with what was on screen.
+///
+/// `created_at` is the write's own authoring instant,
 /// and every statement is scoped to it: a node can carry the pending rows
 /// of more than one staged write, and expiring one must not take
 /// another's. Landed rows are untouched; the content leaves every
@@ -472,30 +498,6 @@ pub async fn discard_pending_many(
     )
     .execute(&mut **tx)
     .await?;
-    sqlx::query!(
-        "DELETE FROM post_attachments
-         WHERE post_id IN (
-             SELECT id FROM posts
-             WHERE (id, created_at)
-                   IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))
-               AND landed_epoch IS NULL)",
-        nodes,
-        instants,
-    )
-    .execute(&mut **tx)
-    .await?;
-    sqlx::query!(
-        "DELETE FROM comment_attachments
-         WHERE comment_id IN (
-             SELECT id FROM comments
-             WHERE (id, created_at)
-                   IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))
-               AND landed_epoch IS NULL)",
-        nodes,
-        instants,
-    )
-    .execute(&mut **tx)
-    .await?;
     let mut removed = sqlx::query_scalar!(
         "DELETE FROM posts
          WHERE (id, created_at)
@@ -528,10 +530,10 @@ pub async fn discard_pending_many(
 /// comments hanging under it, and the pending replies under those. Their
 /// own staged writes expire on their own schedule, but the content has
 /// nowhere left to hang — a pending comment on nothing is not a thread.
-/// Each one goes whole, versions and attachments with it, since a pending
-/// node's versions are all pending by construction. A *landed* comment is
-/// left where it is: its record is ordered fact, so it renders as an
-/// orphan whose `target` resolves to null.
+/// Each one goes whole, since a pending node's versions are all pending by
+/// construction and each version's gallery cascades from it. A *landed*
+/// comment is left where it is: its record is ordered fact, so it renders
+/// as an orphan whose `target` resolves to null.
 async fn discard_pending_thread(
     tx: &mut Transaction<'_, Postgres>,
     roots: Vec<Uuid>,
@@ -550,12 +552,6 @@ async fn discard_pending_thread(
         }
         sqlx::query!(
             "DELETE FROM comment_versions WHERE comment_id = ANY($1)",
-            &children
-        )
-        .execute(&mut **tx)
-        .await?;
-        sqlx::query!(
-            "DELETE FROM comment_attachments WHERE comment_id = ANY($1)",
             &children
         )
         .execute(&mut **tx)
@@ -621,6 +617,7 @@ fn post_from_row(row: PostRow) -> Post {
         redaction_reason: row.redaction_reason,
         version_pending: row.version_pending,
         version_created_at: row.version_created_at,
+        version_id: row.version_id,
     }
 }
 
@@ -639,6 +636,7 @@ struct PostRow {
     redaction_reason: Option<String>,
     version_pending: bool,
     version_created_at: Timestamp,
+    version_id: i64,
 }
 
 /// One post with its current version; None for an unknown id. Pending
@@ -652,11 +650,12 @@ pub async fn post(pool: &PgPool, id: Uuid) -> Result<Option<Post>, ContentError>
                   v.title, v.description,
                   v.content AS "content!", v.redaction_reason,
                   v.pending AS "version_pending!",
-                  v.created_at AS "version_created_at!"
+                  v.created_at AS "version_created_at!",
+                  v.version_id AS "version_id!"
            FROM posts p
            JOIN LATERAL (
                SELECT title, description, content, redaction_reason, pending,
-                      created_at
+                      created_at, version_id
                FROM post_versions WHERE post_id = p.id
                ORDER BY pending DESC,
                         landed_epoch DESC NULLS LAST,
@@ -683,11 +682,12 @@ pub async fn post_by_node(pool: &PgPool, l1_node_id: &str) -> Result<Option<Post
                   v.title, v.description,
                   v.content AS "content!", v.redaction_reason,
                   v.pending AS "version_pending!",
-                  v.created_at AS "version_created_at!"
+                  v.created_at AS "version_created_at!",
+                  v.version_id AS "version_id!"
            FROM posts p
            JOIN LATERAL (
                SELECT title, description, content, redaction_reason, pending,
-                      created_at
+                      created_at, version_id
                FROM post_versions WHERE post_id = p.id
                ORDER BY pending DESC,
                         landed_epoch DESC NULLS LAST,
@@ -718,11 +718,12 @@ pub async fn posts_by_nodes(
                   v.title, v.description,
                   v.content AS "content!", v.redaction_reason,
                   v.pending AS "version_pending!",
-                  v.created_at AS "version_created_at!"
+                  v.created_at AS "version_created_at!",
+                  v.version_id AS "version_id!"
            FROM posts p
            JOIN LATERAL (
                SELECT title, description, content, redaction_reason, pending,
-                      created_at
+                      created_at, version_id
                FROM post_versions WHERE post_id = p.id
                ORDER BY pending DESC,
                         landed_epoch DESC NULLS LAST,
@@ -902,11 +903,12 @@ async fn list_posts_landed(
                       v.title, v.description,
                       v.content AS "content!", v.redaction_reason,
                       v.pending AS "version_pending!",
-                      v.created_at AS "version_created_at!"
+                      v.created_at AS "version_created_at!",
+                      v.version_id AS "version_id!"
                FROM posts p
                JOIN LATERAL (
                    SELECT title, description, content, redaction_reason,
-                          pending, created_at
+                          pending, created_at, version_id
                    FROM post_versions
                    WHERE post_id = p.id AND ($6 OR NOT pending)
                    ORDER BY pending DESC,
@@ -961,11 +963,12 @@ async fn list_posts_pending(
                       v.title, v.description,
                       v.content AS "content!", v.redaction_reason,
                       v.pending AS "version_pending!",
-                      v.created_at AS "version_created_at!"
+                      v.created_at AS "version_created_at!",
+                      v.version_id AS "version_id!"
                FROM posts p
                JOIN LATERAL (
                    SELECT title, description, content, redaction_reason,
-                          pending, created_at
+                          pending, created_at, version_id
                    FROM post_versions WHERE post_id = p.id
                    ORDER BY pending DESC,
                             landed_epoch DESC NULLS LAST,
@@ -1013,6 +1016,7 @@ fn comment_from_row(row: CommentRow) -> Comment {
         redaction_reason: row.redaction_reason,
         version_pending: row.version_pending,
         version_created_at: row.version_created_at,
+        version_id: row.version_id,
     }
 }
 
@@ -1031,6 +1035,7 @@ struct CommentRow {
     redaction_reason: Option<String>,
     version_pending: bool,
     version_created_at: Timestamp,
+    version_id: i64,
 }
 
 /// One comment with its current version; None for an unknown id.
@@ -1042,10 +1047,12 @@ pub async fn comment(pool: &PgPool, id: Uuid) -> Result<Option<Comment>, Content
                   c.position, c.created_at,
                   v.content AS "content!", v.redaction_reason,
                   v.pending AS "version_pending!",
-                  v.created_at AS "version_created_at!"
+                  v.created_at AS "version_created_at!",
+                  v.version_id AS "version_id!"
            FROM comments c
            JOIN LATERAL (
-               SELECT content, redaction_reason, pending, created_at
+               SELECT content, redaction_reason, pending, created_at,
+                      version_id
                FROM comment_versions WHERE comment_id = c.id
                ORDER BY pending DESC,
                         landed_epoch DESC NULLS LAST,
@@ -1074,10 +1081,12 @@ pub async fn comment_by_node(
                   c.position, c.created_at,
                   v.content AS "content!", v.redaction_reason,
                   v.pending AS "version_pending!",
-                  v.created_at AS "version_created_at!"
+                  v.created_at AS "version_created_at!",
+                  v.version_id AS "version_id!"
            FROM comments c
            JOIN LATERAL (
-               SELECT content, redaction_reason, pending, created_at
+               SELECT content, redaction_reason, pending, created_at,
+                      version_id
                FROM comment_versions WHERE comment_id = c.id
                ORDER BY pending DESC,
                         landed_epoch DESC NULLS LAST,
@@ -1108,10 +1117,12 @@ pub async fn comments_by_nodes(
                   c.position, c.created_at,
                   v.content AS "content!", v.redaction_reason,
                   v.pending AS "version_pending!",
-                  v.created_at AS "version_created_at!"
+                  v.created_at AS "version_created_at!",
+                  v.version_id AS "version_id!"
            FROM comments c
            JOIN LATERAL (
-               SELECT content, redaction_reason, pending, created_at
+               SELECT content, redaction_reason, pending, created_at,
+                      version_id
                FROM comment_versions WHERE comment_id = c.id
                ORDER BY pending DESC,
                         landed_epoch DESC NULLS LAST,
@@ -1175,10 +1186,12 @@ async fn comments_landed(
                       c.position, c.created_at,
                       v.content AS "content!", v.redaction_reason,
                       v.pending AS "version_pending!",
-                      v.created_at AS "version_created_at!"
+                      v.created_at AS "version_created_at!",
+                      v.version_id AS "version_id!"
                FROM comments c
                JOIN LATERAL (
-                   SELECT content, redaction_reason, pending, created_at
+                   SELECT content, redaction_reason, pending, created_at,
+                          version_id
                    FROM comment_versions
                    WHERE comment_id = c.id AND ($7 OR NOT pending)
                    ORDER BY pending DESC,
@@ -1232,10 +1245,12 @@ async fn comments_pending(
                       c.position, c.created_at,
                       v.content AS "content!", v.redaction_reason,
                       v.pending AS "version_pending!",
-                      v.created_at AS "version_created_at!"
+                      v.created_at AS "version_created_at!",
+                      v.version_id AS "version_id!"
                FROM comments c
                JOIN LATERAL (
-                   SELECT content, redaction_reason, pending, created_at
+                   SELECT content, redaction_reason, pending, created_at,
+                          version_id
                    FROM comment_versions WHERE comment_id = c.id
                    ORDER BY pending DESC,
                             landed_epoch DESC NULLS LAST,
