@@ -18,6 +18,8 @@ export function Screen() {
           score="9.10"
           comments={2}
           bundle={null}
+          license={{ attribution: 0.5, provenance: 0.5 }}
+          menuItems={CITE_MENU}
         />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />

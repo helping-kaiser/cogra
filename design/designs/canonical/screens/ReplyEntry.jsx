@@ -23,12 +23,18 @@ export function Screen() {
             onReply={() => {}}
             replyCount={2}
             onOpenReplies={() => {}}
+            topics={["glovebox", "coastroad"]}
+            references={1}
+            license={{ attribution: 0, provenance: 0 }}
+            menuItems={CITE_MENU}
           />
           <CommentCard
             author={SOL}
             content="Which headland is the third one, counting from the ferry landing?"
             timestamp="45m"
             onReply={() => {}}
+            license={{ attribution: 0, provenance: 0 }}
+            menuItems={CITE_MENU}
             replies={[
               {
                 id: "r1",
@@ -36,6 +42,8 @@ export function Screen() {
                 content: "The one past the pines — the road dips right before it.",
                 timestamp: "40m",
                 onReply: () => {},
+                license: { attribution: 0, provenance: 0 },
+                menuItems: CITE_MENU,
               },
               {
                 id: "r2",
@@ -43,6 +51,8 @@ export function Screen() {
                 content: "@ada That dip floods at spring tide, mind the sign.",
                 timestamp: "22m",
                 onReply: () => {},
+                license: { attribution: 0, provenance: 0 },
+                menuItems: CITE_MENU,
               },
             ]}
           />
@@ -51,6 +61,8 @@ export function Screen() {
             content="Saving this for the weekend walk."
             timestamp="10m"
             onReply={() => {}}
+            license={{ attribution: 0, provenance: 0 }}
+            menuItems={CITE_MENU}
           />
         </ul>
         <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 0", borderTop: "1px solid var(--border-hairline)" }}>

@@ -22,7 +22,9 @@ export function MonogramAvatar({ name, size = "sm", src }) {
   const box =
     size === "lg"
       ? { height: "64px", width: "64px", fontSize: "var(--text-headline-small)" }
-      : { height: "24px", width: "24px", fontSize: "var(--text-label-small)" };
+      : size === "md"
+        ? { height: "32px", width: "32px", fontSize: "var(--text-label-medium)" }
+        : { height: "24px", width: "24px", fontSize: "var(--text-label-small)" };
   return (
     <span
       aria-hidden="true"

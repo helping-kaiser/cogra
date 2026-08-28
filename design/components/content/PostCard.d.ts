@@ -66,11 +66,11 @@ export interface PostCardProps {
   redacted?: boolean | import("../honesty/SensitiveVeil").RedactedContentProps;
   /**
    * The author's self-mark (readme §13): veils the body and the description
-   * while the TITLE stays readable, with the author's own reason on the veil
-   * (`label`; omitted, the veil reads "Sensitive — tap to view"). One reveal
-   * answers for the whole card.
+   * while the TITLE stays readable. `reason` is the author's own line under
+   * the veil's standard "Sensitive — tap to view". One reveal answers for the
+   * whole card.
    */
-  sensitive?: { label?: string };
+  sensitive?: { reason?: string };
   /**
    * Topic names, with or without the `#`. One line with the citation count at
    * its end — clipped in the summary card (readme §13's collapse order),

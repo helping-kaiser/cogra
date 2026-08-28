@@ -36,7 +36,13 @@ product already inlines, so web and Android match.
 | `more_vert` | the post overflow menu | `<Icon name="more_vert" />` |
 | `chat_bubble` | the comments affordance on a card | `<Icon name="chat_bubble" />` |
 | `volume_up` / `volume_off` | a video's sound toggle | `<Icon name="volume_up" />` |
+| `check` | the checkbox's mark, and only that | `<Icon name="check" />` |
 | `graph_3` | the Post Score | `<Icon name="graph" />` |
+| `how_to_vote` | a proposal's node-type mark (reference rows, search results) | `<Icon name="how_to_vote" />` |
+| `inventory_2` | an item's node-type mark | `<Icon name="inventory_2" />` |
+| `campaign` | a campaign's node-type mark | `<Icon name="campaign" />` |
+| `sell` | an offer's node-type mark | `<Icon name="sell" />` |
+| `forum` | a chat's node-type mark | `<Icon name="forum" />` |
 
 The web client's interim words (`Show` / `Hide`, `Settings`) and its `←`
 character were placeholders for icons it had not inlined. **The icons now

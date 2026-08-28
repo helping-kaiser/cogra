@@ -18,7 +18,10 @@ export interface SensitiveVeilProps {
   children?: React.ReactNode;
   /** "media" covers a tile; "text" blurs a line of type in place. */
   kind?: "media" | "text";
+  /** The standard line on the wash. Default "Sensitive — tap to view". */
   label?: string;
+  /** The author's own reason, the smaller second line under the label. */
+  reason?: string;
   revealLabel?: string;
   /**
    * The veiled tile's radius. Authoritative: it styles the scrim AND is forwarded

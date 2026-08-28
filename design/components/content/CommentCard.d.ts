@@ -23,6 +23,12 @@ export interface CommentCardProps {
   replyCount?: number;
   /** Expands the collapsed replies. */
   onOpenReplies?: () => void;
+  /** The same topics-and-citations line a post wears (`TopicsLine`). */
+  topics?: readonly string[];
+  /** The citation count at that line's end. */
+  references?: number;
+  /** Makes the count open the topics-and-references sheet. */
+  onOpenReferences?: () => void;
   signedIn?: boolean;
   /** Owned by the shell, like `PostCard.taught`. Defaults to true. */
   taught?: boolean;

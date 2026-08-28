@@ -435,7 +435,7 @@ exists in `web/src/lib/ui/` (and, unless noted, in Android's
 | Directory | Components |
 |---|---|
 | `components/core/` | `Button`, `Card`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip` |
-| `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu` |
+| `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow` |
 | `components/forms/` | `TextField`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode` |
 | `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `BorrowedViewBand` |
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader` |
@@ -1099,6 +1099,30 @@ the detail view is just about the post.
   muted, opens the sheet. (Supersedes the one-day-old where-you-are
   detail state — there is no "already among the comments" anymore.)
 
+### Reference rows and signed pairs — 2026-08-28
+
+A card never lists its references inline — the topics line's count
+opens the **topics-and-references sheet**, and every signed act gets
+one row there: **leading mark · name · the signed pair**. One row
+shape across every node kind (`ReferenceRow`), reused by search's
+results (item 9).
+
+- **The leading mark says the kind, without a word beside it.** A
+  person keeps their avatar; a media post its cover; a text post the
+  letter T as a tile; a topic its #; the rest carry node-type glyphs
+  — proposal `how_to_vote`, item `inventory_2`, campaign `campaign`,
+  offer `sell`, chat `forum`, comment `chat_bubble`. Item and offer
+  deliberately do not share a silhouette (box vs price tag).
+- **The pair is public record**: set at compose on each picked topic
+  and reference (a changeable default of +0.10 / +0.10), edited
+  through the reader's chosen stance input (the pad, or whatever
+  their settings swap in), and displayed on the row for any reader.
+- A signed reference is a compose-time act; an @handle typed in text
+  is only a mention. They must not look identical — the mention is
+  coloured text, the reference is a row in the sheet.
+- Comments wear the same topics-and-citations line as posts
+  (`TopicsLine`, shared) and the same overflow menu.
+
 ### Masters, variants, and screens — 2026-08-28
 
 The Figma discipline, applied here: a component's ONE
@@ -1144,7 +1168,7 @@ and `iconography.md` for the deeper dives.
 
 **`assets/`** — `cogra-mark.svg` (source of truth), `icon.svg`,
 `apple-icon.png`, `favicon.ico`, `fonts/figtree.ttf`,
-`fonts/figtree-ofl.txt`, `icons/*.svg` (all fourteen glyphs),
+`fonts/figtree-ofl.txt`, `icons/*.svg` (every exported glyph),
 `photos/*.jpg` (ten real photographs at true ratios, mock material — see
 §4, *Imagery*).
 
