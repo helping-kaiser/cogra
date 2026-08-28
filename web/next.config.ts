@@ -12,8 +12,48 @@ const privateNetworkOrigins = [
   ...Array.from({ length: 16 }, (_, i) => `172.${16 + i}.*.*`),
 ];
 
+// Where served media lives. The contract mints ABSOLUTE urls from
+// MEDIA_BASE_URL, so `next/image` sees an external src and needs the host
+// allowlisted — `images.domains` was removed in Next 16, and `remotePatterns`
+// is the documented replacement. A same-origin deployment (media proxied
+// through the web origin, which is what dev does) matches no pattern and needs
+// none, so the list is empty unless the env var says otherwise.
+//
+// `protocol`, `port`, and `search` are pinned rather than left to the implied
+// `**` wildcard: the docs warn that omitting them "may allow malicious actors
+// to optimize urls you did not intend", and an image optimizer pointed at an
+// attacker-chosen host is an open proxy.
+const mediaOrigin = process.env.MEDIA_BASE_URL;
+const mediaPatterns = mediaOrigin
+  ? (() => {
+      const url = new URL(mediaOrigin);
+      return [
+        {
+          protocol: url.protocol.replace(":", "") as "http" | "https",
+          hostname: url.hostname,
+          port: url.port,
+          // D6 puts every asset under `/media/{id}`; nothing else on that host
+          // is ours to optimize.
+          pathname: "/media/**",
+          search: "",
+        },
+      ];
+    })()
+  : [];
+
 const nextConfig: NextConfig = {
   allowedDevOrigins: privateNetworkOrigins,
+  images: {
+    remotePatterns: mediaPatterns,
+    // Stored assets are already WebP — the client re-encodes before upload
+    // (D11) — so the optimizer's only remaining job is resizing, and it should
+    // not spend a second lossy pass converting between modern formats.
+    formats: ["image/webp"],
+    // Next 16 defaults `qualities` to [75]; a `quality` prop outside the list
+    // is coerced to the nearest member, so the value the tiles ask for has to
+    // be declared here to be honoured.
+    qualities: [75],
+  },
   // Pin Turbopack's workspace root to this package: root inference has
   // repeatedly crashed the dev server mid-run in the monorepo layout
   // (2026-08-07, "couldn't find next/package.json from src/app").
