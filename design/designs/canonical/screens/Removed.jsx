@@ -2,7 +2,8 @@
 export function Screen() {
   return (
     <>
-      <PageHeader backLabel="Back to feed" />
+      {/* A removed post has no menu left — back is the whole header. */}
+      <PageHeader backHref="#" backLabel="Back to feed" />
       <DetailColumn>
         <PostCard author={SOL} content="" timestamp="3d" variant="detail" redacted={{ reason: "author", when: "today" }} score="9.10" />
         <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 16px" }}>

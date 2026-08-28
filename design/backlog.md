@@ -110,16 +110,23 @@ of the word, not an icon.
 is a screen definition composed from the REAL components, rendered
 against the live `_ds_bundle.js` and written out as its `.dc.html`
 artboard — update a component, re-run bundle + render, and every
-screen that uses it updates. The fifteen feed/thread boards are
-converted (landing, bare arrival, the applicant days, vouch-back and
-its pad, expired/landed, the thread, removal, the post ladder), and
-the conversion immediately caught real drift: `RedactedContent` said
-"graph" on screen and predated the decided removal marks — fixed once
-in the component, propagated everywhere. Ported into components on
-the way: `PostCard` topics + citation line and the one-line summary
-title clamp. **Remaining:** the task-flow boards (compose wizard,
-seals, key/auth ceremony screens) are still hand-authored `.dc.html`
-— convert them as their sections are next touched.
+screen that uses it updates. Sixteen boards are converted (landing,
+bare arrival, the applicant days, vouch-back and its pad,
+expired/landed, the thread, removal, the post ladder, the
+key-elsewhere feed), and the conversion keeps catching real drift:
+`RedactedContent` said "graph" on screen; the pad, the detail
+headers, and the sensitive card had been rebuilt by hand and rotted.
+Ported into components on the way: `PostCard` topics + citation
+line, the one-line summary title clamp, the `sensitive` self-mark
+variant, the where-you-are comment affordance on detail;
+`StanceControl` `defaultOpen`/`defaultPick`/`padInset`/`padNote` so
+a static board shows the parked pad from the master. Screens can
+keep canvas tweak chips via `PROPS`/`VALS` exports. The rule is
+readme §13 *Masters, variants, and screens*. **Remaining:** the
+task-flow boards (compose wizard, seals, key/auth ceremony screens)
+are still hand-authored `.dc.html` — convert them as their sections
+are next touched; `ReplyPad`/`ComposePad` (hand-copied pads) are
+first in line.
 The canonical artboards hand-copy component markup, so system updates
 don't propagate — the entry-session post cards already drifted
 (missing elements newer boards carry). Change the authoring model so

@@ -2,7 +2,7 @@
 export function Screen() {
   return (
     <>
-      <PageHeader backLabel="Back to feed" />
+      <DetailHeader items={OWN_POST_MENU} />
       <DetailColumn>
         <PostCard {...SOL_POST} variant="detail" bundle={mkBundle(0.1, 1)} />
       </DetailColumn>

@@ -51,7 +51,8 @@ export interface PostCardProps {
   /**
    * The comment count. Third in the affordance row: `chat_bubble` plus the
    * number, the same shape as the score beside it. Zero shows the glyph alone.
-   * Absent on the detail variant, where the comments are already on screen.
+   * On the detail variant it stays but reads as WHERE YOU ARE: `primary`,
+   * `aria-current`, no navigation.
    */
   comments?: number;
   /**
@@ -67,6 +68,13 @@ export interface PostCardProps {
    * thread position, and stance control survive around it.
    */
   redacted?: boolean | import("../honesty/SensitiveVeil").RedactedContentProps;
+  /**
+   * The author's self-mark (readme §13): veils the body and the description
+   * while the TITLE stays readable, with the author's own reason on the veil
+   * (`label`; omitted, the veil reads "Sensitive — tap to view"). One reveal
+   * answers for the whole card.
+   */
+  sensitive?: { label?: string };
   /**
    * Topic names, with or without the `#`. One line with the citation count at
    * its end — clipped in the summary card (readme §13's collapse order),

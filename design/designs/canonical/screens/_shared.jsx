@@ -4,6 +4,7 @@
 const {
   PostCard,
   CommentCard,
+  OverflowMenu,
   BottomNav,
   ALL_SLOTS,
   PageHeader,
@@ -148,6 +149,25 @@ function TaskCard({ title, body, children }) {
     </Card>
   );
 }
+
+/* The detail surface's header: back plus the ONE overflow. On a detail view the
+   menu lives up here and the card's own dot yields (PostCard hides it in
+   detail) — two dots would be two menus for one post. */
+function DetailHeader({ items }) {
+  return <PageHeader backHref="#" backLabel="Back to feed" action={<OverflowMenu items={items} ariaLabel="More on this post" />} />;
+}
+
+/* What the one menu holds — the author's post vs someone else's. */
+const OWN_POST_MENU = [
+  { label: "Edit", onSelect: () => {} },
+  { label: "Mark as sensitive", onSelect: () => {} },
+  { label: "Remove", onSelect: () => {} },
+  { label: "License terms", onSelect: () => {} },
+];
+const READER_POST_MENU = [
+  { label: "Cite in a new post", onSelect: () => {} },
+  { label: "License terms", onSelect: () => {} },
+];
 
 /* The post-detail column: the read surface a card opens into. */
 function DetailColumn({ children }) {
