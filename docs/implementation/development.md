@@ -72,6 +72,18 @@ over file values.
 | `RATE_LIMIT_RESEND_PER_EMAIL` | `5` | Verification resends per submitted email per hour (trips silently) |
 | `RATE_LIMIT_CONFIRM_PER_IP` | `30` | Token confirmations per IP per 15 min |
 | `RATE_LIMIT_GC_INTERVAL_SECS` | `3600` | Sweep interval of the idle throttle-row GC; the login backoff's shape (threshold 5, 1 s doubling, 15 min cap) changes in code, not env |
+| `RATE_LIMIT_UPLOAD_PER_ACCOUNT` | `60` | Media uploads per account per hour — uploading is not an act, so this is the only cost control media has |
+| `MEDIA_S3_ENDPOINT` | `http://localhost:9000` | The media service's S3 API endpoint. It stays on the loopback: only the API and the web server talk to the store, and a phone reaches media through the web origin's `/media` proxy rather than the store itself |
+| `MEDIA_BUCKET` | `cogra-media` | Bucket the media objects live in; created by the `media-init` one-shot |
+| `MEDIA_ACCESS_KEY_ID` | `cogra_media` | Media store access key (also the store's root user in compose) |
+| `MEDIA_SECRET_ACCESS_KEY` | `cogra_media_secret` | Media store secret key |
+| `MEDIA_REGION` | `us-east-1` | S3 region the requests are signed for; any value the store accepts |
+| `MEDIA_PORT` | `9000` | Exposed host port of the media S3 API |
+| `MEDIA_CONSOLE_PORT` | `9001` | Exposed host port of the media store's web console |
+| `MEDIA_BASE_URL` | `http://localhost:3000/media` | The public origin every `MediaAttachment.url` is minted against. In development the web dev server's `/media` proxy, so a phone loads bytes from the https origin it already trusts; in production the media origin or the CDN in front of it |
+| `MEDIA_MAX_UPLOAD_BYTES` | `10485760` | Per-asset upload cap. The multipart transport refuses at twice this, so an ordinary over-cap upload still gets a field-level `userError` naming `file` |
+| `MEDIA_ORPHAN_REAPER_INTERVAL_SECS` | `600` | Sweep interval of the media orphan reaper |
+| `MEDIA_ORPHAN_MAX_AGE_SECS` | `86400` | How long an asset no parent references survives before the reaper collects it and its object |
 | `BREACH_CHECK` | `hibp` | The password breach corpus ([auth.md "Password requirements"](auth.md#password-requirements)): `hibp` (live range API) or `off` (offline dev — no lookup) |
 | `CLIENT_IP_SOURCE` | `ConnectInfo` | Client-IP derivation ([auth.md "Rate limiting"](auth.md#rate-limiting)): `ConnectInfo` (socket peer) by default; `RightmostXForwardedFor` only behind a reverse proxy that is the sole ingress |
 | `GENESIS_HANDLE` | `genesis` | The Genesis Moderator's handle (`make bootstrap`) |
