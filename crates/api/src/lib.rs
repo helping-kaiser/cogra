@@ -90,8 +90,7 @@ async fn graphql_handler(
         .and_then(|v| v.to_str().ok())
         .map(str::to_owned);
 
-    let reader =
-        StreamReader::new(body.into_data_stream().map_err(std::io::Error::other)).compat();
+    let reader = StreamReader::new(body.into_data_stream().map_err(std::io::Error::other)).compat();
     let request = async_graphql::http::receive_batch_body(content_type, reader, state.multipart)
         .await
         .map_err(GraphQLRejection)?

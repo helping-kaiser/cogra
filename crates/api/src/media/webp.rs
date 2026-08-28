@@ -118,7 +118,9 @@ fn chunks(bytes: &[u8]) -> Result<Vec<Chunk<'_>>, MediaError> {
         chunks.push(Chunk { fourcc, payload });
         at = payload_end
             .checked_add(size % 2)
-            .ok_or(MediaError::Malformed("chunk padding overruns the container"))?;
+            .ok_or(MediaError::Malformed(
+                "chunk padding overruns the container",
+            ))?;
     }
     if chunks.is_empty() {
         return Err(MediaError::Malformed("no image data"));
@@ -138,7 +140,10 @@ pub fn strip_metadata(bytes: &[u8]) -> Result<Vec<u8>, MediaError> {
     let animated = chunks.iter().any(|chunk| {
         &chunk.fourcc == CHUNK_ANIM
             || (&chunk.fourcc == CHUNK_VP8X
-                && chunk.payload.first().is_some_and(|f| f & FLAG_ANIMATION != 0))
+                && chunk
+                    .payload
+                    .first()
+                    .is_some_and(|f| f & FLAG_ANIMATION != 0))
     });
     if animated {
         return Err(MediaError::Animated);
@@ -250,7 +255,10 @@ mod tests {
         vp8x.extend_from_slice(&[0, 0, 0, 0, 0, 0]);
         let mut body = chunk(CHUNK_VP8X, &vp8x);
         body.extend_from_slice(&chunk(b"ICCP", b"colour-profile"));
-        body.extend_from_slice(&chunk(b"VP8L", &[0x2F, 0x00, 0x00, 0x00, 0x00, 0x88, 0x88, 0x08]));
+        body.extend_from_slice(&chunk(
+            b"VP8L",
+            &[0x2F, 0x00, 0x00, 0x00, 0x00, 0x88, 0x88, 0x08],
+        ));
         body.extend_from_slice(&chunk(CHUNK_EXIF, b"GPS 52.5200 N 13.4050 E"));
         body.extend_from_slice(&chunk(CHUNK_XMP, b"<x:xmpmeta>author</x:xmpmeta>"));
         container(&body)
@@ -352,10 +360,7 @@ mod tests {
         let vp8x = vec![FLAG_ANIMATION, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         let mut body = chunk(CHUNK_VP8X, &vp8x);
         body.extend_from_slice(&chunk(CHUNK_ANIM, &[0, 0, 0, 0, 0, 0]));
-        assert_eq!(
-            strip_metadata(&container(&body)),
-            Err(MediaError::Animated)
-        );
+        assert_eq!(strip_metadata(&container(&body)), Err(MediaError::Animated));
     }
 
     #[test]

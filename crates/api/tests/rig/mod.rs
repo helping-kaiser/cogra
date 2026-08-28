@@ -73,12 +73,9 @@ pub fn connect_info_app_with_standin(
         ClientIpSource::ConnectInfo,
         &MediaConfig::default(),
     )
-    .layer(
-        axum::Extension(axum::extract::ConnectInfo(std::net::SocketAddr::from((
-            [127, 0, 0, 1],
-            9999,
-        )))),
-    );
+    .layer(axum::Extension(axum::extract::ConnectInfo(
+        std::net::SocketAddr::from(([127, 0, 0, 1], 9999)),
+    )));
     (app, standin)
 }
 

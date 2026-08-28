@@ -924,6 +924,11 @@ type Mutation {
 	design: a client sends its gallery concurrently, and each upload
 	then retries on its own instead of a ten-photo request failing
 	whole on the tenth picture.
+	
+	Reading the spooled temporary file and decoding the picture are
+	both blocking work, so they run on the blocking pool — left on
+	the async runtime, one upload would stall every other request
+	behind it.
 	"""
 	uploadMedia(input: UploadMediaInput!): UploadMediaPayload!
 	"""
