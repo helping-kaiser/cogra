@@ -67,8 +67,8 @@ export function MonogramAvatar({
           // would overflow the 24px avatar in a reference row.
           // Weight 500 matches the label roles the rest of the system sets a
           // mark in; it rides the inline style because the size does too — a
-          // Tailwind weight utility here would be the `font-medium` the type
-          // test bans in favour of reading a role.
+          // bare Tailwind weight utility is exactly what type.test.ts bans, in
+          // favour of reading a role.
           style={{ fontSize: Math.round(size * 0.42), lineHeight: 1, fontWeight: 500 }}
         >
           {monogramOf(name)}

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { BodyVeil } from "./body-veil";
@@ -21,7 +21,7 @@ describe("BodyVeil", () => {
         <p>Body</p>
       </BodyVeil>,
     );
-    screen.getByTestId("body-veil-reveal").click();
+    fireEvent.click(screen.getByTestId("body-veil-reveal"));
     expect(screen.queryByTestId("body-veil-reveal")).toBeNull();
   });
 

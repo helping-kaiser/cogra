@@ -20,7 +20,9 @@ describe("pillClassName", () => {
   it("puts primary on the label of both unfilled variants, not on a border", () => {
     expect(pillClassName({ variant: "outlined" })).toContain("text-primary");
     expect(pillClassName({ variant: "text" })).toContain("text-primary");
-    expect(pillClassName({ variant: "text" })).not.toContain("border");
+    // The outlined variant draws the hairline; the text variant draws none.
+    expect(pillClassName({ variant: "outlined" })).toContain("border-outline");
+    expect(pillClassName({ variant: "text" })).not.toContain("border-outline");
   });
 
   it("fills with primary rather than the loudest surface", () => {

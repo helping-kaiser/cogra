@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { ComponentGallery } from "./gallery";
@@ -49,7 +49,7 @@ describe("ComponentGallery", () => {
     expect(screen.getByTestId("gallery-shape-tall")).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByTestId("crop-frame").style.aspectRatio).toBe(`${4 / 5} / 1`);
 
-    screen.getByTestId("gallery-shape-wide").click();
+    fireEvent.click(screen.getByTestId("gallery-shape-wide"));
 
     expect(screen.getByTestId("gallery-shape-wide")).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByTestId("crop-frame").style.aspectRatio).toBe("1.91 / 1");
@@ -59,7 +59,7 @@ describe("ComponentGallery", () => {
     render(<ComponentGallery />);
     const sheet = screen.getByTestId("bottom-sheet") as HTMLDialogElement;
     expect(sheet.open).toBe(false);
-    screen.getByTestId("gallery-open-sheet").click();
+    fireEvent.click(screen.getByTestId("gallery-open-sheet"));
     expect(sheet.open).toBe(true);
   });
 });

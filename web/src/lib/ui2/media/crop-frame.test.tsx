@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -56,10 +56,10 @@ describe("CropFrame", () => {
     expect(screen.getByTestId("readout")).toHaveTextContent("1.00 0.50 0.50");
 
     // Zoom in twice, then move.
-    screen.getByRole("button", { name: "Zoom in" }).click();
-    screen.getByRole("button", { name: "Zoom in" }).click();
-    screen.getByRole("button", { name: "Move the picture left" }).click();
-    screen.getByRole("button", { name: "Move the picture up" }).click();
+    fireEvent.click(screen.getByRole("button", { name: "Zoom in" }));
+    fireEvent.click(screen.getByRole("button", { name: "Zoom in" }));
+    fireEvent.click(screen.getByRole("button", { name: "Move the picture left" }));
+    fireEvent.click(screen.getByRole("button", { name: "Move the picture up" }));
 
     expect(screen.getByTestId("readout")).toHaveTextContent("1.20 0.55 0.55");
   });
@@ -69,7 +69,7 @@ describe("CropFrame", () => {
     expect(screen.getByRole("button", { name: "Move the picture left" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Zoom out" })).toBeDisabled();
 
-    screen.getByRole("button", { name: "Zoom in" }).click();
+    fireEvent.click(screen.getByRole("button", { name: "Zoom in" }));
     expect(screen.getByRole("button", { name: "Move the picture left" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Zoom out" })).toBeEnabled();
   });
