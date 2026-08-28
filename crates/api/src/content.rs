@@ -396,6 +396,7 @@ pub async fn prepare_post<B: L1Boundary>(
         title: draft.title,
         description: draft.description,
         body: Some(draft.content),
+        media: Vec::new(),
     }
     .encode_payload();
     let prepared = prepare::prepare(
@@ -547,6 +548,7 @@ pub async fn prepare_post_edit<B: L1Boundary>(
         title: draft.title,
         description: draft.description,
         body: Some(draft.content),
+        media: Vec::new(),
     }
     .encode_payload();
     let prepared = prepare::prepare(
@@ -603,6 +605,7 @@ pub async fn prepare_comment<B: L1Boundary>(
         title: None,
         description: None,
         body: Some(draft.content),
+        media: Vec::new(),
     }
     .encode_payload();
     let prepared = prepare::prepare(
@@ -677,6 +680,7 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
         title: None,
         description: None,
         body: Some(draft.content),
+        media: Vec::new(),
     }
     .encode_payload();
     let prepared = prepare::prepare(
