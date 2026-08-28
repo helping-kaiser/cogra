@@ -69,6 +69,16 @@ const nextConfig: NextConfig = {
         source: "/graphql",
         destination: process.env.GRAPHQL_URL ?? "http://localhost:8080/graphql",
       },
+      // Media bytes come from the standalone media origin, not the API. In
+      // development that origin is plain http on another port, which an
+      // https page may not load and a phone on the LAN cannot trust — so
+      // the same-origin proxy that solves it for GraphQL solves it here.
+      // `MEDIA_BASE_URL` points the API at this path; in production it
+      // points at the media origin directly and this rewrite is unused.
+      {
+        source: "/media/:path*",
+        destination: `${process.env.MEDIA_ORIGIN ?? "http://localhost:9000/cogra-media"}/:path*`,
+      },
     ];
   },
 };

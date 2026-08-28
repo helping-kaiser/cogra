@@ -2508,3 +2508,92 @@ async fn comments_connection(
         CommentType,
     ))
 }
+
+/// Layout hints the frontend reads to reserve space before load, so a
+/// gallery never jumps as its pictures arrive. Derived by the server from
+/// the bytes, never supplied — `durationMs` reads null until video lands.
+#[derive(SimpleObject, Debug, Clone, Default)]
+pub struct MediaOptions {
+    pub aspect_ratio: Option<String>,
+    pub duration_ms: Option<i32>,
+}
+
+/// A media asset. Not a graph node — parents point at it and it never
+/// points back — so it carries no records. Bytes live in the media
+/// service, verifiable against the digest committed in the referencing
+/// payload envelope.
+pub struct MediaAttachmentType(pub postgres_store::media::MediaAttachment);
+
+#[Object(name = "MediaAttachment")]
+impl MediaAttachmentType {
+    async fn id(&self) -> Uuid {
+        self.0.id
+    }
+
+    /// Absolute, and minted per read from the media origin's configured
+    /// base rather than stored on the row: the origin is a deployment
+    /// fact, and a baked URL would rot the moment the store moved.
+    async fn url(&self, ctx: &Context<'_>) -> async_graphql::Result<String> {
+        let config = ctx.data::<crate::media::MediaConfig>()?;
+        Ok(crate::media::public_url(
+            &config.base_url,
+            &self.0.storage_key,
+        ))
+    }
+
+    /// The digest the payload envelope commits, lowercase hex. Exposed so
+    /// the transitive witness is checkable rather than asserted: a reader
+    /// can hash the bytes it was served and compare them against the
+    /// record that carries them.
+    async fn digest(&self) -> String {
+        hex::encode(&self.0.digest)
+    }
+
+    /// The algorithm `digest` is under — `sha256` today. It rides beside
+    /// the digest so a reader never infers it from a length.
+    async fn digest_algo(&self) -> &str {
+        &self.0.digest_algo
+    }
+
+    async fn mime_type(&self) -> &str {
+        &self.0.mime_type
+    }
+
+    /// The stored size. `Int` is 32-bit per the GraphQL specification
+    /// while the column is 64-bit, so a value past that range reads null
+    /// rather than wrapping into a wrong number — unreachable under the
+    /// upload cap, and the honest answer if the cap ever moves.
+    async fn size_bytes(&self) -> Option<i32> {
+        self.0.size_bytes.and_then(|n| i32::try_from(n).ok())
+    }
+
+    async fn alt_text(&self) -> Option<&str> {
+        self.0.alt_text.as_deref()
+    }
+
+    async fn options(&self) -> MediaOptions {
+        MediaOptions {
+            aspect_ratio: self
+                .0
+                .options
+                .get("aspect_ratio")
+                .and_then(|v| v.as_str())
+                .map(str::to_string),
+            duration_ms: self
+                .0
+                .options
+                .get("duration_ms")
+                .and_then(|v| v.as_i64())
+                .and_then(|n| i32::try_from(n).ok()),
+        }
+    }
+
+    /// The account that uploaded the asset.
+    async fn author(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<User>> {
+        author_user(ctx, self.0.author_id).await
+    }
+
+    async fn created_at(&self) -> DateTime<Utc> {
+        self.0.created_at
+    }
+}

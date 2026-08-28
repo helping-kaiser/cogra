@@ -19,11 +19,19 @@
 //!
 //! Inside the guild map, keys 2–6 ride Publish/Review payloads and keys
 //! 7–10 the parallel-Registration profile payload, each family's reader
-//! rejecting the other's keys. Three of those are declared but not built:
-//! key 5 (media manifest), key 6 (provenance chain, platform-guidelines.md
-//! §5 plank 4), and key 10 (payout address, which arrives with the rail —
-//! ledger.md). None is ever produced, and all three are rejected on read
-//! until their slices define them.
+//! rejecting the other's keys. Two of those are declared but not built:
+//! key 6 (provenance chain, platform-guidelines.md §5 plank 4) and key 10
+//! (payout address, which arrives with the rail — ledger.md). Neither is
+//! ever produced, and both are rejected on read until their slices define
+//! them.
+//!
+//! Key 5 is the media manifest: an array of per-asset maps carrying the
+//! digest of the bytes, the type they are to be read as, and the alt text
+//! describing them, with array position carrying gallery order. It commits
+//! what a reader needs to render honestly and nothing a server measured —
+//! aspect ratio, size, and duration are derived, so they stay out of what
+//! the author signs. The nested map runs the same reserved-key discipline
+//! the outer envelope runs, so a v2 grows it additively.
 
 use std::collections::BTreeMap;
 
@@ -52,7 +60,18 @@ const COGRA_KEY_NODE: u64 = 1;
 const COGRA_KEY_TITLE: u64 = 2;
 const COGRA_KEY_DESCRIPTION: u64 = 3;
 const COGRA_KEY_BODY: u64 = 4;
+const COGRA_KEY_MEDIA: u64 = 5;
 const COGRA_KEY_DISPLAY_NAME: u64 = 7;
+
+const ASSET_KEY_DIGEST: u64 = 0;
+const ASSET_KEY_MIME: u64 = 1;
+const ASSET_KEY_ALT_TEXT: u64 = 2;
+
+/// SHA-256, the algorithm the manifest's digests are (data-model.md
+/// `media_attachments`). The length is the only place the choice appears
+/// on the wire — no algorithm tag rides the envelope — so changing it is a
+/// guild schema-version bump, not a silent reinterpretation.
+pub const MEDIA_DIGEST_LEN: usize = 32;
 const COGRA_KEY_BIO: u64 = 8;
 const COGRA_KEY_WEBSITE_URL: u64 = 9;
 
@@ -97,6 +116,7 @@ pub enum Value {
     Uint(u64),
     Text(String),
     Bytes(Vec<u8>),
+    Array(Vec<Value>),
     Map(BTreeMap<u64, Value>),
 }
 
@@ -112,6 +132,12 @@ impl Value {
             Value::Bytes(b) => {
                 e.bytes(b);
             }
+            Value::Array(items) => {
+                e.array(items.len() as u64);
+                for item in items {
+                    item.encode(e);
+                }
+            }
             Value::Map(m) => {
                 e.map(m.len() as u64);
                 for (k, v) in m {
@@ -122,11 +148,24 @@ impl Value {
         }
     }
 
+    /// Neither container pre-allocates from the declared length: the count
+    /// is attacker-controlled and the payload behind it is not, so a header
+    /// claiming millions of entries would otherwise reserve the memory
+    /// before the truncated body failed. Growth on real items bounds the
+    /// allocation by the bytes actually present.
     fn decode(d: &mut Decoder) -> Result<Self, EnvelopeError> {
         match d.peek_major() {
             Some(0) => Ok(Value::Uint(d.uint()?)),
             Some(2) => Ok(Value::Bytes(d.bytes()?)),
             Some(3) => Ok(Value::Text(d.text()?)),
+            Some(4) => {
+                let len = d.array()?;
+                let mut items = Vec::new();
+                for _ in 0..len {
+                    items.push(Value::decode(d)?);
+                }
+                Ok(Value::Array(items))
+            }
             Some(5) => {
                 let len = d.map()?;
                 let mut m = BTreeMap::new();
@@ -312,6 +351,96 @@ fn guild_text_field(
     }
 }
 
+/// One asset in the media manifest (guild key 5).
+///
+/// The three fields are what a reader needs to render the asset honestly:
+/// which bytes (`digest`), what to read them as (`mime`), and what the
+/// picture is of (`alt_text`). Alt text rides here rather than staying
+/// Postgres-side because it is what a blind reader *reads* — leaving it
+/// unwitnessed while the body is witnessed would make the accessible
+/// rendering the only one a reader cannot check against the record.
+///
+/// Everything a server measured — aspect ratio, byte size, duration —
+/// stays out: the author signs what they wrote, never a measurement.
+/// Gallery order is the array position, so no index rides that could
+/// disagree with the order it is stored in.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MediaAsset {
+    pub digest: [u8; MEDIA_DIGEST_LEN],
+    pub mime: String,
+    pub alt_text: Option<String>,
+}
+
+impl MediaAsset {
+    fn encode(&self) -> Value {
+        let mut map = BTreeMap::new();
+        map.insert(ASSET_KEY_DIGEST, Value::Bytes(self.digest.to_vec()));
+        map.insert(ASSET_KEY_MIME, Value::Text(self.mime.clone()));
+        if let Some(alt_text) = &self.alt_text {
+            map.insert(ASSET_KEY_ALT_TEXT, Value::Text(alt_text.clone()));
+        }
+        Value::Map(map)
+    }
+
+    /// One entry's admission. Unknown keys are refused rather than
+    /// ignored — the same reserved-key discipline the outer envelope
+    /// runs, so a v2 field cannot be silently dropped by a v1 reader
+    /// that would then render an asset it did not fully understand.
+    fn decode(value: &Value) -> Result<Self, EnvelopeError> {
+        let Value::Map(map) = value else {
+            return Err(EnvelopeError::Guild("media entry must be a map"));
+        };
+        for key in map.keys() {
+            if *key > ASSET_KEY_ALT_TEXT {
+                return Err(EnvelopeError::Guild("unknown media entry field"));
+            }
+        }
+        let Some(Value::Bytes(digest)) = map.get(&ASSET_KEY_DIGEST) else {
+            return Err(EnvelopeError::Guild("missing media digest"));
+        };
+        let digest: [u8; MEDIA_DIGEST_LEN] = digest
+            .as_slice()
+            .try_into()
+            .map_err(|_| EnvelopeError::Guild("media digest must be 32 bytes"))?;
+        let mime = match map.get(&ASSET_KEY_MIME) {
+            Some(Value::Text(mime)) if !mime.is_empty() => mime.clone(),
+            Some(Value::Text(_)) => {
+                return Err(EnvelopeError::Guild("media mime must not be empty"));
+            }
+            _ => return Err(EnvelopeError::Guild("missing media mime")),
+        };
+        let alt_text = match map.get(&ASSET_KEY_ALT_TEXT) {
+            None => None,
+            Some(Value::Text(alt)) if !alt.is_empty() => Some(alt.clone()),
+            Some(Value::Text(_)) => {
+                return Err(EnvelopeError::Guild("empty media alt text must be omitted"));
+            }
+            Some(_) => return Err(EnvelopeError::Guild("media alt text must be text")),
+        };
+        Ok(Self {
+            digest,
+            mime,
+            alt_text,
+        })
+    }
+}
+
+/// The manifest under guild key 5, as the content family reads it. An
+/// absent key and an empty manifest are the same state and only the
+/// absent form is legal — PCE §4.4's rule that an optional field's empty
+/// value is omitted rather than carried in band, applied inside the guild
+/// map so one gallery has exactly one encoding.
+fn guild_media(cogra: &BTreeMap<u64, Value>) -> Result<Vec<MediaAsset>, EnvelopeError> {
+    match cogra.get(&COGRA_KEY_MEDIA) {
+        None => Ok(Vec::new()),
+        Some(Value::Array(items)) if items.is_empty() => {
+            Err(EnvelopeError::Guild("empty media manifest must be omitted"))
+        }
+        Some(Value::Array(items)) => items.iter().map(MediaAsset::decode).collect(),
+        Some(_) => Err(EnvelopeError::Guild("media manifest must be an array")),
+    }
+}
+
 /// CoGra's guild fields, as carried under `COGRA_GUILD_KEY`
 /// (data-model.md "CoGra's guild schema"). Field presence is meaningful:
 /// on a genesis act every supplied field is present; on an edit only the
@@ -325,6 +454,10 @@ pub struct CograContent {
     pub title: Option<String>,
     pub description: Option<String>,
     pub body: Option<String>,
+    /// The gallery in order. Empty is the absent manifest: a content act
+    /// carries the complete content state, so an edit that drops every
+    /// asset omits key 5 and the winning record renders no gallery.
+    pub media: Vec<MediaAsset>,
 }
 
 impl CograContent {
@@ -343,6 +476,10 @@ impl CograContent {
         if let Some(body) = self.body {
             cogra.insert(COGRA_KEY_BODY, Value::Text(body));
         }
+        if !self.media.is_empty() {
+            let assets = self.media.iter().map(MediaAsset::encode).collect();
+            cogra.insert(COGRA_KEY_MEDIA, Value::Array(assets));
+        }
         let mut extensions = BTreeMap::new();
         extensions.insert(COGRA_GUILD_KEY, Value::Map(cogra));
         Envelope {
@@ -359,11 +496,12 @@ impl CograContent {
 
     /// The content family's guild admission over a decoded envelope: the
     /// shared checks (`cogra_guild_map`), a 16-byte node id, and only the
-    /// content keys — reserved and profile keys are rejected.
+    /// content keys — the still-unbuilt provenance key and the profile
+    /// keys are rejected.
     pub fn from_envelope(envelope: &Envelope) -> Result<Self, EnvelopeError> {
         let cogra = cogra_guild_map(envelope)?;
         for key in cogra.keys() {
-            if *key > COGRA_KEY_BODY {
+            if *key > COGRA_KEY_MEDIA {
                 return Err(EnvelopeError::Guild("unknown cogra field"));
             }
         }
@@ -372,6 +510,7 @@ impl CograContent {
             title: guild_text_field(cogra, COGRA_KEY_TITLE)?,
             description: guild_text_field(cogra, COGRA_KEY_DESCRIPTION)?,
             body: guild_text_field(cogra, COGRA_KEY_BODY)?,
+            media: guild_media(cogra)?,
         })
     }
 
@@ -724,7 +863,39 @@ mod tests {
             title: title.map(Into::into),
             description: description.map(Into::into),
             body: body.map(Into::into),
+            media: Vec::new(),
         }
+    }
+
+    fn asset(fill: u8, mime: &str, alt_text: Option<&str>) -> MediaAsset {
+        MediaAsset {
+            digest: [fill; MEDIA_DIGEST_LEN],
+            mime: mime.into(),
+            alt_text: alt_text.map(Into::into),
+        }
+    }
+
+    /// An envelope whose guild map carries the given key-5 value verbatim,
+    /// for the shapes `MediaAsset` itself would never construct.
+    fn with_media_value(media: Value) -> Vec<u8> {
+        let mut inner = BTreeMap::new();
+        inner.insert(COGRA_KEY_VERSION, Value::Uint(1));
+        inner.insert(COGRA_KEY_NODE, Value::Bytes(vec![7; 16]));
+        inner.insert(COGRA_KEY_MEDIA, media);
+        let mut ext = BTreeMap::new();
+        ext.insert(COGRA_GUILD_KEY, Value::Map(inner));
+        envelope("", ext).encode()
+    }
+
+    fn media_entry(pairs: Vec<(u64, Value)>) -> Value {
+        Value::Map(pairs.into_iter().collect())
+    }
+
+    fn refuses_media(media: Value, message: &'static str) {
+        assert_eq!(
+            CograContent::decode_payload(&with_media_value(media)),
+            Err(EnvelopeError::Guild(message))
+        );
     }
 
     /// Presence survives the round trip in every shape it carries meaning:
@@ -809,18 +980,202 @@ mod tests {
         );
     }
 
+    /// Key 6 (provenance) is still declared and unbuilt, so it is still
+    /// refused on read — allocating key 5 lifted the rejection for the
+    /// manifest alone.
     #[test]
-    fn cogra_rejects_reserved_guild_fields() {
+    fn cogra_rejects_the_unbuilt_provenance_key() {
         let mut inner = BTreeMap::new();
         inner.insert(COGRA_KEY_VERSION, Value::Uint(1));
         inner.insert(COGRA_KEY_NODE, Value::Bytes(vec![7; 16]));
-        inner.insert(5, Value::Text("media".into()));
+        inner.insert(6, Value::Text("provenance".into()));
         let mut ext = BTreeMap::new();
         ext.insert(COGRA_GUILD_KEY, Value::Map(inner));
         assert_eq!(
             CograContent::decode_payload(&envelope("", ext).encode()),
             Err(EnvelopeError::Guild("unknown cogra field"))
         );
+    }
+
+    /// Every manifest shape that carries meaning: a lone asset, a gallery
+    /// whose order is its array position, alt text present and absent on
+    /// the same manifest, and a media post — an empty body beside a
+    /// manifest, which is what the body XOR produces.
+    #[test]
+    fn manifest_round_trips_gallery_shapes() {
+        let galleries = [
+            vec![asset(1, "image/webp", Some("A sunset"))],
+            vec![
+                asset(1, "image/webp", Some("First")),
+                asset(2, "image/webp", None),
+                asset(3, "image/webp", Some("Third")),
+            ],
+        ];
+        for media in galleries {
+            let mut content = cogra(Some("Title"), Some("Words beside it"), None);
+            content.media = media.clone();
+            let bytes = content.clone().encode_payload();
+            let decoded = CograContent::decode_payload(&bytes).expect("valid");
+            assert_eq!(decoded, content);
+            assert_eq!(decoded.media, media, "array position carries order");
+        }
+    }
+
+    /// An absent manifest and an empty gallery are one state, and the
+    /// encoder produces only the absent form — so key 5 never rides an
+    /// envelope that has nothing to say with it.
+    #[test]
+    fn an_empty_gallery_omits_the_manifest_key() {
+        let bytes = cogra(None, None, Some("text only")).encode_payload();
+        let decoded = Envelope::decode(&bytes).expect("valid");
+        let Some(Value::Map(guild)) = decoded.extensions.get(&COGRA_GUILD_KEY) else {
+            panic!("the guild map");
+        };
+        assert!(!guild.contains_key(&COGRA_KEY_MEDIA));
+        assert!(
+            CograContent::decode_payload(&bytes)
+                .expect("valid")
+                .media
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn manifest_rejects_an_in_band_empty_gallery() {
+        refuses_media(
+            Value::Array(Vec::new()),
+            "empty media manifest must be omitted",
+        );
+    }
+
+    #[test]
+    fn manifest_rejects_a_non_array_value() {
+        refuses_media(
+            Value::Text("media".into()),
+            "media manifest must be an array",
+        );
+        refuses_media(Value::Uint(5), "media manifest must be an array");
+    }
+
+    #[test]
+    fn manifest_rejects_an_entry_that_is_not_a_map() {
+        refuses_media(
+            Value::Array(vec![Value::Bytes(vec![1; MEDIA_DIGEST_LEN])]),
+            "media entry must be a map",
+        );
+    }
+
+    /// The nested map runs the outer envelope's reserved-key discipline:
+    /// a key a v1 reader does not know refuses the envelope rather than
+    /// being dropped, so no reader renders an asset it half-understood.
+    #[test]
+    fn manifest_rejects_an_unallocated_entry_key() {
+        refuses_media(
+            Value::Array(vec![media_entry(vec![
+                (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
+                (ASSET_KEY_MIME, Value::Text("image/webp".into())),
+                (3, Value::Uint(1080)),
+            ])]),
+            "unknown media entry field",
+        );
+    }
+
+    #[test]
+    fn manifest_rejects_a_missing_or_mis_sized_digest() {
+        refuses_media(
+            Value::Array(vec![media_entry(vec![(
+                ASSET_KEY_MIME,
+                Value::Text("image/webp".into()),
+            )])]),
+            "missing media digest",
+        );
+        refuses_media(
+            Value::Array(vec![media_entry(vec![
+                (ASSET_KEY_DIGEST, Value::Text("not bytes".into())),
+                (ASSET_KEY_MIME, Value::Text("image/webp".into())),
+            ])]),
+            "missing media digest",
+        );
+        for length in [0, 16, 31, 33, 64] {
+            refuses_media(
+                Value::Array(vec![media_entry(vec![
+                    (ASSET_KEY_DIGEST, Value::Bytes(vec![1; length])),
+                    (ASSET_KEY_MIME, Value::Text("image/webp".into())),
+                ])]),
+                "media digest must be 32 bytes",
+            );
+        }
+    }
+
+    #[test]
+    fn manifest_rejects_a_missing_or_empty_mime() {
+        refuses_media(
+            Value::Array(vec![media_entry(vec![(
+                ASSET_KEY_DIGEST,
+                Value::Bytes(vec![1; MEDIA_DIGEST_LEN]),
+            )])]),
+            "missing media mime",
+        );
+        refuses_media(
+            Value::Array(vec![media_entry(vec![
+                (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
+                (ASSET_KEY_MIME, Value::Uint(1)),
+            ])]),
+            "missing media mime",
+        );
+        refuses_media(
+            Value::Array(vec![media_entry(vec![
+                (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
+                (ASSET_KEY_MIME, Value::Text(String::new())),
+            ])]),
+            "media mime must not be empty",
+        );
+    }
+
+    /// Absent alt text is the decorative case; a present-and-empty one
+    /// would be a second encoding of it, so it is refused rather than
+    /// folded — the same rule PCE §4.4 applies to its own optionals.
+    #[test]
+    fn manifest_rejects_alt_text_that_is_empty_or_not_text() {
+        refuses_media(
+            Value::Array(vec![media_entry(vec![
+                (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
+                (ASSET_KEY_MIME, Value::Text("image/webp".into())),
+                (ASSET_KEY_ALT_TEXT, Value::Text(String::new())),
+            ])]),
+            "empty media alt text must be omitted",
+        );
+        refuses_media(
+            Value::Array(vec![media_entry(vec![
+                (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
+                (ASSET_KEY_MIME, Value::Text("image/webp".into())),
+                (ASSET_KEY_ALT_TEXT, Value::Uint(7)),
+            ])]),
+            "media alt text must be text",
+        );
+    }
+
+    /// A manifest is content-family only: the profile reader refuses it
+    /// exactly as it refuses every other content key.
+    #[test]
+    fn profile_rejects_a_media_manifest() {
+        assert_eq!(
+            CograProfile::decode_payload(&with_media_value(Value::Array(vec![
+                asset(1, "image/webp", None).encode()
+            ]))),
+            Err(EnvelopeError::Guild("unknown cogra profile field"))
+        );
+    }
+
+    /// Two galleries differing only in order encode to different bytes,
+    /// which is what makes position load-bearing rather than incidental.
+    #[test]
+    fn manifest_order_is_witnessed() {
+        let mut forward = cogra(None, None, None);
+        forward.media = vec![asset(1, "image/webp", None), asset(2, "image/webp", None)];
+        let mut reversed = cogra(None, None, None);
+        reversed.media = vec![asset(2, "image/webp", None), asset(1, "image/webp", None)];
+        assert_ne!(forward.encode_payload(), reversed.encode_payload());
     }
 
     fn profile(

@@ -136,6 +136,22 @@ async fn main() -> anyhow::Result<()> {
         .parse()
         .map_err(|e| anyhow::anyhow!("CLIENT_IP_SOURCE unrecognized: {e}"))?;
 
+    let media = api::media::MediaConfig::from_env()?;
+    let blobs: Arc<dyn api::media::BlobStore> =
+        Arc::new(api::media::blob::s3(&media.s3).context("building the media store client")?);
+    tracing::info!(
+        endpoint = %media.s3.endpoint,
+        bucket = %media.s3.bucket,
+        base_url = %media.base_url,
+        "media service configured"
+    );
+    tokio::spawn(api::media::orphan_reaper_loop(
+        pool.clone(),
+        blobs.clone(),
+        media.orphan_reaper_interval_secs,
+        media.orphan_max_age_secs,
+    ));
+
     let auth = auth_config()?;
     let schema = api::schema::build(ApiContext {
         pool,
@@ -152,6 +168,8 @@ async fn main() -> anyhow::Result<()> {
         },
         rate_limits: RateLimitConfig::from_env()?,
         breach,
+        media: media.clone(),
+        blobs,
     });
     let addr = format!(
         "{}:{}",
@@ -164,7 +182,7 @@ async fn main() -> anyhow::Result<()> {
     tracing::info!("listening on http://{addr} — /graphql, /health, /playground (dev)");
     axum::serve(
         listener,
-        api::app(schema, auth, ip_source)
+        api::app(schema, auth, ip_source, &media)
             .into_make_service_with_connect_info::<std::net::SocketAddr>(),
     )
     .await?;

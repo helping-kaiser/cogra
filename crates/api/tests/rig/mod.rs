@@ -12,6 +12,7 @@ use std::sync::{Arc, Mutex};
 
 use api::auth::AuthConfig;
 use api::mailer::{Mail, Mailer, WebOrigin};
+use api::media::MediaConfig;
 use api::ratelimit::RateLimitConfig;
 use api::schema::ApiContext;
 use axum_client_ip::ClientIpSource;
@@ -38,6 +39,8 @@ pub fn api_context(
             onboarding: api::onboarding::OnboardingConfig::default(),
             rate_limits,
             breach: Arc::new(api::breach::DisabledCorpus),
+            media: MediaConfig::default(),
+            blobs: Arc::new(api::media::blob::in_memory()),
         },
         auth,
     )
@@ -64,12 +67,15 @@ pub fn connect_info_app_with_standin(
 ) -> (axum::Router, StandIn) {
     let (ctx, auth) = api_context(pool, mailer, rate_limits);
     let standin = ctx.funding.clone();
-    let app = api::app(api::schema::build(ctx), auth, ClientIpSource::ConnectInfo).layer(
-        axum::Extension(axum::extract::ConnectInfo(std::net::SocketAddr::from((
-            [127, 0, 0, 1],
-            9999,
-        )))),
-    );
+    let app = api::app(
+        api::schema::build(ctx),
+        auth,
+        ClientIpSource::ConnectInfo,
+        &MediaConfig::default(),
+    )
+    .layer(axum::Extension(axum::extract::ConnectInfo(
+        std::net::SocketAddr::from(([127, 0, 0, 1], 9999)),
+    )));
     (app, standin)
 }
 
@@ -82,7 +88,12 @@ pub fn x_real_ip_app(
     rate_limits: RateLimitConfig,
 ) -> axum::Router {
     let (ctx, auth) = api_context(pool, mailer, rate_limits);
-    api::app(api::schema::build(ctx), auth, ClientIpSource::XRealIp)
+    api::app(
+        api::schema::build(ctx),
+        auth,
+        ClientIpSource::XRealIp,
+        &MediaConfig::default(),
+    )
 }
 
 /// Collects a response body as JSON.

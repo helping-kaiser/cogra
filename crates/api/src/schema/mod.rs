@@ -25,6 +25,7 @@ use crate::auth::AuthConfig;
 use crate::breach::BreachCorpus;
 use crate::l1::StandInBoundary;
 use crate::mailer::{Mailer, WebOrigin};
+use crate::media::{BlobStore, MediaConfig};
 use crate::onboarding::OnboardingConfig;
 use crate::ratelimit::RateLimitConfig;
 
@@ -43,6 +44,10 @@ pub struct ApiContext {
     pub onboarding: OnboardingConfig,
     pub rate_limits: RateLimitConfig,
     pub breach: Arc<dyn BreachCorpus>,
+    pub media: MediaConfig,
+    /// The media service, as a client. Bytes never live in this process
+    /// — the store is its own container with its own lifecycle.
+    pub blobs: Arc<dyn BlobStore>,
 }
 
 /// The per-query demand budgets (roadmap.md slice 1.1; api-spec.md
@@ -130,6 +135,8 @@ pub fn build_with(ctx: ApiContext, budgets: QueryBudgets) -> ApiSchema {
         .data(ctx.onboarding)
         .data(ctx.rate_limits)
         .data(ctx.breach)
+        .data(ctx.media)
+        .data(ctx.blobs)
         .limit_depth(budgets.depth)
         .limit_complexity(budgets.complexity);
     if !budgets.introspection_enabled {

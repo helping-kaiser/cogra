@@ -620,7 +620,7 @@ business. 38 files declare `mod tests`, so a census that kept them
 would derive mod:*:tests thirty-eight times and fail injectivity in
 every owner. The consequence is accepted plainly — an inline test
 module carries no label of its own.
-MEASURED 2026-08-27 by the linter's own migrations subcommand: 94
+MEASURED 2026-08-28 by the linter's own migrations subcommand: 99
 module definitions, and after the exclusion no duplicate module name
 in any owner (api, cogra-interchange, cogra-linter, common,
 l1-standin, postgres-store all clean). The census grows with the
