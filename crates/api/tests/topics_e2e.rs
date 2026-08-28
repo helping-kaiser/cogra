@@ -10,6 +10,8 @@ use axum::body::Body;
 use axum::http::Request;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
+use api::topics::MAX_LIVE_TOPICS_PER_ARTIFACT;
+use common::l1::census::{LegRole, leg_params};
 use common::l1::client::ActorKey;
 use common::l1::wire;
 use http_body_util::BodyExt;
@@ -1354,4 +1356,165 @@ async fn follow_and_unfollow_round_trip_through_the_topic_page(pool: PgPool) {
         after["viewerStance"]["recordCount"], 2,
         "the follow and its counter-record both stand"
     );
+}
+
+/// Inserts one landed Tag record straight into the mirror, deriving the
+/// T-leg's stored orientation from the census so the fixture cannot
+/// disagree with the write path about which column is which.
+async fn seed_tag(pool: &PgPool, record: &str, author: &str, node: &str, name: &str, relevance: f64) {
+    sqlx::query(
+        "INSERT INTO mirror_records
+             (record_id, family, author, epoch, act_time, position,
+              payload_marked, payload_witness)
+         VALUES ($1, 'tag', $2, 0, 0, 0, FALSE, '\\x00')",
+    )
+    .bind(record)
+    .bind(author)
+    .execute(pool)
+    .await
+    .expect("record row");
+
+    let (t_pd, t_pi) = leg_params(LegRole::T, relevance, 1.0);
+    sqlx::query(
+        "INSERT INTO mirror_record_legs
+             (record_id, leg, source, target, p_d, p_i, domain,
+              mask_a00, mask_a01, mask_a10, mask_a11, tier, tau,
+              family, epoch, act_time, position)
+         VALUES ($1, 't', $2, $3, $4, $5, 'tribal',
+                 TRUE, TRUE, TRUE, TRUE, 'full', 1.0,
+                 'tag', 0, 0, 0)",
+    )
+    .bind(record)
+    .bind(node)
+    .bind(format!("name:{name}"))
+    .bind(t_pd)
+    .bind(t_pi)
+    .execute(pool)
+    .await
+    .expect("leg row");
+}
+
+/// The author's L0 address and the post's minted node identifier — the
+/// pair the topics fold is keyed by, which a fixture has to name to seed
+/// into the same row the cap then reads.
+async fn fold_key(pool: &PgPool, author: Uuid, post: &str) -> (String, String) {
+    let address = postgres_store::auth::actor_identity(pool, author)
+        .await
+        .expect("identity")
+        .expect("row")
+        .l0_address
+        .expect("address");
+    let node = postgres_store::content::post(pool, post.parse().expect("uuid"))
+        .await
+        .expect("reads")
+        .expect("post row")
+        .l1_node_id;
+    (address, node)
+}
+
+/// Seeds one author's standing topic set on one artifact, with entry 0
+/// optionally withdrawn at relevance 0 so a test can state a set that is
+/// one short of the cap without changing its length.
+///
+/// The record identifiers are well-formed `act:<author>:<seq>:<family>`
+/// rather than opaque labels: `allocate_seq` reads the author's highest
+/// landed sequence out of the mirror by splitting the identifier, so a
+/// fixture seeding under an author who then prepares has to speak the
+/// same grammar the write path allocates in.
+async fn seed_standing_topics(
+    pool: &PgPool,
+    address: &str,
+    node: &str,
+    count: usize,
+    first_withdrawn: bool,
+) {
+    for i in 0..count {
+        let relevance = if i == 0 && first_withdrawn { 0.0 } else { 0.1 };
+        seed_tag(
+            pool,
+            &format!("act:{address}:{}:tag", 9000 + i),
+            address,
+            node,
+            &format!("live{i}"),
+            relevance,
+        )
+        .await;
+    }
+}
+
+/// D22's standing-set cap on the tag family. The batch cap bounds one
+/// gesture; this bounds what the gestures accumulate into, and the
+/// standalone tag is the only one that meets an artifact already
+/// carrying a set.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_standing_topic_cap_refuses_the_tag_past_fifty(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (author, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let post = rig.landed_post(&token, &ak, "A post", json!([])).await;
+    let (address, node) = fold_key(&rig.pool, author, &post).await;
+    seed_standing_topics(
+        &rig.pool,
+        &address,
+        &node,
+        MAX_LIVE_TOPICS_PER_ARTIFACT,
+        false,
+    )
+    .await;
+
+    let refused = rig.prepare_tag(&token, &post, tag("fresh")).await;
+    assert_eq!(errors(&refused, "prepareTag")[0]["code"], "BAD_INPUT");
+    assert_eq!(
+        errors(&refused, "prepareTag")[0]["field"],
+        json!(["name"]),
+        "{refused}"
+    );
+}
+
+/// The cap counts the fold's view: a topic withdrawn at relevance 0 has
+/// left the chip row, and the tag that takes its place is admitted.
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_untagged_topic_frees_a_slot_under_the_standing_topic_cap(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (author, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let post = rig.landed_post(&token, &ak, "A post", json!([])).await;
+    let (address, node) = fold_key(&rig.pool, author, &post).await;
+    seed_standing_topics(
+        &rig.pool,
+        &address,
+        &node,
+        MAX_LIVE_TOPICS_PER_ARTIFACT,
+        true,
+    )
+    .await;
+
+    let prepared = rig.prepare_tag(&token, &post, tag("fresh")).await;
+    let writes = prepared["prepareTag"]["writes"].as_array().expect("writes");
+    assert_eq!(writes.len(), 1, "{prepared}");
+}
+
+/// Withdrawing stays possible on a full artifact: an un-tag claims no
+/// slot, so the cap can never trap an author inside it.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_un_tag_is_admitted_on_an_artifact_at_the_standing_topic_cap(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (author, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let post = rig.landed_post(&token, &ak, "A post", json!([])).await;
+    let (address, node) = fold_key(&rig.pool, author, &post).await;
+    seed_standing_topics(
+        &rig.pool,
+        &address,
+        &node,
+        MAX_LIVE_TOPICS_PER_ARTIFACT,
+        false,
+    )
+    .await;
+
+    let prepared = rig
+        .prepare_tag(&token, &post, json!({ "name": "live0", "pDirected": 0.0 }))
+        .await;
+    let writes = prepared["prepareTag"]["writes"].as_array().expect("writes");
+    assert_eq!(writes.len(), 1, "{prepared}");
 }
