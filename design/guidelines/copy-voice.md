@@ -143,9 +143,15 @@ title, at most two short paragraphs, Close. The texts, verbatim
   titles, never bodies. Start with @handle to search one person's
   work — including their comments and offers, found through what
   they point at. Start with #topic to search inside a topic. /
-  Results follow your own graph — the numbers are your view, no one
-  else's. Below the line, what your graph can't reach yet, newest
-  first. Your searches stay on this device.
+  Results put what's closest to you first — the numbers are your
+  view, no one else's. Below the line, what's still beyond your
+  reach, newest first. Your searches stay on this device.
+- **The filter** (the feed's and search's filter sheets): What you
+  let in, and in what order — the kinds combine freely, ranked or
+  newest is one choice, and what you've already seen stays out
+  unless you ask for it back. Every change applies as you tap;
+  nothing here is signed or shared. / It lasts until you change it,
+  on this device only. Your default lives in settings.
 
 Two removal marks, never interchangeable: `Removed by its author` —
 "The words and pictures are gone. The post's place in the thread, and

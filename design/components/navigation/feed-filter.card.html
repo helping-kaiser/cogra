@@ -1,4 +1,4 @@
-<!-- @dsCard group="Components" viewport="900x620" name="What your feed shows" subtitle="The filter is a trigger plus a sheet: seven kinds that combine, forms of post, order, and what else is admitted" -->
+<!-- @dsCard group="Components" viewport="900x620" name="What your feed shows" subtitle="The filter is a trigger plus a sheet: ten kinds that combine, forms of post, order and the seen toggle, and what else is admitted" -->
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -42,8 +42,9 @@ function Demo(){
   </div>
   <div className="col">
     <span className="lbl">The trigger reads back the view — tap it to open the sheet</span>
-    <p><b>What replaced what.</b> A three-segment row (Posts / Comments / Stances) was wrong twice: a stance is not a thing that gets ranked, and the real set is seven kinds that <b>combine</b>. A segmented row cannot express a combination.</p>
-    <p><b>Kinds combine, order does not.</b> Posts, comments, chats, profiles, proposals, topics, items are chips; ranked-versus-newest is a two-option segmented control. Forms of post combine too — photos and video with no text posts is a legitimate feed.</p>
+    <p><b>What replaced what.</b> A three-segment row (Posts / Comments / Stances) was wrong twice: a stance is not a thing that gets ranked, and the real set is ten kinds that <b>combine</b>. A segmented row cannot express a combination.</p>
+    <p><b>Kinds combine, order does not.</b> Posts, comments, chats, messages, profiles, proposals, topics, items, campaigns, offers are chips — one list, shared with search; ranked-versus-newest is a two-option segmented control. Forms of post combine too — photos and video with no text posts is a legitimate feed.</p>
+    <p><b>Order carries the seen toggle.</b> "Show what you've already seen", default off — what you've seen stays out until you ask for it back. Seen means the card's impression entered the viewport, kept on this device, shared transiently with the viewer's chosen ranker. The trigger speaks deviations only: "showing seen" appears when it is on, nothing when it is not.</p>
     <p><b>It applies live and it is never permanently on screen.</b> One chip in the top region, everything else a tap away in the sheet. No Apply button: that asks the reader to commit to a guess about their own feed.</p>
     <p><b>Switching everything off is allowed.</b> The feed says what is off and offers to switch it back — the chip does not refuse the tap.</p>
     <p><b>"Also show" is not a warning.</b> Sensitive arrives veiled; a removed record arrives as its skeleton. No <code>error</code> colouring in either.</p>

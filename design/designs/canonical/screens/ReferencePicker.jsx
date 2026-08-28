@@ -9,7 +9,7 @@ export function Screen() {
       <div style={{ flex: "none" }}>
         <SearchBar query="salt" />
         <div style={{ display: "flex", alignItems: "center", padding: "0 16px 8px 16px" }}>
-          <SearchFilterTrigger reading="All kinds · ranked" />
+          <FilterTrigger reading="Everything" ariaLabel="What the search shows" />
         </div>
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
