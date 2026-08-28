@@ -372,15 +372,15 @@ order = 12
 path  = "android/"
 owner = "pkg.android"
 note  = """
-ONE owner for the whole Gradle build, though android/ has 12 modules
-(:app, :core:crypto|designsystem|domain|network,
-:feature:auth|content|home|invites|onboarding|profile|settings).
+ONE owner for the whole Gradle build, though android/ has 15 modules
+(:app, :core:crypto|designsystem|domain|media|network,
+:feature:auth|content|home|invites|onboarding|profile|settings|stance|topics).
 The Kotlin frontend has landed and the whole tree is scanned — the
-173 .kt sources and, since the script production, the 18 .kts build
+218 .kt sources and, since the script production, the 19 .kts build
 files, which live here and nowhere else, so no Gradle script ever
 falls to the repo-root residual owner of rule 20 —
 but the modules carry NO labels: zero occurrences across the tree. A
-12-way split would still buy 12 prefixes and 12 rules over an empty
+15-way split would still buy 15 prefixes and 15 rules over an empty
 occurrence set. The revisit is a conjunction and only half of it has
 happened — the split waits on the modules starting to carry labels,
 which is when LBL inf:labels:derivation-warrant's package/module
