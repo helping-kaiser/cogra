@@ -463,7 +463,9 @@ pub async fn plan_profile_image(
         return Err(GalleryError::at(path, "no such asset").into());
     };
     if asset.author_id != author {
-        return Err(GalleryError::at(path, "a profile picture must be an asset you uploaded").into());
+        return Err(
+            GalleryError::at(path, "a profile picture must be an asset you uploaded").into(),
+        );
     }
     if asset.redacted_at.is_some() {
         return Err(GalleryError::at(path, "this asset has been removed").into());

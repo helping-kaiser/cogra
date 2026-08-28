@@ -151,6 +151,28 @@ type AttachActorKeyPayload {
 	userErrors: [UserError!]!
 }
 
+"""
+One attachment placement within a gallery. Assets are uploaded first
+via `uploadMedia`; the envelope commits their digests.
+
+The list is the gallery in order, so `displayOrder` states the entry's
+own index and `isCover` is true on the first entry and nowhere else —
+the payload envelope carries order as array position and has no room
+for a second, disagreeing index. A value that contradicts its position
+is refused rather than silently overridden. `isCover` applies to post
+galleries only; a comment gallery ignores it.
+"""
+input AttachmentInput {
+	"""
+	An asset **this author uploaded**. Cross-author re-use is not
+	supported through this path: sharing someone else's picture is a
+	link to their post, never a reference to their asset.
+	"""
+	mediaId: UUID!
+	displayOrder: Int!
+	isCover: Boolean
+}
+
 type AuthSession {
 	"""
 	The bearer token for `Authorization: Bearer <token>`; 15-minute
@@ -208,6 +230,16 @@ type Comment implements Node {
 	"""
 	landing: Landing!
 	content: ModeratedText!
+	"""
+	The gallery, in the author's order — at most four, and no cover: a
+	comment's media supports its words rather than replacing them, so
+	nothing here leads the way a post's first picture does.
+	"""
+	attachments: [MediaAttachment!]!
+	"""
+	The gallery's moderation state — one state for the whole set.
+	"""
+	attachmentsStatus: FieldModerationStatus!
 	author: User
 	"""
 	The license qualifiers the minting Review record carried.
@@ -688,7 +720,26 @@ type MediaAttachment {
 	upload cap, and the honest answer if the cap ever moves.
 	"""
 	sizeBytes: Int
+	"""
+	Null once the asset is removed: alt text is what a blind reader
+	*reads*, so redaction takes it with the picture rather than leaving
+	a description of bytes that are gone.
+	"""
 	altText: String
+	"""
+	NORMAL, or REDACTED once the bytes are removed — the visible mark
+	the design requires, carried on the contract rather than left to a
+	failed fetch. The store answers a removed object with a 404, which
+	reads as a broken image; this field is what lets a client render
+	the calm "Removed" placeholder instead of a silent gap.
+	
+	Never SENSITIVE. Sensitivity is a whole-body state a reader sees as
+	one blur across media, text and description together, and it is
+	carried by the parent's `attachmentsStatus` and field statuses —
+	per-asset sensitivity was ruled against, one image blurring alone
+	being the UI the product does not want.
+	"""
+	status: FieldModerationStatus!
 	options: MediaOptions!
 	"""
 	The account that uploaded the asset.
@@ -1089,7 +1140,28 @@ type Post implements Node {
 	landing: Landing!
 	title: ModeratedText!
 	description: ModeratedText!
+	"""
+	The words half of the body; **value null on a media post**, whose
+	body is its gallery. A post's body is words or media and never
+	both, so exactly one of `content.value` and `attachments` carries
+	it. Words that belong beside a picture are the `description`.
+	"""
 	content: ModeratedText!
+	"""
+	The gallery, in the author's order, the first entry the cover.
+	
+	A bounded list rather than a connection: the write side caps a post
+	at ten attachments, so the whole gallery is always servable and a
+	page argument would promise a pagination this read cannot honour —
+	the same shape `topics` and `references` carry, for the same
+	reason.
+	"""
+	attachments: [MediaAttachment!]!
+	"""
+	The gallery's moderation state — one state for the whole set, not
+	one per picture.
+	"""
+	attachmentsStatus: FieldModerationStatus!
 	author: User
 	"""
 	The license qualifiers the minting Publish record carried.
@@ -1171,6 +1243,10 @@ A Comment edit: the complete new body (comment.md §4).
 input PrepareCommentEditInput {
 	id: UUID!
 	content: String!
+	"""
+	The gallery the edit leaves standing — complete, not a delta.
+	"""
+	attachments: [AttachmentInput!]
 }
 
 """
@@ -1196,8 +1272,23 @@ input PrepareCommentInput {
 	Citations declared at creation; same rules as on a Post.
 	"""
 	references: [ReferenceInput!]
+	"""
+	The gallery, in order — at most 4. A comment is text **plus**
+	optional media, deliberately asymmetric to a post's exclusive-or:
+	an answer is words first.
+	"""
+	attachments: [AttachmentInput!]
 }
 
+"""
+A prepared content write: the staged batch plus `node` — the L2 id the
+envelope binds to the minted node, and the id the content reads serve
+once the record lands. `writes` carries the minting record first, then
+one Tag record per declared topic and one Reference record per declared
+citation, each its own priced act. A gallery adds none: attaching
+media mints nothing, so a twenty-photo post is still one Publish.
+Null when `userErrors` is non-empty.
+"""
 type PrepareContentPayload {
 	node: UUID
 	writes: [PreparedWrite!]
@@ -1223,7 +1314,16 @@ input PreparePostEditInput {
 	id: UUID!
 	title: String
 	description: String
-	content: String!
+	"""
+	The words half of the body, under the same exclusive-or a create
+	carries.
+	"""
+	content: String
+	"""
+	The gallery the edit leaves standing — complete, not a delta.
+	Reordering pictures is this one act, priced once.
+	"""
+	attachments: [AttachmentInput!]
 }
 
 """
@@ -1235,7 +1335,13 @@ server-assigned.
 input PreparePostInput {
 	title: String
 	description: String
-	content: String!
+	"""
+	The words half of the body. A post's body is **words or media**,
+	never both and never neither: supply `content` or `attachments`,
+	and put words that belong beside a picture in `description`.
+	Breaking the rule is a field-level refusal on `content`.
+	"""
+	content: String
 	license: LicenseInput!
 	"""
 	The author's attachment; defaults to the low-defaults policy
@@ -1256,6 +1362,13 @@ input PreparePostInput {
 	deduplicated, and a post cannot cite itself.
 	"""
 	references: [ReferenceInput!]
+	"""
+	The gallery, in order — the full intended arrangement, referencing
+	assets already uploaded. At most 10; the same asset twice is
+	refused rather than deduplicated. Attaching mints no record and
+	adds nothing to the batch's cost.
+	"""
+	attachments: [AttachmentInput!]
 }
 
 """
@@ -1268,6 +1381,16 @@ input PrepareProfileUpdateInput {
 	displayName: String
 	bio: String
 	websiteUrl: String
+	"""
+	The avatar — an asset this account uploaded. Explicit null clears
+	it back to the monogram, which is the designed placeholder rather
+	than a gap.
+	"""
+	avatarMediaId: UUID
+	"""
+	The profile cover, same three values.
+	"""
+	coverMediaId: UUID
 }
 
 """
@@ -2200,12 +2323,6 @@ type UploadKeyBackupPayload {
 }
 
 """
-A prepared content write: the staged batch plus `node` — the L2
-id the envelope binds to the minted node, and the id the content
-reads serve once the record lands. `writes` carries the minting
-record first, then one Tag record per declared topic and one
-Reference record per declared citation, each its own priced act.
-Null when `userErrors` is non-empty.
 Uploads one asset. `altText` is the one layout-adjacent fact the
 server cannot infer and the author must supply; aspect ratio and
 duration are derived from the bytes.
@@ -2262,6 +2379,16 @@ type User implements Node & Actor {
 	when never set.
 	"""
 	bio: ModeratedText!
+	"""
+	The profile picture (the newest profile version); null for an
+	account that has never set one, which is the monogram circle — the
+	designed placeholder, not a gap.
+	"""
+	avatar: MediaAttachment
+	"""
+	The profile's cover image; null when never set.
+	"""
+	cover: MediaAttachment
 	"""
 	The profile's website link (the newest profile version); value
 	null when never set.

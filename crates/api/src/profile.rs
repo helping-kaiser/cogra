@@ -146,7 +146,8 @@ pub async fn prepare_profile_update<B: L1Boundary>(
         crate::media::plan_profile_image(pool, viewer, "avatarMediaId", draft.avatar_media_id)
             .await?;
     let cover =
-        crate::media::plan_profile_image(pool, viewer, "coverMediaId", draft.cover_media_id).await?;
+        crate::media::plan_profile_image(pool, viewer, "coverMediaId", draft.cover_media_id)
+            .await?;
     let payload = CograProfile {
         node: viewer,
         display_name: draft.display_name,
