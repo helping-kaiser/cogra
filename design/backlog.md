@@ -159,14 +159,22 @@ Q46; ideation on the "CoGra search" canvas (hybrid of directions
 (navigation/), `ReferenceRow` `rank`/`sub`/`message`, the `send`
 glyph, the Searching "?" text in copy-voice.md.
 
-### 19 · The feed's filter + ordering on the canonical screens · *design*
+### 19 · The feed's filter + ordering on the canonical screens · *design* · **built**
+`designs/canonical/` — the Feed row (2026-08-28): signed in at rest,
+the filter sheet open, narrowed ("Posts · photos · newest"), and
+everything-off with the empty state. The trigger sits on the
+`CograBand`'s right edge (`trailing` — the band never spends its
+full width on identity alone) and every feed view wears it, guests
+included. Ported back: `OrderSection` + `FilterSection` (the shared
+ordering section and sheet-section chrome, consumed by the feed's
+sheet and search's alike), `FilterTrigger` (the worded pill alone),
+`FEED_KINDS` grown to the shared ten ("Profiles" everywhere),
+deviations-only trigger reading on both surfaces ("Everything" at
+rest on search), `FeedFilter defaultOpen`, and the readme §13 block
+*The feed's filter on screen*.
 Item 4 built `FeedFilter` (kinds, forms, Ranked/Newest order, the
 trigger reading the view in words) — and no canonical feed board
-ever drew the trigger; it slipped while compose had the focus. Put
-the filter on the canonical feed screens, and grow its Order
-section with the search rulings' controls: the seen toggle
-("show already seen", default on, impression-based, device-local)
-rides beside the order swap, identical on feed and search.
+ever drew the trigger; it slipped while compose had the focus.
 
 ### 10 · Sensitive veil treatment · *system*, has open questions
 Granularity is settled (blur only what is marked, reveal per post),

@@ -437,7 +437,7 @@ exists in `web/src/lib/ui/` (and, unless noted, in Android's
 | `components/core/` | `Button`, `Card`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip` |
 | `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow` |
 | `components/forms/` | `TextField`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
-| `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `BorrowedViewBand`, `CograBand` |
+| `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand` |
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader` |
 | `components/states/` | `EmptyState`, `LoadingState` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending` |
@@ -520,12 +520,16 @@ paper over:
   pill, told apart by what they do: a chip acts, a topic navigates. 32px
   drawn, 48px tapped, selection colour only with no check glyph (a check
   reflows every label in the row as the reader picks).
-- `FeedFilter` — **what the feed actually needs**, and the reason the
-  segmented row was the wrong control. Seven kinds of ranked content that
-  combine (posts, comments, chats, profiles, proposals, topics, items),
+- `FeedFilter` (+ `FilterTrigger`, `OrderSection`, `FilterSection`) —
+  **what the feed actually needs**, and the reason the
+  segmented row was the wrong control. Ten kinds of ranked content that
+  combine (posts, comments, chats, messages, profiles, proposals, topics,
+  items, campaigns, offers — `FEED_KINDS`, one list shared with search),
   forms of post that combine (photos and video with no text posts is a
   legitimate feed), an order that does not (ranked, the default, or
-  newest), and what else the feed admits (sensitive, veiled; removed, as
+  newest) with the seen toggle riding in the same section (`OrderSection`,
+  identical on the feed and on search), and what else the feed admits
+  (sensitive, veiled; removed, as
   its skeleton). None of that fits in a row across the top of a screen, so
   it is one chip-shaped trigger reading the view back in words plus a
   sheet — and the trigger has a budget: the kinds always show, and once
@@ -1167,6 +1171,38 @@ as Q46 in docs/open-questions.md):
   order, and the seen toggle). A rank on a row wears the score's
   graph glyph, so the number is recognized before it is read. A chat
   message's mark is `send`; the chat that holds it stays `forum`.
+
+### The feed's filter on screen — 2026-08-28
+
+Item 19: item 4 built the filter and no canonical board ever drew it.
+The rulings that put it on screen:
+
+- **The trigger lives on the `CograBand`'s right edge.** A full-width
+  band spent on identity alone is wasted space; the band's right side
+  holds the tab's one working control. The whole band scrolls away
+  with the top region and returns with it — the trigger rides along,
+  never pinned.
+- **Every feed view wears it, guests and applicants included.**
+  Filtering is a read control; the seen list is device-local. The
+  borrowed-view landing filters like the member's feed does.
+- **The trigger speaks deviations only, on the feed and on search
+  alike.** The default state is silence: "Posts" at rest, "newest"
+  and "hiding seen" only when flipped, the budget collapse past the
+  pill's width. Search's trigger at rest reads "Everything".
+- **One kind list.** `FEED_KINDS` grows to search's ten and both
+  surfaces share it — posts, comments, chats, messages, profiles,
+  proposals, topics, items, campaigns, offers — and the word is
+  **"Profiles"** everywhere, never "People".
+- **One ordering section.** `OrderSection` — the Ranked/Newest swap
+  with "Show what you've already seen" (default on) under it, one
+  section because both answer "how is this list arranged" — is a
+  master consumed by the feed's sheet and the search sheet alike, and
+  `FilterSection` is the one sheet-section chrome every filter sheet
+  uses. The filter sheet opens taller than the sheet default (88%)
+  so the whole control is present.
+- **Everything off is answered by the feed**, not the chip: the empty
+  state names what is off ("Your feed admits nothing right now —
+  every kind is switched off.") and offers the way back.
 
 ### Masters, variants, and screens — 2026-08-28
 
