@@ -111,16 +111,19 @@ export function PostMedia({
 }) {
   if (!hasMedia(node)) return null;
 
+  // The test id lives on the bleed wrapper rather than being handed down: a
+  // one-picture gallery renders a bare tile with no wrapper of its own, so a
+  // caller asking "is there media here" would find nothing for exactly the
+  // commonest case.
   return (
-    <div className={BLEED[bleed]}>
+    <div data-testid={testId} className={BLEED[bleed]}>
       {galleryIsRedacted(node) ? (
-        <RemovedPlaceholder reason={removalReason(node)} testId={testId} />
+        <RemovedPlaceholder reason={removalReason(node)} />
       ) : (
         <MediaGallery
           items={galleryItems(node)}
           radius="0px"
           preloadLead={preloadLead}
-          testId={testId}
           onOpen={onOpen}
         />
       )}
