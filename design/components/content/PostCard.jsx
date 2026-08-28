@@ -10,6 +10,7 @@ import { MediaViewer } from "../proposed/MediaViewer.jsx";
 import { RedactedContent } from "../honesty/SensitiveVeil.jsx";
 import { OverflowMenu } from "./OverflowMenu.jsx";
 import { Icon } from "../navigation/Icon.jsx";
+import { TopicChip } from "../core/Chip.jsx";
 
 /* The post card of design.md §6 — "author (avatar, display name, handle,
    timestamp), optional title, optional description, body, media gallery, stance
@@ -66,6 +67,8 @@ export function PostCard({
   actions,
   onOpenMedia,
   redacted,
+  topics = [],
+  references = 0,
   menuItems = [],
 }) {
   const detail = variant === "detail";
@@ -79,9 +82,9 @@ export function PostCard({
   // readings — so it is not on the initial view. It arrives when asked for, from
   // the overflow menu, and stays until the reader is done with it.
   const [showLicense, setShowLicense] = React.useState(false);
-  // A media post's caption is clamped and openable in place. The title never is:
-  // a title that needs truncating is a body, and cutting it costs the reader the
-  // orientation they opened the card for.
+  // A media post's caption is clamped and openable in place. The SUMMARY title
+  // clamps to one line (readme §13's collapse order: the title gives way before
+  // media or the affordance row ever shrink); the detail title never clamps.
   const [open, setOpen] = React.useState(false);
   // The detail view's media opens full-size in place. In the feed the same tap
   // opens the post instead: a reader scrolling is choosing between posts, not
@@ -100,6 +103,7 @@ export function PostCard({
         fontSize: detail ? "var(--text-headline-small)" : "var(--text-title-medium)",
         lineHeight: detail ? "var(--text-headline-small--line-height)" : "var(--text-title-medium--line-height)",
         fontWeight: detail ? "var(--text-headline-small--font-weight)" : "var(--text-title-medium--font-weight)",
+        ...(detail ? {} : { ...CLAMP(1), wordBreak: "break-word" }),
       }}
     >
       {title}
@@ -220,6 +224,40 @@ export function PostCard({
       {redacted ? <RedactedContent {...(redacted === true ? {} : redacted)} /> : linkedText}
       {!redacted && opener}
       {license && showLicense && !redacted && <LicenseTerms license={license} />}
+      {/* TOPICS AND CITATIONS, ONE LINE (readme §13's collapse order: they give
+          way before media or the affordance row ever shrink). The summary card
+          never wraps them — overflow is simply clipped, the detail view is where
+          the full set lives — and a citation count rides the end of the same
+          line rather than earning a row of its own. */}
+      {!redacted && (topics.length > 0 || references > 0) && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-2)",
+            flexWrap: detail ? "wrap" : "nowrap",
+            overflow: "hidden",
+            minWidth: 0,
+          }}
+        >
+          {topics.map((topic) => (
+            <TopicChip key={topic} topic={topic} />
+          ))}
+          {references > 0 && (
+            <span
+              style={{
+                flex: "none",
+                color: "var(--text-secondary)",
+                fontSize: "var(--text-body-small)",
+                lineHeight: "var(--text-body-small--line-height)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              · {references === 1 ? "1 reference" : `${references} references`}
+            </span>
+          )}
+        </div>
+      )}
       {edited && <EditedMarker />}
       {pending && <PendingMarker />}
       {/* THE AFFORDANCE ROW. The stance control leads — it is the gesture the

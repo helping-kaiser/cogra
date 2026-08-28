@@ -68,6 +68,14 @@ export interface PostCardProps {
    */
   redacted?: boolean | import("../honesty/SensitiveVeil").RedactedContentProps;
   /**
+   * Topic names, with or without the `#`. One line with the citation count at
+   * its end — clipped in the summary card (readme §13's collapse order),
+   * wrapping only on the detail variant.
+   */
+  topics?: readonly string[];
+  /** The citation count, riding the end of the topics line. */
+  references?: number;
+  /**
    * Detail variant only: takes over the media tap, which otherwise opens
    * `MediaViewer` in place. In the feed the same tap opens the post.
    */

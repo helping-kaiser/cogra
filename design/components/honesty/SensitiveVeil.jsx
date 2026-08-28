@@ -165,15 +165,16 @@ const REASONS = {
      words — "found illegal" is the verdict, not an accusation of the author, and
      the vote is what makes it a public fact rather than a moderator's opinion. */
   illegal: {
-    line: "The content of this post was removed",
-    detail: "A community proposal found it illegal. The post stays in place, and what it does in the graph is unchanged.",
+    line: "Removed under the platform's rules",
+    detail: "A passed proposal removed it. The decision is public.",
   },
   /* Removed by choice (erasure §1). The docs are explicit that this must read
      differently from removed-for-cause — collapsing the two would let a
-     moderation verdict hide behind an author's own decision, or the reverse. */
+     moderation verdict hide behind an author's own decision, or the reverse.
+     Both texts are the decided marks of guidelines/copy-voice.md. */
   author: {
-    line: "The author removed this post's content",
-    detail: "The post stays in place, and what it does in the graph is unchanged.",
+    line: "Removed by its author",
+    detail: "The post's place in the thread, and every response, remain.",
   },
 };
 
