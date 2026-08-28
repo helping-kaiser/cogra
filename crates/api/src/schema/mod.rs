@@ -64,8 +64,9 @@ pub struct ApiContext {
 /// posture stops admitting one, and re-measures the corpus by bisection
 /// so a document growing into the headroom fails before it grows past
 /// the ceiling. The heaviest operation either client sends is the
-/// Android post-detail read at **176 198** complexity and **12** levels;
-/// the standard introspection query is cheap (181) but deep (13).
+/// Android post-detail read at **178 347** complexity and **12** levels
+/// — 224 under the guard's 1.4×-headroom limit of 178 571; the standard
+/// introspection query is cheap (181) but deep (13).
 #[derive(Debug, Clone, Copy)]
 pub struct QueryBudgets {
     pub depth: usize,
