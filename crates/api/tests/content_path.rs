@@ -828,10 +828,13 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
     assert_eq!(versions_after, versions_before, "nothing duplicated");
 }
 
-/// The gallery half of the content path: what an attachment list does to
-/// the envelope, to the junction rows, and to a reader — including the
-/// expiry the whole re-keying exists for.
 mod galleries {
+    //! ´mod:module:galleries´
+    //!
+    //! The gallery half of the content path: what an attachment list does
+    //! to the envelope, to the junction rows, and to a reader — including
+    //! the expiry the whole re-keying exists for.
+
     use super::*;
     use api::media::AttachmentDraft;
     use postgres_store::media as media_store;
