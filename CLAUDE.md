@@ -31,10 +31,12 @@ these — these are the rules most often violated:
 5. **Flag contradictions inline.** If a doc contradicts another or
    the user's framing, raise it in the same response. Don't paper
    over it.
-6. **Sessions end at task boundaries.** When the task fabric ends —
-   not mechanically at every PR — suggest a fresh session. Long
-   sessions accumulate context that doesn't help; externalized
-   state is what makes the fresh start cheap.
+6. **Fabric boundaries mean compaction, not endings.** When the
+   task fabric ends — not mechanically at every PR — a superloop
+   session prepares compaction and the human runs `/compact`;
+   superloops run indefinitely. An ordinary one-task session
+   suggests a fresh session instead. Externalized state is what
+   makes either cheap.
 7. **Never deviate silently.** If you have reason to break a rule
    here, name the rule and the reason — let the human accept or
    reject. The rule is not "never deviate," it's "never deviate
@@ -258,25 +260,33 @@ subagent. It does the heavy reading inside its own context,
 returns a summary, and keeps the main thread lean — the cheapest
 way to investigate without bloating the session.
 
-### Sessions end at task boundaries
+### Fabric boundaries: superloops compact, one-task sessions end
 
-A session ends when the **task fabric** ends — when the threads in
-flight stop feeding each other — not mechanically at every PR
-merge. A day where environment work, a live demo, and the bug
-reports it produced genuinely interleave is one fabric: cutting it
-per-PR re-derives the shared context every hour for nothing. But
-once the fabric ends, **suggest a fresh session before the next
-task**: long sessions accumulate context that doesn't help
-(redundant doc re-reads, resolved discussions, stale hypotheses),
-and fresh sessions reload this file and start lean.
+A **task fabric** ends when the threads in flight stop feeding
+each other — not mechanically at every PR merge. A day where
+environment work, a live demo, and the bug reports it produced
+genuinely interleave is one fabric: cutting it per-PR re-derives
+the shared context every hour for nothing.
 
-What makes fresh sessions cheap is externalization, and that duty
-is the rule's real content: every decision, ruling, and piece of
-working state lands in a durable artifact (docs, open-questions,
-the backlog, PR bodies, tmp_dev notes) **as it happens**, never
-only in conversation. Context compaction is a seatbelt, not a
-plan — a compacted session cannot audit what its own summary
-dropped, so never rely on it to carry state a file should hold.
+What happens at the boundary depends on the session kind. A
+**superloop session is meant to run indefinitely** — it is never
+ended deliberately, only lost to genuine breakage. At each fabric
+boundary it prepares compaction (externalize everything, refresh
+the post-compaction anchor) and the human runs `/compact`; the
+same session then continues into the next fabric, lean again. An
+**ordinary one-task session** instead suggests a fresh session
+before the next task: long sessions accumulate context that
+doesn't help (redundant doc re-reads, resolved discussions, stale
+hypotheses), and fresh sessions reload this file and start lean.
+
+What makes both cheap is externalization, and that duty is the
+rule's real content: every decision, ruling, and piece of working
+state lands in a durable artifact (docs, open-questions, the
+backlog, PR bodies, tmp_dev notes) **as it happens**, never only
+in conversation. That duty is also what makes routine compaction
+safe — a compacted session cannot audit what its own summary
+dropped, so never rely on the summary to carry state a file
+should hold.
 
 ### One Edit per response during active design iteration
 
