@@ -23,7 +23,7 @@
 use common::hashtag::{HashtagNameError, canonicalize};
 use common::l1::census::Family;
 use common::l1::identifier::{ActId, NodeId};
-use postgres_store::{PgPool, auth as store, content as content_store};
+use postgres_store::{PgPool, auth as store, content as content_store, topics as topics_store};
 use uuid::Uuid;
 
 use crate::l1::L1Boundary;
@@ -34,6 +34,19 @@ use crate::prepare::{self, Gesture, PrepareError, Target};
 /// loop, and one approve: θ prices the author's cost, but not the
 /// prepare-side work an unbounded batch demands of the server.
 pub const MAX_TAGS_PER_BATCH: usize = 10;
+
+/// Topics one author may have *standing* on one artifact (D22).
+///
+/// [`MAX_TAGS_PER_BATCH`] bounds a gesture; this bounds the set a gesture
+/// accumulates into. Both fold families carry the same cap for the same
+/// reason: the read side prices an author-owned fold list at a stated
+/// bound, and a standing set past that bound is server work nothing
+/// charged for. L1 admits any number of Tag records; the narrowing is
+/// CoGra's.
+///
+/// "Standing" is what the current-topics fold serves, so a topic withdrawn
+/// at relevance 0 has left the set and freed its slot.
+pub const MAX_LIVE_TOPICS_PER_ARTIFACT: usize = 50;
 
 /// Default relevance — the low-defaults policy value, as everywhere else
 /// (invitations.md §3): a modest claim, leaving stronger ones expressible.
@@ -220,11 +233,64 @@ pub async fn stage_tags<B: L1Boundary>(
     Ok(staged)
 }
 
+/// The refusal message when a batch would leave the author standing past
+/// [`MAX_LIVE_TOPICS_PER_ARTIFACT`] topics on one artifact, or `None` when
+/// it fits (D22). The caller roots the path.
+///
+/// `live` is the current-topics fold's own view, read pending-inclusive —
+/// otherwise fifty staged tags would sail through one after another while
+/// none of them had landed.
+///
+/// A declaration claims a slot only when it names a topic the author is
+/// not already standing on *and* carries a non-zero relevance. Both
+/// conditions are exact under newest-wins: the record being staged is the
+/// one the fold will read, so its own relevance decides whether the topic
+/// stands, and relevance 0 is the un-tag.
+fn over_the_standing_cap(live: &[String], planned: &[PlannedTag]) -> Option<String> {
+    let claiming = planned
+        .iter()
+        .filter(|t| t.relevance != 0.0 && !live.iter().any(|name| *name == t.name))
+        .count();
+    (live.len() + claiming > MAX_LIVE_TOPICS_PER_ARTIFACT).then(|| {
+        format!(
+            "at most {MAX_LIVE_TOPICS_PER_ARTIFACT} topics may stand on one \
+             artifact at once; withdraw one first"
+        )
+    })
+}
+
+/// The author's standing topics on one artifact, as the fold serves them.
+async fn live_names(
+    pool: &PgPool,
+    author: &str,
+    middle: &NodeId,
+) -> Result<Vec<String>, TopicsError> {
+    Ok(
+        topics_store::topics_of(
+            pool,
+            &middle.to_string(),
+            author,
+            topics_store::TopicView::IncludingPending { actor: author },
+        )
+        .await
+        .map_err(|e| TopicsError::Internal(e.to_string()))?
+        .into_iter()
+        .map(|claim| claim.name)
+        .collect(),
+    )
+}
+
 /// Prepares one standalone Tag — the gesture that adds a topic to
 /// existing content, and, at relevance 0, the one that withdraws it
 /// (post.md §3; hashtag.md §4). Tagging is unconstrained by authorship:
 /// the content's author declares its topics, anyone else makes a
 /// third-party claim, and the read side is what gates the difference.
+///
+/// The standing cap is checked here and not on the creation path because a
+/// creation batch mints the artifact it tags: its set starts empty, and
+/// [`MAX_TAGS_PER_BATCH`] already bounds it well under
+/// [`MAX_LIVE_TOPICS_PER_ARTIFACT`]. This is the only gesture that can
+/// reach the cap, and it is refused before anything is staged.
 pub async fn prepare_tag<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -236,6 +302,10 @@ pub async fn prepare_tag<B: L1Boundary>(
     let tag = plan_one(draft)?;
     let middle = taggable_node(pool, target).await?;
     let author = author_address(pool, viewer).await?;
+    let live = live_names(pool, &author, &middle).await?;
+    if let Some(message) = over_the_standing_cap(&live, std::slice::from_ref(&tag)) {
+        return Err(TagError::at(vec!["name".to_string()], message).into());
+    }
     let gesture = tag_gesture(&author, middle, &tag, vec![])?;
     Ok(prepare::prepare(boundary, pool, gc_after_epochs, viewer, gesture).await?)
 }
@@ -358,6 +428,61 @@ mod tests {
         over[0] = draft("not an atom");
         let e = plan_batch(&over).expect_err("refused");
         assert_eq!(e.path, vec!["tags".to_string()]);
+    }
+
+    fn standing(n: usize) -> Vec<String> {
+        (0..n).map(|i| format!("t{i}")).collect()
+    }
+
+    fn tag(name: &str, relevance: f64) -> PlannedTag {
+        PlannedTag {
+            name: name.to_string(),
+            relevance,
+            confidence: 1.0,
+        }
+    }
+
+    /// The boundary itself: the fiftieth topic is the last one the
+    /// artifact carries, and the fifty-first is refused.
+    #[test]
+    fn the_standing_cap_admits_the_fiftieth_topic_and_refuses_the_next() {
+        let fresh = [tag("fresh", 0.1)];
+        assert!(
+            over_the_standing_cap(&standing(MAX_LIVE_TOPICS_PER_ARTIFACT - 1), &fresh).is_none(),
+            "the set reaches exactly the cap"
+        );
+        let refusal =
+            over_the_standing_cap(&standing(MAX_LIVE_TOPICS_PER_ARTIFACT), &fresh).expect("refused");
+        assert!(refusal.contains("withdraw one first"), "{refusal}");
+    }
+
+    /// The cap counts what stands: an un-tag is a further Tag at
+    /// relevance 0, the fold drops it, and its slot comes back.
+    #[test]
+    fn an_untagged_topic_frees_its_slot_under_the_standing_cap() {
+        let mut live = standing(MAX_LIVE_TOPICS_PER_ARTIFACT);
+        live.pop();
+        assert!(over_the_standing_cap(&live, &[tag("fresh", 0.1)]).is_none());
+    }
+
+    /// Withdrawing is never refused for want of room — a full artifact
+    /// must stay un-taggable, or the cap would trap the author inside it.
+    #[test]
+    fn the_un_tag_is_admitted_at_the_standing_cap() {
+        let live = standing(MAX_LIVE_TOPICS_PER_ARTIFACT);
+        assert!(over_the_standing_cap(&live, &[tag("fresh", 0.0)]).is_none());
+        assert!(
+            over_the_standing_cap(&live, &[tag("t3", 0.0)]).is_none(),
+            "un-tagging a standing topic is what frees a slot"
+        );
+    }
+
+    /// Re-declaring a topic the author already stands on claims no slot —
+    /// newest-wins replaces the winner rather than adding a chip.
+    #[test]
+    fn re_declaring_a_standing_topic_claims_no_further_slot() {
+        let live = standing(MAX_LIVE_TOPICS_PER_ARTIFACT);
+        assert!(over_the_standing_cap(&live, &[tag("t7", 0.9)]).is_none());
     }
 
     #[test]

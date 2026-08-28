@@ -2671,6 +2671,26 @@ citation targets, and the balance against the batch's whole price
 — is checked before the minting record is staged, so a refusal
 leaves nothing in flight.
 
+**Fifty stand on an artifact.** The batch caps bound a gesture;
+one author's *standing* set on one artifact is capped at **fifty**
+references and, separately, fifty topics — named constants, and
+CoGra's narrowing over a substrate that admits any number of
+records toward any number of targets. The cap counts what the
+folds serve, not what was ever authored: a reference bundle netted
+to `(0,0)` and a topic withdrawn at relevance 0 have both left the
+set and freed their slots. The standing set is read
+pending-inclusive, so an author's own in-flight acts count against
+it. Only `prepareReference` and `prepareTag` can reach the cap — a
+creation batch mints the artifact it declares about, so its set
+starts empty and the batch cap of ten already bounds it — and both
+refuse before staging, with a field-level `userError` on `target`
+(a citation) or `name` (a topic) telling the author to withdraw
+one first. Withdrawing is never refused for want of room: an
+un-tag and a citation at `(0,0)` claim no slot, so a full artifact
+can always be emptied. Fifty is five full batches, which is what
+the widest realistic gesture — mentioning everyone in a group
+photo — needs.
+
 ```graphql
 "One attachment placement within a gallery. Assets are uploaded
  first via uploadMedia; the envelope commits their digests."

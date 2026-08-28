@@ -13,7 +13,8 @@
 
 use api::l1::{L1Boundary, StandInBoundary};
 use api::references::{
-    self, MAX_REFERENCES_PER_BATCH, ReferenceDraft, ReferenceError, ReferencesError,
+    self, MAX_LIVE_REFERENCES_PER_ARTIFACT, MAX_REFERENCES_PER_BATCH, ReferenceDraft,
+    ReferenceError, ReferencesError,
 };
 use common::l1::census::{Family, LegRole, leg_params};
 use common::l1::client::ActorKey;
@@ -466,6 +467,130 @@ async fn seed_reference(
     .execute(pool)
     .await
     .expect("leg row");
+}
+
+/// Fills the artifact's reference row to `live` standing bundles plus
+/// `netted` bundles that have been walked back to `(0, 0)`, so a test can
+/// state the fold's view and let the cap read it.
+///
+/// The record identifiers are well-formed `act:<author>:<seq>:<family>`
+/// rather than opaque labels: `allocate_seq` reads the author's highest
+/// landed sequence out of the mirror by splitting the identifier, so a
+/// fixture that seeds under an author who then prepares has to speak the
+/// same grammar the write path allocates in.
+async fn seed_standing_set(pool: &PgPool, author: &str, artifact: &str, live: usize, netted: usize) {
+    let mut seq = 9000;
+    for i in 0..live {
+        seed_reference(
+            pool,
+            &format!("act:{author}:{seq}:reference"),
+            author,
+            artifact,
+            &format!("prof:live{i}"),
+            0.1,
+            0.1,
+            false,
+        )
+        .await;
+        seq += 1;
+    }
+    for i in 0..netted {
+        let target = format!("prof:gone{i}");
+        for (relevance, support) in [(0.1, 0.1), (-0.1, -0.1)] {
+            seed_reference(
+                pool,
+                &format!("act:{author}:{seq}:reference"),
+                author,
+                artifact,
+                &target,
+                relevance,
+                support,
+                false,
+            )
+            .await;
+            seq += 1;
+        }
+    }
+}
+
+/// D22's standing-set cap. The batch cap bounds one gesture; this bounds
+/// what the gestures accumulate into, and it is the standalone citation —
+/// the only one that meets an artifact already carrying a set — that
+/// meets it.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_standing_reference_cap_refuses_the_citation_past_fifty(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, key) = rig.funded_actor("alice").await;
+    let artifact = rig.post(alice, &key, "carrier").await;
+    let target = rig.post(alice, &key, "cited").await;
+    let node = rig.node_of(artifact).await;
+    let address = rig.address(alice).await;
+    seed_standing_set(
+        &rig.pool,
+        &address,
+        &node,
+        MAX_LIVE_REFERENCES_PER_ARTIFACT,
+        0,
+    )
+    .await;
+
+    let e = bad_input(
+        references::prepare_reference(&rig.pool, &rig.boundary, GC, alice, artifact, &draft(target))
+            .await
+            .expect_err("refused"),
+    );
+    assert_eq!(e.path, vec!["target".to_string()]);
+    assert!(e.message.contains("withdraw one first"), "{}", e.message);
+}
+
+/// The cap counts the fold's view, not the records behind it: an artifact
+/// carrying fifty-one bundles of which one has netted away has a slot
+/// free, and the citation that fills it is admitted.
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_netted_bundle_frees_a_slot_under_the_standing_reference_cap(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, key) = rig.funded_actor("alice").await;
+    let artifact = rig.post(alice, &key, "carrier").await;
+    let target = rig.post(alice, &key, "cited").await;
+    let node = rig.node_of(artifact).await;
+    let address = rig.address(alice).await;
+    seed_standing_set(
+        &rig.pool,
+        &address,
+        &node,
+        MAX_LIVE_REFERENCES_PER_ARTIFACT - 1,
+        1,
+    )
+    .await;
+
+    references::prepare_reference(&rig.pool, &rig.boundary, GC, alice, artifact, &draft(target))
+        .await
+        .expect("the freed slot admits the citation");
+}
+
+/// The cap is per (author, artifact): another author's fifty citations
+/// from the same artifact leave the viewer's own set empty.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_standing_reference_cap_counts_only_the_citing_authors_own_set(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, key) = rig.funded_actor("alice").await;
+    let (bob, _) = rig.funded_actor("bob").await;
+    let artifact = rig.post(alice, &key, "carrier").await;
+    let target = rig.post(alice, &key, "cited").await;
+    let node = rig.node_of(artifact).await;
+    let alice_address = rig.address(alice).await;
+    seed_standing_set(
+        &rig.pool,
+        &alice_address,
+        &node,
+        MAX_LIVE_REFERENCES_PER_ARTIFACT,
+        0,
+    )
+    .await;
+
+    references::prepare_reference(&rig.pool, &rig.boundary, GC, bob, artifact, &draft(target))
+        .await
+        .expect("bob's own set on this artifact is empty");
 }
 
 /// The fold nets — it does not pick a winner. Three records from one
