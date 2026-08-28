@@ -53,6 +53,11 @@ internal fun ColumnScope.WordsStepBody(
         onValueChange = onBodyChange,
         label = "What do you want to publish?",
         singleLine = false,
+        // Both halves are needed: the weight gives the field's own
+        // column the rest of the stage, and `fillHeight` passes that
+        // height down to the box inside it. Either one alone leaves the
+        // box at its 44dp minimum with empty screen under it.
+        modifier = Modifier.weight(1f),
         fillHeight = true,
         testTag = "wizard_body",
     )
