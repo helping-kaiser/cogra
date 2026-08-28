@@ -194,6 +194,8 @@ describe("ComposeForm", () => {
         license: { attribution: 1, provenance: 0.5 },
         tags: [],
         references: [],
+        // The 1.0 form authors words only; the gallery is the wizard's.
+        attachments: null,
       },
     });
   });

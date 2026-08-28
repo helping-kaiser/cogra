@@ -79,6 +79,21 @@ function referenceInputs(references: readonly ReferenceDraft[] | undefined) {
   );
 }
 
+/**
+ * The gallery, as the contract wants it: the list IS the order, so
+ * `displayOrder` states each entry's own index and `isCover` is true on the
+ * first and nowhere else. A value that disagrees with its position is refused
+ * rather than quietly overridden, so both are derived here and never passed in.
+ */
+export function attachmentInputs(mediaIds: readonly string[] | undefined) {
+  if (mediaIds === undefined || mediaIds.length === 0) return null;
+  return mediaIds.map((mediaId, index) => ({
+    mediaId,
+    displayOrder: index,
+    isCover: index === 0,
+  }));
+}
+
 /** One page per fetch; the server default is the same number. */
 export const CONTENT_PAGE_SIZE = 20;
 
@@ -200,10 +215,13 @@ export async function preparePost(
   fields: {
     title: string | null;
     description: string | null;
-    content: string;
+    /** Null on a media post: the body is words XOR media (D16). */
+    content: string | null;
     license: LicenseChoice;
     tags?: readonly TagDraft[];
     references?: readonly ReferenceDraft[];
+    /** Asset ids already uploaded, in gallery order. */
+    attachments?: readonly string[];
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -216,6 +234,7 @@ export async function preparePost(
             description: fields.description,
             content: fields.content,
             license: fields.license,
+            attachments: attachmentInputs(fields.attachments),
             // The composer's tags are explicit structured input, never
             // parsed from the body (api-spec.md `preparePost`); each
             // carries the pair its sliders hold (F6).
