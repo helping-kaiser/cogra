@@ -37,6 +37,17 @@ query HashtagDetail($name: String!, $includePending: Boolean! = true) {
             value
             status
           }
+          # The same card renders here, so it reads the same gallery.
+          attachments {
+            id
+            url
+            altText
+            status
+            options {
+              aspectRatio
+            }
+          }
+          attachmentsStatus
           author {
             id
             handle

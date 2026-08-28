@@ -143,12 +143,30 @@ export async function fetchAuthorRecords(
   });
 }
 
+/**
+ * A profile field the update leaves alone, clears, or replaces.
+ *
+ * The three-valued rule is the profile's own and differs from the two-valued
+ * one every content edit uses, which is exactly why it is spelled out in a type
+ * rather than left to `undefined` discipline: omitted = untouched, explicit
+ * null = cleared, a value = replaced. `undefined` in a GraphQL variables object
+ * serialises to an absent field, which is the "untouched" the contract means.
+ */
+export type MediaSelection = "unchanged" | { readonly clear: true } | { readonly mediaId: string };
+
+function mediaField(selection: MediaSelection | undefined): string | null | undefined {
+  if (selection === undefined || selection === "unchanged") return undefined;
+  return "clear" in selection ? null : selection.mediaId;
+}
+
 export async function prepareProfileUpdate(
   client: ApolloClient,
   fields: {
     displayName: string;
     bio: string | null;
     websiteUrl: string | null;
+    avatar?: MediaSelection;
+    cover?: MediaSelection;
   },
 ): Promise<Outcome<readonly StagedWriteView[]>> {
   return payloadOutcome(
@@ -160,6 +178,8 @@ export async function prepareProfileUpdate(
             displayName: fields.displayName,
             bio: fields.bio,
             websiteUrl: fields.websiteUrl,
+            avatarMediaId: mediaField(fields.avatar),
+            coverMediaId: mediaField(fields.cover),
           },
         },
       }),

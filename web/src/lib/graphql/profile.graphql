@@ -19,6 +19,23 @@ query UserProfile($handle: String!) {
       value
       status
     }
+    # Null is the ordinary state, not a gap: the monogram is the designed
+    # placeholder and stays the permanent fallback (D13).
+    avatar {
+      id
+      url
+      altText
+      status
+    }
+    cover {
+      id
+      url
+      altText
+      status
+      options {
+        aspectRatio
+      }
+    }
   }
 }
 
@@ -37,6 +54,23 @@ query MyProfile {
     websiteUrl {
       value
       status
+    }
+    # Null is the ordinary state, not a gap: the monogram is the designed
+    # placeholder and stays the permanent fallback (D13).
+    avatar {
+      id
+      url
+      altText
+      status
+    }
+    cover {
+      id
+      url
+      altText
+      status
+      options {
+        aspectRatio
+      }
     }
   }
 }

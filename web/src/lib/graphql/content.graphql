@@ -92,6 +92,22 @@ query Posts($first: Int!, $after: String, $includePending: Boolean! = true) {
           value
           status
         }
+        # The gallery, in the author's order, the first entry the cover. A
+        # bounded fold list rather than a connection, so it prices at its
+        # cap. `digest` is deliberately unread: checking the transitive
+        # witness is not what a render does, and the field would cost its
+        # bound on every node.
+        attachments {
+          id
+          url
+          altText
+          status
+          options {
+            aspectRatio
+          }
+        }
+        # One state for the whole set: sensitivity veils the body as one.
+        attachmentsStatus
         author {
           id
           handle
@@ -218,6 +234,22 @@ query PostDetail(
       value
       status
     }
+    # The gallery, in the author's order, the first entry the cover. A
+    # bounded fold list rather than a connection, so it prices at its
+    # cap. `digest` is deliberately unread: checking the transitive
+    # witness is not what a render does, and the field would cost its
+    # bound on every node.
+    attachments {
+      id
+      url
+      altText
+      status
+      options {
+        aspectRatio
+      }
+    }
+    # One state for the whole set: sensitivity veils the body as one.
+    attachmentsStatus
     author {
       id
       handle
@@ -323,6 +355,22 @@ query PostDetail(
             value
             status
           }
+          # The gallery, in the author's order, the first entry the cover. A
+          # bounded fold list rather than a connection, so it prices at its
+          # cap. `digest` is deliberately unread: checking the transitive
+          # witness is not what a render does, and the field would cost its
+          # bound on every node.
+          attachments {
+            id
+            url
+            altText
+            status
+            options {
+              aspectRatio
+            }
+          }
+          # One state for the whole set: sensitivity veils the body as one.
+          attachmentsStatus
           author {
             id
             handle
@@ -420,6 +468,22 @@ query PostDetail(
                   value
                   status
                 }
+                # The gallery, in the author's order, the first entry the cover. A
+                # bounded fold list rather than a connection, so it prices at its
+                # cap. `digest` is deliberately unread: checking the transitive
+                # witness is not what a render does, and the field would cost its
+                # bound on every node.
+                attachments {
+                  id
+                  url
+                  altText
+                  status
+                  options {
+                    aspectRatio
+                  }
+                }
+                # One state for the whole set: sensitivity veils the body as one.
+                attachmentsStatus
                 author {
                   id
                   handle
@@ -545,6 +609,22 @@ query CommentReplies(
             value
             status
           }
+          # The gallery, in the author's order, the first entry the cover. A
+          # bounded fold list rather than a connection, so it prices at its
+          # cap. `digest` is deliberately unread: checking the transitive
+          # witness is not what a render does, and the field would cost its
+          # bound on every node.
+          attachments {
+            id
+            url
+            altText
+            status
+            options {
+              aspectRatio
+            }
+          }
+          # One state for the whole set: sensitivity veils the body as one.
+          attachmentsStatus
           author {
             id
             handle
@@ -642,6 +722,22 @@ query CommentReplies(
                   value
                   status
                 }
+                # The gallery, in the author's order, the first entry the cover. A
+                # bounded fold list rather than a connection, so it prices at its
+                # cap. `digest` is deliberately unread: checking the transitive
+                # witness is not what a render does, and the field would cost its
+                # bound on every node.
+                attachments {
+                  id
+                  url
+                  altText
+                  status
+                  options {
+                    aspectRatio
+                  }
+                }
+                # One state for the whole set: sensitivity veils the body as one.
+                attachmentsStatus
                 author {
                   id
                   handle
