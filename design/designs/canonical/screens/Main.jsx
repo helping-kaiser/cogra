@@ -2,7 +2,7 @@
 export function Screen() {
   return (
     <>
-      <CograBand>
+      <CograBand trailing={<FeedFilter />}>
         <BorrowedViewBand handle="mira" displayName="Mira Voss" avatarSrc="inviter.jpg" actionLabel="Sign in or join" />
         <ApkLine />
       </CograBand>
