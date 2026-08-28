@@ -56,7 +56,15 @@ function LeadingMark({ kind, name, src }) {
   );
 }
 
-export function ReferenceRow({ kind = "post", name, src, pair, onOpen }) {
+/* `sub` is the INDIRECT-HIT line (readme §13, the search rulings): a scoped
+   query that matched through an act's target says both halves — the comment
+   row reads "on <post title>", the offer row "on <item name>". Without it an
+   indirect hit is indistinguishable from a mishit. `value` is the row's right
+   edge: the signed pair in the references sheet, the viewer-relative rank in
+   ranked search results, the age past the seam. (`pair` remains as its old
+   name.) */
+export function ReferenceRow({ kind = "post", name, sub, src, pair, value, onOpen }) {
+  const edge = value ?? pair;
   return (
     <button
       type="button"
@@ -78,20 +86,34 @@ export function ReferenceRow({ kind = "post", name, src, pair, onOpen }) {
       }}
     >
       <LeadingMark kind={kind} name={name} src={src} />
-      <span
-        style={{
-          flex: 1,
-          minWidth: 0,
-          fontSize: "var(--text-body-medium)",
-          lineHeight: "var(--text-body-medium--line-height)",
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-        }}
-      >
-        {name}
+      <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+        <span
+          style={{
+            fontSize: "var(--text-body-medium)",
+            lineHeight: "var(--text-body-medium--line-height)",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {name}
+        </span>
+        {sub && (
+          <span
+            style={{
+              fontSize: "var(--text-body-small)",
+              lineHeight: "var(--text-body-small--line-height)",
+              color: "var(--text-secondary)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {sub}
+          </span>
+        )}
       </span>
-      {pair && (
+      {edge && (
         <span
           style={{
             flex: "none",
@@ -101,7 +123,7 @@ export function ReferenceRow({ kind = "post", name, src, pair, onOpen }) {
             whiteSpace: "nowrap",
           }}
         >
-          {pair}
+          {edge}
         </span>
       )}
     </button>

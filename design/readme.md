@@ -437,7 +437,7 @@ exists in `web/src/lib/ui/` (and, unless noted, in Android's
 | `components/core/` | `Button`, `Card`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip` |
 | `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow` |
 | `components/forms/` | `TextField`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode` |
-| `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `BorrowedViewBand` |
+| `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `BorrowedViewBand`, `CograBand` |
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader` |
 | `components/states/` | `EmptyState`, `LoadingState` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending` |
