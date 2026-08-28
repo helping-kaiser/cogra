@@ -43,6 +43,9 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.truth)
+    // The preview palette pins itself to the repo-root design-tokens.json,
+    // the same contract :app's ColorSchemeTest reads.
+    testImplementation(libs.kotlinx.serialization.json)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.androidx.test.ext.junit)
