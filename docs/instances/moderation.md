@@ -57,8 +57,10 @@ content; the content stays everywhere.
   its category; frontends respect each viewing user's
   `content_filtering_severity_level`
   ([data-model.md](../implementation/data-model.md)) when
-  rendering. The flag can name specific fields or attachments —
-  filter granularity is a Postgres-side, read-side freedom.
+  rendering. The flag can name specific fields — filter
+  granularity is a Postgres-side, read-side freedom. A gallery
+  carries one state for the whole set: a sensitive post veils its
+  body as one region, so there is no per-picture flag to set.
 - **Substrate-visible mark.** The moderation system actor authors
   a **Tag `(0,0)` + payload** toward the named moderation Type
   for the category
@@ -236,8 +238,10 @@ For `illegal`, the cascade removes each targeted record's payload
 whole (§1) — where content spans a revision chain (profile
 revisions, edited bodies), the Proposal names the records it
 covers, and each is removed whole. For `sensitive`, the Postgres
-flag can be narrower — one field, one attachment — because
-filtering is read-side and free of the commitment's granularity.
+flag can be narrower — one field, or the gallery as a whole —
+because filtering is read-side and free of the commitment's
+granularity. It never names a single picture: the body veils as
+one region.
 
 **Out of scope:**
 
