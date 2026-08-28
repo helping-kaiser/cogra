@@ -1,5 +1,5 @@
 import React from "react";
-import { Icon } from "../navigation/Icon.jsx";
+import { Icon, NODE_GLYPHS } from "../navigation/Icon.jsx";
 import { MonogramAvatar } from "../people/ActorChip.jsx";
 
 /* One row of the topics-and-references sheet (readme §13, 2026-08-28), and the
@@ -19,16 +19,9 @@ import { MonogramAvatar } from "../people/ActorChip.jsx";
    changeable default), shown here for any reader: a signed act is public
    record. Right-aligned, `body-small`, never coloured. */
 
-const KIND_GLYPHS = {
-  comment: "chat_bubble",
-  proposal: "how_to_vote",
-  item: "inventory_2",
-  campaign: "campaign",
-  offer: "sell",
-  chat: "forum",
-};
-
-function LeadingMark({ kind, name, src }) {
+/** A node kind's mark, on any surface: avatar, cover, T, #, or the kind's
+ *  glyph from the ONE semantic assignment (`NODE_GLYPHS`, the glyph atoms). */
+export function NodeMark({ kind, name, src }) {
   if (kind === "person") return <MonogramAvatar name={name} src={src} size="md" />;
   const tile = {
     height: "32px",
@@ -51,12 +44,20 @@ function LeadingMark({ kind, name, src }) {
   const letter = kind === "topic" ? "#" : kind === "post" ? "T" : null;
   return (
     <span style={{ ...tile, fontFamily: "var(--font-sans)", fontSize: "var(--text-title-medium)", fontWeight: "var(--text-title-medium--font-weight)" }} aria-hidden="true">
-      {letter ?? <Icon name={KIND_GLYPHS[kind]} size={18} />}
+      {letter ?? <Icon name={NODE_GLYPHS[kind]} size={18} />}
     </span>
   );
 }
 
-export function ReferenceRow({ kind = "post", name, src, pair, onOpen }) {
+/* `sub` is the INDIRECT-HIT line (readme §13, the search rulings): a scoped
+   query that matched through an act's target says both halves — the comment
+   row reads "on <post title>", the offer row "on <item name>". Without it an
+   indirect hit is indistinguishable from a mishit. `value` is the row's right
+   edge: the signed pair in the references sheet, the viewer-relative rank in
+   ranked search results, the age past the seam. (`pair` remains as its old
+   name.) */
+export function ReferenceRow({ kind = "post", name, sub, src, pair, value, rank, trailing, onOpen }) {
+  const edge = value ?? pair;
   return (
     <button
       type="button"
@@ -77,32 +78,72 @@ export function ReferenceRow({ kind = "post", name, src, pair, onOpen }) {
         textAlign: "left",
       }}
     >
-      <LeadingMark kind={kind} name={name} src={src} />
-      <span
-        style={{
-          flex: 1,
-          minWidth: 0,
-          fontSize: "var(--text-body-medium)",
-          lineHeight: "var(--text-body-medium--line-height)",
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-        }}
-      >
-        {name}
+      <NodeMark kind={kind} name={name} src={src} />
+      <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+        <span
+          style={{
+            fontSize: "var(--text-body-medium)",
+            lineHeight: "var(--text-body-medium--line-height)",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {name}
+        </span>
+        {sub && (
+          <span
+            style={{
+              fontSize: "var(--text-body-small)",
+              lineHeight: "var(--text-body-small--line-height)",
+              color: "var(--text-secondary)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {sub}
+          </span>
+        )}
       </span>
-      {pair && (
+      {/* A RANK wears the score's own glyph, so the number is recognized before
+          it is read — the same graph mark the post card's affordance row
+          carries. A plain `value` (the signed pair, an age) stays bare. A
+          `trailing` node wins over both: the PICKER's edge is the action (the
+          add mark), because there the whole row's tap picks — ranking still
+          orders the list, the number just yields the edge to the act. */}
+      {trailing ? (
+        <span aria-hidden="true" style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }}>{trailing}</span>
+      ) : rank ? (
         <span
           style={{
             flex: "none",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "4px",
             fontSize: "var(--text-body-small)",
             lineHeight: "var(--text-body-small--line-height)",
             color: "var(--text-secondary)",
             whiteSpace: "nowrap",
           }}
         >
-          {pair}
+          <Icon name="graph" size={14} />
+          {rank}
         </span>
+      ) : (
+        edge && (
+          <span
+            style={{
+              flex: "none",
+              fontSize: "var(--text-body-small)",
+              lineHeight: "var(--text-body-small--line-height)",
+              color: "var(--text-secondary)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {edge}
+          </span>
+        )
       )}
     </button>
   );
