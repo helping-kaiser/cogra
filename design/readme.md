@@ -329,9 +329,10 @@ anything a consumer builds gets the same behaviour by adding those two
 classes.
 ### Imagery
 
-**Avatars are monogram circles** in
-`secondaryContainer`/`onSecondaryContainer` — the *designed* placeholder,
-not a gap, and they stay that way until the media-avatar slice lands.
+**An avatar is the actor's picture where they have one**, and a
+**monogram circle** in `secondaryContainer`/`onSecondaryContainer`
+where they do not — the *designed* placeholder, not a gap waiting to
+be filled, and where a picture fails to load it is what shows.
 
 **Photography now exists as mock material** (`assets/photos/`, ten real
 photographs at true ratios — food, people, animals, scenery). It is
@@ -917,14 +918,13 @@ content, never a silent gap — a statement of fact, not a warning; author,
 timestamp, and thread structure survive, and redaction is
 record-granular. Sensitive: **a gentle blur with tap to reveal**, tuned
 by the reader's own `content_filtering_severity_level` (0–10,
-backend-stored). **Blur only what is marked** — the granularity is the
-field or the attachment, so one image in a gallery blurs alone, and so
-can a title or a description while the rest of the post reads normally.
-Never blanket a post. Neither state may use `error` colouring. Genuinely
+backend-stored). **The body blurs as one region** — media, text, and
+description together, under a single veil with one reveal. The title
+stays outside it, so a reader can tell what they are choosing to
+reveal. Picture-by-picture blur inside a gallery is the UI this rule
+exists to avoid. Neither state may use `error` colouring. Genuinely
 open inside that: the literal copy, the blur radius and overlay, whether
-reveal is per-item or session-sticky, and how 0–10 maps to blur-or-not.
-
-**Media avatars** (slice 2.5) are settled and can be designed.
+reveal is session-sticky, and how 0–10 maps to blur-or-not.
 
 **Feed, Search, Explore, Wallet, and the marketplace** are product
 surfaces whose decisions are recorded in the product docs rather than
@@ -1080,10 +1080,9 @@ collapse to one line under the description; the title clamps to one
 line, the description to two. The expanded detail view may exceed
 the screen.
 
-To port to the product docs: the body XOR (the API today has
-`content` required with attachments beside it), the sensitive
-self-mark field and its fixed per-field policy, the default-license
-account setting, and the edit batch carrying topic/citation acts.
+To port to the product docs: the sensitive self-mark field and its
+fixed per-field policy, the default-license account setting, and
+the edit batch carrying topic/citation acts.
 
 ### Comments live in a sheet — 2026-08-28
 
