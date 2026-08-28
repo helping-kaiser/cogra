@@ -1670,6 +1670,19 @@ type ReferenceClaim {
 	"""
 	support: Dimension!
 	"""
+	How many counter-records withdrawing this citation stages right
+	now — the gesture's cost, since each is its own priced act
+	(D11). Never zero: a bundle already netted to `(0, 0)` has left
+	the fold and is not served here.
+	
+	Served for the same reason `StanceBundle.severanceCost` is: a
+	removal that costs more than one act must be able to say so
+	*before* it is confirmed. The clipped `relevance` and `support`
+	beside it cannot answer this — the clip has already lost how far
+	past `1` the raw sums reach.
+	"""
+	withdrawalCost: Int!
+	"""
 	True while any record in the bundle is still in flight.
 	"""
 	pending: Boolean!

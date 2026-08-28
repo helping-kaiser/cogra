@@ -875,6 +875,72 @@ async fn withdrawal_stages_the_counter_records_that_net_the_bundle(pool: PgPool)
     assert!(claims.is_empty(), "a netted bundle leaves the view");
 }
 
+/// B4: the number the read side quotes is the number the write side then
+/// stages. A client asks the author to confirm off `withdrawalCost`, so a
+/// claim quoting one act while the prepare returns three would mislead an
+/// author into a gesture they did not agree to.
+///
+/// The bundle here is deliberately clipped — its raw sums reach past `1`
+/// on both axes — because the clip is exactly what a claim's `relevance`
+/// and `support` have already lost, and reading the cost off them would
+/// quote one act for a three-act withdrawal.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_served_withdrawal_cost_is_the_batch_the_prepare_stages(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, key) = rig.funded_actor("alice").await;
+    let carrier = rig.post(alice, &key, "carrier").await;
+    let cited = rig.post(alice, &key, "cited").await;
+
+    rig.cite(alice, &key, carrier, cited, 0.9, 0.5).await;
+    rig.cite(alice, &key, carrier, cited, 0.9, 0.5).await;
+    rig.cite(alice, &key, carrier, cited, 0.7, 0.3).await;
+
+    let artifact = rig.node_of(carrier).await;
+    let address = rig.address(alice).await;
+    let claims = references_of(&rig.pool, &artifact, &address, ReferenceView::Landed)
+        .await
+        .expect("folds");
+    assert_eq!(claims.len(), 1);
+    assert_eq!(claims[0].relevance, 1.0, "the served pair is clipped");
+    assert_eq!(claims[0].support, 1.0);
+
+    let batch = references::prepare_reference_withdrawal(
+        &rig.pool,
+        &rig.boundary,
+        GC,
+        alice,
+        carrier,
+        cited,
+    )
+    .await
+    .expect("withdraws");
+    assert_eq!(
+        claims[0].withdrawal_cost as usize,
+        batch.len(),
+        "the quote and the batch answer the same question"
+    );
+    assert_eq!(batch.len(), 3, "⌈max(2.5, 1.3)⌉ counter-records");
+}
+
+/// A citation at the defaults costs exactly one act to withdraw — the
+/// common case the quote must not over-state either.
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_default_citation_quotes_a_one_act_withdrawal(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, key) = rig.funded_actor("alice").await;
+    let carrier = rig.post(alice, &key, "carrier").await;
+    let cited = rig.post(alice, &key, "cited").await;
+
+    rig.cite(alice, &key, carrier, cited, 0.1, 0.1).await;
+
+    let artifact = rig.node_of(carrier).await;
+    let address = rig.address(alice).await;
+    let claims = references_of(&rig.pool, &artifact, &address, ReferenceView::Landed)
+        .await
+        .expect("folds");
+    assert_eq!(claims[0].withdrawal_cost, 1);
+}
+
 /// Withdrawing what is not there stages nothing and says so, rather than
 /// charging θ for a batch of no records.
 #[sqlx::test(migrations = "../../migrations")]
