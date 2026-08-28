@@ -12,6 +12,7 @@ pub mod ingest;
 pub mod l1;
 pub mod loaders;
 pub mod mailer;
+pub mod media;
 pub mod nodes;
 pub mod onboarding;
 pub mod prepare;
