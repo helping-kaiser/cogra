@@ -7,13 +7,6 @@ import android.net.Uri
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.ProcessedPicture
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -31,8 +24,7 @@ import kotlinx.coroutines.withContext
  * Everything runs on [Dispatchers.IO]: a picker hands over ten of these
  * at once and each one decodes a multi-megapixel bitmap.
  */
-@Singleton
-class AndroidMediaProcessor @Inject constructor(
+class AndroidMediaProcessor(
     private val resolver: ContentResolver,
 ) : MediaProcessor {
 
@@ -125,17 +117,3 @@ internal fun Bitmap.cropped(crop: CropSpec): Bitmap {
     return Bitmap.createBitmap(this, x, y, w, h)
 }
 
-/** Binds the platform pipeline behind the domain's own interface. */
-@Module
-@InstallIn(SingletonComponent::class)
-object MediaModule {
-
-    @Provides
-    @Singleton
-    fun contentResolver(@ApplicationContext context: android.content.Context): ContentResolver =
-        context.contentResolver
-
-    @Provides
-    @Singleton
-    fun mediaProcessor(impl: AndroidMediaProcessor): MediaProcessor = impl
-}

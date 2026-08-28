@@ -1,7 +1,8 @@
 // The actor chip / row and its monogram avatar (design.md §6):
 // the compact person-or-group reference every author attribution
-// renders as, opening the actor's profile. Media avatars arrive with
-// slice 2.5; until then the monogram is the designed placeholder.
+// renders as, opening the actor's profile. The chip draws the actor's
+// picture when they have one and the monogram when they do not — the
+// monogram is the designed placeholder, not a gap (D13).
 
 package com.cogra.core.designsystem
 
@@ -24,6 +25,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cogra.core.designsystem.v2.media.CograAvatar
 
 /**
  * The circular letter avatar: the first grapheme of the display name
@@ -62,6 +64,13 @@ fun ActorChip(
     displayName: String?,
     onOpen: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    /**
+     * The actor's picture, when they have one (D13). Null keeps the
+     * monogram, which is the designed fallback rather than a gap — an
+     * actor with no picture and one whose picture failed to load look
+     * alike on purpose.
+     */
+    avatarUrl: Any? = null,
     testTag: String? = null,
 ) {
     val name = displayName?.takeIf { it.isNotBlank() } ?: handle
@@ -72,7 +81,7 @@ fun ActorChip(
             .then(if (onOpen != null) Modifier.heightIn(min = 48.dp).clickable(onClick = onOpen) else Modifier)
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
     ) {
-        MonogramAvatar(name = name, size = 24.dp)
+        CograAvatar(name = name, size = 24.dp, url = avatarUrl)
         Text(
             text = name,
             style = MaterialTheme.typography.labelLarge,
