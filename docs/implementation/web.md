@@ -305,11 +305,41 @@ beside its button, never a read fault. The fault reflects the
 last *completed* fetch — it clears on success, never eagerly at
 fetch start, so a failed retry never flashes the error surface.
 
+## Media
+
+**`next/image`** draws every served asset — Next.js's documented
+image primitive, and the one that gives reserved space for free.
+Tiles use `fill` inside a wrapper carrying a CSS `aspect-ratio`
+from `options.aspectRatio`, with `sizes` stating the widths the
+layout actually asks for so the optimizer serves one of them
+rather than the largest.
+
+- **`alt` comes from `altText`,** and a decorative asset takes
+  `alt=""` — the documented correct value, not an omitted
+  attribute and never a filename.
+- **The optimizer needs the media origin declared.** `url` is
+  absolute and points at the media store, so the origin is
+  configured as a `remotePatterns` entry scoped to `/media/**`.
+  In development the dev server also proxies `/media/*` to that
+  origin, so a phone on the LAN loads pictures from the same
+  origin it already trusts instead of a second one it does not.
+- **A device-local preview is a plain `<img>`.** The crop step's
+  source is an object URL the optimizer cannot fetch, so it is
+  not asked to; `next/image` is for what the server serves.
+- **Pictures are processed in the browser before upload,** on the
+  same envelope Android uses: long edge capped at 1080, WebP at
+  quality 0.8, the author's crop baked into the pixels. The
+  re-encode carries no metadata forward, so EXIF — location,
+  device serial — is gone before upload, and the server strips
+  again rather than trusting it.
+
 ## Accessibility
 
 Part of the bar from day one, never retrofitted: every page
 lands with semantic HTML, ARIA where semantics fall short, and
-keyboard operability, alongside its tests.
+keyboard operability, alongside its tests. A drag gesture always
+has a non-drag equivalent: the crop step's framing is completable
+with discrete move and zoom buttons.
 
 ## Layout
 

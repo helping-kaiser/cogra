@@ -119,11 +119,39 @@ Three failure classes the app absorbs instead of dying:
   clears on success, never eagerly at fetch start, so a failed
   retry never flashes the error surface.
 
+## Media
+
+**Coil 3** (`coil-compose`) is the loader — the Compose-native
+one Android's own Compose documentation points at. It ships no
+network fetcher, so `coil-network-okhttp` rides with it. The
+version tracks the Compose and Kotlin pair the app is on rather
+than the newest release: Coil follows the toolchain, so moving it
+up is an AGP and Kotlin migration, not a dependency bump.
+
+- **`AsyncImage`** draws every asset, inside a
+  `Modifier.aspectRatio()` driven by `options.aspectRatio`, so
+  the tile's space is reserved before a byte arrives and the feed
+  never jumps as pictures load.
+- **`contentDescription` comes from `altText`.** A null `altText`
+  is a null description — decorative — never a fabricated one and
+  never the filename.
+- **Pictures are processed on the device before upload.** The
+  long edge is capped at 1080 and the bytes are re-encoded to
+  WebP at quality 0.8, which is the envelope the platforms at
+  this tier publish. The author's crop is baked into the pixels,
+  so the stored bytes are the post's bytes. The re-encode is also
+  what kills EXIF: a decode-and-re-encode carries no metadata
+  forward, so location and device serial are gone before the
+  bytes leave the phone — and the server strips again rather than
+  trusting that.
+
 ## Accessibility
 
 Part of the bar from day one, never retrofitted: every screen
 lands with its Compose semantics — content descriptions, roles,
-touch-target sizes — alongside its UI tests.
+touch-target sizes — alongside its UI tests. A drag gesture
+always has a non-drag equivalent: the crop step's framing is
+completable with discrete nudge and zoom controls.
 
 ## Screens
 
