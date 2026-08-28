@@ -50,6 +50,7 @@ import { Card } from "@/lib/ui/card";
 import { LicenseChooser, LicenseTerms } from "@/lib/ui/license-fields";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PendingMarker } from "@/lib/ui/pending-marker";
+import { BodyRegion, PostMedia, bodyIsSensitive, hasMedia } from "@/lib/ui/post-media";
 import { MultiActionConfirm, SignedActionsIndicator } from "@/lib/ui/signed-actions";
 import { SigningPending } from "@/lib/ui/signing-pending";
 import { StanceControl } from "@/lib/ui/stance-control";
@@ -689,6 +690,7 @@ export function PostView({
             <ActorChip
               handle={comment.author.handle}
               displayName={comment.author.displayName.value}
+              avatarUrl={comment.author.avatar?.url}
               testId={`comment-author-${comment.id}`}
             />
           )}
@@ -768,7 +770,15 @@ export function PostView({
             </div>
           ) : (
             <>
-              <p className="text-body-medium">{comment.content.value}</p>
+              {/* A comment is text PLUS optional media — the XOR is the post's
+                  rule alone (D16) — so both render, and both are veiled as one
+                  body when the comment is marked. */}
+              <BodyRegion veiled={bodyIsSensitive(comment)} testId={`comment-${comment.id}`}>
+                <p className="text-body-medium">{comment.content.value}</p>
+                {hasMedia(comment) && (
+                  <PostMedia node={comment} testId={`comment-media-${comment.id}`} />
+                )}
+              </BodyRegion>
               <LicenseTerms
                 license={comment.license}
                 testId={`comment-license-terms-${comment.id}`}
@@ -982,23 +992,32 @@ export function PostView({
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
       {header(isOwnPost)}
-      <div>
-        {post.title.value && (
-          <h1 className="text-headline-small" data-testid="post-title">
-            {post.title.value}
-          </h1>
+      {/* The title stands outside the veil and above the gallery; everything
+          else in the body region is veiled as one (D12). */}
+      {post.title.value && (
+        <h1 className="text-headline-small" data-testid="post-title">
+          {post.title.value}
+        </h1>
+      )}
+      <BodyRegion veiled={bodyIsSensitive(post)} testId="post">
+        {hasMedia(post) && (
+          <PostMedia node={post} testId="post-media" bleed="page" preloadLead />
         )}
         {post.description.value && (
           <p className="text-body-medium text-on-surface-variant">{post.description.value}</p>
         )}
-      </div>
-      <p className="whitespace-pre-wrap" data-testid="post-body">
-        {post.content.value}
-      </p>
+        {/* Null on a media post, whose body is its gallery. */}
+        {post.content.value && (
+          <p className="whitespace-pre-wrap" data-testid="post-body">
+            {post.content.value}
+          </p>
+        )}
+      </BodyRegion>
       {post.author && (
         <ActorChip
           handle={post.author.handle}
           displayName={post.author.displayName.value}
+          avatarUrl={post.author.avatar?.url}
           testId="post-author"
         />
       )}

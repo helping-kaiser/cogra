@@ -1,0 +1,27 @@
+# The media surface (api-spec.md "Content authoring", roadmap "Slice
+# 2.5.1"). One asset per call by design: the composer issues them
+# concurrently and each is retried on its own, which is worth more than
+# one fat request that fails whole.
+#
+# This is the app's only operation that carries bytes. The `Upload`
+# scalar rides a GraphQL multipart request — see `apollo-link.ts` for the
+# mechanism and its source.
+
+mutation UploadMedia($input: UploadMediaInput!) {
+  uploadMedia(input: $input) {
+    media {
+      id
+      url
+      altText
+      status
+      options {
+        aspectRatio
+      }
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
