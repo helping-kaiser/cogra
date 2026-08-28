@@ -2,7 +2,7 @@
 export function Screen() {
   return (
     <>
-      <CograBand />
+      <CograBand trailing={<FeedFilter />} />
       <FeedList>
         <TaskCard title="Your post didn't land" body={'"Salt maps of the coast road" couldn\'t finish settling. Nothing was spent — your draft is saved.'}>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>

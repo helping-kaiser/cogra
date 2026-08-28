@@ -6,10 +6,7 @@ export function Screen() {
     <>
       <div style={{ flex: "none", paddingTop: 12 }}>
         <SearchBar query="brackish cartography" />
-        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 16px 8px 16px" }}>
-          <SearchFilterTrigger reading="All kinds · ranked · showing seen" />
-          <HelpDot />
-        </div>
+        <SearchTriggerRow reading="Everything" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 24px" }}>
         <EmptyState title="Nothing carries that name. Search reads names and titles, never bodies — fewer words reach further." />
