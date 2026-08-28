@@ -144,27 +144,30 @@ fun SensitiveVeil(
     }
 }
 
+/** A post body — media plus its description — for the veil's previews. */
+@Composable
+private fun VeilBodySample() {
+    Column(verticalArrangement = Arrangement.spacedBy(Space.x2)) {
+        MediaGallery(listOf(MediaItem(null, 1.91f, "A wide frame")))
+        Text(
+            "Rubbings from three weekends at low tide.",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
+}
+
 @ThemePreviews
 @Composable
 private fun SensitiveVeilStates() {
-    val body = @Composable {
-        Column(verticalArrangement = Arrangement.spacedBy(Space.x2)) {
-            MediaGallery(listOf(MediaItem(null, 1.91f, "A wide frame")))
-            Text(
-                "Rubbings from three weekends at low tide.",
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
-    }
     Cogra2PreviewTheme {
         PreviewMediaColumn {
-            SensitiveVeil(veiled = true, onReveal = {}) { body() }
+            SensitiveVeil(veiled = true, onReveal = {}) { VeilBodySample() }
             SensitiveVeil(
                 veiled = true,
                 onReveal = {},
                 reason = "Shows an injury",
-            ) { body() }
-            SensitiveVeil(veiled = false, onReveal = {}) { body() }
+            ) { VeilBodySample() }
+            SensitiveVeil(veiled = false, onReveal = {}) { VeilBodySample() }
             Box(Modifier.fillMaxSize())
         }
     }
