@@ -250,21 +250,31 @@ costs its requested (or default) page size times the per-item
 cost, so a nested full-page-connections query prices
 multiplicatively; an author-owned fold list (`topics`,
 `references`) takes no page argument and costs a stated bound of
-50 rows times the per-row cost. A tripped budget is a
-message-only GraphQL validation error ("Query is nested too
-deep." / "Query is too complex."), with no `extensions.code` —
-clients treat it as a generic transport failure.
+50 rows times the per-row cost, and a **gallery** costs its
+parent's write-side cap — ten for a post, four for a comment —
+times the per-item cost. A tripped budget is a message-only
+GraphQL validation error ("Query is nested too deep." / "Query is
+too complex."), with no `extensions.code` — clients treat it as a
+generic transport failure.
 
 **The fold bound is enforced, not assumed.** Fifty is the
 write-side cap on one author's standing set per artifact, per
 fold family — so a fold list cannot serve more rows than it was
 priced for, and the budget is a bound on the server's work rather
-than a hope about it.
+than a hope about it. A gallery's bound is enforced the same way,
+by the cap prepare refuses past.
 
 **The ceilings are measured, not chosen.** Both are derived from
 replaying every committed operation of both clients against the
-schema; the heaviest is the Android post-detail read at 176 198
+schema; the heaviest is the Android post-detail read at 178 347
 complexity and 12 levels, and 250 000 leaves it ~1.4× headroom.
+That headroom is now thin: the stated ratio admits 178 571, so
+the heaviest operation clears it by 224. A selection that
+multiplies across the thread — a comment author's avatar costs
+560, priced eighty times over — no longer fits, and the ceilings
+are owed a deliberate re-derivation rather than another
+selection squeezed under them
+([open-questions.md](../open-questions.md)).
 A standing test replays the whole corpus under both postures and
 fails by operation name, and re-measures it by bisection so a
 document growing *into* the headroom fails before it grows past
