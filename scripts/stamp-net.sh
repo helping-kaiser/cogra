@@ -24,14 +24,17 @@ IP=$(ip -4 route get 1.1.1.1 2>/dev/null | grep -oE 'src [0-9.]+' | awk '{print 
 
 sed -i -E "s#^DATABASE_URL=postgres://([^@]+)@[^:/]+:#DATABASE_URL=postgres://\1@${IP}:#" .env
 sed -i -E "s#^WEB_ORIGIN=https?://[^:/]+#WEB_ORIGIN=https://${IP}#" .env
-# The media store is the same kind of hop as the database — a host process
-# reaching a published container port — so it takes the same address. Its
-# public base is phone-facing instead: the web origin's /media proxy, so a
-# phone loads bytes from the https origin it already trusts.
-sed -i -E "s#^MEDIA_S3_ENDPOINT=https?://[^:/]+#MEDIA_S3_ENDPOINT=http://${IP}#" .env
+# The media store keeps its loopback address deliberately. Only the API
+# and the web server talk to it, both of them processes on this machine,
+# and a phone reaches media through the web origin's /media proxy rather
+# than the store — so the store needs no LAN address, and not giving it
+# one keeps the bucket off the network the guests are on.
+#
+# MEDIA_BASE_URL is the phone-facing half and does take the address: it is
+# the web origin, so bytes arrive over the https origin the app trusts.
 sed -i -E "s#^MEDIA_BASE_URL=https?://[^:/]+#MEDIA_BASE_URL=https://${IP}#" .env
 
-grep -E '^(DATABASE_URL|WEB_ORIGIN|MEDIA_S3_ENDPOINT|MEDIA_BASE_URL)=' .env
+grep -E '^(DATABASE_URL|WEB_ORIGIN|MEDIA_BASE_URL)=' .env
 echo "stamped ${IP}"
 
 # The certificate and the CA behind it. Browsers reach the dev server past
