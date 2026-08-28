@@ -20,6 +20,10 @@ unwrap_used = "deny"
 [workspace.dependencies]
 # Async runtime
 tokio = { version = "1", features = ["full"] }
+# The body-stream-to-AsyncRead bridge the GraphQL multipart parse needs —
+# the same two adapters async-graphql-axum's own extractor uses, pulled in
+# directly because that extractor cannot be given upload limits.
+tokio-util = { version = "0.7", features = ["io", "compat"] }
 
 # Web framework + GraphQL
 # axum 0.8 matches the version async-graphql-axum 7 builds against, so the
@@ -76,6 +80,28 @@ base64 = { version = "0.23" }
 axum-client-ip = { version = "1" }
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 sha1 = { version = "0.10" }
+
+# Media carriage. `object_store` speaks the S3 object protocol behind one
+# small trait, which is the boundary the standalone media service needs —
+# the same code reaches a MinIO container, a cloud bucket, or a federated
+# peer's store.
+#
+# `aws` is the bundled feature its own documentation points at: S3 over
+# the built-in reqwest transport, signed by aws-lc-rs "matching reqwest's
+# default so that applications do not end up with two crypto stacks".
+# Splitting it (`aws-base` + `reqwest` + `ring`) to keep aws-lc-rs out —
+# the reason jsonwebtoken is on `rust_crypto` — does not work here and
+# was measured, not assumed: the transport's TLS is `reqwest/rustls`,
+# whose only provider in reqwest 0.13 is aws-lc-rs, so the split leaves
+# TLS unselected (the build fails outright) and, once selected, adds ring
+# beside aws-lc-rs rather than instead of it. The C toolchain arrives
+# with the HTTPS client either way; this way it arrives once.
+object_store = { version = "0.14", default-features = false, features = ["aws"] }
+
+# The decode probe over uploaded pictures (WebP only — clients re-encode
+# on device). Decoding alone: the crate's encoders, and every format but
+# the one that is stored, are off.
+image = { version = "0.25", default-features = false, features = ["webp"] }
 
 # The key-backup blob reference (auth.md "Blob format (v1)") — used only
 # by common's golden-vector export. Pinned to the 0.10-generation

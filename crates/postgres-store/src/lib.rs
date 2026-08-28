@@ -9,6 +9,7 @@ pub mod auth;
 pub mod content;
 pub mod genesis;
 pub mod hashtag;
+pub mod media;
 pub mod mirror;
 pub mod params;
 pub mod profile;

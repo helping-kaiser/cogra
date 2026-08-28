@@ -16,7 +16,7 @@ WEB_APK_DIR       = web/public/downloads
 # guest APK trusts it so it can talk https to this machine's web origin.
 ANDROID_DEV_CA = android/app/src/devCa/res/raw/cogra_dev_ca.pem
 
-.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint lint-corpus regenerate fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-prod web-apk guest-apk web-ci fuzz-interchange fuzz-linter
+.PHONY: help init up down reset-db migrate wait-media api api-release bootstrap run ci lint lint-corpus regenerate fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-prod web-apk guest-apk web-ci fuzz-interchange fuzz-linter
 
 help: ## Show available commands
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -39,7 +39,7 @@ init: ## First-time setup: copy .env, check & install dependencies
 	fi
 	@echo "All dependencies ready."
 
-up: ## Start all services (Postgres)
+up: ## Start all services (Postgres, the media object store)
 	$(DOCKER_COMPOSE) up -d
 
 down: ## Stop all services
@@ -51,10 +51,18 @@ reset-db: ## Wipe all data volumes and restart fresh
 	@echo "Waiting for Postgres to be ready..."
 	@until $(DOCKER_COMPOSE) exec -T postgres pg_isready -U $(POSTGRES_USER) > /dev/null 2>&1; do sleep 1; done
 	$(MAKE) migrate
+	$(MAKE) wait-media
 	@echo "Done. Databases are clean and migrated."
 
 migrate: ## Run pending Postgres migrations
 	sqlx migrate run --source migrations --database-url $(DATABASE_URL)
+
+# `mc ready local` is the readiness probe the media image's own compose
+# recipe uses; the bucket is provisioned by the media-init one-shot, so a
+# ready store is a usable store.
+wait-media: ## Block until the media object store answers
+	@echo "Waiting for the media store to be ready..."
+	@until $(DOCKER_COMPOSE) exec -T media mc ready local > /dev/null 2>&1; do sleep 1; done
 
 api: ## Start the API server
 	$(CARGO) run -p api
@@ -90,6 +98,7 @@ dev: up ## Start DBs, run migrations, then start the API
 	@echo "Waiting for Postgres to be ready..."
 	@until $(DOCKER_COMPOSE) exec -T postgres pg_isready -U $(POSTGRES_USER) > /dev/null 2>&1; do sleep 1; done
 	$(MAKE) migrate
+	$(MAKE) wait-media
 	$(MAKE) api
 
 run: init dev ## Full start: init + dev (first-time friendly)

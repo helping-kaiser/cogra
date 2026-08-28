@@ -71,9 +71,16 @@ impl Rig {
             onboarding: api::onboarding::OnboardingConfig::default(),
             rate_limits: api::ratelimit::RateLimitConfig::unlimited(),
             breach: Arc::new(api::breach::DisabledCorpus),
+            media: api::media::MediaConfig::default(),
+            blobs: Arc::new(api::media::blob::in_memory()),
         });
         Self {
-            app: api::app(schema, auth, axum_client_ip::ClientIpSource::XRealIp),
+            app: api::app(
+                schema,
+                auth,
+                axum_client_ip::ClientIpSource::XRealIp,
+                &api::media::MediaConfig::default(),
+            ),
             pool,
             mailer,
         }

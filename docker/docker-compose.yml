@@ -17,5 +17,58 @@ services:
       timeout: 5s
       retries: 5
 
+  # The standalone media service (architecture.md "Infrastructure"): an
+  # S3-compatible object store with its own container, its own volume, and
+  # its own lifecycle. It is never in the API process and never in
+  # Postgres — the API speaks S3 to it, which is the boundary that survives
+  # the store moving to another host, another provider, or a federated
+  # peer. Registry-qualified so podman resolves it without a search list.
+  media:
+    image: docker.io/minio/minio
+    container_name: gnp_media
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MEDIA_ACCESS_KEY_ID:-cogra_media}
+      MINIO_ROOT_PASSWORD: ${MEDIA_SECRET_ACCESS_KEY:-cogra_media_secret}
+    ports:
+      - "${MEDIA_PORT:-9000}:9000"
+      - "${MEDIA_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - media_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # One-shot bucket setup. The store creates no bucket on its own, and the
+  # API's S3 client is an object API with no bucket-management surface, so
+  # the bucket is provisioned here instead of on every server start.
+  # Anonymous download is the read posture the contract already commits to:
+  # media is content, and "every content body is readable without an
+  # account" (api-spec.md "Everything on the graph is public"). It waits by
+  # retrying rather than on a compose health condition, so the recipe holds
+  # on runtimes whose `depends_on` conditions differ.
+  media-init:
+    image: docker.io/minio/minio
+    container_name: gnp_media_init
+    depends_on:
+      - media
+    restart: "no"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        until mc alias set store http://media:9000 \
+            "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"; do sleep 1; done
+        mc mb --ignore-existing "store/$$MEDIA_BUCKET"
+        mc anonymous set download "store/$$MEDIA_BUCKET"
+    environment:
+      MINIO_ROOT_USER: ${MEDIA_ACCESS_KEY_ID:-cogra_media}
+      MINIO_ROOT_PASSWORD: ${MEDIA_SECRET_ACCESS_KEY:-cogra_media_secret}
+      MEDIA_BUCKET: ${MEDIA_BUCKET:-cogra-media}
+
 volumes:
   postgres_data:
+  media_data:
