@@ -7,29 +7,12 @@
 // every other operation still leaves as the plain JSON POST it was before the
 // terminating link changed.
 
-import { ApolloClient, InMemoryCache, gql } from "@apollo/client";
+import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { LogInDocument, UploadMediaDocument } from "@/__generated__/graphql";
 import { authorizedLink } from "./apollo-link";
 import type { TokenStore } from "@/lib/session/token-store";
-
-const UPLOAD = gql`
-  mutation Upload($input: UploadMediaInput!) {
-    uploadMedia(input: $input) {
-      media {
-        id
-      }
-    }
-  }
-`;
-
-const PLAIN = gql`
-  mutation Plain($id: UUID!) {
-    prepareStance(input: { target: $id }) {
-      node
-    }
-  }
-`;
 
 function store(token: string | null): TokenStore {
   return { accessToken: () => token } as TokenStore;
@@ -68,7 +51,7 @@ describe("the terminating link", () => {
     });
 
     await clientWith("t0ken").mutate({
-      mutation: UPLOAD,
+      mutation: UploadMediaDocument,
       variables: { input: { file, altText: "a salt crust" } },
     });
 
@@ -105,15 +88,13 @@ describe("the terminating link", () => {
     const calls = captureFetch();
 
     await clientWith(null).mutate({
-      mutation: PLAIN,
-      variables: { id: "11111111-1111-1111-1111-111111111111" },
+      mutation: LogInDocument,
+      variables: { input: { email: "ada@example.test", password: "secret" } },
     });
 
     const { init } = calls[0]!;
     expect(init.body).toBeTypeOf("string");
-    expect(JSON.parse(init.body as string).variables.id).toBe(
-      "11111111-1111-1111-1111-111111111111",
-    );
+    expect(JSON.parse(init.body as string).variables.input.email).toBe("ada@example.test");
     const headers = init.headers as Record<string, string>;
     expect(headers["content-type"]).toContain("application/json");
     // No token in this tab: the request goes out anonymous rather than with an
