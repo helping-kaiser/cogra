@@ -161,8 +161,12 @@ ${logicFor(extraProps, extraVals)}
 `;
 
 // ---- compile and render every screen.
-const screensDir = join(root, "designs/canonical/screens");
-const outDir = join(root, "designs/canonical");
+// An argument renders another canvas's screens/ (ideation canvases build from
+// the masters too — freezing happens by committing the outputs, never by
+// copying markup): `node render-screens.mjs designs/search`.
+const canvasDir = process.argv[2] ?? "designs/canonical";
+const screensDir = join(root, canvasDir, "screens");
+const outDir = join(root, canvasDir);
 // `_shared.jsx` is prepended to every screen: screen-level helpers (the logo
 // band, sample people) that are not design-system components live once there.
 let prelude = "";
