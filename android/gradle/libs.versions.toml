@@ -43,6 +43,12 @@ hiltNavigationCompose = "1.3.0"
 # GraphQL
 apollo = "4.4.3"
 
+# Images. Coil 3 is the Compose-native loader Android's own Compose docs
+# point at, and the one the media slice's D20 ruling names. Coil 3 ships no
+# network fetcher by default, so `coil-network-okhttp` is required as well
+# to load over HTTP — see https://coil-kt.github.io/coil/network/.
+coil = "3.6.0"
+
 # Crypto — Tink backs the encrypted token store (EncryptedSharedPreferences
 # is deprecated in current androidx.security-crypto). BouncyCastle's
 # lightweight API backs the signing crypto in core:crypto: Tink's own
@@ -125,6 +131,11 @@ androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navig
 
 # Apollo (GraphQL)
 apollo-runtime = { group = "com.apollographql.apollo", name = "apollo-runtime", version.ref = "apollo" }
+
+# Images
+coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
+coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
+coil-test = { group = "io.coil-kt.coil3", name = "coil-test", version.ref = "coil" }
 
 # Crypto
 tink-android = { group = "com.google.crypto.tink", name = "tink-android", version.ref = "tink" }
