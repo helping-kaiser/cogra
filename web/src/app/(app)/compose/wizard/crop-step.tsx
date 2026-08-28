@@ -42,7 +42,10 @@ export function CropStep({
 
   return (
     <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 pb-4 pt-2">
-      <div className="flex gap-2" role="radiogroup" aria-label="The post's shape">
+      {/* A named group of toggles rather than a radiogroup: the chips report
+          `aria-pressed`, and a radiogroup whose children are not radios lies to
+          a screen reader about what it will find inside. */}
+      <div className="flex gap-2" role="group" aria-label="The post's shape">
         {POST_SHAPE_ORDER.map((option) => (
           <Chip
             key={option}
