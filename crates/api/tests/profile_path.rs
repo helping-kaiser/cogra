@@ -333,3 +333,126 @@ async fn refuses_an_update_without_the_anchoring_registration(pool: PgPool) {
         other => panic!("expected Internal, got {other:?}"),
     }
 }
+
+/// The avatar and cover slots, whose three values differ from every other
+/// profile field's two.
+mod pictures {
+    use super::*;
+    use postgres_store::media as media_store;
+
+    async fn asset(pool: &PgPool, author: Uuid, fill: u8) -> Uuid {
+        let id = Uuid::new_v4();
+        media_store::insert(
+            pool,
+            id,
+            author,
+            &[fill; 32],
+            "sha256",
+            &format!("{id}.webp"),
+            "image/webp",
+            1024,
+            Some("a face"),
+            &serde_json::json!({ "v": 1, "aspect_ratio": "1:1" }),
+        )
+        .await
+        .expect("asset row");
+        id
+    }
+
+    fn with_pictures(
+        avatar: Option<Option<Uuid>>,
+        cover: Option<Option<Uuid>>,
+    ) -> ProfileUpdateDraft {
+        ProfileUpdateDraft {
+            avatar_media_id: avatar,
+            cover_media_id: cover,
+            ..draft(None, None, None)
+        }
+    }
+
+    async fn current(pool: &PgPool, actor: Uuid) -> (Option<Uuid>, Option<Uuid>) {
+        let version = profile_store::current_profile(pool, actor)
+            .await
+            .expect("reads")
+            .expect("profile");
+        (version.avatar_id, version.cover_id)
+    }
+
+    /// All three values, in the one order that tells them apart: set,
+    /// then leave alone, then clear. A two-valued field could not express
+    /// the middle step — which is why the slot is nested rather than
+    /// borrowing the text fields' empty-string clear.
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn a_picture_slot_is_set_then_untouched_then_cleared(pool: PgPool) {
+        let rig = Rig::new(pool).await;
+        let (actor, key) = rig.registered_actor("ada").await;
+        let face = asset(&rig.pool, actor, 1).await;
+        let banner = asset(&rig.pool, actor, 2).await;
+
+        rig.land_update(
+            actor,
+            &key,
+            with_pictures(Some(Some(face)), Some(Some(banner))),
+        )
+        .await;
+        assert_eq!(current(&rig.pool, actor).await, (Some(face), Some(banner)));
+
+        rig.land_update(actor, &key, draft(None, Some("a new bio"), None))
+            .await;
+        assert_eq!(
+            current(&rig.pool, actor).await,
+            (Some(face), Some(banner)),
+            "an update that says nothing about the pictures leaves them"
+        );
+
+        rig.land_update(actor, &key, with_pictures(Some(None), None))
+            .await;
+        assert_eq!(
+            current(&rig.pool, actor).await,
+            (None, Some(banner)),
+            "an explicit clear takes the avatar and only the avatar"
+        );
+    }
+
+    /// The anti-hijack rule reaches a profile picture too: an avatar must
+    /// be an asset this account uploaded.
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn a_picture_slot_refuses_someone_elses_asset(pool: PgPool) {
+        let rig = Rig::new(pool).await;
+        let (actor, _key) = rig.registered_actor("ada").await;
+        let (stranger, _stranger_key) = rig.registered_actor("mallory").await;
+        let theirs = asset(&rig.pool, stranger, 3).await;
+
+        match rig
+            .update(actor, with_pictures(Some(Some(theirs)), None))
+            .await
+        {
+            Err(ProfileError::Media(e)) => {
+                assert_eq!(e.path, vec!["avatarMediaId".to_string()]);
+            }
+            other => panic!("expected a media refusal, got {other:?}"),
+        }
+
+        match rig
+            .update(actor, with_pictures(None, Some(Some(Uuid::new_v4()))))
+            .await
+        {
+            Err(ProfileError::Media(e)) => {
+                assert_eq!(e.path, vec!["coverMediaId".to_string()]);
+            }
+            other => panic!("expected a media refusal, got {other:?}"),
+        }
+    }
+
+    /// A picture on its own is a change, so an update carrying only one
+    /// is not the empty update the surface refuses.
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn a_picture_alone_is_enough_to_be_an_update(pool: PgPool) {
+        let rig = Rig::new(pool).await;
+        let (actor, _key) = rig.registered_actor("ada").await;
+        let face = asset(&rig.pool, actor, 1).await;
+        rig.update(actor, with_pictures(Some(Some(face)), None))
+            .await
+            .expect("prepares");
+    }
+}
