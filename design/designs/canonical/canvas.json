@@ -416,6 +416,38 @@
       "y": 11920,
       "w": 390,
       "h": 844
+    },
+    {
+      "file": "Feed.dc.html",
+      "title": "Feed · signed in",
+      "x": 0,
+      "y": 12980,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "FeedSheet.dc.html",
+      "title": "Feed · the filter sheet",
+      "x": 480,
+      "y": 12980,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "FeedNarrowed.dc.html",
+      "title": "Feed · narrowed",
+      "x": 960,
+      "y": 12980,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "FeedNothing.dc.html",
+      "title": "Feed · everything off",
+      "x": 1440,
+      "y": 12980,
+      "w": 390,
+      "h": 844
     }
   ],
   "annotations": [
@@ -523,6 +555,13 @@
       "y": 11920,
       "w": 280,
       "text": "SEARCH — the Explore tab (item 9, rulings in readme §13 / Q46). At rest: the field, the orbit hero (item 16’s future 3D view), device-local recents. Searching: the worded filter trigger + the one “?”, ranked rows wearing the graph glyph, the seam, the aged tail. Scope operators @handle / #topic; indirect hits say their target on the second line."
+    },
+    {
+      "id": "sec-feed",
+      "x": -340,
+      "y": 12980,
+      "w": 290,
+      "text": "FEED · The filter (item 19, growing item 4). The trigger sits on the CograBand's right edge — the band never spends its full width on identity alone — and scrolls away and back with it. EVERY feed view wears it, guests and applicants too: filtering is a read control. The trigger speaks deviations only ('Posts' at rest; 'Posts · photos · newest' when flipped; past the pill's budget, 'Posts · 3 changes'). The sheet: ten kinds that combine — ONE list shared with search, 'Profiles' everywhere — forms of post, the Order section (Ranked/Newest + 'Show what you've already seen', default on, impression-based, device-local, shared transiently with the viewer's ranker; identical section on search), what else is admitted, Reset. Applies live. Everything off is allowed: the feed's empty state answers, not the chip."
     }
   ],
   "launch": {

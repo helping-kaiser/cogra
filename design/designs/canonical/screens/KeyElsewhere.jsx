@@ -6,7 +6,7 @@ export const VALS = `keyTitle: this.props.wording === "app" ? "Your key isn't in
 export function Screen() {
   return (
     <>
-      <CograBand />
+      <CograBand trailing={<FeedFilter />} />
       <FeedList>
         <TaskCard title="{{keyTitle}}" body="Restore it with your recovery code to post, vouch, and act. Until then, anything you sign waits as pending.">
           <div style={{ display: "flex" }}>
