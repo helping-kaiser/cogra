@@ -1176,6 +1176,14 @@ type ReferenceClaim {
   "Endorsing versus refuting — enthusiasm `e`, folded and clipped.
    Strictly positive on both axes is what makes a mention a vouch."
   support: Dimension!
+  "How many counter-records withdrawing this citation stages right
+   now — the gesture's cost, since each is its own priced act.
+   Never zero: a bundle already netted to (0,0) has left the fold.
+   Served for the same reason StanceBundle.severanceCost is: a
+   removal costing more than one act must say so before it is
+   confirmed, and the clipped pair beside it cannot answer that —
+   the clip has lost how far past 1 the raw sums reach."
+  withdrawalCost: Int!
   "True while any record in the bundle is still in flight."
   pending: Boolean!
 }
@@ -2873,6 +2881,11 @@ input PrepareReferenceInput {
  record to walk back, and quoting that count is why the batch is
  assembled server-side rather than left to a client that would
  author a single negating record and silently under-net.
+
+ The count is knowable before the gesture: `ReferenceClaim.
+ withdrawalCost` serves it on the read side, so a client asks for
+ confirmation first and prepares only once the author has agreed —
+ the same order every other multi-act gesture follows.
 
  A citation whose target this instance cannot type is not
  addressable here: the mutation names its target by L2 id, and a

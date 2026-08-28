@@ -139,8 +139,7 @@ impl StanceBundle {
     /// `(0, 0)`.
     async fn severance_cost(&self) -> i32 {
         self.sum
-            .severance_batch()
-            .len()
+            .severance_cost()
             .try_into()
             .unwrap_or(i32::MAX)
     }
@@ -1936,6 +1935,17 @@ pub struct ReferenceClaim {
     /// Endorsing versus refuting — enthusiasm `e`, folded and clipped.
     /// Strictly positive on both axes is what makes a mention a vouch.
     pub support: Dimension,
+    /// How many counter-records withdrawing this citation stages right
+    /// now — the gesture's cost, since each is its own priced act
+    /// (D11). Never zero: a bundle already netted to `(0, 0)` has left
+    /// the fold and is not served here.
+    ///
+    /// Served for the same reason `StanceBundle.severanceCost` is: a
+    /// removal that costs more than one act must be able to say so
+    /// *before* it is confirmed. The clipped `relevance` and `support`
+    /// beside it cannot answer this — the clip has already lost how far
+    /// past `1` the raw sums reach.
+    pub withdrawal_cost: i32,
     /// True while any record in the bundle is still in flight.
     pub pending: bool,
 }
@@ -2111,6 +2121,7 @@ async fn reference_claims(
             target_id: row.target,
             relevance: Dimension(row.relevance),
             support: Dimension(row.support),
+            withdrawal_cost: row.withdrawal_cost.try_into().unwrap_or(i32::MAX),
             pending: row.pending,
         });
     }
