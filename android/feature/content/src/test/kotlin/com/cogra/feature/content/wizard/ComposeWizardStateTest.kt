@@ -195,7 +195,7 @@ class ComposeWizardStateTest {
     @Test
     fun aDraftKeepsWhatWasAuthoredAndDropsWhatWasUploaded() {
         val state = media
-            .copy(title = "Salt maps", shape = DraftShape.Wide, sensitive = true)
+            .copy(title = "Salt maps", shape = DraftShape.Wide)
             .withAltText("a", "A salt crust")
             .withUpload("a", AssetUpload.Done("m1"))
 
@@ -203,7 +203,6 @@ class ComposeWizardStateTest {
 
         assertThat(restored.title).isEqualTo("Salt maps")
         assertThat(restored.shape).isEqualTo(DraftShape.Wide)
-        assertThat(restored.sensitive).isTrue()
         assertThat(restored.picked.map { it.altText }).containsExactly("A salt crust", "")
         // Ids are deliberately dropped: a previous session's asset may
         // have been swept as an orphan (D5), so the wizard re-uploads

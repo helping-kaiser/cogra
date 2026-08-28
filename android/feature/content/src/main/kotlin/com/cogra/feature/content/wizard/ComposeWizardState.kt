@@ -66,11 +66,20 @@ data class PickedAsset(
 }
 
 /**
- * Which sheet or dialog is open over the seal (`ComposeLicense`,
- * `ComposeSensitive`, `ComposePad`). One at a time: each is a drawer
- * the reader opened over the same screen.
+ * Which sheet is open over the seal (`ComposeLicense`, `ComposePad`).
+ * One at a time: each is a drawer the reader opened over the same
+ * screen.
+ *
+ * **`ComposeSensitive` is not here, and that is deliberate.** The
+ * contract cannot carry an author's self-mark: `PreparePostInput` has
+ * no sensitive field and no mutation sets one — `SENSITIVE` exists only
+ * as a read-side `FieldModerationStatus` the server assigns. A sheet
+ * that said "Marked" while sending nothing would be a lie told to the
+ * one person trusting it, so the board is left unbuilt until the
+ * contract can express it. The *reading* half — the whole-body veil —
+ * is built and works the moment a verdict exists.
  */
-enum class SealSheet { None, License, Sensitive, Stance }
+enum class SealSheet { None, License, Stance }
 
 /**
  * How the wizard ended.
@@ -122,8 +131,6 @@ data class ComposeWizardState(
 
     // -- The seal --
     val license: LicenseChoice = LicenseChoice.PublicDomain,
-    val sensitive: Boolean = false,
-    val sensitiveReason: String = "",
     /** The author's own attachment to the post (`ComposePad`). */
     val pDirected: Double = DEFAULT_P_DIRECTED,
     val sheet: SealSheet = SealSheet.None,
@@ -174,9 +181,9 @@ data class ComposeWizardState(
         get() = 1 + tagSection.tags.size + referenceSection.references.size
 
     /**
-     * The one line the seal, the license sheet and the sensitive sheet
-     * all show above the act list — "Salt maps of the coast road — 2
-     * pictures." on the canonical boards.
+     * The one line the seal and its sheets show above the act list —
+     * "Salt maps of the coast road — 2 pictures." on the canonical
+     * boards.
      */
     val sealSummary: String
         get() {
@@ -217,8 +224,6 @@ data class ComposeWizardState(
         description = description,
         assets = picked.map { DraftAsset(it.uri, it.altText) },
         shape = shape,
-        sensitive = sensitive,
-        sensitiveReason = sensitiveReason,
     )
 
     companion object {
@@ -247,8 +252,6 @@ data class ComposeWizardState(
             // that might no longer exist.
             picked = draft.assets.map { PickedAsset(it.uri, altText = it.altText) },
             shape = draft.shape,
-            sensitive = draft.sensitive,
-            sensitiveReason = draft.sensitiveReason,
         )
     }
 }

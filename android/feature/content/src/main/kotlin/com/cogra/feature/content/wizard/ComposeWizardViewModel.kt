@@ -280,10 +280,6 @@ class ComposeWizardViewModel @Inject constructor(
 
     fun onLicenseChange(license: LicenseChoice) = _state.update { it.copy(license = license) }
 
-    fun onSensitiveChange(marked: Boolean) = _state.update { it.copy(sensitive = marked) }
-
-    fun onSensitiveReasonChange(reason: String) = _state.update { it.copy(sensitiveReason = reason) }
-
     fun onPDirectedChange(value: Double) = _state.update { it.copy(pDirected = value) }
 
     // -- Uploads (D5: one call per asset, concurrent, retryable) --

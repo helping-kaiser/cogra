@@ -343,9 +343,10 @@ internal fun PostFields.toDomain(): PostView = PostView(
 internal fun CommentFields.toDomain(): CommentView = CommentView(
     id = id,
     content = content.toDomain(),
-    author = author?.let {
-        ActorRef(it.id, it.handle, it.displayName.value, it.avatar?.mediaFields?.toDomain())
-    },
+    // No avatar: the thread read does not ask for one, because a
+    // comment author's picture is the corpus's most multiplied
+    // selection — see `CommentFields` in content.graphql.
+    author = author?.let { ActorRef(it.id, it.handle, it.displayName.value) },
     createdAt = createdAt,
     updatedAt = updatedAt,
     landing = landing.toDomain(),

@@ -14,7 +14,6 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -30,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
-import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.atom.Hairline
 import com.cogra.core.designsystem.v2.atom.SettingRow
 import com.cogra.core.designsystem.v2.atom.SheetTitle
@@ -84,13 +82,9 @@ internal fun ColumnScope.SealStepBody(
             onAction = { onOpenSheet(SealSheet.Stance) },
             testTag = "wizard_seal_stance",
         )
-        SettingRow(
-            label = "Sensitive",
-            value = if (state.sensitive) "Marked" else "Not marked",
-            actionText = if (state.sensitive) "Change" else "Mark",
-            onAction = { onOpenSheet(SealSheet.Sensitive) },
-            testTag = "wizard_seal_sensitive",
-        )
+        // No `Sensitive` row: see [SealSheet]. The contract carries no
+        // author self-mark, and a row reading "Not marked" would
+        // promise a control that does not exist.
         Hairline()
     }
 
@@ -359,56 +353,6 @@ private fun DegreeGroup(
 }
 
 /**
- * `ComposeSensitive` — the author's own mark.
- *
- * The reason is optional and shown on the veil, and the veil covers the
- * post's whole body: media, text and description as one state, with the
- * title outside it (D12). The sheet says so in the board's own words.
- */
-@Composable
-internal fun SensitiveSheet(
-    marked: Boolean,
-    reason: String,
-    onMarkedChange: (Boolean) -> Unit,
-    onReasonChange: (String) -> Unit,
-    onDone: () -> Unit,
-) {
-    CograSheetSurface(testTag = "wizard_sensitive_sheet") {
-        SheetTitle(
-            text = "Mark as sensitive",
-            trailing = {
-                Switch(
-                    checked = marked,
-                    onCheckedChange = onMarkedChange,
-                    modifier = Modifier.testTag("wizard_sensitive_switch"),
-                )
-            },
-        )
-        Text(
-            text = "Veils the pictures and the description until a reader chooses to look.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        if (marked) {
-            CograTextField(
-                value = reason,
-                onValueChange = onReasonChange,
-                label = "Why?",
-                optional = true,
-                optionalLabel = "Optional — shown on the veil",
-                testTag = "wizard_sensitive_reason",
-            )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Space.x2, Alignment.End),
-        ) {
-            CograButton("Done", onDone, testTag = "wizard_sensitive_done")
-        }
-    }
-}
-
-/**
  * `ComposePad` — where the author stands on their own post.
  *
  * **A named divergence.** The board draws the full stance pad, the
@@ -487,8 +431,8 @@ private fun LicenseSheetPreview() {
 
 @ThemePreviews
 @Composable
-private fun SensitiveSheetPreview() {
+private fun StanceSheetPreview() {
     Cogra2PreviewTheme {
-        SensitiveSheet(marked = true, reason = "One rubbing includes a dead seabird.", {}, {}, {})
+        StanceSheet(pDirected = 0.1, onChange = {}, onDone = {}, onCancel = {})
     }
 }

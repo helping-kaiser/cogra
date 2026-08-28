@@ -493,6 +493,13 @@ private fun CograNavGraphContent(
                         },
                         onLeave = { navController.navigateUp() },
                         onRestoreKey = { navController.navigate(Restore) },
+                        keyBanner = {
+                            if (signedIn == true) {
+                                KeyRestoreBannerRoute(
+                                    onRestoreActor = { navController.navigate(Restore) },
+                                )
+                            }
+                        },
                     )
                     return@composable
                 }
