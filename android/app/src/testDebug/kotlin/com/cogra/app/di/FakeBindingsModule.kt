@@ -12,7 +12,9 @@ import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.HashtagView
 import com.cogra.domain.ReferenceCandidateView
 import com.cogra.domain.InviteCheck
+import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
@@ -111,10 +113,11 @@ class ScriptedContentRepository : ThrowingContentRepository() {
     override suspend fun preparePost(
         title: String?,
         description: String?,
-        content: String,
+        content: String?,
         license: LicenseChoice,
         tags: List<TagClaim>,
         references: List<ReferenceClaim>,
+        attachments: List<AttachmentClaim>,
     ): Outcome<PreparedContentView> {
         pendingAfterPrepare?.let { listing = listOf(it) + listing }
         return Outcome.Success(PreparedContentView(preparedNode, emptyList()))
@@ -161,6 +164,8 @@ class ScriptedProfileRepository : ThrowingProfileRepository() {
         displayName: String,
         bio: String?,
         websiteUrl: String?,
+        avatar: MediaFieldUpdate,
+        cover: MediaFieldUpdate,
     ): Outcome<List<PreparedWriteView>> {
         updates += Triple(displayName, bio, websiteUrl)
         profile = profile?.copy(

@@ -348,9 +348,30 @@ class SealingWriteRepository(private val actor: ActorKey) : ThrowingWriteReposit
         return view
     }
 
+    /**
+     * Makes the next submit come back already collected — the
+     * garbage-collected-unlanded path a caller has to treat as "nothing
+     * was spent" rather than as a failure.
+     */
+    var expireOnSubmit = false
+
     override suspend fun submitProposal(stagedWriteId: String, signatureBase64: String): Outcome<StagedWriteView> {
         val seq = stagedWriteId.removePrefix("w").toULong()
         val proposal = testProposalBytes(actor, seq)
+        if (expireOnSubmit) {
+            // No verified act: the signer sees EXPIRED and stops before
+            // any second signature, which is the real sequence.
+            val expired = StagedWriteView(
+                id = stagedWriteId,
+                state = com.cogra.domain.WriteState.EXPIRED,
+                family = Family.OPINION,
+                canonicalProposal = proposal,
+                verifiedAct = null,
+                recordId = null,
+            )
+            staged[stagedWriteId] = expired
+            return Outcome.Success(expired)
+        }
         val sealed = host.seal(
             proposal,
             java.util.Base64.getDecoder().decode(signatureBase64),
