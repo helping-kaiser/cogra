@@ -121,13 +121,20 @@ duplicate history that already lives in the source data.
 
 ## 4. Layers on Postgres-side display content
 
-Display content — message bodies, post text, profile text,
-attachment metadata — lives in Postgres (see
+Display content — message bodies, post text, profile text —
+lives in Postgres (see
 [data-model.md](../implementation/data-model.md)). The same
 principle in relational form: an edit writes a **new version
 row**, not an overwrite. Readers see the current version by
 default; past versions stay accessible to anyone who wants the
 history.
+
+A parent's gallery is display content like the rest: its
+attachment rows are keyed on the version row and follow the
+winning version exactly as the text does. A media asset carries
+no version rows because it is never edited — an asset is
+immutable after upload, and a corrected caption or a different
+crop is a new asset.
 
 Named carve-outs to append-only exist only on the Postgres side
 and only for operational state, not history:
@@ -144,13 +151,9 @@ and only for operational state, not history:
 - `user_preferences` — per-user settings row, overwritten in
   place; a setting's current value is operational state, not
   history.
-- content–attachment junction rows — a parent's *current* gallery
-  arrangement; an edit adds and removes junction rows. The assets
-  themselves remain append-only.
 
-The per-viewer entries are operational state private to the
-viewer; the junction entry is arrangement, not content. Additions
-to this list require a named exception added here.
+Every entry is operational state private to the viewer.
+Additions to this list require a named exception added here.
 
 Implementation specifics (schema, version columns, how queries
 pick the current version) belong in
