@@ -294,17 +294,23 @@ describe("the details and the sheets", () => {
       picks(1),
       { type: "title", title: "Salt maps of the coast road" },
       { type: "description", description: "Rubbings from three weekends." },
-      { type: "sensitive", sensitive: { marked: true, reason: "a dead seabird" } },
       { type: "goto", step: "details" },
     );
     expect(state.title).toBe("Salt maps of the coast road");
-    expect(state.sensitive).toEqual({ marked: true, reason: "a dead seabird" });
+    expect(state.description).toBe("Rubbings from three weekends.");
     // Everything on the details screen is optional, so it always hands over.
     expect(advanceGate(state).ok).toBe(true);
   });
 
-  it("starts on the account's default licence", () => {
+  it("starts on the account's default licence and the low-defaults stance", () => {
     expect(emptyWizard().license).toEqual(PUBLIC_DOMAIN);
+    expect(emptyWizard().pDirected).toBe(0.1);
+  });
+
+  it("keeps the author's stance inside the contract's closed interval", () => {
+    expect(wizardReducer(emptyWizard(), { type: "pDirected", pDirected: 4 }).pDirected).toBe(1);
+    expect(wizardReducer(emptyWizard(), { type: "pDirected", pDirected: -9 }).pDirected).toBe(-1);
+    expect(wizardReducer(emptyWizard(), { type: "pDirected", pDirected: -0.4 }).pDirected).toBe(-0.4);
   });
 
   it("carries alt text per asset", () => {
