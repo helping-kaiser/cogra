@@ -3,6 +3,7 @@ import { BottomSheet } from "../core/BottomSheet.jsx";
 import { Chip } from "../core/Chip.jsx";
 import { Button } from "../core/Button.jsx";
 import { FilterSection, OrderSection, FILTER_ORDER } from "./OrderSection.jsx";
+import { HelpDot } from "../core/HelpDot.jsx";
 
 /* The feed filter (backlog item 4, second pass; grown by item 19).
 
@@ -22,7 +23,7 @@ import { FilterSection, OrderSection, FILTER_ORDER } from "./OrderSection.jsx";
    under its field — the idiom is one.
 
    THE TRIGGER SPEAKS DEVIATIONS. At the default it says only the kinds; order
-   and the seen toggle enter its words when flipped ("newest", "hiding seen"),
+   and the seen toggle enter its words when flipped ("newest", "showing seen"),
    never when at rest. The filter you have forgotten about is the one that
    confuses you — the default is silence.
 
@@ -66,7 +67,7 @@ export const FEED_ALSO = [
   { value: "removed", label: "Removed" },
 ];
 
-export const FEED_FILTER_DEFAULT = { kinds: ["posts"], forms: ["text", "photos", "video"], order: "ranked", seen: true, also: [] };
+export const FEED_FILTER_DEFAULT = { kinds: ["posts"], forms: ["text", "photos", "video"], order: "ranked", seen: false, also: [] };
 
 const labelOf = (set, value) => (set.find((entry) => entry.value === value) || {}).label;
 
@@ -92,7 +93,7 @@ export function feedFilterSummary(value = FEED_FILTER_DEFAULT, budget = 26) {
   const extras = [];
   if (forms.length > 0 && forms.length < FEED_FORMS.length) extras.push(forms.map((form) => labelOf(FEED_FORMS, form).toLowerCase()).join(" + "));
   if (value.order && value.order !== "ranked") extras.push(labelOf(FEED_ORDER, value.order).toLowerCase());
-  if (value.seen === false) extras.push("hiding seen");
+  if (value.seen === true) extras.push("showing seen");
   if (also.length > 0) extras.push("+ " + also.map((entry) => labelOf(FEED_ALSO, entry).toLowerCase()).join(", "));
   if (extras.length === 0) return head;
   const spelled = [head, ...extras].join(" · ");
@@ -136,7 +137,7 @@ export function FilterTrigger({ reading, onOpen, expanded = false, ariaLabel = "
   );
 }
 
-export function FeedFilter({ value = FEED_FILTER_DEFAULT, onChange, defaultOpen = false, ariaLabel = "What your feed shows" }) {
+export function FeedFilter({ value = FEED_FILTER_DEFAULT, onChange, onHelp, defaultOpen = false, ariaLabel = "What your feed shows" }) {
   const [open, setOpen] = React.useState(defaultOpen);
   const set = (patch) => onChange && onChange({ ...value, ...patch });
   const toggle = (key, entry) => {
@@ -150,9 +151,13 @@ export function FeedFilter({ value = FEED_FILTER_DEFAULT, onChange, defaultOpen 
       <FilterTrigger reading={feedFilterSummary(value)} onOpen={() => setOpen(true)} expanded={open} ariaLabel={ariaLabel} />
       {/* Ten kinds plus four sections outgrow the sheet's 62% default — the
           filter opens taller so the whole control is present; it still scrolls
-          on shorter screens. */}
+          on shorter screens. The sheet carries its own "?" (like the pads):
+          the dialog explains the filter and names the settings default. */}
       <BottomSheet open={open} onClose={() => setOpen(false)} ariaLabel={ariaLabel} maxHeight="88%">
-        <FilterSection label="What gets ranked" hint="Anything the network ranks can be in your feed. Combine as many as you like.">
+        <div style={{ position: "absolute", top: "var(--space-1)", right: "var(--space-2)" }}>
+          <HelpDot ariaLabel="How the filter works" onOpen={onHelp} />
+        </div>
+        <FilterSection label="What gets ranked" hint="Everything that can reach your feed. Combine as many as you like.">
           {FEED_KINDS.map((kind) => (
             <Chip key={kind.value} label={kind.label} selected={(value.kinds || []).includes(kind.value)} onToggle={() => toggle("kinds", kind.value)} />
           ))}
@@ -162,8 +167,8 @@ export function FeedFilter({ value = FEED_FILTER_DEFAULT, onChange, defaultOpen 
             <Chip key={form.value} label={form.label} selected={(value.forms || []).includes(form.value)} onToggle={() => toggle("forms", form.value)} disabled={!postsish} />
           ))}
         </FilterSection>
-        <OrderSection order={value.order} onOrder={(order) => set({ order })} seen={value.seen !== false} onSeen={(seen) => set({ seen })} />
-        <FilterSection label="Also show" hint="Sensitive content stays veiled until you tap it. A removed record shows its skeleton — author, time, and place in the thread — never the content.">
+        <OrderSection order={value.order} onOrder={(order) => set({ order })} seen={value.seen === true} onSeen={(seen) => set({ seen })} />
+        <FilterSection label="Also show" hint="Sensitive content stays veiled until you tap it. A removed post keeps its place — author, time, and where it sat in the thread — never the content.">
           {FEED_ALSO.map((entry) => (
             <Chip key={entry.value} label={entry.label} selected={(value.also || []).includes(entry.value)} onToggle={() => toggle("also", entry.value)} />
           ))}

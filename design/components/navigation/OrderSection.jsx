@@ -8,8 +8,10 @@ import { Checkbox } from "../forms/Checkbox.jsx";
    both answer "how is this list arranged".
 
    SEEN, PRECISELY. Seen means the card's impression entered the viewport —
-   device-local, never a record, shared transiently with the viewer's chosen
-   ranker. Default ON: hiding what you've seen is the deviation, not the norm.
+   device-local, never signed, shared transiently with the viewer's chosen
+   ranker. Default OFF (ruled 2026-08-28, flipping the search session's first
+   call): what you've seen stays out until you ask for it back, so the box
+   arrives unticked and "showing seen" is the deviation the trigger speaks.
 
    ONE SECTION CHROME. `FilterSection` is the sheet-section shape every filter
    sheet uses — label, an optional hint in the secondary colour, then the
@@ -31,9 +33,9 @@ export function FilterSection({ label, hint, children }) {
   );
 }
 
-export function OrderSection({ order = "ranked", onOrder, seen = true, onSeen }) {
+export function OrderSection({ order = "ranked", onOrder, seen = false, onSeen }) {
   return (
-    <FilterSection label="Order" hint="Ranked follows your own graph. Newest ignores it and lists by time.">
+    <FilterSection label="Order" hint="Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time.">
       <SegmentedFilter ariaLabel="Order" options={FILTER_ORDER} value={order} onChange={onOrder} />
       <div style={{ flexBasis: "100%" }}>
         <Checkbox label="Show what you've already seen" checked={seen} onChange={onSeen} />

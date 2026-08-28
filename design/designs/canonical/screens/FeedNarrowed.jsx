@@ -2,7 +2,7 @@
    "Posts · photos · newest". Past the pill's budget they collapse to a count
    ("Posts · 3 changes"). The feed behind it obeys: photo posts, newest
    first. */
-const NARROWED = { kinds: ["posts"], forms: ["photos"], order: "newest", seen: true, also: [] };
+const NARROWED = { kinds: ["posts"], forms: ["photos"], order: "newest", seen: false, also: [] };
 
 export function Screen() {
   return (

@@ -434,7 +434,7 @@ exists in `web/src/lib/ui/` (and, unless noted, in Android's
 
 | Directory | Components |
 |---|---|
-| `components/core/` | `Button`, `Card`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip` |
+| `components/core/` | `Button`, `Card`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip`, `HelpDot` |
 | `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow` |
 | `components/forms/` | `TextField`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
 | `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand` |
@@ -1143,11 +1143,13 @@ as Q46 in docs/open-questions.md):
   seam a row's rank gives way to its age (relative to one year, an
   absolute date after).
 - **Controls**: an order swap (Ranked / Newest) and a "show already
-  seen" toggle, default on. Seen = the card's impression entered
-  the viewport; device-local, never a record, shared transiently
-  with the viewer's chosen ranker. **The feed carries this same
-  ordering section** (backlog item 19 — the canonical feed screens
-  never drew the filter at all).
+  seen" toggle — default off since the feed-filter session
+  (2026-08-28, flipping this session's first call): what you've
+  seen stays out until you ask for it back. Seen = the card's
+  impression entered the viewport; device-local, never a record,
+  shared transiently with the viewer's chosen ranker. **The feed
+  carries this same ordering section** (backlog item 19 — the
+  canonical feed screens never drew the filter at all).
 - **Scope operators**: `@handle <text>` and `#topic <text>` scope
   the query; the remainder matches the scoped author's own content
   AND the names of their acts' targets — a comment through its
@@ -1187,19 +1189,28 @@ The rulings that put it on screen:
   borrowed-view landing filters like the member's feed does.
 - **The trigger speaks deviations only, on the feed and on search
   alike.** The default state is silence: "Posts" at rest, "newest"
-  and "hiding seen" only when flipped, the budget collapse past the
-  pill's width. Search's trigger at rest reads "Everything".
+  and "showing seen" only when flipped, and past the pill's budget
+  the extras collapse to a count ("3 kinds · 4 changes" — drawn on
+  the far-from-default board). Search's trigger at rest reads
+  "Everything".
 - **One kind list.** `FEED_KINDS` grows to search's ten and both
   surfaces share it — posts, comments, chats, messages, profiles,
   proposals, topics, items, campaigns, offers — and the word is
   **"Profiles"** everywhere, never "People".
 - **One ordering section.** `OrderSection` — the Ranked/Newest swap
-  with "Show what you've already seen" (default on) under it, one
+  with "Show what you've already seen" (default off — what you've
+  seen stays out until you ask for it back) under it, one
   section because both answer "how is this list arranged" — is a
   master consumed by the feed's sheet and the search sheet alike, and
   `FilterSection` is the one sheet-section chrome every filter sheet
   uses. The filter sheet opens taller than the sheet default (88%)
   so the whole control is present.
+- **The sheet carries its own "?"** (the pads' precedent): "The
+  filter" dialog explains combining, live-apply, the seen toggle,
+  and that the default lives in settings — the settings entry is
+  its own design (backlog item 20). `SegmentedFilter` drops to the
+  chips' 32px drawn rung: it lives among 32px chips in these
+  sheets, and a taller pill beside them read as swollen.
 - **Everything off is answered by the feed**, not the chip: the empty
   state names what is off ("Your feed admits nothing right now —
   every kind is switched off.") and offers the way back.

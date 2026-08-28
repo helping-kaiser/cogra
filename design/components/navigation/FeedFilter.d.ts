@@ -5,7 +5,8 @@ export interface FeedFilterValue {
   forms?: readonly string[];
   /** "ranked" (default) or "newest". */
   order?: string;
-  /** The seen toggle, default true — show what has already crossed the viewport. */
+  /** The seen toggle, default false — what you've seen stays out until you
+   *  ask for it back. */
   seen?: boolean;
   /** What the feed also admits: "sensitive", "removed". */
   also?: readonly string[];
@@ -23,6 +24,8 @@ export interface FeedFilterValue {
 export interface FeedFilterProps {
   value?: FeedFilterValue;
   onChange?: (value: FeedFilterValue) => void;
+  /** Opens "The filter" dialog — the sheet carries its own "?". */
+  onHelp?: () => void;
   /** Render with the sheet already open — for static boards. */
   defaultOpen?: boolean;
   ariaLabel?: string;
@@ -31,7 +34,7 @@ export interface FeedFilterProps {
 export declare function FeedFilter(props: FeedFilterProps): JSX.Element;
 
 /** The trigger's words, within a pill's budget: the kinds always, then either the
- *  exceptions spelled out ("newest", "hiding seen") or a count of them. Past
+ *  exceptions spelled out ("newest", "showing seen") or a count of them. Past
  *  `budget` characters the detail collapses — "far from the default" is the
  *  useful fact, and which ways is what the sheet is for. Deviations only: the
  *  default state is silence. */

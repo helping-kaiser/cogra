@@ -219,3 +219,11 @@ The graph as a navigable universe: a 3D view from your position, other
 profiles as spheres varying in size, colour and brightness by their
 weight. Mostly its own thing and mostly outside this system — last on
 purpose.
+
+### 20 · Settings — the defaults surface · *design*
+Three shipped "?" texts already promise it: "Your default lives in
+settings" (the license, and now the filter), and "Swap the input in
+settings" (the stance pads). Design the settings surface that keeps
+those promises — the default license, the reader's stance input, the
+default feed filter — and the pattern the rest of settings will
+follow. Added 2026-08-28 out of item 19's review.
