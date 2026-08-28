@@ -25,10 +25,10 @@ import React from "react";
    `primaryContainer` is not available here: a filter is not the loudest thing on
    any screen it appears on, and the stance knob has already spent it.
 
-   TRUE 40PX, border-box — M3's segmented-button height and the same rung every
-   pill in this system stands on (readme §13, the button ruling). The 48px hit
-   minimum is a target rule, not a drawn height; drawn at 48 the control read as
-   a swollen pill. */
+   DRAWN AT 32PX, border-box — the chips' rung, because this control lives among
+   chips (the filter sheets) and a taller pill beside 32px chips read as swollen
+   twice over (first at 48, then again at 40). The 48px hit minimum is a target
+   rule, not a drawn height — the same drawn-vs-tapped split the chips keep. */
 
 export function SegmentedFilter({ options = [], value, onChange, ariaLabel }) {
   if (options.length === 0) return null;
@@ -39,7 +39,7 @@ export function SegmentedFilter({ options = [], value, onChange, ariaLabel }) {
       style={{
         display: "inline-flex",
         alignItems: "stretch",
-        height: "40px",
+        height: "32px",
         boxSizing: "border-box",
         borderRadius: "var(--radius-full)",
         border: "1px solid var(--border-field)",
@@ -56,8 +56,9 @@ export function SegmentedFilter({ options = [], value, onChange, ariaLabel }) {
             type="button"
             aria-pressed={selected}
             onClick={() => onChange && onChange(option.value)}
-            className="cg-state cg-focus"
+            className="cg-state cg-focus cg-hit"
             style={{
+              position: "relative",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
