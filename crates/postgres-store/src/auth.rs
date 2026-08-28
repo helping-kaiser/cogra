@@ -1398,3 +1398,30 @@ pub async fn actor_identity_by_address(
         created_at: r.created_at,
     }))
 }
+
+/// Every actor among `realization_addresses`, in one round trip — the batched
+/// twin of [`actor_identity_by_address`], for a read holding many
+/// addresses at once (a page of mentions resolving their profiles).
+/// An address nothing answers to is simply absent from the result.
+pub async fn actor_identities_by_addresses(
+    pool: &PgPool,
+    realization_addresses: &[String],
+) -> Result<Vec<ActorIdentity>, sqlx::Error> {
+    Ok(sqlx::query!(
+        "SELECT id, kind, handle, actor_pubkey, realization_address, created_at
+         FROM actors WHERE realization_address = ANY($1)",
+        realization_addresses,
+    )
+    .fetch_all(pool)
+    .await?
+    .into_iter()
+    .map(|r| ActorIdentity {
+        id: r.id,
+        kind: r.kind,
+        handle: r.handle,
+        actor_pubkey: r.actor_pubkey,
+        realization_address: r.realization_address,
+        created_at: r.created_at,
+    })
+    .collect())
+}
