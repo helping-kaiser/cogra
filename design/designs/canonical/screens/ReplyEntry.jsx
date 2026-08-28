@@ -2,7 +2,7 @@
 export function Screen() {
   return (
     <>
-      <PageHeader backLabel="Back to feed" />
+      <DetailHeader items={READER_POST_MENU} />
       <DetailColumn>
         <PostCard {...ADA_POST} variant="detail" />
         <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 16px" }}>

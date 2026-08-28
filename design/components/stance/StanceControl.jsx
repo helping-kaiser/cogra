@@ -64,7 +64,23 @@ function parkedPadStyle(inset = 16) {
   };
 }
 
-export function StanceControl({ targetLabel = "this post", bundle: supplied, signedIn = true, taught: taughtProp, onCommit }) {
+/* `defaultOpen`/`defaultPick` exist for STATES A CLICK CANNOT REACH: the
+   prototype boards are server-rendered, so a screen showing the parked pad asks
+   the MASTER for it instead of copying the card — the copy is never the answer.
+   `padInset` lifts the parked card clear of a bottom bar (the pad sits above the
+   bar, readme §13); `padNote` is the shell's one-time coaching slot — the first
+   vouch speaks there, between the field and the landing line. */
+export function StanceControl({
+  targetLabel = "this post",
+  bundle: supplied,
+  signedIn = true,
+  taught: taughtProp,
+  onCommit,
+  defaultOpen = false,
+  defaultPick,
+  padInset = 16,
+  padNote,
+}) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
   React.useEffect(() => {
     if (supplied !== undefined) setBundle(supplied);
@@ -76,11 +92,11 @@ export function StanceControl({ targetLabel = "this post", bundle: supplied, sig
   React.useEffect(() => {
     if (taughtProp) setTaught(true);
   }, [taughtProp]);
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(defaultOpen);
   const [alternates, setAlternates] = React.useState(false);
   const [coach, setCoach] = React.useState(false);
   const [explaining, setExplaining] = React.useState(false);
-  const [pick, setPick] = React.useState(ORIGIN);
+  const [pick, setPick] = React.useState(defaultPick ?? ORIGIN);
   const [confirming, setConfirming] = React.useState(null);
   const [signed, setSigned] = React.useState(null);
   const [joinPrompt, setJoinPrompt] = React.useState(false);
@@ -295,7 +311,7 @@ export function StanceControl({ targetLabel = "this post", bundle: supplied, sig
             role="group"
             aria-label={`Stance pad for ${targetLabel}`}
             style={{
-              ...parkedPadStyle(),
+              ...parkedPadStyle(padInset),
               zIndex: 20,
               display: "flex",
               width: "17rem",
@@ -373,19 +389,25 @@ export function StanceControl({ targetLabel = "this post", bundle: supplied, sig
             ) : (
               <>
                 <StancePad value={pick} onChange={setPick} fieldRef={fieldRef} />
+                {padNote}
                 <StanceLandingLine landing={landing} />
               </>
             )}
-            {/* One row: the walk-away on the left, the two decisions on the right. */}
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
-              <button
-                type="button"
-                onClick={openSeverance}
-                className={BUTTON_CLASS}
-                style={{ ...buttonStyle({ variant: "text", size: "sm" }), marginRight: "auto" }}
-              >
-                Sever
-              </button>
+            {/* One row: the walk-away on the left, the two decisions on the right.
+                SEVER NEEDS SOMETHING TO SEVER — with no records and nothing
+                severed there is no relationship to walk away from, and the button
+                led only to a dialog saying so. It arrives with the first stance. */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "var(--space-2)" }}>
+              {(bundle.records > 0 || bundle.severed === true) && (
+                <button
+                  type="button"
+                  onClick={openSeverance}
+                  className={BUTTON_CLASS}
+                  style={{ ...buttonStyle({ variant: "text", size: "sm" }), marginRight: "auto" }}
+                >
+                  Sever
+                </button>
+              )}
               <button type="button" onClick={closeAll} className={BUTTON_CLASS} style={buttonStyle({ variant: "text", size: "sm" })}>
                 Cancel
               </button>

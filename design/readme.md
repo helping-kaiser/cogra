@@ -1081,6 +1081,27 @@ To port to the product docs: the body XOR (the API today has
 self-mark field and its fixed per-field policy, the default-license
 account setting, and the edit batch carrying topic/citation acts.
 
+### Masters, variants, and screens — 2026-08-28
+
+The Figma discipline, applied here: a component's ONE
+implementation is its **master** (`components/**/*.jsx`); its
+**variants** are the states its props reach, drawn side by side on
+that directory's `@dsCard`; and every prototype screen **consumes
+the master in the right variant** — never a copy of its markup.
+Changing a master changes every screen that uses it; a copy would
+drift, always. Concretely:
+
+- Prototype boards are **generated** from `designs/canonical/
+  screens/*.jsx` by `_build/render-screens.mjs` — a screen is JSX
+  over the real components; never edit a generated `.dc.html`.
+- A state a screen needs but no prop reaches is a MISSING VARIANT:
+  add the prop to the master (as `StanceControl` gained
+  `defaultOpen` and `PostCard` gained `sensitive`), never rebuild
+  the state by hand in the screen.
+- `Raw` markup in a screen is for the genuinely screen-local —
+  content that exists nowhere else. The moment it appears on a
+  second screen it becomes a component or a `_shared.jsx` helper.
+
 ## 14. Index
 
 **Root**

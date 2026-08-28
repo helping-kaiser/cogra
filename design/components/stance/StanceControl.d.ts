@@ -18,6 +18,17 @@ export interface StanceControlProps {
   taught?: boolean;
   /** Fires with the picked pair and the new standing once a gesture completes. */
   onCommit?: (pick: StancePair, bundle: StanceBundle) => void;
+  /**
+   * Render the pad already parked — for statically rendered boards showing a
+   * state a click cannot reach. The master draws the card; never copy it.
+   */
+  defaultOpen?: boolean;
+  /** The pick the parked pad opens holding. Defaults to the origin. */
+  defaultPick?: StancePair;
+  /** Clearance under the parked card — lift it above a bottom bar. */
+  padInset?: number;
+  /** One-time coaching lines (the first vouch), between the field and the landing line. */
+  padNote?: JSX.Element;
 }
 
 export declare function StanceControl(props: StanceControlProps): JSX.Element;

@@ -2,7 +2,7 @@
 export function Screen() {
   return (
     <>
-      <PageHeader backLabel="Back to feed" />
+      <DetailHeader items={OWN_POST_MENU} />
       <DetailColumn>
         <PostCard
           {...SOL_POST}
@@ -11,6 +11,7 @@ export function Screen() {
           pending
           bundle={mkBundle(0.1, 1)}
           score={"—"}
+          comments={0}
           references={1}
         />
         <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>

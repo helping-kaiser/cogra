@@ -7,7 +7,7 @@ import { StanceControl } from "../stance/StanceControl.jsx";
 import { ExplainableNumber } from "../proposed/ExplainableNumber.jsx";
 import { MediaGallery } from "../proposed/MediaAttachment.jsx";
 import { MediaViewer } from "../proposed/MediaViewer.jsx";
-import { RedactedContent } from "../honesty/SensitiveVeil.jsx";
+import { RedactedContent, SensitiveScope, SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
 import { OverflowMenu } from "./OverflowMenu.jsx";
 import { Icon } from "../navigation/Icon.jsx";
 import { TopicChip } from "../core/Chip.jsx";
@@ -67,11 +67,16 @@ export function PostCard({
   actions,
   onOpenMedia,
   redacted,
+  sensitive,
   topics = [],
   references = 0,
   menuItems = [],
 }) {
   const detail = variant === "detail";
+  // THE AUTHOR'S SELF-MARK (readme §13): one flag veils the BODY and the
+  // DESCRIPTION while the title stays readable, and the author's own reason
+  // rides the veil. One reveal answers for the whole card (SensitiveScope).
+  const veil = !redacted && sensitive ? { label: sensitive.label ?? "Sensitive — tap to view" } : null;
   // REDACTION IS RECORD-GRANULAR. An illegal verdict removes the payload, so
   // every authored field goes at once — there is no redacted title beside a
   // surviving body. The card renders its skeleton instead: author, timestamp,
@@ -121,7 +126,7 @@ export function PostCard({
             ...(hasMedia && !open && !detail ? CLAMP(1) : null),
           }}
         >
-          {description}
+          {veil ? <SensitiveVeil kind="text">{description}</SensitiveVeil> : description}
         </p>
       )}
       {content && (
@@ -133,7 +138,7 @@ export function PostCard({
             ...(detail ? { whiteSpace: "pre-wrap" } : CLAMP(hasMedia && !open ? 2 : 4)),
           }}
         >
-          {content}
+          {veil ? <SensitiveVeil kind="text">{content}</SensitiveVeil> : content}
         </p>
       )}
     </>
@@ -189,13 +194,17 @@ export function PostCard({
       </a>
     );
 
-  return (
-    <Card>
+  const body = (
+    <>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-2)" }}>
         {author && <ActorChip handle={author.handle} displayName={author.displayName} />}
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", flex: "none" }}>
           {timestamp && <span style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>{timestamp}</span>}
-          <OverflowMenu items={items} ariaLabel="More on this post" />
+          {/* ON A DETAIL SURFACE THE PAGE HEADER OWNS THE ONE OVERFLOW — a dot in
+              the header and another in the card would be two menus for one post.
+              The summary card keeps its own: in a feed there is no header to
+              carry it. */}
+          {!detail && <OverflowMenu items={items} ariaLabel="More on this post" />}
         </div>
       </div>
       {hasMedia && heading}
@@ -217,7 +226,13 @@ export function PostCard({
             }
           }}
         >
-          <MediaGallery items={media} radius="0px" />
+          {veil ? (
+            <SensitiveVeil kind="media" label={veil.label} radius="0px">
+              <MediaGallery items={media} radius="0px" />
+            </SensitiveVeil>
+          ) : (
+            <MediaGallery items={media} radius="0px" />
+          )}
         </div>
       )}
       {viewing !== null && <MediaViewer items={media} index={viewing} onClose={() => setViewing(null)} />}
@@ -282,13 +297,20 @@ export function PostCard({
               "read the post" and the count is information in itself. It opens the
               SAME detail view as the card, scrolled so the comments lead — never
               a separate screen. Glyph plus number, exactly like the score beside
-              it; the count is spoken by the accessible name. */}
-          {comments !== undefined && !detail && (
+              it; the count is spoken by the accessible name.
+
+              ON THE DETAIL VIEW IT STAYS — the count is still information — but
+              reads as WHERE YOU ARE: `primary` instead of muted, `aria-current`,
+              and no navigation, because the comments are already on screen. A
+              vanished glyph reads as a post that lost its comments, not as an
+              arrival. */}
+          {comments !== undefined && (
             <button
               type="button"
-              onClick={onOpenComments ?? onOpen}
+              onClick={detail ? undefined : (onOpenComments ?? onOpen)}
               aria-label={comments === 1 ? "1 comment" : `${comments} comments`}
-              className="cg-state cg-focus cg-hit"
+              aria-current={detail ? "location" : undefined}
+              className={detail ? "cg-focus" : "cg-state cg-focus cg-hit"}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -297,11 +319,11 @@ export function PostCard({
                 background: "transparent",
                 borderRadius: "var(--radius-full)",
                 padding: "6px 8px",
-                color: "var(--text-secondary)",
+                color: detail ? "var(--primary)" : "var(--text-secondary)",
                 fontFamily: "var(--font-sans)",
                 fontSize: "var(--text-label-large)",
                 fontWeight: "var(--text-label-large--font-weight)",
-                cursor: "pointer",
+                cursor: detail ? "default" : "pointer",
               }}
             >
               <Icon name="chat_bubble" size={18} />
@@ -311,6 +333,8 @@ export function PostCard({
           {actions}
         </div>
       )}
-    </Card>
+    </>
   );
+
+  return <Card>{veil ? <SensitiveScope>{body}</SensitiveScope> : body}</Card>;
 }

@@ -77,7 +77,12 @@ const tokenCss = tokenFiles.map((file) => readFileSync(join(root, file), "utf8")
 const darkCss = tokenCss.replace(/:root/g, '[data-theme="dark"]');
 const fontTokens = `:root { --font-figtree: "Figtree"; --font-sans: var(--font-figtree), "Segoe UI", system-ui, sans-serif; --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }`;
 
-const LOGIC = `<script data-dc-script data-props='{"theme":{"editor":"enum","options":["auto","light","dark"],"default":"auto"}}'>
+// A screen may export PROPS (extra data-props descriptors) and VALS (extra
+// `renderVals` entries, one code string like `keyTitle: this.props.wording ===
+// "app" ? "…" : "…"`); its markup then carries `{{name}}` holes the canvas
+// substitutes live — how a generated board keeps a tweak chip beyond the theme.
+const THEME_PROP = { theme: { editor: "enum", options: ["auto", "light", "dark"], default: "auto" } };
+const logicFor = (extraProps, extraVals) => `<script data-dc-script data-props='${JSON.stringify({ ...THEME_PROP, ...(extraProps ?? {}) })}'>
 class Component extends DCLogic {
   componentDidMount() {
     this.media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -124,12 +129,12 @@ class Component extends DCLogic {
     const dark = mode === "auto"
       ? window.matchMedia("(prefers-color-scheme: dark)").matches
       : mode === "dark";
-    return { theme: dark ? "dark" : "light" };
+    return { theme: dark ? "dark" : "light"${extraVals ? `, ${extraVals}` : ""} };
   }
 }
 </${"script"}>`;
 
-const shell = (markup) => `<!doctype html>
+const shell = (markup, extraProps, extraVals) => `<!doctype html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -150,7 +155,7 @@ ${darkCss}
 ${markup}
 </div>
 </x-dc>
-${LOGIC}
+${logicFor(extraProps, extraVals)}
 </body>
 </html>
 `;
@@ -174,11 +179,11 @@ for (const file of readdirSync(screensDir).sort()) {
     "React",
     "components",
     "Raw",
-    `${compiled}\nif (typeof Screen !== "function") throw new Error("no Screen export");\nreturn Screen;`
+    `${compiled}\nif (typeof Screen !== "function") throw new Error("no Screen export");\nreturn { Screen, PROPS: typeof PROPS === "undefined" ? null : PROPS, VALS: typeof VALS === "undefined" ? null : VALS };`
   );
-  const Screen = factory(React, ns, Raw);
+  const { Screen, PROPS, VALS } = factory(React, ns, Raw);
   const markup = renderToStaticMarkup(React.createElement(Screen));
-  writeFileSync(join(outDir, `${name}.dc.html`), shell(markup));
+  writeFileSync(join(outDir, `${name}.dc.html`), shell(markup, PROPS, VALS));
   count += 1;
   console.log(`rendered ${name}.dc.html`);
 }
