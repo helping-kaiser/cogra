@@ -116,4 +116,8 @@
     <string name="content_comment_edit_save">Save</string>
     <string name="content_comment_edit_cancel">Cancel</string>
     <string name="content_comment_more_replies">Show replies</string>
+    <string name="content_expired_title">Your post didn\'t land</string>
+    <string name="content_expired_body">"%1$s" couldn\'t finish settling. Nothing was spent — your draft is saved.</string>
+    <string name="content_expired_dismiss">Dismiss</string>
+    <string name="content_expired_open">Open the draft</string>
 </resources>

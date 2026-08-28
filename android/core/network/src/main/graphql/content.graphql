@@ -17,11 +17,24 @@ fragment PostFields on Post {
     value
     status
   }
+  # The other half of the body: a post is words XOR media (D16), so a
+  # media post's `content.value` is null and this carries it instead.
+  # A bounded fold list, not a connection — the write side caps a post
+  # at ten, so the whole gallery is always servable (D9).
+  attachments {
+    ...MediaFields
+  }
+  # One state for the whole set: the veil covers the body as a unit
+  # (D12), so there is nothing per-asset to read.
+  attachmentsStatus
   author {
     id
     handle
     displayName {
       value
+    }
+    avatar {
+      ...MediaFields
     }
   }
   createdAt
@@ -58,6 +71,21 @@ fragment CommentFields on Comment {
     value
     status
   }
+  # A comment is text **plus** optional media — deliberately not the
+  # post's exclusive-or (D16) — capped at four.
+  attachments {
+    ...MediaFields
+  }
+  attachmentsStatus
+  # No `avatar` here, deliberately.
+  #
+  # A comment's author picture is the most multiplied selection in the
+  # corpus: the thread read carries twenty comments each with three
+  # replies, so every field on a comment's author is priced eighty
+  # times over. Measured, it costs 560 of complexity — and the release
+  # ceiling's stated headroom leaves 224 to spare as it is, so this
+  # selection alone would fail the guard. The canonical `Removed` and
+  # `ComposeLanded` boards draw comment authors as monograms anyway.
   author {
     id
     handle

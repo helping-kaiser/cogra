@@ -416,12 +416,15 @@ private fun PostWithThread(
     ) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                post.description.value?.takeIf { it.isNotEmpty() }?.let {
-                    Text(it, style = MaterialTheme.typography.titleSmall)
-                }
-                Text(
-                    post.content.value.orEmpty(),
-                    style = MaterialTheme.typography.bodyLarge,
+                // Media, words and description are one region because
+                // the veil covers them as one state (D12); the title
+                // stays outside it, on the bar above.
+                PostBody(
+                    content = post.content,
+                    description = post.description,
+                    attachments = post.attachments,
+                    attachmentsStatus = post.attachmentsStatus,
+                    testTagPrefix = "detail",
                     modifier = Modifier.testTag("detail_body"),
                 )
                 post.author?.let { author ->
@@ -429,6 +432,7 @@ private fun PostWithThread(
                         handle = author.handle,
                         displayName = author.displayName,
                         onOpen = { onOpenActor(author.handle) },
+                        avatarUrl = author.avatar?.url,
                         testTag = "detail_author",
                     )
                 }
@@ -762,6 +766,10 @@ private fun CommentThread(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 comment.author?.let { author ->
+                    // No picture: the thread read does not ask for one
+                    // (see `CommentFields`), so a comment author is the
+                    // monogram — which is what the canonical boards
+                    // draw for them anyway.
                     ActorChip(
                         handle = author.handle,
                         displayName = author.displayName,
@@ -846,7 +854,17 @@ private fun CommentThread(
                         }
                     }
                 } else {
-                    Text(comment.content.value.orEmpty(), style = MaterialTheme.typography.bodyMedium)
+                    // A comment is text **plus** optional media (D16),
+                    // so its body is never the exclusive-or a post's
+                    // is — but it veils and redacts as one region all
+                    // the same.
+                    PostBody(
+                        content = comment.content,
+                        description = null,
+                        attachments = comment.attachments,
+                        attachmentsStatus = comment.attachmentsStatus,
+                        testTagPrefix = "comment_${comment.id}",
+                    )
                     Text(
                         licenseTerms(comment.license),
                         style = MaterialTheme.typography.bodySmall,

@@ -90,15 +90,28 @@ object ImageProcessing {
     fun process(source: ByteArray): ProcessedImage? {
         val decoded = BitmapFactory.decodeByteArray(source, 0, source.size) ?: return null
         val upright = decoded.applyOrientation(orientationOf(source))
-        val scaled = upright.downscaled(MAX_EDGE_PX)
-        val bytes = scaled.toWebP(WEBP_QUALITY)
-        val result = ProcessedImage(bytes, scaled.width, scaled.height)
+        val result = processBitmap(upright)
 
         // Free the intermediates eagerly: a picker can hand over a dozen of
         // these in a row, and a phone's heap is the binding constraint.
-        if (scaled !== upright) upright.recycle()
-        if (upright !== decoded) decoded.recycle()
-        scaled.recycle()
+        if (upright !== decoded) upright.recycle()
+        decoded.recycle()
+        return result
+    }
+
+    /**
+     * The pixel half of [process], for a caller that already holds an
+     * upright — and, in the composer's case, already cropped — bitmap.
+     *
+     * The crop has to happen between the orientation and the downscale
+     * (D17: the client crops, and the stored bytes are the post's
+     * bytes), which is why the two halves are separable at all.
+     */
+    fun processBitmap(upright: Bitmap): ProcessedImage {
+        val scaled = upright.downscaled(MAX_EDGE_PX)
+        val bytes = scaled.toWebP(WEBP_QUALITY)
+        val result = ProcessedImage(bytes, scaled.width, scaled.height)
+        if (scaled !== upright) scaled.recycle()
         return result
     }
 

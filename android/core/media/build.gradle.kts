@@ -15,9 +15,11 @@ android {
 }
 
 dependencies {
-    // Android's Bitmap and ExifInterface are the whole dependency surface:
-    // no Compose, no domain, no network. The module is the on-device image
-    // pipeline and nothing else.
+    // Android's Bitmap and ExifInterface plus the domain's own
+    // `MediaProcessor` seam: no Compose, no network, and no DI — the
+    // Hilt module that hands this to the app lives in :app, so this
+    // module stays a plain library with a constructor.
+    api(project(":core:domain"))
     implementation(libs.androidx.exifinterface)
     implementation(libs.kotlinx.coroutines.core)
 

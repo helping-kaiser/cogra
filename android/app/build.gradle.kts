@@ -93,6 +93,10 @@ android {
 dependencies {
     implementation(project(":core:network"))
     implementation(project(":core:designsystem"))
+    // The on-device image pipeline's Hilt binding: the wizard and the
+    // profile form both inject `MediaProcessor`, and this module is
+    // where the platform implementation is provided.
+    implementation(project(":core:media"))
     implementation(project(":feature:auth"))
     implementation(project(":feature:content"))
     implementation(project(":feature:onboarding"))

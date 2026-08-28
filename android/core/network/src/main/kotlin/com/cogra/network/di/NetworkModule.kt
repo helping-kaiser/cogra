@@ -9,6 +9,8 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.apollographql.apollo.ApolloClient
+import com.cogra.domain.compose.ComposeDraftStore
+import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ProfileRepository
@@ -24,6 +26,7 @@ import com.cogra.domain.store.TokenStore
 import com.cogra.network.auth.BearerInterceptor
 import com.cogra.network.repo.AccountRepositoryImpl
 import com.cogra.network.repo.ContentRepositoryImpl
+import com.cogra.network.repo.MediaRepositoryImpl
 import com.cogra.network.repo.ProfileRepositoryImpl
 import com.cogra.network.repo.OnboardingRepositoryImpl
 import com.cogra.network.repo.SessionRepositoryImpl
@@ -31,6 +34,7 @@ import com.cogra.network.repo.StanceRepositoryImpl
 import com.cogra.network.repo.ReferenceRepositoryImpl
 import com.cogra.network.repo.TopicRepositoryImpl
 import com.cogra.network.repo.WriteRepositoryImpl
+import com.cogra.network.store.ComposeDraftStoreImpl
 import com.cogra.network.store.EncryptedStore
 import com.cogra.network.store.IdentityStoreImpl
 import com.cogra.network.store.StorageHealthImpl
@@ -122,4 +126,10 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun referenceRepository(impl: ReferenceRepositoryImpl): ReferenceRepository
+
+    @Binds
+    abstract fun mediaRepository(impl: MediaRepositoryImpl): MediaRepository
+
+    @Binds
+    abstract fun composeDraftStore(impl: ComposeDraftStoreImpl): ComposeDraftStore
 }

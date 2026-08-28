@@ -2,7 +2,11 @@ package com.cogra.feature.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.Outcome
+import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.MediaProcessor
+import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
@@ -13,19 +17,65 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/**
+ * One of the two profile pictures, as the form holds it.
+ *
+ * The three states are the contract's three (D13) plus the one the form
+ * needs while a new picture is on its way: [Held] is what the account
+ * already has and the form has not touched, [Cleared] is the explicit
+ * clear, [Picked] is a local file mid-upload, and [Uploaded] is the
+ * asset the update will name. Only [Cleared] and [Uploaded] change
+ * anything; [Held] sends nothing at all, which is what makes "leave it
+ * alone" distinguishable from "clear it".
+ */
+sealed interface ProfileImageState {
+    data class Held(val url: String?) : ProfileImageState
+
+    data object Cleared : ProfileImageState
+
+    data class Picked(val uri: String) : ProfileImageState
+
+    data class Uploaded(val mediaId: String, val url: String) : ProfileImageState
+
+    data class Failed(val uri: String, val message: String) : ProfileImageState
+
+    /** What the header should draw right now, or null for the monogram. */
+    val previewUrl: Any?
+        get() = when (this) {
+            is Held -> url
+            is Picked -> uri
+            is Uploaded -> url
+            is Failed -> uri
+            Cleared -> null
+        }
+
+    /** The wire value: absent, an explicit clear, or an id. */
+    fun toUpdate(): MediaFieldUpdate = when (this) {
+        is Held, is Picked, is Failed -> MediaFieldUpdate.Untouched
+        Cleared -> MediaFieldUpdate.Clear
+        is Uploaded -> MediaFieldUpdate.Set(mediaId)
+    }
+}
+
 data class ProfileEditUiState(
     val loading: Boolean = true,
     val transportFailed: Boolean = false,
     val displayName: String = "",
     val bio: String = "",
     val websiteUrl: String = "",
+    val avatar: ProfileImageState = ProfileImageState.Held(null),
+    val cover: ProfileImageState = ProfileImageState.Held(null),
     val submitting: Boolean = false,
     val emptyName: Boolean = false,
     val refused: Boolean = false,
     val signingFailed: Boolean = false,
     /** One-shot: the update signed; the caller pops back and refreshes. */
     val saved: Boolean = false,
-)
+) {
+    /** A picture is still on its way; saving would name nothing. */
+    val imagesPending: Boolean
+        get() = avatar is ProfileImageState.Picked || cover is ProfileImageState.Picked
+}
 
 /**
  * The profile edit form: pre-filled from the current version, saved as
@@ -36,6 +86,8 @@ data class ProfileEditUiState(
 @HiltViewModel
 class ProfileEditViewModel @Inject constructor(
     private val profiles: ProfileRepository,
+    private val media: MediaRepository,
+    private val processor: MediaProcessor,
     private val signer: WriteSigner,
 ) : ViewModel() {
 
@@ -61,6 +113,8 @@ class ProfileEditViewModel @Inject constructor(
                                 displayName = profile.displayName.value.orEmpty(),
                                 bio = profile.bio.value.orEmpty(),
                                 websiteUrl = profile.websiteUrl.value.orEmpty(),
+                                avatar = ProfileImageState.Held(profile.avatar?.url),
+                                cover = ProfileImageState.Held(profile.cover?.url),
                             )
                         }
                     }
@@ -76,9 +130,48 @@ class ProfileEditViewModel @Inject constructor(
     fun onWebsiteChange(v: String) = _state.update { it.copy(websiteUrl = v) }
     fun onSavedConsumed() = _state.update { it.copy(saved = false) }
 
+    // -- The two pictures (D13) --
+
+    /**
+     * A picked avatar or cover: cropped to its fixed shape, processed
+     * and uploaded exactly as a post's pictures are — same pipeline,
+     * same `uploadMedia`, only the shape differs.
+     */
+    fun onAvatarPicked(uri: String) = pick(uri, AVATAR_RATIO, avatar = true)
+
+    fun onCoverPicked(uri: String) = pick(uri, COVER_RATIO, avatar = false)
+
+    /** Back to the monogram, which is the designed placeholder. */
+    fun onAvatarCleared() = _state.update { it.copy(avatar = ProfileImageState.Cleared) }
+
+    fun onCoverCleared() = _state.update { it.copy(cover = ProfileImageState.Cleared) }
+
+    private fun pick(uri: String, ratio: Float, avatar: Boolean) {
+        val picked = ProfileImageState.Picked(uri)
+        _state.update { if (avatar) it.copy(avatar = picked) else it.copy(cover = picked) }
+        viewModelScope.launch {
+            // The fixed crop is centred: the profile form has no
+            // framing step, so the picture is taken from the middle of
+            // whatever was picked rather than from a corner.
+            val processed = processor.process(uri, CropSpec(targetRatio = ratio))
+            val next = if (processed == null) {
+                ProfileImageState.Failed(uri, UNREADABLE)
+            } else {
+                when (val outcome = media.uploadMedia(processed, altText = null)) {
+                    is Outcome.Success ->
+                        ProfileImageState.Uploaded(outcome.value.id, outcome.value.url)
+                    is Outcome.Refused ->
+                        ProfileImageState.Failed(uri, outcome.errors.firstOrNull()?.message ?: REFUSED)
+                    is Outcome.Failed -> ProfileImageState.Failed(uri, TRANSPORT)
+                }
+            }
+            _state.update { if (avatar) it.copy(avatar = next) else it.copy(cover = next) }
+        }
+    }
+
     fun onSubmit() {
         val s = _state.value
-        if (s.submitting) return
+        if (s.submitting || s.imagesPending) return
         if (s.displayName.isBlank()) {
             _state.update { it.copy(emptyName = true) }
             return
@@ -90,6 +183,8 @@ class ProfileEditViewModel @Inject constructor(
                     displayName = s.displayName.trim(),
                     bio = s.bio.ifBlank { null },
                     websiteUrl = s.websiteUrl.trim().ifBlank { null },
+                    avatar = s.avatar.toUpdate(),
+                    cover = s.cover.toUpdate(),
                 )
             ) {
                 is Outcome.Success -> outcome.value
@@ -109,5 +204,15 @@ class ProfileEditViewModel @Inject constructor(
                 _state.update { it.copy(submitting = false, signingFailed = true) }
             }
         }
+    }
+
+    private companion object {
+        /** D13's fixed crops: a circle-masked square, and a wide cover. */
+        const val AVATAR_RATIO = 1f
+        const val COVER_RATIO = 1.91f
+
+        const val UNREADABLE = "That file could not be read as a picture."
+        const val REFUSED = "The server would not take that picture."
+        const val TRANSPORT = "The upload could not reach the server."
     }
 }

@@ -38,6 +38,23 @@ class CropState internal constructor(initialScale: Float, initialOffset: Offset)
             offset = clampOffset(offset, scale, value)
         }
 
+    /**
+     * The framing in units that survive leaving the screen.
+     *
+     * The pixels this state holds belong to the viewport it was framed
+     * in; the bitmap the crop is finally applied to is a different size
+     * entirely. Expressing the translation as a fraction of the
+     * viewport is what lets the two agree without either learning the
+     * other's dimensions — and it is why the viewport itself stays
+     * internal, so no screen is tempted to do the arithmetic.
+     */
+    val framing: CropFraming
+        get() = CropFraming(
+            scale = scale,
+            offsetFractionX = if (viewport.width > 0f) offset.x / viewport.width else 0f,
+            offsetFractionY = if (viewport.height > 0f) offset.y / viewport.height else 0f,
+        )
+
     /** Multiplies the current zoom and re-clamps, e.g. from a pinch. */
     fun zoomBy(factor: Float) {
         val next = (scale * factor).coerceIn(MIN_SCALE, MAX_SCALE)
@@ -98,6 +115,16 @@ class CropState internal constructor(initialScale: Float, initialOffset: Offset)
         }
     }
 }
+
+/**
+ * One picture's framing, in viewport-relative units — what a screen
+ * hands to whatever finally cuts the bytes.
+ */
+data class CropFraming(
+    val scale: Float,
+    val offsetFractionX: Float,
+    val offsetFractionY: Float,
+)
 
 /** The four discrete directions the non-drag route offers. */
 enum class NudgeDirection(val x: Float, val y: Float) {

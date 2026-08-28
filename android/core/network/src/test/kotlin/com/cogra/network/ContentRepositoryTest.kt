@@ -66,6 +66,7 @@ class ContentRepositoryTest {
         title: String?,
         redacted: Boolean = false,
         landing: String = landingJson("LANDED", 7),
+        attachments: String = "[]",
     ) = """
         {"__typename":"Post","id":"$id",
          "title":{"__typename":"ModeratedText","value":${title?.let { "\"$it\"" } ?: "null"},"status":"NORMAL"},
@@ -73,7 +74,9 @@ class ContentRepositoryTest {
          "content":{"__typename":"ModeratedText",
                     "value":${if (redacted) "null" else "\"body\""},
                     "status":"${if (redacted) "REDACTED" else "NORMAL"}"},
-         "author":{"__typename":"User","id":"u1","handle":"alice","displayName":{"__typename":"ModeratedText","value":"Alice"}},
+         "attachments":$attachments,
+         "attachmentsStatus":"NORMAL",
+         "author":{"__typename":"User","id":"u1","handle":"alice","displayName":{"__typename":"ModeratedText","value":"Alice"},"avatar":null},
          "createdAt":"2026-08-12T10:00:00+00:00",
          "updatedAt":"2026-08-12T11:00:00+00:00",
          "landing":$landing,
@@ -81,6 +84,19 @@ class ContentRepositoryTest {
          "license":{"__typename":"License","attribution":0.5,"provenance":1.0},
          "topics":[],
          "references":[]}
+    """.trimIndent()
+
+    /** One attachment as the contract serves it. */
+    private fun mediaJson(
+        id: String = "m1",
+        altText: String? = "A salt crust",
+        status: String = "NORMAL",
+        aspectRatio: String? = "0.8",
+    ) = """
+        {"__typename":"MediaAttachment","id":"$id","url":"https://media/$id",
+         "altText":${altText?.let { "\"$it\"" } ?: "null"},
+         "status":"$status",
+         "options":{"__typename":"MediaOptions","aspectRatio":${aspectRatio?.let { "\"$it\"" } ?: "null"}}}
     """.trimIndent()
 
     @Test
@@ -151,6 +167,8 @@ class ContentRepositoryTest {
                "title":{"__typename":"ModeratedText","value":null,"status":"NORMAL"},
                "description":{"__typename":"ModeratedText","value":null,"status":"NORMAL"},
                "content":{"__typename":"ModeratedText","value":"body","status":"NORMAL"},
+               "attachments":[],
+               "attachmentsStatus":"NORMAL",
                "author":null,
                "createdAt":"2026-08-12T10:00:00+00:00",
                "updatedAt":"2026-08-12T10:00:00+00:00",
@@ -162,6 +180,8 @@ class ContentRepositoryTest {
                "comments":{"__typename":"CommentConnection",
                  "edges":[{"__typename":"CommentEdge","node":{"__typename":"Comment","id":"c1",
                    "content":{"__typename":"ModeratedText","value":"hi","status":"NORMAL"},
+                   "attachments":[${mediaJson("cm1")}],
+                   "attachmentsStatus":"NORMAL",
                    "author":{"__typename":"User","id":"u2","handle":"bob","displayName":{"__typename":"ModeratedText","value":"Bob"}},
                    "createdAt":"2026-08-12T10:05:00+00:00",
                    "updatedAt":"2026-08-12T10:05:00+00:00",
@@ -185,9 +205,71 @@ class ContentRepositoryTest {
         // A landed post can carry a comment that has not landed yet.
         assertThat(detail.post.landing).isEqualTo(Landing.landed(3))
         assertThat(detail.comments.items.single().landing).isEqualTo(Landing.Pending)
+        // A comment is text plus optional media (D16), and its gallery
+        // maps like a post's.
+        val commentMedia = detail.comments.items.single().attachments.single()
+        assertThat(commentMedia.id).isEqualTo("cm1")
+        assertThat(commentMedia.altText).isEqualTo("A salt crust")
+        assertThat(commentMedia.aspectRatio).isEqualTo(0.8f)
 
         enqueue("""{"data":{"post":null}}""")
         assertThat((repo().post("gone", 20, null) as Outcome.Success).value).isNull()
+    }
+
+    @Test
+    fun aGalleryMapsInOrderWithItsStateAndReservedShape() = runTest {
+        enqueue(
+            """{"data":{"posts":{"__typename":"PostConnection",
+               "edges":[{"__typename":"PostEdge","node":${
+                postJson(
+                    "p1",
+                    "Salt maps",
+                    attachments = "[${mediaJson("m1")},${mediaJson("m2", altText = null, aspectRatio = "1.91")}]",
+                )
+            }}],
+               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
+        )
+        val post = (repo().posts(20, null) as Outcome.Success).value.items.single()
+        assertThat(post.attachments.map { it.id }).containsExactly("m1", "m2").inOrder()
+        assertThat(post.attachmentsStatus).isEqualTo(FieldStatus.NORMAL)
+        assertThat(post.isMediaPost).isTrue()
+        // A described asset keeps its words; an undescribed one stays
+        // null rather than acquiring a fabricated description (D20).
+        assertThat(post.attachments[0].altText).isEqualTo("A salt crust")
+        assertThat(post.attachments[1].altText).isNull()
+        assertThat(post.attachments[1].aspectRatio).isEqualTo(1.91f)
+    }
+
+    @Test
+    fun anUnparsableRatioReservesASquareRatherThanCollapsing() = runTest {
+        enqueue(
+            """{"data":{"posts":{"__typename":"PostConnection",
+               "edges":[{"__typename":"PostEdge","node":${
+                postJson("p1", null, attachments = "[${mediaJson(aspectRatio = null)}]")
+            }}],
+               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
+        )
+        val post = (repo().posts(20, null) as Outcome.Success).value.items.single()
+        // The field exists to hold the tile open before the load; a
+        // zero would collapse exactly what it is there to reserve.
+        assertThat(post.attachments.single().aspectRatio).isEqualTo(1f)
+    }
+
+    @Test
+    fun aRedactedAssetKeepsItsMark() = runTest {
+        enqueue(
+            """{"data":{"posts":{"__typename":"PostConnection",
+               "edges":[{"__typename":"PostEdge","node":${
+                postJson(
+                    "p1",
+                    null,
+                    attachments = "[${mediaJson(altText = null, status = "REDACTED")}]",
+                )
+            }}],
+               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
+        )
+        val post = (repo().posts(20, null) as Outcome.Success).value.items.single()
+        assertThat(post.attachments.single().status).isEqualTo(FieldStatus.REDACTED)
     }
 
     @Test

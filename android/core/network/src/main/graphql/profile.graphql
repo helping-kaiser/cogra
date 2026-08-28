@@ -17,6 +17,14 @@ fragment ProfileFields on User {
     value
     status
   }
+  # Null for an account that has never set one, which is the monogram
+  # — the designed placeholder, not a gap (D13).
+  avatar {
+    ...MediaFields
+  }
+  cover {
+    ...MediaFields
+  }
 }
 
 query UserByHandle($handle: String!) {

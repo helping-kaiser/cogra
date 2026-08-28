@@ -1,0 +1,35 @@
+# The media surface (api-spec.md "Media"; roadmap "Slice 2.5.1"): the
+# one upload verb, and the selection every gallery render reads.
+#
+# `uploadMedia` takes one asset per call by design (D5): concurrency is
+# the client's to arrange, and each upload retries on its own.
+
+# What a client needs to draw an attachment and to honour its state.
+#
+# `digest`/`digestAlgo` are deliberately NOT selected: nothing on the
+# device verifies bytes against the record yet, and every selected field
+# is priced against the query budget. They arrive with the verification
+# work, not before it.
+fragment MediaFields on MediaAttachment {
+  id
+  url
+  altText
+  # NORMAL, or REDACTED once the bytes are gone — what lets the client
+  # draw the calm placeholder instead of a broken image (D15).
+  status
+  # Reserves the tile's space before a byte loads (design.md §6).
+  options {
+    aspectRatio
+  }
+}
+
+mutation UploadMedia($file: Upload!, $altText: String) {
+  uploadMedia(input: { file: $file, altText: $altText }) {
+    media {
+      ...MediaFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}

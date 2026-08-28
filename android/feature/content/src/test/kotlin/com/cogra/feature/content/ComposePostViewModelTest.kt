@@ -78,10 +78,11 @@ class ComposePostViewModelTest {
         override suspend fun preparePost(
             title: String?,
             description: String?,
-            content: String,
+            content: String?,
             license: LicenseChoice,
             tags: List<TagClaim>,
             references: List<ReferenceClaim>,
+            attachments: List<com.cogra.domain.AttachmentClaim>,
         ): Outcome<PreparedContentView> {
             lastCreate = listOf(title, description, content, license, tags)
             lastCreateReferences = references
