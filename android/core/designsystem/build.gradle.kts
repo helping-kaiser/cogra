@@ -26,6 +26,12 @@ dependencies {
     // api: every feature that uses a designsystem component gets the
     // icon set with it (R8 strips the unused bulk in release builds).
     api(libs.androidx.compose.material.icons.extended)
+    // api: the 2.0 media components expose Coil's AsyncImage model types on
+    // their own signatures, so consumers need the artifact on their compile
+    // path too. coil-network-okhttp is what teaches Coil 3 to fetch over
+    // HTTP at all — it ships no network fetcher by default.
+    api(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
     // The key gate: BiometricPrompt needs the hosting FragmentActivity,
@@ -37,9 +43,15 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.truth)
+    // The preview palette pins itself to the repo-root design-tokens.json,
+    // the same contract :app's ColorSchemeTest reads.
+    testImplementation(libs.kotlinx.serialization.json)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.androidx.test.ext.junit)
     testImplementation(libs.androidx.compose.ui.test.junit4)
     testImplementation(libs.androidx.compose.ui.test.manifest)
+    // Coil's own test artifact: a fake ImageLoader engine, so a media test
+    // asserts layout and semantics without a network or a real decode.
+    testImplementation(libs.coil.test)
 }
