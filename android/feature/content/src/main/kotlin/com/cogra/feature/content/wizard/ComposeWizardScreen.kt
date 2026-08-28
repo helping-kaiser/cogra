@@ -230,7 +230,7 @@ internal fun ComposeWizardScreen(
                     onTogglePick = onTogglePick,
                 )
 
-                WizardStep.Crop -> WizardBody {
+                WizardStep.Crop -> WizardBody(scrollable = true) {
                     CropStepBody(state, onShapeChange, onFrameAsset, onCropsChanged)
                 }
 

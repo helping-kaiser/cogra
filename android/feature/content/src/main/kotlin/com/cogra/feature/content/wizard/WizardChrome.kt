@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -64,12 +66,27 @@ internal fun WizardCaption(
 internal fun ColumnScope.WizardBody(
     modifier: Modifier = Modifier,
     gap: androidx.compose.ui.unit.Dp = Space.x3,
+    /**
+     * Whether the stage scrolls when it does not fit.
+     *
+     * The canonical boards are drawn at 390×844 and fit exactly there,
+     * which is not a promise about any real device. A stage whose
+     * controls can fall below the fold scrolls — the crop's non-drag
+     * route in particular is required to be reachable (D17), and a
+     * required control that a short screen hides is not reachable.
+     *
+     * The crop viewport keeps its pan gesture: it consumes the drag
+     * before the scrolling parent sees it, so the picture moves inside
+     * the frame and the page moves everywhere else.
+     */
+    scrollable: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
             .weight(1f)
+            .then(if (scrollable) Modifier.verticalScroll(rememberScrollState()) else Modifier)
             .padding(
                 start = Layout.ScreenGutter,
                 end = Layout.ScreenGutter,
