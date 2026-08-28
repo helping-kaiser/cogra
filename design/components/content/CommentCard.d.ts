@@ -11,9 +11,24 @@ export interface CommentCardProps {
   pending?: boolean;
   edited?: boolean;
   bundle?: StanceBundle | null;
-  /** Indents 12px per level, flattening past three. */
+  /**
+   * Indents 12px once. The thread is two levels deep on screen (readme §13):
+   * deeper answers flatten into the reply level and open with the @handle they
+   * answer — mentions render in `primary`.
+   */
   depth?: number;
+  /** The EXPANDED replies. Collapsed, pass `replyCount` instead. */
   replies?: readonly (CommentCardProps & { id: string })[];
+  /** Renders the collapsed "View n replies" line when `replies` is empty. */
+  replyCount?: number;
+  /** Expands the collapsed replies. */
+  onOpenReplies?: () => void;
+  /** The same topics-and-citations line a post wears (`TopicsLine`). */
+  topics?: readonly string[];
+  /** The citation count at that line's end. */
+  references?: number;
+  /** Makes the count open the topics-and-references sheet. */
+  onOpenReferences?: () => void;
   signedIn?: boolean;
   /** Owned by the shell, like `PostCard.taught`. Defaults to true. */
   taught?: boolean;

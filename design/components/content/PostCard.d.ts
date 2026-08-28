@@ -51,13 +51,10 @@ export interface PostCardProps {
   /**
    * The comment count. Third in the affordance row: `chat_bubble` plus the
    * number, the same shape as the score beside it. Zero shows the glyph alone.
-   * Absent on the detail variant, where the comments are already on screen.
+   * Opens the comments sheet, from the feed and the detail view alike.
    */
   comments?: number;
-  /**
-   * Opens the SAME detail view as the card, scrolled so the comments lead.
-   * Defaults to `onOpen`.
-   */
+  /** Opens the comments sheet. Defaults to `onOpen`. */
   onOpenComments?: () => void;
   /**
    * Renders the record's SKELETON instead of its content: an illegal verdict
@@ -67,6 +64,22 @@ export interface PostCardProps {
    * thread position, and stance control survive around it.
    */
   redacted?: boolean | import("../honesty/SensitiveVeil").RedactedContentProps;
+  /**
+   * The author's self-mark (readme §13): veils the body and the description
+   * while the TITLE stays readable. `reason` is the author's own line under
+   * the veil's standard "Sensitive — tap to view". One reveal answers for the
+   * whole card.
+   */
+  sensitive?: { reason?: string };
+  /**
+   * Topic names, with or without the `#`. One line with the citation count at
+   * its end, clipped on both variants (readme §13's collapse order) — the
+   * topics-and-references sheet is the full set's home. On detail the whole
+   * line opens the sheet.
+   */
+  topics?: readonly string[];
+  /** The citation count, riding the end of the topics line. */
+  references?: number;
   /**
    * Detail variant only: takes over the media tap, which otherwise opens
    * `MediaViewer` in place. In the feed the same tap opens the post.

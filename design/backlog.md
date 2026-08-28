@@ -64,7 +64,21 @@ taken"** (the repo's own word for the link is banned on screen, and
 "followers" would describe a different product); `own` changes the row,
 not the layout; no cover image. The monogram stays the fallback.
 
-### 6 · Compose + signing + pending · *design*
+### 6 · Compose + signing + pending · *design* · **built**
+`designs/canonical/` — the canonical canvas's Compose rows
+(2026-08-27), grown well past this item's scope by jakob's direction:
+the body-first wizard (pick with tray + photos-app door, crop at
+4:5/1:1/1.91:1, video cover, one details screen, the seal as a
+place), the seal's sheets and pads, restore-first key absence with
+local drafts, landing + the did-not-land notice, the reply flow with
+its disclosed parent stance, edit as one batch with a breakdown
+sheet, remove with distinct marks, the reference explorer, the post
+ladder with the height cap, and the feed's rounded full-width cards.
+Three ideation rounds live on the "CoGra compose" canvas. Ported
+back: readme §13 rulings, the "?" dialog texts in copy-voice.md,
+`Button` true heights + 64px min width, and the product-side flags
+(body XOR, sensitive self-mark, default-license setting, edit
+batches, Q43 resolved).
 Writing, pricing shown before signing, the key-not-on-this-browser path,
 and the pending marker arriving in the thread. Exercises `TextField`,
 `LicenseChooser`, `RecoveryCode`, `SigningPending`, `PendingMarker` —
@@ -90,6 +104,50 @@ restore.
 filter's `Chip` — same pill, told apart by what they do. The `#` is part
 of the word, not an icon.
 
+### 17 · Prototype screens consume the master components · *system* ·
+**first pass built (2026-08-28)**
+`_build/render-screens.mjs`: every `designs/canonical/screens/*.jsx`
+is a screen definition composed from the REAL components, rendered
+against the live `_ds_bundle.js` and written out as its `.dc.html`
+artboard — update a component, re-run bundle + render, and every
+screen that uses it updates. Sixteen boards are converted (landing,
+bare arrival, the applicant days, vouch-back and its pad,
+expired/landed, the thread, removal, the post ladder, the
+key-elsewhere feed), and the conversion keeps catching real drift:
+`RedactedContent` said "graph" on screen; the pad, the detail
+headers, and the sensitive card had been rebuilt by hand and rotted.
+Ported into components on the way: `PostCard` topics + citation
+line, the one-line summary title clamp, the `sensitive` self-mark
+variant, the where-you-are comment affordance on detail;
+`StanceControl` `defaultOpen`/`defaultPick`/`padInset`/`padNote` so
+a static board shows the parked pad from the master. Screens can
+keep canvas tweak chips via `PROPS`/`VALS` exports. The rule is
+readme §13 *Masters, variants, and screens*. **Remaining:** the
+task-flow boards (compose wizard, seals, key/auth ceremony screens)
+are still hand-authored `.dc.html` — convert them as their sections
+are next touched; `ReplyPad`/`ComposePad` (hand-copied pads) are
+first in line.
+The canonical artboards hand-copy component markup, so system updates
+don't propagate — the entry-session post cards already drifted
+(missing elements newer boards carry). Change the authoring model so
+prototype screens are built from the design system's actual
+components and variants; updating a component then updates every
+screen that uses it. Applies to the canonical canvas first; the
+ideation canvases stay frozen records.
+
+### 18 · Reference rows + per-act standing display · *system* · **built**
+Ruled and built 2026-08-28 (readme §13 *Reference rows and signed
+pairs*): the counts open the topics-and-references sheet;
+`ReferenceRow` is the one row shape (leading mark · name · signed
+pair) with glyph-led kinds (five node-type glyphs exported verbatim
+from material-design-icons; a text post wears a T tile, a person
+their avatar, a media post its cover); `TopicsLine` is shared by
+post and comment cards. Drawn on the "Topics & references · the
+sheet" board. **Remaining:** the compose-side pair setting (each
+picked chip shows its default pair, tap edits via the reader's
+chosen stance input) lands when the compose wizard boards convert
+to the screens pipeline (item 17).
+
 ### 9 · Search + results · *design*
 Topics, post titles, usernames, item names. Produces a search field
 variant of `TextField` and result-row treatments per node type — a
@@ -97,11 +155,14 @@ result list is a list of ranked nodes, so the row work is reused by the
 feed later.
 
 ### 10 · Sensitive veil treatment · *system*, has open questions
-Granularity is settled (blur only what is marked, reveal per post). Open
-and to be decided in this item: blur radius, overlay wash, whether a
-reveal survives leaving and returning to the post, what the veil says
-when the author gave a reason, and how the reader's 0–10 severity setting
-maps to blur-or-not. No `error` colouring, no warning glyph.
+Granularity is settled (blur only what is marked, reveal per post),
+and the compose session (item 6) settled more: the author's self-mark
+veils body + description with the title readable, and the veil's face
+is the pattern every large product uses — the visibility glyph,
+`Sensitive — tap to view`, and the author's reason, centred in white
+on the wash, no surface of their own. Drawn on the post-ladder row. Still open in this item: whether a reveal survives
+leaving and returning to the post, and how the reader's 0–10 severity
+setting maps to blur-or-not. No `error` colouring, no warning glyph.
 
 ### 11 · Money & CGT figures · *system*
 Balances, earnings, campaign amounts: how a figure is formatted, when it

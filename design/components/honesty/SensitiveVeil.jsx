@@ -57,7 +57,7 @@ export function SensitiveScope({ children }) {
  * Veils ONE field or ONE attachment — a title, a description, a body, a single
  * tile. Never a whole post.
  */
-export function SensitiveVeil({ children, kind = "media", label = "Sensitive", revealLabel = "Show", radius }) {
+export function SensitiveVeil({ children, kind = "media", label = "Sensitive — tap to view", reason, revealLabel = "Show", radius }) {
   const scope = React.useContext(RevealContext);
   const [local, setLocal] = React.useState(false);
   const revealed = scope ? scope.revealed : local;
@@ -112,17 +112,19 @@ export function SensitiveVeil({ children, kind = "media", label = "Sensitive", r
   }
 
   return (
-    <div style={{ position: "relative", display: "flex", minWidth: 0 }}>
+    <div style={{ position: "relative", display: "flex", minWidth: 0, overflow: "hidden", borderRadius: radius ?? 0 }}>
       {/* The content still renders and still reserves its exact space — the veil
           is over it, not instead of it, so revealing moves nothing. `scale` hides
-          the transparent edge a blur leaves at the bounds. */}
+          the transparent edge a blur leaves at the bounds — and the WRAPPER clips
+          it: the scaled halo must never paint outside the tile's own box, into
+          the title above or the caption below. */}
       <div aria-hidden="true" style={{ filter: "blur(24px)", transform: "scale(1.06)", flex: 1, minWidth: 0, overflow: "hidden" }}>
         {veiled}
       </div>
       <button
         type="button"
         onClick={reveal}
-        aria-label={`${label} — ${revealLabel.toLowerCase()}`}
+        aria-label={`${label}${reason ? ` — ${reason}` : ""}`}
         className="cg-focus"
         style={{
           position: "absolute",
@@ -138,22 +140,31 @@ export function SensitiveVeil({ children, kind = "media", label = "Sensitive", r
           padding: 0,
         }}
       >
+        {/* No surface of its own — the wash IS the surface, and the words sit
+            directly on it, centred: the pattern every large product uses for
+            this exact moment, so the reader has met it before. Fixed white,
+            deliberately theme-independent: the wash is dark in both themes.
+            The author's reason, when there is one, is the second, smaller
+            line. */}
         <span
           style={{
-            display: "inline-flex",
+            display: "flex",
+            flexDirection: "column",
             alignItems: "center",
             gap: "var(--space-2)",
-            borderRadius: "var(--radius-full)",
-            background: "var(--surface-snackbar)",
-            color: "var(--on-surface-snackbar)",
-            padding: "8px 14px",
+            padding: "0 var(--space-6)",
+            color: "#fff",
             fontFamily: "var(--font-sans)",
-            fontSize: "var(--text-label-large)",
-            fontWeight: "var(--text-label-large--font-weight)",
+            textAlign: "center",
           }}
         >
-          <Icon name="visibility" size={18} />
-          {label}
+          <Icon name="visibility" size={24} />
+          <span style={{ fontSize: "var(--text-label-large)", fontWeight: "var(--text-label-large--font-weight)" }}>{label}</span>
+          {reason && (
+            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", opacity: 0.85, textWrap: "pretty" }}>
+              {reason}
+            </span>
+          )}
         </span>
       </button>
     </div>
@@ -165,15 +176,16 @@ const REASONS = {
      words — "found illegal" is the verdict, not an accusation of the author, and
      the vote is what makes it a public fact rather than a moderator's opinion. */
   illegal: {
-    line: "The content of this post was removed",
-    detail: "A community proposal found it illegal. The post stays in place, and what it does in the graph is unchanged.",
+    line: "Removed under the platform's rules",
+    detail: "A passed proposal removed it. The decision is public.",
   },
   /* Removed by choice (erasure §1). The docs are explicit that this must read
      differently from removed-for-cause — collapsing the two would let a
-     moderation verdict hide behind an author's own decision, or the reverse. */
+     moderation verdict hide behind an author's own decision, or the reverse.
+     Both texts are the decided marks of guidelines/copy-voice.md. */
   author: {
-    line: "The author removed this post's content",
-    detail: "The post stays in place, and what it does in the graph is unchanged.",
+    line: "Removed by its author",
+    detail: "The post's place in the thread, and every response, remain.",
   },
 };
 

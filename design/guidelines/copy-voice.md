@@ -92,3 +92,54 @@ it: **"this browser"** on web, **"this app"** on Android — never a bare
 "device" where the concrete noun exists, and each noun carries its own
 preposition. One line, two renderings:
 `Your key isn't on this browser` · `Your key isn't in this app`.
+
+## The "?" dialogs
+
+Compose keeps captions to one short line; the full explanation lives
+behind a small "?" (at most one per screen) opening a plain dialog:
+title, at most two short paragraphs, Close. The texts, verbatim
+(browser wording shown; the app variant swaps the platform noun):
+
+- **Signed actions** (the seal, post and reply): Each piece of a post —
+  the post itself, every topic, every citation — is its own signed
+  action, written in your name. They sign together: all of them land,
+  or none does. / You don't pay for these — a shared community pool
+  covers members' signings. The pool is real and finite, so each
+  action still counts.
+- **The license**: Terms for anyone who reuses what you publish —
+  credit, and a public record of use. They are not a statement about
+  how you made it. / The license is set when the post is first signed
+  and can never change, not even by an edit. Your default lives in
+  settings — Public domain until you change it.
+- **Marking as sensitive**: The mark veils the pictures and the
+  description until a reader chooses to look. The title stays
+  readable, so choosing is informed. / Your reason, if you give one,
+  is shown on the veil. The mark is public and travels with the post.
+- **Your key** (key absent at the seal): Signing needs your key, and
+  it isn't on this browser. Nothing is signed or sent without it — the
+  draft stays on this device. / Restore the key with your recovery
+  code to finish. Restoring here is the only way to complete this
+  write.
+- **Where you stand on it** (the post's one-axis pad): Publishing also
+  signs where you stand on your own post — for or against, from a
+  gentle +0.10 by default. / Your own post always reaches you in full,
+  so only for-or-against is yours to set. Nothing is signed until Set.
+  Prefer sliders or exact numbers? Swap the input in settings.
+- **Toward what you answer** (the reply's two-axis pad): Replying also
+  signs where you stand on the post you answer — for or against, and
+  how much of it reaches you. It starts at a gentle +0.10 / +0.10 and
+  rides the same signature as your reply. / Nothing is signed until
+  Set. Swap the input in settings if you prefer sliders or numbers.
+- **Editing**: An edit replaces the whole post; earlier versions stay
+  public under "Edited" unless you remove them. An edit never bumps
+  the post as new. / Topic and citation changes ride the same signing,
+  each as its own signed action. The license never changes.
+- **Citing**: A citation is its own signed action and carries where
+  you stand on what you cite. You can cite anything on CoGra. /
+  Comments and chat messages are cited from themselves — open one and
+  choose "Cite in a new post".
+
+Two removal marks, never interchangeable: `Removed by its author` —
+"The words and pictures are gone. The post's place in the thread, and
+every response, remain." — and `Removed under the platform's rules` —
+"A passed proposal removed it. The decision is public."

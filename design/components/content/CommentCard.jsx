@@ -6,16 +6,35 @@ import { PendingMarker, EditedMarker } from "../honesty/PendingMarker.jsx";
 import { LicenseTerms } from "../forms/LicenseChooser.jsx";
 import { StanceControl } from "../stance/StanceControl.jsx";
 import { OverflowMenu } from "./OverflowMenu.jsx";
+import { TopicsLine } from "./TopicsLine.jsx";
 
 /* The comment of design.md §6 — "author, body, timestamp, media, nested replies,
    stance control", in its top-level and nested variants. Extracted from
    `post-view.tsx` for the same reason as PostCard: it is the product's own
    "second surface" rule, and the recursion was previously inline.
 
-   Nesting indents 12px per level up to three levels, then flattens — a thread
-   that indents forever ends up a column one word wide. */
+   THE THREAD IS TWO LEVELS DEEP ON SCREEN (readme §13, 2026-08-28): a comment,
+   and its replies indented once. Anything deeper flattens into that one reply
+   level and opens with the @handle it answers — the mention IS the structure,
+   so the column never narrows to a word. Replies arrive COLLAPSED behind a
+   "View n replies" line (`replyCount`); `replies` renders them expanded. */
 
-const MAX_INDENT_DEPTH = 3;
+const MAX_INDENT_DEPTH = 1;
+
+/* @handle tokens read as what they are — a reference to a person. */
+function withMentions(text) {
+  const parts = String(text).split(/(@[a-z0-9_]+)/gi);
+  if (parts.length === 1) return text;
+  return parts.map((part, index) =>
+    part.startsWith("@") ? (
+      <span key={index} style={{ color: "var(--primary)", fontWeight: "var(--text-label-large--font-weight)" }}>
+        {part}
+      </span>
+    ) : (
+      part
+    )
+  );
+}
 
 export function CommentCard({
   author,
@@ -27,6 +46,8 @@ export function CommentCard({
   bundle,
   depth = 0,
   replies = [],
+  replyCount = 0,
+  onOpenReplies,
   signedIn = true,
   taught = true,
   onCommit,
@@ -36,6 +57,9 @@ export function CommentCard({
   targetLabel = "this comment",
   actions,
   menuItems = [],
+  topics = [],
+  references = 0,
+  onOpenReferences,
   children,
 }) {
   // Same rule as PostCard: the licence is a rare read, so it arrives from the
@@ -62,7 +86,10 @@ export function CommentCard({
             <OverflowMenu items={items} ariaLabel="More on this comment" />
           </div>
         </div>
-        <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{content}</p>
+        <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{withMentions(content)}</p>
+        {/* The same topics-and-citations line a post wears, one line, clipped —
+            a comment is content like any other and signs the same acts. */}
+        <TopicsLine topics={topics} references={references} onOpenReferences={onOpenReferences} />
         {license && showLicense && <LicenseTerms license={license} />}
         {edited && <EditedMarker />}
         {pending && <PendingMarker />}
@@ -85,6 +112,34 @@ export function CommentCard({
         </div>
       </Card>
       {children}
+      {/* The collapsed form: a short rule and the count, indented under the
+          comment — the thread stays scannable and a reader opens only the
+          branches they mean to read. */}
+      {replyCount > 0 && replies.length === 0 && (
+        <button
+          type="button"
+          onClick={onOpenReplies}
+          className="cg-state cg-focus cg-hit"
+          style={{
+            alignSelf: "flex-start",
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-3)",
+            border: 0,
+            background: "none",
+            padding: "4px 8px 4px 0",
+            marginLeft: "28px",
+            cursor: "pointer",
+            fontFamily: "var(--font-sans)",
+            fontSize: "var(--text-label-medium)",
+            fontWeight: "var(--text-label-medium--font-weight)",
+            color: "var(--text-secondary)",
+          }}
+        >
+          <span aria-hidden="true" style={{ width: "24px", height: "1px", background: "var(--border-hairline)" }} />
+          View {replyCount === 1 ? "1 reply" : `${replyCount} replies`}
+        </button>
+      )}
       {replies.length > 0 && (
         <ul style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", margin: 0, padding: 0 }}>
           {replies.map((reply) => (

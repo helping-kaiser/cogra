@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300..900&amp;display=swap">
+  <style>
+    body { margin: 0; }
+    .screen {
+      --primary: #9f4100; --on-primary: #ffffff;
+      --primary-container: #ef6c1a; --on-primary-container: #4f1d00;
+      --secondary-container: #feaa81; --on-secondary-container: #783c1c;
+      --surface: #fff8f6; --on-surface: #251913; --on-surface-variant: #584237;
+      --surface-container: #ffeae1; --surface-container-high: #fbe3d9; --surface-container-highest: #f5ded4;
+      --outline: #8c7165; --outline-variant: #e0c0b2;
+      font-family: 'Figtree', 'Segoe UI', system-ui, sans-serif;
+    }
+    .screen[data-theme="dark"] {
+      --primary: #ff8d50; --on-primary: #341100;
+      --secondary-container: #743918; --on-secondary-container: #f8a57b;
+      --surface: #151312; --on-surface: #e8e1df; --on-surface-variant: #cdc5c2;
+      --surface-container: #221f1e; --surface-container-high: #2c2928; --surface-container-highest: #373433;
+      --outline: #968f8d; --outline-variant: #4b4644;
+    }
+  </style>
+</helmet>
+<div class="screen" data-theme="{{theme}}" style="width: 390px; height: 844px; display: flex; flex-direction: column; background: var(--surface); color: var(--on-surface); overflow: hidden; box-sizing: border-box;">
+
+  <div style="min-height: 48px; display: flex; align-items: center; gap: 4px; padding: 0 12px; flex: none;">
+    <span style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></span>
+    <h1 style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 400;">The video's face</h1>
+    <span style="flex: 1;"></span>
+    <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">Video only</span>
+  </div>
+
+  <div style="flex: 1; display: flex; flex-direction: column; gap: 16px; padding: 16px 24px; overflow: hidden;">
+
+    <div style="position: relative; border-radius: 12px; overflow: hidden;">
+      <img src="post-photo.jpg" alt="" style="display: block; width: 100%; height: 342px; object-fit: cover;">
+      <span style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 56px; height: 56px; border-radius: 9999px; background: rgba(0,0,0,0.55); color: #ffffff; display: flex; align-items: center; justify-content: center;"><svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></span>
+      <span style="position: absolute; right: 8px; bottom: 8px; padding: 1px 8px; border-radius: 4px; background: rgba(0,0,0,0.55); color: #ffffff; font-size: 11px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px;">0:42</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <label style="font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Cover</label>
+      <div style="display: flex; gap: 8px;">
+        <div style="width: 76px; height: 76px; border-radius: 8px; overflow: hidden; outline: 2px solid var(--primary); outline-offset: 1px; flex: none;"><img src="post-photo.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></div>
+        <div style="width: 76px; height: 76px; border-radius: 8px; overflow: hidden; opacity: 0.65; flex: none;"><img src="post-photo.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.4);"></div>
+        <div style="width: 76px; height: 76px; border-radius: 8px; overflow: hidden; opacity: 0.65; flex: none;"><img src="post-photo.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.8); filter: saturate(1.3);"></div>
+        <div style="width: 76px; height: 76px; border-radius: 8px; border: 1px dashed var(--outline); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--on-surface-variant); box-sizing: border-box; flex: none;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg>
+          <span style="font-size: 11px; line-height: 14px; font-weight: 500; letter-spacing: 0.5px; text-align: center;">A picture</span>
+        </div>
+      </div>
+      <p style="margin: 0; font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">A frame, or a picture of your own.</p>
+    </div>
+
+    <div style="flex: 1;"></div>
+
+    <div style="display: flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 24px; min-width: 64px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Next</div>
+
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"theme":{"editor":"enum","options":["auto","light","dark"],"default":"auto"}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    this.media = window.matchMedia("(prefers-color-scheme: dark)");
+    this.onScheme = () => this.forceUpdate();
+    this.media.addEventListener("change", this.onScheme);
+    this.onMsg = (event) => {
+      const d = event.data;
+      if (d && (d.cograTheme === "light" || d.cograTheme === "dark" || d.cograTheme === "auto")) {
+        if (!this.state || this.state.remote !== d.cograTheme) this.setState({ remote: d.cograTheme });
+      } else if (d && d.cograThemeQuery && this.state && this.state.remote && event.source) {
+        try { event.source.postMessage({ cograTheme: this.state.remote }, "*"); } catch (e) {}
+      }
+    };
+    window.addEventListener("message", this.onMsg);
+    try {
+      const askWalk = (w, depth) => {
+        if (depth > 5) return;
+        let n = 0;
+        try { n = w.length; } catch (e) { n = 0; }
+        for (let i = 0; i < n; i++) {
+          let c = null;
+          try { c = w[i]; } catch (e) { c = null; }
+          if (c) {
+            try { c.postMessage({ cograThemeQuery: true }, "*"); } catch (e) {}
+            askWalk(c, depth + 1);
+          }
+        }
+      };
+      askWalk(window.top, 0);
+    } catch (e) {}
+  }
+  componentDidUpdate(prevProps) {
+    if (prevProps.theme !== this.props.theme && this.state && this.state.remote) {
+      this.setState({ remote: null });
+    }
+  }
+  componentWillUnmount() {
+    if (this.media) this.media.removeEventListener("change", this.onScheme);
+    window.removeEventListener("message", this.onMsg);
+  }
+  renderVals() {
+    const remote = this.state ? this.state.remote : null;
+    const mode = remote ?? this.props.theme ?? "auto";
+    const dark = mode === "auto"
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+      : mode === "dark";
+    return { theme: dark ? "dark" : "light" };
+  }
+}
+</script>
+</body>
+</html>

@@ -7,9 +7,10 @@ import { StanceControl } from "../stance/StanceControl.jsx";
 import { ExplainableNumber } from "../proposed/ExplainableNumber.jsx";
 import { MediaGallery } from "../proposed/MediaAttachment.jsx";
 import { MediaViewer } from "../proposed/MediaViewer.jsx";
-import { RedactedContent } from "../honesty/SensitiveVeil.jsx";
+import { RedactedContent, SensitiveScope, SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
 import { OverflowMenu } from "./OverflowMenu.jsx";
 import { Icon } from "../navigation/Icon.jsx";
+import { TopicsLine } from "./TopicsLine.jsx";
 
 /* The post card of design.md §6 — "author (avatar, display name, handle,
    timestamp), optional title, optional description, body, media gallery, stance
@@ -62,13 +63,22 @@ export function PostCard({
   onOpenScore,
   comments,
   onOpenComments,
+  onOpenReferences,
   media,
   actions,
   onOpenMedia,
   redacted,
+  sensitive,
+  topics = [],
+  references = 0,
   menuItems = [],
 }) {
   const detail = variant === "detail";
+  // THE AUTHOR'S SELF-MARK (readme §13): one flag veils the BODY and the
+  // DESCRIPTION while the title stays readable, and the author's own reason
+  // rides the veil under its standard line. One reveal answers for the whole
+  // card (SensitiveScope).
+  const veil = !redacted && sensitive ? { reason: sensitive.reason ?? sensitive.label } : null;
   // REDACTION IS RECORD-GRANULAR. An illegal verdict removes the payload, so
   // every authored field goes at once — there is no redacted title beside a
   // surviving body. The card renders its skeleton instead: author, timestamp,
@@ -79,9 +89,9 @@ export function PostCard({
   // readings — so it is not on the initial view. It arrives when asked for, from
   // the overflow menu, and stays until the reader is done with it.
   const [showLicense, setShowLicense] = React.useState(false);
-  // A media post's caption is clamped and openable in place. The title never is:
-  // a title that needs truncating is a body, and cutting it costs the reader the
-  // orientation they opened the card for.
+  // A media post's caption is clamped and openable in place. The SUMMARY title
+  // clamps to one line (readme §13's collapse order: the title gives way before
+  // media or the affordance row ever shrink); the detail title never clamps.
   const [open, setOpen] = React.useState(false);
   // The detail view's media opens full-size in place. In the feed the same tap
   // opens the post instead: a reader scrolling is choosing between posts, not
@@ -100,38 +110,33 @@ export function PostCard({
         fontSize: detail ? "var(--text-headline-small)" : "var(--text-title-medium)",
         lineHeight: detail ? "var(--text-headline-small--line-height)" : "var(--text-title-medium--line-height)",
         fontWeight: detail ? "var(--text-headline-small--font-weight)" : "var(--text-title-medium--font-weight)",
+        ...(detail ? {} : { ...CLAMP(1), wordBreak: "break-word" }),
       }}
     >
       {title}
     </h2>
   ) : null;
 
+  const descriptionStyle = {
+    margin: 0,
+    fontSize: "var(--text-body-medium)",
+    color: "var(--text-secondary)",
+    ...(hasMedia && !open && !detail ? CLAMP(1) : null),
+  };
+  const contentStyle = {
+    margin: 0,
+    fontSize: detail ? "var(--text-body-large)" : "var(--text-body-medium)",
+    lineHeight: detail ? "var(--text-body-large--line-height)" : "var(--text-body-medium--line-height)",
+    ...(detail ? { whiteSpace: "pre-wrap" } : CLAMP(hasMedia && !open ? 2 : 4)),
+  };
+  // THE VEIL WRAPS THE PARAGRAPH, never the text inside it: the clamp's
+  // `overflow: hidden` then clips the TEXT before the blur applies, so the halo
+  // stays soft on every side instead of being cut at the box's edge.
+  const veiledParagraph = (node) => (veil ? <SensitiveVeil kind="text">{node}</SensitiveVeil> : node);
   const caption = (
     <>
-      {description && (
-        <p
-          style={{
-            margin: 0,
-            fontSize: "var(--text-body-medium)",
-            color: "var(--text-secondary)",
-            ...(hasMedia && !open && !detail ? CLAMP(1) : null),
-          }}
-        >
-          {description}
-        </p>
-      )}
-      {content && (
-        <p
-          style={{
-            margin: 0,
-            fontSize: detail ? "var(--text-body-large)" : "var(--text-body-medium)",
-            lineHeight: detail ? "var(--text-body-large--line-height)" : "var(--text-body-medium--line-height)",
-            ...(detail ? { whiteSpace: "pre-wrap" } : CLAMP(hasMedia && !open ? 2 : 4)),
-          }}
-        >
-          {content}
-        </p>
-      )}
+      {description && veiledParagraph(<p style={descriptionStyle}>{description}</p>)}
+      {content && veiledParagraph(<p style={contentStyle}>{content}</p>)}
     </>
   );
 
@@ -185,13 +190,17 @@ export function PostCard({
       </a>
     );
 
-  return (
-    <Card>
+  const body = (
+    <>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-2)" }}>
         {author && <ActorChip handle={author.handle} displayName={author.displayName} />}
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", flex: "none" }}>
           {timestamp && <span style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>{timestamp}</span>}
-          <OverflowMenu items={items} ariaLabel="More on this post" />
+          {/* ON A DETAIL SURFACE THE PAGE HEADER OWNS THE ONE OVERFLOW — a dot in
+              the header and another in the card would be two menus for one post.
+              The summary card keeps its own: in a feed there is no header to
+              carry it. */}
+          {!detail && <OverflowMenu items={items} ariaLabel="More on this post" />}
         </div>
       </div>
       {hasMedia && heading}
@@ -213,13 +222,30 @@ export function PostCard({
             }
           }}
         >
-          <MediaGallery items={media} radius="0px" />
+          {veil ? (
+            <SensitiveVeil kind="media" reason={veil.reason} radius="0px">
+              <MediaGallery items={media} radius="0px" />
+            </SensitiveVeil>
+          ) : (
+            <MediaGallery items={media} radius="0px" />
+          )}
         </div>
       )}
       {viewing !== null && <MediaViewer items={media} index={viewing} onClose={() => setViewing(null)} />}
       {redacted ? <RedactedContent {...(redacted === true ? {} : redacted)} /> : linkedText}
       {!redacted && opener}
       {license && showLicense && !redacted && <LicenseTerms license={license} />}
+      {/* ONE LINE on both variants — the sheet is the full set's home. On
+          detail the whole line is the sheet's opener; in the feed the chips
+          navigate and only the count opens it. */}
+      {!redacted && (
+        <TopicsLine
+          topics={topics}
+          references={references}
+          onOpen={detail ? (onOpenReferences ?? (() => {})) : undefined}
+          onOpenReferences={onOpenReferences}
+        />
+      )}
       {edited && <EditedMarker />}
       {pending && <PendingMarker />}
       {/* THE AFFORDANCE ROW. The stance control leads — it is the gesture the
@@ -241,11 +267,13 @@ export function PostCard({
           )}
           {/* COMMENTS get their own affordance rather than living behind a tap on
               the card, because "read the replies" is a different intent from
-              "read the post" and the count is information in itself. It opens the
-              SAME detail view as the card, scrolled so the comments lead — never
-              a separate screen. Glyph plus number, exactly like the score beside
-              it; the count is spoken by the accessible name. */}
-          {comments !== undefined && !detail && (
+              "read the post" and the count is information in itself. It opens
+              THE COMMENTS SHEET (readme §13, 2026-08-28) — the thread lives in a
+              near-full-height bottom sheet, never a separate screen — and it
+              does so from the feed and the detail view alike, because the detail
+              view is just about the post. Glyph plus number, exactly like the
+              score beside it; the count is spoken by the accessible name. */}
+          {comments !== undefined && (
             <button
               type="button"
               onClick={onOpenComments ?? onOpen}
@@ -273,6 +301,8 @@ export function PostCard({
           {actions}
         </div>
       )}
-    </Card>
+    </>
   );
+
+  return <Card>{veil ? <SensitiveScope>{body}</SensitiveScope> : body}</Card>;
 }
