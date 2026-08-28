@@ -47,7 +47,7 @@ mechanics live in each concept's own doc.
 | Item | gesture | An L1 **Item** minted by its genesis Owner edge. Item identity is declarative — the Item *is* its genesis record. See §6 and [items.md](../instances/items.md). |
 | Hashtag / topic | gesture | An L1 **Type** — a named identifier compared by byte equality, anchored vacuously. Canonical-name resolution is an L2 naming service. See [hashtag.md](../instances/hashtag.md). |
 | Authorship | consume | Author binding is intrinsic to every L1 record — no authoring edge exists as a separate concept. See [authorship.md](authorship.md). |
-| Media / large bodies | off-graph | Bytes in CoGra blob storage; the payload envelope commits their digests, so substitution is publicly detectable ([substrate.md §7](substrate.md#7-payload-carriage)). |
+| Media / large bodies | off-graph | Bytes in the CoGra media store; the envelope commits their digests in CoGra's own guild keyspace — a CoGra guarantee, not one the container makes — so substitution is publicly detectable ([substrate.md §7](substrate.md#7-payload-carriage)). |
 | Platform documents | gesture (system actor) | Anchored by a publisher-authored Content node; the document text is witnessed payload, read from the **genesis** Publish alone — a ratified amendment anchors a *new* document node ([platform-guidelines.md §3](../instances/platform-guidelines.md#3-amendment-procedure)), and a later Publish toward an existing document anchor is fold-ignored ([substrate.md §9](substrate.md#9-node-values-and-updates)). |
 
 ---
