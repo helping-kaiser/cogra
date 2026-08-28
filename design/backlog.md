@@ -148,11 +148,25 @@ picked chip shows its default pair, tap edits via the reader's
 chosen stance input) lands when the compose wizard boards convert
 to the screens pipeline (item 17).
 
-### 9 · Search + results · *design*
-Topics, post titles, usernames, item names. Produces a search field
-variant of `TextField` and result-row treatments per node type — a
-result list is a list of ranked nodes, so the row work is reused by the
-feed later.
+### 9 · Search + results · *design* · **built**
+`designs/canonical/` — the Explore row (2026-08-28): at rest (the
+field, the Sky hero, device-local recents), searching (worded
+filter trigger + sheet, ranked rows wearing the graph glyph, the
+seam, the aged tail, @/# scope operators with two-line indirect
+hits), the filter sheet, and nothing-found. Rulings in readme §13 +
+Q46; ideation on the "CoGra search" canvas (hybrid of directions
+1 + 2 chosen). Ported back: `SearchBar` (forms/), `CograBand`
+(navigation/), `ReferenceRow` `rank`/`sub`/`message`, the `send`
+glyph, the Searching "?" text in copy-voice.md.
+
+### 19 · The feed's filter + ordering on the canonical screens · *design*
+Item 4 built `FeedFilter` (kinds, forms, Ranked/Newest order, the
+trigger reading the view in words) — and no canonical feed board
+ever drew the trigger; it slipped while compose had the focus. Put
+the filter on the canonical feed screens, and grow its Order
+section with the search rulings' controls: the seen toggle
+("show already seen", default on, impression-based, device-local)
+rides beside the order swap, identical on feed and search.
 
 ### 10 · Sensitive veil treatment · *system*, has open questions
 Granularity is settled (blur only what is marked, reveal per post),

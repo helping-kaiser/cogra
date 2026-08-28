@@ -88,6 +88,8 @@ const PATHS = {
   forum: [
     "M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z",
   ],
+  /* A chat MESSAGE, distinct from the chat that holds it (`forum`). */
+  send: ["M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"],
   /* The Post Score's glyph. A branching graph: the score comes out of the graph,
      and the branches hint at the paths folded up behind the number. Material
      Symbols only, and the FILL-1 cut is derived (see the top of this file) —
@@ -120,6 +122,23 @@ function Mark({ size, pickColor, style }) {
     </svg>
   );
 }
+
+/* THE SEMANTIC GLYPH ATOMS (readme §13, Masters/variants/atoms). A MEANING is
+   assigned its glyph exactly once, here — a surface never picks a glyph for a
+   node kind on its own, it asks this map. Swap one assignment (a chat message
+   moved from `forum` to `send`, 2026-08-28) and every screen that draws that
+   meaning updates. Kinds whose mark is not a glyph (a person's avatar, a media
+   post's cover, the text post's T tile, the topic's #) are `NodeMark`'s
+   business, in `content/ReferenceRow.jsx`. */
+export const NODE_GLYPHS = {
+  comment: "chat_bubble",
+  proposal: "how_to_vote",
+  item: "inventory_2",
+  campaign: "campaign",
+  offer: "sell",
+  chat: "forum",
+  message: "send",
+};
 
 export function Icon({ name, size = 24, pickColor = "var(--surface-loud)", style }) {
   if (name === "mark") return <Mark size={size} pickColor={pickColor} style={style} />;

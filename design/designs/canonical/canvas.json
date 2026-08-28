@@ -384,6 +384,38 @@
       "y": 10860,
       "w": 390,
       "h": 844
+    },
+    {
+      "file": "Explore.dc.html",
+      "title": "Explore · at rest",
+      "x": 0,
+      "y": 11920,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ExploreSearch.dc.html",
+      "title": "Explore · searching",
+      "x": 480,
+      "y": 11920,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ExploreFilter.dc.html",
+      "title": "Explore · the filter sheet",
+      "x": 960,
+      "y": 11920,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "ExploreNone.dc.html",
+      "title": "Explore · nothing found",
+      "x": 1440,
+      "y": 11920,
+      "w": 390,
+      "h": 844
     }
   ],
   "annotations": [
@@ -469,7 +501,7 @@
       "x": 640,
       "y": -300,
       "w": 640,
-      "text": "THE ? CONTENTS — each ? opens a plain dialog (see 'The ? dialog' board): title, at most two short paragraphs, Close. The copy, verbatim:\n\nSEAL (post + reply) · 'Signed actions': Each piece of a post — the post itself, every topic, every citation — is its own signed action, written in your name. They sign together: all of them land, or none does. / You don't pay for these — a shared community pool covers members' signings. The pool is real and finite, so each action still counts.\n\nLICENSE SHEET · 'The license': Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it. / The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.\n\nSENSITIVE SHEET · 'Marking as sensitive': The mark veils the pictures and the description until a reader chooses to look. The title stays readable, so choosing is informed. / Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.\n\nKEY ABSENT · 'Your key': Signing needs your key, and it isn't on this browser. Nothing is signed or sent without it — the draft stays on this device. / Restore the key with your recovery code to finish. Restoring here is the only way to complete this write.\n\nPOST PAD · 'Where you stand on it': Publishing also signs where you stand on your own post — for or against, from a gentle +0.10 by default. / Your own post always reaches you in full, so only for-or-against is yours to set. Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.\n\nREPLY PAD · 'Toward what you answer': Replying also signs where you stand on the post you answer — for or against, and how much of it reaches you. It starts at a gentle +0.10 / +0.10 and rides the same signature as your reply. / Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nEDIT · 'Editing': An edit replaces the whole post; earlier versions stay public under 'Edited' unless you remove them. An edit never bumps the post as new. / Topic and citation changes ride the same signing, each as its own signed action. The license never changes.\n\nCITE · 'Citing': A citation is its own signed action and carries where you stand on what you cite. You can cite anything on CoGra. / Comments and chat messages are cited from themselves — open one and choose 'Cite in a new post'."
+      "text": "THE ? CONTENTS — each ? opens a plain dialog (see 'The ? dialog' board): title, at most two short paragraphs, Close. The copy, verbatim:\n\nSEAL (post + reply) · 'Signed actions': Each piece of a post — the post itself, every topic, every citation — is its own signed action, written in your name. They sign together: all of them land, or none does. / You don't pay for these — a shared community pool covers members' signings. The pool is real and finite, so each action still counts.\n\nLICENSE SHEET · 'The license': Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it. / The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.\n\nSENSITIVE SHEET · 'Marking as sensitive': The mark veils the pictures and the description until a reader chooses to look. The title stays readable, so choosing is informed. / Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.\n\nKEY ABSENT · 'Your key': Signing needs your key, and it isn't on this browser. Nothing is signed or sent without it — the draft stays on this device. / Restore the key with your recovery code to finish. Restoring here is the only way to complete this write.\n\nPOST PAD · 'Where you stand on it': Publishing also signs where you stand on your own post — for or against, from a gentle +0.10 by default. / Your own post always reaches you in full, so only for-or-against is yours to set. Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.\n\nREPLY PAD · 'Toward what you answer': Replying also signs where you stand on the post you answer — for or against, and how much of it reaches you. It starts at a gentle +0.10 / +0.10 and rides the same signature as your reply. / Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nEDIT · 'Editing': An edit replaces the whole post; earlier versions stay public under 'Edited' unless you remove them. An edit never bumps the post as new. / Topic and citation changes ride the same signing, each as its own signed action. The license never changes.\n\nCITE · 'Citing': A citation is its own signed action and carries where you stand on what you cite. You can cite anything on CoGra — start with @handle or #topic to reach comments, messages, and offers. / Comments and chat messages can also be cited from themselves — open one and choose 'Cite in a new post'.\n\nSEARCH · 'Searching' (the Explore tab and the citing picker): Search reads names and titles, never bodies. Start with @handle to search one person's work — including their comments and offers, found through what they point at. Start with #topic to search inside a topic. / Results follow your own graph — the numbers are your view, no one else's. Below the line, what your graph can't reach yet, newest first. Your searches stay on this device."
     },
     {
       "id": "note-cite",
@@ -484,6 +516,13 @@
       "y": 10860,
       "w": 290,
       "text": "COMPOSE · The post ladder — every container state in one place\n\nFrom the smallest form (one line of words, nothing else) through bare media to the maximal collapsed container, plus the marked states: sensitive-veiled (blur + neutral wash + the author's reason; title and interaction row stay readable), removed by its author, and removed under the platform's rules — the two removal marks deliberately read differently.\n\nTHE HEIGHT RULE (2026-08-27): a post card's collapsed form never exceeds the screen height minus the bottom bar and the top safe zone — designed against the app / downloadable-webapp viewport, not browser chrome. Collapse order: the media and the interaction row NEVER shrink; tags and references collapse to one line under the description; the title clamps to one line; the description to two. The expanded detail view may be taller than the screen."
+    },
+    {
+      "id": "sec-search",
+      "x": -340,
+      "y": 11920,
+      "w": 280,
+      "text": "SEARCH — the Explore tab (item 9, rulings in readme §13 / Q46). At rest: the field, the orbit hero (item 16’s future 3D view), device-local recents. Searching: the worded filter trigger + the one “?”, ranked rows wearing the graph glyph, the seam, the aged tail. Scope operators @handle / #topic; indirect hits say their target on the second line."
     }
   ],
   "launch": {
