@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -56,6 +57,14 @@ fun FeedRoute(
     refreshSignal: Boolean = false,
     onRefreshSignalConsumed: () -> Unit = {},
     banners: @Composable () -> Unit = {},
+    /**
+     * A post the wizard staged whose acts were collected before they
+     * landed: the label names it, and null means there is nothing to
+     * say (`ComposeExpired`).
+     */
+    expiredLabel: String? = null,
+    onExpiredDismissed: () -> Unit = {},
+    onOpenDraft: () -> Unit = {},
     viewModel: FeedViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -66,6 +75,9 @@ fun FeedRoute(
     FeedScreen(
         state = state,
         signedIn = signedIn,
+        expiredLabel = expiredLabel,
+        onExpiredDismissed = onExpiredDismissed,
+        onOpenDraft = onOpenDraft,
         onRefresh = viewModel::refresh,
         onLoadMore = viewModel::loadMore,
         onOpenPost = onOpenPost,
@@ -91,6 +103,9 @@ fun FeedScreen(
     onSignInOrJoin: () -> Unit,
     keyBanner: @Composable () -> Unit = {},
     banners: @Composable () -> Unit = {},
+    expiredLabel: String? = null,
+    onExpiredDismissed: () -> Unit = {},
+    onOpenDraft: () -> Unit = {},
     /**
      * The stance control a post card carries (design.md §6), hoisted so
      * the screen stays free of DI and previewable.
@@ -195,6 +210,20 @@ fun FeedScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             item(key = "feed_banners") { banners() }
+                            // "Your post didn't land." The canonical
+                            // `ComposeExpired` board puts this here, at
+                            // the top of the feed the author returns
+                            // to, rather than in the composer they have
+                            // already left.
+                            expiredLabel?.let { label ->
+                                item(key = "feed_expired") {
+                                    ExpiredCard(
+                                        label = label,
+                                        onDismiss = onExpiredDismissed,
+                                        onOpenDraft = onOpenDraft,
+                                    )
+                                }
+                            }
                             items(state.posts, key = { it.id }) { post ->
                                 PostCard(
                                     post = post,
@@ -239,6 +268,58 @@ fun FeedScreen(
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+/** What a card shows of a long body before the detail takes over. */
+private const val FEED_BODY_LINES = 4
+
+/**
+ * `ComposeExpired` — a staged batch collected before it landed.
+ *
+ * The tone is the whole point: nothing was spent, and the draft is
+ * already saved, so this states two facts and offers the draft back. No
+ * error colouring — an expiry is the substrate working as designed, not
+ * a failure the author caused.
+ */
+@Composable
+private fun ExpiredCard(
+    label: String,
+    onDismiss: () -> Unit,
+    onOpenDraft: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("feed_expired"),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.content_expired_title),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = stringResource(R.string.content_expired_body, label),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+            ) {
+                TextButton(onClick = onDismiss, modifier = Modifier.testTag("feed_expired_dismiss")) {
+                    Text(stringResource(R.string.content_expired_dismiss))
+                }
+                Button(onClick = onOpenDraft, modifier = Modifier.testTag("feed_expired_open")) {
+                    Text(stringResource(R.string.content_expired_open))
                 }
             }
         }
@@ -297,20 +378,27 @@ private fun PostCard(
                     handle = author.handle,
                     displayName = author.displayName,
                     onOpen = { onOpenActor(author.handle) },
+                    avatarUrl = author.avatar?.url,
                     testTag = "feed_author_${post.id}",
                 )
             }
+            // The title stays outside the veil (D12): a reader has to
+            // be able to tell what they are choosing not to look at.
             post.title.value?.takeIf { it.isNotEmpty() }?.let { title ->
                 Text(title, style = MaterialTheme.typography.titleMedium)
             }
-            post.content.value?.let { body ->
-                Text(
-                    body,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 4,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+            PostBody(
+                content = post.content,
+                description = post.description,
+                attachments = post.attachments,
+                attachmentsStatus = post.attachmentsStatus,
+                testTagPrefix = "feed_post_${post.id}",
+                maxBodyLines = FEED_BODY_LINES,
+                // The whole gallery is one target opening the post: a
+                // reader scrolling the feed is choosing between posts,
+                // not looking at one picture.
+                onOpenMedia = onClick,
+            )
             if (post.landing.isPending) {
                 PendingMarker(testTag = "feed_post_pending_${post.id}")
             }

@@ -29,6 +29,11 @@
     <string name="profile_edit_bio">Bio</string>
     <string name="profile_edit_website">Website</string>
     <string name="profile_edit_save">Save</string>
+    <string name="profile_edit_avatar">Picture</string>
+    <string name="profile_edit_cover">Cover</string>
+    <string name="profile_edit_image_choose">Choose a picture</string>
+    <string name="profile_edit_image_clear">Back to %1$s</string>
+    <string name="profile_edit_image_sending">Sending…</string>
     <string name="profile_edit_empty_name">A display name is required.</string>
     <string name="profile_edit_refused">That didn\'t work. Check the fields and try again.</string>
     <string name="profile_edit_signing_failed">Signing didn\'t complete. Try again.</string>

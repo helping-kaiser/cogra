@@ -29,6 +29,7 @@ import com.cogra.domain.HashtagView
 import com.cogra.domain.Landing
 import com.cogra.domain.LandingState
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.MediaAssetView
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.PostView
 import com.cogra.domain.ProfileView
@@ -50,6 +51,7 @@ import com.cogra.network.graphql.ReferenceCandidatesQuery
 import com.cogra.network.graphql.fragment.ApplicationFields
 import com.cogra.network.graphql.fragment.CommentFields
 import com.cogra.network.graphql.fragment.HashtagFields
+import com.cogra.network.graphql.fragment.MediaFields
 import com.cogra.network.graphql.fragment.PostFields
 import com.cogra.network.graphql.fragment.ReferenceClaimFields
 import com.cogra.network.graphql.fragment.ReferenceTargetFields
@@ -182,6 +184,24 @@ internal fun ProfileFields.toDomain(): ProfileView = ProfileView(
     displayName = ModeratedField(displayName.value, displayName.status.toDomain()),
     bio = ModeratedField(bio.value, bio.status.toDomain()),
     websiteUrl = ModeratedField(websiteUrl.value, websiteUrl.status.toDomain()),
+    avatar = avatar?.mediaFields?.toDomain(),
+    cover = cover?.mediaFields?.toDomain(),
+)
+
+/**
+ * One attachment.
+ *
+ * `options.aspectRatio` is a string on the wire, and an unparsable one
+ * falls back to square rather than to zero — the field exists to
+ * reserve space before the load, and a zero would collapse the tile it
+ * is meant to hold open.
+ */
+internal fun MediaFields.toDomain(): MediaAssetView = MediaAssetView(
+    id = id,
+    url = url,
+    altText = altText,
+    status = status.toDomain(),
+    aspectRatio = MediaAssetView.ratioOf(options.aspectRatio),
 )
 
 internal fun PostFields.Title.toDomain() = ModeratedField(value, status.toDomain())
@@ -307,18 +327,25 @@ internal fun PostFields.toDomain(): PostView = PostView(
     title = title.toDomain(),
     description = description.toDomain(),
     content = content.toDomain(),
-    author = author?.let { ActorRef(it.id, it.handle, it.displayName.value) },
+    author = author?.let {
+        ActorRef(it.id, it.handle, it.displayName.value, it.avatar?.mediaFields?.toDomain())
+    },
     createdAt = createdAt,
     updatedAt = updatedAt,
     landing = landing.toDomain(),
     license = LicenseChoice(license.attribution, license.provenance),
     topics = topics.map { it.toDomain() },
     references = references.map { it.referenceClaimFields.toDomain() },
+    attachments = attachments.map { it.mediaFields.toDomain() },
+    attachmentsStatus = attachmentsStatus.toDomain(),
 )
 
 internal fun CommentFields.toDomain(): CommentView = CommentView(
     id = id,
     content = content.toDomain(),
+    // No avatar: the thread read does not ask for one, because a
+    // comment author's picture is the corpus's most multiplied
+    // selection — see `CommentFields` in content.graphql.
     author = author?.let { ActorRef(it.id, it.handle, it.displayName.value) },
     createdAt = createdAt,
     updatedAt = updatedAt,
@@ -326,6 +353,8 @@ internal fun CommentFields.toDomain(): CommentView = CommentView(
     license = LicenseChoice(license.attribution, license.provenance),
     topics = topics.map { it.toDomain() },
     references = references.map { it.referenceClaimFields.toDomain() },
+    attachments = attachments.map { it.mediaFields.toDomain() },
+    attachmentsStatus = attachmentsStatus.toDomain(),
 )
 
 internal fun LicenseChoice.toInput(): LicenseInput = LicenseInput(

@@ -22,9 +22,16 @@ import com.cogra.crypto.encodeProposal
 import com.cogra.crypto.encodeVerifiedAct
 import com.cogra.domain.ActorRef
 import com.cogra.domain.ApplicationStatus
+import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.CommentView
 import com.cogra.domain.FieldStatus
+import com.cogra.domain.MediaAssetView
+import com.cogra.domain.MediaFieldUpdate
+import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.MediaProcessor
+import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.HashtagView
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
@@ -341,9 +348,30 @@ class SealingWriteRepository(private val actor: ActorKey) : ThrowingWriteReposit
         return view
     }
 
+    /**
+     * Makes the next submit come back already collected — the
+     * garbage-collected-unlanded path a caller has to treat as "nothing
+     * was spent" rather than as a failure.
+     */
+    var expireOnSubmit = false
+
     override suspend fun submitProposal(stagedWriteId: String, signatureBase64: String): Outcome<StagedWriteView> {
         val seq = stagedWriteId.removePrefix("w").toULong()
         val proposal = testProposalBytes(actor, seq)
+        if (expireOnSubmit) {
+            // No verified act: the signer sees EXPIRED and stops before
+            // any second signature, which is the real sequence.
+            val expired = StagedWriteView(
+                id = stagedWriteId,
+                state = com.cogra.domain.WriteState.EXPIRED,
+                family = Family.OPINION,
+                canonicalProposal = proposal,
+                verifiedAct = null,
+                recordId = null,
+            )
+            staged[stagedWriteId] = expired
+            return Outcome.Success(expired)
+        }
         val sealed = host.seal(
             proposal,
             java.util.Base64.getDecoder().decode(signatureBase64),
@@ -409,10 +437,11 @@ open class ThrowingContentRepository : ContentRepository {
     override suspend fun preparePost(
         title: String?,
         description: String?,
-        content: String,
+        content: String?,
         license: LicenseChoice,
         tags: List<TagClaim>,
         references: List<ReferenceClaim>,
+        attachments: List<AttachmentClaim>,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun preparePostEdit(
         id: String,
@@ -453,7 +482,25 @@ open class ThrowingProfileRepository : ProfileRepository {
         displayName: String,
         bio: String?,
         websiteUrl: String?,
+        avatar: MediaFieldUpdate,
+        cover: MediaFieldUpdate,
     ): Outcome<List<PreparedWriteView>> = throw UnsupportedOperationException()
+}
+
+/** Media-repository base: the upload throws until a test scripts it. */
+open class ThrowingMediaRepository : MediaRepository {
+    override suspend fun uploadMedia(
+        picture: ProcessedPicture,
+        altText: String?,
+    ): Outcome<MediaAssetView> = throw UnsupportedOperationException()
+}
+
+/** Media-processor base: the pipeline throws until a test scripts it. */
+open class ThrowingMediaProcessor : MediaProcessor {
+    override suspend fun process(uri: String, crop: CropSpec): ProcessedPicture? =
+        throw UnsupportedOperationException()
+
+    override suspend fun aspectRatio(uri: String): Float? = throw UnsupportedOperationException()
 }
 
 /** Topic-repository base: every call throws until overridden. */

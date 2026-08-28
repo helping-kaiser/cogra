@@ -340,7 +340,9 @@ class CograNavGraphTest {
         render()
         waitForTag("bar_compose")
         compose.onNodeWithTag("bar_compose").performClick()
-        waitForTag("compose_body")
+        // Creating a post is the wizard now (D19); the shipped composer
+        // is reached only by editing one.
+        waitForTag("wizard_body")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ComposePost>()).isTrue()
         // A task flow owns the screen: the bar leaves (design.md §6).
         assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isEmpty()
@@ -363,21 +365,24 @@ class CograNavGraphTest {
         render()
         waitForTag("bar_compose")
         compose.onNodeWithTag("bar_compose").performClick()
-        waitForTag("compose_body")
-        compose.onNodeWithTag("compose_body").performTextInput("Something new")
-        compose.onNodeWithTag("compose_submit").performScrollTo().performClick()
+        // The wizard's words path: body, then details, then the seal.
+        waitForTag("wizard_body")
+        compose.onNodeWithTag("wizard_body").performTextInput("Something new")
+        compose.onNodeWithTag("wizard_header_action").performClick()
+        waitForTag("wizard_details_next")
+        // The details pill is pinned below the scrolling fields, as the
+        // canonical board draws it, so there is nothing to scroll to.
+        compose.onNodeWithTag("wizard_details_next").performClick()
+        waitForTag("wizard_sign")
+        compose.onNodeWithTag("wizard_sign").performClick()
 
-        // Settle first, and surface a composer-side refusal as itself
+        // Settle first, and surface a wizard-side refusal as itself
         // rather than as a timeout on a screen that never changed.
         compose.waitUntil(timeoutMillis = 30_000) {
             navController.currentBackStackEntry?.destination?.hasRoute<ComposePost>() != true ||
-                compose.onAllNodesWithTag("compose_refused").fetchSemanticsNodes().isNotEmpty() ||
-                compose.onAllNodesWithTag("compose_signing_failed").fetchSemanticsNodes().isNotEmpty() ||
-                compose.onAllNodesWithTag("compose_transport_error").fetchSemanticsNodes().isNotEmpty()
+                compose.onAllNodesWithTag("wizard_problem").fetchSemanticsNodes().isNotEmpty()
         }
-        assertThat(compose.onAllNodesWithTag("compose_refused").fetchSemanticsNodes()).isEmpty()
-        assertThat(compose.onAllNodesWithTag("compose_signing_failed").fetchSemanticsNodes()).isEmpty()
-        assertThat(compose.onAllNodesWithTag("compose_transport_error").fetchSemanticsNodes()).isEmpty()
+        assertThat(compose.onAllNodesWithTag("wizard_problem").fetchSemanticsNodes()).isEmpty()
 
         // The feed re-read: the entry the server only started serving
         // once the write was prepared is on screen, still settling.
@@ -643,7 +648,7 @@ class CograNavGraphTest {
         }
         waitForTag("home_restore")
 
-        compose.onNodeWithTag("compose_back").performClick()
+        compose.onNodeWithTag("wizard_header_back").performClick()
         waitForTag("bar_profile")
         compose.onNodeWithTag("bar_profile").performClick()
         waitForTag("profile_settings")

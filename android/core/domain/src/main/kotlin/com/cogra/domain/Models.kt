@@ -77,6 +77,11 @@ data class ActorRef(
     val handle: String,
     /** The current display name; null when the read did not ask. */
     val displayName: String? = null,
+    /**
+     * The actor's picture, when they have one and the read asked. Null
+     * is the monogram — the designed placeholder, not a gap (D13).
+     */
+    val avatar: MediaAssetView? = null,
 )
 
 /** The anonymous pre-submit view of an invite link. */
@@ -242,6 +247,63 @@ data class Landing(
     }
 }
 
+/**
+ * One attachment as a reader needs it (api-spec.md `MediaAttachment`).
+ *
+ * [aspectRatio] is the server's own derivation from the stored bytes
+ * (D11) and it is what reserves the tile's space before the picture
+ * loads. The contract serves it as a string, so an unparsable or absent
+ * value falls back to square rather than to zero — a zero ratio would
+ * collapse the tile and defeat the reservation the field exists for.
+ *
+ * [altText] is authored, never generated: a null one is a decorative
+ * asset and must stay a null content description (D20).
+ */
+data class MediaAssetView(
+    val id: String,
+    val url: String,
+    val altText: String?,
+    /** NORMAL, or REDACTED once the bytes are gone (D15). */
+    val status: FieldStatus,
+    val aspectRatio: Float,
+) {
+    companion object {
+        /** What an absent or unparsable `options.aspectRatio` reads as. */
+        const val FALLBACK_RATIO = 1f
+
+        fun ratioOf(raw: String?): Float =
+            raw?.toFloatOrNull()?.takeIf { it.isFinite() && it > 0f } ?: FALLBACK_RATIO
+    }
+}
+
+/**
+ * One placement in a gallery being authored (api-spec.md
+ * `AttachmentInput`).
+ *
+ * `displayOrder` and `isCover` are not free values: the contract
+ * refuses an entry whose stated index contradicts its array position,
+ * so the claim carries only the asset and the list's own order decides
+ * the rest.
+ */
+data class AttachmentClaim(val mediaId: String)
+
+/**
+ * A three-valued profile media field: omitted = untouched, explicit
+ * null = cleared, a value = replaced (api-spec.md "Content authoring",
+ * D13).
+ *
+ * This differs from the content-edit two-valued rule and is easy to get
+ * wrong, so it is a type rather than a nullable string — "leave it
+ * alone" and "clear it" are not the same absence.
+ */
+sealed interface MediaFieldUpdate {
+    data object Untouched : MediaFieldUpdate
+
+    data object Clear : MediaFieldUpdate
+
+    data class Set(val mediaId: String) : MediaFieldUpdate
+}
+
 /** One post with its current display version. */
 data class PostView(
     val id: String,
@@ -265,7 +327,18 @@ data class PostView(
     val topics: List<TopicClaimView> = emptyList(),
     /** This post's current references — the same author-owned channel as [topics] (D12). */
     val references: List<ReferenceClaimView> = emptyList(),
-)
+    /**
+     * The gallery, in the author's order, the first entry the cover.
+     * Empty on a words post — a post's body is words XOR media (D16),
+     * so exactly one of [content]`.value` and this carries it.
+     */
+    val attachments: List<MediaAssetView> = emptyList(),
+    /** The gallery's state — one for the whole set, never per asset (D12). */
+    val attachmentsStatus: FieldStatus = FieldStatus.NORMAL,
+) {
+    /** The body is media rather than words (D16). */
+    val isMediaPost: Boolean get() = attachments.isNotEmpty()
+}
 
 /** One comment with its current display version. */
 data class CommentView(
@@ -288,6 +361,12 @@ data class CommentView(
     val topics: List<TopicClaimView> = emptyList(),
     /** This comment's current references — the same author-owned channel (D12). */
     val references: List<ReferenceClaimView> = emptyList(),
+    /**
+     * The gallery, at most four and with no cover: a comment is text
+     * **plus** optional media, never instead of it (D16).
+     */
+    val attachments: List<MediaAssetView> = emptyList(),
+    val attachmentsStatus: FieldStatus = FieldStatus.NORMAL,
 )
 
 /**
@@ -485,6 +564,9 @@ data class ProfileView(
     val displayName: ModeratedField,
     val bio: ModeratedField,
     val websiteUrl: ModeratedField,
+    /** Null for an account that has never set one — the monogram (D13). */
+    val avatar: MediaAssetView? = null,
+    val cover: MediaAssetView? = null,
 )
 
 /** A tappable link from a chronicle row into the content it touched. */

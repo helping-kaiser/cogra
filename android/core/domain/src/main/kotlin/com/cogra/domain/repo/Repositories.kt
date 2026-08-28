@@ -6,7 +6,9 @@ package com.cogra.domain.repo
 
 import com.cogra.crypto.Family
 import com.cogra.domain.ApplicationStatus
+import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.AuthTokens
+import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.CommentView
 import com.cogra.domain.HashtagView
 import com.cogra.domain.ProfileView
@@ -189,10 +191,17 @@ interface ContentRepository {
     suspend fun preparePost(
         title: String?,
         description: String?,
-        content: String,
+        content: String?,
         license: LicenseChoice,
         tags: List<TagClaim> = emptyList(),
         references: List<ReferenceClaim> = emptyList(),
+        /**
+         * The gallery in the author's order — the array position is the
+         * order and the first entry is the cover, so nothing here
+         * carries an index that could disagree with itself (D16, D9).
+         * Exactly one of [content] and this is non-empty.
+         */
+        attachments: List<AttachmentClaim> = emptyList(),
     ): Outcome<PreparedContentView>
 
     /**
@@ -310,6 +319,15 @@ interface ProfileRepository {
         displayName: String,
         bio: String?,
         websiteUrl: String?,
+        /**
+         * Three-valued, unlike the fields above: untouched, cleared, or
+         * replaced (D13). The distinction is the whole reason it is a
+         * type — "leave the picture alone" and "go back to the
+         * monogram" are different requests, and a nullable id cannot
+         * say which one it means.
+         */
+        avatar: MediaFieldUpdate = MediaFieldUpdate.Untouched,
+        cover: MediaFieldUpdate = MediaFieldUpdate.Untouched,
     ): Outcome<List<PreparedWriteView>>
 }
 

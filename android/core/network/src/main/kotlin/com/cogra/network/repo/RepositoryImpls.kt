@@ -14,7 +14,9 @@ import com.cogra.domain.LoginGrant
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.ActorRef
+import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
@@ -83,6 +85,7 @@ import com.cogra.network.graphql.UploadKeyBackupMutation
 import com.cogra.network.graphql.VerifyEmailMutation
 import com.cogra.network.graphql.type.ApplicationApprovalInput
 import com.cogra.network.graphql.type.ApplyWithInviteInput
+import com.cogra.network.graphql.type.AttachmentInput
 import com.cogra.network.graphql.type.PrepareCommentEditInput
 import com.cogra.network.graphql.type.PrepareCommentInput
 import com.cogra.network.graphql.type.PreparePostEditInput
@@ -605,24 +608,26 @@ class ContentRepositoryImpl @Inject constructor(
     override suspend fun preparePost(
         title: String?,
         description: String?,
-        content: String,
+        content: String?,
         license: LicenseChoice,
         tags: List<TagClaim>,
         references: List<ReferenceClaim>,
+        attachments: List<AttachmentClaim>,
     ): Outcome<PreparedContentView> = guard.run {
         client.mutation(
             PreparePostMutation(
                 PreparePostInput(
                     title = Optional.presentIfNotNull(title),
                     description = Optional.presentIfNotNull(description),
-                    // A post's body is words or media, so `content` is
-                    // nullable on the wire now. This surface still authors
-                    // the words half only; the media half arrives with the
-                    // compose wizard.
-                    content = Optional.present(content),
+                    // A post's body is words XOR media (D16), and the
+                    // server enforces it: a media post sends no content
+                    // at all rather than an empty string, which is a
+                    // value and would read as "both".
+                    content = Optional.presentIfNotNull(content),
                     license = license.toInput(),
                     tags = tags.toInput(),
                     references = references.toInput(),
+                    attachments = attachments.toInput(),
                 ),
             ),
         ).payloadOutcome({ it.preparePost.userErrors.map { e -> e.userErrorFields } }) { data ->
@@ -742,6 +747,38 @@ private fun List<ReferenceClaim>.toInput(): Optional<List<ReferenceInput>?> =
         },
     )
 
+/**
+ * The gallery a creation declares (api-spec.md `AttachmentInput`).
+ *
+ * `displayOrder` and `isCover` are derived from the list's own order
+ * rather than taken from the caller: the contract refuses an entry
+ * whose stated index disagrees with its array position, so deriving
+ * them is the only way the two cannot drift. `isCover` is true on the
+ * first entry and nowhere else.
+ */
+@JvmName("attachmentClaimsToInput")
+private fun List<AttachmentClaim>.toInput(): Optional<List<AttachmentInput>?> =
+    Optional.presentIfNotNull(
+        takeIf { it.isNotEmpty() }?.mapIndexed { index, claim ->
+            AttachmentInput(
+                mediaId = claim.mediaId,
+                displayOrder = index,
+                isCover = Optional.present(index == 0),
+            )
+        },
+    )
+
+/**
+ * The three-valued profile media field on the wire (D13): absent leaves
+ * the picture alone, a present null clears it back to the monogram, and
+ * a present id replaces it.
+ */
+private fun MediaFieldUpdate.toOptional(): Optional<String?> = when (this) {
+    MediaFieldUpdate.Untouched -> Optional.Absent
+    MediaFieldUpdate.Clear -> Optional.present(null)
+    is MediaFieldUpdate.Set -> Optional.present(mediaId)
+}
+
 @Singleton
 class ProfileRepositoryImpl @Inject constructor(
     private val client: ApolloClient,
@@ -784,16 +821,25 @@ class ProfileRepositoryImpl @Inject constructor(
         displayName: String,
         bio: String?,
         websiteUrl: String?,
+        avatar: MediaFieldUpdate,
+        cover: MediaFieldUpdate,
     ): Outcome<List<PreparedWriteView>> = guard.run {
         client.mutation(
             PrepareProfileUpdateMutation(
                 // The edit form holds the full field set, so every field
                 // rides as present; a present null clears (api-spec.md
                 // "Content authoring") — the display name never nulls.
+                //
+                // The two media fields are the exception and the reason
+                // `MediaFieldUpdate` exists: an untouched picture must
+                // be ABSENT, not a present null, because a present null
+                // is the clear (D13).
                 PrepareProfileUpdateInput(
                     displayName = Optional.present(displayName),
                     bio = Optional.present(bio),
                     websiteUrl = Optional.present(websiteUrl),
+                    avatarMediaId = avatar.toOptional(),
+                    coverMediaId = cover.toOptional(),
                 ),
             ),
         ).payloadOutcome({ it.prepareProfileUpdate.userErrors.map { e -> e.userErrorFields } }) { data ->

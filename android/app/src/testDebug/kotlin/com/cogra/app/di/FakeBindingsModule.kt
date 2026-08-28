@@ -12,7 +12,16 @@ import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.HashtagView
 import com.cogra.domain.ReferenceCandidateView
 import com.cogra.domain.InviteCheck
+import com.cogra.domain.AttachmentClaim
+import com.cogra.domain.FieldStatus
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.MediaAssetView
+import com.cogra.domain.MediaFieldUpdate
+import com.cogra.domain.compose.ComposeDraft
+import com.cogra.domain.compose.ComposeDraftStore
+import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.media.ProcessedPicture
+import com.cogra.domain.testing.ThrowingMediaRepository
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
@@ -111,10 +120,11 @@ class ScriptedContentRepository : ThrowingContentRepository() {
     override suspend fun preparePost(
         title: String?,
         description: String?,
-        content: String,
+        content: String?,
         license: LicenseChoice,
         tags: List<TagClaim>,
         references: List<ReferenceClaim>,
+        attachments: List<AttachmentClaim>,
     ): Outcome<PreparedContentView> {
         pendingAfterPrepare?.let { listing = listOf(it) + listing }
         return Outcome.Success(PreparedContentView(preparedNode, emptyList()))
@@ -161,6 +171,8 @@ class ScriptedProfileRepository : ThrowingProfileRepository() {
         displayName: String,
         bio: String?,
         websiteUrl: String?,
+        avatar: MediaFieldUpdate,
+        cover: MediaFieldUpdate,
     ): Outcome<List<PreparedWriteView>> {
         updates += Triple(displayName, bio, websiteUrl)
         profile = profile?.copy(
@@ -318,6 +330,37 @@ class ScriptedReferenceRepository(
     }
 }
 
+/**
+ * The upload verb, scripted: one asset in, one id out. Nothing in the
+ * navigation suite drives a real picker, so the interesting scripting
+ * lives in the wizard's own ViewModel tests.
+ */
+class ScriptedMediaRepository : ThrowingMediaRepository() {
+    var outcome: Outcome<MediaAssetView> = Outcome.Success(
+        MediaAssetView("m1", "https://media/m1", null, FieldStatus.NORMAL, 1f),
+    )
+
+    override suspend fun uploadMedia(
+        picture: ProcessedPicture,
+        altText: String?,
+    ): Outcome<MediaAssetView> = outcome
+}
+
+/** The wizard's local draft, in memory. */
+class FakeComposeDraftStore : ComposeDraftStore {
+    var held: ComposeDraft? = null
+
+    override suspend fun draft(): ComposeDraft? = held
+
+    override suspend fun save(draft: ComposeDraft) {
+        held = draft
+    }
+
+    override suspend fun clear() {
+        held = null
+    }
+}
+
 @Module
 @TestInstallIn(
     components = [SingletonComponent::class],
@@ -414,4 +457,18 @@ object FakeBindingsModule {
 
     @Provides
     fun referenceRepository(fake: ScriptedReferenceRepository): ReferenceRepository = fake
+
+    @Provides
+    @Singleton
+    fun scriptedMediaRepository(): ScriptedMediaRepository = ScriptedMediaRepository()
+
+    @Provides
+    fun mediaRepository(fake: ScriptedMediaRepository): MediaRepository = fake
+
+    @Provides
+    @Singleton
+    fun fakeComposeDraftStore(): FakeComposeDraftStore = FakeComposeDraftStore()
+
+    @Provides
+    fun composeDraftStore(fake: FakeComposeDraftStore): ComposeDraftStore = fake
 }
