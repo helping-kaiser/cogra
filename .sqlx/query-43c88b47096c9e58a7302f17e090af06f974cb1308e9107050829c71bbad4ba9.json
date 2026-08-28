@@ -1,0 +1,106 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT j.post_version_id AS \"version_id!\", j.display_order,\n                  j.is_cover,\n                  m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,\n                  m.mime_type, m.size_bytes, m.alt_text,\n                  m.options AS \"options!: serde_json::Value\",\n                  m.redaction_reason, m.redacted_at, m.created_at\n           FROM post_attachments j\n           JOIN media_attachments m ON m.id = j.attachment_id\n           WHERE j.post_version_id = ANY($1)\n           ORDER BY j.post_version_id, j.display_order, m.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "version_id!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "display_order",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 2,
+        "name": "is_cover",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 3,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "author_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "digest",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 6,
+        "name": "digest_algo",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "storage_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "mime_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "size_bytes",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 10,
+        "name": "alt_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "options!: serde_json::Value",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 12,
+        "name": "redaction_reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "redacted_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 14,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "43c88b47096c9e58a7302f17e090af06f974cb1308e9107050829c71bbad4ba9"
+}

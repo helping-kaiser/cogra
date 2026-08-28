@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO post_attachments\n             (post_version_id, attachment_id, display_order, is_cover)\n         SELECT $1, a.id, a.ord, a.ord = 0\n         FROM unnest($2::uuid[], $3::smallint[]) AS a(id, ord)\n         ON CONFLICT (post_version_id, attachment_id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "UuidArray",
+        "Int2Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fe184d8b46fac11ef4f56c9e0e30ea4ccd6c2a7b5c8ae10d9368d5e73c9a3bf2"
+}

@@ -615,7 +615,11 @@ class ContentRepositoryImpl @Inject constructor(
                 PreparePostInput(
                     title = Optional.presentIfNotNull(title),
                     description = Optional.presentIfNotNull(description),
-                    content = content,
+                    // A post's body is words or media, so `content` is
+                    // nullable on the wire now. This surface still authors
+                    // the words half only; the media half arrives with the
+                    // compose wizard.
+                    content = Optional.present(content),
                     license = license.toInput(),
                     tags = tags.toInput(),
                     references = references.toInput(),
@@ -645,7 +649,7 @@ class ContentRepositoryImpl @Inject constructor(
                     id = id,
                     title = Optional.present(title),
                     description = Optional.present(description),
-                    content = content,
+                    content = Optional.present(content),
                 ),
             ),
         ).payloadOutcome({ it.preparePostEdit.userErrors.map { e -> e.userErrorFields } }) { data ->
