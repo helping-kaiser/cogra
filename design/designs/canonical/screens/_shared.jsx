@@ -35,6 +35,12 @@ const {
   Chip,
   SegmentedFilter,
   Checkbox,
+  FeedFilter,
+  FilterTrigger,
+  FilterSection,
+  OrderSection,
+  FEED_KINDS,
+  FEED_FILTER_DEFAULT,
   StancePad,
   StanceReadout,
   SensitiveVeil,
@@ -264,34 +270,14 @@ function Seam() {
   );
 }
 
-/* The searching view's ONE trigger, reading the whole view back in words (the
-   FeedFilter idiom) — it opens the filter sheet. */
-function SearchFilterTrigger({ reading }) {
+/* The searching view's trigger row: the master FilterTrigger (the FeedFilter
+   idiom — deviations only, "Everything" at rest) with the "?" on the far edge. */
+function SearchTriggerRow({ reading }) {
   return (
-    <button
-      type="button"
-      className="cg-state cg-focus"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        flex: 1,
-        minHeight: 40,
-        padding: "0 16px",
-        border: "1px solid var(--border-field)",
-        borderRadius: "var(--radius-full)",
-        background: "none",
-        cursor: "pointer",
-        fontFamily: "var(--font-sans)",
-        color: "var(--text-secondary)",
-        fontSize: "var(--text-body-small)",
-        lineHeight: "var(--text-body-small--line-height)",
-        textAlign: "left",
-        boxSizing: "border-box",
-      }}
-    >
-      {reading}
-    </button>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4, padding: "0 16px 8px 16px" }}>
+      <FilterTrigger reading={reading} ariaLabel="What the search shows" />
+      <HelpDot />
+    </div>
   );
 }
 
