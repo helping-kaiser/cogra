@@ -32,6 +32,7 @@ l1-standin       = { path = "../l1-standin" }
 postgres-store   = { path = "../postgres-store" }
 
 tokio              = { workspace = true }
+tokio-util         = { workspace = true }
 axum               = { workspace = true }
 # `tempfile` is what makes an uploaded body spool to disk instead of
 # being buffered in memory: without it a concurrent burst of uploads is a

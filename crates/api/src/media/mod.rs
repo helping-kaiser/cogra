@@ -44,7 +44,7 @@ use postgres_store::media as store;
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
-pub use blob::{BlobError, BlobStore, S3BlobStore, S3Config};
+pub use blob::{BlobError, BlobStore, ObjectBlobStore, S3Config};
 
 /// The widest canvas a decode is allowed to open, per axis.
 ///
@@ -112,29 +112,65 @@ where
     }
 }
 
+impl Default for MediaConfig {
+    fn default() -> Self {
+        Self {
+            s3: S3Config {
+                endpoint: "http://localhost:9000".into(),
+                bucket: "cogra-media".into(),
+                access_key_id: "cogra_media".into(),
+                secret_access_key: "cogra_media_secret".into(),
+                region: "us-east-1".into(),
+            },
+            base_url: "http://localhost:3000/media".into(),
+            max_upload_bytes: DEFAULT_MAX_UPLOAD_BYTES,
+            orphan_reaper_interval_secs: DEFAULT_ORPHAN_REAPER_INTERVAL_SECS,
+            orphan_max_age_secs: DEFAULT_ORPHAN_MAX_AGE_SECS,
+        }
+    }
+}
+
 impl MediaConfig {
+    /// The MEDIA_* overrides on top of the defaults (development.md
+    /// "Environment Variables").
     pub fn from_env() -> anyhow::Result<Self> {
+        let base = Self::default();
         Ok(Self {
             s3: S3Config {
-                endpoint: env_or("MEDIA_S3_ENDPOINT", "http://localhost:9000"),
-                bucket: env_or("MEDIA_BUCKET", "cogra-media"),
-                access_key_id: env_or("MEDIA_ACCESS_KEY_ID", "cogra_media"),
-                secret_access_key: env_or("MEDIA_SECRET_ACCESS_KEY", "cogra_media_secret"),
-                region: env_or("MEDIA_REGION", "us-east-1"),
+                endpoint: env_or("MEDIA_S3_ENDPOINT", &base.s3.endpoint),
+                bucket: env_or("MEDIA_BUCKET", &base.s3.bucket),
+                access_key_id: env_or("MEDIA_ACCESS_KEY_ID", &base.s3.access_key_id),
+                secret_access_key: env_or(
+                    "MEDIA_SECRET_ACCESS_KEY",
+                    &base.s3.secret_access_key,
+                ),
+                region: env_or("MEDIA_REGION", &base.s3.region),
             },
-            base_url: env_or("MEDIA_BASE_URL", "http://localhost:3000/media")
+            base_url: env_or("MEDIA_BASE_URL", &base.base_url)
                 .trim_end_matches('/')
                 .to_string(),
-            max_upload_bytes: env_parsed("MEDIA_MAX_UPLOAD_BYTES", DEFAULT_MAX_UPLOAD_BYTES)?,
+            max_upload_bytes: env_parsed("MEDIA_MAX_UPLOAD_BYTES", base.max_upload_bytes)?,
             orphan_reaper_interval_secs: env_parsed(
                 "MEDIA_ORPHAN_REAPER_INTERVAL_SECS",
-                DEFAULT_ORPHAN_REAPER_INTERVAL_SECS,
+                base.orphan_reaper_interval_secs,
             )?,
             orphan_max_age_secs: env_parsed(
                 "MEDIA_ORPHAN_MAX_AGE_SECS",
-                DEFAULT_ORPHAN_MAX_AGE_SECS,
+                base.orphan_max_age_secs,
             )?,
         })
+    }
+
+    /// The hard multipart ceiling, distinct from the policy cap.
+    ///
+    /// The transport cannot produce a GraphQL field error — it refuses
+    /// the request before a resolver exists — so the two limits are set
+    /// apart deliberately: an ordinary over-cap upload passes the
+    /// transport and is refused by the resolver with a readable error
+    /// naming `file`, and only a wildly oversized body is cut at the
+    /// connection, where a status code is the only answer available.
+    pub fn transport_limit_bytes(&self) -> usize {
+        self.max_upload_bytes.saturating_mul(2)
     }
 }
 

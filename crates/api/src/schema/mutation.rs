@@ -12,7 +12,7 @@
 
 use std::sync::Arc;
 
-use async_graphql::{Context, InputObject, Object, SimpleObject};
+use async_graphql::{Context, InputObject, Object, SimpleObject, Upload};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use chrono::{DateTime, Duration, Utc};
@@ -26,13 +26,14 @@ use rand::rngs::OsRng;
 use uuid::Uuid;
 
 use super::types::{
-    Application, AuthSession, Dimension, ErrorCode, InviteLink, PreparedWrite, Session,
-    StagedWriteType, User, UserError,
+    Application, AuthSession, Dimension, ErrorCode, InviteLink, MediaAttachmentType, PreparedWrite,
+    Session, StagedWriteType, User, UserError,
 };
 use crate::auth::{self, AuthConfig, RefreshError, Viewer};
 use crate::breach::BreachCorpus;
 use crate::l1::StandInBoundary;
 use crate::mailer::{Mail, Mailer, WebOrigin};
+use crate::media::{self, BlobStore, MediaConfig};
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 use crate::profile::ProfileError;
 use crate::ratelimit::{self, RateLimitConfig, RequestIp, Window, scope};
@@ -53,6 +54,12 @@ const MAX_KEY_BACKUP_BYTES: usize = 4096;
 /// An upload challenge stays live this long (auth.md "Key recovery") —
 /// one signing round trip on the device, not a window worth parking in.
 const KEY_BACKUP_CHALLENGE_TTL_MINUTES: i64 = 5;
+/// Alt text cap. It rides the payload envelope, which is bounded whole by
+/// `M_payload`, and overrunning that bound is a hard L1 formation error
+/// rather than a friendly refusal — so the friendly refusal happens here,
+/// at the upload, where the author can still fix it. Ten assets at this
+/// length is a tenth of the envelope's budget.
+const MAX_ALT_TEXT_CHARS: usize = 1000;
 
 /// The transport-tier refusal for a request that needed a session.
 fn unauthenticated() -> async_graphql::Error {
@@ -581,6 +588,34 @@ struct PrepareProfileUpdateInput {
 /// record first, then one Tag record per declared topic and one
 /// Reference record per declared citation, each its own priced act.
 /// Null when `userErrors` is non-empty.
+/// Uploads one asset. `altText` is the one layout-adjacent fact the
+/// server cannot infer and the author must supply; aspect ratio and
+/// duration are derived from the bytes.
+///
+/// `actAs` is not here: a Collective is the only non-user actor there is
+/// and Collectives arrive with slice 5, so the uploader is the viewer.
+#[derive(InputObject)]
+struct UploadMediaInput {
+    file: Upload,
+    alt_text: Option<String>,
+}
+
+/// The asset, or the refusal that explains what was wrong with the file.
+#[derive(SimpleObject)]
+struct UploadMediaPayload {
+    media: Option<MediaAttachmentType>,
+    user_errors: Vec<UserError>,
+}
+
+impl UploadMediaPayload {
+    fn refused(error: UserError) -> Self {
+        Self {
+            media: None,
+            user_errors: vec![error],
+        }
+    }
+}
+
 #[derive(SimpleObject)]
 struct PrepareContentPayload {
     node: Option<Uuid>,
@@ -1811,6 +1846,80 @@ impl Mutation {
             }),
             Err(e) => Ok(stance_refusal(e)),
         }
+    }
+
+    /// Uploads a single media asset.
+    ///
+    /// A pure L2 operation: it mints no record, authors nothing, and
+    /// costs no θ — the asset's digest enters a payload envelope later,
+    /// at prepare time, and it is *that* Publish the author pays for. A
+    /// twenty-photo post and a text post cost the same.
+    ///
+    /// The binary rides the multipart request. One file per call, by
+    /// design: a client sends its gallery concurrently, and each upload
+    /// then retries on its own instead of a ten-photo request failing
+    /// whole on the tenth picture.
+    async fn upload_media(
+        &self,
+        ctx: &Context<'_>,
+        input: UploadMediaInput,
+    ) -> async_graphql::Result<UploadMediaPayload> {
+        let v = member_viewer(ctx).await?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        guard_window(
+            ctx,
+            scope::UPLOAD_ACCOUNT,
+            &v.user_id.to_string(),
+            limits.upload_account,
+        )
+        .await?;
+
+        let alt_text = match input.alt_text.as_deref().map(str::trim) {
+            Some(alt) if alt.chars().count() > MAX_ALT_TEXT_CHARS => {
+                return Ok(UploadMediaPayload::refused(UserError::at(
+                    ErrorCode::BadInput,
+                    format!("alt text is longer than {MAX_ALT_TEXT_CHARS} characters"),
+                    vec!["altText".into()],
+                )));
+            }
+            Some(alt) if !alt.is_empty() => Some(alt.to_string()),
+            _ => None,
+        };
+
+        let pool = ctx.data::<PgPool>()?;
+        let config = ctx.data::<MediaConfig>()?;
+        let blobs = ctx.data::<Arc<dyn BlobStore>>()?;
+        let value = input.file.value(ctx)?;
+        let max_upload_bytes = config.max_upload_bytes;
+
+        // Reading a spooled temp file and decoding a picture are both
+        // blocking work; running them on the async runtime would stall
+        // every other request behind one upload.
+        let processed = tokio::task::spawn_blocking(move || {
+            use std::io::Read;
+            let mut bytes = Vec::new();
+            value.into_read().read_to_end(&mut bytes)?;
+            std::io::Result::Ok(media::process(&bytes, max_upload_bytes))
+        })
+        .await??;
+
+        let asset = match processed {
+            Ok(asset) => asset,
+            Err(e) => {
+                return Ok(UploadMediaPayload::refused(UserError::at(
+                    ErrorCode::BadInput,
+                    e.to_string(),
+                    vec!["file".into()],
+                )));
+            }
+        };
+
+        let row =
+            media::store_asset(pool, blobs.as_ref(), v.user_id, asset, alt_text.as_deref()).await?;
+        Ok(UploadMediaPayload {
+            media: Some(MediaAttachmentType(row)),
+            user_errors: vec![],
+        })
     }
 
     /// Prepares a new Post: one genesis Publish through the ordinary

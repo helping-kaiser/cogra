@@ -89,34 +89,46 @@ pub struct S3Config {
     pub region: String,
 }
 
-/// The S3 implementation — the only one there is. A local-filesystem
-/// variant was deliberately not built: it would be a second code path
-/// that development exercises and production never does, which is how a
-/// dev posture stops being a preview of release.
-pub struct S3BlobStore {
-    store: object_store::aws::AmazonS3,
+/// The one implementation, over any object store.
+///
+/// It is generic rather than S3-specific so the test double and the
+/// running service are the *same* code: a rig exercising an in-memory
+/// backend exercises this put, this delete, and this not-found handling,
+/// not a parallel implementation that only looks similar. No local
+/// filesystem variant exists — a dev-only backend that production never
+/// runs is how a dev posture stops being a preview of release.
+pub struct ObjectBlobStore<S: ObjectStore>(S);
+
+/// The media service as it actually runs.
+///
+/// Plain http is permitted only when the operator's own endpoint asks
+/// for it, which in practice means a development store on the same
+/// machine. A production endpoint is https and this never loosens it.
+///
+/// Path-style addressing, because a bucket name in the hostname needs
+/// DNS entries per bucket that a self-hosted store does not have.
+pub fn s3(config: &S3Config) -> Result<ObjectBlobStore<object_store::aws::AmazonS3>, BlobError> {
+    let allow_http = config.endpoint.starts_with("http://");
+    let store = AmazonS3Builder::new()
+        .with_endpoint(&config.endpoint)
+        .with_bucket_name(&config.bucket)
+        .with_access_key_id(&config.access_key_id)
+        .with_secret_access_key(&config.secret_access_key)
+        .with_region(&config.region)
+        .with_allow_http(allow_http)
+        .with_virtual_hosted_style_request(false)
+        .build()?;
+    Ok(ObjectBlobStore(store))
 }
 
-impl S3BlobStore {
-    /// Plain http is permitted only when the operator's own endpoint asks
-    /// for it, which in practice means a development store on the same
-    /// machine. A production endpoint is https and this never loosens it.
-    pub fn new(config: &S3Config) -> Result<Self, BlobError> {
-        let allow_http = config.endpoint.starts_with("http://");
-        let store = AmazonS3Builder::new()
-            .with_endpoint(&config.endpoint)
-            .with_bucket_name(&config.bucket)
-            .with_access_key_id(&config.access_key_id)
-            .with_secret_access_key(&config.secret_access_key)
-            .with_region(&config.region)
-            .with_allow_http(allow_http)
-            .with_virtual_hosted_style_request(false)
-            .build()?;
-        Ok(Self { store })
-    }
+/// A store that keeps objects in this process. For test rigs and nothing
+/// else: it is not a deployment posture, and it forgets everything when
+/// the process ends.
+pub fn in_memory() -> ObjectBlobStore<object_store::memory::InMemory> {
+    ObjectBlobStore(object_store::memory::InMemory::new())
 }
 
-impl BlobStore for S3BlobStore {
+impl<S: ObjectStore> BlobStore for ObjectBlobStore<S> {
     fn put<'a>(
         &'a self,
         key: &'a str,
@@ -131,7 +143,7 @@ impl BlobStore for S3BlobStore {
                 attributes,
                 ..Default::default()
             };
-            self.store
+            self.0
                 .put_opts(&ObjectPath::from(key), PutPayload::from(bytes), options)
                 .await?;
             Ok(())
@@ -143,7 +155,7 @@ impl BlobStore for S3BlobStore {
         key: &'a str,
     ) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, BlobError>> + Send + 'a>> {
         Box::pin(async move {
-            let result = self.store.get(&ObjectPath::from(key)).await?;
+            let result = self.0.get(&ObjectPath::from(key)).await?;
             Ok(result.bytes().await?.to_vec())
         })
     }
@@ -153,7 +165,7 @@ impl BlobStore for S3BlobStore {
         key: &'a str,
     ) -> Pin<Box<dyn Future<Output = Result<bool, BlobError>> + Send + 'a>> {
         Box::pin(async move {
-            match self.store.head(&ObjectPath::from(key)).await {
+            match self.0.head(&ObjectPath::from(key)).await {
                 Ok(_) => Ok(true),
                 Err(ObjectStoreError::NotFound { .. }) => Ok(false),
                 Err(e) => Err(e.into()),
@@ -166,7 +178,7 @@ impl BlobStore for S3BlobStore {
         key: &'a str,
     ) -> Pin<Box<dyn Future<Output = Result<(), BlobError>> + Send + 'a>> {
         Box::pin(async move {
-            match self.store.delete(&ObjectPath::from(key)).await {
+            match self.0.delete(&ObjectPath::from(key)).await {
                 Ok(()) | Err(ObjectStoreError::NotFound { .. }) => Ok(()),
                 Err(e) => Err(e.into()),
             }
