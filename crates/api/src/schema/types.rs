@@ -2032,17 +2032,14 @@ pub(super) fn list_cost(limit: Option<i32>, child_complexity: usize) -> usize {
 /// ([`fold_cost`]).
 ///
 /// `Post.topics`, `Post.references` and their `Comment` twins take no
-/// page argument, so there is no requested size to price and no served
-/// ceiling to price against: the fold returns whatever the author has
-/// standing. This constant is therefore an assumption, and it is stated
-/// here rather than borrowed: the per-gesture caps
-/// (`topics::MAX_TAGS_PER_BATCH`, `references::MAX_REFERENCES_PER_BATCH`,
-/// both 10) bound one batch, not the standing set an author accumulates
-/// across batches, so the budget assumes twice a full batch. A standing
-/// set past this costs the server more than it was charged — capping
-/// what the folds serve is the open serving question api-spec.md
-/// "Query budgets" records.
-pub const FOLD_LIST_BOUND: i32 = 20;
+/// page argument, so there is no requested size to price: the fold
+/// returns whatever the author has standing. What makes that priceable
+/// is the write side — `references::MAX_LIVE_REFERENCES_PER_ARTIFACT`
+/// and `topics::MAX_LIVE_TOPICS_PER_ARTIFACT`, both 50, refuse the
+/// gesture that would push a standing set past this many (D22). So the
+/// bound is enforced rather than assumed, and it is stated here as one
+/// number because both fold families carry the same cap.
+pub const FOLD_LIST_BOUND: i32 = 50;
 
 /// What an author-owned fold list charges: [`FOLD_LIST_BOUND`] rows times
 /// the per-row cost, plus one for the field itself.
