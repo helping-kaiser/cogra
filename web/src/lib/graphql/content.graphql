@@ -114,6 +114,9 @@ query Posts($first: Int!, $after: String, $includePending: Boolean! = true) {
           displayName {
             value
           }
+          avatar {
+            url
+          }
         }
         createdAt
         updatedAt
@@ -256,6 +259,9 @@ query PostDetail(
       displayName {
         value
       }
+      avatar {
+        url
+      }
     }
     createdAt
     updatedAt
@@ -377,6 +383,9 @@ query PostDetail(
             displayName {
               value
             }
+            avatar {
+              url
+            }
           }
           createdAt
           updatedAt
@@ -489,6 +498,9 @@ query PostDetail(
                   handle
                   displayName {
                     value
+                  }
+                  avatar {
+                    url
                   }
                 }
                 createdAt
@@ -631,6 +643,9 @@ query CommentReplies(
             displayName {
               value
             }
+            avatar {
+              url
+            }
           }
           createdAt
           updatedAt
@@ -743,6 +758,9 @@ query CommentReplies(
                   handle
                   displayName {
                     value
+                  }
+                  avatar {
+                    url
                   }
                 }
                 createdAt

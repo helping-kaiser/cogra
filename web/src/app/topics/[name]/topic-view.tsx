@@ -128,6 +128,7 @@ export function TopicView({ name }: { name: string }) {
                     <ActorChip
                       handle={node.author.handle}
                       displayName={node.author.displayName.value}
+                      avatarUrl={node.author.avatar?.url}
                       testId={`topic-comment-author-${node.id}`}
                     />
                   )}
