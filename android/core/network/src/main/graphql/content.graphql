@@ -45,6 +45,11 @@ fragment PostFields on Post {
     confidence
     pending
   }
+  # The author's own current references, on the same content-intrinsic
+  # channel the topics ride (D12).
+  references {
+    ...ReferenceClaimFields
+  }
 }
 
 fragment CommentFields on Comment {
@@ -78,6 +83,9 @@ fragment CommentFields on Comment {
     relevance
     confidence
     pending
+  }
+  references {
+    ...ReferenceClaimFields
   }
 }
 

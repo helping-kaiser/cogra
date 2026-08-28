@@ -1,7 +1,8 @@
 //! Slice 2.4 — the Reference act and its declared fold (roadmap "Slice
 //! 2.4"): planning refusals, the act tuple as the write path really
-//! stores it, the netting fold, the landed/pending split, and the
-//! withdrawal batch.
+//! stores it, the netting fold, the landed/pending split, the withdrawal
+//! batch, and the batched resolution the fold's far ends come back
+//! through.
 //!
 //! The orientation is the thing under test throughout. Reference is Review
 //! with its legs transposed, so the act tuple is (effort, enthusiasm) and
@@ -11,10 +12,17 @@
 //! fixtures that need controlled sums derive their storage orientation
 //! from `census::leg_params` rather than restating it.
 
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
+
 use api::l1::{L1Boundary, StandInBoundary};
+use api::loaders::NodeLoaders;
 use api::references::{
-    self, MAX_REFERENCES_PER_BATCH, ReferenceDraft, ReferenceError, ReferencesError,
+    self, MAX_LIVE_REFERENCES_PER_ARTIFACT, MAX_REFERENCES_PER_BATCH, ReferenceDraft,
+    ReferenceError, ReferencesError,
 };
+use async_graphql::dataloader::{DataLoader, Loader};
 use common::l1::census::{Family, LegRole, leg_params};
 use common::l1::client::ActorKey;
 use l1_standin::{StandIn, StandInConfig};
@@ -114,6 +122,7 @@ impl Rig {
                 license: license(),
                 p_directed: None,
                 tags: vec![],
+                references: vec![],
             },
         )
         .await
@@ -467,6 +476,150 @@ async fn seed_reference(
     .expect("leg row");
 }
 
+/// Fills the artifact's reference row to `live` standing bundles plus
+/// `netted` bundles that have been walked back to `(0, 0)`, so a test can
+/// state the fold's view and let the cap read it.
+///
+/// The record identifiers are well-formed `act:<author>:<seq>:<family>`
+/// rather than opaque labels: `allocate_seq` reads the author's highest
+/// landed sequence out of the mirror by splitting the identifier, so a
+/// fixture that seeds under an author who then prepares has to speak the
+/// same grammar the write path allocates in.
+async fn seed_standing_set(
+    pool: &PgPool,
+    author: &str,
+    artifact: &str,
+    live: usize,
+    netted: usize,
+) {
+    let mut seq = 9000;
+    for i in 0..live {
+        seed_reference(
+            pool,
+            &format!("act:{author}:{seq}:reference"),
+            author,
+            artifact,
+            &format!("prof:live{i}"),
+            0.1,
+            0.1,
+            false,
+        )
+        .await;
+        seq += 1;
+    }
+    for i in 0..netted {
+        let target = format!("prof:gone{i}");
+        for (relevance, support) in [(0.1, 0.1), (-0.1, -0.1)] {
+            seed_reference(
+                pool,
+                &format!("act:{author}:{seq}:reference"),
+                author,
+                artifact,
+                &target,
+                relevance,
+                support,
+                false,
+            )
+            .await;
+            seq += 1;
+        }
+    }
+}
+
+/// D22's standing-set cap. The batch cap bounds one gesture; this bounds
+/// what the gestures accumulate into, and it is the standalone citation —
+/// the only one that meets an artifact already carrying a set — that
+/// meets it.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_standing_reference_cap_refuses_the_citation_past_fifty(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, key) = rig.funded_actor("alice").await;
+    let artifact = rig.post(alice, &key, "carrier").await;
+    let target = rig.post(alice, &key, "cited").await;
+    let node = rig.node_of(artifact).await;
+    let address = rig.address(alice).await;
+    seed_standing_set(
+        &rig.pool,
+        &address,
+        &node,
+        MAX_LIVE_REFERENCES_PER_ARTIFACT,
+        0,
+    )
+    .await;
+
+    let e = bad_input(
+        references::prepare_reference(
+            &rig.pool,
+            &rig.boundary,
+            GC,
+            alice,
+            artifact,
+            &draft(target),
+        )
+        .await
+        .expect_err("refused"),
+    );
+    assert_eq!(e.path, vec!["target".to_string()]);
+    assert!(e.message.contains("withdraw one first"), "{}", e.message);
+}
+
+/// The cap counts the fold's view, not the records behind it: an artifact
+/// carrying fifty-one bundles of which one has netted away has a slot
+/// free, and the citation that fills it is admitted.
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_netted_bundle_frees_a_slot_under_the_standing_reference_cap(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, key) = rig.funded_actor("alice").await;
+    let artifact = rig.post(alice, &key, "carrier").await;
+    let target = rig.post(alice, &key, "cited").await;
+    let node = rig.node_of(artifact).await;
+    let address = rig.address(alice).await;
+    seed_standing_set(
+        &rig.pool,
+        &address,
+        &node,
+        MAX_LIVE_REFERENCES_PER_ARTIFACT - 1,
+        1,
+    )
+    .await;
+
+    references::prepare_reference(
+        &rig.pool,
+        &rig.boundary,
+        GC,
+        alice,
+        artifact,
+        &draft(target),
+    )
+    .await
+    .expect("the freed slot admits the citation");
+}
+
+/// The cap is per (author, artifact): another author's fifty citations
+/// from the same artifact leave the viewer's own set empty.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_standing_reference_cap_counts_only_the_citing_authors_own_set(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, key) = rig.funded_actor("alice").await;
+    let (bob, _) = rig.funded_actor("bob").await;
+    let artifact = rig.post(alice, &key, "carrier").await;
+    let target = rig.post(alice, &key, "cited").await;
+    let node = rig.node_of(artifact).await;
+    let alice_address = rig.address(alice).await;
+    seed_standing_set(
+        &rig.pool,
+        &alice_address,
+        &node,
+        MAX_LIVE_REFERENCES_PER_ARTIFACT,
+        0,
+    )
+    .await;
+
+    references::prepare_reference(&rig.pool, &rig.boundary, GC, bob, artifact, &draft(target))
+        .await
+        .expect("bob's own set on this artifact is empty");
+}
+
 /// The fold nets — it does not pick a winner. Three records from one
 /// author toward one target sum, and the sum is what the view reports;
 /// newest-wins would have reported the last record's pair alone.
@@ -747,6 +900,201 @@ async fn withdrawal_stages_the_counter_records_that_net_the_bundle(pool: PgPool)
         .await
         .expect("folds");
     assert!(claims.is_empty(), "a netted bundle leaves the view");
+}
+
+/// B4: the number the read side quotes is the number the write side then
+/// stages. A client asks the author to confirm off `withdrawalCost`, so a
+/// claim quoting one act while the prepare returns three would mislead an
+/// author into a gesture they did not agree to.
+///
+/// The bundle here is deliberately clipped — its raw sums reach past `1`
+/// on both axes — because the clip is exactly what a claim's `relevance`
+/// and `support` have already lost, and reading the cost off them would
+/// quote one act for a three-act withdrawal.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_served_withdrawal_cost_is_the_batch_the_prepare_stages(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, key) = rig.funded_actor("alice").await;
+    let carrier = rig.post(alice, &key, "carrier").await;
+    let cited = rig.post(alice, &key, "cited").await;
+
+    rig.cite(alice, &key, carrier, cited, 0.9, 0.5).await;
+    rig.cite(alice, &key, carrier, cited, 0.9, 0.5).await;
+    rig.cite(alice, &key, carrier, cited, 0.7, 0.3).await;
+
+    let artifact = rig.node_of(carrier).await;
+    let address = rig.address(alice).await;
+    let claims = references_of(&rig.pool, &artifact, &address, ReferenceView::Landed)
+        .await
+        .expect("folds");
+    assert_eq!(claims.len(), 1);
+    assert_eq!(claims[0].relevance, 1.0, "the served pair is clipped");
+    assert_eq!(claims[0].support, 1.0);
+
+    let batch = references::prepare_reference_withdrawal(
+        &rig.pool,
+        &rig.boundary,
+        GC,
+        alice,
+        carrier,
+        cited,
+    )
+    .await
+    .expect("withdraws");
+    assert_eq!(
+        claims[0].withdrawal_cost as usize,
+        batch.len(),
+        "the quote and the batch answer the same question"
+    );
+    assert_eq!(batch.len(), 3, "⌈max(2.5, 1.3)⌉ counter-records");
+}
+
+/// A citation at the defaults costs exactly one act to withdraw — the
+/// common case the quote must not over-state either.
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_default_citation_quotes_a_one_act_withdrawal(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, key) = rig.funded_actor("alice").await;
+    let carrier = rig.post(alice, &key, "carrier").await;
+    let cited = rig.post(alice, &key, "cited").await;
+
+    rig.cite(alice, &key, carrier, cited, 0.1, 0.1).await;
+
+    let artifact = rig.node_of(carrier).await;
+    let address = rig.address(alice).await;
+    let claims = references_of(&rig.pool, &artifact, &address, ReferenceView::Landed)
+        .await
+        .expect("folds");
+    assert_eq!(claims[0].withdrawal_cost, 1);
+}
+
+/// A loader that answers out of the same batched store call the real one
+/// does, while recording the key counts it was handed.
+///
+/// The real loaders hold a private pool and cannot be instrumented, so
+/// the property under test — that concurrent `load_one` calls arrive at
+/// `load` as ONE slice of many keys — is pinned against a delegate. What
+/// it proves is the library behaviour the read side depends on; the
+/// tests below it prove the production loaders answer correctly over the
+/// same store call.
+struct CountingPostLoader {
+    pool: PgPool,
+    batches: Arc<Mutex<Vec<usize>>>,
+}
+
+impl Loader<String> for CountingPostLoader {
+    type Value = content_store::Post;
+    type Error = String;
+
+    async fn load(
+        &self,
+        keys: &[String],
+    ) -> Result<HashMap<String, content_store::Post>, Self::Error> {
+        self.batches.lock().expect("lock").push(keys.len());
+        Ok(content_store::posts_by_nodes(&self.pool, keys)
+            .await
+            .map_err(|e| e.to_string())?
+            .into_iter()
+            .map(|post| (post.l1_node_id.clone(), post))
+            .collect())
+    }
+}
+
+/// The N+1 fix, at the level it actually happens: eight far ends asked
+/// for concurrently reach the batch function once, as eight keys — not
+/// eight times as one. A sequential loop would show eight batches of
+/// one, which is the shape this replaces.
+///
+/// The batching window is widened well past its default so the eight
+/// tasks are certainly all in flight when it closes: what is under test
+/// is what a batch collects, not how fast a test machine schedules.
+#[sqlx::test(migrations = "../../migrations")]
+async fn concurrent_target_resolutions_reach_the_loader_as_one_batch(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, key) = rig.funded_actor("alice").await;
+    let mut nodes = Vec::new();
+    for i in 0..8 {
+        let post = rig.post(alice, &key, &format!("t{i}")).await;
+        nodes.push(rig.node_of(post).await);
+    }
+    let batches = Arc::new(Mutex::new(Vec::new()));
+    let loader = Arc::new(
+        DataLoader::new(
+            CountingPostLoader {
+                pool: rig.pool.clone(),
+                batches: Arc::clone(&batches),
+            },
+            tokio::spawn,
+        )
+        .delay(Duration::from_millis(200)),
+    );
+
+    let mut handles = Vec::new();
+    for node in nodes {
+        let loader = Arc::clone(&loader);
+        handles.push(tokio::spawn(async move { loader.load_one(node).await }));
+    }
+    let mut resolved = 0;
+    for handle in handles {
+        if handle.await.expect("join").expect("loads").is_some() {
+            resolved += 1;
+        }
+    }
+
+    assert_eq!(resolved, 8);
+    let seen = batches.lock().expect("lock").clone();
+    assert_eq!(seen, vec![8], "one batch carrying every key");
+}
+
+/// The production loaders, over the same store calls: every identifier
+/// that names something comes back, and one that names nothing is simply
+/// absent rather than an error.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_node_loaders_answer_for_what_exists_and_stay_silent_otherwise(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, key) = rig.funded_actor("alice").await;
+    let post = rig.post(alice, &key, "one").await;
+    let node = rig.node_of(post).await;
+    let address = rig.address(alice).await;
+    let loaders = NodeLoaders::new(rig.pool.clone());
+
+    assert_eq!(
+        loaders
+            .posts
+            .load_one(node.clone())
+            .await
+            .expect("loads")
+            .expect("post")
+            .id,
+        post,
+    );
+    assert!(
+        loaders
+            .posts
+            .load_one("mint:act:nobody:0:publish".to_string())
+            .await
+            .expect("loads")
+            .is_none(),
+    );
+    assert!(
+        loaders
+            .comments
+            .load_one(node)
+            .await
+            .expect("loads")
+            .is_none(),
+        "a post's identifier answers to no comment",
+    );
+    assert_eq!(
+        loaders
+            .actors
+            .load_one(address)
+            .await
+            .expect("loads")
+            .expect("actor")
+            .id,
+        alice,
+    );
 }
 
 /// Withdrawing what is not there stages nothing and says so, rather than

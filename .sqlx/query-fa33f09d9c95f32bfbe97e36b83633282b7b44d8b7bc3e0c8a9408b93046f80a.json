@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT r.epoch\n         FROM mirror_records r\n         JOIN mirror_record_legs l ON l.record_id = r.record_id\n         WHERE r.family = $1 AND l.leg IN ('binary', 't') AND l.target = $2\n         ORDER BY r.epoch ASC, r.act_time ASC, r.position ASC\n         LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "epoch",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "fa33f09d9c95f32bfbe97e36b83633282b7b44d8b7bc3e0c8a9408b93046f80a"
+}

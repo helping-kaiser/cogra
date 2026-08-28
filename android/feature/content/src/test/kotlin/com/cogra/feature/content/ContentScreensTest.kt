@@ -26,13 +26,17 @@ import com.cogra.domain.Landing
 import com.cogra.domain.LandingState
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.testing.testComment
+import com.cogra.domain.testing.testContentTarget
+import com.cogra.domain.testing.testMentionTarget
 import com.cogra.domain.testing.testPost
+import com.cogra.domain.testing.testReferenceClaim
 import com.cogra.domain.testing.testTopicClaim
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 class ContentScreensTest {
@@ -327,6 +331,15 @@ class ContentScreensTest {
         onDoneTuningTag: () -> Unit = {},
         onTagRelevanceChange: (String, Double) -> Unit = { _, _ -> },
         onTagConfidenceChange: (String, Double) -> Unit = { _, _ -> },
+        onOpenFinder: () -> Unit = {},
+        onCloseFinder: () -> Unit = {},
+        onFinderQueryChange: (String) -> Unit = {},
+        onPickReference: (ReferenceCandidateRow) -> Unit = {},
+        onRemoveReference: (String) -> Unit = {},
+        onTuneReference: (String) -> Unit = {},
+        onDoneTuningReference: () -> Unit = {},
+        onReferenceRelevanceChange: (String, Double) -> Unit = { _, _ -> },
+        onReferenceSupportChange: (String, Double) -> Unit = { _, _ -> },
         onConfirmSubmit: (Boolean) -> Unit = {},
         onDismissConfirm: () -> Unit = {},
         keyBanner: @Composable () -> Unit = {},
@@ -345,6 +358,15 @@ class ContentScreensTest {
                 onDoneTuningTag = onDoneTuningTag,
                 onTagRelevanceChange = onTagRelevanceChange,
                 onTagConfidenceChange = onTagConfidenceChange,
+                onOpenFinder = onOpenFinder,
+                onCloseFinder = onCloseFinder,
+                onFinderQueryChange = onFinderQueryChange,
+                onPickReference = onPickReference,
+                onRemoveReference = onRemoveReference,
+                onTuneReference = onTuneReference,
+                onDoneTuningReference = onDoneTuningReference,
+                onReferenceRelevanceChange = onReferenceRelevanceChange,
+                onReferenceSupportChange = onReferenceSupportChange,
                 onSubmit = onSubmit,
                 onConfirmSubmit = onConfirmSubmit,
                 onDismissConfirm = onDismissConfirm,
@@ -460,6 +482,10 @@ class ContentScreensTest {
         onConfirmSubmit: (Boolean) -> Unit = {},
         onDismissConfirm: () -> Unit = {},
         onStance: (String, String) -> Unit = { _, _ -> },
+        onToggleReferenceValues: (String) -> Unit = {},
+        onRemoveReference: (TagTarget, String) -> Unit = { _, _ -> },
+        onOpenPost: (String) -> Unit = {},
+        onReference: (String) -> Unit = {},
     ) {
         compose.setContent {
             PostDetailScreen(
@@ -490,11 +516,23 @@ class ContentScreensTest {
                 onDoneTuningTag = onDoneTuningTag,
                 onTagRelevanceChange = onTagRelevanceChange,
                 onTagConfidenceChange = onTagConfidenceChange,
+                onToggleReferenceValues = onToggleReferenceValues,
+                onOpenFinder = {},
+                onCloseFinder = {},
+                onFinderQueryChange = { _, _ -> },
+                onPickReference = { _, _ -> },
+                onRemoveReference = onRemoveReference,
+                onTuneReference = { _, _ -> },
+                onDoneTuningReference = {},
+                onReferenceRelevanceChange = { _, _, _ -> },
+                onReferenceSupportChange = { _, _, _ -> },
                 onConfirmSubmit = onConfirmSubmit,
                 onDismissConfirm = onDismissConfirm,
                 onEdit = onEdit,
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
+                onOpenPost = onOpenPost,
+                onReference = onReference,
                 onSignInOrJoin = onSignInOrJoin,
                 onBack = {},
             )
@@ -516,6 +554,13 @@ class ContentScreensTest {
         )
     }
 
+    /**
+     * A taller device than the default: the assertion needs every
+     * comment composed, and a `LazyColumn` composes only its window.
+     * The detail's header grew a reference row and a Reference action,
+     * so the default viewport no longer reaches the second comment.
+     */
+    @Config(qualifiers = "+h1600dp")
     @Test
     fun theDetailCarriesAStanceControlForThePostAndForEveryComment() {
         val stanced = mutableListOf<String>()
@@ -710,6 +755,7 @@ class ContentScreensTest {
     }
 
     @Test
+    @Config(qualifiers = "+h1600dp")
     fun aFailedCommentsPageSurfacesAtItsLoadMoreSlot() {
         var more = false
         renderDetail(
@@ -1369,4 +1415,286 @@ class ContentScreensTest {
     }
 
     private fun tagRows(vararg names: String) = names.map { TagRow(it) }
+
+    // -- The reference row (D16) --
+
+    private fun mentionClaim(handle: String = "ada") =
+        testReferenceClaim(testMentionTarget(handle))
+
+    @Test
+    fun aPostCardRendersItsReferenceChips() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(testPost("p1").copy(references = listOf(mentionClaim()))),
+            ),
+        )
+        compose.onNodeWithTag("feed_post_p1_reference_l1-user-ada").assertExists()
+    }
+
+    /** A card is for reading; the reveal belongs where the reader chose the content. */
+    @Test
+    fun aFeedCardOffersNoReferenceValueReveal() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(testPost("p1").copy(references = listOf(mentionClaim()))),
+            ),
+        )
+        compose.onNodeWithTag("feed_post_p1_references_reveal").assertDoesNotExist()
+    }
+
+    @Test
+    fun theDetailOffersTheReferenceRevealOnThePostAndOnEveryComment() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(references = listOf(mentionClaim())),
+                comments = listOf(comment("c1").copy(references = listOf(mentionClaim("grace")))),
+            ),
+        )
+        compose.onNodeWithTag("detail_post_references_reveal").assertExists()
+        compose.onNodeWithTag("comment_c1_references_reveal").assertExists()
+    }
+
+    /** The two rows reveal apart — a citation's parameters are its own question. */
+    @Test
+    fun revealingReferenceValuesLeavesTheTopicRowAlone() {
+        val revealed = mutableListOf<String>()
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    topics = listOf(testTopicClaim("rust")),
+                    references = listOf(mentionClaim()),
+                ),
+                comments = emptyList(),
+            ),
+            onToggleReferenceValues = { revealed += it },
+        )
+        compose.onNodeWithTag("detail_post_references_reveal").performClick()
+        assertThat(revealed).containsExactly("p1")
+    }
+
+    @Test
+    fun aRevealedReferenceRowShowsBothParametersSigned() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    references = listOf(
+                        testReferenceClaim(
+                            testMentionTarget("ada"),
+                            relevance = 0.4,
+                            support = -0.2,
+                        ),
+                    ),
+                ),
+                comments = emptyList(),
+                revealedReferenceRows = setOf("p1"),
+            ),
+        )
+        compose.onNodeWithTag("detail_post_reference_l1-user-ada")
+            .assertTextContains("+0.40 · -0.20")
+    }
+
+    @Test
+    fun aMentionChipOpensTheProfileItNames() {
+        val opened = mutableListOf<String>()
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(references = listOf(mentionClaim())),
+                comments = emptyList(),
+            ),
+            onOpenActor = { opened += it },
+        )
+        compose.onNodeWithTag("detail_post_reference_l1-user-ada").performClick()
+        assertThat(opened).containsExactly("ada")
+    }
+
+    @Test
+    fun aQuotedPostChipOpensThatPostsDetail() {
+        val opened = mutableListOf<String>()
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    references = listOf(testReferenceClaim(testContentTarget("p9"))),
+                ),
+                comments = emptyList(),
+            ),
+            onOpenPost = { opened += it },
+        )
+        compose.onNodeWithTag("detail_post_reference_l1-p9").performClick()
+        assertThat(opened).containsExactly("p9")
+    }
+
+    /**
+     * A citation this build cannot type still stands as a substrate
+     * fact, so its chip renders — readable, and not actionable.
+     */
+    @Test
+    fun anUntypeableCitationRendersInertRatherThanVanishing() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    references = listOf(testReferenceClaim(target = null)),
+                ),
+                comments = emptyList(),
+            ),
+        )
+        compose.onNodeWithTag("detail_post_reference_l1-untypeable").assertExists()
+        compose.onNodeWithTag("detail_post_reference_l1-untypeable").assertIsNotEnabled()
+    }
+
+    // -- The Reference affordance and the finder (D20) --
+
+    @Test
+    fun thePostDetailOffersTheReferenceAffordance() {
+        val referenced = mutableListOf<String>()
+        renderDetail(
+            PostDetailUiState(loading = false, post = testPost("p1"), comments = emptyList()),
+            onReference = { referenced += it },
+        )
+        compose.onNodeWithTag("detail_post_reference_action").performClick()
+        assertThat(referenced).containsExactly("p1")
+    }
+
+    @Test
+    fun aCommentOffersTheReferenceAffordanceToo() {
+        val referenced = mutableListOf<String>()
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(comment("c1")),
+            ),
+            signedIn = true,
+            onReference = { referenced += it },
+        )
+        compose.onNodeWithTag("comment_reference_c1").performClick()
+        assertThat(referenced).containsExactly("c1")
+    }
+
+    @Test
+    fun theComposerOpensTheFinderFromItsAddAction() {
+        var opened = false
+        renderComposer(ComposePostUiState(), onOpenFinder = { opened = true })
+        compose.onNodeWithTag("compose_reference_add").performScrollTo().performClick()
+        assertThat(opened).isTrue()
+    }
+
+    @Test
+    fun theFinderListsWhatResolvedAndPicksOnTap() {
+        val picked = mutableListOf<String>()
+        renderComposer(
+            ComposePostUiState(
+                referenceSection = ReferenceSectionState(
+                    finder = ReferenceFinderState(
+                        query = "@ada",
+                        candidates = listOf(
+                            ReferenceCandidateRow("u1", testMentionTarget("ada")),
+                        ),
+                    ),
+                ),
+            ),
+            onPickReference = { picked += it.targetId },
+        )
+        compose.onNodeWithTag("compose_finder_candidate_u1").performClick()
+        assertThat(picked).containsExactly("u1")
+    }
+
+    /** Resolving nothing is the normal case mid-typing, not an error. */
+    @Test
+    fun aFinderThatResolvedNothingSaysSoWithoutAnErrorLine() {
+        renderComposer(
+            ComposePostUiState(
+                referenceSection = ReferenceSectionState(
+                    finder = ReferenceFinderState(query = "ad", candidates = emptyList()),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("compose_finder_empty").assertExists()
+        compose.onNodeWithTag("compose_finder_failed").assertDoesNotExist()
+    }
+
+    @Test
+    fun aFinderLookupThatFellOverShowsItsOwnLine() {
+        renderComposer(
+            ComposePostUiState(
+                referenceSection = ReferenceSectionState(
+                    finder = ReferenceFinderState(query = "ada", failed = true),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("compose_finder_failed").assertExists()
+        compose.onNodeWithTag("compose_finder_empty").assertDoesNotExist()
+    }
+
+    @Test
+    fun theComposerRefusesTheEleventhReferenceInWords() {
+        renderComposer(
+            ComposePostUiState(
+                referenceSection = ReferenceSectionState(
+                    references = (1..10).map { ReferenceRow("u$it", testMentionTarget("a$it")) },
+                ),
+            ),
+        )
+        compose.onNodeWithTag("compose_references_cap").assertExists()
+        compose.onNodeWithTag("compose_reference_add").assertDoesNotExist()
+    }
+
+    /** Verbatim, on the chip the server named. */
+    @Test
+    fun aRefusedReferenceChipCarriesTheServersWords() {
+        renderComposer(
+            ComposePostUiState(
+                referenceSection = ReferenceSectionState(
+                    references = listOf(
+                        ReferenceRow(
+                            "u1",
+                            testMentionTarget("ada"),
+                            error = "An artifact cannot cite itself.",
+                        ),
+                    ),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("compose_reference_error_u1")
+            .assertTextEquals("An artifact cannot cite itself.")
+    }
+
+    /**
+     * The count a withdrawal costs, quoted in the confirm before
+     * anything is staged: the claim served it, so the dialog can name
+     * it the first time it opens (B4).
+     */
+    @Test
+    fun theConfirmQuotesWhatAWithdrawalCosts() {
+        val standing = ReferenceRow("u1", testMentionTarget("ada"), withdrawalCost = 3)
+        renderComposer(
+            ComposePostUiState(
+                editingId = "p1",
+                confirmPending = true,
+                referenceSection = ReferenceSectionState(
+                    references = emptyList(),
+                    loaded = listOf(standing),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("compose_confirm_withdrawal").assertExists()
+    }
+
+    @Test
+    fun aConfirmWithNoWithdrawalQuotesNoWithdrawalCost() {
+        renderComposer(
+            ComposePostUiState(
+                tagSection = TagSectionState(tags = tagRows("rust")),
+                confirmPending = true,
+            ),
+        )
+        compose.onNodeWithTag("compose_confirm_withdrawal").assertDoesNotExist()
+    }
 }

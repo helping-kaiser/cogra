@@ -85,6 +85,16 @@ pub enum OnboardingError {
     VerificationTokenInvalid,
     #[error("write rule: balance {balance} below the act price {theta}")]
     WriteRule { balance: f64, theta: f64 },
+    /// The write rule priced over a whole batch (D19) — the same account
+    /// state, quoted as the gesture the author authored.
+    #[error(
+        "write rule: balance {balance} cannot carry this batch — {acts} acts at the act price {theta}"
+    )]
+    BatchWriteRule {
+        balance: f64,
+        theta: f64,
+        acts: usize,
+    },
     #[error("signature invalid: {0}")]
     SignatureInvalid(String),
     #[error("staged write expired; the flow re-stages on next poll")]
@@ -103,6 +113,15 @@ impl From<PrepareError> for OnboardingError {
             PrepareError::WriteRule { balance, theta } => {
                 OnboardingError::WriteRule { balance, theta }
             }
+            PrepareError::BatchWriteRule {
+                balance,
+                theta,
+                acts,
+            } => OnboardingError::BatchWriteRule {
+                balance,
+                theta,
+                acts,
+            },
             PrepareError::Formation(m) => OnboardingError::BadInput {
                 field: "input",
                 message: m,

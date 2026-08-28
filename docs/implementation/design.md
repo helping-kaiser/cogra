@@ -438,6 +438,22 @@ behaviour and matching names:
   Collective looks like a person but reads as a shared
   identity.
 - **Topic chip** — a tappable tag.
+- **Reference chip** — a compact content citation: the cited
+  node's author and its title or snippet. A profile target
+  renders as the actor chip instead.
+- **Reference chip row** — the citations an artifact's author
+  built into it, under the body, tapping through to the cited
+  node. Deliberately plain — structure over polish, so the
+  redesign hits it once.
+- **Reference affordance** — on a content detail view, the
+  control that opens the composer with that node prefilled as a
+  citation. The user-facing word is **Reference**, never "cite":
+  every content node can be referenced, and a reference to a
+  profile is a mention.
+- **Reference finder** — the picker the composer's reference
+  section opens, bound to `referenceCandidates`. Its visual
+  design is pending; the structure it binds to is fixed, so the
+  look changes without the clients rebinding.
 - **Media attachment** — aspect-ratio-reserved tile with
   optional alt text; gallery layout for multiples. Space is
   reserved before load so content never jumps.
@@ -600,6 +616,26 @@ context arrives with feed ranking.
 Nothing implicit ever becomes a record: scrolling, dwell,
 opening, and sharing are not stances ([graph-model.md
 §Stances, not events](../primitive/graph-model.md)).
+
+**Valence and connection are the stance family's words for the
+two slots.** Every family carries the same pair, and the census
+names them per family ([edges.md §1](../primitive/edges.md)); the
+labels the clients show are CoGra's, chosen so a casual author
+reads them without the census vocabulary:
+
+| Family | `p_d` slot | `p_i` slot |
+|---|---|---|
+| Opinion, Affinity | valence | connection |
+| Tag | relevance `r` | confidence `c` |
+| Reference | relevance (census **effort `f`**) | support (census **enthusiasm `e`**) |
+
+Relevance occupies `p_d` in both Tag and Reference, which is why
+the word carries across the two composer sections unchanged.
+Support is the axis that decides whether a mention vouches: a
+citation strictly positive on both axes resolves its fold cell to
+the cited person. These per-record parameters are authored with
+paired sliders (§8.6), not the pad — the pad writes a stance, and
+a citation is not one.
 
 ### 8.2 What a pick lands you at
 

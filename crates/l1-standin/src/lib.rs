@@ -42,10 +42,17 @@ pub struct StandInConfig {
     pub max_payload_bytes: usize,
 }
 
+impl StandInConfig {
+    /// The default act price in micro-units. Named so a caller pricing a
+    /// batch against it — a test funding an author for exactly N acts —
+    /// states the multiple rather than a bare number.
+    pub const DEFAULT_THETA_MICRO: i64 = 52_810;
+}
+
 impl Default for StandInConfig {
     fn default() -> Self {
         Self {
-            theta_micro: 52_810,
+            theta_micro: Self::DEFAULT_THETA_MICRO,
             epoch_target_acts: 10_000,
             max_payload_bytes: 64 * 1024,
         }

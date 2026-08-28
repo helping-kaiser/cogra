@@ -231,6 +231,12 @@ type Comment implements Node {
 	"""
 	topics(includePending: Boolean! = true): [TopicClaim!]!
 	"""
+	This comment's current citations — the same fold and the same
+	author-owned channel as `Post.references`; a Comment is a citing
+	artifact like any other passive node.
+	"""
+	references(includePending: Boolean! = true): [ReferenceClaim!]!
+	"""
 	The viewer's own stance bundle toward this comment, and — with
 	`pick` — where a candidate stance would land it. Null for a
 	viewer with no bundle to read. `includePending: false` folds
@@ -888,6 +894,24 @@ type Mutation {
 	"""
 	prepareTag(input: PrepareTagInput!): PreparePayload!
 	"""
+	Prepares one standalone citation on existing content — a quote,
+	an embed, or a mention, which are all one record distinguished
+	only by the target's node class. Citing is not restricted to the
+	artifact's author; the read side is what separates the carrier
+	author's own citations from third-party ones.
+	"""
+	prepareReference(input: PrepareReferenceInput!): PreparePayload!
+	"""
+	Prepares the withdrawal of one citation: the counter-records that
+	net the viewer's `(artifact, target)` citation bundle to `(0, 0)`.
+	Each is its own priced act, so the batch length is the gesture's
+	cost — a citation revised upward several times needs more than one
+	record to walk back, and quoting that count is the whole point of
+	assembling the batch server-side rather than letting a client
+	author a single negating record that would silently under-net.
+	"""
+	prepareReferenceWithdrawal(input: PrepareReferenceWithdrawalInput!): PreparePayload!
+	"""
 	Prepares a Comment edit: an ordinary-role Review at (0,0) — A
 	leg to the genesis parent, terminal leg to the existing Comment
 	(comment.md §4).
@@ -1028,6 +1052,20 @@ type Post implements Node {
 	"""
 	topics(includePending: Boolean! = true): [TopicClaim!]!
 	"""
+	This post's current citations — quotes, embeds and mentions the
+	author built into it, as the current-references fold reads them:
+	the (author, artifact, target) bundle summed then clipped, a
+	bundle netting to `(0, 0)` read as withdrawn.
+	
+	The author's own citations only. A stranger's citation off this
+	post reaches a viewer through the citer, at a forward-path weight
+	the ranker computes, and the ranker arrives in slice 3.
+	`includePending: false` serves only what has landed on L1; the
+	pending half is the viewer's own in-flight citations on their own
+	content.
+	"""
+	references(includePending: Boolean! = true): [ReferenceClaim!]!
+	"""
 	The viewer's own stance bundle toward this post, and — with
 	`pick` — where a candidate stance would land it. Null for a
 	viewer with no bundle to read. `includePending: false` folds
@@ -1088,14 +1126,19 @@ input PrepareCommentInput {
 	Topics declared at creation; same rules as on a Post.
 	"""
 	tags: [TagInput!]
+	"""
+	Citations declared at creation; same rules as on a Post.
+	"""
+	references: [ReferenceInput!]
 }
 
 """
 A prepared content write: the staged batch plus `node` — the L2
 id the envelope binds to the minted node, and the id the content
 reads serve once the record lands. `writes` carries the minting
-record first, then one Tag record per declared topic, each its own
-priced act. Null when `userErrors` is non-empty.
+record first, then one Tag record per declared topic and one
+Reference record per declared citation, each its own priced act.
+Null when `userErrors` is non-empty.
 """
 type PrepareContentPayload {
 	node: UUID
@@ -1148,6 +1191,13 @@ input PreparePostInput {
 	alike are refused rather than deduplicated.
 	"""
 	tags: [TagInput!]
+	"""
+	Citations declared at creation — quotes, embeds and mentions.
+	Structured input like tags and for the same reason. At most 10 per
+	batch; citing the same target twice is refused rather than
+	deduplicated, and a post cannot cite itself.
+	"""
+	references: [ReferenceInput!]
 }
 
 """
@@ -1160,6 +1210,54 @@ input PrepareProfileUpdateInput {
 	displayName: String
 	bio: String
 	websiteUrl: String
+}
+
+"""
+One standalone citation on existing content — the gesture that adds a
+quote, embed or mention after publishing, which post.md §3 and
+comment.md §3 both promise ("alongside the Publish or later").
+Citations are never edit fields: changing what a post cites is its own
+priced act.
+
+Citing is unconstrained by the artifact's ownership — anyone may hang
+a citation off anyone's content — and the read side is what separates
+the carrier author's own citations from third-party ones.
+"""
+input PrepareReferenceInput {
+	"""
+	The citing artifact — the post or comment the citation hangs off.
+	"""
+	artifact: UUID!
+	"""
+	The cited node. An artifact cannot cite itself.
+	"""
+	target: UUID!
+	"""
+	Effort `f`, the `pDirected` slot; defaults to +0.1.
+	"""
+	relevance: Dimension
+	"""
+	Enthusiasm `e`, the `pInterest` slot; defaults to +0.1.
+	"""
+	support: Dimension
+}
+
+"""
+Withdrawing one citation. Records are never deleted, and Reference
+withdrawal is per-leg net stance — not the Tag rule beside it, which
+is newest-wins at relevance 0 only because a tag's confidence cannot
+be netted. Both citation parameters are signed, so a withdrawal is the
+severance shape: counter-records until the bundle reaches `(0, 0)`.
+"""
+input PrepareReferenceWithdrawalInput {
+	"""
+	The citing artifact the citation hangs off.
+	"""
+	artifact: UUID!
+	"""
+	The cited node whose bundle is netted away.
+	"""
+	target: UUID!
 }
 
 input PrepareSeveranceInput {
@@ -1354,6 +1452,32 @@ type Query {
 	"""
 	records(author: UUID, target: UUID, terminal: UUID, family: RecordFamily, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, after: String, before: String, first: Int, last: Int): RecordConnection!
 	"""
+	Candidate targets for the reference picker.
+	
+	**Exact-match resolution only.** Real search — prefix matching,
+	ranking, snippets — arrives with slice 2.7 *behind this same
+	field*, so a client binds to it once and does not change when the
+	implementation is replaced. Two shapes resolve today: a handle,
+	bare or `@`-sigilled, names a person; a UUID names whatever node
+	it addresses.
+	
+	An empty or unresolvable query yields an empty list, never an
+	error. A finder runs on every keystroke, so most of what it is
+	asked is a prefix of something the user is still typing — failing
+	those would make error noise the normal case.
+	
+	A candidate is offerable only if `prepareReference` would accept
+	it: resolution runs through the write path's own resolver, so the
+	picker cannot hand back a target the mutation then refuses. Two
+	classes narrow for exactly that reason. A topic is never offered
+	— it is tagged, not referenced — which is why a `#`-typed
+	query finds nothing and a UUID naming a Type yields no candidate.
+	And a keyless account fronts no Profile on the graph, so it
+	resolves nowhere for the write path and must not be offered here
+	either.
+	"""
+	referenceCandidates(query: String!, limit: Int): [ReferenceCandidate!]!
+	"""
 	The chronological listing (roadmap "Slice 2"): every post,
 	newest-first — pending entries, then landed entries in landing
 	order, the record set's own order, never wall clock
@@ -1481,6 +1605,147 @@ enum RecordFamily {
 }
 
 scalar RecordId
+
+"""
+One thing the reference finder offers as a citation target.
+
+The pairing mirrors `ReferenceClaim` — the typed node for the chip,
+its raw id beside it — with two deliberate differences, both following
+from a candidate being a thing about to be *cited* rather than a
+citation already standing.
+
+`targetId` is the L2 `Uuid` rather than the claim's L1 identifier
+string, because `ReferenceInput.target` takes the L2 id: the picker
+hands back exactly what the mutation consumes, with nothing for the
+client to translate.
+
+`target` is non-null where a claim's is nullable. A claim is a
+substrate fact that can outrun the display store, so its far end may
+be untypeable; a candidate is only ever built *from* what CoGra can
+display, and one it could not render would be unofferable anyway.
+"""
+type ReferenceCandidate {
+	"""
+	The candidate node, typed — the same union a standing citation
+	carries, so the picker renders with the components already built
+	for the reference row.
+	"""
+	target: ReferenceTarget!
+	"""
+	The candidate's L2 id: what a `ReferenceInput` names to cite it.
+	"""
+	targetId: UUID!
+}
+
+"""
+One standing citation from an artifact — a chip in the reference row.
+
+The bundle key is (author, citing artifact, target) and its records
+*net*: a citation revised twice folds to the sum of all three records,
+clipped to the census range, and a bundle netting to `(0, 0)` is
+withdrawn and never appears here.
+"""
+type ReferenceClaim {
+	"""
+	The cited node, typed. Null when this instance cannot type the far
+	end — the fold reads the mirror, which reaches further than both
+	the display store and CoGra's own target policy — in which case
+	`targetId` still names it.
+	"""
+	target: ReferenceTarget
+	"""
+	The cited node's raw L1 identifier, always present: the citation
+	stands as a substrate fact whether or not this instance can type
+	its far end.
+	"""
+	targetId: String!
+	"""
+	How load-bearing the cited thing is to this artifact — effort `f`,
+	folded and clipped to `[-1, 1]`.
+	"""
+	relevance: Dimension!
+	"""
+	Endorsing versus refuting — enthusiasm `e`, folded and clipped.
+	Strictly positive on both axes is what makes a mention a vouch.
+	"""
+	support: Dimension!
+	"""
+	How many counter-records withdrawing this citation stages right
+	now — the gesture's cost, since each is its own priced act
+	(D11). Never zero: a bundle already netted to `(0, 0)` has left
+	the fold and is not served here.
+	
+	Served for the same reason `StanceBundle.severanceCost` is: a
+	removal that costs more than one act must be able to say so
+	*before* it is confirmed. The clipped `relevance` and `support`
+	beside it cannot answer this — the clip has already lost how far
+	past `1` the raw sums reach.
+	"""
+	withdrawalCost: Int!
+	"""
+	True while any record in the bundle is still in flight.
+	"""
+	pending: Boolean!
+}
+
+"""
+A citation — one Reference record from the authored artifact to the
+target. Quoting, embedding and mentioning are all this one record, and
+the target's node class is the whole distinction: a Reference whose
+target is a person's Profile *is* a mention. Nothing is minted; both
+endpoints pre-exist.
+
+Both parameters are optional and default to +0.1, so a plain citation
+needs only its target. The defaults are strictly positive on both
+axes, which means a default mention vouches — weakly, at coefficient
+`√0.01 = 0.1`.
+
+A citation carries no note. A payload would make the record
+payload-marked, and payload-marked records are read individually and
+never through the author's netted bundle — so a note would silently
+remove the citation from the very fold that renders it.
+
+The target may still be in flight when it is the viewer's own: a
+citation toward a pending node declares that node's act as a
+dependency, so the epoch close cannot order the citation ahead of what
+it cites.
+"""
+input ReferenceInput {
+	"""
+	The cited node — a post, a comment, or a person's profile.
+	External links are body text, never citations: both endpoints
+	of a Reference are nodes on the graph.
+	"""
+	target: UUID!
+	"""
+	How load-bearing the cited thing is to this artifact, `[-1, 1]`;
+	defaults to +0.1. The census calls this **effort `f`**, and it
+	occupies the `pDirected` slot — the same slot relevance occupies
+	on a tag.
+	"""
+	relevance: Dimension
+	"""
+	Endorsing versus refuting, `[-1, 1]`; defaults to +0.1. The census
+	calls this **enthusiasm `e`**, and it occupies the `pInterest`
+	slot. This is the axis that decides whether a mention vouches: a
+	citation strictly positive on both axes resolves its fold cell to
+	the cited person, and every other citation resolves home.
+	"""
+	support: Dimension
+}
+
+"""
+What a citation may point at. Quoting, embedding and mentioning are
+one record, and this union *is* the distinction between them: a
+citation whose target is a `User` is a mention, and one whose target
+is a `Post` or `Comment` is a quote or embed — which of those two is
+a render question, not a wire one.
+
+A `Hashtag` is absent, and that absence is the contract: a topic is
+tagged, never referenced. The write path refuses a Type target,
+so no citation this instance prepares can have one.
+"""
+union ReferenceTarget = Post | Comment | User
 
 type RefreshPayload {
 	"""
@@ -1871,8 +2136,26 @@ type UploadKeyBackupPayload {
 	userErrors: [UserError!]!
 }
 
-type User implements Actor {
+type User implements Node & Actor {
 	id: UUID!
+	"""
+	When this node was created — when the account row that fronts the
+	Profile was written, which precedes the Registration record
+	landing.
+	"""
+	createdAt: DateTime!
+	"""
+	The most recent profile version's authoring instant; equals
+	`createdAt` for an actor whose profile has never changed.
+	"""
+	updatedAt: DateTime!
+	"""
+	Where this actor's Profile stands relative to L1 finality. A
+	Profile is minted by its own Registration record, so it pends
+	between the key ceremony — which is where the address is bound —
+	and that record landing.
+	"""
+	landing: Landing!
 	"""
 	The account's name in the one actor namespace: 3–30 characters of
 	[a-z0-9_], case-folded.

@@ -1,0 +1,110 @@
+# The reference surface (api-spec.md "Content authoring"; post.md §3,
+# comment.md §3): the finder's lookup, the standalone Reference gesture,
+# and its withdrawal. Quoting, embedding and mentioning are one record
+# and the target's node class is the whole distinction (D2) — a
+# reference whose target is a person's profile is a MENTION.
+#
+# References declared at creation ride `PreparePostInput.references` /
+# `PrepareCommentInput.references` in content.graphql, batched onto the
+# minting record. Field selections are inlined per the house style.
+
+# D20's finder. Exact-match resolution only today — a handle bare or
+# `@`-sigilled, or a UUID — with real search arriving in slice 2.7
+# BEHIND THIS SAME FIELD, so this document does not change when the
+# implementation is replaced. D21: a topic is tagged, never referenced,
+# so no topic is ever offered. An empty or unresolvable query
+# answers with an empty list, never an error: a finder runs on every
+# keystroke, so most of what it is asked is a prefix of something still
+# being typed.
+query ReferenceCandidates($query: String!, $limit: Int) {
+  referenceCandidates(query: $query, limit: $limit) {
+    targetId
+    target {
+      __typename
+      ... on User {
+        id
+        handle
+        displayName {
+          value
+        }
+      }
+      ... on Post {
+        id
+        title {
+          value
+        }
+        content {
+          value
+        }
+        author {
+          handle
+        }
+      }
+      ... on Comment {
+        id
+        content {
+          value
+        }
+        author {
+          handle
+        }
+        target {
+          __typename
+          ... on Post {
+            id
+          }
+          ... on Comment {
+            target {
+              __typename
+              ... on Post {
+                id
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# One standalone reference on existing content (D10) — the gesture that
+# adds a quote, embed or mention after publishing, which post.md §3 and
+# comment.md §3 both promise. References are never edit FIELDS (D14):
+# changing what a post references is its own priced act.
+mutation PrepareReference($input: PrepareReferenceInput!) {
+  prepareReference(input: $input) {
+    writes {
+      id
+      family
+      canonicalProposal
+      gcAfterEpochs
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
+
+# Withdrawing one reference (D11). Records are never deleted and
+# reference withdrawal is per-leg net stance, so this is the severance
+# shape: the server assembles counter-records until the
+# (author, artifact, target) bundle reaches (0, 0). The returned batch
+# IS the quoted cost — one priced act per write — and it is what the
+# confirm reports before anything is signed.
+mutation PrepareReferenceWithdrawal($input: PrepareReferenceWithdrawalInput!) {
+  prepareReferenceWithdrawal(input: $input) {
+    writes {
+      id
+      family
+      canonicalProposal
+      gcAfterEpochs
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}

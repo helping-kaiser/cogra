@@ -21,6 +21,7 @@ import com.cogra.domain.PostDetail
 import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ReferenceCandidateView
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.TaggedContentView
@@ -29,6 +30,7 @@ import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
+import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.topics.TagClaim
 import java.time.Instant
 
@@ -190,6 +192,7 @@ interface ContentRepository {
         content: String,
         license: LicenseChoice,
         tags: List<TagClaim> = emptyList(),
+        references: List<ReferenceClaim> = emptyList(),
     ): Outcome<PreparedContentView>
 
     /**
@@ -213,6 +216,7 @@ interface ContentRepository {
         content: String,
         license: LicenseChoice,
         tags: List<TagClaim> = emptyList(),
+        references: List<ReferenceClaim> = emptyList(),
     ): Outcome<PreparedContentView>
 
     suspend fun prepareCommentEdit(id: String, content: String): Outcome<PreparedContentView>
@@ -348,5 +352,52 @@ interface TopicRepository {
         name: String,
         pDirected: Double? = null,
         pInterest: Double? = null,
+    ): Outcome<List<PreparedWriteView>>
+}
+
+/**
+ * The reference surface (roadmap "Slice 2.4"): the finder that turns
+ * what an author types into a citable target (D20), the standalone
+ * gesture that hangs a citation off already-published content (D10),
+ * and the withdrawal that nets one away (D11).
+ *
+ * References declared at creation ride the content write's own input
+ * instead — [ContentRepository.preparePost] and
+ * [ContentRepository.prepareComment] carry them, exactly as tags do.
+ */
+interface ReferenceRepository {
+    /**
+     * What the finder offers for [query] — exact matches only: a handle
+     * bare or `@`-sigilled, or a UUID. Topics are not offered (D21).
+     * An empty or unresolvable query yields an empty list rather than an error,
+     * because a finder runs on every keystroke and most of what it is
+     * asked is a prefix of something still being typed. Real search
+     * arrives in slice 2.7 behind this same call.
+     */
+    suspend fun referenceCandidates(query: String, limit: Int? = null): Outcome<List<ReferenceCandidateView>>
+
+    /**
+     * Stages one standalone citation on existing content — the edit
+     * screen's add gesture. Citations are never edit fields: changing
+     * what a post cites is its own priced act (post.md §3).
+     */
+    suspend fun prepareReference(
+        artifact: String,
+        target: String,
+        relevance: Double? = null,
+        support: Double? = null,
+    ): Outcome<List<PreparedWriteView>>
+
+    /**
+     * Stages the counter-records that net one citation bundle to
+     * `(0, 0)` (D11). Both parameters are signed, so a withdrawal is
+     * the severance shape rather than the tag rule beside it — the
+     * returned batch length *is* the gesture's cost, which is why the
+     * server assembles it instead of the client authoring a single
+     * negating record that would silently under-net.
+     */
+    suspend fun prepareReferenceWithdrawal(
+        artifact: String,
+        target: String,
     ): Outcome<List<PreparedWriteView>>
 }

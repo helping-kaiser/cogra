@@ -49,7 +49,51 @@ type FixtureComment = {
   replies?: FixtureComment[];
   repliesHaveMore?: boolean;
   topics?: TopicFixture[];
+  references?: ReferenceFixture[];
 };
+
+/**
+ * A `ReferenceClaim` as the wire serves it: the L1 identifier beside the
+ * TYPED target, whose own `id` is the L2 one the prepare verbs take.
+ */
+function referenceClaim(
+  target: Record<string, unknown>,
+  relevance = 0.1,
+  support = 0.1,
+  pending = false,
+  withdrawalCost = 1,
+) {
+  return {
+    __typename: "ReferenceClaim",
+    targetId: `l1-${target.id as string}`,
+    relevance,
+    support,
+    withdrawalCost,
+    pending,
+    target,
+  };
+}
+
+function userTarget(id: string, handle: string) {
+  return {
+    __typename: "User",
+    id,
+    handle,
+    displayName: { __typename: "ModeratedText", value: handle },
+  };
+}
+
+function postTarget(id: string, title: string) {
+  return {
+    __typename: "Post",
+    id,
+    title: { __typename: "ModeratedText", value: title },
+    content: { __typename: "ModeratedText", value: "quoted body" },
+    author: { __typename: "User", handle: "carol" },
+  };
+}
+
+type ReferenceFixture = ReturnType<typeof referenceClaim>;
 
 function commentNode(comment: FixtureComment, withReplies = true): Record<string, unknown> {
   return {
@@ -68,6 +112,7 @@ function commentNode(comment: FixtureComment, withReplies = true): Record<string
     moderationStatus: "NORMAL",
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: comment.topics ?? [],
+    references: comment.references ?? [],
     ...(withReplies
       ? {
           replies: {
@@ -96,6 +141,7 @@ function detail(
   },
   postPending = false,
   postTopics: TopicFixture[] = [],
+  postReferences: ReferenceFixture[] = [],
 ) {
   return {
     post: {
@@ -116,6 +162,7 @@ function detail(
       moderationStatus: "NORMAL",
       license: { __typename: "License", attribution: 0, provenance: 0 },
       topics: postTopics,
+      references: postReferences,
       comments: {
         __typename: "CommentConnection",
         edges: comments.map((comment) => ({
@@ -333,9 +380,10 @@ describe("PostView", () => {
           target: "p1",
           content: "Nice one",
           license: { attribution: 1, provenance: 0 },
-          // The composer always sends its list; empty is "no topics",
-          // the shape `preparePost` already uses.
+          // The composer always sends its lists; empty is "no topics"
+          // and "no references", the shape `preparePost` already uses.
           tags: [],
+          references: [],
         },
       }),
     );
@@ -1483,5 +1531,289 @@ describe("PostView", () => {
       fireEvent.click(screen.getByTestId("comment-edit-multi-action-proceed"));
       await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(2));
     });
+  });
+});
+
+// Slice 2.4. Named apart from the topics suites above: the reference row
+// and the tag row are siblings on this screen.
+describe("PostView — references", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    // Asking is the default; the tests that care about the dialog turn
+    // it back on themselves.
+    writeConfirmMultiAction(false);
+  });
+
+  function referenceWrites(count: number) {
+    return Array.from({ length: count }, (_, i) => ({
+      __typename: "PreparedWrite",
+      id: `r${i}`,
+      family: "REFERENCE",
+      canonicalProposal: "cHJvcG9zYWw=",
+      gcAfterEpochs: 8,
+    }));
+  }
+
+  it("renders the post's references under the body, values hidden until asked", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: detail("u1", [], undefined, false, [], [
+            referenceClaim(userTarget("u-ada", "ada"), 0.4, -0.2),
+          ]),
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />);
+
+    const chip = await screen.findByTestId("post-reference-l1-u-ada-link");
+    expect(chip).toHaveAttribute("href", "/u/ada");
+    expect(screen.queryByTestId("post-reference-l1-u-ada-values")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("post-references-reveal"));
+    expect(screen.getByTestId("post-reference-l1-u-ada-values")).toHaveTextContent(
+      "+0.40 · -0.20",
+    );
+  });
+
+  it("opens a referenced post on its own detail", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: detail("u1", [], undefined, false, [], [
+            referenceClaim(postTarget("p-quoted", "On folding")),
+          ]),
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />);
+    expect(await screen.findByTestId("post-reference-l1-p-quoted-link")).toHaveAttribute(
+      "href",
+      "/posts/p-quoted",
+    );
+  });
+
+  it("renders a comment's own references on the thread", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: detail("u1", [
+            {
+              id: "c1",
+              body: "First!",
+              references: [referenceClaim(userTarget("u-ada", "ada"))],
+            },
+          ]),
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />);
+    expect(
+      await screen.findByTestId("comment-c1-reference-l1-u-ada-link"),
+    ).toHaveAttribute("href", "/u/ada");
+  });
+
+  it("offers the Reference affordance on the post and on each comment", async () => {
+    // D20: the word is Reference, never "cite", and it opens the
+    // composer with the node already drafted as a chip.
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u2", [{ id: "c1", body: "First!" }]) }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { store: storeFor("u1") });
+
+    expect(await screen.findByTestId("post-reference")).toHaveAttribute(
+      "href",
+      "/compose?reference=p1",
+    );
+    expect(screen.getByTestId("comment-reference-c1")).toHaveAttribute(
+      "href",
+      "/compose?reference=c1",
+    );
+  });
+
+  it("hides the Reference affordance from a signed-out reader", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u2", [{ id: "c1", body: "First!" }]) }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />);
+    await screen.findByTestId("post-body");
+    expect(screen.queryByTestId("post-reference")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("comment-reference-c1")).not.toBeInTheDocument();
+  });
+
+  it("counts a drafted reference in what the comment box would sign", async () => {
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u2", []) })),
+      graphql.query("ReferenceCandidates", () =>
+        HttpResponse.json({
+          data: {
+            referenceCandidates: [
+              {
+                __typename: "ReferenceCandidate",
+                targetId: "u-ada",
+                target: {
+                  __typename: "User",
+                  id: "u-ada",
+                  handle: "ada",
+                  displayName: { __typename: "ModeratedText", value: "ada" },
+                },
+              },
+            ],
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { store: storeFor("u1") });
+    await screen.findByTestId("comment-draft");
+    expect(screen.getByTestId("comment-signed-actions")).toHaveTextContent(
+      "creates 1 signed action",
+    );
+
+    fireEvent.click(screen.getByTestId("comment-reference-add"));
+    fireEvent.change(screen.getByTestId("comment-finder-query"), {
+      target: { value: "ada" },
+    });
+    fireEvent.click(await screen.findByTestId("comment-finder-candidate-u-ada"));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("comment-signed-actions")).toHaveTextContent(
+        "creates 2 signed actions",
+      ),
+    );
+  });
+
+  it("asks before it prepares a comment's withdrawal, on the served cost", async () => {
+    writeConfirmMultiAction(true);
+    let withdrawalInput: Record<string, unknown> | undefined;
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: detail("u2", [
+            {
+              id: "c1",
+              body: "First!",
+              authorId: "u1",
+              references: [referenceClaim(userTarget("u-ada", "ada"), 1, 1, false, 2)],
+            },
+          ]),
+        }),
+      ),
+      graphql.mutation("PrepareReferenceWithdrawal", ({ variables }) => {
+        withdrawalInput = variables;
+        return HttpResponse.json({
+          data: {
+            prepareReferenceWithdrawal: {
+              __typename: "PreparePayload",
+              writes: referenceWrites(2),
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const signer = fakeWriteSigner();
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("u1"),
+      writeSigner: signer,
+    });
+
+    fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+    fireEvent.click(screen.getByTestId("comment-edit-reference-0-remove"));
+    fireEvent.click(screen.getByTestId("comment-edit-save"));
+
+    const count = await screen.findByTestId("comment-edit-multi-action-count");
+    expect(count).toHaveTextContent("creates 2 signed actions");
+    // Nothing is staged, let alone signed, while the reader decides.
+    expect(withdrawalInput).toBeUndefined();
+    expect(signer.signStaged).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByTestId("comment-edit-multi-action-proceed"));
+    await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(2));
+    // The withdrawal names the L2 id, never the claim's L1 identifier.
+    expect((withdrawalInput as { input: { target: string } }).input.target).toBe("u-ada");
+  });
+
+  it("stages nothing for an untouched reference section on a comment edit", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: detail("u2", [
+            {
+              id: "c1",
+              body: "First!",
+              authorId: "u1",
+              references: [referenceClaim(userTarget("u-ada", "ada"))],
+            },
+          ]),
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { store: storeFor("u1") });
+    fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+    expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
+      "creates no signed actions",
+    );
+    expect(screen.getByTestId("comment-edit-reference-0")).toHaveTextContent("@ada");
+  });
+
+  it("routes a batched reference's refusal onto that exact chip", async () => {
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u2", []) })),
+      graphql.query("ReferenceCandidates", () =>
+        HttpResponse.json({
+          data: {
+            referenceCandidates: [
+              {
+                __typename: "ReferenceCandidate",
+                targetId: "u-ada",
+                target: {
+                  __typename: "User",
+                  id: "u-ada",
+                  handle: "ada",
+                  displayName: { __typename: "ModeratedText", value: "ada" },
+                },
+              },
+            ],
+          },
+        }),
+      ),
+      graphql.mutation("PrepareComment", () =>
+        HttpResponse.json({
+          data: {
+            prepareComment: {
+              __typename: "PrepareContentPayload",
+              node: null,
+              writes: null,
+              userErrors: [
+                {
+                  __typename: "UserError",
+                  message: "That target can't be referenced.",
+                  code: "INVALID_ARGUMENT",
+                  field: ["references", "0", "target"],
+                },
+              ],
+            },
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { store: storeFor("u1") });
+    await screen.findByTestId("comment-draft");
+    fireEvent.change(screen.getByTestId("comment-draft"), { target: { value: "hi" } });
+    fireEvent.click(screen.getByTestId("comment-reference-add"));
+    fireEvent.change(screen.getByTestId("comment-finder-query"), {
+      target: { value: "ada" },
+    });
+    fireEvent.click(await screen.findByTestId("comment-finder-candidate-u-ada"));
+    fireEvent.click(screen.getByTestId("comment-submit"));
+
+    expect(await screen.findByTestId("comment-reference-error-0")).toHaveTextContent(
+      "That target can't be referenced.",
+    );
+    expect(screen.queryByTestId("comment-refused")).not.toBeInTheDocument();
   });
 });

@@ -100,10 +100,19 @@ The rule behind the split: the shared graph holds what the Post
   ([hashtag.md §4](hashtag.md#4-the-current-topics-fold)).
 - **Quoting, embedding, mentioning** — a **Reference** hyper-edge
   (Actor → Post → target) per cited node, authored alongside the
-  Publish or later; nothing is minted, both endpoints pre-exist. A
+  Publish or by `prepareReference` afterwards; nothing is minted,
+  both endpoints pre-exist. The three gestures are one record and
+  the target's node class is the whole distinction between them: a
   mention targets the person's **Profile** — a positive, effortful
   mention is a weak, priced vouch
   ([edges.md §3](../primitive/edges.md#3-hyper-edge-families-cogra-authors)).
+  Tagging is the topic gesture and referencing serves every other
+  passive class, so a Type is never a citation target. An external
+  link is body text, never a Reference: both endpoints are nodes on
+  the graph. The Post's current citations are the
+  (author, Post, target) bundle summed then clipped, a bundle
+  netting to `(0,0)` read as withdrawn — withdrawal is per-leg net
+  stance here, not the Tag rule beside it.
 
 **By anyone, toward the Post:**
 

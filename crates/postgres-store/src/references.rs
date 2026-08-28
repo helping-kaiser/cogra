@@ -90,6 +90,14 @@ pub struct ReferenceClaim {
     pub support: f64,
     /// How many records the bundle folds.
     pub records: u32,
+    /// How many counter-records withdrawing this citation would stage —
+    /// `⌈max(|Σ_d|, |Σ_i|)⌉`, one priced act each (B4).
+    ///
+    /// Read off the RAW sums, before the clip: the clip has already lost
+    /// how far past `1` a bundle reaches, and that distance is exactly
+    /// what decides whether one counter-record can walk it back. A claim
+    /// clipped to `1.0` may cost one act to withdraw or five.
+    pub withdrawal_cost: u32,
     /// True when any record in the bundle is still in flight.
     pub pending: bool,
 }
@@ -180,6 +188,7 @@ pub async fn references_of(
                 relevance: net.p_d,
                 support: net.p_i,
                 records: sum.records,
+                withdrawal_cost: sum.severance_cost().try_into().unwrap_or(u32::MAX),
                 pending: r.pending,
             })
         })

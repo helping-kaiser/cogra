@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, kind, handle, actor_pubkey, realization_address FROM actors WHERE id = $1",
+  "query": "SELECT i.id, i.kind, i.handle, i.actor_pubkey, i.realization_address, i.created_at\n         FROM auth_applications ap\n         JOIN auth_invite_links l ON l.id = ap.invite_link_id\n         JOIN actors i ON i.id = l.inviter_id\n         WHERE ap.account_id = $1 AND ap.landed_at IS NOT NULL\n         ORDER BY ap.landed_at DESC LIMIT 1",
   "describe": {
     "columns": [
       {
@@ -27,6 +27,11 @@
         "ordinal": 4,
         "name": "realization_address",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
@@ -39,8 +44,9 @@
       false,
       false,
       true,
-      true
+      true,
+      false
     ]
   },
-  "hash": "97ceeece0044c7a8304b320791f7e45e4a443b89d47ea0ef3737e6cc96eb60a4"
+  "hash": "6b7d87b374bd84b3432d8eecf66680557f3026f17d1d44cdfa548a1e56b0bb91"
 }
