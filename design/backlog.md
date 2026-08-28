@@ -150,7 +150,7 @@ to the screens pipeline (item 17).
 
 ### 9 · Search + results · *design* · **built**
 `designs/canonical/` — the Explore row (2026-08-28): at rest (the
-field, the orbit hero, device-local recents), searching (worded
+field, the Sky hero, device-local recents), searching (worded
 filter trigger + sheet, ranked rows wearing the graph glyph, the
 seam, the aged tail, @/# scope operators with two-line indirect
 hits), the filter sheet, and nothing-found. Rulings in readme §13 +

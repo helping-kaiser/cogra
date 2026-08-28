@@ -221,8 +221,8 @@ function RecentRow({ text }) {
   );
 }
 
-/* The orbit teaser — token colours only: item 16's galaxy, hinted. */
-function OrbitField({ height = 180 }) {
+/* The Sky, teased — token colours only: item 16's galaxy, hinted. */
+function SkyField({ height = 180 }) {
   return (
     <Raw
       style={{ display: "block", lineHeight: 0 }}

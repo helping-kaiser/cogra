@@ -1156,13 +1156,13 @@ as Q46 in docs/open-questions.md):
   row's right edge; explained by the "?", drill-down waits for the
   Post Score screens (item 13).
 - **The Explore tab at rest**: recent searches (device-local) plus
-  a PROMINENT entry into the orbit/3D view (item 16) — never a
-  small side thing. Typing drops the orbit entry off the bottom
+  a PROMINENT entry into THE SKY — the 3D graph view (item 16) — never a
+  small side thing. Typing drops the Sky entry off the bottom
   edge; the screen becomes kinds filter, order controls, results.
 - **Chats are public reads**: a chat result opens the chat's read
   surface for anyone; E2E chats show ciphertext but they show.
 - **Built as the hybrid** (2026-08-28, after ideation): direction 1's
-  rest (the orbit hero card) with direction 2's searching (the band
+  rest (the Sky hero card) with direction 2's searching (the band
   gives way to the field; ONE worded trigger + sheet for kinds,
   order, and the seen toggle). A rank on a row wears the score's
   graph glyph, so the number is recognized before it is read. A chat
@@ -1188,6 +1188,22 @@ drift, always. Concretely:
 - `Raw` markup in a screen is for the genuinely screen-local —
   content that exists nowhere else. The moment it appears on a
   second screen it becomes a component or a `_shared.jsx` helper.
+
+**Below the masters sit the ATOMS** (2026-08-28) — the smallest
+units, each assigned in exactly one place so swapping one updates
+every surface that draws its meaning:
+
+- **Colour, type, spacing, radius, motion** are already atoms: the
+  CSS tokens (`tokens/*.css`). A component never states a raw value.
+- **Glyphs** are atoms in `Icon.jsx` — path data assigned per name —
+  and MEANINGS are assigned their glyph once in `NODE_GLYPHS` (a
+  chat is `forum`, a chat message is `send`, …). A surface asks the
+  map; it never picks a glyph for a node kind on its own. Kinds
+  whose mark is not a glyph (avatar, cover, the T tile, the #) live
+  once in `NodeMark` (`content/ReferenceRow.jsx`).
+- The stance **anchor table** (`StanceReadout.jsx`) and the decided
+  **copy strings** (`guidelines/copy-voice.md`) are atoms of the
+  same kind: one assignment, many surfaces.
 
 ## 14. Index
 

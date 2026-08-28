@@ -12,7 +12,7 @@ export function Screen() {
         </div>
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 24px" }}>
-        <EmptyState title="Nothing carries that name. Search matches names and titles — fewer words reach further." />
+        <EmptyState title="Nothing carries that name. Search reads names and titles, never bodies — fewer words reach further." />
       </div>
       <BottomNav active="search" slots={ALL_SLOTS} inline />
     </>

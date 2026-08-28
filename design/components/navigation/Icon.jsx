@@ -123,6 +123,23 @@ function Mark({ size, pickColor, style }) {
   );
 }
 
+/* THE SEMANTIC GLYPH ATOMS (readme §13, Masters/variants/atoms). A MEANING is
+   assigned its glyph exactly once, here — a surface never picks a glyph for a
+   node kind on its own, it asks this map. Swap one assignment (a chat message
+   moved from `forum` to `send`, 2026-08-28) and every screen that draws that
+   meaning updates. Kinds whose mark is not a glyph (a person's avatar, a media
+   post's cover, the text post's T tile, the topic's #) are `NodeMark`'s
+   business, in `content/ReferenceRow.jsx`. */
+export const NODE_GLYPHS = {
+  comment: "chat_bubble",
+  proposal: "how_to_vote",
+  item: "inventory_2",
+  campaign: "campaign",
+  offer: "sell",
+  chat: "forum",
+  message: "send",
+};
+
 export function Icon({ name, size = 24, pickColor = "var(--surface-loud)", style }) {
   if (name === "mark") return <Mark size={size} pickColor={pickColor} style={style} />;
   const paths = PATHS[name];

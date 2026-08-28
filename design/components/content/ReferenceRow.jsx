@@ -1,5 +1,5 @@
 import React from "react";
-import { Icon } from "../navigation/Icon.jsx";
+import { Icon, NODE_GLYPHS } from "../navigation/Icon.jsx";
 import { MonogramAvatar } from "../people/ActorChip.jsx";
 
 /* One row of the topics-and-references sheet (readme §13, 2026-08-28), and the
@@ -19,17 +19,9 @@ import { MonogramAvatar } from "../people/ActorChip.jsx";
    changeable default), shown here for any reader: a signed act is public
    record. Right-aligned, `body-small`, never coloured. */
 
-const KIND_GLYPHS = {
-  comment: "chat_bubble",
-  proposal: "how_to_vote",
-  item: "inventory_2",
-  campaign: "campaign",
-  offer: "sell",
-  chat: "forum",
-  message: "send",
-};
-
-function LeadingMark({ kind, name, src }) {
+/** A node kind's mark, on any surface: avatar, cover, T, #, or the kind's
+ *  glyph from the ONE semantic assignment (`NODE_GLYPHS`, the glyph atoms). */
+export function NodeMark({ kind, name, src }) {
   if (kind === "person") return <MonogramAvatar name={name} src={src} size="md" />;
   const tile = {
     height: "32px",
@@ -52,7 +44,7 @@ function LeadingMark({ kind, name, src }) {
   const letter = kind === "topic" ? "#" : kind === "post" ? "T" : null;
   return (
     <span style={{ ...tile, fontFamily: "var(--font-sans)", fontSize: "var(--text-title-medium)", fontWeight: "var(--text-title-medium--font-weight)" }} aria-hidden="true">
-      {letter ?? <Icon name={KIND_GLYPHS[kind]} size={18} />}
+      {letter ?? <Icon name={NODE_GLYPHS[kind]} size={18} />}
     </span>
   );
 }
@@ -64,7 +56,7 @@ function LeadingMark({ kind, name, src }) {
    edge: the signed pair in the references sheet, the viewer-relative rank in
    ranked search results, the age past the seam. (`pair` remains as its old
    name.) */
-export function ReferenceRow({ kind = "post", name, sub, src, pair, value, rank, onOpen }) {
+export function ReferenceRow({ kind = "post", name, sub, src, pair, value, rank, trailing, onOpen }) {
   const edge = value ?? pair;
   return (
     <button
@@ -86,7 +78,7 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, value, rank,
         textAlign: "left",
       }}
     >
-      <LeadingMark kind={kind} name={name} src={src} />
+      <NodeMark kind={kind} name={name} src={src} />
       <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
         <span
           style={{
@@ -116,8 +108,13 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, value, rank,
       </span>
       {/* A RANK wears the score's own glyph, so the number is recognized before
           it is read — the same graph mark the post card's affordance row
-          carries. A plain `value` (the signed pair, an age) stays bare. */}
-      {rank ? (
+          carries. A plain `value` (the signed pair, an age) stays bare. A
+          `trailing` node wins over both: the PICKER's edge is the action (the
+          add mark), because there the whole row's tap picks — ranking still
+          orders the list, the number just yields the edge to the act. */}
+      {trailing ? (
+        <span aria-hidden="true" style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }}>{trailing}</span>
+      ) : rank ? (
         <span
           style={{
             flex: "none",
