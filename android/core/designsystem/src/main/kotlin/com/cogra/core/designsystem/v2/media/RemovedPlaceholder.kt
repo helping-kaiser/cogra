@@ -37,6 +37,7 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
 fun RemovedPlaceholder(
     reason: RemovalReason,
     modifier: Modifier = Modifier,
+    timestamp: String? = null,
     shape: Shape = MaterialTheme.shapes.medium,
     testTag: String? = null,
 ) {
@@ -44,10 +45,11 @@ fun RemovedPlaceholder(
         RemovalReason.Author -> "Removed by its author"
         RemovalReason.Platform -> "Removed under the platform's rules"
     }
-    val detail = when (reason) {
-        RemovalReason.Author -> "The author took this down. Everything around it stays."
-        RemovalReason.Platform -> "A proposal carried against this content. Everything around it stays."
-    }
+    // The second line is the same fact in both arms — what survives is the
+    // skeleton either way — so the two are told apart by the headline, which
+    // is the distinction design/readme.md §9 actually requires. The wording
+    // is the canonical `Removed` board's, verbatim.
+    val detail = "The post's place in the thread, and every response, remain."
 
     Column(
         modifier = modifier
@@ -68,6 +70,15 @@ fun RemovedPlaceholder(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        // Part of the surviving skeleton: a removal never hides when it
+        // happened.
+        if (timestamp != null) {
+            Text(
+                text = timestamp,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
@@ -76,8 +87,8 @@ fun RemovedPlaceholder(
 private fun RemovedPlaceholderReasons() {
     Cogra2PreviewTheme {
         PreviewMediaColumn {
-            RemovedPlaceholder(RemovalReason.Author)
-            RemovedPlaceholder(RemovalReason.Platform)
+            RemovedPlaceholder(RemovalReason.Author, timestamp = "today")
+            RemovedPlaceholder(RemovalReason.Platform, timestamp = "today")
         }
     }
 }
