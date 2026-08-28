@@ -135,16 +135,17 @@ title, at most two short paragraphs, Close. The texts, verbatim
   the post as new. / Topic and citation changes ride the same signing,
   each as its own signed action. The license never changes.
 - **Citing**: A citation is its own signed action and carries where
-  you stand on what you cite. You can cite anything on CoGra. /
-  Comments and chat messages are cited from themselves — open one and
-  choose "Cite in a new post".
-- **Searching** (the Explore tab's results): Search matches names and
-  titles. Start with @handle to search one person's work — including
-  their comments and offers, found through what they point at. Start
-  with #topic to search inside a topic. / Results follow your own
-  graph — the numbers are your view, no one else's. Below the line,
-  what your graph can't reach yet, newest first. Your searches stay
-  on this device.
+  you stand on what you cite. You can cite anything on CoGra — start
+  with @handle or #topic to reach comments, messages, and offers. /
+  Comments and chat messages can also be cited from themselves —
+  open one and choose "Cite in a new post".
+- **Searching** (the Explore tab's results): Search reads names and
+  titles, never bodies. Start with @handle to search one person's
+  work — including their comments and offers, found through what
+  they point at. Start with #topic to search inside a topic. /
+  Results follow your own graph — the numbers are your view, no one
+  else's. Below the line, what your graph can't reach yet, newest
+  first. Your searches stay on this device.
 
 Two removal marks, never interchangeable: `Removed by its author` —
 "The words and pictures are gone. The post's place in the thread, and

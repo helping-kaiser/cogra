@@ -38,6 +38,11 @@ export interface ReferenceRowProps {
    * number is recognized before it is read. Wins over `value`.
    */
   rank?: string;
+  /**
+   * An action mark at the row's edge (the picker's add glyph); wins over
+   * `rank` and `value`. Decorative — the row's own tap is the action.
+   */
+  trailing?: JSX.Element;
   /** The row navigates to the node it names. */
   onOpen?: () => void;
 }

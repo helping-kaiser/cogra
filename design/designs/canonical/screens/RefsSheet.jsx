@@ -27,6 +27,7 @@ export function Screen() {
           <ReferenceRow kind="campaign" name="Coast road cleanup week" pair="+0.40 / +0.40" onOpen={() => {}} />
           <ReferenceRow kind="offer" name="Offer on: Salt-crust rubbing, framed" pair="+0.10 / +0.10" onOpen={() => {}} />
           <ReferenceRow kind="chat" name="Coast walkers" pair="+0.10 / +0.10" onOpen={() => {}} />
+          <ReferenceRow kind="message" name="Crust held all the way past the slipway today." sub="in Coast walkers" pair="+0.10 / +0.10" onOpen={() => {}} />
         </div>
       </BottomSheet>
     </>
