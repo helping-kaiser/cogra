@@ -65,9 +65,12 @@ export function cssRatio(ratio: number): string {
  */
 export function parseAspectRatio(text: string | null | undefined): number | null {
   if (typeof text !== "string") return null;
-  const [width, height] = text.split(":");
-  const w = Number(width);
-  const h = Number(height);
+  const parts = text.split(":");
+  // Exactly two parts. Reading the first two of three would silently accept
+  // "4:5:6" as 4:5, which is a shape nobody stated.
+  if (parts.length !== 2) return null;
+  const w = Number(parts[0]);
+  const h = Number(parts[1]);
   if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) return null;
   return w / h;
 }

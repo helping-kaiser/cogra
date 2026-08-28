@@ -14,7 +14,7 @@
 // permanent fallback for an actor with no avatar, so "Remove" is a real, calm
 // choice rather than an incomplete state.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import { Button } from "@/lib/ui/button";
 import { MonogramAvatar } from "@/lib/ui2/monogram-avatar";
@@ -51,18 +51,17 @@ export function ProfileMediaField({
   testIdPrefix: string;
 }) {
   const input = useRef<HTMLInputElement | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
 
-  // One object URL per pick, revoked when it is replaced or the field goes.
+  // One object URL per PICKED FILE, not per choice: the crop is edited in
+  // place, so keying this on the whole choice would mint a URL on every frame
+  // of a drag. The URL is derived rather than stored in state — an effect that
+  // set it would render once with the old picture still showing.
+  const file = choice.kind === "picked" ? choice.file : null;
+  const preview = useMemo(() => (file === null ? null : URL.createObjectURL(file)), [file]);
   useEffect(() => {
-    if (choice.kind !== "picked") {
-      setPreview(null);
-      return;
-    }
-    const url = URL.createObjectURL(choice.file);
-    setPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [choice]);
+    if (preview === null) return;
+    return () => URL.revokeObjectURL(preview);
+  }, [preview]);
 
   const label = kind === "avatar" ? "Avatar" : "Cover";
   const showing = choice.kind === "cleared" ? null : (preview ?? currentUrl);
