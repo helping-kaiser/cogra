@@ -409,6 +409,9 @@ const PREPARE_POST_EDIT: &str = r#"mutation($input: PreparePostEditInput!) {
 /// no causal key. The typed reads agree. The chronicle holds only ordered
 /// fact, so for a node whose record has not landed it is well-formed and
 /// empty: not an actor match, and not an error.
+///
+/// Pending content serves whole to every viewer, marked pending and without an epoch, while the chronicle stays well-formed and empty for it.
+/// ´claim:pending:pending-content-reads-to-everyone´
 #[sqlx::test(migrations = "../../migrations")]
 async fn pending_content_reads_in_full_to_every_viewer(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -460,6 +463,9 @@ async fn pending_content_reads_in_full_to_every_viewer(pool: PgPool) {
 
 /// The content is public; the handshake handle is not. Nothing on the
 /// content surface carries the staged-write id.
+///
+/// The content is public and the handshake behind it is not, so nothing on the content surface carries the staged-write handle.
+/// ´claim:pending:the-handshake-never-reaches-the-content-surface´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_handshake_stays_the_authors_own_business(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -500,6 +506,8 @@ async fn the_handshake_stays_the_authors_own_business(pool: PgPool) {
     );
 }
 
+/// Landing clears the pending mark and leaves the authoring date where it was.
+/// ´claim:pending:landing-clears-the-mark-and-keeps-the-date´
 #[sqlx::test(migrations = "../../migrations")]
 async fn landing_drops_the_mark_without_moving_the_authoring_date(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -537,6 +545,9 @@ async fn landing_drops_the_mark_without_moving_the_authoring_date(pool: PgPool) 
 /// graph nothing ever existed to redact. The author's own staged row
 /// stays observable in its terminal state until the reap — that surface
 /// is the handshake, not the content.
+///
+/// Expiry takes content out of every view unmarked, nothing having existed on the graph to redact, while the author's own staged row stays observable until the reap.
+/// ´claim:pending:expiry-leaves-no-mark-on-the-graph´
 #[sqlx::test(migrations = "../../migrations")]
 async fn expired_pending_content_leaves_every_view(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -581,6 +592,9 @@ async fn expired_pending_content_leaves_every_view(pool: PgPool) {
 /// content was never the author's, because the substrate never took it.
 /// The write is back in the device's hands, retryable, and a proper
 /// signature re-stages the very same content.
+///
+/// Content the substrate refused to seal is readable to nobody, the write returning to the device's hands where a proper signature re-stages the very same content.
+/// ´claim:pending:a-refused-seal-leaves-nothing-readable´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_refused_seal_leaves_no_readable_pending_content(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -646,6 +660,9 @@ async fn a_refused_seal_leaves_no_readable_pending_content(pool: PgPool) {
 /// staging it can never succeed, because the parent it would hang under
 /// is gone. The refusal leaves the write where the device can act on it,
 /// rather than stranded in `sealing` until GC.
+///
+/// A staging failure hands the write back to the device to act on rather than stranding it until collection.
+/// ´claim:pending:a-staging-failure-hands-the-write-back´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_staging_failure_hands_the_write_back_instead_of_wedging_it(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -717,6 +734,9 @@ async fn a_staging_failure_hands_the_write_back_instead_of_wedging_it(pool: PgPo
 /// two crosses into the landed one, while walking backward from the same
 /// cursor serves the newer neighbours — the pending set — still
 /// newest-first.
+///
+/// Pending entries lead the listing, newest authored first, and one cursor namespace carries a walk across the boundary into the landed set in both directions.
+/// ´claim:pending:one-cursor-namespace-spans-pending-and-landed´
 #[sqlx::test(migrations = "../../migrations")]
 async fn pending_entries_lead_the_listing_and_page_by_their_own_cursor(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -767,6 +787,9 @@ async fn pending_entries_lead_the_listing_and_page_by_their_own_cursor(pool: PgP
 
 /// The default is the canon — pending content shows — and the opt-out
 /// serves only what has landed.
+///
+/// The canon is the default view and the settled graph is the opt-out.
+/// ´claim:pending:the-canon-is-the-default-view´
 #[sqlx::test(migrations = "../../migrations")]
 async fn include_pending_false_serves_only_what_landed(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -788,6 +811,8 @@ async fn include_pending_false_serves_only_what_landed(pool: PgPool) {
 /// graph — the version that landed, and a landing state that says so. The
 /// epoch contract holds there, because nothing on screen is unlanded any
 /// more.
+///
+/// (´claim:pending:the-canon-is-the-default-view´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn include_pending_false_serves_the_version_that_landed(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -829,6 +854,9 @@ async fn include_pending_false_serves_the_version_that_landed(pool: PgPool) {
 /// opt-out to serve the settled graph, and a signed-but-unordered Publish
 /// is simply not there. The pending node's own chronicle is well-formed
 /// and empty; landing is what puts a record in it.
+///
+/// A record is in the chronicle exactly when it is ordered fact, so the record set needs no opt-out to serve the settled graph.
+/// ´claim:pending:the-chronicle-holds-only-ordered-fact´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_chronicle_omits_a_pending_record_until_it_lands(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -876,6 +904,9 @@ async fn the_chronicle_omits_a_pending_record_until_it_lands(pool: PgPool) {
 /// pending edit's text marked PENDING: the chronicle's landed-only
 /// guarantee is over which records exist, not over which version the node
 /// they name serves. Landing the edit is what adds the edit's own row.
+///
+/// The chronicle's landed-only guarantee is over which records exist, never over which version the node they name serves.
+/// ´claim:pending:the-guarantee-is-over-records-not-versions´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_unlanded_edit_adds_no_chronicle_row(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -910,6 +941,7 @@ async fn an_unlanded_edit_adds_no_chronicle_row(pool: PgPool) {
     assert_eq!(edges[0]["node"]["target"]["landing"]["state"], "LANDED");
 }
 
+/// (´claim:pending:pending-content-reads-to-everyone´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_pending_comment_reads_in_its_thread(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -973,6 +1005,9 @@ async fn a_pending_comment_reads_in_its_thread(pool: PgPool) {
 /// from the moment they sign it: the new title is on screen at once, the
 /// node reads pending, and the body reads as the snapshot has it. The
 /// node keeps its landing position — an edit never moves it.
+///
+/// A signed edit is its author's content from that moment: the new text is on screen marked pending, and the node keeps its landing position.
+/// ´claim:pending:a-signed-edit-shows-at-once´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_pending_edit_shows_its_new_text_marked_pending(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1025,6 +1060,9 @@ async fn a_pending_edit_shows_its_new_text_marked_pending(pool: PgPool) {
 /// staged row stays behind, unreaped. Then the epoch closes over the act
 /// after all. The mirror governs, so the content comes back, this time
 /// with its real landing order.
+///
+/// The mirror governs, so an act ordered after its write expired but before the reap brings the content back at its real landing order.
+/// ´claim:pending:a-late-landing-still-promotes´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_record_landing_after_expiry_but_before_the_reap_still_promotes(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1062,6 +1100,8 @@ async fn a_record_landing_after_expiry_but_before_the_reap_still_promotes(pool: 
     );
 }
 
+/// An expired edit leaves the version that landed on screen.
+/// ´claim:pending:an-expired-edit-leaves-the-landed-version´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_expired_edit_leaves_the_previous_version_rendered(pool: PgPool) {
     let rig = Rig::new(pool).await;

@@ -31,6 +31,9 @@ fn document(label_str: &str, version: Version, entries: &[(u64, Value)]) -> Docu
 
 /// Every argument is validated before it arrives, so construction cannot
 /// fail and there is no assembly-time check to forget.
+///
+/// Every part of a document is validated before it arrives, so assembling one cannot fail.
+/// ´claim:documents:construction-cannot-fail´
 #[test]
 fn construction_is_total() {
     let document = document(
@@ -46,6 +49,8 @@ fn construction_is_total() {
     assert_eq!(document.content().keys().collect::<Vec<_>>(), [2, 7]);
 }
 
+/// A document's name is the canonical map of its envelope keys and its content.
+/// ´claim:documents:a-name-is-the-map-of-the-parts´
 #[test]
 fn the_name_of_a_document_is_the_map_of_its_parts() {
     let document = document("a.b", Version::new(1, 0, 0), &[]);
@@ -60,6 +65,9 @@ fn the_name_of_a_document_is_the_map_of_its_parts() {
 
 /// The map view and the byte view agree, which is what lets satisfaction
 /// consume the one and transit carry the other.
+///
+/// A document survives the trip through bytes unchanged, and its map view and byte view agree.
+/// ´claim:documents:a-document-round-trips-through-bytes´
 #[test]
 fn documents_survive_the_round_trip_through_bytes() {
     let documents = [
@@ -92,6 +100,9 @@ fn documents_survive_the_round_trip_through_bytes() {
 /// Content keys are written in ascending order, which for unsigned
 /// integers is canonical order — and the decoder, which checks sortedness
 /// on the encoded forms, is what says so.
+///
+/// Content keys are written in the ascending order the decoder requires, whatever order they were inserted in.
+/// ´claim:documents:content-keys-are-written-canonically´
 #[test]
 fn content_keys_are_written_in_canonical_order() {
     let document = document(
@@ -115,6 +126,8 @@ fn content_keys_are_written_in_canonical_order() {
     );
 }
 
+/// A value that is not a map is refused as a document.
+/// ´claim:documents:only-a-map-can-be-a-document´
 #[test]
 fn a_value_that_is_not_a_map_is_not_a_document() {
     for value in [
@@ -128,6 +141,8 @@ fn a_value_that_is_not_a_map_is_not_a_document() {
     }
 }
 
+/// A map key outside the unsigned integers is refused, and the refusal says which key it was.
+/// ´claim:documents:a-document-key-is-an-unsigned-integer´
 #[test]
 fn a_key_outside_the_unsigned_integers_is_refused() {
     for key in [
@@ -142,6 +157,8 @@ fn a_key_outside_the_unsigned_integers_is_refused() {
     }
 }
 
+/// A map missing either envelope key is refused, naming the lesser missing key.
+/// ´claim:documents:both-envelope-keys-are-required´
 #[test]
 fn an_absent_envelope_key_is_refused() {
     let no_label = Value::Map(
@@ -160,6 +177,8 @@ fn an_absent_envelope_key_is_refused() {
     assert!(matches!(error, EnvelopeError::MissingKey { key: 0 }));
 }
 
+/// Key 0 holds a namespace label, a wrong type being told apart from a text that is no label.
+/// ´claim:documents:key-0-holds-a-namespace-label´
 #[test]
 fn key_0_holds_a_namespace_label_or_nothing() {
     for (value, expects_label_error) in [
@@ -186,6 +205,8 @@ fn key_0_holds_a_namespace_label_or_nothing() {
     }
 }
 
+/// Key 1 holds a version triple and admits nothing else in its place.
+/// ´claim:documents:key-1-holds-a-version-triple´
 #[test]
 fn key_1_holds_a_version_triple_or_nothing() {
     for value in [
@@ -211,6 +232,9 @@ fn key_1_holds_a_version_triple_or_nothing() {
 /// The envelope's two keys are not the content's to hold, which is the
 /// invariant `ContentKey` carries and the reason content cannot be built
 /// over them.
+///
+/// The two envelope keys cannot be built as content keys, so content can never claim them.
+/// ´claim:documents:the-envelope-keys-are-not-content´
 #[test]
 fn the_envelope_keys_are_refused_as_content_keys() {
     for key in [0, 1] {
@@ -222,6 +246,9 @@ fn the_envelope_keys_are_refused_as_content_keys() {
 
 /// The unsorted case is a map with its keys out of canonical order: it is
 /// well-formed CBOR, and no name of the data language.
+///
+/// Bytes outside the data language are refused as a document before their shape is read.
+/// ´claim:documents:bytes-outside-the-language-are-refused´
 #[test]
 fn bytes_outside_the_data_language_are_not_documents() {
     let unsorted = [0xa2, 0x01, 0x00, 0x00, 0x00];

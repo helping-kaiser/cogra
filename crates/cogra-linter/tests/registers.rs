@@ -86,9 +86,14 @@ fn the_corpus_generates_a_register_for_every_scope() {
         label_registers > 1,
         "the corpus's tests span several owners: {scopes:?}"
     );
+    let activated = adoption()
+        .claims
+        .as_ref()
+        .and_then(|claims| claims.activation.declared())
+        .expect("this corpus declares its activated owners");
     assert_eq!(
-        matrices, 1,
-        "one owner's authoring wave has closed: {scopes:?}"
+        matrices, activated,
+        "one matrix per owner whose authoring wave has closed: {scopes:?}"
     );
 }
 
@@ -242,11 +247,14 @@ fn an_owner_scope_touches_no_corpus_wide_register() {
         .filter(|reg| scope.admits(reg))
         .map(|reg| &reg.path)
         .collect();
-    assert_eq!(
-        admitted,
-        vec![&PathBuf::from("crates/api/label-register.md")],
-        "that owner's own register, and nothing corpus-wide"
-    );
+    assert!(!admitted.is_empty(), "the owner has registers to admit");
+    for path in &admitted {
+        assert!(
+            path.starts_with("crates/api/"),
+            "that owner's own registers, and nothing corpus-wide: {}",
+            path.display()
+        );
+    }
 }
 
 /// The test profile, which `[profiles]` registers and Π carries.

@@ -567,6 +567,8 @@ mod tests {
 
     const MINIMAL: &str = r#"example = {0 => "com.example", 1 => [1, 0, uint]}"#;
 
+    /// A theory of the envelope alone is in the fragment, carrying its label and its coordinate.
+    /// ´claim:fragment:the-minimal-theory-is-in-the-fragment´
     #[test]
     fn the_minimal_theory_is_in_the_fragment() {
         let fragment = admit(MINIMAL);
@@ -576,6 +578,9 @@ mod tests {
     }
 
     /// The conventions' own illustration of an assigned theory.
+    ///
+    /// The conventions' own illustration is in the fragment, with the requiredness each key was written with.
+    /// ´claim:fragment:the-conventions-example-is-in-the-fragment´
     #[test]
     fn the_conventions_example_theory_is_in_the_fragment() {
         let fragment = admit(concat!(
@@ -595,6 +600,8 @@ mod tests {
         assert_eq!(slots, [(2, true), (7, false)]);
     }
 
+    /// Slots are recorded in ascending key order whatever order the theory wrote them in.
+    /// ´claim:fragment:slots-are-recorded-ascending´
     #[test]
     fn slots_are_ascending_whatever_order_they_were_written_in() {
         let fragment =
@@ -607,12 +614,16 @@ mod tests {
         assert_eq!(keys, [3, 9]);
     }
 
+    /// A content key may be written in any base the grammar admits.
+    /// ´claim:fragment:a-content-key-may-be-written-in-any-base´
     #[test]
     fn a_content_key_may_be_written_in_any_base() {
         let fragment = admit(r#"e = {0 => "com.example", 1 => [0, 0, uint], 0x10 => uint}"#);
         assert_eq!(fragment.slots()[0].key().get(), 16);
     }
 
+    /// A content key may be written with the colon form as well as with the arrow.
+    /// ´claim:fragment:a-content-key-may-use-the-colon-form´
     #[test]
     fn a_content_key_may_use_the_colon_form() {
         let fragment = admit(r#"e = {0 => "com.example", 1 => [0, 0, uint], 2: tstr}"#);
@@ -622,6 +633,9 @@ mod tests {
     /// Clause 6 as a non-check: a tagged type at a content key is exotic
     /// and admitted, because the fragment restricts the constructor
     /// vocabulary nowhere.
+    ///
+    /// Membership restricts the vocabulary at a content key nowhere, constructors and operators alike.
+    /// ´claim:fragment:membership-restricts-no-vocabulary´
     #[test]
     fn an_exotic_type_at_a_content_key_is_in_the_fragment() {
         admit(r#"e = {0 => "com.example", 1 => [0, 0, uint], 2 => #6.42(bstr)}"#);
@@ -632,6 +646,8 @@ mod tests {
     /// Clause 6 again, on the operator vocabulary: `.cbor` is outside the
     /// evaluable subset, and that is a different verdict at a different
     /// place — membership does not look.
+    ///
+    /// (´claim:fragment:membership-restricts-no-vocabulary´)
     #[test]
     fn an_unevaluable_operator_at_a_content_key_is_in_the_fragment() {
         admit(r#"e = {0 => "com.example", 1 => [0, 0, uint], 2 => bstr .cbor any}"#);
@@ -639,6 +655,9 @@ mod tests {
 
     /// A map rule below the root is not a second root: reading clause 1 as
     /// a census of map rules would refuse this, and contradict clause 6.
+    ///
+    /// A map rule below the root is no second root, and a theory carrying one is admitted.
+    /// ´claim:fragment:a-map-below-the-root-is-no-second-root´
     #[test]
     fn a_map_rule_below_the_root_is_in_the_fragment() {
         admit(
@@ -647,6 +666,8 @@ inner = {a: 1}"#,
         );
     }
 
+    /// The envelope keys may be written in either order, the entries being a set.
+    /// ´claim:fragment:the-envelope-keys-may-stand-in-any-order´
     #[test]
     fn the_envelope_keys_may_be_written_in_any_order() {
         let fragment = admit(r#"e = {1 => [4, 5, uint], 0 => "com.example"}"#);
@@ -656,6 +677,9 @@ inner = {a: 1}"#,
 
     /// The patch position is matched by the name `uint`, not by what the
     /// name denotes, so a theory redefining `uint` still writes the shape.
+    ///
+    /// The patch position is matched by the name written there, and not by what that name denotes.
+    /// ´claim:fragment:the-patch-position-is-matched-by-name´
     #[test]
     fn the_patch_position_is_matched_by_name() {
         admit(
@@ -664,12 +688,16 @@ uint = 5"#,
         );
     }
 
+    /// The label is read from what its literal denotes, the escapes already resolved.
+    /// ´claim:fragment:a-label-is-read-by-its-denotation´
     #[test]
     fn an_escaped_label_is_read_by_its_denotation() {
         let fragment = admit(r#"e = {0 => "com.example", 1 => [0, 0, uint]}"#);
         assert_eq!(fragment.label().as_str(), "com.example");
     }
 
+    /// A slot's span covers exactly the type as the author wrote it.
+    /// ´claim:fragment:a-slots-span-covers-its-type-as-written´
     #[test]
     fn the_span_of_a_slot_covers_the_type_as_written() {
         let source = r#"e = {0 => "com.example", 1 => [0, 0, uint], 2 => tstr .size 3}"#;
@@ -678,16 +706,22 @@ uint = 5"#,
         assert_eq!(&source[span.start..span.end], "tstr .size 3");
     }
 
+    /// A root rule that is not a map is refused.
+    /// ´claim:fragment:a-root-that-is-not-a-map-is-refused´
     #[test]
     fn a_root_that_is_not_a_map_is_refused() {
         assert!(reject("e = uint").contains("not a map"));
     }
 
+    /// A root read as a group rule is refused.
+    /// ´claim:fragment:a-root-group-rule-is-refused´
     #[test]
     fn a_root_group_rule_is_refused() {
         assert!(reject("e = (1, 2)").contains("group"));
     }
 
+    /// A root taking generic parameters is refused.
+    /// ´claim:fragment:a-generic-root-is-refused´
     #[test]
     fn a_generic_root_is_refused() {
         assert!(
@@ -695,16 +729,21 @@ uint = 5"#,
         );
     }
 
+    /// A root built as a choice is refused, type choice and group choice alike.
+    /// ´claim:fragment:a-root-choice-is-refused´
     #[test]
     fn a_root_type_choice_is_refused() {
         assert!(reject(r#"e = {0 => "com.example"} / {1 => uint}"#).contains("choice"));
     }
 
+    /// (´claim:fragment:a-root-choice-is-refused´)
     #[test]
     fn a_root_group_choice_is_refused() {
         assert!(reject(r#"e = {0 => "com.example" // 1 => uint}"#).contains("not closed"));
     }
 
+    /// An entry of the root map carrying an occurrence indicator is refused.
+    /// ´claim:fragment:an-occurrence-indicator-in-the-root-is-refused´
     #[test]
     fn a_wildcard_entry_is_refused() {
         assert!(
@@ -713,6 +752,7 @@ uint = 5"#,
         );
     }
 
+    /// (´claim:fragment:an-occurrence-indicator-in-the-root-is-refused´)
     #[test]
     fn a_repeated_entry_is_refused() {
         assert!(
@@ -721,6 +761,8 @@ uint = 5"#,
         );
     }
 
+    /// An entry that could extend the root map from elsewhere is refused, inline group and bare reference alike.
+    /// ´claim:fragment:an-entry-that-extends-the-map-is-refused´
     #[test]
     fn an_inline_group_entry_is_refused() {
         assert!(
@@ -729,6 +771,7 @@ uint = 5"#,
         );
     }
 
+    /// (´claim:fragment:an-entry-that-extends-the-map-is-refused´)
     #[test]
     fn a_bare_group_reference_is_refused() {
         assert!(
@@ -740,6 +783,8 @@ more = (2 => uint)"#
         );
     }
 
+    /// A content key must be an integer literal, so a bareword key and a typed key are both refused.
+    /// ´claim:fragment:a-content-key-must-be-an-integer-literal´
     #[test]
     fn a_bareword_key_is_refused() {
         assert!(
@@ -748,6 +793,7 @@ more = (2 => uint)"#
         );
     }
 
+    /// (´claim:fragment:a-content-key-must-be-an-integer-literal´)
     #[test]
     fn a_typed_key_is_refused() {
         assert!(
@@ -756,6 +802,8 @@ more = (2 => uint)"#
         );
     }
 
+    /// A content key written twice is refused.
+    /// ´claim:fragment:a-content-key-may-not-be-written-twice´
     #[test]
     fn a_duplicate_content_key_is_refused() {
         assert!(
@@ -764,16 +812,21 @@ more = (2 => uint)"#
         );
     }
 
+    /// A root map missing either envelope key is refused, naming the one that is absent.
+    /// ´claim:fragment:both-envelope-keys-must-be-present´
     #[test]
     fn an_absent_key_0_is_refused() {
         assert!(reject("e = {1 => [0, 0, uint]}").contains("key 0 is absent"));
     }
 
+    /// (´claim:fragment:both-envelope-keys-must-be-present´)
     #[test]
     fn an_absent_key_1_is_refused() {
         assert!(reject(r#"e = {0 => "com.example"}"#).contains("key 1 is absent"));
     }
 
+    /// An envelope key marked optional is refused, naming the key.
+    /// ´claim:fragment:an-envelope-key-may-not-be-optional´
     #[test]
     fn an_optional_envelope_key_is_refused() {
         assert!(
@@ -786,11 +839,15 @@ more = (2 => uint)"#
         );
     }
 
+    /// Key 0 must be pinned to a text-string literal and not to a type.
+    /// ´claim:fragment:key-0-must-be-a-text-literal´
     #[test]
     fn an_unpinned_key_0_is_refused() {
         assert!(reject(r#"e = {0 => tstr, 1 => [0, 0, uint]}"#).contains("text-string literal"));
     }
 
+    /// The literal at key 0 must denote a namespace label.
+    /// ´claim:fragment:key-0-must-denote-a-namespace-label´
     #[test]
     fn a_key_0_that_is_no_label_is_refused() {
         assert!(
@@ -799,12 +856,15 @@ more = (2 => uint)"#
         assert!(reject(r#"e = {0 => "com", 1 => [0, 0, uint]}"#).contains("no namespace label"));
     }
 
+    /// Key 1 must be pinned to an array, and to one of exactly three elements.
+    /// ´claim:fragment:key-1-must-be-a-three-element-array´
     #[test]
     fn a_key_1_of_the_wrong_length_is_refused() {
         assert!(reject(r#"e = {0 => "com.example", 1 => [0, 0]}"#).contains("not three"));
         assert!(reject(r#"e = {0 => "com.example", 1 => [0, 0, uint, 0]}"#).contains("not three"));
     }
 
+    /// (´claim:fragment:key-1-must-be-a-three-element-array´)
     #[test]
     fn a_key_1_that_is_not_an_array_is_refused() {
         assert!(
@@ -812,6 +872,8 @@ more = (2 => uint)"#
         );
     }
 
+    /// The major and minor positions must each be pinned, and the refusal names which one is not.
+    /// ´claim:fragment:the-major-and-minor-must-be-pinned´
     #[test]
     fn an_unpinned_major_or_minor_is_refused() {
         assert!(
@@ -822,12 +884,16 @@ more = (2 => uint)"#
         );
     }
 
+    /// The patch position must be left free, so a pinned or retyped patch is refused.
+    /// ´claim:fragment:the-patch-position-must-be-free´
     #[test]
     fn a_pinned_patch_is_refused() {
         assert!(reject(r#"e = {0 => "com.example", 1 => [0, 0, 3]}"#).contains("patch position"));
         assert!(reject(r#"e = {0 => "com.example", 1 => [0, 0, int]}"#).contains("patch position"));
     }
 
+    /// The version triple must be written without member keys on its positions.
+    /// ´claim:fragment:the-version-triple-carries-no-member-keys´
     #[test]
     fn a_documented_version_triple_is_refused() {
         assert!(
@@ -838,12 +904,17 @@ more = (2 => uint)"#
 
     /// Keys 0 and 1 are consumed as the envelope before any slot is recorded,
     /// so no slot can carry them.
+    ///
+    /// The envelope keys are consumed before any slot is recorded, so no slot can carry one.
+    /// ´claim:fragment:no-slot-can-carry-an-envelope-key´
     #[test]
     fn a_content_key_at_or_below_one_is_impossible_by_construction() {
         let fragment = admit(MINIMAL);
         assert!(fragment.slots().iter().all(|slot| slot.key().get() > 1));
     }
 
+    /// Every membership refusal names the line it is about.
+    /// ´claim:fragment:every-refusal-carries-a-line´
     #[test]
     fn every_refusal_carries_a_line() {
         assert!(reject("e = uint").starts_with("line 1:"));

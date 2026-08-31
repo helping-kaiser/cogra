@@ -70,6 +70,8 @@ fn text(s: &str) -> Value {
     Value::Text(s.to_owned().into())
 }
 
+/// A fresh registry answers every question about what it holds with nothing.
+/// ´claim:registry:a-fresh-registry-holds-nothing´
 #[test]
 fn a_fresh_registry_holds_nothing_and_says_so() {
     let registry = Registry::new();
@@ -86,6 +88,9 @@ fn a_fresh_registry_holds_nothing_and_says_so() {
 /// A reader that comes to a major late holds what was assigned, and the
 /// registry cannot know which minors below its first were ever assigned — that
 /// is the owner's ledger, not this copy.
+///
+/// A reader coming to a major late holds from whatever minor it first acquired.
+/// ´claim:registry:the-first-minor-of-a-major-may-be-any-minor´
 #[test]
 fn the_first_minor_of_a_major_may_be_any_minor() {
     let mut registry = Registry::new();
@@ -98,6 +103,8 @@ fn the_first_minor_of_a_major_may_be_any_minor() {
     assert!(!registry.holds(&coord(1, 6)));
 }
 
+/// Acquiring in ascending order raises the ceiling and lists every minor taken.
+/// ´claim:registry:acquisition-ascends-and-the-ceiling-rises´
 #[test]
 fn acquisition_ascends_and_the_ceiling_rises() {
     let registry = holding(0..4);
@@ -112,6 +119,9 @@ fn acquisition_ascends_and_the_ceiling_rises() {
 /// A held minor is answered by permanence rather than by order: the question
 /// is whether the object changed, not where the ceiling is. A minor never
 /// held is refused too, because a gap below an assigned minor is never filled.
+///
+/// A minor at or below the ceiling is refused, as immutable where it is held and out of order where it is not.
+/// ´claim:registry:a-minor-at-or-below-the-ceiling-is-refused´
 #[test]
 fn a_minor_at_or_below_the_ceiling_is_out_of_order() {
     let mut registry = holding(0..3);
@@ -137,6 +147,8 @@ fn a_minor_at_or_below_the_ceiling_is_out_of_order() {
     ));
 }
 
+/// A minor absent below the ceiling was never assigned, and nothing later fills it.
+/// ´claim:registry:a-gap-is-knowledge-and-is-never-filled´
 #[test]
 fn a_gap_below_the_ceiling_is_knowledge_and_stays_one() {
     let mut registry = Registry::new();
@@ -162,6 +174,9 @@ fn a_gap_below_the_ceiling_is_knowledge_and_stays_one() {
 }
 
 /// Minor 4 is the ceiling, so it is what minor 6 is compared against.
+///
+/// Inclusion is checked against the greatest held minor, across a gap as much as without one.
+/// ´claim:registry:inclusion-is-checked-against-the-ceiling´
 #[test]
 fn inclusion_is_checked_against_the_greatest_held_below_the_gap() {
     let mut registry = Registry::new();
@@ -184,6 +199,8 @@ fn inclusion_is_checked_against_the_greatest_held_below_the_gap() {
     }
 }
 
+/// A key first named at a later minor must be optional, or the minor is not additive.
+/// ´claim:registry:a-key-new-at-a-later-minor-must-be-optional´
 #[test]
 fn a_new_key_that_is_required_is_no_additive_minor() {
     let mut registry = holding(0..1);
@@ -198,6 +215,8 @@ fn a_new_key_that_is_required_is_no_additive_minor() {
     assert_eq!(registry.ceiling(&label(), 1), Some(0));
 }
 
+/// Acquiring the theory already held at a coordinate is admitted and changes nothing.
+/// ´claim:registry:re-acquiring-the-held-theory-changes-nothing´
 #[test]
 fn re_acquiring_the_held_theory_changes_nothing() {
     let mut registry = holding(0..2);
@@ -212,6 +231,9 @@ fn re_acquiring_the_held_theory_changes_nothing() {
 }
 
 /// And the held object is the one that stays.
+///
+/// A changed theory at a held coordinate is refused, and the held object is the one that stays.
+/// ´claim:registry:a-held-theory-is-immutable´
 #[test]
 fn re_acquiring_a_changed_theory_is_refused() {
     let mut registry = holding(0..2);
@@ -227,6 +249,8 @@ fn re_acquiring_a_changed_theory_is_refused() {
     assert!(held.source().contains("? 3 => uint"));
 }
 
+/// Comments and layout are exposition, so a respelling of the held theory is the same theory.
+/// ´claim:registry:layout-and-comments-are-exposition´
 #[test]
 fn exposition_does_not_make_a_second_theory_object() {
     let mut registry = holding(0..1);
@@ -240,6 +264,8 @@ fn exposition_does_not_make_a_second_theory_object() {
         .expect("comments and layout are exposition, which patches may move");
 }
 
+/// A theory whose pins name another label or another minor is refused at the coordinate offered.
+/// ´claim:registry:the-pins-must-name-the-coordinate´
 #[test]
 fn pins_disagreeing_with_the_coordinate_are_refused() {
     let mut registry = Registry::new();
@@ -263,6 +289,8 @@ fn pins_disagreeing_with_the_coordinate_are_refused() {
     assert!(!registry.holds_major(&label(), 1));
 }
 
+/// A theory reaching a restrained value without naming it is refused, the reaching key named.
+/// ´claim:registry:an-implicit-reach-is-refused´
 #[test]
 fn a_theory_reaching_a_restrained_value_implicitly_is_refused() {
     let mut registry = Registry::new();
@@ -279,6 +307,8 @@ fn a_theory_reaching_a_restrained_value_implicitly_is_refused() {
     }
 }
 
+/// A lenient registry takes such a theory and keeps the report of what it reaches.
+/// ´claim:registry:a-lenient-registry-keeps-the-report´
 #[test]
 fn a_lenient_registry_admits_the_reach_and_keeps_the_report() {
     let mut registry = Registry::lenient();
@@ -292,6 +322,8 @@ fn a_lenient_registry_admits_the_reach_and_keeps_the_report() {
     assert!(held.restraint().implicit_reaches().next().is_some());
 }
 
+/// Leniency relaxes the implicit reach alone, every other refusal standing.
+/// ´claim:registry:leniency-relaxes-the-reach-alone´
 #[test]
 fn a_lenient_registry_still_refuses_every_other_way() {
     let mut registry = Registry::lenient();
@@ -313,6 +345,8 @@ fn a_lenient_registry_still_refuses_every_other_way() {
     ));
 }
 
+/// Refusing a minor drops it and everything above it, and the ceiling falls to what remains.
+/// ´claim:registry:refusal-truncates-upward´
 #[test]
 fn refusal_truncates_from_the_minor_upward_and_the_ceiling_falls() {
     let mut registry = holding(0..4);
@@ -329,6 +363,9 @@ fn refusal_truncates_from_the_minor_upward_and_the_ceiling_falls() {
 }
 
 /// Refusing a major nothing is held of does nothing.
+///
+/// Refusing from the first held minor leaves the major unheld, and refusing what is not held does nothing.
+/// ´claim:registry:refusing-the-first-minor-empties-the-major´
 #[test]
 fn refusing_from_the_first_minor_leaves_the_major_unheld() {
     let mut registry = holding(0..3);
@@ -343,6 +380,8 @@ fn refusing_from_the_first_minor_leaves_the_major_unheld() {
     assert!(!registry.holds_major(&label(), 9));
 }
 
+/// The target of a label is the greatest coordinate held of it, across its majors.
+/// ´claim:registry:the-target-is-the-greatest-held-coordinate´
 #[test]
 fn target_is_the_greatest_held_coordinate_of_the_label() {
     let mut registry = holding(0..3);
@@ -360,6 +399,9 @@ fn target_is_the_greatest_held_coordinate_of_the_label() {
 /// Content needing nothing the later minors added stamps the least minor and
 /// not the target, while a key first named at minor 2 pulls the stamp up to
 /// it.
+///
+/// Content is stamped at the least held minor that admits it, and not at the target.
+/// ´claim:registry:the-stamp-is-the-least-minor-that-admits-the-content´
 #[test]
 fn stamp_is_the_least_held_minor_the_content_satisfies() {
     let registry = holding(0..4);
@@ -374,6 +416,9 @@ fn stamp_is_the_least_held_minor_the_content_satisfies() {
 
 /// Key 2 is required and typed `tstr` at every held minor, so content without
 /// it, content mistyping it, and content of an unheld major all stamp nothing.
+///
+/// Content no held theory admits gets no stamp at all.
+/// ´claim:registry:content-no-theory-admits-has-no-stamp´
 #[test]
 fn content_no_held_theory_admits_has_no_stamp() {
     let registry = holding(0..3);
@@ -393,6 +438,9 @@ fn content_no_held_theory_admits_has_no_stamp() {
 /// a document's key 1 pins the very minor being sought. Content an emitter
 /// targeting minor 3 assembled still stamps 0 when nothing in it needs a later
 /// vocabulary.
+///
+/// Stamping asks the content class alone, never the stamp the document would come to carry.
+/// ´claim:registry:stamping-reads-the-content-alone´
 #[test]
 fn stamping_reads_the_content_and_not_the_stamp_it_would_carry() {
     let registry = holding(0..4);
@@ -409,6 +457,9 @@ fn stamping_reads_the_content_and_not_the_stamp_it_would_carry() {
 
 /// The third pair widens the shared key, which is no minor whatever it claims.
 /// What was taken before the refusal stays held; nothing after it was.
+///
+/// Taking a published sequence stops at the first refusal and keeps everything taken before it.
+/// ´claim:registry:acquire-all-stops-at-the-first-refusal´
 #[test]
 fn acquire_all_takes_the_sequence_and_stops_at_the_first_refusal() {
     let mut registry = Registry::new();
@@ -433,6 +484,8 @@ fn acquire_all_takes_the_sequence_and_stops_at_the_first_refusal() {
     );
 }
 
+/// Taking a published sequence that ascends additively holds the whole of it.
+/// ´claim:registry:acquire-all-takes-a-whole-ascending-chain´
 #[test]
 fn acquire_all_over_an_ascending_chain_holds_all_of_it() {
     let mut registry = Registry::new();
@@ -444,6 +497,8 @@ fn acquire_all_over_an_ascending_chain_holds_all_of_it() {
     assert_eq!(registry.minors(&label(), 1).count(), 5);
 }
 
+/// Each label and each major is its own line, with its own ceiling and no inclusion across them.
+/// ´claim:registry:each-label-and-major-is-its-own-line´
 #[test]
 fn majors_and_labels_do_not_share_a_line() {
     let mut registry = holding(0..2);

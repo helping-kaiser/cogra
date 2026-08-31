@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT c.id, c.target_id, c.target_type, c.author_id,\n                  c.l1_node_id, c.license, c.landed_epoch, c.act_time,\n                  c.position, c.created_at,\n                  v.content AS \"content!\", v.redaction_reason,\n                  v.pending AS \"version_pending!\",\n                  v.created_at AS \"version_created_at!\",\n                  v.version_id AS \"version_id!\"\n           FROM comments c\n           JOIN LATERAL (\n               SELECT content, redaction_reason, pending, created_at,\n                      version_id\n               FROM comment_versions WHERE comment_id = c.id\n               ORDER BY pending DESC,\n                        landed_epoch DESC NULLS LAST,\n                        act_time DESC NULLS LAST,\n                        position DESC NULLS LAST,\n                        created_at DESC, version_id DESC\n               LIMIT 1\n           ) v ON TRUE\n           WHERE c.id = $1",
+  "query": "SELECT c.id, c.target_id, c.target_type, c.author_id,\n                  c.l1_node_id, c.license, c.landed_epoch, c.act_time,\n                  c.position, c.created_at,\n                  v.content AS \"content!\", v.redaction_reason,\n                  v.sensitive AS \"sensitive!\", v.sensitive_reason,\n                  v.pending AS \"version_pending!\",\n                  v.created_at AS \"version_created_at!\",\n                  v.version_id AS \"version_id!\"\n           FROM comments c\n           JOIN LATERAL (\n               SELECT content, redaction_reason, sensitive, sensitive_reason,\n                      pending, created_at, version_id\n               FROM comment_versions WHERE comment_id = c.id\n               ORDER BY pending DESC,\n                        landed_epoch DESC NULLS LAST,\n                        act_time DESC NULLS LAST,\n                        position DESC NULLS LAST,\n                        created_at DESC, version_id DESC\n               LIMIT 1\n           ) v ON TRUE\n           WHERE c.id = $1",
   "describe": {
     "columns": [
       {
@@ -65,16 +65,26 @@
       },
       {
         "ordinal": 12,
-        "name": "version_pending!",
+        "name": "sensitive!",
         "type_info": "Bool"
       },
       {
         "ordinal": 13,
+        "name": "sensitive_reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "version_pending!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 15,
         "name": "version_created_at!",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 14,
+        "ordinal": 16,
         "name": "version_id!",
         "type_info": "Int8"
       }
@@ -98,9 +108,11 @@
       false,
       true,
       false,
+      true,
+      false,
       false,
       false
     ]
   },
-  "hash": "f4d8cbc94d94bce0e9db1615d0838cdbaf151c5c2a1b57365f34aa6c08c927ee"
+  "hash": "707c6ae305e026db2beceb39b8f113ed36deb912e40c22104db46038fe40a964"
 }

@@ -115,6 +115,8 @@ generated_files = [
   # The per-owner claim matrices, one per ACTIVATED owner, materialized
   # on 2026-08-31 by the pilot wave; see [claims] matrix. The list grows
   # by one file in the commit that closes each further owner's wave.
+  "crates/api/claim-matrix.md",
+  "crates/cogra-interchange/claim-matrix.md",
   "crates/cogra-linter/claim-matrix.md",
   "crates/common/claim-matrix.md",
   "crates/l1-standin/claim-matrix.md",
@@ -866,10 +868,12 @@ to rename around the collision.
   [claims.activation]
   scope  = "declared"
   owners = [
-    "pkg.cogra-linter",
-    "pkg.common",
-    "pkg.l1-standin",
-    "pkg.postgres-store",
+    "pkg.api",                # joined 2026-08-31, the api wave
+    "pkg.cogra-interchange",  # joined 2026-08-31, the interchange wave
+    "pkg.cogra-linter",       # joined 2026-08-31, the pilot wave
+    "pkg.common",             # joined 2026-08-31, the fourth wave
+    "pkg.l1-standin",         # joined 2026-08-31, the second wave
+    "pkg.postgres-store",     # joined 2026-08-31, the third wave
   ]
   note = """
 PILOT WAVE, 2026-08-31: pkg.cogra-linter alone. Its tests are the
@@ -888,10 +892,14 @@ tests over twelve areas, twenty-three of them citing. The specification
 vector suites are what the citation form is for — eleven tests pinning
 eleven byte strings evidence one statement, and eleven statements
 restating eleven test names would evidence nothing.
-The other two owners with covered assets — pkg.api and
-pkg.cogra-interchange — are outside the list and their covered tests are
-counted. Each joins by one edit to this array, in the commit that lands
-its wave.
+INTERCHANGE WAVE, 2026-08-31: pkg.cogra-interchange joins, 474 covered
+tests, the corpus's largest set. Its tests already cited the design
+clauses they discharge, so the claim line is a new final line stating
+the proved fact and those citations stand above it untouched.
+API WAVE, 2026-08-31: pkg.api, 348 covered tests over seventeen areas.
+Every owner with covered assets is now inside the list: the roster is
+total, and a future package joins by one edit to this array, in the
+commit that lands its wave.
 """
 
   [claims.matrix]

@@ -448,6 +448,9 @@ fn errors(payload: &Value, mutation: &str) -> Value {
 
 /// The creation batch stages one act per topic, on top of the minting
 /// record.
+///
+/// A creation batch stages one act per topic on top of the minting record.
+/// ´claim:topics:one-act-per-topic´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_post_with_topics_stages_one_act_per_topic(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -466,6 +469,7 @@ async fn a_post_with_topics_stages_one_act_per_topic(pool: PgPool) {
     assert_eq!(writes[2]["family"], "TAG");
 }
 
+/// (´claim:topics:one-act-per-topic´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_post_without_topics_stages_only_its_minting_record(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -482,6 +486,7 @@ async fn a_post_without_topics_stages_only_its_minting_record(pool: PgPool) {
     );
 }
 
+/// (´claim:topics:one-act-per-topic´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_comment_carries_topics_too(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -511,6 +516,9 @@ async fn a_comment_carries_topics_too(pool: PgPool) {
 
 /// A comment's Tag enters the Comment the Review's terminal leg mints,
 /// not the post the Review's A leg entered.
+///
+/// A comment's Tag enters the Comment the review minted, never the post the review entered.
+/// ´claim:topics:a-comments-tag-enters-the-comment´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_comments_tag_enters_the_comment(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -545,6 +553,9 @@ async fn a_comments_tag_enters_the_comment(pool: PgPool) {
 /// The whole batch lands through one signing loop, and the Tag's middle
 /// is the node the Publish minted — which only exists once prepare has
 /// allocated the sequence value.
+///
+/// The whole batch lands through one signing loop, the Tag's middle being a node that exists only once prepare has allocated its sequence value.
+/// ´claim:topics:the-batch-lands-through-one-signing-loop´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_batch_lands_whole(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -584,6 +595,9 @@ async fn the_batch_lands_whole(pool: PgPool) {
 /// Prepare only — no signing, no landing. The registry row is written in
 /// the transaction that stages the act (D5), because the composer needs
 /// the name the moment it is declared.
+///
+/// A topic's registry row is written in the transaction that stages the act, because the composer needs the name the moment it is declared.
+/// ´claim:topics:staging-registers-the-name´
 #[sqlx::test(migrations = "../../migrations")]
 async fn staging_a_tag_registers_its_name(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -603,6 +617,9 @@ async fn staging_a_tag_registers_its_name(pool: PgPool) {
 
 /// The first of the refusals, every one of which lands before a single
 /// act is staged.
+///
+/// Every batch refusal lands before a single act is staged.
+/// ´claim:topics:a-refusal-stages-nothing´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_illegal_name_refuses_the_whole_batch(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -634,6 +651,7 @@ async fn an_illegal_name_refuses_the_whole_batch(pool: PgPool) {
     );
 }
 
+/// (´claim:topics:canonical-duplicates-are-refused´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn duplicate_names_after_canonicalization_are_refused(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -656,6 +674,7 @@ async fn duplicate_names_after_canonicalization_are_refused(pool: PgPool) {
     assert!(refused["preparePost"]["writes"].is_null());
 }
 
+/// (´claim:topics:the-batch-caps-at-ten´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_batch_cap_admits_ten_and_refuses_eleven(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -693,6 +712,8 @@ async fn the_batch_cap_admits_ten_and_refuses_eleven(pool: PgPool) {
 /// but the census bounds Tag confidence to `[0, 1]`, so a negative
 /// confidence is a field-level refusal rather than a formation fault
 /// dressed up as an internal error (D12).
+///
+/// (´claim:topics:confidence-is-narrower-than-its-scalar´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn negative_confidence_is_a_field_level_refusal(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -716,6 +737,9 @@ async fn negative_confidence_is_a_field_level_refusal(pool: PgPool) {
 
 /// Out of the scalar's own range is a transport fault, as everywhere
 /// else `Dimension` is used.
+///
+/// A parameter outside the scalar's own range is a transport fault, as everywhere else that scalar is used.
+/// ´claim:topics:the-scalars-range-is-a-transport-boundary´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_parameter_off_the_dimension_scale_is_a_transport_fault(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -739,6 +763,9 @@ async fn a_parameter_off_the_dimension_scale_is_a_transport_fault(pool: PgPool) 
 
 /// The standalone gesture: a tag declared on its own rather than inside
 /// a creation batch stages exactly one act.
+///
+/// A tag declared on its own rather than inside a creation batch stages exactly one act.
+/// ´claim:topics:a-standalone-tag-stages-one-act´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_standalone_tag_stages_one_act(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -752,6 +779,8 @@ async fn a_standalone_tag_stages_one_act(pool: PgPool) {
     assert_eq!(writes[0]["family"], "TAG");
 }
 
+/// A standalone tag's refusals name its own fields, there being no batch entry to index.
+/// ´claim:topics:a-standalone-refusal-names-its-own-fields´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_standalone_tag_names_its_own_fields_on_refusal(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -771,6 +800,8 @@ async fn a_standalone_tag_names_its_own_fields_on_refusal(pool: PgPool) {
     );
 }
 
+/// Only content is taggable, so a target that is not content is refused.
+/// ´claim:topics:only-content-is-taggable´
 #[sqlx::test(migrations = "../../migrations")]
 async fn tagging_something_that_is_not_content_is_refused(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -788,6 +819,8 @@ async fn tagging_something_that_is_not_content_is_refused(pool: PgPool) {
     );
 }
 
+/// Tagging needs a member session.
+/// ´claim:topics:tagging-is-member-gated´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_guest_cannot_tag(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -803,6 +836,9 @@ async fn a_guest_cannot_tag(pool: PgPool) {
 
 /// The un-tag: a further Tag at relevance 0, an ordinary priced record
 /// that the fold reads as withdrawn — never an erasure (hashtag.md §4).
+///
+/// An un-tag is a further Tag at relevance zero, an ordinary priced record the fold reads as withdrawn rather than an erasure.
+/// ´claim:topics:an-un-tag-is-a-further-record´
 #[sqlx::test(migrations = "../../migrations")]
 async fn un_tagging_is_a_further_tag_at_relevance_zero(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -843,6 +879,9 @@ async fn un_tagging_is_a_further_tag_at_relevance_zero(pool: PgPool) {
 /// no per-act family choice anywhere (edges.md §1). Affinity is binary,
 /// so the Type is the target leg and there is no terminal leg to carry
 /// it.
+///
+/// The target selects the family, so the one stance gesture carries an Affinity toward a Type as readily as an Opinion toward a Post, with no per-act family choice anywhere.
+/// ´claim:topics:the-target-selects-the-family´
 #[sqlx::test(migrations = "../../migrations")]
 async fn following_a_topic_writes_an_affinity(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -873,6 +912,9 @@ async fn following_a_topic_writes_an_affinity(pool: PgPool) {
 /// A topic nobody has tagged has no registry row, and its id derives
 /// one-way from its name — so the id spelling cannot reach it and the
 /// name spelling must (D4).
+///
+/// A topic nobody has tagged has no registry row and an identifier derived one-way from its name, so only the name spelling can reach it.
+/// ´claim:topics:an-unregistered-topic-is-reachable-by-name-alone´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_never_tagged_topic_is_followable_by_name(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -891,6 +933,9 @@ async fn a_never_tagged_topic_is_followable_by_name(pool: PgPool) {
 
 /// Once a name has a registry row the id spelling works too — which is
 /// what lets a chip carry an id straight into the follow control.
+///
+/// Once a name has a registry row the identifier spelling works too, which is what lets a chip carry one straight into the follow control.
+/// ´claim:topics:a-registered-topic-is-reachable-by-id´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_registered_topic_is_followable_by_id(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -932,6 +977,9 @@ async fn a_registered_topic_is_followable_by_id(pool: PgPool) {
 
 /// Unfollowing is `prepareSeverance` on the topic — the same generic
 /// gesture every other stance target gets (D9).
+///
+/// Unfollowing is the same generic severance every other stance target gets.
+/// ´claim:topics:unfollowing-is-ordinary-severance´
 #[sqlx::test(migrations = "../../migrations")]
 async fn unfollowing_a_topic_severs_the_affinity_bundle(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -970,6 +1018,8 @@ async fn unfollowing_a_topic_severs_the_affinity_bundle(pool: PgPool) {
     assert!(sum.abs() < 1e-9, "the bundle nets to zero: {listing}");
 }
 
+/// Severing a topic the viewer does not follow is refused, there being no bundle to walk back.
+/// ´claim:topics:severing-an-unfollowed-topic-is-refused´
 #[sqlx::test(migrations = "../../migrations")]
 async fn severing_an_unfollowed_topic_is_refused(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -986,6 +1036,9 @@ async fn severing_an_unfollowed_topic_is_refused(pool: PgPool) {
 /// Exactly one spelling of the target, in both stance mutations: naming
 /// neither leaves the gesture pointing nowhere, and naming both makes
 /// the record's endpoint a guess.
+///
+/// Both stance mutations take exactly one spelling of the target: naming neither points the gesture nowhere, and naming both makes the record's endpoint a guess.
+/// ´claim:topics:a-stance-names-exactly-one-target´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_stance_names_exactly_one_target(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1016,6 +1069,7 @@ async fn a_stance_names_exactly_one_target(pool: PgPool) {
     }
 }
 
+/// (´claim:topics:an-illegal-name-names-its-field´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_illegal_topic_name_refuses_the_follow(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1039,6 +1093,9 @@ async fn an_illegal_topic_name_refuses_the_follow(pool: PgPool) {
 
 /// Every well-formed name already denotes a Type, and a read never
 /// writes the registry (D4).
+///
+/// Every well-formed name already denotes a Type, and a read never writes the registry.
+/// ´claim:topics:a-name-denotes-without-being-registered´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_untagged_name_resolves_without_a_registry_row(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1064,6 +1121,8 @@ async fn an_untagged_name_resolves_without_a_registry_row(pool: PgPool) {
     );
 }
 
+/// A name the substrate could never carry resolves to nothing rather than to an error.
+/// ´claim:topics:an-impossible-name-resolves-to-nothing´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_name_the_substrate_could_never_carry_resolves_to_nothing(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1081,6 +1140,9 @@ async fn a_name_the_substrate_could_never_carry_resolves_to_nothing(pool: PgPool
 
 /// A `Hashtag` is not a `Node`: it has no minting record, so there is
 /// nothing to date and nothing to land (D2).
+///
+/// A hashtag is no node: it has no minting record, so there is nothing to date and nothing to land.
+/// ´claim:topics:a-hashtag-is-no-node´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_hashtag_carries_no_node_fields(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1099,6 +1161,8 @@ async fn a_hashtag_carries_no_node_fields(pool: PgPool) {
     }
 }
 
+/// An artifact's chip row serves the author's current topics as the fold has them.
+/// ´claim:topics:the-chip-row-is-the-authors-current-fold´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_posts_chip_row_serves_the_authors_current_topics(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1124,6 +1188,8 @@ async fn a_posts_chip_row_serves_the_authors_current_topics(pool: PgPool) {
 
 /// Defaults, as jakob ruled them: a modest relevance claim held with
 /// full confidence in one's own declaration (D13).
+///
+/// (´claim:topics:omitted-parameters-take-the-defaults´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn omitted_parameters_land_the_declared_defaults(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1142,6 +1208,8 @@ async fn omitted_parameters_land_the_declared_defaults(pool: PgPool) {
 /// other, and the chip is gone without anything being erased. Re-tagging
 /// brings it back, the fold reading the newest record rather than a
 /// tombstone.
+///
+/// (´claim:topics:an-un-tag-is-a-further-record´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn un_tagging_takes_the_chip_off_the_row(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1184,6 +1252,9 @@ async fn un_tagging_takes_the_chip_off_the_row(pool: PgPool) {
 /// Third-party claims are the ranker's to weight, so 2.3's chip row
 /// carries only the content-intrinsic channel (D8) — and neither does
 /// such a claim reach the topic page's author-owned channel.
+///
+/// A third party's claim is the ranker's to weight, so the chip row carries only the content-intrinsic channel and the topic page only the author-owned one.
+/// ´claim:topics:a-third-partys-tag-stays-off-both-rows´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_strangers_tag_stays_off_the_chip_row(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1216,6 +1287,9 @@ async fn a_strangers_tag_stays_off_the_chip_row(pool: PgPool) {
 
 /// A tag still in flight is the author's own content from the moment
 /// they sign it — and nobody else's business until it lands.
+///
+/// A tag still in flight is its author's own content from the moment they sign it, and nobody else's business until it lands.
+/// ´claim:topics:a-staged-tag-shows-to-its-author-alone´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_pending_tag_shows_to_its_author_only(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1248,6 +1322,7 @@ async fn a_pending_tag_shows_to_its_author_only(pool: PgPool) {
     );
 }
 
+/// (´claim:topics:the-chip-row-is-the-authors-current-fold´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_comments_chip_row_reads_the_same_fold(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1271,6 +1346,8 @@ async fn a_comments_chip_row_reads_the_same_fold(pool: PgPool) {
     );
 }
 
+/// A topic page lists the content tagged with it.
+/// ´claim:topics:a-topic-page-lists-its-content´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_topic_page_lists_the_content_tagged_with_it(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1288,6 +1365,8 @@ async fn a_topic_page_lists_the_content_tagged_with_it(pool: PgPool) {
     assert_eq!(listed[0]["pending"], false);
 }
 
+/// The tagged-content list refuses over-asking rather than silently clamping.
+/// ´claim:topics:the-tagged-content-list-refuses-over-asking´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_tagged_content_limit_refuses_over_asking(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1303,6 +1382,9 @@ async fn the_tagged_content_limit_refuses_over_asking(pool: PgPool) {
 
 /// The follow control's read: the topic page shows where the viewer's
 /// own Affinity bundle stands, and what severing it would cost.
+///
+/// A topic page shows where the viewer's own Affinity bundle stands and what severing it would cost.
+/// ´claim:topics:a-topic-page-reads-the-viewers-own-follow´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_topic_page_reads_the_viewers_own_follow(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1331,6 +1413,9 @@ async fn a_topic_page_reads_the_viewers_own_follow(pool: PgPool) {
 }
 
 /// Follow, then unfollow, then read: the round trip a topic page runs.
+///
+/// Follow, unfollow and read round-trip through the topic page as a client runs them.
+/// ´claim:topics:the-follow-control-round-trips´
 #[sqlx::test(migrations = "../../migrations")]
 async fn follow_and_unfollow_round_trip_through_the_topic_page(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1453,6 +1538,8 @@ async fn seed_standing_topics(
 /// gesture; this bounds what the gestures accumulate into, and the
 /// standalone tag is the only one that meets an artifact already
 /// carrying a set.
+///
+/// (´claim:topics:the-standing-set-caps-at-fifty´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_standing_topic_cap_refuses_the_tag_past_fifty(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1480,6 +1567,8 @@ async fn the_standing_topic_cap_refuses_the_tag_past_fifty(pool: PgPool) {
 
 /// The cap counts the fold's view: a topic withdrawn at relevance 0 has
 /// left the chip row, and the tag that takes its place is admitted.
+///
+/// (´claim:topics:the-standing-cap-counts-what-stands´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_untagged_topic_frees_a_slot_under_the_standing_topic_cap(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1503,6 +1592,8 @@ async fn an_untagged_topic_frees_a_slot_under_the_standing_topic_cap(pool: PgPoo
 
 /// Withdrawing stays possible on a full artifact: an un-tag claims no
 /// slot, so the cap can never trap an author inside it.
+///
+/// (´claim:topics:the-cap-never-traps-the-author´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_un_tag_is_admitted_on_an_artifact_at_the_standing_topic_cap(pool: PgPool) {
     let rig = Rig::new(pool).await;
