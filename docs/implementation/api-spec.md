@@ -3000,6 +3000,18 @@ input UploadMediaInput {
 }
 type UploadMediaPayload { media: MediaAttachment! }
 
+"Rewrite an uploaded asset's description. Owner-only, and a
+ stranger's attempt answers exactly as one on an asset that does
+ not exist. Two-valued: altText is the only field, so a call always
+ says what the description should now be — text sets it, null or
+ blank clears it. The bytes never move; nothing else about an asset
+ is editable."
+input UpdateMediaInput {
+  mediaId: UUID!
+  altText: String
+}
+type UpdateMediaPayload { media: MediaAttachment }
+
 "A prepared content write: the staged handshake plus `node` — the
  L2 id the envelope binds to the minted node, and the id the
  content reads serve once the record lands. The client needs it to
@@ -3020,8 +3032,31 @@ extend type Mutation {
   prepareCommentEdit(input: PrepareCommentEditInput!): PrepareContentPayload!
   prepareProfileUpdate(input: PrepareProfileUpdateInput!): PreparePayload!
   uploadMedia(input: UploadMediaInput!): UploadMediaPayload!
+  updateMedia(input: UpdateMediaInput!): UpdateMediaPayload!
 }
 ```
+
+**Describing a picture.** A client uploads while its author is
+still writing — that is what keeps the wizard responsive — so the
+description is typed after the bytes are already stored, and
+`updateMedia` is how it reaches them. The bytes stay immutable:
+only `alt_text` moves, and the digest that names the bytes is
+untouched.
+
+What a *published* post says does not move with it. Every act's
+manifest snapshots the description at prepare, and promotion binds
+a manifest entry to its asset by digest alone, so a landed record
+keeps the alt text it witnessed and no later edit reaches it.
+Changing what a published post says is an edit act, exactly as it
+is for the body. `MediaAttachment.altText` serves the row, so it
+can differ from what an older record witnessed: the record is the
+published statement, the row is the current one.
+
+Its own budget, `RATE_LIMIT_MEDIA_UPDATE_PER_ACCOUNT` (240/hour),
+rather than the upload budget: that one bounds disk, and a
+ten-picture post spending ten uploads plus ten descriptions
+against it would be throttled by a limit sized to sit well above
+exactly that gesture.
 
 **The author's own sensitive mark.** `sensitive` is the seal's
 switch and `sensitiveReason` the line the sheet offers; both ride
@@ -3101,7 +3136,9 @@ says so.
 by the API: the store is its own service, so `MediaAttachment.url`
 is absolute and minted per read from a configured base. Objects
 carry `Cache-Control: public, max-age=31536000, immutable`, which
-is safe because an asset is immutable after upload, and the store
+is safe because an asset's bytes are immutable after upload — a
+description can change, but nothing the store serves does — and the
+store
 answers ranged requests natively. A removed object answers 404 —
 the visible mark for a redaction rides
 `MediaAttachment.status` and the client placeholder it drives,

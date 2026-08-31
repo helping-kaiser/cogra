@@ -433,10 +433,10 @@ points at a parent — see "Why parents point at attachments" below.
 -- row never points at a parent — see "Why parents point at attachments"
 -- below.
 --
--- An asset row is immutable after upload: there is no update surface,
--- and a corrected caption or a re-crop is a new asset. Alt text rides
--- the payload envelope, so editing it has to be a new record anyway —
--- the same cost a typo in the body already carries.
+-- The bytes are immutable after upload: a re-crop is a new asset, and
+-- the digest names these bytes forever. alt_text is the one field that
+-- moves — updateMedia rewrites it, because a client uploads while its
+-- author is still writing and the description arrives after the bytes.
 --
 -- digest is SHA-256 over the stored bytes, computed after metadata
 -- stripping so it describes exactly what the store holds and what a
@@ -1512,12 +1512,30 @@ declared. The same index serves the foreign-key check every
 `media_attachments` delete performs, which redaction runs in
 bulk.
 
-An asset row is **immutable after upload**. There is no update
-surface for one, and a corrected caption or a different crop is a
-new asset rather than an edit of an old one — alt text rides the
-payload envelope, so changing it is a new record either way. That
-is what makes the served bytes cacheable forever and what lets a
-reader treat a digest as a permanent name for them.
+An asset's **bytes are immutable after upload**. A different crop is
+a new asset rather than an edit of an old one, which is what makes
+the served bytes cacheable forever and what lets a reader treat a
+digest as a permanent name for them.
+
+Its **description is not**. `updateMedia` rewrites `alt_text`, and
+the window that needs it is the compose wizard's: a client uploads
+while its author is still writing, so the description arrives after
+the bytes have already been stored.
+
+That needs no version rows on the asset, because the history the
+append-only rule protects is kept somewhere better. Every act's
+payload envelope snapshots the alt text at prepare, so what each
+post *published* is witnessed per record and permanent; nothing at
+promotion re-reads
+the row, since a manifest entry binds to its asset by digest alone.
+The row carries the author's current description; the records carry
+what each post said. Changing what a landed post says is an edit
+act, exactly as it is for the body.
+
+The consequence to know: `MediaAttachment.altText` serves the row,
+so it can differ from the alt text witnessed by an older record
+carrying the same asset. The record is the published statement; the
+row is the current one.
 
 **Anti-hijack** is enforced at the API layer: when a parent
 references an attachment, the API checks

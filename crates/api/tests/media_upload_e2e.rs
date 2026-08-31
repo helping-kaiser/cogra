@@ -35,6 +35,13 @@ const UPLOAD_MEDIA: &str = r#"mutation($input: UploadMediaInput!) {
   }
 }"#;
 
+const UPDATE_MEDIA: &str = r#"mutation($input: UpdateMediaInput!) {
+  updateMedia(input: $input) {
+    media { id digest altText }
+    userErrors { code message field }
+  }
+}"#;
+
 struct Rig {
     app: axum::Router,
     pool: PgPool,
@@ -189,6 +196,37 @@ impl Rig {
             "unexpected transport errors: {json}"
         );
         json["data"]["uploadMedia"].clone()
+    }
+
+    /// One ordinary JSON GraphQL request — `updateMedia` carries no
+    /// binary, so it needs none of the multipart apparatus above.
+    async fn update(&self, token: &str, media_id: &str, alt_text: Option<&str>) -> Value {
+        let body = json!({
+            "query": UPDATE_MEDIA,
+            "variables": { "input": { "mediaId": media_id, "altText": alt_text }},
+        })
+        .to_string();
+        let response = self
+            .app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/graphql")
+                    .header("content-type", "application/json")
+                    .header("authorization", format!("Bearer {token}"))
+                    .header("x-real-ip", "203.0.113.7")
+                    .body(Body::from(body))
+                    .expect("request"),
+            )
+            .await
+            .expect("response");
+        let json = body_json(response).await;
+        assert!(
+            json.get("errors").is_none(),
+            "unexpected transport errors: {json}"
+        );
+        json["data"]["updateMedia"].clone()
     }
 }
 
@@ -396,4 +434,86 @@ async fn an_unattached_asset_is_swept_with_its_object(pool: PgPool) {
         .await
         .expect("count");
     assert_eq!(rows, 0);
+}
+
+/// The description is set after the bytes are already stored — the
+/// window the wizard actually works in, since it uploads while the
+/// author is still writing. The bytes do not move: the digest the
+/// asset was named by is the digest it keeps.
+///
+/// A description can be written after the upload, and setting it leaves the bytes and their digest alone.
+/// ´claim:media:a-description-can-be-set-after-the-upload´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_description_can_be_written_after_the_bytes(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let uploaded = rig.upload(&token, None, &photo_with_location()).await;
+    let id = uploaded["media"]["id"].as_str().expect("id").to_string();
+    let digest = uploaded["media"]["digest"].clone();
+    assert!(uploaded["media"]["altText"].is_null(), "nothing typed yet");
+
+    let updated = rig.update(&token, &id, Some("  A sunset  ")).await;
+    assert_eq!(
+        updated["userErrors"].as_array().map(Vec::len),
+        Some(0),
+        "refused: {updated}"
+    );
+    assert_eq!(updated["media"]["altText"], "A sunset", "trimmed like upload");
+    assert_eq!(
+        updated["media"]["digest"], digest,
+        "the bytes the digest names never moved"
+    );
+
+    let cleared = rig.update(&token, &id, None).await;
+    assert!(
+        cleared["media"]["altText"].is_null(),
+        "null clears the description"
+    );
+
+    let blank = rig.update(&token, &id, Some("   ")).await;
+    assert!(
+        blank["media"]["altText"].is_null(),
+        "blank and null are one nothing, not two"
+    );
+}
+
+/// A description is the author's to write. A stranger's attempt reads
+/// exactly like an attempt on an asset that does not exist, so the
+/// surface cannot be walked to learn which ids are real or whose they
+/// are.
+///
+/// Only the uploader can describe an asset, and a stranger's attempt is indistinguishable from one on an asset that does not exist.
+/// ´claim:media:only-the-uploader-can-describe-an-asset´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_stranger_cannot_describe_someone_elses_asset(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_member("author", "author@example.com").await;
+    rig.seed_member("mallory", "mallory@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let stranger = rig.log_in("mallory@example.com").await;
+
+    let uploaded = rig
+        .upload(&token, Some("A sunset"), &photo_with_location())
+        .await;
+    let id = uploaded["media"]["id"].as_str().expect("id").to_string();
+
+    let theirs = rig.update(&stranger, &id, Some("mine now")).await;
+    let absent = rig
+        .update(&stranger, &Uuid::new_v4().to_string(), Some("mine now"))
+        .await;
+    assert!(theirs["media"].is_null());
+    assert_eq!(theirs["userErrors"][0]["code"], "NOT_FOUND");
+    assert_eq!(theirs["userErrors"][0]["field"], json!(["mediaId"]));
+    assert_eq!(
+        theirs["userErrors"], absent["userErrors"],
+        "someone else's asset answers exactly as a missing one does"
+    );
+
+    let still: Option<String> = sqlx::query_scalar("SELECT alt_text FROM media_attachments")
+        .fetch_one(&rig.pool)
+        .await
+        .expect("row");
+    assert_eq!(still.as_deref(), Some("A sunset"), "the row did not move");
 }
