@@ -457,9 +457,13 @@ open class ThrowingContentRepository : ContentRepository {
         license: LicenseChoice,
         tags: List<TagClaim>,
         references: List<ReferenceClaim>,
+        attachments: List<AttachmentClaim>,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
-    override suspend fun prepareCommentEdit(id: String, content: String): Outcome<PreparedContentView> =
-        throw UnsupportedOperationException()
+    override suspend fun prepareCommentEdit(
+        id: String,
+        content: String,
+        attachments: List<AttachmentClaim>,
+    ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun commentReplies(
         commentId: String,
         first: Int,

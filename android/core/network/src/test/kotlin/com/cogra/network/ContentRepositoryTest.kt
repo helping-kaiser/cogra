@@ -6,6 +6,7 @@
 package com.cogra.network
 
 import com.apollographql.apollo.ApolloClient
+import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.Landing
@@ -379,5 +380,56 @@ class ContentRepositoryTest {
         val error = (refused as Outcome.Refused).errors.single()
         assertThat(error.code).isEqualTo(ErrorCode.BAD_INPUT)
         assertThat(error.field).containsExactly("tags", "0", "name").inOrder()
+    }
+
+    // -- A comment's gallery (2026-08-31: comment media) --
+
+    /**
+     * Order is the list's own, and there is **no cover**: a comment's
+     * set leads nothing, so marking a first picture would state a fact
+     * about the gallery that is not true of it.
+     */
+    @Test
+    fun aCommentsGalleryRidesInOrderAndNamesNoCover() = runTest {
+        enqueue(
+            """{"data":{"prepareComment":{"__typename":"PrepareContentPayload",
+               "node":"c1",
+               "writes":[{"__typename":"PreparedWrite","id":"w1","family":"REVIEW",
+                          "canonicalProposal":"AA==","gcAfterEpochs":8}],
+               "userErrors":[]}}}""",
+        )
+        repo().prepareComment(
+            target = "p1",
+            content = "Two from the sea wall",
+            license = LicenseChoice.PublicDomain,
+            attachments = listOf(AttachmentClaim("m1"), AttachmentClaim("m2")),
+        )
+
+        val body = server.takeRequest().body.readUtf8()
+        assertThat(body).contains("\"mediaId\":\"m1\"")
+        assertThat(body).contains("\"mediaId\":\"m2\"")
+        assertThat(body).contains("\"displayOrder\":0")
+        assertThat(body).contains("\"displayOrder\":1")
+        assertThat(body).doesNotContain("isCover")
+    }
+
+    /**
+     * An edit's gallery is the complete state, so an empty one rides as
+     * an explicit `[]` — an absent field would leave the old pictures
+     * standing and make removing the last one unsayable.
+     */
+    @Test
+    fun aCommentEditClearingItsGallerySaysSoExplicitly() = runTest {
+        enqueue(
+            """{"data":{"prepareCommentEdit":{"__typename":"PrepareContentPayload",
+               "node":"c1",
+               "writes":[{"__typename":"PreparedWrite","id":"w1","family":"REVIEW",
+                          "canonicalProposal":"AA==","gcAfterEpochs":8}],
+               "userErrors":[]}}}""",
+        )
+        repo().prepareCommentEdit(id = "c1", content = "Words only now")
+
+        val body = server.takeRequest().body.readUtf8()
+        assertThat(body).contains("\"attachments\":[]")
     }
 }
