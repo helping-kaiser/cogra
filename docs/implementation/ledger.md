@@ -18,10 +18,15 @@ Money amounts never leave the rail. L1 carries the public campaign
 record and pointers ([economics.md §10](../primitive/economics.md#10-the-settlement-record-and-the-payout-flow));
 Postgres carries display content and cached views; balances,
 escrow, transfers, and payouts live here
-([architecture.md](architecture.md)). Layer 0 never appears on this
-rail at all — admission money is a different asset behind the L1
-boundary, read only as the scalar `B_i`
-([economics.md §1](../primitive/economics.md#1-the-two-economies)).
+([architecture.md](architecture.md)). Layer 0's accounting never
+appears on this rail — admission money is **L-BTC behind the L1
+boundary**, the same chain's native asset in the other economy,
+read by CoGra only as the scalar `B_i`
+([economics.md §1](../primitive/economics.md#1-the-two-economies));
+the two touch only at the reserve conversion below. Living on one
+chain is deliberate: a holder can swap earned CGT for L-BTC through
+the ladder to fund their own θ-debits, or give back to the
+community fund, without leaving Liquid.
 
 Design history: [Q20 (resolved)](../open-questions.md).
 
@@ -248,16 +253,26 @@ direction ([economics.md §1](../primitive/economics.md#1-the-two-economies)).
 
 ## Keys
 
-The rail key is an ordinary **device-held Liquid key** — the same
-custody posture as the actor key
+The rail key is an ordinary **device-held Liquid key**, distinct
+from the actor key but under the same
+custody posture
 ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission),
 [android.md](android.md)): generated and held on the user's device,
 never in CoGra custody, backed up through the same recovery-code and
-client-encrypted-blob story
+client-encrypted-blob story — a second secret in the one container,
+under the one code
 ([auth.md "Key recovery"](auth.md#key-recovery)). There is no smart
 account, no passkey contract stack, and no counterfactual address
 machinery — a UTXO chain needs none of it; an address exists the
 moment the key does.
+
+**The rail key is born lazily, at first wallet open** — the
+wallet's set-up moment, not the join ceremony, which is already
+ceremony enough. The device generates the key, adds its seed to
+the existing recovery blob under the existing code, and closes by
+publishing the payout address as the ceremony's one signed act —
+the parallel Registration below. Until then the account simply has
+no rail side: no address, not tippable, nothing lost.
 
 The account's payout address is published as the Registration
 guild-key field ([user.md §3](../primitive/user.md#3-graph-side-properties)) —

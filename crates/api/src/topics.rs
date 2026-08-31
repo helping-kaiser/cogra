@@ -352,6 +352,8 @@ mod tests {
         }
     }
 
+    /// An omitted tag parameter takes the declared default: a modest relevance claim, held with full confidence in one's own declaration.
+    /// ´claim:topics:omitted-parameters-take-the-defaults´
     #[test]
     fn omitted_parameters_take_the_declared_defaults() {
         let planned = plan_one(&draft("#Rust")).expect("legal");
@@ -360,6 +362,8 @@ mod tests {
         assert_eq!(planned.confidence, DEFAULT_CONFIDENCE);
     }
 
+    /// A malformed topic name is refused against the name field the client sent.
+    /// ´claim:topics:an-illegal-name-names-its-field´
     #[test]
     fn an_illegal_name_names_the_name_field() {
         for bad in ["", "#", "has space", "münchen", &"a".repeat(129)] {
@@ -368,6 +372,8 @@ mod tests {
         }
     }
 
+    /// Tag confidence is narrower than the scalar carrying it, and a value outside the census range is refused against the census-slot field the input spells it by.
+    /// ´claim:topics:confidence-is-narrower-than-its-scalar´
     #[test]
     fn confidence_outside_the_census_range_names_pinterest() {
         let mut d = draft("rust");
@@ -376,6 +382,8 @@ mod tests {
         assert_eq!(e.path, vec!["pInterest".to_string()]);
     }
 
+    /// Tag confidence accepts the whole census range, both ends included.
+    /// ´claim:topics:confidence-takes-its-whole-range´
     #[test]
     fn the_whole_confidence_range_is_accepted() {
         for c in [0.0, 0.5, 1.0] {
@@ -385,6 +393,8 @@ mod tests {
         }
     }
 
+    /// Relevance zero is legal, being the un-tag rather than a malformed claim.
+    /// ´claim:topics:relevance-zero-is-legal´
     #[test]
     fn relevance_zero_is_the_un_tag_and_is_legal() {
         let mut d = draft("rust");
@@ -392,6 +402,8 @@ mod tests {
         assert_eq!(plan_one(&d).expect("legal").relevance, 0.0);
     }
 
+    /// Negative relevance is legal, the tag family carrying disagreement as readily as assent.
+    /// ´claim:topics:negative-relevance-is-legal´
     #[test]
     fn negative_relevance_is_legal() {
         let mut d = draft("rust");
@@ -399,6 +411,8 @@ mod tests {
         assert_eq!(plan_one(&d).expect("legal").relevance, -1.0);
     }
 
+    /// A tag batch caps at ten entries: ten are admitted and eleven refused.
+    /// ´claim:topics:the-batch-caps-at-ten´
     #[test]
     fn the_batch_cap_admits_ten_and_refuses_eleven() {
         let at_cap: Vec<TagDraft> = (0..MAX_TAGS_PER_BATCH)
@@ -418,6 +432,9 @@ mod tests {
 
     /// An over-long batch is refused as a batch even when it also carries
     /// a malformed name: the whole-batch fault is the one to report.
+    ///
+    /// The batch cap is decided before the entries are, so an over-long batch reports the whole-batch fault even when it also carries a malformed one.
+    /// ´claim:topics:the-batch-cap-precedes-the-entries´
     #[test]
     fn the_cap_is_checked_before_the_entries() {
         let mut over: Vec<TagDraft> = (0..MAX_TAGS_PER_BATCH + 1)
@@ -442,6 +459,9 @@ mod tests {
 
     /// The boundary itself: the fiftieth topic is the last one the
     /// artifact carries, and the fifty-first is refused.
+    ///
+    /// The standing set caps at fifty topics: the fiftieth is carried and the fifty-first refused.
+    /// ´claim:topics:the-standing-set-caps-at-fifty´
     #[test]
     fn the_standing_cap_admits_the_fiftieth_topic_and_refuses_the_next() {
         let fresh = [tag("fresh", 0.1)];
@@ -456,6 +476,9 @@ mod tests {
 
     /// The cap counts what stands: an un-tag is a further Tag at
     /// relevance 0, the fold drops it, and its slot comes back.
+    ///
+    /// The standing cap counts what stands, so a topic withdrawn at relevance zero hands its slot back.
+    /// ´claim:topics:the-standing-cap-counts-what-stands´
     #[test]
     fn an_untagged_topic_frees_its_slot_under_the_standing_cap() {
         let mut live = standing(MAX_LIVE_TOPICS_PER_ARTIFACT);
@@ -465,6 +488,9 @@ mod tests {
 
     /// Withdrawing is never refused for want of room — a full artifact
     /// must stay un-taggable, or the cap would trap the author inside it.
+    ///
+    /// An un-tag is admitted on a full artifact, so the cap can never trap an author inside it.
+    /// ´claim:topics:the-cap-never-traps-the-author´
     #[test]
     fn the_un_tag_is_admitted_at_the_standing_cap() {
         let live = standing(MAX_LIVE_TOPICS_PER_ARTIFACT);
@@ -477,12 +503,16 @@ mod tests {
 
     /// Re-declaring a topic the author already stands on claims no slot —
     /// newest-wins replaces the winner rather than adding a chip.
+    ///
+    /// (´claim:topics:the-standing-cap-counts-what-stands´)
     #[test]
     fn re_declaring_a_standing_topic_claims_no_further_slot() {
         let live = standing(MAX_LIVE_TOPICS_PER_ARTIFACT);
         assert!(over_the_standing_cap(&live, &[tag("t7", 0.9)]).is_none());
     }
 
+    /// Two names that canonicalize to one topic are refused as the duplicate they are.
+    /// ´claim:topics:canonical-duplicates-are-refused´
     #[test]
     fn names_colliding_after_canonicalization_are_refused() {
         let batch = [draft("rust"), draft("Rust")];
@@ -495,12 +525,15 @@ mod tests {
         assert!(e.message.contains("rust"), "{}", e.message);
     }
 
+    /// (´claim:topics:canonical-duplicates-are-refused´)
     #[test]
     fn the_sigil_does_not_make_a_name_distinct() {
         let batch = [draft("rust"), draft("#rust")];
         assert!(plan_batch(&batch).is_err());
     }
 
+    /// An entry-level refusal carries the index of the entry that caused it.
+    /// ´claim:topics:an-entry-refusal-carries-its-index´
     #[test]
     fn a_batch_entry_refusal_carries_its_index() {
         let batch = [draft("ok"), draft("also-ok"), draft("nope!")];
@@ -511,6 +544,8 @@ mod tests {
         );
     }
 
+    /// An empty tag batch plans to no acts at all rather than to a refusal.
+    /// ´claim:topics:an-empty-batch-plans-to-nothing´
     #[test]
     fn an_empty_batch_plans_to_nothing() {
         assert!(plan_batch(&[]).expect("legal").is_empty());
@@ -518,6 +553,9 @@ mod tests {
 
     /// The census transposes on the T-leg, so the gesture must carry
     /// `(r, c)` for that transposition to land where the fold reads it.
+    ///
+    /// The Tag gesture writes the act tuple, the census transposing it on the terminal leg for the fold to read back.
+    /// ´claim:topics:the-gesture-writes-the-act-tuple´
     #[test]
     fn the_gesture_writes_the_act_tuple_never_a_leg_rendering() {
         let tag = PlannedTag {
@@ -535,6 +573,8 @@ mod tests {
         assert!(g.payload.is_empty(), "a topic claim carries no payload");
     }
 
+    /// The planned gesture is a well-formed Tag, down to the family, the legs and the parameters the census fixes.
+    /// ´claim:topics:the-planned-gesture-is-well-formed´
     #[test]
     fn the_gesture_is_a_well_formed_tag() {
         let tag = PlannedTag {

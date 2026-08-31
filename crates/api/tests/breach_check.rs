@@ -47,6 +47,7 @@ async fn range_server(status: StatusCode, body: String) -> String {
     format!("http://{addr}/range")
 }
 
+/// (´claim:breach:a-positive-count-reports-breached´)
 #[tokio::test]
 async fn a_corpus_hit_reports_breached() {
     let (_, suffix) = split_digest("password123");
@@ -56,6 +57,7 @@ async fn a_corpus_hit_reports_breached() {
     assert!(matches!(corpus.is_breached("password123").await, Ok(true)));
 }
 
+/// (´claim:breach:only-a-positive-count-is-a-breach´)
 #[tokio::test]
 async fn an_absent_suffix_reports_clean() {
     let body = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:12\r\nBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB:1"
@@ -70,6 +72,8 @@ async fn an_absent_suffix_reports_clean() {
 
 /// Add-Padding responses list the queried suffix itself with count 0, so
 /// a listed suffix reads as clean unless its count is positive.
+///
+/// (´claim:breach:only-a-positive-count-is-a-breach´)
 #[tokio::test]
 async fn a_padding_entry_reports_clean() {
     let (_, suffix) = split_digest("padded password");
@@ -82,6 +86,8 @@ async fn a_padding_entry_reports_clean() {
     ));
 }
 
+/// A corpus answering with a fault is an error for the caller to fail open on, never a verdict about the password.
+/// ´claim:breach:a-faulting-corpus-is-an-error´
 #[tokio::test]
 async fn a_server_fault_is_an_error_for_the_caller_to_fail_open_on() {
     let corpus = HibpCorpus::with_base_url(
@@ -91,6 +97,8 @@ async fn a_server_fault_is_an_error_for_the_caller_to_fail_open_on() {
     assert!(corpus.is_breached("whatever password").await.is_err());
 }
 
+/// An unreachable corpus errors within a bounded wait rather than hanging the request behind it.
+/// ´claim:breach:an-unreachable-corpus-is-bounded´
 #[tokio::test]
 async fn an_unreachable_corpus_is_an_error_not_a_hang() {
     let corpus = HibpCorpus::with_base_url("http://127.0.0.1:9/range".to_string()).expect("client");

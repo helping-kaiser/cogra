@@ -130,6 +130,8 @@ fn parse_axis(value: &str) -> Option<f64> {
 mod license_tests {
     use super::{AXIS_STEPS, ContentError, License};
 
+    /// Each published licence tier renders to its own canonical string.
+    /// ´claim:content:a-tier-renders-canonically´
     #[test]
     fn canonical_renders_the_published_tiers() {
         let cases = [
@@ -147,6 +149,8 @@ mod license_tests {
         }
     }
 
+    /// Every point of the licence grid parses back to the value its canonical rendering came from.
+    /// ´claim:content:the-licence-grid-round-trips´
     #[test]
     fn canonical_round_trips_across_the_whole_grid() {
         for steps in 0..=1000 {
@@ -159,6 +163,8 @@ mod license_tests {
         }
     }
 
+    /// Every licence string the retired ladder ever published still parses, so no landed record becomes unreadable.
+    /// ´claim:content:published-licence-strings-stay-readable´
     #[test]
     fn every_string_the_retired_ladder_published_still_parses() {
         for a in ["0", "1"] {
@@ -170,6 +176,8 @@ mod license_tests {
         }
     }
 
+    /// A licence string this instance never published is refused rather than guessed at.
+    /// ´claim:content:an-unpublished-licence-string-is-refused´
     #[test]
     fn parse_refuses_what_cogra_never_published() {
         for bad in [
@@ -186,6 +194,8 @@ mod license_tests {
         }
     }
 
+    /// The checked constructor admits every licence the square defines.
+    /// ´claim:content:the-licence-square-is-admitted-whole´
     #[test]
     fn checked_accepts_the_whole_square() {
         assert_eq!(
@@ -197,6 +207,8 @@ mod license_tests {
         );
     }
 
+    /// A licence a degree off the square or off the grid entirely is refused at construction.
+    /// ´claim:content:a-licence-off-the-square-is-refused´
     #[test]
     fn checked_refuses_degrees_off_the_square_or_off_the_grid() {
         for (a, o) in [
