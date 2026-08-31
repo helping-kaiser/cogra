@@ -22,11 +22,23 @@
 const REMOVE_GLYPH =
   "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z";
 
-function Ring({ progress, size = 26 }: { progress: number; size?: number }) {
+// THE RING NEVER INVENTS A NUMBER. The upload model reports a state, not a
+// fraction, so an upload in flight draws the ring as a turning arc rather than a
+// made-up percentage — a determinate ring at a guessed value would be a lie
+// told in the one place the author is watching. A measured fraction, when one
+// exists, fills the arc instead.
+function Ring({ progress, size = 26 }: { progress: number | "indeterminate"; size?: number }) {
   const r = 12;
   const c = 2 * Math.PI * r;
+  const arc = progress === "indeterminate" ? 0.25 : Math.max(0.02, Math.min(1, progress));
   return (
-    <svg viewBox="0 0 28 28" width={size} height={size} aria-hidden="true">
+    <svg
+      viewBox="0 0 28 28"
+      width={size}
+      height={size}
+      aria-hidden="true"
+      className={progress === "indeterminate" ? "motion-safe:animate-spin" : undefined}
+    >
       <circle cx="14" cy="14" r={r} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="3" />
       <circle
         cx="14"
@@ -36,7 +48,7 @@ function Ring({ progress, size = 26 }: { progress: number; size?: number }) {
         stroke="#ffffff"
         strokeWidth="3"
         strokeLinecap="round"
-        strokeDasharray={`${Math.max(0.02, Math.min(1, progress)) * c} ${c}`}
+        strokeDasharray={`${arc * c} ${c}`}
         transform="rotate(-90 14 14)"
       />
     </svg>
@@ -68,7 +80,7 @@ export function MediaThumb({
   fit?: "cover" | "contain";
   radius?: string;
   cover?: boolean;
-  progress?: number;
+  progress?: number | "indeterminate";
   failed?: boolean;
   onRemove?: () => void;
   removeLabel?: string;
@@ -103,9 +115,11 @@ export function MediaThumb({
           Cover
         </span>
       ) : null}
-      {typeof progress === "number" && !failed ? (
+      {progress !== undefined && !failed ? (
         <span
-          aria-label={`Uploading, ${Math.round(progress * 100)}%`}
+          aria-label={
+            progress === "indeterminate" ? "Uploading" : `Uploading, ${Math.round(progress * 100)}%`
+          }
           data-testid={testId ? `${testId}-progress` : undefined}
           className="absolute inset-0 grid place-items-center bg-scrim/35"
         >

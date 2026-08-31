@@ -28,6 +28,13 @@ describe("MediaThumb", () => {
     expect(screen.getByLabelText("Uploading, 42%")).toBeInTheDocument();
   });
 
+  it("says only that it is uploading when no fraction has been measured", () => {
+    // The upload model reports a state, not a percentage — so the ring turns
+    // rather than claiming a number nobody counted.
+    render(<MediaThumb src="blob:one" progress="indeterminate" testId="thumb" />);
+    expect(screen.getByLabelText("Uploading")).toBeInTheDocument();
+  });
+
   it("trades the remove X for the badge when the upload failed", () => {
     // The ways out of a failure are words beside the row, not a second meaning
     // for the same corner.

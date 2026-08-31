@@ -13,7 +13,7 @@ export type PickedThumb = {
   id: string;
   src?: string | null;
   altText?: string | null;
-  progress?: number;
+  progress?: number | "indeterminate";
   failed?: boolean;
 };
 

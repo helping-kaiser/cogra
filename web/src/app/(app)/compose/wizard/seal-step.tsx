@@ -23,6 +23,7 @@
 
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { PillButton, TextAction } from "@/lib/ui2/pill-button";
+import { UploadStatusLine } from "@/lib/ui2/compose/upload-notice";
 import { StanceSlider } from "@/lib/ui/stance-slider";
 import { LicenseChooser } from "@/lib/ui/license-fields";
 import { formatDimension } from "@/lib/ui/stance-format";
@@ -61,6 +62,14 @@ export function SealStep({
   onRestoreKey: () => void;
 }) {
   const acts = signedActions(state);
+  // How many are still moving — the count the gate reads out. A failure is not
+  // counted here: it is not something the reader is waiting for.
+  const uploading = state.assets.filter(
+    (asset) =>
+      asset.upload.kind === "waiting" ||
+      asset.upload.kind === "encoding" ||
+      asset.upload.kind === "uploading",
+  ).length;
   const bodyLine =
     state.mode === "media"
       ? state.assets.length === 1
@@ -150,11 +159,22 @@ export function SealStep({
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {blocked && (
+          {/* THE GATE, drawn as the board draws it (ComposeSealUploading): while
+              bytes are still moving the seal says so with the count and holds
+              the sign button, because nothing signs until the content it signs
+              exists. A failure is words rather than a count — there is nothing
+              left to wait for. */}
+          {blocked && uploading > 0 ? (
+            <UploadStatusLine
+              done={state.assets.length - uploading}
+              total={state.assets.length}
+              testId="wizard-seal-blocked"
+            />
+          ) : blocked ? (
             <p role="status" data-testid="wizard-seal-blocked" className="m-0 text-body-medium text-on-surface-variant">
               {blocked}
             </p>
-          )}
+          ) : null}
           <PillButton
             testId="wizard-sign"
             full
