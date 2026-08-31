@@ -675,12 +675,10 @@ struct PrepareProfileUpdateInput {
     display_name: async_graphql::MaybeUndefined<String>,
     bio: async_graphql::MaybeUndefined<String>,
     website_url: async_graphql::MaybeUndefined<String>,
-    /// The avatar — an asset this account uploaded. Explicit null clears
-    /// it back to the monogram, which is the designed placeholder rather
-    /// than a gap.
+    /// The avatar — the profile's one image, an asset this account
+    /// uploaded. Explicit null clears it back to the monogram, which is
+    /// the designed placeholder rather than a gap.
     avatar_media_id: async_graphql::MaybeUndefined<Uuid>,
-    /// The profile cover, same three values.
-    cover_media_id: async_graphql::MaybeUndefined<Uuid>,
 }
 
 /// Uploads one asset. `altText` is the one layout-adjacent fact the
@@ -2308,7 +2306,6 @@ impl Mutation {
             bio: edit_field(input.bio),
             website_url: edit_field(input.website_url),
             avatar_media_id: image_field(input.avatar_media_id),
-            cover_media_id: image_field(input.cover_media_id),
         };
         match crate::profile::prepare_profile_update(
             pool,

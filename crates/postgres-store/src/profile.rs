@@ -19,7 +19,6 @@ pub struct ProfileVersion {
     pub display_name: String,
     pub bio: Option<String>,
     pub avatar_id: Option<Uuid>,
-    pub cover_id: Option<Uuid>,
     pub website_url: Option<String>,
     pub redaction_reason: Option<String>,
     pub created_at: chrono::DateTime<chrono::Utc>,
@@ -36,7 +35,7 @@ pub async fn current_profile(
 ) -> Result<Option<ProfileVersion>, sqlx::Error> {
     sqlx::query_as!(
         ProfileVersion,
-        "SELECT display_name, bio, avatar_id, cover_id, website_url,
+        "SELECT display_name, bio, avatar_id, website_url,
                 redaction_reason, created_at
          FROM actor_profile_versions
          WHERE actor_id = $1
@@ -63,20 +62,18 @@ pub async fn insert_profile_version(
     display_name: &str,
     bio: Option<&str>,
     avatar_id: Option<Uuid>,
-    cover_id: Option<Uuid>,
     website_url: Option<&str>,
     order: LandingOrder,
 ) -> Result<(), sqlx::Error> {
     sqlx::query!(
         "INSERT INTO actor_profile_versions
-             (actor_id, display_name, bio, avatar_id, cover_id, website_url,
+             (actor_id, display_name, bio, avatar_id, website_url,
               landed_epoch, act_time, position)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
         actor_id,
         display_name,
         bio,
         avatar_id,
-        cover_id,
         website_url,
         order.landed_epoch,
         order.act_time,

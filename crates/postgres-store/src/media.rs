@@ -386,8 +386,7 @@ pub async fn sweep_orphans(
           AND NOT EXISTS (SELECT 1 FROM chat_message_attachments a WHERE a.attachment_id = m.id)
           AND NOT EXISTS (SELECT 1 FROM item_attachments         a WHERE a.attachment_id = m.id)
           AND NOT EXISTS (
-                SELECT 1 FROM actor_profile_versions p
-                WHERE p.avatar_id = m.id OR p.cover_id = m.id)
+                SELECT 1 FROM actor_profile_versions p WHERE p.avatar_id = m.id)
           AND NOT EXISTS (SELECT 1 FROM chat_versions c WHERE c.image_id = m.id)
         RETURNING id, storage_key
         "#,
