@@ -953,11 +953,15 @@ mod tests {
         })
     }
 
+    /// An empty source tokenizes to nothing but its end marker.
+    /// ´claim:lex:an-empty-source-is-only-its-end´
     #[test]
     fn empty_source_is_only_eof() {
         assert_eq!(kinds(""), []);
     }
 
+    /// Each punctuation token is the longest one that fits, so a compound form wins over its own prefix.
+    /// ´claim:lex:punctuation-takes-the-longest-match´
     #[test]
     fn punctuation_takes_the_longest_match() {
         assert_eq!(
@@ -990,6 +994,9 @@ mod tests {
     }
 
     /// The reading RFC 8610 states in its comment on `type1`.
+    ///
+    /// A name takes interior dots and hyphens into itself, and a space before a dot makes a control operator instead.
+    /// ´claim:lex:a-name-swallows-interior-dots-and-hyphens´
     #[test]
     fn names_swallow_interior_dots_and_hyphens() {
         assert_eq!(kinds("a.size"), [ident("a.size")]);
@@ -1003,12 +1010,17 @@ mod tests {
 
     /// `id` requires a letter or digit after every run of separators, so the
     /// trailing hyphen is not part of the name.
+    ///
+    /// A name must end on a letter or a digit, so a trailing separator is refused where it stands.
+    /// ´claim:lex:a-name-never-ends-on-a-separator´
     #[test]
     fn a_name_never_ends_on_a_separator() {
         let error = refuse("a-");
         assert_eq!((error.line, error.column), (1, 2));
     }
 
+    /// The socket sigils and the other name characters are read as part of an ordinary name.
+    /// ´claim:lex:sockets-and-plugs-are-ordinary-names´
     #[test]
     fn sockets_and_plugs_are_ordinary_names() {
         assert_eq!(kinds("$socket"), [ident("$socket")]);
@@ -1019,6 +1031,9 @@ mod tests {
     }
 
     /// `fraction = 1*DIGIT`: the dot needs a digit behind it.
+    ///
+    /// A dot with no digit behind it ends the number, so a range never reads as a float.
+    /// ´claim:lex:a-range-is-not-a-float´
     #[test]
     fn a_range_is_not_a_float() {
         assert_eq!(
@@ -1037,6 +1052,9 @@ mod tests {
 
     /// The upper-case prefixes are read too, ABNF string literals being case
     /// insensitive.
+    ///
+    /// An integer is read in decimal, hexadecimal and binary, its base prefix being case insensitive.
+    /// ´claim:lex:an-integer-is-read-in-every-base´
     #[test]
     fn integers_in_every_base() {
         assert_eq!(kinds("0"), [int("0")]);
@@ -1050,6 +1068,9 @@ mod tests {
 
     /// The ordered choice in `uint` falls through to `"0"`. And since
     /// `DIGIT1 *DIGIT` cannot start at 0, `01` is two numbers.
+    ///
+    /// A base prefix with no digits behind it falls through to the integer zero and a name.
+    /// ´claim:lex:a-base-prefix-without-digits-falls-through-to-zero´
     #[test]
     fn a_prefix_without_digits_is_the_integer_zero_and_a_name() {
         assert_eq!(kinds("0x"), [int("0"), ident("x")]);
@@ -1057,6 +1078,8 @@ mod tests {
         assert_eq!(kinds("01"), [int("0"), int("1")]);
     }
 
+    /// A float is read with a fraction, an exponent, or both, and with either sign.
+    /// ´claim:lex:a-float-carries-a-fraction-or-an-exponent´
     #[test]
     fn floats_carry_fractions_and_exponents() {
         assert_eq!(kinds("1.5"), [float("1.5")]);
@@ -1067,6 +1090,8 @@ mod tests {
         assert_eq!(kinds("0.0"), [float("0.0")]);
     }
 
+    /// An exponent marker with no digits behind it is left standing as a name.
+    /// ´claim:lex:an-exponent-without-digits-is-a-name´
     #[test]
     fn an_exponent_without_digits_is_a_name() {
         assert_eq!(kinds("1e"), [int("1"), ident("e")]);
@@ -1077,6 +1102,9 @@ mod tests {
     /// alternative takes `0x1`, leaving the name `p` behind. And `e` is a
     /// hexadecimal digit, so the digits swallow it rather than reading an
     /// exponent.
+    ///
+    /// A hexadecimal float is read only with its binary exponent, and falls back to an integer without one.
+    /// ´claim:lex:a-hexadecimal-float-needs-its-exponent´
     #[test]
     fn hexadecimal_floats_need_their_exponent() {
         assert_eq!(kinds("0x1p3"), [float("0x1p3")]);
@@ -1088,6 +1116,9 @@ mod tests {
 
     /// An escape the lexer does not recognize is still an escape: SESC names a
     /// character class, not a list of letters.
+    ///
+    /// A text literal is carried with its escapes unresolved, an escape the lexer does not name included.
+    /// ´claim:lex:a-text-literal-keeps-its-escapes´
     #[test]
     fn text_literals_keep_their_escapes() {
         assert_eq!(kinds(r#""hi""#), [TokenKind::Text("hi".to_owned())]);
@@ -1099,6 +1130,9 @@ mod tests {
     }
 
     /// The qualifiers are case insensitive, per the preamble to Appendix B.
+    ///
+    /// A byte string is read plain, hex-qualified or base64-qualified, the qualifier being case insensitive.
+    /// ´claim:lex:a-byte-string-is-read-in-every-qualification´
     #[test]
     fn byte_strings_in_all_three_qualifications() {
         assert_eq!(
@@ -1131,6 +1165,8 @@ mod tests {
         );
     }
 
+    /// A qualifier not touching a quote is an ordinary name.
+    /// ´claim:lex:a-qualifier-away-from-its-quote-is-a-name´
     #[test]
     fn a_qualifier_away_from_a_quote_is_a_name() {
         assert_eq!(kinds("h"), [ident("h")]);
@@ -1149,6 +1185,9 @@ mod tests {
 
     /// BCHAR admits CRLF where SCHAR does not, and the line count survives the
     /// literal.
+    ///
+    /// A byte string may carry a line ending, and the line count survives it.
+    /// ´claim:lex:a-byte-string-may-span-lines´
     #[test]
     fn byte_strings_may_span_lines() {
         let tokens = tokenize("'a\nb'").expect("BCHAR admits a line feed");
@@ -1164,6 +1203,9 @@ mod tests {
 
     /// Without a digit behind the dot the head ends and a control operator
     /// begins.
+    ///
+    /// A representation head is scanned whole, major and additional information together, and a space ends it.
+    /// ´claim:lex:a-representation-head-is-scanned-whole´
     #[test]
     fn representation_type_heads_are_scanned_whole() {
         assert_eq!(
@@ -1208,6 +1250,9 @@ mod tests {
 
     /// The ABNF ends COMMENT at a CRLF; the scanner also lets the end of the
     /// source end it.
+    ///
+    /// A comment runs to the line ending or to the end of the source, and leaves no token behind.
+    /// ´claim:lex:a-comment-runs-to-the-line-ending´
     #[test]
     fn comments_run_to_the_line_ending() {
         assert_eq!(kinds("a ; comment\nb"), [ident("a"), ident("b")]);
@@ -1216,6 +1261,8 @@ mod tests {
         assert_eq!(kinds("; trailing"), []);
     }
 
+    /// A line feed and a carriage-return pair each advance the line count once.
+    /// ´claim:lex:both-line-endings-advance-the-line´
     #[test]
     fn line_endings_of_both_shapes_advance_the_line() {
         let tokens = tokenize("a\r\nb\nc").expect("CRLF and LF are both line endings");
@@ -1224,12 +1271,16 @@ mod tests {
         assert_eq!(tokens[2].span.line, 3);
     }
 
+    /// A column counts characters, so a multi-byte character advances it by one.
+    /// ´claim:lex:a-column-counts-characters´
     #[test]
     fn columns_count_characters_and_not_bytes() {
         let tokens = tokenize("\"\u{e4}\u{e4}\" a").expect("source is CDDL");
         assert_eq!((tokens[1].span.line, tokens[1].span.column), (1, 6));
     }
 
+    /// An unterminated literal is refused at the quote that opened it.
+    /// ´claim:lex:an-unterminated-literal-is-located-at-its-quote´
     #[test]
     fn refuses_an_unterminated_text_literal_at_its_opening_quote() {
         let error = refuse("a = \"open");
@@ -1237,6 +1288,7 @@ mod tests {
         assert!(error.detail.contains("unterminated text"));
     }
 
+    /// (´claim:lex:an-unterminated-literal-is-located-at-its-quote´)
     #[test]
     fn refuses_an_unterminated_byte_string_at_its_opening_quote() {
         let error = refuse("a = h'ff");
@@ -1245,24 +1297,33 @@ mod tests {
     }
 
     /// SCHAR excludes the control characters.
+    ///
+    /// A line ending inside a text literal is refused where it stands.
+    /// ´claim:lex:a-text-literal-admits-no-line-ending´
     #[test]
     fn refuses_a_line_ending_inside_a_text_literal() {
         let error = refuse("\"a\nb\"");
         assert_eq!((error.line, error.column), (1, 3));
     }
 
+    /// A backslash with nothing behind it is refused rather than read as a character.
+    /// ´claim:lex:an-escape-at-the-end-of-the-input-is-refused´
     #[test]
     fn refuses_an_escape_at_the_end_of_the_input() {
         let error = refuse("\"a\\");
         assert_eq!((error.line, error.column), (1, 3));
     }
 
+    /// An escape of a control character lies outside the escape class and is refused.
+    /// ´claim:lex:an-escaped-control-character-is-refused´
     #[test]
     fn refuses_an_escaped_control_character() {
         let error = refuse("\"a\\\u{7f}\"");
         assert!(error.detail.contains("SESC"));
     }
 
+    /// A horizontal tab is no whitespace of this grammar and is refused wherever it stands.
+    /// ´claim:lex:a-tab-is-not-whitespace´
     #[test]
     fn refuses_a_tab_because_whitespace_is_the_space_character() {
         let error = refuse("a\t= 1");
@@ -1270,18 +1331,23 @@ mod tests {
         assert!(error.detail.contains("horizontal tab"));
     }
 
+    /// (´claim:lex:a-tab-is-not-whitespace´)
     #[test]
     fn refuses_a_tab_in_a_comment_because_pchar_excludes_it() {
         let error = refuse("; a\tb\n");
         assert!(error.detail.contains("comment"));
     }
 
+    /// A carriage return with no line feed behind it is refused.
+    /// ´claim:lex:a-lone-carriage-return-is-refused´
     #[test]
     fn refuses_a_lone_carriage_return() {
         let error = refuse("a\rb");
         assert!(error.detail.contains("carriage return"));
     }
 
+    /// A dot opening neither a control operator nor a range is refused.
+    /// ´claim:lex:a-dot-that-begins-nothing-is-refused´
     #[test]
     fn refuses_a_dot_that_begins_nothing() {
         let error = refuse("a . 1");
@@ -1289,12 +1355,16 @@ mod tests {
         assert!(error.detail.contains("control-operator"));
     }
 
+    /// A hyphen with no number behind it is refused where it stands.
+    /// ´claim:lex:a-hyphen-that-begins-no-number-is-refused´
     #[test]
     fn refuses_a_hyphen_that_begins_no_number() {
         let error = refuse("- a");
         assert_eq!((error.line, error.column), (1, 1));
     }
 
+    /// A character the grammar names nowhere is refused at its own column.
+    /// ´claim:lex:a-character-outside-the-grammar-is-refused´
     #[test]
     fn refuses_a_character_outside_the_grammar() {
         let error = refuse("a = !");
@@ -1302,6 +1372,8 @@ mod tests {
         assert!(error.detail.contains("unexpected character"));
     }
 
+    /// Every token's span falls on character boundaries of the source it came from.
+    /// ´claim:lex:a-span-slices-its-own-source´
     #[test]
     fn spans_slice_the_source_they_came_from() {
         let source = "reputation-object = { a: 1 }";
@@ -1311,6 +1383,8 @@ mod tests {
         }
     }
 
+    /// Two spans join into the span covering both, keeping the earlier one's line and column.
+    /// ´claim:lex:a-span-reaches-from-one-token-to-another´
     #[test]
     fn a_span_reaches_from_one_node_to_another() {
         let tokens = tokenize("a = 1").expect("source is CDDL");
