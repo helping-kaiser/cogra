@@ -1,41 +1,19 @@
 import React from "react";
 import { HelpDot } from "../core/HelpDot.jsx";
-import { MoneyFigure, CgtMark } from "../core/MoneyFigure.jsx";
+import { MoneyFigure } from "../core/MoneyFigure.jsx";
+import { WashCard } from "./WashCard.jsx";
 
-/* The wallet's HERO (item 12 round 2, jakob 2026-08-31): the balance is a
-   trophy, not a ledger line — this page is the user's reach paying off, and
-   it should feel that way. The card rides THE BRAND WASH (`--surface-hero`,
-   the one decorative gradient surface, blessed same day) with the brand coin
-   GHOSTED oversized into the corner, cropped by the card's edge — the mark as
-   texture, never a second logo.
-
-   Still the one surface that spells CGT (readme §13, Money figures): mark and
-   word adjacent at display size, the "?" (What is CGT?) beside them. The
-   ≈ L-BTC line reads the public ladder market — an estimate, never a promise,
-   hidden at zero. `delta` is the recent-earnings chip ("+14.40 this week"):
-   quiet pride, real number, omitted when there is nothing new. */
+/* The wallet's HERO (item 12 rounds 2–3): the balance as a trophy on the
+   brand wash (`WashCard` — the wash + ghosted coin live there). Still the
+   one surface that spells CGT (readme §13, Money figures): mark and word
+   adjacent at display size, the "?" (What is CGT?) beside them. The ≈ L-BTC
+   line reads the public ladder market — an estimate, never a promise, hidden
+   at zero. `delta` is the recent-earnings chip ("+14.40 this week"): quiet
+   pride, real number, omitted when there is nothing new. */
 
 export function WalletBalance({ amount = 0, approx, delta, onHelp }) {
   return (
-    <div
-      style={{
-        position: "relative",
-        margin: "0 var(--space-4)",
-        borderRadius: "var(--radius-large)",
-        background: "var(--surface-hero)",
-        padding: "var(--space-5) var(--space-5) var(--space-5)",
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--space-2)",
-        flex: "none",
-      }}
-    >
-      {/* The ghost coin — the brand mark at texture scale, cropped by the
-          edge. aria-hidden: it says nothing the figure doesn't. */}
-      <span aria-hidden="true" style={{ position: "absolute", right: "-30px", bottom: "-44px", opacity: 0.18, pointerEvents: "none" }}>
-        <CgtMark size={150} />
-      </span>
+    <WashCard>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "var(--space-2)" }}>
         <span
           style={{
@@ -88,6 +66,6 @@ export function WalletBalance({ amount = 0, approx, delta, onHelp }) {
           )}
         </div>
       )}
-    </div>
+    </WashCard>
   );
 }

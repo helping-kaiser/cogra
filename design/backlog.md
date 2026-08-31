@@ -220,7 +220,13 @@ the hero with the ghosted coin + delta chip, `EarnedChart`
 badges, the campaign's own subpage (*Wallet · your campaign*), the
 address in a card with copy, and the round of wording fixes
 (path-true zero state, key notice leads, centered guest prompt,
-unmissable applicant return).
+unmissable applicant return). Round 3 (same day): the address
+collapses to one line at rest (`PayoutAddressRow`, high on the
+page), campaign money became ordinary history (escrow out / top-up
+out / return in) behind a campaigns DOOR to the new campaigns page
+(*Wallet · campaigns*: start, Yours/You-took-part, open + past),
+and the moment screens (first open, guest, applicant) wear the
+wash via the extracted `WashCard` master.
 
 ### 21 · The media slice · *design + system* · **built**
 Inserted 2026-08-31 (jakob), ahead of item 12: the product's media
