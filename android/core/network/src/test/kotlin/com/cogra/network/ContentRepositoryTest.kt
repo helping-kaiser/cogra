@@ -317,6 +317,70 @@ class ContentRepositoryTest {
     }
 
     /**
+     * The mark is part of that complete state: an edit prepared without
+     * it unmarks the post, so it rides every edit — the switch always,
+     * its reason only under the switch (api-spec.md "The author's own
+     * sensitive mark").
+     */
+    @Test
+    fun anEditReStatesTheAuthorsOwnSensitiveMark() = runTest {
+        enqueue(
+            """{"data":{"preparePostEdit":{"__typename":"PrepareContentPayload",
+               "node":"p1",
+               "writes":[{"__typename":"PreparedWrite","id":"w1","family":"PUBLISH",
+                          "canonicalProposal":"AA==","gcAfterEpochs":8}],
+               "userErrors":[]}}}""",
+        )
+        repo().preparePostEdit(
+            "p1",
+            title = null,
+            description = null,
+            content = "B",
+            sensitive = true,
+            sensitiveReason = "graphic injury",
+        )
+        val marked = server.takeRequest().body.readUtf8()
+        assertThat(marked).contains("\"sensitive\":true")
+        assertThat(marked).contains("\"sensitiveReason\":\"graphic injury\"")
+
+        enqueue(
+            """{"data":{"preparePostEdit":{"__typename":"PrepareContentPayload",
+               "node":"p1",
+               "writes":[{"__typename":"PreparedWrite","id":"w1","family":"PUBLISH",
+                          "canonicalProposal":"AA==","gcAfterEpochs":8}],
+               "userErrors":[]}}}""",
+        )
+        // A reason without the switch is a field-level refusal, so an
+        // unmarked edit sends the switch alone.
+        repo().preparePostEdit(
+            "p1",
+            title = null,
+            description = null,
+            content = "B",
+            sensitive = false,
+            sensitiveReason = "left over from a cleared switch",
+        )
+        val unmarked = server.takeRequest().body.readUtf8()
+        assertThat(unmarked).contains("\"sensitive\":false")
+        assertThat(unmarked).contains("\"sensitiveReason\":null")
+    }
+
+    /** The edit form's own read: the author's mark, alone. */
+    @Test
+    fun theSelfMarkReadServesTheAuthorsMarkAlone() = runTest {
+        enqueue(
+            """{"data":{"post":{"__typename":"Post","id":"p1",
+               "sensitiveSelfMark":true,"sensitiveReason":"graphic injury"}}}""",
+        )
+        val mark = (repo().postSelfMark("p1") as Outcome.Success).value
+        assertThat(mark?.sensitive).isTrue()
+        assertThat(mark?.reason).isEqualTo("graphic injury")
+
+        enqueue("""{"data":{"post":null}}""")
+        assertThat((repo().postSelfMark("gone") as Outcome.Success).value).isNull()
+    }
+
+    /**
      * A comment declares its topics on the creation input, the way a
      * post does (F9), and both parameters ride explicitly so an
      * untouched slider says what omitting it would.
