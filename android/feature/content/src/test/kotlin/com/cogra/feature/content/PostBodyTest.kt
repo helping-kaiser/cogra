@@ -1,5 +1,8 @@
 package com.cogra.feature.content
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -105,6 +108,10 @@ class PostBodyTest {
 
     @Test
     fun aVeiledBodyRevealsInPlaceAndStaysRevealed() {
+        // The reveal is hoisted: it belongs to the node and the session,
+        // not to this card, so the body reads it rather than holding it
+        // (`SensitiveReveals`). The screen is what puts the answer back.
+        var revealed by mutableStateOf(false)
         compose.setContent {
             PostBody(
                 content = words,
@@ -112,9 +119,28 @@ class PostBodyTest {
                 attachments = listOf(picture),
                 attachmentsStatus = FieldStatus.SENSITIVE,
                 testTagPrefix = "t",
+                revealed = revealed,
+                onReveal = { revealed = true },
             )
         }
         compose.onNodeWithTag("t_veil_reveal").assertIsDisplayed().performClick()
+        compose.onNodeWithTag("t_veil_reveal").assertDoesNotExist()
+        compose.onNodeWithTag("t_gallery").assertIsDisplayed()
+    }
+
+    /** A body already revealed elsewhere opens unveiled — no second ask. */
+    @Test
+    fun aBodyRevealedElsewhereIsNotVeiledAgain() {
+        compose.setContent {
+            PostBody(
+                content = words,
+                description = null,
+                attachments = listOf(picture),
+                attachmentsStatus = FieldStatus.SENSITIVE,
+                testTagPrefix = "t",
+                revealed = true,
+            )
+        }
         compose.onNodeWithTag("t_veil_reveal").assertDoesNotExist()
         compose.onNodeWithTag("t_gallery").assertIsDisplayed()
     }
