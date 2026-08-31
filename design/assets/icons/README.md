@@ -1,4 +1,4 @@
-# Icons
+# Icons · `guide:design:icon-assets`
 
 Material Design Icons (Apache-2.0), 24×24, `currentColor`, **classic
 filled** variant — the set and variant the product inlines in

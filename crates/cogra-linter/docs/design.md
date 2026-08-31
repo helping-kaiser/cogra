@@ -1,4 +1,4 @@
-# The Corpus Linter — Design
+# The Corpus Linter — Design · `spec:lint:design`
 
 _Phase 2 of the standard engineering process: the design. The review of 2026-08-25 ratified it; implementation follows behind the Gate at the end._
 
@@ -972,9 +972,19 @@ The overriding rows need no separate datum. `HeadVerdict::Exact` is tried before
 
 `[head-recognition]` of the adoption data fixes which participating regions are heads, and `frontend_md` reads it rather than knowing it: the two Markdown forms this corpus writes — a bold `Kind (Title)` run opening a block, and a heading, each closed by the separator and the mint — the separator itself, and the languages that have no head form at all. A code comment is a scanned region that carries occurrences and heads nothing, which is why `frontend_rust` produces no `Head` values.
 
-Two details are load-bearing and are fixed here. For the bold form the head is the text up to the opening parenthesis: the Title names this instance and the head names the genre, and handing the Title to the registry would ask it to classify a proper noun. For a heading the head is the rung the format supplies and not the heading's own text, exactly as (`[KND-def:kinds:presentation-reduction]`) rules for named divisions — Markdown's rung is Section, which the registry classifies `sec`, and every heading anchor in the corpus carries `sec` accordingly.
+Two details are load-bearing and are fixed here. For the bold form the head is the text up to the opening parenthesis: the Title names this instance and the head names the genre, and handing the Title to the registry would ask it to classify a proper noun. For a heading the head is the rung the format supplies and not the heading's own text, exactly as (`[KND-def:kinds:presentation-reduction]`) rules for named divisions — Markdown's rung is Section, which the registry classifies `sec`, and every section anchor in the corpus carries `sec` accordingly.
 
 Matching is case-exact, ruled, and the consequence is named rather than discovered: `HeadVerdict::Uncatalogued` fires on a head whose only defect is capitalization, and its diagnostic names the catalogue spelling, so the finding reads as the correction it is. Folding case would be the cheaper-looking road and the wrong one — it would make Table and table one name and widen N by a rule no row of the registry authorizes.
+
+**Decision (The document's title is its third head form)** · `dec:lint:title-head`
+
+The first structural level-one heading of a Markdown source is its Title head: its environment name is `Document`, its kind names the document's *genre*, and its mint names the document concept itself. `frontend_md` claims the title when the heading opens, not when it closes, so a later level-one heading is an ordinary division under the heading form whatever it says; and the rule reads *first* rather than *topmost level*, so a source whose deepest heading is `##` has no title head at all. The form is `[head-recognition]`'s like the other two, and the walker knows only which of the three the adoption data declares.
+
+`Document` is the same word for every source, and the kind is what varies. That is the same division the bold form draws: the head is what the registry classifies, and what this document is *called* is a proper noun no registry can classify. Since the registry catalogues the environments inside a document and no Document row of its own, the seven genres this corpus writes — `rec`, `rep`, `reg`, `proposal`, `spec`, `plan`, `guide` — enter C_A as the recorded extensions of `[kinds.extensions]`, and validation is then the ordinary judgment of (`[KND-judg:kinds:head-validation]`) with no title-shaped special case anywhere in the checker. The genre vocabulary is declaration data, so a genre is added by a recorded decision and never by a code change.
+
+Coverage follows a structural title. Every Markdown source of the carrier that has a level-one heading participates, and one that has none is exempt: nothing is synthesized for it, because a mint with no author's choice behind it is exactly the absence (`[LBL-inv:labels:generated-compliance]`) forbids a generator to fill. An unminted title is the frontend's `markdown-title-unminted`, reported at the heading, and it is the frontend's finding because the frontend is the only thing that knows which heading came first.
+
+Generated sources reach coverage and not validation, and the two clauses come from different disciplines. Their titles *mint*: an authorship a generator transcribes is that choice still, so `label_register_bytes` and the attestation generator write their own `reg:registers:…` mints and the freshness compare stays byte-exact over them. Their heads form no judgment: (`[KND-judg:kinds:head-validation]`) puts generated registers outside authored heads and (`[KND-inv:kinds:totality]`) outside its requirement, so `frontend_md` emits no `Head` value for a generated source at all — the clause was vacuous while no generated register carried a mint, and the title is what makes it bite.
 
 ## Registers · `sec:lint:registers`
 

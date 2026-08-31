@@ -1,4 +1,4 @@
-# The Interchange Crate — Design
+# The Interchange Crate — Design · `spec:xchg:design`
 
 _Phase 2 of the standard engineering process: the design. The review of 2026-08-21 ratified it; implementation follows behind the Gate at the end._
 

@@ -1,4 +1,4 @@
-# Copy and voice
+# Copy and voice · `guide:design:copy-voice`
 
 The rules of `design.md` §7, with the product's own examples. See
 `readme.md` §3 for the condensed version.

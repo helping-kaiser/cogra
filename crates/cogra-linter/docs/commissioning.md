@@ -1,4 +1,4 @@
-# The Corpus Linter — Commissioning
+# The Corpus Linter — Commissioning · `rec:lint:commissioning`
 
 _Phase 6 of the standard engineering process: commissioning. The corpus-wide check runs in continuous integration, its runtime budget is measured and recorded beside the lane that invokes it, and the six-phase build closes._
 

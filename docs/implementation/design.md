@@ -1,4 +1,4 @@
-# Design
+# Design · `spec:implementation:design-system`
 
 The visual and interaction system both clients implement:
 colour, type, shape, motion, components, copy, and the stance
