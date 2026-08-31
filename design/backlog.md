@@ -192,8 +192,9 @@ setting maps to blur-or-not. No `error` colouring, no warning glyph.
 *Money · the CGT figure* spec board (2026-08-31; rulings in readme §3
 *Money* + §13 *Money figures*). Two decimals, thousands grouped, dust
 as `< 0.01`, zero as `0`; a minus is an outflow, dust never signs,
-direction never a colour. The unit is the mark — the primary coin with
-the wordmark's c cut out — trailing the figure; the word "CGT" appears
+direction never a colour. The unit is the mark — the primary coin
+carrying the brand mark, knocked out monochrome — trailing the
+figure; the word "CGT" appears
 once, on the wallet's balance headline beside its "?" (*What is
 CGT?*, copy-voice.md). Pending amounts deliberately wait for item 12.
 Balances, earnings, campaign amounts: how a figure is formatted, when it

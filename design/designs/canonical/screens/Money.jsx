@@ -3,19 +3,36 @@
    headline — the one surface that spells the word. The B and C marks are
    ideation drawn here only; the system ships exactly one mark (CgtMark). */
 
-function MarkRing({ size = "1em" }) {
+/* Round-2 candidates (jakob: the lone C is any game's coin — try CG). All on
+   the winning disc; the letters and interlock are drawn here only. */
+function MarkCG({ size = "1em" }) {
   return (
     <svg viewBox="0 0 20 20" width={size} height={size} aria-hidden="true" style={{ verticalAlign: "-0.125em", flex: "none" }}>
-      <circle cx="10" cy="10" r="9.25" fill="none" stroke="var(--primary)" strokeWidth="1.5" />
-      <path d="M 13.2 5.9 A 5.2 5.2 0 1 0 13.2 14.1" fill="none" stroke="var(--primary)" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="10" cy="10" r="10" fill="var(--primary)" />
+      <path d="M 8.59 7.63 A 3.1 3.1 0 1 0 8.59 12.37" fill="none" stroke="var(--on-primary)" strokeWidth="2" strokeLinecap="round" />
+      <path d="M 15.39 7.63 A 3.1 3.1 0 1 0 15.39 12.37" fill="none" stroke="var(--on-primary)" strokeWidth="2" strokeLinecap="round" />
+      <path d="M 15.6 10.4 L 13.4 10.4" fill="none" stroke="var(--on-primary)" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
 
-function MarkGlyph({ size = "1em" }) {
+function MarkInterlock({ size = "1em" }) {
   return (
     <svg viewBox="0 0 20 20" width={size} height={size} aria-hidden="true" style={{ verticalAlign: "-0.125em", flex: "none" }}>
-      <path d="M 14.31 4.48 A 7 7 0 1 0 14.31 15.52" fill="none" stroke="var(--primary)" strokeWidth="3.4" strokeLinecap="round" />
+      <circle cx="10" cy="10" r="10" fill="var(--primary)" />
+      <path d="M 10.83 6.63 A 4.4 4.4 0 1 0 10.83 13.37" fill="none" stroke="var(--on-primary)" strokeWidth="2.2" strokeLinecap="round" />
+      <path d="M 15.43 6.63 A 4.4 4.4 0 1 0 15.43 13.37" fill="none" stroke="var(--on-primary)" strokeWidth="2.2" strokeLinecap="round" />
+      <path d="M 15.6 10.3 L 12.6 10.3" fill="none" stroke="var(--on-primary)" strokeWidth="2.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function MarkCDot({ size = "1em" }) {
+  return (
+    <svg viewBox="0 0 20 20" width={size} height={size} aria-hidden="true" style={{ verticalAlign: "-0.125em", flex: "none" }}>
+      <circle cx="10" cy="10" r="10" fill="var(--primary)" />
+      <path d="M 13.2 5.9 A 5.2 5.2 0 1 0 13.2 14.1" fill="none" stroke="var(--on-primary)" strokeWidth="2.8" strokeLinecap="round" />
+      <circle cx="10.4" cy="9.3" r="1.55" fill="var(--on-primary)" />
     </svg>
   );
 }
@@ -71,11 +88,12 @@ export function Screen() {
         One shape for every amount. The unit is the mark, never the word — the word appears once, on the balance headline, beside its "?".
       </p>
 
-      <SpecLabel>The mark — three candidates, one ships</SpecLabel>
+      <SpecLabel>The mark, round two — the coin won; a lone C is any game's coin</SpecLabel>
       <div style={{ display: "flex", gap: 12 }}>
-        <Candidate tag="A" name="the coin" mark={<CgtMark />} />
-        <Candidate tag="B" name="the ring" mark={<MarkRing />} />
-        <Candidate tag="C" name="the glyph" mark={<MarkGlyph />} />
+        <Candidate tag="A" name="CG" mark={<MarkCG />} />
+        <Candidate tag="B" name="CG locked" mark={<MarkInterlock />} />
+        <Candidate tag="C" name="the logo" mark={<CgtMark />} />
+        <Candidate tag="D" name="c + dot" mark={<MarkCDot />} />
       </div>
 
       <SpecLabel>The figure — rest, large, dust, zero</SpecLabel>
