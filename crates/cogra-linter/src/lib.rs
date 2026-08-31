@@ -47,6 +47,7 @@ pub mod bans;
 pub mod carrier;
 pub mod diag;
 pub mod error;
+pub mod fix;
 pub mod frontend;
 pub mod frontend_kotlin;
 pub mod frontend_md;
@@ -58,6 +59,7 @@ pub mod migrate;
 pub mod pretokenize;
 pub mod registers;
 pub mod render;
+pub mod report;
 pub mod scan;
 pub mod timing;
 
@@ -73,6 +75,7 @@ pub use bans::BanRule;
 pub use carrier::{SourceFile, Walk, WalkOutcome};
 pub use diag::{ByteSpan, Diagnostic, Enforcement, Location, Related, RuleId, Severity};
 pub use error::{AdoptionError, GenerateError, RunError, WalkError};
+pub use fix::{Insertion, Sweep};
 pub use frontend::{
     Asset, Declaration, Head, Parsed, Region, RegionKind, Table, backing_definitions,
 };
@@ -85,12 +88,13 @@ pub use judge::kinds::{
     Attestation, Bound, Device, DeviceFamily, HeadVerdict, HeadlineCounts, KindRegistry, Reduced,
     Reduction,
 };
-pub use migrate::{Migration, Remaining, distances};
+pub use migrate::{Migration, Remaining, Unplaced, distances};
 pub use pretokenize::{CommentForm, LexClass, Lexeme, LiteralForm, PreTokenized, pretokenize};
 pub use registers::{
     Freshness, Register, RegisterScope, Scope, Written, compare, label_registers_of,
     regenerate_all, write_all,
 };
+pub use report::{Cited, Reverse, Survey, Tally};
 pub use scan::{
     DelimitedSpan, Delimiter, DelimiterFailure, Expectation, Label, LabelSyntax, NearMiss,
     NearMissKind, Occurrence, Prefix, RegionScan, Syntax, scan_code, scan_prose,
