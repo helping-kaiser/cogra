@@ -71,6 +71,9 @@ fn failures(source: &str) -> Vec<&'static str> {
 }
 
 /// `//` opens a plain line comment, which `[banned-tokens]` forbids.
+///
+/// Two slashes open a plain line comment.
+/// ´claim:lexer:two-slashes-open-a-plain-comment´
 #[test]
 fn two_slashes_open_a_plain_line_comment() {
     assert_eq!(
@@ -80,6 +83,9 @@ fn two_slashes_open_a_plain_line_comment() {
 }
 
 /// `///` opens an outer line doc comment.
+///
+/// Three slashes open an outer line documentation comment.
+/// ´claim:lexer:three-slashes-open-an-outer-doc´
 #[test]
 fn three_slashes_open_an_outer_doc_comment() {
     assert_eq!(
@@ -89,6 +95,9 @@ fn three_slashes_open_an_outer_doc_comment() {
 }
 
 /// `//!` opens an inner line doc comment.
+///
+/// A slash pair followed by a bang opens an inner line documentation comment.
+/// ´claim:lexer:a-bang-opens-an-inner-doc´
 #[test]
 fn slash_slash_bang_opens_an_inner_doc_comment() {
     assert_eq!(forms("//! module doc\n"), vec![CommentForm::LineInnerDoc]);
@@ -96,12 +105,17 @@ fn slash_slash_bang_opens_an_inner_doc_comment() {
 
 /// A fourth slash makes it plain again: the Reference's line-comment
 /// production admits `////` and the doc production does not.
+///
+/// A fourth slash makes a line comment plain again, the documentation production admitting only three.
+/// ´claim:lexer:a-fourth-slash-is-plain-again´
 #[test]
 fn four_slashes_are_plain_again() {
     assert_eq!(forms("//// not doc\n"), vec![CommentForm::LinePlain]);
 }
 
 /// And so does a fifth.
+///
+/// (´claim:lexer:a-fourth-slash-is-plain-again´)
 #[test]
 fn five_slashes_are_plain_too() {
     assert_eq!(forms("///// still not doc\n"), vec![CommentForm::LinePlain]);
@@ -109,6 +123,9 @@ fn five_slashes_are_plain_too() {
 
 /// `///` with nothing after it is an empty outer doc comment, not a plain
 /// one: the fourth byte is a newline, not a slash.
+///
+/// An empty outer documentation comment is documentation, its fourth byte being a newline.
+/// ´claim:lexer:an-empty-doc-comment-is-documentation´
 #[test]
 fn an_empty_outer_doc_comment_is_still_a_doc_comment() {
     assert_eq!(
@@ -119,6 +136,9 @@ fn an_empty_outer_doc_comment_is_still_a_doc_comment() {
 
 /// The lexeme stops before the newline: the terminator is not part of the
 /// token, which is what lets a run of lines be assembled into one region.
+///
+/// A line comment's lexeme stops before its newline, the terminator being no part of the token.
+/// ´claim:lexer:a-line-comment-stops-before-its-newline´
 #[test]
 fn a_line_comment_stops_before_its_newline() {
     let pre = lex("// a\nlet x = 1;\n");
@@ -128,6 +148,9 @@ fn a_line_comment_stops_before_its_newline() {
 
 /// A line comment closed by the end of the file rather than a newline is
 /// still a complete comment.
+///
+/// A line comment closed by the end of the file is still a complete comment.
+/// ´claim:lexer:a-comment-may-end-at-the-file´
 #[test]
 fn a_line_comment_may_end_at_the_file() {
     assert_eq!(
@@ -138,12 +161,18 @@ fn a_line_comment_may_end_at_the_file() {
 }
 
 /// A `//` inside a line comment opens nothing: the comment is one lexeme.
+///
+/// A comment leader inside a line comment opens nothing, the comment being one lexeme.
+/// ´claim:lexer:a-line-comment-is-one-lexeme´
 #[test]
 fn a_line_comment_swallows_further_slashes() {
     assert_eq!(comments("// a // b\n").len(), 1);
 }
 
 /// `/* */` is a plain block comment, which `[banned-tokens]` forbids.
+///
+/// A bare block comment is plain.
+/// ´claim:lexer:a-bare-block-comment-is-plain´
 #[test]
 fn a_block_comment_is_plain() {
     assert_eq!(
@@ -153,12 +182,18 @@ fn a_block_comment_is_plain() {
 }
 
 /// `/** */` is an outer block doc comment.
+///
+/// A double-star opener is an outer block documentation comment.
+/// ´claim:lexer:a-double-star-opener-is-outer-doc´
 #[test]
 fn a_double_star_opener_is_an_outer_block_doc() {
     assert_eq!(forms("/** doc */\n"), vec![CommentForm::BlockOuterDoc]);
 }
 
 /// `/*! */` is an inner block doc comment.
+///
+/// A bang opener is an inner block documentation comment.
+/// ´claim:lexer:a-bang-opener-is-inner-doc´
 #[test]
 fn a_bang_opener_is_an_inner_block_doc() {
     assert_eq!(forms("/*! doc */\n"), vec![CommentForm::BlockInnerDoc]);
@@ -166,6 +201,9 @@ fn a_bang_opener_is_an_inner_block_doc() {
 
 /// `/**/` is the empty *plain* block comment, which the Reference spells
 /// out as its own alternative — the second star closes it.
+///
+/// The empty block comment is plain, its second star closing it.
+/// ´claim:lexer:the-empty-block-comment-is-plain´
 #[test]
 fn the_empty_block_comment_is_plain() {
     assert_eq!(
@@ -175,6 +213,8 @@ fn the_empty_block_comment_is_plain() {
 }
 
 /// `/***/` is likewise plain, and likewise spelled out.
+///
+/// (´claim:lexer:the-empty-block-comment-is-plain´)
 #[test]
 fn the_three_star_block_comment_is_plain() {
     assert_eq!(
@@ -185,6 +225,9 @@ fn the_three_star_block_comment_is_plain() {
 
 /// `/***` is plain too: the `**` alternative of the block-comment
 /// production wins over the doc production.
+///
+/// A triple-star opener is plain, the block-comment alternative winning over the documentation one.
+/// ´claim:lexer:a-triple-star-opener-is-plain´
 #[test]
 fn a_triple_star_opener_is_plain() {
     assert_eq!(forms("/*** text */\n"), vec![CommentForm::BlockPlain]);
@@ -192,6 +235,9 @@ fn a_triple_star_opener_is_plain() {
 
 /// The slash right after `/*` is content, not half of a closer: the
 /// scan starts past the opener so its own star cannot close it.
+///
+/// The byte right after a block opener is content, the scan starting past the opener.
+/// ´claim:lexer:the-byte-after-an-opener-is-content´
 #[test]
 fn a_slash_after_the_opener_is_content() {
     assert_eq!(
@@ -201,6 +247,9 @@ fn a_slash_after_the_opener_is_content() {
 }
 
 /// Block comments nest: the inner `*/` closes the inner one only.
+///
+/// Block comments nest, and an inner closer closes the inner one only.
+/// ´claim:lexer:block-comments-nest´
 #[test]
 fn block_comments_nest() {
     assert_eq!(
@@ -210,6 +259,9 @@ fn block_comments_nest() {
 }
 
 /// Three levels deep, and the form is the outermost opener's.
+///
+/// A nested block comment takes the outermost opener's form.
+/// ´claim:lexer:nesting-keeps-the-outermost-form´
 #[test]
 fn nesting_keeps_the_outermost_form() {
     assert_eq!(
@@ -222,6 +274,9 @@ fn nesting_keeps_the_outermost_form() {
 }
 
 /// A `//` inside a block comment opens nothing.
+///
+/// A comment leader inside a block comment opens nothing.
+/// ´claim:lexer:a-block-comment-swallows-leaders´
 #[test]
 fn a_block_comment_swallows_line_leaders() {
     assert_eq!(comments("/* // not a second one */\n").len(), 1);
@@ -229,6 +284,9 @@ fn a_block_comment_swallows_line_leaders() {
 
 /// A quote inside a block comment opens no literal: the block comment is
 /// scanned for delimiters alone.
+///
+/// A quote inside a block comment opens no literal.
+/// ´claim:lexer:a-block-comment-swallows-quotes´
 #[test]
 fn a_block_comment_swallows_quotes() {
     assert!(literals("/* \"unclosed */\n").is_empty());
@@ -238,6 +296,9 @@ fn a_block_comment_swallows_quotes() {
 /// An unterminated block comment is a located diagnostic beside a lexeme
 /// that runs to the end of the input — the partition holds in the failure
 /// case (´inv:lint:lexeme-partition´).
+///
+/// An unterminated block comment is a located diagnostic beside a lexeme running to the end.
+/// ´claim:lexer:an-unterminated-block-comment-is-located´
 #[test]
 fn an_unterminated_block_comment_fails_located() {
     let source = "/* never closed\nlet x = 1;\n";
@@ -249,6 +310,9 @@ fn an_unterminated_block_comment_fails_located() {
 }
 
 /// A nested block comment that closes once but not twice is unterminated.
+///
+/// A nested block comment that closes once but not twice is unterminated.
+/// ´claim:lexer:a-half-closed-nest-is-unterminated´
 #[test]
 fn a_half_closed_nest_is_unterminated() {
     assert_eq!(
@@ -259,6 +323,9 @@ fn a_half_closed_nest_is_unterminated() {
 
 /// `/*/*/` opens twice and closes once, which the Reference makes
 /// unterminated: the middle slash is consumed by the second opener.
+///
+/// An opener whose middle byte is consumed by a second opener leaves the comment unterminated.
+/// ´claim:lexer:the-ambiguous-nest-is-unterminated´
 #[test]
 fn the_ambiguous_nest_is_unterminated() {
     assert_eq!(failures("/*/*/"), vec![UNTERMINATED_BLOCK_COMMENT.as_str()]);
@@ -266,6 +333,9 @@ fn the_ambiguous_nest_is_unterminated() {
 
 /// A `//` inside a string is not a comment, which is precisely why the
 /// pre-tokenizer exists (`[banned-tokens]`, the line-comment row's note).
+///
+/// A comment leader inside a string literal is not a comment, which is why the pre-tokenizer exists.
+/// ´claim:lexer:a-literal-hides-a-leader´
 #[test]
 fn a_string_hides_a_line_leader() {
     let source = r#"let s = "// not a comment";"#;
@@ -277,6 +347,8 @@ fn a_string_hides_a_line_leader() {
 }
 
 /// A `/*` inside a string opens nothing either.
+///
+/// (´claim:lexer:a-literal-hides-a-leader´)
 #[test]
 fn a_string_hides_a_block_leader() {
     let source = r#"let s = "/* not a comment";"#;
@@ -285,6 +357,9 @@ fn a_string_hides_a_block_leader() {
 }
 
 /// An escaped quote does not close a string.
+///
+/// An escaped quote does not close a string.
+/// ´claim:lexer:an-escaped-quote-does-not-close´
 #[test]
 fn an_escaped_quote_does_not_close_a_string() {
     let source = r#"let s = "a\"b // still inside";"#;
@@ -294,6 +369,9 @@ fn an_escaped_quote_does_not_close_a_string() {
 
 /// A backslash at the very end of a string's content escapes the byte
 /// after it and not the closing quote.
+///
+/// A trailing backslash escapes the byte after it and not the closing quote.
+/// ´claim:lexer:a-trailing-escape-consumes-one-byte´
 #[test]
 fn a_trailing_escape_consumes_one_byte() {
     let source = r#""a\\" // after"#;
@@ -301,6 +379,8 @@ fn a_trailing_escape_consumes_one_byte() {
 }
 
 /// A raw string honours no escape, and hides a `//` all the same.
+///
+/// (´claim:lexer:a-literal-hides-a-leader´)
 #[test]
 fn a_raw_string_hides_a_line_leader() {
     let source = r##"let s = r"// not a comment";"##;
@@ -315,6 +395,9 @@ fn a_raw_string_hides_a_line_leader() {
 }
 
 /// A raw string with one hash closes on `"#` and not on a bare quote.
+///
+/// A raw string's hashes raise its closing bar, so a bare quote does not close it.
+/// ´claim:lexer:hashes-raise-the-closing-bar´
 #[test]
 fn one_hash_raises_the_closing_bar() {
     let source = r###"let s = r#"a "quoted" b // inside"#;"###;
@@ -323,6 +406,8 @@ fn one_hash_raises_the_closing_bar() {
 }
 
 /// Three hashes, likewise, and a `"##` inside is content.
+///
+/// (´claim:lexer:hashes-raise-the-closing-bar´)
 #[test]
 fn three_hashes_raise_it_further() {
     let source = r####"r###"a "## b // inside"###"####;
@@ -335,6 +420,9 @@ fn three_hashes_raise_it_further() {
 
 /// A raw string does not honour a backslash: `r"a\"` closes at its own
 /// quote, and what follows is code again.
+///
+/// A raw string honours no backslash and closes at its own quote.
+/// ´claim:lexer:a-raw-string-honours-no-escape´
 #[test]
 fn a_raw_string_ignores_backslashes() {
     let source = r####"r"a\" // a comment"####;
@@ -346,6 +434,8 @@ fn a_raw_string_ignores_backslashes() {
 }
 
 /// `b"…"` is a byte string and hides a leader like any other literal.
+///
+/// (´claim:lexer:a-literal-hides-a-leader´)
 #[test]
 fn a_byte_string_hides_a_line_leader() {
     let source = r#"let s = b"// not a comment";"#;
@@ -355,6 +445,9 @@ fn a_byte_string_hides_a_line_leader() {
 }
 
 /// `br#"…"#` is a raw byte string.
+///
+/// A raw byte string is its own literal form.
+/// ´claim:lexer:a-raw-byte-string-is-its-own-form´
 #[test]
 fn a_raw_byte_string_is_its_own_form() {
     let source = r##"br#"// inside"#"##;
@@ -364,6 +457,9 @@ fn a_raw_byte_string_is_its_own_form() {
 
 /// `c"…"` is a C string, a form the design's gloss does not spell out and
 /// which hides a leader all the same.
+///
+/// A C string is its own literal form and hides a leader like any other.
+/// ´claim:lexer:a-c-string-is-its-own-form´
 #[test]
 fn a_c_string_is_its_own_form() {
     let source = r#"let s = c"// not a comment";"#;
@@ -372,6 +468,9 @@ fn a_c_string_is_its_own_form() {
 }
 
 /// `cr#"…"#` is a raw C string.
+///
+/// A raw C string is its own literal form.
+/// ´claim:lexer:a-raw-c-string-is-its-own-form´
 #[test]
 fn a_raw_c_string_is_its_own_form() {
     let source = r##"cr#"// inside"#"##;
@@ -381,6 +480,9 @@ fn a_raw_c_string_is_its_own_form() {
 
 /// `r#type` is a raw *identifier* and opens no string: a prefix counts only
 /// when a quote follows the hashes.
+///
+/// A raw identifier opens no string: a prefix counts only when a quote follows the hashes.
+/// ´claim:lexer:a-raw-identifier-opens-no-string´
 #[test]
 fn a_raw_identifier_is_not_a_raw_string() {
     let source = "let r#type = 1; // a comment\n";
@@ -390,6 +492,9 @@ fn a_raw_identifier_is_not_a_raw_string() {
 
 /// A prefix counts only at an identifier boundary: `abr"x"` is the
 /// identifier `abr` beside an ordinary string.
+///
+/// A literal prefix counts only at an identifier boundary.
+/// ´claim:lexer:a-prefix-counts-at-a-boundary-only´
 #[test]
 fn a_prefix_inside_an_identifier_is_not_a_prefix() {
     let source = r#"abr"x""#;
@@ -400,6 +505,8 @@ fn a_prefix_inside_an_identifier_is_not_a_prefix() {
 }
 
 /// The same for a byte-string prefix inside a longer identifier.
+///
+/// (´claim:lexer:a-prefix-counts-at-a-boundary-only´)
 #[test]
 fn a_byte_prefix_inside_an_identifier_is_not_a_prefix() {
     let source = r#"tab"x""#;
@@ -408,6 +515,9 @@ fn a_byte_prefix_inside_an_identifier_is_not_a_prefix() {
 
 /// A number ending in a prefix letter is not a prefix either: `0b1010` is
 /// a binary literal and opens nothing.
+///
+/// A number ending in a prefix letter opens no literal.
+/// ´claim:lexer:a-number-opens-no-literal´
 #[test]
 fn a_binary_number_opens_no_literal() {
     let source = "let x = 0b1010; // a comment\n";
@@ -417,6 +527,9 @@ fn a_binary_number_opens_no_literal() {
 
 /// An unterminated string is a located diagnostic beside a lexeme running
 /// to the end of the input.
+///
+/// An unterminated string is a located diagnostic beside a lexeme running to the end.
+/// ´claim:lexer:an-unterminated-string-is-located´
 #[test]
 fn an_unterminated_string_fails_located() {
     let source = "let s = \"never closed\n";
@@ -429,6 +542,8 @@ fn an_unterminated_string_fails_located() {
 }
 
 /// An unterminated raw string, likewise.
+///
+/// (´claim:lexer:an-unterminated-string-is-located´)
 #[test]
 fn an_unterminated_raw_string_fails_located() {
     let source = r##"let s = r#"never closed"##;
@@ -436,6 +551,9 @@ fn an_unterminated_raw_string_fails_located() {
 }
 
 /// A raw string whose closing quote carries too few hashes does not close.
+///
+/// A closing quote carrying too few hashes does not close its raw string.
+/// ´claim:lexer:too-few-hashes-do-not-close´
 #[test]
 fn too_few_closing_hashes_do_not_close() {
     let source = r###"r##"a"# b"###;
@@ -443,6 +561,9 @@ fn too_few_closing_hashes_do_not_close() {
 }
 
 /// `'a'` is a character literal.
+///
+/// An apostrophe pair is a character literal.
+/// ´claim:lexer:an-apostrophe-pair-is-a-character´
 #[test]
 fn an_apostrophe_pair_is_a_character() {
     assert_eq!(
@@ -452,12 +573,17 @@ fn an_apostrophe_pair_is_a_character() {
 }
 
 /// `'a` is a lifetime, and lifetimes are code.
+///
+/// A lone apostrophe opens a lifetime, and lifetimes are code.
+/// ´claim:lexer:a-lone-apostrophe-is-a-lifetime´
 #[test]
 fn a_lone_apostrophe_is_a_lifetime() {
     assert!(literals("fn f<'a>(x: &'a str) {}").is_empty());
 }
 
 /// `'static` is a lifetime however long its name.
+///
+/// (´claim:lexer:a-lone-apostrophe-is-a-lifetime´)
 #[test]
 fn a_long_lifetime_is_still_a_lifetime() {
     assert!(literals("let s: &'static str = \"x\";").len() == 1);
@@ -469,12 +595,17 @@ fn a_long_lifetime_is_still_a_lifetime() {
 
 /// Two lifetimes in a row are not joined into one literal: the
 /// discrimination happens before any scanning.
+///
+/// Two lifetimes in a row are not joined into one literal.
+/// ´claim:lexer:two-lifetimes-do-not-pair´
 #[test]
 fn two_lifetimes_do_not_pair_up() {
     assert!(literals("struct S<'a, 'b>(&'a u8, &'b u8);").is_empty());
 }
 
 /// A loop label is a lifetime by the lexer's lights.
+///
+/// (´claim:lexer:a-lone-apostrophe-is-a-lifetime´)
 #[test]
 fn a_loop_label_is_not_a_character() {
     assert!(literals("'outer: loop { break 'outer; }").is_empty());
@@ -482,6 +613,9 @@ fn a_loop_label_is_not_a_character() {
 
 /// A `//` after a lifetime is still a comment: the lifetime consumed only
 /// itself.
+///
+/// A comment after a lifetime is a comment, the lifetime having consumed only itself.
+/// ´claim:lexer:a-lifetime-consumes-only-itself´
 #[test]
 fn a_comment_after_a_lifetime_is_a_comment() {
     assert_eq!(
@@ -491,6 +625,9 @@ fn a_comment_after_a_lifetime_is_a_comment() {
 }
 
 /// An escaped character literal: `'\n'`.
+///
+/// An escape inside an apostrophe pair opens a character literal.
+/// ´claim:lexer:an-escape-opens-a-character´
 #[test]
 fn an_escape_opens_a_character_literal() {
     assert_eq!(
@@ -500,6 +637,9 @@ fn an_escape_opens_a_character_literal() {
 }
 
 /// An escaped apostrophe does not close its own literal.
+///
+/// An escaped apostrophe does not close its own literal.
+/// ´claim:lexer:an-escaped-apostrophe-is-content´
 #[test]
 fn an_escaped_apostrophe_is_content() {
     assert_eq!(
@@ -509,6 +649,9 @@ fn an_escaped_apostrophe_is_content() {
 }
 
 /// An escaped backslash closes normally.
+///
+/// An escaped backslash closes its literal normally.
+/// ´claim:lexer:an-escaped-backslash-closes-normally´
 #[test]
 fn an_escaped_backslash_closes_normally() {
     assert_eq!(
@@ -518,6 +661,9 @@ fn an_escaped_backslash_closes_normally() {
 }
 
 /// A unicode escape runs past its braces to the closing apostrophe.
+///
+/// A unicode escape runs past its braces to the closing apostrophe.
+/// ´claim:lexer:a-unicode-escape-runs-to-the-closer´
 #[test]
 fn a_unicode_escape_runs_to_the_apostrophe() {
     assert_eq!(
@@ -528,6 +674,9 @@ fn a_unicode_escape_runs_to_the_apostrophe() {
 
 /// A multi-byte character is one character: the width comes from the UTF-8
 /// leading byte, not from a byte count.
+///
+/// A multi-byte character is one character, its width coming from the leading byte.
+/// ´claim:lexer:a-multibyte-character-is-one-character´
 #[test]
 fn a_multibyte_character_is_one_character() {
     assert_eq!(
@@ -537,6 +686,8 @@ fn a_multibyte_character_is_one_character() {
 }
 
 /// A four-byte character, likewise.
+///
+/// (´claim:lexer:a-multibyte-character-is-one-character´)
 #[test]
 fn a_four_byte_character_is_one_character() {
     assert_eq!(
@@ -546,6 +697,9 @@ fn a_four_byte_character_is_one_character() {
 }
 
 /// `b'x'` is a byte literal.
+///
+/// A byte literal is its own literal form.
+/// ´claim:lexer:a-byte-literal-is-its-own-form´
 #[test]
 fn a_byte_literal_is_its_own_form() {
     assert_eq!(
@@ -555,6 +709,9 @@ fn a_byte_literal_is_its_own_form() {
 }
 
 /// `'_'` is a character and `'_` is the anonymous lifetime.
+///
+/// An underscore splits into a character and a lifetime the way any name does.
+/// ´claim:lexer:an-underscore-splits-like-any-name´
 #[test]
 fn underscore_splits_the_same_way() {
     assert_eq!(literals("let c = '_';")[0].0, LiteralForm::Char);
@@ -563,6 +720,9 @@ fn underscore_splits_the_same_way() {
 
 /// A `//` inside a character literal is not a comment — there is no room
 /// for one, but the pair `'/'` must not be mistaken for the start of one.
+///
+/// A slash in a character literal opens no comment.
+/// ´claim:lexer:a-slash-character-opens-no-comment´
 #[test]
 fn a_slash_character_opens_no_comment() {
     assert!(comments("let c = '/';").is_empty());
@@ -570,6 +730,9 @@ fn a_slash_character_opens_no_comment() {
 
 /// An unterminated escaped character is a located diagnostic, bounded by
 /// its own line so it cannot swallow the file.
+///
+/// An unterminated character literal is located and bounded by its own line.
+/// ´claim:lexer:an-unterminated-character-is-bounded´
 #[test]
 fn an_unterminated_character_fails_located_on_its_line() {
     let source = "let c = '\\n;\nlet y = 1;\n";
@@ -585,6 +748,9 @@ fn an_unterminated_character_fails_located_on_its_line() {
 
 /// A bare apostrophe at the end of the file classifies as code and reports
 /// nothing: it is a lifetime with an empty name, not a broken literal.
+///
+/// A bare apostrophe at the end of a file is a lifetime with an empty name and reports nothing.
+/// ´claim:lexer:a-trailing-apostrophe-is-code´
 #[test]
 fn a_trailing_apostrophe_is_code() {
     assert!(literals("let x = 1; '").is_empty());
@@ -592,6 +758,9 @@ fn a_trailing_apostrophe_is_code() {
 }
 
 /// The empty input partitions vacuously: no lexemes, no bytes.
+///
+/// The empty input partitions vacuously.
+/// ´claim:lexer:the-empty-input-partitions-vacuously´
 #[test]
 fn the_empty_input_has_no_lexemes() {
     let pre = lex("");
@@ -600,6 +769,9 @@ fn the_empty_input_has_no_lexemes() {
 }
 
 /// A source with no comment or literal is one `Code` lexeme.
+///
+/// A source with no comment or literal is one code lexeme.
+/// ´claim:lexer:plain-code-is-one-lexeme´
 #[test]
 fn plain_code_is_one_lexeme() {
     let pre = lex("fn main() {}\n");
@@ -609,6 +781,9 @@ fn plain_code_is_one_lexeme() {
 
 /// Bytes that are not UTF-8 still partition, and a comment among them is
 /// still found: the ban is a lexical fact and does not wait on an AST.
+///
+/// Bytes that are not UTF-8 still partition, and a comment among them is still found.
+/// ´claim:lexer:invalid-bytes-still-partition´
 #[test]
 fn invalid_utf8_still_partitions() {
     let language = Language::new("rust");
@@ -623,6 +798,9 @@ fn invalid_utf8_still_partitions() {
 
 /// A lone continuation byte inside a character literal's position does not
 /// walk off the end.
+///
+/// A lone continuation byte does not walk off the end of the input.
+/// ´claim:lexer:a-continuation-byte-does-not-overrun´
 #[test]
 fn a_continuation_byte_does_not_overrun() {
     let language = Language::new("rust");
@@ -632,6 +810,9 @@ fn a_continuation_byte_does_not_overrun() {
 }
 
 /// A truncated multi-byte sequence at the very end does not overrun.
+///
+/// A truncated multi-byte sequence at the end does not overrun.
+/// ´claim:lexer:a-truncated-sequence-does-not-overrun´
 #[test]
 fn a_truncated_sequence_does_not_overrun() {
     let language = Language::new("rust");
@@ -642,6 +823,9 @@ fn a_truncated_sequence_does_not_overrun() {
 
 /// CRLF line endings close a line comment at the newline; the carriage
 /// return is inside the comment, where the byte actually sits.
+///
+/// A carriage-return line ending closes a line comment at the newline.
+/// ´claim:lexer:crlf-closes-a-line-comment´
 #[test]
 fn crlf_closes_a_line_comment() {
     let source = "// note\r\nlet x = 1;\r\n";
@@ -652,6 +836,9 @@ fn crlf_closes_a_line_comment() {
 }
 
 /// A shebang line opens no comment: `#!` is not `//`.
+///
+/// A shebang line opens no comment.
+/// ´claim:lexer:a-shebang-is-no-comment´
 #[test]
 fn a_shebang_is_not_a_comment() {
     assert!(comments("#!/usr/bin/env run\nfn main() {}\n").is_empty());
@@ -659,6 +846,9 @@ fn a_shebang_is_not_a_comment() {
 
 /// A doc comment carrying a fenced example with a `//` in it holds one
 /// comment: the fence is inside the comment's own bytes.
+///
+/// A documentation comment carrying a fenced example holds one comment.
+/// ´claim:lexer:a-fenced-example-is-not-a-second-comment´
 #[test]
 fn a_fenced_example_inside_a_doc_comment_is_not_a_second_comment() {
     let source = "/// ```\n/// let x = 1; // inside\n/// ```\n";
@@ -672,6 +862,9 @@ fn a_fenced_example_inside_a_doc_comment_is_not_a_second_comment() {
 
 /// A language with no pre-tokenizer yields one `Code` lexeme over the whole
 /// input, which is the partition's answer for "nothing is known here".
+///
+/// A language with no pre-tokenizer yields one code lexeme over the whole input.
+/// ´claim:lexer:no-pretokenizer-is-all-code´
 #[test]
 fn a_language_with_no_pretokenizer_is_all_code() {
     let language = Language::new("markdown");
@@ -683,6 +876,8 @@ fn a_language_with_no_pretokenizer_is_all_code() {
 }
 
 /// A source with no language at all is the same.
+///
+/// (´claim:lexer:no-pretokenizer-is-all-code´)
 #[test]
 fn no_language_is_all_code() {
     let source = "/* anything */";
@@ -692,6 +887,9 @@ fn no_language_is_all_code() {
 }
 
 /// The comment forms answer the two questions the frontends ask of them.
+///
+/// The comment forms answer the two questions the frontends ask of them.
+/// ´claim:lexer:the-forms-classify-themselves´
 #[test]
 fn the_forms_classify_themselves() {
     assert!(CommentForm::LineOuterDoc.is_doc() && CommentForm::LineOuterDoc.is_line());
@@ -702,6 +900,9 @@ fn the_forms_classify_themselves() {
 
 /// `class_at` answers for a lexeme's own start and for nothing else: a
 /// span starting mid-lexeme is not that lexeme.
+///
+/// A lexeme's class is answered for its own start and for nothing else.
+/// ´claim:lexer:a-class-answers-at-a-start-only´
 #[test]
 fn class_at_answers_at_a_lexeme_start_only() {
     let pre = lex("/// doc\nfn f() {}\n");
@@ -714,6 +915,8 @@ fn class_at_answers_at_a_lexeme_start_only() {
 
 /// No rule identifier of this module is label-shaped: `lint` is a reserved
 /// kind no profile governs (´sig:lint:diagnostic-api´).
+///
+/// (´claim:diagnostics:no-rule-identifier-is-label-shaped´)
 #[test]
 fn no_pretokenizer_rule_identifier_is_label_shaped() {
     for rule in cogra_linter::pretokenize::RULES {

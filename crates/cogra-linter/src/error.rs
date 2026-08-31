@@ -115,7 +115,7 @@ pub enum AdoptionError {
         /// The spelling the corpus root actually carries.
         found: String,
     },
-    /// A profile is missing one of the five data a profile fixes.
+    /// A profile is missing one of the seven data a profile fixes.
     #[error("profile {id} is missing its {datum}")]
     ProfileIncomplete {
         /// The row the profile opens at.
@@ -408,6 +408,8 @@ mod tests {
         )
     }
 
+    /// Every error message is lowercase and unpunctuated.
+    /// ´claim:errors:messages-are-lowercase-and-unpunctuated´
     #[test]
     fn every_message_is_lowercase_and_unpunctuated() {
         let errors: Vec<AdoptionError> = vec![
@@ -465,12 +467,16 @@ mod tests {
         }
     }
 
+    /// Every locatable error variant carries the row it sits in.
+    /// ´claim:errors:a-locatable-variant-carries-its-row´
     #[test]
     fn every_locatable_variant_carries_its_row() {
         let error = AdoptionError::PartitionNotTotal { at: row() };
         assert_eq!(error.at().map(|at| at.line), Some(7));
     }
 
+    /// An unlocatable variant says so rather than inventing a row.
+    /// ´claim:errors:an-unlocatable-variant-says-so´
     #[test]
     fn an_unlocatable_variant_says_so() {
         let error = AdoptionError::Unreadable {
@@ -480,6 +486,8 @@ mod tests {
         assert!(error.at().is_none());
     }
 
+    /// The aggregate error takes every leaf of the taxonomy.
+    /// ´claim:errors:the-aggregate-takes-every-leaf´
     #[test]
     fn the_aggregate_takes_every_leaf() {
         let run: RunError = WalkError::NotADirectory {

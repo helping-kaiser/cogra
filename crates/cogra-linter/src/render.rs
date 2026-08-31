@@ -334,6 +334,8 @@ mod tests {
         }
     }
 
+    /// A related location follows its finding, indented beneath it.
+    /// ´claim:rendering:a-related-location-is-indented´
     #[test]
     fn a_related_location_follows_indented_four_spaces() {
         let mut finding = one("a.md");
@@ -350,12 +352,16 @@ mod tests {
         assert_eq!(lines.next(), Some("    b.md:9:2: the first mint sits here"));
     }
 
+    /// A rendered path is spelled with forward slashes on every platform.
+    /// ´claim:rendering:paths-render-with-forward-slashes´
     #[test]
     fn a_path_is_spelled_with_forward_slashes_on_every_platform() {
         let nested = one("crates/cogra-linter/docs/design.md");
         assert!(diagnostic(&nested).starts_with("crates/cogra-linter/docs/design.md:3:7:"));
     }
 
+    /// The run summary counts both halves of the enforcement partition.
+    /// ´claim:rendering:the-summary-counts-both-halves´
     #[test]
     fn the_summary_counts_both_halves() {
         let mut failing = one("a.md");

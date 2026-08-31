@@ -517,6 +517,8 @@ mod tests {
         (g, o, s, r, m)
     }
 
+    /// Ownership is found by walking the graph and never read off a field.
+    /// ´claim:graph:ownership-is-walked´
     #[test]
     fn ownership_is_found_by_walking_and_never_by_a_field() {
         let (g, o, s, r, m) = one_chain();
@@ -525,6 +527,8 @@ mod tests {
         assert_eq!(owner_of(&g, s), Some(o));
     }
 
+    /// An unowned node has no owner.
+    /// ´claim:graph:an-unowned-node-has-no-owner´
     #[test]
     fn an_unowned_node_has_no_owner() {
         let mut g = Corpus::new();
@@ -532,6 +536,8 @@ mod tests {
         assert_eq!(owner_of(&g, stray), None);
     }
 
+    /// An occurrence's source is the file it lies in.
+    /// ´claim:graph:an-occurrences-source-is-its-file´
     #[test]
     fn the_source_of_an_occurrence_is_the_file_it_lies_in() {
         let (g, _, s, r, m) = one_chain();
@@ -540,6 +546,8 @@ mod tests {
         assert_eq!(source_of(&g, s), Some(s));
     }
 
+    /// Nodes of one variant come in index order.
+    /// ´claim:graph:nodes-come-in-index-order´
     #[test]
     fn nodes_of_one_variant_come_in_index_order() {
         let (mut g, _, _, _, _) = one_chain();
@@ -549,6 +557,8 @@ mod tests {
         assert!(found[0].index() < second.index());
     }
 
+    /// A walk along one edge weight ignores every other.
+    /// ´claim:graph:a-walk-follows-one-weight´
     #[test]
     fn a_walk_along_one_weight_ignores_the_others() {
         let (mut g, o, s, _, m) = one_chain();
@@ -564,6 +574,8 @@ mod tests {
         assert_eq!(out_along(&g, s, EdgeW::Contains).count(), 1);
     }
 
+    /// A judgment reduces to a degree against a constant.
+    /// ´claim:graph:a-judgment-is-a-degree´
     #[test]
     fn a_judgment_is_a_degree_against_a_constant() {
         let (mut g, _, _, _, m) = one_chain();
@@ -579,6 +591,8 @@ mod tests {
         );
     }
 
+    /// An owner view holds that owner alone.
+    /// ´claim:graph:an-owner-view-is-scoped´
     #[test]
     fn an_owner_view_holds_that_owner_alone() {
         let (mut g, o, _, _, _) = one_chain();
@@ -595,6 +609,8 @@ mod tests {
         assert_eq!(held.len(), 4);
     }
 
+    /// An edge view holds one weight alone.
+    /// ´claim:graph:an-edge-view-is-scoped´
     #[test]
     fn an_edge_view_holds_one_weight_alone() {
         let (g, _, _, _, _) = one_chain();
@@ -608,6 +624,8 @@ mod tests {
         );
     }
 
+    /// Every node variant answers with its own discriminant.
+    /// ´claim:graph:every-variant-has-its-discriminant´
     #[test]
     fn every_node_variant_has_its_discriminant() {
         assert_eq!(owner("x").kind(), NodeKind::Owner);
@@ -616,6 +634,8 @@ mod tests {
         assert_eq!(mint("a:b:c").kind(), NodeKind::Mint);
     }
 
+    /// A second mint of one label is caught at insertion and handed back.
+    /// ´claim:graph:a-second-mint-is-caught-at-insertion´
     #[test]
     fn a_second_mint_of_one_label_is_caught_at_insertion() {
         let (mut g, o, _, _, m) = one_chain();
@@ -636,6 +656,8 @@ mod tests {
         assert_eq!(registries.mints.len(), 1);
     }
 
+    /// Recording a mint records its label node beside it.
+    /// ´claim:graph:a-mint-records-its-label´
     #[test]
     fn recording_a_mint_records_its_label() {
         let (mut g, o, _, _, m) = one_chain();

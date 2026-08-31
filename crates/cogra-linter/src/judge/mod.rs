@@ -151,8 +151,13 @@ fn suppressed(g: &Corpus, a: &Adoption) -> Diagnostic {
 /// because that mint is what an inventory finding is about: the register row
 /// or the documentation line that carries — or should carry — the label. An
 /// asset carrying no label falls back to its own span and its own source,
-/// which (´sig:lint:node-weights´) and (´sig:lint:edge-weights´) supply, and
-/// to an unlocated finding where neither is in the graph.
+/// which (´sig:lint:node-weights´) and (´sig:lint:edge-weights´) supply.
+///
+/// An asset no source contains at all — a hand-built graph, or one whose
+/// frontend settled it without a source of its own — is reported *unlocated*
+/// rather than dropped. The inventory clause's most important case is the
+/// asset with no mint, and a silently dropped finding would be worse than an
+/// unlocated one.
 pub(crate) fn at(g: &Corpus, n: NodeIndex) -> Option<Location> {
     let asset = matches!(g.node_weight(n), Some(NodeW::Asset(_)));
     let anchor = if asset {
@@ -160,14 +165,8 @@ pub(crate) fn at(g: &Corpus, n: NodeIndex) -> Option<Location> {
     } else {
         n
     };
-    let located = located(g, anchor);
-    match (located, asset) {
+    match (located(g, anchor), asset) {
         (Some(at), _) => Some(at),
-        // An asset no source contains — a hand-built graph, or one whose
-        // frontend settled it without a source of its own — is reported
-        // unlocated rather than dropped: the inventory clause's most
-        // important case is the asset with no mint, and a silently dropped
-        // finding would be worse than an unlocated one.
         (None, true) => Some(Location::new(PathBuf::new(), ByteSpan::new(0, 0), 0, 0)),
         (None, false) => None,
     }
