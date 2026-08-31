@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -72,12 +74,18 @@ sealed interface ThumbBadge {
  *   a separate parameter rather than `!selected` because most uses — the
  *   picked tray, the details row — have no selection at all and must not fade
  *   everything.
+ * @param size a fixed edge, or null to fill the width as a square — the
+ *   picker grid sizes its tiles by its own columns, and `ComposePick` draws
+ *   them flush to the seam rather than at a measured dp.
+ * @param corner the tray's thumbnails are rounded; the picker grid's tiles
+ *   are not, so the seam between them reads as one sheet of pictures.
  */
 @Composable
 fun MediaThumb(
     item: MediaItem,
     modifier: Modifier = Modifier,
-    size: Dp = Layout.ThumbSize,
+    size: Dp? = Layout.ThumbSize,
+    corner: Dp = Space.x2,
     badge: ThumbBadge? = null,
     selected: Boolean = false,
     dimmed: Boolean = false,
@@ -85,10 +93,10 @@ fun MediaThumb(
     contentDescription: String? = null,
     testTag: String? = null,
 ) {
-    val shape = RoundedCornerShape(Space.x2)
+    val shape = RoundedCornerShape(corner)
     Box(
         modifier = modifier
-            .size(size)
+            .then(if (size != null) Modifier.size(size) else Modifier.fillMaxWidth().aspectRatio(1f))
             .then(
                 if (selected) {
                     Modifier.border(BorderStroke(2.dp, MaterialTheme.colorScheme.primary), shape)
