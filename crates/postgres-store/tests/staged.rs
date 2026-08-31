@@ -103,6 +103,9 @@ async fn stage(pool: &PgPool, actor_id: Uuid, p: &Proposal, prepared_epoch: i64)
 /// Sequence values are monotone and per-author, and an act landed outside
 /// the prepare path — bootstrap repair, the dev CLI — pushes the counter
 /// past its sequence value rather than letting an identifier be reused.
+///
+/// Sequence allocation is monotone per author and steps past an act that landed outside the prepare path, so no identifier is reissued.
+/// ´claim:staged:sequence-allocation-never-reissues-an-identifier´
 #[sqlx::test(migrations = "../../migrations")]
 async fn seq_allocation_is_monotone_and_catches_up_with_the_mirror(pool: PgPool) {
     let mut conn = pool.acquire().await.expect("conn");
@@ -135,6 +138,8 @@ async fn seq_allocation_is_monotone_and_catches_up_with_the_mirror(pool: PgPool)
     );
 }
 
+/// A staged write loads back as what was written, down to the handshake parts nothing has filled yet.
+/// ´claim:staged:a-staged-write-round-trips´
 #[sqlx::test(migrations = "../../migrations")]
 async fn insert_and_load_round_trip_the_proposal(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
@@ -153,6 +158,8 @@ async fn insert_and_load_round_trip_the_proposal(pool: PgPool) {
     assert!(w.verified_act().is_none());
 }
 
+/// Loading an id the store never staged is not found, and the diagnostic names the id asked for.
+/// ´claim:staged:an-unknown-id-loads-as-not-found´
 #[sqlx::test(migrations = "../../migrations")]
 async fn load_of_unknown_id_is_not_found(pool: PgPool) {
     let missing = Uuid::new_v4();
@@ -162,6 +169,8 @@ async fn load_of_unknown_id_is_not_found(pool: PgPool) {
     ));
 }
 
+/// A staged row changed behind the store's back is refused at load rather than trusted.
+/// ´claim:staged:a-row-changed-behind-the-store-is-refused-at-load´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_row_edited_out_of_band_loads_as_corrupt(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
@@ -180,6 +189,9 @@ async fn a_row_edited_out_of_band_loads_as_corrupt(pool: PgPool) {
 /// The handshake walks pre-sign, seal, then approve, storing each leg's
 /// parts as it goes and rebuilding the verified act from them. Pre-sign and
 /// approve each accept an idempotent retry from the state they lead to.
+///
+/// The staged handshake walks pre-sign, seal, and approve, and a retry from the state a step leads to is idempotent.
+/// ´claim:staged:the-handshake-walks-its-states-and-retries-idempotently´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_handshake_lifecycle_advances_through_its_states(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
@@ -221,6 +233,9 @@ async fn the_handshake_lifecycle_advances_through_its_states(pool: PgPool) {
 /// actually in; an unknown id surfaces NotFound instead. A failed seal is
 /// the one way back — it returns the write to awaiting_pre_sign for the
 /// device's retry.
+///
+/// A transition taken out of turn is refused with the state the row is actually in, and a failed seal is the one way back.
+/// ´claim:staged:an-out-of-turn-transition-is-refused-with-the-actual-state´
 #[sqlx::test(migrations = "../../migrations")]
 async fn out_of_order_transitions_are_refused_with_the_actual_state(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
@@ -257,6 +272,9 @@ async fn out_of_order_transitions_are_refused_with_the_actual_state(pool: PgPool
 /// Promotion lands exactly the staged writes whose records arrived in the
 /// epoch and leaves the rest where they were; a second pass over the same
 /// epoch promotes nothing further.
+///
+/// Promotion lands exactly the writes whose records arrived, and a second pass over one epoch promotes nothing further.
+/// ´claim:staged:promotion-lands-what-arrived-and-nothing-twice´
 #[sqlx::test(migrations = "../../migrations")]
 async fn promotion_lands_exactly_the_staged_writes_whose_records_arrive(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
@@ -301,6 +319,9 @@ async fn promotion_lands_exactly_the_staged_writes_whose_records_arrive(pool: Pg
 /// one more window before it reaps. The payload rides the row until that
 /// reap, so a record landing in the window can still be promoted
 /// (data-model.md "Staged writes").
+///
+/// Expiry and the reap are two phases, and the payload rides the row until the reap.
+/// ´claim:staged:expiry-and-the-reap-are-two-phases´
 #[sqlx::test(migrations = "../../migrations")]
 async fn gc_expires_then_reaps_and_spares_landed_writes(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
@@ -337,6 +358,9 @@ async fn gc_expires_then_reaps_and_spares_landed_writes(pool: PgPool) {
 
 /// Expiring one write reaches only that write, and expiring an
 /// already-terminal one is refused.
+///
+/// Expiring one write reaches only that write, and an already-terminal one is refused.
+/// ´claim:staged:expiring-one-write-reaches-only-that-write´
 #[sqlx::test(migrations = "../../migrations")]
 async fn expire_one_is_targeted_and_terminal(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
@@ -361,6 +385,9 @@ async fn expire_one_is_targeted_and_terminal(pool: PgPool) {
 /// The mirror governs: a late landing wins over expiry, and the payload the
 /// promotion needs is still on the expired row — expiry stops serving the
 /// content, the reap is what destroys it (data-model.md "Staged writes").
+///
+/// The mirror governs expiry: a late landing still promotes, because the payload survives until the reap.
+/// ´claim:staged:a-late-landing-outranks-expiry´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_record_landing_after_expiry_still_promotes(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
@@ -395,6 +422,9 @@ async fn a_record_landing_after_expiry_still_promotes(pool: PgPool) {
 
 /// A staged write answers as live for its own actor and only at its own
 /// target; once expired it is a tombstone and answers no longer.
+///
+/// A staged write answers as live only for its own actor at its own target, and never once expired.
+/// ´claim:staged:a-live-write-answers-only-for-its-author-at-its-target´
 #[sqlx::test(migrations = "../../migrations")]
 async fn has_live_targeting_sees_only_live_writes_at_the_target(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;

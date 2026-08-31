@@ -120,6 +120,9 @@ async fn fixture(pool: &PgPool) {
 ///   absent from the view rather than served at zero.
 ///
 /// Ordered by target, that is carol then zoe.
+///
+/// The reference fold nets per bundle, clips only after summing, and drops a bundle that nets to zero.
+/// ´claim:references:the-fold-nets-then-clips-and-drops-what-reaches-zero´
 #[sqlx::test(migrations = "../../migrations")]
 async fn hand_computed_reference_fold_agrees(pool: PgPool) {
     fixture(&pool).await;
@@ -169,6 +172,9 @@ async fn hand_computed_reference_fold_agrees(pool: PgPool) {
 /// withdrawal gesture prices its batch against: `bundle` returns sums
 /// before the clip, so a bundle already at zero quotes an empty batch
 /// while a live one quotes the walk back.
+///
+/// A bundle's raw sums stay readable before the clip, which is what a withdrawal prices its batch against.
+/// ´claim:references:a-bundle-reads-its-sums-before-the-clip´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_raw_bundle_sums_match_the_hand_computation(pool: PgPool) {
     fixture(&pool).await;
