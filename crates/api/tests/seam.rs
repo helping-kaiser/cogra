@@ -35,6 +35,9 @@ fn registration(actor: &ActorKey) -> Proposal {
 /// nothing, the pass after it advances the cursor, and a further pass is
 /// a no-op because ingestion resumes from that cursor. The B_i read
 /// through the boundary then shows the debit consummated.
+///
+/// Both relay legs cross the boundary trait and the record lands only once the epoch closes, ingestion resuming from its cursor so a further pass moves nothing.
+/// ´claim:relay:a-record-crosses-the-seam-at-the-epoch-close´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_record_crosses_the_seam_into_the_mirror(pool: PgPool) {
     let standin = StandIn::new(pool.clone(), StandInConfig::default());

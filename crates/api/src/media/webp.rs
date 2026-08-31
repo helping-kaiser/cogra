@@ -264,6 +264,7 @@ mod tests {
         container(&body)
     }
 
+    /// (´claim:media:the-bytes-decide-the-type´)
     #[test]
     fn sniffing_reads_the_container_not_the_claim() {
         assert!(sniff(&one_pixel_vp8l()));
@@ -273,6 +274,8 @@ mod tests {
         assert!(!sniff(b""));
     }
 
+    /// Stripping removes the metadata chunks and clears the flags that announced them, leaving nothing to say they were there.
+    /// ´claim:media:stripping-removes-the-chunks-and-their-flags´
     #[test]
     fn stripping_removes_the_metadata_chunks_and_their_flags() {
         let stripped = strip_metadata(&extended_with_metadata()).expect("a valid container");
@@ -293,6 +296,8 @@ mod tests {
         assert_eq!(flags & 0x20, 0x20, "the colour profile stays advertised");
     }
 
+    /// Stripping keeps the colour profile and every pixel, taking only what identifies the author.
+    /// ´claim:media:stripping-keeps-the-picture´
     #[test]
     fn stripping_keeps_the_colour_profile_and_the_pixels() {
         let stripped = strip_metadata(&extended_with_metadata()).expect("a valid container");
@@ -307,6 +312,9 @@ mod tests {
 
     /// Stripping a file that carries no metadata still produces a valid
     /// container, and stripping twice is stripping once.
+    ///
+    /// Stripping a file with nothing to strip still yields a valid container, and stripping twice is stripping once.
+    /// ´claim:media:stripping-is-idempotent-and-total´
     #[test]
     fn stripping_is_idempotent_and_total() {
         let clean = one_pixel_vp8l();
@@ -318,6 +326,9 @@ mod tests {
 
     /// Bytes appended past the declared RIFF size are not part of the
     /// image and must not reach public storage under its content type.
+    ///
+    /// Bytes appended past the declared container size are dropped, so nothing rides into public storage under the image content type.
+    /// ´claim:media:nothing-rides-past-the-container´
     #[test]
     fn stripping_drops_a_payload_appended_past_the_container() {
         let mut polyglot = one_pixel_vp8l();
@@ -328,6 +339,8 @@ mod tests {
         assert!(!stripped.windows(9).any(|w| w == b"#!/bin/sh"));
     }
 
+    /// A malformed container is refused rather than repaired into something servable.
+    /// ´claim:media:a-malformed-container-is-refused´
     #[test]
     fn a_malformed_container_is_refused_not_repaired() {
         assert_eq!(strip_metadata(b"not an image"), Err(MediaError::NotWebp));
@@ -355,6 +368,8 @@ mod tests {
         ));
     }
 
+    /// An animated image is refused, the accepted form being a single still frame.
+    /// ´claim:media:an-animated-image-is-refused´
     #[test]
     fn an_animated_image_is_refused() {
         let vp8x = vec![FLAG_ANIMATION, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -363,6 +378,8 @@ mod tests {
         assert_eq!(strip_metadata(&container(&body)), Err(MediaError::Animated));
     }
 
+    /// Probing a real image reports the pixel dimensions it decodes to.
+    /// ´claim:media:probing-reports-the-pixel-size´
     #[test]
     fn probing_accepts_a_real_image_and_reports_its_size() {
         assert_eq!(
@@ -375,6 +392,9 @@ mod tests {
     }
 
     /// A container that parses is not an image; only a decode says so.
+    ///
+    /// A container that parses is not yet an image: only a decode says so, and bytes that will not decode are refused.
+    /// ´claim:media:only-a-decode-proves-an-image´
     #[test]
     fn probing_refuses_bytes_that_do_not_decode() {
         let body = chunk(b"VP8L", b"\x2f not a bitstream at all");

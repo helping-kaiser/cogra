@@ -33,6 +33,9 @@ fn standin(pool: &PgPool) -> StandIn {
 /// first accepted acts — four Registrations, two endorsement Opinions,
 /// The Charter, and the genesis role Tag, with the Genesis Moderator's
 /// Registration first.
+///
+/// A fresh bootstrap lands both halves: the L2 cast, reserved Types and parameter carrier, and the L1 genesis sequence as the instance's first accepted acts.
+/// ´claim:bootstrap:a-fresh-run-lands-both-halves´
 #[sqlx::test(migrations = "../../migrations")]
 async fn fresh_bootstrap_creates_both_halves(pool: PgPool) {
     let host = standin(&pool);
@@ -81,6 +84,9 @@ async fn fresh_bootstrap_creates_both_halves(pool: PgPool) {
 
 /// A second run reports AlreadyComplete and lands nothing new: still
 /// exactly one epoch of eight records.
+///
+/// A second run reports the genesis already complete and lands nothing new.
+/// ´claim:bootstrap:a-rerun-lands-nothing-new´
 #[sqlx::test(migrations = "../../migrations")]
 async fn rerun_is_idempotent(pool: PgPool) {
     let host = standin(&pool);
@@ -101,6 +107,9 @@ async fn rerun_is_idempotent(pool: PgPool) {
 /// happened — simulated by wiping the substrate and the mirror's
 /// projection of it. The re-run completes the missing half, keyed on the
 /// stored identities.
+///
+/// A crash between the two halves is repaired by the re-run, which completes the missing half keyed on the identities already stored.
+/// ´claim:bootstrap:a-crash-between-the-halves-is-repaired´
 #[sqlx::test(migrations = "../../migrations")]
 async fn crash_before_the_l1_half_is_repaired(pool: PgPool) {
     let host = standin(&pool);
@@ -196,6 +205,9 @@ async fn rewind_to_partial_genesis(pool: &PgPool, keep: &[String]) {
 /// Registrations and the first endorsement Opinion approved, then nothing
 /// more. The re-run finishes the sequence, and the genesis burn is
 /// credited at most once per cast member across both runs.
+///
+/// A crash part-way through the genesis sequence is repaired by finishing it, the genesis burn crediting at most once per cast member across both runs.
+/// ´claim:bootstrap:a-crash-inside-the-sequence-is-finished-not-repeated´
 #[sqlx::test(migrations = "../../migrations")]
 async fn crash_inside_the_l1_sequence_is_repaired(pool: PgPool) {
     let host = standin(&pool);
@@ -241,6 +253,9 @@ async fn crash_inside_the_l1_sequence_is_repaired(pool: PgPool) {
 /// The narrowest crash window: The Treasury's Registration was sealed but
 /// the crash hit before its approval was recorded. The re-run recovers
 /// the approval from the custodied key rather than re-sealing.
+///
+/// An act sealed but not yet approved when the crash hit has its approval recovered from the custodied key rather than being sealed a second time.
+/// ´claim:bootstrap:a-sealed-act-is-recovered-not-resealed´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_sealed_unapproved_act_is_recovered(pool: PgPool) {
     let host = standin(&pool);
@@ -289,6 +304,9 @@ async fn a_sealed_unapproved_act_is_recovered(pool: PgPool) {
 /// The same identifier holding different content — what a re-run with
 /// changed genesis input would produce — is refused as divergence rather
 /// than replayed.
+///
+/// One identifier holding different content is refused as divergence rather than replayed over.
+/// ´claim:bootstrap:divergence-is-refused-not-replayed´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_diverged_substrate_act_is_refused(pool: PgPool) {
     let host = standin(&pool);
@@ -321,6 +339,9 @@ async fn a_diverged_substrate_act_is_refused(pool: PgPool) {
 /// A different act holds the author-local sequence, so the identifier the
 /// genesis sequence needs does not exist and the seal conflicts. That too
 /// is refused truthfully rather than replayed.
+///
+/// An author-local sequence value another act already holds is refused truthfully rather than worked around.
+/// ´claim:bootstrap:an-occupied-sequence-is-refused´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_occupied_author_sequence_is_refused(pool: PgPool) {
     let host = standin(&pool);
@@ -431,6 +452,9 @@ async fn clear_profile_versions(pool: &PgPool, actor: Uuid) {
 /// closed and not yet ingested, carrying a write whose promotion will
 /// fail. The refusal is a refusal to complete, not a rollback — the
 /// record landed and the mirror governs, exactly as ingestion left it.
+///
+/// A promotion that cannot complete refuses the run rather than letting it walk on, so an operator told the genesis completed is never sitting on a promotion that silently did not.
+/// ´claim:bootstrap:a-failed-promotion-refuses-the-run´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_failed_promotion_refuses_the_catch_up_ingestion(pool: PgPool) {
     let host = standin(&pool);
@@ -470,6 +494,8 @@ async fn a_failed_promotion_refuses_the_catch_up_ingestion(pool: PgPool) {
 /// that keys the L1 half of the gate — while the cursor stands, leaving
 /// the catch-up ingestion nothing to do — sends the run through the epoch
 /// close to the second ingestion.
+///
+/// (´claim:bootstrap:a-failed-promotion-refuses-the-run´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_failed_promotion_refuses_the_genesis_ingestion(pool: PgPool) {
     let host = standin(&pool);
@@ -509,6 +535,9 @@ async fn a_failed_promotion_refuses_the_genesis_ingestion(pool: PgPool) {
 /// With the L2 half wiped — custodied keys included — while the L1
 /// records stand, there is nothing left to sign with and the instance is
 /// beyond repair.
+///
+/// With the L2 half gone and its custodied keys with it, an instance whose L1 records stand is beyond repair and says so.
+/// ´claim:bootstrap:a-lost-l2-half-is-unrepairable´
 #[sqlx::test(migrations = "../../migrations")]
 async fn missing_l2_half_with_l1_records_is_unrepairable(pool: PgPool) {
     let host = standin(&pool);
@@ -537,6 +566,9 @@ async fn missing_l2_half_with_l1_records_is_unrepairable(pool: PgPool) {
 /// display form the way a client would, stripping the separators and
 /// decoding Crockford base32. Re-running mints nothing new: credentials
 /// stand, the blob stands, and no second code is printed.
+///
+/// The genesis account finishes as an ordinary one: its credentials log in, its printed code opens a standard key-backup blob holding the custodied seed, and a re-run mints no second code.
+/// ´claim:bootstrap:the-genesis-account-is-an-ordinary-one´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_operator_login_completes_the_genesis_account(pool: PgPool) {
     let host = standin(&pool);
@@ -602,6 +634,8 @@ async fn the_operator_login_completes_the_genesis_account(pool: PgPool) {
     assert!(unchanged.is_some(), "the original login is untouched");
 }
 
+/// The operator login needs an instance that has actually been bootstrapped behind it.
+/// ´claim:bootstrap:the-operator-login-needs-a-genesis´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_operator_login_requires_a_bootstrapped_instance(pool: PgPool) {
     let err = ensure_operator_login(&pool, "operator", "op@example.com", "pw pw pw pw")
