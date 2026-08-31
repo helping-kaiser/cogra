@@ -1,9 +1,9 @@
-/* Edit comment (media slice): the post's one-screen-one-batch, scaled to the
-   comment's anatomy — words, pictures (uncropped, four max, described via the
-   same counter line the reply composer wears), topics, citations, the license
-   locked. Entered from Edit on an own comment. The acts footer is the
-   affordance into the acts sheet (the CommentEditActs board — the EditActs
-   pattern at comment scale). */
+/* Edit comment · the acts (comment-media round, 2026-08-31): the footer's
+   "This creates 2 signed actions" opened — an M3 modal bottom sheet, the
+   EditActs pattern at comment scale, rendered with ActsCard (the sheet title
+   carries the count, so the card carries rows and the all-or-nothing note).
+   The sheet is the peek-from-a-composer pattern; ceremony screens keep the
+   inline ActsCard — two patterns, one component. */
 
 function FieldLabel({ children }) {
   return (
@@ -67,6 +67,22 @@ export function Screen() {
         </div>
         <Button style={{ width: "100%" }}>Sign the edit</Button>
       </div>
+
+      <BottomSheet open ariaLabel="What the edit signs">
+        <SheetTitle>2 signed actions</SheetTitle>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 24px 16px" }}>
+          <ActsCard
+            rows={[
+              { label: "Edit", value: "The glovebox camera earns its keep — this is the print…", count: "1 action" },
+              { label: "Topic added", value: "#glovebox", count: "1 action" },
+            ]}
+            note="They land together, or none does."
+          />
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <Button variant="text">Done</Button>
+          </div>
+        </div>
+      </BottomSheet>
     </>
   );
 }
