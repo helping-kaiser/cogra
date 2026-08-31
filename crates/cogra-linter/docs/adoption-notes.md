@@ -1,4 +1,4 @@
-# Adoption data — rationale, rulings, findings
+# Adoption data — rationale, rulings, findings · `rec:lint:adoption-notes`
 
 Companion to `corpus-adoption.toml`. Drafted 2026-08-20 against the
 repository at branch `jakob/docs/linter-adoption-draft` (read-only);

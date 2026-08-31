@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# web/CLAUDE.md
+# web/CLAUDE.md · `guide:web:claude-instructions`
 
 Web-specific assistant rules. The root [CLAUDE.md](../CLAUDE.md)
 holds the shared mission, design boundaries, and workflow rules —
