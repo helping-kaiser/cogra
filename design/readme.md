@@ -1349,6 +1349,36 @@ media and comment editing.
 - **Sensitive veils the whole gallery**, never one picture of it —
   the open question in `MediaAttachment` closed.
 
+**The comment-media round** (the implementation session's second
+set of findings; jakob's rulings 2026-08-31):
+
+- **Comments have no pick stage.** "+ Add" opens the platform's
+  own picker — Android's photo-picker sheet, the browser's file
+  dialog on web — never the post wizard's grid: reusing the stage
+  would drag cover/crop/video machinery into a flow that has none
+  of it. The one web addition is the drop path: files dropped
+  anywhere on the composer are accepted, and a quiet hint beside
+  Add says so (*Reply · pictures on the web*).
+- **Alt text is detached from the upload** — a product ruling,
+  recorded in api-spec.md and data-model.md: the upload moves
+  bytes only; a description is witnessed in the act's manifest
+  and rides the prepare input per placement (`AttachmentInput`),
+  cached on the version's junction row like gallery order. So
+  comment pictures upload at pick, descriptions land at sign,
+  nothing gates on the other — the alt-text-vs-upload race the
+  implementation session feared cannot exist. The describe entry
+  is the same counter line everywhere a composer shows picked
+  pictures; the reply composer already wore it, *Edit comment*
+  now does too.
+- **The edit's acts footer opens a sheet.** "This creates n
+  signed actions" opens an M3 modal bottom sheet — the EditActs
+  pattern, now rendered with `ActsCard` (*Edit comment · the
+  acts*): the sheet title carries the count, the card the rows
+  and the all-or-nothing note. The sheet is the
+  peek-from-a-composer pattern; ceremony screens keep the inline
+  `ActsCard` — two patterns, one component. EditActs'
+  pre-component note wording is conformed to the card's standard.
+
 ### The wallet — 2026-08-31
 
 Item 12, jakob's rulings — grounded first in a verbatim doc audit
