@@ -138,6 +138,9 @@ impl Rig {
 /// the envelope the device signs, so a reader can check the veil against
 /// the record and a mirror rebuild restores it with the body it belongs
 /// to. The display row is the projection of that payload.
+///
+/// The self-mark is witnessed: it rides the envelope the device signs, and the display row is that payload's projection.
+/// ´claim:content:the-self-mark-is-witnessed´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_self_mark_rides_the_signed_payload_into_the_display_row(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -219,6 +222,9 @@ async fn a_self_mark_rides_the_signed_payload_into_the_display_row(pool: PgPool)
 /// A blank reason is no reason, and a reason without the switch is a
 /// refusal rather than a silent drop — the author would otherwise sign a
 /// warning nobody is ever shown.
+///
+/// A blank reason is no reason and a reason without the switch is refused, so the author never signs a warning nobody is shown.
+/// ´claim:content:a-reason-needs-its-switch´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_self_mark_reconciles_its_switch_and_its_reason(pool: PgPool) {
     let rig = Rig::new(pool).await;

@@ -428,6 +428,9 @@ async fn content_writes_need_a_member_session(pool: PgPool) {
 /// The body veils as one region (media, words and description together)
 /// and the title stays readable, so choosing to look is informed
 /// (design/readme.md §13, moderation.md §1).
+///
+/// A self-marked post veils its whole body as one region while the title stays readable, so choosing to look is an informed choice.
+/// ´claim:content:a-self-mark-veils-the-body-not-the-title´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_self_marked_post_veils_its_body_and_keeps_its_title(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -520,6 +523,8 @@ async fn a_self_marked_post_veils_its_body_and_keeps_its_title(pool: PgPool) {
 
 /// A reason without the switch is refused rather than dropped: the author
 /// wrote a warning no reader would ever be shown.
+///
+/// (´claim:content:a-reason-needs-its-switch´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_sensitive_reason_without_the_mark_is_refused(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -548,6 +553,9 @@ async fn a_sensitive_reason_without_the_mark_is_refused(pool: PgPool) {
 
 /// A comment seals through the same seal a post does, so it carries the
 /// same switch and veils the same way.
+///
+/// A comment seals through the same seal a post does, so it carries the same mark and veils the same way.
+/// ´claim:content:a-comment-carries-the-same-mark´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_self_marked_comment_veils_its_body(pool: PgPool) {
     let rig = Rig::new(pool).await;
