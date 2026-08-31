@@ -331,6 +331,8 @@ export function ComposeWizard({
   const gate = advanceGate(state);
   const seal = sealGate(state);
 
+  // The arrow: ONE STAGE BACK, never out of the flow (jakob, round 4). From the
+  // first stage there is no stage to step to, so that one lands on the feed.
   const leave = () => {
     const previous = state.step;
     // Leaving keeps the draft — written here rather than left to the coalescing
@@ -340,8 +342,15 @@ export function ComposeWizard({
     // uploaded came from the framing the author is about to change.
     if (previous === "details" && state.mode === "media") invalidateUploads();
     dispatch({ type: "back" });
-    // Already on the first screen: leaving the wizard is leaving the surface.
     if (previous === "pick") router.push("/feed");
+  };
+
+  // The X: OUT OF THE FLOW from any stage, draft kept, NO confirmation —
+  // nothing is lost, and the draft prompt is the return surface. Without it an
+  // author five stages deep was stuck backing out tap by tap.
+  const leaveFlow = () => {
+    keep();
+    router.push("/feed");
   };
 
   if (!loaded) {
@@ -359,6 +368,7 @@ export function ComposeWizard({
         title={HEADINGS[state.step]}
         onBack={leave}
         backLabel={state.step === "pick" ? "Back to feed" : "Back a step"}
+        onLeave={leaveFlow}
         // The seal board carries a `?`. It opens the help dialog of HelpDialog,
         // which has no 2.0 component yet — so the slot stays empty rather than
         // holding a control that does nothing when pressed.
