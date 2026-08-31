@@ -171,6 +171,8 @@ impl fmt::Display for NodeId {
 mod tests {
     use super::*;
 
+    /// An act identifier prints in its textual form and parses back from it unchanged.
+    /// ´claim:identifier:an-act-identifier-round-trips-through-its-text´
     #[test]
     fn act_id_round_trips() {
         let id = ActId::new("alice-addr", 7, Family::Opinion).expect("valid");
@@ -179,6 +181,8 @@ mod tests {
         assert_eq!(ActId::parse(&text).expect("parses"), id);
     }
 
+    /// Every node class prints and parses back unchanged, the minted class included.
+    /// ´claim:identifier:every-node-class-round-trips-through-its-text´
     #[test]
     fn node_ids_round_trip() {
         for text in [
@@ -192,6 +196,8 @@ mod tests {
         }
     }
 
+    /// Active and passive are decided by the node's class alone, and can be read off its text.
+    /// ´claim:identifier:active-and-passive-are-decided-by-the-class-alone´
     #[test]
     fn classes_are_syntactic() {
         assert!(NodeId::parse("addr:a").expect("ok").is_active());
@@ -200,6 +206,8 @@ mod tests {
         }
     }
 
+    /// An identifier built from a string that is no atom is refused at construction.
+    /// ´claim:identifier:a-non-atom-is-refused-at-construction´
     #[test]
     fn invalid_atoms_rejected() {
         assert!(NodeId::addr("has space").is_err());
@@ -208,6 +216,8 @@ mod tests {
         assert!(ActId::new("ok", 1, Family::Opinion).is_ok());
     }
 
+    /// A text that is no identifier fails to parse rather than parsing into a wrong one.
+    /// ´claim:identifier:an-unparseable-text-fails-rather-than-misparses´
     #[test]
     fn unparseable_forms_rejected() {
         for bad in [

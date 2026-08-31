@@ -36,6 +36,9 @@ fn package(epoch: i64, records: Vec<PublishedRecord>) -> EpochPackage {
 
 /// Ingesting a package appends its records and advances the cursor, and
 /// the leg rows come back carrying the family-fixed census metadata.
+///
+/// A published package arrives whole: its records, its legs, and each leg's family-fixed census metadata.
+/// ´claim:mirror:a-published-package-arrives-whole´
 #[sqlx::test(migrations = "../../migrations")]
 async fn ingestion_appends_and_advances_the_cursor(pool: PgPool) {
     assert_eq!(
@@ -75,6 +78,9 @@ async fn ingestion_appends_and_advances_the_cursor(pool: PgPool) {
 
 /// Only the cursor's successor is accepted: a gap ahead of the cursor and
 /// a replay of an already-ingested epoch are refused alike.
+///
+/// Only the cursor's successor is accepted: a gap ahead of it and a replay behind it are refused alike.
+/// ´claim:mirror:only-the-cursors-successor-is-accepted´
 #[sqlx::test(migrations = "../../migrations")]
 async fn ingestion_is_strictly_sequential(pool: PgPool) {
     let p1 = package(1, vec![registration("alice", 1, 0)]);
@@ -90,6 +96,8 @@ async fn ingestion_is_strictly_sequential(pool: PgPool) {
     assert!(matches!(err, MirrorError::OutOfOrder { got: 0, cursor: 0 }));
 }
 
+/// Dropping the mirror and replaying the published sequence restores it record for record.
+/// ´claim:mirror:the-mirror-rebuilds-from-the-published-sequence´
 #[sqlx::test(migrations = "../../migrations")]
 async fn mirror_is_rebuildable_from_the_published_sequence(pool: PgPool) {
     let packages = [
