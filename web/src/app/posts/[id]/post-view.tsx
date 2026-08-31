@@ -16,6 +16,7 @@ import { useApolloClient } from "@apollo/client/react";
 import { PUBLIC_DOMAIN, type License } from "@/lib/license";
 import {
   fetchCommentReplies,
+  fetchCommentSelfMark,
   fetchPostDetail,
   isPending,
   prepareComment,
@@ -50,7 +51,13 @@ import { Card } from "@/lib/ui/card";
 import { LicenseChooser, LicenseTerms } from "@/lib/ui/license-fields";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PendingMarker } from "@/lib/ui/pending-marker";
-import { BodyRegion, PostMedia, bodyIsSensitive, hasMedia } from "@/lib/ui/post-media";
+import {
+  BodyRegion,
+  PostMedia,
+  bodyIsSensitive,
+  hasMedia,
+  sensitiveSignature,
+} from "@/lib/ui/post-media";
 import { MultiActionConfirm, SignedActionsIndicator } from "@/lib/ui/signed-actions";
 import { SigningPending } from "@/lib/ui/signing-pending";
 import { StanceControl } from "@/lib/ui/stance-control";
@@ -780,7 +787,12 @@ export function PostView({
               {/* A comment is text PLUS optional media — the XOR is the post's
                   rule alone (D16) — so both render, and both are veiled as one
                   body when the comment is marked. */}
-              <BodyRegion veiled={bodyIsSensitive(comment)} testId={`comment-${comment.id}`}>
+              <BodyRegion
+                veiled={bodyIsSensitive(comment)}
+                testId={`comment-${comment.id}`}
+                nodeId={comment.id}
+                signature={sensitiveSignature(comment)}
+              >
                 <p className="text-body-medium">{comment.content.value}</p>
                 {/* A COMMENT IS WORDS FIRST and its pictures join them: below
                     the words, INSET at the card's medium rung rather than
@@ -890,7 +902,23 @@ export function PostView({
                         tags: loaded,
                         loadedReferences: loadedRefs,
                         references: loadedRefs,
-                        sensitive: bodyIsSensitive(comment),
+                        // The OR is what a READER sees; the switch is the
+                        // author's own mark and arrives from its own read a
+                        // moment later (round 4). Starting from the OR would
+                        // show a moderator's verdict as the author's until it
+                        // landed, so the switch starts unmarked and the read
+                        // is what turns it on.
+                        sensitive: false,
+                      });
+                      void fetchCommentSelfMark(client, comment.id).then((outcome) => {
+                        if (outcome.kind !== "success") return;
+                        const mark = outcome.value;
+                        if (mark === null) return;
+                        setEditing((current) =>
+                          current === null || current.id !== comment.id
+                            ? current
+                            : { ...current, sensitive: mark },
+                        );
                       });
                       setEditTagErrors({});
                       setEditReferenceErrors({});
@@ -1020,7 +1048,12 @@ export function PostView({
           {post.title.value}
         </h1>
       )}
-      <BodyRegion veiled={bodyIsSensitive(post)} testId="post">
+      <BodyRegion
+        veiled={bodyIsSensitive(post)}
+        testId="post"
+        nodeId={post.id}
+        signature={sensitiveSignature(post)}
+      >
         {hasMedia(post) && (
           <PostMedia node={post} testId="post-media" bleed="page" preloadLead />
         )}

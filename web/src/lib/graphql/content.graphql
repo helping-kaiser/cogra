@@ -253,6 +253,14 @@ query PostDetail(
     }
     # One state for the whole set: sensitivity veils the body as one.
     attachmentsStatus
+    # The AUTHOR'S OWN mark, which is not the same question as
+    # `moderationStatus` (round 4): what a reader sees is the OR of the two
+    # marks and neither side can clear the other, so an edit that re-stated the
+    # OR would let a moderator's mark become the author's. The edit switch reads
+    # this and nothing else. Selected here, on the single root post, and
+    # deliberately NOT on the comment and reply selections below, where it would
+    # be paid for on every one of them.
+    sensitiveSelfMark
     author {
       id
       handle
@@ -859,5 +867,20 @@ query CommentReplies(
         endCursor
       }
     }
+  }
+}
+
+# THE COMMENT EDIT'S OWN READ, and the reason it is its own operation.
+#
+# The edit switch shows the AUTHOR'S own sensitive mark, never the OR a reader
+# sees (round 4). `sensitiveSelfMark` could have been selected on the comment
+# nodes inside `PostDetail` — but a detail read carries a page of comments each
+# carrying a page of replies, so one scalar there is paid for eighty-odd times
+# on every open of every post. Here it is paid for once, and only by the reader
+# who actually opened an editor.
+query CommentSelfMark($id: UUID!) {
+  comment(id: $id) {
+    id
+    sensitiveSelfMark
   }
 }
