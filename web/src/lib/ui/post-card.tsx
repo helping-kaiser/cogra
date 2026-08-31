@@ -18,7 +18,13 @@ import { referenceChipEntries } from "@/lib/references/claims";
 import { ActorChip } from "./actor-chip";
 import { Card } from "./card";
 import { PendingMarker } from "./pending-marker";
-import { BodyRegion, PostMedia, bodyIsSensitive, hasMedia } from "./post-media";
+import {
+  BodyRegion,
+  PostMedia,
+  bodyIsSensitive,
+  hasMedia,
+  sensitiveSignature,
+} from "./post-media";
 import { ReferenceChipRow } from "./reference-chip-row";
 import { StanceControl } from "./stance-control";
 import { TopicChipRow, type TopicChipEntry } from "./topic-chip-row";
@@ -57,7 +63,12 @@ export function PostCard({
       {media && title}
       <Link href={`/posts/${post.id}`} data-testid={testId} className="flex flex-col gap-3">
         {!media && title}
-        <BodyRegion veiled={veiled} testId={testId}>
+        <BodyRegion
+          veiled={veiled}
+          testId={testId}
+          nodeId={post.id}
+          signature={sensitiveSignature(post)}
+        >
           {media && <PostMedia node={post} testId={`${testId}-media`} />}
           {post.description.value && (
             <p className="line-clamp-2 text-body-medium text-on-surface-variant">
