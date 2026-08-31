@@ -178,7 +178,10 @@ async fn a_self_mark_rides_the_signed_payload_into_the_display_row(pool: PgPool)
         .expect("reads")
         .expect("post row");
     assert!(post.sensitive);
-    assert_eq!(post.sensitive_reason.as_deref(), Some("  Depicts an injury  "));
+    assert_eq!(
+        post.sensitive_reason.as_deref(),
+        Some("  Depicts an injury  ")
+    );
 
     let edit = content::prepare_post_edit(
         &rig.pool,

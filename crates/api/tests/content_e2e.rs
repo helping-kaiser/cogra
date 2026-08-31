@@ -563,8 +563,12 @@ async fn a_self_marked_comment_veils_its_body(pool: PgPool) {
         )
         .await;
     let post_id = prepared["preparePost"]["node"].as_str().expect("node id");
-    rig.sign_prepared(&author_token, &author_key, &prepared["preparePost"]["writes"])
-        .await;
+    rig.sign_prepared(
+        &author_token,
+        &author_key,
+        &prepared["preparePost"]["writes"],
+    )
+    .await;
     rig.close_and_ingest().await;
 
     let commented = rig
