@@ -592,6 +592,9 @@ mod tests {
     /// verbatim, and the census row for Reference reads `A: p_d = f,
     /// p_i = e`. So the tuple this gesture writes must be
     /// (effort, enthusiasm) = (relevance, support).
+    ///
+    /// The Reference gesture writes the act tuple the census fixes, never a leg's rendering of it.
+    /// ´claim:references:the-gesture-writes-the-act-tuple´
     #[test]
     fn the_reference_gesture_writes_the_act_tuple_never_a_leg_rendering() {
         let reference = planned("prof:bob", -0.25, 0.75);
@@ -614,6 +617,8 @@ mod tests {
         );
     }
 
+    /// The planned gesture is a well-formed Reference, down to the family, the legs and the parameters the census fixes.
+    /// ´claim:references:the-planned-gesture-is-well-formed´
     #[test]
     fn the_gesture_is_a_well_formed_reference() {
         let reference = planned("prof:bob", 1.0, -1.0);
@@ -638,12 +643,17 @@ mod tests {
     /// A (0,0) citation is legitimate — priced, admitted, structurally
     /// permanent, and routing-inert (claim 12). It is the proposal- and
     /// campaign-targeting gesture, so formation must admit it.
+    ///
+    /// A citation inert on both axes is well-formed and admitted, being the proposal- and campaign-targeting gesture.
+    /// ´claim:references:an-inert-citation-is-well-formed´
     #[test]
     fn a_zero_zero_citation_is_well_formed() {
         let g = reference_gesture("alice", middle(), &planned("prof:bob", 0.0, 0.0), vec![]);
         g.family.params_check(g.p_d, g.p_i).expect("params");
     }
 
+    /// An omitted citation parameter takes the declared default rather than zero or a refusal.
+    /// ´claim:references:omitted-parameters-take-the-defaults´
     #[test]
     fn omitted_reference_parameters_take_the_declared_defaults() {
         let (relevance, support) = check(&ReferenceDraft {
@@ -663,6 +673,9 @@ mod tests {
     /// The refusal names the field the client actually sent, which on
     /// `ReferenceInput` is `relevance` / `support` (D1) and not the
     /// census-slot spelling `TagInput` still uses.
+    ///
+    /// An out-of-range parameter is refused against the field the client actually sent, never the census slot behind it.
+    /// ´claim:references:a-refusal-names-the-clients-own-field´
     #[test]
     fn out_of_range_parameters_name_their_own_input_field() {
         let over = ReferenceDraft {
@@ -680,6 +693,8 @@ mod tests {
         assert_eq!(check(&under).expect_err("refused").0, "support");
     }
 
+    /// Both citation axes accept the whole signed range, negative ends included.
+    /// ´claim:references:both-axes-take-the-whole-signed-range´
     #[test]
     fn the_whole_signed_range_is_accepted_on_both_axes() {
         for v in [-1.0, -0.5, 0.0, 0.5, 1.0] {
@@ -692,6 +707,8 @@ mod tests {
         }
     }
 
+    /// An artifact may not cite itself, and only the entry that tried is refused for it.
+    /// ´claim:references:an-artifact-cannot-cite-itself´
     #[test]
     fn an_artifact_citing_itself_is_refused_at_its_own_index() {
         let batch = [
@@ -709,6 +726,7 @@ mod tests {
         );
     }
 
+    /// (´claim:references:an-artifact-cannot-cite-itself´)
     #[test]
     fn a_batch_that_cites_others_passes_the_self_check() {
         let batch = [
@@ -718,6 +736,8 @@ mod tests {
         refuse_self_citation(&middle(), &batch).expect("legal");
     }
 
+    /// A citation batch prices at one act per citation.
+    /// ´claim:references:one-act-per-citation´
     #[test]
     fn the_act_count_is_one_per_citation() {
         let batch = [
@@ -731,6 +751,9 @@ mod tests {
     /// D21: the one passive class the Reference family does not reach.
     /// L1 would admit the record — a Type is a passive node like any
     /// other — so nothing but this refusal keeps the gesture out.
+    ///
+    /// A topic is the one passive class the Reference family does not reach, and nothing but this refusal keeps the gesture out of it.
+    /// ´claim:references:a-topic-is-no-reference-target´
     #[test]
     fn a_topic_is_refused_as_a_reference_target() {
         let (field, message) =
@@ -746,6 +769,9 @@ mod tests {
     /// The boundary itself: the fiftieth citation is the last one the
     /// artifact carries, and the fifty-first is refused rather than
     /// clamped or silently dropped.
+    ///
+    /// The standing set caps at fifty citations: the fiftieth is carried and the fifty-first refused rather than clamped or dropped.
+    /// ´claim:references:the-standing-set-caps-at-fifty´
     #[test]
     fn the_standing_cap_admits_the_fiftieth_citation_and_refuses_the_next() {
         let fresh = [planned("prof:new", 0.1, 0.1)];
@@ -762,6 +788,9 @@ mod tests {
     /// The cap counts what stands, not what was ever authored: the fold
     /// drops a bundle netted to `(0, 0)`, so a withdrawal hands its slot
     /// back and the next citation fits.
+    ///
+    /// The standing cap counts what stands rather than what was ever authored, so a slot no longer claimed comes back.
+    /// ´claim:references:the-standing-cap-counts-what-stands´
     #[test]
     fn a_withdrawn_citation_frees_its_slot_under_the_standing_cap() {
         let mut live = standing(MAX_LIVE_REFERENCES_PER_ARTIFACT);
@@ -774,6 +803,8 @@ mod tests {
 
     /// Revising a citation the author already stands on claims no slot —
     /// the bundle it folds into is already counted.
+    ///
+    /// (´claim:references:the-standing-cap-counts-what-stands´)
     #[test]
     fn re_citing_a_standing_target_claims_no_further_slot() {
         let live = standing(MAX_LIVE_REFERENCES_PER_ARTIFACT);
@@ -785,6 +816,8 @@ mod tests {
 
     /// A `(0, 0)` citation toward a fresh target leaves the fold exactly
     /// as it found it, so the cap has nothing to refuse.
+    ///
+    /// (´claim:references:the-standing-cap-counts-what-stands´)
     #[test]
     fn an_inert_citation_does_not_claim_a_slot() {
         let live = standing(MAX_LIVE_REFERENCES_PER_ARTIFACT);
@@ -793,6 +826,9 @@ mod tests {
 
     /// Every other passive class stays a target — the narrowing is one
     /// class wide, not a general suspicion of non-content targets.
+    ///
+    /// Every passive class but the topic stays a citation target, the narrowing being one class wide and not a suspicion of non-content targets.
+    /// ´claim:references:the-narrowing-is-one-class-wide´
     #[test]
     fn the_other_passive_classes_stay_reference_targets() {
         for target in ["prof:bob", "mint:act:carol:0:publish"] {

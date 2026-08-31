@@ -100,26 +100,36 @@ fun SheetTitle(
             modifier = Modifier.weight(1f),
         )
         if (onHelp != null) {
-            HelpAffordance(onHelp, helpContentDescription)
+            HelpDot(onHelp, helpContentDescription)
         }
         trailing?.invoke()
     }
 }
 
 /**
- * The circled `?`, drawn as the canonical boards draw it. It taps at 48dp
- * while drawing at 24dp, and its label rides `onClickLabel` so the glyph is
- * never the only thing announced.
+ * The circled `?`, drawn as the canonical boards draw it (`HelpDialog`): a
+ * 24dp outlined circle in `onSurfaceVariant`. It taps at 48dp while drawing
+ * at 24dp, and its label rides `onClickLabel` so the glyph is never the only
+ * thing announced.
+ *
+ * **At most one per screen** (design/readme.md §13), and every one opens
+ * [HelpDialog] — the house plain dialog — rather than a tooltip of its own.
  */
 @Composable
-private fun HelpAffordance(onHelp: () -> Unit, description: String) {
+fun HelpDot(
+    onHelp: () -> Unit,
+    contentDescription: String,
+    modifier: Modifier = Modifier,
+    testTag: String? = null,
+) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .minimumInteractiveComponentSize()
             .size(24.dp)
             .clip(CircleShape)
             .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
-            .clickable(role = Role.Button, onClickLabel = description, onClick = onHelp),
+            .clickable(role = Role.Button, onClickLabel = contentDescription, onClick = onHelp)
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
         Text(

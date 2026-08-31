@@ -407,6 +407,9 @@ fn f(v: &Value) -> f64 {
 
 /// Every passive node kind takes the same gesture; this is the Profile
 /// target.
+///
+/// Every passive node kind takes the same stance gesture.
+/// ´claim:stance:one-gesture-for-every-passive-kind´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_stance_lands_toward_a_profile(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -423,6 +426,7 @@ async fn a_stance_lands_toward_a_profile(pool: PgPool) {
     assert_eq!(bundle["recordCount"], 1);
 }
 
+/// (´claim:stance:one-gesture-for-every-passive-kind´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_stance_lands_toward_a_post(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -438,6 +442,7 @@ async fn a_stance_lands_toward_a_post(pool: PgPool) {
     assert_eq!(bundle["recordCount"], 1);
 }
 
+/// (´claim:stance:one-gesture-for-every-passive-kind´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_stance_lands_toward_a_comment(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -453,6 +458,8 @@ async fn a_stance_lands_toward_a_comment(pool: PgPool) {
     assert_eq!(f(&bundle["pInterest"]), -0.2);
 }
 
+/// A stance toward a target that is not there is refused.
+/// ´claim:stance:an-unknown-target-is-refused´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_unknown_target_is_refused(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -475,6 +482,9 @@ async fn an_unknown_target_is_refused(pool: PgPool) {
 
 /// With no viewer at all, an acting mutation is a transport fault rather
 /// than a userError (api-spec.md "Conventions").
+///
+/// With no viewer at all an acting mutation is a transport fault rather than a user error.
+/// ´claim:stance:acting-without-a-viewer-is-a-transport-fault´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_guest_cannot_stance(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -497,6 +507,9 @@ async fn a_guest_cannot_stance(pool: PgPool) {
 /// delta (0.2, 0.2) so the bundle would net to the stated (0.7, 0.7);
 /// here it carries the picked (0.7, 0.7) and the bundle sums to (1.2,
 /// 1.2), clipped to (1, 1). This test fails under delta semantics.
+///
+/// A stance record carries the values the author picked verbatim, never a delta computed against what the bundle already nets to.
+/// ´claim:stance:a-record-carries-the-pick-not-a-delta´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_stance_record_carries_the_picked_values_not_a_delta(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -529,6 +542,8 @@ async fn a_stance_record_carries_the_picked_values_not_a_delta(pool: PgPool) {
 
 /// Restating the same pick is a further record, never a refusal — the
 /// backend no longer knows what the bundle "already nets to".
+///
+/// (´claim:stance:a-record-carries-the-pick-not-a-delta´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn restating_the_same_pick_is_a_further_record(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -546,6 +561,9 @@ async fn restating_the_same_pick_is_a_further_record(pool: PgPool) {
 }
 
 /// A counter-pick walks the bundle back without erasing the history.
+///
+/// A counter-pick walks the bundle back without erasing the history behind it.
+/// ´claim:stance:a-counter-pick-walks-the-bundle-back´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_counter_pick_walks_the_bundle_back(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -567,6 +585,9 @@ async fn a_counter_pick_walks_the_bundle_back(pool: PgPool) {
 /// The `Dimension` scalar refuses out-of-range input at parse time, so
 /// this never reaches the resolver: it is a transport fault, not a
 /// userError.
+///
+/// A stance parameter outside the scalar's range is refused at parse time and never reaches the resolver.
+/// ´claim:stance:an-out-of-range-parameter-is-a-transport-fault´
 #[sqlx::test(migrations = "../../migrations")]
 async fn stance_parameters_outside_the_range_are_refused(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -586,6 +607,8 @@ async fn stance_parameters_outside_the_range_are_refused(pool: PgPool) {
     assert!(refused.get("errors").is_some(), "{refused}");
 }
 
+/// An empty bundle reads as zero and costs nothing to sever.
+/// ´claim:stance:an-empty-bundle-is-free´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_empty_bundle_reads_as_zero_and_costs_no_severance(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -607,6 +630,9 @@ async fn an_empty_bundle_reads_as_zero_and_costs_no_severance(pool: PgPool) {
 /// the landing locally under the drag and price severance off the sum
 /// (design.md §8.3), and neither is derivable from the clipped pair. The
 /// bundle here sums to (2.4, 1.5), driving both axes past the clip.
+///
+/// The clip is the read rule and not the storage, so a bundle past it still serves the raw history clients fold locally and price severance off.
+/// ´claim:stance:the-raw-history-is-served-past-the-clip´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_raw_sums_serve_what_the_fold_clips(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -634,6 +660,9 @@ async fn the_raw_sums_serve_what_the_fold_clips(pool: PgPool) {
 /// raw pair is what lets a cost surface state that number without
 /// asking the backend to price a bundle it is already showing. Checked
 /// inside the clip, past it, and past it on the negative side.
+///
+/// Severance is priced off the raw sum, so a cost surface can state the number without asking the backend to price a bundle it is already showing.
+/// ´claim:stance:severance-is-priced-off-the-raw-sum´
 #[sqlx::test(migrations = "../../migrations")]
 async fn severance_cost_agrees_with_the_served_raw_sums(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -662,6 +691,9 @@ async fn severance_cost_agrees_with_the_served_raw_sums(pool: PgPool) {
 
 /// The projection answers where a candidate stance would land the bundle,
 /// and asking leaves current standing untouched.
+///
+/// A projection answers where a candidate stance would land the bundle, and asking leaves current standing untouched.
+/// ´claim:stance:a-projection-asks-without-committing´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_pick_projects_where_the_bundle_lands(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -682,6 +714,9 @@ async fn a_pick_projects_where_the_bundle_lands(pool: PgPool) {
 
 /// One `(+1, +1)` edge plus a new `(-1, -1)` nets to zero, and the
 /// control has to say so before the pick is committed (design.md §8.2).
+///
+/// A projection names a severance before it is authored, so a control can say a pick would net to nothing before it is committed.
+/// ´claim:stance:a-projection-names-severance-in-advance´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_projection_can_name_severance_before_it_is_authored(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -699,6 +734,9 @@ async fn a_projection_can_name_severance_before_it_is_authored(pool: PgPool) {
 
 /// Connection returns to zero while valence stays live: the stance then
 /// carries nothing, and the projection has to say so (edges.md §1).
+///
+/// A projection flags an axis returned to zero, the stance then carrying nothing on it.
+/// ´claim:stance:a-projection-flags-an-inert-axis´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_projection_flags_an_inert_axis(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -716,6 +754,9 @@ async fn a_projection_flags_an_inert_axis(pool: PgPool) {
 
 /// The fold never nets across authors (layer1-interface.md §11.3), so one
 /// viewer's stance toward a target leaves another's bundle at zero.
+///
+/// The fold never nets across authors, so one viewer's stance leaves another's bundle at zero.
+/// ´claim:stance:a-bundle-is-per-viewer´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_bundle_is_per_viewer(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -733,6 +774,8 @@ async fn the_bundle_is_per_viewer(pool: PgPool) {
     assert_eq!(theirs["recordCount"], 0);
 }
 
+/// A bundle is somebody's, so a viewerless read has none to serve.
+/// ´claim:stance:a-viewerless-read-has-no-bundle´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_guest_reads_no_bundle(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -752,6 +795,9 @@ async fn a_guest_reads_no_bundle(pool: PgPool) {
 /// flight counts in the pending-inclusive read and not in the landed one.
 /// The write stops at the pre-commitment, where the record is authored
 /// but not landed.
+///
+/// The landed view and the pending-inclusive one are the reader's choice, a stance still in flight counting in the second and not the first.
+/// ´claim:stance:the-two-views-are-the-readers-choice´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_pending_view_counts_what_is_still_in_flight(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -774,6 +820,9 @@ async fn the_pending_view_counts_what_is_still_in_flight(pool: PgPool) {
 
 /// A landed record is counted once, not twice — the staged row stays
 /// behind in `landed` state and must not be added to the mirror's sum.
+///
+/// A landed record is counted once: the staged row stays behind in its landed state and must not be added to the mirror's sum.
+/// ´claim:stance:a-landed-record-counts-once´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_landed_stance_is_not_double_counted(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -788,6 +837,7 @@ async fn a_landed_stance_is_not_double_counted(pool: PgPool) {
     assert_eq!(bundle["recordCount"], 1);
 }
 
+/// (´claim:stance:severance-stages-as-many-records-as-it-needs´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn severance_nets_a_short_bundle_in_one_record(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -815,6 +865,9 @@ async fn severance_nets_a_short_bundle_in_one_record(pool: PgPool) {
 /// A bundle carrying more conviction than one record can walk back needs
 /// several, each its own priced act (feed-ranking.md §8.1). The valence
 /// sum here is 2.4, past what a single record can cancel.
+///
+/// Severance stages as many priced counter-records as the bundle's conviction requires, one being enough only when one is enough.
+/// ´claim:stance:severance-stages-as-many-records-as-it-needs´
 #[sqlx::test(migrations = "../../migrations")]
 async fn severance_of_a_long_bundle_stages_a_batch(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -848,6 +901,8 @@ async fn severance_of_a_long_bundle_stages_a_batch(pool: PgPool) {
     assert_eq!(bundle["recordCount"], 6, "nothing was erased");
 }
 
+/// Severing a bundle that has already netted away is refused, there being nothing left to walk back.
+/// ´claim:stance:severing-a-netted-bundle-is-refused´
 #[sqlx::test(migrations = "../../migrations")]
 async fn severing_an_already_netted_bundle_is_refused(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -863,6 +918,7 @@ async fn severing_an_already_netted_bundle_is_refused(pool: PgPool) {
     assert!(refused["prepareSeverance"]["writes"].is_null());
 }
 
+/// (´claim:stance:an-unknown-target-is-refused´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn severance_toward_an_unknown_target_is_refused(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -879,6 +935,7 @@ async fn severance_toward_an_unknown_target_is_refused(pool: PgPool) {
     );
 }
 
+/// (´claim:stance:one-gesture-for-every-passive-kind´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn severance_works_toward_content_too(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -899,6 +956,9 @@ async fn severance_works_toward_content_too(pool: PgPool) {
 /// Severance computes against the pending-inclusive view, so a sever
 /// issued while a stance is still in flight covers it too: the sum
 /// reaches 1.4 on both axes, so the batch is ⌈1.4⌉ = 2 counter-records.
+///
+/// Severance computes against the pending-inclusive view, so a sever issued while a stance is in flight covers it too.
+/// ´claim:stance:severance-covers-what-is-in-flight´
 #[sqlx::test(migrations = "../../migrations")]
 async fn severance_counts_a_stance_still_in_flight(pool: PgPool) {
     let rig = Rig::new(pool).await;

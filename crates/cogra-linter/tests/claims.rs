@@ -63,6 +63,36 @@ fn covered(path: &str, owner: &str, documentation: &str) -> SourceFile {
     )
 }
 
+/// An owner whose wave the ruled activation leaves open.
+///
+/// Derived rather than spelled: the roster grows by one owner on the commit
+/// that closes each wave, and a fixture naming a particular owner is a
+/// fixture that fails on exactly that commit — while what it means to test
+/// is the staging, which outlives any one roster. Ω is total over the
+/// carrier and its owners far outnumber the owners with covered assets, so a
+/// row outside the roster is always there to find.
+fn open_wave() -> OwnerId {
+    let declared = adoption()
+        .claims
+        .as_ref()
+        .expect("this corpus adopts the claim discipline");
+    adoption()
+        .partition
+        .rules
+        .iter()
+        .map(|rule| &rule.owner)
+        .find(|owner| !declared.activation.admits(owner))
+        .expect("an owner of the partition lies outside the roster")
+        .clone()
+}
+
+/// A source path for a fixture whose owner is [`open_wave`]'s.
+///
+/// The owner a `SourceFile` carries is the one the judgment reads, and the
+/// path only names the fixture in a diagnostic, so the path stays fixed while
+/// the owner is derived.
+const OPEN_FIXTURE: &str = "crates/fixture/src/fixture.rs";
+
 /// How many findings of one rule a run produced.
 fn reported(run: &Run, rule: &str) -> usize {
     run.findings
@@ -227,11 +257,12 @@ fn an_unclaimed_test_of_an_activated_owner_is_reported() {
 /// ´claim:claims:an-open-wave-is-counted-not-reported´
 #[test]
 fn an_unclaimed_test_of_an_unactivated_owner_is_only_counted() {
+    let owner = open_wave();
     let run = check_sources(
         adoption(),
         vec![covered(
-            "crates/l1-standin/src/fixture.rs",
-            "pkg.l1-standin",
+            OPEN_FIXTURE,
+            owner.as_str(),
             "/// Prose and no claim.\n",
         )],
     );
@@ -243,7 +274,7 @@ fn an_unclaimed_test_of_an_unactivated_owner_is_only_counted() {
     let counted = census(&run.graph, adoption());
     let held = counted
         .by_owner
-        .get(&OwnerId::new("pkg.l1-standin"))
+        .get(&owner)
         .expect("the owner is tallied even though its wave is open");
     assert_eq!(
         (held.covered, held.unclaimed, held.activated),
@@ -261,8 +292,8 @@ fn a_misplaced_claim_is_reported_in_an_unactivated_owner() {
     let run = check_sources(
         adoption(),
         vec![covered(
-            "crates/l1-standin/src/fixture.rs",
-            "pkg.l1-standin",
+            OPEN_FIXTURE,
+            open_wave().as_str(),
             "/// ´claim:x:one´\n/// Prose after it.\n",
         )],
     );

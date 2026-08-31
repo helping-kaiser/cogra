@@ -148,6 +148,9 @@ mod tests {
     /// The quoted cost and the staged batch answer the same question, so
     /// they may never disagree — a read surface quoting one number while
     /// the write path stages another is the failure this pins.
+    ///
+    /// The quoted severance cost is the batch it prices, so a read surface and the write path can never disagree about it.
+    /// ´claim:fold:the-quoted-cost-is-the-batch-it-prices´
     #[test]
     fn the_severance_cost_is_the_length_of_the_batch_it_prices() {
         for (p_d, p_i) in [
@@ -168,6 +171,8 @@ mod tests {
         }
     }
 
+    /// A fold clips into the unit range on both axes, whatever the bundle's sum reached.
+    /// ´claim:fold:a-fold-clips-into-the-unit-range´
     #[test]
     fn fold_clips_to_the_unit_range() {
         assert_eq!(
@@ -188,6 +193,9 @@ mod tests {
 
     /// The raw-edge semantic: a pick is one more edge, so a (+0.5, +0.5)
     /// bundle taking a (+0.1, +0.1) pick reads 0.6, not the picked 0.1.
+    ///
+    /// A pick is one more edge on the bundle and never a replacement of what the bundle already holds.
+    /// ´claim:fold:a-pick-is-appended-and-never-a-replacement´
     #[test]
     fn projection_appends_the_pick_rather_than_replacing_the_bundle() {
         let projected = sum(0.5, 0.5).project(0.1, 0.1);
@@ -195,6 +203,9 @@ mod tests {
         assert!((projected.p_i - 0.6).abs() < 1e-12);
     }
 
+    /// The projection clips where the fold does, so a preview never promises more.
+    ///
+    /// (´claim:fold:a-fold-clips-into-the-unit-range´)
     #[test]
     fn projection_clips_like_the_fold() {
         assert_eq!(
@@ -205,11 +216,16 @@ mod tests {
 
     /// A bundle within one record's reach severs in one: a (+1, +1) edge
     /// plus a fresh (-1, -1) nets to zero (design.md §8.2).
+    ///
+    /// A bundle within one record's reach severs in a single counter-record.
+    /// ´claim:fold:a-bundle-within-reach-severs-in-one-record´
     #[test]
     fn a_counter_pick_can_reach_severance_in_one_record() {
         assert!(sum(1.0, 1.0).project(-1.0, -1.0).is_severed());
     }
 
+    /// A bundle is inert as soon as either axis reaches zero.
+    /// ´claim:fold:a-bundle-is-inert-when-either-axis-is-zero´
     #[test]
     fn inert_on_either_axis() {
         assert!(sum(0.0, 0.8).fold().is_inert());
@@ -217,18 +233,24 @@ mod tests {
         assert!(!sum(0.8, 0.8).fold().is_inert());
     }
 
+    /// A bundle is severed only when both axes are zero.
+    /// ´claim:fold:a-bundle-is-severed-only-when-both-axes-are-zero´
     #[test]
     fn severed_is_both_axes_at_zero() {
         assert!(sum(0.0, 0.0).fold().is_severed());
         assert!(!sum(0.0, 0.3).fold().is_severed());
     }
 
+    /// A bundle with nothing left to cancel stages no severance at all.
+    /// ´claim:fold:a-bundle-with-nothing-to-cancel-stages-nothing´
     #[test]
     fn severance_of_an_empty_bundle_stages_nothing() {
         assert!(BundleSum::default().severance_batch().is_empty());
         assert!(sum(0.0, 0.0).severance_batch().is_empty());
     }
 
+    /// A bundle one record can cancel stages exactly that one record.
+    /// ´claim:fold:a-bundle-one-record-can-cancel-stages-one´
     #[test]
     fn severance_within_one_record_stages_one() {
         let b = sum(0.5, 0.5);
@@ -239,6 +261,9 @@ mod tests {
     /// A long history carries a sum past what one record can cancel, so the
     /// batch runs to several — each still authorable, and together cancelling
     /// the bundle exactly.
+    ///
+    /// A sum past one record's reach stages a batch whose records are each authorable and together cancel exactly.
+    /// ´claim:fold:a-sum-past-one-record-stages-an-authorable-batch´
     #[test]
     fn severance_beyond_one_record_stages_a_batch_that_nets_to_zero() {
         let b = sum(2.5, -1.2);
@@ -254,16 +279,24 @@ mod tests {
         assert!((b.p_i + net_i).abs() < 1e-12);
     }
 
+    /// At exactly one, the boundary the batch length turns on.
+    ///
+    /// (´claim:fold:a-bundle-one-record-can-cancel-stages-one´)
     #[test]
     fn severance_at_exactly_one_stages_one_record() {
         assert_eq!(sum(1.0, -1.0).severance_batch().len(), 1);
     }
 
+    /// And below one, where a batch of none would leave the bundle standing.
+    ///
+    /// (´claim:fold:a-bundle-one-record-can-cancel-stages-one´)
     #[test]
     fn severance_of_a_sub_unit_bundle_stages_one_record() {
         assert_eq!(sum(0.05, 0.0).severance_batch().len(), 1);
     }
 
+    /// Applying a severance batch to the bundle it was computed for leaves that bundle severed.
+    /// ´claim:fold:a-severance-batch-severs-the-bundle-it-priced´
     #[test]
     fn severance_batch_applied_to_the_bundle_folds_to_zero() {
         let b = sum(-3.4, 2.9);

@@ -9,141 +9,199 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
-import com.cogra.core.designsystem.v2.token.MediaOverlay
-import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.core.designsystem.v2.token.Layout
+import com.cogra.core.designsystem.v2.token.MediaFrame
 import com.cogra.core.designsystem.v2.token.ThemePreviews
 
 /**
- * A post's body when it is pictures: one tile, or a lead tile with two
- * squares and a `+n` (design/readme.md §7.1).
+ * A post's pictures: **one frame at the post's one crop shape, swiped, with
+ * dots below** (`design/components/proposed/MediaAttachment.prompt.md`,
+ * 2026-08-31; drawn on `FeedGallery`, `FeedFar`, `ComposeLanded`).
  *
- * **The secondary squares crop, and only they.** They are an index into the
- * set rather than the media itself, which is the one exception
- * design/readme.md §12 makes to "the layout never decides the author's crop".
- * The lead tile keeps the post's shape and obeys the 4:5 cap like any other.
+ * Every frame shows whole, exactly as the author cropped it, and **the
+ * height is one frame's height regardless of count** — a set of ten costs
+ * the reader no more screen than a single picture does. That is what makes
+ * the pager the right shape rather than a mosaic: a mosaic has to decide
+ * how to crop the pictures it shrinks, and the layout never decides the
+ * author's crop.
+ *
+ * **Dots only, never a `1/n` count pill** — the boards carry no counter
+ * badge anywhere, and the dot row states the position to a screen reader
+ * instead.
  *
  * The whole gallery is one tap target opening the post — a reader scrolling
  * is choosing between posts, not looking at one picture — so [onOpen] is a
- * single callback and the tiles below it are not individually focusable.
+ * single callback and the pages below it are not individually focusable.
  *
- * The canvas has no multi-attachment board, so the internal seam is the
- * design system's own 4dp grid step rather than a measured value.
+ * @param frameRatio the shape every page takes. The composer crops a post's
+ *   whole set to one shape, so this is the set's shape; it defaults to the
+ *   lead picture's, capped at 4:5.
+ * @param fit `Crop` where the author already cropped to the frame, `Fit`
+ *   where the frame is imposed on uncropped pictures — a comment's case.
+ * @param maxHeight the cap. A post's is the viewport-derived
+ *   [mediaMaxHeight]; a comment's is [MediaFrame.CommentMaxHeight].
+ * @param shape square-cornered and full-bleed in a post card, rounded and
+ *   inset in a comment's.
  */
 @Composable
 fun MediaGallery(
     items: List<MediaItem>,
     modifier: Modifier = Modifier,
     onOpen: (() -> Unit)? = null,
-    shape: Shape = MaterialTheme.shapes.medium,
+    frameRatio: Float = items.firstOrNull()?.aspectRatio?.cappedToTallestTile() ?: 1f,
+    fit: ContentScale = ContentScale.Crop,
+    maxHeight: Dp = mediaMaxHeight(),
+    shape: Shape = RectangleShape,
+    pagerState: PagerState = rememberPagerState { items.size },
     testTag: String? = null,
 ) {
     if (items.isEmpty()) return
 
-    val gallerySemantics = Modifier.clearAndSetSemantics {
-        contentDescription = galleryDescription(items)
-    }
-    val root = modifier
-        .fillMaxWidth()
-        .then(if (onOpen != null) Modifier.clickable(onClick = onOpen) else Modifier)
-        .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
-        .then(gallerySemantics)
-
-    when (items.size) {
-        1 -> MediaTile(items[0], modifier = root, shape = shape)
-
-        2 -> Row(
-            modifier = root,
-            horizontalArrangement = Arrangement.spacedBy(Space.x1),
-        ) {
-            items.forEach { item ->
-                MediaTile(
-                    item = item,
-                    modifier = Modifier.weight(1f),
-                    shape = shape,
-                )
-            }
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(if (onOpen != null) Modifier.clickable(onClick = onOpen) else Modifier)
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+    ) {
+        HorizontalPager(
+            state = pagerState,
+            // One description for the whole set, on the pager rather than
+            // per page: the set is what the reader is being told about, and
+            // the dot row below carries the position.
+            modifier = Modifier.clearAndSetSemantics {
+                contentDescription = galleryDescription(items)
+            },
+        ) { page ->
+            GalleryFrame(
+                item = items[page],
+                frameRatio = frameRatio,
+                fit = fit,
+                maxHeight = maxHeight,
+                shape = shape,
+            )
         }
 
-        else -> {
-            val lead = items[0]
-            val leadRatio = lead.aspectRatio.cappedToTallestTile()
-            Row(
-                modifier = root,
-                horizontalArrangement = Arrangement.spacedBy(Space.x1),
-            ) {
-                MediaTile(
-                    item = lead,
-                    modifier = Modifier.weight(2f),
-                    shape = shape,
-                )
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        // Match the lead tile's height so the pair of squares
-                        // never sets the row's height themselves.
-                        .aspectRatio(leadRatio / 2f),
-                    verticalArrangement = Arrangement.spacedBy(Space.x1),
-                ) {
-                    SecondarySquare(items[1], shape, Modifier.weight(1f))
-                    Box(Modifier.weight(1f)) {
-                        SecondarySquare(items[2], shape, Modifier.fillMaxSize())
-                        val extra = items.size - 3
-                        if (extra > 0) OverflowCount(extra, shape)
-                    }
-                }
-            }
+        if (items.size > 1) {
+            PageDots(
+                count = items.size,
+                current = pagerState.currentPage,
+                testTag = testTag?.let { "${it}_dots" },
+            )
         }
     }
 }
 
 /**
- * A square in the index. It crops — see [MediaGallery]'s note — and it is
- * never described on its own, because the gallery above it carries the whole
- * set's description.
+ * One page. The reserved surface is painted before the bytes arrive, so
+ * nothing jumps on load and nothing flashes on failure — and it is what
+ * shows at the sides of a frame fitted whole inside the cap.
  */
 @Composable
-private fun SecondarySquare(item: MediaItem, shape: Shape, modifier: Modifier) {
-    MediaTile(
-        item = item.copy(aspectRatio = 1f, altText = null),
-        modifier = modifier,
-        shape = shape,
-        capToTallest = false,
-    )
-}
-
-/** `+n` over the last square, on the badge scrim so it reads over any photo. */
-@Composable
-private fun OverflowCount(extra: Int, shape: Shape) {
+private fun GalleryFrame(
+    item: MediaItem,
+    frameRatio: Float,
+    fit: ContentScale,
+    maxHeight: Dp,
+    shape: Shape,
+) {
     Box(
         modifier = Modifier
-            .fillMaxSize()
-            .background(MediaOverlay.Badge, shape),
-        contentAlignment = Alignment.Center,
+            .fillMaxWidth()
+            .aspectRatio(frameRatio)
+            // The cap bounds the tile; the picture inside then fits rather
+            // than cropping further, so obeying the cap never re-crops.
+            .heightIn(min = MediaFrame.MinHeight, max = maxHeight)
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
     ) {
-        Text(
-            text = "+$extra",
-            style = MaterialTheme.typography.titleMedium,
-            color = MediaOverlay.BadgeInk,
+        AsyncImage(
+            model = item.url,
+            contentDescription = null,
+            contentScale = fit,
+            modifier = Modifier.fillMaxSize(),
         )
     }
 }
 
 /**
+ * The pager's position, below the media and never over it.
+ *
+ * The row carries the position in words for a screen reader; the dots
+ * themselves are decorative, which is why they are cleared from the tree
+ * rather than announced one by one.
+ */
+@Composable
+private fun PageDots(count: Int, current: Int, testTag: String?) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = MediaFrame.DotRowTopPadding)
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
+            .clearAndSetSemantics {
+                contentDescription = "Picture ${current + 1} of $count"
+            },
+        horizontalArrangement = Arrangement.spacedBy(MediaFrame.DotGap, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        repeat(count) { index ->
+            Box(
+                modifier = Modifier
+                    .size(MediaFrame.Dot)
+                    .clip(CircleShape)
+                    .background(
+                        if (index == current) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.outlineVariant
+                        },
+                    ),
+            )
+        }
+    }
+}
+
+/**
+ * `--media-max-height`: the viewport, less the top safe area, the bottom
+ * bar, and the worst-case post chrome — floored so a short screen still
+ * shows something.
+ *
+ * Read from the window rather than hard-coded, because the whole point of
+ * the cap is that a post fits *this* screen.
+ */
+@Composable
+fun mediaMaxHeight(): Dp {
+    val viewport = LocalConfiguration.current.screenHeightDp.dp
+    val chrome = Layout.BottomBarHeight + MediaFrame.PostChrome
+    return maxOf(MediaFrame.MinHeight, viewport - chrome)
+}
+
+/**
  * One description for the whole set. Authored alt text is used where it
- * exists; the count is stated either way, so a reader always learns how much
- * is there even when nothing was described.
+ * exists; the count is stated either way, so a reader always learns how
+ * much is there even when nothing was described.
  */
 private fun galleryDescription(items: List<MediaItem>): String {
     val described = items.mapNotNull { it.altText }
@@ -158,27 +216,25 @@ private fun MediaGalleryCounts() {
     Cogra2PreviewTheme {
         PreviewMediaColumn {
             MediaGallery(listOf(square))
-            MediaGallery(List(2) { square })
-            MediaGallery(List(3) { square })
-            MediaGallery(List(7) { square })
+            MediaGallery(List(4) { square })
         }
     }
 }
 
 @ThemePreviews
 @Composable
-private fun MediaGalleryTallLead() {
+private fun MediaGalleryComment() {
     Cogra2PreviewTheme {
         PreviewMediaColumn {
+            // A comment's pictures are never cropped: a fixed square frame
+            // with each whole frame fitted inside it.
             MediaGallery(
-                listOf(
-                    MediaItem(null, 0.8f, "A 4:5 lead"),
-                    MediaItem(null, 1f),
-                    MediaItem(null, 1f),
-                    MediaItem(null, 1f),
-                ),
+                items = listOf(MediaItem(null, 0.8f, "A tall picture"), MediaItem(null, 1.91f)),
+                frameRatio = 1f,
+                fit = ContentScale.Fit,
+                maxHeight = MediaFrame.CommentMaxHeight,
+                shape = MaterialTheme.shapes.medium,
             )
-            Box(Modifier.height(1.dp))
         }
     }
 }

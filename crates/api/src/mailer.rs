@@ -112,6 +112,9 @@ mod tests {
     /// configured path is created on the way — a nested target exercises
     /// that, since the usual `tmp_dev/` does not exist on a fresh
     /// checkout.
+    ///
+    /// The configured sink is created on the way and every message appends to it in send order under a dated header.
+    /// ´claim:mail:the-sink-is-created-and-appended-in-order´
     #[tokio::test]
     async fn appends_each_message_to_the_configured_file() {
         let dir = std::env::temp_dir().join(format!("cogra-mailer-{}", uuid::Uuid::new_v4()));
@@ -142,6 +145,9 @@ mod tests {
 
     /// The unset path stays a plain log-and-return: no file, no directory,
     /// no error.
+    ///
+    /// With no sink configured the mailer logs and returns, writing nothing and failing not at all.
+    /// ´claim:mail:no-sink-is-a-log-and-return´
     #[tokio::test]
     async fn without_a_configured_file_only_the_log_line_is_emitted() {
         DevMailer::new(None)

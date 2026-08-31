@@ -12,6 +12,9 @@ use uuid::Uuid;
 /// derivation: re-seeding is idempotent, the CHECK rejects a non-derived id
 /// even from a buggy writer, and the id SQL accepts is the one the Rust
 /// helper computes.
+///
+/// A type id is derived from its name, and SQL and Rust derive it identically.
+/// ´claim:schema:a-type-id-is-derived-from-its-name-on-both-sides´
 #[sqlx::test(migrations = "../../migrations")]
 async fn hashtag_ids_are_content_addressed(pool: PgPool) {
     let mut conn = pool.acquire().await.expect("conn");
@@ -49,6 +52,9 @@ async fn hashtag_ids_are_content_addressed(pool: PgPool) {
 /// Handles live in one namespace across actor kinds, so a mention resolves
 /// to exactly one actor (data-model.md "Actors"); the kind column admits
 /// only the kinds its CHECK names.
+///
+/// One handle namespace spans every actor kind, so a mention can resolve exactly one way.
+/// ´claim:schema:one-handle-namespace-spans-every-actor-kind´
 #[sqlx::test(migrations = "../../migrations")]
 async fn handles_share_one_namespace_across_kinds(pool: PgPool) {
     let mut conn = pool.acquire().await.expect("conn");
@@ -74,6 +80,9 @@ async fn handles_share_one_namespace_across_kinds(pool: PgPool) {
 /// The L2-half gate flips only once all three system actors are seeded,
 /// each with its own key and address, as the real bootstrap gives them
 /// (data-model.md "Actors").
+///
+/// The L2 half of the bootstrap gate flips only once every system actor is seeded with its own key.
+/// ´claim:schema:the-l2-gate-waits-for-every-system-actor´
 #[sqlx::test(migrations = "../../migrations")]
 async fn genesis_seed_round_trips(pool: PgPool) {
     assert!(!genesis::system_actors_present(&pool).await.expect("gate"));
@@ -119,6 +128,9 @@ async fn genesis_seed_round_trips(pool: PgPool) {
 
 /// The parameter carrier is layered, never overwritten: a second seed of
 /// the same parameter appends a version row beside the first.
+///
+/// The parameter carrier is layered: a second seed appends a version beside the first rather than overwriting it.
+/// ´claim:schema:the-parameter-carrier-appends-rather-than-overwrites´
 #[sqlx::test(migrations = "../../migrations")]
 async fn parameter_carrier_versions_append(pool: PgPool) {
     assert!(!genesis::parameters_seeded(&pool).await.expect("check"));
@@ -144,6 +156,9 @@ async fn parameter_carrier_versions_append(pool: PgPool) {
 /// not built yet — the rule is the schema's, not each reader's, so a new
 /// version table that skips it fails here rather than at the first read
 /// that quietly orders by the clock.
+///
+/// Landing-order keying is the schema's rule and not each reader's, so a table that skips it fails here rather than at its first read.
+/// ´claim:schema:the-landing-key-is-the-schemas-rule-not-each-readers´
 #[sqlx::test(migrations = "../../migrations")]
 async fn every_version_table_is_keyed_on_the_landing_order(pool: PgPool) {
     const TABLES: [&str; 7] = [
@@ -190,6 +205,9 @@ async fn every_version_table_is_keyed_on_the_landing_order(pool: PgPool) {
 
 /// The coordinates are one fact in three columns: a row holding part of
 /// a landing position would order against a key the graph never issued.
+///
+/// A landing position is one fact in three columns, and a row holding part of it is refused.
+/// ´claim:schema:a-landing-position-is-all-three-columns-or-none´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_partial_landing_position_is_rejected(pool: PgPool) {
     let chat = Uuid::new_v4();

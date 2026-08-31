@@ -125,6 +125,8 @@ class ScriptedContentRepository : ThrowingContentRepository() {
         tags: List<TagClaim>,
         references: List<ReferenceClaim>,
         attachments: List<AttachmentClaim>,
+        sensitive: Boolean,
+        sensitiveReason: String?,
     ): Outcome<PreparedContentView> {
         pendingAfterPrepare?.let { listing = listOf(it) + listing }
         return Outcome.Success(PreparedContentView(preparedNode, emptyList()))

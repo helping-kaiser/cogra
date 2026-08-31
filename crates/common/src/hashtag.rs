@@ -73,11 +73,15 @@ pub fn canonicalize(input: &str) -> Result<String, HashtagNameError> {
 mod tests {
     use super::*;
 
+    /// One name derives one id, and derives it again every time it is asked.
+    /// ´claim:hashtag:a-name-derives-one-stable-id´
     #[test]
     fn same_name_same_uuid() {
         assert_eq!(hashtag_uuid("bot-defense"), hashtag_uuid("bot-defense"));
     }
 
+    /// Two names that differ at all derive two different ids.
+    /// ´claim:hashtag:different-names-derive-different-ids´
     #[test]
     fn different_names_differ() {
         assert_ne!(hashtag_uuid("bot-defense"), hashtag_uuid("botdefense"));
@@ -85,11 +89,16 @@ mod tests {
 
     /// The v5 hash is taken over the raw bytes, so a non-canonical casing
     /// derives a different id — canonicalization is the caller's job.
+    ///
+    /// The derivation canonicalizes nothing: it hashes the bytes it is handed, and the caller owes it a canonical name.
+    /// ´claim:hashtag:the-derivation-canonicalizes-nothing´
     #[test]
     fn derivation_is_case_sensitive() {
         assert_ne!(hashtag_uuid("Bot-Defense"), hashtag_uuid("bot-defense"));
     }
 
+    /// Canonicalization folds ASCII casing and strips the sigil, and does nothing else.
+    /// ´claim:hashtag:canonicalization-folds-casing-and-strips-the-sigil´
     #[test]
     fn canonicalizes_casing_and_the_sigil() {
         for input in ["rust", "Rust", "RUST", "#rust", "#Rust", "#RUST"] {
@@ -97,6 +106,8 @@ mod tests {
         }
     }
 
+    /// Canonicalizing an already-canonical name returns it unchanged.
+    /// ´claim:hashtag:canonicalization-is-idempotent´
     #[test]
     fn canonicalization_is_idempotent() {
         for input in ["#Bot-Defense", "rust", "a.b_c-1"] {
@@ -105,6 +116,8 @@ mod tests {
         }
     }
 
+    /// Every name canonicalization admits is a substrate atom.
+    /// ´claim:hashtag:a-canonical-name-is-an-atom´
     #[test]
     fn canonical_names_are_atoms() {
         for input in ["a", "a.b", "a-b", "a_b", "0", "bot-defense"] {
@@ -114,6 +127,9 @@ mod tests {
     }
 
     /// A bare sigil is empty too, once the sigil is stripped.
+    ///
+    /// An empty name is refused, and a bare sigil is empty once the sigil is stripped.
+    /// ´claim:hashtag:an-empty-name-is-refused´
     #[test]
     fn empty_is_refused() {
         assert_eq!(
@@ -128,6 +144,9 @@ mod tests {
 
     /// The sigil is not part of the name, so it consumes none of the budget:
     /// a name at the bound is still legal with a `#` in front of it.
+    ///
+    /// The length bound is the atom's own, and the sigil consumes none of it.
+    /// ´claim:hashtag:the-bound-is-the-atoms-and-the-sigil-costs-nothing´
     #[test]
     fn the_length_bound_is_the_atom_bound() {
         let at_bound = "a".repeat(MAX_ATOM_BYTES);
@@ -144,6 +163,9 @@ mod tests {
     /// D3: non-ASCII is unrepresentable on the substrate, so it is refused
     /// outright — never punycoded or percent-encoded into something that
     /// looks like a different name.
+    ///
+    /// A name the substrate cannot represent is refused outright, never encoded into something that looks like another name.
+    /// ´claim:hashtag:an-unrepresentable-name-is-refused-never-encoded´
     #[test]
     fn non_atoms_are_refused_never_encoded() {
         for input in [
@@ -165,6 +187,9 @@ mod tests {
 
     /// ASCII lowercasing leaves `Ü` alone and the atom check then refuses
     /// it: the refusal must not come to depend on Unicode case folding.
+    ///
+    /// Only ASCII case is folded, so no refusal comes to depend on Unicode case folding.
+    /// ´claim:hashtag:only-ascii-case-is-folded´
     #[test]
     fn non_ascii_case_is_not_folded() {
         assert_eq!(
@@ -175,6 +200,9 @@ mod tests {
 
     /// The reserved Types are seeded by name, so canonicalizing the same
     /// strings must land on the same content-addressed keys.
+    ///
+    /// Canonicalizing a reserved Type's name lands on the id that Type was seeded under.
+    /// ´claim:hashtag:a-reserved-name-derives-the-id-it-was-seeded-under´
     #[test]
     fn canonical_names_derive_the_seeded_reserved_ids() {
         assert_eq!(
@@ -186,6 +214,9 @@ mod tests {
     /// A golden value locking both the namespace constant and the v5
     /// derivation. A failure here means previously minted hashtag ids are at
     /// risk; the expectation is never the thing to update.
+    ///
+    /// A golden value locks the namespace and the derivation together, so no minted id can be silently re-derived.
+    /// ´claim:hashtag:the-derivation-is-pinned-against-silent-change´
     #[test]
     fn derivation_is_pinned() {
         assert_eq!(

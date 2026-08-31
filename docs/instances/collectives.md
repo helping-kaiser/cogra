@@ -293,7 +293,7 @@ walks most-specific → class-general → the in-prose defaults of
 Unlike chats, Collectives ship with no default map: creating a
 Collective *is* writing its social contract. And hierarchy is
 just a parameter choice — a contract giving the CEO sole
-eligibility and threshold 1 on `decision:remove_member:worker`
+eligibility and threshold 1 on ``decision:remove_member:worker``
 expresses CEO-unilateral authority; the substrate doesn't pick a
 power structure, the Collective does.
 
@@ -306,11 +306,11 @@ Role vocabularies below are collective-specific; tables show
 
 | `action_key` | `exec.eligibility` | `exec.threshold` |
 |---|---|---|
-| `decision:add_member:worker` | `role = CEO` | 1 vote |
-| `decision:remove_member:worker` | `role = CEO` | 1 vote |
-| `decision:add_member:board_member` | `role = founder`, weighted by `ownership_pct` | > 50% |
-| `decision:remove_member:board_member` | `role IN (founder, board_member)`, `exclude_subject` | ≥ 2/3 |
-| `decision:remove_member:CEO` | `role = board_member` | ≥ 2/3 |
+| ``decision:add_member:worker`` | `role = CEO` | 1 vote |
+| ``decision:remove_member:worker`` | `role = CEO` | 1 vote |
+| ``decision:add_member:board_member`` | `role = founder`, weighted by `ownership_pct` | > 50% |
+| ``decision:remove_member:board_member`` | `role IN (founder, board_member)`, `exclude_subject` | ≥ 2/3 |
+| ``decision:remove_member:CEO`` | `role = board_member` | ≥ 2/3 |
 | `decision:admit_shareholder` *(composite)* | `role IN (founder, shareholder)`, weighted by stake | ≥ 75% |
 | `decision:transfer_shares` *(composite)* | `role = shareholder`, weighted by `ownership_pct` | ≥ 75% |
 | ``actas:author:Post`` | `role = press_officer` *(overrides any-member default)* | — |

@@ -679,5 +679,5 @@ Adoption is blocked until all of the following hold:
 - every pair of C_A has exactly one firm or borderline status, no weaker than its edition floor; daggers match the edition's evidence exactly; every candidate lies outside C_A (`inv:kinds:attestation-coverage`);
 - the companion register is the current, deterministic, totally ordered output of the acceptee's evidence and statuses, presents exactly Hom(C_A) as a view of the same base, and is maintained only by regeneration (`req:kinds:attestation-register`);
 - the headline counts are derived from the tables by the register generator, presented only in (`tab:kinds:headline-counts`), never hand-maintained, and are this document's only generated region;
-- this document's own heads and heading anchors are classified by the registry they define, with exactly one label per head, no environment numbering, and every parenthesized reference resolving;
+- this document's own heads and heading anchors are classified by the registry they define, its Title head through the effective relation, with exactly one label per head, no environment numbering, and every parenthesized reference resolving;
 - the gate is dischargeable from this document and the corpus's adoption data alone; no check consults another document.

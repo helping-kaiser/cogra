@@ -2,6 +2,7 @@ package com.cogra.feature.content.wizard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
@@ -238,7 +239,25 @@ class ComposeWizardViewModel @Inject constructor(
      * fail the accessibility bar android.md sets from day one. Flagged
      * as an addition rather than a match.
      */
-    fun onAltTextChange(uri: String, text: String) = _state.update { it.withAltText(uri, text) }
+    /**
+     * A picture's description, authored in `DescribeSheet`.
+     *
+     * Re-describing an asset that already uploaded sends it again: the
+     * description rides `UploadMediaInput` and an asset row is immutable
+     * after upload (D3), so the only way the new words reach the server is
+     * a fresh upload. That happens when the author steps back from the seal
+     * to Details and edits — rare, but silently keeping the old words would
+     * be worse than the extra call.
+     */
+    fun onAltTextChange(uri: String, text: String) = _state.update { state ->
+        val described = state.withAltText(uri, text)
+        val asset = described.picked.firstOrNull { it.uri == uri }
+        if (asset?.upload is AssetUpload.Done) {
+            described.withUpload(uri, AssetUpload.Idle)
+        } else {
+            described
+        }
+    }
 
     fun onTagInputChange(value: String) = updateTags { it.withInput(value) }
 
@@ -339,22 +358,39 @@ class ComposeWizardViewModel @Inject constructor(
     fun onNext() {
         val current = _state.value
         val next = current.advanced() ?: return
-        // Leaving the crop stage is what commits the framing, so it is
-        // also where the uploads start: they then run while the author
-        // fills in the details, and the seal waits only for whatever is
-        // left (D5's "concurrency is the client's to arrange").
-        if (current.step == WizardStep.Crop) startUploads(cropSpecsFor(current))
+        // Uploads start on leaving DETAILS, not the crop stage.
+        //
+        // NAMED DEVIATION from `ComposeUploading`'s footnote ("Pictures
+        // upload while you write — signing waits for them"), forced by the
+        // contract: `altText` rides `UploadMediaInput` and there is no
+        // `updateMedia` — D3 makes an asset row immutable after upload. The
+        // descriptions are authored on Details (`DescribeSheet`), so an
+        // upload started at crop-exit would silently drop every description
+        // written after it, which is a lie told to the one person trusting
+        // it. Waiting until Details is done is what makes the boarded
+        // placement of Describe honest.
+        //
+        // The waiting still shows exactly where the boards draw it:
+        // `ComposeSealUploading` gates the seal on `UploadStatusLine`, and
+        // stepping back to Details renders the in-flight rings.
+        // Flagged for jakob — see the PR.
+        if (current.step == WizardStep.Details) startUploads(cropSpecsFor(current))
         _state.value = next
     }
 
     /**
-     * The header's arrow and the system gesture.
+     * The header's arrow and the system gesture: **always one step back**
+     * (jakob 2026-08-31).
      *
-     * Returns true only when there was something *inside* the wizard to
-     * dismiss. Back never walks the stages backwards: it leaves, and the
-     * draft is kept — the boards put the ways back into the stages
-     * themselves (`ComposeDetails`' Crop and Edit, `ComposeSeal`'s Back),
-     * so the arrow is the way out rather than one more step to unwind.
+     * Returns true when the gesture was absorbed inside the wizard, false
+     * only from the first stage — where there is no earlier stage and
+     * back therefore leaves. The draft survives either way: it is written
+     * continuously as the author works, so stepping back and walking out
+     * both keep it.
+     *
+     * The crop step is the wizard's only second entrance, reached with
+     * this arrow — which is why `PickedRow` carries no `Crop` link
+     * (design/components/compose/PickedRow.prompt.md).
      */
     fun onBack(): Boolean {
         if (_state.value.sheet != SealSheet.None) {
@@ -367,7 +403,9 @@ class ComposeWizardViewModel @Inject constructor(
             _state.update { it.copy(outcome = WizardOutcome.DraftKept) }
             return true
         }
-        return false
+        val back = _state.value.retreated() ?: return false
+        _state.value = back
+        return true
     }
 
     /** `ComposeSeal`'s Back pill: one stage, not out of the wizard. */
@@ -375,12 +413,61 @@ class ComposeWizardViewModel @Inject constructor(
         _state.value.retreated()?.let { _state.value = it }
     }
 
-    /** `ComposeDetails`' two ways back — `Edit` to the body, `Crop` to the crop. */
-    fun onReturnTo(step: WizardStep) = _state.update { it.returnedTo(step) }
+    /** The screen's one `?`; every one opens the house plain dialog. */
+    fun onOpenHelp(topic: HelpTopic) = _state.update { it.copy(help = topic) }
+
+    fun onCloseHelp() = _state.update { it.copy(help = null) }
+
+    /**
+     * The author's own sensitive mark.
+     *
+     * Turning the mark off drops the reason with it: the contract
+     * refuses a reason without `sensitive: true`, so keeping one around
+     * would send a value that is guaranteed to be refused.
+     */
+    fun onSensitiveChange(marked: Boolean) = _state.update {
+        if (marked) it.copy(sensitive = true) else it.copy(sensitive = false, sensitiveReason = "")
+    }
+
+    fun onSensitiveReasonChange(reason: String) =
+        _state.update { it.copy(sensitiveReason = reason) }
 
     fun onOpenSheet(sheet: SealSheet) = _state.update { it.copy(sheet = sheet) }
 
-    fun onCloseSheet() = _state.update { it.copy(sheet = SealSheet.None) }
+    fun onCloseSheet() = _state.update { it.closedSheets() }
+
+    // -- The picked-pictures manager (`PickedSheet`) --
+
+    /** "Show all", and the details step's picked row. */
+    fun onOpenPickedSheet() = _state.update { it.copy(pickedSheetOpen = true) }
+
+    /** Reorder; the first pick is the cover, so the badge follows the move. */
+    fun onMovePick(from: Int, to: Int) = _state.update { it.movedPick(from, to) }
+
+    fun onRemovePickAt(index: Int) = _state.update { state ->
+        state.picked.getOrNull(index)?.let { state.removePick(it.uri) } ?: state
+    }
+
+    // -- Descriptions (`DescribeSheet`) --
+
+    /** Opens the sheet on one picture, from the counter or the Show all sheet. */
+    fun onDescribe(index: Int) = _state.update {
+        if (index in it.picked.indices) it.copy(describingIndex = index) else it
+    }
+
+    /**
+     * The details step's "Describe the pictures": the first picture without
+     * a description, or the first picture when every one has one — so the
+     * link always opens something rather than doing nothing.
+     */
+    fun onDescribeFirst() = _state.update { state ->
+        if (state.picked.isEmpty()) {
+            state
+        } else {
+            val next = state.picked.indexOfFirst { it.altText.isBlank() }
+            state.copy(describingIndex = if (next >= 0) next else 0)
+        }
+    }
 
     fun onLicenseChange(license: LicenseChoice) = _state.update { it.copy(license = license) }
 
@@ -487,6 +574,15 @@ class ComposeWizardViewModel @Inject constructor(
                     } else {
                         emptyList()
                     },
+                    // Always sent explicitly, never omitted: an edit
+                    // payload is the complete state, so an omitted mark
+                    // UNMARKS. Sending the switch's current value is what
+                    // keeps create and edit the same code.
+                    sensitive = current.sensitive,
+                    // Blank counts as none, said here rather than left to
+                    // the transport: an empty string is a value, and "no
+                    // reason" is what the author actually chose.
+                    sensitiveReason = current.sensitiveReason.ifBlank { null },
                 )
             ) {
                 is Outcome.Success -> outcome.value

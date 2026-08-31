@@ -675,7 +675,11 @@ describe("PostView", () => {
     fireEvent.change(input, { target: { value: "better words" } });
     fireEvent.click(screen.getByTestId("comment-edit-save"));
     await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(1));
-    expect(variables).toEqual({ input: { id: "c1", content: "better words" } });
+    expect(variables).toEqual({
+      // The mark is re-stated on the edit: a complete-state write that omitted
+      // it would unveil a comment its author had veiled.
+      input: { id: "c1", content: "better words", sensitive: false, sensitiveReason: null },
+    });
     // The editor closes and the in-flight notice shows.
     expect(screen.queryByTestId("comment-edit-input")).not.toBeInTheDocument();
     expect(screen.getByTestId("comment-signed")).toBeInTheDocument();

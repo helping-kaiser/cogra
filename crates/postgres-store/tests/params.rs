@@ -30,6 +30,9 @@ async fn landed(pool: &PgPool, parameter: &str, value: i64, epoch: i64, position
 /// appended second was ordered first by L1, which is what a fold replayed
 /// out of epoch order produces — so only the landing coordinates can put
 /// the right value in force.
+///
+/// Only the landing coordinates decide which finalization is in force, never the order the rows were written.
+/// ´claim:params:the-landing-order-decides-which-finalization-holds´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_finalization_that_landed_last_is_in_force(pool: PgPool) {
     let mut conn = pool.acquire().await.expect("conn");
@@ -47,6 +50,8 @@ async fn the_finalization_that_landed_last_is_in_force(pool: PgPool) {
     );
 }
 
+/// A parameter answers from its genesis seed until a finalization lands over it, and from nothing before either.
+/// ´claim:params:the-seed-is-the-base-case-and-never-a-rival´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_genesis_seed_holds_until_a_finalization_lands(pool: PgPool) {
     let mut conn = pool.acquire().await.expect("conn");

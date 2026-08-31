@@ -55,4 +55,21 @@ describe("HeaderBar", () => {
     help.click();
     expect(onOpen).toHaveBeenCalledOnce();
   });
+
+  it("offers two ways out, and the X says the draft is kept", () => {
+    // jakob, round 4: the arrow steps one stage back and never leaves the flow;
+    // the X leaves it from any stage, draft kept, with no confirmation.
+    const onBack = vi.fn();
+    const onLeave = vi.fn();
+    render(<HeaderBar title="Details" onBack={onBack} onLeave={onLeave} />);
+
+    screen.getByRole("button", { name: "Leave — your draft is kept" }).click();
+    expect(onLeave).toHaveBeenCalledOnce();
+    expect(onBack).not.toHaveBeenCalled();
+  });
+
+  it("shows no X on a screen that has no flow to leave", () => {
+    render(<HeaderBar title="Crop" onBack={() => {}} />);
+    expect(screen.queryByTestId("header-leave")).toBeNull();
+  });
 });
