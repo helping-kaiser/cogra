@@ -10,12 +10,13 @@
 // prefetched level, more on demand.
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { PUBLIC_DOMAIN, type License } from "@/lib/license";
 import {
   fetchCommentReplies,
+  fetchCommentSelfMark,
   fetchPostDetail,
   isPending,
   prepareComment,
@@ -50,7 +51,28 @@ import { Card } from "@/lib/ui/card";
 import { LicenseChooser, LicenseTerms } from "@/lib/ui/license-fields";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PendingMarker } from "@/lib/ui/pending-marker";
-import { BodyRegion, PostMedia, bodyIsSensitive, hasMedia } from "@/lib/ui/post-media";
+import {
+  BodyRegion,
+  PostMedia,
+  bodyIsSensitive,
+  hasMedia,
+  sensitiveSignature,
+} from "@/lib/ui/post-media";
+import {
+  commentAttachmentClaims,
+  commentGate,
+  pickInto,
+  removeFrom,
+  withUpload,
+  NO_COMMENT_MEDIA,
+  type CommentMedia,
+} from "@/lib/compose/comment-media";
+import { runUpload } from "@/lib/compose/uploads";
+import { usePreviewUrls } from "@/lib/compose/previews";
+import {
+  CommentAttachments,
+  commentDropHandlers,
+} from "@/lib/ui2/compose/comment-attachments";
 import { MultiActionConfirm, SignedActionsIndicator } from "@/lib/ui/signed-actions";
 import { SigningPending } from "@/lib/ui/signing-pending";
 import { StanceControl } from "@/lib/ui/stance-control";
@@ -165,6 +187,10 @@ export function PostView({
   const [transportFault, setTransportFault] = useState<TransportFault | null>(null);
 
   const [draft, setDraft] = useState("");
+  // A comment's pictures. There is no pick screen and no crop step at comment
+  // scale (the #544 boards): they are chosen from the browser's own dialog and
+  // upload while the reader writes.
+  const [draftMedia, setDraftMedia] = useState<CommentMedia>(NO_COMMENT_MEDIA);
   const [draftTags, setDraftTags] = useState<readonly TagDraft[]>([]);
   const [draftTagErrors, setDraftTagErrors] = useState<Readonly<Record<number, string>>>({});
   const [draftReferences, setDraftReferences] = useState<readonly ReferenceDraft[]>([]);
@@ -314,6 +340,47 @@ export function PostView({
     editing === null ? [] : referenceChanges(editing.loadedReferences, editing.references);
   const editTextChanged = editing !== null && editing.draft !== editing.loadedDraft;
   const commentActions = 1 + draftTags.length + draftReferences.length;
+
+  // ---- the comment's pictures ---------------------------------------------
+
+  const draftPreviews = usePreviewUrls(draftMedia);
+  const draftMediaGate = commentGate(draft, draftMedia);
+  // Which pictures have been handed to `runUpload` already. A ref rather than
+  // state so writing it cannot re-run the effect that reads it — and because
+  // React mounts effects twice in development, which without this would upload
+  // every picture twice.
+  const startedUploads = useRef(new Set<string>());
+
+  useEffect(() => {
+    for (const asset of draftMedia) {
+      if (asset.upload.kind !== "waiting" || startedUploads.current.has(asset.id)) continue;
+      startedUploads.current.add(asset.id);
+      // No ratio: a comment's pictures are never cropped, so the encoder keeps
+      // each picture's own shape.
+      void runUpload(client, asset, undefined, (upload) =>
+        setDraftMedia((current) => withUpload(current, asset.id, upload)),
+      );
+    }
+  }, [draftMedia, client]);
+
+  const pickCommentMedia = (files: readonly File[]) => {
+    setDraftMedia((current) =>
+      pickInto(
+        current,
+        files.map((file) => ({ id: crypto.randomUUID(), file })),
+      ),
+    );
+  };
+
+  const removeCommentMedia = (id: string) => {
+    startedUploads.current.delete(id);
+    setDraftMedia((current) => removeFrom(current, id));
+  };
+
+  const retryCommentMedia = (id: string) => {
+    startedUploads.current.delete(id);
+    setDraftMedia((current) => withUpload(current, id, { kind: "waiting" }));
+  };
   const replyActions = 1 + replyTags.length + replyReferences.length;
   // A withdrawal is a whole counter-record batch, and the claim quotes
   // it: `withdrawalCost` comes off the raw bundle sums the clipped pair
@@ -360,6 +427,7 @@ export function PostView({
         license,
         tags: draftTags,
         references: draftReferences,
+        attachments: commentAttachmentClaims(draftMedia) ?? undefined,
       }),
     );
     if (prepared.kind === "refused") {
@@ -387,6 +455,11 @@ export function PostView({
     setSubmitting(false);
     if (done) {
       setDraft("");
+      // The pictures went with it, so the composer stops holding them. The
+      // started-uploads ledger is deliberately NOT cleared here: every pick
+      // mints a fresh id, so a later picture can never be mistaken for one of
+      // these, and reading a ref from here would be reading it during render.
+      setDraftMedia(NO_COMMENT_MEDIA);
       setDraftTags([]);
       setDraftReferences([]);
       setCommentSigned(true);
@@ -403,7 +476,7 @@ export function PostView({
   };
 
   const onSubmitComment = async () => {
-    if (submitting || draft.trim() === "") return;
+    if (submitting || !draftMediaGate.ok) return;
     if (commentActions > 1 && confirmMultiAction) {
       setConfirming("comment");
       return;
@@ -780,7 +853,12 @@ export function PostView({
               {/* A comment is text PLUS optional media — the XOR is the post's
                   rule alone (D16) — so both render, and both are veiled as one
                   body when the comment is marked. */}
-              <BodyRegion veiled={bodyIsSensitive(comment)} testId={`comment-${comment.id}`}>
+              <BodyRegion
+                veiled={bodyIsSensitive(comment)}
+                testId={`comment-${comment.id}`}
+                nodeId={comment.id}
+                signature={sensitiveSignature(comment)}
+              >
                 <p className="text-body-medium">{comment.content.value}</p>
                 {/* A COMMENT IS WORDS FIRST and its pictures join them: below
                     the words, INSET at the card's medium rung rather than
@@ -890,7 +968,23 @@ export function PostView({
                         tags: loaded,
                         loadedReferences: loadedRefs,
                         references: loadedRefs,
-                        sensitive: bodyIsSensitive(comment),
+                        // The OR is what a READER sees; the switch is the
+                        // author's own mark and arrives from its own read a
+                        // moment later (round 4). Starting from the OR would
+                        // show a moderator's verdict as the author's until it
+                        // landed, so the switch starts unmarked and the read
+                        // is what turns it on.
+                        sensitive: false,
+                      });
+                      void fetchCommentSelfMark(client, comment.id).then((outcome) => {
+                        if (outcome.kind !== "success") return;
+                        const mark = outcome.value;
+                        if (mark === null) return;
+                        setEditing((current) =>
+                          current === null || current.id !== comment.id
+                            ? current
+                            : { ...current, sensitive: mark },
+                        );
                       });
                       setEditTagErrors({});
                       setEditReferenceErrors({});
@@ -1020,7 +1114,12 @@ export function PostView({
           {post.title.value}
         </h1>
       )}
-      <BodyRegion veiled={bodyIsSensitive(post)} testId="post">
+      <BodyRegion
+        veiled={bodyIsSensitive(post)}
+        testId="post"
+        nodeId={post.id}
+        signature={sensitiveSignature(post)}
+      >
         {hasMedia(post) && (
           <PostMedia node={post} testId="post-media" bleed="page" preloadLead />
         )}
@@ -1118,7 +1217,13 @@ export function PostView({
         </Link>
       )}
       {phase === "signedIn" && (
-        <div className="flex flex-col gap-2">
+        // The drop target is the WHOLE composer, drawn nowhere — the quiet
+        // line beside Add is the only thing that says so (ReplyPicturesWeb).
+        <div
+          data-testid="comment-composer"
+          className="flex flex-col gap-2"
+          {...commentDropHandlers(pickCommentMedia)}
+        >
           <label htmlFor="comment-draft" className="text-label-large">
             Add a comment
           </label>
@@ -1129,6 +1234,16 @@ export function PostView({
             onChange={(event) => setDraft(event.target.value)}
             rows={3}
             className="rounded-extra-small border border-outline p-2"
+          />
+          {/* A comment is words PLUS optional pictures (D16 is the post's
+              rule alone), so the row sits under the words and the pictures
+              upload while the reader keeps writing. */}
+          <CommentAttachments
+            media={draftMedia}
+            previews={draftPreviews}
+            onPick={pickCommentMedia}
+            onRemove={removeCommentMedia}
+            onRetry={retryCommentMedia}
           />
           {/* F9: the comment compose box tags like any other composer —
               the same gated entry, chips, and per-chip sliders, batched
@@ -1165,12 +1280,20 @@ export function PostView({
               Signed — it&apos;s in the thread now, still settling.
             </p>
           )}
+          {/* An attachment names an asset id, so a comment cannot be prepared
+              while a picture is still on its way. Saying so plainly beats a
+              button that refuses for a reason the reader cannot see. */}
+          {!draftMediaGate.ok && draft.trim() !== "" && (
+            <p data-testid="comment-media-gate" className="m-0 text-label-small text-on-surface-variant">
+              {draftMediaGate.reason}
+            </p>
+          )}
           {/* The cost, beside the control that pays it (F4). */}
           <SignedActionsIndicator count={commentActions} testId="comment-signed-actions" />
           <Button
             testId="comment-submit"
             onClick={() => void onSubmitComment()}
-            disabled={submitting || draft.trim() === ""}
+            disabled={submitting || !draftMediaGate.ok}
           >
             Sign comment
           </Button>

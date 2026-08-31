@@ -10,10 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
@@ -26,9 +22,12 @@ import com.cogra.core.designsystem.v2.media.SensitiveVeil
 import com.cogra.core.designsystem.v2.media.cappedToTallestTile
 import com.cogra.core.designsystem.v2.token.MediaFrame
 import com.cogra.core.designsystem.v2.token.MediaShape
+import com.cogra.domain.CommentView
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.ModeratedField
+import com.cogra.domain.PostView
+import com.cogra.domain.content.SensitiveMark
 
 /**
  * Which surface the body is drawn on, and therefore how its pictures sit.
@@ -59,8 +58,17 @@ internal enum class BodySurface { Post, Comment }
  * removed body is the placeholder rather than a gallery with holes in
  * it.
  *
+ * **The reveal is not this composable's to remember.** It is per node
+ * and per session, shared across every surface the node appears on, and
+ * dropped when the node's own sensitive state changes (jakob
+ * 2026-08-31) — none of which a `remember` keyed to one card can do. It
+ * is hoisted to `SensitiveReveals`, and arrives here already decided.
+ *
  * @param maxBodyLines the feed card's clamp; null in the detail, where
  *   the whole body is shown.
+ * @param revealed whether this reader has already chosen to look.
+ * @param onReveal fired when they choose to; null where the surface
+ *   holds no reveal state, which leaves the veil closed.
  */
 @Composable
 internal fun PostBody(
@@ -73,6 +81,8 @@ internal fun PostBody(
     maxBodyLines: Int? = null,
     onOpenMedia: (() -> Unit)? = null,
     surface: BodySurface = BodySurface.Post,
+    revealed: Boolean = false,
+    onReveal: () -> Unit = {},
 ) {
     if (isRemoved(content, attachments, attachmentsStatus)) {
         RemovedPlaceholder(
@@ -89,12 +99,11 @@ internal fun PostBody(
         return
     }
 
-    var revealed by rememberSaveable(testTagPrefix) { mutableStateOf(false) }
     val veiled = !revealed && isSensitive(content, description, attachmentsStatus)
 
     SensitiveVeil(
         veiled = veiled,
-        onReveal = { revealed = true },
+        onReveal = onReveal,
         modifier = modifier.fillMaxWidth(),
         testTag = "${testTagPrefix}_veil",
     ) {
@@ -195,6 +204,29 @@ internal fun isRemoved(
     val wordsGone = attachments.isEmpty() && content.status.hidden()
     return galleryGone || wordsGone
 }
+
+/**
+ * The node's sensitive state, as a reveal is remembered against.
+ *
+ * The same three statuses [isSensitive] reads, kept together so a reveal
+ * can be compared to the state it was made under rather than merely to
+ * a node id.
+ */
+internal fun sensitiveMark(
+    content: ModeratedField,
+    description: ModeratedField?,
+    attachmentsStatus: FieldStatus,
+): SensitiveMark = SensitiveMark(
+    content = content.status,
+    description = description?.status,
+    attachments = attachmentsStatus,
+)
+
+internal fun PostView.sensitiveMark(): SensitiveMark =
+    sensitiveMark(content, description, attachmentsStatus)
+
+internal fun CommentView.sensitiveMark(): SensitiveMark =
+    sensitiveMark(content, description = null, attachmentsStatus = attachmentsStatus)
 
 /** Whether the body is marked sensitive — one state for the whole of it. */
 internal fun isSensitive(

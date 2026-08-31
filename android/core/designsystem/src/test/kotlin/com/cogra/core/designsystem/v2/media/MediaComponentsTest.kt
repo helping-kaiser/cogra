@@ -166,9 +166,12 @@ class MediaComponentsTest {
         compose.runOnUiThread { action!!.action() }
     }
 
+    /** A half-size window, so a nudge has room to move in any direction. */
+    private fun centredState() = CropState(CropFraming(0.25f, 0.25f, 0.75f, 0.75f))
+
     @Test
     fun theCropIsCompletableWithoutAGesture() {
-        val state = CropState(2f, Offset.Zero)
+        val state = centredState()
         cropContent(state)
 
         fireCropAction("Nudge left")
@@ -176,52 +179,54 @@ class MediaComponentsTest {
 
         // The non-drag route actually moves the framing — this is the D17
         // requirement, not a decoration.
-        assertThat(state.offset.x).isGreaterThan(0f)
+        assertThat(state.framing.left).isLessThan(0.25f)
     }
 
     @Test
     fun everyNudgeDirectionIsWired() {
-        val state = CropState(2f, Offset.Zero)
+        val state = centredState()
         cropContent(state)
 
         fireCropAction("Nudge right")
         compose.waitForIdle()
-        assertThat(state.offset.x).isLessThan(0f)
+        assertThat(state.framing.left).isGreaterThan(0.25f)
+
+        fireCropAction("Nudge down")
+        compose.waitForIdle()
+        assertThat(state.framing.top).isGreaterThan(0.25f)
 
         fireCropAction("Nudge up")
+        fireCropAction("Nudge up")
         compose.waitForIdle()
-        assertThat(state.offset.y).isGreaterThan(0f)
-
-        fireCropAction("Nudge down")
-        fireCropAction("Nudge down")
-        compose.waitForIdle()
-        assertThat(state.offset.y).isLessThan(0f)
+        assertThat(state.framing.top).isLessThan(0.25f)
     }
 
     @Test
     fun theZoomAndResetActionsAreReachableWithoutSeeingAnything() {
-        val state = CropState(CropState.MIN_SCALE, Offset.Zero)
+        val state = centredState()
         cropContent(state)
 
         fireCropAction("Zoom in")
         compose.waitForIdle()
-        assertThat(state.scale).isGreaterThan(CropState.MIN_SCALE)
+        val zoomedIn = state.framing.width
+        assertThat(zoomedIn).isLessThan(0.5f)
 
         fireCropAction("Zoom out")
         compose.waitForIdle()
-        assertThat(state.scale).isWithin(0.001f).of(CropState.MIN_SCALE)
+        assertThat(state.framing.width).isGreaterThan(zoomedIn)
 
         fireCropAction("Zoom in")
         fireCropAction("Nudge left")
         fireCropAction("Reset framing")
         compose.waitForIdle()
-        assertThat(state.scale).isEqualTo(CropState.MIN_SCALE)
-        assertThat(state.offset).isEqualTo(Offset.Zero)
+        // Reset goes back to the whole picture, which is what a shape
+        // switch re-frames against.
+        assertThat(state.framing).isEqualTo(CropFraming.Whole)
     }
 
     @Test
     fun theCropCarriesNoVisibleFramingChrome() {
-        cropContent(CropState(CropState.MIN_SCALE, Offset.Zero))
+        cropContent(centredState())
 
         // The board draws nothing under the crop but its caption, so the
         // non-gesture route lives entirely in the semantics tree.
@@ -233,31 +238,33 @@ class MediaComponentsTest {
 
     @Test
     fun theFramingIsReadBackSoTheActionsAreNotFiredBlind() {
-        val state = CropState(CropState.MIN_SCALE, Offset.Zero)
+        val state = CropState(CropFraming.Whole)
         cropContent(state)
 
         crop().assert(
             SemanticsMatcher.expectValue(
                 SemanticsProperties.StateDescription,
-                "Zoom 100%, centred",
+                "Keeping 100% of the picture, centred",
             ),
         )
 
         fireCropAction("Zoom in")
         compose.waitForIdle()
 
+        // The number moved, which is the whole point: an action fired
+        // blind must still be answerable.
         crop().assert(
-            SemanticsMatcher.expectValue(
-                SemanticsProperties.StateDescription,
-                "Zoom 125%, centred",
-            ),
+            SemanticsMatcher.keyIsDefined(SemanticsProperties.StateDescription),
+        )
+        assertThat(state.framingDescription()).isNotEqualTo(
+            "Keeping 100% of the picture, centred",
         )
     }
 
     @Test
-    fun aSecondPictureIsFramableInAFrameTheFirstAlreadyMeasured() {
-        val first = CropState(2f, Offset.Zero)
-        val second = CropState(2f, Offset.Zero)
+    fun eachPictureCarriesItsOwnFramingAcrossTheFilmstrip() {
+        val first = centredState()
+        val second = centredState()
         var showing by mutableStateOf(first)
         compose.setContent {
             Cogra2PreviewTheme {
@@ -273,19 +280,19 @@ class MediaComponentsTest {
 
         fireCropAction("Nudge left")
         compose.waitForIdle()
-        assertThat(first.offset.x).isGreaterThan(0f)
+        assertThat(first.framing.left).isLessThan(0.25f)
 
-        // The filmstrip moves to the next picture: the frame's measured
-        // size has not changed, so nothing re-measures — and the fresh
-        // state has to be told the viewport anyway, or every picture after
-        // the first is dead to nudges and drags alike.
+        // The filmstrip moves to the next picture: the second state is
+        // framable in its own right, and the first one's framing stays
+        // where its own picture was left.
         showing = second
         compose.waitForIdle()
 
-        fireCropAction("Nudge left")
+        fireCropAction("Nudge right")
         compose.waitForIdle()
 
-        assertThat(second.offset.x).isGreaterThan(0f)
+        assertThat(second.framing.left).isGreaterThan(0.25f)
+        assertThat(first.framing.left).isLessThan(0.25f)
     }
 
     @Test

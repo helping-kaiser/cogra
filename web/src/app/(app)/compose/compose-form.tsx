@@ -153,11 +153,13 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
         setBody(loaded.body);
         setLoadedContent(loaded);
         // AN EDIT IS COMPLETE STATE, so the mark has to be carried forward or
-        // the edit would quietly unveil a post its author had veiled. The
-        // status is already on the detail read, so preserving it costs no new
-        // selection. Reported: the read cannot tell an author's own mark from a
-        // moderator's, so an edit re-states whichever one is standing.
-        setSensitive(post.moderationStatus === "SENSITIVE");
+        // the edit would quietly unveil a post its author had veiled — and it
+        // has to be the AUTHOR'S OWN mark (round 4). What a reader sees is the
+        // OR of the author's mark and the moderator's, and neither side can
+        // clear the other; re-stating the OR would silently adopt a moderator's
+        // verdict as the author's own, which is the one thing this switch must
+        // never do.
+        setSensitive(post.sensitiveSelfMark);
         // A pending claim is a current tag too — the author declared it.
         const current = post.topics.map((claim) => ({
           name: claim.hashtag.name.value ?? "",

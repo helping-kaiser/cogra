@@ -393,6 +393,40 @@ class ComposeWizardViewModelTest {
         assertThat(drafts.held).isNull()
     }
 
+    /**
+     * The route consumes the outcome the instant it navigates, and the
+     * lifecycle then stops the screen — which used to write the published
+     * post straight back into the store, so the composer offered it again
+     * on the next visit (jakob 2026-08-31).
+     */
+    @Test
+    fun aLandedPostStaysGoneWhenTheOutcomeIsConsumedAndTheScreenStops() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.signWords()
+        assertThat(drafts.held).isNull()
+
+        // Exactly what `ComposeWizardScreen` does on `Landed`: consume,
+        // navigate, and take the `ON_STOP` that follows.
+        vm.onOutcomeConsumed()
+        vm.persistNow()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(drafts.held).isNull()
+    }
+
+    /** The debounced writer must not resurrect it either. */
+    @Test
+    fun aLandedPostIsNotRewrittenByThePendingDebouncedSave() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.signWords()
+
+        vm.onOutcomeConsumed()
+        // Long enough for any scheduled debounce to have fired.
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(drafts.held).isNull()
+    }
+
     @Test
     fun anExpiredActKeepsTheDraftAndSaysNothingWasSpent() = runTest(dispatcher) {
         val vm = viewModel()
@@ -606,6 +640,45 @@ class ComposeWizardViewModelTest {
 
         assertThat(vm.state.value.draftOffer).isNull()
         assertThat(drafts.held).isNull()
+    }
+
+    /**
+     * Resuming replaces what was authored, never what the device already
+     * handed over: the grid used to be wiped by the restore and never
+     * refilled, leaving the pick stage with nothing but its photos-app
+     * tile (jakob 2026-08-31).
+     */
+    @Test
+    fun resumingADraftKeepsThePickerGrid() = runTest(dispatcher) {
+        drafts.held = ComposeDraft(DraftBodyKind.Media, assets = listOf(DraftAsset("a", "")))
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onMediaPermissionGranted()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.deviceImages).isNotEmpty()
+
+        vm.onContinueDraft()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.deviceImages.map { it.uri }).containsExactly("a", "b").inOrder()
+    }
+
+    /** And it re-reads the roll, because a held draft can be days old. */
+    @Test
+    fun resumingADraftRereadsTheRoll() = runTest(dispatcher) {
+        drafts.held = ComposeDraft(DraftBodyKind.Media, assets = listOf(DraftAsset("a", "")))
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        val before = deviceImages.calls
+
+        deviceImages.offered = listOf(DeviceImage("c", 1f))
+        vm.onContinueDraft()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(deviceImages.calls).isGreaterThan(before)
+        assertThat(vm.state.value.deviceImages.map { it.uri }).containsExactly("c")
     }
 
     // -- Refusals --

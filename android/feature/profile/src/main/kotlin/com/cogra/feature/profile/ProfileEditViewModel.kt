@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * One of the two profile pictures, as the form holds it.
+ * The profile picture, as the form holds it.
  *
  * The three states are the contract's three (D13) plus the one the form
  * needs while a new picture is on its way: [Held] is what the account

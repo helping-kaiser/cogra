@@ -234,9 +234,27 @@ interface ContentRepository {
         license: LicenseChoice,
         tags: List<TagClaim> = emptyList(),
         references: List<ReferenceClaim> = emptyList(),
+        /**
+         * The gallery, in the author's order — at most
+         * [MAX_COMMENT_ATTACHMENTS]. A comment is text **plus** optional
+         * media, deliberately asymmetric to a post's exclusive-or: an
+         * answer is words first (D16). There is no cover, because a
+         * comment's set never leads anything.
+         */
+        attachments: List<AttachmentClaim> = emptyList(),
     ): Outcome<PreparedContentView>
 
-    suspend fun prepareCommentEdit(id: String, content: String): Outcome<PreparedContentView>
+    /**
+     * [attachments] is the gallery the edit leaves standing — complete,
+     * not a delta, exactly like the words beside it. An edit that sends
+     * an empty list therefore *clears* the gallery, which is what makes
+     * removing a picture expressible at all.
+     */
+    suspend fun prepareCommentEdit(
+        id: String,
+        content: String,
+        attachments: List<AttachmentClaim> = emptyList(),
+    ): Outcome<PreparedContentView>
 
     /** A further page of one comment's direct replies (expand). */
     suspend fun commentReplies(
@@ -245,6 +263,15 @@ interface ContentRepository {
         after: String?,
         includePending: Boolean = true,
     ): Outcome<Page<CommentView>>
+
+    companion object {
+        /**
+         * api-spec.md `PrepareCommentInput`: at most four per comment
+         * (D9). A comment gallery is a supporting picture, not an album
+         * — which is why it is four where a post's is ten.
+         */
+        const val MAX_COMMENT_ATTACHMENTS = 4
+    }
 }
 
 /**
