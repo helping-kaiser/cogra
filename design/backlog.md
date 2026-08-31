@@ -201,8 +201,32 @@ Balances, earnings, campaign amounts: how a figure is formatted, when it
 carries a unit, and what it does at zero and negative. `payoutAddress`
 moves off the profile in item 12, so settle the figure first.
 
-### 12 · Wallet · *design*
+### 12 · Wallet · *design + system* · **built**
+Eight boards (Wallet rows on the canonical canvas: at rest, the
+zero state, first-open set-up, the address-publish seal, the
+address-change seal, key elsewhere, guest, applicant) and
+`components/wallet/` (`WalletBalance`, `LedgerRow`,
+`PayoutAddress`) + wallet.card.html. Rulings in readme §13 *The
+wallet*; the product-doc decisions they stand on (L0 = L-BTC on
+Liquid, the admission fund's caps, the rail key's lazy birth) went
+to `docs/` as their own PR. Two new "?" texts (*Your wallet key*;
+*What is CGT?* extended with the market-≈ sentence); pending
+amounts (deferred from item 11) landed as `LedgerRow pending`.
 Balance, where CGT came from, active campaigns, `payoutAddress`.
+Round 2 (same day, "make it sexy" — direction A + gradient
+blessed): `--surface-hero` (the one brand-wash gradient surface),
+the hero with the ghosted coin + delta chip, `EarnedChart`
+(settlement bars, honest decoration), identity rows with direction
+badges, the campaign's own subpage (*Wallet · your campaign*), the
+address in a card with copy, and the round of wording fixes
+(path-true zero state, key notice leads, centered guest prompt,
+unmissable applicant return). Round 3 (same day): the address
+collapses to one line at rest (`PayoutAddressRow`, high on the
+page), campaign money became ordinary history (escrow out / top-up
+out / return in) behind a campaigns DOOR to the new campaigns page
+(*Wallet · campaigns*: start, Yours/You-took-part, open + past),
+and the moment screens (first open, guest, applicant) wear the
+wash via the extracted `WashCard` master.
 
 ### 21 · The media slice · *design + system* · **built**
 Inserted 2026-08-31 (jakob), ahead of item 12: the product's media

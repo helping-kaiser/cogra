@@ -449,6 +449,7 @@ exists in `web/src/lib/ui/` (and, unless noted, in Android's
 | `components/forms/` | `TextField`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
 | `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand` |
 | `components/compose/` | `WizardHeader`, `MediaThumb`, `PickedRow`, `DescribeCounter`, `PickedSheet`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `ActsCard` |
+| `components/wallet/` | `WashCard`, `WalletBalance`, `EarnedChart`, `LedgerRow`, `PayoutAddress`, `PayoutAddressRow` |
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader` |
 | `components/states/` | `EmptyState`, `LoadingState` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending` |
@@ -1347,6 +1348,111 @@ media and comment editing.
   item.
 - **Sensitive veils the whole gallery**, never one picture of it —
   the open question in `MediaAttachment` closed.
+
+### The wallet — 2026-08-31
+
+Item 12, jakob's rulings — grounded first in a verbatim doc audit
+and the same-day product decisions it forced (L0's reserve asset is
+L-BTC on Liquid; the community admission fund covers invites within
+its governed caps; the rail key is distinct from the actor key and
+born lazily — recorded in the product docs, PR #537). The boards:
+*Wallet* rows on the canonical canvas; masters in
+`components/wallet/`.
+
+- **The balance headline** (`WalletBalance`) is the one surface that
+  spells CGT, as ruled in item 11 — and now carries the **≈ L-BTC
+  value line**: jakob overruled the CGT-only lean ("knowing how much
+  value it currently might have is super cool"). The estimate reads
+  the public CGT–L-BTC market — the protocol's own ladder, live from
+  genesis — moves with it, is never a promise, and hides at zero.
+  Never fiat: the product's own market quotes L-BTC.
+- **No free-form send, no cash-out.** Tipping IS the user-to-user
+  send; moving CGT anywhere else is any Liquid tool's business — the
+  wallet says where the money lives, not where to sell it.
+- **History is one stream, newest first** (`LedgerRow`): payouts,
+  tips in and out, campaign money — every line opens what paid it
+  (the traceability promise), direction by sign and words, and an
+  unlanded payout wears *Still settling* — the pending look item 11
+  deferred lands here. Search over history is deliberately later.
+- **Campaigns are a money view only**: deposit, escrow, window,
+  settles-as-one-public-record. The card clicks through to a
+  details page the moment one exists; no advertiser console here.
+- **The rail key is born at first wallet open** — the set-up card
+  (*Set up your wallet*, "?" *Your wallet key*): its own key, no new
+  recovery code (the seed joins the one container under the one
+  code), and the ceremony's single signed act is publishing the
+  payout address. An applicant's wallet says plainly that it opens
+  with membership — nothing locked, nothing yet to show.
+- **The payout address renders whole** (`PayoutAddress`) — mono,
+  wrapped, never truncated: checking it against a wallet is the
+  point of showing it. Changing it is a seal (parallel Registration,
+  newest wins); the line under it says the address is public and so
+  is every change.
+- **Key-absent is read-only, honestly**: balance and history stay
+  readable — the address and the chain are public — and only signing
+  needs the key; the restore-first notice says exactly that.
+
+**Round 2 — the trophy pass** (jakob, same day: the first cut read
+"sad — text and numbers"; direction A blessed *with* the gradient,
+explicitly as a first move against the product reading "basic"
+next to brands like Instagram):
+
+- **The brand wash** — `--surface-hero` in tokens/colors.css, the
+  system's ONE decorative gradient surface (both stops existing
+  palette values; the recipe is the only new thing). It dresses the
+  few places a figure IS the page — the wallet's hero first — and is
+  never a default card fill. The hero adds the **ghosted oversized
+  brand coin** cropped by the card's edge (texture, not a second
+  logo, aria-hidden) and the **delta chip** ("+14.40 this week" —
+  real recent earnings, omitted when nothing is new).
+- **`EarnedChart`** — the progress strip: earnings per settlement as
+  bars, every bar a real public settlement and tappable into it —
+  the traceability promise is what makes a chart admissible. Latest
+  bar wears `primary` (recency, never direction); zero settlements
+  are visible stubs.
+- **History rows are identity rows** — the disc leads (the tipper's
+  face, the paying campaign's cover, a glyph), wearing a small
+  direction badge (`arrow_outward`, rotated for in); the amount is
+  never coloured. `MonogramAvatar` accepts a numeric size for the
+  40px list-avatar rung.
+- **The campaign has its own subpage** (*Wallet · your campaign*) —
+  committing a deposit is a big deal: the money facts (deposit,
+  escrow, window, one-public-record settlement, unspent-returns) and
+  its rail history; the main page keeps one entry row.
+- **The address lives in a card** — label, **copy**, Change, the
+  address whole and mono; compact at rest, captioned on the zero
+  state and the seals.
+- Wording fixes: the zero state is **path-true** (campaigns pay when
+  the paths between an advertiser's crowd and their target run
+  through you; posting is how paths start, not a guarantee); the
+  key notice **leads** the key-absent board, inset like every card;
+  the guest prompt is centered; the applicant is told plainly to
+  come back after approval — earnings can't land until the address
+  exists.
+
+**Round 3** (jakob, same day):
+
+- **At rest the address is one line, high on the page**
+  (`PayoutAddressRow`) — an entry point out of scrolling's way, and
+  the ONE place the address may shorten (head…tail): it is not a
+  checking surface. The full card (copy, Change, the public-record
+  caption) is one tap away, and sits high on the zero state where a
+  new member's first move is checking it.
+- **Campaign money is ordinary history.** Three row kinds: **escrow
+  out** at creation, **top-up out** (a created campaign can be topped
+  up), **return in** when the payout wasn't full (the target missed,
+  or the crowd refused). No campaign section on the main page — the
+  wallet keeps only the **campaigns door**.
+- **The campaigns page** (*Wallet · campaigns*): Start a campaign,
+  the `Yours / You took part` segments, Open (with amounts in
+  escrow), Past (with outcomes — returned or fully paid out). "You
+  took part" lists the campaigns that paid you, with what each paid.
+  A listed campaign opens the money subpage (*Wallet · your
+  campaign*); the full campaign console stays a future item.
+- **The moment screens wear the wash** — `WashCard` extracts the
+  brand wash + ghost coin as one master (at most one per screen):
+  first open, guest, and applicant are a person's first look at the
+  money side and must not read as settings.
 - **The picked row carries no "Crop" or "Edit" links** (jakob, same
   day: "none") — the whole row is the affordance and opens the Show
   all sheet; re-cropping is the crop step's job, one Back away in the
