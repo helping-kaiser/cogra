@@ -26,8 +26,8 @@ import {
   sourceRect,
   targetSize,
   WEBP_QUALITY,
+  withinImage,
 } from "./encode-image";
-import { CENTERED } from "./crop";
 
 describe("the pinned parameters", () => {
   it("holds the numbers the PR cites, so a silent edit fails here", () => {
@@ -42,12 +42,12 @@ describe("the pinned parameters", () => {
   });
 });
 
-// The crop has to survive the trip to the server as PIXELS (D17), so what is
-// asserted here is that the rectangle handed to the encoder is the same region
-// `cropStyle` puts on screen. The invariant that carries the whole model: the
-// rectangle never leaves the source, at any zoom, at any focal point.
+// The crop has to survive the trip to the server as PIXELS (D17). The cropper
+// measures that rectangle and hands it over; `sourceRect` is what stands in
+// when nothing was measured, and it has to agree with what the cropper shows at
+// rest — the largest rectangle of the shape, laid centred inside the picture.
 describe("sourceRect", () => {
-  it("centres the cover fit and trims the longer axis", () => {
+  it("lays the largest rectangle of the shape centred in the picture", () => {
     // 4:5 out of a 1000x1000 square: the width is what gives.
     expect(sourceRect(1000, 1000, 4 / 5)).toEqual({ x: 100, y: 0, width: 800, height: 1000 });
     // 1.91:1 out of the same square: the height gives instead.
@@ -62,55 +62,7 @@ describe("sourceRect", () => {
     expect(sourceRect(800, 1000, 4 / 5)).toEqual({ x: 0, y: 0, width: 800, height: 1000 });
   });
 
-  it("halves the window at zoom 2 and anchors it on the focal point", () => {
-    const left = sourceRect(800, 1000, 4 / 5, { zoom: 2, x: 0, y: 0 });
-    expect(left).toEqual({ x: 0, y: 0, width: 400, height: 500 });
-    const right = sourceRect(800, 1000, 4 / 5, { zoom: 2, x: 1, y: 1 });
-    expect(right).toEqual({ x: 400, y: 500, width: 400, height: 500 });
-    const middle = sourceRect(800, 1000, 4 / 5, { zoom: 2, x: 0.5, y: 0.5 });
-    expect(middle).toEqual({ x: 200, y: 250, width: 400, height: 500 });
-  });
-
-  it("has no window to move when the shapes already agree", () => {
-    expect(sourceRect(1000, 1000, 1, { zoom: 1, x: 0, y: 1 })).toEqual(
-      sourceRect(1000, 1000, 1, CENTERED),
-    );
-  });
-
-  // The fix-round-2 ruling: switching shape re-frames against the ORIGINAL, and
-  // any section must be reachable at any ratio — including at zoom 1, where the
-  // band the cover fit trims is the only thing there is to choose between.
-  it("reaches the top and the bottom band of a tall picture in a wide frame at zoom 1", () => {
-    const top = sourceRect(1000, 2000, 1.91, { zoom: 1, x: 0.5, y: 0 });
-    const bottom = sourceRect(1000, 2000, 1.91, { zoom: 1, x: 0.5, y: 1 });
-    expect(top.y).toBe(0);
-    expect(bottom.y + bottom.height).toBeCloseTo(2000, 6);
-    expect(top.height).toBeCloseTo(bottom.height, 6);
-  });
-
-  it("reaches the left and the right band of a wide picture in a tall frame at zoom 1", () => {
-    const left = sourceRect(3000, 1000, 4 / 5, { zoom: 1, x: 0, y: 0.5 });
-    const right = sourceRect(3000, 1000, 4 / 5, { zoom: 1, x: 1, y: 0.5 });
-    expect(left.x).toBe(0);
-    expect(right.x + right.width).toBeCloseTo(3000, 6);
-  });
-
-  // A shape switch changes only the ratio passed here; the crop is untouched,
-  // so the new window is cut from the original picture rather than from the
-  // rectangle the previous shape happened to leave behind.
-  it("cuts every shape out of the whole original, not out of the previous crop", () => {
-    // The 4:5 window over this source spans 112.5..1362.5 of the 2000.
-    const tall = sourceRect(1000, 2000, 4 / 5, { zoom: 1, x: 0.5, y: 0.15 });
-    expect(tall.y).toBeCloseTo(112.5, 6);
-    expect(tall.y + tall.height).toBeCloseTo(1362.5, 6);
-    // Switching to 1.91:1 can frame the source's very bottom — past everything
-    // the 4:5 window held, which is reachable only from the original.
-    const wide = sourceRect(1000, 2000, 1.91, { zoom: 1, x: 0.5, y: 1 });
-    expect(wide.y).toBeGreaterThan(tall.y + tall.height);
-    expect(wide.y + wide.height).toBeCloseTo(2000, 6);
-  });
-
-  it("never leaves the source, for any reachable crop", () => {
+  it("never leaves the source, and always carries the shape asked for", () => {
     for (const [w, h] of [
       [1000, 1000],
       [4000, 500],
@@ -118,18 +70,12 @@ describe("sourceRect", () => {
       [1080, 1350],
     ]) {
       for (const ratio of [4 / 5, 1, 1.91]) {
-        for (const zoom of [1, 1.4, 2, 3]) {
-          for (const x of [0, 0.37, 0.5, 1]) {
-            for (const y of [0, 0.63, 1]) {
-              const rect = sourceRect(w, h, ratio, { zoom, x, y });
-              expect(rect.x).toBeGreaterThanOrEqual(-1e-9);
-              expect(rect.y).toBeGreaterThanOrEqual(-1e-9);
-              expect(rect.x + rect.width).toBeLessThanOrEqual(w + 1e-9);
-              expect(rect.y + rect.height).toBeLessThanOrEqual(h + 1e-9);
-              expect(rect.width / rect.height).toBeCloseTo(ratio, 6);
-            }
-          }
-        }
+        const rect = sourceRect(w!, h!, ratio);
+        expect(rect.x).toBeGreaterThanOrEqual(-1e-9);
+        expect(rect.y).toBeGreaterThanOrEqual(-1e-9);
+        expect(rect.x + rect.width).toBeLessThanOrEqual(w! + 1e-9);
+        expect(rect.y + rect.height).toBeLessThanOrEqual(h! + 1e-9);
+        expect(rect.width / rect.height).toBeCloseTo(ratio, 6);
       }
     }
   });
@@ -137,6 +83,31 @@ describe("sourceRect", () => {
   it("refuses a ratio it cannot use", () => {
     expect(() => sourceRect(100, 100, 0)).toThrow(/ratio/);
     expect(() => sourceRect(100, 100, Number.NaN)).toThrow(/ratio/);
+  });
+});
+
+describe("withinImage", () => {
+  it("leaves a rectangle that is already inside alone", () => {
+    const area = { x: 100, y: 200, width: 400, height: 500 };
+    expect(withinImage(area, 1000, 1000)).toEqual(area);
+  });
+
+  it("pulls a rectangle that rounding pushed over the edge back inside", () => {
+    expect(withinImage({ x: -3, y: 990, width: 400, height: 500 }, 1000, 1000)).toEqual({
+      x: 0,
+      y: 500,
+      width: 400,
+      height: 500,
+    });
+  });
+
+  it("never returns a rectangle larger than the picture", () => {
+    expect(withinImage({ x: 0, y: 0, width: 4000, height: 4000 }, 800, 600)).toEqual({
+      x: 0,
+      y: 0,
+      width: 800,
+      height: 600,
+    });
   });
 });
 
@@ -322,31 +293,63 @@ describe("encodeForUpload", () => {
     expect(result.height).toBe(810);
   });
 
-  it("bakes the crop into the pixels, at the post shape's own size", async () => {
+  it("bakes the measured rectangle into the pixels, at the post shape's own size", async () => {
     const drawn = installFakeCanvas(3);
     vi.stubGlobal(
       "createImageBitmap",
       vi.fn(async () => ({ width: 4032, height: 3024, close: () => {} })),
     );
 
-    // Tall 4:5 out of a landscape original, framed hard right.
+    // Tall 4:5 out of a landscape original, framed hard into the bottom-right
+    // corner — the rectangle the cropper measured, in the original's pixels.
+    const area = { x: 2822.4, y: 1512, width: 1209.6, height: 1512 };
     const result = await encodeForUpload(new Blob([new Uint8Array([0]) as BlobPart]), {
       ratio: 4 / 5,
-      crop: { zoom: 2, x: 1, y: 1 },
+      crop: { x: -40, y: -60, zoom: 2, area },
     });
 
-    // The window is the cover fit divided by the zoom — 2419.2/2 wide, 3024/2
-    // tall — and the focal point carries it across everything the original has
-    // left over, so framing hard right lands it on the original's right edge.
-    const from = drawn[0]!.from;
-    expect(from.width).toBeCloseTo(1209.6, 4);
-    expect(from.height).toBeCloseTo(1512, 4);
-    expect(from.x + from.width).toBeCloseTo(4032, 4);
-    expect(from.y + from.height).toBeCloseTo(3024, 4);
+    expect(drawn[0]!.from).toEqual(area);
     // The output is the SHAPE's, not the original's: 1209.6x1512 is inside the
     // 1080 width cap, so it scales down to it rather than keeping 4032 wide.
     expect(result.width).toBe(1080);
     expect(result.height).toBe(1350);
+  });
+
+  // The rectangle carries its own shape, so it is authoritative: a draft framed
+  // at one shape and encoded while the wizard still names another must upload
+  // what the author actually saw.
+  it("prefers the measured rectangle over the ratio", async () => {
+    const drawn = installFakeCanvas(6);
+    vi.stubGlobal(
+      "createImageBitmap",
+      vi.fn(async () => ({ width: 1000, height: 1000, close: () => {} })),
+    );
+
+    const area = { x: 0, y: 250, width: 1000, height: 500 };
+    await encodeForUpload(new Blob([new Uint8Array([0]) as BlobPart]), {
+      ratio: 4 / 5,
+      crop: { x: 0, y: 0, zoom: 1, area },
+    });
+
+    expect(drawn[0]!.from).toEqual(area);
+  });
+
+  // Nothing measured — an upload that raced the decode, or a draft signed
+  // without reopening the crop screen. The fallback is what the cropper shows
+  // at rest for that shape, so the author still gets the picture they saw.
+  it("falls back to the resting rectangle when the framing was never measured", async () => {
+    const drawn = installFakeCanvas(7);
+    vi.stubGlobal(
+      "createImageBitmap",
+      vi.fn(async () => ({ width: 1000, height: 1000, close: () => {} })),
+    );
+
+    await encodeForUpload(new Blob([new Uint8Array([0]) as BlobPart]), {
+      ratio: 4 / 5,
+      crop: { x: 0, y: 0, zoom: 1, area: null },
+    });
+
+    expect(drawn[0]!.from).toEqual({ x: 100, y: 0, width: 800, height: 1000 });
   });
 
   it("leaves the shape alone when no ratio is asked for", async () => {
@@ -356,10 +359,10 @@ describe("encodeForUpload", () => {
       vi.fn(async () => ({ width: 600, height: 400, close: () => {} })),
     );
 
-    // A crop with no ratio has nothing to crop TO, so it is ignored rather than
-    // silently reshaping the picture.
+    // A crop with nothing measured and no ratio has nothing to crop TO, so it
+    // is ignored rather than silently reshaping the picture.
     const result = await encodeForUpload(new Blob([new Uint8Array([0]) as BlobPart]), {
-      crop: { zoom: 3, x: 0, y: 0 },
+      crop: { x: 0, y: 0, zoom: 3, area: null },
     });
 
     expect(drawn[0]!.from).toEqual({ x: 0, y: 0, width: 600, height: 400 });

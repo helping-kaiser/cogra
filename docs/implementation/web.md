@@ -339,6 +339,22 @@ rather than the largest.
 - **A device-local preview is a plain `<img>`.** The crop step's
   source is an object URL the optimizer cannot fetch, so it is
   not asked to; `next/image` is for what the server serves.
+- **Cropping is [`react-easy-crop`](https://github.com/ValentinH/react-easy-crop),**
+  pinned exactly, and the boarded chrome — shape chips, caption,
+  filmstrip — is drawn around it. It is the most used maintained
+  React cropper by a wide margin (3.36M weekly downloads against
+  react-cropper's 432k in the week of 2026-08-23, npm registry
+  download counts), MIT, TypeScript-typed, and current at 6.2.3;
+  react-cropper still depends on Cropper.js 1.x while Cropper.js
+  itself is at 2.x. Two of its defaults carry the design:
+  `objectFit: "contain"` shows the whole picture at rest and lays
+  the crop rectangle inside it, and that rectangle is recomputed
+  from the media whenever the shape changes — so no shape is ever
+  framed against a previous crop. `onCropComplete` reports the
+  framed rectangle in the source's own pixels, which is what the
+  encoder bakes; the wizard stores that rather than a viewport
+  offset, so a draft framed on a phone still encodes correctly in
+  a wider window.
 - **Pictures are processed in the browser before upload,** on the
   same envelope Android uses: long edge capped at 1080, WebP at
   quality 0.8, the author's crop baked into the pixels. The
@@ -354,7 +370,10 @@ keyboard operability, alongside its tests. A drag gesture always
 has a non-drag equivalent: the crop frame takes focus and is
 framed with the arrow keys, `+`/`-`, and Home, which a visually
 hidden description spells out — the canvas draws no framing
-controls, so the route is offered without painting one.
+controls, so the route is offered without painting one. The
+cropper brings the arrow keys itself; zoom and recentre are added
+over it, because pinch-to-zoom is a gesture like any other and the
+library has no keyboard route for it.
 
 ## Layout
 

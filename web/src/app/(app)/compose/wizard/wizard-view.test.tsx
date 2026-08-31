@@ -199,48 +199,58 @@ describe("the compose wizard", () => {
 
   // The hand test found framing dead on everything past the first picture, so
   // what is asserted is that each one carries its OWN framing and keeps it.
+  // The zoom is read off the cropper's own transform, which is the framing the
+  // library renders from.
+  const zoomOf = () => {
+    const transform = screen
+      .getByTestId("wizard-crop-frame")
+      .querySelector("img")!.style.transform;
+    return Number(/scale\(([\d.]+)\)/.exec(transform)?.[1]);
+  };
+
   it("frames every picked picture, not just the first", async () => {
     render();
     await pick(["one.jpg", "two.jpg", "three.jpg"]);
     fireEvent.click(screen.getByTestId("wizard-next"));
 
-    const origin = () =>
-      screen.getByTestId("wizard-crop-frame").querySelector("img")!.style.transformOrigin;
-
-    // Each picture starts centred and is framed on its own.
+    // Each picture starts unzoomed and is framed on its own.
     for (const index of [0, 1, 2]) {
       fireEvent.click(screen.getByTestId(`wizard-crop-pick-${index}`));
-      expect(origin()).toBe("50% 50%");
+      expect(zoomOf()).toBe(1);
       for (let press = 0; press <= index; press += 1) {
-        fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "ArrowLeft" });
+        fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "+" });
       }
     }
 
     // Coming back finds each one as it was left, so no picture's framing was
     // written over another's.
     for (const [index, expected] of [
-      [0, "55% 50%"],
-      [1, "60% 50%"],
-      [2, "65% 50%"],
+      [0, 1.1],
+      [1, 1.2],
+      [2, 1.3],
     ] as const) {
       fireEvent.click(screen.getByTestId(`wizard-crop-pick-${index}`));
-      expect(origin()).toBe(expected);
+      expect(zoomOf()).toBeCloseTo(expected, 6);
     }
   });
 
-  // Switching shape re-cuts from the ORIGINAL, so the framing survives it.
-  it("keeps each picture's framing across a shape switch", async () => {
+  // Switching shape re-frames against the ORIGINAL: the rectangle is measured
+  // anew at the new ratio, while where the reader had put the picture stays.
+  it("re-frames against the original across a shape switch, keeping the zoom", async () => {
     render();
     await pick(["one.jpg", "two.jpg"]);
     fireEvent.click(screen.getByTestId("wizard-next"));
 
     fireEvent.click(screen.getByTestId("wizard-crop-pick-1"));
-    fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "ArrowDown" });
+    fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "+" });
     fireEvent.click(screen.getByTestId("wizard-shape-wide"));
 
     const frame = screen.getByTestId("wizard-crop-frame");
     expect(frame.style.aspectRatio).toBe("1.91 / 1");
-    expect(frame.querySelector("img")!.style.transformOrigin).toBe("50% 45%");
+    expect(zoomOf()).toBeCloseTo(1.1, 6);
+    // The picture the cropper works from is the picked original, never a
+    // rectangle a previous shape left behind.
+    expect(frame.querySelector("img")!.getAttribute("src")).toBe("blob:preview");
   });
 
   it("refuses to leave the pick screen with no body", async () => {
