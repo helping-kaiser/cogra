@@ -49,6 +49,10 @@ sealed interface ProfileImageState {
             Cleared -> null
         }
 
+    /** This state, or the server's picture where the form has none of its own. */
+    fun orHeld(url: String?): ProfileImageState =
+        if (this is Held) Held(url) else this
+
     /** The wire value: absent, an explicit clear, or an id. */
     fun toUpdate(): MediaFieldUpdate = when (this) {
         is Held, is Picked, is Failed -> MediaFieldUpdate.Untouched
@@ -113,8 +117,13 @@ class ProfileEditViewModel @Inject constructor(
                                 displayName = profile.displayName.value.orEmpty(),
                                 bio = profile.bio.value.orEmpty(),
                                 websiteUrl = profile.websiteUrl.value.orEmpty(),
-                                avatar = ProfileImageState.Held(profile.avatar?.url),
-                                cover = ProfileImageState.Held(profile.cover?.url),
+                                // A picture the author has already touched
+                                // outranks the one the server holds: a
+                                // reload reached from the retry button
+                                // would otherwise discard an upload still
+                                // in flight.
+                                avatar = it.avatar.orHeld(profile.avatar?.url),
+                                cover = it.cover.orHeld(profile.cover?.url),
                             )
                         }
                     }

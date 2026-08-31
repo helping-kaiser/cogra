@@ -9,19 +9,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.ZoomIn
-import androidx.compose.material.icons.filled.ZoomOut
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
@@ -36,11 +31,11 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.cogra.core.designsystem.v2.atom.CograChip
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
-import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.MediaOverlay
 import com.cogra.core.designsystem.v2.token.MediaShape
 import com.cogra.core.designsystem.v2.token.Space
@@ -54,18 +49,15 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  * moves and zooms *within* it. The rule-of-thirds overlay is the canvas's,
  * drawn as hairlines over the picture.
  *
- * **The non-gesture route is required, not optional.** D17 makes it explicit
- * — "the crop step must be completable without a gesture" — and
- * design/readme.md §10 requires a non-drag equivalent for every drag. It is
- * provided twice over, because the two reach different people:
- *
- * - **Custom accessibility actions** on the viewport, so an assistive
- *   technology user gets nudge and zoom as named actions.
- * - **A visible control row**, for a reader who can see the screen but
- *   cannot pinch. The canonical board draws no such row — it is a required
- *   element the canvas is silent on — so it is placed in the empty space the
- *   board leaves below the caption, and [showFramingControls] can retire it
- *   if the design later draws something else there.
+ * **The non-gesture route is required, and it is invisible.** D17 makes the
+ * requirement explicit — "the crop step must be completable without a
+ * gesture" — and design/readme.md §10 requires a non-drag equivalent for
+ * every drag. The canonical board draws no controls under the crop, so the
+ * equivalent is carried entirely in the semantics tree: named custom
+ * accessibility actions for nudge, zoom and reset, plus a state description
+ * that reads the current framing back. An assistive-technology user and a
+ * keyboard user both reach every one of them; a reader looking at the board
+ * sees exactly what the board draws.
  */
 @Composable
 fun MediaCrop(
@@ -73,7 +65,6 @@ fun MediaCrop(
     shape: MediaShape,
     state: CropState,
     modifier: Modifier = Modifier,
-    showFramingControls: Boolean = true,
     caption: String = "One shape for the whole post. Drag to move, pinch to zoom.",
     testTag: String? = null,
 ) {
@@ -88,10 +79,6 @@ fun MediaCrop(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-
-        if (showFramingControls) {
-            FramingControls(state, testTag)
-        }
     }
 }
 
@@ -112,13 +99,24 @@ private fun CropViewport(
         CustomAccessibilityAction("Reset framing") { state.reset(); true },
     )
 
+    // The measurement is remembered rather than pushed straight into the
+    // state, because `onSizeChanged` fires on a *change* of size: framing
+    // the second picture of a gallery hands this same box a fresh
+    // `CropState` at an unchanged size, and that state would never learn
+    // its viewport — which is why every picture after the first used to
+    // ignore drags and nudges entirely.
+    var measured by remember { mutableStateOf(Size.Zero) }
+    if (measured != Size.Zero) {
+        SideEffect { state.measured(measured, item.aspectRatio) }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(shape.ratio)
             .clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .onSizeChanged { state.viewport = Size(it.width.toFloat(), it.height.toFloat()) }
+            .onSizeChanged { measured = Size(it.width.toFloat(), it.height.toFloat()) }
             .pointerInput(Unit) {
                 detectTransformGestures { _, pan, zoom, _ ->
                     if (zoom != 1f) state.zoomBy(zoom)
@@ -127,6 +125,10 @@ private fun CropViewport(
             }
             .semantics {
                 contentDescription = item.altText ?: "The picture being framed"
+                // The invisible half of the non-gesture route: what the
+                // framing currently is, so the actions below are not fired
+                // blind.
+                stateDescription = state.framingDescription()
                 customActions = nudgeActions
             }
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
@@ -177,67 +179,6 @@ private fun RuleOfThirds() {
     )
 }
 
-/**
- * The visible non-drag route. Each control is a full 48dp target and carries
- * its own label — an icon never carries meaning alone (design/readme.md §5).
- */
-@Composable
-private fun FramingControls(state: CropState, testTag: String?) {
-    val tag = testTag ?: "crop"
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(Space.x1),
-    ) {
-        NudgeButton(Icons.Filled.KeyboardArrowLeft, "Nudge left", "${tag}_left") {
-            state.nudge(NudgeDirection.Left)
-        }
-        NudgeButton(Icons.Filled.KeyboardArrowRight, "Nudge right", "${tag}_right") {
-            state.nudge(NudgeDirection.Right)
-        }
-        NudgeButton(Icons.Filled.KeyboardArrowUp, "Nudge up", "${tag}_up") {
-            state.nudge(NudgeDirection.Up)
-        }
-        NudgeButton(Icons.Filled.KeyboardArrowDown, "Nudge down", "${tag}_down") {
-            state.nudge(NudgeDirection.Down)
-        }
-        NudgeButton(
-            Icons.Filled.ZoomIn,
-            "Zoom in",
-            "${tag}_zoom_in",
-            enabled = state.canZoom(inward = true),
-        ) { state.stepZoom(inward = true) }
-        NudgeButton(
-            Icons.Filled.ZoomOut,
-            "Zoom out",
-            "${tag}_zoom_out",
-            enabled = state.canZoom(inward = false),
-        ) { state.stepZoom(inward = false) }
-    }
-}
-
-@Composable
-private fun NudgeButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    tag: String,
-    enabled: Boolean = true,
-    onClick: () -> Unit,
-) {
-    IconButton(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = Modifier
-            .size(Layout.TouchTargetMin)
-            .testTag(tag),
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
 /** The three shapes, as the canonical board draws them. */
 @Composable
 fun CropShapeChips(
@@ -285,7 +226,6 @@ private fun MediaCropWide() {
                 item = MediaItem(null, 1.5f, "A picture being framed"),
                 shape = MediaShape.Wide,
                 state = rememberCropState(),
-                showFramingControls = false,
             )
         }
     }

@@ -6,9 +6,11 @@ import com.cogra.domain.ErrorCode
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserError
+import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.DeviceImageSource
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.ContentRepository
@@ -62,6 +64,7 @@ class ComposeWizardViewModel @Inject constructor(
     private val references: ReferenceRepository,
     private val media: MediaRepository,
     private val processor: MediaProcessor,
+    private val deviceImages: DeviceImageSource,
     private val drafts: ComposeDraftStore,
     private val signer: WriteSigner,
 ) : ViewModel() {
@@ -76,6 +79,19 @@ class ComposeWizardViewModel @Inject constructor(
     private var started = false
 
     /**
+     * Whether the store may be written to yet.
+     *
+     * A fresh wizard is empty, and persisting an empty wizard *clears*
+     * the store — so writing before the held draft has been read and
+     * answered would destroy the very draft the offer is about. Nothing
+     * is written until the offer is settled one way or the other.
+     */
+    private var armed = false
+
+    /** The pending debounced write, so a burst of typing is one save. */
+    private var draftSaveJob: Job? = null
+
+    /**
      * Route entry. A held draft is *offered*, never restored silently:
      * the `ComposeDraft` board asks before it takes over the screen,
      * because an author who opened the composer to write something else
@@ -85,10 +101,17 @@ class ComposeWizardViewModel @Inject constructor(
         if (started) return
         started = true
         viewModelScope.launch {
-            drafts.draft()?.takeIf { !it.isEmpty }?.let { held ->
+            val held = drafts.draft()?.takeIf { !it.isEmpty }
+            if (held != null) {
                 _state.update { it.copy(draftOffer = held) }
+            } else {
+                armed = true
             }
         }
+        // The draft follows the work rather than the exit: every
+        // meaningful change schedules a write, so a process death between
+        // two taps loses nothing (fix-round-2 ruling).
+        viewModelScope.launch { _state.collect { rememberDraft() } }
         prefillReference(referenceTargetId)
     }
 
@@ -97,6 +120,7 @@ class ComposeWizardViewModel @Inject constructor(
     fun onContinueDraft() {
         val held = _state.value.draftOffer ?: return
         _state.value = ComposeWizardState.from(held)
+        armed = true
         // A restored media draft re-reads every asset's shape: the crop
         // preview needs it, and the URIs may no longer resolve.
         _state.value.picked.forEach { readSourceRatio(it.uri) }
@@ -104,7 +128,51 @@ class ComposeWizardViewModel @Inject constructor(
 
     fun onDiscardDraft() {
         _state.update { it.copy(draftOffer = null) }
+        armed = true
         viewModelScope.launch { drafts.clear() }
+    }
+
+    /**
+     * Writes what is authored right now, without waiting out the
+     * debounce — the lifecycle's `ON_STOP`, which is the last moment the
+     * process is guaranteed to still be running.
+     */
+    fun persistNow() {
+        val draft = draftToWrite() ?: return
+        // Deliberately untracked: the debounced write is what gets
+        // cancelled, never this one. Tracking it would let the very next
+        // state emission cancel the write that was made because the
+        // process is about to stop.
+        draftSaveJob?.cancel()
+        viewModelScope.launch { write(draft) }
+    }
+
+    private fun rememberDraft() {
+        val draft = draftToWrite() ?: return
+        draftSaveJob?.cancel()
+        draftSaveJob = viewModelScope.launch {
+            delay(DRAFT_SAVE_DEBOUNCE_MILLIS)
+            write(draft)
+        }
+    }
+
+    /** What the store should hold right now, or null while it is not ours. */
+    private fun draftToWrite(): ComposeDraft? {
+        if (!armed) return null
+        val current = _state.value
+        // An answered outcome owns the store: a signed post cleared it, and
+        // an expiry or a departure already wrote what it meant to keep.
+        if (current.outcome != null || current.draftOffer != null) return null
+        // So does a submit in flight. Scheduling here is what put the
+        // draft back after a landed post had cleared it: signing emits
+        // `submitting` before it emits its outcome, and a write scheduled
+        // on that emission outlives the clear.
+        if (current.submitting) return null
+        return current.toDraft()
+    }
+
+    private suspend fun write(draft: ComposeDraft) {
+        if (draft.isEmpty) drafts.clear() else drafts.save(draft)
     }
 
     // -- The body (`ComposeWords` / `ComposePick`) --
@@ -137,6 +205,17 @@ class ComposeWizardViewModel @Inject constructor(
 
     fun onFrameAsset(index: Int) = _state.update {
         it.copy(framingIndex = index.coerceIn(0, (it.picked.size - 1).coerceAtLeast(0)))
+    }
+
+    /**
+     * Loads `ComposePick`'s grid. Called whenever a media permission is
+     * granted — including a re-grant, since a partial grant may have
+     * gained pictures since the last look.
+     */
+    fun onMediaPermissionGranted() {
+        viewModelScope.launch {
+            _state.update { it.copy(deviceImages = deviceImages.newestImages(DEVICE_IMAGE_PAGE)) }
+        }
     }
 
     private fun readSourceRatio(uri: String) {
@@ -268,11 +347,36 @@ class ComposeWizardViewModel @Inject constructor(
         _state.value = next
     }
 
+    /**
+     * The header's arrow and the system gesture.
+     *
+     * Returns true only when there was something *inside* the wizard to
+     * dismiss. Back never walks the stages backwards: it leaves, and the
+     * draft is kept — the boards put the ways back into the stages
+     * themselves (`ComposeDetails`' Crop and Edit, `ComposeSeal`'s Back),
+     * so the arrow is the way out rather than one more step to unwind.
+     */
     fun onBack(): Boolean {
-        val retreated = _state.value.retreated() ?: return false
-        _state.value = retreated
-        return true
+        if (_state.value.sheet != SealSheet.None) {
+            onCloseSheet()
+            return true
+        }
+        if (_state.value.draftOffer != null) {
+            // Leaving with the offer still up must not overwrite the very
+            // draft being offered.
+            _state.update { it.copy(outcome = WizardOutcome.DraftKept) }
+            return true
+        }
+        return false
     }
+
+    /** `ComposeSeal`'s Back pill: one stage, not out of the wizard. */
+    fun onSealBack() {
+        _state.value.retreated()?.let { _state.value = it }
+    }
+
+    /** `ComposeDetails`' two ways back — `Edit` to the body, `Crop` to the crop. */
+    fun onReturnTo(step: WizardStep) = _state.update { it.returnedTo(step) }
 
     fun onOpenSheet(sheet: SealSheet) = _state.update { it.copy(sheet = sheet) }
 
@@ -353,6 +457,9 @@ class ComposeWizardViewModel @Inject constructor(
     fun onSign() {
         val current = _state.value
         if (!current.canSign) return
+        // A landed post clears the store; a pending write must not put the
+        // draft back after it.
+        draftSaveJob?.cancel()
         _state.update {
             it.copy(
                 submitting = true,
@@ -400,6 +507,7 @@ class ComposeWizardViewModel @Inject constructor(
 
             when {
                 results.all { it is WriteResult.Done } -> {
+                    draftSaveJob?.cancel()
                     drafts.clear()
                     _state.update {
                         it.copy(submitting = false, outcome = WizardOutcome.Landed(prepared.node))
@@ -425,6 +533,8 @@ class ComposeWizardViewModel @Inject constructor(
     fun onLeave() {
         val current = _state.value
         if (current.outcome != null || current.draftOffer != null) return
+        // A write already in flight would land after this one and undo it.
+        draftSaveJob?.cancel()
         viewModelScope.launch {
             val draft = current.toDraft()
             if (draft.isEmpty) drafts.clear() else drafts.save(draft)
@@ -492,6 +602,13 @@ class ComposeWizardViewModel @Inject constructor(
 
     private companion object {
         const val FINDER_DEBOUNCE_MILLIS = 250L
+
+        /** Long enough that a typed word is one write, short enough to be a save. */
+        const val DRAFT_SAVE_DEBOUNCE_MILLIS = 400L
+
+        /** How much of the camera roll the grid offers before the picker. */
+        const val DEVICE_IMAGE_PAGE = 300
+
         const val UNREADABLE = "That file could not be read as a picture."
         const val REFUSED = "The server would not take that picture."
         const val TRANSPORT = "The upload could not reach the server."
