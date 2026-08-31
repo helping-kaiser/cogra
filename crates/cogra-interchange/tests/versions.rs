@@ -12,6 +12,9 @@ fn label(s: &str) -> NamespaceLabel {
 /// is the lexicographic one the conventions fix. A field reordering breaks
 /// this test before it breaks anything downstream: a greater minor outranks
 /// any patch, and a greater major any minor.
+///
+/// A version orders by major, then minor, then patch, so no lesser field outranks a greater one.
+/// ´claim:versions:a-version-orders-major-then-minor-then-patch´
 #[test]
 fn versions_are_ordered_major_then_minor_then_patch() {
     let ascending = [
@@ -33,6 +36,8 @@ fn versions_are_ordered_major_then_minor_then_patch() {
     assert!(Version::new(2, 0, 0) > Version::new(1, u64::MAX, u64::MAX));
 }
 
+/// A version is carried as the three-element array of its major, minor and patch.
+/// ´claim:versions:a-version-is-a-three-element-array´
 #[test]
 fn a_version_is_the_three_element_array() {
     let version = Version::new(1, 2, 3);
@@ -42,6 +47,8 @@ fn a_version_is_the_three_element_array() {
     assert_eq!(Version::from_value(&value).expect("a triple"), version);
 }
 
+/// A version survives the trip out to bytes and back, up to the largest triple the type holds.
+/// ´claim:versions:a-version-round-trips-through-bytes´
 #[test]
 fn a_version_survives_the_round_trip_through_bytes() {
     for version in [
@@ -55,6 +62,8 @@ fn a_version_survives_the_round_trip_through_bytes() {
     }
 }
 
+/// A value that is not three unsigned integers is refused as a version, whatever else it is.
+/// ´claim:versions:only-three-unsigned-integers-are-a-version´
 #[test]
 fn anything_but_three_unsigned_integers_is_refused() {
     let refused = [
@@ -93,6 +102,8 @@ fn anything_but_three_unsigned_integers_is_refused() {
     }
 }
 
+/// A coordinate carries back the label, major and minor it was built from.
+/// ´claim:versions:a-coordinate-carries-a-label-and-two-numbers´
 #[test]
 fn a_coordinate_carries_a_label_a_major_and_a_minor() {
     let at = Coordinate::new(label("com.example.thing"), 3, 7);
@@ -102,6 +113,8 @@ fn a_coordinate_carries_a_label_a_major_and_a_minor() {
     assert_eq!(at.minor(), 7);
 }
 
+/// A coordinate orders by label first, and only then by major and minor.
+/// ´claim:versions:a-coordinate-orders-by-label-first´
 #[test]
 fn coordinates_order_by_label_then_major_then_minor() {
     let ascending = [

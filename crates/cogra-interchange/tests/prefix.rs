@@ -23,6 +23,9 @@ fn document(label_str: &str, version: Version, keys: &[u64]) -> Document {
 
 /// The envelope a document is decoded to, and the envelope peeked out of
 /// its name, are the same envelope — and the peek stays inside the bound.
+///
+/// The envelope peeked out of a name is the envelope a full decode reports, and the peek stays inside the bound.
+/// ´claim:prefix:a-peek-agrees-with-a-full-decode´
 #[test]
 fn peek_agrees_with_a_full_decode() {
     let documents = [
@@ -55,6 +58,9 @@ fn peek_agrees_with_a_full_decode() {
 /// and a maximal version. The map's entries are never read — there are 2³²
 /// of them declared and none present — which is the whole point of the
 /// bounded read.
+///
+/// The bound is reached exactly by a maximal envelope, and the entries beyond it are never read.
+/// ´claim:prefix:the-bound-is-tight´
 #[test]
 fn the_bound_is_tight_and_the_tail_is_never_reached() {
     let text = format!("{}.b", "a".repeat(253));
@@ -84,6 +90,9 @@ fn the_bound_is_tight_and_the_tail_is_never_reached() {
 
 /// Routing is early; acceptance is not. A well-formed envelope over a tail
 /// that is not in the data language peeks fine and decodes never.
+///
+/// A peek routes and certifies nothing further, so a sound envelope over an unacceptable tail still fails to decode.
+/// ´claim:prefix:a-peek-certifies-no-membership´
 #[test]
 fn peek_certifies_no_membership() {
     let document = document("com.example", Version::new(1, 0, 0), &[2]);
@@ -98,6 +107,9 @@ fn peek_certifies_no_membership() {
 }
 
 /// However much follows the envelope, the read stops at the bound.
+///
+/// However long the name, a peek reads no further than the bound and answers the same either way.
+/// ´claim:prefix:a-peek-reads-no-more-than-the-bound´
 #[test]
 fn peek_reads_no_more_than_the_bound() {
     let keys: Vec<u64> = (2..2_000).collect();
@@ -115,6 +127,9 @@ fn peek_reads_no_more_than_the_bound() {
 
 /// Every proper prefix of an envelope is a request for more bytes, never a
 /// rejection; the first prefix that carries the envelope answers.
+///
+/// Every proper prefix of an envelope asks for more bytes rather than rejecting, and asks for no more than remain.
+/// ´claim:prefix:a-short-prefix-asks-for-more´
 #[test]
 fn a_short_prefix_asks_for_more_bytes() {
     let document = document("com.example", Version::new(1, 2, 3), &[2]);
@@ -139,6 +154,7 @@ fn a_short_prefix_asks_for_more_bytes() {
     assert!(Envelope::peek(&bytes[..consumed]).is_ok());
 }
 
+/// (´claim:prefix:a-short-prefix-asks-for-more´)
 #[test]
 fn an_empty_prefix_needs_one_byte() {
     let error = Envelope::peek(&[]).expect_err("nothing at all");
@@ -151,6 +167,8 @@ fn an_empty_prefix_needs_one_byte() {
     ));
 }
 
+/// Bytes whose head is not a map are refused before any key is looked for.
+/// ´claim:prefix:only-a-map-carries-an-envelope´
 #[test]
 fn a_value_that_is_not_a_map_is_refused() {
     for bytes in [
@@ -170,6 +188,9 @@ fn a_value_that_is_not_a_map_is_refused() {
 /// The cases, in order: a map count spelled with a uint8 argument, an
 /// indefinite-length map, a key spelled with a uint8 argument, and a label
 /// length spelled with one. Each names the offset it is refused at.
+///
+/// Preferred serialization is checked on every head the prefix path reads, each refusal naming its offset.
+/// ´claim:prefix:every-head-the-peek-reads-is-checked´
 #[test]
 fn a_head_outside_preferred_serialization_is_refused() {
     let cases: [(Vec<u8>, usize); 4] = [
@@ -192,6 +213,9 @@ fn a_head_outside_preferred_serialization_is_refused() {
 /// is absent altogether rather than merely later. The cases run from an empty
 /// map through one entry and two, and end at a key outside the unsigned
 /// integers.
+///
+/// Sortedness puts the envelope keys first, so a greater first key means the envelope key is absent rather than later.
+/// ´claim:prefix:the-envelope-keys-come-first-and-in-order´
 #[test]
 fn the_first_two_keys_must_be_0_and_1_in_that_order() {
     let error = Envelope::peek(&[0xa0]).expect_err("no keys at all");
@@ -213,6 +237,9 @@ fn the_first_two_keys_must_be_0_and_1_in_that_order() {
 
 /// Key 0 is refused for holding an integer and for holding a text string that
 /// is no label; key 1 for holding anything other than a version triple.
+///
+/// The prefix path holds key 0 to a namespace label and key 1 to a version triple.
+/// ´claim:prefix:the-peek-judges-both-envelope-values´
 #[test]
 fn key_0_holds_a_label_and_key_1_a_version() {
     let error = Envelope::peek(&[0xa2, 0x00, 0x01]).expect_err("no text at key 0");
@@ -241,6 +268,9 @@ fn key_0_holds_a_label_and_key_1_a_version() {
 /// payload is never reached for, which is what keeps the read inside the
 /// bound however long the label claims to be — an eight-byte declared length
 /// far beyond any prefix included.
+///
+/// A label longer than the bound is refused from its declared length alone, its payload never reached for.
+/// ´claim:prefix:an-over-long-label-is-refused-unread´
 #[test]
 fn an_over_long_label_is_refused_without_reading_it() {
     let mut bytes = vec![0xa2, 0x00, 0x79, 0x01, 0x00];
@@ -262,6 +292,9 @@ fn an_over_long_label_is_refused_without_reading_it() {
 
 /// A label whose bytes are not valid UTF-8 is outside the data language,
 /// and the prefix path locates it where the decoder would.
+///
+/// A label whose bytes are not valid UTF-8 is refused where the decoder would refuse it.
+/// ´claim:prefix:a-label-must-be-valid-utf8´
 #[test]
 fn a_label_that_is_not_valid_utf8_is_refused() {
     let bytes = [0xa2, 0x00, 0x63, 0x61, 0xff, 0x62];

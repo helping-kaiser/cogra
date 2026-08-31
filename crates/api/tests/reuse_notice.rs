@@ -138,6 +138,9 @@ async fn detect_reuse(rig: &Rig, refresh_token: &str) {
 /// The carrier is null before any detection, carries the timestamp on the
 /// first successful login after it, and is clean again on the next —
 /// delivered exactly once.
+///
+/// The reuse notice is delivered exactly once, on the first successful login after the detection that raised it.
+/// ´claim:auth:the-reuse-notice-is-delivered-once´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_notice_rides_the_first_login_after_detection(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -161,6 +164,9 @@ async fn the_notice_rides_the_first_login_after_detection(pool: PgPool) {
 
 /// A wrong password neither leaks the pending mark nor consumes it, so
 /// the notice still waits for the next successful login.
+///
+/// A failed login neither leaks the pending reuse mark nor spends it, so the notice still waits for a real one.
+/// ´claim:auth:a-failed-login-neither-leaks-nor-spends-the-mark´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_refusal_never_carries_or_clears_the_notice(pool: PgPool) {
     let rig = Rig::new(pool);

@@ -1813,13 +1813,15 @@ fn a_claim_discipline_riding_an_unregistered_profile_is_refused() {
     assert_eq!(id, "rust-none");
 }
 
-/// (´dec:lint:claim-standing´): the corpus's own `[claims]` states the pilot
-/// wave, and the roster is read rather than recited.
+/// (´dec:lint:claim-standing´): the corpus's own `[claims]` states which
+/// waves have landed, and the roster is read rather than recited — the count
+/// moves with every wave, so counting the owners the roster admits is what
+/// keeps this test about the discipline instead of about the calendar.
 ///
-/// The ruled corpus activates the claim discipline for one owner alone.
-/// ´claim:adoption:the-ruled-claims-name-one-owner´
+/// The ruled corpus activates the claim discipline for exactly the owners its roster names.
+/// ´claim:adoption:the-ruled-claims-name-their-owners´
 #[test]
-fn the_ruled_claim_discipline_activates_one_owner() {
+fn the_ruled_claim_discipline_names_its_activated_owners() {
     let adoption = ruled();
     let declared = adoption
         .claims
@@ -1831,13 +1833,29 @@ fn the_ruled_claim_discipline_activates_one_owner() {
         !adoption.reserved_kinds.contains(&declared.kind),
         "a claim stands on an authorship warrant"
     );
-    assert_eq!(declared.activation.declared(), Some(1));
+
+    let admitted = [
+        "pkg.api",
+        "pkg.cogra-interchange",
+        "pkg.cogra-linter",
+        "pkg.common",
+        "pkg.l1-standin",
+        "pkg.postgres-store",
+    ]
+    .into_iter()
+    .filter(|owner| declared.activation.admits(&OwnerId::new(owner)))
+    .count();
+    assert_eq!(declared.activation.declared(), Some(admitted));
     assert!(
         declared
             .activation
-            .admits(&OwnerId::new("pkg.cogra-linter"))
+            .admits(&OwnerId::new("pkg.cogra-linter")),
+        "the pilot owner stays activated"
     );
-    assert!(!declared.activation.admits(&OwnerId::new("pkg.api")));
+    assert!(
+        !declared.activation.admits(&OwnerId::new("pkg.android")),
+        "an owner the roster does not name is refused"
+    );
 }
 
 /// (´[LBL-sig:labels:profiles]´): both v1 profiles are in force corpus-wide,

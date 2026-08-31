@@ -159,6 +159,9 @@ impl Rig {
 /// driven by the corpus answer rather than the length floor (auth.md
 /// "Password requirements"). Unknown, revoked and expired links collapse
 /// into one refusal: unusable.
+///
+/// Every registration failure names itself at the form: handle, email and password each pin their own code, a breached password refuses with its reason, and unknown, revoked and expired links collapse into one unusable.
+/// ´claim:onboarding:each-registration-failure-names-itself´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_registration_form_refuses_each_named_failure(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -238,6 +241,9 @@ async fn the_registration_form_refuses_each_named_failure(pool: PgPool) {
 /// email. A dead account — never verified, past its bound — is instead
 /// replaced in place, so the experience never depends on the reaper's
 /// schedule (auth.md "Registration collision").
+///
+/// A live account holds both its handle and its email against a newcomer, while a never-verified one past its bound is replaced in place so the experience never waits on the reaper.
+/// ´claim:onboarding:a-live-account-collides-and-a-dead-one-yields´
 #[sqlx::test(migrations = "../../migrations")]
 async fn handles_and_emails_collide_at_the_form(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -275,6 +281,9 @@ async fn handles_and_emails_collide_at_the_form(pool: PgPool) {
 
 /// A single-use link is spent by the first registration, while a
 /// multi-use one registers many.
+///
+/// A link admits exactly the registrations it declares: a single-use one is spent by the first, a multi-use one keeps admitting.
+/// ´claim:onboarding:a-link-holds-the-slots-it-declares´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_single_use_link_holds_exactly_one_slot(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -302,6 +311,9 @@ async fn a_single_use_link_holds_exactly_one_slot(pool: PgPool) {
 /// A garbage token is invalid; the real one — read from the captured
 /// mail, whose body carries the web link URL per auth.md "Link URLs" —
 /// verifies once, and a second use of it is invalid again.
+///
+/// A verification token verifies once and is invalid thereafter, garbage never at all.
+/// ´claim:onboarding:a-verification-token-is-single-use´
 #[sqlx::test(migrations = "../../migrations")]
 async fn verification_tokens_are_single_purpose(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -354,6 +366,9 @@ async fn verification_tokens_are_single_purpose(pool: PgPool) {
 /// crash-healing repair path, never a conflict with itself. A member
 /// account cannot attach at all, since the genesis path owns its key.
 /// Approval binds the address: from then on the attach is immutable.
+///
+/// The ceremony's outputs must cohere before anything is stored, re-attaching the account's own current key is the crash-healing repair rather than a conflict, and approval binds the address for good.
+/// ´claim:onboarding:the-attach-guards-hold-until-approval-binds´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_attach_guards_hold(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -455,6 +470,9 @@ async fn the_attach_guards_hold(pool: PgPool) {
 /// derivation check, is still refused. The refusal leaves nothing behind
 /// — the second account's own key attaches cleanly, and the first account
 /// is untouched.
+///
+/// An address binds at most one account, and a second account is refused on the key and on the address alike, leaving both accounts as it found them.
+/// ´claim:onboarding:an-address-binds-at-most-one-account´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_attach_refuses_a_key_bound_elsewhere(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -543,6 +561,9 @@ async fn the_attach_refuses_a_key_bound_elsewhere(pool: PgPool) {
 /// is the joiner's own act"), so with no landed application there is
 /// nothing latched and nothing to latch: the update's `landed_at` guard
 /// refuses. An account with no application trace at all behaves the same.
+///
+/// The reciprocation latch lives on the landed application row, so with nothing landed there is nothing to latch and the guard refuses.
+/// ´claim:onboarding:the-latch-waits-for-landing´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_reciprocation_latch_waits_for_landing(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -580,6 +601,9 @@ async fn the_reciprocation_latch_waits_for_landing(pool: PgPool) {
 /// unverified account cannot be approved, nor a verified but keyless one,
 /// and even with both proofs held only the issuing inviter may approve. A
 /// second approval is refused, and the funding does not double.
+///
+/// Approval needs both approvability proofs held and the issuing inviter asking, and a second approval is refused without doubling the funding.
+/// ´claim:onboarding:approval-needs-both-proofs-and-its-own-inviter´
 #[sqlx::test(migrations = "../../migrations")]
 async fn approval_guards_hold(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -679,6 +703,9 @@ async fn approval_guards_hold(pool: PgPool) {
 /// The approval mark is set directly, because the race under test starts
 /// after it — between the approving request's staging and the poll's
 /// repair. The loser finds the winner's staged row, and nothing doubles.
+///
+/// The approving mutation and the applicant's poll are serialized by the row lock, so the burn credits once and one Registration stages however they race.
+/// ´claim:onboarding:the-admission-burn-credits-once-under-a-race´
 #[sqlx::test(migrations = "../../migrations")]
 async fn concurrent_approval_and_poll_fund_the_burn_once(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -737,6 +764,9 @@ async fn concurrent_approval_and_poll_fund_the_burn_once(pool: PgPool) {
 /// the chained row, and never staging a duplicate admission. The chained
 /// Registration staged here points at the same Profile and is newer than
 /// the admission row — the shape a profile update stages.
+///
+/// Only the unchained Registration is the admission one, so a newer chained Registration never stands in for it and never provokes a duplicate.
+/// ´claim:onboarding:only-the-unchained-registration-is-the-admission´
 #[sqlx::test(migrations = "../../migrations")]
 async fn admission_idempotency_ignores_chained_registrations(pool: PgPool) {
     use api::prepare::{Gesture, Target};
@@ -823,6 +853,9 @@ async fn admission_idempotency_ignores_chained_registrations(pool: PgPool) {
 /// Re-arming refuses while the application is still live. Once it has
 /// expired never approved, a fresh link re-arms it with a new row,
 /// leaving the account untouched. A member account cannot apply at all.
+///
+/// A live application refuses re-arming and an expired one takes a fresh link as a new row, the account untouched either way, and a member cannot apply at all.
+/// ´claim:onboarding:only-an-expired-application-re-arms´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_fresh_invite_rearms_an_expired_application(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -858,6 +891,9 @@ async fn a_fresh_invite_rearms_an_expired_application(pool: PgPool) {
 
 /// With two accounts past the bound, only the never-verified one is dead:
 /// verification is what takes an account out of the reaper's reach.
+///
+/// Verification is what takes an account out of the reaper's reach, so of two accounts past the bound only the never-verified one dies.
+/// ´claim:onboarding:verification-saves-an-account-from-the-reaper´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_reaper_deletes_only_never_verified_accounts(pool: PgPool) {
     let rig = Rig::new(pool).await;
