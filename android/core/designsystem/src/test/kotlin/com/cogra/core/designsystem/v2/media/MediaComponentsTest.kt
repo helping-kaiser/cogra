@@ -301,4 +301,56 @@ class MediaComponentsTest {
 
         assertThat(chosen).isEqualTo(MediaShape.Wide)
     }
+
+    // -- The gallery pager (FeedGallery, 2026-08-31) --
+
+    private fun gallery(count: Int) {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                MediaGallery(
+                    items = List(count) { MediaItem(null, 1f, "Picture ${it + 1}") },
+                    testTag = "g",
+                )
+            }
+        }
+    }
+
+    @Test
+    fun aSetOfPicturesPagesAndSaysWhereItIs() {
+        gallery(4)
+
+        // Dots below, never a "1/4" pill: the position is stated in words
+        // for a screen reader and drawn as dots for everyone else.
+        compose.onNodeWithTag("g_dots").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Picture 1 of 4").assertIsDisplayed()
+    }
+
+    @Test
+    fun aLonePictureHasNoPagerFurniture() {
+        gallery(1)
+
+        compose.onNodeWithTag("g").assertIsDisplayed()
+        compose.onNodeWithTag("g_dots").assertDoesNotExist()
+    }
+
+    @Test
+    fun theWholeSetIsDescribedOnceRatherThanPerPage() {
+        gallery(2)
+
+        // One description for the set — the gallery is one tap target
+        // opening the post, not two pictures to hunt through.
+        compose.onNodeWithContentDescription("2 pictures: Picture 1. Picture 2")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun anUndescribedSetStillStatesHowMuchIsThere() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                MediaGallery(items = List(3) { MediaItem(null, 1f) }, testTag = "g")
+            }
+        }
+
+        compose.onNodeWithContentDescription("3 pictures").assertIsDisplayed()
+    }
 }

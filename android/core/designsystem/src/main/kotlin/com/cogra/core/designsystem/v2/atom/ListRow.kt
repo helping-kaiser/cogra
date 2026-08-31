@@ -82,32 +82,37 @@ fun SettingRow(
 @Composable
 fun SummaryRow(
     headline: String,
-    detail: String,
     modifier: Modifier = Modifier,
+    detail: String? = null,
     testTag: String? = null,
 ) {
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 44.dp)
+            .defaultMinSize(minHeight = 48.dp)
             .clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-            .padding(horizontal = Space.x4)
+            .padding(vertical = 6.dp)
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+        verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
     ) {
         Text(
             text = headline,
-            style = MaterialTheme.typography.labelLarge,
+            // `ActsCard`'s total: body-medium size at label-large weight.
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = MaterialTheme.typography.labelLarge.fontWeight,
+            ),
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f),
         )
-        Text(
-            text = detail,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        // The all-or-nothing subline sits UNDER the total rather than beside
+        // it, and only on a seal that commits more than one act.
+        if (detail != null) {
+            Text(
+                text = detail,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
@@ -127,7 +132,9 @@ fun Hairline(modifier: Modifier = Modifier) {
 private fun RowVariants() {
     Cogra2PreviewTheme {
         PreviewColumn(canvasWidth = true) {
-            SummaryRow("4 signed actions", "they land together, or none does")
+            SummaryRow("4 signed actions", detail = "they land together, or none does")
+            // A single-act seal has nothing for the subline to be true of.
+            SummaryRow("1 signed action")
             Column {
                 SettingRow(
                     label = "License",

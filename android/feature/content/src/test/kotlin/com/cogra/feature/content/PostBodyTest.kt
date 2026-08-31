@@ -3,6 +3,7 @@ package com.cogra.feature.content
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
@@ -131,5 +132,43 @@ class PostBodyTest {
         }
         compose.onNodeWithTag("t_gallery").assertIsDisplayed()
         compose.onNodeWithTag("t_veil_reveal").assertDoesNotExist()
+    }
+
+    // -- Where a comment's pictures sit (CommentCard, 2026-08-31) --
+
+    @Test
+    fun aCommentsPicturesJoinItsWordsRatherThanLeadingThem() {
+        compose.setContent {
+            PostBody(
+                content = words,
+                description = null,
+                attachments = listOf(picture, picture.copy(id = "m2")),
+                attachmentsStatus = FieldStatus.NORMAL,
+                testTagPrefix = "c",
+                surface = BodySurface.Comment,
+            )
+        }
+
+        // A comment is words first; the gallery follows them.
+        val wordsTop = compose.onNodeWithText("Salt maps").fetchSemanticsNode().positionInRoot.y
+        val galleryTop = compose.onNodeWithTag("c_gallery").fetchSemanticsNode().positionInRoot.y
+        assertThat(galleryTop).isGreaterThan(wordsTop)
+    }
+
+    @Test
+    fun aPostsPicturesLeadItsWords() {
+        compose.setContent {
+            PostBody(
+                content = words,
+                description = null,
+                attachments = listOf(picture),
+                attachmentsStatus = FieldStatus.NORMAL,
+                testTagPrefix = "p",
+            )
+        }
+
+        val wordsTop = compose.onNodeWithText("Salt maps").fetchSemanticsNode().positionInRoot.y
+        val galleryTop = compose.onNodeWithTag("p_gallery").fetchSemanticsNode().positionInRoot.y
+        assertThat(galleryTop).isLessThan(wordsTop)
     }
 }
