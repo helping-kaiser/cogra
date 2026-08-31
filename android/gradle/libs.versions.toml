@@ -61,6 +61,21 @@ apollo = "4.4.3"
 # dependency bump, so it rides with that migration and Coil follows it.
 coil = "3.4.0"
 
+# Cropping. The crop step runs an established cropper rather than our own
+# geometry (jakob 2026-08-31: "i cant imagine that you cant find a nice
+# opensource cropping that we can use here"), picked by the same D20
+# standard as Coil — most used, best suited, maintained.
+#
+# CanHub's Android-Image-Cropper is the fork that carries the abandoned
+# ArthurHub original (https://github.com/CanHub/Android-Image-Cropper). It
+# is the only current candidate that is on Maven Central, embeddable as a
+# plain `CropImageView` inside our own chrome rather than a whole Activity
+# we would have to launch, and able to switch aspect ratio at runtime and
+# reset the window against the original — the three things this step needs.
+# uCrop is JitPack-only and Activity-shaped; the Compose-native croppers
+# (SmartToolFactory, easycrop) have not released in years.
+androidImageCropper = "4.7.0"
+
 # Crypto — Tink backs the encrypted token store (EncryptedSharedPreferences
 # is deprecated in current androidx.security-crypto). BouncyCastle's
 # lightweight API backs the signing crypto in core:crypto: Tink's own
@@ -146,6 +161,7 @@ androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navig
 apollo-runtime = { group = "com.apollographql.apollo", name = "apollo-runtime", version.ref = "apollo" }
 
 # Images
+android-image-cropper = { group = "com.vanniktech", name = "android-image-cropper", version.ref = "androidImageCropper" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 coil-test = { group = "io.coil-kt.coil3", name = "coil-test", version.ref = "coil" }

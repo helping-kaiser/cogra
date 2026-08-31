@@ -21,6 +21,7 @@ import com.cogra.core.designsystem.v2.token.MediaShape
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.CropWindow
 
 /**
  * `ComposeCrop` — one shape for the whole post, framed per picture
@@ -106,14 +107,10 @@ internal fun ColumnScope.CropStepBody(
 }
 
 /** The framing as the pipeline takes it, plus the post's own shape. */
-private fun CropState.toSpec(targetRatio: Float): CropSpec = framing.let {
-    CropSpec(
-        targetRatio = targetRatio,
-        scale = it.scale,
-        offsetFractionX = it.offsetFractionX,
-        offsetFractionY = it.offsetFractionY,
-    )
-}
+private fun CropState.toSpec(targetRatio: Float): CropSpec = CropSpec(
+    targetRatio = targetRatio,
+    window = CropWindow(framing.left, framing.top, framing.right, framing.bottom),
+)
 
 internal fun DraftShape.toMediaShape(): MediaShape = when (this) {
     DraftShape.Tall -> MediaShape.Tall
