@@ -77,6 +77,13 @@ export type WizardState = {
   readonly references: readonly ReferenceDraft[];
   readonly license: License;
   /**
+   * The author's own sensitive mark — the seal's switch. It veils the pictures
+   * and the description; the title stays readable, so choosing is informed.
+   */
+  readonly sensitive: boolean;
+  /** Shown on the veil when it is given. Blank counts as none. */
+  readonly sensitiveReason: string;
+  /**
    * Where the author stands on their own post — the Publish record's `pDirected`.
    * `pInterest` is census-fixed at 1 for Publish, so there is one free number
    * here and not a pair; the low-defaults policy value is +0.1.
@@ -100,6 +107,8 @@ export function emptyWizard(): WizardState {
     tags: [],
     references: [],
     license: PUBLIC_DOMAIN,
+    sensitive: false,
+    sensitiveReason: "",
     pDirected: DEFAULT_P_DIRECTED,
   };
 }
@@ -256,6 +265,8 @@ export type WizardAction =
   | { type: "tags"; tags: readonly TagDraft[] }
   | { type: "references"; references: readonly ReferenceDraft[] }
   | { type: "license"; license: License }
+  | { type: "sensitive"; sensitive: boolean }
+  | { type: "sensitiveReason"; sensitiveReason: string }
   | { type: "pDirected"; pDirected: number }
   | { type: "goto"; step: Step }
   | { type: "advance" }
@@ -355,6 +366,15 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
 
     case "license":
       return { ...state, license: action.license };
+
+    case "sensitive":
+      // Unmarking keeps the reason typed: an author who toggles the switch off
+      // and on again should not have to write it a second time. What is SENT is
+      // gated on the switch, not on the text.
+      return { ...state, sensitive: action.sensitive };
+
+    case "sensitiveReason":
+      return { ...state, sensitiveReason: action.sensitiveReason };
 
     case "pDirected":
       // Clamped here rather than trusted from a control: the contract's

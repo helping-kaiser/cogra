@@ -9,20 +9,16 @@
 // author stands, sensitivity — are the settings a reader might still want to
 // change with the cost in front of them.
 //
-// WHERE THE CANVAS AND THE CONTRACT DISAGREE, twice.
+// WHERE THE CANVAS AND THE CONTRACT DISAGREE, once.
 //
 // ComposePad draws the stance as a two-axis pad. On a Publish record
 // `pInterest` is census-fixed at 1 and only `pDirected` is the author's to set,
 // so a second axis would be a control that does nothing. One slider is shown
-// instead.
-//
-// ComposeSensitive draws a "Sensitive — Mark" row. Nothing in the contract can
-// carry that declaration, so the row is absent rather than inert: a control
-// that reports "Marked" while sending nothing would be a safety promise the
-// system does not keep. Both are reported, not decided here.
+// instead, and that is reported rather than decided here.
 
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { PillButton, TextAction } from "@/lib/ui2/pill-button";
+import { TextField } from "@/lib/ui2/text-field";
 import { UploadStatusLine } from "@/lib/ui2/compose/upload-notice";
 import { StanceSlider } from "@/lib/ui/stance-slider";
 import { LicenseChooser } from "@/lib/ui/license-fields";
@@ -31,7 +27,7 @@ import { licenseTerms, PUBLIC_DOMAIN, type License } from "@/lib/license";
 import type { WizardState } from "@/lib/compose/wizard";
 import { signedActions } from "@/lib/compose/wizard";
 
-export type SealSheet = "none" | "license" | "stance";
+export type SealSheet = "none" | "license" | "stance" | "sensitive";
 
 export function SealStep({
   state,
@@ -43,6 +39,9 @@ export function SealStep({
   onSheet,
   onLicense,
   onPDirected,
+  onSensitive,
+  onSensitiveReason,
+  onHelp,
   onSign,
   onBack,
   onRestoreKey,
@@ -57,6 +56,9 @@ export function SealStep({
   onSheet: (next: SealSheet) => void;
   onLicense: (next: License) => void;
   onPDirected: (next: number) => void;
+  onSensitive: (next: boolean) => void;
+  onSensitiveReason: (next: string) => void;
+  onHelp: () => void;
   onSign: () => void;
   onBack: () => void;
   onRestoreKey: () => void;
@@ -126,6 +128,13 @@ export function SealStep({
           action="Adjust"
           testId="wizard-open-stance"
           onAction={() => onSheet("stance")}
+        />
+        <TermRow
+          label="Sensitive"
+          value={state.sensitive ? "Marked" : "Not marked"}
+          action={state.sensitive ? "Change" : "Mark"}
+          testId="wizard-open-sensitive"
+          onAction={() => onSheet("sensitive")}
           last
         />
       </div>
@@ -228,6 +237,69 @@ export function SealStep({
           <PillButton testId="wizard-stance-done" onClick={() => onSheet("none")}>
             Set
           </PillButton>
+        </div>
+      </BottomSheet>
+
+      {/* THE AUTHOR'S OWN SENSITIVE MARK (ComposeSensitive). The switch is the
+          declaration and the reason is optional beside it; the reason is only
+          ever sent WITH the mark, because a reason on an unmarked post is a
+          field-level refusal. */}
+      <BottomSheet
+        open={sheet === "sensitive"}
+        onClose={() => onSheet("none")}
+        title="Mark as sensitive"
+        testId="wizard-sensitive-sheet"
+      >
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <span className="flex-1" />
+            <button
+              type="button"
+              data-testid="wizard-sensitive-help"
+              aria-label="Marking as sensitive"
+              onClick={() => onHelp()}
+              className="cg-state cg-focus flex size-8 flex-none items-center justify-center rounded-full border border-outline-variant text-label-large text-primary"
+            >
+              ?
+            </button>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={state.sensitive}
+              aria-label="Mark as sensitive"
+              data-testid="wizard-sensitive-switch"
+              onClick={() => onSensitive(!state.sensitive)}
+              className={`cg-focus relative h-6 w-11 flex-none rounded-full ${
+                state.sensitive ? "bg-primary" : "bg-surface-container-highest"
+              }`}
+            >
+              <span
+                aria-hidden="true"
+                className={`absolute top-[3px] size-[18px] rounded-full ${
+                  state.sensitive ? "right-[3px] bg-on-primary" : "left-[3px] bg-outline"
+                }`}
+              />
+            </button>
+          </div>
+          <p className="m-0 text-body-medium">
+            Veils the pictures and the description until a reader chooses to look.
+          </p>
+          <TextField
+            label="Why?"
+            value={state.sensitiveReason}
+            onChange={onSensitiveReason}
+            testId="wizard-sensitive-reason"
+            // The corner says where it lands, which is what makes it worth
+            // writing — a reason nobody sees is a form field for its own sake.
+            optionalLabel="Optional — shown on the veil"
+            optional
+            disabled={!state.sensitive}
+          />
+          <div className="flex justify-end">
+            <PillButton testId="wizard-sensitive-done" onClick={() => onSheet("none")}>
+              Done
+            </PillButton>
+          </div>
         </div>
       </BottomSheet>
     </div>

@@ -17,7 +17,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
 import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
-import { HelpDialog, HELP_TOPICS } from "@/lib/ui2/help-dialog";
+import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { preparePost } from "@/lib/api/content-api";
 import { fetchReferenceCandidates } from "@/lib/api/references-api";
@@ -99,7 +99,9 @@ export function ComposeWizard({
   // move the sheet onto a different picture.
   const [managing, setManaging] = useState(false);
   const [describing, setDescribing] = useState<string | null>(null);
-  const [help, setHelp] = useState(false);
+  // Which explanation is open, if any — the `?`s share one dialog because only
+  // one can be open at a time and each names its own topic.
+  const [help, setHelp] = useState<HelpTopic | null>(null);
   const [busy, setBusy] = useState(false);
   const [refusal, setRefusal] = useState<string | null>(null);
   const [transportFailed, setTransportFailed] = useState(false);
@@ -249,6 +251,8 @@ export function ComposeWizard({
         title: state.title.trim() === "" ? null : state.title,
         description: state.description.trim() === "" ? null : state.description,
         content: bodyContent(state),
+        sensitive: state.sensitive,
+        sensitiveReason: state.sensitiveReason,
         license: state.license,
         tags: state.tags,
         references: state.references,
@@ -375,7 +379,7 @@ export function ComposeWizard({
         // "Signed actions". One `?` per screen, so only the seal carries one.
         help={
           state.step === "seal" ? (
-            <HelpButton onOpen={() => setHelp(true)} label="Signed actions" />
+            <HelpButton onOpen={() => setHelp(HELP_TOPICS.signedActions)} label="Signed actions" />
           ) : undefined
         }
         action={
@@ -499,6 +503,11 @@ export function ComposeWizard({
           onSheet={setSheet}
           onLicense={(license) => dispatch({ type: "license", license })}
           onPDirected={(pDirected) => dispatch({ type: "pDirected", pDirected })}
+          onSensitive={(sensitive) => dispatch({ type: "sensitive", sensitive })}
+          onSensitiveReason={(sensitiveReason) =>
+            dispatch({ type: "sensitiveReason", sensitiveReason })
+          }
+          onHelp={() => setHelp(HELP_TOPICS.markingAsSensitive)}
           onSign={() => void submit()}
           onBack={() => dispatch({ type: "back" })}
           onRestoreKey={() => router.push("/restore")}
@@ -539,9 +548,9 @@ export function ComposeWizard({
       />
 
       <HelpDialog
-        open={help}
-        onClose={() => setHelp(false)}
-        topic={HELP_TOPICS.signedActions}
+        open={help !== null}
+        onClose={() => setHelp(null)}
+        topic={help ?? HELP_TOPICS.signedActions}
         testId="wizard-help"
       />
     </main>
