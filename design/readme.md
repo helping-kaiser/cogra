@@ -448,6 +448,7 @@ exists in `web/src/lib/ui/` (and, unless noted, in Android's
 | `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow` |
 | `components/forms/` | `TextField`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
 | `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand` |
+| `components/compose/` | `MediaThumb`, `PickedRow`, `DescribeCounter`, `PickedSheet`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `ActsCard` |
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader` |
 | `components/states/` | `EmptyState`, `LoadingState` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending` |
@@ -1297,6 +1298,72 @@ canvas's *Money · the CGT figure*.
   names the registry entry, no value); the display rule is
   deliberately precision-independent — dust collapses to `< 0.01`
   whatever the chain's smallest unit turns out to be.
+
+### The media slice — 2026-08-31
+
+Drawn for the product's media rebuild (jakob's rulings, same day):
+the five gaps its implementation lanes had been inventing —
+alt-text entry, upload states, the multi-picture gallery, the
+picked tray's Show all, profile-picture change — plus comment
+media and comment editing.
+
+- **The gallery is a pager.** Every picture in a post shares the
+  post's one crop shape, so the feed card shows one frame at that
+  shape, swiped, each picture whole exactly as the author shaped
+  it — dots below, **dots only, never a "1/n" count pill**. The
+  earlier lead-tile-plus-squares layout is rejected: its squares
+  re-cropped deliberately shaped frames. `MediaGallery` renders it;
+  the ratio vocabulary across media components is the crop ruling's
+  (`tall` 4:5 · `square` 1:1 · `wide` 1.91:1 — 16:9 is gone).
+- **Caps.** A post carries at most **ten pictures, or one video**
+  (with its cover); a comment at most **four pictures**. The caps
+  are authoring-side; the components render what they are given.
+- **Upload starts after the crop.** The crop happens on the device
+  and **only the cropped export is ever uploaded** — the original
+  frame can hold what the author never meant to share. Comment
+  pictures never crop, so they upload at pick. Progress rides the
+  thumbnails as rings; a failed picture is marked on its tile with
+  `Retry · Remove it` beside the row; **the seal gates** — "Uploading
+  n of m — signing waits for the pictures", the sign button held
+  until the content it signs exists.
+- **Descriptions (alt text) are authored, optional, never
+  invented** — the component rule made enterable: per picture from
+  the details step (`Describe the pictures · 1 of 3 described`) and
+  from the picked tray's **Show all** sheet, which is the
+  per-picture manager: drag to reorder (first = cover), remove,
+  describe. The describe sheet's "?" (*Describing pictures*, text
+  in copy-voice.md) says what it is and that nothing is guessed.
+- **Comment media is words-first**: pictures sit below the words,
+  inset at the card's medium rung (an attachment, not the body),
+  **capped at comment scale** so a comment never turns into a post,
+  never cropped — a single picture at its own ratio, multiples in
+  the same pager on a fixed square frame. **Comment editing**
+  mirrors the post's one-screen-one-batch (words, pictures, topics,
+  citations; license locked), entered from `Edit` on an own
+  comment; the Edited marker is the same one posts wear.
+- **The profile has ONE image — the avatar.** No cover, per the
+  ProfileHeader ruling (a "cover" in older product notes was a
+  misreading of it). Minimal flow for the slice: pick → circular
+  1:1 crop → **its own seal**, because every profile change is a
+  signed act ("Sign the change"; "?" *Changing your picture* in
+  copy-voice.md). The full profile screen stays its own backlog
+  item.
+- **Sensitive veils the whole gallery**, never one picture of it —
+  the open question in `MediaAttachment` closed.
+- **The picked row carries no "Crop" or "Edit" links** (jakob, same
+  day: "none") — the whole row is the affordance and opens the Show
+  all sheet; re-cropping is the crop step's job, one Back away in the
+  linear wizard. A second entrance to the same step is the two-menus
+  pattern the system refuses. The shortcut links the details and edit
+  boards had carried since the compose section are deleted.
+- **The slice ships componentized** (`components/compose/`):
+  `MediaThumb` (the authoring tile and its upload states), `PickedRow`
+  + `DescribeCounter`, `PickedSheet` (Show all), `DescribeSheet`,
+  `UploadStatusLine` (the seal's gate) + `UploadErrorLine`, and
+  `ActsCard` (the seal's acts card, extracted when the profile seal
+  became the third). All ten media-slice boards render from the
+  pipeline; `TextField` grew the `corner` hint ("Optional") and `Icon`
+  the `close`/`drag_indicator`/`lock`/`expand_more` glyphs.
 
 ## 14. Index
 

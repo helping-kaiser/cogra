@@ -22,7 +22,7 @@ const POSTS = [
     timestamp: "2h",
     score: "15.20",
     comments: 3,
-    media: [{ src: PHOTOS + "03-landscape-16x9.jpg", ratio: "landscape", alt: "A coast road curving around a headland at low sun." }],
+    media: [{ src: PHOTOS + "03-landscape-16x9.jpg", ratio: "wide", alt: "A coast road curving around a headland at low sun." }],
     stance: bundleOf(0.55, 0.2, 4, 0.9, 0.3),
   },
   {
@@ -46,10 +46,10 @@ const POSTS = [
     comments: 0,
     edited: true,
     media: [
-      { src: PHOTOS + "05-portrait-4x5.jpg", ratio: "portrait", alt: "A dog asleep in a patch of sun on a wooden floor." },
+      { src: PHOTOS + "05-portrait-4x5.jpg", ratio: "tall", alt: "A dog asleep in a patch of sun on a wooden floor." },
       { src: PHOTOS + "10-square-1x1.jpg", ratio: "square" },
       { src: PHOTOS + "04-square-1x1.jpg", ratio: "square" },
-      { src: PHOTOS + "09-landscape-4x3.jpg", ratio: "landscape" },
+      { src: PHOTOS + "09-landscape-4x3.jpg", ratio: "wide" },
     ],
     stance: bundleOf(-0.4, 0.3, 2),
   },

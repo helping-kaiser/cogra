@@ -7,6 +7,13 @@ export interface CommentCardProps {
   author?: PostAuthor;
   content: string;
   timestamp?: string;
+  /**
+   * The comment's pictures — below the words, inset at the card's medium rung
+   * (an attachment, not the body). Never cropped; multiples render in the same
+   * pager as a post's gallery, in a fixed square frame each whole frame fits
+   * inside. At most four per comment (authoring-side cap).
+   */
+  media?: readonly import("../proposed/MediaAttachment").MediaAttachmentProps[];
   license?: License;
   pending?: boolean;
   edited?: boolean;

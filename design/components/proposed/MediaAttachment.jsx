@@ -22,19 +22,18 @@ import { Icon } from "../navigation/Icon.jsx";
    · Alt text is authored, optional, and never invented. A tile with none is
      `aria-hidden`, because a decorative-by-omission image is better than a
      machine-guessed description.
-   · PORTRAIT CAP 4:5. Taller media (3:4, 2:3, 9:16) is not shown taller — a 9:16
-     tile eats a phone screen whole, which is the opposite of a scrollable feed;
-     4:5 is the cap because it is the widely-used default.
-   · THE FRAME IS SHOWN WHOLE (2026-08-26). The cap bounds the TILE, not the
-     picture: a taller frame is fitted inside it and the reserved surface shows at
-     the sides, rather than the frame being cut. Nothing about the author's crop is
-     decided by the layout. The bars are plain surfaceContainerHigh — the same
-     reserved region the tile already is — and never a blurred enlargement of the
-     photo itself, which invents image where there is none and is exactly the
-     attention device §1 rules out.
-     THE ONE EXCEPTION is a gallery's SECONDARY tiles: those squares are an index
-     into the set, not the media itself, so they crop to stay a legible grid. The
-     lead tile, and any single attachment, always shows the whole frame.
+   · THE RATIO VOCABULARY IS THE CROP RULING'S (readme §13, compose): tall 4:5,
+     square 1:1, wide 1.91:1 — one shape for the whole post, chosen at the crop
+     step. `tall` is also the CAP: uncropped media (a comment's pictures never
+     crop — jakob 2026-08-31) is not shown taller than 4:5; a 9:16 tile eats a
+     phone screen whole, which is the opposite of a scrollable feed.
+   · THE FRAME IS SHOWN WHOLE (2026-08-26; without exception since 2026-08-31).
+     The cap bounds the TILE, not the picture: a taller frame is fitted inside it
+     and the reserved surface shows at the sides, rather than the frame being cut.
+     Nothing about the author's crop is decided by the layout. The bars are plain
+     surfaceContainerHigh — the same reserved region the tile already is — and
+     never a blurred enlargement of the photo itself, which invents image where
+     there is none and is exactly the attention device §1 rules out.
    · VIDEO AUTOPLAYS, MUTED, and the mute decision is GLOBAL AND STICKY. Unmute
      one video and the next one down is already unmuted; mute it again and they
      all go quiet. Tapping every clip to start it is friction with no upside, and
@@ -43,13 +42,14 @@ import { Icon } from "../navigation/Icon.jsx";
      IntersectionObserver) — offscreen video is neither calm nor cheap.
 
    The sound toggle shows the CURRENT state (`volume_up` = sound on) and its
-   accessible name says what the tap will DO. Still open: the interaction between
-   a gallery and §9's sensitive blur.
+   accessible name says what the tap will DO. A sensitive post veils the WHOLE
+   gallery, never per-picture (jakob 2026-08-31) — the veil wraps this component
+   where the card renders it.
 
    `src`-less tiles render the reserved region with a label saying what belongs
    there. Real photography for mocks now lives in `assets/photos/`. */
 
-const RATIOS = { landscape: "16 / 9", square: "1 / 1", portrait: "4 / 5" };
+const RATIOS = { tall: "4 / 5", square: "1 / 1", wide: "1.91 / 1" };
 
 /* The global mute decision. One value for every video on every surface, so a
    reader decides "sound on" once. Module-level rather than context: a feed and a
@@ -78,7 +78,7 @@ export function MediaAttachment({
   src,
   poster,
   alt,
-  ratio = "landscape",
+  ratio = "wide",
   kind = "image",
   label = "Media",
   radius = "var(--radius-medium)",
@@ -195,49 +195,74 @@ export function MediaAttachment({
   );
 }
 
-/* One, two, or three-and-more, and nothing cleverer. The first tile leads at the
-   post's own ratio; the rest share a row of squares, so the reserved height is a
-   function of the count alone and can be computed before anything loads. A
-   fourth-and-beyond count shows three and a remainder — a gallery that grows a
-   new row per image changes the height of every card below it. */
-export function MediaGallery({ items = [], ratio = "landscape", radius }) {
+/* THE GALLERY IS A PAGER (jakob 2026-08-31). Every picture in a post shares the
+   post's one crop shape, so the honest layout is one frame at that shape,
+   swiped: each picture is shown WHOLE, exactly as its author shaped it, and the
+   card's height is one frame's height regardless of count. Dots below carry the
+   position — dots only, no "1/n" count pill (ruled against). The earlier
+   lead-tile-plus-square-strip layout is rejected: its secondary squares
+   re-cropped frames the author had deliberately shaped, half-undoing the
+   one-crop ruling. The cap is authoring-side — at most TEN pictures, or ONE
+   video (with its cover) — the gallery renders what it is given.
+
+   Every frame renders at the ONE frame ratio: the explicit `ratio` prop, else
+   the first item's, so uncropped sets (a comment's pictures) pass a fixed frame
+   (square) and fit each whole frame inside it — a pager whose height changed
+   per swipe would bounce the card under the reader's thumb. */
+export function MediaGallery({ items = [], ratio, radius, maxHeight }) {
+  const [page, setPage] = React.useState(0);
+  const stripRef = React.useRef(null);
   if (items.length === 0) return null;
   if (items.length === 1) {
-    return <MediaAttachment {...items[0]} ratio={items[0].ratio ?? ratio} radius={radius ?? items[0].radius} />;
+    return (
+      <MediaAttachment
+        {...items[0]}
+        ratio={items[0].ratio ?? ratio ?? "wide"}
+        radius={radius ?? items[0].radius}
+        maxHeight={maxHeight ?? items[0].maxHeight}
+      />
+    );
   }
-  const [lead, ...rest] = items;
-  const shown = rest.slice(0, 2);
-  const remainder = rest.length - shown.length;
-  // The CAP IS ON THE WHOLE GALLERY, not each tile: lead and strip together have
-  // to leave the rest of the card on screen. Roughly 60/40, because the lead is
-  // the media and the strip is only an index into the set.
+  const frameRatio = ratio ?? items[0].ratio ?? "wide";
+  const onScroll = () => {
+    const strip = stripRef.current;
+    if (!strip || strip.clientWidth === 0) return;
+    const next = Math.round(strip.scrollLeft / strip.clientWidth);
+    if (next !== page) setPage(next);
+  };
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "2px", maxHeight: "var(--media-max-height)", overflow: "hidden" }}>
-      <MediaAttachment {...lead} ratio={lead.ratio ?? ratio} radius={radius ?? lead.radius} maxHeight="calc(var(--media-max-height) * 0.6)" />
-      <div style={{ display: "grid", gridTemplateColumns: `repeat(${shown.length}, 1fr)`, gap: "2px" }}>
-        {shown.map((item, index) => (
-          <div key={item.src ?? index} style={{ position: "relative" }}>
-            {/* Secondary tiles crop: they are an index into the set, not the
-                media itself, and a ragged grid of fitted thumbnails reads as a
-                mistake. The whole frame is one tap away in the viewer. */}
-            <MediaAttachment {...item} ratio="square" fit="cover" radius={radius ?? item.radius} maxHeight="calc(var(--media-max-height) * 0.4)" />
-            {remainder > 0 && index === shown.length - 1 && (
-              <span
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  display: "grid",
-                  placeItems: "center",
-                  borderRadius: radius ?? "var(--radius-medium)",
-                  background: "var(--scrim-dialog)",
-                  color: "var(--inverse-on-surface)",
-                  fontSize: "var(--text-title-medium)",
-                }}
-              >
-                +{remainder}
-              </span>
-            )}
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <div
+        ref={stripRef}
+        onScroll={onScroll}
+        style={{
+          display: "flex",
+          overflowX: "auto",
+          scrollSnapType: "x mandatory",
+          scrollbarWidth: "none",
+        }}
+      >
+        {items.map((item, index) => (
+          <div key={item.src ?? index} style={{ flex: "none", width: "100%", scrollSnapAlign: "start" }}>
+            <MediaAttachment {...item} ratio={frameRatio} radius={radius ?? item.radius} maxHeight={maxHeight ?? item.maxHeight} />
           </div>
+        ))}
+      </div>
+      {/* The dots are a readout, not ten targets — the gesture is the swipe. */}
+      <div
+        aria-label={`Picture ${page + 1} of ${items.length}`}
+        style={{ display: "flex", justifyContent: "center", gap: "6px", padding: "8px 0 0" }}
+      >
+        {items.map((item, index) => (
+          <span
+            key={item.src ?? index}
+            style={{
+              width: "6px",
+              height: "6px",
+              borderRadius: "var(--radius-full)",
+              background: index === page ? "var(--primary)" : "var(--border-hairline)",
+            }}
+          />
         ))}
       </div>
     </div>
