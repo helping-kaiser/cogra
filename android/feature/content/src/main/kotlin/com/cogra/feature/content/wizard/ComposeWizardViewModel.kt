@@ -418,6 +418,20 @@ class ComposeWizardViewModel @Inject constructor(
 
     fun onCloseHelp() = _state.update { it.copy(help = null) }
 
+    /**
+     * The author's own sensitive mark.
+     *
+     * Turning the mark off drops the reason with it: the contract
+     * refuses a reason without `sensitive: true`, so keeping one around
+     * would send a value that is guaranteed to be refused.
+     */
+    fun onSensitiveChange(marked: Boolean) = _state.update {
+        if (marked) it.copy(sensitive = true) else it.copy(sensitive = false, sensitiveReason = "")
+    }
+
+    fun onSensitiveReasonChange(reason: String) =
+        _state.update { it.copy(sensitiveReason = reason) }
+
     fun onOpenSheet(sheet: SealSheet) = _state.update { it.copy(sheet = sheet) }
 
     fun onCloseSheet() = _state.update { it.closedSheets() }
@@ -560,6 +574,15 @@ class ComposeWizardViewModel @Inject constructor(
                     } else {
                         emptyList()
                     },
+                    // Always sent explicitly, never omitted: an edit
+                    // payload is the complete state, so an omitted mark
+                    // UNMARKS. Sending the switch's current value is what
+                    // keeps create and edit the same code.
+                    sensitive = current.sensitive,
+                    // Blank counts as none, said here rather than left to
+                    // the transport: an empty string is a value, and "no
+                    // reason" is what the author actually chose.
+                    sensitiveReason = current.sensitiveReason.ifBlank { null },
                 )
             ) {
                 is Outcome.Success -> outcome.value

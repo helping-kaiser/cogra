@@ -14,6 +14,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -31,6 +32,7 @@ import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.compose.UploadStatusLine
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.Hairline
+import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.atom.SettingRow
 import com.cogra.core.designsystem.v2.atom.SheetTitle
 import com.cogra.core.designsystem.v2.atom.SummaryRow
@@ -83,9 +85,16 @@ internal fun ColumnScope.SealStepBody(
             onAction = { onOpenSheet(SealSheet.Stance) },
             testTag = "wizard_seal_stance",
         )
-        // No `Sensitive` row: see [SealSheet]. The contract carries no
-        // author self-mark, and a row reading "Not marked" would
-        // promise a control that does not exist.
+        // The author's own mark. The row says where it stands and the
+        // sheet is where it is set — the same shape License and the
+        // stance pad take, so the seal reads as one list of choices.
+        SettingRow(
+            label = "Sensitive",
+            value = if (state.sensitive) "Marked" else "Not marked",
+            actionText = if (state.sensitive) "Change" else "Mark",
+            onAction = { onOpenSheet(SealSheet.Sensitive) },
+            testTag = "wizard_seal_sensitive",
+        )
         Hairline()
     }
 
@@ -245,6 +254,60 @@ private fun KeyAbsentCard(onRestoreKey: () -> Unit, onKeepDraft: () -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             testTag = "wizard_keep_draft",
         )
+    }
+}
+
+/**
+ * `ComposeSensitive` — the author's own mark, and the reason that rides
+ * the veil with it.
+ *
+ * The switch sits in the title row and the heading is its label, so the
+ * sheet says what it does in one line. The reason is optional and
+ * public: it is shown *on* the veil, which is the only place a reader
+ * meets it, so the corner says so rather than a paragraph explaining it.
+ */
+@Composable
+internal fun SensitiveSheet(
+    marked: Boolean,
+    reason: String,
+    onMarkedChange: (Boolean) -> Unit,
+    onReasonChange: (String) -> Unit,
+    onDone: () -> Unit,
+    onHelp: () -> Unit,
+) {
+    CograSheetSurface(testTag = "wizard_sensitive_sheet") {
+        SheetTitle(
+            text = "Mark as sensitive",
+            onHelp = onHelp,
+            helpContentDescription = "Marking as sensitive",
+            trailing = {
+                Switch(
+                    checked = marked,
+                    onCheckedChange = onMarkedChange,
+                    modifier = Modifier.testTag("wizard_sensitive_switch"),
+                )
+            },
+        )
+        Text(
+            text = "Veils the pictures and the description until a reader chooses to look.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        CograTextField(
+            value = reason,
+            onValueChange = onReasonChange,
+            label = "Why?",
+            optional = true,
+            optionalLabel = "Optional — shown on the veil",
+            // The contract refuses a reason without the mark, so the
+            // field is only live once the switch is on: offering a box
+            // that would be refused is worse than not offering it.
+            enabled = marked,
+            testTag = "wizard_sensitive_reason",
+        )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            CograButton("Done", onDone, testTag = "wizard_sensitive_done")
+        }
     }
 }
 

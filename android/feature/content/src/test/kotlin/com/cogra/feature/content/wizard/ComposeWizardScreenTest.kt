@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.semantics.SemanticsActions
+import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
@@ -44,6 +45,8 @@ class ComposeWizardScreenTest {
     private var draftDiscards = 0
 
     private var permissionRequests = 0
+    private var leaves = 0
+    private var helps = mutableListOf<HelpTopic>()
     private var manages = 0
     private var describes = 0
     private var describedAt = mutableListOf<Int>()
@@ -78,9 +81,14 @@ class ComposeWizardScreenTest {
             onCloseSheet = {},
             onLicenseChange = {},
             onPDirectedChange = {},
+            onSensitiveChange = {},
+            onSensitiveReasonChange = {},
             onNext = { nexts += 1 },
             onBack = { backs += 1 },
+            onLeave = { leaves += 1 },
             onSealBack = { sealBacks += 1 },
+            onOpenHelp = { helps += it },
+            onCloseHelp = {},
             onManagePictures = { manages += 1 },
             onDescribePictures = { describes += 1 },
             onDescribeAt = { describedAt += it },
@@ -157,6 +165,68 @@ class ComposeWizardScreenTest {
         compose.onNodeWithTag("wizard_header_action").assertIsEnabled()
         compose.onNodeWithTag("wizard_header_action").performClick()
         assertThat(nexts).isEqualTo(1)
+    }
+
+    @Test
+    fun theSealSaysWhereTheSensitiveMarkStands() {
+        compose.setContent { Wizard(words.copy(step = WizardStep.Seal)) }
+        compose.onNodeWithText("Not marked").assertExists()
+        compose.onNodeWithTag("wizard_seal_sensitive_action").performClick()
+        assertThat(sheets).containsExactly(SealSheet.Sensitive)
+    }
+
+    @Test
+    fun aMarkedSealSaysSoAndOffersToChangeIt() {
+        compose.setContent {
+            Wizard(words.copy(step = WizardStep.Seal, sensitive = true))
+        }
+        compose.onNodeWithText("Marked").assertExists()
+        // Bound to the tag, not the word: the license row says "Change" too.
+        compose.onNodeWithTag("wizard_seal_sensitive_action").assertIsDisplayed()
+    }
+
+    @Test
+    fun theReasonIsOnlyLiveOnceTheMarkIs() {
+        // The contract refuses a reason without the mark, so the field is
+        // not offered before the switch is on.
+        compose.setContent {
+            Wizard(words.copy(step = WizardStep.Seal, sheet = SealSheet.Sensitive))
+        }
+        compose.onNodeWithTag("wizard_sensitive_reason").assertIsNotEnabled()
+
+        compose.onNodeWithText(
+            "Veils the pictures and the description until a reader chooses to look.",
+        ).assertExists()
+    }
+
+    @Test
+    fun theArrowStepsAndTheXLeaves() {
+        // Two ways out, each doing one thing (jakob 2026-08-31). The X is
+        // wired to leaving, not to the stage-stepping arrow.
+        compose.setContent { Wizard(withPicks.copy(step = WizardStep.Details)) }
+
+        compose.onNodeWithTag("wizard_header_leave").performClick()
+        assertThat(leaves).isEqualTo(1)
+        assertThat(backs).isEqualTo(0)
+
+        compose.onNodeWithTag("wizard_header_back").performClick()
+        assertThat(backs).isEqualTo(1)
+        assertThat(leaves).isEqualTo(1)
+    }
+
+    @Test
+    fun theSealCarriesTheOneQuestionMarkAndTheKeyAbsentSealDoesNot() {
+        compose.setContent { Wizard(words.copy(step = WizardStep.Seal)) }
+        compose.onNodeWithTag("wizard_header_help").performClick()
+        assertThat(helps).containsExactly(HelpTopic.SignedActions)
+    }
+
+    @Test
+    fun theKeyStoryOutranksTheSealStoryWhenTheKeyIsGone() {
+        // One `?` per screen: on the key-absent seal it belongs to the key
+        // notice, so the header carries none.
+        compose.setContent { Wizard(words.copy(step = WizardStep.Seal, keyAbsent = true)) }
+        compose.onNodeWithTag("wizard_header_help").assertDoesNotExist()
     }
 
     @Test
@@ -405,11 +475,11 @@ class ComposeWizardScreenTest {
     }
 
     @Test
-    fun theSealOffersNoSensitiveMarkItCannotSend() {
-        // The contract carries no author self-mark, so a row promising
-        // one would be a lie told to the person trusting it.
+    fun theSealCarriesTheAuthorsOwnSensitiveMark() {
+        // The contract carries the self-mark now, so the row is real: it
+        // says where the mark stands and opens the sheet that sets it.
         compose.setContent { Wizard(ComposeWizardState(body = "x", step = WizardStep.Seal)) }
-        compose.onNodeWithTag("wizard_seal_sensitive").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_seal_sensitive").assertIsDisplayed()
     }
 
     @Test
