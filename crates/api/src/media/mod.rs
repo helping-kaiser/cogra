@@ -402,6 +402,10 @@ pub async fn plan_gallery(
             )
             .into());
         }
+        alts.push(
+            checked_alt_text(draft.alt_text.as_deref())
+                .map_err(|message| GalleryError::at(gallery_path(i, "altText"), message))?,
+        );
         if ids.contains(&draft.media_id) {
             return Err(GalleryError::at(
                 gallery_path(i, "mediaId"),
@@ -409,9 +413,6 @@ pub async fn plan_gallery(
             )
             .into());
         }
-        alts.push(checked_alt_text(draft.alt_text.as_deref()).map_err(|message| {
-            GalleryError::at(gallery_path(i, "altText"), message)
-        })?);
         ids.push(draft.media_id);
     }
 
