@@ -317,6 +317,105 @@ impl Adoption {
         }
         Ok(())
     }
+
+    /// Every package the build system names has a partition rule of its own.
+    ///
+    /// R-PKG′ (`[signature.families.package]`) derives a prefix for "every
+    /// unit the build system names as a package", but Σ registering a
+    /// derivable prefix is not Ω assigning that package's paths to an
+    /// owner — nothing before this check enforced that the two agree. A
+    /// package with no rule of its own falls to the residual rule
+    /// silently: this is the check that says so out loud, the same way
+    /// [`Adoption::verify_spellings`] says out loud what a silent
+    /// case-fold would otherwise hide.
+    ///
+    /// The roster is read off the build systems themselves — never off this
+    /// file, which would only be able to check itself against itself: a
+    /// Cargo workspace member from the root manifest's `[workspace]
+    /// members`, the npm package if `web/package.json` exists, the Gradle
+    /// build if `android/build.gradle.kts` exists (the anchor a 15-module
+    /// build has exactly one of, unlike any single module beneath it).
+    ///
+    /// Like [`Adoption::verify_spellings`], this cannot run at
+    /// [`Adoption::load`]: the adoption file is handed over with no corpus
+    /// root, and the roster lives in the root's own build manifests. A root
+    /// manifest this check cannot read or parse is not this check's
+    /// question — Cargo itself refuses to build such a workspace — so it
+    /// passes here with nothing to reconcile.
+    ///
+    /// # Errors
+    ///
+    /// [`AdoptionError::UnregisteredPackage`], located at the row of the
+    /// residual partition rule the package's paths fall to, naming the
+    /// package and the prefix R-PKG′ would derive for it.
+    pub fn verify_package_roster(&self, root: &Path) -> Result<(), AdoptionError> {
+        for (package, representative) in build_system_roster(root) {
+            let fell_through = self
+                .partition
+                .rule_for(&representative)
+                .is_none_or(|rule| rule.path.as_str().is_empty());
+            if fell_through {
+                let owner = OwnerId::new(&format!("pkg.{package}"));
+                let derived_prefix = self.signature.derived_prefix(&owner).map_or_else(
+                    || String::from("none — R-PKG' derives no well-formed prefix for it"),
+                    |prefix| prefix.to_string(),
+                );
+                return Err(AdoptionError::UnregisteredPackage {
+                    at: self.partition.residual_at.clone(),
+                    package,
+                    derived_prefix,
+                });
+            }
+        }
+        Ok(())
+    }
+}
+
+/// The packages the build systems under `root` actually name, each with one
+/// representative path inside it for [`Partition::rule_for`] to resolve —
+/// the package's own directory prefix carries no trailing component a tree
+/// prefix could match against.
+///
+/// Cargo workspace members come from the root manifest's own `[workspace]
+/// members`, parsed rather than assumed, so a member this check names is a
+/// member Cargo itself would build. `android` and `web` are named only when
+/// their own build file exists, so a corpus without either build carries no
+/// phantom package for it.
+fn build_system_roster(root: &Path) -> Vec<(String, PathBuf)> {
+    #[derive(serde::Deserialize)]
+    struct RootManifest {
+        #[serde(default)]
+        workspace: Option<WorkspaceTable>,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct WorkspaceTable {
+        #[serde(default)]
+        members: Vec<Box<str>>,
+    }
+
+    let mut roster = Vec::new();
+    if let Ok(manifest) = std::fs::read_to_string(root.join("Cargo.toml"))
+        && let Ok(parsed) = toml::from_str::<RootManifest>(&manifest)
+    {
+        for member in parsed.workspace.into_iter().flat_map(|w| w.members) {
+            let package = Path::new(&*member).file_name().map_or_else(
+                || member.to_string(),
+                |name| name.to_string_lossy().into_owned(),
+            );
+            roster.push((package, Path::new(&*member).join("Cargo.toml")));
+        }
+    }
+    if root.join("android/build.gradle.kts").is_file() {
+        roster.push((
+            String::from("android"),
+            PathBuf::from("android/build.gradle.kts"),
+        ));
+    }
+    if root.join("web/package.json").is_file() {
+        roster.push((String::from("web"), PathBuf::from("web/package.json")));
+    }
+    roster
 }
 
 /// The on-disk spelling of `configured`, when the tree carries it under one
@@ -373,7 +472,7 @@ fn entry_names(at: &Path) -> Vec<String> {
 }
 
 /// When the adoption was drafted and ruled, and where its rationale lives.
-#[derive(Clone, Debug, serde::Deserialize)]
+#[derive(Clone, Debug)]
 pub struct Meta {
     /// The date the file was drafted.
     pub drafted: Box<str>,
@@ -387,6 +486,12 @@ pub struct Meta {
     pub corpus_root: Box<str>,
     /// The discipline documents this corpus adopts.
     pub discipline_docs: Vec<Box<str>>,
+    /// `[major, minor, patch]` of the config envelope this file is written
+    /// against. Only `major` is enforced: a file whose major this build
+    /// does not read fails to load with a located error naming both,
+    /// rather than being silently misinterpreted by a reader built for a
+    /// shape it does not have. `minor`/`patch` are carried but advisory.
+    pub schema_version: [u32; 3],
 }
 
 /// What the corpus IS: the exclusions that fix Ω's domain.
@@ -526,6 +631,13 @@ pub struct Partition {
     /// Ordered, first match wins. The last rule's prefix is empty, which is
     /// what makes Ω total.
     pub rules: Vec<PartitionRule>,
+    /// The row the residual (last, empty-prefix) rule sits in.
+    ///
+    /// Kept for a defect [`Adoption::verify_package_roster`] finds only
+    /// after the file has fully loaded: an unregistered package has no row
+    /// of its own to name, and this is exactly the row its paths silently
+    /// fall to.
+    pub residual_at: Location,
 }
 
 impl Partition {
@@ -1281,7 +1393,7 @@ fn joined(tree: &str, relative: &str) -> String {
 
 #[derive(serde::Deserialize)]
 struct RawAdoption {
-    meta: Meta,
+    meta: RawMeta,
     carrier: RawCarrier,
     signature: RawSignature,
     partition: RawPartition,
@@ -1316,6 +1428,42 @@ struct RawReachRow {
     owner: Spanned<OwnerId>,
     #[serde(default)]
     may_cite: Vec<OwnerId>,
+}
+
+/// `[meta]`, with `schema_version` kept spanned so a refused major names its
+/// own row.
+#[derive(serde::Deserialize)]
+struct RawMeta {
+    drafted: Box<str>,
+    ruled: Box<str>,
+    status: Box<str>,
+    rationale: Box<str>,
+    corpus_root: Box<str>,
+    discipline_docs: Vec<Box<str>>,
+    schema_version: Spanned<[u32; 3]>,
+}
+
+impl RawMeta {
+    fn validate(self, source: &str, origin: &Path) -> Result<Meta, AdoptionError> {
+        let schema_version = *self.schema_version.as_ref();
+        let expected = 1;
+        if schema_version[0] != expected {
+            return Err(AdoptionError::UnsupportedSchemaVersion {
+                at: row(&self.schema_version, source, origin),
+                found: schema_version[0],
+                expected,
+            });
+        }
+        Ok(Meta {
+            drafted: self.drafted,
+            ruled: self.ruled,
+            status: self.status,
+            rationale: self.rationale,
+            corpus_root: self.corpus_root,
+            discipline_docs: self.discipline_docs,
+            schema_version,
+        })
+    }
 }
 
 /// `[carrier]`, with each prefix's row kept for the spelling check.
@@ -1423,6 +1571,7 @@ fn row<T>(spanned: &Spanned<T>, source: &str, origin: &Path) -> Location {
 
 impl RawAdoption {
     fn validate(self, source: &str, origin: &Path) -> Result<Adoption, AdoptionError> {
+        let meta = self.meta.validate(source, origin)?;
         let signature = self.signature.validate(source, origin)?;
         let mut configured = Vec::new();
         for rule in &self.partition.rules {
@@ -1453,7 +1602,7 @@ impl RawAdoption {
             at: row(&self.kinds.registry, source, origin),
         });
         Ok(Adoption {
-            meta: self.meta,
+            meta,
             carrier: Carrier {
                 exclude_trees: inner(self.carrier.exclude_trees),
                 generated_files: inner(self.carrier.generated_files),
@@ -1574,8 +1723,8 @@ impl RawPartition {
                 });
             }
         }
-        match self.rules.last() {
-            Some(last) if last.path.as_ref().as_str().is_empty() => {}
+        let residual_at = match self.rules.last() {
+            Some(last) if last.path.as_ref().as_str().is_empty() => row(&last.path, source, origin),
             Some(last) => {
                 return Err(AdoptionError::PartitionNotTotal {
                     at: row(&last.path, source, origin),
@@ -1586,7 +1735,7 @@ impl RawPartition {
                     at: Location::in_source(origin.to_path_buf(), ByteSpan::new(0, 0), source),
                 });
             }
-        }
+        };
         let rules = self
             .rules
             .into_iter()
@@ -1597,7 +1746,7 @@ impl RawPartition {
                 optional: rule.optional,
             })
             .collect();
-        Ok(Partition { rules })
+        Ok(Partition { rules, residual_at })
     }
 }
 
