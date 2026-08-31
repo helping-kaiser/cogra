@@ -4,7 +4,7 @@
 export function Screen() {
   return (
     <>
-      <PageHeader title="Details" backHref="#" backLabel="Back" />
+      <WizardHeader title="Details" />
       <div style={{ padding: "12px 24px 0" }}>
         <PickedRow
           items={[{ src: "post-photo.jpg" }, { src: "gallery-market.jpg" }, { src: "gallery-honey.jpg" }]}
