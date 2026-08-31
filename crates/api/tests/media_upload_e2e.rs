@@ -190,7 +190,6 @@ impl Rig {
         );
         json["data"]["uploadMedia"].clone()
     }
-
 }
 
 async fn body_json(response: axum::response::Response) -> Value {
