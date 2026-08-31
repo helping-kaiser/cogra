@@ -168,7 +168,7 @@ function MediaBody({
                     className="block size-full object-cover"
                   />
                   {index === 0 ? (
-                    <span className="absolute bottom-0.5 left-0.5 rounded-full bg-scrim/60 px-1.5 text-label-small text-white">
+                    <span className="absolute bottom-[3px] left-[3px] rounded-full bg-scrim/55 px-[5px] text-label-small text-white">
                       Cover
                     </span>
                   ) : null}
@@ -177,7 +177,7 @@ function MediaBody({
                     data-testid={`wizard-unpick-${asset.id}`}
                     aria-label={`Remove picture ${index + 1}`}
                     onClick={() => onUnpick(asset.id)}
-                    className="cg-focus absolute right-0.5 top-0.5 flex size-4 items-center justify-center rounded-full bg-scrim/60 text-white"
+                    className="cg-focus absolute right-[3px] top-[3px] flex size-4 items-center justify-center rounded-full bg-scrim/55 text-white"
                   >
                     <svg viewBox="0 0 24 24" width={10} height={10} fill="currentColor" aria-hidden="true">
                       <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
@@ -186,7 +186,7 @@ function MediaBody({
                 </li>
               ))}
             </ul>
-            <span className="flex-1 text-label-small text-on-surface-variant">
+            <span className="flex-1 text-body-small text-on-surface-variant">
               The first one is the cover.
             </span>
           </div>
@@ -205,7 +205,7 @@ function MediaBody({
           setOver(false);
           take(event.dataTransfer.files);
         }}
-        className={`flex flex-1 content-start flex-wrap gap-1 p-1 ${over ? "bg-surface-container" : ""}`}
+        className={`flex flex-1 content-start flex-wrap gap-[3px] p-1 pb-0 ${over ? "bg-surface-container" : ""}`}
       >
         <input
           ref={input}

@@ -75,6 +75,54 @@ function capturingUpdate(seen: { input?: Record<string, unknown> }) {
   });
 }
 
+/** The one asset id a picked avatar is expected to come back as. */
+function uploadHandler(id: string) {
+  return graphql.mutation("UploadMedia", () =>
+    HttpResponse.json({
+      data: {
+        uploadMedia: {
+          __typename: "UploadMediaPayload",
+          media: {
+            __typename: "MediaAttachment",
+            id,
+            url: `https://media.test/${id}.webp`,
+            altText: null,
+            status: "NORMAL",
+            options: { __typename: "MediaOptions", aspectRatio: "1:1" },
+          },
+          userErrors: [],
+        },
+      },
+    }),
+  );
+}
+
+/** jsdom has no canvas and no WebP encoder, so the encode is stubbed whole. */
+function installEncoder() {
+  vi.stubGlobal(
+    "createImageBitmap",
+    vi.fn(async () => ({ width: 1200, height: 1200, close: () => {} })),
+  );
+  class Canvas {
+    constructor(
+      public width: number,
+      public height: number,
+    ) {}
+    getContext() {
+      return { drawImage: () => {} };
+    }
+    async convertToBlob({ type }: { type: string }) {
+      return new Blob([new Uint8Array(8) as BlobPart], { type });
+    }
+  }
+  vi.stubGlobal("OffscreenCanvas", Canvas);
+  Object.defineProperty(URL, "createObjectURL", {
+    value: () => "blob:preview",
+    configurable: true,
+  });
+  Object.defineProperty(URL, "revokeObjectURL", { value: () => {}, configurable: true });
+}
+
 beforeEach(() => {
   window.localStorage.clear();
   push.mockClear();
@@ -246,6 +294,35 @@ describe("ProfileEditPage", () => {
       await screen.findByTestId("profile-edit-avatar-preview");
       expect(screen.queryByTestId("profile-edit-avatar-remove")).not.toBeInTheDocument();
       expect(screen.getByTestId("profile-edit-avatar-choose")).toHaveTextContent("Choose");
+    });
+
+    // The third value, and the one the other two cannot stand in for: a picked
+    // file has to travel the whole way — encoded, uploaded, and the id it comes
+    // back as written onto the profile. Asserting only that the control renders
+    // would pass with the chain cut anywhere along it.
+    it("uploads a picked avatar and saves the id it comes back as", async () => {
+      installEncoder();
+      const seen: { input?: Record<string, unknown> } = {};
+      server.use(myProfileHandler(), uploadHandler("m-9"), capturingUpdate(seen));
+      renderWithProviders(<ProfileEditPage />, {
+        store: signedInStore(),
+        writeSigner: fakeWriteSigner(),
+      });
+
+      const input = await screen.findByTestId("profile-edit-avatar-input");
+      fireEvent.change(input, {
+        target: {
+          files: [
+            new File([new Uint8Array([1, 2, 3]) as BlobPart], "face.jpg", { type: "image/jpeg" }),
+          ],
+        },
+      });
+      fireEvent.click(screen.getByTestId("profile-edit-save"));
+
+      await waitFor(() => expect(seen.input).toHaveProperty("avatarMediaId", "m-9"));
+      // The cover was never touched, so it must not be written at all.
+      expect(seen.input).not.toHaveProperty("coverMediaId");
+      await waitFor(() => expect(push).toHaveBeenCalledWith("/profile"));
     });
   });
 });
