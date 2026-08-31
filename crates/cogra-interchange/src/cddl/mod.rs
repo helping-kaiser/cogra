@@ -703,6 +703,8 @@ mod tests {
         }
     }
 
+    /// The ABNF scanner and the conventions' compiled pattern agree on the labels checked here by hand.
+    /// ´claim:cddl:the-two-label-recognizers-agree-by-hand´
     #[test]
     fn the_pattern_matches_labels_the_scanner_accepts_by_hand() {
         for label in ["com.example", "a.b", "a-b.c9", "0.0", "com.example.thing"] {
@@ -714,6 +716,8 @@ mod tests {
         }
     }
 
+    /// The conventions' base theory parses, resolves and compiles like any other source.
+    /// ´claim:cddl:the-base-theory-goes-through-the-pipeline´
     #[test]
     fn the_base_theory_goes_through_the_pipeline() {
         assert!(
@@ -724,6 +728,9 @@ mod tests {
 
     /// The expected source is what reaches the engine, `\.`, and not what the
     /// CDDL literal writes for it, `\\.`.
+    ///
+    /// The pattern the base theory compiles is what reaches the engine, one level of escaping already undone.
+    /// ´claim:cddl:the-compiled-pattern-is-what-reaches-the-engine´
     #[test]
     fn the_base_theory_carries_the_conventions_pattern() {
         let pattern = match global().pattern_of("namespace-form") {
@@ -736,11 +743,14 @@ mod tests {
         );
     }
 
+    /// (´claim:theories:the-base-theory-is-not-assignable´)
     #[test]
     fn the_base_theory_is_not_in_the_assignable_fragment() {
         assert!(Theory::parse(GLOBAL_SOURCE).is_err());
     }
 
+    /// A pattern reached through a rule reference is compiled along with the theory.
+    /// ´claim:cddl:a-pattern-behind-a-reference-is-compiled´
     #[test]
     fn a_pattern_reached_through_a_rule_reference_is_compiled() {
         let theory = Theory::parse(concat!(
@@ -751,6 +761,7 @@ mod tests {
         assert_eq!(theory.patterns.len(), 1);
     }
 
+    /// (´claim:theories:a-pattern-is-compiled-at-parse´)
     #[test]
     fn a_malformed_pattern_is_refused_at_parse() {
         let error = Theory::parse(
@@ -760,6 +771,8 @@ mod tests {
         assert!(matches!(error, TheoryError::Regexp(_)));
     }
 
+    /// Every operator of the evaluable subset is admitted in a theory.
+    /// ´claim:cddl:every-operator-of-the-subset-is-admitted´
     #[test]
     fn every_operator_of_the_subset_is_admitted() {
         for operator in EVALUABLE {
@@ -773,6 +786,7 @@ mod tests {
         }
     }
 
+    /// (´claim:theories:an-operator-outside-the-subset-is-unevaluable´)
     #[test]
     fn the_operators_outside_the_subset_are_refused() {
         for operator in ["cbor", "cborseq", "within", "and"] {
@@ -788,6 +802,8 @@ mod tests {
         }
     }
 
+    /// An operator outside the subset is refused however deep below a content key it stands.
+    /// ´claim:cddl:an-unevaluable-operator-is-refused-wherever-it-stands´
     #[test]
     fn an_unevaluable_operator_below_a_content_key_is_still_refused() {
         let error = Theory::parse(concat!(
