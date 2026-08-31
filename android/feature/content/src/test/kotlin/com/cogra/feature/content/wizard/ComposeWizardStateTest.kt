@@ -41,7 +41,15 @@ class ComposeWizardStateTest {
     }
 
     @Test
-    fun backRetracesTheSamePathItCameBy() {
+    fun aFreshComposerStartsOnThePictures() {
+        // Images-first: `ComposeDraft` captions the stage behind its offer
+        // "Or start fresh — pick one picture…", which is the picker.
+        assertThat(ComposeWizardState().mode).isEqualTo(BodyMode.Media)
+        assertThat(ComposeWizardState().step).isEqualTo(WizardStep.Body)
+    }
+
+    @Test
+    fun theSealsBackPillRetracesTheSamePathItCameBy() {
         val atDetails = media.advanced()!!.advanced()!!
         assertThat(atDetails.retreated()?.step).isEqualTo(WizardStep.Crop)
 
@@ -50,8 +58,40 @@ class ComposeWizardStateTest {
     }
 
     @Test
-    fun backFromTheBodyLeavesTheWizard() {
+    fun thereIsNoStageBeforeTheBody() {
         assertThat(words.retreated()).isNull()
+    }
+
+    // -- The details board's two ways back --
+
+    @Test
+    fun cropAndEditReachTwoDifferentStages() {
+        val atDetails = media.advanced()!!.advanced()!!
+
+        assertThat(atDetails.returnedTo(WizardStep.Crop).step).isEqualTo(WizardStep.Crop)
+        assertThat(atDetails.returnedTo(WizardStep.Body).step).isEqualTo(WizardStep.Body)
+    }
+
+    @Test
+    fun aWordsPostHasNoCropToReturnTo() {
+        val atDetails = words.advanced()!!
+
+        assertThat(atDetails.returnedTo(WizardStep.Crop).step).isEqualTo(WizardStep.Details)
+    }
+
+    @Test
+    fun aJumpNeverSkipsForward() {
+        // Forward is the `Next` pill's business, and only it knows whether
+        // the stage is ready.
+        assertThat(media.returnedTo(WizardStep.Seal).step).isEqualTo(WizardStep.Body)
+        assertThat(media.returnedTo(WizardStep.Body).step).isEqualTo(WizardStep.Body)
+    }
+
+    @Test
+    fun leavingTheSealForAnEarlierStageClosesItsSheet() {
+        val sealed = words.copy(step = WizardStep.Seal, sheet = SealSheet.License)
+
+        assertThat(sealed.returnedTo(WizardStep.Details).sheet).isEqualTo(SealSheet.None)
     }
 
     @Test

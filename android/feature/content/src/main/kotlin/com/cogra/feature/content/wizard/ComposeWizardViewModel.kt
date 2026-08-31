@@ -6,6 +6,7 @@ import com.cogra.domain.ErrorCode
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserError
+import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.media.CropSpec
@@ -136,22 +137,42 @@ class ComposeWizardViewModel @Inject constructor(
      * debounce — the lifecycle's `ON_STOP`, which is the last moment the
      * process is guaranteed to still be running.
      */
-    fun persistNow() = saveDraft(debounced = false)
+    fun persistNow() {
+        val draft = draftToWrite() ?: return
+        // Deliberately untracked: the debounced write is what gets
+        // cancelled, never this one. Tracking it would let the very next
+        // state emission cancel the write that was made because the
+        // process is about to stop.
+        draftSaveJob?.cancel()
+        viewModelScope.launch { write(draft) }
+    }
 
-    private fun rememberDraft() = saveDraft(debounced = true)
+    private fun rememberDraft() {
+        val draft = draftToWrite() ?: return
+        draftSaveJob?.cancel()
+        draftSaveJob = viewModelScope.launch {
+            delay(DRAFT_SAVE_DEBOUNCE_MILLIS)
+            write(draft)
+        }
+    }
 
-    private fun saveDraft(debounced: Boolean) {
-        if (!armed) return
+    /** What the store should hold right now, or null while it is not ours. */
+    private fun draftToWrite(): ComposeDraft? {
+        if (!armed) return null
         val current = _state.value
         // An answered outcome owns the store: a signed post cleared it, and
         // an expiry or a departure already wrote what it meant to keep.
-        if (current.outcome != null || current.draftOffer != null) return
-        val draft = current.toDraft()
-        draftSaveJob?.cancel()
-        draftSaveJob = viewModelScope.launch {
-            if (debounced) delay(DRAFT_SAVE_DEBOUNCE_MILLIS)
-            if (draft.isEmpty) drafts.clear() else drafts.save(draft)
-        }
+        if (current.outcome != null || current.draftOffer != null) return null
+        // So does a submit in flight. Scheduling here is what put the
+        // draft back after a landed post had cleared it: signing emits
+        // `submitting` before it emits its outcome, and a write scheduled
+        // on that emission outlives the clear.
+        if (current.submitting) return null
+        return current.toDraft()
+    }
+
+    private suspend fun write(draft: ComposeDraft) {
+        if (draft.isEmpty) drafts.clear() else drafts.save(draft)
     }
 
     // -- The body (`ComposeWords` / `ComposePick`) --
@@ -486,6 +507,7 @@ class ComposeWizardViewModel @Inject constructor(
 
             when {
                 results.all { it is WriteResult.Done } -> {
+                    draftSaveJob?.cancel()
                     drafts.clear()
                     _state.update {
                         it.copy(submitting = false, outcome = WizardOutcome.Landed(prepared.node))

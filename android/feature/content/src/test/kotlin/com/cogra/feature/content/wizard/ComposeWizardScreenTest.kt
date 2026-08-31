@@ -9,9 +9,11 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.semantics.SemanticsActions
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
+import com.cogra.domain.media.DeviceImage
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -41,10 +43,23 @@ class ComposeWizardScreenTest {
     private var draftContinues = 0
     private var draftDiscards = 0
 
+    private var permissionRequests = 0
+    private var editBodies = 0
+    private var editCrops = 0
+    private var sealBacks = 0
+
     @Composable
-    private fun Wizard(state: ComposeWizardState) {
+    private fun Wizard(
+        state: ComposeWizardState,
+        permission: MediaPermission = MediaPermission.Granted(partial = false),
+    ) {
         ComposeWizardScreen(
             state = state,
+            permission = MediaPermissionController(
+                permission = permission,
+                request = { permissionRequests += 1 },
+                openSettings = {},
+            ),
             onBodyChange = {},
             onModeChange = { modeChanges += it },
             onOpenPicker = {},
@@ -62,6 +77,9 @@ class ComposeWizardScreenTest {
             onPDirectedChange = {},
             onNext = { nexts += 1 },
             onBack = { backs += 1 },
+            onSealBack = { sealBacks += 1 },
+            onEditBody = { editBodies += 1 },
+            onEditCrop = { editCrops += 1 },
             onSign = { signs += 1 },
             onContinueDraft = { draftContinues += 1 },
             onDiscardDraft = { draftDiscards += 1 },
@@ -89,13 +107,27 @@ class ComposeWizardScreenTest {
     private val withPicks = ComposeWizardState(
         mode = BodyMode.Media,
         picked = listOf(PickedAsset("a", 1f), PickedAsset("b", 1f)),
+        deviceImages = listOf(DeviceImage("a", 1f), DeviceImage("b", 1f), DeviceImage("c", 1f)),
     )
+
+    private val words = ComposeWizardState(mode = BodyMode.Words)
 
     // -- The body stage --
 
     @Test
-    fun theWordsStageOffersTheOtherHalf() {
+    fun aFreshComposerOpensOnThePictures() {
         compose.setContent { Wizard(ComposeWizardState()) }
+
+        // Images-first: the picker grid, not the words field.
+        compose.onNodeWithTag("wizard_pick_grid").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_body").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_switch_words").performClick()
+        assertThat(modeChanges).containsExactly(BodyMode.Words)
+    }
+
+    @Test
+    fun theWordsStageOffersTheOtherHalf() {
+        compose.setContent { Wizard(words) }
         compose.onNodeWithTag("wizard_body").assertIsDisplayed()
         compose.onNodeWithTag("wizard_switch_media").performClick()
         assertThat(modeChanges).containsExactly(BodyMode.Media)
@@ -103,13 +135,19 @@ class ComposeWizardScreenTest {
 
     @Test
     fun theNextPillWaitsForABody() {
+        compose.setContent { Wizard(words) }
+        compose.onNodeWithTag("wizard_header_action").assertIsNotEnabled()
+    }
+
+    @Test
+    fun theNextPillWaitsForAPick() {
         compose.setContent { Wizard(ComposeWizardState()) }
         compose.onNodeWithTag("wizard_header_action").assertIsNotEnabled()
     }
 
     @Test
     fun aTypedBodyEnablesTheNextPill() {
-        compose.setContent { Wizard(ComposeWizardState(body = "Salt maps")) }
+        compose.setContent { Wizard(words.copy(body = "Salt maps")) }
         compose.onNodeWithTag("wizard_header_action").assertIsEnabled()
         compose.onNodeWithTag("wizard_header_action").performClick()
         assertThat(nexts).isEqualTo(1)
@@ -124,10 +162,54 @@ class ComposeWizardScreenTest {
     }
 
     @Test
-    fun aTileInTheGridDropsItsPick() {
+    fun theGridDrawsTheDevicesOwnPicturesAndTogglesThemInPlace() {
         compose.setContent { Wizard(withPicks) }
-        compose.onNodeWithTag("wizard_pick_0").performClick()
-        assertThat(picked).containsExactly("a")
+
+        // Every device picture is a tile, picked or not — the board's grid
+        // is a set you browse, not a list of what you already chose.
+        compose.onNodeWithTag("wizard_grid_c").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_grid_a").performClick()
+        compose.onNodeWithTag("wizard_grid_c").performClick()
+
+        assertThat(picked).containsExactly("a", "c").inOrder()
+    }
+
+    @Test
+    fun theBoardsPhotosAppTileSurvivesEveryPermissionAnswer() {
+        compose.setContent { Wizard(ComposeWizardState(), MediaPermission.Refused) }
+
+        // A refusal is never a dead end: the system picker needs no
+        // permission, so the tile the board draws still opens it.
+        compose.onNodeWithTag("wizard_open_picker").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_pick_permission_settings").assertIsDisplayed()
+    }
+
+    @Test
+    fun anUnaskedGridOffersTheWayToFillIt() {
+        compose.setContent { Wizard(ComposeWizardState(), MediaPermission.Unrequested) }
+
+        compose.onNodeWithTag("wizard_pick_permission_grant").performClick()
+
+        assertThat(permissionRequests).isEqualTo(1)
+    }
+
+    @Test
+    fun aPartialGrantIsAnAnswerRatherThanAFailure() {
+        compose.setContent {
+            Wizard(withPicks, MediaPermission.Granted(partial = true))
+        }
+
+        // The grid still draws what was shared, and the way to share more
+        // is an offer rather than a warning.
+        compose.onNodeWithTag("wizard_grid_c").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_pick_permission_more").assertIsDisplayed()
+    }
+
+    @Test
+    fun aFullGrantSaysNothingAtAll() {
+        compose.setContent { Wizard(withPicks) }
+
+        compose.onNodeWithTag("wizard_pick_permission").assertDoesNotExist()
     }
 
     // -- The draft offer --
@@ -157,11 +239,17 @@ class ComposeWizardScreenTest {
         compose.onNodeWithTag("crop_shape_tall").assertIsDisplayed()
         compose.onNodeWithTag("crop_shape_square").assertIsDisplayed()
         compose.onNodeWithTag("crop_shape_wide").assertIsDisplayed()
-        // D17: the stage has to be completable without a gesture, and
-        // "reachable" is the claim — the stage scrolls, so the controls
-        // are scrolled to rather than assumed to be above the fold.
-        compose.onNodeWithTag("wizard_crop_left").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithTag("wizard_crop_zoom_in").performScrollTo().assertIsDisplayed()
+
+        // D17: completable without a gesture. The board draws no controls
+        // under the crop, so the route is named actions in the semantics
+        // tree — nothing visible to scroll to.
+        val actions = compose.onNodeWithTag("wizard_crop")
+            .fetchSemanticsNode()
+            .config[SemanticsActions.CustomActions]
+            .map { it.label }
+        assertThat(actions).containsAtLeast("Nudge left", "Zoom in", "Reset framing")
+        compose.onNodeWithTag("wizard_crop_left").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_crop_zoom_in").assertDoesNotExist()
     }
 
     @Test
@@ -210,7 +298,32 @@ class ComposeWizardScreenTest {
         assertThat(retries).containsExactly("b")
     }
 
+    @Test
+    fun theDetailsRowsTwoWaysBackGoToTwoDifferentPlaces() {
+        compose.setContent { Wizard(withPicks.copy(step = WizardStep.Details)) }
+
+        compose.onNodeWithTag("wizard_details_crop").performScrollTo().performClick()
+        compose.onNodeWithTag("wizard_details_edit").performScrollTo().performClick()
+
+        // The board draws Crop and Edit side by side because they are two
+        // destinations; wiring both to the same one made them a duplicate.
+        assertThat(editCrops).isEqualTo(1)
+        assertThat(editBodies).isEqualTo(1)
+        assertThat(backs).isEqualTo(0)
+    }
+
     // -- The seal --
+
+    @Test
+    fun theSealsBackPillStepsBackWhileTheArrowLeaves() {
+        compose.setContent { Wizard(withPicks.copy(step = WizardStep.Seal)) }
+
+        compose.onNodeWithTag("wizard_seal_back").performClick()
+        compose.onNodeWithTag("wizard_header_back").performClick()
+
+        assertThat(sealBacks).isEqualTo(1)
+        assertThat(backs).isEqualTo(1)
+    }
 
     @Test
     fun theSealNamesEveryActAndItsCost() {
