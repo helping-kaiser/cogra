@@ -338,6 +338,9 @@ struct Harvest<'a> {
     derivations: Vec<Derivation>,
     declared: Vec<(PathBuf, String)>,
     defined: Vec<(ProfileId, PathBuf, String)>,
+    /// Each source's node, by path, so that an asset settled by the pairing
+    /// reaches the source it sits in as directly as one settled inline does.
+    sources: BTreeMap<PathBuf, NodeIndex>,
     registry: Option<(Parsed, String)>,
 }
 
@@ -382,6 +385,7 @@ impl<'a> Harvest<'a> {
             derivations: Vec::new(),
             declared: Vec::new(),
             defined: Vec::new(),
+            sources: BTreeMap::new(),
             registry: None,
         };
         let mut ids: BTreeSet<OwnerId> = a
@@ -426,6 +430,7 @@ impl<'a> Harvest<'a> {
         if let Some(owner) = owner {
             self.g.add_edge(owner, source, EdgeW::Owns);
         }
+        self.sources.insert(src.path.clone(), source);
 
         let parsed = match frontend::parse(src, pre, self.a) {
             Ok(parsed) => parsed,
@@ -597,9 +602,18 @@ impl<'a> Harvest<'a> {
             identifier: Box::from(asset.identifier.as_str()),
             area: asset.area.clone(),
             place: asset.place.clone(),
+            span: asset.span,
+            documentation: asset
+                .documentation
+                .iter()
+                .map(|line| Box::from(line.as_str()))
+                .collect(),
         }));
         if let Some(owner) = owner {
             self.g.add_edge(owner, node, EdgeW::Owns);
+        }
+        if let Some(source) = self.sources.get(path).copied() {
+            self.g.add_edge(source, node, EdgeW::Contains);
         }
         if let Some(profile) = self.profiles.get(&asset.profile).copied() {
             self.g.add_edge(profile, node, EdgeW::Covers);
