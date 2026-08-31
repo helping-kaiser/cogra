@@ -30,7 +30,10 @@ use l1_standin::StandIn;
 
 use crate::auth::Viewer;
 use crate::l1::StandInBoundary;
-use crate::loaders::{ActorByAddressLoader, CommentByNodeLoader, PostByNodeLoader};
+use crate::loaders::{
+    ActorByAddressLoader, CommentByNodeLoader, CommentGalleryLoader, PostByNodeLoader,
+    PostGalleryLoader,
+};
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 
 /// A stance dimension: a float constrained to the closed range
@@ -2156,9 +2159,8 @@ async fn post_gallery(
     ctx: &Context<'_>,
     version_id: i64,
 ) -> async_graphql::Result<Vec<MediaAttachmentType>> {
-    let loaders = ctx.data::<crate::loaders::NodeLoaders>()?;
-    Ok(loaders
-        .post_galleries
+    Ok(ctx
+        .data::<DataLoader<PostGalleryLoader>>()?
         .load_one(version_id)
         .await?
         .unwrap_or_default()
@@ -2172,9 +2174,8 @@ async fn comment_gallery(
     ctx: &Context<'_>,
     version_id: i64,
 ) -> async_graphql::Result<Vec<MediaAttachmentType>> {
-    let loaders = ctx.data::<crate::loaders::NodeLoaders>()?;
-    Ok(loaders
-        .comment_galleries
+    Ok(ctx
+        .data::<DataLoader<CommentGalleryLoader>>()?
         .load_one(version_id)
         .await?
         .unwrap_or_default()
