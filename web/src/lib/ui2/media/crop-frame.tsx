@@ -1,48 +1,40 @@
 "use client";
 
-// The crop frame — Instagram's model, as the compose wizard rules it: ONE shape
-// for the whole post (Tall 4:5, Square 1:1, Wide 1.91:1), with drag-to-move and
-// pinch-to-zoom framing per picture. Those two gestures are what the canvas's
-// caption promises in as many words, which is why the pinch is implemented here
-// rather than left to a control the canvas does not draw.
+// The crop frame — the boarded chrome (ComposeCrop) around `react-easy-crop`.
 //
-// THE NON-DRAG ROUTE IS KEYBOARD, AND IT IS INVISIBLE ON PURPOSE. design.md §10
-// requires every drag gesture to have a non-drag equivalent, and D17 names this
-// component. The canvas draws no nudge or zoom controls, and the fix-round-2
-// ruling settles the conflict in the canvas's favour: the requirement is met
-// without drawing anything. The frame is therefore a focusable control —
+// THE ENGINE IS THE LIBRARY, NOT US (jakob, round 5: "i cant imagine that you
+// cant find a nice opensource cropping that we can use here"). The hand-rolled
+// focal-point cropper this replaces had two defects that were properties of its
+// model rather than bugs on top of it:
 //
-//   · arrow keys      move the framing by one step
-//   · + / = and - / _ zoom in and out by one step
-//   · Home            return to the centre at rest
+//   · it cover-fitted the picture to the frame, so at rest a wide photograph in
+//     a 4:5 frame showed a vertical slice and the rest of the picture was never
+//     drawn — the reader could not see what they were choosing between; and
+//   · every re-frame was expressed against that already-trimmed window.
 //
-// — described to assistive technology by a visually hidden paragraph, so a
-// reader who cannot drag is TOLD what to do rather than left to guess at an
-// affordance that is not painted. Anyone changing this file: the keyboard route
-// is the accessibility requirement, not a convenience. It may not be dropped,
-// and `crop-frame.test.tsx` fails if it is.
+// `react-easy-crop` defaults `objectFit` to "contain": the picture is shown
+// WHOLE and the crop rectangle is computed from the MEDIA and laid inside it.
+// So the full picture renders at rest, every section is reachable, and changing
+// the shape recomputes that rectangle against the original picture rather than
+// against the previous crop. Both defects die by construction, which is why the
+// library replaces the model and not just the gestures.
 //
-// THE FRAME NEEDS THE PICTURE'S OWN SHAPE. Panning spans the cover overflow
-// (see `crop.ts`), which only exists relative to the source's aspect ratio, so
-// the natural size is read off the loaded image. Before it loads there is
-// nothing to pan across and nothing drawn to pan, which is the same state.
+// THE NON-DRAG ROUTE IS STILL OURS TO FINISH, AND IT IS INVISIBLE ON PURPOSE.
+// design.md §10 requires a non-drag equivalent for every drag gesture, and the
+// fix-round-2 ruling forbids drawing nudge or zoom controls. The library brings
+// half of it — its cropper is focusable and the arrow keys move the framing by
+// `keyboardStep` — but it has no keyboard route for ZOOM, and pinch-to-zoom is
+// a gesture like any other. So `+`/`-`/`Home` are handled here, on top, and a
+// visually hidden paragraph TELLS a reader the keys rather than leaving them to
+// guess at an affordance that is not painted. Anyone changing this file: the
+// keyboard zoom is the accessibility requirement, not a convenience, and
+// `crop-frame.test.tsx` fails if it goes.
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import Cropper, { type Area, type Point } from "react-easy-crop";
 
-import {
-  CENTERED,
-  canPan,
-  cropStyle,
-  dragBy,
-  NUDGE_STEP,
-  ZOOM_STEP,
-  nudge,
-  zoomBy,
-  type Crop,
-} from "./crop";
+import { CENTERED, clampZoom, MAX_ZOOM, MIN_ZOOM, sameCrop, usableArea, type Crop } from "./crop";
 import { AVATAR_RATIO, cssRatio, POST_SHAPES, type PostShape } from "./aspect";
-
-const GUIDE = "rgba(255, 255, 255, 0.55)";
 
 // The frame's shape. A post takes one of the three ruled shapes; the
 // profile's avatar is its own fixed frame and is not a post shape (D13).
@@ -54,6 +46,16 @@ const SHAPE_RATIO: Record<CropFrameShape, number> = {
   wide: POST_SHAPES.wide.ratio,
   avatar: AVATAR_RATIO,
 };
+
+/** One press of a zoom key. The library's own arrow step is in pixels. */
+const ZOOM_STEP = 0.1;
+
+/**
+ * The library's arrow-key step, in pixels. Its default is 1, which moves the
+ * framing by an amount a reader cannot see — a keyboard route nobody can tell
+ * is working is not a route.
+ */
+const KEYBOARD_STEP = 8;
 
 export function CropFrame({
   src,
@@ -70,113 +72,66 @@ export function CropFrame({
   alt?: string;
   testId?: string;
 }) {
-  const frameRef = useRef<HTMLDivElement | null>(null);
-  const dragRef = useRef<{ id: number; x: number; y: number } | null>(null);
-  /** Every pointer currently down, so a second finger can be recognised. */
-  const pointers = useRef(new Map<number, { x: number; y: number }>());
-  /** The finger spread the current zoom was measured from. */
-  const pinchRef = useRef<number | null>(null);
-  const [dragging, setDragging] = useState(false);
-  /** The source's own width / height, once the browser has decoded it. */
-  const [sourceRatio, setSourceRatio] = useState<number | null>(null);
+  // The library reports position, zoom, and the framed area through three
+  // separate callbacks that can fire in one tick. Each merges into the newest
+  // value rather than into the one this render closed over, or the second
+  // callback would undo the first.
+  const latest = useRef(crop);
+  useEffect(() => {
+    latest.current = crop;
+  }, [crop]);
 
-  const frameRatio = SHAPE_RATIO[shape];
-  const ratio = sourceRatio ?? frameRatio;
-  const pannable = canPan(crop, ratio, frameRatio);
+  const emit = useCallback(
+    (patch: Partial<Crop>) => {
+      const next = { ...latest.current, ...patch };
+      // A report that changes nothing is not reported. The cropper re-reports
+      // its position on every recompute — including the recompute our own
+      // report triggered — so passing an equal-but-new object straight through
+      // is an infinite render loop rather than a wasted update.
+      if (sameCrop(next, latest.current)) return;
+      latest.current = next;
+      onChange(next);
+    },
+    [onChange],
+  );
 
-  const spread = (): number | null => {
-    const [a, b] = [...pointers.current.values()];
-    if (a === undefined || b === undefined) return null;
-    return Math.hypot(a.x - b.x, a.y - b.y);
-  };
-
-  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    event.currentTarget.setPointerCapture(event.pointerId);
-    const pinch = spread();
-    if (pinch !== null) {
-      // The second finger takes over: a pinch zooms rather than drags.
-      pinchRef.current = pinch;
-      dragRef.current = null;
-      setDragging(false);
-      return;
-    }
-    if (!pannable) return;
-    dragRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
-    setDragging(true);
-  };
-
-  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const frame = frameRef.current;
-    if (frame === null) return;
-    if (pointers.current.has(event.pointerId)) {
-      pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    }
-
-    // Pinch first: while two fingers are down there is no drag to apply.
-    const started = pinchRef.current;
-    if (started !== null) {
-      const now = spread();
-      if (now !== null && started > 0) {
-        onChange(zoomBy(crop, crop.zoom * (now / started) - crop.zoom));
-        pinchRef.current = now;
-      }
-      return;
-    }
-
-    const drag = dragRef.current;
-    if (!drag || drag.id !== event.pointerId) return;
-    const rect = frame.getBoundingClientRect();
-    onChange(
-      dragBy(
-        crop,
-        event.clientX - drag.x,
-        event.clientY - drag.y,
-        rect.width,
-        rect.height,
-        ratio,
-        frameRatio,
-      ),
-    );
-    dragRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
-  };
-
-  const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
-    pointers.current.delete(event.pointerId);
-    if (pointers.current.size < 2) pinchRef.current = null;
-    if (dragRef.current?.id !== event.pointerId) return;
-    dragRef.current = null;
-    setDragging(false);
-  };
+  const onCropChange = useCallback((point: Point) => emit({ x: point.x, y: point.y }), [emit]);
+  const onZoomChange = useCallback((zoom: number) => emit({ zoom: clampZoom(zoom) }), [emit]);
+  // `croppedAreaPixels` is the rectangle of the SOURCE the frame shows, in the
+  // source's own pixels — exactly what the encoder bakes, and independent of
+  // the viewport that produced it.
+  //
+  // A measurement taken before the cropper has a size to measure against — a
+  // hidden container, the tick before layout — comes back zeroed or NaN. It is
+  // dropped rather than stored: overwriting a good framing with an unusable one
+  // would upload a rectangle the author never chose, and a value that is never
+  // equal to itself also keeps the report/re-render cycle from ever settling.
+  const onCropComplete = useCallback(
+    (_percent: Area, pixels: Area) => {
+      if (!usableArea(pixels)) return;
+      emit({ area: pixels });
+    },
+    [emit],
+  );
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    const step = (dx: number, dy: number) => {
-      event.preventDefault();
-      onChange(nudge(crop, dx, dy));
-    };
     switch (event.key) {
-      // Arrow keys move the PICTURE, matching the drag: pressing Left sends the
-      // picture left, which brings its right-hand side into the frame.
-      case "ArrowLeft":
-        return step(NUDGE_STEP, 0);
-      case "ArrowRight":
-        return step(-NUDGE_STEP, 0);
-      case "ArrowUp":
-        return step(0, NUDGE_STEP);
-      case "ArrowDown":
-        return step(0, -NUDGE_STEP);
       case "+":
       case "=":
         event.preventDefault();
-        return onChange(zoomBy(crop, ZOOM_STEP));
+        return emit({ zoom: clampZoom(latest.current.zoom + ZOOM_STEP) });
       case "-":
       case "_":
         event.preventDefault();
-        return onChange(zoomBy(crop, -ZOOM_STEP));
+        return emit({ zoom: clampZoom(latest.current.zoom - ZOOM_STEP) });
       case "Home":
         event.preventDefault();
-        return onChange(CENTERED);
+        // The area is dropped with the framing: the library measures a fresh
+        // one the moment it re-renders centred.
+        return emit({ x: 0, y: 0, zoom: MIN_ZOOM, area: null });
       default:
+        // Arrows belong to the library; swallowing them here would take the
+        // keyboard route away rather than add to it.
         return;
     }
   };
@@ -187,56 +142,34 @@ export function CropFrame({
   return (
     <>
       <div
-        ref={frameRef}
         data-testid={testId}
-        // A focusable group rather than a button: it takes keys and reports a
-        // value, but activating it does nothing, and a button that ignores
-        // Enter would lie about itself.
-        role="group"
-        tabIndex={0}
-        aria-label="The picture's framing"
-        aria-describedby={describedBy}
         style={{
-          aspectRatio: cssRatio(frameRatio),
+          aspectRatio: cssRatio(SHAPE_RATIO[shape]),
           borderRadius: round ? "var(--radius-full)" : "var(--radius-medium)",
-          touchAction: "none",
-          cursor: pannable ? (dragging ? "grabbing" : "grab") : "default",
         }}
-        className="cg-focus relative w-full select-none overflow-hidden bg-surface-container-high"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
+        className="relative w-full overflow-hidden bg-surface-container-high"
         onKeyDown={onKeyDown}
       >
-        {/* A plain <img>, not next/image: the source here is a device-local
-            `blob:`/`data:` URL for a file the reader just picked, which the
-            optimizer cannot fetch and must not be asked to. next/image is for
-            served media; this is a local preview. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={src}
-          alt={alt}
-          draggable={false}
-          onLoad={(event) => {
-            const image = event.currentTarget;
-            if (image.naturalWidth > 0 && image.naturalHeight > 0) {
-              setSourceRatio(image.naturalWidth / image.naturalHeight);
-            }
-          }}
-          style={cropStyle(crop)}
-          className="block size-full"
+        <Cropper
+          image={src}
+          aspect={SHAPE_RATIO[shape]}
+          crop={{ x: crop.x, y: crop.y }}
+          zoom={clampZoom(crop.zoom)}
+          minZoom={MIN_ZOOM}
+          maxZoom={MAX_ZOOM}
+          cropShape={round ? "round" : "rect"}
+          // The whole picture, always. This one prop is the first of the two
+          // reported defects; it is not a taste setting.
+          objectFit="contain"
+          // The rule-of-thirds guides the canvas draws are the library's own.
+          showGrid
+          keyboardStep={KEYBOARD_STEP}
+          onCropChange={onCropChange}
+          onZoomChange={onZoomChange}
+          onCropComplete={onCropComplete}
+          mediaProps={{ alt }}
+          cropperProps={{ "aria-label": "The picture's framing", "aria-describedby": describedBy }}
         />
-        {/* Rule-of-thirds guides. `aria-hidden` and non-interactive: they are a
-            framing aid, not content. Fixed translucent white rather than a
-            role — the guides sit on the reader's own photograph, whose tones
-            no theme knows, and this is the value the canvas draws. */}
-        <span aria-hidden="true" className="pointer-events-none absolute inset-0">
-          <span style={{ background: GUIDE }} className="absolute inset-y-0 left-1/3 w-px" />
-          <span style={{ background: GUIDE }} className="absolute inset-y-0 left-2/3 w-px" />
-          <span style={{ background: GUIDE }} className="absolute inset-x-0 top-1/3 h-px" />
-          <span style={{ background: GUIDE }} className="absolute inset-x-0 top-2/3 h-px" />
-        </span>
       </div>
       <p id={describedBy} className="sr-only">
         Drag the picture to move it, or use the arrow keys. Press plus to zoom in, minus to zoom
