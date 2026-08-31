@@ -1,4 +1,4 @@
-# Hashtag
+# Hashtag · `spec:instances:hashtag`
 
 The **Hashtag** is CoGra's topic surface. On the substrate a
 hashtag *is* an L1 **Type** node — a named semantic anchor

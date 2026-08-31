@@ -1,4 +1,4 @@
-# Retention archive
+# Retention archive · `spec:primitive:retention-archive`
 
 Some redactions destroy the original; others must preserve it for
 legal purposes. The retention archive is the platform's universal

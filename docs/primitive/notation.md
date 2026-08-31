@@ -1,4 +1,4 @@
-# Notation
+# Notation · `spec:primitive:notation`
 
 Two symbol ledgers govern the math in these docs, and they never
 mix:

@@ -1,4 +1,4 @@
-# Network
+# Network · `spec:primitive:network`
 
 The **Network** is the global community of every member on a CoGra
 instance — the body that backs platform-wide governance: content

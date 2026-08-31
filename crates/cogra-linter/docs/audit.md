@@ -1,4 +1,4 @@
-# The Corpus Linter — Audit
+# The Corpus Linter — Audit · `rep:lint:audit`
 
 _Phase 5 of the standard engineering process: the audit. Adversarial review over the merged crate by a reader who wrote none of it, the four deferred fuzz targets written and campaigned, and orchestrator reproduction of every Major._
 

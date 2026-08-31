@@ -1,4 +1,4 @@
-# Backlog
+# Backlog · `plan:design:backlog`
 
 One ordered queue. A session pulls the top unstarted item, does it, and
 ports back whatever it learned — a new component gets its `.d.ts`,

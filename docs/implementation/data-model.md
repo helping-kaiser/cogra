@@ -1,4 +1,4 @@
-# Data Model — PostgreSQL
+# Data Model — PostgreSQL · `spec:implementation:data-model`
 
 CoGra runs a single store: this document covers the **PostgreSQL
 schema** — the L1 record mirror, the overlay, and CoGra's

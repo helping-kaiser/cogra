@@ -107,8 +107,12 @@ pub const ANCHOR_UNDESIGNATED: RuleId = RuleId::new("anchor-undesignated");
 /// (´[LBL-inf:labels:synthetic-citation]´).
 pub const TYPED_DATA_UNHARVESTED: RuleId = RuleId::new("typed-data-unharvested");
 
+/// An imported citation into an owner outside the citing owner's declared
+/// reach (´dec:lint:reach-declared´).
+pub const CITATION_OUTSIDE_REACH: RuleId = RuleId::new("label-citation-outside-reach");
+
 /// Every rule this module can report, for the diagnostic inventory.
-pub const RULES: [RuleId; 16] = [
+pub const RULES: [RuleId; 17] = [
     DUPLICATE_MINT,
     UNRESOLVED,
     AMBIGUOUS_RESOLUTION,
@@ -125,6 +129,7 @@ pub const RULES: [RuleId; 16] = [
     GENERATED_DANGLING,
     ANCHOR_UNDESIGNATED,
     TYPED_DATA_UNHARVESTED,
+    CITATION_OUTSIDE_REACH,
 ];
 
 /// At most one mint per owner and label, with both locations when there are
@@ -500,6 +505,77 @@ pub fn synthetic_citation(g: &Corpus, a: &Adoption) -> Vec<Diagnostic> {
             ),
         })
         .collect()
+}
+
+/// Every imported citation names an owner the citing owner reaches
+/// (´dec:lint:reach-declared´).
+///
+/// Σ says which prefixes name an owner and Ω says which owner holds a source.
+/// Between them a citation either resolves or does not, and neither has an
+/// opinion about whether a source of one owner had any business importing
+/// from another: a primitive document importing from a web package resolves
+/// exactly as cleanly as one importing from the label calculus. This is the
+/// clause that has the opinion, and the corpus supplies it as data.
+///
+/// # Why the domain is the imported citations alone
+///
+/// A same-owner citation is an owner reaching itself, which no declaration can
+/// forbid. An import whose prefix Σ does not register has no `Cites` edge and
+/// names no owner to test — [`total_resolution`] reports it as
+/// [`UNREGISTERED_PREFIX`], and a second finding on the same occurrence would
+/// say nothing further. An import that names the citing owner is
+/// [`SELF_QUALIFIED_IMPORT`] there for the same reason. What is left is
+/// exactly the edges a reach graph is about, and each is one lookup against
+/// one row.
+///
+/// The query runs over the citations in node order and consults no `HashMap`,
+/// so the findings arrive in one order whatever the traversal did
+/// (´[ARCH-req:linter:determinism]´).
+///
+/// # The empty domain
+///
+/// This corpus declares no `[reach]` section, so the graph is `None` and the
+/// clause passes vacuously over every import it holds. That is the same
+/// vacuity the anchor harvest and the synthetic citation run under, and it is
+/// implemented for the same reason: a check whose domain is empty passes
+/// vacuously and a check that does not exist passes by absence
+/// (´tab:lint:judgment-implementation´).
+#[must_use]
+pub fn citation_reach(g: &Corpus, a: &Adoption) -> Vec<Diagnostic> {
+    let Some(reach) = a.reach.as_ref() else {
+        return Vec::new();
+    };
+    let mut found = Vec::new();
+    for citation in nodes_of(g, NodeKind::Citation) {
+        let Some(NodeW::Citation(weight)) = g.node_weight(citation) else {
+            continue;
+        };
+        let Some(prefix) = weight.prefix.as_ref() else {
+            continue;
+        };
+        let (Some(from), Some(into)) = (
+            owner_of(g, citation),
+            out_along(g, citation, EdgeW::Cites).next(),
+        ) else {
+            continue;
+        };
+        let (from, into) = (owner_id(g, from), owner_id(g, into));
+        if reach.permits(&from, &into) {
+            continue;
+        }
+        let Some(at) = at(g, citation) else { continue };
+        found.push(Diagnostic {
+            rule: CITATION_OUTSIDE_REACH,
+            severity: Severity::Error,
+            enforcement: Enforcement::Advisory,
+            primary: at,
+            related: Vec::new(),
+            message: format!(
+                "{from} imports {prefix} of {into}, which its declared reach does not name"
+            ),
+        });
+    }
+    found
 }
 
 /// One profile's inventory within one owner.

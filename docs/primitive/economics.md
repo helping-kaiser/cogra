@@ -1,4 +1,4 @@
-# Economics
+# Economics · `spec:primitive:economics`
 
 CoGra's economy turns advertiser demand into contributor earnings
 **through the graph and nothing else**. Who gets paid, and how much,
