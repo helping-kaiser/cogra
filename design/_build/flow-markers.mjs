@@ -161,6 +161,96 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+// The Feed & Search page. Signed-in post cards carry standings, so the stance
+// anchor differs from the entry boards'; the hidden "Choose your stance"
+// skip-link shares the stance number. Sheet boards are scanExempt — only the
+// sheet layer (and its scrim, the tap-outside dismiss) is stamped.
+const signedPost = (at) => [
+  { n: at.author, find: '<a href="/u/', tag: "a", all: true },
+  { n: at.menu, find: 'aria-label="More on this post"', tag: "button", all: true },
+  { n: at.more, find: ">More</button>", tag: "button", all: true },
+  { n: at.topic, find: '<a href="/t/', tag: "a", all: true },
+  { n: at.stance, find: 'aria-label="Your stance on this post', tag: "button", all: true },
+  { n: at.stance, find: ">Choose your stance</button>", tag: "button", all: true },
+  { n: at.score, find: ">Post Score</span>", tag: "button", all: true },
+];
+const searchShell = (fieldText, nRow) => [
+  { n: 1, find: fieldText, tag: "div" },
+  { n: 2, find: 'aria-label="What the search shows"', tag: "button" },
+  { n: 3, find: 'aria-label="How searching works"', tag: "button" },
+  ...nav(nRow),
+];
+
+Object.assign(FLOW_MARKERS, {
+  Explore: [
+    { n: 1, find: "Search people, posts, topics", tag: "div" },
+    { n: 2, find: ">Enter the Sky</button>", tag: "button" },
+    { n: 3, find: ">@sol salt</span>", tag: "button" },
+    { n: 3, find: ">#saltmaps</span>", tag: "button" },
+    { n: 3, find: ">coast road</span>", tag: "button" },
+    ...nav(4),
+  ],
+  ExploreSearch: [
+    ...searchShell("@sol salt", 9),
+    { n: 4, find: "Salt maps of the coast road", tag: "button" },
+    { n: 4, find: "First try at a rubbing", tag: "button" },
+    { n: 5, find: "Salt-crust rubbing, framed", tag: "button" },
+    { n: 6, find: "The wax-stick ones read like weather charts", tag: "button" },
+    { n: 7, find: "Crust held all the way past the slipway today.", tag: "button" },
+    { n: 8, find: "An offer by @sol", tag: "button" },
+  ],
+  ExploreFilter: [
+    { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
+    { n: 2, find: 'role="switch"', tag: "button", all: true },
+    { n: 3, find: "aria-pressed=", tag: "button", all: true },
+    { n: 4, find: "already seen", tag: "label" },
+    { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ExploreNone: [...searchShell("brackish cartography", 4)],
+  Feed: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
+    { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 7, find: ">· 1 reference<", tag: "span" },
+    { n: 10, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 10, find: 'aria-label="1 comment"', tag: "button" },
+    ...nav(11),
+  ],
+  FeedSheet: [
+    { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
+    { n: 2, find: 'role="switch"', tag: "button", all: true },
+    { n: 3, find: "aria-pressed=", tag: "button", all: true },
+    { n: 4, find: "already seen", tag: "label" },
+    { n: 5, find: ">Reset</button>", tag: "button" },
+    { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  FeedNarrowed: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
+    { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
+    { n: 7, find: ">· 1 reference<", tag: "span" },
+    { n: 10, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 10, find: 'aria-label="2 comments"', tag: "button" },
+    ...nav(11),
+  ],
+  FeedNothing: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 2, find: ">Show posts again</button>", tag: "button" },
+    ...nav(3),
+  ],
+  FeedFar: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
+    { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
+    { n: 7, find: ">· 1 reference<", tag: "span" },
+    { n: 10, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 10, find: 'aria-label="2 comments"', tag: "button" },
+    ...nav(11),
+  ],
+});
+
 export function applyFlowMarkers(name, html) {
   const markers = FLOW_MARKERS[name];
   if (!markers) return html;
