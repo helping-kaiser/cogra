@@ -204,6 +204,25 @@ moves off the profile in item 12, so settle the figure first.
 ### 12 · Wallet · *design*
 Balance, where CGT came from, active campaigns, `payoutAddress`.
 
+### 21 · The media slice · *design + system* · **built**
+Inserted 2026-08-31 (jakob), ahead of item 12: the product's media
+rebuild needed the five designs its lanes had been inventing, plus
+comment media and comment editing. Rulings in readme §13 *The media
+slice* and on the canvas's `sec-media` note. Built: `MediaGallery`
+became the PAGER (one frame at the post's one crop shape, dots only,
+no count pill; ratio vocabulary now `tall`/`square`/`wide`),
+`CommentCard` grew `media` (inset, comment-scale cap, never cropped,
+max four); boards *Feed · the gallery pager*, *Comments · pictures &
+own comment* (Edit + Edited on an own comment), *Pick · show all*
+(the per-picture manager: reorder/cover/remove/describe), *Describe
+a picture* (+ "?"), *Details · uploading, one failed* (rings, Retry ·
+Remove), *Seal · waiting on uploads* (signing gated), *Reply ·
+pictures attached*, *Edit comment* (one batch, license locked),
+*Profile picture · crop* and *· what you sign* (avatar change is a
+signed act; NO profile cover — the ProfileHeader ruling stands).
+Upload starts after the crop: only the cropped export ever leaves
+the device. Caps: 10 pictures or 1 video per post, 4 per comment.
+
 ### 13 · Post Score drill-down · *design*
 Four screens — FeedEntry → RankPath → RankHop → raw records — each
 carrying a small cover of the post it came from. The register is graph,
