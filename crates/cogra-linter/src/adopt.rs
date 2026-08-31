@@ -12,6 +12,9 @@
 //! Thirteen sections: the seven data the calculus is parametric in, the
 //! kind registry's own adoption data, the carrier, head recognition, the
 //! banned-token sets, the enforcement partition, and the file's metadata.
+//! A fourteenth is optional and this corpus does not yet write it: `[reach]`,
+//! which says which owners an owner's imports may name
+//! (´dec:lint:reach-declared´).
 
 use std::collections::BTreeMap;
 use std::fmt;
@@ -189,6 +192,9 @@ pub struct Adoption {
     /// The failing set, as literal path prefixes
     /// (´dec:lint:enforcement-partition´).
     pub enforcement: EnforcementPartition,
+    /// Which owners an owner's imports may name, where the corpus declares
+    /// it at all (´dec:lint:reach-declared´).
+    pub reach: Option<Reach>,
     /// Every path the data configures, each with the row it sits in, so
     /// that a spelling check can be located (´sig:lint:adoption-api´).
     pub configured_paths: Vec<ConfiguredPath>,
@@ -311,6 +317,105 @@ impl Adoption {
         }
         Ok(())
     }
+
+    /// Every package the build system names has a partition rule of its own.
+    ///
+    /// R-PKG′ (`[signature.families.package]`) derives a prefix for "every
+    /// unit the build system names as a package", but Σ registering a
+    /// derivable prefix is not Ω assigning that package's paths to an
+    /// owner — nothing before this check enforced that the two agree. A
+    /// package with no rule of its own falls to the residual rule
+    /// silently: this is the check that says so out loud, the same way
+    /// [`Adoption::verify_spellings`] says out loud what a silent
+    /// case-fold would otherwise hide.
+    ///
+    /// The roster is read off the build systems themselves — never off this
+    /// file, which would only be able to check itself against itself: a
+    /// Cargo workspace member from the root manifest's `[workspace]
+    /// members`, the npm package if `web/package.json` exists, the Gradle
+    /// build if `android/build.gradle.kts` exists (the anchor a 15-module
+    /// build has exactly one of, unlike any single module beneath it).
+    ///
+    /// Like [`Adoption::verify_spellings`], this cannot run at
+    /// [`Adoption::load`]: the adoption file is handed over with no corpus
+    /// root, and the roster lives in the root's own build manifests. A root
+    /// manifest this check cannot read or parse is not this check's
+    /// question — Cargo itself refuses to build such a workspace — so it
+    /// passes here with nothing to reconcile.
+    ///
+    /// # Errors
+    ///
+    /// [`AdoptionError::UnregisteredPackage`], located at the row of the
+    /// residual partition rule the package's paths fall to, naming the
+    /// package and the prefix R-PKG′ would derive for it.
+    pub fn verify_package_roster(&self, root: &Path) -> Result<(), AdoptionError> {
+        for (package, representative) in build_system_roster(root) {
+            let fell_through = self
+                .partition
+                .rule_for(&representative)
+                .is_none_or(|rule| rule.path.as_str().is_empty());
+            if fell_through {
+                let owner = OwnerId::new(&format!("pkg.{package}"));
+                let derived_prefix = self.signature.derived_prefix(&owner).map_or_else(
+                    || String::from("none — R-PKG' derives no well-formed prefix for it"),
+                    |prefix| prefix.to_string(),
+                );
+                return Err(AdoptionError::UnregisteredPackage {
+                    at: self.partition.residual_at.clone(),
+                    package,
+                    derived_prefix,
+                });
+            }
+        }
+        Ok(())
+    }
+}
+
+/// The packages the build systems under `root` actually name, each with one
+/// representative path inside it for [`Partition::rule_for`] to resolve —
+/// the package's own directory prefix carries no trailing component a tree
+/// prefix could match against.
+///
+/// Cargo workspace members come from the root manifest's own `[workspace]
+/// members`, parsed rather than assumed, so a member this check names is a
+/// member Cargo itself would build. `android` and `web` are named only when
+/// their own build file exists, so a corpus without either build carries no
+/// phantom package for it.
+fn build_system_roster(root: &Path) -> Vec<(String, PathBuf)> {
+    #[derive(serde::Deserialize)]
+    struct RootManifest {
+        #[serde(default)]
+        workspace: Option<WorkspaceTable>,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct WorkspaceTable {
+        #[serde(default)]
+        members: Vec<Box<str>>,
+    }
+
+    let mut roster = Vec::new();
+    if let Ok(manifest) = std::fs::read_to_string(root.join("Cargo.toml"))
+        && let Ok(parsed) = toml::from_str::<RootManifest>(&manifest)
+    {
+        for member in parsed.workspace.into_iter().flat_map(|w| w.members) {
+            let package = Path::new(&*member).file_name().map_or_else(
+                || member.to_string(),
+                |name| name.to_string_lossy().into_owned(),
+            );
+            roster.push((package, Path::new(&*member).join("Cargo.toml")));
+        }
+    }
+    if root.join("android/build.gradle.kts").is_file() {
+        roster.push((
+            String::from("android"),
+            PathBuf::from("android/build.gradle.kts"),
+        ));
+    }
+    if root.join("web/package.json").is_file() {
+        roster.push((String::from("web"), PathBuf::from("web/package.json")));
+    }
+    roster
 }
 
 /// The on-disk spelling of `configured`, when the tree carries it under one
@@ -367,7 +472,7 @@ fn entry_names(at: &Path) -> Vec<String> {
 }
 
 /// When the adoption was drafted and ruled, and where its rationale lives.
-#[derive(Clone, Debug, serde::Deserialize)]
+#[derive(Clone, Debug)]
 pub struct Meta {
     /// The date the file was drafted.
     pub drafted: Box<str>,
@@ -381,6 +486,12 @@ pub struct Meta {
     pub corpus_root: Box<str>,
     /// The discipline documents this corpus adopts.
     pub discipline_docs: Vec<Box<str>>,
+    /// `[major, minor, patch]` of the config envelope this file is written
+    /// against. Only `major` is enforced: a file whose major this build
+    /// does not read fails to load with a located error naming both,
+    /// rather than being silently misinterpreted by a reader built for a
+    /// shape it does not have. `minor`/`patch` are carried but advisory.
+    pub schema_version: [u32; 3],
 }
 
 /// What the corpus IS: the exclusions that fix Ω's domain.
@@ -520,6 +631,13 @@ pub struct Partition {
     /// Ordered, first match wins. The last rule's prefix is empty, which is
     /// what makes Ω total.
     pub rules: Vec<PartitionRule>,
+    /// The row the residual (last, empty-prefix) rule sits in.
+    ///
+    /// Kept for a defect [`Adoption::verify_package_roster`] finds only
+    /// after the file has fully loaded: an unregistered package has no row
+    /// of its own to name, and this is exactly the row its paths silently
+    /// fall to.
+    pub residual_at: Location,
 }
 
 impl Partition {
@@ -1048,9 +1166,195 @@ impl EnforcementPartition {
     }
 }
 
+/// Which owners an owner's imported citations may name
+/// (´dec:lint:reach-declared´).
+///
+/// Σ says which prefixes name an owner and Ω says which owner holds a source;
+/// neither says whether a source of one owner has any business importing from
+/// another. This is that relation, and the corpus declares it rather than
+/// deriving it: a derivation would have to read one dependency graph, and this
+/// corpus has three build systems and five document owners that appear in
+/// none of them (´dec:lint:reach-declared´).
+///
+/// # What a missing row means
+///
+/// A row constrains its own owner and no other. An owner the section does not
+/// name reaches everything, exactly as it does with no section at all, which
+/// is what lets the graph be tightened one owner at a time instead of all
+/// nineteen at once. Absence is therefore never a tightening, and the empty
+/// section is the same judgment as no section.
+#[derive(Clone, Debug)]
+pub struct Reach {
+    /// The declared rows, in the order the file writes them.
+    pub rows: Vec<ReachRow>,
+}
+
+impl Reach {
+    /// Whether an import from `from` into `to` lies inside the declared
+    /// reach.
+    ///
+    /// An owner reaches itself, so a same-owner citation is permitted by
+    /// structure and never by a row; an unconstrained owner reaches
+    /// everything; and reach is the declared edge alone and is not closed
+    /// under composition — the owner in the middle of a two-step path is the
+    /// one whose declaration would have to say so.
+    ///
+    /// ```
+    /// use cogra_linter::{Adoption, OwnerId};
+    ///
+    /// # let source = std::fs::read_to_string(
+    /// #     concat!(env!("CARGO_MANIFEST_DIR"), "/../../corpus-adoption.toml"),
+    /// # ).expect("the corpus's own adoption data");
+    /// # let adoption = Adoption::from_str(&source, std::path::Path::new("corpus-adoption.toml"))
+    /// #     .expect("a ruled adoption");
+    /// assert!(
+    ///     adoption.reach.is_none(),
+    ///     "this corpus declares no reach graph, so every import is permitted",
+    /// );
+    /// ```
+    #[must_use]
+    pub fn permits(&self, from: &OwnerId, to: &OwnerId) -> bool {
+        if from == to {
+            return true;
+        }
+        match self.row(from) {
+            None => true,
+            Some(row) => row.may_cite.contains(to),
+        }
+    }
+
+    /// The row that constrains one owner, where the section writes one.
+    #[must_use]
+    pub fn row(&self, owner: &OwnerId) -> Option<&ReachRow> {
+        self.rows.iter().find(|row| row.owner == *owner)
+    }
+}
+
+/// One owner's declared reach.
+#[derive(Clone, Debug)]
+pub struct ReachRow {
+    /// The owner the row constrains.
+    pub owner: OwnerId,
+    /// The owners its imports may name, beside itself.
+    pub may_cite: Vec<OwnerId>,
+    /// The row it sits in, so a defect against it can be opened.
+    pub at: Location,
+}
+
+impl Adoption {
+    /// No declared reach edge contradicts a dependency the build system
+    /// already carries (´dec:lint:reach-declared´).
+    ///
+    /// The comparison runs one way and only one. A package that depends on
+    /// another *compiles against* it, so an import between them is structural
+    /// and a declaration that omits it forbids what the build already
+    /// requires: that is the contradiction, and it stops the run. The other
+    /// direction is no defect at all — a declared edge Cargo does not carry is
+    /// how a document owner reaches a package, how the Kotlin and TypeScript
+    /// halves of the corpus reach anything, and how prose reaches prose. The
+    /// asymmetry is the whole reason the graph is declared and merely checked
+    /// against Cargo rather than read out of it.
+    ///
+    /// Only owners with a row are compared, because an owner with no row
+    /// reaches everything and can contradict nothing. Only manifests that are
+    /// there and parse are read: an absent or malformed `Cargo.toml` is no
+    /// evidence about reach, and the compiler will have more to say about it
+    /// than this check would.
+    ///
+    /// # Errors
+    ///
+    /// [`AdoptionError::ReachContradictsManifest`], located at the row whose
+    /// `may_cite` omits the dependency.
+    pub fn verify_reach_against_manifests(&self, root: &Path) -> Result<(), AdoptionError> {
+        let Some(reach) = self.reach.as_ref() else {
+            return Ok(());
+        };
+        for row in &reach.rows {
+            let Some(tree) = self.owner_tree(&row.owner) else {
+                continue;
+            };
+            for dependency in manifest_dependencies(root, &tree) {
+                let owner = self
+                    .partition
+                    .owner_for(&PathBuf::from(&dependency).join("Cargo.toml"));
+                if owner == row.owner || row.may_cite.contains(&owner) {
+                    continue;
+                }
+                return Err(AdoptionError::ReachContradictsManifest {
+                    at: row.at.clone(),
+                    owner: row.owner.to_string(),
+                    depends_on: owner.to_string(),
+                    manifest: format!("{tree}/Cargo.toml"),
+                });
+            }
+        }
+        Ok(())
+    }
+
+    /// The tree one owner's partition rule names, where a rule names one.
+    fn owner_tree(&self, owner: &OwnerId) -> Option<String> {
+        self.partition
+            .rules
+            .iter()
+            .find(|rule| rule.owner == *owner && rule.path.as_str().ends_with('/'))
+            .map(|rule| String::from(rule.path.as_str().trim_end_matches('/')))
+    }
+}
+
+/// Every intra-workspace path dependency one package's manifest declares,
+/// as a corpus-relative directory.
+///
+/// The three tables Cargo resolves a build from — ordinary, development, and
+/// build — because each is a real compile-time dependency and the reach
+/// question is the same for all three. A dependency is intra-workspace
+/// exactly when its entry carries a `path`; a registry dependency names no
+/// owner of this corpus and is not a reach question.
+fn manifest_dependencies(root: &Path, tree: &str) -> Vec<String> {
+    let Ok(text) = std::fs::read_to_string(root.join(tree).join("Cargo.toml")) else {
+        return Vec::new();
+    };
+    let Ok(manifest) = text.parse::<toml::Table>() else {
+        return Vec::new();
+    };
+    let mut found = Vec::new();
+    for table in ["dependencies", "dev-dependencies", "build-dependencies"] {
+        let Some(entries) = manifest.get(table).and_then(toml::Value::as_table) else {
+            continue;
+        };
+        for entry in entries.values() {
+            let Some(path) = entry.get("path").and_then(toml::Value::as_str) else {
+                continue;
+            };
+            found.push(joined(tree, path));
+        }
+    }
+    found.sort();
+    found.dedup();
+    found
+}
+
+/// One relative path resolved against a tree, with `.` and `..` applied.
+///
+/// Lexical and not `canonicalize`: the answer is fed back to Ω, which matches
+/// corpus-relative prefixes byte-exactly, and an absolute filesystem path
+/// matches none of them.
+fn joined(tree: &str, relative: &str) -> String {
+    let mut parts: Vec<&str> = tree.split('/').filter(|one| !one.is_empty()).collect();
+    for part in relative.split('/') {
+        match part {
+            "" | "." => {}
+            ".." => {
+                parts.pop();
+            }
+            named => parts.push(named),
+        }
+    }
+    parts.join("/")
+}
+
 #[derive(serde::Deserialize)]
 struct RawAdoption {
-    meta: Meta,
+    meta: RawMeta,
     carrier: RawCarrier,
     signature: RawSignature,
     partition: RawPartition,
@@ -1069,6 +1373,58 @@ struct RawAdoption {
     #[serde(rename = "head-recognition")]
     head_recognition: HeadRecognition,
     enforcement: RawEnforcement,
+    #[serde(default)]
+    reach: Option<RawReach>,
+}
+
+/// `[reach]`, the one optional section (´dec:lint:reach-declared´).
+#[derive(serde::Deserialize)]
+struct RawReach {
+    #[serde(rename = "owner", default)]
+    owners: Vec<RawReachRow>,
+}
+
+#[derive(serde::Deserialize)]
+struct RawReachRow {
+    owner: Spanned<OwnerId>,
+    #[serde(default)]
+    may_cite: Vec<OwnerId>,
+}
+
+/// `[meta]`, with `schema_version` kept spanned so a refused major names its
+/// own row.
+#[derive(serde::Deserialize)]
+struct RawMeta {
+    drafted: Box<str>,
+    ruled: Box<str>,
+    status: Box<str>,
+    rationale: Box<str>,
+    corpus_root: Box<str>,
+    discipline_docs: Vec<Box<str>>,
+    schema_version: Spanned<[u32; 3]>,
+}
+
+impl RawMeta {
+    fn validate(self, source: &str, origin: &Path) -> Result<Meta, AdoptionError> {
+        let schema_version = *self.schema_version.as_ref();
+        let expected = 1;
+        if schema_version[0] != expected {
+            return Err(AdoptionError::UnsupportedSchemaVersion {
+                at: row(&self.schema_version, source, origin),
+                found: schema_version[0],
+                expected,
+            });
+        }
+        Ok(Meta {
+            drafted: self.drafted,
+            ruled: self.ruled,
+            status: self.status,
+            rationale: self.rationale,
+            corpus_root: self.corpus_root,
+            discipline_docs: self.discipline_docs,
+            schema_version,
+        })
+    }
 }
 
 /// `[carrier]`, with each prefix's row kept for the spelling check.
@@ -1176,12 +1532,17 @@ fn row<T>(spanned: &Spanned<T>, source: &str, origin: &Path) -> Location {
 
 impl RawAdoption {
     fn validate(self, source: &str, origin: &Path) -> Result<Adoption, AdoptionError> {
+        let meta = self.meta.validate(source, origin)?;
         let signature = self.signature.validate(source, origin)?;
         let mut configured = Vec::new();
         for rule in &self.partition.rules {
             keep(&mut configured, "[partition]", &rule.path, source, origin);
         }
         let partition = self.partition.validate(source, origin, &signature)?;
+        let reach = self
+            .reach
+            .map(|declared| declared.validate(source, origin, &signature))
+            .transpose()?;
         let profiles = self
             .profiles
             .validate(source, origin, &self.reserved_kinds)?;
@@ -1202,7 +1563,7 @@ impl RawAdoption {
             at: row(&self.kinds.registry, source, origin),
         });
         Ok(Adoption {
-            meta: self.meta,
+            meta,
             carrier: Carrier {
                 exclude_trees: inner(self.carrier.exclude_trees),
                 generated_files: inner(self.carrier.generated_files),
@@ -1231,6 +1592,7 @@ impl RawAdoption {
                 default: self.enforcement.default,
                 failing: inner(self.enforcement.failing),
             },
+            reach,
             configured_paths: configured,
         })
     }
@@ -1322,8 +1684,8 @@ impl RawPartition {
                 });
             }
         }
-        match self.rules.last() {
-            Some(last) if last.path.as_ref().as_str().is_empty() => {}
+        let residual_at = match self.rules.last() {
+            Some(last) if last.path.as_ref().as_str().is_empty() => row(&last.path, source, origin),
             Some(last) => {
                 return Err(AdoptionError::PartitionNotTotal {
                     at: row(&last.path, source, origin),
@@ -1334,7 +1696,7 @@ impl RawPartition {
                     at: Location::in_source(origin.to_path_buf(), ByteSpan::new(0, 0), source),
                 });
             }
-        }
+        };
         let rules = self
             .rules
             .into_iter()
@@ -1345,7 +1707,73 @@ impl RawPartition {
                 optional: rule.optional,
             })
             .collect();
-        Ok(Partition { rules })
+        Ok(Partition { rules, residual_at })
+    }
+}
+
+impl RawReach {
+    /// The four things a declared graph must not say
+    /// (´dec:lint:reach-declared´).
+    ///
+    /// Both ends of every edge name a registered owner, because an edge into
+    /// a name Σ registers nothing for constrains an import no prefix could
+    /// write and would sit in the file looking like a permission. An owner
+    /// heads at most one row and names each target once, because a second
+    /// spelling of the same permission is a place for the two to drift apart.
+    /// And no row names its own owner: an owner reaches itself by being
+    /// itself, so writing the edge states a structural fact as a choice.
+    fn validate(
+        self,
+        source: &str,
+        origin: &Path,
+        signature: &Signature,
+    ) -> Result<Reach, AdoptionError> {
+        let mut rows: Vec<ReachRow> = Vec::with_capacity(self.owners.len());
+        for raw in &self.owners {
+            let owner = raw.owner.as_ref();
+            let at = row(&raw.owner, source, origin);
+            if !signature.registers(owner) {
+                return Err(AdoptionError::ReachUnknownOwner {
+                    at,
+                    owner: owner.to_string(),
+                });
+            }
+            if rows.iter().any(|kept| kept.owner == *owner) {
+                return Err(AdoptionError::ReachDuplicateOwner {
+                    at,
+                    owner: owner.to_string(),
+                });
+            }
+            let mut may_cite: Vec<OwnerId> = Vec::with_capacity(raw.may_cite.len());
+            for target in &raw.may_cite {
+                if !signature.registers(target) {
+                    return Err(AdoptionError::ReachUnknownOwner {
+                        at,
+                        owner: target.to_string(),
+                    });
+                }
+                if target == owner {
+                    return Err(AdoptionError::ReachSelfEdge {
+                        at,
+                        owner: owner.to_string(),
+                    });
+                }
+                if may_cite.contains(target) {
+                    return Err(AdoptionError::ReachRepeatedTarget {
+                        at,
+                        owner: owner.to_string(),
+                        target: target.to_string(),
+                    });
+                }
+                may_cite.push(target.clone());
+            }
+            rows.push(ReachRow {
+                owner: owner.clone(),
+                may_cite,
+                at,
+            });
+        }
+        Ok(Reach { rows })
     }
 }
 

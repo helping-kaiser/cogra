@@ -91,6 +91,7 @@ pub fn judge_all(
     found.extend(labels::generated_compliance(g, r, a));
     found.extend(labels::anchor_harvest(g, a));
     found.extend(labels::synthetic_citation(g, a));
+    found.extend(labels::citation_reach(g, a));
     match kinds {
         Some(registry) => found.extend(kinds::head_validation(g, registry)),
         None => found.push(suppressed(g, a)),

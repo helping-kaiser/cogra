@@ -69,7 +69,8 @@ pub use adopt::{
     HeadlessLanguages, Kind, KindEvidence, KindExtensions, KindGenerator, KindRegister,
     KindStatuses, KindsAdoption, Language, Meta, NameTransformation, OwnerId, Partition,
     PartitionRule, PathPrefix, Place, PrefixFamily, Profile, ProfileId, ProfileStatus, Profiles,
-    ReservedKinds, ScannedLanguage, ScannedRegions, Signature, TypedData, UnscannedLanguages,
+    Reach, ReachRow, ReservedKinds, ScannedLanguage, ScannedRegions, Signature, TypedData,
+    UnscannedLanguages,
 };
 pub use bans::BanRule;
 pub use carrier::{SourceFile, Walk, WalkOutcome};
@@ -227,12 +228,17 @@ impl Run {
 /// which is the linter unable to do its job and not a fact about the corpus
 /// (´crit:lint:error-or-finding´).
 ///
+/// The package roster is reconciled here for the identical reason: it too
+/// reads the root's own build manifests, which [`Adoption::load`] never
+/// sees. See [`Adoption::verify_package_roster`].
+///
 /// # Errors
 ///
 /// [`RunError::Walk`] when `root` is not a directory, and
 /// [`RunError::Adoption`] when a configured path is spelled otherwise than
-/// the root spells it. Nothing else: a traversal failure inside a directory
-/// that exists is a diagnostic beside a shorter source list, never an empty
+/// the root spells it, or a build-system package has no partition rule of
+/// its own. Nothing else: a traversal failure inside a directory that
+/// exists is a diagnostic beside a shorter source list, never an empty
 /// carrier (´[LBL-cav:labels:coexistence]´).
 pub fn check(a: &Adoption, root: &Path) -> Result<Run, RunError> {
     if !root.is_dir() {
@@ -241,6 +247,8 @@ pub fn check(a: &Adoption, root: &Path) -> Result<Run, RunError> {
         }));
     }
     a.verify_spellings(root)?;
+    a.verify_package_roster(root)?;
+    a.verify_reach_against_manifests(root)?;
     let walking = Instant::now();
     let (sources, failures) = match Walk::new(a, root).sources() {
         Ok(sources) => (sources, Vec::new()),
