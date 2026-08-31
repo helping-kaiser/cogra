@@ -42,6 +42,8 @@ const {
   FEED_KINDS,
   FEED_FILTER_DEFAULT,
   HelpDot: SystemHelpDot,
+  MoneyFigure,
+  CgtMark,
   StancePad,
   StanceReadout,
   SensitiveVeil,
