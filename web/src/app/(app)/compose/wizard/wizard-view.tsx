@@ -165,14 +165,24 @@ export function ComposeWizard({
     latest.current = state;
   }, [state]);
 
+  // ONCE THE POST HAS LANDED THERE IS NO DRAFT TO KEEP. The coalescing timer is
+  // armed by the last change before signing and fires on its own schedule, so
+  // without this latch it can land after the clear and put the published draft
+  // straight back. Checked where each write actually happens rather than in the
+  // effect body, because the write is what has to be stopped.
+  const landed = useRef(false);
+
   const keep = useCallback(() => {
-    if (!loaded || offered !== null || !draftIsWorthKeeping(latest.current)) return;
+    if (landed.current || !loaded || offered !== null || !draftIsWorthKeeping(latest.current)) return;
     void drafts.save(latest.current);
   }, [loaded, offered, drafts]);
 
   useEffect(() => {
     if (!loaded || offered !== null || !draftIsWorthKeeping(state)) return;
-    const timer = setTimeout(() => void drafts.save(state), 200);
+    const timer = setTimeout(() => {
+      if (landed.current) return;
+      void drafts.save(state);
+    }, 200);
     return () => clearTimeout(timer);
   }, [state, loaded, offered, drafts]);
 
@@ -302,7 +312,10 @@ export function ComposeWizard({
     setBusy(false);
 
     if (results.every((result) => result.kind === "done")) {
-      // The draft has become a post, so it stops being a draft.
+      // The draft has become a post, so it stops being a draft. The latch goes
+      // up BEFORE the clear, so a save the reader's last keystroke armed cannot
+      // slip in behind it.
+      landed.current = true;
       await drafts.clear();
       // ComposeLanded is the POST'S OWN PAGE carrying a confirmation, not the
       // feed carrying a card: what an author wants after publishing is to see

@@ -62,7 +62,7 @@
 //   put a third lossy generation between the phone and the feed, and would decode
 //   the same picture twice for no gain.
 
-import { CENTERED, clampCrop, type Crop } from "./crop";
+import { usableArea, type Crop, type CropArea } from "./crop";
 
 export const MAX_WIDTH = 1080;
 export const MAX_LONG_EDGE = 1440;
@@ -85,38 +85,50 @@ export type EncodeOptions = {
    * takes.
    */
   ratio?: number;
-  /** The framing inside that ratio; ignored without `ratio`. */
+  /**
+   * The author's framing. Its measured `area` is authoritative when it is
+   * there — it already carries the shape — and `ratio` is what stands in for it
+   * when it is not.
+   */
   crop?: Crop;
 };
 
 /**
- * The rectangle of the source the frame actually shows, in source pixels.
+ * The rectangle the frame shows AT REST, in source pixels: the largest
+ * rectangle of `ratio` that fits inside the source, centred.
  *
- * It inverts what `cropStyle` does on screen, so what uploads is what the
- * author framed. The frame shows a window of `cover / zoom`, and the focal
- * point slides that window across everything the source has left over — the
- * band the cover fit trims plus the slack the zoom opens. Sliding it by the
- * leftover exactly is what bounds the result: at focal point 0 the window sits
- * on one edge, at 1 on the other, and it can never run off the source.
+ * This is the fallback, and it is not an approximation of the cropper — it is
+ * the same rectangle the cropper itself computes before anyone touches it,
+ * because a "contain" fit lays the crop rectangle inside the media. So a
+ * picture whose framing was never measured (an upload that raced the decode, a
+ * draft restored and signed without reopening the crop screen) encodes exactly
+ * what the author last saw.
  */
 export function sourceRect(
   imageWidth: number,
   imageHeight: number,
   ratio: number,
-  crop: Crop = CENTERED,
-): { x: number; y: number; width: number; height: number } {
+): CropArea {
   if (!Number.isFinite(ratio) || ratio <= 0) throw new Error("crop ratio is not usable");
-  const { zoom, x, y } = clampCrop(crop);
-  // The cover fit, expressed as the source region the frame sees at zoom 1:
-  // whichever axis is proportionally longer than the frame gets trimmed.
   const sourceRatio = imageWidth / imageHeight;
-  const coverWidth = sourceRatio > ratio ? imageHeight * ratio : imageWidth;
-  const coverHeight = sourceRatio > ratio ? imageHeight : imageWidth / ratio;
-  const width = coverWidth / zoom;
-  const height = coverHeight / zoom;
+  const width = sourceRatio > ratio ? imageHeight * ratio : imageWidth;
+  const height = sourceRatio > ratio ? imageHeight : imageWidth / ratio;
+  return { x: (imageWidth - width) / 2, y: (imageHeight - height) / 2, width, height };
+}
+
+/**
+ * Hold a measured area inside the picture it was measured against.
+ *
+ * The cropper bounds the framing itself, so this only ever absorbs rounding —
+ * but a rectangle even a pixel outside the source draws a transparent edge into
+ * the upload, which is a visible defect for an invisible cause.
+ */
+export function withinImage(area: CropArea, imageWidth: number, imageHeight: number): CropArea {
+  const width = Math.min(area.width, imageWidth);
+  const height = Math.min(area.height, imageHeight);
   return {
-    x: (imageWidth - width) * x,
-    y: (imageHeight - height) * y,
+    x: Math.min(Math.max(0, area.x), imageWidth - width),
+    y: Math.min(Math.max(0, area.y), imageHeight - height),
     width,
     height,
   };
@@ -210,10 +222,15 @@ export async function encodeForUpload(
   // because the whole orientation argument rests on it.
   const bitmap = await createImageBitmap(source, { imageOrientation: "from-image" });
   try {
-    const from =
-      options.ratio === undefined
+    // What the author framed, if the cropper measured it; otherwise the
+    // rectangle the cropper shows at rest for this shape; otherwise — no shape
+    // at all — the picture whole.
+    const area = options.crop?.area;
+    const from = usableArea(area)
+      ? withinImage(area, bitmap.width, bitmap.height)
+      : options.ratio === undefined
         ? { x: 0, y: 0, width: bitmap.width, height: bitmap.height }
-        : sourceRect(bitmap.width, bitmap.height, options.ratio, options.crop);
+        : sourceRect(bitmap.width, bitmap.height, options.ratio);
     // The caps apply to what is being WRITTEN, so they read the cropped size:
     // a wide crop out of a tall original is a wide picture, and capping the
     // original's dimensions instead would shrink it for a height it no longer
