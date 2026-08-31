@@ -1,4 +1,4 @@
-# Collectives
+# Collectives · `spec:instances:collectives`
 
 A **Collective** is any group of people that needs a single graph
 identity to act through — a household, a band, a co-op, a studio,

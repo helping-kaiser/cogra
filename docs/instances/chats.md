@@ -1,4 +1,4 @@
-# Chats
+# Chats · `spec:instances:chats`
 
 Chats on CoGra are **not** what they are on WhatsApp, Signal, or
 iMessage. Assuming otherwise leads to wrong designs.

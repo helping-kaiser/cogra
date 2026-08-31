@@ -1,4 +1,4 @@
-# Post
+# Post · `spec:instances:post`
 
 The **Post** is CoGra's primary public content surface — a piece
 of authored content (text and/or media) published by a User or

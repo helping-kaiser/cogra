@@ -1,4 +1,4 @@
-# User-initiated erasure
+# User-initiated erasure · `spec:instances:erasure`
 
 A User can erase their own content from public view — a single
 record (§1) or the whole account (§2). Both paths are **pure L2

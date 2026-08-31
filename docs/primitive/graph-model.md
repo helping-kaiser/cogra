@@ -1,4 +1,4 @@
-# Graph Model
+# Graph Model · `spec:primitive:graph-model`
 
 How graph state behaves across the substrate: the record model,
 time and causality, revision, what "current state" means,
