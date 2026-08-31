@@ -318,6 +318,89 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+// The Compose page's JSX boards (the 13 hand boards carry their attributes
+// directly). The sheet boards are scanExempt; only the sheet layer and its
+// scrim are stamped.
+Object.assign(FLOW_MARKERS, {
+  ReferencePicker: [
+    { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
+    { n: 2, find: 'aria-label="How searching works"', tag: "button" },
+    { n: 3, find: ">salt<", tag: "div" },
+    { n: 4, find: 'aria-label="What the search shows"', tag: "button" },
+    { n: 5, find: ">Salt maps of the coast road<", tag: "button" },
+    { n: 5, find: ">Sal Torres<", tag: "button" },
+    { n: 5, find: ">Salt cellar, hand-carved<", tag: "button" },
+    { n: 5, find: ">Keep the salt flats path open<", tag: "button" },
+    { n: 5, find: ">Salt marsh survey crew<", tag: "button" },
+    { n: 5, find: ">Sea salt collective — autumn run<", tag: "button" },
+    { n: 5, find: "Offer on Salt cellar, hand-carved", tag: "button" },
+  ],
+  RefsSheet: [
+    { n: 1, find: ">photography<", tag: "button" },
+    { n: 1, find: ">coastroad<", tag: "button" },
+    { n: 2, find: ">Mira Voss<", tag: "button" },
+    { n: 2, find: ">Salt maps of the coast road<", tag: "button" },
+    { n: 2, find: ">Low tide at six tomorrow — anyone walking the flats?<", tag: "button" },
+    { n: 2, find: ">That stretch after the second bend…<", tag: "button" },
+    { n: 2, find: ">Mark the flooded dip on the coast road<", tag: "button" },
+    { n: 2, find: ">Salt-crust rubbing, framed<", tag: "button" },
+    { n: 2, find: ">Coast road cleanup week<", tag: "button" },
+    { n: 2, find: "Offer on: Salt-crust rubbing, framed", tag: "button" },
+    { n: 2, find: ">Coast walkers<", tag: "button" },
+    { n: 2, find: "Crust held all the way past the slipway today.", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  RemoveMenu: [
+    { n: 1, find: ">Edit</button>", tag: "button" },
+    { n: 2, find: ">Mark as sensitive</button>", tag: "button" },
+    { n: 3, find: ">Remove</button>", tag: "button" },
+    { n: 4, find: ">License terms</button>", tag: "button" },
+    { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  RemoveConfirm: [
+    { n: 1, find: ">Remove</button>", tag: "button" },
+    { n: 2, find: ">Keep it</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  Removed: [
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
+    { n: 2, find: '<a href="/u/', tag: "a", all: true },
+    { n: 3, find: 'aria-label="Take a stance on this post"', tag: "button", all: true },
+    { n: 3, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 4, find: ">Post Score</span>", tag: "button", all: true },
+    { n: 5, find: 'aria-label="2 comments"', tag: "button" },
+    ...nav(6),
+  ],
+  ComposeLanded: [
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
+    { n: 2, find: 'aria-label="More on this post"', tag: "button", all: true },
+    { n: 3, find: '<a href="/u/', tag: "a", all: true },
+    { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
+    { n: 5, find: 'aria-label="Topics and references"', tag: "button" },
+    { n: 6, find: 'aria-label="Your stance on this post', tag: "button", all: true },
+    { n: 6, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 7, find: ">Post Score</span>", tag: "button", all: true },
+    { n: 8, find: 'aria-label="0 comments"', tag: "button" },
+    ...nav(9),
+  ],
+  ComposeExpired: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 2, find: ">Dismiss</button>", tag: "button" },
+    { n: 3, find: ">Open the draft</button>", tag: "button" },
+    { n: 4, find: '<a href="/u/', tag: "a", all: true },
+    { n: 5, find: 'aria-label="More on this post"', tag: "button", all: true },
+    { n: 6, find: 'src="post-photo.jpg"', tag: "div" },
+    { n: 7, find: ">More</button>", tag: "button" },
+    { n: 8, find: '<a href="/t/', tag: "a", all: true },
+    { n: 9, find: ">· 1 reference<", tag: "span" },
+    { n: 10, find: 'aria-label="Your stance on this post', tag: "button", all: true },
+    { n: 10, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 11, find: ">Post Score</span>", tag: "button", all: true },
+    { n: 12, find: 'aria-label="3 comments"', tag: "button" },
+    ...nav(13),
+  ],
+});
+
 export function applyFlowMarkers(name, html) {
   const markers = FLOW_MARKERS[name];
   if (!markers) return html;
