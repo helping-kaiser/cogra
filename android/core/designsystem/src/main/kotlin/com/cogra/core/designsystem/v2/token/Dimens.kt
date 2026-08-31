@@ -75,4 +75,10 @@ object Layout {
 
     /** The square thumbnail the picked tray, the filmstrip and details share. */
     val ThumbSize = 48.dp
+
+    /** `PickedSheet`'s rows draw one rung larger than the tray's chips. */
+    val ThumbSizeSheet = 56.dp
+
+    /** `PickedSheet`'s row band, read off `ComposePicked`'s `min-height`. */
+    val PickedRowHeight = 68.dp
 }

@@ -18,6 +18,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.PriorityHigh
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -26,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -58,6 +61,17 @@ sealed interface ThumbBadge {
 
     /** A video's running time. Rendered now so 2.5.2 adds no new shape. */
     data class Duration(val label: String) : ThumbBadge
+
+    /**
+     * The upload did not go through
+     * (design/components/compose/MediaThumb.prompt.md).
+     *
+     * The tile dims and wears this badge; its *words* live beside the row
+     * in [com.cogra.core.designsystem.v2.compose.UploadErrorLine], which
+     * owns Retry and Remove — "never cram retry into 48px". The two
+     * always appear together, so a badge with no line is a bug.
+     */
+    data object Failed : ThumbBadge
 }
 
 /**
@@ -79,6 +93,15 @@ sealed interface ThumbBadge {
  *   them flush to the seam rather than at a measured dp.
  * @param corner the tray's thumbnails are rounded; the picker grid's tiles
  *   are not, so the seam between them reads as one sheet of pictures.
+ * @param width overrides [size] on one axis, for the comment composer's
+ *   uncropped 70×88 frame. A comment's pictures are never cropped
+ *   (2026-08-31), so their thumbnail shows the whole frame.
+ * @param height the other half of [width].
+ * @param fit `Crop` for an index into the set, `Fit` where the whole frame
+ *   must show — the uncropped comment thumbnail's case.
+ * @param progress an upload in flight: the ring rides a scrim over the tile.
+ *   Upload starts *after* the crop (only the cropped export is ever
+ *   uploaded), so this is the picture's own story on its own tile.
  */
 @Composable
 fun MediaThumb(
@@ -91,12 +114,25 @@ fun MediaThumb(
     dimmed: Boolean = false,
     onClick: (() -> Unit)? = null,
     contentDescription: String? = null,
+    width: Dp? = null,
+    height: Dp? = null,
+    fit: ContentScale = ContentScale.Crop,
+    progress: Float? = null,
     testTag: String? = null,
 ) {
     val shape = RoundedCornerShape(corner)
+    // A failed tile dims and its remove X gives way to the badge: the
+    // error line beside the row owns that tile's ways out.
+    val failed = badge == ThumbBadge.Failed
+    val faded = dimmed || failed
+    val sizing = when {
+        width != null && height != null -> Modifier.size(width, height)
+        size != null -> Modifier.size(size)
+        else -> Modifier.fillMaxWidth().aspectRatio(1f)
+    }
     Box(
         modifier = modifier
-            .then(if (size != null) Modifier.size(size) else Modifier.fillMaxWidth().aspectRatio(1f))
+            .then(sizing)
             .then(
                 if (selected) {
                     Modifier.border(BorderStroke(2.dp, MaterialTheme.colorScheme.primary), shape)
@@ -118,20 +154,78 @@ fun MediaThumb(
         AsyncImage(
             model = item.url,
             contentDescription = null,
-            contentScale = ContentScale.Crop,
+            contentScale = fit,
             modifier = Modifier
                 .fillMaxSize()
-                .alpha(if (dimmed) 0.65f else 1f),
+                .alpha(if (faded) 0.65f else 1f),
         )
+        if (progress != null) UploadRing(progress)
         when (badge) {
             is ThumbBadge.Order -> OrderBadge(badge.position)
             ThumbBadge.Cover -> CoverBadge()
             is ThumbBadge.Remove -> RemoveBadge(badge.onRemove)
             is ThumbBadge.Duration -> DurationBadge(badge.label)
+            ThumbBadge.Failed -> FailedBadge()
             null -> Unit
         }
     }
 }
+
+/**
+ * An upload in flight: the ring on its own scrim, centred
+ * (`design/components/compose/UploadNotice.jsx`'s `Ring`, on the tile).
+ *
+ * The scrim is what keeps a light stroke legible over arbitrary pixels —
+ * the same reason every other badge here rides [MediaOverlay].
+ */
+@Composable
+private fun BoxScope.UploadRing(progress: Float) {
+    Box(
+        modifier = Modifier
+            .matchParentSize()
+            .background(MediaOverlay.Badge),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator(
+            progress = { progress.coerceIn(0f, 1f) },
+            modifier = Modifier.size(RingSize),
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MediaOverlay.BadgeInk.copy(alpha = 0.35f),
+            strokeWidth = RingStroke,
+            strokeCap = StrokeCap.Round,
+            // The tile already carries the count in the line beside it;
+            // a second announcement per thumbnail would be noise.
+            gapSize = 0.dp,
+        )
+    }
+}
+
+/**
+ * The failed tile's mark. The words are the error line's — this only says
+ * *which* tile, which is the one thing 48dp can carry.
+ */
+@Composable
+private fun BoxScope.FailedBadge() {
+    Box(
+        modifier = Modifier
+            .align(Alignment.TopEnd)
+            .padding(3.dp)
+            .size(16.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.error),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Filled.PriorityHigh,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onError,
+            modifier = Modifier.size(10.dp),
+        )
+    }
+}
+
+private val RingSize = 18.dp
+private val RingStroke = 3.dp
 
 @Composable
 private fun BoxScope.OrderBadge(position: Int?) {
