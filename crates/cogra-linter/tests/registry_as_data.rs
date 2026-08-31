@@ -108,6 +108,9 @@ fn table(header: &str, rows: &[(&str, &str)]) -> String {
 }
 
 /// The registry document is its own fixture, and it parses.
+///
+/// The registry document parses out of its own tables.
+/// ´claim:registry:the-registry-document-parses´
 #[test]
 fn the_registry_document_parses() {
     assert!(registry().headline_counts().names > 0);
@@ -115,6 +118,9 @@ fn the_registry_document_parses() {
 
 /// The Markdown frontend finds no defect in the document that defines the
 /// discipline it implements.
+///
+/// The document defining the discipline carries no frontend defect of its own.
+/// ´claim:registry:the-registry-document-is-clean´
 #[test]
 fn the_registry_document_carries_no_frontend_finding() {
     assert_eq!(registry_doc().diagnostics, []);
@@ -122,6 +128,9 @@ fn the_registry_document_carries_no_frontend_finding() {
 
 /// A table whose header row is `Environment | Kind` is a catalogue table;
 /// the fourteen Conventions carry one each.
+///
+/// A table whose header row names an environment and a kind is a catalogue table.
+/// ´claim:registry:a-catalogue-table-is-known-by-its-header´
 #[test]
 fn every_convention_table_is_a_catalogue_table() {
     let catalogue = registry_doc()
@@ -134,6 +143,9 @@ fn every_convention_table_is_a_catalogue_table() {
 
 /// The emphasis and status modifiers are the one `Modifier | Kind` table,
 /// and the registry carries twelve.
+///
+/// The emphasis and status modifiers are the one modifier table.
+/// ´claim:registry:the-modifier-table-is-found´
 #[test]
 fn the_modifier_table_is_found() {
     let modifiers: Vec<&Table> = registry_doc()
@@ -147,6 +159,9 @@ fn the_modifier_table_is_found() {
 
 /// A generated presentation derives no classification pair, so the headline
 /// counts table contributes nothing (´[KND-sig:kinds:registry-data]´).
+///
+/// A generated presentation derives no classification pair.
+/// ´claim:registry:a-generated-table-contributes-no-pair´
 #[test]
 fn the_headline_table_contributes_no_pair() {
     let headline = registry_doc()
@@ -161,6 +176,9 @@ fn the_headline_table_contributes_no_pair() {
 
 /// The five counts are derived from the tables alone, and the derivation is
 /// checked by recomputing it a second way off the same parse.
+///
+/// The headline counts are derived from the tables alone, recomputed a second way off one parse.
+/// ´claim:registry:the-headline-counts-are-derived´
 #[test]
 fn the_headline_counts_are_derived_from_the_tables() {
     let mut names: BTreeSet<String> = BTreeSet::new();
@@ -201,6 +219,9 @@ fn the_headline_counts_are_derived_from_the_tables() {
 
 /// The counts the derivation produces, pinned so a change to the registry
 /// is a change to this test rather than a silent drift.
+///
+/// The derived counts are pinned, so a change to the registry is a change to a test.
+/// ´claim:registry:the-counts-are-pinned´
 #[test]
 fn the_derived_counts_are_pinned() {
     assert_eq!(
@@ -217,6 +238,9 @@ fn the_derived_counts_are_pinned() {
 
 /// The rows of C are the catalogue rows with the derived hybrid rows
 /// included and the device rows excluded.
+///
+/// The rows of the relation include the derived hybrids and exclude the device rows.
+/// ´claim:registry:device-rows-are-not-relation-rows´
 #[test]
 fn the_device_rows_are_excluded_from_the_rows_count() {
     let counts = registry().headline_counts();
@@ -231,6 +255,9 @@ fn the_device_rows_are_excluded_from_the_rows_count() {
 
 /// Classification is a relation: one name may carry several kinds, one per
 /// catalogued sense (´[KND-judg:kinds:classification]´).
+///
+/// Classification is a relation: one name may carry several kinds, one per catalogued sense.
+/// ´claim:registry:a-name-may-carry-several-kinds´
 #[test]
 fn a_name_may_carry_several_kinds() {
     let kinds: Vec<&str> = registry().classify("Structure").map(Kind::as_str).collect();
@@ -238,6 +265,9 @@ fn a_name_may_carry_several_kinds() {
 }
 
 /// And several names one kind (´[KND-inv:kinds:one-kind]´).
+///
+/// Several names may carry one kind.
+/// ´claim:registry:several-names-may-carry-one-kind´
 #[test]
 fn several_names_may_carry_one_kind() {
     for name in [
@@ -252,6 +282,9 @@ fn several_names_may_carry_one_kind() {
 }
 
 /// A name the registry does not catalogue is classified by nothing.
+///
+/// A name the registry does not catalogue is classified by nothing.
+/// ´claim:registry:an-uncatalogued-name-classifies-to-nothing´
 #[test]
 fn an_uncatalogued_name_classifies_to_nothing() {
     assert!(registry().classify("Widget").next().is_none());
@@ -259,6 +292,9 @@ fn an_uncatalogued_name_classifies_to_nothing() {
 
 /// The dagger printed at a row is a status mark on the row, never a
 /// character of the name (´[KND-judg:kinds:attestation]´).
+///
+/// The dagger printed at a row is a status mark and never a character of the name.
+/// ´claim:registry:the-dagger-is-not-the-name´
 #[test]
 fn the_dagger_is_not_part_of_the_name() {
     let kinds: Vec<&str> = registry().classify("Yoga").map(Kind::as_str).collect();
@@ -267,6 +303,9 @@ fn the_dagger_is_not_part_of_the_name() {
 }
 
 /// A device row carries no kind and contributes no member to C.
+///
+/// A device row carries no kind and contributes no member to the relation.
+/// ´claim:registry:a-device-row-contributes-no-pair´
 #[test]
 fn a_device_row_contributes_no_pair() {
     for row in [
@@ -279,6 +318,8 @@ fn a_device_row_contributes_no_pair() {
 }
 
 /// A modifier is a device too, and contributes no member.
+///
+/// (´claim:registry:a-device-row-contributes-no-pair´)
 #[test]
 fn a_modifier_contributes_no_pair() {
     for row in ["Main", "Toy", "Working"] {
@@ -288,6 +329,9 @@ fn a_modifier_contributes_no_pair() {
 
 /// A hybrid environment concatenates its parts' kinds in order
 /// (´[KND-inf:kinds:hybrid]´).
+///
+/// A hybrid environment concatenates its parts' kinds in order.
+/// ´claim:registry:a-hybrid-composes-its-parts´
 #[test]
 fn a_hybrid_composes_its_parts_kinds() {
     let kinds: Vec<&str> = registry()
@@ -298,6 +342,9 @@ fn a_hybrid_composes_its_parts_kinds() {
 }
 
 /// The registry's three declared triples are all derived.
+///
+/// Every declared hybrid triple of the registry is derived.
+/// ´claim:registry:every-declared-hybrid-derives´
 #[test]
 fn every_declared_hybrid_is_derived() {
     for (name, kind) in [
@@ -311,6 +358,9 @@ fn every_declared_hybrid_is_derived() {
 }
 
 /// The derivation reads the parts out of the ordinary rows.
+///
+/// A hybrid's derivation reads its parts out of the ordinary rows.
+/// ´claim:registry:a-hybrids-parts-are-ordinary-rows´
 #[test]
 fn a_hybrids_parts_are_ordinary_rows() {
     for (part, kind) in [("Definition", "def"), ("Proposition", "prop")] {
@@ -321,6 +371,9 @@ fn a_hybrids_parts_are_ordinary_rows() {
 
 /// Side condition: the composed token is not otherwise assigned
 /// (´[KND-inv:kinds:distinctness]´).
+///
+/// A hybrid whose composed token is otherwise assigned fails.
+/// ´claim:registry:a-taken-hybrid-token-fails´
 #[test]
 fn a_hybrid_token_that_is_otherwise_assigned_fails() {
     let doc = table(
@@ -342,6 +395,9 @@ fn a_hybrid_token_that_is_otherwise_assigned_fails() {
 
 /// Side condition: no two declared hybrids compose one token. Synonymous
 /// parts are what makes two distinct hybrid names compose one.
+///
+/// Two declared hybrids composing one token fail.
+/// ´claim:registry:two-hybrids-may-not-compose-one-token´
 #[test]
 fn two_hybrids_composing_one_token_fail() {
     let doc = table(
@@ -365,6 +421,9 @@ fn two_hybrids_composing_one_token_fail() {
 
 /// The row states the composition, and a row disagreeing with it fails: the
 /// hybrid rows are exactly the declared instances of the rule.
+///
+/// A hybrid row disagreeing with its own composition fails.
+/// ´claim:registry:a-hybrid-row-states-its-composition´
 #[test]
 fn a_hybrid_row_disagreeing_with_its_composition_fails() {
     let doc = table(
@@ -385,6 +444,9 @@ fn a_hybrid_row_disagreeing_with_its_composition_fails() {
 
 /// The parts are non-hybrid names, so a part that is classified by nothing
 /// fails.
+///
+/// A hybrid part classified by nothing fails.
+/// ´claim:registry:an-uncatalogued-hybrid-part-fails´
 #[test]
 fn a_hybrid_part_that_is_uncatalogued_fails() {
     let doc = table(
@@ -403,6 +465,9 @@ fn a_hybrid_part_that_is_uncatalogued_fails() {
 }
 
 /// A part carrying several kinds does not determine the composition.
+///
+/// A hybrid part carrying several kinds does not determine the composition.
+/// ´claim:registry:a-homonymous-hybrid-part-fails´
 #[test]
 fn a_homonymous_hybrid_part_fails() {
     let doc = table(
@@ -424,6 +489,9 @@ fn a_homonymous_hybrid_part_fails() {
 
 /// Homonymy is derived, never declared (´[KND-def:kinds:homonymy]´): a pair
 /// is in `Hom` exactly when its name carries another kind too.
+///
+/// Homonymy is derived and never declared: a pair is homonymous when its name carries another kind.
+/// ´claim:registry:homonymy-is-derived´
 #[test]
 fn homonymy_is_derived_from_the_relation() {
     let hom: BTreeSet<(&str, &str)> = registry()
@@ -444,6 +512,9 @@ fn homonymy_is_derived_from_the_relation() {
 /// The caveat's own claim, checked against the derivation: of the
 /// Construction–Model–Structure genre, Construction rows nowhere in Hom
 /// while Model and Structure both do (´[KND-cav:kinds:homonymy]´).
+///
+/// The registry's own homonymy caveat holds against the derivation.
+/// ´claim:registry:the-homonymy-caveat-holds´
 #[test]
 fn construction_is_nowhere_in_hom() {
     let names: BTreeSet<&str> = registry().homonyms().map(|(name, _)| name).collect();
@@ -454,6 +525,8 @@ fn construction_is_nowhere_in_hom() {
 
 /// And the second half of that claim: several names under one kind — `heur`,
 /// `assum`, `por`, `fact`, `pred` — row nowhere in Hom at all.
+///
+/// (´claim:registry:the-homonymy-caveat-holds´)
 #[test]
 fn the_shared_kinds_row_nowhere_in_hom() {
     let kinds: BTreeSet<&str> = registry()
@@ -466,6 +539,9 @@ fn the_shared_kinds_row_nowhere_in_hom() {
 }
 
 /// A relation with no repeated name has an empty `Hom`.
+///
+/// A relation with no repeated name has no homonym at all.
+/// ´claim:registry:no-repetition-means-no-homonym´
 #[test]
 fn a_relation_with_no_repeated_name_has_no_homonym() {
     let doc = table("Environment", &[("Theorem", "`thm`"), ("Lemma", "`lem`")]);
@@ -475,6 +551,9 @@ fn a_relation_with_no_repeated_name_has_no_homonym() {
 
 /// An exact catalogue name carrying the declared kind validates exactly
 /// (´[KND-judg:kinds:head-validation]´).
+///
+/// An exact catalogue name carrying the declared kind validates exactly.
+/// ´claim:registry:an-exact-pair-validates´
 #[test]
 fn an_exact_pair_validates_exactly() {
     assert_eq!(
@@ -486,6 +565,9 @@ fn an_exact_pair_validates_exactly() {
 /// Matching is case-exact, and the consequence is named rather than
 /// discovered: a head whose only defect is capitalization is a validation
 /// failure (´dec:lint:head-recognition´).
+///
+/// Matching is case-exact, so a head whose only defect is capitalization fails validation.
+/// ´claim:registry:a-miscased-head-fails´
 #[test]
 fn a_miscased_head_does_not_validate() {
     assert!(matches!(
@@ -496,6 +578,9 @@ fn a_miscased_head_does_not_validate() {
 
 /// An exact catalogue name is never reduced, so a name carrying another
 /// kind is uncatalogued for this one rather than reduced into it.
+///
+/// An exact catalogue name is never reduced, so another kind leaves it uncatalogued.
+/// ´claim:registry:an-exact-name-is-never-reduced´
 #[test]
 fn an_exact_name_with_another_kind_is_uncatalogued() {
     assert_eq!(
@@ -508,6 +593,9 @@ fn an_exact_name_with_another_kind_is_uncatalogued() {
 
 /// An emphasis modifier is stripped and the base carries the kind
 /// (´[KND-def:kinds:presentation-reduction]´).
+///
+/// An emphasis modifier is stripped and the base carries the kind.
+/// ´claim:registry:a-modifier-reduces-to-its-base´
 #[test]
 fn an_emphasis_modifier_reduces_to_its_base() {
     assert_eq!(
@@ -519,6 +607,8 @@ fn an_emphasis_modifier_reduces_to_its_base() {
 }
 
 /// The registry's own example: a Key Lemma classifies by its base.
+///
+/// (´claim:registry:a-modifier-reduces-to-its-base´)
 #[test]
 fn a_key_lemma_reduces_to_lemma() {
     assert_eq!(
@@ -532,6 +622,9 @@ fn a_key_lemma_reduces_to_lemma() {
 /// Toy, Worked, Running, and Numerical examples classify by their base,
 /// which needs the tail's sentence case restored before it is the
 /// catalogue's spelling.
+///
+/// A modified example classifies by its base, its tail's sentence case restored first.
+/// ´claim:registry:a-modified-example-reduces´
 #[test]
 fn a_modified_example_reduces_to_example() {
     for head in [
@@ -551,6 +644,9 @@ fn a_modified_example_reduces_to_example() {
 }
 
 /// Numbering is presentation, not denotation.
+///
+/// Numbering is presentation and not denotation.
+/// ´claim:registry:numbering-is-presentation´
 #[test]
 fn a_numbered_environment_reduces() {
     assert_eq!(
@@ -562,6 +658,8 @@ fn a_numbered_environment_reduces() {
 }
 
 /// So is lettering.
+///
+/// (´claim:registry:numbering-is-presentation´)
 #[test]
 fn a_lettered_main_theorem_reduces() {
     assert_eq!(
@@ -573,6 +671,8 @@ fn a_lettered_main_theorem_reduces() {
 }
 
 /// So is starring and unnumbering.
+///
+/// (´claim:registry:numbering-is-presentation´)
 #[test]
 fn a_starred_variant_reduces() {
     assert_eq!(
@@ -585,6 +685,9 @@ fn a_starred_variant_reduces() {
 
 /// A restated theorem is its original returned to; it names nothing new,
 /// and it carries two devices.
+///
+/// A head carrying two devices reduces through both.
+/// ´claim:registry:two-devices-reduce-together´
 #[test]
 fn a_restated_theorem_reduces_through_two_devices() {
     assert_eq!(
@@ -596,6 +699,8 @@ fn a_restated_theorem_reduces_through_two_devices() {
 }
 
 /// A continued environment likewise.
+///
+/// (´claim:registry:two-devices-reduce-together´)
 #[test]
 fn a_continued_environment_reduces() {
     assert_eq!(
@@ -607,6 +712,9 @@ fn a_continued_environment_reduces() {
 }
 
 /// An attached name is a device: a Theorem (Riemann–Roch) is a Theorem.
+///
+/// An attached proper name is a device, and the environment reduces past it.
+/// ´claim:registry:an-attached-name-is-a-device´
 #[test]
 fn an_attached_name_reduces() {
     assert_eq!(
@@ -620,6 +728,9 @@ fn an_attached_name_reduces() {
 /// Nesting within a rung is the sub- prefix, iterated at need, and is
 /// presentation: a subsection is a section, nested
 /// (´[KND-conv:kinds:structure]´).
+///
+/// Nesting within a rung is presentation: a subsection is a section, nested.
+/// ´claim:registry:nesting-within-a-rung-is-presentation´
 #[test]
 fn a_sub_prefix_reduces_to_its_rung() {
     for head in ["Subsection", "Subsubsection"] {
@@ -637,6 +748,9 @@ fn a_sub_prefix_reduces_to_its_rung() {
 /// overrides of the modifier rule: the exact pair is tried first, so the
 /// row wins and no list of overrides is consulted
 /// (´dec:lint:reduction-vocabulary´).
+///
+/// The exact pair is tried first, so a catalogued override wins and no list of overrides is consulted.
+/// ´claim:registry:the-exact-pair-is-tried-first´
 #[test]
 fn an_overriding_row_takes_precedence_over_reduction() {
     for head in ["Working hypothesis", "Standing hypothesis"] {
@@ -656,6 +770,9 @@ fn an_overriding_row_takes_precedence_over_reduction() {
 }
 
 /// A head reduces to itself by removing nothing when it is already a name.
+///
+/// A head already a catalogue name reduces to itself by removing nothing.
+/// ´claim:registry:a-catalogue-name-reduces-to-itself´
 #[test]
 fn a_catalogue_name_reduces_to_itself() {
     let reduced = registry().reduce("Theorem");
@@ -665,6 +782,9 @@ fn a_catalogue_name_reduces_to_itself() {
 
 /// An undeclared family strips nothing: `reduce` runs exactly the routines
 /// the registry declares.
+///
+/// Reduction runs exactly the routines the registry declares, so an undeclared family strips nothing.
+/// ´claim:registry:reduction-runs-only-declared-families´
 #[test]
 fn an_undeclared_family_strips_nothing() {
     let doc = table("Environment", &[("Theorem", "`thm`")]);
@@ -676,6 +796,8 @@ fn an_undeclared_family_strips_nothing() {
 }
 
 /// Declaring the family turns the same routine on.
+///
+/// (´claim:registry:reduction-runs-only-declared-families´)
 #[test]
 fn a_declared_family_strips() {
     let doc = table(
@@ -693,6 +815,9 @@ fn a_declared_family_strips() {
 
 /// Reduction through two different base pairs is ambiguous, which is the
 /// second failure mode of (´[KND-inv:kinds:totality]´).
+///
+/// Reduction through two different base pairs is ambiguous.
+/// ´claim:registry:two-base-pairs-are-ambiguous´
 #[test]
 fn two_base_pairs_are_ambiguous() {
     let doc = format!(
@@ -719,6 +844,9 @@ fn two_base_pairs_are_ambiguous() {
 
 /// Reduction is a search over spelling rules, and it is bounded: a
 /// pathological head terminates rather than running away.
+///
+/// Reduction is bounded, so a pathological head terminates rather than running away.
+/// ´claim:registry:reduction-is-bounded´
 #[test]
 fn reduction_is_bounded() {
     let head = format!("{}section 1.1, restated", "Sub".repeat(200));
@@ -735,6 +863,9 @@ fn reduction_is_bounded() {
 /// the registry; reporting the first as the second sends its reader to look
 /// for a row nothing ever consulted. A head carrying more devices than the
 /// reduction may remove is the case that reaches this.
+///
+/// A reduction stopped by a bound says so, and never that the relation carries no such pair.
+/// ´claim:registry:a-bound-does-not-blame-the-catalogue´
 #[test]
 fn f9_a_reduction_stopped_by_its_bound_does_not_blame_the_catalogue() {
     let deep = "Main Key Toy Working Running Theorem";
@@ -757,6 +888,9 @@ fn f9_a_reduction_stopped_by_its_bound_does_not_blame_the_catalogue() {
 /// A search that finished still reports the catalogue, so the new verdict
 /// narrows and never swallows: an unknown name and a miscased one are both
 /// uncatalogued, and neither reduction was bounded.
+///
+/// A search that finished still reports the catalogue, so the bound verdict narrows and never swallows.
+/// ´claim:registry:the-bound-verdict-narrows´
 #[test]
 fn f9_a_finished_search_still_reports_the_catalogue() {
     for head in ["Frobnicator", "Main Frobnicator", "theorem"] {
@@ -775,6 +909,9 @@ fn f9_a_finished_search_still_reports_the_catalogue() {
 
 /// A head within the bounds validates as it always did: recording the bound
 /// changes no verdict that had one.
+///
+/// A head within the bounds validates as it always did.
+/// ´claim:registry:a-bounded-search-changes-no-other-verdict´
 #[test]
 fn f9_a_head_within_the_bounds_is_unchanged() {
     assert_eq!(
@@ -788,6 +925,9 @@ fn f9_a_head_within_the_bounds_is_unchanged() {
 }
 
 /// Validation consumes a classification and never extends the relation.
+///
+/// Validation consumes a classification and never extends the relation.
+/// ´claim:registry:validation-extends-nothing´
 #[test]
 fn validation_extends_nothing() {
     let before = registry().headline_counts();
@@ -799,6 +939,9 @@ fn validation_extends_nothing() {
 /// A document with no catalogue table has no classification relation, and
 /// the failure is loud rather than an empty registry
 /// (´dec:lint:registry-bootstrap´).
+///
+/// A document with no catalogue table fails loudly rather than yielding an empty registry.
+/// ´claim:registry:no-catalogue-table-fails-loudly´
 #[test]
 fn a_document_with_no_catalogue_table_fails() {
     let findings = from("just prose, no tables\n").expect_err("no relation");
@@ -811,6 +954,9 @@ fn a_document_with_no_catalogue_table_fails() {
 
 /// A kind cell that is not a kind token fails, located on the registry
 /// document itself.
+///
+/// A kind cell that is no kind token fails, located on the registry document itself.
+/// ´claim:registry:a-bad-kind-cell-is-located´
 #[test]
 fn a_kind_cell_that_is_not_a_token_fails() {
     let doc = table("Environment", &[("Theorem", "`Thm`")]);
@@ -824,6 +970,9 @@ fn a_kind_cell_that_is_not_a_token_fails() {
 }
 
 /// A modifier row carrying a kind is a defect: a modifier is a device.
+///
+/// A modifier row carrying a kind is a defect, a modifier being a device.
+/// ´claim:registry:a-modifier-row-carries-no-kind´
 #[test]
 fn a_modifier_row_with_a_kind_fails() {
     let doc = format!(
@@ -841,6 +990,9 @@ fn a_modifier_row_with_a_kind_fails() {
 
 /// The findings are ordered the way every diagnostic sequence is
 /// (´conv:lint:diagnostic-order´).
+///
+/// The registry findings are ordered the way every diagnostic sequence is.
+/// ´claim:registry:the-registry-findings-are-ordered´
 #[test]
 fn the_findings_are_ordered() {
     let doc = table(
@@ -857,6 +1009,9 @@ fn the_findings_are_ordered() {
 /// recorded extension is a row of C_A that the registry's own tables never
 /// carried, so classification sees it and the headline counts do not
 /// (´[KND-sig:kinds:registry-data]´).
+///
+/// A recorded extension joins the relation and leaves the edition's counts alone.
+/// ´claim:registry:an-extension-does-not-move-the-edition´
 #[test]
 fn the_extensions_join_the_relation_without_moving_the_edition() {
     let doc = table("Environment", &[("Theorem", "`thm`")]);
@@ -882,12 +1037,17 @@ fn the_extensions_join_the_relation_without_moving_the_edition() {
 
 /// Every device family the registry declares has a routine here, so
 /// nothing the registry admits goes unimplemented unnoticed.
+///
+/// Every device family the registry declares has a routine, so nothing it admits goes unimplemented.
+/// ´claim:registry:every-declared-family-is-implemented´
 #[test]
 fn every_declared_family_is_recognized() {
     assert_eq!(registry().unrecognized_families(), &[] as &[Box<str>]);
 }
 
 /// No rule identifier of this module is label-shaped.
+///
+/// (´claim:diagnostics:no-rule-identifier-is-label-shaped´)
 #[test]
 fn no_registry_rule_identifier_is_label_shaped() {
     for rule in judge::kinds::RULES {
@@ -899,6 +1059,9 @@ fn no_registry_rule_identifier_is_label_shaped() {
 /// material written under the discipline validates by exactly one exact
 /// pair (´[KND-inv:kinds:totality]´), and the corpus's own registry is what
 /// judges them.
+///
+/// Every participating authored head of the corpus validates by exactly one exact pair.
+/// ´claim:registry:every-corpus-head-validates´
 #[test]
 fn every_head_written_under_the_discipline_validates() {
     let mut heads = 0;
@@ -927,6 +1090,9 @@ fn every_head_written_under_the_discipline_validates() {
 /// format supplies classified by the registry's own structure table; and
 /// the one head that is no rung is the document itself
 /// (´dec:lint:title-head´), which carries its genre.
+///
+/// Every section anchor carries the rung's kind, and the one head that is no rung carries its genre.
+/// ´claim:registry:an-anchor-carries-its-rungs-kind´
 #[test]
 fn every_heading_anchor_carries_the_rungs_kind() {
     let text = std::fs::read_to_string(root().join(REGISTRY)).expect("readable");
