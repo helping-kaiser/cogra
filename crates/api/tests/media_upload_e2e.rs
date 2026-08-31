@@ -460,7 +460,10 @@ async fn a_description_can_be_written_after_the_bytes(pool: PgPool) {
         Some(0),
         "refused: {updated}"
     );
-    assert_eq!(updated["media"]["altText"], "A sunset", "trimmed like upload");
+    assert_eq!(
+        updated["media"]["altText"], "A sunset",
+        "trimmed like upload"
+    );
     assert_eq!(
         updated["media"]["digest"], digest,
         "the bytes the digest names never moved"

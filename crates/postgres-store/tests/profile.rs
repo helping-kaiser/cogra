@@ -103,17 +103,9 @@ async fn same_instant_writes_both_land_and_the_later_one_is_current(pool: PgPool
     profile::insert_profile_version(&mut tx, actor, "First", None, None, None, order(1, 0))
         .await
         .expect("first insert");
-    profile::insert_profile_version(
-        &mut tx,
-        actor,
-        "Second",
-        None,
-        None,
-        None,
-        order(1, 0),
-    )
-    .await
-    .expect("second insert");
+    profile::insert_profile_version(&mut tx, actor, "Second", None, None, None, order(1, 0))
+        .await
+        .expect("second insert");
     tx.commit().await.expect("commits");
 
     let stamps: Vec<chrono::DateTime<chrono::Utc>> = sqlx::query_scalar(

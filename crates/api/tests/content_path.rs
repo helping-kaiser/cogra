@@ -1132,8 +1132,8 @@ mod galleries {
         media_store::update_alt_text(&rig.pool, a, actor, Some("described later"))
             .await
             .expect("updates");
-        let again = CograContent::decode_payload(&prepared.writes[0].proposal.payload)
-            .expect("decodes");
+        let again =
+            CograContent::decode_payload(&prepared.writes[0].proposal.payload).expect("decodes");
         assert_eq!(
             again.media[0].alt_text.as_deref(),
             Some("picture 1"),
