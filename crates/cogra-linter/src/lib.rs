@@ -67,7 +67,8 @@ pub use adopt::{
     HeadlessLanguages, Kind, KindEvidence, KindExtensions, KindGenerator, KindRegister,
     KindStatuses, KindsAdoption, Language, Meta, NameTransformation, OwnerId, Partition,
     PartitionRule, PathPrefix, Place, PrefixFamily, Profile, ProfileId, ProfileStatus, Profiles,
-    ReservedKinds, ScannedLanguage, ScannedRegions, Signature, TypedData, UnscannedLanguages,
+    Reach, ReachRow, ReservedKinds, ScannedLanguage, ScannedRegions, Signature, TypedData,
+    UnscannedLanguages,
 };
 pub use bans::BanRule;
 pub use carrier::{SourceFile, Walk, WalkOutcome};
