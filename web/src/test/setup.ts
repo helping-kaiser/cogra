@@ -42,6 +42,19 @@ if (typeof Element !== "undefined" && Element.prototype.setPointerCapture === un
   };
 }
 
+// jsdom implements no ResizeObserver, which `react-easy-crop` observes its
+// container with. jsdom also reports every element as 0x0, so a real
+// implementation would have nothing to report: the stub is inert on purpose and
+// the crop suite drives the cropper through its callbacks rather than through
+// layout.
+if (typeof globalThis.ResizeObserver === "undefined") {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver;
+}
+
 // jsdom ships HTMLDialogElement without its methods (jsdom#3294), so
 // the native-<dialog> contract the join prompt relies on is filled in:
 // showModal opens, close flips `open` and fires the close event.
