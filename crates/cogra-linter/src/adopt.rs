@@ -12,8 +12,8 @@
 //! Thirteen sections: the seven data the calculus is parametric in, the
 //! kind registry's own adoption data, the carrier, head recognition, the
 //! banned-token sets, the enforcement partition, and the file's metadata.
-//! A fourteenth is optional and this corpus does not yet write it: `[reach]`,
-//! which says which owners an owner's imports may name
+//! A fourteenth is optional and this corpus writes it: `[reach]`, which
+//! says which owners an owner's imports may name
 //! (´dec:lint:reach-declared´).
 
 use std::collections::BTreeMap;
@@ -1358,9 +1358,15 @@ impl Reach {
     /// # ).expect("the corpus's own adoption data");
     /// # let adoption = Adoption::from_str(&source, std::path::Path::new("corpus-adoption.toml"))
     /// #     .expect("a ruled adoption");
+    /// let reach = adoption.reach.expect("this corpus declares its graph");
+    /// let architecture = OwnerId::new("doc.linter-architecture");
+    /// let calculus = OwnerId::new("doc.label-calculus");
+    /// assert!(reach.permits(&architecture, &calculus));
+    /// assert!(!reach.permits(&calculus, &architecture));
+    /// assert!(reach.permits(&calculus, &calculus), "an owner reaches itself");
     /// assert!(
-    ///     adoption.reach.is_none(),
-    ///     "this corpus declares no reach graph, so every import is permitted",
+    ///     reach.permits(&OwnerId::new("pkg.api"), &architecture),
+    ///     "an owner the section does not name reaches everything",
     /// );
     /// ```
     #[must_use]

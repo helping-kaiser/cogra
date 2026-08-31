@@ -1,31 +1,110 @@
-// One, two, or three-and-more, and nothing cleverer.
+// THE GALLERY IS A PAGER (jakob 2026-08-31, design/readme.md §"The media slice").
 //
-// The first tile leads at the post's own shape; the rest share a row of
-// squares. That is what makes the reserved height a function of the COUNT
-// ALONE — computable before anything loads, which is the reservation rule of
-// the tile applied to a set. A gallery that grew a new row per image would
-// change the height of every card below it as each one arrived.
+// Every picture in a post shares the post's one crop shape (D17), so the honest
+// layout is ONE FRAME AT THAT SHAPE, SWIPED: each picture is shown whole,
+// exactly as its author shaped it, and the card's height is one frame's height
+// however many pictures ride it. Dots below carry the position — dots only,
+// never a "1/n" count pill, which the ruling rejects.
 //
-// A fourth-and-beyond count shows three and a remainder rather than growing,
-// for the same reason.
+// The earlier lead-tile-plus-square-strip layout is REJECTED and gone: its
+// secondary squares re-cropped frames the author had deliberately shaped, which
+// half-undid the one-crop ruling it was supposed to serve.
+//
+// Every frame renders at the ONE frame ratio — the explicit `ratio`, else the
+// first item's — so an uncropped set (a comment's pictures, which never crop)
+// passes a fixed frame and each whole frame is fitted inside it. A pager whose
+// height changed per swipe would bounce the card under the reader's thumb.
+//
+// The cap is authoring-side (ten per post, four per comment); the gallery
+// renders what it is given.
 
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
+import { tileRatio } from "./aspect";
 import { MediaTile, type MediaTileProps } from "./media-tile";
 
 export type GalleryItem = Pick<MediaTileProps, "src" | "altText" | "sourceRatio" | "label">;
 
+// Two ratios agree when they round to the same hundredth: the server states the
+// shape in lowest terms off the bytes, so "4:5" and a 1080×1350 export are the
+// same shape arriving with different rounding, not two different frames.
+function sameShape(a: number, b: number): boolean {
+  return Math.abs(a - b) < 0.005;
+}
+
+/**
+ * How one item sits in the shared frame.
+ *
+ * `cover` only where the picture already IS the frame's shape — there it avoids
+ * a sub-pixel seam at the edges and crops nothing. Anything else is fitted
+ * WHOLE (`contain`) with the reserved surface showing at the sides, because the
+ * layout never decides the author's crop.
+ */
+function fitInFrame(sourceRatio: number | null | undefined, frameRatio: number): "contain" | "cover" {
+  if (typeof sourceRatio !== "number" || !Number.isFinite(sourceRatio) || sourceRatio <= 0) {
+    return "contain";
+  }
+  return sameShape(sourceRatio, frameRatio) ? "cover" : "contain";
+}
+
 export function MediaGallery({
   items,
+  ratio,
   radius = "var(--radius-medium)",
+  maxHeight,
   preloadLead = false,
   testId = "media-gallery",
   onOpen,
 }: {
   items: readonly GalleryItem[];
+  // The one frame every picture renders at. Omitted, the first picture's shape
+  // sets it — which is exactly right for a post, where the whole set shares one.
+  ratio?: number;
   radius?: string;
+  maxHeight?: string;
   preloadLead?: boolean;
   testId?: string;
   onOpen?: (index: number) => void;
 }) {
+  const stripRef = useRef<HTMLDivElement>(null);
+  const [page, setPage] = useState(0);
+
+  // The swipe is the gesture; these are the routes that do not need one. The
+  // canvas draws no arrows, so the keyboard route is offered without painting
+  // a control for it (web.md §Accessibility: "the canvas draws no framing
+  // controls, so the route is offered without painting one").
+  const goTo = (index: number) => {
+    const strip = stripRef.current;
+    if (!strip) return;
+    const clamped = Math.max(0, Math.min(index, items.length - 1));
+    const reduced =
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // jsdom leaves `scrollTo` off elements, and a browser with no smooth
+    // scrolling still has to land on the page — so the scroll is best-effort
+    // and the readout below is what actually moves.
+    strip.scrollTo?.({ left: clamped * strip.clientWidth, behavior: reduced ? "auto" : "smooth" });
+    // jsdom and reduced-motion both land without firing a scroll event, so the
+    // readout follows the intent rather than waiting for the scroll to report.
+    setPage(clamped);
+  };
+
+  // Keep the dots honest when the reader swipes rather than types.
+  useEffect(() => {
+    const strip = stripRef.current;
+    if (!strip) return;
+    const onScroll = () => {
+      if (strip.clientWidth === 0) return;
+      const next = Math.round(strip.scrollLeft / strip.clientWidth);
+      setPage((current) => (next === current ? current : next));
+    };
+    strip.addEventListener("scroll", onScroll, { passive: true });
+    return () => strip.removeEventListener("scroll", onScroll);
+  }, []);
+
   if (items.length === 0) return null;
 
   if (items.length === 1) {
@@ -33,6 +112,7 @@ export function MediaGallery({
       <MediaTile
         {...items[0]}
         radius={radius}
+        maxHeight={maxHeight}
         preload={preloadLead}
         testId={`${testId}-lead`}
         onOpen={onOpen ? () => onOpen(0) : undefined}
@@ -40,65 +120,76 @@ export function MediaGallery({
     );
   }
 
-  const [lead, ...rest] = items;
-  const shown = rest.slice(0, 2);
-  const remainder = rest.length - shown.length;
+  const frameRatio = ratio ?? tileRatio(items[0].sourceRatio);
 
   return (
-    <div
-      data-testid={testId}
-      style={{ maxHeight: "var(--media-max-height)" }}
-      className="flex flex-col gap-0.5 overflow-hidden"
-    >
-      {/* THE CAP IS ON THE WHOLE GALLERY, not on each tile: the lead and the
-          strip together have to leave the rest of the card on screen. Roughly
-          60/40, because the lead is the media and the strip is only an index
-          into the set. */}
-      <MediaTile
-        {...lead}
-        radius={radius}
-        preload={preloadLead}
-        maxHeight="calc(var(--media-max-height) * 0.6)"
-        // The lead is one of two or three tiles' worth of width at most, but it
-        // still spans the card, so it keeps the full-width hint.
-        testId={`${testId}-lead`}
-        onOpen={onOpen ? () => onOpen(0) : undefined}
-      />
+    <div className="flex flex-col">
       <div
-        style={{ gridTemplateColumns: `repeat(${shown.length}, minmax(0, 1fr))` }}
-        className="grid gap-0.5"
+        ref={stripRef}
+        data-testid={`${testId}-strip`}
+        // A scroll container is only reachable by keyboard if it can take
+        // focus; `group` names it so the reader is told what they entered
+        // rather than landing in an unlabelled box.
+        role="group"
+        aria-label={`${items.length} pictures`}
+        tabIndex={0}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowRight") {
+            event.preventDefault();
+            goTo(page + 1);
+          } else if (event.key === "ArrowLeft") {
+            event.preventDefault();
+            goTo(page - 1);
+          } else if (event.key === "Home") {
+            event.preventDefault();
+            goTo(0);
+          } else if (event.key === "End") {
+            event.preventDefault();
+            goTo(items.length - 1);
+          }
+        }}
+        // `scrollbar-width: none` keeps the strip's own bar off a surface that
+        // is already telling the reader where they are with the dots.
+        style={{ scrollSnapType: "x mandatory", scrollbarWidth: "none" }}
+        className="cg-focus flex overflow-x-auto"
       >
-        {shown.map((item, index) => (
-          <div key={item.src ?? index} className="relative">
-            {/* Secondary tiles CROP — `ratio: 1` and `fit: cover`. They are an
-                index into the set, not the media itself, and the whole frame is
-                one tap away in the viewer. This is the single exception to "the
-                layout never decides the author's crop". */}
+        {items.map((item, index) => (
+          <div
+            key={item.src ?? index}
+            style={{ scrollSnapAlign: "start" }}
+            className="w-full flex-none"
+          >
             <MediaTile
               {...item}
-              ratio={1}
-              fit="cover"
+              ratio={frameRatio}
+              fit={fitInFrame(item.sourceRatio, frameRatio)}
               radius={radius}
-              maxHeight="calc(var(--media-max-height) * 0.4)"
-              sizes="(max-width: 42rem) 50vw, 21rem"
-              testId={`${testId}-tile-${index + 1}`}
-              onOpen={onOpen ? () => onOpen(index + 1) : undefined}
+              maxHeight={maxHeight}
+              preload={index === 0 && preloadLead}
+              testId={`${testId}-page-${index}`}
+              onOpen={onOpen ? () => onOpen(index) : undefined}
             />
-            {remainder > 0 && index === shown.length - 1 && (
-              // The remainder counter sits over the last square. It is
-              // `aria-hidden` because the tile beneath it is already a labelled
-              // control and this is a count, not a second target — the reader
-              // reaches the rest through the viewer either way.
-              <span
-                aria-hidden="true"
-                data-testid={`${testId}-remainder`}
-                style={{ borderRadius: radius, background: "var(--scrim-dialog)" }}
-                className="pointer-events-none absolute inset-0 grid place-items-center text-title-medium text-inverse-on-surface"
-              >
-                +{remainder}
-              </span>
-            )}
           </div>
+        ))}
+      </div>
+      {/* The dots are a READOUT, not ten targets — the gesture is the swipe and
+          the keys are the route. Live, so a swipe says where it landed to a
+          reader who cannot see the dots move. */}
+      <div
+        data-testid={`${testId}-dots`}
+        aria-live="polite"
+        aria-label={`Picture ${page + 1} of ${items.length}`}
+        className="flex justify-center gap-1.5 pt-2"
+      >
+        {items.map((item, index) => (
+          <span
+            key={item.src ?? index}
+            aria-hidden="true"
+            style={{
+              background: index === page ? "var(--primary)" : "var(--border-hairline)",
+            }}
+            className="size-1.5 rounded-full"
+          />
         ))}
       </div>
     </div>

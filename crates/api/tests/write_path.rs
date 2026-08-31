@@ -112,6 +112,9 @@ impl Rig {
 /// The whole write path in order. Confirmation is asynchronous — the
 /// ingestion pass is what lands the record — and the landed act has
 /// debited θ from the author's residual balance.
+///
+/// The write path runs its five steps in order, confirmation being asynchronous and the landed act having debited the author's residual balance.
+/// ´claim:relay:the-five-steps-land-and-confirm´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_five_steps_land_a_record_and_confirm_the_staged_write(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -169,6 +172,8 @@ async fn the_five_steps_land_a_record_and_confirm_the_staged_write(pool: PgPool)
     assert!(balance.balance < balance.burned_total);
 }
 
+/// Prepare allocates consecutive author-local sequence values.
+/// ´claim:relay:prepare-allocates-consecutively´
 #[sqlx::test(migrations = "../../migrations")]
 async fn prepare_allocates_consecutive_sequence_values(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -191,6 +196,9 @@ async fn prepare_allocates_consecutive_sequence_values(pool: PgPool) {
 /// staged: parameters off Registration's census-fixed `(1, 1)`, an
 /// Opinion aimed at a raw address atom, and a payload past the published
 /// carriage bound M_payload. No refusal leaves a staged write behind.
+///
+/// A formation fault is refused at prepare, before anything is staged, and no such refusal leaves a staged write behind.
+/// ´claim:relay:formation-faults-refuse-before-staging´
 #[sqlx::test(migrations = "../../migrations")]
 async fn prepare_refuses_a_malformed_gesture_before_staging(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -227,6 +235,9 @@ async fn prepare_refuses_a_malformed_gesture_before_staging(pool: PgPool) {
 
 /// An author with no burn has b_i = 0 < θ. That is a normal, visible
 /// account state rather than an auth fault, and prepare says so.
+///
+/// An unfunded author is a normal, visible account state rather than an auth fault, and prepare says so.
+/// ´claim:relay:an-unfunded-author-is-a-visible-state´
 #[sqlx::test(migrations = "../../migrations")]
 async fn prepare_surfaces_an_unfunded_author_as_a_write_rule_state(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -256,6 +267,9 @@ async fn prepare_surfaces_an_unfunded_author_as_a_write_rule_state(pool: PgPool)
 /// A garbage signature is refused per act and leaves nothing on L1. The
 /// write returns to `awaiting_pre_sign`, so the honest signature then
 /// seals on the retry.
+///
+/// A garbage signature is refused per act and leaves nothing on the substrate, the write returning to await its pre-signature so an honest one seals on the retry.
+/// ´claim:relay:a-bad-signature-leaves-the-write-retryable´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_bad_pre_signature_is_refused_and_the_device_can_retry(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -292,6 +306,9 @@ async fn a_bad_pre_signature_is_refused_and_the_device_can_retry(pool: PgPool) {
 /// A client that lost the response re-submits and gets the stored act
 /// back rather than a substrate conflict. Approval retries are
 /// idempotent the same way.
+///
+/// A client that lost the response re-submits and is handed the stored act back rather than a substrate conflict, approval retrying the same way.
+/// ´claim:relay:a-replay-is-answered-from-the-stored-seal´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_lost_response_replays_the_stored_seal(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -345,6 +362,9 @@ async fn a_lost_response_replays_the_stored_seal(pool: PgPool) {
 /// with the stored act would tell it that its new bytes were sealed. The
 /// sealed handshake survives the refusal, so the exact replay still
 /// answers.
+///
+/// A re-submission of different bytes is refused rather than answered, since answering would tell the client its new bytes were sealed, and the sealed handshake survives to answer the exact replay.
+/// ´claim:relay:a-differing-resubmission-is-refused´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_differing_resubmission_is_refused_not_answered(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -388,6 +408,9 @@ async fn a_differing_resubmission_is_refused_not_answered(pool: PgPool) {
 /// Approval before the seal exists is refused on state, and an approval
 /// of a sealed act carrying a garbage witness signature is refused by the
 /// host.
+///
+/// Approval before the seal exists is refused on state, and one carrying a garbage witness signature is refused by the host.
+/// ´claim:relay:approval-is-refused-out-of-order-or-unwitnessed´
 #[sqlx::test(migrations = "../../migrations")]
 async fn approval_is_refused_out_of_order_and_on_a_bad_witness(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -440,6 +463,9 @@ async fn approval_is_refused_out_of_order_and_on_a_bad_witness(pool: PgPool) {
 /// conflicts, and because the salts are gone no approval can ever be
 /// produced — terminal, so the device re-prepares and gets a fresh
 /// sequence value.
+///
+/// A seal lost between the substrate and the store is terminal: no approval can ever be produced, so the device re-prepares at a fresh sequence value.
+/// ´claim:relay:a-lost-seal-is-terminal´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_seal_lost_before_storing_expires_the_write(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -493,6 +519,9 @@ async fn a_seal_lost_before_storing_expires_the_write(pool: PgPool) {
 /// reaches its terminal state and stops serving content, while the
 /// payload rides the row until the reap, so a record landing in that
 /// window still promotes (data-model.md "Staged writes").
+///
+/// A write abandoned before signing is collected once the epoch clock passes its bound, expiry stopping the content while the payload rides the row until the reap.
+/// ´claim:relay:an-abandoned-write-is-collected´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_ingestion_pass_collects_writes_that_never_land(pool: PgPool) {
     let rig = Rig::new(pool).await;

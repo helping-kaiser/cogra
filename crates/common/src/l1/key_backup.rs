@@ -197,6 +197,8 @@ pub fn verify_upload(key: &VerifyingKey, challenge: &[u8], blob: &[u8], signatur
 mod tests {
     use super::*;
 
+    /// A seed sealed under a recovery code opens back to itself under that same code.
+    /// ´claim:backup:a-sealed-seed-opens-under-its-own-code´
     #[test]
     fn seal_and_open_round_trip() {
         let seed = [7u8; 32];
@@ -205,6 +207,8 @@ mod tests {
         assert_eq!(open(&blob, &code).expect("opens"), seed);
     }
 
+    /// A code that is not the sealing code does not open the blob.
+    /// ´claim:backup:a-wrong-code-does-not-open-the-blob´
     #[test]
     fn a_wrong_code_does_not_open() {
         let blob = seal(&[7u8; 32], &RecoveryCode::generate());
@@ -217,6 +221,9 @@ mod tests {
     /// The header rides as associated data and the ciphertext is sealed, so a
     /// flipped bit anywhere refuses to open. An unsupported version and a
     /// truncated container are told apart from that refusal.
+    ///
+    /// A flipped bit anywhere in the container refuses to open, and a bad version or a truncation is told apart from that refusal.
+    /// ´claim:backup:a-flipped-bit-anywhere-refuses-to-open´
     #[test]
     fn tampering_anywhere_refuses() {
         let code = RecoveryCode::generate();
@@ -235,6 +242,8 @@ mod tests {
         assert_eq!(open(&blob[..10], &code), Err(KeyBackupError::Malformed));
     }
 
+    /// A recovery code displays as grouped Crockford, which is what makes it readable back to a person.
+    /// ´claim:backup:a-recovery-code-displays-as-grouped-crockford´
     #[test]
     fn display_is_grouped_crockford() {
         let display = RecoveryCode::generate().display();
@@ -254,6 +263,9 @@ mod tests {
     /// challenge, one whose blob was swapped underneath it, and one from a
     /// different actor all fail to verify. Garbage signature bytes refuse
     /// rather than panic.
+    ///
+    /// An upload proof binds its challenge, its blob, and its actor, and garbage refuses rather than panics.
+    /// ´claim:backup:an-upload-proof-binds-its-challenge-blob-and-actor´
     #[test]
     fn an_upload_proof_binds_both_the_challenge_and_the_blob() {
         let key = SigningKey::from_bytes(&[3u8; 32]);
@@ -281,6 +293,8 @@ mod tests {
         assert!(!verify_upload(&public, &challenge, &blob, b"xx"));
     }
 
+    /// The upload tag is separated from the act tags, so an upload proof can never verify as an approval.
+    /// ´claim:backup:the-upload-tag-is-separated-from-the-act-tags´
     #[test]
     fn the_upload_tag_is_domain_separated_from_the_l1_act_tags() {
         let key = SigningKey::from_bytes(&[3u8; 32]);

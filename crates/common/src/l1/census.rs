@@ -636,6 +636,8 @@ mod tests {
     use super::*;
     use crate::l1::identifier::ActId;
 
+    /// Every family parses back from its own token and carries the leg roles its kind fixes.
+    /// ´claim:census:every-family-round-trips-and-carries-its-legs´
     #[test]
     fn every_family_round_trips_and_has_census_rows() {
         for family in Family::ALL {
@@ -655,6 +657,8 @@ mod tests {
         }
     }
 
+    /// A Registration may target its own author's Profile and no other.
+    /// ´claim:census:a-registration-targets-its-authors-own-profile´
     #[test]
     fn registration_targets_own_profile_only() {
         let src = NodeId::parse("addr:alice").expect("ok");
@@ -672,6 +676,8 @@ mod tests {
         );
     }
 
+    /// An act's source endpoint is its author, and an act claiming another is refused.
+    /// ´claim:census:the-source-endpoint-is-the-author´
     #[test]
     fn source_must_be_author() {
         let wrong = NodeId::parse("addr:mallory").expect("ok");
@@ -683,6 +689,8 @@ mod tests {
         );
     }
 
+    /// A hyper act needs a middle, and that middle must be passive.
+    /// ´claim:census:a-hyper-act-needs-a-passive-middle´
     #[test]
     fn hyper_needs_passive_middle() {
         let src = NodeId::parse("addr:pub").expect("ok");
@@ -706,6 +714,9 @@ mod tests {
     /// either endpoint, or no middle at all, is refused. Its parameter arm
     /// admits the system actor's inert (0, 0) while still forcing the second
     /// component non-negative.
+    ///
+    /// The movement act runs between Chats and may self-loop, its parameter arm admitting an inert pair while still forcing the second component non-negative.
+    /// ´claim:census:the-movement-act-runs-between-chats-and-may-self-loop´
     #[test]
     fn participant_moves_between_chats_and_self_loops() {
         let src = NodeId::parse("addr:alice").expect("ok");
@@ -744,6 +755,8 @@ mod tests {
         assert!(Family::Participant.params_check(0.5, -0.1).is_err());
     }
 
+    /// A family whose parameters the census fixes admits that pair and no other.
+    /// ´claim:census:fixed-parameters-admit-one-pair-only´
     #[test]
     fn fixed_params_enforced() {
         assert!(Family::Registration.params_check(1.0, 1.0).is_ok());
@@ -751,6 +764,8 @@ mod tests {
         assert!(Family::Leave.params_check(1.0, 0.0).is_err());
     }
 
+    /// Parameter ranges are enforced per axis, and a family's two axes need not share one.
+    /// ´claim:census:parameter-ranges-are-enforced-per-axis´
     #[test]
     fn ranges_enforced() {
         assert!(Family::Opinion.params_check(-1.0, 1.0).is_ok());
@@ -761,6 +776,8 @@ mod tests {
         assert!(Family::Publish.params_check(0.3, 1.0).is_ok());
     }
 
+    /// The T-leg carries the act's pair transposed, where the A-leg and a binary leg carry it as written.
+    /// ´claim:census:the-t-leg-carries-the-pair-transposed´
     #[test]
     fn t_leg_transposes_params() {
         assert_eq!(leg_params(LegRole::A, 0.25, 0.75), (0.25, 0.75));

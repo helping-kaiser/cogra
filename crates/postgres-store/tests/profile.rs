@@ -41,6 +41,9 @@ async fn seed_actor(pool: &PgPool, handle: &str) -> Uuid {
 
 /// The read serves the newest version, and the insert is append-only — the
 /// older row survives underneath it.
+///
+/// The profile read serves the newest version while every older row survives underneath it.
+/// ´claim:profile:the-newest-version-serves-and-the-older-ones-survive´
 #[sqlx::test(migrations = "../../migrations")]
 async fn current_profile_serves_the_newest_version(pool: PgPool) {
     let actor = seed_actor(&pool, "ada").await;
@@ -90,6 +93,9 @@ async fn current_profile_serves_the_newest_version(pool: PgPool) {
 /// the real write path rather than simulated. Both rows are given one
 /// landing order too, which is the only state in which every key above
 /// `version_id` ties and the monotonic key alone decides.
+///
+/// Two version rows sharing one transaction timestamp are told apart by the monotonic key alone.
+/// ´claim:profile:the-monotonic-key-alone-breaks-a-shared-instant´
 #[sqlx::test(migrations = "../../migrations")]
 async fn same_instant_writes_both_land_and_the_later_one_is_current(pool: PgPool) {
     let actor = seed_actor(&pool, "ada").await;
@@ -137,6 +143,9 @@ async fn same_instant_writes_both_land_and_the_later_one_is_current(pool: PgPool
 /// the row written second promotes a record that landed *earlier*, which
 /// a promotion pass replaying two epochs out of order produces. The
 /// profile must be the one whose record landed last.
+///
+/// The current profile is the one whose record landed last, never the one whose row was written last.
+/// ´claim:profile:the-record-that-landed-last-is-current´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_record_that_landed_last_is_current_even_when_written_first(pool: PgPool) {
     let actor = seed_actor(&pool, "ada").await;
@@ -200,6 +209,9 @@ async fn the_record_that_landed_last_is_current_even_when_written_first(pool: Pg
 /// it was written. That is what NULLS LAST buys, and the coordinate-less
 /// row is written last here so nothing but NULLS LAST can produce the
 /// answer.
+///
+/// A profile version carrying no landing coordinates ranks below every version the graph ordered, however late it was written.
+/// ´claim:profile:a-version-without-coordinates-ranks-last´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_row_without_coordinates_never_outranks_a_landed_one(pool: PgPool) {
     let actor = seed_actor(&pool, "ada").await;
@@ -225,6 +237,8 @@ async fn a_row_without_coordinates_never_outranks_a_landed_one(pool: PgPool) {
     );
 }
 
+/// An actor the store has never seen has no current profile at all.
+/// ´claim:profile:an-unknown-actor-has-no-profile´
 #[sqlx::test(migrations = "../../migrations")]
 async fn current_profile_is_none_for_unknown_actor(pool: PgPool) {
     assert!(
@@ -235,6 +249,8 @@ async fn current_profile_is_none_for_unknown_actor(pool: PgPool) {
     );
 }
 
+/// A handle resolves to the one actor that holds it, and to nothing when nobody does.
+/// ´claim:profile:a-handle-resolves-to-one-actor-or-to-none´
 #[sqlx::test(migrations = "../../migrations")]
 async fn handle_lookup_resolves_exactly_one_actor(pool: PgPool) {
     let ada = seed_actor(&pool, "ada").await;
