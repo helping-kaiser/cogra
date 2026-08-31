@@ -2,6 +2,7 @@ package com.cogra.feature.content
 
 import com.cogra.crypto.ActorKey
 import com.cogra.crypto.Family
+import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.CommentView
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Landing
@@ -16,6 +17,7 @@ import com.cogra.domain.ReferenceClaimView
 import com.cogra.domain.UserError
 import com.cogra.domain.content.LandingSignal
 import com.cogra.domain.content.NodeLanding
+import com.cogra.domain.content.SensitiveReveals
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
@@ -49,6 +51,7 @@ class PostDetailViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
     private val landings = LandingSignal()
+    private val reveals = SensitiveReveals()
     private val actor = ActorKey.generate()
     private val identity = FakeIdentityStore().apply { seed = actor.seed() }
     private val sealer = SealingWriteRepository(actor)
@@ -95,12 +98,17 @@ class PostDetailViewModelTest {
         var repliesPage: Outcome<Page<CommentView>> =
             Outcome.Success(Page(listOf(testComment("r1")), "rc1", hasNextPage = false))
 
+        /** The gallery the last comment edit left standing. */
+        var lastEditAttachments: List<AttachmentClaim> = emptyList()
+
         override suspend fun prepareCommentEdit(
             id: String,
             content: String,
+            attachments: List<AttachmentClaim>,
         ): Outcome<PreparedContentView> {
             if (prepareFails) return Outcome.Failed(java.io.IOException("offline"))
             editPrepared += 1
+            lastEditAttachments = attachments
             return Outcome.Success(
                 PreparedContentView("node-e", listOf(sealer.stage(Family.REVIEW))),
             )
@@ -122,17 +130,22 @@ class PostDetailViewModelTest {
         /** The references the last comment/reply creation declared. */
         var lastCommentReferences: List<ReferenceClaim> = emptyList()
 
+        /** The gallery the last comment/reply creation carried. */
+        var lastCommentAttachments: List<AttachmentClaim> = emptyList()
+
         override suspend fun prepareComment(
             target: String,
             content: String,
             license: LicenseChoice,
             tags: List<TagClaim>,
             references: List<ReferenceClaim>,
+            attachments: List<AttachmentClaim>,
         ): Outcome<PreparedContentView> {
             replyTargets += target
             commentPrepared += 1
             lastCommentTags = tags
             lastCommentReferences = references
+            lastCommentAttachments = attachments
             if (prepareFails) return Outcome.Failed(IOException("offline"))
             commentRefusal?.let { return Outcome.Refused(it) }
             return Outcome.Success(
@@ -204,6 +217,7 @@ class PostDetailViewModelTest {
         WriteSigner(sealer, identity),
         landings,
         identity,
+        reveals,
     )
 
     /**

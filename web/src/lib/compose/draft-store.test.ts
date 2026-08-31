@@ -80,6 +80,39 @@ describe("the local draft", () => {
     await composeDraftStore.clear();
     expect(await composeDraftStore.load()).toBeNull();
   });
+
+  // The published draft that came back. `save` has to read every picked blob
+  // before it can write, so a save that began before the post was signed is
+  // still reading when `clear` runs — and its write lands afterwards.
+  it("does not let a save that began before the clear write the draft back", async () => {
+    let release!: (bytes: ArrayBuffer) => void;
+    const held = new Promise<ArrayBuffer>((resolve) => {
+      release = resolve;
+    });
+    const state = draft(picked("a0"));
+    const slow = {
+      type: "image/webp",
+      arrayBuffer: () => held,
+    } as unknown as Blob;
+    const saving = composeDraftStore.save({
+      ...state,
+      assets: [{ ...state.assets[0]!, file: slow }],
+    });
+
+    await composeDraftStore.clear();
+    release(new Uint8Array([7]).buffer);
+    await saving;
+
+    expect(await composeDraftStore.load()).toBeNull();
+  });
+
+  it("still saves normally once the cleared draft has been replaced by a new one", async () => {
+    await composeDraftStore.save(draft(picked("a0")));
+    await composeDraftStore.clear();
+
+    await composeDraftStore.save(draft(picked("b0")));
+    expect((await composeDraftStore.load())!.assets).toHaveLength(1);
+  });
 });
 
 describe("what the draft card says", () => {

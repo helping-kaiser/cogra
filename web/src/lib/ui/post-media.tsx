@@ -20,6 +20,7 @@
 // direction (an author's choice shown as a platform verdict) is the worse error.
 
 import type React from "react";
+import { useState } from "react";
 
 import {
   fitFor,
@@ -29,6 +30,7 @@ import {
 import { BodyVeil } from "@/lib/ui2/media/body-veil";
 import { MediaGallery, type GalleryItem } from "@/lib/ui2/media/media-gallery";
 import { RemovedPlaceholder, type RemovalReason } from "@/lib/ui2/media/removed-placeholder";
+import { isRevealed, rememberReveal, sensitiveSignature } from "@/lib/ui2/media/reveal";
 
 type Attachment = {
   id: string;
@@ -148,27 +150,81 @@ export function PostMedia({
  * branches have to lay their children out identically: revealing must not move
  * anything on screen, and a veil that also changed the gap would do exactly
  * that.
+ *
+ * The decision itself is NOT held here. It belongs to the node, not to the
+ * component that happens to be drawing it, so a reveal in the feed is already
+ * answered on the detail page and a change to the node's mark takes it back
+ * (see `reveal.ts`). A caller that names no node keeps the old lone-body
+ * behaviour, which is what the design-system gallery wants.
  */
 export function BodyRegion({
   children,
   veiled,
   reason,
   testId,
+  nodeId,
+  signature,
 }: {
   children: React.ReactNode;
   veiled: boolean;
   reason?: string | null;
   testId?: string;
+  /** The node the decision is about. */
+  nodeId?: string;
+  /** Its sensitive state, so an old reveal does not cover a new mark. */
+  signature?: string;
 }) {
   const body = <div className="flex flex-col gap-2">{children}</div>;
-  return veiled ? (
-    <BodyVeil radius="0px" reason={reason} testId={testId ? `${testId}-veil` : undefined}>
+  if (!veiled) return body;
+  return (
+    <SharedVeil nodeId={nodeId} signature={signature} reason={reason} testId={testId}>
       {body}
+    </SharedVeil>
+  );
+}
+
+function SharedVeil({
+  children,
+  nodeId,
+  signature,
+  reason,
+  testId,
+}: {
+  children: React.ReactNode;
+  nodeId?: string;
+  signature?: string;
+  reason?: string | null;
+  testId?: string;
+}) {
+  const shared = nodeId !== undefined && signature !== undefined;
+  // The store is not React state, so a reveal made here has to be turned into
+  // a render. The counter is that, and nothing else reads it.
+  const [, bump] = useState(0);
+  const veilId = testId ? `${testId}-veil` : undefined;
+
+  if (!shared) {
+    return (
+      <BodyVeil radius="0px" reason={reason} testId={veilId}>
+        {children}
+      </BodyVeil>
+    );
+  }
+
+  return (
+    <BodyVeil
+      radius="0px"
+      reason={reason}
+      testId={veilId}
+      revealed={isRevealed(nodeId, signature)}
+      onReveal={() => {
+        rememberReveal(nodeId, signature);
+        bump((n) => n + 1);
+      }}
+    >
+      {children}
     </BodyVeil>
-  ) : (
-    body
   );
 }
 
 /** Re-exported so a caller reading one attachment does not import three modules. */
-export { fitFor, tileRatio };
+export { fitFor, tileRatio, sensitiveSignature };

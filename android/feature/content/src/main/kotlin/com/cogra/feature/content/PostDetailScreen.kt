@@ -47,6 +47,8 @@ import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.CommentView
+import com.cogra.domain.content.SensitiveMark
+import com.cogra.domain.content.isRevealed
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.PostView
 import com.cogra.feature.content.R
@@ -106,6 +108,7 @@ fun PostDetailRoute(
         onTagRelevanceChange = viewModel::onTagRelevanceChange,
         onTagConfidenceChange = viewModel::onTagConfidenceChange,
         onToggleReferenceValues = viewModel::onToggleReferenceValues,
+        onReveal = viewModel::onReveal,
         onOpenFinder = viewModel::onOpenFinder,
         onCloseFinder = viewModel::onCloseFinder,
         onFinderQueryChange = viewModel::onFinderQueryChange,
@@ -162,6 +165,8 @@ fun PostDetailScreen(
     onTagConfidenceChange: (TagTarget, String, Double) -> Unit,
     /** A reference row asking to show its parameters, by owner id (D16). */
     onToggleReferenceValues: (String) -> Unit,
+    /** A reader chose to look at one veiled body, as it stands. */
+    onReveal: (String, SensitiveMark) -> Unit,
     // The reference twin of the tag callbacks above (D10, D20).
     onOpenFinder: (TagTarget) -> Unit,
     onCloseFinder: (TagTarget) -> Unit,
@@ -351,6 +356,7 @@ fun PostDetailScreen(
                             onSubmitReply = onSubmitReply,
                             onToggleTagValues = onToggleTagValues,
                             onToggleReferenceValues = onToggleReferenceValues,
+                            onReveal = onReveal,
                             tags = tags,
                             references = references,
                             onOpenActor = onOpenActor,
@@ -398,6 +404,8 @@ private fun PostWithThread(
     onSubmitReply: () -> Unit,
     onToggleTagValues: (String) -> Unit,
     onToggleReferenceValues: (String) -> Unit,
+    /** A reader chose to look at one veiled body, as it stands. */
+    onReveal: (String, SensitiveMark) -> Unit,
     tags: TagCallbacks,
     references: ReferenceCallbacks,
     onOpenActor: (String) -> Unit,
@@ -426,6 +434,11 @@ private fun PostWithThread(
                     attachmentsStatus = post.attachmentsStatus,
                     testTagPrefix = "detail",
                     modifier = Modifier.testTag("detail_body"),
+                    // The same set the feed reads: a reader who already
+                    // chose to look at this post is not asked again on
+                    // the way in.
+                    revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
+                    onReveal = { onReveal(post.id, post.sensitiveMark()) },
                 )
                 post.author?.let { author ->
                     ActorChip(
@@ -513,6 +526,7 @@ private fun PostWithThread(
                 onSubmitReply = onSubmitReply,
                 onToggleTagValues = onToggleTagValues,
                 onToggleReferenceValues = onToggleReferenceValues,
+                onReveal = onReveal,
                 tags = tags,
                 references = references,
                 onOpenActor = onOpenActor,
@@ -739,6 +753,8 @@ private fun CommentThread(
     onSubmitReply: () -> Unit,
     onToggleTagValues: (String) -> Unit,
     onToggleReferenceValues: (String) -> Unit,
+    /** A reader chose to look at one veiled body, as it stands. */
+    onReveal: (String, SensitiveMark) -> Unit,
     tags: TagCallbacks,
     references: ReferenceCallbacks,
     onOpenActor: (String) -> Unit,
@@ -865,6 +881,8 @@ private fun CommentThread(
                         attachmentsStatus = comment.attachmentsStatus,
                         testTagPrefix = "comment_${comment.id}",
                         surface = BodySurface.Comment,
+                        revealed = state.reveals.isRevealed(comment.id, comment.sensitiveMark()),
+                        onReveal = { onReveal(comment.id, comment.sensitiveMark()) },
                     )
                     Text(
                         licenseTerms(comment.license),
@@ -1012,6 +1030,7 @@ private fun CommentThread(
                 onSubmitReply = onSubmitReply,
                 onToggleTagValues = onToggleTagValues,
                 onToggleReferenceValues = onToggleReferenceValues,
+                onReveal = onReveal,
                 tags = tags,
                 references = references,
                 onOpenActor = onOpenActor,
