@@ -197,6 +197,52 @@ describe("the compose wizard", () => {
     expect(variables!.input.attachments).toBeNull();
   });
 
+  // The hand test found framing dead on everything past the first picture, so
+  // what is asserted is that each one carries its OWN framing and keeps it.
+  it("frames every picked picture, not just the first", async () => {
+    render();
+    await pick(["one.jpg", "two.jpg", "three.jpg"]);
+    fireEvent.click(screen.getByTestId("wizard-next"));
+
+    const origin = () =>
+      screen.getByTestId("wizard-crop-frame").querySelector("img")!.style.transformOrigin;
+
+    // Each picture starts centred and is framed on its own.
+    for (const index of [0, 1, 2]) {
+      fireEvent.click(screen.getByTestId(`wizard-crop-pick-${index}`));
+      expect(origin()).toBe("50% 50%");
+      for (let press = 0; press <= index; press += 1) {
+        fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "ArrowLeft" });
+      }
+    }
+
+    // Coming back finds each one as it was left, so no picture's framing was
+    // written over another's.
+    for (const [index, expected] of [
+      [0, "55% 50%"],
+      [1, "60% 50%"],
+      [2, "65% 50%"],
+    ] as const) {
+      fireEvent.click(screen.getByTestId(`wizard-crop-pick-${index}`));
+      expect(origin()).toBe(expected);
+    }
+  });
+
+  // Switching shape re-cuts from the ORIGINAL, so the framing survives it.
+  it("keeps each picture's framing across a shape switch", async () => {
+    render();
+    await pick(["one.jpg", "two.jpg"]);
+    fireEvent.click(screen.getByTestId("wizard-next"));
+
+    fireEvent.click(screen.getByTestId("wizard-crop-pick-1"));
+    fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "ArrowDown" });
+    fireEvent.click(screen.getByTestId("wizard-shape-wide"));
+
+    const frame = screen.getByTestId("wizard-crop-frame");
+    expect(frame.style.aspectRatio).toBe("1.91 / 1");
+    expect(frame.querySelector("img")!.style.transformOrigin).toBe("50% 45%");
+  });
+
   it("refuses to leave the pick screen with no body", async () => {
     render();
     fireEvent.click(await screen.findByTestId("wizard-to-words"));

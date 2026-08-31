@@ -127,6 +127,15 @@ export function dragBy(
   return nudge(crop, dx, dy);
 }
 
+/**
+ * Rounded to four places before it reaches the DOM. Stepping by 0.05 lands on
+ * values like 0.55000000000000004, and a seventeen-digit percentage in an
+ * inline style is noise — four places is far finer than a device pixel.
+ */
+function trim(value: number): number {
+  return Number(value.toFixed(4));
+}
+
 /** The inline style that renders a crop: what the component hands to the img. */
 export function cropStyle(crop: Crop): {
   transform: string;
@@ -135,9 +144,9 @@ export function cropStyle(crop: Crop): {
   objectPosition: string;
 } {
   const safe = clampCrop(crop);
-  const at = `${safe.x * 100}% ${safe.y * 100}%`;
+  const at = `${trim(safe.x * 100)}% ${trim(safe.y * 100)}%`;
   return {
-    transform: `scale(${safe.zoom})`,
+    transform: `scale(${trim(safe.zoom)})`,
     transformOrigin: at,
     objectFit: "cover",
     objectPosition: at,
