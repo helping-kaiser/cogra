@@ -693,6 +693,11 @@ async fn a_refused_prepare_reports_user_errors(pool: PgPool) {
 /// the record the device signs, served back off the junction — never
 /// fetched from the asset, which holds no description at all.
 ///
+/// The asset row is written directly rather than uploaded: the byte
+/// pipeline has its own end-to-end test and nothing here is about bytes.
+/// Both posts are media posts, so the words that vary between them are the
+/// description beside the gallery — the body XOR leaves `content` empty.
+///
 /// The same asset reads differently in two parents, each version's gallery serving the description its own manifest witnessed.
 /// ´claim:media:a-description-belongs-to-the-placement´
 #[sqlx::test(migrations = "../../migrations")]
@@ -701,8 +706,6 @@ async fn one_asset_reads_differently_in_two_posts(pool: PgPool) {
     let (author_id, key) = rig.seed_member("author", "author@example.com").await;
     let token = rig.log_in("author@example.com").await;
 
-    // The asset row without the upload path: the byte pipeline has its own
-    // end-to-end test and nothing here is about bytes.
     let asset = Uuid::new_v4();
     postgres_store::media::insert(
         &rig.pool,
@@ -725,7 +728,8 @@ async fn one_asset_reads_differently_in_two_posts(pool: PgPool) {
                 Some(&token),
                 PREPARE_POST,
                 json!({ "input": {
-                    "content": description,
+                    "title": "Look",
+                    "description": description,
                     "license": { "attribution": 1.0, "provenance": 0.0 },
                     "attachments": [{
                         "mediaId": asset.to_string(),

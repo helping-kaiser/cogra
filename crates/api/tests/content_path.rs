@@ -1404,8 +1404,13 @@ mod galleries {
 
     /// Every gallery refusal, each naming its offender: the count over the
     /// whole list, an order contradicting the position the envelope will
-    /// witness, the same picture twice, an asset that is not there, and —
-    /// the anti-hijack rule — someone else's picture.
+    /// witness, the same picture twice, an asset that is not there, —
+    /// the anti-hijack rule — someone else's picture, and a description
+    /// past the cap.
+    ///
+    /// The last one is why the paths carry an index at all: a description
+    /// is authored per entry, so its refusal has to reach the one field
+    /// the author can still fix rather than the gallery.
     ///
     /// Every gallery fault refuses the gallery whole and names the entry that caused it, someone else's picture included.
     /// ´claim:content:a-gallery-refuses-whole-and-names-its-offender´
@@ -1459,9 +1464,6 @@ mod galleries {
                 placements(&[theirs]),
                 vec!["attachments".into(), "0".into(), "mediaId".into()],
             ),
-            // A description past the cap names the entry it came from, not
-            // the gallery: the refusal has to reach the one field the
-            // author can still fix.
             (
                 vec![
                     AttachmentDraft {
