@@ -15,7 +15,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
-import com.cogra.core.designsystem.v2.token.Layout
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -156,13 +155,12 @@ class AtomsTest {
             }
         }
 
-        // The board draws the pill inside the header's own 12dp gutter. A
-        // short title must not pull it toward the middle.
+        // The board hands the leftover width to a spacer, which puts the
+        // pill against the far edge of the header's content box. A short
+        // title must not pull it back toward the middle.
         val header = compose.onNodeWithTag("header").getUnclippedBoundsInRoot()
         val action = compose.onNodeWithTag("header_action").getUnclippedBoundsInRoot()
-        assertThat((header.right - action.right).value)
-            .isWithin(TOLERANCE)
-            .of(Layout.TopBarPadding.value)
+        assertThat((header.right - action.right).value).isWithin(TOLERANCE).of(0f)
     }
 
     @Test
