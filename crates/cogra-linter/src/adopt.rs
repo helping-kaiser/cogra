@@ -367,7 +367,7 @@ fn entry_names(at: &Path) -> Vec<String> {
 }
 
 /// When the adoption was drafted and ruled, and where its rationale lives.
-#[derive(Clone, Debug, serde::Deserialize)]
+#[derive(Clone, Debug)]
 pub struct Meta {
     /// The date the file was drafted.
     pub drafted: Box<str>,
@@ -381,6 +381,12 @@ pub struct Meta {
     pub corpus_root: Box<str>,
     /// The discipline documents this corpus adopts.
     pub discipline_docs: Vec<Box<str>>,
+    /// `[major, minor, patch]` of the config envelope this file is written
+    /// against. Only `major` is enforced: a file whose major this build
+    /// does not read fails to load with a located error naming both,
+    /// rather than being silently misinterpreted by a reader built for a
+    /// shape it does not have. `minor`/`patch` are carried but advisory.
+    pub schema_version: [u32; 3],
 }
 
 /// What the corpus IS: the exclusions that fix Ω's domain.
@@ -1050,7 +1056,7 @@ impl EnforcementPartition {
 
 #[derive(serde::Deserialize)]
 struct RawAdoption {
-    meta: Meta,
+    meta: RawMeta,
     carrier: RawCarrier,
     signature: RawSignature,
     partition: RawPartition,
@@ -1069,6 +1075,42 @@ struct RawAdoption {
     #[serde(rename = "head-recognition")]
     head_recognition: HeadRecognition,
     enforcement: RawEnforcement,
+}
+
+/// `[meta]`, with `schema_version` kept spanned so a refused major names its
+/// own row.
+#[derive(serde::Deserialize)]
+struct RawMeta {
+    drafted: Box<str>,
+    ruled: Box<str>,
+    status: Box<str>,
+    rationale: Box<str>,
+    corpus_root: Box<str>,
+    discipline_docs: Vec<Box<str>>,
+    schema_version: Spanned<[u32; 3]>,
+}
+
+impl RawMeta {
+    fn validate(self, source: &str, origin: &Path) -> Result<Meta, AdoptionError> {
+        let schema_version = *self.schema_version.as_ref();
+        let expected = 1;
+        if schema_version[0] != expected {
+            return Err(AdoptionError::UnsupportedSchemaVersion {
+                at: row(&self.schema_version, source, origin),
+                found: schema_version[0],
+                expected,
+            });
+        }
+        Ok(Meta {
+            drafted: self.drafted,
+            ruled: self.ruled,
+            status: self.status,
+            rationale: self.rationale,
+            corpus_root: self.corpus_root,
+            discipline_docs: self.discipline_docs,
+            schema_version,
+        })
+    }
 }
 
 /// `[carrier]`, with each prefix's row kept for the spelling check.
@@ -1176,6 +1218,7 @@ fn row<T>(spanned: &Spanned<T>, source: &str, origin: &Path) -> Location {
 
 impl RawAdoption {
     fn validate(self, source: &str, origin: &Path) -> Result<Adoption, AdoptionError> {
+        let meta = self.meta.validate(source, origin)?;
         let signature = self.signature.validate(source, origin)?;
         let mut configured = Vec::new();
         for rule in &self.partition.rules {
@@ -1202,7 +1245,7 @@ impl RawAdoption {
             at: row(&self.kinds.registry, source, origin),
         });
         Ok(Adoption {
-            meta: self.meta,
+            meta,
             carrier: Carrier {
                 exclude_trees: inner(self.carrier.exclude_trees),
                 generated_files: inner(self.carrier.generated_files),

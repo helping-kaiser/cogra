@@ -37,6 +37,7 @@ status = \"ruled\"
 rationale = \"notes.md\"
 corpus_root = \".\"
 discipline_docs = []
+schema_version = [1, 0, 0]
 
 [carrier]
 exclude_trees = []
@@ -333,6 +334,47 @@ fn the_meta_section_round_trips() {
             .iter()
             .any(|doc| &**doc == "crates/cogra-linter/docs/label-calculus.md")
     );
+    assert_eq!(meta.schema_version, [1, 0, 0]);
+}
+
+/// Major is enforced; minor and patch are carried, advisory only.
+#[test]
+fn a_schema_major_this_build_reads_loads() {
+    let source = document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K)
+        .replace("schema_version = [1, 0, 0]", "schema_version = [1, 9, 9]");
+    let adoption = load(&source).expect("major 1 loads whatever minor and patch say");
+    assert_eq!(adoption.meta.schema_version, [1, 9, 9]);
+}
+
+/// A major this build does not read is refused with a located error naming
+/// both majors — never silently misinterpreted as the shape this build
+/// expects.
+#[test]
+fn a_schema_major_below_this_build_is_refused() {
+    let source = document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K)
+        .replace("schema_version = [1, 0, 0]", "schema_version = [0, 9, 0]");
+    let error = load(&source).expect_err("major 0 predates this build's reader");
+    let AdoptionError::UnsupportedSchemaVersion {
+        found, expected, ..
+    } = error
+    else {
+        panic!("expected UnsupportedSchemaVersion, got {error:?}");
+    };
+    assert_eq!((found, expected), (0, 1));
+    assert!(row(&source, &error).contains("schema_version"));
+}
+
+/// The same refusal for a major ahead of this build — the reader has no
+/// obligation to guess forward compatibility it was never built for.
+#[test]
+fn a_schema_major_above_this_build_is_refused() {
+    let source = document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K)
+        .replace("schema_version = [1, 0, 0]", "schema_version = [2, 0, 0]");
+    let error = load(&source).expect_err("major 2 postdates this build's reader");
+    let AdoptionError::UnsupportedSchemaVersion { found, .. } = error else {
+        panic!("expected UnsupportedSchemaVersion, got {error:?}");
+    };
+    assert_eq!(found, 2);
 }
 
 #[test]
