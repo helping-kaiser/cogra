@@ -1089,9 +1089,8 @@ collapse to one line under the description; the title clamps to one
 line, the description to two. The expanded detail view may exceed
 the screen.
 
-To port to the product docs: the sensitive self-mark field and its
-fixed per-field policy, the default-license account setting, and
-the edit batch carrying topic/citation acts.
+To port to the product docs: the default-license account setting,
+and the edit batch carrying topic/citation acts.
 
 ### Comments live in a sheet — 2026-08-28
 
