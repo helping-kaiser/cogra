@@ -146,6 +146,12 @@ title, at most two short paragraphs, Close. The texts, verbatim
   Results put what's closest to you first — the numbers are your
   view, no one else's. Below the line, what's still beyond your
   reach, newest first. Your searches stay on this device.
+- **What is CGT?** (the wallet's balance headline): CGT is CoGra's
+  own money. Advertisers fund campaigns with it, and it pays the
+  people whose posts and stances carried real reach — the small coin
+  always means CGT. / It's yours the moment it lands: earnings are
+  paid straight to you, held by your key, never by CoGra. Every
+  amount can be traced to what paid it.
 - **The filter** (the feed's and search's filter sheets): What you
   let in, and in what order — the kinds combine freely, ranked or
   newest is one choice, and what you've already seen stays out
