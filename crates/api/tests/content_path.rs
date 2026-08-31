@@ -138,6 +138,9 @@ impl Rig {
 /// the envelope the device signs, so a reader can check the veil against
 /// the record and a mirror rebuild restores it with the body it belongs
 /// to. The display row is the projection of that payload.
+///
+/// The self-mark is witnessed: it rides the envelope the device signs, and the display row is that payload's projection.
+/// ´claim:content:the-self-mark-is-witnessed´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_self_mark_rides_the_signed_payload_into_the_display_row(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -219,6 +222,9 @@ async fn a_self_mark_rides_the_signed_payload_into_the_display_row(pool: PgPool)
 /// A blank reason is no reason, and a reason without the switch is a
 /// refusal rather than a silent drop — the author would otherwise sign a
 /// warning nobody is ever shown.
+///
+/// A blank reason is no reason and a reason without the switch is refused, so the author never signs a warning nobody is shown.
+/// ´claim:content:a-reason-needs-its-switch´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_self_mark_reconciles_its_switch_and_its_reason(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -278,6 +284,9 @@ async fn a_self_mark_reconciles_its_switch_and_its_reason(pool: PgPool) {
 /// display row visible with its node binding and landing order, carriage
 /// holding the exact envelope bytes, and the chronicle serving it in both
 /// the newest-first listing and the record read.
+///
+/// A landed post leaves all three traces at once: the display row bound to its node in landing order, the exact envelope bytes in carriage, and the record in the chronicle.
+/// ´claim:content:a-landed-post-leaves-all-three-traces´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -357,6 +366,9 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
 /// the whole state — a Post without that field. An explicit empty title
 /// stores NULL the same way. Each edit chains behind the previous one:
 /// the first behind the genesis record, the second behind the first.
+///
+/// An edit's payload is a whole snapshot and not a patch, an absent field storing null, and each edit chains behind the one before it.
+/// ´claim:content:an-edit-is-a-whole-snapshot-chained-behind-the-last´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -461,6 +473,9 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
 /// second edit while one is in flight, because the backend serializes
 /// edits per (node, author) (substrate.md §9). Once the first lands, the
 /// next edit stages again.
+///
+/// Edits refuse at prepare for a non-creator, an unknown target and a second edit in flight, and the next one stages again once the first lands.
+/// ´claim:content:edits-are-eligibility-checked-and-serialized´
 #[sqlx::test(migrations = "../../migrations")]
 async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -561,6 +576,9 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
 /// living under that comment. A comment edit is an ordinary-role Review
 /// at `(0, 0)` with an A leg back to the genesis parent, and commenting
 /// on nothing refuses.
+///
+/// A comment is minted on its own terminal leg, so comments thread under comments as readily as under posts, and commenting on nothing refuses.
+/// ´claim:content:comments-thread-under-comments-too´
 #[sqlx::test(migrations = "../../migrations")]
 async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -699,6 +717,9 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
 /// exactly where the page ended, and walking backward from that same
 /// cursor serves the newer neighbors instead — still newest-first. The
 /// record chronicle pages the five Publishes the same way.
+///
+/// The listing is newest-first by landing order, and its keyset cursor continues exactly where a page ended, forward and backward alike.
+/// ´claim:content:the-listing-pages-by-keyset-both-ways´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_listing_pages_by_keyset_in_landing_order(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -753,6 +774,8 @@ async fn the_listing_pages_by_keyset_in_landing_order(pool: PgPool) {
     );
 }
 
+/// The chain head follows the newest landed edit.
+/// ´claim:content:the-chain-head-follows-the-newest-edit´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_chain_head_tracks_the_newest_landed_edit(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -819,6 +842,9 @@ async fn the_chain_head_tracks_the_newest_landed_edit(pool: PgPool) {
 /// own key, so the pass reports nothing and duplicates nothing. The real
 /// `promote_landed` filter never re-selects a landed row, so this
 /// exercises a path production does not take.
+///
+/// The chronicle's filters compose and page in both directions, and re-running the landing pass over already-promoted writes duplicates nothing.
+/// ´claim:content:the-chronicle-filters-compose-and-landing-is-idempotent´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1060,6 +1086,9 @@ mod galleries {
     /// manifest on the record, the two saying the same thing in the same
     /// order — which is what makes a gallery rebuildable from the record
     /// rather than only from the request that made it.
+    ///
+    /// A gallery is on the version row and its manifest on the record, the two saying the same thing in the same order, so a gallery is rebuildable from the record alone.
+    /// ´claim:content:a-gallery-is-rebuildable-from-its-record´
     #[sqlx::test(migrations = "../../migrations")]
     async fn a_media_post_lands_with_its_manifest_and_its_junction_rows(pool: PgPool) {
         let rig = Rig::new(pool).await;
@@ -1125,6 +1154,9 @@ mod galleries {
     /// The words here are the title and description: a media post's body
     /// *is* its gallery, and words beside media are the description, so
     /// those are the version-row text a media post edits.
+    ///
+    /// An expired edit rolls its words and its gallery back together, so a reader never meets the old words under the new pictures.
+    /// ´claim:content:an-expired-edit-rolls-back-whole´
     #[sqlx::test(migrations = "../../migrations")]
     async fn an_expired_edit_rolls_back_the_words_and_the_gallery_together(pool: PgPool) {
         let rig = Rig::new(pool).await;
@@ -1230,6 +1262,9 @@ mod galleries {
     /// edit dropped is still referenced and the orphan sweeper leaves it
     /// alone — right, because the old digests stay committed on the record
     /// that carried them.
+    ///
+    /// A superseded version keeps the gallery it carried, so a picture an edit dropped is still referenced and survives the orphan sweep.
+    /// ´claim:content:a-superseded-version-keeps-its-gallery´
     #[sqlx::test(migrations = "../../migrations")]
     async fn a_superseded_version_keeps_its_own_gallery(pool: PgPool) {
         let rig = Rig::new(pool).await;
@@ -1280,6 +1315,9 @@ mod galleries {
 
     /// A comment carries the smaller gallery and no cover: its media
     /// supports the words rather than replacing them.
+    ///
+    /// A comment's media supports its words rather than replacing them: the smaller gallery, and no cover.
+    /// ´claim:content:a-comments-media-sits-beside-its-words´
     #[sqlx::test(migrations = "../../migrations")]
     async fn a_comment_carries_media_beside_its_words(pool: PgPool) {
         let rig = Rig::new(pool).await;
@@ -1341,6 +1379,9 @@ mod galleries {
     /// whole list, an order contradicting the position the envelope will
     /// witness, the same picture twice, an asset that is not there, and —
     /// the anti-hijack rule — someone else's picture.
+    ///
+    /// Every gallery fault refuses the gallery whole and names the entry that caused it, someone else's picture included.
+    /// ´claim:content:a-gallery-refuses-whole-and-names-its-offender´
     #[sqlx::test(migrations = "../../migrations")]
     async fn a_gallery_is_refused_whole_and_names_the_offending_entry(pool: PgPool) {
         let rig = Rig::new(pool).await;
@@ -1409,6 +1450,9 @@ mod galleries {
 
     /// A comment's gallery is bounded lower than a post's, checked the
     /// same way and over the whole list.
+    ///
+    /// A comment's gallery is bounded lower than a post's.
+    /// ´claim:content:a-comments-gallery-is-bounded-lower´
     #[sqlx::test(migrations = "../../migrations")]
     async fn a_comment_gallery_stops_at_four(pool: PgPool) {
         let rig = Rig::new(pool).await;
@@ -1445,6 +1489,9 @@ mod galleries {
 
     /// The body's exclusive-or, refused from both sides — words beside a
     /// gallery, and a post with neither — on a create and on an edit.
+    ///
+    /// A post's body is words or media and never both or neither, refused from both sides on a create and on an edit alike.
+    /// ´claim:content:a-body-is-words-or-media´
     #[sqlx::test(migrations = "../../migrations")]
     async fn a_post_body_is_words_or_media_and_never_both_or_neither(pool: PgPool) {
         let rig = Rig::new(pool).await;
