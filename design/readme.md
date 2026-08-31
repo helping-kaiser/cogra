@@ -1584,12 +1584,20 @@ entry first". What stands:
   reports gaps without failing. Full pipeline:
   `node bundle.mjs && node render-screens.mjs && node gen-maps.mjs
   && node check-flows.mjs`.
-- **Entry is wired** (19 boards, 147 edges, 47 gaps). The gap list
-  is the visible to-do: the guest-gate and network-error pattern
-  boards, the reader's post menu, field-error states, the key-absent
-  acting paths, the topic destination ruling, the profile screen,
-  and item 13's Post Score drill-down. The other pages wire
-  page by page in later rounds.
+- **Every page is wired** (rounds 1–6, 2026-08-31: Entry, then Money
+  & Wallet, Feed & Search, Comments, Compose, Media + Patterns —
+  573 edges over all 81 boards, no board unreached, no interactable
+  unedged). The 125 gaps are the visible to-do: the guest-gate and
+  network-error pattern boards, the reader's post and comment menus,
+  the topic picker, field/mismatch error states, the key-absent
+  acting paths, the settlement/tip/rail record views the wallet's
+  traceability promise owes, the standalone post detail, the item /
+  chat / offer surfaces, the topic-destination and applicant-rights
+  rulings, the profile screen, the Sky (item 16), and item 13's
+  Post Score drill-down. Cross-flow reuse is wired as edges into the
+  master boards (the describe sheet, the gated seal, the license /
+  sensitive sheets, the key-absent seal, the stance pad) rather than
+  duplicated boards.
 
 ## 14. Index
 

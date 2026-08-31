@@ -401,6 +401,84 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+// The Media page (HelpDialog, the one Patterns board, carries its attributes
+// directly as a hand board).
+Object.assign(FLOW_MARKERS, {
+  FeedGallery: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 2, find: '<a href="/u/', tag: "a", all: true },
+    { n: 3, find: 'aria-label="More on this post"', tag: "button", all: true },
+    { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
+    { n: 5, find: ">More</button>", tag: "button" },
+    { n: 6, find: '<a href="/t/', tag: "a", all: true },
+    { n: 7, find: 'aria-label="Your stance on this post', tag: "button", all: true },
+    { n: 7, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 8, find: ">Post Score</span>", tag: "button", all: true },
+    { n: 9, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 9, find: 'aria-label="1 comment"', tag: "button" },
+    ...nav(10),
+  ],
+  ComposePicked: [
+    { n: 1, find: "cursor:grab", tag: "span", all: true },
+    { n: 2, find: ">Describe</button>", tag: "button", all: true },
+    { n: 3, find: 'aria-label="Remove', tag: "button", all: true },
+    { n: 4, find: ">Done</button>", tag: "button" },
+    { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  ComposeDescribe: [
+    { n: 1, find: 'aria-label="Describing pictures"', tag: "button" },
+    { n: 2, find: 'rows="2"', tag: "textarea" },
+    { n: 3, find: ">Done</button>", tag: "button" },
+    { n: 4, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  ComposeUploading: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="Manage the pictures"', tag: "button" },
+    { n: 4, find: ">Retry</button>", tag: "button" },
+    { n: 5, find: ">Remove it</button>", tag: "button" },
+    { n: 6, find: ">Describe the pictures</button>", tag: "button" },
+    { n: 7, find: 'type="text"', tag: "input" },
+    { n: 8, find: 'rows="2"', tag: "textarea" },
+    { n: 9, find: "#tidemarket", tag: "span" },
+    { n: 10, find: ">Add a topic</button>", tag: "button" },
+    { n: 11, find: ">Next</button>", tag: "button" },
+  ],
+  ComposeSealUploading: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
+    { n: 4, find: ">Change</button>", tag: "button" },
+    { n: 5, find: ">Adjust</button>", tag: "button" },
+    { n: 6, find: ">Mark</button>", tag: "button" },
+    { n: 7, find: 'disabled=""', tag: "button" },
+    { n: 8, find: ">Back</button>", tag: "button" },
+  ],
+  ComposePickWeb: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: ">Write words instead</button>", tag: "button" },
+    { n: 5, find: ">Show all</span>", tag: "span" },
+    { n: 6, find: 'aria-label="Remove this picture"', tag: "button" },
+    { n: 7, find: "1px dashed var(--border-field)", tag: "div" },
+    { n: 8, find: ">Choose from your files</button>", tag: "button" },
+  ],
+  AvatarCrop: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: "transform:scale(1.2)", tag: "div" },
+  ],
+  AvatarSeal: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave"', tag: "button" },
+    { n: 3, find: 'aria-label="Changing your picture"', tag: "button" },
+    { n: 4, find: ">Sign the change</button>", tag: "button" },
+    { n: 5, find: ">Back</button>", tag: "button" },
+  ],
+});
+
 export function applyFlowMarkers(name, html) {
   const markers = FLOW_MARKERS[name];
   if (!markers) return html;
