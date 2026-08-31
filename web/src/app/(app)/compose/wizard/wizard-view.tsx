@@ -380,6 +380,21 @@ export function ComposeWizard({
         />
       )}
 
+      {/* The other way out of the offer, said rather than drawn: the pick screen
+          below is already the way to start fresh, so this names it instead of
+          adding a second control that would compete with Continue. Discarding
+          is the card's own affordance and the only route to it. */}
+      {offered !== null && (
+        <div className="flex flex-none items-center gap-2 px-6 py-2">
+          <p
+            data-testid="wizard-draft-fresh"
+            className="m-0 flex-1 text-body-medium text-on-surface-variant"
+          >
+            Or start fresh — pick one picture, several, or one video.
+          </p>
+        </div>
+      )}
+
       {transportFailed && (
         <div className="px-6">
           <TransportError testId="wizard-transport-error" />

@@ -147,7 +147,7 @@ function MediaBody({
   return (
     <>
       <Prompt action="Write words instead" actionTestId="wizard-to-words" onAction={() => onMode("words")}>
-        Pick one picture or several.
+        Pick one picture, several, or one video.
       </Prompt>
 
       {assets.length > 0 && (
