@@ -1,4 +1,4 @@
-Two states, opposite granularity. Get that wrong and the design misrepresents the data model.
+Two states, two different takes: sensitive covers the body and gives it back on a tap; redaction takes the whole record for good. Get that wrong and the design misrepresents the data model.
 
 **`SensitiveVeil` — the whole body, as one.**
 
