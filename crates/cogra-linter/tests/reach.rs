@@ -137,6 +137,9 @@ fn refusals(run: &Run) -> Vec<String> {
 
 /// The ruled corpus declares no graph, so the clause has no subject
 /// (´dec:lint:reach-declared´).
+///
+/// This corpus declares no reach graph, so the clause has no subject.
+/// ´claim:reach:the-ruled-corpus-declares-no-graph´
 #[test]
 fn the_ruled_adoption_declares_no_reach_graph() {
     assert!(
@@ -147,6 +150,9 @@ fn the_ruled_adoption_declares_no_reach_graph() {
 
 /// With no section the import is permitted, which is the corpus's behavior
 /// before this mechanism existed (´dec:lint:reach-declared´).
+///
+/// With no declared graph every import is permitted.
+/// ´claim:reach:an-absent-section-permits-everything´
 #[test]
 fn an_absent_section_permits_every_import() {
     let run = check_sources(ruled(), corpus());
@@ -159,6 +165,9 @@ fn an_absent_section_permits_every_import() {
 
 /// A graph naming the cited owner permits the import
 /// (´dec:lint:reach-declared´).
+///
+/// A graph naming the cited owner permits the import.
+/// ´claim:reach:a-named-owner-is-permitted´
 #[test]
 fn a_declared_reach_permits_the_owners_it_names() {
     let run = check_sources(&with_reach(PERMITTING), corpus());
@@ -171,6 +180,9 @@ fn a_declared_reach_permits_the_owners_it_names() {
 
 /// A graph that omits the cited owner refuses the import, at the occurrence
 /// (´dec:lint:reach-declared´).
+///
+/// A graph omitting the cited owner refuses the import, at the occurrence.
+/// ´claim:reach:an-unnamed-owner-is-refused´
 #[test]
 fn an_import_outside_the_declared_reach_is_located() {
     let run = check_sources(&with_reach(FORBIDDING), corpus());
@@ -199,6 +211,9 @@ fn an_import_outside_the_declared_reach_is_located() {
 
 /// An owner the section does not name is constrained by nothing
 /// (´dec:lint:reach-declared´).
+///
+/// An owner the section does not name is constrained by nothing.
+/// ´claim:reach:an-owner-without-a-row-is-unconstrained´
 #[test]
 fn an_owner_with_no_row_reaches_everything() {
     let run = check_sources(&with_reach(ELSEWHERE), corpus());
@@ -211,6 +226,9 @@ fn an_owner_with_no_row_reaches_everything() {
 
 /// An owner reaches itself by being itself, whatever the section says
 /// (´dec:lint:reach-declared´).
+///
+/// An owner reaches itself by being itself, whatever the section says.
+/// ´claim:reach:an-owner-reaches-itself´
 #[test]
 fn an_owner_reaches_itself_without_a_row() {
     let adoption = with_reach(FORBIDDING);
@@ -220,6 +238,9 @@ fn an_owner_reaches_itself_without_a_row() {
 }
 
 /// Reach is the declared edge and not its closure (´dec:lint:reach-declared´).
+///
+/// Reach is the declared edge and never its closure.
+/// ´claim:reach:reach-is-not-closed´
 #[test]
 fn reach_is_not_closed_under_composition() {
     let adoption = with_reach(
@@ -251,6 +272,9 @@ may_cite = [\"pkg.web\"]
 
 /// A row whose owner no prefix registers is refused, at its row
 /// (´dec:lint:reach-declared´).
+///
+/// A row whose owner no prefix registers is refused at its row.
+/// ´claim:reach:an-unregistered-row-owner-is-refused´
 #[test]
 fn a_row_naming_an_unregistered_owner_is_refused() {
     let error = refused(
@@ -270,6 +294,9 @@ may_cite = [\"pkg.web\"]
 }
 
 /// So is a target no prefix registers (´dec:lint:reach-declared´).
+///
+/// A target no prefix registers is refused at its row.
+/// ´claim:reach:an-unregistered-target-is-refused´
 #[test]
 fn a_target_naming_an_unregistered_owner_is_refused() {
     let error = refused(
@@ -296,6 +323,9 @@ may_cite = [\"doc.nowhere\"]
 /// the same reach the partition's own owner check has, and naming it here is
 /// what keeps the limit a recorded fact rather than a gap someone discovers by
 /// writing a typo that loads.
+///
+/// The package family registers a prefix for every package name, so a misspelling still loads.
+/// ´claim:reach:the-package-family-registers-any-spelling´
 #[test]
 fn a_misspelled_package_owner_is_registered_by_the_family() {
     let adoption = with_reach(
@@ -319,6 +349,9 @@ may_cite = [\"pkg.web\"]
 }
 
 /// One owner heads one row (´dec:lint:reach-declared´).
+///
+/// One owner heads one row.
+/// ´claim:reach:one-owner-heads-one-row´
 #[test]
 fn an_owner_heading_two_rows_is_refused() {
     let error = refused(
@@ -342,6 +375,9 @@ may_cite = [\"pkg.common\"]
 
 /// A row does not write the edge every owner has by structure
 /// (´dec:lint:reach-declared´).
+///
+/// A row does not write the edge every owner has by structure.
+/// ´claim:reach:a-self-edge-is-refused´
 #[test]
 fn a_row_naming_its_own_owner_is_refused() {
     let error = refused(
@@ -360,6 +396,9 @@ may_cite = [\"pkg.web\"]
 }
 
 /// One permission is written once (´dec:lint:reach-declared´).
+///
+/// One permission is written once.
+/// ´claim:reach:a-repeated-target-is-refused´
 #[test]
 fn a_row_repeating_a_target_is_refused() {
     let error = refused(
@@ -387,6 +426,9 @@ may_cite = [\"pkg.api\", \"pkg.api\"]
 /// `crates/api` path-depends on `common`, `l1-standin`, and `postgres-store`.
 /// A row for `pkg.api` naming only one of them forbids two imports the
 /// compiler already performs, which is the one direction the comparison runs.
+///
+/// A declaration omitting a path dependency contradicts the build.
+/// ´claim:reach:omitting-a-path-dependency-contradicts´
 #[test]
 fn a_reach_omitting_a_path_dependency_contradicts_the_manifest() {
     let adoption = with_reach(
@@ -413,6 +455,9 @@ may_cite = [\"pkg.common\"]
 
 /// A declaration that admits every path dependency agrees with the build
 /// (´dec:lint:reach-declared´).
+///
+/// A declaration admitting every path dependency agrees with the build.
+/// ´claim:reach:admitting-the-dependencies-agrees´
 #[test]
 fn a_reach_admitting_its_path_dependencies_agrees_with_the_manifest() {
     let adoption = with_reach(ELSEWHERE);
@@ -424,6 +469,9 @@ fn a_reach_admitting_its_path_dependencies_agrees_with_the_manifest() {
 
 /// A declaration reaching past the manifests is no contradiction, and it is
 /// how every document owner reaches anything (´dec:lint:reach-declared´).
+///
+/// A declaration reaching past the manifests contradicts nothing.
+/// ´claim:reach:reaching-past-the-manifests-is-no-contradiction´
 #[test]
 fn a_reach_beyond_the_manifests_is_no_contradiction() {
     let adoption = with_reach(PERMITTING);
@@ -454,6 +502,9 @@ may_cite = [
 
 /// The absent section reaches the manifest comparison too
 /// (´dec:lint:reach-declared´).
+///
+/// The absent section contradicts no manifest either.
+/// ´claim:reach:an-absent-section-contradicts-nothing´
 #[test]
 fn an_absent_section_contradicts_no_manifest() {
     assert!(ruled().verify_reach_against_manifests(&root()).is_ok());
