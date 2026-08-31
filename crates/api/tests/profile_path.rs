@@ -176,6 +176,9 @@ fn draft(
 /// into permanent carriage. The payload counts bracket that: the anchor's
 /// own empty payload never reaches carriage, so the count moves from zero
 /// to one across the update.
+///
+/// A landed update appends a merged version row and puts its envelope into permanent carriage, the anchor's own empty payload never reaching carriage at all.
+/// ´claim:profile:an-update-lands-a-merged-version-and-its-envelope´
 #[sqlx::test(migrations = "../../migrations")]
 async fn profile_update_lands_a_merged_version_row(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -200,6 +203,9 @@ async fn profile_update_lands_a_merged_version_row(pool: PgPool) {
 /// A second update asserts the current chain head as its causal parent,
 /// and its merge is per-field: clearing the bio leaves everything the
 /// first update set untouched.
+///
+/// A second update asserts the current chain head as its parent and merges per field, so clearing one field leaves the rest as the first update set them.
+/// ´claim:profile:updates-chain-and-merge-per-field´
 #[sqlx::test(migrations = "../../migrations")]
 async fn second_update_chains_behind_the_head_and_merges(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -249,6 +255,9 @@ async fn second_update_chains_behind_the_head_and_merges(pool: PgPool) {
 /// silently never appeared. The failure is forced by removing the current
 /// version: the merge copies unchanged fields forward from it, so without
 /// one the promotion cannot build the new row.
+///
+/// A promotion that cannot complete names itself in the ingestion outcome rather than leaving the caller with a version row that silently never appeared.
+/// ´claim:profile:a-failed-promotion-names-itself´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_failed_promotion_rides_the_ingestion_outcome(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -280,6 +289,8 @@ async fn a_failed_promotion_rides_the_ingestion_outcome(pool: PgPool) {
     assert_eq!(rig.version_count(actor).await, 0);
 }
 
+/// An update carrying no change is refused as the empty gesture it is.
+/// ´claim:profile:an-empty-update-is-refused´
 #[sqlx::test(migrations = "../../migrations")]
 async fn refuses_an_empty_update(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -290,6 +301,8 @@ async fn refuses_an_empty_update(pool: PgPool) {
     }
 }
 
+/// A display name cannot be cleared, an actor always having one.
+/// ´claim:profile:a-display-name-cannot-be-cleared´
 #[sqlx::test(migrations = "../../migrations")]
 async fn refuses_the_display_name_clear(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -303,6 +316,9 @@ async fn refuses_the_display_name_clear(pool: PgPool) {
 /// Only one update may be in flight per profile, so a second prepare is
 /// refused while the first is unlanded. Landing the first frees the chain
 /// for the next.
+///
+/// One update at a time per profile: a second prepare is refused while the first is unlanded, and landing the first frees the chain.
+/// ´claim:profile:updates-are-serialized-per-profile´
 #[sqlx::test(migrations = "../../migrations")]
 async fn refuses_a_second_in_flight_update(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -322,6 +338,8 @@ async fn refuses_a_second_in_flight_update(pool: PgPool) {
         .expect("prepares after landing");
 }
 
+/// An update needs the anchoring Registration to chain behind.
+/// ´claim:profile:an-update-needs-its-anchor´
 #[sqlx::test(migrations = "../../migrations")]
 async fn refuses_an_update_without_the_anchoring_registration(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -385,6 +403,9 @@ mod pictures {
     /// then leave alone, then clear. A two-valued field could not express
     /// the middle step — which is why the slot is nested rather than
     /// borrowing the text fields' empty-string clear.
+    ///
+    /// A picture slot carries three states and not two, which is why it is nested rather than borrowing the text fields' empty-string clear.
+    /// ´claim:profile:a-picture-slot-carries-three-states´
     #[sqlx::test(migrations = "../../migrations")]
     async fn a_picture_slot_is_set_then_untouched_then_cleared(pool: PgPool) {
         let rig = Rig::new(pool).await;
@@ -419,6 +440,9 @@ mod pictures {
 
     /// The anti-hijack rule reaches a profile picture too: an avatar must
     /// be an asset this account uploaded.
+    ///
+    /// An avatar must be an asset this account uploaded, the anti-hijack rule reaching the profile picture too.
+    /// ´claim:profile:an-avatar-must-be-the-accounts-own-asset´
     #[sqlx::test(migrations = "../../migrations")]
     async fn a_picture_slot_refuses_someone_elses_asset(pool: PgPool) {
         let rig = Rig::new(pool).await;
@@ -449,6 +473,8 @@ mod pictures {
 
     /// A picture on its own is a change, so an update carrying only one
     /// is not the empty update the surface refuses.
+    ///
+    /// (´claim:profile:an-empty-update-is-refused´)
     #[sqlx::test(migrations = "../../migrations")]
     async fn a_picture_alone_is_enough_to_be_an_update(pool: PgPool) {
         let rig = Rig::new(pool).await;
