@@ -8,15 +8,15 @@
 // second copy restyled for this screen would be two implementations of one
 // gesture, and the batch caps are the same caps either way.
 //
-// THE UPLOAD STATE IS AN ADDITION TO THE CANVAS. The boards draw a picked
-// gallery as if the bytes were already on the server, because on a phone board
-// nothing is in flight. Here the uploads run from the moment the crop screen is
-// left, so the strip that stands for the body also has to say when a picture
-// has not made it and offer the retry — a reader must not reach the seal and
-// find it locked for a reason no screen mentioned.
+// THE UPLOAD STATE IS BOARDED (ComposeUploading, 2026-08-31): rings on the
+// thumbnails, one failure with its words and ways out, and the describe counter
+// — and no Crop or Edit links anywhere. The row IS the affordance and it opens
+// Show all; the crop step is one Back away (jakob: "none").
 
-import { PillButton, TextAction } from "@/lib/ui2/pill-button";
+import { PillButton } from "@/lib/ui2/pill-button";
 import { TextField } from "@/lib/ui2/text-field";
+import { DescribeCounter, PickedRow, type PickedThumb } from "@/lib/ui2/compose/picked-row";
+import { UploadErrorLine } from "@/lib/ui2/compose/upload-notice";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { TAG_BATCH_CAP } from "@/lib/topics/normalize";
@@ -39,9 +39,10 @@ export function DetailsStep({
   onDescription,
   onTags,
   onReferences,
-  onCrop,
-  onEdit,
+  onManage,
+  onDescribe,
   onRetry,
+  onRemove,
   onNext,
 }: {
   mode: "words" | "media";
@@ -57,9 +58,10 @@ export function DetailsStep({
   onDescription: (next: string) => void;
   onTags: (next: readonly TagDraft[]) => void;
   onReferences: (next: readonly ReferenceDraft[]) => void;
-  onCrop: () => void;
-  onEdit: () => void;
+  onManage: () => void;
+  onDescribe: () => void;
   onRetry: (id: string) => void;
+  onRemove: (id: string) => void;
   onNext: () => void;
 }) {
   return (
@@ -68,9 +70,10 @@ export function DetailsStep({
         <BodyStrip
           assets={assets}
           previews={previews}
-          onCrop={onCrop}
-          onEdit={onEdit}
+          onManage={onManage}
+          onDescribe={onDescribe}
           onRetry={onRetry}
+          onRemove={onRemove}
         />
       )}
 
@@ -107,6 +110,16 @@ export function DetailsStep({
       />
 
       <div className="flex-1" />
+      {/* Why the seal may wait, said before the reader reaches it rather than
+          as a refusal when they get there. */}
+      {mode === "media" && (
+        <p
+          data-testid="wizard-upload-aside"
+          className="m-0 text-center text-label-small text-on-surface-variant"
+        >
+          Pictures upload while you write — signing waits for them.
+        </p>
+      )}
       <PillButton testId="wizard-next" full onClick={onNext}>
         Next
       </PillButton>
@@ -114,79 +127,85 @@ export function DetailsStep({
   );
 }
 
+/** How one asset's upload state reads on its thumbnail. */
+export function thumbState(asset: PickedAsset): Pick<PickedThumb, "progress" | "failed"> {
+  switch (asset.upload.kind) {
+    case "waiting":
+    case "encoding":
+    case "uploading":
+      // No fraction is measured, so the ring turns rather than claiming one.
+      return { progress: "indeterminate" };
+    case "failed":
+      return { failed: true };
+    default:
+      return {};
+  }
+}
+
 function BodyStrip({
   assets,
   previews,
-  onCrop,
-  onEdit,
+  onManage,
+  onDescribe,
   onRetry,
+  onRemove,
 }: {
   assets: readonly PickedAsset[];
   previews: Readonly<Record<string, string>>;
-  onCrop: () => void;
-  onEdit: () => void;
+  onManage: () => void;
+  onDescribe: () => void;
   onRetry: (id: string) => void;
+  onRemove: (id: string) => void;
 }) {
   const failed = assets.filter((asset) => asset.upload.kind === "failed");
-  const moving = assets.filter(
-    (asset) =>
-      asset.upload.kind === "waiting" ||
-      asset.upload.kind === "encoding" ||
-      asset.upload.kind === "uploading",
-  ).length;
+  const described = assets.filter((asset) => asset.altText.trim() !== "").length;
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <ul className="m-0 flex list-none gap-2 overflow-x-auto p-0">
-          {assets.slice(0, 4).map((asset) => (
-            <li key={asset.id} className="size-12 flex-none overflow-hidden rounded-small">
-              {/* eslint-disable-next-line @next/next/no-img-element -- local blob: URL. */}
-              <img src={previews[asset.id] ?? ""} alt="" className="block size-full object-cover" />
-            </li>
-          ))}
-        </ul>
-        <span className="flex-1 text-body-small text-on-surface-variant">
-          {assets.length === 1 ? "1 picture — the body" : `${assets.length} pictures — the body`}
-        </span>
-        <TextAction testId="wizard-recrop" onClick={onCrop}>
-          Crop
-        </TextAction>
-        <TextAction testId="wizard-repick" onClick={onEdit}>
-          Edit
-        </TextAction>
-      </div>
+      <PickedRow
+        items={assets.map((asset) => ({
+          id: asset.id,
+          src: previews[asset.id] ?? null,
+          ...thumbState(asset),
+        }))}
+        caption={
+          assets.length === 1 ? "1 picture — the body" : `${assets.length} pictures — the body`
+        }
+        onManage={onManage}
+        testId="wizard-picked-row"
+      />
 
-      {/* `polite` rather than `assertive`: an upload finishing is news, not an
-          interruption, and ten of them would otherwise talk over the author
-          filling in the title. */}
-      <div role="status" aria-live="polite" className="text-label-small text-on-surface-variant">
-        {moving > 0
-          ? moving === 1
-            ? "Uploading 1 picture…"
-            : `Uploading ${moving} pictures…`
-          : failed.length === 0
-            ? "Every picture is uploaded."
-            : ""}
-      </div>
+      {/* One line for the failure, whatever its count — the tiles already say
+          WHICH ones, so repeating a row per picture would say it twice. */}
+      {failed.length > 0 && (
+        <UploadErrorLine
+          // One failure keeps the SERVER'S OWN WORDS — "the server refused that
+          // picture" and "too many uploads" are different problems and only one
+          // of them is worth retrying. Several collapse to the count, because a
+          // stack of reasons is not a thing to read while writing a title.
+          message={
+            failed.length === 1 && failed[0].upload.kind === "failed"
+              ? failed[0].upload.message
+              : `${failed.length} pictures didn't upload.`
+          }
+          onRetry={() => {
+            for (const asset of failed) {
+              if (asset.upload.kind === "failed" && asset.upload.retryable) onRetry(asset.id);
+            }
+          }}
+          onRemove={() => {
+            for (const asset of failed) onRemove(asset.id);
+          }}
+          testId="wizard-upload-error"
+        />
+      )}
 
-      {failed.map((asset, index) => (
-        <p
-          key={asset.id}
-          role="alert"
-          className="m-0 flex items-center gap-2 text-body-medium text-error"
-        >
-          <span className="flex-1">
-            Picture {assets.indexOf(asset) + 1}:{" "}
-            {asset.upload.kind === "failed" ? asset.upload.message : ""}
-          </span>
-          {asset.upload.kind === "failed" && asset.upload.retryable && (
-            <TextAction testId={`wizard-retry-${index}`} onClick={() => onRetry(asset.id)}>
-              Try again
-            </TextAction>
-          )}
-        </p>
-      ))}
+      <DescribeCounter
+        described={described}
+        total={assets.length}
+        onDescribe={onDescribe}
+        testId="wizard-describe-counter"
+      />
     </div>
   );
 }

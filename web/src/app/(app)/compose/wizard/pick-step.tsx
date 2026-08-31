@@ -18,6 +18,7 @@
 import { useId, useRef, useState } from "react";
 
 import { PillButton, TextAction } from "@/lib/ui2/pill-button";
+import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import type { PickedAsset } from "@/lib/compose/wizard";
 import { POST_ATTACHMENT_CAP } from "@/lib/compose/wizard";
 
@@ -34,6 +35,7 @@ export function PickStep({
   onMode,
   onPick,
   onUnpick,
+  onManage,
 }: {
   mode: "words" | "media";
   words: string;
@@ -44,6 +46,7 @@ export function PickStep({
   onMode: (next: "words" | "media") => void;
   onPick: (files: readonly File[]) => void;
   onUnpick: (id: string) => void;
+  onManage: () => void;
 }) {
   return mode === "words" ? (
     <WordsBody words={words} error={error} onWords={onWords} onMode={onMode} />
@@ -55,6 +58,7 @@ export function PickStep({
       onMode={onMode}
       onPick={onPick}
       onUnpick={onUnpick}
+      onManage={onManage}
     />
   );
 }
@@ -127,6 +131,7 @@ function MediaBody({
   onMode,
   onPick,
   onUnpick,
+  onManage,
 }: {
   assets: readonly PickedAsset[];
   previews: Readonly<Record<string, string>>;
@@ -134,6 +139,7 @@ function MediaBody({
   onMode: (next: "words" | "media") => void;
   onPick: (files: readonly File[]) => void;
   onUnpick: (id: string) => void;
+  onManage: () => void;
 }) {
   const input = useRef<HTMLInputElement | null>(null);
   const [over, setOver] = useState(false);
@@ -147,46 +153,41 @@ function MediaBody({
   return (
     <>
       <Prompt action="Write words instead" actionTestId="wizard-to-words" onAction={() => onMode("words")}>
-        Pick one picture or several.
+        Pick one picture, several, or one video.
       </Prompt>
 
       {assets.length > 0 && (
         <div className="flex flex-none flex-col gap-1.5 border-b border-outline-variant px-6 pb-3 pt-1">
-          <span className="text-label-medium text-on-surface-variant">
-            Picked · {assets.length}
-          </span>
+          <div className="flex items-baseline gap-2">
+            <span className="flex-1 text-label-medium text-on-surface-variant">
+              Picked · {assets.length}
+            </span>
+            {/* The way into the per-picture manager: reorder (first is the
+                cover), remove, describe. The tray itself stays a summary. */}
+            <button
+              type="button"
+              data-testid="wizard-show-all"
+              onClick={onManage}
+              className="cg-state cg-focus cursor-pointer border-0 bg-transparent p-0 text-label-small text-primary"
+            >
+              Show all
+            </button>
+          </div>
           <div className="flex items-center gap-2">
             <ul className="m-0 flex list-none gap-2 overflow-x-auto p-0">
               {assets.map((asset, index) => (
-                <li key={asset.id} className="relative size-12 flex-none overflow-hidden rounded-small">
-                  {/* eslint-disable-next-line @next/next/no-img-element -- a
-                      blob: URL for bytes that never left the device; the
-                      optimizer has nothing to fetch and no size to reason about. */}
-                  <img
-                    src={previews[asset.id] ?? ""}
-                    alt=""
-                    className="block size-full object-cover"
+                <li key={asset.id} className="flex-none">
+                  <MediaThumb
+                    src={previews[asset.id] ?? null}
+                    cover={index === 0}
+                    onRemove={() => onUnpick(asset.id)}
+                    removeLabel={`Remove picture ${index + 1}`}
+                    testId={`wizard-unpick-${asset.id}`}
                   />
-                  {index === 0 ? (
-                    <span className="absolute bottom-[3px] left-[3px] rounded-full bg-scrim/55 px-[5px] text-label-small text-white">
-                      Cover
-                    </span>
-                  ) : null}
-                  <button
-                    type="button"
-                    data-testid={`wizard-unpick-${asset.id}`}
-                    aria-label={`Remove picture ${index + 1}`}
-                    onClick={() => onUnpick(asset.id)}
-                    className="cg-focus absolute right-[3px] top-[3px] flex size-4 items-center justify-center rounded-full bg-scrim/55 text-white"
-                  >
-                    <svg viewBox="0 0 24 24" width={10} height={10} fill="currentColor" aria-hidden="true">
-                      <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                    </svg>
-                  </button>
                 </li>
               ))}
             </ul>
-            <span className="flex-1 text-body-small text-on-surface-variant">
+            <span className="flex-1 text-label-small text-on-surface-variant">
               The first one is the cover.
             </span>
           </div>
@@ -205,7 +206,7 @@ function MediaBody({
           setOver(false);
           take(event.dataTransfer.files);
         }}
-        className={`flex flex-1 content-start flex-wrap gap-[3px] p-1 pb-0 ${over ? "bg-surface-container" : ""}`}
+        className="flex flex-1 flex-col px-6 pb-6 pt-4"
       >
         <input
           ref={input}
@@ -220,37 +221,35 @@ function MediaBody({
           }}
           className="sr-only"
         />
-        <button
-          type="button"
-          data-testid="wizard-open-picker"
-          disabled={full}
-          onClick={() => input.current?.click()}
-          className="cg-state cg-focus flex size-[125px] flex-col items-center justify-center gap-1 border border-dashed border-outline text-primary disabled:opacity-40"
+        {/* ONE CALM REGION, not the app's newest-images grid: a browser has no
+            device-gallery API, so the web's equivalent of the grid is the file
+            picker and a drop target (ComposePickWeb). Dropping works where a
+            desktop exists and costs nothing on a phone. */}
+        <div
+          className={`flex flex-1 flex-col items-center justify-center gap-3 rounded-medium border border-dashed p-6 ${
+            over ? "border-primary bg-surface-container" : "border-outline"
+          }`}
         >
-          <svg viewBox="0 0 24 24" width={24} height={24} fill="currentColor" aria-hidden="true">
-            <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6 8h-2v2h-2v-2H8v-2h2v-2h2v2h2v2z" />
-          </svg>
-          <span className="text-label-medium">
-            {full ? `${POST_ATTACHMENT_CAP} is the most` : "Choose pictures"}
+          <span className="flex size-12 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant">
+            <svg viewBox="0 0 24 24" width={24} height={24} fill="currentColor" aria-hidden="true">
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+            </svg>
           </span>
-        </button>
-        {assets.map((asset, index) => (
-          <div key={asset.id} className="relative size-[125px] overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element -- see above. */}
-            <img src={previews[asset.id] ?? ""} alt="" className="block size-full object-cover" />
-            <span className="absolute right-1.5 top-1.5 flex size-5 items-center justify-center rounded-full bg-primary text-label-small text-on-primary">
-              {index + 1}
-            </span>
-          </div>
-        ))}
-        <p className="w-full px-5 py-2 text-label-small text-on-surface-variant">
-          Drag pictures here, or choose them. The order you pick is the order they appear.
-        </p>
-        {error && (
-          <p role="alert" data-testid="wizard-body-error" className="w-full px-5 text-body-medium text-error">
-            {error}
-          </p>
-        )}
+          <PillButton
+            testId="wizard-open-picker"
+            variant="outlined"
+            disabled={full}
+            onClick={() => input.current?.click()}
+          >
+            {full ? `${POST_ATTACHMENT_CAP} is the most` : "Choose from your files"}
+          </PillButton>
+          <span className="text-label-small text-on-surface-variant">…or drop them here.</span>
+          {error && (
+            <p role="alert" data-testid="wizard-body-error" className="m-0 text-body-medium text-error">
+              {error}
+            </p>
+          )}
+        </div>
       </div>
     </>
   );

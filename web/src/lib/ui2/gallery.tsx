@@ -193,7 +193,7 @@ export function ComponentGallery() {
         />
         <MediaGallery
           items={[
-            { label: "Lead", sourceRatio: 1 },
+            { label: "1", sourceRatio: 1 },
             { label: "2", sourceRatio: 1 },
             { label: "3", sourceRatio: 1 },
           ]}

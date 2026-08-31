@@ -19,6 +19,7 @@ export function TextField({
   onChange,
   testId,
   optional = false,
+  optionalLabel = "Optional",
   placeholder,
   disabled = false,
   // A description takes the taller box; a title takes the single line.
@@ -32,6 +33,7 @@ export function TextField({
   onChange: (next: string) => void;
   testId: string;
   optional?: boolean;
+  optionalLabel?: string;
   placeholder?: string;
   disabled?: boolean;
   multiline?: boolean;
@@ -49,7 +51,9 @@ export function TextField({
           {label}
         </label>
         {optional && (
-          <span className="text-body-small text-on-surface-variant">Optional</span>
+          // Some corners say more than "Optional" — where the words land is
+          // what makes them worth writing (the sensitive sheet's reason).
+          <span className="text-body-small text-on-surface-variant">{optionalLabel}</span>
         )}
       </div>
       {multiline ? (

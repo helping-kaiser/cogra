@@ -77,6 +77,13 @@ export type WizardState = {
   readonly references: readonly ReferenceDraft[];
   readonly license: License;
   /**
+   * The author's own sensitive mark — the seal's switch. It veils the pictures
+   * and the description; the title stays readable, so choosing is informed.
+   */
+  readonly sensitive: boolean;
+  /** Shown on the veil when it is given. Blank counts as none. */
+  readonly sensitiveReason: string;
+  /**
    * Where the author stands on their own post — the Publish record's `pDirected`.
    * `pInterest` is census-fixed at 1 for Publish, so there is one free number
    * here and not a pair; the low-defaults policy value is +0.1.
@@ -100,6 +107,8 @@ export function emptyWizard(): WizardState {
     tags: [],
     references: [],
     license: PUBLIC_DOMAIN,
+    sensitive: false,
+    sensitiveReason: "",
     pDirected: DEFAULT_P_DIRECTED,
   };
 }
@@ -245,6 +254,7 @@ export type WizardAction =
   | { type: "words"; words: string }
   | { type: "pick"; assets: readonly { id: string; file: Blob }[] }
   | { type: "unpick"; id: string }
+  | { type: "reorder"; from: number; to: number }
   | { type: "focus"; index: number }
   | { type: "shape"; shape: PostShape }
   | { type: "crop"; id: string; crop: Crop }
@@ -255,6 +265,8 @@ export type WizardAction =
   | { type: "tags"; tags: readonly TagDraft[] }
   | { type: "references"; references: readonly ReferenceDraft[] }
   | { type: "license"; license: License }
+  | { type: "sensitive"; sensitive: boolean }
+  | { type: "sensitiveReason"; sensitiveReason: string }
   | { type: "pDirected"; pDirected: number }
   | { type: "goto"; step: Step }
   | { type: "advance" }
@@ -299,6 +311,28 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       return { ...state, assets, focused: Math.min(state.focused, Math.max(0, assets.length - 1)) };
     }
 
+    case "reorder": {
+      // ORDER IS THE COVER: the first picture leads the post, so moving one is
+      // how the cover is chosen and there is no separate cover control. The
+      // focus follows the picture that moved rather than the position, or a
+      // reorder on the crop step would silently reframe a different picture.
+      const { from, to } = action;
+      const last = state.assets.length - 1;
+      if (from === to || from < 0 || to < 0 || from > last || to > last) return state;
+      const assets = [...state.assets];
+      const [moved] = assets.splice(from, 1);
+      assets.splice(to, 0, moved);
+      const focused =
+        state.focused === from
+          ? to
+          : state.focused > from && state.focused <= to
+            ? state.focused - 1
+            : state.focused >= to && state.focused < from
+              ? state.focused + 1
+              : state.focused;
+      return { ...state, assets, focused };
+    }
+
     case "focus":
       return { ...state, focused: Math.min(Math.max(0, action.index), Math.max(0, state.assets.length - 1)) };
 
@@ -333,15 +367,24 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
     case "license":
       return { ...state, license: action.license };
 
+    case "sensitive":
+      // Unmarking keeps the reason typed: an author who toggles the switch off
+      // and on again should not have to write it a second time. What is SENT is
+      // gated on the switch, not on the text.
+      return { ...state, sensitive: action.sensitive };
+
+    case "sensitiveReason":
+      return { ...state, sensitiveReason: action.sensitiveReason };
+
     case "pDirected":
       // Clamped here rather than trusted from a control: the contract's
       // Dimension is the closed interval, and a slider is not the only caller.
       return { ...state, pDirected: Math.min(1, Math.max(-1, action.pDirected)) };
 
     case "goto":
-      // Only backwards, and only to a step this mode has: the seal's "Crop" and
-      // "Edit" shortcuts are the reason this exists, and neither may skip a gate
-      // by jumping forward.
+      // Only backwards, and only to a step this mode has: a jump may never skip
+      // a gate. Switching sides is what still uses it — the shortcut links the
+      // details step once carried are gone (jakob 2026-08-31, "none").
       return stepsFor(state.mode).includes(action.step) ? { ...state, step: action.step } : state;
 
     case "advance": {
