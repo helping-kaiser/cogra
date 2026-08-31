@@ -11,6 +11,18 @@ export function Screen() {
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 0 0" }}>
         <WalletBalance amount={0} onHelp={() => {}} />
 
+        {/* The full card sits high here — a new member's first move is
+            checking this against their wallet; at rest it collapses to the
+            one-line row. */}
+        <div style={{ padding: "8px 16px 0" }}>
+          <PayoutAddress
+            address={SOL_ADDRESS}
+            onCopy={() => {}}
+            onChange={() => {}}
+            caption="The address is public — and so is every change to it."
+          />
+        </div>
+
         <SectionLabel>History</SectionLabel>
         <div style={{ flex: "none", padding: "4px 24px 0" }}>
           <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
@@ -22,15 +34,6 @@ export function Screen() {
         </div>
 
         <div style={{ flex: 1 }} />
-
-        <div style={{ padding: "0 16px 8px" }}>
-          <PayoutAddress
-            address={SOL_ADDRESS}
-            onCopy={() => {}}
-            onChange={() => {}}
-            caption="The address is public — and so is every change to it."
-          />
-        </div>
       </div>
       <BottomNav active="wallet" slots={ALL_SLOTS} inline />
     </>

@@ -449,7 +449,7 @@ exists in `web/src/lib/ui/` (and, unless noted, in Android's
 | `components/forms/` | `TextField`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
 | `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand` |
 | `components/compose/` | `WizardHeader`, `MediaThumb`, `PickedRow`, `DescribeCounter`, `PickedSheet`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `ActsCard` |
-| `components/wallet/` | `WalletBalance`, `LedgerRow`, `PayoutAddress` |
+| `components/wallet/` | `WashCard`, `WalletBalance`, `EarnedChart`, `LedgerRow`, `PayoutAddress`, `PayoutAddressRow` |
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader` |
 | `components/states/` | `EmptyState`, `LoadingState` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending` |
@@ -1432,6 +1432,30 @@ next to brands like Instagram):
   the guest prompt is centered; the applicant is told plainly to
   come back after approval — earnings can't land until the address
   exists.
+
+**Round 3** (jakob, same day):
+
+- **At rest the address is one line, high on the page**
+  (`PayoutAddressRow`) — an entry point out of scrolling's way, and
+  the ONE place the address may shorten (head…tail): it is not a
+  checking surface. The full card (copy, Change, the public-record
+  caption) is one tap away, and sits high on the zero state where a
+  new member's first move is checking it.
+- **Campaign money is ordinary history.** Three row kinds: **escrow
+  out** at creation, **top-up out** (a created campaign can be topped
+  up), **return in** when the payout wasn't full (the target missed,
+  or the crowd refused). No campaign section on the main page — the
+  wallet keeps only the **campaigns door**.
+- **The campaigns page** (*Wallet · campaigns*): Start a campaign,
+  the `Yours / You took part` segments, Open (with amounts in
+  escrow), Past (with outcomes — returned or fully paid out). "You
+  took part" lists the campaigns that paid you, with what each paid.
+  A listed campaign opens the money subpage (*Wallet · your
+  campaign*); the full campaign console stays a future item.
+- **The moment screens wear the wash** — `WashCard` extracts the
+  brand wash + ghost coin as one master (at most one per screen):
+  first open, guest, and applicant are a person's first look at the
+  money side and must not read as settings.
 - **The picked row carries no "Crop" or "Edit" links** (jakob, same
   day: "none") — the whole row is the affordance and opens the Show
   all sheet; re-cropping is the crop step's job, one Back away in the

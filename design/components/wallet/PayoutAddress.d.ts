@@ -17,3 +17,15 @@ export interface PayoutAddressProps {
 }
 
 export declare function PayoutAddress(props: PayoutAddressProps): JSX.Element;
+
+/**
+ * The at-rest form: one line near the top of the wallet — an entry point,
+ * not a checking surface, so this is the single place the address may
+ * shorten (head…tail). Tapping opens the full card.
+ */
+export interface PayoutAddressRowProps {
+  address: string;
+  onOpen?: () => void;
+}
+
+export declare function PayoutAddressRow(props: PayoutAddressRowProps): JSX.Element;

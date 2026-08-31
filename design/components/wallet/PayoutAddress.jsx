@@ -1,6 +1,48 @@
 import React from "react";
 import { Icon } from "../navigation/Icon.jsx";
 
+/* The at-rest form (round 3): ONE line near the top of the wallet — an entry
+   point, not a checking surface, so this is the single place the address may
+   shorten (head…tail). Tapping opens the full card, where the whole address,
+   the copy, and Change live; the never-truncate rule holds everywhere
+   checking happens. */
+export function PayoutAddressRow({ address, onOpen }) {
+  const short = address.length > 22 ? `${address.slice(0, 12)}…${address.slice(-6)}` : address;
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="cg-state cg-focus"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-2)",
+        width: "100%",
+        minHeight: "44px",
+        border: 0,
+        borderRadius: "var(--radius-medium)",
+        background: "var(--surface-card)",
+        padding: "var(--space-2) var(--space-4)",
+        cursor: "pointer",
+        fontFamily: "var(--font-sans)",
+        color: "var(--on-surface)",
+        textAlign: "left",
+        boxSizing: "border-box",
+      }}
+    >
+      <span style={{ flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
+        Payouts land at
+      </span>
+      <code style={{ flex: 1, minWidth: 0, fontFamily: "var(--font-mono)", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {short}
+      </code>
+      <span style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }} aria-hidden="true">
+        <Icon name="chevron_right" size={18} />
+      </span>
+    </button>
+  );
+}
+
 /* The witnessed payout address (item 12 round 2): a proper HOME, not text
    thrown on the page — a quiet container with the label, the copy button,
    and Change as real affordances, the address whole inside. Mono, wrapped,
