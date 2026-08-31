@@ -18,12 +18,13 @@
 //! rules, and the reserved-range rejection.
 //!
 //! Inside the guild map, keys 2–6 and 13–14 ride Publish/Review payloads
-//! and keys 7–12 the parallel-Registration profile payload, each family's
+//! and keys 7–11 the parallel-Registration profile payload, each family's
 //! reader rejecting the other's keys. Two of those are declared but not built:
 //! key 6 (provenance chain, platform-guidelines.md §5 plank 4) and key 10
 //! (payout address, which arrives with the rail — ledger.md). Neither is
 //! ever produced, and both are rejected on read until their slices define
-//! them.
+//! them. Key 12 is retired and never reallocated: a profile carries one
+//! image, so the slot it held has no successor to inherit its number.
 //!
 //! Key 5 is the media manifest: an array of per-asset maps carrying the
 //! digest of the bytes, the type they are to be read as, and the alt text
@@ -33,11 +34,11 @@
 //! the author signs. The nested map runs the same reserved-key discipline
 //! the outer envelope runs, so a v2 grows it additively.
 //!
-//! Keys 11 and 12 carry the profile's avatar and cover as that same
-//! per-asset map, one deep. An avatar is a picture a reader is shown, so
-//! it is witnessed like any other; and a profile payload being a delta
-//! rather than complete state, each slot is three-valued — the empty array
-//! is how an update says "cleared".
+//! Key 11 carries the profile's avatar as that same per-asset map, one
+//! deep. An avatar is a picture a reader is shown, so it is witnessed like
+//! any other; and a profile payload being a delta rather than complete
+//! state, the slot is three-valued — the empty array is how an update says
+//! "cleared".
 //!
 //! Keys 13 and 14 carry the author's own sensitive mark and its optional
 //! public reason. They are witnessed rather than Postgres-side because a
@@ -87,7 +88,12 @@ pub const MEDIA_DIGEST_LEN: usize = 32;
 const COGRA_KEY_BIO: u64 = 8;
 const COGRA_KEY_WEBSITE_URL: u64 = 9;
 const COGRA_KEY_AVATAR: u64 = 11;
-const COGRA_KEY_COVER: u64 = 12;
+/// Key 12 held the profile cover and is **retired**: the profile carries
+/// one image. It is not returned to the unallocated pool — a number that
+/// once meant something is never given a second meaning, so a payload
+/// carrying it is refused as an unknown profile field rather than read as
+/// whatever key 12 might mean next.
+const COGRA_KEY_RETIRED_COVER: u64 = 12;
 /// The author's own sensitive mark, carried as `1` and omitted when
 /// unmarked — the veil the author asked for rides the witnessed payload
 /// so a reader can check it against the record, the same reason alt text
@@ -485,8 +491,7 @@ fn guild_media(cogra: &BTreeMap<u64, Value>) -> Result<Vec<MediaAsset>, Envelope
     }
 }
 
-/// One profile image slot — the avatar or the cover — under a profile
-/// family key.
+/// The profile's image slot — the avatar — under its profile family key.
 ///
 /// A profile payload is a **delta**: a key that is absent leaves the field
 /// as it stands, and a key present-and-empty clears it. The text fields
@@ -637,7 +642,7 @@ impl CograContent {
     }
 }
 
-/// The profile payload a parallel Registration carries — guild keys 7–9
+/// The profile payload a parallel Registration carries — guild keys 7–11
 /// (data-model.md "CoGra's guild schema"; substrate.md §9, user.md §4).
 /// Same presence semantics as content: a genesis-shaped payload carries
 /// every supplied field, an edit only the changed ones, and a
@@ -651,15 +656,13 @@ pub struct CograProfile {
     pub display_name: Option<String>,
     pub bio: Option<String>,
     pub website_url: Option<String>,
-    /// The avatar slot, three-valued: None leaves it alone, `Some(None)`
-    /// clears it back to the monogram, `Some(Some(asset))` replaces it.
-    /// The asset rides here rather than staying Postgres-side because
-    /// erasure removes an avatar's bytes and leaves its digest committed
-    /// in the witnessed payload (erasure.md §2) — which is only true if
-    /// the payload carries one.
+    /// The avatar slot — the profile's one image — three-valued: None
+    /// leaves it alone, `Some(None)` clears it back to the monogram,
+    /// `Some(Some(asset))` replaces it. The asset rides here rather than
+    /// staying Postgres-side because erasure removes an avatar's bytes and
+    /// leaves its digest committed in the witnessed payload (erasure.md
+    /// §2) — which is only true if the payload carries one.
     pub avatar: Option<Option<MediaAsset>>,
-    /// The cover slot, same three values.
-    pub cover: Option<Option<MediaAsset>>,
 }
 
 impl CograProfile {
@@ -681,9 +684,6 @@ impl CograProfile {
         if let Some(avatar) = encode_profile_image(self.avatar) {
             cogra.insert(COGRA_KEY_AVATAR, avatar);
         }
-        if let Some(cover) = encode_profile_image(self.cover) {
-            cogra.insert(COGRA_KEY_COVER, cover);
-        }
         let mut extensions = BTreeMap::new();
         extensions.insert(COGRA_GUILD_KEY, Value::Map(cogra));
         Envelope {
@@ -700,11 +700,14 @@ impl CograProfile {
 
     /// The profile family's guild admission: the shared checks
     /// (`cogra_guild_map`), a 16-byte node id, and only the profile
-    /// keys — content keys, reserved keys, and the assigned-but-unbuilt
-    /// payout key are rejected.
+    /// keys — content keys, reserved keys, the assigned-but-unbuilt
+    /// payout key, and the retired cover key are rejected.
     pub fn from_envelope(envelope: &Envelope) -> Result<Self, EnvelopeError> {
         let cogra = cogra_guild_map(envelope)?;
         for key in cogra.keys() {
+            if *key == COGRA_KEY_RETIRED_COVER {
+                return Err(EnvelopeError::Guild("retired cogra profile field"));
+            }
             let known = matches!(
                 *key,
                 COGRA_KEY_VERSION
@@ -713,7 +716,6 @@ impl CograProfile {
                     | COGRA_KEY_BIO
                     | COGRA_KEY_WEBSITE_URL
                     | COGRA_KEY_AVATAR
-                    | COGRA_KEY_COVER
             );
             if !known {
                 return Err(EnvelopeError::Guild("unknown cogra profile field"));
@@ -725,7 +727,6 @@ impl CograProfile {
             bio: guild_text_field(cogra, COGRA_KEY_BIO)?,
             website_url: guild_text_field(cogra, COGRA_KEY_WEBSITE_URL)?,
             avatar: guild_profile_image(cogra, COGRA_KEY_AVATAR)?,
-            cover: guild_profile_image(cogra, COGRA_KEY_COVER)?,
         })
     }
 
@@ -1390,34 +1391,48 @@ mod tests {
             bio: bio.map(Into::into),
             website_url: website_url.map(Into::into),
             avatar: None,
-            cover: None,
         }
     }
 
-    /// The three states an image slot carries, on both slots and in every
-    /// combination that means something: untouched, replaced, and cleared.
+    /// The three states the image slot carries: untouched, replaced, and
+    /// cleared.
     #[test]
     fn profile_round_trips_every_image_slot_state() {
         let cases = [
-            (None, None),
-            (
-                Some(Some(asset(4, "image/webp", Some("Ada, smiling")))),
-                None,
-            ),
-            (None, Some(Some(asset(5, "image/webp", None)))),
-            (Some(None), Some(None)),
-            (Some(None), Some(Some(asset(6, "image/webp", None)))),
+            None,
+            Some(Some(asset(4, "image/webp", Some("Ada, smiling")))),
+            Some(Some(asset(5, "image/webp", None))),
+            Some(None),
         ];
-        for (avatar, cover) in cases {
+        for avatar in cases {
             let mut content = profile(None, None, None);
             content.avatar = avatar;
-            content.cover = cover;
             let bytes = content.clone().encode_payload();
             assert_eq!(
                 CograProfile::decode_payload(&bytes).expect("valid"),
                 content
             );
         }
+    }
+
+    /// Key 12 held the profile cover and is retired rather than returned
+    /// to the unallocated pool, so a payload carrying it is refused with
+    /// the retirement named — never read as whatever 12 might mean next.
+    #[test]
+    fn profile_refuses_the_retired_cover_key() {
+        let mut inner = BTreeMap::new();
+        inner.insert(COGRA_KEY_VERSION, Value::Uint(1));
+        inner.insert(COGRA_KEY_NODE, Value::Bytes(vec![9; 16]));
+        inner.insert(
+            COGRA_KEY_RETIRED_COVER,
+            Value::Array(vec![asset(1, "image/webp", None).encode()]),
+        );
+        let mut ext = BTreeMap::new();
+        ext.insert(COGRA_GUILD_KEY, Value::Map(inner));
+        assert_eq!(
+            CograProfile::decode_payload(&envelope("", ext).encode()),
+            Err(EnvelopeError::Guild("retired cogra profile field"))
+        );
     }
 
     /// An untouched slot rides no key at all, so "leave the avatar alone"
@@ -1430,7 +1445,6 @@ mod tests {
             panic!("the guild map");
         };
         assert!(!guild.contains_key(&COGRA_KEY_AVATAR));
-        assert!(!guild.contains_key(&COGRA_KEY_COVER));
     }
 
     fn refuses_profile_image(slot: Value, message: &'static str) {
@@ -1488,11 +1502,12 @@ mod tests {
         );
     }
 
-    /// The content family refuses the profile's image keys the way the
-    /// profile family refuses the content family's manifest.
+    /// The content family refuses the profile's image key the way the
+    /// profile family refuses the content family's manifest, and refuses
+    /// the retired cover key with it — a number this family never had.
     #[test]
     fn content_rejects_the_profile_image_keys() {
-        for key in [COGRA_KEY_AVATAR, COGRA_KEY_COVER] {
+        for key in [COGRA_KEY_AVATAR, COGRA_KEY_RETIRED_COVER] {
             let mut inner = BTreeMap::new();
             inner.insert(COGRA_KEY_VERSION, Value::Uint(1));
             inner.insert(COGRA_KEY_NODE, Value::Bytes(vec![7; 16]));

@@ -918,22 +918,14 @@ impl User {
         })
     }
 
-    /// The profile picture (the newest profile version); null for an
-    /// account that has never set one, which is the monogram circle — the
-    /// designed placeholder, not a gap.
+    /// The profile picture — the profile's one image (the newest profile
+    /// version); null for an account that has never set one, which is the
+    /// monogram circle — the designed placeholder, not a gap.
     async fn avatar(
         &self,
         ctx: &Context<'_>,
     ) -> async_graphql::Result<Option<MediaAttachmentType>> {
         let Some(id) = self.profile(ctx).await?.and_then(|p| p.avatar_id) else {
-            return Ok(None);
-        };
-        profile_image(ctx, id).await
-    }
-
-    /// The profile's cover image; null when never set.
-    async fn cover(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<MediaAttachmentType>> {
-        let Some(id) = self.profile(ctx).await?.and_then(|p| p.cover_id) else {
             return Ok(None);
         };
         profile_image(ctx, id).await
