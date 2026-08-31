@@ -56,6 +56,8 @@ class ComposeWizardViewModelTest {
         var outcome: Outcome<PreparedContentView>? = null
         var lastContent: String? = null
         var lastAttachments: List<AttachmentClaim> = emptyList()
+        var lastSensitive: Boolean? = null
+        var lastSensitiveReason: String? = null
         var calls = 0
 
         override suspend fun preparePost(
@@ -66,10 +68,14 @@ class ComposeWizardViewModelTest {
             tags: List<TagClaim>,
             references: List<ReferenceClaim>,
             attachments: List<AttachmentClaim>,
+            sensitive: Boolean,
+            sensitiveReason: String?,
         ): Outcome<PreparedContentView> {
             calls += 1
             lastContent = content
             lastAttachments = attachments
+            lastSensitive = sensitive
+            lastSensitiveReason = sensitiveReason
             return outcome ?: Outcome.Success(
                 PreparedContentView("node-1", listOf(sealer.stage(Family.PUBLISH))),
             )
@@ -168,6 +174,22 @@ class ComposeWizardViewModelTest {
         Dispatchers.resetMain()
     }
 
+    /**
+     * Walks a words post to the seal, runs [atTheSeal], then signs — so a
+     * test can set the seal's own choices where an author would.
+     */
+    private fun ComposeWizardViewModel.signWords(atTheSeal: () -> Unit = {}) {
+        start()
+        dispatcher.scheduler.advanceUntilIdle()
+        onModeChange(BodyMode.Words)
+        onBodyChange("Salt maps of the coast road")
+        onNext() // body -> details
+        onNext() // details -> seal
+        atTheSeal()
+        onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+    }
+
     /** Walks a media post from an empty wizard to the seal, uploads done. */
     private fun ComposeWizardViewModel.toSealWithMedia(vararg uris: String) {
         start()
@@ -176,9 +198,9 @@ class ComposeWizardViewModelTest {
         uris.forEach { onTogglePick(it) }
         dispatcher.scheduler.advanceUntilIdle()
         onNext() // body -> crop
-        onNext() // crop -> details, uploads start
+        onNext() // crop -> details
+        onNext() // details -> seal, uploads start (they carry the alt text)
         dispatcher.scheduler.advanceUntilIdle()
-        onNext() // details -> seal
     }
 
     // -- The XOR reaches the wire, not just the screen (D16) --
@@ -288,11 +310,60 @@ class ComposeWizardViewModelTest {
         vm.onModeChange(BodyMode.Media)
         vm.onTogglePick("a")
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext() // body -> crop
+        vm.onNext() // crop -> details, where descriptions are authored
         vm.onAltTextChange("a", "A salt crust")
-        vm.onNext()
-        vm.onNext()
+        vm.onNext() // details -> seal, and only now does the upload run
         dispatcher.scheduler.advanceUntilIdle()
+
+        // The description has to be on the wire with its own bytes:
+        // `altText` rides `UploadMediaInput` and an asset row is immutable
+        // after upload (D3), so an upload that started earlier would have
+        // dropped it.
         assertThat(media.lastAltText).isEqualTo("A salt crust")
+    }
+
+    // -- The author's own sensitive mark --
+
+    @Test
+    fun anUnmarkedPostStatesTheMarkExplicitlyRatherThanOmittingIt() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.signWords()
+
+        // An edit payload is the complete state, so an OMITTED mark
+        // unmarks. Always sending the switch's value is what keeps the
+        // create and edit paths one piece of code.
+        assertThat(content.lastSensitive).isFalse()
+        assertThat(content.lastSensitiveReason).isNull()
+    }
+
+    @Test
+    fun aMarkedPostCarriesItsReason() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.signWords {
+            vm.onSensitiveChange(true)
+            vm.onSensitiveReasonChange("One rubbing includes a dead seabird.")
+        }
+
+        assertThat(content.lastSensitive).isTrue()
+        assertThat(content.lastSensitiveReason).isEqualTo("One rubbing includes a dead seabird.")
+    }
+
+    @Test
+    fun unmarkingDropsTheReasonWithIt() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.signWords {
+            vm.onSensitiveChange(true)
+            vm.onSensitiveReasonChange("A dead seabird.")
+            vm.onSensitiveChange(false)
+
+            // The contract refuses a reason without the mark, so keeping
+            // one would send a value guaranteed to come back as an error.
+            assertThat(vm.state.value.sensitiveReason).isEmpty()
+        }
+
+        assertThat(content.lastSensitive).isFalse()
+        assertThat(content.lastSensitiveReason).isNull()
     }
 
     @Test
@@ -396,13 +467,21 @@ class ComposeWizardViewModelTest {
     }
 
     @Test
-    fun backLeavesFromEveryStageAndKeepsTheDraft() = runTest(dispatcher) {
+    fun backWalksOneStageAndLeavesOnlyFromTheFirst() = runTest(dispatcher) {
         val vm = viewModel()
         vm.toSealWithMedia("a")
         assertThat(vm.state.value.step).isEqualTo(WizardStep.Seal)
 
-        // Back never walks the stages backwards: it reports "not handled"
-        // so the route leaves, and the draft survives.
+        // Back always goes back one step (jakob 2026-08-31), absorbing the
+        // gesture until the first stage has nowhere left to retreat to.
+        assertThat(vm.onBack()).isTrue()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Details)
+        assertThat(vm.onBack()).isTrue()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Crop)
+        assertThat(vm.onBack()).isTrue()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Body)
+
+        // Only the first stage reports "not handled", so the route leaves.
         assertThat(vm.onBack()).isFalse()
         vm.onLeave()
         dispatcher.scheduler.advanceUntilIdle()
@@ -412,14 +491,18 @@ class ComposeWizardViewModelTest {
     }
 
     @Test
-    fun backClosesAnOpenSheetBeforeItLeaves() = runTest(dispatcher) {
+    fun backClosesAnOpenSheetBeforeItStepsBack() = runTest(dispatcher) {
         val vm = viewModel()
         vm.toSealWithMedia("a")
         vm.onOpenSheet(SealSheet.License)
 
+        // The sheet is a drawer over the seal: it closes first, and the
+        // stage only moves on the next gesture.
         assertThat(vm.onBack()).isTrue()
         assertThat(vm.state.value.sheet).isEqualTo(SealSheet.None)
-        assertThat(vm.onBack()).isFalse()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Seal)
+        assertThat(vm.onBack()).isTrue()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Details)
     }
 
     @Test
@@ -599,10 +682,10 @@ class ComposeWizardViewModelTest {
         vm.onBack() // details -> crop
         vm.onBack() // crop -> body
         vm.onTogglePick("a")
-        vm.onNext()
-        vm.onNext()
+        vm.onNext() // body -> crop
+        vm.onNext() // crop -> details
+        vm.onNext() // details -> seal
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onNext()
         vm.onSign()
         dispatcher.scheduler.advanceUntilIdle()
 

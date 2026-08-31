@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,24 +28,40 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  * row with 12dp side padding, a 48dp square back target, the stage's name in
  * `titleLarge`, and an optional trailing action rendered as a Compact pill.
  *
+ * **Two ways out, each doing one thing** (jakob 2026-08-31,
+ * `design/components/compose/WizardHeader.prompt.md`):
+ *
+ * - **The arrow steps one stage back**, never out of the flow — Details
+ *   reaches crop with it, and the platform back gesture does the same.
+ * - **The X leaves the whole flow, from any stage, draft kept — no
+ *   confirmation.** Nothing is lost, because every leave keeps the draft and
+ *   the draft prompt is the return surface. Without it an author deep in the
+ *   wizard was stuck backing out tap by tap.
+ *
+ * The X sits **between the title and the stage's trailing controls**, so the
+ * Next pill keeps the right edge wherever it is the primary action.
+ *
  * **No step numbers.** design/readme.md §13 rules them out — the paths differ
  * in length, so the title names the stage and only the seal says "Last step".
- * (The superseded ideation boards under `design/designs/compose/` still draw
- * a "Step 1 of 4" counter; the canonical boards do not.)
  *
  * The back glyph is `automirrored` so a right-to-left locale gets the arrow
- * pointing the way that locale reads.
+ * pointing the way that locale reads. The X is not: a close glyph reads the
+ * same in every direction.
  */
 @Composable
 fun WizardHeader(
     title: String,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
-    backContentDescription: String? = null,
+    backContentDescription: String? = "Back a step",
+    onLeave: (() -> Unit)? = null,
+    leaveContentDescription: String = "Leave — your draft is kept",
     actionText: String? = null,
     onAction: (() -> Unit)? = null,
     actionEnabled: Boolean = true,
     trailingNote: String? = null,
+    onHelp: (() -> Unit)? = null,
+    helpContentDescription: String = "What this means",
     testTag: String? = null,
 ) {
     Row(
@@ -89,6 +106,24 @@ fun WizardHeader(
             modifier = Modifier.weight(1f),
         )
 
+        // The X: out of the flow entirely, from any stage, with the draft
+        // kept and nothing to confirm. It precedes the trailing controls so
+        // the primary action keeps the right edge.
+        if (onLeave != null) {
+            IconButton(
+                onClick = onLeave,
+                modifier = Modifier
+                    .size(Layout.TouchTargetMin)
+                    .testTag(testTag?.let { "${it}_leave" } ?: "wizard_leave"),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Close,
+                    contentDescription = leaveContentDescription,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
         // The seal's "Last step" — the one place a wizard header states where
         // the reader is, and it is a plain note rather than a step count.
         if (trailingNote != null) {
@@ -96,6 +131,15 @@ fun WizardHeader(
                 text = trailingNote,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        // The screen's one `?`, after the note the seal draws beside it.
+        if (onHelp != null) {
+            HelpDot(
+                onHelp = onHelp,
+                contentDescription = helpContentDescription,
+                testTag = testTag?.let { "${it}_help" } ?: "wizard_help",
             )
         }
 
@@ -119,16 +163,28 @@ private fun WizardHeaderVariants() {
             WizardHeader(
                 title = "New post",
                 onBack = {},
-                backContentDescription = "Back",
+                onLeave = {},
                 actionText = "Next",
                 onAction = {},
             )
-            WizardHeader(title = "Crop", onBack = {}, actionText = "Next", onAction = {})
-            WizardHeader(title = "Details", onBack = {})
-            WizardHeader(title = "What you sign", onBack = {}, trailingNote = "Last step")
+            WizardHeader(
+                title = "Crop",
+                onBack = {},
+                onLeave = {},
+                actionText = "Next",
+                onAction = {},
+            )
+            WizardHeader(title = "Details", onBack = {}, onLeave = {})
+            WizardHeader(
+                title = "What you sign",
+                onBack = {},
+                onLeave = {},
+                trailingNote = "Last step",
+            )
             WizardHeader(
                 title = "New post",
                 onBack = {},
+                onLeave = {},
                 actionText = "Next",
                 onAction = {},
                 actionEnabled = false,

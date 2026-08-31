@@ -11,7 +11,6 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.media.CropShapeChips
 import com.cogra.core.designsystem.v2.media.CropState
 import com.cogra.core.designsystem.v2.media.MediaCrop
@@ -44,7 +43,6 @@ internal fun ColumnScope.CropStepBody(
     state: ComposeWizardState,
     onShapeChange: (DraftShape) -> Unit,
     onFrameAsset: (Int) -> Unit,
-    onAltTextChange: (String, String) -> Unit,
     onCropsChanged: (Map<String, CropSpec>) -> Unit,
 ) {
     val shape = state.shape.toMediaShape()
@@ -81,24 +79,10 @@ internal fun ColumnScope.CropStepBody(
         testTag = "wizard_crop",
     )
 
-    // The description of the picture being framed.
-    //
-    // **An addition to the board**, and it sits here rather than on
-    // `ComposeDetails` for two reasons: `uploadMedia` takes `altText`
-    // at upload time and there is no `updateMedia`, so a description
-    // has to exist before the bytes move; and this is the one stage
-    // where the author is looking at the picture they are describing.
-    // The details board is fully specified by its own layout, while
-    // the crop board leaves the region below the caption open. The web
-    // client places it identically.
-    CograTextField(
-        value = framed.altText,
-        onValueChange = { onAltTextChange(framed.uri, it) },
-        label = "Describe this picture",
-        optional = true,
-        optionalLabel = "Optional — read aloud in place of the picture",
-        testTag = "wizard_alt_${state.framingIndex}",
-    )
+    // No description field here: **never from the crop step** — a geometry
+    // step is no place for a keyboard
+    // (`design/components/compose/DescribeSheet.prompt.md`). Descriptions
+    // are authored on the details stage, in `DescribeSheet`.
 
     if (state.picked.size > 1) {
         Row(
