@@ -28,12 +28,14 @@
     }
     a { color: var(--primary); text-decoration: none; }
     a:hover { color: var(--primary); }
+    [data-flow] { position: relative; }
+    [data-flow]::after { content: attr(data-flow); position: absolute; top: -7px; right: -7px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }
   </style>
 </helmet>
 <div class="screen" data-theme="{{theme}}" style="width: 390px; height: 844px; display: flex; flex-direction: column; background: var(--surface); color: var(--on-surface); overflow: hidden; box-sizing: border-box;">
 
   <div style="min-height: 48px; display: flex; align-items: center; padding: 0 12px; flex: none;">
-    <span style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></span>
+    <span data-flow="1" style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></span>
   </div>
 
   <div style="flex: 1; display: flex; flex-direction: column; padding: 8px 24px 32px 24px; overflow: hidden;">
@@ -44,27 +46,27 @@
     <div style="margin-top: 32px; display: flex; flex-direction: column; gap: 16px;">
       <div style="display: flex; flex-direction: column; gap: 4px;">
         <label style="font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Email</label>
-        <div style="height: 40px; border: 1px solid var(--outline); border-radius: 4px; background: transparent;"></div>
+        <div data-flow="2" style="height: 40px; border: 1px solid var(--outline); border-radius: 4px; background: transparent;"></div>
       </div>
       <div style="display: flex; flex-direction: column; gap: 4px;">
         <label style="font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Password</label>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <div style="flex: 1; height: 40px; border: 1px solid var(--outline); border-radius: 4px; background: transparent;"></div>
-          <span style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; color: var(--on-surface-variant); flex: none;"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"></path></svg></span>
+          <div data-flow="3" style="flex: 1; height: 40px; border: 1px solid var(--outline); border-radius: 4px; background: transparent;"></div>
+          <span data-flow="4" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; color: var(--on-surface-variant); flex: none;"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"></path></svg></span>
         </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 12px; min-height: 48px;">
+      <div data-flow="5" style="display: flex; align-items: center; gap: 12px; min-height: 48px;">
         <span style="width: 18px; height: 18px; border: 1px solid var(--outline); border-radius: 4px; flex: none;"></span>
         <span style="font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">Don't remember this account on this device</span>
       </div>
-      <div style="display: flex; align-items: center; justify-content: center; min-height: 40px; padding: 8px 16px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Sign in</div>
+      <div data-flow="6" style="display: flex; align-items: center; justify-content: center; min-height: 40px; padding: 8px 16px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Sign in</div>
     </div>
 
     <div style="margin-top: 24px; display: flex; flex-direction: column;">
-      <span style="display: flex; align-items: center; min-height: 40px; color: var(--primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Forgot password?</span>
-      <span style="display: flex; align-items: center; min-height: 40px; color: var(--primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">New here? Enter your invite</span>
-      <span style="display: flex; align-items: center; min-height: 40px; color: var(--primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Just looking? Browse the feed &#8594;</span>
-      <span style="display: flex; align-items: center; min-height: 40px; color: var(--primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">On Android? Download the app (APK)</span>
+      <span data-flow="7" style="display: flex; align-items: center; min-height: 40px; color: var(--primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Forgot password?</span>
+      <span data-flow="8" style="display: flex; align-items: center; min-height: 40px; color: var(--primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">New here? Enter your invite</span>
+      <span data-flow="9" style="display: flex; align-items: center; min-height: 40px; color: var(--primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Just looking? Browse the feed &#8594;</span>
+      <span data-flow="10" style="display: flex; align-items: center; min-height: 40px; color: var(--primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">On Android? Download the app (APK)</span>
     </div>
 
   </div>
