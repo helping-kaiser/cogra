@@ -1,9 +1,11 @@
-/* The reply composer with pictures attached (media slice): words first, the
-   uncropped tiles join them — whole frames in MediaThumb, one still
-   uploading (comment pictures upload at pick; there is no crop). Four is the
-   cap. Comments have no pick stage: "+ Add" opens the platform's own picker
-   (Android's photo-picker sheet here; the browser's file dialog on the
-   ReplyPicturesWeb board). */
+/* The reply composer with pictures on the WEB (comment-media round,
+   2026-08-31): comments have no pick stage on either platform — "+ Add"
+   opens the platform's own picker (Android's photo-picker sheet; the
+   browser's file dialog here), so nothing of the post wizard's grid or its
+   web substitution appears at comment scale. The one web addition is the
+   drop path: the composer accepts files dropped anywhere on it, and the
+   quiet hint beside Add says so — costs nothing on a phone. Everything
+   else is the app's board unchanged. */
 export function Screen() {
   return (
     <>
@@ -33,7 +35,12 @@ export function Screen() {
 
         <DescribeCounter described={0} total={2} onDescribe={() => {}} />
 
-        <Button variant="text" size="sm" selfStart>+ Add pictures · 2 of 4</Button>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+          <Button variant="text" size="sm">+ Add pictures · 2 of 4</Button>
+          <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
+            …or drop them here.
+          </span>
+        </div>
 
         <div style={{ flex: 1 }} />
 
