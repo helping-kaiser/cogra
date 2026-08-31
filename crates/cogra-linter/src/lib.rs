@@ -67,7 +67,8 @@ pub use adopt::{
     HeadlessLanguages, Kind, KindEvidence, KindExtensions, KindGenerator, KindRegister,
     KindStatuses, KindsAdoption, Language, Meta, NameTransformation, OwnerId, Partition,
     PartitionRule, PathPrefix, Place, PrefixFamily, Profile, ProfileId, ProfileStatus, Profiles,
-    ReservedKinds, ScannedLanguage, ScannedRegions, Signature, TypedData, UnscannedLanguages,
+    Reach, ReachRow, ReservedKinds, ScannedLanguage, ScannedRegions, Signature, TypedData,
+    UnscannedLanguages,
 };
 pub use bans::BanRule;
 pub use carrier::{SourceFile, Walk, WalkOutcome};
@@ -243,6 +244,7 @@ pub fn check(a: &Adoption, root: &Path) -> Result<Run, RunError> {
     }
     a.verify_spellings(root)?;
     a.verify_package_roster(root)?;
+    a.verify_reach_against_manifests(root)?;
     let walking = Instant::now();
     let (sources, failures) = match Walk::new(a, root).sources() {
         Ok(sources) => (sources, Vec::new()),
