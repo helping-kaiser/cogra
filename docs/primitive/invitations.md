@@ -1,4 +1,4 @@
-# Invitations
+# Invitations · `spec:primitive:invitations`
 
 How a person joins CoGra and gets their first edges. The
 invitation is one half of the admission AND gate

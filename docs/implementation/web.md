@@ -1,4 +1,4 @@
-# Web App
+# Web App · `spec:implementation:web-app`
 
 The second frontend: a TypeScript web app living in `web/`, serving
 everyone the Android app doesn't reach — iOS and desktop users —
@@ -338,8 +338,10 @@ rather than the largest.
 Part of the bar from day one, never retrofitted: every page
 lands with semantic HTML, ARIA where semantics fall short, and
 keyboard operability, alongside its tests. A drag gesture always
-has a non-drag equivalent: the crop step's framing is completable
-with discrete move and zoom buttons.
+has a non-drag equivalent: the crop frame takes focus and is
+framed with the arrow keys, `+`/`-`, and Home, which a visually
+hidden description spells out — the canvas draws no framing
+controls, so the route is offered without painting one.
 
 ## Layout
 

@@ -11,7 +11,7 @@ description: >
 argument-hint: "[feature or task]"
 ---
 
-# Implement a feature, grounded in the docs
+# Implement a feature, grounded in the docs · `guide:skills:implement-feature`
 
 This skill is a procedure, not a rulebook. The rules it applies
 live in the root [CLAUDE.md](../../../CLAUDE.md) and the platform

@@ -34,6 +34,7 @@ import {
   sealGate,
   shapeRatio,
   wizardReducer,
+  type PickedAsset,
   type WizardAction,
   type WizardState,
 } from "@/lib/compose/wizard";
@@ -56,6 +57,9 @@ function pathIndex(field: readonly string[] | null, head: string): number | null
   const index = Number(field[1]);
   return Number.isInteger(index) ? index : null;
 }
+
+/** A stable empty list, so the preview effect does not re-run on every render. */
+const NO_ASSETS: readonly PickedAsset[] = [];
 
 const HEADINGS: Record<WizardState["step"], string> = {
   pick: "New post",
@@ -94,6 +98,9 @@ export function ComposeWizard({
   const [referenceErrors, setReferenceErrors] = useState<Readonly<Record<number, string>>>({});
 
   const previews = usePreviewUrls(state.assets);
+  // The offered draft's own cover, which the card draws before the draft has
+  // been adopted and its assets are still nobody's.
+  const offeredPreviews = usePreviewUrls(offered?.assets ?? NO_ASSETS);
 
   // The Reference affordance: a detail surface sends the author here with the
   // node it wants cited, and the chip arrives prefilled. It resolves through
@@ -131,15 +138,49 @@ export function ComposeWizard({
     };
   }, [drafts]);
 
-  // Saved on a timer rather than on every keystroke: the draft carries the
-  // picked bytes, and writing several megabytes per character typed would make
-  // the title field stutter. Nothing is saved until the reader has done
-  // something worth keeping.
+  // THE DRAFT IS KEPT CONTINUOUSLY. Every meaningful change is written, and
+  // leaving never discards — the only way a draft goes is the offer's Discard.
+  //
+  // The timer is a coalescing window, not a save policy: the draft carries the
+  // picked bytes, and `save` reads every one of them back out of its Blob, so a
+  // write per character typed would stutter the title field with ten pictures
+  // attached. 200ms is short enough that a change is on disk before a reader
+  // can reach for anything, and every departure flushes below regardless.
+  // The departure handlers are bound once but must write what the draft holds
+  // NOW, so the state is mirrored into a ref — updated in an effect, because a
+  // ref written during render is a value React is free to discard.
+  const latest = useRef(state);
+  useEffect(() => {
+    latest.current = state;
+  }, [state]);
+
+  const keep = useCallback(() => {
+    if (!loaded || offered !== null || !draftIsWorthKeeping(latest.current)) return;
+    void drafts.save(latest.current);
+  }, [loaded, offered, drafts]);
+
   useEffect(() => {
     if (!loaded || offered !== null || !draftIsWorthKeeping(state)) return;
-    const timer = setTimeout(() => void drafts.save(state), 800);
+    const timer = setTimeout(() => void drafts.save(state), 200);
     return () => clearTimeout(timer);
   }, [state, loaded, offered, drafts]);
+
+  // Closing the tab, reloading, or switching away. `beforeunload` is not used:
+  // it is unreliable on mobile, where a tab is far more often discarded than
+  // closed. `visibilitychange` to hidden is the transition browsers do
+  // guarantee, and `pagehide` covers the bfcache path.
+  // (https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API)
+  useEffect(() => {
+    const onHide = () => {
+      if (document.visibilityState === "hidden") keep();
+    };
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", keep);
+    return () => {
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("pagehide", keep);
+    };
+  }, [keep]);
 
   // ---- the uploads ---------------------------------------------------------
 
@@ -236,10 +277,10 @@ export function ComposeWizard({
       return;
     }
 
-    await finish(prepared.value.writes);
+    await finish(prepared.value.node, prepared.value.writes);
   };
 
-  const finish = async (writes: readonly StagedWriteView[]) => {
+  const finish = async (node: string, writes: readonly StagedWriteView[]) => {
     const results = [];
     for (const staged of writes) results.push(await signer.signStaged(staged));
     setBusy(false);
@@ -247,7 +288,10 @@ export function ComposeWizard({
     if (results.every((result) => result.kind === "done")) {
       // The draft has become a post, so it stops being a draft.
       await drafts.clear();
-      router.push("/feed?compose=landed");
+      // ComposeLanded is the POST'S OWN PAGE carrying a confirmation, not the
+      // feed carrying a card: what an author wants after publishing is to see
+      // the thing they published, and the board draws exactly that.
+      router.push(`/posts/${node}?published=1`);
       return;
     }
 
@@ -279,6 +323,9 @@ export function ComposeWizard({
 
   const leave = () => {
     const previous = state.step;
+    // Leaving keeps the draft — written here rather than left to the coalescing
+    // timer, which the navigation would otherwise outrun.
+    keep();
     dispatch({ type: "back" });
     // Already on the first screen: leaving the wizard is leaving the surface.
     if (previous === "pick") router.push("/feed");
@@ -309,6 +356,10 @@ export function ComposeWizard({
             <PillButton testId="wizard-next" size="sm" onClick={() => dispatch({ type: "advance" })}>
               Next
             </PillButton>
+          ) : state.step === "seal" ? (
+            // The seal carries no forward pill — signing happens on the surface
+            // — but the board still names where the reader has got to.
+            <span className="text-body-small text-on-surface-variant">Last step</span>
           ) : undefined
         }
         testId="wizard-header"
@@ -317,6 +368,7 @@ export function ComposeWizard({
       {offered !== null && (
         <DraftCard
           draft={offered}
+          previews={offeredPreviews}
           onContinue={() => {
             setState(offered);
             setOffered(null);
@@ -415,23 +467,39 @@ export function ComposeWizard({
 // is already holding an unpublished post.
 function DraftCard({
   draft,
+  previews,
   onContinue,
   onDiscard,
 }: {
   draft: WizardState;
+  previews: Readonly<Record<string, string>>;
   onContinue: () => void;
   onDiscard: () => void;
 }) {
   const summary = draftSummary(draft);
+  const cover = draft.assets[0];
   return (
     <div
       data-testid="wizard-draft-card"
       className="mx-6 my-2 flex flex-none flex-col gap-2 rounded-medium bg-surface-container-highest p-4"
     >
-      <h2 className="m-0 text-title-small">Your draft is here</h2>
-      <div className="flex flex-col">
-        <span className="text-body-medium">{summary.title}</span>
-        <span className="text-label-small text-on-surface-variant">{summary.detail}</span>
+      <h2 className="m-0 text-title-medium">Your draft is here</h2>
+      <div className="flex items-center gap-2">
+        {cover !== undefined && (
+          <div className="size-10 flex-none overflow-hidden rounded-small">
+            {/* eslint-disable-next-line @next/next/no-img-element -- a blob: URL
+                for bytes that never left the device. */}
+            <img
+              src={previews[cover.id] ?? ""}
+              alt=""
+              className="block size-full object-cover"
+            />
+          </div>
+        )}
+        <span className="flex flex-1 flex-col">
+          <span className="text-body-medium">{summary.title}</span>
+          <span className="text-body-small text-on-surface-variant">{summary.detail}</span>
+        </span>
       </div>
       <div className="flex justify-end gap-2">
         <PillButton testId="wizard-draft-discard" variant="text" onClick={onDiscard}>

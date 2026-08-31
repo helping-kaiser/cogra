@@ -1,4 +1,4 @@
-# Substrate
+# Substrate · `spec:primitive:substrate`
 
 How CoGra runs as a Layer 2 on the **PeerNetworks Layer 1** — the
 flow every other doc builds on: what the layers provide, what CoGra

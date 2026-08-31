@@ -81,6 +81,9 @@ fn census_of(sources: Vec<SourceFile>) -> Vec<String> {
 
 /// (´dec:lint:cross-source-pairing´): an inline definition is settled by the
 /// source that holds it, and needs no pairing at all.
+///
+/// An inline definition is settled by the source that holds it and needs no pairing.
+/// ´claim:pairing:an-inline-definition-needs-no-pairing´
 #[test]
 fn an_inline_definition_is_the_source_s_own() {
     let held = vec![rust("crates/l1-standin/src/lib.rs", "mod inline { }\n")];
@@ -89,6 +92,9 @@ fn an_inline_definition_is_the_source_s_own() {
 
 /// (´dec:lint:cross-source-pairing´): a nested inline definition is a
 /// definition too — the census counts modules, not top-level items.
+///
+/// A nested inline definition is an asset of its own.
+/// ´claim:pairing:a-nested-definition-is-its-own-asset´
 #[test]
 fn a_nested_inline_definition_is_an_asset_of_its_own() {
     let held = vec![rust(
@@ -103,6 +109,9 @@ fn a_nested_inline_definition_is_an_asset_of_its_own() {
 
 /// (´dec:lint:cross-source-pairing´): the file named after a declaration
 /// backs it, and the asset sits at that file.
+///
+/// The file named after a declaration backs it, and the asset sits at that file.
+/// ´claim:pairing:a-file-backs-the-declaration-naming-it´
 #[test]
 fn a_file_backs_the_declaration_that_names_it() {
     let held = vec![
@@ -114,6 +123,9 @@ fn a_file_backs_the_declaration_that_names_it() {
 
 /// (´dec:lint:cross-source-pairing´): a directory backs a declaration
 /// through its `mod.rs`, which is Cargo's second layout.
+///
+/// A directory backs a declaration through its module file.
+/// ´claim:pairing:a-directory-backs-through-its-mod-file´
 #[test]
 fn a_directory_backs_a_declaration_through_its_mod_file() {
     let held = vec![
@@ -125,6 +137,9 @@ fn a_directory_backs_a_declaration_through_its_mod_file() {
 
 /// (´dec:lint:cross-source-pairing´): a `mod.rs` roots its own directory,
 /// so a declaration inside one is backed from beside it.
+///
+/// A module file roots its own directory, so a declaration inside one is backed from beside it.
+/// ´claim:pairing:a-mod-file-roots-its-directory´
 #[test]
 fn a_mod_file_backs_from_its_own_directory() {
     let held = vec![
@@ -136,6 +151,9 @@ fn a_mod_file_backs_from_its_own_directory() {
 
 /// (´dec:lint:cross-source-pairing´): a module file backs from the directory
 /// named after it, which is the other half of Cargo's rule.
+///
+/// A module file backs from the directory named after it.
+/// ´claim:pairing:a-module-file-backs-from-its-directory´
 #[test]
 fn a_module_file_backs_from_the_directory_named_after_it() {
     let held = vec![
@@ -152,6 +170,9 @@ fn a_module_file_backs_from_the_directory_named_after_it() {
 /// (´dec:lint:cross-source-pairing´): many declarations of one module are
 /// one asset — the census counts definitions, never declarations, which is
 /// what keeps `[profiles]` injective where a tree is declared repeatedly.
+///
+/// Many declarations of one module are one asset.
+/// ´claim:pairing:many-declarations-are-one-asset´
 #[test]
 fn many_declarations_of_one_definition_are_one_asset() {
     let held = vec![
@@ -169,6 +190,9 @@ fn many_declarations_of_one_definition_are_one_asset() {
 /// `tests` directory is a crate root, so the shared rig many suites declare
 /// is backed from beside them and counts once — the corpus's own eleven
 /// `mod rig;` in miniature.
+///
+/// Many test roots declaring one shared tree back one asset between them.
+/// ´claim:pairing:many-test-roots-back-one-asset´
 #[test]
 fn many_test_roots_declaring_one_tree_are_one_asset() {
     let held = vec![
@@ -183,6 +207,9 @@ fn many_test_roots_declaring_one_tree_are_one_asset() {
 /// (´dec:lint:cross-source-pairing´): the same rule reaches a support tree
 /// backed by a file rather than a directory, which is the other half of
 /// Cargo's layout under a test root.
+///
+/// A test root backs a support file beside it.
+/// ´claim:pairing:a-test-root-backs-a-file-beside-it´
 #[test]
 fn a_test_root_backs_a_support_file_beside_it() {
     let held = vec![
@@ -195,6 +222,9 @@ fn a_test_root_backs_a_support_file_beside_it() {
 /// (´dec:lint:cross-source-pairing´): a `tests` directory inside a `src` tree
 /// is a module of the lib target and roots nothing, so a declaration in one
 /// is backed from the directory named after it like any module file.
+///
+/// A tests directory inside a source tree is a module and roots nothing.
+/// ´claim:pairing:a-tests-module-is-no-root´
 #[test]
 fn a_tests_module_inside_a_lib_target_is_not_a_root() {
     let held = vec![
@@ -209,6 +239,9 @@ fn a_tests_module_inside_a_lib_target_is_not_a_root() {
 
 /// (´dec:lint:cross-source-pairing´): a file that is backed under a name it
 /// also defines inline yields one asset, not two.
+///
+/// A file backed under a name it also defines inline yields one asset.
+/// ´claim:pairing:a-self-defining-backing-is-one-asset´
 #[test]
 fn a_file_defining_the_name_it_is_backed_under_yields_one_asset() {
     let held = vec![
@@ -221,6 +254,9 @@ fn a_file_defining_the_name_it_is_backed_under_yields_one_asset() {
 /// (´dec:lint:cross-source-pairing´): `[profiles]` excludes modules
 /// attributed `#[cfg(test)]`, and a declaration is a module — the exclusion
 /// reaches the file-backed half exactly as it reaches the inline one.
+///
+/// The test-attributed exclusion reaches the file-backed half as it reaches the inline one.
+/// ´claim:pairing:the-exclusion-reaches-file-backed-modules´
 #[test]
 fn a_test_attributed_declaration_is_excluded_with_its_definition() {
     let held = vec![
@@ -236,6 +272,9 @@ fn a_test_attributed_declaration_is_excluded_with_its_definition() {
 /// (´dec:lint:cross-source-pairing´): a declaration whose backing file is
 /// not in the carrier pairs with nothing, rather than producing an asset
 /// pointing at a file no run saw.
+///
+/// A declaration whose backing file is outside the carrier pairs with nothing.
+/// ´claim:pairing:an-unbacked-declaration-pairs-with-nothing´
 #[test]
 fn a_declaration_with_no_backing_source_pairs_with_nothing() {
     let held = vec![rust("crates/l1-standin/src/lib.rs", "mod absent;\n")];
@@ -261,6 +300,9 @@ fn measured(a: &Adoption, at: &Path) -> Vec<String> {
 /// the census a check judges is the census the measurement reports — here
 /// over a fixture corpus in a root of its own, walked once and handed to
 /// both runs.
+///
+/// The check and the measurement read one census over a fixture corpus.
+/// ´claim:pairing:check-and-measurement-agree-on-a-fixture´
 #[test]
 fn the_check_and_the_measurement_agree_over_a_fixture() {
     let at = std::env::temp_dir().join("cogra-lint-pairing-fixture");
@@ -296,10 +338,13 @@ fn the_check_and_the_measurement_agree_over_a_fixture() {
 
 /// (´dec:lint:cross-source-pairing´): the agreement holds over this
 /// repository, at the size `[profiles]` records as the module migration's.
+///
+/// The check and the measurement read one census over this repository.
+/// ´claim:pairing:check-and-measurement-agree-here´
 #[test]
 fn the_check_and_the_measurement_agree_over_this_corpus() {
     let reported = measured(ruled(), &root());
-    assert_eq!(reported.len(), 101, "the size `[profiles]` records");
+    assert_eq!(reported.len(), 104, "the size `[profiles]` records");
 
     let run = cogra_linter::check(ruled(), &root()).expect("the check runs over the corpus");
     assert_eq!(covered(&run), reported, "one pairing, one census");

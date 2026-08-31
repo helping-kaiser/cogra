@@ -1,4 +1,4 @@
-# Architecture
+# Architecture · `spec:implementation:architecture`
 
 ## Overview
 

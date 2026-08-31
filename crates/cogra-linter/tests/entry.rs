@@ -190,6 +190,9 @@ fn asset_of(g: &Corpus, identifier: &str) -> NodeIndex {
 /// one `Derives` edge from each covered asset to the mint at the profile's
 /// standard place — the owner's generated register, and not the asset's own
 /// source.
+///
+/// An effective profile lays one derivation from each covered asset to the mint at its standard place.
+/// ´claim:entry:each-asset-derives-into-its-register´
 #[test]
 fn an_effective_profile_derives_each_asset_into_its_register() {
     let run = entered_corpus();
@@ -222,6 +225,9 @@ fn an_effective_profile_derives_each_asset_into_its_register() {
 
 /// (´sig:lint:index-maps´): the census side of the bijection is recorded as
 /// the harvest lays the warrants, keyed as the minting registry is.
+///
+/// The census side of the bijection is recorded as the harvest lays the warrants.
+/// ´claim:entry:the-derived-registry-holds-every-label´
 #[test]
 fn the_derived_registry_holds_every_covered_assets_label() {
     let run = entered_corpus();
@@ -244,6 +250,9 @@ fn the_derived_registry_holds_every_covered_assets_label() {
 /// (´[LBL-inv:labels:inventory]´): with the register committed, the census
 /// and the carried labels stand in a bijection and the clause reports
 /// nothing.
+///
+/// With every label carried, the census and the register stand in a bijection and the clause is silent.
+/// ´claim:entry:a-complete-register-is-a-clean-inventory´
 #[test]
 fn the_inventory_is_clean_when_the_register_carries_every_label() {
     let run = entered_corpus();
@@ -260,6 +269,9 @@ fn the_inventory_is_clean_when_the_register_carries_every_label() {
 /// (´dec:lint:one-generator´): a check run immediately after the write
 /// reports `Current` for the register it wrote, which is what arms the exact
 /// byte comparison the day the profile enters Π.
+///
+/// A check run immediately after a write reports the register it wrote as current.
+/// ´claim:entry:check-after-write-is-current´
 #[test]
 fn the_committed_register_is_current_and_the_freshness_clause_is_silent() {
     let run = entered_corpus();
@@ -276,6 +288,9 @@ fn the_committed_register_is_current_and_the_freshness_clause_is_silent() {
 
 /// (´[LBL-inv:labels:warrant-totality]´): a K-kind mint at the standard place
 /// now stands on a derivation, and one away from it stands on none.
+///
+/// A reserved-kind mint at the standard place stands on a derivation, and one away from it stands on none.
+/// ´claim:entry:a-stray-reserved-mint-has-no-warrant´
 #[test]
 fn the_warrant_arm_sees_the_derivation_and_still_reports_a_stray_mint() {
     let run = entered_corpus();
@@ -319,6 +334,9 @@ fn the_warrant_arm_sees_the_derivation_and_still_reports_a_stray_mint() {
 /// (´[LBL-inv:labels:inventory]´): an asset whose label the standard place
 /// does not carry is reported uncarried, which is the clause admitting
 /// nothing partial.
+///
+/// An asset whose label the standard place does not carry is reported uncarried.
+/// ´claim:entry:an-uncarried-asset-is-reported´
 #[test]
 fn an_asset_missing_from_the_register_is_uncarried() {
     let sources = vec![
@@ -348,6 +366,9 @@ fn an_asset_missing_from_the_register_is_uncarried() {
 
 /// (´[LBL-inv:labels:inventory]´): two covered assets of one owner deriving
 /// one label is a naming defect of the assets, and the finding names both.
+///
+/// Two covered assets of one owner deriving one label is reported naming both.
+/// ´claim:entry:a-collision-names-both-assets´
 #[test]
 fn two_assets_deriving_one_label_name_each_other() {
     let sources = vec![
@@ -375,6 +396,9 @@ fn two_assets_deriving_one_label_name_each_other() {
 
 /// (´[LBL-inv:labels:inventory]´): a label of the governed kind with no
 /// covered asset behind it is an inventory label outliving what it names.
+///
+/// A governed-kind label with no covered asset behind it outlives what it names.
+/// ´claim:entry:an-orphan-label-outlives-its-asset´
 #[test]
 fn a_register_row_with_no_asset_is_an_orphan() {
     let sources = vec![rust("crates/l1-standin/src/lib.rs", &tested("alpha"))];
@@ -394,6 +418,9 @@ fn a_register_row_with_no_asset_is_an_orphan() {
 /// (´dec:lint:staged-profiles´): the staged profile carries no `Covers` edge
 /// and no `Derives` edge, so a module definition beside a covered test puts
 /// nothing of its own in the run.
+///
+/// A staged profile carries neither a covering edge nor a derivation.
+/// ´claim:entry:a-staged-profile-derives-nothing´
 #[test]
 fn a_staged_profile_derives_nothing() {
     let staging = module_staged();
@@ -447,6 +474,15 @@ fn a_staged_profile_derives_nothing() {
 /// (´[LBL-inv:labels:generated-compliance]´): the register is a generated
 /// region whose every occurrence is a warranted mint, which is the clause
 /// holding over the one generated carrier file this corpus will gain.
+///
+/// Both authorities appear here, and the clause covers both: every label
+/// the profile derives stands on its one derivation, while the register's
+/// own Title mint (´dec:lint:title-head´) stands on the authorship the
+/// generator transcribes and carries no derivation at all. Generation is a
+/// fact about the pen, and warrants attach to no pen.
+///
+/// Every occurrence of a generated register is a warranted mint, authored or derived.
+/// ´claim:entry:the-generated-register-complies´
 #[test]
 fn the_generated_register_complies() {
     let run = entered_corpus();
@@ -459,18 +495,22 @@ fn the_generated_register_complies() {
         !generated.is_empty(),
         "the register's regions are generated"
     );
+    let mut titles = 0;
     for region in generated {
         for held in out_along(&run.graph, region, EdgeW::Contains) {
-            if run.graph.node_weight(held).map(NodeW::kind) != Some(NodeKind::Mint) {
+            let Some(NodeW::Mint(weight)) = run.graph.node_weight(held) else {
                 continue;
-            }
+            };
+            let authored = weight.label.kind() == "reg";
+            titles += usize::from(authored);
             assert_eq!(
                 in_along(&run.graph, held, EdgeW::Derives).count(),
-                1,
-                "every mint of the register stands on exactly one derivation"
+                usize::from(!authored),
+                "a derived mint of the register stands on exactly one derivation, an authored one on none"
             );
         }
     }
+    assert!(titles > 0, "the register carries its own Title mint");
     assert!(of(run, "label-generated-dangling").is_empty());
 }
 
@@ -478,6 +518,9 @@ fn the_generated_register_complies() {
 /// on one profile's census, which is what makes the registers generated while
 /// a profile is staged the ones the check will compare against once it is in
 /// force.
+///
+/// The named regeneration and the harvest agree on one profile's census.
+/// ´claim:entry:generation-and-harvest-agree´
 #[test]
 fn the_named_generation_and_the_harvest_produce_one_register() {
     let run = entered_corpus();
@@ -501,6 +544,8 @@ fn the_named_generation_and_the_harvest_produce_one_register() {
                 area: cogra_linter::Area::new("unit"),
                 place: profile.standard_place.clone(),
                 span: cogra_linter::ByteSpan::new(0, 0),
+                opens: 0,
+                documentation: Vec::new(),
             },
             cogra_linter::Asset {
                 profile: profile.id.clone(),
@@ -508,6 +553,8 @@ fn the_named_generation_and_the_harvest_produce_one_register() {
                 area: cogra_linter::Area::new("integration"),
                 place: profile.standard_place.clone(),
                 span: cogra_linter::ByteSpan::new(0, 0),
+                opens: 0,
+                documentation: Vec::new(),
             },
         ],
     )]
@@ -541,6 +588,9 @@ fn temporary(name: &str) -> PathBuf {
 /// (´dec:lint:staged-profiles´): the named regeneration writes the register
 /// the migration's entry condition names, at the place the measurement waits
 /// on it, while the profile is still staged.
+///
+/// A named regeneration writes the register a staged migration's entry condition names.
+/// ´claim:entry:a-staged-migration-can-be-written´
 #[test]
 fn a_named_regeneration_writes_the_register_a_staged_migration_waits_on() {
     let at = temporary("named-regeneration");

@@ -1,4 +1,4 @@
-# CoGra Web
+# CoGra Web · `guide:web:readme`
 
 The web frontend. See
 [docs/implementation/web.md](../docs/implementation/web.md) for the

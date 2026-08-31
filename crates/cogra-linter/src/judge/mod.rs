@@ -22,6 +22,7 @@
 //! pre-tokenizer already makes for the same reason
 //! (´[ARCH-req:linter:diagnostics-not-panics]´).
 
+pub mod claims;
 pub mod freshness;
 pub mod kinds;
 pub mod labels;
@@ -91,6 +92,8 @@ pub fn judge_all(
     found.extend(labels::generated_compliance(g, r, a));
     found.extend(labels::anchor_harvest(g, a));
     found.extend(labels::synthetic_citation(g, a));
+    found.extend(labels::citation_reach(g, a));
+    found.extend(claims::claims(g, a));
     match kinds {
         Some(registry) => found.extend(kinds::head_validation(g, registry)),
         None => found.push(suppressed(g, a)),
@@ -144,25 +147,35 @@ fn suppressed(g: &Corpus, a: &Adoption) -> Diagnostic {
 /// Line and column stay zero and the enforcement stays the adoption's own
 /// default; [`stamp`] fills both in one place.
 ///
-/// An `Asset` is located through the mint it derives, because it has no
-/// other route into a file: (´sig:lint:node-weights´) gives `AssetNode` an
-/// identifier, an area, and a place and no span, and (´sig:lint:edge-weights´)
-/// runs `Owns` from the owner to the asset and no `Contains` from its
-/// source. An asset carrying no label therefore has nothing to point at, and
-/// is reported unlocated rather than not reported — a silently dropped
-/// finding would be worse than an unlocated one, and the inventory clause's
-/// most important case is exactly the asset with no mint. The gap is in the
-/// ruled weights and not a choice of this module.
+/// An `Asset` is located through the mint it derives where it derives one,
+/// because that mint is what an inventory finding is about: the register row
+/// or the documentation line that carries — or should carry — the label. An
+/// asset carrying no label falls back to its own span and its own source,
+/// which (´sig:lint:node-weights´) and (´sig:lint:edge-weights´) supply.
+///
+/// An asset no source contains at all — a hand-built graph, or one whose
+/// frontend settled it without a source of its own — is reported *unlocated*
+/// rather than dropped. The inventory clause's most important case is the
+/// asset with no mint, and a silently dropped finding would be worse than an
+/// unlocated one.
 pub(crate) fn at(g: &Corpus, n: NodeIndex) -> Option<Location> {
-    let anchor = match g.node_weight(n) {
-        Some(NodeW::Asset(_)) => match out_along(g, n, EdgeW::Derives).next() {
-            Some(mint) => mint,
-            None => return Some(Location::new(PathBuf::new(), ByteSpan::new(0, 0), 0, 0)),
-        },
-        _ => n,
+    let asset = matches!(g.node_weight(n), Some(NodeW::Asset(_)));
+    let anchor = if asset {
+        out_along(g, n, EdgeW::Derives).next().unwrap_or(n)
+    } else {
+        n
     };
-    let span = span_of(g, anchor)?;
-    let source = source_of(g, anchor)?;
+    match (located(g, anchor), asset) {
+        (Some(at), _) => Some(at),
+        (None, true) => Some(Location::new(PathBuf::new(), ByteSpan::new(0, 0), 0, 0)),
+        (None, false) => None,
+    }
+}
+
+/// The path and span a node sits at, where the graph holds both.
+fn located(g: &Corpus, n: NodeIndex) -> Option<Location> {
+    let span = span_of(g, n)?;
+    let source = source_of(g, n)?;
     let Some(NodeW::Source(weight)) = g.node_weight(source) else {
         return None;
     };
@@ -176,6 +189,7 @@ fn span_of(g: &Corpus, n: NodeIndex) -> Option<ByteSpan> {
         NodeW::Mint(weight) => Some(weight.span),
         NodeW::Citation(weight) => Some(weight.span),
         NodeW::Head(weight) => Some(weight.span),
+        NodeW::Asset(weight) => Some(weight.span),
         NodeW::Source(_) => Some(ByteSpan::new(0, 0)),
         _ => None,
     }

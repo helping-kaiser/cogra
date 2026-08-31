@@ -115,7 +115,7 @@ pub enum AdoptionError {
         /// The spelling the corpus root actually carries.
         found: String,
     },
-    /// A profile is missing one of the five data a profile fixes.
+    /// A profile is missing one of the seven data a profile fixes.
     #[error("profile {id} is missing its {datum}")]
     ProfileIncomplete {
         /// The row the profile opens at.
@@ -135,6 +135,143 @@ pub enum AdoptionError {
         /// The kind it governs.
         kind: String,
     },
+    /// An activation's `scope` is neither of the two shapes.
+    #[error("{section} activation scope {scope} is neither every-owner nor declared")]
+    ActivationScopeUnknown {
+        /// The row the scope sits in.
+        at: Location,
+        /// The section the activation belongs to.
+        section: String,
+        /// What was written.
+        scope: String,
+    },
+    /// A declared activation names an owner no prefix registers.
+    ///
+    /// An owner Σ registers nothing for owes nothing and is held to nothing,
+    /// so naming it closes a wave over no assets while reading exactly like a
+    /// wave that closed.
+    #[error("{section} activation names owner {owner}, which no prefix registers")]
+    ActivationUnknownOwner {
+        /// The row the offending name sits in.
+        at: Location,
+        /// The section the activation belongs to.
+        section: String,
+        /// The owner it names.
+        owner: String,
+    },
+    /// A declared activation names one owner twice.
+    #[error("{section} activation names owner {owner} more than once")]
+    ActivationRepeatedOwner {
+        /// The row of the second one.
+        at: Location,
+        /// The section the activation belongs to.
+        section: String,
+        /// The owner.
+        owner: String,
+    },
+    /// A declared activation names no owner at all.
+    ///
+    /// An empty declared activation and an activation over no owner are the
+    /// same state written two ways, and the second is the one a reader can
+    /// tell from an accident: a discipline that holds nobody to anything is
+    /// registered by not being written.
+    #[error("{section} declares an activation over no owner")]
+    ActivationEmpty {
+        /// The row the scope sits in.
+        at: Location,
+        /// The section the activation belongs to.
+        section: String,
+    },
+    /// `[claims]` names a kind reserved in K.
+    ///
+    /// A claim is authored: its head is a statement its author composes, not
+    /// an identifier the code already bears. A kind in K admits derivation
+    /// only, so a claim of such a kind could stand on no warrant at all
+    /// (´[LBL-inv:labels:warrant-totality]´).
+    #[error(
+        "the claim discipline names kind {kind}, which is reserved in K and admits no authorship"
+    )]
+    ClaimKindReserved {
+        /// The row the kind sits in.
+        at: Location,
+        /// The kind it names.
+        kind: String,
+    },
+    /// `[claims]` rides a profile Π does not register.
+    #[error("the claim discipline rides profile {id}, which is not registered")]
+    ClaimProfileUnknown {
+        /// The row the name sits in.
+        at: Location,
+        /// The profile it names.
+        id: String,
+    },
+    /// `[claims]` lacks one of the data it fixes.
+    #[error("the claim discipline fixes no {datum}")]
+    ClaimIncomplete {
+        /// The row the section opens at.
+        at: Location,
+        /// The datum it lacks.
+        datum: &'static str,
+    },
+    /// A `[reach]` row names an owner no prefix registers.
+    ///
+    /// Either end of the edge: an owner Σ registers nothing for can be named
+    /// by no imported citation, so a permission written for it or into it
+    /// governs nothing while looking exactly like one that does.
+    #[error("reach names owner {owner}, which no prefix registers")]
+    ReachUnknownOwner {
+        /// The row the offending name sits in.
+        at: Location,
+        /// The owner it names.
+        owner: String,
+    },
+    /// One owner heads two `[reach]` rows.
+    #[error("owner {owner} heads more than one reach row")]
+    ReachDuplicateOwner {
+        /// The row of the second one.
+        at: Location,
+        /// The owner.
+        owner: String,
+    },
+    /// A `[reach]` row names its own owner.
+    ///
+    /// An owner reaches itself by being itself, and an import naming the
+    /// citing owner is underivable whatever the graph says, so the edge is
+    /// unwritable rather than redundant.
+    #[error("reach row for {owner} names itself, and an owner reaches itself by being itself")]
+    ReachSelfEdge {
+        /// The row.
+        at: Location,
+        /// The owner.
+        owner: String,
+    },
+    /// One `[reach]` row names one target twice.
+    #[error("reach row for {owner} names {target} more than once")]
+    ReachRepeatedTarget {
+        /// The row.
+        at: Location,
+        /// The owner the row constrains.
+        owner: String,
+        /// The target it repeats.
+        target: String,
+    },
+    /// A declared reach omits a dependency the build system already carries.
+    ///
+    /// The one direction the comparison runs: a package that compiles against
+    /// another may cite it, so a declaration omitting the edge forbids what
+    /// the build requires. A declared edge Cargo does not carry is no defect —
+    /// that is how every document owner reaches anything at all.
+    #[error("reach for {owner} omits {depends_on}, which {manifest} declares as a path dependency")]
+    ReachContradictsManifest {
+        /// The row whose targets omit it.
+        at: Location,
+        /// The owner the row constrains.
+        owner: String,
+        /// The owner its manifest depends on.
+        depends_on: String,
+        /// The manifest that declares the dependency.
+        manifest: String,
+    },
     /// The stated effective-profile count disagrees with the file.
     #[error("the effective profile count {stated} disagrees with the {found} profiles not staged")]
     EffectiveCountMismatch {
@@ -144,6 +281,30 @@ pub enum AdoptionError {
         stated: usize,
         /// What the file's own profiles say.
         found: usize,
+    },
+    /// A build-system package has no partition rule of its own.
+    #[error(
+        "package {package} has no partition rule of its own; its paths fall to the residual owner, and R-PKG' would derive the prefix {derived_prefix} for it"
+    )]
+    UnregisteredPackage {
+        /// The row of the residual rule the package's paths fall to.
+        at: Location,
+        /// The package, by the name its build system gives it.
+        package: String,
+        /// The prefix R-PKG′ would derive for it.
+        derived_prefix: String,
+    },
+    /// The file's schema major version is not the one this build reads.
+    #[error(
+        "adoption data states schema major version {found}, and this build reads major version {expected}"
+    )]
+    UnsupportedSchemaVersion {
+        /// The row `schema_version` sits in.
+        at: Location,
+        /// The major version the file states.
+        found: u32,
+        /// The major version this build reads.
+        expected: u32,
     },
 }
 
@@ -164,7 +325,21 @@ impl AdoptionError {
             | AdoptionError::PathSpelling { at, .. }
             | AdoptionError::ProfileIncomplete { at, .. }
             | AdoptionError::UngovernedKindNotReserved { at, .. }
-            | AdoptionError::EffectiveCountMismatch { at, .. } => Some(at),
+            | AdoptionError::ActivationScopeUnknown { at, .. }
+            | AdoptionError::ActivationUnknownOwner { at, .. }
+            | AdoptionError::ActivationRepeatedOwner { at, .. }
+            | AdoptionError::ActivationEmpty { at, .. }
+            | AdoptionError::ClaimKindReserved { at, .. }
+            | AdoptionError::ClaimProfileUnknown { at, .. }
+            | AdoptionError::ClaimIncomplete { at, .. }
+            | AdoptionError::ReachUnknownOwner { at, .. }
+            | AdoptionError::ReachDuplicateOwner { at, .. }
+            | AdoptionError::ReachSelfEdge { at, .. }
+            | AdoptionError::ReachRepeatedTarget { at, .. }
+            | AdoptionError::ReachContradictsManifest { at, .. }
+            | AdoptionError::EffectiveCountMismatch { at, .. }
+            | AdoptionError::UnregisteredPackage { at, .. }
+            | AdoptionError::UnsupportedSchemaVersion { at, .. } => Some(at),
         }
     }
 }
@@ -235,6 +410,8 @@ mod tests {
         )
     }
 
+    /// Every error message is lowercase and unpunctuated.
+    /// ´claim:errors:messages-are-lowercase-and-unpunctuated´
     #[test]
     fn every_message_is_lowercase_and_unpunctuated() {
         let errors: Vec<AdoptionError> = vec![
@@ -273,6 +450,16 @@ mod tests {
                 stated: 1,
                 found: 0,
             },
+            AdoptionError::UnregisteredPackage {
+                at: row(),
+                package: String::from("widgets"),
+                derived_prefix: String::from("WIDGETS"),
+            },
+            AdoptionError::UnsupportedSchemaVersion {
+                at: row(),
+                found: 2,
+                expected: 1,
+            },
         ];
         for error in &errors {
             let message = error.to_string();
@@ -282,12 +469,16 @@ mod tests {
         }
     }
 
+    /// Every locatable error variant carries the row it sits in.
+    /// ´claim:errors:a-locatable-variant-carries-its-row´
     #[test]
     fn every_locatable_variant_carries_its_row() {
         let error = AdoptionError::PartitionNotTotal { at: row() };
         assert_eq!(error.at().map(|at| at.line), Some(7));
     }
 
+    /// An unlocatable variant says so rather than inventing a row.
+    /// ´claim:errors:an-unlocatable-variant-says-so´
     #[test]
     fn an_unlocatable_variant_says_so() {
         let error = AdoptionError::Unreadable {
@@ -297,6 +488,8 @@ mod tests {
         assert!(error.at().is_none());
     }
 
+    /// The aggregate error takes every leaf of the taxonomy.
+    /// ´claim:errors:the-aggregate-takes-every-leaf´
     #[test]
     fn the_aggregate_takes_every_leaf() {
         let run: RunError = WalkError::NotADirectory {
