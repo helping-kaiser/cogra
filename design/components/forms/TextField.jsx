@@ -8,6 +8,7 @@ import React from "react";
 
 export function TextField({
   label,
+  corner,
   value,
   onChange,
   type = "text",
@@ -34,17 +35,33 @@ export function TextField({
   };
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
-      <label
-        htmlFor={fieldId}
-        style={{
-          fontSize: "var(--text-label-large)",
-          lineHeight: "var(--text-label-large--line-height)",
-          letterSpacing: "var(--text-label-large--letter-spacing)",
-          fontWeight: "var(--text-label-large--font-weight)",
-        }}
-      >
-        {label}
-      </label>
+      <div style={{ display: "flex", alignItems: "baseline", gap: "var(--space-2)" }}>
+        <label
+          htmlFor={fieldId}
+          style={{
+            flex: 1,
+            fontSize: "var(--text-label-large)",
+            lineHeight: "var(--text-label-large--line-height)",
+            letterSpacing: "var(--text-label-large--letter-spacing)",
+            fontWeight: "var(--text-label-large--font-weight)",
+          }}
+        >
+          {label}
+        </label>
+        {/* The corner word — "Optional" on the details fields. A quiet fact
+            beside the label, never inside it, so the label stays the name. */}
+        {corner && (
+          <span
+            style={{
+              fontSize: "var(--text-label-small)",
+              lineHeight: "var(--text-label-small--line-height)",
+              color: "var(--text-secondary)",
+            }}
+          >
+            {corner}
+          </span>
+        )}
+      </div>
       {rows ? (
         <textarea
           id={fieldId}
