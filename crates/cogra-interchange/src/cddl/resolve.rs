@@ -537,6 +537,8 @@ mod tests {
         out
     }
 
+    /// The shipped prelude parses into its forty rules, each marked as the prelude's own.
+    /// ´claim:resolve:the-prelude-parses-and-is-marked-as-such´
     #[test]
     fn the_prelude_parses_and_defines_its_names() {
         let prelude = match prelude_table() {
@@ -553,6 +555,8 @@ mod tests {
         );
     }
 
+    /// A prelude name resolves without the source defining it.
+    /// ´claim:resolve:a-prelude-name-resolves-undefined´
     #[test]
     fn prelude_names_resolve_without_being_defined() {
         let table = table("a = {0 => tstr, 1 => uint, 2 => any}");
@@ -560,6 +564,8 @@ mod tests {
         assert!(table.get("a").is_some());
     }
 
+    /// A rule of the source's own shadows the prelude rule of that name.
+    /// ´claim:resolve:a-source-rule-shadows-the-prelude´
     #[test]
     fn a_theory_rule_shadows_a_prelude_rule() {
         let table = table("a = {0 => uint}\nuint = 1..3");
@@ -567,6 +573,8 @@ mod tests {
         assert!(!table.get("uint").is_some_and(|rule| rule.is_from_prelude()));
     }
 
+    /// The source's own rules are listed without the prelude among them.
+    /// ´claim:resolve:the-own-rules-exclude-the-prelude´
     #[test]
     fn own_rules_exclude_the_prelude() {
         let table = table("a = {0 => tstr}");
@@ -574,6 +582,8 @@ mod tests {
         assert_eq!(names, ["a"]);
     }
 
+    /// A name nothing defines is refused at the line that names it.
+    /// ´claim:resolve:an-undefined-name-is-located´
     #[test]
     fn an_undefined_name_is_a_located_refusal() {
         let error = refuse("a = {0 => missing}");
@@ -583,6 +593,7 @@ mod tests {
         ));
     }
 
+    /// (´claim:resolve:an-undefined-name-is-located´)
     #[test]
     fn an_undefined_name_on_a_later_line_carries_that_line() {
         let error = refuse("a = {0 => b}\nb = {1 => missing}");
@@ -592,6 +603,8 @@ mod tests {
         ));
     }
 
+    /// A name is resolved wherever one may stand, an unwrap, a generic argument and a member key included.
+    /// ´claim:resolve:every-place-a-name-may-stand-is-resolved´
     #[test]
     fn an_undefined_name_inside_an_unwrap_is_refused() {
         assert!(matches!(
@@ -600,6 +613,7 @@ mod tests {
         ));
     }
 
+    /// (´claim:resolve:every-place-a-name-may-stand-is-resolved´)
     #[test]
     fn an_undefined_name_inside_a_generic_argument_is_refused() {
         assert!(matches!(
@@ -608,6 +622,7 @@ mod tests {
         ));
     }
 
+    /// (´claim:resolve:every-place-a-name-may-stand-is-resolved´)
     #[test]
     fn an_undefined_name_in_a_member_key_is_refused() {
         assert!(matches!(
@@ -616,24 +631,31 @@ mod tests {
         ));
     }
 
+    /// A bareword member key names a key and refers to no rule.
+    /// ´claim:resolve:a-bareword-key-is-no-reference´
     #[test]
     fn a_bareword_key_is_not_a_reference() {
         let table = table("a = {missing: uint}");
         assert!(table.get("missing").is_none());
     }
 
+    /// A control operator's name refers to no rule.
+    /// ´claim:resolve:a-control-operator-name-is-no-reference´
     #[test]
     fn a_control_operator_name_is_not_a_reference() {
         let table = table("a = tstr .size 3");
         assert!(table.get("size").is_none());
     }
 
+    /// A generic parameter resolves inside its own rule and enters the table nowhere.
+    /// ´claim:resolve:a-generic-parameter-is-local-to-its-rule´
     #[test]
     fn a_generic_parameter_resolves_inside_its_rule() {
         let table = table("a<t> = [* t]\nb = a<uint>");
         assert!(table.get("t").is_none());
     }
 
+    /// (´claim:resolve:a-generic-parameter-is-local-to-its-rule´)
     #[test]
     fn a_generic_parameter_does_not_escape_its_rule() {
         assert!(matches!(
@@ -642,12 +664,16 @@ mod tests {
         ));
     }
 
+    /// A generic parameter shadows a prelude name inside the rule that declares it.
+    /// ´claim:resolve:a-generic-parameter-shadows-a-prelude-name´
     #[test]
     fn a_generic_parameter_shadows_a_prelude_name() {
         let table = table("a<uint> = [* uint]\nb = a<tstr>");
         assert_eq!(table.get("a").map(|rule| rule.params().len()), Some(1));
     }
 
+    /// A generic rule cited at another arity, or at none, is refused at the citing line.
+    /// ´claim:resolve:a-generic-must-be-cited-at-its-arity´
     #[test]
     fn a_generic_at_the_wrong_arity_is_refused() {
         assert!(matches!(
@@ -656,6 +682,7 @@ mod tests {
         ));
     }
 
+    /// (´claim:resolve:a-generic-must-be-cited-at-its-arity´)
     #[test]
     fn a_generic_cited_without_arguments_is_refused() {
         assert!(matches!(
@@ -664,48 +691,60 @@ mod tests {
         ));
     }
 
+    /// A socket nothing plugs resolves to nothing, and that is no refusal.
+    /// ´claim:resolve:an-unplugged-socket-resolves-to-nothing´
     #[test]
     fn an_undefined_type_socket_resolves_to_nothing() {
         let table = table("a = {0 => $extension}");
         assert!(table.get("$extension").is_none());
     }
 
+    /// (´claim:resolve:an-unplugged-socket-resolves-to-nothing´)
     #[test]
     fn an_undefined_group_socket_resolves_to_nothing() {
         let table = table("a = {0 => uint, * $$extension}");
         assert!(table.get("$$extension").is_none());
     }
 
+    /// A socket collects its plugs into one choice, in the order they were written.
+    /// ´claim:resolve:a-socket-collects-its-plugs-in-order´
     #[test]
     fn a_plugged_type_socket_collects_its_plugs_in_order() {
         let table = table("a = $message\n$message /= [1, tstr]\n$message /= [2, uint]");
         assert_eq!(printed(&table, "$message"), "[1, tstr] / [2, uint]");
     }
 
+    /// (´claim:resolve:a-socket-collects-its-plugs-in-order´)
     #[test]
     fn a_plugged_group_socket_collects_its_plugs_in_order() {
         let table = table("a = {0 => uint, * $$opt}\n$$opt //= (1 => tstr)\n$$opt //= (2 => uint)");
         assert_eq!(printed(&table, "$$opt"), "(1 => tstr // 2 => uint)");
     }
 
+    /// An augmenting assignment extends the rule it names into a choice.
+    /// ´claim:resolve:an-augmenting-assignment-extends-its-base´
     #[test]
     fn a_type_choice_augments_a_defined_base() {
         let table = table("a = 1\na /= 2\na /= 3");
         assert_eq!(printed(&table, "a"), "1 / 2 / 3");
     }
 
+    /// (´claim:resolve:an-augmenting-assignment-extends-its-base´)
     #[test]
     fn a_type_choice_augments_a_prelude_rule() {
         let table = table("a = {0 => uint}\nuint /= tstr");
         assert_eq!(printed(&table, "uint"), "#0 / tstr");
     }
 
+    /// A name defined twice is admitted where the definitions agree and refused where they differ.
+    /// ´claim:resolve:a-name-defined-twice-must-agree´
     #[test]
     fn a_name_defined_twice_identically_is_admitted() {
         let table = table("a = {0 => uint}\nb = 1\nb = 1");
         assert_eq!(printed(&table, "b"), "1");
     }
 
+    /// (´claim:resolve:a-name-defined-twice-must-agree´)
     #[test]
     fn a_name_defined_twice_differently_is_refused() {
         assert!(matches!(
@@ -714,6 +753,8 @@ mod tests {
         ));
     }
 
+    /// The conventions' base theory resolves, every rule it names being found.
+    /// ´claim:resolve:the-conventions-base-theory-resolves´
     #[test]
     fn the_conventions_base_theory_resolves() {
         let source = concat!(
@@ -731,6 +772,8 @@ mod tests {
         assert!(table.get("version").is_some());
     }
 
+    /// Every document of the standard's own corpus parses and then resolves.
+    /// ´claim:resolve:the-standards-examples-resolve´
     #[test]
     fn the_rfc_appendix_h_examples_resolve() {
         for (what, source) in super::super::parse::CORPUS {

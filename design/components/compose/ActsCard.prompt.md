@@ -14,4 +14,4 @@ What holds:
 
 - One row per act kind: quiet `label-small` label (76px column), the value (clipped, or any node — chips, a stance pair), the count on the right. The total is the footer row, always.
 - The card is `surface-container-highest` at the medium rung — the same quiet summary surface the seals have always used.
-- The all-or-nothing sentence ("They sign together — all n land, or none does.") belongs to the screen below the card when the seal carries more than one act.
+- **On a multi-act seal, pass `note="they land together, or none does"`** — the quiet subline under the total. Omit it on a single-act seal. (It had drifted across the hand boards; the component is now its one home.)
