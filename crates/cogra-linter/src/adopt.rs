@@ -2026,13 +2026,8 @@ impl RawProfile {
                 kind: kind.to_string(),
             });
         }
-        let activation = self
-            .activation
-            .as_ref()
-            .ok_or_else(|| incomplete("activation"))?
-            .validate(source, origin, signature, &format!("profile {id_text}"))?;
         Ok(Profile {
-            id,
+            id: id.clone(),
             kind,
             status,
             census: self.census.ok_or_else(|| incomplete("census"))?,
@@ -2046,7 +2041,11 @@ impl RawProfile {
                 .standard_place
                 .ok_or_else(|| incomplete("standard place"))?,
             collision: self.collision.ok_or_else(|| incomplete("collision rule"))?,
-            activation,
+            activation: self
+                .activation
+                .as_ref()
+                .ok_or_else(|| incomplete("activation"))?
+                .validate(source, origin, signature, &format!("profile {id_text}"))?,
         })
     }
 }
