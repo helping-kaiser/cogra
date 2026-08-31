@@ -29,8 +29,8 @@ describe("ComponentGallery", () => {
       "gallery-tile-wide",
       "gallery-tile-capped",
       "gallery-one-lead",
-      "gallery-three-lead",
-      "gallery-many-remainder",
+      "gallery-three-page-0",
+      "gallery-many-dots",
       "body-veil",
       "crop-frame",
     ]) {

@@ -284,14 +284,20 @@ describe("the compose wizard", () => {
     await pick(["one.jpg", "two.jpg"]);
     fireEvent.click(await screen.findByTestId("wizard-next"));
 
-    // The crop screen, with the alt-text field the contract needs before upload.
-    fireEvent.change(await screen.findByTestId("wizard-alt-text"), {
-      target: { value: "paper against the salt crust" },
-    });
+    // The crop screen carries no keyboard: a description is written over the
+    // details step, never here (design/readme.md §"The media slice").
+    expect(screen.queryByTestId("wizard-alt-text")).toBeNull();
     fireEvent.click(screen.getByTestId("wizard-next"));
 
     // Uploads run from here; the seal opens only once they are done.
     expect(await screen.findByTestId("wizard-title")).toBeInTheDocument();
+
+    // The describe counter is the way in, and it opens the sheet on a picture.
+    fireEvent.click(screen.getByTestId("wizard-describe-counter"));
+    fireEvent.change(await screen.findByTestId("wizard-describe-sheet-field"), {
+      target: { value: "paper against the salt crust" },
+    });
+    fireEvent.click(screen.getByTestId("wizard-describe-sheet-done"));
     fireEvent.click(screen.getByTestId("wizard-next"));
     await waitFor(() => expect(screen.getByTestId("wizard-sign")).not.toBeDisabled());
 
@@ -356,7 +362,7 @@ describe("the compose wizard", () => {
 
     // Back to the details screen to retry the one that failed.
     fireEvent.click(screen.getByTestId("wizard-back"));
-    fireEvent.click(await screen.findByTestId("wizard-retry-0"));
+    fireEvent.click(await screen.findByTestId("wizard-upload-error-retry"));
     fireEvent.click(screen.getByTestId("wizard-next"));
     await waitFor(() => expect(screen.getByTestId("wizard-sign")).not.toBeDisabled());
     expect(attempts).toBe(2);

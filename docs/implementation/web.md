@@ -317,12 +317,25 @@ rather than the largest.
 - **`alt` comes from `altText`,** and a decorative asset takes
   `alt=""` — the documented correct value, not an omitted
   attribute and never a filename.
-- **The optimizer needs the media origin declared.** `url` is
-  absolute and points at the media store, so the origin is
-  configured as a `remotePatterns` entry scoped to `/media/**`.
-  In development the dev server also proxies `/media/*` to that
-  origin, so a phone on the LAN loads pictures from the same
-  origin it already trusts instead of a second one it does not.
+- **The media origin is declared, and the bytes are fetched as
+  stored.** `url` is absolute and points at the media store, so
+  the origin is configured as a `remotePatterns` entry scoped to
+  `/media/**`; in development the dev server also proxies
+  `/media/*` to that origin, so a phone on the LAN loads pictures
+  from the same origin it already trusts instead of a second one
+  it does not. The tiles themselves pass `unoptimized`: the
+  composer re-encodes to WebP at display size before upload and
+  the server keeps that single rendition, so the optimizer would
+  re-encode bytes that need no work — and it refuses the
+  private-IP origins the dev topology uses.
+- **A gallery is a pager, not a grid.** Every picture in a post
+  shares the post's one crop shape, so multiples render as one
+  frame at that shape, swiped, with dots below carrying the
+  position. The swipe is not the only route: the strip is a
+  labelled, focusable group and the arrow keys, Home and End move
+  through it, with `prefers-reduced-motion` dropping the smooth
+  scroll. A comment's pictures never crop, so they share a fixed
+  square frame and each whole frame is fitted inside it.
 - **A device-local preview is a plain `<img>`.** The crop step's
   source is an object URL the optimizer cannot fetch, so it is
   not asked to; `next/image` is for what the server serves.
