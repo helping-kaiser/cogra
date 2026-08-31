@@ -70,10 +70,9 @@ internal fun ColumnScope.CropStepBody(
 
     val framed = state.picked.getOrNull(state.framingIndex) ?: return
     MediaCrop(
-        // A ratio of zero means "not read yet", and the crop falls back
-        // to the frame's own ratio rather than claiming the picture is
-        // square — guessing here would clamp the author out of the very
-        // slack the shape switch exists to give them.
+        // The ratio is carried for the alt text's sake and for whatever
+        // the frame reserves before the decode; the cropper reads the
+        // picture's real shape itself, so nothing here has to guess it.
         item = MediaItem(framed.uri, framed.sourceRatio ?: 0f, framed.altText.ifBlank { null }),
         shape = shape,
         state = framings.getValue(framed.uri),

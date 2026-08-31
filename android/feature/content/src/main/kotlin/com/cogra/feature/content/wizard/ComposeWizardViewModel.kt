@@ -382,19 +382,22 @@ class ComposeWizardViewModel @Inject constructor(
         // Uploads start on leaving DETAILS, not the crop stage.
         //
         // NAMED DEVIATION from `ComposeUploading`'s footnote ("Pictures
-        // upload while you write — signing waits for them"), forced by the
-        // contract: `altText` rides `UploadMediaInput` and there is no
-        // `updateMedia` — D3 makes an asset row immutable after upload. The
-        // descriptions are authored on Details (`DescribeSheet`), so an
-        // upload started at crop-exit would silently drop every description
-        // written after it, which is a lie told to the one person trusting
-        // it. Waiting until Details is done is what makes the boarded
-        // placement of Describe honest.
+        // upload while you write — signing waits for them"), forced by
+        // what the client can currently say: `altText` rides
+        // `UploadMediaInput`, and D3 makes an asset row immutable after
+        // upload, so the only way a description written on Details
+        // reaches the server is the upload that carries it. Starting at
+        // crop-exit would silently drop every description written after
+        // it, which is a lie told to the one person trusting it.
+        //
+        // It ends when alt text stops riding the upload (jakob
+        // 2026-08-31: "the media and its alt text are two seperate
+        // things") — a pre-uploaded picture then has nothing left to
+        // race, and the pick becomes the honest moment to start.
         //
         // The waiting still shows exactly where the boards draw it:
         // `ComposeSealUploading` gates the seal on `UploadStatusLine`, and
         // stepping back to Details renders the in-flight rings.
-        // Flagged for jakob — see the PR.
         if (current.step == WizardStep.Details) startUploads(cropSpecsFor(current))
         _state.value = next
     }
