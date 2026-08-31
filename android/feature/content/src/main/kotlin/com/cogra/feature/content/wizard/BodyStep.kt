@@ -37,6 +37,7 @@ import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.atom.Hairline
+import com.cogra.core.designsystem.v2.atom.InlineAction
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.MediaThumb
 import com.cogra.core.designsystem.v2.media.ThumbBadge
@@ -102,9 +103,10 @@ internal fun ColumnScope.PickStage(
     onOpenSettings: () -> Unit,
     onOpenPicker: () -> Unit,
     onTogglePick: (String) -> Unit,
+    onShowAll: () -> Unit,
 ) {
     if (state.picked.isNotEmpty()) {
-        PickedTray(state = state, onRemove = onTogglePick)
+        PickedTray(state = state, onShowAll = onShowAll)
         Hairline()
     }
 
@@ -155,18 +157,18 @@ internal fun ColumnScope.PickStage(
 }
 
 /**
- * The picked tray: the count, then every pick in order — the first
- * wearing `Cover`, the rest a remove badge — and, on the same line, the
- * sentence that says why the first one is different.
+ * The picked tray (`ComposePicked`): the count, `Show all` beside it, and
+ * the picks in order below.
  *
- * The row scrolls rather than truncating behind the board's `Show all`,
- * whose destination is not drawn anywhere; that affordance is frozen
- * pending its own design.
+ * **The tray shows; the sheet manages.** Order, cover, remove and describe
+ * all live in `PickedSheet`, which `Show all` opens — so the tray carries
+ * no badges and no per-thumbnail controls, and the cover rule is stated
+ * where it can be acted on rather than here.
  */
 @Composable
 private fun PickedTray(
     state: ComposeWizardState,
-    onRemove: (String) -> Unit,
+    onShowAll: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -175,12 +177,25 @@ private fun PickedTray(
             .padding(start = Layout.ScreenGutter, end = Layout.ScreenGutter, top = 4.dp, bottom = Space.x3),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Text(
-            text = "Picked · ${state.picked.size}",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.testTag("wizard_picked_count"),
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Space.x2),
+        ) {
+            Text(
+                text = "Picked · ${state.picked.size}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("wizard_picked_count"),
+            )
+            InlineAction(
+                text = "Show all",
+                onClick = onShowAll,
+                testTag = "wizard_show_all",
+            )
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -191,20 +206,10 @@ private fun PickedTray(
             state.picked.forEachIndexed { index, asset ->
                 MediaThumb(
                     item = MediaItem(asset.uri, asset.sourceRatio ?: 1f, asset.altText.ifBlank { null }),
-                    badge = if (index == 0) ThumbBadge.Cover else ThumbBadge.Remove { onRemove(asset.uri) },
-                    contentDescription = if (index == 0) {
-                        "Picture 1, the cover"
-                    } else {
-                        "Picture ${index + 1}"
-                    },
+                    contentDescription = "Picture ${index + 1}",
                     testTag = "wizard_tray_$index",
                 )
             }
-            Text(
-                text = "The first one is the cover.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }

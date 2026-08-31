@@ -99,9 +99,11 @@ sealed interface ThumbBadge {
  * @param height the other half of [width].
  * @param fit `Crop` for an index into the set, `Fit` where the whole frame
  *   must show — the uncropped comment thumbnail's case.
- * @param progress an upload in flight: the ring rides a scrim over the tile.
- *   Upload starts *after* the crop (only the cropped export is ever
+ * @param uploading an upload in flight: the ring rides a scrim over the
+ *   tile. Upload starts *after* the crop (only the cropped export is ever
  *   uploaded), so this is the picture's own story on its own tile.
+ * @param progress how far that upload has got, where the transport can say.
+ *   Null with [uploading] set draws the indeterminate ring.
  */
 @Composable
 fun MediaThumb(
@@ -117,6 +119,7 @@ fun MediaThumb(
     width: Dp? = null,
     height: Dp? = null,
     fit: ContentScale = ContentScale.Crop,
+    uploading: Boolean = false,
     progress: Float? = null,
     testTag: String? = null,
 ) {
@@ -159,7 +162,7 @@ fun MediaThumb(
                 .fillMaxSize()
                 .alpha(if (faded) 0.65f else 1f),
         )
-        if (progress != null) UploadRing(progress)
+        if (uploading) UploadRing(progress)
         when (badge) {
             is ThumbBadge.Order -> OrderBadge(badge.position)
             ThumbBadge.Cover -> CoverBadge()
@@ -179,24 +182,39 @@ fun MediaThumb(
  * the same reason every other badge here rides [MediaOverlay].
  */
 @Composable
-private fun BoxScope.UploadRing(progress: Float) {
+private fun BoxScope.UploadRing(progress: Float?) {
     Box(
         modifier = Modifier
             .matchParentSize()
             .background(MediaOverlay.Badge),
         contentAlignment = Alignment.Center,
     ) {
-        CircularProgressIndicator(
-            progress = { progress.coerceIn(0f, 1f) },
-            modifier = Modifier.size(RingSize),
-            color = MaterialTheme.colorScheme.primary,
-            trackColor = MediaOverlay.BadgeInk.copy(alpha = 0.35f),
-            strokeWidth = RingStroke,
-            strokeCap = StrokeCap.Round,
-            // The tile already carries the count in the line beside it;
-            // a second announcement per thumbnail would be noise.
-            gapSize = 0.dp,
-        )
+        val ring = Modifier.size(RingSize)
+        val ink = MaterialTheme.colorScheme.primary
+        val track = MediaOverlay.BadgeInk.copy(alpha = 0.35f)
+        if (progress == null) {
+            // The board draws a determinate ring, but `uploadMedia` reports
+            // no byte progress — so the honest ring is the indeterminate
+            // one. Drawing a made-up percentage would be a number the
+            // author could not trust.
+            CircularProgressIndicator(
+                modifier = ring,
+                color = ink,
+                trackColor = track,
+                strokeWidth = RingStroke,
+                strokeCap = StrokeCap.Round,
+            )
+        } else {
+            CircularProgressIndicator(
+                progress = { progress.coerceIn(0f, 1f) },
+                modifier = ring,
+                color = ink,
+                trackColor = track,
+                strokeWidth = RingStroke,
+                strokeCap = StrokeCap.Round,
+                gapSize = 0.dp,
+            )
+        }
     }
 }
 
