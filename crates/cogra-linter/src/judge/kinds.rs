@@ -385,8 +385,7 @@ impl KindRegistry {
                 .insert(row.kind.clone());
             self.local.insert((row.name.clone(), row.kind.clone()));
             if &*row.status == Attestation::Borderline.token() {
-                self.borderline
-                    .insert((row.name.clone(), row.kind.clone()));
+                self.borderline.insert((row.name.clone(), row.kind.clone()));
             }
         }
         self.unapplied.extend(x.hybrids.iter().cloned());

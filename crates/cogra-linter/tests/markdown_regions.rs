@@ -478,7 +478,10 @@ fn a_setext_level_one_heading_is_the_title_head() {
 fn an_unminted_title_is_a_finding_and_still_the_title() {
     let parsed = doc("# Untitled\n\n# Later \u{b7} `sec:x:later`\n");
     assert_eq!(parsed.diagnostics.len(), 1);
-    assert_eq!(parsed.diagnostics[0].rule.as_str(), "markdown-title-unminted");
+    assert_eq!(
+        parsed.diagnostics[0].rule.as_str(),
+        "markdown-title-unminted"
+    );
     assert_eq!(parsed.heads.len(), 1);
     assert_eq!(parsed.heads[0].text, "Section");
 }
