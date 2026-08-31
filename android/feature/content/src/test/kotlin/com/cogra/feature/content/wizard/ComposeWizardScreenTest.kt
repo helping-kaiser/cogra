@@ -44,8 +44,11 @@ class ComposeWizardScreenTest {
     private var draftDiscards = 0
 
     private var permissionRequests = 0
-    private var editBodies = 0
-    private var editCrops = 0
+    private var manages = 0
+    private var describes = 0
+    private var describedAt = mutableListOf<Int>()
+    private var moves = mutableListOf<Pair<Int, Int>>()
+    private var removals = mutableListOf<Int>()
     private var sealBacks = 0
 
     @Composable
@@ -78,8 +81,11 @@ class ComposeWizardScreenTest {
             onNext = { nexts += 1 },
             onBack = { backs += 1 },
             onSealBack = { sealBacks += 1 },
-            onEditBody = { editBodies += 1 },
-            onEditCrop = { editCrops += 1 },
+            onManagePictures = { manages += 1 },
+            onDescribePictures = { describes += 1 },
+            onDescribeAt = { describedAt += it },
+            onMovePick = { from, to -> moves += (from to to) },
+            onRemovePickAt = { removals += it },
             onSign = { signs += 1 },
             onContinueDraft = { draftContinues += 1 },
             onDiscardDraft = { draftDiscards += 1 },
@@ -154,11 +160,15 @@ class ComposeWizardScreenTest {
     }
 
     @Test
-    fun thePickStageShowsTheTrayAndTheCoverMark() {
+    fun thePickStageShowsTheTrayAndOpensTheShowAllSheet() {
         compose.setContent { Wizard(withPicks) }
         compose.onNodeWithTag("wizard_picked_count").assertIsDisplayed()
         compose.onNodeWithTag("wizard_tray_0").assertIsDisplayed()
         compose.onNodeWithTag("wizard_tray_1").assertIsDisplayed()
+
+        // The tray shows; the sheet manages.
+        compose.onNodeWithTag("wizard_show_all").performClick()
+        assertThat(manages).isEqualTo(1)
     }
 
     @Test
@@ -277,44 +287,76 @@ class ComposeWizardScreenTest {
     // -- The details stage --
 
     @Test
-    fun theCropStageDescribesThePictureBeingFramed() {
+    fun theCropStageCarriesNoKeyboard() {
         compose.setContent { Wizard(withPicks.copy(step = WizardStep.Crop)) }
-        // The description sits beside the picture it describes, and it
-        // has to exist before the bytes move: `uploadMedia` takes the
-        // alt text and there is no `updateMedia`.
-        compose.onNodeWithTag("wizard_alt_0").assertExists()
-        // The second picture's field appears when it is the one framed.
-        compose.onNodeWithTag("wizard_alt_1").assertDoesNotExist()
+
+        // Never from the crop step: a geometry step is no place for a
+        // keyboard. Descriptions are authored on Details, in DescribeSheet.
+        compose.onNodeWithTag("wizard_alt_0").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_describe_sheet").assertDoesNotExist()
     }
 
     @Test
-    fun theSecondPicturesDescriptionFollowsTheFilmstrip() {
-        compose.setContent { Wizard(withPicks.copy(step = WizardStep.Crop, framingIndex = 1)) }
-        compose.onNodeWithTag("wizard_alt_1").assertExists()
-    }
-
-    @Test
-    fun aFailedUploadOffersARetryForThatPictureAlone() {
+    fun aFailedUploadCarriesItsWordsAndBothWaysOut() {
         val state = withPicks
             .copy(step = WizardStep.Details)
             .withUpload("b", AssetUpload.Failed("too big"))
         compose.setContent { Wizard(state) }
-        compose.onNodeWithTag("wizard_upload_retry_1").performScrollTo().performClick()
-        assertThat(retries).containsExactly("b")
+
+        // The line carries the failure's words; the tile only wears the
+        // badge, because retry does not fit in 48dp.
+        compose.onNodeWithTag("wizard_upload_failed_1").performScrollTo().assertExists()
+        compose.onNodeWithText("too big", substring = true).assertExists()
     }
 
     @Test
-    fun theDetailsRowsTwoWaysBackGoToTwoDifferentPlaces() {
+    fun thePickedRowOpensTheShowAllSheetAndCarriesNoCropOrEditLinks() {
         compose.setContent { Wizard(withPicks.copy(step = WizardStep.Details)) }
 
-        compose.onNodeWithTag("wizard_details_crop").performScrollTo().performClick()
-        compose.onNodeWithTag("wizard_details_edit").performScrollTo().performClick()
+        // "none" (jakob 2026-08-31): managing the set is the sheet's job,
+        // and the crop step is reached with Back.
+        compose.onNodeWithTag("wizard_details_crop").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_details_edit").assertDoesNotExist()
 
-        // The board draws Crop and Edit side by side because they are two
-        // destinations; wiring both to the same one made them a duplicate.
-        assertThat(editCrops).isEqualTo(1)
-        assertThat(editBodies).isEqualTo(1)
+        compose.onNodeWithTag("wizard_picked_row").performScrollTo().performClick()
+        assertThat(manages).isEqualTo(1)
         assertThat(backs).isEqualTo(0)
+    }
+
+    @Test
+    fun theDetailsStageCountsWhatHasBeenDescribed() {
+        val state = withPicks
+            .copy(step = WizardStep.Details)
+            .withAltText("a", "A salt crust")
+        compose.setContent { Wizard(state) }
+
+        compose.onNodeWithText("· 1 of 2 described").performScrollTo().assertExists()
+        compose.onNodeWithTag("wizard_describe_counter").performScrollTo().performClick()
+        assertThat(describes).isEqualTo(1)
+    }
+
+    @Test
+    fun theShowAllSheetManagesOneSetAndNothingElseDoes() {
+        val state = withPicks.copy(step = WizardStep.Details, pickedSheetOpen = true)
+        compose.setContent { Wizard(state) }
+
+        compose.onNodeWithText("The first one is the cover — drag to reorder.").assertExists()
+        compose.onNodeWithTag("wizard_picked_sheet_row_1_describe").performClick()
+        assertThat(describedAt).containsExactly(1)
+
+        compose.onNodeWithTag("wizard_picked_sheet_row_1_remove").performClick()
+        assertThat(removals).containsExactly(1)
+    }
+
+    @Test
+    fun theDescribeSheetIsWhereAltTextIsAuthored() {
+        val state = withPicks.copy(step = WizardStep.Details, describingIndex = 0)
+        compose.setContent { Wizard(state) }
+
+        compose.onNodeWithTag("wizard_describe_sheet_field").assertExists()
+        compose.onNodeWithText(
+            "Read aloud to people who can't see it, and shown if the picture can't load.",
+        ).assertExists()
     }
 
     // -- The seal --

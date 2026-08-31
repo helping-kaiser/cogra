@@ -29,6 +29,9 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.WizardHeader
+import com.cogra.core.designsystem.v2.compose.DescribeSheet
+import com.cogra.core.designsystem.v2.compose.PickedSheet
+import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.LicenseChoice
@@ -129,8 +132,11 @@ fun ComposeWizardRoute(
         onNext = viewModel::onNext,
         onBack = { if (!viewModel.onBack()) viewModel.onLeave() },
         onSealBack = viewModel::onSealBack,
-        onEditBody = { viewModel.onReturnTo(WizardStep.Body) },
-        onEditCrop = { viewModel.onReturnTo(WizardStep.Crop) },
+        onManagePictures = viewModel::onOpenPickedSheet,
+        onDescribePictures = viewModel::onDescribeFirst,
+        onDescribeAt = viewModel::onDescribe,
+        onMovePick = viewModel::onMovePick,
+        onRemovePickAt = viewModel::onRemovePickAt,
         onSign = viewModel::onSign,
         onContinueDraft = viewModel::onContinueDraft,
         onDiscardDraft = viewModel::onDiscardDraft,
@@ -188,8 +194,11 @@ internal fun ComposeWizardScreen(
     onNext: () -> Unit,
     onBack: () -> Unit,
     onSealBack: () -> Unit,
-    onEditBody: () -> Unit,
-    onEditCrop: () -> Unit,
+    onManagePictures: () -> Unit,
+    onDescribePictures: () -> Unit,
+    onDescribeAt: (Int) -> Unit,
+    onMovePick: (Int, Int) -> Unit,
+    onRemovePickAt: (Int) -> Unit,
     onSign: () -> Unit,
     onContinueDraft: () -> Unit,
     onDiscardDraft: () -> Unit,
@@ -258,6 +267,7 @@ internal fun ComposeWizardScreen(
                     onModeChange = onModeChange,
                     onOpenPicker = onOpenPicker,
                     onTogglePick = onTogglePick,
+                    onManagePictures = onManagePictures,
                 )
 
                 WizardStep.Crop -> WizardBody(scrollable = true, bottom = Space.x4) {
@@ -265,7 +275,6 @@ internal fun ComposeWizardScreen(
                         state = state,
                         onShapeChange = onShapeChange,
                         onFrameAsset = onFrameAsset,
-                        onAltTextChange = onAltTextChange,
                         onCropsChanged = onCropsChanged,
                     )
                 }
@@ -276,8 +285,9 @@ internal fun ComposeWizardScreen(
                         onTitleChange = onTitleChange,
                         onDescriptionChange = onDescriptionChange,
                         onRetryUpload = onRetryUpload,
-                        onEditBody = onEditBody,
-                        onEditCrop = onEditCrop,
+                        onRemovePick = onRemovePickAt,
+                        onManagePictures = onManagePictures,
+                        onDescribePictures = onDescribePictures,
                         topics = {
                             // The 2.3 section, embedded rather than
                             // rebuilt: only its surroundings changed.
@@ -346,18 +356,46 @@ internal fun ComposeWizardScreen(
         }
     }
 
-    if (state.sheet != SealSheet.None) {
+    // Every drawer over the wizard, one at a time. `PickedSheet` and
+    // `DescribeSheet` open over the pick and details stages; the license
+    // and stance sheets over the seal.
+    if (state.anySheetOpen) {
         val sheetState = rememberModalBottomSheetState()
         ModalBottomSheet(onDismissRequest = onCloseSheet, sheetState = sheetState) {
-            when (state.sheet) {
-                SealSheet.License -> LicenseSheet(state.license, onLicenseChange, onCloseSheet)
-                SealSheet.Stance -> StanceSheet(
+            val describing = state.describingIndex?.let { state.picked.getOrNull(it) }
+            when {
+                describing != null -> DescribeSheet(
+                    item = MediaItem(
+                        describing.uri,
+                        describing.sourceRatio ?: 1f,
+                        describing.altText.ifBlank { null },
+                    ),
+                    value = describing.altText,
+                    onValueChange = { onAltTextChange(describing.uri, it) },
+                    onDone = onCloseSheet,
+                    testTag = "wizard_describe_sheet",
+                )
+
+                state.pickedSheetOpen -> PickedSheet(
+                    pictures = state.pickedPictures(),
+                    onDescribe = onDescribeAt,
+                    onRemove = onRemovePickAt,
+                    onMove = onMovePick,
+                    onDone = onCloseSheet,
+                    testTag = "wizard_picked_sheet",
+                )
+
+                state.sheet == SealSheet.License ->
+                    LicenseSheet(state.license, onLicenseChange, onCloseSheet)
+
+                state.sheet == SealSheet.Stance -> StanceSheet(
                     pDirected = state.pDirected,
                     onChange = onPDirectedChange,
                     onDone = onCloseSheet,
                     onCancel = onCloseSheet,
                 )
-                SealSheet.None -> Unit
+
+                else -> Unit
             }
         }
     }
@@ -378,6 +416,7 @@ private fun ColumnScope.BodyStage(
     onModeChange: (BodyMode) -> Unit,
     onOpenPicker: () -> Unit,
     onTogglePick: (String) -> Unit,
+    onManagePictures: () -> Unit,
 ) {
     when (state.mode) {
         BodyMode.Words -> {
@@ -413,6 +452,7 @@ private fun ColumnScope.BodyStage(
                 onOpenSettings = permission.openSettings,
                 onOpenPicker = onOpenPicker,
                 onTogglePick = onTogglePick,
+                onShowAll = onManagePictures,
             )
         }
     }

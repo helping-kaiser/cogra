@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
+import com.cogra.core.designsystem.v2.compose.UploadStatusLine
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.Hairline
 import com.cogra.core.designsystem.v2.atom.SettingRow
@@ -97,6 +98,16 @@ internal fun ColumnScope.SealStepBody(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(Space.x2),
         ) {
+            // `ComposeSealUploading`: while this shows, the sign button is
+            // disabled — nothing signs until the content it signs exists.
+            if (state.mode == BodyMode.Media && !state.uploadsComplete) {
+                UploadStatusLine(
+                    done = state.uploadsDone,
+                    total = state.picked.size,
+                    modifier = Modifier.fillMaxWidth(),
+                    testTag = "wizard_seal_uploading",
+                )
+            }
             CograButton(
                 text = "Sign and publish",
                 onClick = onSign,

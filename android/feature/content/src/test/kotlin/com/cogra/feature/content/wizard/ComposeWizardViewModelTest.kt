@@ -176,9 +176,9 @@ class ComposeWizardViewModelTest {
         uris.forEach { onTogglePick(it) }
         dispatcher.scheduler.advanceUntilIdle()
         onNext() // body -> crop
-        onNext() // crop -> details, uploads start
+        onNext() // crop -> details
+        onNext() // details -> seal, uploads start (they carry the alt text)
         dispatcher.scheduler.advanceUntilIdle()
-        onNext() // details -> seal
     }
 
     // -- The XOR reaches the wire, not just the screen (D16) --
@@ -288,10 +288,16 @@ class ComposeWizardViewModelTest {
         vm.onModeChange(BodyMode.Media)
         vm.onTogglePick("a")
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext() // body -> crop
+        vm.onNext() // crop -> details, where descriptions are authored
         vm.onAltTextChange("a", "A salt crust")
-        vm.onNext()
-        vm.onNext()
+        vm.onNext() // details -> seal, and only now does the upload run
         dispatcher.scheduler.advanceUntilIdle()
+
+        // The description has to be on the wire with its own bytes:
+        // `altText` rides `UploadMediaInput` and an asset row is immutable
+        // after upload (D3), so an upload that started earlier would have
+        // dropped it.
         assertThat(media.lastAltText).isEqualTo("A salt crust")
     }
 
@@ -611,10 +617,10 @@ class ComposeWizardViewModelTest {
         vm.onBack() // details -> crop
         vm.onBack() // crop -> body
         vm.onTogglePick("a")
-        vm.onNext()
-        vm.onNext()
+        vm.onNext() // body -> crop
+        vm.onNext() // crop -> details
+        vm.onNext() // details -> seal
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onNext()
         vm.onSign()
         dispatcher.scheduler.advanceUntilIdle()
 
