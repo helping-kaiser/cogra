@@ -1,6 +1,7 @@
 //! ´mod:module:render´
 //!
-//! Diagnostic rendering and the run summary.
+//! Diagnostic rendering, the run summary, and the spelling of every other
+//! mode's output.
 //!
 //! [`diag`](crate::diag) has already ordered the findings
 //! (´conv:lint:diagnostic-order´); this module only spells them. Nothing
@@ -24,12 +25,20 @@
 //! linter's consumer set has, and it is the shape a compiler-trained reader
 //! already parses by eye. Being a contract, it is stable: changing it is a
 //! breaking change to whatever consumes it.
+//!
+//! The report and the sweep spell their located lines in that same shape,
+//! prefixed to their own listings. A second grammar would buy nothing: what a
+//! reader learns once about a finding's line then reads an orphan mint and a
+//! pending insertion too (´dec:lint:report-subcommand´).
 
 use std::fmt::Write as _;
 use std::path::Path;
 
 use crate::diag::{Diagnostic, Enforcement, Location, Severity};
+use crate::fix::Insertion;
 use crate::registers::{Freshness, Register, RegisterScope};
+use crate::report::{Cited, Reverse, Survey};
+use crate::scan::Label;
 use crate::timing::Timing;
 
 /// One finding, in the ruled form, with its related locations under it.
@@ -132,6 +141,112 @@ pub fn freshness(reg: &Register, found: &Freshness) -> String {
         Freshness::Staged => String::from("staged, never generated"),
     };
     format!("{}: {what} — {standing}", reg.path.display())
+}
+
+/// One label line the sweep would write, or wrote
+/// (´dec:lint:fix-subcommand´).
+///
+/// The located shape again, and the bytes themselves with their line breaks
+/// shown as `\n` — so that a dry run says exactly what a write will put there
+/// and says it on one line, which is what makes the two readable against each
+/// other.
+#[must_use]
+pub fn insertion(one: &Insertion) -> String {
+    format!(
+        "{}: at byte {} write {:?}",
+        at(&one.at),
+        one.offset,
+        one.text
+    )
+}
+
+/// The reference graph, as the report mode spells it
+/// (´dec:lint:report-subcommand´).
+///
+/// Sections separated by a blank line, each opening with a header line
+/// carrying its own count, and every listed line indented two spaces. A
+/// located line keeps the `path:line:col:` shape the diagnostic form fixes
+/// (´dec:lint:diagnostic-format´), so one reader and one problem matcher parse
+/// both without a second grammar.
+#[must_use]
+pub fn survey(found: &Survey) -> String {
+    let mut out = format!(
+        "{} sources · {} owners · {} mints · {} citations · {} resolved\n",
+        found.sources, found.owners, found.mints, found.citations, found.resolved
+    );
+
+    let _ = write!(
+        out,
+        "\norphan mints · {} of {} minted and cited by nothing\n",
+        found.orphans.len(),
+        found.orphaned
+    );
+    for one in &found.orphans {
+        let _ = writeln!(out, "  {}", cited(one));
+    }
+
+    let _ = write!(
+        out,
+        "\nhub labels · {} of {} cited\n",
+        found.hubs.len(),
+        found.cited
+    );
+    for one in &found.hubs {
+        let _ = writeln!(out, "  {}", cited(one));
+    }
+
+    out.push_str("\nowners\n");
+    for one in &found.tally {
+        let _ = writeln!(
+            out,
+            "  {} · {} mints · {} citations written · {} citations received",
+            one.owner.as_str(),
+            one.mints,
+            one.writes,
+            one.cited
+        );
+    }
+    out
+}
+
+/// One label's mints and citations, as the reverse lookup spells them.
+///
+/// One block per owner carrying the label, because a label is scoped to its
+/// owner and two owners' citations are two answers.
+#[must_use]
+pub fn reverse(label: &Label, found: &[Reverse]) -> String {
+    if found.is_empty() {
+        return format!("´{}´ · no owner carries it\n", label.as_str());
+    }
+    let mut out = String::new();
+    for one in found {
+        let _ = writeln!(
+            out,
+            "´{}´ · owner {} · {} mints · {} citations",
+            label.as_str(),
+            one.owner.as_str(),
+            one.minted.len(),
+            one.cited.len()
+        );
+        for mint in &one.minted {
+            let _ = writeln!(out, "  minted {}", at(mint));
+        }
+        for citation in &one.cited {
+            let _ = writeln!(out, "  cited  {}", at(citation));
+        }
+    }
+    out
+}
+
+/// One surveyed label: its count, itself, its owner, and where it is minted.
+fn cited(one: &Cited) -> String {
+    format!(
+        "{}: ´{}´ · {} · {} citations",
+        at(&one.at),
+        one.label.as_str(),
+        one.owner.as_str(),
+        one.citations
+    )
 }
 
 /// One location, in the ruled `path`:`line`:`col` shape.

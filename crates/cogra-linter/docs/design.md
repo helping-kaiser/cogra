@@ -38,8 +38,10 @@ src/
     freshness.rs    exact byte comparison of every generated register
   registers.rs      the generators: label registers, headline counts, attestation
   migrate.rs        the migrations report: each staged profile's distance
+  fix.rs            the sweep: one profile's labels, written where its assets are
+  report.rs         the reference report: orphans, hubs, per-owner counts, reverse lookup
   diag.rs           ByteSpan, Diagnostic, Severity, Location, RuleId, the total order
-  render.rs         diagnostic rendering and the run summary
+  render.rs         diagnostic rendering, the run summary, every mode's output form
   error.rs          the thiserror taxonomy
   timing.rs         per-phase wall clock, the report of (`[ARCH-req:linter:timing]`)
 tests/              acceptance suites and the vector corpora
@@ -48,7 +50,7 @@ fuzz/               audit-phase targets; absent from the version-1 tree
 
 **Remark (What this adds to the ruled module list)** · `rem:lint:module-additions`
 
-The architecture rules the module set `pretokenize`, `frontend_md`, `frontend_rust`, `frontend_web`, `frontend_kotlin`, `scan`, `bans`, `graph`, `judge`, `render`, and a thin binary (`[ARCH-dec:linter:crate-layout]`). Every one of those names survives here unchanged; `pretokenize` and `judge` gain children, which leaves them the modules they were. Eight modules are added, and each is named rather than slipped in, because a module map that quietly grows past its ruling is the first way a ratified boundary erodes. `adopt` holds the subsystem the architecture gives a Signature but no module (`[ARCH-sig:linter:adoption-data]`), and it is the whole of the first slice. `carrier` holds the walk and the owner assignment — R17 and R18 of (`tab:lint:functional`) — which run before any frontend and belong to neither. `frontend` holds the data contract the four frontends produce — which is the line a frontend would leave along — and the one step over that contract no single frontend can take (`dec:lint:cross-source-pairing`). `registers` holds the generator side of register freshness, kept apart from `judge::freshness`, which only compares: one generator serving both the check and the regeneration mode is what (`req:lint:register-generator`) means by one generator, and separating production from comparison is what stops the check from acquiring a second one. `diag` holds the diagnostic type and its total order, `render` only formats what `diag` has already ordered. `error` holds the taxonomy, per the repository's error rule. `timing` holds the per-phase clock of (`req:lint:timing`). `migrate` holds the measurement of (`dec:lint:migrations-subcommand`), which is outside `judge` because it judges nothing: it computes a staged profile's census, which no check may do, and returns distances rather than diagnostics.
+The architecture rules the module set `pretokenize`, `frontend_md`, `frontend_rust`, `frontend_web`, `frontend_kotlin`, `scan`, `bans`, `graph`, `judge`, `render`, and a thin binary (`[ARCH-dec:linter:crate-layout]`). Every one of those names survives here unchanged; `pretokenize` and `judge` gain children, which leaves them the modules they were. Ten modules are added, and each is named rather than slipped in, because a module map that quietly grows past its ruling is the first way a ratified boundary erodes. `adopt` holds the subsystem the architecture gives a Signature but no module (`[ARCH-sig:linter:adoption-data]`), and it is the whole of the first slice. `carrier` holds the walk and the owner assignment — R17 and R18 of (`tab:lint:functional`) — which run before any frontend and belong to neither. `frontend` holds the data contract the four frontends produce — which is the line a frontend would leave along — and the one step over that contract no single frontend can take (`dec:lint:cross-source-pairing`). `registers` holds the generator side of register freshness, kept apart from `judge::freshness`, which only compares: one generator serving both the check and the regeneration mode is what (`req:lint:register-generator`) means by one generator, and separating production from comparison is what stops the check from acquiring a second one. `diag` holds the diagnostic type and its total order, `render` only formats what `diag` has already ordered. `error` holds the taxonomy, per the repository's error rule. `timing` holds the per-phase clock of (`req:lint:timing`). `migrate` holds the measurement of (`dec:lint:migrations-subcommand`), which is outside `judge` because it judges nothing: it computes a staged profile's census, which no check may do, and returns distances rather than diagnostics. `fix` holds the sweep of (`dec:lint:fix-subcommand`), kept apart from `migrate` on the same line that keeps `registers` apart from `judge::freshness` — one module measures and one writes at what it measured, and a writer folded into a measurement is how a measurement acquires an opinion. `report` holds the reading of (`dec:lint:report-subcommand`), which belongs to neither `judge`, whose subject is what is wrong, nor `render`, which spells what someone else selected: selecting orphans and hubs out of a completed graph is a third thing, and the module map had no name for it.
 
 **Remark (Where a crate split would fall)** · `rem:lint:split-lines`
 
@@ -1174,9 +1176,95 @@ The measurement walks the corpus itself rather than reading one `Parsed`, becaus
 
 It is never part of `check`, and the separation is the whole of why it is safe. `check` runs the judgments the adoption data puts in force, and a staged profile is not in force (`dec:lint:staged-profiles`); a census computed inside that run would be a half-computed pass of exactly the kind (`[LBL-inv:labels:two-pass]`) exists to forbid. `migrations` is its own run with its own pass 1, it judges nothing, it emits no diagnostic and no verdict, and it always exits `0` on a corpus it could read. What it produces is a measurement, and a measurement reported as a measurement costs the staging nothing.
 
+**Decision (The sweep writes what the measurement reports)** · `dec:lint:fix-subcommand`
+
+`cogra-lint fix --profile <id>` writes the derived label of every covered asset that does not carry one, at the standard place the asset itself is. It is the mechanized form of the module migration this corpus made by hand across eighty-nine definitions, and it exists because every future comment-placed profile repeats that migration. The command and its two design points — the working-tree precondition and the settle property — are adopted from a sibling corpus linter maintained outside this repository; what is adapted rather than taken is recorded at the end of this clause.
+
+```rust
+/// What one sweep of a profile came to.
+pub struct Sweep { pub profile: ProfileId, pub writes: Vec<Insertion> }
+
+impl Sweep {
+    pub fn settled(&self) -> bool;
+    /// The sources a write would touch, in path order, each once.
+    pub fn touches(&self) -> Vec<PathBuf>;
+}
+
+/// One label line, and the byte of one source it is written before.
+pub struct Insertion {
+    pub path: PathBuf,
+    pub at: Location,
+    pub label: Label,
+    pub offset: usize,
+    /// Exactly the bytes written, newline included.
+    pub text: String,
+}
+
+pub fn sweep(a: &Adoption, root: &Path, profile: &ProfileId) -> Result<Sweep, RunError>;
+pub fn apply(sweep: &Sweep, root: &Path) -> Result<Written, GenerateError>;
+```
+
+It measures nothing of its own. What is missing and where is `migrate::unplaced`, which is `migrations`' own second half made public: the covered assets of one registered profile whose standard place is the asset itself and which carry no mint of their derived label in an inner documentation comment of their source, each with the byte a label line goes before. The measurement renders those as its remaining lines and the sweep writes at them, off one walk and one recognizer. That is what makes the settle property a consequence rather than a hope — a corpus the measurement calls arrived is one the sweep writes nothing into, and a second sweep over what the first wrote is empty by the recognizer that found the work.
+
+Status is not consulted, exactly as the named regeneration does not consult it (`dec:lint:staged-profiles`). A migration lands while its profile is still staged, so the staged reading is the normal one; asking the same question of a profile in force answers with what the inventory clause would report, and answering it costs nothing.
+
+The write is an insertion and never a replacement. The label line goes before the first line of the asset's own documentation, so an authored comment keeps every byte its author gave it and gains a line above it — the one shape that cannot lose prose. Where that documentation opens is the frontend's answer and not a reading of the bytes: `Asset::opens` is byte 0 for a definition a whole file backs and the byte after the opening brace for one written inline, because the frontend holds the tree and a writer that re-derived the position from the source would be reading structure a parser had already resolved. Four shapes follow from it, and all four are pinned as bytes in the acceptance suite: the label line joins an inner documentation comment that already opens the position, or opens one of its own above code with a blank line under it; an inline definition takes its own column plus four, and gets the line it needs where its brace has none.
+
+`fix` reports no verdict, so it never exits `1`. A covered asset with no label at its standard place is what the inventory judgment reports, and `check` reports it; a sweep that graded its own listing would be saying the same thing twice under a different name. It exits `0` on any corpus it could sweep and `2` where it refused to start (`dec:lint:fix-precondition`).
+
+Three points of the adopted contract are adapted, and each is named because the source contract argues for the other reading. Its `fix` takes a *write* flag and reports without one, on the ground that a dry-run opt-in makes writing the default; this one takes `--dry-run`, because `regenerate` already spells that flag and one binary with two write polarities is worse than either polarity. Its object is JSON on stdout under a repository-wide output contract; this one prints the located form (`dec:lint:diagnostic-format`), because that contract is theirs and this crate has one form already. And its sweep reaches a findings status for assets whose standard place it refused to write; this one has no such class, because the only asset it can refuse is one deriving no well-formed label, which the inventory judgment already reports and which a second report would double-count.
+
+**Decision (The sweep refuses a working tree it cannot review)** · `dec:lint:fix-precondition`
+
+`fix` is the only mode that edits sources it was not asked for by name, so it is the only one with a precondition on the state of the working tree. Before writing, it asks `git status --porcelain` about exactly the sources it would rewrite, and refuses unless every one of them is clean. Staged and unstaged changes both count, and so does a source git is not tracking at all: what the precondition protects is the reviewability of the edit, and an untracked file's prior bytes cannot be recovered to review against.
+
+```rust
+/// Which of `paths` the working tree carries uncommitted work in.
+pub fn modified(root: &Path, paths: &[PathBuf]) -> std::io::Result<Vec<PathBuf>>;
+```
+
+This is the one place the crate runs another program, and it is deliberate: whether a file carries uncommitted work is a fact about the repository and not about the corpus, so no walk of the tree can answer it. The porcelain format is git's own documented script interface, stable across versions by its own guarantee, which is why it is the one that is parsed and why nothing here reads the human format.
+
+A refusal is not a finding. Nothing was examined, so there is no listing, stdout stays empty, and the exit code is `2` — the code this binary gives its own inability to proceed. The distinction is the whole content of the class: `1` says the run happened and the corpus is wrong, `2` says the run did not happen. The same code covers the second refusal, a profile whose standard place is a generated register: there is no position in any source for such a label to occupy, and the message names `regenerate --profile` rather than reporting an empty sweep, because an operator who asked for the wrong mode wants to be told which one is right.
+
+`--allow-dirty` sweeps anyway. It exists because the precondition is a review discipline and not a safety property — the writer is total on what it writes either way — and because a migration is sometimes taken in a tree that already holds the commit preparing for it.
+
+**Decision (The report describes the reference graph)** · `dec:lint:report-subcommand`
+
+`cogra-lint report` says what the corpus's citation structure looks like: the summary counts, the mints nothing cites, the most-cited labels, and one row per owner. `report --label <label>` answers for one label instead — where it is minted, and every citation that reaches it. It is adopted from the same sibling linter, whose `report` this corpus had no equivalent of at all: several thousand mints, and no way to ask which of them are cited or by whom short of grep.
+
+```rust
+pub struct Cited { pub label: Label, pub owner: OwnerId, pub at: Location, pub citations: usize }
+pub struct Tally { pub owner: OwnerId, pub mints: usize, pub writes: usize, pub cited: usize }
+
+pub struct Survey {
+    pub sources: usize, pub owners: usize,
+    pub mints: usize, pub citations: usize, pub resolved: usize,
+    /// Cut to the length asked for; the whole counts travel beside them.
+    pub orphans: Vec<Cited>, pub orphaned: usize,
+    pub hubs: Vec<Cited>, pub cited: usize,
+    pub tally: Vec<Tally>,
+}
+
+pub struct Reverse { pub owner: OwnerId, pub minted: Vec<Location>, pub cited: Vec<Location> }
+
+pub fn survey(run: &Run, top: usize) -> Survey;
+pub fn reverse(run: &Run, label: &Label) -> Vec<Reverse>;
+```
+
+It adds no pass. Every number is in the graph when the check finishes, and the module selects, counts and orders what pass 2 left behind — which is why a third run over the tree was never needed for it. It walks nothing, parses nothing, and adds no edge.
+
+It judges nothing either, and so exits `0` however long its listing runs. A mint nobody cites is ordinary; a label a hundred sources cite is ordinary; a status that graded either would be inventing a judgment the disciplines do not make. The judgments that read this same structure — unresolved citation, uncarried inventory, the warrant arms — are `judge`'s, the check runs them, and this mode reports none of them a second time.
+
+One thing is refused: a `--label` that is not a well-formed label. Asking for the citations of a token no occurrence could carry is a mistake in the question, and answering "none" would hide it, so the parse happens before the run and the refusal costs no walk. A well-formed label no owner carries is the opposite case and answers empty, because that is a fact about the corpus.
+
+Two shapes are adapted from the source contract. Its `--top` bounds the hubs alone, its orphans travelling whole inside a JSON object; here it bounds each listing, because this corpus has two thousand orphan mints and a terminal report of two thousand lines is one nobody reads — each header carries its whole count, so a cut listing never understates what is there. And its per-owner counts live in a separate `coverage` command, which this one folds into the owner section rather than adding a fourth mode for three numbers.
+
+Order is the whole contract. The registries are `HashMap`s, so no listing is produced by iterating one: every list is sorted by keys total over the corpus — the label, then the owner — and the hubs are ranked by a stable sort over a list already in that order, so ties come out in it and the cut falls in the same place on every run (`[ARCH-req:linter:determinism]`).
+
 **Signature (Command line)** · `sig:lint:cli-api`
 
-Three modes: a check that writes nothing, an explicit mode that regenerates in place (`[ARCH-rule:linter:register-freshness]`), and the measurement of (`dec:lint:migrations-subcommand`).
+Five modes: a check that writes nothing, an explicit mode that regenerates in place (`[ARCH-rule:linter:register-freshness]`), the measurement of (`dec:lint:migrations-subcommand`), the sweep of (`dec:lint:fix-subcommand`), and the report of (`dec:lint:report-subcommand`).
 
 ```rust
 #[derive(clap::Parser)]
@@ -1216,10 +1304,36 @@ enum Command {
         #[arg(long)]
         profile: Option<String>,
     },
+    /// Write one profile's derived labels at the standard place its covered
+    /// assets themselves are (`dec:lint:fix-subcommand`).
+    Fix {
+        /// The profile to sweep.
+        #[arg(long)]
+        profile: String,
+        /// Report what would be written and write nothing.
+        #[arg(long)]
+        dry_run: bool,
+        /// Sweep even where a source it would rewrite carries uncommitted
+        /// work (`dec:lint:fix-precondition`).
+        #[arg(long)]
+        allow_dirty: bool,
+    },
+    /// Report the reference graph. Judges nothing and writes nothing
+    /// (`dec:lint:report-subcommand`).
+    Report {
+        /// Answer for one label instead.
+        #[arg(long)]
+        label: Option<String>,
+        /// How many entries to name in each listing.
+        #[arg(long, default_value_t = 20)]
+        top: usize,
+    },
 }
 ```
 
-Exit codes are the machine-readable half of (`[ARCH-req:linter:diagnostics-not-panics]`): `0` is a clean corpus, `1` is findings on the failing set (`dec:lint:enforcement-partition`), `2` is the linter's own failure — a malformed adoption file, an unusable root, a write that failed. That findings and crashes are different codes is what lets a CI lane tell "the corpus is wrong" from "the linter is broken", and the concept names that distinction as a consumer requirement (`sig:lint:consumers`). `regenerate` and `migrations` exit `1` only on findings of their own scope, and `migrations` has none.
+Exit codes are the machine-readable half of (`[ARCH-req:linter:diagnostics-not-panics]`): `0` is a clean corpus, `1` is findings on the failing set (`dec:lint:enforcement-partition`), `2` is the linter's own failure — a malformed adoption file, an unusable root, a write that failed, a precondition the sweep could not establish. That findings and crashes are different codes is what lets a CI lane tell "the corpus is wrong" from "the linter is broken", and the concept names that distinction as a consumer requirement (`sig:lint:consumers`). Only the check reports a verdict, so only the check reaches `1`: the other four exit `0` on any corpus they could read and `2` where they could not read it or could not proceed, and a refusal to run is never dressed as a finding about the corpus.
+
+The Makefile gains no target for either addition. `make ci` runs the check, and neither of these belongs in a lane: the sweep is a deliberate act taken once per migration, under a precondition a lane would have to be told to ignore, and the report is a question an author asks interactively and reads. A target that wrapped either would be a shorter spelling of a command nothing runs twice the same way.
 
 `clap` with its `derive` feature is the technical answer to a technical question, and it is taken rather than debated: it is the argument parser the Rust ecosystem documents, the derive API is the one its own documentation leads with, and the alternative — hand-rolling three subcommands — buys nothing and loses the help output CI operators read. Version and features are in (`tab:lint:dependencies`).
 
@@ -1390,6 +1504,8 @@ Counts are the design's estimate of scope, to be met or explained, not a ceiling
 | Judgments | the four gates, clause by clause | ~55 | one test per clause, named for it |
 | Registers | (`sig:lint:register-api`) | ~18 | `Current`, `Stale` with the first differing offset, `Staged`; scoped regeneration ignoring another owner's defects; the spliced generated region |
 | Diagnostics | (`conv:lint:diagnostic-order`) | ~12 | the three sort keys; totality on the corpus; the exit-code mapping |
+| Sweep | (`dec:lint:fix-subcommand`) | ~18 | the four insertion shapes pinned as bytes; a dry run and a write agreeing byte for byte; a second sweep writing nothing; a staged profile swept as one in force; the working-tree precondition over a repository the test builds (`dec:lint:fix-precondition`) |
+| Report | (`dec:lint:report-subcommand`) | ~15 | the orphan and hub listings pinned as text; each header's whole count under a cut; the per-owner tally in owner order; the reverse lookup located; a label no owner carries answering empty |
 | Properties | (`tab:lint:metatheorem-tests`) | 10 | proptest, default 256 cases, budgeted separately |
 | Corpus acceptance | (`rep:lint:first-corpus`) | ~8 | the four disciplines, the architecture, the interchange artifacts, the linter's own concept and design |
 | Doc tests | the public API | ~45 | compiled by `cargo test` |

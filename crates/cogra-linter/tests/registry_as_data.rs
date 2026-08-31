@@ -920,7 +920,7 @@ fn every_head_written_under_the_discipline_validates() {
         }
     }
     assert_eq!(failed, [] as [String; 0]);
-    assert_eq!(heads, 444);
+    assert_eq!(heads, 447);
 }
 
 /// Every section anchor in the corpus carries `sec`, which is the rung the
