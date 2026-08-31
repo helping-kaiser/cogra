@@ -424,20 +424,76 @@ fn a_headings_mint_declares_the_kind() {
 }
 
 /// Every rung is Section: the heading's level is presentation, and the
-/// format supplies one rung.
+/// format supplies one rung. The title is the one exception, and it is not
+/// a rung — it is the document, which is why it is asked for separately.
 #[test]
 fn every_heading_level_supplies_one_rung() {
-    let parsed = doc("# a \u{b7} `sec:x:one`\n\n##### b \u{b7} `sec:x:two`\n");
+    let parsed = doc("## a \u{b7} `sec:x:one`\n\n##### b \u{b7} `sec:x:two`\n");
     assert_eq!(parsed.heads.len(), 2);
     assert!(parsed.heads.iter().all(|head| head.text == "Section"));
 }
 
-/// A heading is a head when it is followed by the separator and the mint;
-/// the document title is publication metadata and mints nothing.
+/// A heading is a head when it is followed by the separator and the mint.
 #[test]
 fn a_heading_without_a_mint_heads_nothing() {
-    let parsed = doc("# A Calculus of Documentation and Source Labels\n");
+    let parsed = doc("## A Section With No Mint\n");
     assert!(parsed.heads.is_empty());
+}
+
+/// The first level-one heading is the document's Title head, and its
+/// environment name is Document whatever the title says
+/// (´dec:lint:title-head´).
+#[test]
+fn the_first_level_one_heading_is_the_title_head() {
+    let parsed = doc("# A Calculus of Documentation \u{b7} `spec:x:calculus`\n");
+    assert_eq!(parsed.heads.len(), 1);
+    assert_eq!(parsed.heads[0].text, "Document");
+    assert_eq!(parsed.heads[0].declared.as_str(), "spec");
+    assert!(parsed.diagnostics.is_empty());
+}
+
+/// Only the first: a later level-one heading is an ordinary division and
+/// takes the rung the format supplies.
+#[test]
+fn a_later_level_one_heading_is_an_ordinary_division() {
+    let parsed = doc("# One \u{b7} `spec:x:one`\n\n# Two \u{b7} `sec:x:two`\n");
+    assert_eq!(parsed.heads.len(), 2);
+    assert_eq!(parsed.heads[0].text, "Document");
+    assert_eq!(parsed.heads[1].text, "Section");
+}
+
+/// A setext level-one heading is a level-one heading: the format supplies
+/// the rung, and how the author underlined it is presentation.
+#[test]
+fn a_setext_level_one_heading_is_the_title_head() {
+    let parsed = doc("A Calculus \u{b7} `spec:x:calculus`\n===\n");
+    assert_eq!(parsed.heads.len(), 1);
+    assert_eq!(parsed.heads[0].text, "Document");
+}
+
+/// The claim is made when the heading opens, so a first level-one heading
+/// that carries no mint takes the title with it: the coverage finding names
+/// that heading, and the next one stays an ordinary division.
+#[test]
+fn an_unminted_title_is_a_finding_and_still_the_title() {
+    let parsed = doc("# Untitled\n\n# Later \u{b7} `sec:x:later`\n");
+    assert_eq!(parsed.diagnostics.len(), 1);
+    assert_eq!(
+        parsed.diagnostics[0].rule.as_str(),
+        "markdown-title-unminted"
+    );
+    assert_eq!(parsed.heads.len(), 1);
+    assert_eq!(parsed.heads[0].text, "Section");
+}
+
+/// A source with no level-one heading is exempt, and nothing is
+/// synthesized for it.
+#[test]
+fn a_source_without_a_level_one_heading_is_exempt() {
+    let parsed = doc("## Only a section \u{b7} `sec:x:only`\n\nprose\n");
+    assert!(parsed.diagnostics.is_empty());
+    assert_eq!(parsed.heads.len(), 1);
+    assert_eq!(parsed.heads[0].text, "Section");
 }
 
 /// The separator is what says where the head text ends and the label

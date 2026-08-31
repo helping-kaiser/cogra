@@ -1,4 +1,4 @@
-# The Corpus Linter — Concept
+# The Corpus Linter — Concept · `spec:lint:concept`
 
 _Phase 1 of the standard engineering process: concept. Review closes this phase; the design candidate follows._
 

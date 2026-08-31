@@ -1,4 +1,4 @@
-# Open Questions
+# Open Questions · `reg:docs:open-questions`
 
 All unresolved design questions across the project, consolidated here.
 

@@ -1,4 +1,4 @@
-# The Standard Engineering Process
+# The Standard Engineering Process · `spec:implementation:engineering-process`
 
 Every substantial build in this repo — a new crate, a new
 subsystem, a major feature — runs through six phases. Each phase

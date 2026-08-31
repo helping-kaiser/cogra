@@ -1,4 +1,4 @@
-# API Specification
+# API Specification · `spec:implementation:api`
 
 The API is a single GraphQL endpoint served by Axum +
 async-graphql.

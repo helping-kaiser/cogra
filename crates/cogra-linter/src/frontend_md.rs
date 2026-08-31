@@ -35,7 +35,7 @@
 use std::ops::Range;
 use std::path::PathBuf;
 
-use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
+use pulldown_cmark::{Event, HeadingLevel, Options, Parser, Tag, TagEnd};
 
 use crate::adopt::{Adoption, Kind};
 use crate::carrier::SourceFile;
@@ -56,8 +56,17 @@ pub const NOT_TEXT: RuleId = RuleId::new("markdown-not-utf8");
 /// structurally unable to see what the format did not pair.
 pub const UNPAIRED_BACKTICK: RuleId = RuleId::new("markdown-unpaired-backtick");
 
+/// A document whose Title head carries no mint.
+///
+/// Coverage follows a structural title: every tracked Markdown source with
+/// a level-one heading participates, and a source without one is exempt —
+/// no synthetic title is invented for it (´dec:lint:title-head´). The
+/// finding is the frontend's because the frontend is what knows which
+/// heading was first.
+pub const TITLE_UNMINTED: RuleId = RuleId::new("markdown-title-unminted");
+
 /// Every rule this module can report, for the diagnostic inventory.
-pub const RULES: [RuleId; 2] = [NOT_TEXT, UNPAIRED_BACKTICK];
+pub const RULES: [RuleId; 3] = [NOT_TEXT, TITLE_UNMINTED, UNPAIRED_BACKTICK];
 
 /// Markdown's own sectioning rung.
 ///
@@ -69,11 +78,24 @@ pub const RULES: [RuleId; 2] = [NOT_TEXT, UNPAIRED_BACKTICK];
 /// own structure table.
 const RUNG: &str = "Section";
 
+/// The environment name a Title head carries.
+///
+/// The document concept is the environment, and its kind names the
+/// document's genre (´dec:lint:title-head´) — so the head the registry is
+/// asked about is the same word for every document, and what varies is the
+/// kind the author declares at the mint. Like [`RUNG`], the spelling is a
+/// datum `[head-recognition]` states in prose rather than as a value, so it
+/// is spelled here.
+const TITLE: &str = "Document";
+
 /// The identifier `[head-recognition]` gives the bold-run form.
 const ENVIRONMENT_HEAD: &str = "environment-head";
 
 /// The identifier `[head-recognition]` gives the heading form.
 const HEADING: &str = "heading";
+
+/// The identifier `[head-recognition]` gives the title form.
+const TITLE_HEAD: &str = "title";
 
 /// The language token `[scanned-regions]` gives this format.
 pub(crate) const MARKDOWN: &str = "markdown";
@@ -167,6 +189,9 @@ struct Frame {
     /// leaves: a code block and an HTML block are their own bytes, fences
     /// and tags included.
     verbatim: bool,
+    /// Whether this block is the document's title: the first structural
+    /// level-one heading, and the only one.
+    title: bool,
     text: String,
     pieces: Vec<ByteSpan>,
     spans: Vec<DelimitedSpan>,
@@ -180,6 +205,7 @@ impl Frame {
             kind,
             participates,
             verbatim,
+            title: false,
             text: String::new(),
             pieces: Vec::new(),
             spans: Vec::new(),
@@ -224,6 +250,14 @@ struct Walker<'a> {
     separator: &'a str,
     bold_form: bool,
     heading_form: bool,
+    title_form: bool,
+    /// Whether a level-one heading has already claimed the title. A later
+    /// one is an ordinary division (´dec:lint:title-head´).
+    title_taken: bool,
+    /// Where the title sits, once its block has closed, and whether it
+    /// carried a mint — the two the coverage finding needs.
+    title_at: Option<ByteSpan>,
+    title_minted: bool,
     frames: Vec<Frame>,
     tables: Vec<TableBuild>,
     /// Regions and heads keyed by the order their blocks opened, sorted
@@ -249,6 +283,10 @@ impl<'a> Walker<'a> {
             separator: &a.head_recognition.separator,
             bold_form: has_form(a, ENVIRONMENT_HEAD),
             heading_form: has_form(a, HEADING),
+            title_form: has_form(a, TITLE_HEAD),
+            title_taken: false,
+            title_at: None,
+            title_minted: false,
             frames: Vec::new(),
             tables: Vec::new(),
             regions: Vec::new(),
@@ -264,6 +302,14 @@ impl<'a> Walker<'a> {
     fn finish(mut self) -> Parsed {
         while !self.frames.is_empty() {
             self.pop();
+        }
+        if let (false, Some(at)) = (self.title_minted, self.title_at) {
+            let finding = self.finding(
+                TITLE_UNMINTED,
+                at,
+                "the first level-one heading is this document's Title head and carries no mint",
+            );
+            self.out.diagnostics.push(finding);
         }
         self.regions.sort_by_key(|(order, _)| *order);
         self.heads.sort_by_key(|(order, _)| *order);
@@ -293,7 +339,15 @@ impl<'a> Walker<'a> {
     fn start(&mut self, tag: &Tag<'_>, range: Range<usize>) {
         match tag {
             Tag::Paragraph | Tag::Item => self.push(RegionKind::Prose, true, false, &range),
-            Tag::Heading { .. } => self.push(RegionKind::Heading, true, false, &range),
+            Tag::Heading { level, .. } => {
+                self.push(RegionKind::Heading, true, false, &range);
+                if self.title_form && *level == HeadingLevel::H1 && !self.title_taken {
+                    self.title_taken = true;
+                    if let Some(frame) = self.frames.last_mut() {
+                        frame.title = true;
+                    }
+                }
+            }
             Tag::TableCell => self.push(RegionKind::TableRow, true, false, &range),
             Tag::CodeBlock(_) | Tag::HtmlBlock => {
                 self.push(RegionKind::Prose, false, true, &range);
@@ -440,7 +494,7 @@ impl<'a> Walker<'a> {
         };
         if region.participates {
             self.unpaired(&mut region);
-            self.head(frame.order, &region, frame.strong);
+            self.head(frame.order, &region, frame.strong, frame.title);
         }
         self.regions.push((frame.order, region));
         text
@@ -494,15 +548,28 @@ impl<'a> Walker<'a> {
 
     /// Read this region's environment head, where it has one.
     ///
-    /// Two forms, both `[head-recognition]`'s: a bold run opening a block,
+    /// Three forms, all `[head-recognition]`'s: a bold run opening a block,
     /// of the shape `Kind (Title)`, whose head is the text up to the
     /// opening parenthesis — the Title names this instance and handing it
-    /// to the registry would ask it to classify a proper noun; and a
-    /// heading, whose head is the rung the format supplies. Both are closed
-    /// by the separator and the mint, and the mint is what declares the
-    /// kind (´dec:lint:head-recognition´).
-    fn head(&mut self, order: usize, region: &Region, strong: Strong) {
+    /// to the registry would ask it to classify a proper noun; a heading,
+    /// whose head is the rung the format supplies; and the document's
+    /// first level-one heading, whose head is [`TITLE`] and whose kind
+    /// names the document's genre (´dec:lint:title-head´). All three are
+    /// closed by the separator and the mint, and the mint is what declares
+    /// the kind (´dec:lint:head-recognition´).
+    ///
+    /// # Why a generated source heads nothing
+    ///
+    /// A generated register is not an authored head and forms no
+    /// head-validation judgment (´[KND-judg:kinds:head-validation]´), so
+    /// its heads never reach the registry. Its title still *mints*, on the
+    /// authorship its generator transcribes
+    /// (´[LBL-inv:labels:generated-compliance]´) — minting runs off the
+    /// region's spans and never off a head — which is why the coverage
+    /// record below is taken before the exemption applies.
+    fn head(&mut self, order: usize, region: &Region, strong: Strong, title: bool) {
         let found = match region.kind {
+            RegionKind::Heading if title => Some((String::from(TITLE), region.span(), 0)),
             RegionKind::Heading if self.heading_form => {
                 Some((String::from(RUNG), region.span(), 0))
             }
@@ -512,9 +579,17 @@ impl<'a> Walker<'a> {
         let Some((text, span, after)) = found else {
             return;
         };
-        let Some(declared) = self.declared(region, after) else {
+        let declared = self.declared(region, after);
+        if title {
+            self.title_at = Some(region.span());
+            self.title_minted = declared.is_some();
+        }
+        let Some(declared) = declared else {
             return;
         };
+        if self.generated {
+            return;
+        }
         self.heads.push((
             order,
             Head {

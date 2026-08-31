@@ -1,4 +1,4 @@
-# User
+# User · `spec:primitive:user`
 
 The **User** is a person's account: one PeerNetworks Layer 1
 **Actor + Profile** grounded pair, anchored by the actor's own
