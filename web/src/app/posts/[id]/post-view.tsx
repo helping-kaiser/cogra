@@ -194,6 +194,8 @@ export function PostView({
     tags: readonly TagDraft[];
     loadedReferences: readonly ReferenceDraft[];
     references: readonly ReferenceDraft[];
+    /** Carried forward so a complete-state edit cannot unveil the comment. */
+    sensitive: boolean;
   } | null>(null);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editFailed, setEditFailed] = useState(false);
@@ -429,7 +431,12 @@ export function PostView({
 
     if (editTextChanged) {
       const prepared = await guard.run(() =>
-        prepareCommentEdit(client, { id: editing.id, content: editing.draft }),
+        prepareCommentEdit(client, {
+          id: editing.id,
+          content: editing.draft,
+          // Re-stated, never omitted: the edit carries the whole state.
+          sensitive: editing.sensitive,
+        }),
       );
       if (prepared.kind === "failed") {
         setEditSubmitting(false);
@@ -775,8 +782,21 @@ export function PostView({
                   body when the comment is marked. */}
               <BodyRegion veiled={bodyIsSensitive(comment)} testId={`comment-${comment.id}`}>
                 <p className="text-body-medium">{comment.content.value}</p>
+                {/* A COMMENT IS WORDS FIRST and its pictures join them: below
+                    the words, INSET at the card's medium rung rather than
+                    full-bleed (they are an attachment, not the body), and
+                    capped at comment scale so a comment never turns into a
+                    post. Comment pictures never crop, so multiples share a
+                    fixed square frame and each whole frame fits inside it. */}
                 {hasMedia(comment) && (
-                  <PostMedia node={comment} testId={`comment-media-${comment.id}`} />
+                  <PostMedia
+                    node={comment}
+                    bleed="none"
+                    radius="var(--radius-medium)"
+                    ratio={comment.attachments.length > 1 ? 1 : undefined}
+                    maxHeight="220px"
+                    testId={`comment-media-${comment.id}`}
+                  />
                 )}
               </BodyRegion>
               <LicenseTerms
@@ -870,6 +890,7 @@ export function PostView({
                         tags: loaded,
                         loadedReferences: loadedRefs,
                         references: loadedRefs,
+                        sensitive: bodyIsSensitive(comment),
                       });
                       setEditTagErrors({});
                       setEditReferenceErrors({});

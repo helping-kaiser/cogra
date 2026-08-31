@@ -2,17 +2,20 @@
 
 // ComposeCrop — one shape for the whole post, framing per picture.
 //
-// THE ALT-TEXT FIELD IS AN ADDITION TO THE CANVAS, and a deliberate one. No
-// board in the set draws a slot for alt text anywhere, but the contract takes it
-// on `uploadMedia` and there is no `updateMedia` to add it later — an asset row
-// is immutable once written (D3) — so it has to be entered before the bytes go
-// up. That puts it on this screen rather than on Details: this is where a
-// picture is already selected one at a time, it is the last screen before the
-// uploads start, and the board leaves an explicit empty region under the
-// thumbnail strip. Flagged as a canvas gap rather than treated as settled.
+// ALT TEXT IS NOT HERE, and its absence is the ruling: a description is written
+// over the details step and from the Show all sheet, NEVER on crop — a geometry
+// step is no place for a keyboard (design/readme.md §"The media slice").
+//
+// OPEN, AND REPORTED RATHER THAN PAPERED OVER: alt text rides `uploadMedia`, an
+// asset row is immutable once written (D3), and ComposeUploading draws the
+// uploads already running ON the details step ("Pictures upload while you
+// write"). Those two together mean a description typed on details reaches the
+// server only if that picture's upload has not finished yet. Nothing here
+// invents a way out — the upload timing is left exactly as it shipped, and the
+// race is the lane's question for jakob, who owns whether uploads wait for the
+// details step or an `updateMedia` carries a late description.
 
 import { Chip } from "@/lib/ui2/chip";
-import { TextField } from "@/lib/ui2/text-field";
 import { CropFrame } from "@/lib/ui2/media/crop-frame";
 import { POST_SHAPES, POST_SHAPE_ORDER, type PostShape } from "@/lib/ui2/media/aspect";
 import type { Crop } from "@/lib/ui2/media/crop";
@@ -26,7 +29,6 @@ export function CropStep({
   onShape,
   onFocus,
   onCrop,
-  onAltText,
 }: {
   assets: readonly PickedAsset[];
   previews: Readonly<Record<string, string>>;
@@ -35,7 +37,6 @@ export function CropStep({
   onShape: (next: PostShape) => void;
   onFocus: (index: number) => void;
   onCrop: (id: string, crop: Crop) => void;
-  onAltText: (id: string, altText: string) => void;
 }) {
   const asset = assets[focused];
   if (asset === undefined) return null;
@@ -92,22 +93,6 @@ export function CropStep({
           ))}
         </ul>
       )}
-
-      {/* Per picture, and it travels with the bytes. The label names WHICH
-          picture, because a reader arriving by keyboard has no cursor to tell
-          them which thumbnail is selected. */}
-      <TextField
-        label={
-          assets.length > 1
-            ? `Describe picture ${focused + 1} of ${assets.length}`
-            : "Describe this picture"
-        }
-        optional
-        value={asset.altText}
-        onChange={(next) => onAltText(asset.id, next)}
-        testId="wizard-alt-text"
-        placeholder="What someone who can't see it would need to know"
-      />
     </div>
   );
 }

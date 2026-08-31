@@ -94,6 +94,26 @@ export function attachmentInputs(mediaIds: readonly string[] | undefined) {
   }));
 }
 
+/**
+ * The author's own sensitive mark, as the contract wants it.
+ *
+ * A REASON WITHOUT THE MARK IS A REFUSAL on `["sensitiveReason"]`, so the reason
+ * only ever travels WITH `sensitive: true`; a blank one counts as none and is
+ * sent as null rather than as an empty string.
+ *
+ * The switch's value is always stated rather than omitted, because an EDIT is
+ * complete state: omitting `sensitive` on an edit would UNMARK a post the author
+ * had marked, silently, which is the one direction this must never fail in.
+ */
+export function sensitiveInput(sensitive: boolean | undefined, reason: string | undefined) {
+  const marked = sensitive === true;
+  const trimmed = (reason ?? "").trim();
+  return {
+    sensitive: marked,
+    sensitiveReason: marked && trimmed !== "" ? trimmed : null,
+  };
+}
+
 /** One page per fetch; the server default is the same number. */
 export const CONTENT_PAGE_SIZE = 20;
 
@@ -222,6 +242,9 @@ export async function preparePost(
     references?: readonly ReferenceDraft[];
     /** Asset ids already uploaded, in gallery order. */
     attachments?: readonly string[];
+    /** The author's own sensitive mark. Omitted counts as false. */
+    sensitive?: boolean;
+    sensitiveReason?: string;
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -235,6 +258,7 @@ export async function preparePost(
             content: fields.content,
             license: fields.license,
             attachments: attachmentInputs(fields.attachments),
+            ...sensitiveInput(fields.sensitive, fields.sensitiveReason),
             // The composer's tags are explicit structured input, never
             // parsed from the body (api-spec.md `preparePost`); each
             // carries the pair its sliders hold (F6).
@@ -260,6 +284,13 @@ export async function preparePostEdit(
     title: string | null;
     description: string | null;
     content: string;
+    /**
+     * REQUIRED, and deliberately not optional: an edit is COMPLETE STATE, so
+     * omitting the mark unmarks a post the author had marked. Making the caller
+     * state it is what stops that happening by forgetting.
+     */
+    sensitive: boolean;
+    sensitiveReason?: string;
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -272,6 +303,7 @@ export async function preparePostEdit(
             title: fields.title,
             description: fields.description,
             content: fields.content,
+            ...sensitiveInput(fields.sensitive, fields.sensitiveReason),
           },
         },
       }),
@@ -321,13 +353,21 @@ export async function prepareComment(
 
 export async function prepareCommentEdit(
   client: ApolloClient,
-  fields: { id: string; content: string },
+  // `sensitive` is required for the same reason it is on a post edit: an edit
+  // is complete state, so an omitted mark unveils a comment its author veiled.
+  fields: { id: string; content: string; sensitive: boolean; sensitiveReason?: string },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
     () =>
       client.mutate({
         mutation: PrepareCommentEditDocument,
-        variables: { input: { id: fields.id, content: fields.content } },
+        variables: {
+          input: {
+            id: fields.id,
+            content: fields.content,
+            ...sensitiveInput(fields.sensitive, fields.sensitiveReason),
+          },
+        },
       }),
     (data) => data.prepareCommentEdit.userErrors,
     (data) => liftPrepared(data.prepareCommentEdit),
