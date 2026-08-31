@@ -35,8 +35,12 @@ sed -i -E "s#^MEDIA_S3_ENDPOINT=https?://[^:/]+#MEDIA_S3_ENDPOINT=http://${IP}#"
 # MEDIA_BASE_URL is the phone-facing half: it is the web origin, so bytes
 # arrive over the https origin the app trusts via the /media proxy.
 sed -i -E "s#^MEDIA_BASE_URL=https?://[^:/]+#MEDIA_BASE_URL=https://${IP}#" .env
+#
+# MEDIA_ORIGIN is the web front's proxy target — the store's bucket URL,
+# stamped for the same split-distro reason as MEDIA_S3_ENDPOINT.
+sed -i -E "s#^MEDIA_ORIGIN=https?://[^:/]+#MEDIA_ORIGIN=http://${IP}#" .env
 
-grep -E '^(DATABASE_URL|WEB_ORIGIN|MEDIA_S3_ENDPOINT|MEDIA_BASE_URL)=' .env
+grep -E '^(DATABASE_URL|WEB_ORIGIN|MEDIA_S3_ENDPOINT|MEDIA_BASE_URL|MEDIA_ORIGIN)=' .env
 echo "stamped ${IP}"
 
 # The certificate and the CA behind it. Browsers reach the dev server past
