@@ -680,6 +680,7 @@ class ContentRepositoryImpl @Inject constructor(
         license: LicenseChoice,
         tags: List<TagClaim>,
         references: List<ReferenceClaim>,
+        attachments: List<AttachmentClaim>,
     ): Outcome<PreparedContentView> = guard.run {
         client.mutation(
             PrepareCommentMutation(
@@ -689,6 +690,7 @@ class ContentRepositoryImpl @Inject constructor(
                     license = license.toInput(),
                     tags = tags.toInput(),
                     references = references.toInput(),
+                    attachments = attachments.toCommentInput(),
                 ),
             ),
         ).payloadOutcome({ it.prepareComment.userErrors.map { e -> e.userErrorFields } }) { data ->
@@ -700,11 +702,23 @@ class ContentRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun prepareCommentEdit(id: String, content: String): Outcome<PreparedContentView> =
+    override suspend fun prepareCommentEdit(
+        id: String,
+        content: String,
+        attachments: List<AttachmentClaim>,
+    ): Outcome<PreparedContentView> =
         guard.run {
             client.mutation(
                 PrepareCommentEditMutation(
-                    PrepareCommentEditInput(id = id, content = content),
+                    PrepareCommentEditInput(
+                        id = id,
+                        content = content,
+                        // The complete gallery, like the words beside
+                        // it: an edit payload is the whole state, so an
+                        // omitted list would leave the old pictures
+                        // standing and make removal unsayable.
+                        attachments = attachments.toCommentInput(),
+                    ),
                 ),
             ).payloadOutcome({ it.prepareCommentEdit.userErrors.map { e -> e.userErrorFields } }) { data ->
                 data.prepareCommentEdit.node?.let { node ->
@@ -773,6 +787,27 @@ private fun List<AttachmentClaim>.toInput(): Optional<List<AttachmentInput>?> =
                 displayOrder = index,
                 isCover = Optional.present(index == 0),
             )
+        },
+    )
+
+/**
+ * A comment's gallery on the wire.
+ *
+ * The same derived `displayOrder`, but **no cover**: a comment's set
+ * leads nothing, so there is no first picture to mark, and claiming one
+ * would state a fact about the gallery that is not true of it
+ * (`CommentView.attachments`).
+ *
+ * An empty list rides as an explicit `[]` rather than being dropped,
+ * because an edit's gallery is the complete state: removing the last
+ * picture has to be sayable, and an absent field would leave the old one
+ * standing.
+ */
+@JvmName("commentAttachmentClaimsToInput")
+private fun List<AttachmentClaim>.toCommentInput(): Optional<List<AttachmentInput>?> =
+    Optional.present(
+        mapIndexed { index, claim ->
+            AttachmentInput(mediaId = claim.mediaId, displayOrder = index)
         },
     )
 

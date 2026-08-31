@@ -21,6 +21,7 @@ import com.cogra.core.designsystem.v2.token.MediaShape
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.CropWindow
 
 /**
  * `ComposeCrop` — one shape for the whole post, framed per picture
@@ -69,10 +70,9 @@ internal fun ColumnScope.CropStepBody(
 
     val framed = state.picked.getOrNull(state.framingIndex) ?: return
     MediaCrop(
-        // A ratio of zero means "not read yet", and the crop falls back
-        // to the frame's own ratio rather than claiming the picture is
-        // square — guessing here would clamp the author out of the very
-        // slack the shape switch exists to give them.
+        // The ratio is carried for the alt text's sake and for whatever
+        // the frame reserves before the decode; the cropper reads the
+        // picture's real shape itself, so nothing here has to guess it.
         item = MediaItem(framed.uri, framed.sourceRatio ?: 0f, framed.altText.ifBlank { null }),
         shape = shape,
         state = framings.getValue(framed.uri),
@@ -106,14 +106,10 @@ internal fun ColumnScope.CropStepBody(
 }
 
 /** The framing as the pipeline takes it, plus the post's own shape. */
-private fun CropState.toSpec(targetRatio: Float): CropSpec = framing.let {
-    CropSpec(
-        targetRatio = targetRatio,
-        scale = it.scale,
-        offsetFractionX = it.offsetFractionX,
-        offsetFractionY = it.offsetFractionY,
-    )
-}
+private fun CropState.toSpec(targetRatio: Float): CropSpec = CropSpec(
+    targetRatio = targetRatio,
+    window = CropWindow(framing.left, framing.top, framing.right, framing.bottom),
+)
 
 internal fun DraftShape.toMediaShape(): MediaShape = when (this) {
     DraftShape.Tall -> MediaShape.Tall

@@ -24,10 +24,9 @@ sealed interface AvatarUpload {
 /**
  * Everything the profile-picture flow's screens read.
  *
- * **The profile has ONE image — the avatar** (design/readme.md §13; a
- * "cover" in older product notes was a misreading of the `ProfileHeader`
- * ruling), so there is no second picture in this state and no shape to
- * choose: the crop is a fixed circular 1:1.
+ * **The profile has ONE image — the avatar** (design/readme.md §13), so
+ * there is no second picture in this state and no shape to choose: the
+ * crop is a fixed circular 1:1.
  */
 data class AvatarFlowState(
     val step: AvatarStep = AvatarStep.Crop,
