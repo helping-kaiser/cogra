@@ -341,19 +341,20 @@ class CograNavGraphTest {
         waitForTag("bar_compose")
         compose.onNodeWithTag("bar_compose").performClick()
         // Creating a post is the wizard now (D19); the shipped composer
-        // is reached only by editing one.
-        waitForTag("wizard_body")
+        // is reached only by editing one. It opens images-first, so the
+        // picker grid is the stage that greets the author.
+        waitForTag("wizard_pick_grid")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ComposePost>()).isTrue()
         // A task flow owns the screen: the bar leaves (design.md §6).
         assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isEmpty()
     }
 
-    // A signed post lands the author back on the feed — the web twin —
-    // where their post already sits at the top, marked as still
-    // settling: content exists at authoring, not at landing
-    // (substrate.md §6).
+    // `ComposeLanded` lands the author on the post they just made. The
+    // feed underneath is still re-read, so backing out of the post finds
+    // it at the top, marked as still settling — content exists at
+    // authoring, not at landing (substrate.md §6).
     @Test
-    fun aSignedPostLandsOnTheRefreshedFeed() {
+    fun aSignedPostLandsOnThePostItself() {
         signIn()
         identity.seed = ActorKey.generate().seed()
         account.profile = member()
@@ -365,7 +366,10 @@ class CograNavGraphTest {
         render()
         waitForTag("bar_compose")
         compose.onNodeWithTag("bar_compose").performClick()
-        // The wizard's words path: body, then details, then the seal.
+        // The wizard's words path: the composer opens on the pictures, so
+        // the words half is reached by the caption's own branch.
+        waitForTag("wizard_switch_words")
+        compose.onNodeWithTag("wizard_switch_words").performClick()
         waitForTag("wizard_body")
         compose.onNodeWithTag("wizard_body").performTextInput("Something new")
         compose.onNodeWithTag("wizard_header_action").performClick()
@@ -384,19 +388,21 @@ class CograNavGraphTest {
         }
         assertThat(compose.onAllNodesWithTag("wizard_problem").fetchSemanticsNodes()).isEmpty()
 
-        // The feed re-read: the entry the server only started serving
-        // once the write was prepared is on screen, still settling.
-        waitForTag("feed_post_p-new")
-        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
-        // The card merges its descendants' semantics, so the marker is
-        // only itself in the unmerged tree.
-        compose.onNodeWithTag("feed_post_pending_p-new", useUnmergedTree = true).assertExists()
+        // The author lands on what they just made.
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<PostDetail>() == true
+        }
+        assertThat(navController.currentBackStackEntry?.toRoute<PostDetail>()?.postId)
+            .isEqualTo("p-new")
 
         // The composer left the stack: back never returns to a spent
-        // form.
+        // form — it reaches the re-read feed underneath.
         assertThat(
             navController.currentBackStack.value.any { it.destination.hasRoute<ComposePost>() },
         ).isFalse()
+        assertThat(
+            navController.currentBackStack.value.any { it.destination.hasRoute<Feed>() },
+        ).isTrue()
     }
 
     @Test

@@ -127,8 +127,12 @@ fun ProfileScreen(
     val savedMessage = stringResource(R.string.profile_saved)
     LaunchedEffect(profileSavedResult) {
         if (profileSavedResult) {
-            snackbarHostState.showSnackbar(savedMessage)
+            // Consume and re-read first: `showSnackbar` suspends until the
+            // snackbar is dismissed, so waiting on it left the profile
+            // showing the picture that was just replaced — and a
+            // cancellation before dismissal dropped the refresh entirely.
             onProfileSavedResultConsumed()
+            snackbarHostState.showSnackbar(savedMessage)
         }
     }
     // Acting is gated for applicants, but the surface stays visible and

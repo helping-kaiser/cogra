@@ -34,10 +34,10 @@ import com.cogra.domain.media.CropSpec
  * JVM with no viewport anywhere near it. The committed framings are
  * handed up when the stage advances.
  *
- * **The non-drag route is not optional.** D17 requires the stage to be
- * completable without a gesture, and `MediaCrop` provides it twice —
- * as custom accessibility actions on the viewport and as a visible
- * control row.
+ * **The non-drag route is not optional, and it is invisible.** D17
+ * requires the stage to be completable without a gesture; `MediaCrop`
+ * carries that in the semantics tree alone, because the board draws no
+ * controls under the crop.
  */
 @Composable
 internal fun ColumnScope.CropStepBody(
@@ -71,7 +71,11 @@ internal fun ColumnScope.CropStepBody(
 
     val framed = state.picked.getOrNull(state.framingIndex) ?: return
     MediaCrop(
-        item = MediaItem(framed.uri, framed.sourceRatio ?: 1f, framed.altText.ifBlank { null }),
+        // A ratio of zero means "not read yet", and the crop falls back
+        // to the frame's own ratio rather than claiming the picture is
+        // square — guessing here would clamp the author out of the very
+        // slack the shape switch exists to give them.
+        item = MediaItem(framed.uri, framed.sourceRatio ?: 0f, framed.altText.ifBlank { null }),
         shape = shape,
         state = framings.getValue(framed.uri),
         testTag = "wizard_crop",
