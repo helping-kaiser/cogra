@@ -71,10 +71,43 @@ describe("sourceRect", () => {
     expect(middle).toEqual({ x: 200, y: 250, width: 400, height: 500 });
   });
 
-  it("ignores the focal point at zoom 1, because nothing can be panned there", () => {
+  it("has no window to move when the shapes already agree", () => {
     expect(sourceRect(1000, 1000, 1, { zoom: 1, x: 0, y: 1 })).toEqual(
       sourceRect(1000, 1000, 1, CENTERED),
     );
+  });
+
+  // The fix-round-2 ruling: switching shape re-frames against the ORIGINAL, and
+  // any section must be reachable at any ratio — including at zoom 1, where the
+  // band the cover fit trims is the only thing there is to choose between.
+  it("reaches the top and the bottom band of a tall picture in a wide frame at zoom 1", () => {
+    const top = sourceRect(1000, 2000, 1.91, { zoom: 1, x: 0.5, y: 0 });
+    const bottom = sourceRect(1000, 2000, 1.91, { zoom: 1, x: 0.5, y: 1 });
+    expect(top.y).toBe(0);
+    expect(bottom.y + bottom.height).toBeCloseTo(2000, 6);
+    expect(top.height).toBeCloseTo(bottom.height, 6);
+  });
+
+  it("reaches the left and the right band of a wide picture in a tall frame at zoom 1", () => {
+    const left = sourceRect(3000, 1000, 4 / 5, { zoom: 1, x: 0, y: 0.5 });
+    const right = sourceRect(3000, 1000, 4 / 5, { zoom: 1, x: 1, y: 0.5 });
+    expect(left.x).toBe(0);
+    expect(right.x + right.width).toBeCloseTo(3000, 6);
+  });
+
+  // A shape switch changes only the ratio passed here; the crop is untouched,
+  // so the new window is cut from the original picture rather than from the
+  // rectangle the previous shape happened to leave behind.
+  it("cuts every shape out of the whole original, not out of the previous crop", () => {
+    // The 4:5 window over this source spans 112.5..1362.5 of the 2000.
+    const tall = sourceRect(1000, 2000, 4 / 5, { zoom: 1, x: 0.5, y: 0.15 });
+    expect(tall.y).toBeCloseTo(112.5, 6);
+    expect(tall.y + tall.height).toBeCloseTo(1362.5, 6);
+    // Switching to 1.91:1 can frame the source's very bottom — past everything
+    // the 4:5 window held, which is reachable only from the original.
+    const wide = sourceRect(1000, 2000, 1.91, { zoom: 1, x: 0.5, y: 1 });
+    expect(wide.y).toBeGreaterThan(tall.y + tall.height);
+    expect(wide.y + wide.height).toBeCloseTo(2000, 6);
   });
 
   it("never leaves the source, for any reachable crop", () => {
@@ -302,13 +335,13 @@ describe("encodeForUpload", () => {
       crop: { zoom: 2, x: 1, y: 1 },
     });
 
-    // The cover fit trims the width to 3024 * 4/5 = 2419.2 FIRST, so the window
-    // pans inside that trimmed region and not across the whole original — the
-    // strip the shape already cut away stays unreachable at every zoom.
+    // The window is the cover fit divided by the zoom — 2419.2/2 wide, 3024/2
+    // tall — and the focal point carries it across everything the original has
+    // left over, so framing hard right lands it on the original's right edge.
     const from = drawn[0]!.from;
     expect(from.width).toBeCloseTo(1209.6, 4);
     expect(from.height).toBeCloseTo(1512, 4);
-    expect(from.x + from.width).toBeCloseTo((4032 - 2419.2) / 2 + 2419.2, 4);
+    expect(from.x + from.width).toBeCloseTo(4032, 4);
     expect(from.y + from.height).toBeCloseTo(3024, 4);
     // The output is the SHAPE's, not the original's: 1209.6x1512 is inside the
     // 1080 width cap, so it scales down to it rather than keeping 4032 wide.
