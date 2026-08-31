@@ -455,10 +455,10 @@ export function PostView({
     setSubmitting(false);
     if (done) {
       setDraft("");
-      // The pictures went with it, so the composer stops holding them — and
-      // the started-uploads ledger empties with them, or a later pick reusing
-      // an id would be taken for one already in flight.
-      startedUploads.current.clear();
+      // The pictures went with it, so the composer stops holding them. The
+      // started-uploads ledger is deliberately NOT cleared here: every pick
+      // mints a fresh id, so a later picture can never be mistaken for one of
+      // these, and reading a ref from here would be reading it during render.
       setDraftMedia(NO_COMMENT_MEDIA);
       setDraftTags([]);
       setDraftReferences([]);
