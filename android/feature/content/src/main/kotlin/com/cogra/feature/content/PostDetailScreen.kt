@@ -864,6 +864,7 @@ private fun CommentThread(
                         attachments = comment.attachments,
                         attachmentsStatus = comment.attachmentsStatus,
                         testTagPrefix = "comment_${comment.id}",
+                        surface = BodySurface.Comment,
                     )
                     Text(
                         licenseTerms(comment.license),

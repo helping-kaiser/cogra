@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.media.MediaGallery
@@ -22,9 +23,28 @@ import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.RemovalReason
 import com.cogra.core.designsystem.v2.media.RemovedPlaceholder
 import com.cogra.core.designsystem.v2.media.SensitiveVeil
+import com.cogra.core.designsystem.v2.media.cappedToTallestTile
+import com.cogra.core.designsystem.v2.token.MediaFrame
+import com.cogra.core.designsystem.v2.token.MediaShape
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.ModeratedField
+
+/**
+ * Which surface the body is drawn on, and therefore how its pictures sit.
+ *
+ * A post's body **is** its pictures, so they run full-bleed to the card's
+ * edges, square-cornered, at the author's own crop, and they lead the body
+ * — the boards draw them between the title and the words.
+ *
+ * **A comment is words first and its pictures join them**
+ * (`design/components/content/CommentCard.prompt.md`): they follow the
+ * words, stay inset at the card's medium rung, round their corners, and cap
+ * far lower. They are an attachment, not the body, so no full-bleed — and
+ * they are never cropped (2026-08-31), which is why each whole frame is
+ * fitted inside the frame rather than filling it.
+ */
+internal enum class BodySurface { Post, Comment }
 
 /**
  * The body region of a card or a detail: the gallery, the words, and
@@ -52,6 +72,7 @@ internal fun PostBody(
     modifier: Modifier = Modifier,
     maxBodyLines: Int? = null,
     onOpenMedia: (() -> Unit)? = null,
+    surface: BodySurface = BodySurface.Post,
 ) {
     if (isRemoved(content, attachments, attachmentsStatus)) {
         RemovedPlaceholder(
@@ -81,13 +102,16 @@ internal fun PostBody(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            if (attachments.isNotEmpty()) {
-                MediaGallery(
-                    items = attachments.map { it.toItem() },
-                    onOpen = onOpenMedia,
-                    testTag = "${testTagPrefix}_gallery",
-                )
+            val gallery: @Composable () -> Unit = {
+                if (attachments.isNotEmpty()) {
+                    Gallery(attachments, surface, onOpenMedia, "${testTagPrefix}_gallery")
+                }
             }
+
+            // A post leads with its pictures; a comment leads with its
+            // words and its pictures join them.
+            if (surface == BodySurface.Post) gallery()
+
             content.value?.takeIf { it.isNotEmpty() }?.let { words ->
                 Text(
                     text = words,
@@ -96,6 +120,9 @@ internal fun PostBody(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+
+            if (surface == BodySurface.Comment) gallery()
+
             description?.value?.takeIf { it.isNotEmpty() }?.let { note ->
                 Text(
                     text = note,
@@ -106,6 +133,44 @@ internal fun PostBody(
                 )
             }
         }
+    }
+}
+
+/**
+ * The gallery at the rung its surface gives it.
+ *
+ * A comment's set rides the same pager, in a fixed square frame each whole
+ * frame fits inside — but a lone picture keeps its own shape, which is what
+ * the board draws (a single 4:5 comment picture, fitted).
+ */
+@Composable
+private fun Gallery(
+    attachments: List<MediaAssetView>,
+    surface: BodySurface,
+    onOpenMedia: (() -> Unit)?,
+    testTag: String,
+) {
+    val items = attachments.map { it.toItem() }
+    when (surface) {
+        BodySurface.Post -> MediaGallery(
+            items = items,
+            onOpen = onOpenMedia,
+            testTag = testTag,
+        )
+
+        BodySurface.Comment -> MediaGallery(
+            items = items,
+            onOpen = onOpenMedia,
+            frameRatio = if (items.size == 1) {
+                items[0].aspectRatio.cappedToTallestTile()
+            } else {
+                MediaShape.Square.ratio
+            },
+            fit = ContentScale.Fit,
+            maxHeight = MediaFrame.CommentMaxHeight,
+            shape = MaterialTheme.shapes.medium,
+            testTag = testTag,
+        )
     }
 }
 
