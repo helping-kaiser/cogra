@@ -78,8 +78,11 @@ object MediaOverlay {
     /** Ink on [Badge]; white rather than `onSurface` for the same reason. */
     val BadgeInk = Color(0xFFFFFFFF)
 
-    /** The crop viewport's rule-of-thirds lines. */
+    /** The crop viewport's rule-of-thirds lines, and the avatar circle's rim. */
     val CropRule = Color(0x8CFFFFFF)
+
+    /** What the avatar crop dims outside its circle — `rgba(0,0,0,0.45)`. */
+    val CropScrim = Color(0x73000000)
 
     /** The unselected picker tile's ring. */
     val PickerRing = Color(0xFFFFFFFF)

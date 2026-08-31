@@ -67,6 +67,7 @@ import com.cogra.feature.onboarding.InviteEntryRoute
 import com.cogra.feature.onboarding.KeyCeremonyRoute
 import com.cogra.feature.profile.ProfileEditRoute
 import com.cogra.feature.profile.ProfileRoute
+import com.cogra.feature.profile.avatar.AvatarFlowRoute
 import com.cogra.feature.settings.KeyExportRoute
 import com.cogra.feature.settings.SettingsRoute
 import com.cogra.feature.topics.TopicRoute
@@ -124,6 +125,16 @@ data class Profile(val handle: String? = null)
 
 @Serializable
 data object ProfileEdit
+
+/**
+ * The profile-picture flow (`AvatarCrop` → `AvatarSeal`).
+ *
+ * Its own destination rather than a step inside the edit form, because it
+ * ends in **its own seal**: changing your picture is a signed act in its
+ * own right (design/readme.md §13).
+ */
+@Serializable
+data class AvatarFlow(val uri: String)
 
 @Serializable
 data object Invites
@@ -630,7 +641,20 @@ private fun CograNavGraphContent(
                             ?.set(PROFILE_SAVED_RESULT, true)
                         navController.popBackStack()
                     },
+                    onPicturePicked = { uri -> navController.navigate(AvatarFlow(uri)) },
                     onBack = { navController.navigateUp() },
+                )
+            }
+            composable<AvatarFlow> { entry ->
+                AvatarFlowRoute(
+                    uri = entry.toRoute<AvatarFlow>().uri,
+                    onSigned = {
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(PROFILE_SAVED_RESULT, true)
+                        navController.popBackStack()
+                    },
+                    onLeave = { navController.popBackStack() },
                 )
             }
             composable<Invites> {
