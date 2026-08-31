@@ -7,6 +7,7 @@ import { LicenseTerms } from "../forms/LicenseChooser.jsx";
 import { StanceControl } from "../stance/StanceControl.jsx";
 import { OverflowMenu } from "./OverflowMenu.jsx";
 import { TopicsLine } from "./TopicsLine.jsx";
+import { MediaGallery } from "../proposed/MediaAttachment.jsx";
 
 /* The comment of design.md §6 — "author, body, timestamp, media, nested replies,
    stance control", in its top-level and nested variants. Extracted from
@@ -40,6 +41,7 @@ export function CommentCard({
   author,
   content,
   timestamp,
+  media,
   license,
   pending = false,
   edited = false,
@@ -87,6 +89,16 @@ export function CommentCard({
           </div>
         </div>
         <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{withMentions(content)}</p>
+        {/* A comment is words first and its pictures join them (readme §13) —
+            below the words, INSET at the card's medium rung rather than
+            full-bleed, and capped at a comment-scale height: the media joins
+            the words, it must not turn the comment into a post. Comment
+            pictures never crop (jakob 2026-08-31), so multiples share a fixed
+            square frame and each whole frame fits inside it; at most four ride
+            one comment. */}
+        {Array.isArray(media) && media.length > 0 && (
+          <MediaGallery items={media} ratio={media.length > 1 ? "square" : undefined} maxHeight="220px" />
+        )}
         {/* The same topics-and-citations line a post wears, one line, clipped —
             a comment is content like any other and signs the same acts. */}
         <TopicsLine topics={topics} references={references} onOpenReferences={onOpenReferences} />

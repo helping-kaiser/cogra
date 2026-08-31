@@ -33,6 +33,8 @@ function Demo(){return (
     </div>
     <span className="lbl">Comment thread — nested, one reply pending</span>
     <ul><CommentCard author={mira} content="That corner by the bakery? It does that in September and then never again." timestamp="1h" license={{attribution:0,provenance:0}} edited bundle={b(0.15,0.15,1)} onReply={()=>{}} replies={[{id:"r1",author:ada,content:"The same one. I'll go back in a week and report.",timestamp:"20m",license:{attribution:0,provenance:0},pending:true}]}/></ul>
+    <span className="lbl">A comment with pictures — inset, comment-scale, never cropped; own, so Edit shows</span>
+    <ul><CommentCard author={ada} content="Two from the stand, before the crowd came." timestamp="30m" license={{attribution:0,provenance:0}} own onEdit={()=>{}} onReply={()=>{}} media={[{src:"../../assets/photos/01-landscape-4x3.jpg",ratio:"4 / 3",fit:"contain",alt:"Strawberries on a market stall"},{src:"../../assets/photos/04-square-1x1.jpg",ratio:"1 / 1",fit:"contain",alt:"A jar of honey"}]}/></ul>
   </div>
 </div>)}
 ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
