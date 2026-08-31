@@ -85,7 +85,7 @@ social-contract governance, per
 | Piece | Home |
 |---|---|
 | Title, description, body | Envelope fields on the Publish (and edit) payloads; Postgres display rows for query and render |
-| Media | Bytes in the media store; the envelope's manifest commits each asset's digest, type and alt text; Postgres junction rows on the version carry the gallery's order and cover |
+| Media | Bytes in the media store; the envelope's manifest commits each asset's digest, type and alt text; Postgres junction rows on the version carry the gallery's order, cover, and each entry's description |
 | Topics | Tag hyper-edges toward Types (§3) |
 | Quotes, embeds, mentions | Reference hyper-edges with the Post as citing artifact (§3) |
 | Stances | Opinion records toward the node |

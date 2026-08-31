@@ -262,6 +262,20 @@ the pinned M3 roles (M3 stays the default, no sub-roles). Round 4
 = one stage back, the new X = leave from any stage with the draft
 kept, no confirmation; `WizardHeader` is the master and every
 composer-flow board (JSX and hand-authored alike) wears the X.
+Round 5 (implementation findings, same day): comments have NO pick
+stage — "+ Add" opens the platform's own picker (Android photo
+picker / browser file dialog), web adds the drop path (*Reply ·
+pictures on the web*); ALT TEXT DETACHED FROM THE UPLOAD (product
+ruling → api-spec.md + data-model.md: bytes-only upload, the
+description rides `AttachmentInput` per placement, cached on the
+version's junction row — no race, nothing gates); the describe
+counter joins *Edit comment*; the edit's acts footer opens the
+acts SHEET (*Edit comment · the acts*, ActsCard in the M3 modal
+bottom sheet; ceremony screens keep the inline card); EditActs'
+note wording conformed. Plus the canvas reorg (jakob: the split
+comment rows confused): one unified Comments section — the
+thread row + the reply-composer row, each with its own note; no
+board deleted (none were duplicates — distinct states).
 
 ### 13 · Post Score drill-down · *design*
 Four screens — FeedEntry → RankPath → RankHop → raw records — each
@@ -296,3 +310,20 @@ settings" (the stance pads). Design the settings surface that keeps
 those promises — the default license, the reader's stance input, the
 default feed filter — and the pattern the rest of settings will
 follow. Added 2026-08-28 out of item 19's review.
+
+### 22 · Canvas flows + pages · *process*
+The canonical canvas has outgrown one flat plane (77+ boards):
+connections live only in heads, and gaps hide. Agreed with jakob
+2026-08-31, shaped as data first, pictures generated: (1) a
+checked-in `flows.json` — numbered edges `{id, from, via, to}`
+grouped by section, every interactive affordance on a board either
+carrying an edge or an explicit dead-end marker with a reason; a
+button with neither is by definition a missing piece, greppable.
+(2) Generated flow-map boards — the build pipeline renders one map
+artboard per section (chips + arrows + edge numbers) plus an
+overview, never hand-drawn so never lying. (3) Pages: split the
+canvas by section (Feed · Compose & media · Ceremonies · Wallet ·
+Maps), launch view on the overview. (4) A build-time check
+cross-referencing `flows.json` against the screen list (edges to
+missing boards; boards nothing reaches). 1+3 are the core; new
+boards enter the manifest from the round that lands this item.

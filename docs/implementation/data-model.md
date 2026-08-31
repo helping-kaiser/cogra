@@ -427,16 +427,20 @@ points at a parent — see "Why parents point at attachments" below.
 
 ```sql
 -- Media attachments: asset metadata only (digest, storage key, mime,
--- size, alt text, display options, uploader). Parents (posts, comments,
+-- size, display options, uploader). Parents (posts, comments,
 -- chat messages, items, actor profiles, chats) point at attachments via
 -- either a junction table (1:N) or a direct FK column (1:1). The asset
 -- row never points at a parent — see "Why parents point at attachments"
 -- below.
 --
--- The bytes are immutable after upload: a re-crop is a new asset, and
--- the digest names these bytes forever. alt_text is the one field that
--- moves — updateMedia rewrites it, because a client uploads while its
--- author is still writing and the description arrives after the bytes.
+-- An asset row is immutable after upload: there is no update surface,
+-- and a re-crop is a new asset (new bytes, new digest). The upload
+-- carries nothing authored — a description (alt text) is witnessed in
+-- the referencing payload's manifest and cached on the junction row
+-- per version, so a picture uploads the moment it is picked and is
+-- described any time before signing, and correcting a description is
+-- a new version of the parent, never a re-upload — the same cost a
+-- typo in the body already carries.
 --
 -- digest is SHA-256 over the stored bytes, computed after metadata
 -- stripping so it describes exactly what the store holds and what a
@@ -474,7 +478,6 @@ CREATE TABLE media_attachments (
     storage_key      TEXT         NOT NULL UNIQUE,
     mime_type        TEXT         NOT NULL,
     size_bytes       BIGINT,
-    alt_text         TEXT,
     options          JSONB        NOT NULL DEFAULT '{}'::jsonb,
     -- The tombstone shape every version table uses: redaction removes
     -- the bytes and leaves the mark (primitive/layers.md §5).
@@ -888,24 +891,29 @@ tombstones them in place), so a superseded version keeps its
 gallery rows and renders as it stood.
 
 ```sql
--- Junction: post versions → attachments (ordered, optionally a cover).
--- display_order and is_cover are parent-specific facts about the
--- relationship, not properties of the asset.
+-- Junction: post versions → attachments (ordered, optionally a cover,
+-- each entry carrying its witnessed description). display_order,
+-- is_cover, and alt_text are parent-version facts about the
+-- relationship, not properties of the asset — each caches what the
+-- version's manifest witnessed (array position; per-asset map key 2),
+-- which is why the same asset can read differently in two parents.
 CREATE TABLE post_attachments (
     post_version_id BIGINT   NOT NULL
         REFERENCES post_versions(version_id) ON DELETE CASCADE,
     attachment_id   UUID     NOT NULL REFERENCES media_attachments(id),
     display_order   SMALLINT NOT NULL DEFAULT 0,
     is_cover        BOOLEAN  NOT NULL DEFAULT FALSE,
+    alt_text        TEXT,
     PRIMARY KEY (post_version_id, attachment_id)
 );
 
--- Junction: comment versions → attachments (ordered).
+-- Junction: comment versions → attachments (ordered, described).
 CREATE TABLE comment_attachments (
     comment_version_id BIGINT   NOT NULL
         REFERENCES comment_versions(version_id) ON DELETE CASCADE,
     attachment_id      UUID     NOT NULL REFERENCES media_attachments(id),
     display_order      SMALLINT NOT NULL DEFAULT 0,
+    alt_text           TEXT,
     PRIMARY KEY (comment_version_id, attachment_id)
 );
 
@@ -1512,30 +1520,14 @@ declared. The same index serves the foreign-key check every
 `media_attachments` delete performs, which redaction runs in
 bulk.
 
-An asset's **bytes are immutable after upload**. A different crop is
-a new asset rather than an edit of an old one, which is what makes
-the served bytes cacheable forever and what lets a reader treat a
+An asset row is **immutable after upload**. There is no update
+surface for one, and a different crop is a new asset rather than
+an edit of an old one. A description is not the asset's to hold:
+alt text rides the payload envelope and the junction row caches
+it per version, so writing or correcting one is a new version of
+the parent and the bytes never move again. That is what makes the
+served bytes cacheable forever and what lets a reader treat a
 digest as a permanent name for them.
-
-Its **description is not**. `updateMedia` rewrites `alt_text`, and
-the window that needs it is the compose wizard's: a client uploads
-while its author is still writing, so the description arrives after
-the bytes have already been stored.
-
-That needs no version rows on the asset, because the history the
-append-only rule protects is kept somewhere better. Every act's
-payload envelope snapshots the alt text at prepare, so what each
-post *published* is witnessed per record and permanent; nothing at
-promotion re-reads
-the row, since a manifest entry binds to its asset by digest alone.
-The row carries the author's current description; the records carry
-what each post said. Changing what a landed post says is an edit
-act, exactly as it is for the body.
-
-The consequence to know: `MediaAttachment.altText` serves the row,
-so it can differ from the alt text witnessed by an older record
-carrying the same asset. The record is the published statement; the
-row is the current one.
 
 **Anti-hijack** is enforced at the API layer: when a parent
 references an attachment, the API checks

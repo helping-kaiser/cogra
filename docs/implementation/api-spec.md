@@ -860,8 +860,12 @@ type MediaAttachment {
   mimeType: String!
   "Null past 32 bits rather than wrapping: the column is 64-bit."
   sizeBytes: Int
-  "Null once the asset is removed — redaction takes the description
-   with the picture."
+  "The description the referencing version witnessed for this
+   placement (the manifest entry's alt text) — a fact about the
+   parent–asset relationship, resolved from the version's junction
+   row, so the same asset can read differently in two parents.
+   Null when undescribed, and null once the asset is removed —
+   redaction takes the description with the picture."
   altText: String
   "NORMAL, or REDACTED once the bytes are removed. Never SENSITIVE."
   status: FieldModerationStatus!
@@ -2765,6 +2769,13 @@ input AttachmentInput {
   mediaId: UUID!
   displayOrder: Int!
   isCover: Boolean
+  "The picture's description — the manifest entry's witnessed alt
+   text (data-model.md, per-asset map key 2). Authored here, at
+   prepare time, never at upload: it is a fact about this
+   placement, so the same asset can read differently in two
+   parents, and correcting it is a new version of the parent,
+   never a re-upload."
+  altText: String
 }
 
 "A topic declaration — one Tag record toward the canonical Type
@@ -3000,12 +3011,14 @@ input PrepareProfileUpdateInput {
 
 "Upload a single media asset. A pure L2 operation — the binary
  rides the GraphQL multipart request as an Upload; the asset's
- digest enters payload envelopes at prepare time. Layout hints the
- server cannot infer (alt text) are supplied, the rest (aspect
- ratio, duration) are derived."
+ digest enters payload envelopes at prepare time. The upload
+ carries bytes and nothing authored: descriptions (alt text) ride
+ the prepare inputs' AttachmentInput, so a picture can upload the
+ moment it is picked and be described any time before signing —
+ nothing gates on the other. Layout hints (aspect ratio,
+ duration) are derived server-side."
 input UploadMediaInput {
   file: Upload!
-  altText: String
 }
 type UploadMediaPayload { media: MediaAttachment! }
 
