@@ -9,8 +9,8 @@ import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
 import { FeedView } from "./feed-view";
 
-// The feed reads `?compose=` to say whether the last post landed, and rewrites
-// the URL when the notice is dismissed.
+// The feed reads `?compose=` to say that the last post did not land, and
+// rewrites the URL when the notice is dismissed.
 const replace = vi.fn();
 let searchParams = new URLSearchParams();
 vi.mock("next/navigation", () => ({

@@ -82,6 +82,13 @@ export function MediaTile({
           fill
           sizes={sizes}
           preload={preload}
+          // Served media is display-ready by construction — the composer
+          // re-encodes to WebP at display size before upload and the server
+          // keeps that single rendition — so the optimizer would only
+          // re-encode bytes that need no work, and it refuses private-IP
+          // origins besides (the dev topology). The bytes are fetched as
+          // stored.
+          unoptimized
           style={{ objectFit }}
         />
       ) : (

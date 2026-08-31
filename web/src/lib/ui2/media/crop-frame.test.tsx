@@ -3,12 +3,18 @@ import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { CropFrame } from "./crop-frame";
-import { CENTERED, MAX_ZOOM, type Crop } from "./crop";
+import { CENTERED, type Crop } from "./crop";
 import { POST_SHAPES } from "./aspect";
 
-// A host that holds the crop, so the discrete controls can be pressed in
-// sequence the way a reader would use them.
-function Host({ shape = "tall" as const, initial = CENTERED }: { shape?: "tall" | "square" | "wide" | "avatar" | "cover"; initial?: Crop }) {
+// A host that holds the crop, so the keyboard route can be driven in sequence
+// the way a reader would use it.
+function Host({
+  shape = "tall" as const,
+  initial = CENTERED,
+}: {
+  shape?: "tall" | "square" | "wide" | "avatar" | "cover";
+  initial?: Crop;
+}) {
   const [crop, setCrop] = useState(initial);
   return (
     <>
@@ -16,6 +22,14 @@ function Host({ shape = "tall" as const, initial = CENTERED }: { shape?: "tall" 
       <output data-testid="readout">{`${crop.zoom.toFixed(2)} ${crop.x.toFixed(2)} ${crop.y.toFixed(2)}`}</output>
     </>
   );
+}
+
+/** jsdom decodes nothing, so the picture's own shape is declared to the frame. */
+function loadPicture(width: number, height: number) {
+  const image = screen.getByTestId("crop-frame").querySelector("img")!;
+  Object.defineProperty(image, "naturalWidth", { value: width, configurable: true });
+  Object.defineProperty(image, "naturalHeight", { value: height, configurable: true });
+  fireEvent.load(image);
 }
 
 describe("CropFrame", () => {
@@ -33,55 +47,61 @@ describe("CropFrame", () => {
     expect(screen.getByTestId("crop-frame").style.borderRadius).toBe("var(--radius-medium)");
   });
 
-  // D17 and design.md §10: every drag gesture has a non-drag equivalent, and
-  // the crop step must be completable without one.
-  it("offers a complete non-drag route", () => {
+  // The canvas draws no framing controls, and the fix-round-2 ruling settles it:
+  // the accessibility requirement is met invisibly.
+  it("draws no framing controls of its own", () => {
     render(<Host />);
-    const group = screen.getByRole("group", { name: "Framing" });
-    expect(group).toBeInTheDocument();
-    for (const name of [
-      "Move the picture left",
-      "Move the picture right",
-      "Move the picture up",
-      "Move the picture down",
-      "Zoom in",
-      "Zoom out",
-    ]) {
-      expect(screen.getByRole("button", { name })).toBeInTheDocument();
-    }
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
   });
 
-  it("frames the picture with the controls alone", () => {
+  // D17 and design.md §10: every drag gesture has a non-drag equivalent, and the
+  // crop step must be completable without one. Here that route is the keyboard.
+  it("takes focus and says how it is driven", () => {
     render(<Host />);
+    const frame = screen.getByRole("group", { name: "The picture's framing" });
+    expect(frame).toHaveAttribute("tabindex", "0");
+    expect(frame).toHaveAccessibleDescription(/arrow keys/i);
+    expect(frame).toHaveAccessibleDescription(/zoom in/i);
+  });
+
+  it("frames the picture with the keyboard alone", () => {
+    render(<Host />);
+    const frame = screen.getByTestId("crop-frame");
     expect(screen.getByTestId("readout")).toHaveTextContent("1.00 0.50 0.50");
 
-    // Zoom in twice, then move.
-    fireEvent.click(screen.getByRole("button", { name: "Zoom in" }));
-    fireEvent.click(screen.getByRole("button", { name: "Zoom in" }));
-    fireEvent.click(screen.getByRole("button", { name: "Move the picture left" }));
-    fireEvent.click(screen.getByRole("button", { name: "Move the picture up" }));
+    fireEvent.keyDown(frame, { key: "+" });
+    fireEvent.keyDown(frame, { key: "+" });
+    fireEvent.keyDown(frame, { key: "ArrowLeft" });
+    fireEvent.keyDown(frame, { key: "ArrowUp" });
 
     expect(screen.getByTestId("readout")).toHaveTextContent("1.20 0.55 0.55");
   });
 
-  it("disables the nudges while there is nothing to pan", () => {
-    render(<Host />);
-    expect(screen.getByRole("button", { name: "Move the picture left" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Zoom out" })).toBeDisabled();
+  it("zooms back out and re-centres from the keyboard", () => {
+    render(<Host initial={{ zoom: 1.5, x: 0.2, y: 0.8 }} />);
+    const frame = screen.getByTestId("crop-frame");
 
-    fireEvent.click(screen.getByRole("button", { name: "Zoom in" }));
-    expect(screen.getByRole("button", { name: "Move the picture left" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Zoom out" })).toBeEnabled();
+    fireEvent.keyDown(frame, { key: "-" });
+    expect(screen.getByTestId("readout")).toHaveTextContent("1.40 0.20 0.80");
+
+    fireEvent.keyDown(frame, { key: "Home" });
+    expect(screen.getByTestId("readout")).toHaveTextContent("1.00 0.50 0.50");
   });
 
-  it("stops the zoom at its ceiling", () => {
-    render(<Host initial={{ zoom: MAX_ZOOM, x: 0.5, y: 0.5 }} />);
-    expect(screen.getByRole("button", { name: "Zoom in" })).toBeDisabled();
+  // At zoom 1 an off-shape picture still has the cover overflow to move across,
+  // which is the framing the fix-round-2 ruling requires to be reachable.
+  it("moves a tall picture through a wide frame at rest", () => {
+    render(<Host shape="wide" />);
+    loadPicture(1000, 2000);
+    fireEvent.keyDown(screen.getByTestId("crop-frame"), { key: "ArrowUp" });
+    expect(screen.getByTestId("readout")).toHaveTextContent("1.00 0.50 0.55");
   });
 
   it("moves the picture under a pointer drag", () => {
     const onChange = vi.fn();
-    render(<CropFrame src="blob:x" shape="square" crop={{ zoom: 2, x: 0.5, y: 0.5 }} onChange={onChange} />);
+    render(
+      <CropFrame src="blob:x" shape="square" crop={{ zoom: 2, x: 0.5, y: 0.5 }} onChange={onChange} />,
+    );
     const frame = screen.getByTestId("crop-frame");
     // jsdom lays nothing out, so the frame's box is stubbed to a real size.
     vi.spyOn(frame, "getBoundingClientRect").mockReturnValue({
@@ -109,7 +129,7 @@ describe("CropFrame", () => {
     expect(next.x).toBeLessThan(0.5);
   });
 
-  it("ignores a drag when there is no slack to take up", () => {
+  it("ignores a drag when the picture is already shown whole", () => {
     const onChange = vi.fn();
     render(<CropFrame src="blob:x" shape="square" crop={CENTERED} onChange={onChange} />);
     const frame = screen.getByTestId("crop-frame");
