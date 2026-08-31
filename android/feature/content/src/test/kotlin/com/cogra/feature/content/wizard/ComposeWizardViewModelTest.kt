@@ -195,9 +195,103 @@ class ComposeWizardViewModelTest {
         uris.forEach { onTogglePick(it) }
         dispatcher.scheduler.advanceUntilIdle()
         onNext() // body -> crop
-        onNext() // crop -> details
-        onNext() // details -> seal, uploads start (they carry the alt text)
+        onNext() // crop -> details, uploads start
+        onNext() // details -> seal
         dispatcher.scheduler.advanceUntilIdle()
+    }
+
+    // -- When the pictures go up (`ComposeUploading`) --
+
+    /**
+     * "Pictures upload while you write" — the board's footnote, and the
+     * reason it can hold: nothing authored after the crop changes the
+     * bytes, because a description rides `AttachmentClaim` at prepare
+     * rather than the upload.
+     */
+    @Test
+    fun uploadsBeginOnLeavingTheCropStage() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Media)
+        vm.onTogglePick("a")
+        vm.onTogglePick("b")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onNext() // body -> crop
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(media.uploads).isEqualTo(0)
+
+        vm.onNext() // crop -> details
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Details)
+        // Already on the wire while the author is still writing — not
+        // waiting on the walk out of Details.
+        assertThat(media.uploads).isEqualTo(2)
+        assertThat(vm.state.value.picked.map { it.upload })
+            .containsExactly(AssetUpload.Done("m1"), AssetUpload.Done("m2"))
+    }
+
+    /**
+     * The other half of that freedom: a description authored after the
+     * upload already finished still reaches the prepare input, because
+     * it never rode the upload in the first place.
+     */
+    @Test
+    fun aDescriptionTypedAfterAnUploadFinishedStillReachesPrepare() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Media)
+        vm.onTogglePick("a")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext() // body -> crop
+        vm.onNext() // crop -> details
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // The upload is finished and done with; the describing happens
+        // strictly after it.
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m1"))
+
+        vm.onAltTextChange("a", "a salt map of the coast road")
+        vm.onNext() // details -> seal
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.lastAttachments.single().mediaId).isEqualTo("m1")
+        assertThat(content.lastAttachments.single().altText)
+            .isEqualTo("a salt map of the coast road")
+        // Still one upload: describing does not re-send the bytes.
+        assertThat(media.uploads).isEqualTo(1)
+    }
+
+    /**
+     * The invalidation that made the early start impossible: describing
+     * used to knock a finished upload back to idle, because the alt text
+     * rode the upload and a changed description made the object stale.
+     * It no longer does, so an upload survives every keystroke after it.
+     */
+    @Test
+    fun describingDoesNotInvalidateAFinishedUpload() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Media)
+        vm.onTogglePick("a")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext() // body -> crop
+        vm.onNext() // crop -> details
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onAltTextChange("a", "a salt map")
+        vm.onAltTextChange("a", "a salt map of the coast road")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m1"))
+        assertThat(media.uploads).isEqualTo(1)
+        assertThat(vm.state.value.canSign).isTrue()
     }
 
     // -- The XOR reaches the wire, not just the screen (D16) --
