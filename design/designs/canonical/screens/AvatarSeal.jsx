@@ -10,7 +10,7 @@ export function Screen() {
         leaveLabel="Leave"
         action={
           <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>Last step</span>
+            <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>Last step</span>
             <SystemHelpDot ariaLabel="Changing your picture" />
           </span>
         }

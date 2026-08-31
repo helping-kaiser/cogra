@@ -1,0 +1,36 @@
+<!-- @dsCard group="Wallet" viewport="900x640" name="The wallet's pieces" subtitle="The balance headline (the one surface that spells CGT, with the market ≈), the history line (words carry the source, sign carries direction), and the witnessed payout address (whole, mono, never truncated)." -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{padding:16px}.row{display:flex;gap:24px;align-items:flex-start}.col{display:flex;flex-direction:column;gap:10px;width:390px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { WalletBalance, LedgerRow, PayoutAddress } = window.CoGraDesignSystem_9084ba;
+
+function Demo(){return (
+<div className="row">
+  <div className="col">
+    <span className="lbl">The balance headline — mark and word adjacent, the market ≈ beneath</span>
+    <WalletBalance amount={128.4} approx="0.00087" onHelp={()=>{}}/>
+    <span className="lbl">Zero — a new member's true state; nothing to price, no ≈ line</span>
+    <WalletBalance amount={0} approx="0.00087" onHelp={()=>{}}/>
+    <span className="lbl">The witnessed payout address — whole, mono, never truncated</span>
+    <PayoutAddress address="lq1qq2xvpcvfup5j8zscjq05eqylmrc6javzn30v78y7255695yz4t9r5v5m8g6snm4gvsvvzp6mzurcem6ms70epwqmwtnw2pex" onChange={()=>{}}/>
+  </div>
+  <div className="col">
+    <span className="lbl">History lines — one stream, the words carry the source, Still settling for the unlanded</span>
+    <div style={{display:"flex",flexDirection:"column"}}>
+      <LedgerRow words="Payout · settling" amount={3.1} pending/>
+      <LedgerRow words='Payout · "Sunday at the tide market"' when="2d" amount={12.4} onOpen={()=>{}}/>
+      <LedgerRow words="Tip from @tobias" when="4d" amount={2} onOpen={()=>{}}/>
+      <LedgerRow words="Tip to @ada" when="5d" amount={-2} onOpen={()=>{}}/>
+      <LedgerRow words='Payout · "The long way home"' when="8d" amount={0.0003} onOpen={()=>{}}/>
+      <LedgerRow words="Campaign deposit · escrow" when="12d" amount={-12500} onOpen={()=>{}}/>
+    </div>
+  </div>
+</div>)}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script></body></html>
