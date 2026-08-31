@@ -174,7 +174,6 @@ class ScriptedProfileRepository : ThrowingProfileRepository() {
         bio: String?,
         websiteUrl: String?,
         avatar: MediaFieldUpdate,
-        cover: MediaFieldUpdate,
     ): Outcome<List<PreparedWriteView>> {
         updates += Triple(displayName, bio, websiteUrl)
         profile = profile?.copy(

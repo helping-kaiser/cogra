@@ -166,7 +166,6 @@ export async function prepareProfileUpdate(
     bio: string | null;
     websiteUrl: string | null;
     avatar?: MediaSelection;
-    cover?: MediaSelection;
   },
 ): Promise<Outcome<readonly StagedWriteView[]>> {
   return payloadOutcome(
@@ -179,7 +178,6 @@ export async function prepareProfileUpdate(
             bio: fields.bio,
             websiteUrl: fields.websiteUrl,
             avatarMediaId: mediaField(fields.avatar),
-            coverMediaId: mediaField(fields.cover),
           },
         },
       }),

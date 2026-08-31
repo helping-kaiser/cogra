@@ -94,9 +94,35 @@ choosing to look is informed.
 
 A content act carries the complete content state, so an edit that
 omits the mark unmarks the content; there is no separate
-withdrawal gesture. Both marks read back as the same `SENSITIVE`
-status on the same fields — the author's optional reason is what
-tells a reader which one they are looking at.
+withdrawal gesture. Unmarking reaches the author's own mark and
+nothing else — see below.
+
+### Two independent states, and the veil is their OR
+
+The author's mark and a moderator's verdict are **two states, not
+one**. Neither side can clear the other:
+
+- An author who edits to "not sensitive" cannot lift a verdict.
+  Their edit rewrites their own mark; the verdict stands.
+- A passing Proposal that finds a post ordinary cannot lift the
+  author's mark. It clears the verdict; the author's statement
+  stands.
+
+What a reader is shown is the **OR**: either mark veils, and
+both readings end in a veil. That is why they never share a cell.
+The author's mark lives on the version row it describes,
+witnessed in the payload; a verdict lives in the moderation
+system's own state. One side writing cannot overwrite the other
+by construction rather than by care.
+
+Both marks read back as the same `SENSITIVE` status on the same
+fields — the author's optional reason is what tells a reader
+which one they are looking at. An **edit switch reads the
+author's own mark alone**
+(`Post.sensitiveSelfMark` / `Comment.sensitiveSelfMark`), never
+the veil: a switch bound to the OR would show a moderated post as
+self-marked and then claim to unmark something the author cannot
+touch.
 
 ### `illegal` — whole-record redaction
 
