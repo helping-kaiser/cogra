@@ -86,6 +86,25 @@ describe("the step sequence", () => {
     expect(run(words, { type: "back" }, { type: "back" }).step).toBe("pick");
   });
 
+  it("starts unmarked, and keeps the reason when the mark is switched off", () => {
+    const fresh = emptyWizard();
+    expect(fresh.sensitive).toBe(false);
+    expect(fresh.sensitiveReason).toBe("");
+
+    const marked = run(
+      fresh,
+      { type: "sensitive", sensitive: true },
+      { type: "sensitiveReason", sensitiveReason: "one rubbing includes a dead seabird" },
+    );
+    expect(marked.sensitive).toBe(true);
+
+    // Switching off does not throw the words away — an author who toggles back
+    // should not have to write them twice. What is SENT is gated on the switch.
+    const off = wizardReducer(marked, { type: "sensitive", sensitive: false });
+    expect(off.sensitive).toBe(false);
+    expect(off.sensitiveReason).toBe("one rubbing includes a dead seabird");
+  });
+
   it("reorders the set, and the first picture is what the cover means", () => {
     const three = run(emptyWizard(), picks(3));
     const moved = wizardReducer(three, { type: "reorder", from: 2, to: 0 });

@@ -94,6 +94,26 @@ export function attachmentInputs(mediaIds: readonly string[] | undefined) {
   }));
 }
 
+/**
+ * The author's own sensitive mark, as the contract wants it.
+ *
+ * A REASON WITHOUT THE MARK IS A REFUSAL on `["sensitiveReason"]`, so the reason
+ * only ever travels WITH `sensitive: true`; a blank one counts as none and is
+ * sent as null rather than as an empty string.
+ *
+ * The switch's value is always stated rather than omitted, because an EDIT is
+ * complete state: omitting `sensitive` on an edit would UNMARK a post the author
+ * had marked, silently, which is the one direction this must never fail in.
+ */
+export function sensitiveInput(sensitive: boolean | undefined, reason: string | undefined) {
+  const marked = sensitive === true;
+  const trimmed = (reason ?? "").trim();
+  return {
+    sensitive: marked,
+    sensitiveReason: marked && trimmed !== "" ? trimmed : null,
+  };
+}
+
 /** One page per fetch; the server default is the same number. */
 export const CONTENT_PAGE_SIZE = 20;
 
@@ -222,6 +242,9 @@ export async function preparePost(
     references?: readonly ReferenceDraft[];
     /** Asset ids already uploaded, in gallery order. */
     attachments?: readonly string[];
+    /** The author's own sensitive mark. Omitted counts as false. */
+    sensitive?: boolean;
+    sensitiveReason?: string;
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -235,6 +258,7 @@ export async function preparePost(
             content: fields.content,
             license: fields.license,
             attachments: attachmentInputs(fields.attachments),
+            ...sensitiveInput(fields.sensitive, fields.sensitiveReason),
             // The composer's tags are explicit structured input, never
             // parsed from the body (api-spec.md `preparePost`); each
             // carries the pair its sliders hold (F6).

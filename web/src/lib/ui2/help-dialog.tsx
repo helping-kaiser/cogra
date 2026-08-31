@@ -80,6 +80,13 @@ export const HELP_TOPICS = {
       "You don't pay for these — a shared community pool covers members' signings. The pool is real and finite, so each action still counts.",
     ],
   },
+  markingAsSensitive: {
+    title: "Marking as sensitive",
+    paragraphs: [
+      "The mark veils the pictures and the description until a reader chooses to look. The title stays readable, so choosing is informed.",
+      "Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.",
+    ],
+  },
   describingPictures: {
     title: "Describing pictures",
     paragraphs: [
