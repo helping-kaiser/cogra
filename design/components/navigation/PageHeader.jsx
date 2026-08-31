@@ -49,6 +49,10 @@ export function PageHeader({ title, backHref, backLabel, onBack, action }) {
               fontSize: "var(--text-title-large)",
               lineHeight: "var(--text-title-large--line-height)",
               fontWeight: "var(--text-title-large--font-weight)",
+              // A page title is a name and never wraps — a two-line header
+              // steals the content's first row (seen on the seals, where the
+              // trailing group is widest).
+              whiteSpace: "nowrap",
             }}
           >
             {title}
