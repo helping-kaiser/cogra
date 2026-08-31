@@ -10,10 +10,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsEnabled
-import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -148,71 +152,140 @@ class MediaComponentsTest {
         }
     }
 
+    private fun crop() = compose.onNodeWithTag("crop")
+
+    /**
+     * Fires one of the crop's custom accessibility actions by its label —
+     * the route an assistive technology takes, and now the only non-gesture
+     * route there is.
+     */
+    private fun fireCropAction(label: String) {
+        val actions = crop().fetchSemanticsNode().config[SemanticsActions.CustomActions]
+        val action = actions.firstOrNull { it.label == label }
+        assertThat(action).isNotNull()
+        compose.runOnUiThread { action!!.action() }
+    }
+
     @Test
     fun theCropIsCompletableWithoutAGesture() {
-        val state = CropState(2f, androidx.compose.ui.geometry.Offset.Zero)
+        val state = CropState(2f, Offset.Zero)
         cropContent(state)
 
-        compose.onNodeWithTag("crop_left").performClick()
+        fireCropAction("Nudge left")
         compose.waitForIdle()
 
-        // The visible non-drag route actually moves the framing — this is
-        // the D17 requirement, not a decoration.
+        // The non-drag route actually moves the framing — this is the D17
+        // requirement, not a decoration.
         assertThat(state.offset.x).isGreaterThan(0f)
     }
 
     @Test
     fun everyNudgeDirectionIsWired() {
-        val state = CropState(2f, androidx.compose.ui.geometry.Offset.Zero)
+        val state = CropState(2f, Offset.Zero)
         cropContent(state)
 
-        compose.onNodeWithTag("crop_right").performClick()
+        fireCropAction("Nudge right")
         compose.waitForIdle()
         assertThat(state.offset.x).isLessThan(0f)
 
-        compose.onNodeWithTag("crop_up").performClick()
+        fireCropAction("Nudge up")
         compose.waitForIdle()
         assertThat(state.offset.y).isGreaterThan(0f)
 
-        compose.onNodeWithTag("crop_down").performClick()
-        compose.onNodeWithTag("crop_down").performClick()
+        fireCropAction("Nudge down")
+        fireCropAction("Nudge down")
         compose.waitForIdle()
         assertThat(state.offset.y).isLessThan(0f)
     }
 
     @Test
-    fun theZoomControlsMoveTheScaleAndDisableAtTheirBounds() {
-        val state = CropState(CropState.MIN_SCALE, androidx.compose.ui.geometry.Offset.Zero)
+    fun theZoomAndResetActionsAreReachableWithoutSeeingAnything() {
+        val state = CropState(CropState.MIN_SCALE, Offset.Zero)
         cropContent(state)
 
-        // Fully zoomed out, only one direction is available.
-        compose.onNodeWithTag("crop_zoom_out").assertIsNotEnabled()
-        compose.onNodeWithTag("crop_zoom_in").assertIsEnabled()
-
-        compose.onNodeWithTag("crop_zoom_in").performClick()
+        fireCropAction("Zoom in")
         compose.waitForIdle()
-
         assertThat(state.scale).isGreaterThan(CropState.MIN_SCALE)
-        compose.onNodeWithTag("crop_zoom_out").assertIsEnabled()
+
+        fireCropAction("Zoom out")
+        compose.waitForIdle()
+        assertThat(state.scale).isWithin(0.001f).of(CropState.MIN_SCALE)
+
+        fireCropAction("Zoom in")
+        fireCropAction("Nudge left")
+        fireCropAction("Reset framing")
+        compose.waitForIdle()
+        assertThat(state.scale).isEqualTo(CropState.MIN_SCALE)
+        assertThat(state.offset).isEqualTo(Offset.Zero)
     }
 
     @Test
-    fun theFramingControlsCanBeRetiredWithoutBreakingTheCrop() {
+    fun theCropCarriesNoVisibleFramingChrome() {
+        cropContent(CropState(CropState.MIN_SCALE, Offset.Zero))
+
+        // The board draws nothing under the crop but its caption, so the
+        // non-gesture route lives entirely in the semantics tree.
+        compose.onNodeWithTag("crop").assertIsDisplayed()
+        compose.onNodeWithTag("crop_left").assertDoesNotExist()
+        compose.onNodeWithTag("crop_zoom_in").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Nudge left").assertDoesNotExist()
+    }
+
+    @Test
+    fun theFramingIsReadBackSoTheActionsAreNotFiredBlind() {
+        val state = CropState(CropState.MIN_SCALE, Offset.Zero)
+        cropContent(state)
+
+        crop().assert(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription,
+                "Zoom 100%, centred",
+            ),
+        )
+
+        fireCropAction("Zoom in")
+        compose.waitForIdle()
+
+        crop().assert(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription,
+                "Zoom 125%, centred",
+            ),
+        )
+    }
+
+    @Test
+    fun aSecondPictureIsFramableInAFrameTheFirstAlreadyMeasured() {
+        val first = CropState(2f, Offset.Zero)
+        val second = CropState(2f, Offset.Zero)
+        var showing by mutableStateOf(first)
         compose.setContent {
             Cogra2PreviewTheme {
                 MediaCrop(
                     item = MediaItem(null, 1.5f, "a picture"),
-                    shape = MediaShape.Tall,
-                    state = rememberCropState(),
-                    showFramingControls = false,
+                    shape = MediaShape.Square,
+                    state = showing,
                     modifier = Modifier.width(300.dp),
                     testTag = "crop",
                 )
             }
         }
 
-        compose.onNodeWithTag("crop").assertIsDisplayed()
-        compose.onNodeWithTag("crop_left").assertDoesNotExist()
+        fireCropAction("Nudge left")
+        compose.waitForIdle()
+        assertThat(first.offset.x).isGreaterThan(0f)
+
+        // The filmstrip moves to the next picture: the frame's measured
+        // size has not changed, so nothing re-measures — and the fresh
+        // state has to be told the viewport anyway, or every picture after
+        // the first is dead to nudges and drags alike.
+        showing = second
+        compose.waitForIdle()
+
+        fireCropAction("Nudge left")
+        compose.waitForIdle()
+
+        assertThat(second.offset.x).isGreaterThan(0f)
     }
 
     @Test

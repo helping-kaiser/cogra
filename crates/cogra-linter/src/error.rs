@@ -115,7 +115,7 @@ pub enum AdoptionError {
         /// The spelling the corpus root actually carries.
         found: String,
     },
-    /// A profile is missing one of the five data a profile fixes.
+    /// A profile is missing one of the seven data a profile fixes.
     #[error("profile {id} is missing its {datum}")]
     ProfileIncomplete {
         /// The row the profile opens at.
@@ -134,6 +134,84 @@ pub enum AdoptionError {
         id: String,
         /// The kind it governs.
         kind: String,
+    },
+    /// An activation's `scope` is neither of the two shapes.
+    #[error("{section} activation scope {scope} is neither every-owner nor declared")]
+    ActivationScopeUnknown {
+        /// The row the scope sits in.
+        at: Location,
+        /// The section the activation belongs to.
+        section: String,
+        /// What was written.
+        scope: String,
+    },
+    /// A declared activation names an owner no prefix registers.
+    ///
+    /// An owner Σ registers nothing for owes nothing and is held to nothing,
+    /// so naming it closes a wave over no assets while reading exactly like a
+    /// wave that closed.
+    #[error("{section} activation names owner {owner}, which no prefix registers")]
+    ActivationUnknownOwner {
+        /// The row the offending name sits in.
+        at: Location,
+        /// The section the activation belongs to.
+        section: String,
+        /// The owner it names.
+        owner: String,
+    },
+    /// A declared activation names one owner twice.
+    #[error("{section} activation names owner {owner} more than once")]
+    ActivationRepeatedOwner {
+        /// The row of the second one.
+        at: Location,
+        /// The section the activation belongs to.
+        section: String,
+        /// The owner.
+        owner: String,
+    },
+    /// A declared activation names no owner at all.
+    ///
+    /// An empty declared activation and an activation over no owner are the
+    /// same state written two ways, and the second is the one a reader can
+    /// tell from an accident: a discipline that holds nobody to anything is
+    /// registered by not being written.
+    #[error("{section} declares an activation over no owner")]
+    ActivationEmpty {
+        /// The row the scope sits in.
+        at: Location,
+        /// The section the activation belongs to.
+        section: String,
+    },
+    /// `[claims]` names a kind reserved in K.
+    ///
+    /// A claim is authored: its head is a statement its author composes, not
+    /// an identifier the code already bears. A kind in K admits derivation
+    /// only, so a claim of such a kind could stand on no warrant at all
+    /// (´[LBL-inv:labels:warrant-totality]´).
+    #[error(
+        "the claim discipline names kind {kind}, which is reserved in K and admits no authorship"
+    )]
+    ClaimKindReserved {
+        /// The row the kind sits in.
+        at: Location,
+        /// The kind it names.
+        kind: String,
+    },
+    /// `[claims]` rides a profile Π does not register.
+    #[error("the claim discipline rides profile {id}, which is not registered")]
+    ClaimProfileUnknown {
+        /// The row the name sits in.
+        at: Location,
+        /// The profile it names.
+        id: String,
+    },
+    /// `[claims]` lacks one of the data it fixes.
+    #[error("the claim discipline fixes no {datum}")]
+    ClaimIncomplete {
+        /// The row the section opens at.
+        at: Location,
+        /// The datum it lacks.
+        datum: &'static str,
     },
     /// A `[reach]` row names an owner no prefix registers.
     ///
@@ -247,6 +325,13 @@ impl AdoptionError {
             | AdoptionError::PathSpelling { at, .. }
             | AdoptionError::ProfileIncomplete { at, .. }
             | AdoptionError::UngovernedKindNotReserved { at, .. }
+            | AdoptionError::ActivationScopeUnknown { at, .. }
+            | AdoptionError::ActivationUnknownOwner { at, .. }
+            | AdoptionError::ActivationRepeatedOwner { at, .. }
+            | AdoptionError::ActivationEmpty { at, .. }
+            | AdoptionError::ClaimKindReserved { at, .. }
+            | AdoptionError::ClaimProfileUnknown { at, .. }
+            | AdoptionError::ClaimIncomplete { at, .. }
             | AdoptionError::ReachUnknownOwner { at, .. }
             | AdoptionError::ReachDuplicateOwner { at, .. }
             | AdoptionError::ReachSelfEdge { at, .. }
@@ -325,6 +410,8 @@ mod tests {
         )
     }
 
+    /// Every error message is lowercase and unpunctuated.
+    /// ´claim:errors:messages-are-lowercase-and-unpunctuated´
     #[test]
     fn every_message_is_lowercase_and_unpunctuated() {
         let errors: Vec<AdoptionError> = vec![
@@ -382,12 +469,16 @@ mod tests {
         }
     }
 
+    /// Every locatable error variant carries the row it sits in.
+    /// ´claim:errors:a-locatable-variant-carries-its-row´
     #[test]
     fn every_locatable_variant_carries_its_row() {
         let error = AdoptionError::PartitionNotTotal { at: row() };
         assert_eq!(error.at().map(|at| at.line), Some(7));
     }
 
+    /// An unlocatable variant says so rather than inventing a row.
+    /// ´claim:errors:an-unlocatable-variant-says-so´
     #[test]
     fn an_unlocatable_variant_says_so() {
         let error = AdoptionError::Unreadable {
@@ -397,6 +488,8 @@ mod tests {
         assert!(error.at().is_none());
     }
 
+    /// The aggregate error takes every leaf of the taxonomy.
+    /// ´claim:errors:the-aggregate-takes-every-leaf´
     #[test]
     fn the_aggregate_takes_every_leaf() {
         let run: RunError = WalkError::NotADirectory {

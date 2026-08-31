@@ -199,6 +199,8 @@ impl Build {
                 register: None,
                 form: None,
             },
+            span: ByteSpan::new(0, 0),
+            documentation: Vec::new(),
         }));
         self.g.add_edge(owner, node, EdgeW::Owns);
         self.g.add_edge(profile, node, EdgeW::Covers);
@@ -244,6 +246,9 @@ fn rules(found: &[Diagnostic]) -> Vec<&str> {
 
 /// (´[LBL-inv:labels:unique-mint]´): one mint per owner and label is the
 /// clean case, and the judgment says so with an empty list.
+///
+/// One mint per owner and label is the clean case.
+/// ´claim:judgments:one-mint-per-owner-is-clean´
 #[test]
 fn one_mint_per_owner_and_label_is_clean() {
     let (mut build, owner, region) = one_owner();
@@ -254,6 +259,9 @@ fn one_mint_per_owner_and_label_is_clean() {
 
 /// (´[LBL-inv:labels:unique-mint]´): a second bare occurrence is a
 /// violation, reported with both locations — never a harmless repeat.
+///
+/// A second bare occurrence is a violation reported with both locations.
+/// ´claim:judgments:a-second-mint-reports-both-locations´
 #[test]
 fn a_second_mint_reports_with_both_locations() {
     let (mut build, owner, region) = one_owner();
@@ -271,6 +279,9 @@ fn a_second_mint_reports_with_both_locations() {
 
 /// (´[LBL-inv:labels:unique-mint]´): a third mint is a second finding, and
 /// both name the mint the registry kept.
+///
+/// A third mint is a second finding, both named against the mint the registry kept.
+/// ´claim:judgments:a-third-mint-is-a-second-finding´
 #[test]
 fn a_third_mint_is_a_second_finding_against_the_first() {
     let (mut build, owner, region) = one_owner();
@@ -287,6 +298,9 @@ fn a_third_mint_is_a_second_finding_against_the_first() {
 /// (´[LBL-cav:labels:coexistence]´): two owners minting one label text is
 /// expressly not a collision, which is why a `Label` node exists once per
 /// owner and never once per corpus.
+///
+/// Two owners minting one label text is no collision, ownership disambiguating.
+/// ´claim:judgments:two-owners-may-share-a-label-text´
 #[test]
 fn two_owners_minting_one_label_text_is_no_collision() {
     let mut build = Build::new();
@@ -303,6 +317,9 @@ fn two_owners_minting_one_label_text_is_no_collision() {
 
 /// (´sig:lint:index-maps´): the registry decides which mint is first, and
 /// the finding is written against that one however the graph is ordered.
+///
+/// The registry decides which mint is first, however the graph is ordered.
+/// ´claim:judgments:the-registry-decides-the-first-mint´
 #[test]
 fn the_registry_decides_which_mint_is_first() {
     let (mut build, owner, region) = one_owner();
@@ -318,6 +335,9 @@ fn the_registry_decides_which_mint_is_first() {
 
 /// (´[LBL-inv:labels:total-resolution]´): a same-owner citation with one
 /// `ResolvesTo` edge is the clean case.
+///
+/// A same-owner citation with one resolution edge is the clean case.
+/// ´claim:judgments:a-resolving-citation-is-clean´
 #[test]
 fn a_resolving_same_owner_citation_is_clean() {
     let (mut build, owner, region) = one_owner();
@@ -330,6 +350,9 @@ fn a_resolving_same_owner_citation_is_clean() {
 /// (´[LBL-inv:labels:total-resolution]´): a parenthesized span whose
 /// interior is label-shaped but resolves nowhere fails, and never lapses
 /// into text.
+///
+/// A parenthesized label-shaped span resolving nowhere fails and never lapses into text.
+/// ´claim:judgments:an-unresolved-citation-fails´
 #[test]
 fn an_unresolved_same_owner_citation_fails() {
     let (mut build, owner, region) = one_owner();
@@ -343,6 +366,9 @@ fn an_unresolved_same_owner_citation_fails() {
 /// (´[LBL-gate:labels:implementation]´): an unresolved same-owner citation
 /// whose label mints in another owner is reported with the import form
 /// suggested.
+///
+/// An unresolved citation whose label mints elsewhere is reported with the import form suggested.
+/// ´claim:judgments:the-import-form-is-suggested´
 #[test]
 fn an_unresolved_citation_whose_label_mints_elsewhere_suggests_the_import() {
     let mut build = Build::new();
@@ -366,6 +392,9 @@ fn an_unresolved_citation_whose_label_mints_elsewhere_suggests_the_import() {
 
 /// (´[LBL-inf:labels:imported-citation]´): an import into a registered owner
 /// that mints the label is clean.
+///
+/// An import into a registered owner that mints the label is clean.
+/// ´claim:judgments:a-resolving-import-is-clean´
 #[test]
 fn a_resolving_import_is_clean() {
     let mut build = Build::new();
@@ -384,6 +413,9 @@ fn a_resolving_import_is_clean() {
 /// (´[LBL-inf:labels:imported-citation]´) side condition: an unregistered
 /// prefix names no owner and leaves the citation with out-degree zero over
 /// `Cites`, which is the whole detection.
+///
+/// An unregistered prefix names no owner, which is the whole detection.
+/// ´claim:judgments:an-unregistered-prefix-names-no-owner´
 #[test]
 fn an_unregistered_prefix_is_out_degree_zero_over_cites() {
     let (mut build, _, region) = one_owner();
@@ -395,6 +427,9 @@ fn an_unregistered_prefix_is_out_degree_zero_over_cites() {
 
 /// (´[LBL-inf:labels:imported-citation]´) side condition: a self-qualified
 /// import is an edge back to the citing owner, and is underivable.
+///
+/// A self-qualified import is an edge back to the citing owner and is underivable.
+/// ´claim:judgments:a-self-qualified-import-is-underivable´
 #[test]
 fn a_self_qualified_import_is_an_edge_back_to_the_citing_owner() {
     let (mut build, owner, region) = one_owner();
@@ -408,6 +443,9 @@ fn a_self_qualified_import_is_an_edge_back_to_the_citing_owner() {
 /// (´[LBL-inf:labels:imported-citation]´): the self-qualification is caught
 /// before resolution, so a self-qualified import that would have resolved is
 /// still one finding and not two.
+///
+/// A self-qualified import that would have resolved is still one finding and not two.
+/// ´claim:judgments:a-self-qualified-import-reports-once´
 #[test]
 fn a_self_qualified_import_reports_once() {
     let (mut build, owner, region) = one_owner();
@@ -419,6 +457,9 @@ fn a_self_qualified_import_reports_once() {
 /// (´[LBL-inv:labels:total-resolution]´): "exactly one" cuts both ways, and
 /// a citation with two targets is a finding the harvest cannot produce and
 /// the judgment still states.
+///
+/// A citation with two targets is a finding, exactly-one cutting both ways.
+/// ´claim:judgments:two-targets-is-ambiguous´
 #[test]
 fn a_citation_resolving_twice_is_the_ambiguous_finding() {
     let (mut build, owner, region) = one_owner();
@@ -435,6 +476,9 @@ fn a_citation_resolving_twice_is_the_ambiguous_finding() {
 
 /// (´sig:lint:index-maps´): a label an owner carries but does not mint
 /// resolves nothing — `mints` is the existential premise, `labels` is not.
+///
+/// A label an owner carries but does not mint resolves nothing.
+/// ´claim:judgments:a-carried-label-is-not-a-minted-one´
 #[test]
 fn a_carried_but_unminted_label_resolves_nothing() {
     let (mut build, owner, region) = one_owner();
@@ -449,6 +493,9 @@ fn a_carried_but_unminted_label_resolves_nothing() {
 
 /// (´[LBL-inv:labels:warrant-totality]´): a kind outside K admits authorship
 /// only, and the occurrence embodies it — no finding, no record owed.
+///
+/// A kind outside the reserved set admits authorship only, and the occurrence embodies it.
+/// ´claim:judgments:an-authored-kind-owes-no-record´
 #[test]
 fn an_authored_kind_stands_on_its_own_occurrence() {
     let (mut build, owner, region) = one_owner();
@@ -459,6 +506,9 @@ fn an_authored_kind_stands_on_its_own_occurrence() {
 /// (´[LBL-sig:labels:reserved-kinds]´), (´[LBL-inv:labels:warrant-totality]´):
 /// a reserved kind no profile governs admits neither warrant, and its bare
 /// occurrence is the hard failure.
+///
+/// A reserved kind no profile governs admits neither warrant, and its bare occurrence fails.
+/// ´claim:judgments:an-ungoverned-reserved-kind-fails´
 #[test]
 fn a_reserved_kind_no_profile_governs_is_the_hard_failure() {
     let (mut build, owner, region) = one_owner();
@@ -470,6 +520,9 @@ fn a_reserved_kind_no_profile_governs_is_the_hard_failure() {
 /// (´[LBL-inv:labels:warrant-totality]´): a governed inventory kind away
 /// from any standard place has no derivation behind it, which is the
 /// incoming-`Derives` check reading zero.
+///
+/// A governed inventory kind away from any standard place has no derivation behind it.
+/// ´claim:judgments:a-stray-inventory-mint-is-underived´
 #[test]
 fn a_governed_kind_with_no_derivation_is_the_missing_warrant() {
     let (mut build, owner, region) = one_owner();
@@ -480,6 +533,9 @@ fn a_governed_kind_with_no_derivation_is_the_missing_warrant() {
 
 /// (´[LBL-inv:labels:warrant-totality]´): a governed inventory kind with its
 /// derivation is clean.
+///
+/// A governed inventory kind with its derivation is clean.
+/// ´claim:judgments:a-derived-inventory-mint-is-clean´
 #[test]
 fn a_governed_kind_with_its_derivation_is_clean() {
     let (mut build, owner, region) = one_owner();
@@ -493,6 +549,9 @@ fn a_governed_kind_with_its_derivation_is_clean() {
 /// (´[LBL-inv:labels:warrant-totality]´): every kind admits at most one
 /// warrant species, so a derivation behind a kind outside K is the mirror
 /// failure — the two spaces are disjoint by construction.
+///
+/// A derivation behind an authored kind is the mirror failure, the two spaces being disjoint.
+/// ´claim:judgments:the-two-warrant-spaces-are-disjoint´
 #[test]
 fn a_derivation_behind_an_authored_kind_is_the_species_failure() {
     let (mut build, owner, region) = one_owner();
@@ -507,6 +566,9 @@ fn a_derivation_behind_an_authored_kind_is_the_species_failure() {
 /// (´dec:lint:staged-profiles´): a staged profile governs nothing, so its
 /// kind stays reserved-but-ungoverned and a bare occurrence of it is the
 /// hard failure by that clause rather than by the missing derivation.
+///
+/// A staged profile governs nothing, so its kind fails as reserved-but-ungoverned.
+/// ´claim:judgments:a-staged-kind-is-ungoverned´
 #[test]
 fn a_staged_profiles_kind_is_ungoverned_not_underived() {
     let (mut build, owner, region) = one_owner();
@@ -518,6 +580,9 @@ fn a_staged_profiles_kind_is_ungoverned_not_underived() {
 /// (´[LBL-inv:labels:warrant-totality]´): once the profile is in force the
 /// same bare mint fails by the other arm — the kind is governed, so what the
 /// mint lacks is its derivation.
+///
+/// Once the profile is in force the same bare mint fails for lacking its derivation instead.
+/// ´claim:judgments:the-arm-changes-when-the-profile-enters´
 #[test]
 fn a_governed_kinds_bare_mint_is_underived_not_ungoverned() {
     let (mut build, owner, region) = one_owner();
@@ -528,6 +593,9 @@ fn a_governed_kinds_bare_mint_is_underived_not_ungoverned() {
 
 /// (´dec:lint:staged-profiles´): no inventory judgment runs over a staged
 /// profile, whatever the graph holds beside it.
+///
+/// No inventory judgment runs over a staged profile, whatever the graph holds beside it.
+/// ´claim:judgments:a-staged-profile-is-not-judged´
 #[test]
 fn a_staged_profile_is_judged_not_at_all() {
     let (mut build, owner, _) = one_owner();
@@ -544,6 +612,9 @@ fn a_staged_profile_is_judged_not_at_all() {
 
 /// (´[LBL-inv:labels:inventory]´): every asset of the census carrying
 /// exactly its label, and no label without an asset, is the clean case.
+///
+/// A bijection between census and carried labels is the clean case.
+/// ´claim:judgments:a-bijection-is-clean´
 #[test]
 fn a_bijection_between_census_and_carried_labels_is_clean() {
     let (mut build, owner, region) = one_owner();
@@ -562,10 +633,13 @@ fn a_bijection_between_census_and_carried_labels_is_clean() {
 /// (´[LBL-inv:labels:inventory]´): a covered asset carrying no label of its
 /// profile's kind at the standard place.
 ///
-/// The finding is reported unlocated, because `AssetNode` carries no span
-/// and no `Contains` edge runs from its source: an asset with no mint has
-/// nothing in the ruled weights to point at. Reported-and-unlocated beats
-/// dropped, and the gap belongs to (´sig:lint:node-weights´).
+/// An asset with no mint has no register row to point at, so it is located at
+/// itself where the graph holds its source, and reported unlocated where it
+/// does not — as here, the fixture building assets without one. Reported and
+/// unlocated beats dropped (´sig:lint:node-weights´).
+///
+/// A covered asset carrying no label of its profile's kind fails.
+/// ´claim:judgments:an-uncarried-asset-fails´
 #[test]
 fn a_covered_asset_carrying_no_label_fails() {
     let (mut build, owner, _) = one_owner();
@@ -579,6 +653,9 @@ fn a_covered_asset_carrying_no_label_fails() {
 
 /// (´[LBL-inv:labels:inventory]´): "exactly one label of p's kind" refuses
 /// two as firmly as none.
+///
+/// Exactly one label refuses two as firmly as none.
+/// ´claim:judgments:two-labels-refuse-like-none´
 #[test]
 fn a_covered_asset_carrying_two_labels_fails() {
     let (mut build, owner, region) = one_owner();
@@ -596,6 +673,9 @@ fn a_covered_asset_carrying_two_labels_fails() {
 /// (´[LBL-inv:labels:inventory]´): the derivation is injective, and a
 /// collision is a naming defect of the assets — surfaced as such, naming
 /// both.
+///
+/// A derivation collision is a naming defect of the assets, surfaced naming both.
+/// ´claim:judgments:a-derivation-collision-names-both´
 #[test]
 fn two_assets_deriving_one_label_names_both() {
     let (mut build, owner, region) = one_owner();
@@ -616,6 +696,9 @@ fn two_assets_deriving_one_label_names_both() {
 
 /// (´[LBL-inv:labels:inventory]´): no label of p's kind occurs without a
 /// covered asset — labels do not outlive what they name.
+///
+/// No label of a profile's kind occurs without a covered asset.
+/// ´claim:judgments:a-label-does-not-outlive-its-asset´
 #[test]
 fn a_label_of_a_governed_kind_with_no_asset_is_the_orphan() {
     let (mut build, owner, region) = one_owner();
@@ -630,6 +713,9 @@ fn a_label_of_a_governed_kind_with_no_asset_is_the_orphan() {
 
 /// (´[LBL-inv:labels:inventory]´): the invariant is "within each owner", so
 /// two owners deriving one label text collide with nothing.
+///
+/// The inventory is checked within each owner, so two owners deriving one text collide with nothing.
+/// ´claim:judgments:the-inventory-is-per-owner´
 #[test]
 fn the_inventory_is_checked_within_each_owner() {
     let mut build = Build::new();
@@ -647,6 +733,9 @@ fn the_inventory_is_checked_within_each_owner() {
 
 /// (´[LBL-inv:labels:generated-compliance]´): an authored region is no
 /// subject of this clause, whatever stands in it.
+///
+/// An authored region is no subject of the generated-compliance clause.
+/// ´claim:judgments:an-authored-region-is-not-generated´
 #[test]
 fn an_authored_regions_occurrences_are_not_judged_here() {
     let (mut build, owner, region) = one_owner();
@@ -662,6 +751,9 @@ fn an_authored_regions_occurrences_are_not_judged_here() {
 /// choice is that choice still": generation is a fact about the pen, and
 /// warrants attach to no pen. Demanding a derivation here would demand the
 /// one warrant an authored kind does not admit.
+///
+/// A generated mint of an authored kind stands on its authorship, generation being a fact about the pen.
+/// ´claim:judgments:a-generated-authored-mint-is-clean´
 #[test]
 fn f3_a_generated_mint_of_an_authored_kind_is_clean() {
     let mut build = Build::new();
@@ -678,6 +770,9 @@ fn f3_a_generated_mint_of_an_authored_kind_is_clean() {
 /// (´[LBL-inv:labels:generated-compliance]´): and a reserved kind beside it
 /// in the same region still fails, so the narrowing narrows and never
 /// silences.
+///
+/// A reserved kind beside it in one region still fails, so the narrowing never silences.
+/// ´claim:judgments:the-narrowing-does-not-silence´
 #[test]
 fn f3_a_reserved_kind_in_the_same_generated_region_still_fails() {
     let mut build = Build::new();
@@ -698,6 +793,9 @@ fn f3_a_reserved_kind_in_the_same_generated_region_still_fails() {
 
 /// (´[LBL-inv:labels:generated-compliance]´): a generated mint of a kind in
 /// K stands on a derivation, that being the only warrant its kind admits.
+///
+/// A generated mint of a reserved kind stands on a derivation or on nothing at all.
+/// ´claim:judgments:a-generated-reserved-mint-needs-its-derivation´
 #[test]
 fn a_generated_mint_with_no_derivation_fails() {
     let mut build = Build::new();
@@ -717,6 +815,8 @@ fn a_generated_mint_with_no_derivation_fails() {
 
 /// (´[LBL-inv:labels:generated-compliance]´): a generated mint with its
 /// derivation is an occurrence in full.
+///
+/// (´claim:judgments:a-generated-reserved-mint-needs-its-derivation´)
 #[test]
 fn a_generated_mint_with_its_derivation_is_clean() {
     let mut build = Build::new();
@@ -732,6 +832,9 @@ fn a_generated_mint_with_its_derivation_is_clean() {
 
 /// (´[LBL-inv:labels:generated-compliance]´): an unresolvable span in
 /// generated output is a generator defect.
+///
+/// An unresolvable span in generated output is a generator defect.
+/// ´claim:judgments:an-unresolvable-generated-span-is-a-defect´
 #[test]
 fn a_generated_citation_resolving_nowhere_is_a_generator_defect() {
     let mut build = Build::new();
@@ -752,6 +855,8 @@ fn a_generated_citation_resolving_nowhere_is_a_generator_defect() {
 
 /// (´[LBL-inv:labels:generated-compliance]´): a generated citation resolves
 /// as every citation must, and then it is clean.
+///
+/// (´claim:judgments:an-unresolvable-generated-span-is-a-defect´)
 #[test]
 fn a_generated_citation_that_resolves_is_clean() {
     let mut build = Build::new();
@@ -768,6 +873,9 @@ fn a_generated_citation_that_resolves_is_clean() {
 
 /// (´[LBL-inf:labels:anchor-harvest]´): the domain is empty in this corpus,
 /// and an empty domain passes vacuously rather than by absence.
+///
+/// An empty domain passes vacuously rather than by absence.
+/// ´claim:judgments:an-empty-domain-passes-vacuously´
 #[test]
 fn the_anchor_harvest_passes_vacuously() {
     let (build, _, _) = one_owner();
@@ -777,6 +885,9 @@ fn the_anchor_harvest_passes_vacuously() {
 /// (´[LBL-inf:labels:anchor-harvest]´): the check that is not absent — an
 /// `Anchors` edge where no index is designated is a finding, which is what
 /// makes the vacuous pass mean something.
+///
+/// An anchor edge where no index is designated is a finding, which is what makes a vacuous pass mean something.
+/// ´claim:judgments:an-undesignated-anchor-fails´
 #[test]
 fn an_anchor_with_no_designation_fails() {
     let (mut build, owner, region) = one_owner();
@@ -792,6 +903,8 @@ fn an_anchor_with_no_designation_fails() {
 
 /// (´[LBL-inf:labels:synthetic-citation]´): `[typed-data]` designates no
 /// class, so the domain is empty and the judgment passes vacuously.
+///
+/// (´claim:judgments:an-empty-domain-passes-vacuously´)
 #[test]
 fn the_synthetic_citation_check_passes_vacuously() {
     let (build, _, _) = one_owner();
@@ -819,6 +932,9 @@ fn registry() -> &'static KindRegistry {
 
 /// (´[KND-judg:kinds:head-validation]´): out-degree one over `ValidatesAs`
 /// is a validated head.
+///
+/// A head validating exactly once is clean.
+/// ´claim:judgments:a-head-validating-once-is-clean´
 #[test]
 fn a_head_validating_once_is_clean() {
     let (mut build, _, region) = one_owner();
@@ -829,6 +945,9 @@ fn a_head_validating_once_is_clean() {
 
 /// (´[KND-judg:kinds:head-validation]´): zero is an uncatalogued pair — an
 /// edge with no target, which is why the pairs are nodes.
+///
+/// A head validating nowhere is an uncatalogued pair.
+/// ´claim:judgments:an-unvalidated-head-is-uncatalogued´
 #[test]
 fn a_head_validating_nowhere_is_uncatalogued() {
     let (mut build, _, region) = one_owner();
@@ -841,6 +960,9 @@ fn a_head_validating_nowhere_is_uncatalogued() {
 /// (´dec:lint:head-recognition´): matching is case-exact, so a head whose
 /// only defect is capitalization lands in the uncatalogued class and its
 /// message names the spelling the catalogue carries.
+///
+/// Head matching is case-exact, and a miscapitalized head is named against the catalogue's spelling.
+/// ´claim:judgments:head-matching-is-case-exact´
 #[test]
 fn a_miscapitalized_head_is_uncatalogued_and_named() {
     let (mut build, _, region) = one_owner();
@@ -854,6 +976,9 @@ fn a_miscapitalized_head_is_uncatalogued_and_named() {
 /// are answered in different places — an uncatalogued head at the registry,
 /// this one at the head — and the finding names the bound rather than the
 /// catalogue nothing consulted.
+///
+/// A head whose reduction stopped at a bound carries its own rule and names the bound.
+/// ´claim:judgments:a-bounded-reduction-has-its-own-rule´
 #[test]
 fn f9_a_head_beyond_the_reduction_bounds_carries_its_own_rule() {
     let (mut build, _, region) = one_owner();
@@ -878,6 +1003,9 @@ fn f9_a_head_beyond_the_reduction_bounds_carries_its_own_rule() {
 }
 
 /// (´[KND-judg:kinds:head-validation]´): two is an ambiguous reduction.
+///
+/// A head validating twice is an ambiguous reduction.
+/// ´claim:judgments:a-twice-validated-head-is-ambiguous´
 #[test]
 fn a_head_validating_twice_is_ambiguous() {
     let (mut build, _, region) = one_owner();
@@ -892,6 +1020,9 @@ fn a_head_validating_twice_is_ambiguous() {
 /// (´[ARCH-dec:linter:registry-as-data]´): the verdict is the edges', and
 /// the registry supplies only the words — so a head the harvest validated
 /// stays validated whatever a second call to `validate` would say.
+///
+/// The verdict is the graph's and the registry supplies only the words.
+/// ´claim:judgments:the-verdict-is-the-graphs´
 #[test]
 fn the_edges_carry_the_verdict_and_the_registry_the_words() {
     let (mut build, _, region) = one_owner();
@@ -903,6 +1034,9 @@ fn the_edges_carry_the_verdict_and_the_registry_the_words() {
 /// (´dec:lint:registry-bootstrap´): with no registry the label judgments run
 /// normally and one diagnostic names kind validation as suppressed, counting
 /// the heads it did not validate.
+///
+/// With no registry one diagnostic names kind validation as suppressed and counts the heads.
+/// ´claim:judgments:a-suppression-names-itself´
 #[test]
 fn a_suppressed_registry_names_itself_and_counts_the_heads() {
     let (mut build, _, region) = one_owner();
@@ -924,6 +1058,9 @@ fn a_suppressed_registry_names_itself_and_counts_the_heads() {
 /// (´dec:lint:registry-bootstrap´): the label judgments run whether or not
 /// the registry parsed — the registry document is linted first by the rules
 /// that need no kinds.
+///
+/// The label judgments run whether or not the registry parsed.
+/// ´claim:judgments:the-label-judgments-need-no-registry´
 #[test]
 fn the_label_judgments_run_without_a_registry() {
     let (mut build, owner, region) = one_owner();
@@ -935,6 +1072,9 @@ fn the_label_judgments_run_without_a_registry() {
 
 /// (´sig:lint:judgment-api´): with a registry, head validation runs and no
 /// suppression is claimed.
+///
+/// With a registry, head validation runs and no suppression is claimed.
+/// ´claim:judgments:a-parsed-registry-claims-no-suppression´
 #[test]
 fn a_parsed_registry_validates_heads_and_claims_no_suppression() {
     let (mut build, _, region) = one_owner();
@@ -947,6 +1087,9 @@ fn a_parsed_registry_validates_heads_and_claims_no_suppression() {
 /// (´sig:lint:diagnostic-api´): a judgment leaves line, column, and
 /// enforcement unset, and stamping fills all three from the sources the run
 /// entry holds anyway.
+///
+/// Stamping fills the line, column, and enforcement a judgment leaves unset.
+/// ´claim:judgments:stamping-fills-what-a-judgment-cannot-know´
 #[test]
 fn stamping_fills_what_a_judgment_cannot_know() {
     let mut build = Build::new();
@@ -976,6 +1119,9 @@ fn stamping_fills_what_a_judgment_cannot_know() {
 /// (´dec:lint:enforcement-partition´): a finding about the adoption data
 /// rather than about a source keeps its zeros, because no source's bytes
 /// locate it.
+///
+/// A finding about the adoption data rather than about a source keeps its zeros.
+/// ´claim:judgments:a-sourceless-finding-keeps-its-zeros´
 #[test]
 fn a_finding_with_no_source_keeps_its_zeros() {
     let (mut build, owner, region) = one_owner();
@@ -989,6 +1135,9 @@ fn a_finding_with_no_source_keeps_its_zeros() {
 /// (´conv:lint:finding-or-error´): no judgment returns `Result`, and an
 /// empty list is the positive answer — asserted over the whole surface at
 /// once, so a judgment added later inherits the shape.
+///
+/// No judgment returns an error, and an empty list is the positive answer.
+/// ´claim:judgments:an-empty-list-is-the-positive-answer´
 #[test]
 fn every_judgment_answers_an_empty_corpus_with_an_empty_list() {
     let g = Corpus::new();
@@ -1005,12 +1154,15 @@ fn every_judgment_answers_an_empty_corpus_with_an_empty_list() {
 
 /// (´sig:lint:diagnostic-api´): no rule identifier is label-shaped, because
 /// `lint` is a reserved kind no profile governs.
+///
+/// (´claim:diagnostics:no-rule-identifier-is-label-shaped´)
 #[test]
 fn no_judgment_rule_identifier_is_label_shaped() {
     for rule in labels::RULES
         .iter()
         .chain(&kinds::RULES)
         .chain(&judge::RULES)
+        .chain(&judge::claims::RULES)
         .chain(&judge::freshness::RULES)
         .chain(&cogra_linter::registers::RULES)
         .chain(&cogra_linter::RULES)

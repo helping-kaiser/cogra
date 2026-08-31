@@ -37,6 +37,9 @@ fn parse(text: &str) -> Label {
 
 /// The design's own counterexample: bytewise, a digit sorts below the colon,
 /// so `a1`:`x`:`y` precedes `a`:`x`:`y`.
+///
+/// A digit sorts below the colon, so a longer kind can precede a shorter one.
+/// ´claim:order:a-digit-sorts-below-the-colon´
 #[test]
 fn the_counterexample_pair() {
     let (first, second) = (parse("a1:x:y"), parse("a:x:y"));
@@ -50,6 +53,9 @@ fn the_counterexample_pair() {
 /// The same pair field by field: a field-wise order puts them the other way
 /// round, which is the disagreement the representation removes rather than
 /// tests for.
+///
+/// Comparing the three fields in turn disagrees with comparing the rendering.
+/// ´claim:order:field-wise-comparison-disagrees´
 #[test]
 fn field_wise_order_disagrees() {
     let (first, second) = (parse("a1:x:y"), parse("a:x:y"));
@@ -63,6 +69,9 @@ fn field_wise_order_disagrees() {
 
 /// A hyphen is `0x2D` and sorts below every word byte, so a hyphenated name
 /// precedes the longer single word it shares a prefix with.
+///
+/// A hyphen sorts below every word byte, so a hyphenated name comes first.
+/// ´claim:order:a-hyphen-sorts-below-word-bytes´
 #[test]
 fn hyphen_sorts_below_word_bytes() {
     let (first, second) = (parse("a:b:c-d"), parse("a:b:cd"));
@@ -70,6 +79,9 @@ fn hyphen_sorts_below_word_bytes() {
 }
 
 /// A shorter label precedes the label it is a prefix of.
+///
+/// A label precedes every label that extends its rendering.
+/// ´claim:order:a-prefix-precedes-what-extends-it´
 #[test]
 fn prefix_precedes_extension() {
     let (first, second) = (parse("a:b:c"), parse("a:b:cd"));
@@ -77,6 +89,9 @@ fn prefix_precedes_extension() {
 }
 
 /// Equal renderings are equal labels, so the order is antisymmetric on them.
+///
+/// Two labels rendering the same bytes compare equal.
+/// ´claim:order:equal-renderings-compare-equal´
 #[test]
 fn equal_renderings_compare_equal() {
     assert_eq!(

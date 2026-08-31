@@ -456,7 +456,36 @@ fn asset(profile: &Profile, identifier: &str, area: Area, hit: &Hit) -> Asset {
         place: profile.standard_place.clone(),
         span: hit.span,
         opens: hit.opens,
+        documentation: hit.documentation.clone(),
     }
+}
+
+/// An item's own documentation, as logical lines.
+///
+/// One `///` attribute is one line; one `/** … */` attribute is as many lines
+/// as its interior carries breaks, which is what makes the two forms answer
+/// alike. Each line is trimmed, because a documentation comment's indentation
+/// is its host's and never the line's own — the same resolving-away of
+/// structure the span grammar performs (´[LBL-gram:labels:well-formed]´).
+fn documentation(attrs: &[syn::Attribute]) -> Vec<String> {
+    let mut lines = Vec::new();
+    for attr in attrs {
+        let syn::Meta::NameValue(pair) = &attr.meta else {
+            continue;
+        };
+        if !pair.path.is_ident("doc") {
+            continue;
+        }
+        let syn::Expr::Lit(literal) = &pair.value else {
+            continue;
+        };
+        let syn::Lit::Str(text) = &literal.lit else {
+            continue;
+        };
+        let value = text.value();
+        lines.extend(value.split('\n').map(|line| line.trim().to_owned()));
+    }
+    lines
 }
 
 /// The three-backtick fence that opens and closes a documentation example.
@@ -674,6 +703,8 @@ struct Hit {
     opens: usize,
     /// The final segments of the item's own attribute paths.
     attributes: Vec<String>,
+    /// The item's own documentation, as logical lines.
+    documentation: Vec<String>,
 }
 
 /// The one walk both duties are fed from.
@@ -698,6 +729,7 @@ impl Walk {
             span,
             opens,
             attributes: attrs.iter().filter_map(final_segment).collect(),
+            documentation: documentation(attrs),
         });
     }
 }
@@ -740,6 +772,7 @@ impl<'ast> Visit<'ast> for Walk {
                 span: range(item.span()),
                 opens: range(brace.span.open()).end,
                 attributes: item.attrs.iter().filter_map(final_segment).collect(),
+                documentation: documentation(&item.attrs),
             });
         } else {
             self.declarations.push(Declaration {

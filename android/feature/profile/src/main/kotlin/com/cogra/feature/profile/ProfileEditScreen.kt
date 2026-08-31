@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -45,10 +46,22 @@ fun ProfileEditRoute(
     viewModel: ProfileEditViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    if (state.saved) {
-        viewModel.onSavedConsumed()
-        onSaved()
+
+    // A one-shot, in an effect rather than in the composition.
+    //
+    // Run inline, this popped the back stack twice: `onSavedConsumed`
+    // writes to the state flow, but the collector is dispatched, so the
+    // next recomposition in the same frame still saw `saved` and called
+    // `onSaved` again — the second pop took the profile with it and the
+    // refresh signal landed on the wrong back-stack entry, which is why a
+    // changed avatar never appeared. Same shape the wizard's outcome uses.
+    LaunchedEffect(state.saved) {
+        if (state.saved) {
+            viewModel.onSavedConsumed()
+            onSaved()
+        }
     }
+
     // One picker per picture: the system photo picker, so no media
     // permission is ever requested
     // (developer.android.com/training/data-storage/shared/photopicker).
