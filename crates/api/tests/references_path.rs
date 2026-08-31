@@ -198,6 +198,9 @@ fn draft(target: Uuid) -> ReferenceDraft {
 /// path rather than against whichever entry happens to sit at the limit —
 /// and it is checked before any entry is resolved, so an over-long batch
 /// carrying an unresolvable target still reports the cap.
+///
+/// The citation batch cap is a whole-batch fault reported against the batch field, and it is decided before any entry is resolved.
+/// ´claim:references:the-batch-cap-is-a-whole-batch-fault´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_reference_batch_cap_admits_ten_and_refuses_eleven(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -226,6 +229,7 @@ async fn the_reference_batch_cap_admits_ten_and_refuses_eleven(pool: PgPool) {
     assert_eq!(e.path, vec!["references".to_string()]);
 }
 
+/// (´claim:references:the-batch-cap-is-a-whole-batch-fault´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_cap_is_checked_before_the_entries(pool: PgPool) {
     let over: Vec<ReferenceDraft> = (0..MAX_REFERENCES_PER_BATCH + 1)
@@ -243,6 +247,8 @@ async fn the_cap_is_checked_before_the_entries(pool: PgPool) {
     );
 }
 
+/// An unresolvable target inside a batch is refused against the entry that named it.
+/// ´claim:references:an-unresolvable-target-names-its-entry´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_unresolvable_target_names_its_own_entry(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -267,6 +273,9 @@ async fn an_unresolvable_target_names_its_own_entry(pool: PgPool) {
 
 /// A standalone citation roots its refusal at the mutation's own field,
 /// not at a batch path that does not exist there.
+///
+/// A standalone citation roots its refusal at the mutation's own field, there being no batch path to name.
+/// ´claim:references:a-standalone-refusal-names-the-bare-field´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_standalone_unresolvable_target_names_the_bare_field(pool: PgPool) {
     let e = bad_input(
@@ -277,6 +286,8 @@ async fn a_standalone_unresolvable_target_names_the_bare_field(pool: PgPool) {
     assert_eq!(e.path, vec!["target".to_string()]);
 }
 
+/// One target cited twice in a batch is refused as the duplicate it is.
+/// ´claim:references:a-duplicate-target-in-a-batch-is-refused´
 #[sqlx::test(migrations = "../../migrations")]
 async fn one_target_cited_twice_in_a_batch_is_refused(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -301,6 +312,7 @@ async fn one_target_cited_twice_in_a_batch_is_refused(pool: PgPool) {
     );
 }
 
+/// (´claim:references:an-artifact-cannot-cite-itself´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_artifact_cannot_cite_itself(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -315,6 +327,8 @@ async fn an_artifact_cannot_cite_itself(pool: PgPool) {
     assert_eq!(e.path, vec!["target".to_string()]);
 }
 
+/// Citing from an artifact that is not there is refused against the artifact field.
+/// ´claim:references:an-absent-citing-artifact-names-its-field´
 #[sqlx::test(migrations = "../../migrations")]
 async fn citing_from_an_artifact_that_does_not_exist_names_the_artifact(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -339,6 +353,9 @@ async fn citing_from_an_artifact_that_does_not_exist_names_the_artifact(pool: Pg
 /// A mention is a Reference whose target is the person's Profile (D2), so
 /// the target resolver must reach an Actor's Profile node and the census
 /// must admit it as a terminal target.
+///
+/// A mention's far end is the person it names, resolving to their Profile on every surface that serves it.
+/// ´claim:references:a-mentions-far-end-is-the-person´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_mention_resolves_its_target_to_a_profile(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -372,6 +389,8 @@ async fn a_mention_resolves_its_target_to_a_profile(pool: PgPool) {
 /// hand-built row: a citation authored at (relevance, support) must read
 /// back at exactly that pair, which it can only do if the gesture writes
 /// the act tuple and the fold un-transposes the T-leg.
+///
+/// (´claim:references:a-citation-reads-back-as-authored´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_landed_citation_reads_back_at_the_parameters_it_was_authored_with(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -415,6 +434,9 @@ async fn a_landed_citation_reads_back_at_the_parameters_it_was_authored_with(poo
 
 /// The citation carries no payload (D14), which is what keeps it inside
 /// the netted bundle the read side is built on.
+///
+/// A citation carries no payload, which is what keeps it inside the netted bundle the read side is built on.
+/// ´claim:references:a-citation-carries-no-payload´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_citation_commits_an_empty_payload(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -531,6 +553,8 @@ async fn seed_standing_set(
 /// what the gestures accumulate into, and it is the standalone citation —
 /// the only one that meets an artifact already carrying a set — that
 /// meets it.
+///
+/// (´claim:references:the-standing-set-caps-at-fifty´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_standing_reference_cap_refuses_the_citation_past_fifty(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -567,6 +591,8 @@ async fn the_standing_reference_cap_refuses_the_citation_past_fifty(pool: PgPool
 /// The cap counts the fold's view, not the records behind it: an artifact
 /// carrying fifty-one bundles of which one has netted away has a slot
 /// free, and the citation that fills it is admitted.
+///
+/// (´claim:references:the-standing-cap-counts-what-stands´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_netted_bundle_frees_a_slot_under_the_standing_reference_cap(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -598,6 +624,9 @@ async fn a_netted_bundle_frees_a_slot_under_the_standing_reference_cap(pool: PgP
 
 /// The cap is per (author, artifact): another author's fifty citations
 /// from the same artifact leave the viewer's own set empty.
+///
+/// The standing cap is per author and artifact, so another author's set from the same artifact leaves the viewer's own empty.
+/// ´claim:references:the-standing-cap-is-per-author´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_standing_reference_cap_counts_only_the_citing_authors_own_set(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -624,6 +653,9 @@ async fn the_standing_reference_cap_counts_only_the_citing_authors_own_set(pool:
 /// The fold nets — it does not pick a winner. Three records from one
 /// author toward one target sum, and the sum is what the view reports;
 /// newest-wins would have reported the last record's pair alone.
+///
+/// The fold nets rather than picking a winner: several records from one author toward one target sum, and the sum is what the view reports.
+/// ´claim:references:the-fold-sums-rather-than-picking-a-winner´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_multi_record_bundle_sums_rather_than_taking_the_newest(pool: PgPool) {
     seed_reference(&pool, "r1", "alice", "art", "tgt", 0.2, 0.1, false).await;
@@ -641,6 +673,9 @@ async fn a_multi_record_bundle_sums_rather_than_taking_the_newest(pool: PgPool) 
 
 /// Sum *then* clip: a bundle carrying more conviction than one record can
 /// express folds to the census ceiling, never past it.
+///
+/// The fold sums and then clips, so a bundle carrying more conviction than one record can express folds to the census ceiling and never past it.
+/// ´claim:references:the-fold-sums-then-clips´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_bundle_past_the_ceiling_clips(pool: PgPool) {
     seed_reference(&pool, "r1", "alice", "art", "tgt", 0.9, -0.9, false).await;
@@ -656,6 +691,9 @@ async fn a_bundle_past_the_ceiling_clips(pool: PgPool) {
 /// Withdrawal on this family is netting, so a bundle whose records cancel
 /// leaves the view — the citation stands as a record and stops standing as
 /// a claim.
+///
+/// Withdrawal on this family is netting, so a bundle whose records cancel leaves the view while its citations stand as records.
+/// ´claim:references:a-netted-bundle-leaves-the-view´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_bundle_netting_to_zero_drops_out_of_the_view(pool: PgPool) {
     seed_reference(&pool, "r1", "alice", "art", "gone", 0.5, 0.5, false).await;
@@ -670,6 +708,8 @@ async fn a_bundle_netting_to_zero_drops_out_of_the_view(pool: PgPool) {
 }
 
 /// A bundle inert on one axis still stands: only (0,0) is withdrawal.
+///
+/// (´claim:references:a-netted-bundle-leaves-the-view´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_bundle_inert_on_one_axis_is_kept(pool: PgPool) {
     seed_reference(&pool, "r1", "alice", "art", "tgt", 0.5, 0.0, false).await;
@@ -684,6 +724,9 @@ async fn a_bundle_inert_on_one_axis_is_kept(pool: PgPool) {
 
 /// Payload-marked records are read individually, never through the netted
 /// bundle — so one must not move the fold.
+///
+/// A payload-marked record is read individually and never through the netted bundle, so it cannot move the fold.
+/// ´claim:references:a-payload-marked-record-stays-out-of-the-fold´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_payload_marked_record_is_excluded_from_the_fold(pool: PgPool) {
     seed_reference(&pool, "r1", "alice", "art", "tgt", 0.4, 0.4, false).await;
@@ -702,6 +745,9 @@ async fn a_payload_marked_record_is_excluded_from_the_fold(pool: PgPool) {
 
 /// The bundle is keyed by the full incidence: the same author citing the
 /// same target from two artifacts authors two bundles, never one.
+///
+/// A bundle is keyed by the full incidence, so one author citing one target from two artifacts authors two bundles.
+/// ´claim:references:a-bundle-is-keyed-by-the-full-incidence´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_same_target_from_two_artifacts_is_two_bundles(pool: PgPool) {
     seed_reference(&pool, "r1", "alice", "art-one", "tgt", 0.5, 0.5, false).await;
@@ -722,6 +768,9 @@ async fn the_same_target_from_two_artifacts_is_two_bundles(pool: PgPool) {
 
 /// Another author's citation off the same artifact is a different bundle
 /// and does not join the carrier author's row (D12).
+///
+/// Another author's citation off the same artifact is its own bundle and never joins the carrier author's row.
+/// ´claim:references:a-third-party-citation-is-its-own-bundle´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_third_party_citation_is_not_folded_into_the_authors(pool: PgPool) {
     seed_reference(&pool, "r1", "alice", "art", "tgt", 0.5, 0.5, false).await;
@@ -737,6 +786,9 @@ async fn a_third_party_citation_is_not_folded_into_the_authors(pool: PgPool) {
 
 /// A staged citation is invisible to the L1 view and visible to its own
 /// author's L2 view, from the pre-commitment onward.
+///
+/// A staged citation is its author's own act in flight, visible to them from the pre-commitment onward and to nobody else.
+/// ´claim:references:a-staged-citation-shows-to-its-author-alone´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_pending_citation_shows_only_in_the_pending_inclusive_view(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -802,6 +854,8 @@ async fn a_pending_citation_shows_only_in_the_pending_inclusive_view(pool: PgPoo
     assert!(!after[0].pending);
 }
 
+/// A pending-inclusive view needs both the flag and a viewer for it to be whose pending it is.
+/// ´claim:references:a-pending-view-needs-a-viewer´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_view_constructor_needs_both_the_flag_and_a_viewer(pool: PgPool) {
     let _ = &pool;
@@ -823,6 +877,9 @@ async fn the_view_constructor_needs_both_the_flag_and_a_viewer(pool: PgPool) {
 /// The bundle read returns raw sums in act-tuple space, which is what
 /// withdrawal needs: a clipped sum has already lost how far from zero the
 /// bundle really sits.
+///
+/// The bundle read returns raw unclipped sums, a clipped one having already lost how far from zero the bundle really sits.
+/// ´claim:references:the-bundle-read-is-unclipped´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_bundle_read_returns_raw_unclipped_sums(pool: PgPool) {
     seed_reference(&pool, "r1", "alice", "art", "tgt", 0.9, -0.9, false).await;
@@ -839,6 +896,9 @@ async fn the_bundle_read_returns_raw_unclipped_sums(pool: PgPool) {
 /// Withdrawal costs `⌈max(|Σ_d|, |Σ_i|)⌉` acts, not one — the consequence
 /// of netting rather than declaring, and the reason it is assembled
 /// server-side rather than left to a client authoring one negating record.
+///
+/// Withdrawal costs as many counter-records as the bundle's larger axis requires, which is why the batch is assembled here rather than left to a client.
+/// ´claim:references:withdrawal-costs-the-netting-batch´
 #[sqlx::test(migrations = "../../migrations")]
 async fn withdrawal_stages_the_counter_records_that_net_the_bundle(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -912,6 +972,9 @@ async fn withdrawal_stages_the_counter_records_that_net_the_bundle(pool: PgPool)
 /// on both axes — because the clip is exactly what a claim's `relevance`
 /// and `support` have already lost, and reading the cost off them would
 /// quote one act for a three-act withdrawal.
+///
+/// The number the read side quotes is the number the write side then stages, so an author never confirms a gesture other than the one they agreed to.
+/// ´claim:references:the-quoted-cost-is-the-staged-batch´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_served_withdrawal_cost_is_the_batch_the_prepare_stages(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -952,6 +1015,8 @@ async fn the_served_withdrawal_cost_is_the_batch_the_prepare_stages(pool: PgPool
 
 /// A citation at the defaults costs exactly one act to withdraw — the
 /// common case the quote must not over-state either.
+///
+/// (´claim:references:the-quoted-cost-is-the-staged-batch´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_default_citation_quotes_a_one_act_withdrawal(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1009,6 +1074,9 @@ impl Loader<String> for CountingPostLoader {
 /// The batching window is widened well past its default so the eight
 /// tasks are certainly all in flight when it closes: what is under test
 /// is what a batch collects, not how fast a test machine schedules.
+///
+/// Far ends asked for concurrently reach the batch function once as many keys, never once per key.
+/// ´claim:references:concurrent-reads-batch-into-one-call´
 #[sqlx::test(migrations = "../../migrations")]
 async fn concurrent_target_resolutions_reach_the_loader_as_one_batch(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1050,6 +1118,9 @@ async fn concurrent_target_resolutions_reach_the_loader_as_one_batch(pool: PgPoo
 /// The production loaders, over the same store calls: every identifier
 /// that names something comes back, and one that names nothing is simply
 /// absent rather than an error.
+///
+/// A loader answers for every identifier that names something and leaves the rest simply absent rather than erroring.
+/// ´claim:references:a-loader-is-silent-about-what-is-not-there´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_node_loaders_answer_for_what_exists_and_stay_silent_otherwise(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1100,6 +1171,9 @@ async fn the_node_loaders_answer_for_what_exists_and_stay_silent_otherwise(pool:
 
 /// Withdrawing what is not there stages nothing and says so, rather than
 /// charging θ for a batch of no records.
+///
+/// Withdrawing what is not there stages nothing and says so, rather than charging for a batch of no records.
+/// ´claim:references:withdrawing-nothing-is-refused´
 #[sqlx::test(migrations = "../../migrations")]
 async fn withdrawing_an_absent_citation_is_refused(pool: PgPool) {
     let rig = Rig::new(pool).await;
