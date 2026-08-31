@@ -53,6 +53,9 @@ const {
   UploadErrorLine,
   ActsCard,
   WizardHeader,
+  WalletBalance,
+  LedgerRow,
+  PayoutAddress,
   StancePad,
   StanceReadout,
   SensitiveVeil,
@@ -71,6 +74,11 @@ const ADA = { handle: "ada", displayName: "Ada Okonkwo" };
 const TOBIAS = { handle: "tobias", displayName: "Tobias Lindqvist" };
 const SOL = { handle: "sol", displayName: "Sol Ferreira" };
 const MIRA = { handle: "mira", displayName: "Mira Voss" };
+
+/* Mock Liquid addresses for the wallet boards — shape and length of a real
+   confidential address, content invented. */
+const SOL_ADDRESS = "lq1qq2xvpcvfup5j8zscjq05eqylmrc6javzn30v78y7255695yz4t9r5v5m8g6snm4gvsvvzp6mzurcem6ms70epwqmwtnw2pex";
+const SOL_ADDRESS_NEW = "lq1qqw7t3xk0zfvljmv2u49h5tld6mfj7z2vhnn0mjcz2q0edgp5yh3l5wxk8m9dqrrf0e2h4t8ur5cem2n970q4wsxm5u8f30a";
 
 /* Genesis content always declares a licence, so every card has at least that
    menu entry — without one the dot vanishes, and it must not. Citing rides the

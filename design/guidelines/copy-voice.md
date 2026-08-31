@@ -157,7 +157,15 @@ title, at most two short paragraphs, Close. The texts, verbatim
   people whose posts and stances carried real reach — the small coin
   always means CGT. / It's yours the moment it lands: earnings are
   paid straight to you, held by your key, never by CoGra. Every
-  amount can be traced to what paid it.
+  amount can be traced to what paid it, and the ≈ value reads the
+  public CGT–L-BTC market — it moves with the market and is never a
+  promise.
+- **Your wallet key** (the wallet's set-up moment): Your wallet gets
+  its own key — created on this device, never held by CoGra,
+  restored by the same recovery code as your signing key. One code,
+  both keys. / Publishing your payout address is a signed action.
+  The address is public, payouts and tips land there, and every
+  change to it stays on your public record.
 - **Changing your picture** (the profile-picture seal): Your profile
   is a public record, and changes to it are signed actions in your
   name — the picture changes the moment yours lands. / The community

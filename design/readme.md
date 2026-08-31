@@ -449,6 +449,7 @@ exists in `web/src/lib/ui/` (and, unless noted, in Android's
 | `components/forms/` | `TextField`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
 | `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand` |
 | `components/compose/` | `WizardHeader`, `MediaThumb`, `PickedRow`, `DescribeCounter`, `PickedSheet`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `ActsCard` |
+| `components/wallet/` | `WalletBalance`, `LedgerRow`, `PayoutAddress` |
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader` |
 | `components/states/` | `EmptyState`, `LoadingState` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending` |
@@ -1350,6 +1351,49 @@ media and comment editing.
   item.
 - **Sensitive veils the whole gallery**, never one picture of it —
   the open question in `MediaAttachment` closed.
+
+### The wallet — 2026-08-31
+
+Item 12, jakob's rulings — grounded first in a verbatim doc audit
+and the same-day product decisions it forced (L0's reserve asset is
+L-BTC on Liquid; the community admission fund covers invites within
+its governed caps; the rail key is distinct from the actor key and
+born lazily — recorded in the product docs, PR #537). The boards:
+*Wallet* rows on the canonical canvas; masters in
+`components/wallet/`.
+
+- **The balance headline** (`WalletBalance`) is the one surface that
+  spells CGT, as ruled in item 11 — and now carries the **≈ L-BTC
+  value line**: jakob overruled the CGT-only lean ("knowing how much
+  value it currently might have is super cool"). The estimate reads
+  the public CGT–L-BTC market — the protocol's own ladder, live from
+  genesis — moves with it, is never a promise, and hides at zero.
+  Never fiat: the product's own market quotes L-BTC.
+- **No free-form send, no cash-out.** Tipping IS the user-to-user
+  send; moving CGT anywhere else is any Liquid tool's business — the
+  wallet says where the money lives, not where to sell it.
+- **History is one stream, newest first** (`LedgerRow`): payouts,
+  tips in and out, campaign money — every line opens what paid it
+  (the traceability promise), direction by sign and words, and an
+  unlanded payout wears *Still settling* — the pending look item 11
+  deferred lands here. Search over history is deliberately later.
+- **Campaigns are a money view only**: deposit, escrow, window,
+  settles-as-one-public-record. The card clicks through to a
+  details page the moment one exists; no advertiser console here.
+- **The rail key is born at first wallet open** — the set-up card
+  (*Set up your wallet*, "?" *Your wallet key*): its own key, no new
+  recovery code (the seed joins the one container under the one
+  code), and the ceremony's single signed act is publishing the
+  payout address. An applicant's wallet says plainly that it opens
+  with membership — nothing locked, nothing yet to show.
+- **The payout address renders whole** (`PayoutAddress`) — mono,
+  wrapped, never truncated: checking it against a wallet is the
+  point of showing it. Changing it is a seal (parallel Registration,
+  newest wins); the line under it says the address is public and so
+  is every change.
+- **Key-absent is read-only, honestly**: balance and history stay
+  readable — the address and the chain are public — and only signing
+  needs the key; the restore-first notice says exactly that.
 - **The picked row carries no "Crop" or "Edit" links** (jakob, same
   day: "none") — the whole row is the affordance and opens the Show
   all sheet; re-cropping is the crop step's job, one Back away in the

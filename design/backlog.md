@@ -201,7 +201,17 @@ Balances, earnings, campaign amounts: how a figure is formatted, when it
 carries a unit, and what it does at zero and negative. `payoutAddress`
 moves off the profile in item 12, so settle the figure first.
 
-### 12 · Wallet · *design*
+### 12 · Wallet · *design + system* · **built**
+Eight boards (Wallet rows on the canonical canvas: at rest, the
+zero state, first-open set-up, the address-publish seal, the
+address-change seal, key elsewhere, guest, applicant) and
+`components/wallet/` (`WalletBalance`, `LedgerRow`,
+`PayoutAddress`) + wallet.card.html. Rulings in readme §13 *The
+wallet*; the product-doc decisions they stand on (L0 = L-BTC on
+Liquid, the admission fund's caps, the rail key's lazy birth) went
+to `docs/` as their own PR. Two new "?" texts (*Your wallet key*;
+*What is CGT?* extended with the market-≈ sentence); pending
+amounts (deferred from item 11) landed as `LedgerRow pending`.
 Balance, where CGT came from, active campaigns, `payoutAddress`.
 
 ### 21 · The media slice · *design + system* · **built**
