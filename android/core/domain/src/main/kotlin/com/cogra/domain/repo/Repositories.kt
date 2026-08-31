@@ -202,6 +202,14 @@ interface ContentRepository {
          * Exactly one of [content] and this is non-empty.
          */
         attachments: List<AttachmentClaim> = emptyList(),
+        /**
+         * The author's own sensitive mark, and the reason that rides the
+         * veil with it. Omitted means unmarked; a reason without the mark
+         * is refused on `["sensitiveReason"]`, and a blank one counts as
+         * none.
+         */
+        sensitive: Boolean = false,
+        sensitiveReason: String? = null,
     ): Outcome<PreparedContentView>
 
     /**

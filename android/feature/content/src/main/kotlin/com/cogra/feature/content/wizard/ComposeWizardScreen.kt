@@ -28,7 +28,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.v2.atom.CograButton
+import com.cogra.core.designsystem.v2.atom.HelpDialog
 import com.cogra.core.designsystem.v2.atom.WizardHeader
+import com.cogra.core.designsystem.v2.compose.DescribeSheet
+import com.cogra.core.designsystem.v2.compose.HelpTopic
+import com.cogra.core.designsystem.v2.compose.PickedSheet
+import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.LicenseChoice
@@ -126,11 +131,19 @@ fun ComposeWizardRoute(
         onCloseSheet = viewModel::onCloseSheet,
         onLicenseChange = viewModel::onLicenseChange,
         onPDirectedChange = viewModel::onPDirectedChange,
+        onSensitiveChange = viewModel::onSensitiveChange,
+        onSensitiveReasonChange = viewModel::onSensitiveReasonChange,
         onNext = viewModel::onNext,
         onBack = { if (!viewModel.onBack()) viewModel.onLeave() },
+        onLeave = viewModel::onLeave,
         onSealBack = viewModel::onSealBack,
-        onEditBody = { viewModel.onReturnTo(WizardStep.Body) },
-        onEditCrop = { viewModel.onReturnTo(WizardStep.Crop) },
+        onManagePictures = viewModel::onOpenPickedSheet,
+        onDescribePictures = viewModel::onDescribeFirst,
+        onDescribeAt = viewModel::onDescribe,
+        onMovePick = viewModel::onMovePick,
+        onRemovePickAt = viewModel::onRemovePickAt,
+        onOpenHelp = viewModel::onOpenHelp,
+        onCloseHelp = viewModel::onCloseHelp,
         onSign = viewModel::onSign,
         onContinueDraft = viewModel::onContinueDraft,
         onDiscardDraft = viewModel::onDiscardDraft,
@@ -185,11 +198,19 @@ internal fun ComposeWizardScreen(
     onCloseSheet: () -> Unit,
     onLicenseChange: (LicenseChoice) -> Unit,
     onPDirectedChange: (Double) -> Unit,
+    onSensitiveChange: (Boolean) -> Unit,
+    onSensitiveReasonChange: (String) -> Unit,
     onNext: () -> Unit,
     onBack: () -> Unit,
+    onLeave: () -> Unit,
     onSealBack: () -> Unit,
-    onEditBody: () -> Unit,
-    onEditCrop: () -> Unit,
+    onManagePictures: () -> Unit,
+    onDescribePictures: () -> Unit,
+    onDescribeAt: (Int) -> Unit,
+    onMovePick: (Int, Int) -> Unit,
+    onRemovePickAt: (Int) -> Unit,
+    onOpenHelp: (HelpTopic) -> Unit,
+    onCloseHelp: () -> Unit,
     onSign: () -> Unit,
     onContinueDraft: () -> Unit,
     onDiscardDraft: () -> Unit,
@@ -215,9 +236,9 @@ internal fun ComposeWizardScreen(
     modifier: Modifier = Modifier,
 ) {
     // Back is the header's arrow and the system gesture alike, and both
-    // leave: the author is never held inside the wizard by a stage they
-    // have to unwind, and the draft survives regardless. The ways back
-    // *between* stages are drawn into the stages themselves.
+    // step back one stage (jakob 2026-08-31). Leaving happens from the
+    // first stage, where there is no earlier stage to reach; the draft
+    // survives either way, being written continuously rather than on exit.
     BackHandler(onBack = onBack)
 
     Column(
@@ -228,11 +249,21 @@ internal fun ComposeWizardScreen(
         WizardHeader(
             title = state.headerTitle(),
             onBack = onBack,
-            backContentDescription = "Back",
+            // The X leaves from any stage, draft kept, nothing to confirm.
+            onLeave = onLeave,
             actionText = state.headerAction(),
             onAction = onNext,
             actionEnabled = state.headerActionEnabled(),
             trailingNote = if (state.step == WizardStep.Seal) "Last step" else null,
+            // The seal's one `?`. On the key-absent seal it belongs to the
+            // key notice instead — the key story outranks the seal story
+            // there, and a screen carries only one (design/readme.md §13).
+            onHelp = if (state.step == WizardStep.Seal && !state.keyAbsent) {
+                { onOpenHelp(HelpTopic.SignedActions) }
+            } else {
+                null
+            },
+            helpContentDescription = HelpTopic.SignedActions.title,
             testTag = "wizard_header",
         )
 
@@ -258,6 +289,7 @@ internal fun ComposeWizardScreen(
                     onModeChange = onModeChange,
                     onOpenPicker = onOpenPicker,
                     onTogglePick = onTogglePick,
+                    onManagePictures = onManagePictures,
                 )
 
                 WizardStep.Crop -> WizardBody(scrollable = true, bottom = Space.x4) {
@@ -265,7 +297,6 @@ internal fun ComposeWizardScreen(
                         state = state,
                         onShapeChange = onShapeChange,
                         onFrameAsset = onFrameAsset,
-                        onAltTextChange = onAltTextChange,
                         onCropsChanged = onCropsChanged,
                     )
                 }
@@ -276,8 +307,9 @@ internal fun ComposeWizardScreen(
                         onTitleChange = onTitleChange,
                         onDescriptionChange = onDescriptionChange,
                         onRetryUpload = onRetryUpload,
-                        onEditBody = onEditBody,
-                        onEditCrop = onEditCrop,
+                        onRemovePick = onRemovePickAt,
+                        onManagePictures = onManagePictures,
+                        onDescribePictures = onDescribePictures,
                         topics = {
                             // The 2.3 section, embedded rather than
                             // rebuilt: only its surroundings changed.
@@ -346,20 +378,69 @@ internal fun ComposeWizardScreen(
         }
     }
 
-    if (state.sheet != SealSheet.None) {
+    // Every drawer over the wizard, one at a time. `PickedSheet` and
+    // `DescribeSheet` open over the pick and details stages; the license
+    // and stance sheets over the seal.
+    if (state.anySheetOpen) {
         val sheetState = rememberModalBottomSheetState()
         ModalBottomSheet(onDismissRequest = onCloseSheet, sheetState = sheetState) {
-            when (state.sheet) {
-                SealSheet.License -> LicenseSheet(state.license, onLicenseChange, onCloseSheet)
-                SealSheet.Stance -> StanceSheet(
+            val describing = state.describingIndex?.let { state.picked.getOrNull(it) }
+            when {
+                describing != null -> DescribeSheet(
+                    item = MediaItem(
+                        describing.uri,
+                        describing.sourceRatio ?: 1f,
+                        describing.altText.ifBlank { null },
+                    ),
+                    value = describing.altText,
+                    onValueChange = { onAltTextChange(describing.uri, it) },
+                    onDone = onCloseSheet,
+                    onHelp = { onOpenHelp(HelpTopic.DescribingPictures) },
+                    testTag = "wizard_describe_sheet",
+                )
+
+                state.pickedSheetOpen -> PickedSheet(
+                    pictures = state.pickedPictures(),
+                    onDescribe = onDescribeAt,
+                    onRemove = onRemovePickAt,
+                    onMove = onMovePick,
+                    onDone = onCloseSheet,
+                    testTag = "wizard_picked_sheet",
+                )
+
+                state.sheet == SealSheet.License ->
+                    LicenseSheet(state.license, onLicenseChange, onCloseSheet)
+
+                state.sheet == SealSheet.Stance -> StanceSheet(
                     pDirected = state.pDirected,
                     onChange = onPDirectedChange,
                     onDone = onCloseSheet,
                     onCancel = onCloseSheet,
                 )
-                SealSheet.None -> Unit
+
+                state.sheet == SealSheet.Sensitive -> SensitiveSheet(
+                    marked = state.sensitive,
+                    reason = state.sensitiveReason,
+                    onMarkedChange = onSensitiveChange,
+                    onReasonChange = onSensitiveReasonChange,
+                    onDone = onCloseSheet,
+                    onHelp = { onOpenHelp(HelpTopic.MarkingAsSensitive) },
+                )
+
+                else -> Unit
             }
         }
+    }
+
+    // The screen's one `?`, over whatever is showing. A dialog rather than
+    // a sheet: it explains the surface behind it rather than continuing it.
+    state.help?.let { topic ->
+        HelpDialog(
+            title = topic.title,
+            paragraphs = topic.paragraphs,
+            onClose = onCloseHelp,
+            testTag = "wizard_help_dialog",
+        )
     }
 }
 
@@ -378,6 +459,7 @@ private fun ColumnScope.BodyStage(
     onModeChange: (BodyMode) -> Unit,
     onOpenPicker: () -> Unit,
     onTogglePick: (String) -> Unit,
+    onManagePictures: () -> Unit,
 ) {
     when (state.mode) {
         BodyMode.Words -> {
@@ -394,8 +476,11 @@ private fun ColumnScope.BodyStage(
                 // `ComposeDraft` re-words the caption behind its offer and
                 // drops the branch: with a draft on the table the question
                 // is that draft, and the grid below it is the alternative.
+                // The short form is jakob's (2026-08-31) — the dash points
+                // at the grid, which says "pick pictures" better than a
+                // sentence repeating the fresh-composer caption could.
                 text = if (state.draftOffer != null) {
-                    "Or start fresh — pick one picture, several, or one video."
+                    "Or start fresh —"
                 } else {
                     "Pick one picture, several, or one video."
                 },
@@ -410,6 +495,7 @@ private fun ColumnScope.BodyStage(
                 onOpenSettings = permission.openSettings,
                 onOpenPicker = onOpenPicker,
                 onTogglePick = onTogglePick,
+                onShowAll = onManagePictures,
             )
         }
     }

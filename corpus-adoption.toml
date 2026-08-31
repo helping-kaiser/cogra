@@ -18,6 +18,7 @@
 #          the kind registry's adoption ....... [kinds]
 #          head recognition per format ........ [head-recognition]
 #          the enforcement partition .......... [enforcement]
+#          the owner reach graph .............. [reach]
 #
 # Conventions in this file:
 #   * References to discipline labels are written PLAIN (no backticks,
@@ -114,8 +115,12 @@ generated_files = [
   # The per-owner claim matrices, one per ACTIVATED owner, materialized
   # on 2026-08-31 by the pilot wave; see [claims] matrix. The list grows
   # by one file in the commit that closes each further owner's wave.
+  "crates/api/claim-matrix.md",
   "crates/cogra-interchange/claim-matrix.md",
   "crates/cogra-linter/claim-matrix.md",
+  "crates/common/claim-matrix.md",
+  "crates/l1-standin/claim-matrix.md",
+  "crates/postgres-store/claim-matrix.md",
 ]
 
 # Vendored trees: sources kept in-repo that the carrier does not scan.
@@ -862,20 +867,39 @@ to rename around the collision.
 
   [claims.activation]
   scope  = "declared"
-  owners = ["pkg.cogra-interchange", "pkg.cogra-linter"]
+  owners = [
+    "pkg.api",                # joined 2026-08-31, the api wave
+    "pkg.cogra-interchange",  # joined 2026-08-31, the interchange wave
+    "pkg.cogra-linter",       # joined 2026-08-31, the pilot wave
+    "pkg.common",             # joined 2026-08-31, the fourth wave
+    "pkg.l1-standin",         # joined 2026-08-31, the second wave
+    "pkg.postgres-store",     # joined 2026-08-31, the third wave
+  ]
   note = """
 PILOT WAVE, 2026-08-31: pkg.cogra-linter alone. Its tests are the
 discipline's own, which makes them the right corpus to learn the cost
 on, and their documentation comments already carried claim-shaped
 prose from the sweeps that wrote them.
+SECOND WAVE, 2026-08-31: pkg.l1-standin, fifteen covered tests over the
+stand-in host. The smallest wave the corpus has, and the first over
+tests written before the discipline existed.
+THIRD WAVE, 2026-08-31: pkg.postgres-store, sixty-two covered tests over
+eight suites, and the first wave to need citation: four tests state
+nothing their sibling has not stated, and cite it rather than mint a
+second authority on one fact.
+FOURTH WAVE, 2026-08-31: pkg.common, a hundred and eighteen covered
+tests over twelve areas, twenty-three of them citing. The specification
+vector suites are what the citation form is for — eleven tests pinning
+eleven byte strings evidence one statement, and eleven statements
+restating eleven test names would evidence nothing.
 INTERCHANGE WAVE, 2026-08-31: pkg.cogra-interchange joins, 474 covered
 tests, the corpus's largest set. Its tests already cited the design
 clauses they discharge, so the claim line is a new final line stating
 the proved fact and those citations stand above it untouched.
-The remaining owners with covered assets — pkg.api, pkg.common,
-pkg.l1-standin, pkg.postgres-store — are outside the list and their
-covered tests are counted. Each joins by one edit to this array, in
-the commit that lands its wave.
+API WAVE, 2026-08-31: pkg.api, 348 covered tests over seventeen areas.
+Every owner with covered assets is now inside the list: the roster is
+total, and a future package joins by one edit to this array, in the
+commit that lands its wave.
 """
 
   [claims.matrix]
@@ -1766,5 +1790,102 @@ failing = [
 #   LINTER rep:lint:first-corpus scoped acceptance towards: the failing
 #   set grew with each migration, and this was the last one.
 
+
+####################################################################
+# [reach] — which owners an owner's imports may name
+#
+# RULED 2026-08-31, from the measured graph.
+#
+# LINTER dec:lint:reach-declared: Sigma says which prefixes name an
+# owner and Omega says which owner holds a source, and between them an
+# imported citation either resolves or does not. Neither has an opinion
+# about whether the citing owner had any business importing from the
+# cited one. This section is that opinion, as data.
+#
+# THE MEASUREMENT THE RULING STANDS ON. Walked over the real tree:
+# 11 distinct owner-to-owner edges, 640 imported citations, 3 citing
+# owners out of 19. The graph is already strictly layered and has no
+# cycles — the four discipline documents make no imported citation at
+# all, the architecture cites the four and nothing else, and the two
+# packages cite documents and never each other. What the rows below do
+# is make that property enforced instead of merely true.
+#
+# ONE ALLOWANCE OVER THE MEASUREMENT. pkg.cogra-interchange is given
+# the three discipline documents it does not cite today, so that both
+# packages carry the same tier-0 set. The rule the section states is
+# "implementation may stand on any discipline document", which is a
+# rule; freezing the accident of what happens to be cited today is not.
+#
+# A MISSING ROW CONSTRAINS NOTHING. Twelve owners carry no citation
+# whatever and get no row — pkg.api, pkg.common, pkg.l1-standin,
+# pkg.postgres-store, pkg.android, pkg.web, the four docs trees, the
+# working notes, and the repo root. A row for one of them today would
+# constrain a future rather than a present, and would be written
+# without evidence about what it will need to cite when the discipline
+# reaches it. That is also what makes the graph adoptable one owner at
+# a time: an owner the section does not name reaches everything,
+# exactly as it does with no section at all.
+#
+# THE EMPTY ROWS ARE THE STRONGEST CLAIM HERE. The four disciplines
+# stand on nothing in this corpus, and they are meant to be separately
+# adoptable. If one of them ever wants to cite another, the repair is
+# one line in this section — which is the point of declaring the graph
+# — but it should be a deliberate edit and never a surprise.
+#
+# CHECKED AGAINST CARGO, ONE DIRECTION. A path dependency the owner's
+# manifest carries and this section omits is refused at load; a
+# declared edge Cargo does not carry is no defect at all, and is how
+# every document owner reaches anything.
+####################################################################
+
+[reach]
+
+# Tier 1 — the architecture stands on the four disciplines.
+[[reach.owner]]
+owner    = "doc.linter-architecture"
+may_cite = [
+  "doc.label-calculus",
+  "doc.kind-registry",
+  "doc.identity-adjudication",
+  "doc.interchange-conventions",
+]
+
+# Tier 2 — implementation stands on the disciplines and the architecture.
+[[reach.owner]]
+owner    = "pkg.cogra-linter"
+may_cite = [
+  "doc.label-calculus",
+  "doc.kind-registry",
+  "doc.identity-adjudication",
+  "doc.interchange-conventions",
+  "doc.linter-architecture",
+]
+
+[[reach.owner]]
+owner    = "pkg.cogra-interchange"
+may_cite = [
+  "doc.label-calculus",
+  "doc.kind-registry",
+  "doc.identity-adjudication",
+  "doc.interchange-conventions",
+  "doc.linter-architecture",
+]
+
+# Tier 0 — the disciplines stand on nothing in this corpus.
+[[reach.owner]]
+owner    = "doc.label-calculus"
+may_cite = []
+
+[[reach.owner]]
+owner    = "doc.kind-registry"
+may_cite = []
+
+[[reach.owner]]
+owner    = "doc.identity-adjudication"
+may_cite = []
+
+[[reach.owner]]
+owner    = "doc.interchange-conventions"
+may_cite = []
 
 

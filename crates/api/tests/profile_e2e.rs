@@ -256,6 +256,9 @@ const USER_QUERY: &str = r#"query($id: UUID, $handle: String) {
 /// case-insensitive and trimmed (auth.md "Handle and email format"). A
 /// handle that matches nothing resolves to null, as does one that could
 /// never have been registered.
+///
+/// A user resolves by identifier and by handle alike, handle lookup folding case and trimming, and a handle nothing answers to resolves to null rather than erroring.
+/// ´claim:profile:a-user-resolves-by-id-and-by-handle´
 #[sqlx::test(migrations = "../../migrations")]
 async fn user_resolves_by_id_and_handle(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -293,6 +296,9 @@ async fn user_resolves_by_id_and_handle(pool: PgPool) {
 /// `actor` resolves to the concrete type behind the interface, and takes
 /// exactly one argument: passing both or neither is a transport fault,
 /// not a userError.
+///
+/// The actor lookup resolves to the concrete type behind the interface and takes exactly one argument, both and neither being transport faults.
+/// ´claim:profile:the-actor-lookup-takes-exactly-one-argument´
 #[sqlx::test(migrations = "../../migrations")]
 async fn actor_resolves_and_argument_rule_holds(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -330,6 +336,9 @@ async fn actor_resolves_and_argument_rule_holds(pool: PgPool) {
 /// An authored bio edit goes the whole way — prepare, sign, relay,
 /// ingest — and then reads back to an anonymous caller, because the
 /// shared graph is public.
+///
+/// An authored profile edit goes the whole way through prepare, sign, relay and ingest, and then reads back to an anonymous caller.
+/// ´claim:profile:a-profile-edit-lands-and-reads-back-publicly´
 #[sqlx::test(migrations = "../../migrations")]
 async fn bio_edit_lands_through_the_write_path(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -362,6 +371,7 @@ async fn bio_edit_lands_through_the_write_path(pool: PgPool) {
     assert_eq!(user["user"]["displayName"]["value"], "ada");
 }
 
+/// (´claim:profile:an-empty-update-is-refused´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn empty_update_refuses_with_a_user_error(pool: PgPool) {
     let rig = Rig::new(pool).await;

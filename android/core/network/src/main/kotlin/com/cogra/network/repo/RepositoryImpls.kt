@@ -613,6 +613,8 @@ class ContentRepositoryImpl @Inject constructor(
         tags: List<TagClaim>,
         references: List<ReferenceClaim>,
         attachments: List<AttachmentClaim>,
+        sensitive: Boolean,
+        sensitiveReason: String?,
     ): Outcome<PreparedContentView> = guard.run {
         client.mutation(
             PreparePostMutation(
@@ -628,6 +630,12 @@ class ContentRepositoryImpl @Inject constructor(
                     tags = tags.toInput(),
                     references = references.toInput(),
                     attachments = attachments.toInput(),
+                    sensitive = Optional.present(sensitive),
+                    // A reason only rides a mark: the server refuses one
+                    // without it, and a blank counts as none.
+                    sensitiveReason = Optional.presentIfNotNull(
+                        sensitiveReason?.takeIf { sensitive && it.isNotBlank() },
+                    ),
                 ),
             ),
         ).payloadOutcome({ it.preparePost.userErrors.map { e -> e.userErrorFields } }) { data ->

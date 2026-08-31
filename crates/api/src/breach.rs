@@ -115,6 +115,8 @@ fn occurrences(body: &str, suffix: &str) -> u64 {
 mod tests {
     use super::*;
 
+    /// A suffix the corpus lists with a positive count reports as breached.
+    /// ´claim:breach:a-positive-count-reports-breached´
     #[test]
     fn a_listed_suffix_reports_its_count() {
         let body = "0018A45C4D1DEF81644B54AB7F969B88D65:1\r\n\
@@ -130,6 +132,9 @@ mod tests {
     /// Nothing but a positive count reports as breached: a padding entry,
     /// an absent suffix, an empty body, and an unparseable line all come
     /// back clean.
+    ///
+    /// Nothing but a positive count reports as breached, so padding, absence and unreadable lines all read clean.
+    /// ´claim:breach:only-a-positive-count-is-a-breach´
     #[test]
     fn padding_and_absent_suffixes_are_clean() {
         let body = "0018A45C4D1DEF81644B54AB7F969B88D65:0\r\n\
@@ -140,6 +145,8 @@ mod tests {
         assert_eq!(occurrences("garbage line without colon", "ANY"), 0);
     }
 
+    /// A corpus switched off passes every password rather than refusing them all.
+    /// ´claim:breach:a-disabled-corpus-passes´
     #[tokio::test]
     async fn the_disabled_corpus_always_passes() {
         assert!(matches!(

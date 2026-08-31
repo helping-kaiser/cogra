@@ -100,12 +100,20 @@ export function PostMedia({
   node,
   testId,
   bleed = "card",
+  radius,
+  ratio,
+  maxHeight,
   preloadLead = false,
   onOpen,
 }: {
   node: Bearer;
   testId?: string;
   bleed?: Bleed;
+  // A comment's pictures are an attachment rather than a body, so they keep the
+  // card's rung and a comment-scale cap instead of running to the edges.
+  radius?: string;
+  ratio?: number;
+  maxHeight?: string;
   preloadLead?: boolean;
   onOpen?: (index: number) => void;
 }) {
@@ -122,7 +130,9 @@ export function PostMedia({
       ) : (
         <MediaGallery
           items={galleryItems(node)}
-          radius="0px"
+          radius={radius ?? "0px"}
+          ratio={ratio}
+          maxHeight={maxHeight}
           preloadLead={preloadLead}
           onOpen={onOpen}
         />

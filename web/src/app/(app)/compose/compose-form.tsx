@@ -127,6 +127,9 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   const [transportFailed, setTransportFailed] = useState(false);
   const [confirmMultiAction, setConfirmMultiAction] = useConfirmMultiAction();
   const [confirming, setConfirming] = useState(false);
+  // What the post being edited carries today; re-stated on the edit so a
+  // complete-state write does not drop it.
+  const [sensitive, setSensitive] = useState(false);
 
   useEffect(() => {
     if (editingId === null) return;
@@ -149,6 +152,12 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
         setDescription(loaded.description);
         setBody(loaded.body);
         setLoadedContent(loaded);
+        // AN EDIT IS COMPLETE STATE, so the mark has to be carried forward or
+        // the edit would quietly unveil a post its author had veiled. The
+        // status is already on the detail read, so preserving it costs no new
+        // selection. Reported: the read cannot tell an author's own mark from a
+        // moderator's, so an edit re-states whichever one is standing.
+        setSensitive(post.moderationStatus === "SENSITIVE");
         // A pending claim is a current tag too — the author declared it.
         const current = post.topics.map((claim) => ({
           name: claim.hashtag.name.value ?? "",
@@ -300,6 +309,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
           title: title.trim() === "" ? null : title,
           description: description.trim() === "" ? null : description,
           content: body,
+          sensitive,
         }),
       );
       if (prepared.kind === "failed") {
