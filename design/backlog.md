@@ -272,7 +272,10 @@ version's junction row — no race, nothing gates); the describe
 counter joins *Edit comment*; the edit's acts footer opens the
 acts SHEET (*Edit comment · the acts*, ActsCard in the M3 modal
 bottom sheet; ceremony screens keep the inline card); EditActs'
-note wording conformed.
+note wording conformed. Plus the canvas reorg (jakob: the split
+comment rows confused): one unified Comments section — the
+thread row + the reply-composer row, each with its own note; no
+board deleted (none were duplicates — distinct states).
 
 ### 13 · Post Score drill-down · *design*
 Four screens — FeedEntry → RankPath → RankHop → raw records — each
