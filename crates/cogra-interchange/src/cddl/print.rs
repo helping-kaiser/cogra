@@ -395,6 +395,8 @@ mod tests {
         assert_eq!(once, twice, "{what} is not a fixed point");
     }
 
+    /// Printing a printed document changes nothing, which is what makes the normal form an identity.
+    /// ´claim:print:the-printed-form-is-a-fixed-point´
     #[test]
     fn every_corpus_document_reaches_a_fixed_point() {
         for (what, source) in CORPUS {
@@ -402,6 +404,7 @@ mod tests {
         }
     }
 
+    /// (´claim:print:the-printed-form-is-a-fixed-point´)
     #[test]
     fn every_production_reaches_a_fixed_point() {
         for source in TOUR {
@@ -411,6 +414,9 @@ mod tests {
 
     /// Not required for the fixed point, but it keeps the snippets honest
     /// about what the normal form actually is.
+    ///
+    /// Each production's snippet is written in the very normal form the printer produces for it.
+    /// ´claim:print:the-tour-snippets-are-already-normal´
     #[test]
     fn the_tour_is_already_in_normal_form() {
         for source in TOUR {
@@ -418,16 +424,22 @@ mod tests {
         }
     }
 
+    /// The printer puts one rule on each line.
+    /// ´claim:print:one-rule-to-a-line´
     #[test]
     fn one_rule_to_a_line() {
         assert_eq!(normalize("a = 1 b = 2 c = 3"), "a = 1\nb = 2\nc = 3\n");
     }
 
+    /// Comments are exposition and do not survive printing.
+    /// ´claim:print:comments-do-not-survive-printing´
     #[test]
     fn comments_do_not_survive_normalization() {
         assert_eq!(normalize("; leading\na = 1 ; trailing\n"), "a = 1\n");
     }
 
+    /// A separator the grammar leaves optional is printed as a comma, and a trailing one is dropped.
+    /// ´claim:print:an-optional-comma-becomes-a-comma´
     #[test]
     fn optional_commas_become_commas() {
         assert_eq!(normalize("a = {b: 1 c: 2}"), "a = {b: 1, c: 2}\n");
@@ -435,12 +447,16 @@ mod tests {
         assert_eq!(normalize("a = [1 2]"), "a = [1, 2]\n");
     }
 
+    /// Whatever whitespace the source carried collapses to the one spelling.
+    /// ´claim:print:whitespace-collapses´
     #[test]
     fn whitespace_collapses_to_the_normal_form() {
         assert_eq!(normalize("a   =   {   b   :   1   }"), "a = {b: 1}\n");
         assert_eq!(normalize("a\n=\n1"), "a = 1\n");
     }
 
+    /// A literal is printed in the spelling it was written in, its base and its escapes included.
+    /// ´claim:print:a-literal-keeps-its-spelling´
     #[test]
     fn literals_keep_the_spelling_they_were_given() {
         assert_eq!(normalize("a = 0x18"), "a = 0x18\n");
@@ -451,6 +467,9 @@ mod tests {
 
     /// Printed without the leading space, this would read back as the single
     /// name `text.size`.
+    ///
+    /// A control operator keeps the space before it, without which it would read back as one name.
+    /// ´claim:print:a-control-operator-keeps-its-space´
     #[test]
     fn a_control_operator_keeps_the_space_that_makes_it_one() {
         let printed = normalize("a = text .size 4");
@@ -461,6 +480,9 @@ mod tests {
 
     /// `min..max` is one name and was never a range at all; written with the
     /// spaces it is one, and it stays one.
+    ///
+    /// A range over names keeps the spaces that tell it from a single name.
+    /// ´claim:print:a-range-over-names-keeps-its-spaces´
     #[test]
     fn a_range_over_names_keeps_its_spaces() {
         let printed = normalize("a = min..max");
@@ -470,12 +492,17 @@ mod tests {
 
     /// The bounds stay against the star, and the space that stops the entry
     /// joining the bound stays too.
+    ///
+    /// An occurrence indicator keeps its bounds against the star and the space that holds the entry off.
+    /// ´claim:print:an-occurrence-keeps-its-bounds-against-the-star´
     #[test]
     fn an_occurrence_indicator_keeps_its_bounds_against_the_star() {
         assert_eq!(normalize("a = [2*3 b]"), "a = [2*3 b]\n");
         assert_eq!(normalize("a = [* 3]"), "a = [* 3]\n");
     }
 
+    /// Generic parameters and arguments are printed against the name they belong to.
+    /// ´claim:print:generic-arguments-stay-against-their-name´
     #[test]
     fn generic_arguments_stay_against_their_name() {
         assert_eq!(normalize("a = m<int, text>"), "a = m<int, text>\n");
@@ -484,12 +511,17 @@ mod tests {
 
     /// A head held off its parenthesis by a space is not a tag but two group
     /// entries, and printing must not let them join into one.
+    ///
+    /// A tag is printed against its parenthesis, and two entries a space held apart are not joined into one.
+    /// ´claim:print:a-tag-stays-against-its-parenthesis´
     #[test]
     fn a_tag_stays_against_its_parenthesis() {
         assert_eq!(normalize("a = #6.24(bstr)"), "a = #6.24(bstr)\n");
         assert_eq!(normalize("a = [#6 (b)]"), "a = [#6, (b)]\n");
     }
 
+    /// A plain rule prints back as the reading it was parsed under, type and group alike.
+    /// ´claim:print:both-readings-of-a-plain-rule-survive´
     #[test]
     fn the_two_readings_of_an_equals_rule_both_survive_a_round_trip() {
         assert_eq!(normalize("a = (1)"), "a = (1)\n");
@@ -497,6 +529,8 @@ mod tests {
         assert_eq!(normalize("a = ( rater: text )"), "a = (rater: text)\n");
     }
 
+    /// The standard's own reputon documents print as the normal form of what they say.
+    /// ´claim:print:the-standards-examples-normalize-as-written´
     #[test]
     fn the_verbose_and_compact_reputon_definitions_normalize_as_written() {
         let (_, verbose) = CORPUS[0];
@@ -512,6 +546,8 @@ mod tests {
         assert!(printed.contains("* text => any"));
     }
 
+    /// The standard's prelude prints as its forty rules, first to last.
+    /// ´claim:print:the-prelude-normalizes-to-forty-lines´
     #[test]
     fn the_prelude_normalizes_to_forty_lines() {
         let (_, prelude) = CORPUS[2];
@@ -522,6 +558,8 @@ mod tests {
         assert!(printed.ends_with("undefined = #7.23\n"));
     }
 
+    /// Only an augmenting assignment settles whether a rule is a type or a group.
+    /// ´claim:print:only-an-augmenting-assignment-settles-a-kind´
     #[test]
     fn only_the_augmenting_assignments_settle_a_rules_kind() {
         assert!(!assignment_is_unambiguous(Assign::Plain));

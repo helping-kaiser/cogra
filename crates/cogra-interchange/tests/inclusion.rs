@@ -39,6 +39,8 @@ fn holds(earlier: &str, later: &str) {
 
 const BASE: &str = r#"e = {0 => "com.example", 1 => [1, 0, uint], 2 => tstr, ? 7 => bstr}"#;
 
+/// A minor that changes nothing but its own number includes the minor before it.
+/// ´claim:inclusion:a-minor-changing-only-its-number-includes-its-predecessor´
 #[test]
 fn a_minor_that_changes_nothing_but_its_own_number_includes_its_predecessor() {
     holds(
@@ -47,6 +49,8 @@ fn a_minor_that_changes_nothing_but_its_own_number_includes_its_predecessor() {
     );
 }
 
+/// A key added at a later minor and optional there keeps the inclusion.
+/// ´claim:inclusion:adding-an-optional-key-is-additive´
 #[test]
 fn adding_an_optional_key_is_additive() {
     holds(
@@ -55,6 +59,7 @@ fn adding_an_optional_key_is_additive() {
     );
 }
 
+/// (´claim:inclusion:adding-an-optional-key-is-additive´)
 #[test]
 fn adding_several_optional_keys_at_once_is_additive() {
     holds(
@@ -68,6 +73,9 @@ fn adding_several_optional_keys_at_once_is_additive() {
 
 /// Minors need not be consecutive: the check is between two theories, and
 /// the registry's own choice of which pair to compare is its business.
+///
+/// The check is between two theories, so the minors it is given need not be consecutive.
+/// ´claim:inclusion:the-compared-minors-need-not-be-consecutive´
 #[test]
 fn the_two_minors_need_not_be_consecutive() {
     holds(
@@ -78,6 +86,9 @@ fn the_two_minors_need_not_be_consecutive() {
 
 /// A rule the compared types do not reach is not part of any type's
 /// identity, so a later minor may carry vocabulary of its own.
+///
+/// A rule the compared types do not reach is no part of any type's identity.
+/// ´claim:inclusion:an-unreached-rule-is-no-difference´
 #[test]
 fn an_unreached_rule_added_at_the_later_minor_is_not_a_difference() {
     holds(
@@ -91,6 +102,9 @@ fn an_unreached_rule_added_at_the_later_minor_is_not_a_difference() {
 
 /// Identity of type is the normalized printer's question, never the
 /// source's: two spellings of one type are one type.
+///
+/// Two spellings of one type are one type, identity being asked of the normalized form.
+/// ´claim:inclusion:identity-of-type-is-the-printers-question´
 #[test]
 fn a_respelled_type_is_the_same_type() {
     holds(
@@ -101,6 +115,8 @@ fn a_respelled_type_is_the_same_type() {
 
 /// The rules a type reaches are compared by their printed definitions, so a
 /// chain that is written differently and means the same is the same.
+///
+/// (´claim:inclusion:identity-of-type-is-the-printers-question´)
 #[test]
 fn a_reached_rule_chain_respelled_is_the_same_type() {
     holds(
@@ -117,6 +133,8 @@ fn a_reached_rule_chain_respelled_is_the_same_type() {
     );
 }
 
+/// A content key the earlier minor named and the later one drops is a breach at that key.
+/// ´claim:inclusion:dropping-a-key-is-a-breach´
 #[test]
 fn dropping_a_content_key_is_a_breach() {
     let found = breaches(
@@ -129,6 +147,8 @@ fn dropping_a_content_key_is_a_breach() {
     ));
 }
 
+/// A shared key whose type changed is a breach naming both spellings.
+/// ´claim:inclusion:changing-a-shared-keys-type-is-a-breach´
 #[test]
 fn changing_a_shared_keys_type_is_a_breach() {
     let found = breaches(
@@ -154,6 +174,9 @@ fn changing_a_shared_keys_type_is_a_breach() {
 /// Widening is a change like any other: the invariant asks for the type
 /// *verbatim*, not for a larger one, so a widened key is a major boundary
 /// however compatible it looks.
+///
+/// A widened type is a breach too, the invariant asking for the type verbatim and not for a larger one.
+/// ´claim:inclusion:widening-is-a-change-like-any-other´
 #[test]
 fn widening_a_shared_keys_type_is_a_breach() {
     let found = breaches(
@@ -168,6 +191,9 @@ fn widening_a_shared_keys_type_is_a_breach() {
 
 /// The same, one level down: the expression at the key is untouched and a
 /// rule it reaches was widened.
+///
+/// A change in a rule the key reaches is a breach, and the reported form carries the chain.
+/// ´claim:inclusion:a-change-below-the-key-is-a-breach´
 #[test]
 fn widening_a_reached_rule_is_a_breach() {
     let found = breaches(
@@ -196,6 +222,8 @@ fn widening_a_reached_rule_is_a_breach() {
     }
 }
 
+/// A required key made optional at the later minor is a breach.
+/// ´claim:inclusion:relaxing-requiredness-is-a-breach´
 #[test]
 fn relaxing_a_keys_requiredness_is_a_breach() {
     let found = breaches(
@@ -212,6 +240,8 @@ fn relaxing_a_keys_requiredness_is_a_breach() {
     ));
 }
 
+/// An optional key made required at the later minor is a breach.
+/// ´claim:inclusion:tightening-requiredness-is-a-breach´
 #[test]
 fn tightening_a_keys_requiredness_is_a_breach() {
     let found = breaches(
@@ -228,6 +258,8 @@ fn tightening_a_keys_requiredness_is_a_breach() {
     ));
 }
 
+/// A key first named at the later minor and required there is a breach.
+/// ´claim:inclusion:a-required-new-key-is-a-breach´
 #[test]
 fn a_new_key_that_is_required_is_a_breach() {
     let found = breaches(
@@ -242,6 +274,9 @@ fn a_new_key_that_is_required_is_a_breach() {
 
 /// Every breach the two theories carry is reported, not just the first, and
 /// the shared keys come in ascending order with the new keys after them.
+///
+/// Every breach the pair carries is reported, the shared keys ascending and the new keys after them.
+/// ´claim:inclusion:every-breach-is-reported-in-key-order´
 #[test]
 fn every_breach_is_reported_in_key_order() {
     let found = breaches(
@@ -272,6 +307,9 @@ fn every_breach_is_reported_in_key_order() {
 /// is deliberate — it calls a rename a major boundary, which is stricter
 /// than the invariant's intent and conservative in the safe direction
 /// (´dec:xchg:type-identity´).
+///
+/// A pure rule rename is a breach, type identity being read literally.
+/// ´claim:inclusion:a-pure-rule-rename-is-a-breach´
 #[test]
 fn a_pure_rule_rename_is_a_breach() {
     let found = breaches(
@@ -302,6 +340,8 @@ fn a_pure_rule_rename_is_a_breach() {
 
 /// The rename is a breach one level down too: the key's own expression is
 /// identical and the rule *it* reaches was renamed.
+///
+/// (´claim:inclusion:a-pure-rule-rename-is-a-breach´)
 #[test]
 fn a_rename_below_the_key_is_a_breach() {
     let found = breaches(
@@ -324,6 +364,9 @@ fn a_rename_below_the_key_is_a_breach() {
 
 /// Same name, different definition: the other half of "rule references
 /// matched by name, same-named rules required to be identical".
+///
+/// A rule of one name with a different definition is a breach, references being matched by name.
+/// ´claim:inclusion:a-same-named-rule-must-be-identical´
 #[test]
 fn a_same_named_rule_with_a_different_definition_is_a_breach() {
     let found = breaches(
@@ -345,6 +388,9 @@ fn a_same_named_rule_with_a_different_definition_is_a_breach() {
 /// A prelude name is the same rule in every theory, so it is left out of
 /// the comparison — but a theory that *shadows* one defines a rule of its
 /// own, and dropping the shadow is a difference.
+///
+/// A theory shadowing a prelude name defines a rule of its own, and dropping that shadow is a difference.
+/// ´claim:inclusion:a-shadow-is-a-rule-of-the-theorys-own´
 #[test]
 fn shadowing_a_prelude_name_at_one_minor_and_not_the_next_is_a_breach() {
     let found = breaches(
@@ -364,6 +410,9 @@ fn shadowing_a_prelude_name_at_one_minor_and_not_the_next_is_a_breach() {
 /// prelude entering the comparison at all — and `text = tstr` in the prelude
 /// leaves the two spellings different all the same, the comparison being over
 /// the expression as written.
+///
+/// A prelude type never enters the comparison, so two names for it stay two spellings.
+/// ´claim:inclusion:a-prelude-name-is-compared-as-written´
 #[test]
 fn a_prelude_type_is_not_part_of_the_compared_form() {
     let found = breaches(
@@ -384,6 +433,9 @@ fn a_prelude_type_is_not_part_of_the_compared_form() {
 /// below it and against no lower one, which is sound because "verbatim"
 /// composes. Here it composes over three named minors, with the endpoint
 /// pair checked as well as the two consecutive ones.
+///
+/// Inclusion composes: holding at every consecutive step, it holds between the endpoints.
+/// ´claim:inclusion:inclusion-composes-along-a-chain´
 #[test]
 fn inclusion_composes_over_three_minors() {
     let first = r#"e = {0 => "com.example", 1 => [1, 0, uint], 2 => tstr}"#;
@@ -399,6 +451,9 @@ fn inclusion_composes_over_three_minors() {
 /// And it fails to compose only where a consecutive pair already failed: a
 /// chain whose middle step drops a key is broken at that step, and the
 /// endpoint pair reports the same key.
+///
+/// A chain broken at one step reports the same breach between its endpoints.
+/// ´claim:inclusion:a-break-in-the-middle-shows-at-the-endpoints´
 #[test]
 fn a_break_in_the_middle_is_visible_at_the_endpoints() {
     let first = r#"e = {0 => "com.example", 1 => [1, 0, uint], 2 => tstr}"#;
@@ -422,6 +477,8 @@ fn incomparable(earlier: &str, later: &str) {
     }
 }
 
+/// Two theories differing in label or in major are not comparable at all.
+/// ´claim:inclusion:theories-of-different-lines-are-incomparable´
 #[test]
 fn two_labels_are_not_comparable() {
     incomparable(
@@ -430,6 +487,7 @@ fn two_labels_are_not_comparable() {
     );
 }
 
+/// (´claim:inclusion:theories-of-different-lines-are-incomparable´)
 #[test]
 fn two_majors_are_not_comparable() {
     incomparable(
@@ -438,6 +496,7 @@ fn two_majors_are_not_comparable() {
     );
 }
 
+/// (´claim:inclusion:the-earlier-minor-must-be-the-lesser´)
 #[test]
 fn one_minor_is_not_comparable_with_itself() {
     incomparable(BASE, BASE);
@@ -446,6 +505,9 @@ fn one_minor_is_not_comparable_with_itself() {
 /// The check has a direction: the earlier theory's minor must be the
 /// lesser, and a pair offered the wrong way round is not comparable rather
 /// than quietly compared backwards.
+///
+/// The earlier theory's minor must be strictly the lesser, a pair the wrong way round being incomparable rather than compared backwards.
+/// ´claim:inclusion:the-earlier-minor-must-be-the-lesser´
 #[test]
 fn the_later_minor_may_not_be_the_lesser() {
     incomparable(
@@ -456,6 +518,9 @@ fn the_later_minor_may_not_be_the_lesser() {
 
 /// A breach is a verdict and travels as one; only incomparability is an
 /// error. The two answers are told apart by the type, not by inspection.
+///
+/// A breach travels as a verdict where incomparability is an error, the two told apart by type.
+/// ´claim:inclusion:a-breach-is-a-verdict-and-incomparability-an-error´
 #[test]
 fn a_breach_is_a_verdict_and_incomparability_is_an_error() {
     let dropped = check_inclusion(

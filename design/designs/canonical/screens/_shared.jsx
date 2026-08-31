@@ -52,6 +52,7 @@ const {
   UploadStatusLine,
   UploadErrorLine,
   ActsCard,
+  WizardHeader,
   StancePad,
   StanceReadout,
   SensitiveVeil,

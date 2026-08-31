@@ -32,7 +32,7 @@ function TopicRemovable({ topic }) {
 export function Screen() {
   return (
     <>
-      <PageHeader title="Details" backHref="#" backLabel="Back" />
+      <WizardHeader title="Details" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <PickedRow
           items={[
