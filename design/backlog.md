@@ -227,7 +227,14 @@ GONE ("none") — the row opens the Show all sheet, crop is one Back
 away — and the slice is fully componentized: `components/compose/`
 (`MediaThumb`, `PickedRow`+`DescribeCounter`, `PickedSheet`,
 `DescribeSheet`, `UploadStatusLine`+`UploadErrorLine`, `ActsCard`),
-all ten boards rendered from the pipeline.
+all ten boards rendered from the pipeline. Round 3 (implementation
+findings, same day): *Pick · the web variant* (no device-gallery API
+in browsers — file picker + drop target replace the grid); the
+all-or-nothing subline healed into `ActsCard.note` (every multi-act
+seal; single-act seals omit it); off-role type values conformed to
+the pinned M3 roles (M3 stays the default, no sub-roles). Open with
+jakob: the em-dash question (copy-voice blesses them — global call),
+and the wizard's cancel affordance (brief delivered).
 
 ### 13 · Post Score drill-down · *design*
 Four screens — FeedEntry → RankPath → RankHop → raw records — each

@@ -62,6 +62,7 @@ export function Screen() {
             },
           ]}
           total="3 signed actions"
+          note="they land together, or none does"
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
