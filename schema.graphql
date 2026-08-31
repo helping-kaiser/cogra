@@ -171,6 +171,14 @@ input AttachmentInput {
 	mediaId: UUID!
 	displayOrder: Int!
 	isCover: Boolean
+	"""
+	The picture's description — the manifest entry's witnessed alt
+	text (data-model.md, per-asset map key 2). Authored here, at
+	prepare time, never at upload: it is a fact about this placement,
+	so the same asset can read differently in two parents, and
+	correcting it is a new version of the parent, never a re-upload.
+	"""
+	altText: String
 }
 
 type AuthSession {
@@ -731,9 +739,16 @@ type MediaAttachment {
 	"""
 	sizeBytes: Int
 	"""
-	Null once the asset is removed: alt text is what a blind reader
-	*reads*, so redaction takes it with the picture rather than leaving
-	a description of bytes that are gone.
+	The description the referencing version witnessed for this
+	placement — resolved from that version's junction row, never from
+	the asset, which holds none. Null when undescribed, and null in a
+	context that is not a placement at all: a fresh upload has nothing
+	to describe yet, and a profile picture is named beside a display
+	name rather than described.
+	
+	Null once the asset is removed, too: alt text is what a blind
+	reader *reads*, so redaction takes it with the picture rather than
+	leaving a description of bytes that are gone.
 	"""
 	altText: String
 	"""
@@ -993,21 +1008,6 @@ type Mutation {
 	behind it.
 	"""
 	uploadMedia(input: UploadMediaInput!): UploadMediaPayload!
-	"""
-	Rewrites an uploaded asset's description.
-	
-	The bytes never change — the digest names them and the object is
-	cached forever on that promise. What changes is the author's
-	current description of them, which the next act to carry this
-	asset will witness. Acts that already carry it keep the
-	description they sealed: a published post says what it said, and
-	changing that is an edit.
-	
-	The window this exists for is the compose wizard's: the client
-	uploads while the author is still writing, so the description is
-	typed after the bytes are already stored.
-	"""
-	updateMedia(input: UpdateMediaInput!): UpdateMediaPayload!
 	"""
 	Prepares a new Post: one genesis Publish through the ordinary
 	write path — the returned write pre-signs, seals, and approves
@@ -2373,26 +2373,6 @@ entities without requiring a central allocating authority.
 scalar UUID
 
 """
-Rewrites an uploaded asset's description. Two-valued rather than the
-profile's three: `altText` is the only field, so a call always says
-what the description should now be — text sets it, null or blank
-clears it. Nothing else about an asset can be edited; the bytes are
-what the digest names.
-"""
-input UpdateMediaInput {
-	mediaId: UUID!
-	altText: String
-}
-
-"""
-The updated asset, or the refusal.
-"""
-type UpdateMediaPayload {
-	media: MediaAttachment
-	userErrors: [UserError!]!
-}
-
-"""
 A multipart file upload
 """
 scalar Upload
@@ -2422,16 +2402,16 @@ type UploadKeyBackupPayload {
 }
 
 """
-Uploads one asset. `altText` is the one layout-adjacent fact the
-server cannot infer and the author must supply; aspect ratio and
-duration are derived from the bytes.
+Uploads one asset. Bytes and nothing authored: a description rides
+`AttachmentInput` at prepare, so a picture can upload the moment it is
+picked and be described any time before signing — nothing gates on the
+other. Aspect ratio and duration are derived from the bytes.
 
 `actAs` is not here: a Collective is the only non-user actor there is
 and Collectives arrive with slice 5, so the uploader is the viewer.
 """
 input UploadMediaInput {
 	file: Upload!
-	altText: String
 }
 
 """

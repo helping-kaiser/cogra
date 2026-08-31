@@ -44,10 +44,7 @@ export async function runUpload(
   }
 
   step({ kind: "uploading" });
-  const uploaded = await uploadMedia(client, {
-    blob: encoded.blob,
-    altText: asset.altText,
-  });
+  const uploaded = await uploadMedia(client, { blob: encoded.blob });
 
   if (uploaded.kind === "success") {
     step({ kind: "done", mediaId: uploaded.value.id });

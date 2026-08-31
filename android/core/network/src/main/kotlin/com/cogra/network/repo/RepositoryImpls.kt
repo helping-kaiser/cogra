@@ -772,6 +772,7 @@ private fun List<AttachmentClaim>.toInput(): Optional<List<AttachmentInput>?> =
                 mediaId = claim.mediaId,
                 displayOrder = index,
                 isCover = Optional.present(index == 0),
+                altText = Optional.presentIfNotNull(claim.altText),
             )
         },
     )

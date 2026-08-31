@@ -95,7 +95,7 @@ export default function ProfileEditPage() {
     } catch {
       return { selection: "unchanged", error: "This browser couldn't read that picture." };
     }
-    const result = await uploadMedia(client, { blob: encoded.blob, altText: null });
+    const result = await uploadMedia(client, { blob: encoded.blob });
     if (result.kind === "success") return { selection: { mediaId: result.value.id } };
     return {
       selection: "unchanged",
