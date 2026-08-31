@@ -381,6 +381,9 @@ const POST_REFERENCES: &str = r#"query($id: UUID!) {
 /// One priced act per citation, on top of the minting record — and the
 /// citations come after the mint in relay order, because each declares it
 /// as a dependency.
+///
+/// A creation batch stages one priced act per citation on top of the minting record, and the citations follow the mint in relay order because each depends on it.
+/// ´claim:references:citations-ride-the-mint-in-relay-order´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_post_stages_one_act_per_declared_citation(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -407,6 +410,8 @@ async fn a_post_stages_one_act_per_declared_citation(pool: PgPool) {
 
 /// A Comment is a citing artifact like any other passive node, so the
 /// same batch rides a reply.
+///
+/// (´claim:references:citations-ride-the-mint-in-relay-order´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_comment_stages_its_citations_too(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -437,6 +442,9 @@ async fn a_comment_stages_its_citations_too(pool: PgPool) {
 
 /// Tags and citations batch together, and the whole thing is one gesture
 /// to the author: 1 + 2 + 2 = 5 priced acts through one prepare.
+///
+/// Tags and citations batch into one gesture, priced together and prepared once.
+/// ´claim:references:tags-and-citations-batch-into-one-gesture´
 #[sqlx::test(migrations = "../../migrations")]
 async fn tags_and_citations_batch_into_one_gesture(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -470,6 +478,9 @@ async fn tags_and_citations_batch_into_one_gesture(pool: PgPool) {
 /// check runs before the minting record is staged, so a refusal leaves
 /// the author with nothing at all — not a post whose citations went
 /// missing.
+///
+/// The citation check runs before the minting record is staged, so a refused batch leaves the author with nothing at all rather than a post whose citations went missing.
+/// ´claim:references:a-refused-batch-stages-nothing´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_batch_refused_for_one_citation_stages_none_of_itself(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -504,6 +515,8 @@ async fn a_batch_refused_for_one_citation_stages_none_of_itself(pool: PgPool) {
 
 /// The ten-citation cap is a batch fault, reported against the whole
 /// field rather than against whichever entry sits at the limit.
+///
+/// (´claim:references:the-batch-cap-is-a-whole-batch-fault´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_citation_cap_refuses_the_batch_as_a_batch(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -531,6 +544,9 @@ async fn the_citation_cap_refuses_the_batch_as_a_batch(pool: PgPool) {
 /// Bob is funded for exactly two acts, which is what makes the pair of
 /// attempts a clean split: a post with one citation is two acts and goes
 /// through, a post with two is three and is refused entire.
+///
+/// Either the balance carries the whole gesture or none of it stages, so an author never reads one gesture and gets an arbitrary prefix of it.
+/// ´claim:references:the-balance-carries-the-whole-gesture-or-none´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_balance_that_cannot_carry_the_batch_refuses_all_of_it(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -578,6 +594,8 @@ async fn a_balance_that_cannot_carry_the_batch_refuses_all_of_it(pool: PgPool) {
 
 /// Citing after publishing is what post.md §3 promises with "or later",
 /// and the parameters default so a plain citation needs only its target.
+///
+/// (´claim:references:omitted-parameters-take-the-defaults´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_standalone_citation_defaults_both_parameters(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -598,6 +616,8 @@ async fn a_standalone_citation_defaults_both_parameters(pool: PgPool) {
 /// and quoting that count is why the batch is assembled server-side
 /// instead of letting a client author one negating record that would
 /// silently under-net.
+///
+/// (´claim:references:withdrawal-costs-the-netting-batch´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn withdrawing_a_citation_quotes_its_counter_record_count(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -647,6 +667,7 @@ async fn withdrawing_a_citation_quotes_its_counter_record_count(pool: PgPool) {
     );
 }
 
+/// (´claim:references:an-absent-citing-artifact-names-its-field´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn citing_an_artifact_that_is_not_there_names_the_artifact_field(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -665,6 +686,9 @@ async fn citing_an_artifact_that_is_not_there_names_the_artifact_field(pool: PgP
 /// out-of-range value is refused by the scalar before any resolver sees
 /// it — and nothing is staged. This is the same reason `TagInput` range-
 /// checks only its confidence, which is narrower than its scalar.
+///
+/// A citation parameter outside the range is refused by the scalar before any resolver sees it, so nothing is staged.
+/// ´claim:references:an-out-of-range-parameter-never-reaches-the-resolver´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_parameter_outside_the_census_range_never_reaches_the_write_path(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -695,6 +719,9 @@ async fn a_parameter_outside_the_census_range_never_reaches_the_write_path(pool:
 /// authored at (relevance, support) must read back at exactly that pair,
 /// which it can only do if the gesture writes the act tuple and the fold
 /// un-transposes the T-leg.
+///
+/// A citation authored at a pair of parameters reads back at exactly that pair, which holds only if the gesture writes the act tuple and the fold un-transposes the terminal leg.
+/// ´claim:references:a-citation-reads-back-as-authored´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_reference_row_serves_relevance_and_support_the_right_way_round(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -728,6 +755,9 @@ async fn the_reference_row_serves_relevance_and_support_the_right_way_round(pool
 /// the staged act tuple and the A-leg carry `(relevance, support)`
 /// verbatim, and the T-leg carries them transposed. A single-sided error
 /// moves exactly one of the three.
+///
+/// Each of the three renderings the census fixes is asserted apart from the others, so a single-sided transposition cannot cancel itself out of sight.
+/// ´claim:references:each-rendering-is-checked-apart´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_stored_legs_carry_the_census_orientation(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -779,6 +809,8 @@ async fn the_stored_legs_carry_the_census_orientation(pool: PgPool) {
 
 /// The hand test's second half: a mention must type as a person, or the
 /// render has nothing to send the reader to.
+///
+/// (´claim:references:a-mentions-far-end-is-the-person´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_mention_types_as_the_person_it_names(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -808,6 +840,8 @@ async fn a_mention_types_as_the_person_it_names(pool: PgPool) {
 /// makes that id resolvable at all. So this is the strongest form of the
 /// refusal: a topic that plainly exists, named by the id the finder
 /// itself would once have handed back.
+///
+/// (´claim:references:a-topic-is-no-reference-target´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_topic_is_refused_as_a_citation_target(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -885,6 +919,9 @@ async fn a_topic_is_refused_as_a_citation_target(pool: PgPool) {
 /// The gesture is staged straight at the boundary because the planning
 /// layer is precisely what refuses it; nothing reachable through the
 /// GraphQL write path can produce this record.
+///
+/// The mirror reaches further than this policy, so a record it holds whose target the read side may not serve degrades to a null target beside an identifier that still names the far end.
+/// ´claim:references:an-unservable-target-degrades-rather-than-fails´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_topic_target_record_serves_a_null_target_beside_its_id(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -945,6 +982,8 @@ async fn a_topic_target_record_serves_a_null_target_beside_its_id(pool: PgPool) 
 /// Only the carrier author's own citations (D12). A stranger's citation
 /// off someone else's post reaches a viewer through the citer, at a
 /// forward-path weight the ranker computes — and the ranker is slice 3.
+///
+/// (´claim:references:a-third-party-citation-is-its-own-bundle´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_strangers_citation_stays_off_the_carriers_row(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -987,6 +1026,8 @@ async fn a_strangers_citation_stays_off_the_carriers_row(pool: PgPool) {
 /// A staged citation is the viewer's own act in flight: visible to its
 /// author from the pre-commitment onward, invisible to everyone else and
 /// to the L1 view.
+///
+/// (´claim:references:a-staged-citation-shows-to-its-author-alone´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_pending_citation_shows_to_its_author_alone(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -1034,6 +1075,8 @@ async fn a_pending_citation_shows_to_its_author_alone(pool: PgPool) {
 
 /// Claim 84: before the Profile arm, a mention's terminal leg served null
 /// on the chronicle and the record read as pointing at nothing.
+///
+/// (´claim:references:a-mentions-far-end-is-the-person´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_mentions_record_terminal_resolves_to_the_person(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -1089,6 +1132,9 @@ const REFERENCE_CANDIDATES: &str = r#"query($query: String!, $limit: Int) {
 /// case but rejects the sigil outright, so the finder strips it the way
 /// `hashtag(name:)` strips its own `#`; a picker whose first keystroke is
 /// `@` would otherwise never resolve.
+///
+/// A person is findable by the handle as typed, sigil, case and padding included, a picker's first keystroke otherwise never resolving.
+/// ´claim:references:the-finder-takes-a-handle-as-typed´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_finder_offers_a_person_by_bare_or_sigilled_handle(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -1115,6 +1161,9 @@ async fn the_finder_offers_a_person_by_bare_or_sigilled_handle(pool: PgPool) {
 /// Every class the citation union carries is findable by its own L2 id,
 /// and the id comes back unchanged — the picker hands the composer
 /// exactly what `prepareReference` takes.
+///
+/// Every class the citation union carries is findable by its own identifier, and the identifier comes back unchanged for the composer to hand straight on.
+/// ´claim:references:the-finder-offers-every-citable-class´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_finder_offers_each_target_class_by_its_id(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -1169,6 +1218,9 @@ async fn the_finder_offers_each_target_class_by_its_id(pool: PgPool) {
 /// exists is the case worth pinning: the miss test covers names nothing
 /// answers to, and an absence that held only for unregistered topics
 /// would be no narrowing at all.
+///
+/// The finder offers only what the citation gesture accepts, so a topic is unofferable however it is named.
+/// ´claim:references:the-finder-offers-only-what-can-be-cited´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_finder_never_offers_a_topic(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -1220,6 +1272,9 @@ async fn the_finder_never_offers_a_topic(pool: PgPool) {
 /// A finder runs on every keystroke, so most of what it is handed is a
 /// prefix of something still being typed. None of it may be an error:
 /// an empty list is the answer, whatever the shape of the miss.
+///
+/// A finder runs on every keystroke, so a miss of any shape is an empty list and never an error.
+/// ´claim:references:a-finder-miss-is-an-empty-list´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_finder_answers_a_miss_with_an_empty_list_never_an_error(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -1260,6 +1315,9 @@ async fn the_finder_answers_a_miss_with_an_empty_list_never_an_error(pool: PgPoo
 
 /// `limit` carries the list contract the topic surfaces already use:
 /// bounded by it, and over-asking refuses rather than silently clamping.
+///
+/// The finder is bounded by the list limit and refuses over-asking rather than silently clamping.
+/// ´claim:references:the-finder-refuses-over-asking´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_finder_bounds_itself_by_the_list_limit(pool: PgPool) {
     let rig = Citer::new(pool).await;
@@ -1304,6 +1362,9 @@ async fn the_finder_bounds_itself_by_the_list_limit(pool: PgPool) {
 /// adds no gate of its own: an anonymous picker resolves what an
 /// authenticated one does, with the private fields still authorized on
 /// the types themselves.
+///
+/// Reads are public and the finder adds no gate of its own, the private fields staying authorized on the types themselves.
+/// ´claim:references:the-finder-adds-no-gate´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_finder_resolves_for_an_anonymous_viewer_too(pool: PgPool) {
     let rig = Citer::new(pool).await;
