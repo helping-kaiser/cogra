@@ -302,6 +302,8 @@ fn build_vectors() -> Value {
     })
 }
 
+/// The committed cross-language vectors match what this crate derives, so drift fails the build rather than reaching another language.
+/// ´claim:vectors:the-committed-vectors-match-what-the-crate-derives´
 #[test]
 fn exported_vectors_match_the_committed_file() {
     let rendered = format!(
