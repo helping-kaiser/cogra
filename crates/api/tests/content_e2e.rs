@@ -206,6 +206,26 @@ const PREPARE_COMMENT: &str = r#"mutation($input: PrepareCommentInput!) {
   }
 }"#;
 
+const PREPARE_POST_EDIT: &str = r#"mutation($input: PreparePostEditInput!) {
+  preparePostEdit(input: $input) {
+    node
+    writes { id canonicalProposal }
+    userErrors { code message field }
+  }
+}"#;
+
+/// Everything a client needs to draw the veil: the title's status outside
+/// it, the body's three statuses inside it, the node-level cache, and the
+/// author's reason.
+const READ_VEIL: &str = r#"query($id: UUID!) { post(id: $id) {
+  title { value status }
+  description { value status }
+  content { value status }
+  attachmentsStatus
+  moderationStatus
+  sensitiveReason
+} }"#;
+
 /// The whole slice-2 round trip: a post composed and signed "on the
 /// phone", then read back anonymously through every read shape — the
 /// listing, the typed node, and the interface lookup — because the shared
@@ -394,6 +414,197 @@ async fn content_writes_need_a_member_session(pool: PgPool) {
         response["errors"][0]["extensions"]["code"], "UNAUTHENTICATED",
         "an unauthenticated prepare is a transport fault, not a userError: {response}"
     );
+}
+
+/// The author's own sensitive mark, end to end: it rides the payload the
+/// device signs, and it reads back through the status fields both clients
+/// already veil on — no new read plumbing, which is the point.
+///
+/// The body veils as one region (media, words and description together)
+/// and the title stays readable, so choosing to look is informed
+/// (design/readme.md §13, moderation.md §1).
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_self_marked_post_veils_its_body_and_keeps_its_title(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let prepared = rig
+        .gql(
+            Some(&token),
+            PREPARE_POST,
+            json!({ "input": {
+                "title": "A hard thing",
+                "description": "Beside the words",
+                "content": "The body nobody sees unmarked.",
+                "license": { "attribution": 1.0, "provenance": 0.0 },
+                "sensitive": true,
+                "sensitiveReason": "Depicts an injury",
+            }}),
+        )
+        .await;
+    let post_id = prepared["preparePost"]["node"].as_str().expect("node id");
+    rig.sign_prepared(&token, &key, &prepared["preparePost"]["writes"])
+        .await;
+    rig.close_and_ingest().await;
+
+    let veiled = rig.gql(None, READ_VEIL, json!({ "id": post_id })).await;
+    let post = &veiled["post"];
+    assert_eq!(post["title"]["status"], "NORMAL", "the title stays outside");
+    assert_eq!(post["title"]["value"], "A hard thing");
+    assert_eq!(post["description"]["status"], "SENSITIVE");
+    assert_eq!(post["content"]["status"], "SENSITIVE");
+    assert_eq!(post["attachmentsStatus"], "SENSITIVE");
+    assert_eq!(post["moderationStatus"], "SENSITIVE");
+    assert_eq!(post["sensitiveReason"], "Depicts an injury");
+    assert_eq!(
+        post["content"]["value"], "The body nobody sees unmarked.",
+        "SENSITIVE is a filter, not a removal — the value still travels"
+    );
+
+    let edit = rig
+        .gql(
+            Some(&token),
+            PREPARE_POST_EDIT,
+            json!({ "input": {
+                "id": post_id,
+                "title": "A hard thing",
+                "description": "Beside the words",
+                "content": "Softened.",
+            }}),
+        )
+        .await;
+    rig.sign_prepared(&token, &key, &edit["preparePostEdit"]["writes"])
+        .await;
+    rig.close_and_ingest().await;
+
+    let unmarked = rig.gql(None, READ_VEIL, json!({ "id": post_id })).await;
+    let post = &unmarked["post"];
+    assert_eq!(
+        post["content"]["status"], "NORMAL",
+        "an edit carries the complete content state, so omitting the mark unmarks"
+    );
+    assert_eq!(post["description"]["status"], "NORMAL");
+    assert_eq!(post["attachmentsStatus"], "NORMAL");
+    assert_eq!(post["moderationStatus"], "NORMAL");
+    assert!(post["sensitiveReason"].is_null());
+
+    let remarked = rig
+        .gql(
+            Some(&token),
+            PREPARE_POST_EDIT,
+            json!({ "input": {
+                "id": post_id,
+                "title": "A hard thing",
+                "content": "Marked again.",
+                "sensitive": true,
+            }}),
+        )
+        .await;
+    rig.sign_prepared(&token, &key, &remarked["preparePostEdit"]["writes"])
+        .await;
+    rig.close_and_ingest().await;
+
+    let post = &rig.gql(None, READ_VEIL, json!({ "id": post_id })).await["post"];
+    assert_eq!(post["content"]["status"], "SENSITIVE");
+    assert!(
+        post["sensitiveReason"].is_null(),
+        "a mark without a reason reads back as a mark without a reason"
+    );
+}
+
+/// A reason without the switch is refused rather than dropped: the author
+/// wrote a warning no reader would ever be shown.
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_sensitive_reason_without_the_mark_is_refused(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, _key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let prepared = rig
+        .gql(
+            Some(&token),
+            PREPARE_POST,
+            json!({ "input": {
+                "content": "unmarked",
+                "license": { "attribution": 0.0, "provenance": 0.0 },
+                "sensitiveReason": "why",
+            }}),
+        )
+        .await;
+    let errors = prepared["preparePost"]["userErrors"]
+        .as_array()
+        .expect("userErrors");
+    assert_eq!(errors.len(), 1);
+    assert_eq!(errors[0]["code"], "BAD_INPUT");
+    assert_eq!(errors[0]["field"][0], "sensitiveReason");
+    assert!(prepared["preparePost"]["writes"].is_null());
+}
+
+/// A comment seals through the same seal a post does, so it carries the
+/// same switch and veils the same way.
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_self_marked_comment_veils_its_body(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, author_key) = rig.seed_member("author", "author@example.com").await;
+    let author_token = rig.log_in("author@example.com").await;
+    let (_, bob_key) = rig.seed_member("bob", "bob@example.com").await;
+    let bob_token = rig.log_in("bob@example.com").await;
+
+    let prepared = rig
+        .gql(
+            Some(&author_token),
+            PREPARE_POST,
+            json!({ "input": {
+                "title": "Host",
+                "content": "The thread starts here.",
+                "license": { "attribution": 0.0, "provenance": 0.0 },
+            }}),
+        )
+        .await;
+    let post_id = prepared["preparePost"]["node"].as_str().expect("node id");
+    rig.sign_prepared(
+        &author_token,
+        &author_key,
+        &prepared["preparePost"]["writes"],
+    )
+    .await;
+    rig.close_and_ingest().await;
+
+    let commented = rig
+        .gql(
+            Some(&bob_token),
+            PREPARE_COMMENT,
+            json!({ "input": {
+                "target": post_id,
+                "content": "Hard to look at.",
+                "license": { "attribution": 0.0, "provenance": 0.0 },
+                "sensitive": true,
+                "sensitiveReason": "Describes the injury",
+            }}),
+        )
+        .await;
+    let comment_id = commented["prepareComment"]["node"]
+        .as_str()
+        .expect("node id");
+    rig.sign_prepared(&bob_token, &bob_key, &commented["prepareComment"]["writes"])
+        .await;
+    rig.close_and_ingest().await;
+
+    let read = rig
+        .gql(
+            None,
+            r#"query($id: UUID!) { comment(id: $id) {
+                 content { value status } attachmentsStatus
+                 moderationStatus sensitiveReason } }"#,
+            json!({ "id": comment_id }),
+        )
+        .await;
+    let comment = &read["comment"];
+    assert_eq!(comment["content"]["status"], "SENSITIVE");
+    assert_eq!(comment["attachmentsStatus"], "SENSITIVE");
+    assert_eq!(comment["moderationStatus"], "SENSITIVE");
+    assert_eq!(comment["sensitiveReason"], "Describes the injury");
 }
 
 /// The two refusal tiers stay apart: commenting on an unknown target is a

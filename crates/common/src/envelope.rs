@@ -17,9 +17,9 @@
 //! canonicality (decode re-encodes and compares), the §4.4 empty-value
 //! rules, and the reserved-range rejection.
 //!
-//! Inside the guild map, keys 2–6 ride Publish/Review payloads and keys
-//! 7–12 the parallel-Registration profile payload, each family's reader
-//! rejecting the other's keys. Two of those are declared but not built:
+//! Inside the guild map, keys 2–6 and 13–14 ride Publish/Review payloads
+//! and keys 7–12 the parallel-Registration profile payload, each family's
+//! reader rejecting the other's keys. Two of those are declared but not built:
 //! key 6 (provenance chain, platform-guidelines.md §5 plank 4) and key 10
 //! (payout address, which arrives with the rail — ledger.md). Neither is
 //! ever produced, and both are rejected on read until their slices define
@@ -38,6 +38,12 @@
 //! it is witnessed like any other; and a profile payload being a delta
 //! rather than complete state, each slot is three-valued — the empty array
 //! is how an update says "cleared".
+//!
+//! Keys 13 and 14 carry the author's own sensitive mark and its optional
+//! public reason. They are witnessed rather than Postgres-side because a
+//! self-mark is the author's statement about their own content: a reader
+//! can check the veil they are shown against the record, and a mirror
+//! rebuilt from L1 restores it with the body it belongs to.
 
 use std::collections::BTreeMap;
 
@@ -82,6 +88,19 @@ const COGRA_KEY_BIO: u64 = 8;
 const COGRA_KEY_WEBSITE_URL: u64 = 9;
 const COGRA_KEY_AVATAR: u64 = 11;
 const COGRA_KEY_COVER: u64 = 12;
+/// The author's own sensitive mark, carried as `1` and omitted when
+/// unmarked — the veil the author asked for rides the witnessed payload
+/// so a reader can check it against the record, the same reason alt text
+/// does. Complete-state like every content key: an edit that omits it is
+/// an unmarked post.
+const COGRA_KEY_SENSITIVE: u64 = 13;
+/// The optional public reason shown on the veil (design/readme.md §13).
+/// Valid only alongside key 13.
+const COGRA_KEY_SENSITIVE_REASON: u64 = 14;
+/// The only value key 13 ever carries. A mark is presence, not a
+/// boolean: one state has one encoding, so two payloads cannot disagree
+/// about the same unmarked post.
+const COGRA_SENSITIVE_SET: u64 = 1;
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum EnvelopeError {
@@ -359,6 +378,23 @@ fn guild_text_field(
     }
 }
 
+/// The author's self-mark, read off keys 13 and 14.
+///
+/// A reason without the mark it explains is refused rather than dropped:
+/// the payload would otherwise carry a warning no reader is ever shown,
+/// and the author signed a state the graph does not hold.
+fn guild_sensitive(cogra: &BTreeMap<u64, Value>) -> Result<Option<SensitiveMark>, EnvelopeError> {
+    let reason = guild_text_field(cogra, COGRA_KEY_SENSITIVE_REASON)?;
+    match cogra.get(&COGRA_KEY_SENSITIVE) {
+        None if reason.is_some() => Err(EnvelopeError::Guild("sensitive reason without the mark")),
+        None => Ok(None),
+        Some(Value::Uint(v)) if *v == COGRA_SENSITIVE_SET => Ok(Some(SensitiveMark { reason })),
+        Some(_) => Err(EnvelopeError::Guild(
+            "sensitive mark with an unexpected value",
+        )),
+    }
+}
+
 /// One asset in the media manifest (guild key 5).
 ///
 /// The three fields are what a reader needs to render the asset honestly:
@@ -502,6 +538,24 @@ pub struct CograContent {
     /// carries the complete content state, so an edit that drops every
     /// asset omits key 5 and the winning record renders no gallery.
     pub media: Vec<MediaAsset>,
+    /// The author's own sensitive mark, `None` when unmarked. Absent and
+    /// present are the whole vocabulary — an edit that omits it unmarks,
+    /// because a content act carries the complete content state.
+    pub sensitive: Option<SensitiveMark>,
+}
+
+/// An author's self-mark: "this is sensitive, here is why". The reason is
+/// optional and public — it is shown on the veil, so a reader decides
+/// whether to look knowing what they would be looking at
+/// (design/readme.md §13).
+///
+/// The mark is one bit and its reach is fixed: it veils the body — media,
+/// words and description as one region — and leaves the title and topics
+/// readable (moderation.md §1). There is no per-field choice to encode,
+/// so nothing here names a field.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SensitiveMark {
+    pub reason: Option<String>,
 }
 
 impl CograContent {
@@ -524,6 +578,12 @@ impl CograContent {
             let assets = self.media.iter().map(MediaAsset::encode).collect();
             cogra.insert(COGRA_KEY_MEDIA, Value::Array(assets));
         }
+        if let Some(mark) = self.sensitive {
+            cogra.insert(COGRA_KEY_SENSITIVE, Value::Uint(COGRA_SENSITIVE_SET));
+            if let Some(reason) = mark.reason {
+                cogra.insert(COGRA_KEY_SENSITIVE_REASON, Value::Text(reason));
+            }
+        }
         let mut extensions = BTreeMap::new();
         extensions.insert(COGRA_GUILD_KEY, Value::Map(cogra));
         Envelope {
@@ -545,7 +605,17 @@ impl CograContent {
     pub fn from_envelope(envelope: &Envelope) -> Result<Self, EnvelopeError> {
         let cogra = cogra_guild_map(envelope)?;
         for key in cogra.keys() {
-            if *key > COGRA_KEY_MEDIA {
+            if !matches!(
+                *key,
+                COGRA_KEY_VERSION
+                    | COGRA_KEY_NODE
+                    | COGRA_KEY_TITLE
+                    | COGRA_KEY_DESCRIPTION
+                    | COGRA_KEY_BODY
+                    | COGRA_KEY_MEDIA
+                    | COGRA_KEY_SENSITIVE
+                    | COGRA_KEY_SENSITIVE_REASON
+            ) {
                 return Err(EnvelopeError::Guild("unknown cogra field"));
             }
         }
@@ -555,6 +625,7 @@ impl CograContent {
             description: guild_text_field(cogra, COGRA_KEY_DESCRIPTION)?,
             body: guild_text_field(cogra, COGRA_KEY_BODY)?,
             media: guild_media(cogra)?,
+            sensitive: guild_sensitive(cogra)?,
         })
     }
 
@@ -927,6 +998,7 @@ mod tests {
             description: description.map(Into::into),
             body: body.map(Into::into),
             media: Vec::new(),
+            sensitive: None,
         }
     }
 
@@ -978,6 +1050,72 @@ mod tests {
             assert_eq!(
                 CograContent::decode_payload(&bytes).expect("valid"),
                 content
+            );
+        }
+    }
+
+    /// The self-mark's three states: unmarked, marked bare, marked with a
+    /// reason. Each round-trips, and the unmarked one leaves both keys out
+    /// — so an edit that drops the mark encodes exactly like a post that
+    /// never carried one.
+    #[test]
+    fn cogra_round_trips_the_sensitive_mark() {
+        for mark in [
+            None,
+            Some(SensitiveMark { reason: None }),
+            Some(SensitiveMark {
+                reason: Some("Depicts an injury".into()),
+            }),
+        ] {
+            let content = CograContent {
+                sensitive: mark.clone(),
+                ..cogra(Some("Title"), None, Some("body"))
+            };
+            let bytes = content.clone().encode_payload();
+            assert_eq!(
+                CograContent::decode_payload(&bytes).expect("valid"),
+                content
+            );
+            let keys_present = Envelope::decode(&bytes).ok().and_then(|e| {
+                match e.extensions.get(&COGRA_GUILD_KEY) {
+                    Some(Value::Map(m)) => Some(m.contains_key(&COGRA_KEY_SENSITIVE)),
+                    _ => None,
+                }
+            });
+            assert_eq!(keys_present, Some(mark.is_some()));
+        }
+    }
+
+    #[test]
+    fn cogra_rejects_a_sensitive_reason_without_the_mark() {
+        let mut inner = BTreeMap::new();
+        inner.insert(COGRA_KEY_VERSION, Value::Uint(1));
+        inner.insert(COGRA_KEY_NODE, Value::Bytes(vec![7; 16]));
+        inner.insert(COGRA_KEY_SENSITIVE_REASON, Value::Text("why".into()));
+        let mut ext = BTreeMap::new();
+        ext.insert(COGRA_GUILD_KEY, Value::Map(inner));
+        assert_eq!(
+            CograContent::decode_payload(&envelope("", ext).encode()),
+            Err(EnvelopeError::Guild("sensitive reason without the mark"))
+        );
+    }
+
+    /// The mark is presence, so any encoding other than `1` is a payload
+    /// claiming a state the guild schema does not have.
+    #[test]
+    fn cogra_rejects_a_sensitive_mark_with_an_unexpected_value() {
+        for value in [Value::Uint(0), Value::Uint(2), Value::Text("yes".into())] {
+            let mut inner = BTreeMap::new();
+            inner.insert(COGRA_KEY_VERSION, Value::Uint(1));
+            inner.insert(COGRA_KEY_NODE, Value::Bytes(vec![7; 16]));
+            inner.insert(COGRA_KEY_SENSITIVE, value);
+            let mut ext = BTreeMap::new();
+            ext.insert(COGRA_GUILD_KEY, Value::Map(inner));
+            assert_eq!(
+                CograContent::decode_payload(&envelope("", ext).encode()),
+                Err(EnvelopeError::Guild(
+                    "sensitive mark with an unexpected value"
+                ))
             );
         }
     }
