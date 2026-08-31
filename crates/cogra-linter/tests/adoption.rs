@@ -760,7 +760,7 @@ fn a_kinds_section_with_no_registry_key_is_refused() {
 #[test]
 fn the_kinds_section_round_trips() {
     let kinds = ruled().kinds;
-    assert_eq!(kinds.extensions.rows.len(), 6);
+    assert_eq!(kinds.extensions.rows.len(), 7);
     assert!(
         kinds
             .extensions

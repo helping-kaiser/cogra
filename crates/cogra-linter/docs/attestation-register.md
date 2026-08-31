@@ -9,14 +9,14 @@ Acceptee: jakob.
 Evidence base, adopted component:
 the edition evidence base of crates/cogra-linter/docs/environment-kinds.md, taken by reference
 
-Evidence base, owned records: 6, one per row of the local extension set.
+Evidence base, owned records: 7, one per row of the local extension set.
 A row sourced `adopted` carries the adopted component's own source and
 locator; a row sourced `owned` carries its record's. No status is
 strengthened, so the status map is the edition's unchanged.
 
 ## Evidence and status
 
-355 rows of the effective relation, each with the status the edition
+356 rows of the effective relation, each with the status the edition
 records for it.
 
 | Name                     | Kind         | Status     | Source  | Locator                                       | Record |
@@ -108,274 +108,275 @@ records for it.
 | Disproof                 | `refut`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 85     |
 | Document                 | `guide`      | firm       | owned   | corpus-adoption.toml [kinds.evidence]         | 86     |
 | Document                 | `plan`       | firm       | owned   | corpus-adoption.toml [kinds.evidence]         | 87     |
-| Document                 | `rec`        | firm       | owned   | corpus-adoption.toml [kinds.evidence]         | 88     |
-| Document                 | `reg`        | firm       | owned   | corpus-adoption.toml [kinds.evidence]         | 89     |
-| Document                 | `rep`        | firm       | owned   | corpus-adoption.toml [kinds.evidence]         | 90     |
-| Document                 | `spec`       | firm       | owned   | corpus-adoption.toml [kinds.evidence]         | 91     |
-| Dossier                  | `dossier`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 92     |
-| Dream                    | `dream`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 93     |
-| Drill                    | `exer`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 94     |
-| Endpoint                 | `endpoint`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 95     |
-| Entry                    | `entry`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 96     |
-| Environment variable     | `envvar`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 97     |
-| Epigraph                 | `epigraph`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 98     |
-| Epilogue                 | `adden`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 99     |
-| Equation                 | `eq`         | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 100    |
-| Erratum                  | `errat`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 101    |
-| Error code               | `errcode`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 102    |
-| Estimate                 | `bound`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 103    |
-| Event                    | `event`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 104    |
-| Example                  | `ex`         | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 105    |
-| Excursus                 | `aside`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 106    |
-| Exercise                 | `exer`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 107    |
-| Exhibit                  | `exhibit`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 108    |
-| Expectation              | `pred`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 109    |
-| Experiment               | `expt`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 110    |
-| Explanation              | `expl`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 111    |
-| Exploration              | `proj`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 112    |
-| Fact                     | `fact`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 113    |
-| Fallacy                  | `fallacy`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 114    |
-| False proof              | `fallacy`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 115    |
-| Fantasy                  | `dream`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 116    |
-| Feature flag             | `flag`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 117    |
-| Figure                   | `fig`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 118    |
-| Fixture                  | `fixture`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 119    |
-| Folklore                 | `folk`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 120    |
-| Foreword                 | `pref`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 121    |
-| Formulation              | `formul`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 122    |
-| Fun fact                 | `fact`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 123    |
-| Function                 | `func`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 124    |
-| Fuzz target              | `fuzz`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 125    |
-| Gate                     | `gate`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 126    |
-| Generalization           | `gen`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 127    |
-| Given data               | `data`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 128    |
-| Gloss                    | `gloss`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 129    |
-| Goal                     | `goal`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 130    |
-| Grammar                  | `gram`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 131    |
-| Graph                    | `fig`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 132    |
-| Guess                    | `guess`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 133    |
-| Heuristic                | `heur`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 134    |
-| Heuristic argument       | `heur`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 135    |
-| Hint                     | `hint`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 136    |
-| Historical note          | `hist`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 137    |
-| Historical remark        | `hist`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 138    |
-| Homework                 | `exer`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 139    |
-| Hope                     | `hope`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 140    |
-| Hypothesis               | `hyp`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 141    |
-| Idea of proof            | `sketch`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 142    |
-| Identity                 | `ident`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 143    |
-| Illustration             | `ex`         | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 144    |
-| Illustration             | `fig`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 145    |
-| Image                    | `fig`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 146    |
-| Implementation remark    | `impl`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 147    |
-| Indexing convention      | `conv`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 148    |
-| Inequality               | `bound`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 149    |
-| Inference rule           | `inf`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 150    |
-| Insight                  | `intuit`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 151    |
-| Interface                | `iface`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 152    |
-| Interlude                | `aside`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 153    |
-| Intermezzo               | `aside`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 154    |
-| Intuition                | `intuit`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 155    |
-| Invariant                | `inv`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 156    |
-| Inventory                | `reg`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 157    |
-| Job                      | `job`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 158    |
-| Joke                     | `joke`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 159    |
-| Journal                  | `jour`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 160    |
-| Judgment                 | `judg`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 161    |
-| Justification            | `just`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 162    |
-| Key                      | `legend`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 163    |
-| Language                 | `lang`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 164    |
-| Law                      | `law`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 165    |
-| Lecture                  | `lect`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 166    |
-| Ledger                   | `ledger`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 167    |
-| Legend                   | `legend`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 168    |
-| Legend                   | `story`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 169    |
-| Lemma                    | `lem`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 170    |
-| Lemma–Definition         | `lemdef`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 171    |
-| Library                  | `lib`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 172    |
-| Lint rule                | `lint`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 173    |
-| Listing                  | `listing`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 174    |
-| Log                      | `log`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 175    |
-| Macro                    | `macro`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 176    |
-| Marginal gloss           | `gloss`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 177    |
-| Matrix                   | `mat`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 178    |
-| Maxim                    | `slogan`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 179    |
-| Memo                     | `memo`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 180    |
-| Memorandum               | `memo`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 181    |
-| Meta-conjecture          | `metaconj`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 182    |
-| Meta-question            | `metaq`      | borderline | adopted | crates/cogra-linter/docs/environment-kinds.md | 183    |
-| Meta-theorem             | `metathm`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 184    |
-| Metric                   | `metric`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 185    |
-| Migration                | `migr`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 186    |
-| Minutes                  | `minutes`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 187    |
-| Miracle                  | `miracle`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 188    |
-| Misconception            | `myth`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 189    |
-| Model                    | `constr`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 190    |
-| Model                    | `model`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 191    |
-| Module                   | `mod`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 192    |
-| Module                   | `sec`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 193    |
-| Moral                    | `moral`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 194    |
-| Motivation               | `mot`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 195    |
-| Motto                    | `slogan`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 196    |
-| Myth                     | `myth`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 197    |
-| N.B.                     | `rem`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 198    |
-| Namespace                | `ns`         | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 199    |
-| Nomenclature             | `term`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 200    |
-| Non-example              | `nonex`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 201    |
-| Notation                 | `ntn`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 202    |
-| Note                     | `rem`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 203    |
-| Objection                | `obj`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 204    |
-| Observation              | `data`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 205    |
-| Observation              | `obs`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 206    |
-| Open Problem             | `open`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 207    |
-| Open Question            | `open`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 208    |
-| Outline of proof         | `sketch`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 209    |
-| Outlook                  | `outlook`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 210    |
-| Overview                 | `preview`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 211    |
-| Package                  | `pkg`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 212    |
-| Parable                  | `story`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 213    |
-| Paradox                  | `paradox`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 214    |
-| Paragraph                | `para`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 215    |
-| Part                     | `part`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 216    |
-| Perspective              | `persp`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 217    |
-| Philosophy               | `persp`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 218    |
-| Photograph               | `fig`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 219    |
-| Picture                  | `fig`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 220    |
-| Pipeline                 | `pipeline`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 221    |
-| Pitfall                  | `warn`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 222    |
-| Plausibility argument    | `heur`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 223    |
-| Plot                     | `fig`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 224    |
-| Porism                   | `por`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 225    |
-| Postcondition            | `postc`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 226    |
-| Postmortem               | `postmortem` | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 227    |
-| Postscript               | `adden`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 228    |
-| Postulate                | `ax`         | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 229    |
-| Practice                 | `exer`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 230    |
-| Prayer                   | `hope`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 231    |
-| Preamble                 | `pref`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 232    |
-| Precondition             | `pre`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 233    |
-| Prediction               | `pred`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 234    |
-| Preface                  | `pref`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 235    |
-| Preview                  | `preview`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 236    |
-| Principle                | `prin`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 237    |
-| Problem                  | `prob`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 238    |
-| Problem formulation      | `formul`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 239    |
-| Procedure                | `alg`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 240    |
-| Project                  | `proj`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 241    |
-| Prologue                 | `pref`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 242    |
-| Promise                  | `promise`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 243    |
-| Proof                    | `pf`         | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 244    |
-| Proof idea               | `sketch`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 245    |
-| Proof outline            | `sketch`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 246    |
-| Proof sketch             | `sketch`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 247    |
-| Property                 | `property`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 248    |
-| Proposal                 | `proposal`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 249    |
-| Proposition              | `prop`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 250    |
-| Protocol                 | `minutes`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 251    |
-| Protocol                 | `proto`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 252    |
-| Pseudocode               | `listing`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 253    |
-| Punchline                | `moral`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 254    |
-| Puzzle                   | `puzzle`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 255    |
-| Query                    | `query`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 256    |
-| Question                 | `q`          | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 257    |
-| Quiz                     | `quiz`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 258    |
-| Recall                   | `recall`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 259    |
-| Record                   | `rec`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 260    |
-| Reduction                | `red`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 261    |
-| Refrain                  | `refrain`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 262    |
-| Refutation               | `refut`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 263    |
-| Register                 | `reg`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 264    |
-| Registry                 | `reg`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 265    |
-| Release notes            | `relnotes`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 266    |
-| Remark                   | `rem`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 267    |
-| Reminder                 | `recall`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 268    |
-| Reply                    | `reply`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 269    |
-| Report                   | `rep`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 270    |
-| Requirement              | `req`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 271    |
-| Research problem         | `open`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 272    |
-| Research question        | `open`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 273    |
-| Result                   | `result`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 274    |
-| Retrospective            | `retro`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 275    |
-| Review                   | `rep`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 276    |
-| Review                   | `sec`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 277    |
-| Revision                 | `ver`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 278    |
-| Riddle                   | `puzzle`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 279    |
-| Roadmap                  | `preview`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 280    |
-| Role                     | `role`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 281    |
-| Route                    | `endpoint`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 282    |
-| Rule                     | `rule`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 283    |
-| Rule of thumb            | `heur`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 284    |
-| Runnable example         | `runex`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 285    |
-| Sanity check             | `verif`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 286    |
-| Saying                   | `slogan`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 287    |
-| Scenario                 | `scenario`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 288    |
-| Schema                   | `dataschema` | borderline | adopted | crates/cogra-linter/docs/environment-kinds.md | 289    |
-| Schema                   | `schema`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 290    |
-| Scheme                   | `fig`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 291    |
-| Scheme                   | `scheme`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 292    |
-| Scholium                 | `schol`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 293    |
-| Script                   | `script`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 294    |
-| Section                  | `sec`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 295    |
-| Service                  | `svc`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 296    |
-| Setting                  | `setting`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 297    |
-| Setting                  | `setup`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 298    |
-| Setup                    | `setup`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 299    |
-| Sidebar                  | `aside`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 300    |
-| Sign convention          | `conv`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 301    |
-| Signature                | `sig`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 302    |
-| Simulation               | `expt`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 303    |
-| Situation                | `setup`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 304    |
-| Sketch                   | `sketch`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 305    |
-| Sketch of proof          | `sketch`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 306    |
-| Slogan                   | `slogan`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 307    |
-| Snapshot                 | `snapshot`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 308    |
-| Solution                 | `sol`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 309    |
-| Sorites                  | `sorites`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 310    |
-| Source line              | `credit`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 311    |
-| Special case             | `spcase`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 312    |
-| Specification            | `spec`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 313    |
-| Speculation              | `guess`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 314    |
-| Standing hypothesis      | `assum`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 315    |
-| Statement                | `stmt`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 316    |
-| Step                     | `step`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 317    |
-| Story                    | `scenario`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 318    |
-| Story                    | `story`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 319    |
-| Strategy                 | `strat`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 320    |
-| Struct                   | `class`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 321    |
-| Structure                | `class`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 322    |
-| Structure                | `constr`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 323    |
-| Structure                | `schema`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 324    |
-| Suite                    | `suite`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 325    |
-| Summary                  | `summ`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 326    |
-| Supplement               | `adden`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 327    |
-| Surprise                 | `miracle`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 328    |
-| Synopsis                 | `abst`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 329    |
-| Table                    | `tab`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 330    |
-| Takeaway                 | `moral`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 331    |
-| Task                     | `exer`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 332    |
-| Task                     | `job`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 333    |
-| Terminology              | `term`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 334    |
-| Test                     | `quiz`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 335    |
-| Test                     | `test`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 336    |
-| Theorem                  | `thm`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 337    |
-| Theorem schema           | `thmschema`  | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 338    |
-| Thesis                   | `thesis`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 339    |
-| Thought experiment       | `gedanken`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 340    |
-| Type                     | `type`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 341    |
-| Unit                     | `unit`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 342    |
-| Upshot                   | `moral`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 343    |
-| Use case                 | `scenario`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 344    |
-| Variant                  | `variant`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 345    |
-| Verification             | `verif`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 346    |
-| Version                  | `ver`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 347    |
-| Vignette                 | `story`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 348    |
-| Volume                   | `vol`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 349    |
-| Warm-up                  | `exer`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 350    |
-| Warning                  | `warn`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 351    |
-| Wish                     | `hope`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 352    |
-| Workflow                 | `pipeline`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 353    |
-| Working hypothesis       | `assum`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 354    |
-| Yoga                     | `yoga`       | borderline | adopted | crates/cogra-linter/docs/environment-kinds.md | 355    |
+| Document                 | `proposal`   | firm       | owned   | corpus-adoption.toml [kinds.evidence]         | 88     |
+| Document                 | `rec`        | firm       | owned   | corpus-adoption.toml [kinds.evidence]         | 89     |
+| Document                 | `reg`        | firm       | owned   | corpus-adoption.toml [kinds.evidence]         | 90     |
+| Document                 | `rep`        | firm       | owned   | corpus-adoption.toml [kinds.evidence]         | 91     |
+| Document                 | `spec`       | firm       | owned   | corpus-adoption.toml [kinds.evidence]         | 92     |
+| Dossier                  | `dossier`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 93     |
+| Dream                    | `dream`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 94     |
+| Drill                    | `exer`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 95     |
+| Endpoint                 | `endpoint`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 96     |
+| Entry                    | `entry`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 97     |
+| Environment variable     | `envvar`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 98     |
+| Epigraph                 | `epigraph`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 99     |
+| Epilogue                 | `adden`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 100    |
+| Equation                 | `eq`         | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 101    |
+| Erratum                  | `errat`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 102    |
+| Error code               | `errcode`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 103    |
+| Estimate                 | `bound`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 104    |
+| Event                    | `event`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 105    |
+| Example                  | `ex`         | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 106    |
+| Excursus                 | `aside`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 107    |
+| Exercise                 | `exer`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 108    |
+| Exhibit                  | `exhibit`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 109    |
+| Expectation              | `pred`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 110    |
+| Experiment               | `expt`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 111    |
+| Explanation              | `expl`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 112    |
+| Exploration              | `proj`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 113    |
+| Fact                     | `fact`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 114    |
+| Fallacy                  | `fallacy`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 115    |
+| False proof              | `fallacy`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 116    |
+| Fantasy                  | `dream`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 117    |
+| Feature flag             | `flag`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 118    |
+| Figure                   | `fig`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 119    |
+| Fixture                  | `fixture`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 120    |
+| Folklore                 | `folk`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 121    |
+| Foreword                 | `pref`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 122    |
+| Formulation              | `formul`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 123    |
+| Fun fact                 | `fact`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 124    |
+| Function                 | `func`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 125    |
+| Fuzz target              | `fuzz`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 126    |
+| Gate                     | `gate`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 127    |
+| Generalization           | `gen`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 128    |
+| Given data               | `data`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 129    |
+| Gloss                    | `gloss`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 130    |
+| Goal                     | `goal`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 131    |
+| Grammar                  | `gram`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 132    |
+| Graph                    | `fig`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 133    |
+| Guess                    | `guess`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 134    |
+| Heuristic                | `heur`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 135    |
+| Heuristic argument       | `heur`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 136    |
+| Hint                     | `hint`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 137    |
+| Historical note          | `hist`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 138    |
+| Historical remark        | `hist`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 139    |
+| Homework                 | `exer`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 140    |
+| Hope                     | `hope`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 141    |
+| Hypothesis               | `hyp`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 142    |
+| Idea of proof            | `sketch`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 143    |
+| Identity                 | `ident`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 144    |
+| Illustration             | `ex`         | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 145    |
+| Illustration             | `fig`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 146    |
+| Image                    | `fig`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 147    |
+| Implementation remark    | `impl`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 148    |
+| Indexing convention      | `conv`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 149    |
+| Inequality               | `bound`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 150    |
+| Inference rule           | `inf`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 151    |
+| Insight                  | `intuit`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 152    |
+| Interface                | `iface`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 153    |
+| Interlude                | `aside`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 154    |
+| Intermezzo               | `aside`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 155    |
+| Intuition                | `intuit`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 156    |
+| Invariant                | `inv`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 157    |
+| Inventory                | `reg`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 158    |
+| Job                      | `job`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 159    |
+| Joke                     | `joke`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 160    |
+| Journal                  | `jour`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 161    |
+| Judgment                 | `judg`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 162    |
+| Justification            | `just`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 163    |
+| Key                      | `legend`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 164    |
+| Language                 | `lang`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 165    |
+| Law                      | `law`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 166    |
+| Lecture                  | `lect`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 167    |
+| Ledger                   | `ledger`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 168    |
+| Legend                   | `legend`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 169    |
+| Legend                   | `story`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 170    |
+| Lemma                    | `lem`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 171    |
+| Lemma–Definition         | `lemdef`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 172    |
+| Library                  | `lib`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 173    |
+| Lint rule                | `lint`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 174    |
+| Listing                  | `listing`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 175    |
+| Log                      | `log`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 176    |
+| Macro                    | `macro`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 177    |
+| Marginal gloss           | `gloss`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 178    |
+| Matrix                   | `mat`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 179    |
+| Maxim                    | `slogan`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 180    |
+| Memo                     | `memo`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 181    |
+| Memorandum               | `memo`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 182    |
+| Meta-conjecture          | `metaconj`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 183    |
+| Meta-question            | `metaq`      | borderline | adopted | crates/cogra-linter/docs/environment-kinds.md | 184    |
+| Meta-theorem             | `metathm`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 185    |
+| Metric                   | `metric`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 186    |
+| Migration                | `migr`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 187    |
+| Minutes                  | `minutes`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 188    |
+| Miracle                  | `miracle`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 189    |
+| Misconception            | `myth`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 190    |
+| Model                    | `constr`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 191    |
+| Model                    | `model`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 192    |
+| Module                   | `mod`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 193    |
+| Module                   | `sec`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 194    |
+| Moral                    | `moral`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 195    |
+| Motivation               | `mot`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 196    |
+| Motto                    | `slogan`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 197    |
+| Myth                     | `myth`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 198    |
+| N.B.                     | `rem`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 199    |
+| Namespace                | `ns`         | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 200    |
+| Nomenclature             | `term`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 201    |
+| Non-example              | `nonex`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 202    |
+| Notation                 | `ntn`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 203    |
+| Note                     | `rem`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 204    |
+| Objection                | `obj`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 205    |
+| Observation              | `data`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 206    |
+| Observation              | `obs`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 207    |
+| Open Problem             | `open`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 208    |
+| Open Question            | `open`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 209    |
+| Outline of proof         | `sketch`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 210    |
+| Outlook                  | `outlook`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 211    |
+| Overview                 | `preview`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 212    |
+| Package                  | `pkg`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 213    |
+| Parable                  | `story`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 214    |
+| Paradox                  | `paradox`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 215    |
+| Paragraph                | `para`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 216    |
+| Part                     | `part`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 217    |
+| Perspective              | `persp`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 218    |
+| Philosophy               | `persp`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 219    |
+| Photograph               | `fig`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 220    |
+| Picture                  | `fig`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 221    |
+| Pipeline                 | `pipeline`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 222    |
+| Pitfall                  | `warn`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 223    |
+| Plausibility argument    | `heur`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 224    |
+| Plot                     | `fig`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 225    |
+| Porism                   | `por`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 226    |
+| Postcondition            | `postc`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 227    |
+| Postmortem               | `postmortem` | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 228    |
+| Postscript               | `adden`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 229    |
+| Postulate                | `ax`         | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 230    |
+| Practice                 | `exer`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 231    |
+| Prayer                   | `hope`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 232    |
+| Preamble                 | `pref`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 233    |
+| Precondition             | `pre`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 234    |
+| Prediction               | `pred`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 235    |
+| Preface                  | `pref`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 236    |
+| Preview                  | `preview`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 237    |
+| Principle                | `prin`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 238    |
+| Problem                  | `prob`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 239    |
+| Problem formulation      | `formul`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 240    |
+| Procedure                | `alg`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 241    |
+| Project                  | `proj`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 242    |
+| Prologue                 | `pref`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 243    |
+| Promise                  | `promise`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 244    |
+| Proof                    | `pf`         | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 245    |
+| Proof idea               | `sketch`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 246    |
+| Proof outline            | `sketch`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 247    |
+| Proof sketch             | `sketch`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 248    |
+| Property                 | `property`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 249    |
+| Proposal                 | `proposal`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 250    |
+| Proposition              | `prop`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 251    |
+| Protocol                 | `minutes`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 252    |
+| Protocol                 | `proto`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 253    |
+| Pseudocode               | `listing`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 254    |
+| Punchline                | `moral`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 255    |
+| Puzzle                   | `puzzle`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 256    |
+| Query                    | `query`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 257    |
+| Question                 | `q`          | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 258    |
+| Quiz                     | `quiz`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 259    |
+| Recall                   | `recall`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 260    |
+| Record                   | `rec`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 261    |
+| Reduction                | `red`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 262    |
+| Refrain                  | `refrain`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 263    |
+| Refutation               | `refut`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 264    |
+| Register                 | `reg`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 265    |
+| Registry                 | `reg`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 266    |
+| Release notes            | `relnotes`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 267    |
+| Remark                   | `rem`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 268    |
+| Reminder                 | `recall`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 269    |
+| Reply                    | `reply`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 270    |
+| Report                   | `rep`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 271    |
+| Requirement              | `req`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 272    |
+| Research problem         | `open`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 273    |
+| Research question        | `open`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 274    |
+| Result                   | `result`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 275    |
+| Retrospective            | `retro`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 276    |
+| Review                   | `rep`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 277    |
+| Review                   | `sec`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 278    |
+| Revision                 | `ver`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 279    |
+| Riddle                   | `puzzle`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 280    |
+| Roadmap                  | `preview`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 281    |
+| Role                     | `role`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 282    |
+| Route                    | `endpoint`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 283    |
+| Rule                     | `rule`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 284    |
+| Rule of thumb            | `heur`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 285    |
+| Runnable example         | `runex`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 286    |
+| Sanity check             | `verif`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 287    |
+| Saying                   | `slogan`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 288    |
+| Scenario                 | `scenario`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 289    |
+| Schema                   | `dataschema` | borderline | adopted | crates/cogra-linter/docs/environment-kinds.md | 290    |
+| Schema                   | `schema`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 291    |
+| Scheme                   | `fig`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 292    |
+| Scheme                   | `scheme`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 293    |
+| Scholium                 | `schol`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 294    |
+| Script                   | `script`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 295    |
+| Section                  | `sec`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 296    |
+| Service                  | `svc`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 297    |
+| Setting                  | `setting`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 298    |
+| Setting                  | `setup`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 299    |
+| Setup                    | `setup`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 300    |
+| Sidebar                  | `aside`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 301    |
+| Sign convention          | `conv`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 302    |
+| Signature                | `sig`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 303    |
+| Simulation               | `expt`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 304    |
+| Situation                | `setup`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 305    |
+| Sketch                   | `sketch`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 306    |
+| Sketch of proof          | `sketch`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 307    |
+| Slogan                   | `slogan`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 308    |
+| Snapshot                 | `snapshot`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 309    |
+| Solution                 | `sol`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 310    |
+| Sorites                  | `sorites`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 311    |
+| Source line              | `credit`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 312    |
+| Special case             | `spcase`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 313    |
+| Specification            | `spec`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 314    |
+| Speculation              | `guess`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 315    |
+| Standing hypothesis      | `assum`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 316    |
+| Statement                | `stmt`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 317    |
+| Step                     | `step`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 318    |
+| Story                    | `scenario`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 319    |
+| Story                    | `story`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 320    |
+| Strategy                 | `strat`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 321    |
+| Struct                   | `class`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 322    |
+| Structure                | `class`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 323    |
+| Structure                | `constr`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 324    |
+| Structure                | `schema`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 325    |
+| Suite                    | `suite`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 326    |
+| Summary                  | `summ`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 327    |
+| Supplement               | `adden`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 328    |
+| Surprise                 | `miracle`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 329    |
+| Synopsis                 | `abst`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 330    |
+| Table                    | `tab`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 331    |
+| Takeaway                 | `moral`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 332    |
+| Task                     | `exer`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 333    |
+| Task                     | `job`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 334    |
+| Terminology              | `term`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 335    |
+| Test                     | `quiz`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 336    |
+| Test                     | `test`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 337    |
+| Theorem                  | `thm`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 338    |
+| Theorem schema           | `thmschema`  | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 339    |
+| Thesis                   | `thesis`     | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 340    |
+| Thought experiment       | `gedanken`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 341    |
+| Type                     | `type`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 342    |
+| Unit                     | `unit`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 343    |
+| Upshot                   | `moral`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 344    |
+| Use case                 | `scenario`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 345    |
+| Variant                  | `variant`    | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 346    |
+| Verification             | `verif`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 347    |
+| Version                  | `ver`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 348    |
+| Vignette                 | `story`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 349    |
+| Volume                   | `vol`        | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 350    |
+| Warm-up                  | `exer`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 351    |
+| Warning                  | `warn`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 352    |
+| Wish                     | `hope`       | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 353    |
+| Workflow                 | `pipeline`   | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 354    |
+| Working hypothesis       | `assum`      | firm       | adopted | crates/cogra-linter/docs/environment-kinds.md | 355    |
+| Yoga                     | `yoga`       | borderline | adopted | crates/cogra-linter/docs/environment-kinds.md | 356    |
 
 ## Candidates
 
@@ -386,7 +387,7 @@ relation, and carry no row above.
 
 ## Homonyms
 
-The 37 pairs whose name carries more than one kind, derived from the same
+The 38 pairs whose name carries more than one kind, derived from the same
 relation and declared nowhere. For a name here, the kind token at the label
 is what says which catalogued sense is meant.
 
@@ -396,6 +397,7 @@ is what says which catalogued sense is meant.
 | Demonstration | `pf`         |
 | Document      | `guide`      |
 | Document      | `plan`       |
+| Document      | `proposal`   |
 | Document      | `rec`        |
 | Document      | `reg`        |
 | Document      | `rep`        |
