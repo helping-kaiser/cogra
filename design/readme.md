@@ -448,6 +448,7 @@ exists in `web/src/lib/ui/` (and, unless noted, in Android's
 | `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow` |
 | `components/forms/` | `TextField`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
 | `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand` |
+| `components/compose/` | `MediaThumb`, `PickedRow`, `DescribeCounter`, `PickedSheet`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `ActsCard` |
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader` |
 | `components/states/` | `EmptyState`, `LoadingState` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending` |
@@ -1349,6 +1350,20 @@ media and comment editing.
   item.
 - **Sensitive veils the whole gallery**, never one picture of it —
   the open question in `MediaAttachment` closed.
+- **The picked row carries no "Crop" or "Edit" links** (jakob, same
+  day: "none") — the whole row is the affordance and opens the Show
+  all sheet; re-cropping is the crop step's job, one Back away in the
+  linear wizard. A second entrance to the same step is the two-menus
+  pattern the system refuses. The shortcut links the details and edit
+  boards had carried since the compose section are deleted.
+- **The slice ships componentized** (`components/compose/`):
+  `MediaThumb` (the authoring tile and its upload states), `PickedRow`
+  + `DescribeCounter`, `PickedSheet` (Show all), `DescribeSheet`,
+  `UploadStatusLine` (the seal's gate) + `UploadErrorLine`, and
+  `ActsCard` (the seal's acts card, extracted when the profile seal
+  became the third). All ten media-slice boards render from the
+  pipeline; `TextField` grew the `corner` hint ("Optional") and `Icon`
+  the `close`/`drag_indicator`/`lock`/`expand_more` glyphs.
 
 ## 14. Index
 
