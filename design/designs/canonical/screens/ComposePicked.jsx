@@ -10,7 +10,7 @@ const PICKED = [
 export function Screen() {
   return (
     <>
-      <PageHeader title="New post" backHref="#" backLabel="Back" action={<Button size="sm">Next</Button>} />
+      <WizardHeader title="New post" action={<Button size="sm">Next</Button>} />
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 24px" }}>
         <p style={{ margin: 0, flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
           Pick one picture, several, or one video.
