@@ -379,20 +379,18 @@ class ComposeWizardViewModel @Inject constructor(
     fun onNext() {
         val current = _state.value
         val next = current.advanced() ?: return
-        // Uploads start on leaving DETAILS, not the crop stage.
-        //
-        // NAMED DEVIATION from `ComposeUploading`'s footnote ("Pictures
-        // upload while you write — signing waits for them") — no longer a
-        // forced one. A description rides `AttachmentClaim` at prepare
-        // rather than the upload, so an upload started at crop-exit drops
-        // nothing the author writes afterwards. Moving the start is a
-        // wizard change with its own boards, not part of the contract
-        // change that freed it.
+        // Uploads start on leaving CROP — `ComposeUploading`'s footnote,
+        // "Pictures upload while you write — signing waits for them".
+        // Framing is settled here and nothing later changes the bytes: a
+        // description rides `AttachmentClaim` at prepare rather than the
+        // upload, so the whole Details stage is time the pictures spend
+        // on the wire instead of time the author spends waiting at the
+        // seal.
         //
         // The waiting still shows exactly where the boards draw it:
         // `ComposeSealUploading` gates the seal on `UploadStatusLine`, and
         // stepping back to Details renders the in-flight rings.
-        if (current.step == WizardStep.Details) startUploads(cropSpecsFor(current))
+        if (current.step == WizardStep.Crop) startUploads(cropSpecsFor(current))
         _state.value = next
     }
 
