@@ -1,4 +1,4 @@
-<!-- @dsCard group="Content states" viewport="1240x900" name="Sensitive & removed" subtitle="§9 — sensitive is per field and per attachment; redaction takes the whole record and leaves its skeleton." -->
+<!-- @dsCard group="Content states" viewport="1240x900" name="Sensitive & removed" subtitle="§9 — sensitive veils the whole body as one, title outside; redaction takes the whole record and leaves its skeleton." -->
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -25,7 +25,7 @@ const menu = [{label:"Report this"},{label:"Copy link"}];
 function Demo(){return (
 <div className="grid">
   <div className="col">
-    <span className="hd">Sensitive — per field, per attachment</span>
+    <span className="hd">Sensitive — the whole body, as one</span>
     <span className="lbl">Two of three tiles veiled, one untouched — tap either and the whole post reveals</span>
     <Card>
       <SensitiveScope>
@@ -72,9 +72,9 @@ function Demo(){return (
     <RedactedContent reason="illegal" when="Removed 22 Aug"/>
   </div>
   <div className="open">
-    <p><b>The two states have opposite granularity, and that is the whole design.</b> Reading them as one family is the mistake this card exists to prevent.</p>
-    <p><b>Sensitive is per field.</b> <code>FieldModerationStatus</code> exists per field for exactly this: a title, a description, a text body, and <i>each</i> media attachment can be veiled alone (a gallery cannot wrap generically, so it carries a sibling status for the list). The docs are explicit — per-field granularity exists for sensitive only. Blanketing a post would throw away the one thing the data model went out of its way to keep.</p>
-    <p><b>Reveal, though, is per post.</b> One tap reveals everything veiled in that post — the first specimen has two veiled tiles and a veiled clause in one scope, and tapping any of them clears all three while the untouched tile never changes. The reader answered the question once; asking again per item turns one decision into five. A veil outside a <code>SensitiveScope</code> governs only itself — the right default for a lone tile.</p>
+    <p><b>The two states differ in what they take, and that is the whole design.</b> Reading them as one family is the mistake this card exists to prevent.</p>
+    <p><b>Sensitive veils the whole body as one.</b> Media, text and description sit under a single veil; the title and topics stay outside it and readable, so a reader can decide from the frame without touching the content. An author's optional reason is shown on the veil.</p>
+    <p><b>One tap reveals everything.</b> The reader answered the question once; asking again per item turns one decision into five.</p>
     <p><b>Revealing moves nothing.</b> Content stays mounted under the veil and keeps its exact space. That is also why text is blurred in place rather than replaced: the reader can see there <i>is</i> a sentence, only not read it.</p>
     <p><b>Redaction is record-granular.</b> An illegal verdict removes the <i>payload</i> of the record — "the binding content commitment forbids partial rewrite, so there is no per-field redaction". One illegal attachment takes everything authored with it: no title, no body, no description, no media, and no licence. There is no redacted title beside a surviving body, and no redaction inside a sentence. Anything that offers field-level redaction is lying about the substrate.</p>
     <p><b>What is left is the skeleton, and the skeleton is the point.</b> The structural record, its witness, and everything it does on L1 survive: author, timestamp, thread position, standing, the stance a reader can still take, the score, the comments. No record ever leaves the graph and every redaction leaves a visible mark — so a reader is never left wondering whether something was quietly deleted.</p>

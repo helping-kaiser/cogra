@@ -481,7 +481,7 @@ which is what makes a guess expensive.
 | `MediaAttachment` / `MediaGallery` | reserved aspect ratio before load; authored, never generated alt text; `surfaceContainerHigh` at the 12px rung; one lead tile plus two squares plus `+n`; the 4:5 cap bounding the tile rather than the picture; a height cap budgeted against worst-case card chrome so a whole post fits above the bottom bar; autoplay muted with one global sticky mute | **the sensitive blur treatment** — radius, overlay, reveal stickiness, and how 0–10 maps to blur-or-not |
 | `MediaViewer` | media opens full-size from the detail view, never cropped, backed out of rather than navigated away from; real video controls here, sound only in a tile | — |
 | `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the only figure the product has is the Post Score and its explanation is four screens deep | — |
-| `SensitiveVeil`, `SensitiveScope`, `RedactedContent` | §9's two content states at opposite granularities: sensitive veiled per field or attachment but revealed per post, content kept mounted so revealing moves nothing; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | whether a reveal survives leaving and returning to the post, and what the veil says when the author gave a reason |
+| `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and topics outside, one tap revealing everything, content kept mounted so revealing moves nothing; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | whether a reveal survives leaving and returning to the post |
 
 The **five-slot bottom bar** is not in this group: `design.md` §6 already
 fixes the slots and their order, so `BottomNav` simply accepts
@@ -664,21 +664,19 @@ Nothing vanishes silently, and none of these use `error` colouring.
   by structure still pointing at it, or by a reader whose filter admits
   it. — `RedactedContent`, and `PostCard`'s `redacted` prop
 - **Sensitive** — a gentle blur with tap to reveal, warm wording.
-  **Veiled per field and per attachment.** `FieldModerationStatus` exists
-  per field for exactly this: a title, a description, a text body, and
-  *each* media attachment can be veiled alone, and per-field granularity
-  exists for sensitive **only**. A post is never blanketed — that would
-  throw away the one thing the data model went out of its way to keep.
-  **Revealed per post**: one tap answers for everything inside, because
-  the reader has already made the decision and asking again per item
-  turns one decision into five. The content stays mounted under the veil
-  and keeps its exact space, so revealing moves nothing on screen — which
-  is also why text is blurred in place rather than replaced. No `error`
-  colouring, no warning glyph: a neutral wash of the standard scrim and a
-  plain `visibility` chip. The backend's 0–10 severity level is **not**
-  read — it is for a future where a reader accepts one kind of content
-  and not another; today a veil either exists or does not.
-  — `SensitiveVeil`, `SensitiveScope`
+  **The whole body veils as one**: media, text and description under a
+  single veil, the title and topics outside it and readable, so a
+  reader can decide from the frame without touching the content. One
+  tap reveals everything — the reader decided once, and asking again
+  per item turns one decision into five. An author's optional reason is
+  shown on the veil. The content stays mounted under the veil and keeps
+  its exact space, so revealing moves nothing on screen — which is also
+  why text is blurred in place rather than replaced. No `error`
+  colouring, no warning glyph: a neutral wash of the standard scrim and
+  a plain `visibility` chip. The backend's 0–10 severity level is
+  **not** read — it is for a future where a reader accepts one kind of
+  content and not another; today a veil either exists or does not.
+  — `SensitiveVeil`
 
 ## 10. Accessibility
 
