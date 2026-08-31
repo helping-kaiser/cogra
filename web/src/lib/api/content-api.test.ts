@@ -244,9 +244,23 @@ describe("preparePostEdit", () => {
         });
       }),
     );
-    await preparePostEdit(client(), { id: "p1", title: null, description: null, content: "B" });
+    await preparePostEdit(client(), {
+      id: "p1",
+      title: null,
+      description: null,
+      content: "B",
+      sensitive: true,
+    });
     expect(variables).toEqual({
-      input: { id: "p1", title: null, description: null, content: "B" },
+      input: {
+        id: "p1",
+        title: null,
+        description: null,
+        content: "B",
+        // An edit re-states the mark rather than dropping it.
+        sensitive: true,
+        sensitiveReason: null,
+      },
     });
   });
 });

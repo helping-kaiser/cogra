@@ -194,6 +194,8 @@ export function PostView({
     tags: readonly TagDraft[];
     loadedReferences: readonly ReferenceDraft[];
     references: readonly ReferenceDraft[];
+    /** Carried forward so a complete-state edit cannot unveil the comment. */
+    sensitive: boolean;
   } | null>(null);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editFailed, setEditFailed] = useState(false);
@@ -429,7 +431,12 @@ export function PostView({
 
     if (editTextChanged) {
       const prepared = await guard.run(() =>
-        prepareCommentEdit(client, { id: editing.id, content: editing.draft }),
+        prepareCommentEdit(client, {
+          id: editing.id,
+          content: editing.draft,
+          // Re-stated, never omitted: the edit carries the whole state.
+          sensitive: editing.sensitive,
+        }),
       );
       if (prepared.kind === "failed") {
         setEditSubmitting(false);
@@ -883,6 +890,7 @@ export function PostView({
                         tags: loaded,
                         loadedReferences: loadedRefs,
                         references: loadedRefs,
+                        sensitive: bodyIsSensitive(comment),
                       });
                       setEditTagErrors({});
                       setEditReferenceErrors({});
