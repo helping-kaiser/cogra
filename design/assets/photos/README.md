@@ -1,4 +1,4 @@
-# Photos
+# Photos · `guide:design:photo-assets`
 
 **Mock material, not brand assets.** Ten real photographs at true aspect
 ratios, so media layouts can be judged at real ratios instead of grey

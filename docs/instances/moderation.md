@@ -1,4 +1,4 @@
-# Moderation
+# Moderation · `spec:instances:moderation`
 
 Moderation is **CoGra's responsibility, exercised on CoGra's own
 authority**. L1 carries every record regardless of content — no

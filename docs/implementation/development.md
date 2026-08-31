@@ -1,4 +1,4 @@
-# Development Guide
+# Development Guide · `guide:implementation:development`
 
 ## Prerequisites
 
@@ -81,6 +81,7 @@ over file values.
 | `MEDIA_PORT` | `9000` | Exposed host port of the media S3 API |
 | `MEDIA_CONSOLE_PORT` | `9001` | Exposed host port of the media store's web console |
 | `MEDIA_BASE_URL` | `http://localhost:3000/media` | The public origin every `MediaAttachment.url` is minted against. In development the web dev server's `/media` proxy, so a phone loads bytes from the https origin it already trusts; in production the media origin or the CDN in front of it |
+| `MEDIA_ORIGIN` | `http://localhost:9000/cogra-media` | The web front's `/media` proxy target — the store's bucket URL (web-only; the binaries never read it). `stamp-net.sh` stamps it to the LAN address like `MEDIA_S3_ENDPOINT`, because the web server and the store can live in separate WSL distros where cross-distro localhost is dead |
 | `MEDIA_MAX_UPLOAD_BYTES` | `10485760` | Per-asset upload cap. The multipart transport refuses at twice this, so an ordinary over-cap upload still gets a field-level `userError` naming `file` |
 | `MEDIA_ORPHAN_REAPER_INTERVAL_SECS` | `600` | Sweep interval of the media orphan reaper |
 | `MEDIA_ORPHAN_MAX_AGE_SECS` | `86400` | How long an asset no parent references survives before the reaper collects it and its object |

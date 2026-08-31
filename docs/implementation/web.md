@@ -1,4 +1,4 @@
-# Web App
+# Web App · `spec:implementation:web-app`
 
 The second frontend: a TypeScript web app living in `web/`, serving
 everyone the Android app doesn't reach — iOS and desktop users —

@@ -1,4 +1,4 @@
-# CoGra Android
+# CoGra Android · `guide:android:readme`
 
 The reference frontend. See
 [docs/implementation/android.md](../docs/implementation/android.md) for the

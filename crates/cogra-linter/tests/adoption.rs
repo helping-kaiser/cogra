@@ -37,6 +37,7 @@ status = \"ruled\"
 rationale = \"notes.md\"
 corpus_root = \".\"
 discipline_docs = []
+schema_version = [1, 0, 0]
 
 [carrier]
 exclude_trees = []
@@ -68,6 +69,7 @@ hybrids = []
 
 [kinds.evidence]
 adopted = \"the edition evidence base\"
+recorded_in = \"the adoption data\"
 owned = []
 
 [kinds.statuses]
@@ -97,6 +99,20 @@ failing = []
 }
 
 const ONE_PREFIX: &str = "[signature]
+
+[[signature.prefix]]
+prefix = \"DOC\"
+owner = \"doc.one\"
+";
+
+/// A signature registering the package family, so R-PKG′ can derive a
+/// prefix for the roster check to quote back.
+const ONE_PREFIX_WITH_PACKAGE_FAMILY: &str = "[signature]
+
+[signature.families.package]
+rule = \"uppercase(basename(package_dir)), hyphens deleted, then a leading COGRA deleted when the remainder is nonempty and unique among registered prefixes\"
+rule_id = \"R-PKG'\"
+applies_to = \"every unit the build system names as a package\"
 
 [[signature.prefix]]
 prefix = \"DOC\"
@@ -157,6 +173,30 @@ fn tree(name: &str, paths: &[&str]) -> PathBuf {
             std::fs::create_dir_all(parent).expect("a directory for the fixture");
         }
         std::fs::write(&file, "fixture\n").expect("a fixture file");
+    }
+    root
+}
+
+/// A fixture root carrying a `Cargo.toml` naming `members` as its workspace,
+/// each with a `Cargo.toml` of its own, for [`Adoption::verify_package_roster`]
+/// to read.
+fn workspace_tree(name: &str, members: &[&str]) -> PathBuf {
+    let root = tree(name, &[]);
+    std::fs::create_dir_all(&root).expect("the fixture root");
+    let listed = members
+        .iter()
+        .map(|member| format!("\"{member}\""))
+        .collect::<Vec<_>>()
+        .join(", ");
+    std::fs::write(
+        root.join("Cargo.toml"),
+        format!("[workspace]\nmembers = [{listed}]\n"),
+    )
+    .expect("a fixture root Cargo.toml");
+    for member in members {
+        let dir = root.join(member);
+        std::fs::create_dir_all(&dir).expect("a fixture member directory");
+        std::fs::write(dir.join("Cargo.toml"), "[package]\n").expect("a fixture member manifest");
     }
     root
 }
@@ -333,6 +373,47 @@ fn the_meta_section_round_trips() {
             .iter()
             .any(|doc| &**doc == "crates/cogra-linter/docs/label-calculus.md")
     );
+    assert_eq!(meta.schema_version, [1, 0, 0]);
+}
+
+/// Major is enforced; minor and patch are carried, advisory only.
+#[test]
+fn a_schema_major_this_build_reads_loads() {
+    let source = document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K)
+        .replace("schema_version = [1, 0, 0]", "schema_version = [1, 9, 9]");
+    let adoption = load(&source).expect("major 1 loads whatever minor and patch say");
+    assert_eq!(adoption.meta.schema_version, [1, 9, 9]);
+}
+
+/// A major this build does not read is refused with a located error naming
+/// both majors — never silently misinterpreted as the shape this build
+/// expects.
+#[test]
+fn a_schema_major_below_this_build_is_refused() {
+    let source = document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K)
+        .replace("schema_version = [1, 0, 0]", "schema_version = [0, 9, 0]");
+    let error = load(&source).expect_err("major 0 predates this build's reader");
+    let AdoptionError::UnsupportedSchemaVersion {
+        found, expected, ..
+    } = error
+    else {
+        panic!("expected UnsupportedSchemaVersion, got {error:?}");
+    };
+    assert_eq!((found, expected), (0, 1));
+    assert!(row(&source, &error).contains("schema_version"));
+}
+
+/// The same refusal for a major ahead of this build — the reader has no
+/// obligation to guess forward compatibility it was never built for.
+#[test]
+fn a_schema_major_above_this_build_is_refused() {
+    let source = document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K)
+        .replace("schema_version = [1, 0, 0]", "schema_version = [2, 0, 0]");
+    let error = load(&source).expect_err("major 2 postdates this build's reader");
+    let AdoptionError::UnsupportedSchemaVersion { found, .. } = error else {
+        panic!("expected UnsupportedSchemaVersion, got {error:?}");
+    };
+    assert_eq!(found, 2);
 }
 
 #[test]
@@ -668,10 +749,12 @@ fn the_head_recognition_section_round_trips() {
     let heads = ruled().head_recognition;
     assert_eq!(&*heads.separator, "·");
     assert_eq!(heads.matching, HeadMatching::CaseExact);
-    assert_eq!(heads.forms.len(), 2);
+    assert_eq!(heads.forms.len(), 3);
     assert_eq!(&*heads.forms[0].id, "environment-head");
     assert_eq!(heads.forms[0].language, Language::new("markdown"));
     assert_eq!(&*heads.forms[1].id, "heading");
+    assert_eq!(&*heads.forms[2].id, "title");
+    assert_eq!(heads.forms[2].language, Language::new("markdown"));
     assert_eq!(heads.none.len(), 1);
     assert_eq!(heads.none[0].languages.len(), 3);
 }
@@ -757,10 +840,17 @@ fn a_kinds_section_with_no_registry_key_is_refused() {
 #[test]
 fn the_kinds_section_round_trips() {
     let kinds = ruled().kinds;
-    assert!(kinds.extensions.rows.is_empty());
+    assert_eq!(kinds.extensions.rows.len(), 7);
+    assert!(
+        kinds
+            .extensions
+            .rows
+            .iter()
+            .all(|row| &*row.name == "Document" && &*row.status == "firm")
+    );
     assert!(kinds.extensions.hybrids.is_empty());
-    assert!(kinds.extensions.empty_in_v1);
-    assert!(kinds.evidence.owned.is_empty());
+    assert!(!kinds.extensions.empty_in_v1);
+    assert_eq!(kinds.evidence.owned.len(), kinds.extensions.rows.len());
     assert!(kinds.statuses.strengthenings.is_empty());
     assert_eq!(kinds.statuses.daggered.len(), 3);
     assert_eq!(kinds.statuses.candidates.len(), 1);
@@ -1163,4 +1253,150 @@ reserved_ungoverned = []
     let adoption = load(&source).expect("a consistent effective profile");
     assert_eq!(adoption.profiles.effective_count, 1);
     assert_eq!(adoption.profiles.effective().count(), 1);
+}
+
+/// A Cargo workspace member with no partition rule of its own falls to the
+/// residual owner unnoticed until this check — R-PKG′ would have derived
+/// WIDGETS for it, and the located error names both.
+#[test]
+fn an_unregistered_cargo_member_is_located() {
+    let root = workspace_tree("roster-unregistered-cargo", &["crates/widgets"]);
+    let source = document(
+        ONE_PREFIX_WITH_PACKAGE_FAMILY,
+        TOTAL_PARTITION,
+        NO_PROFILES,
+        EMPTY_K,
+    );
+    let adoption = load(&source).expect("the fixture loads");
+    let error = adoption
+        .verify_package_roster(&root)
+        .expect_err("crates/widgets has no partition rule of its own");
+    let AdoptionError::UnregisteredPackage {
+        ref package,
+        ref derived_prefix,
+        ..
+    } = error
+    else {
+        panic!("expected UnregisteredPackage, got {error:?}");
+    };
+    assert_eq!(package, "widgets");
+    assert_eq!(derived_prefix, "WIDGETS");
+    assert!(
+        row(&source, &error).contains("path"),
+        "{}",
+        row(&source, &error)
+    );
+}
+
+/// A Cargo workspace member with a partition rule of its own passes: the
+/// check is about the roster's completeness, not a judgment on the rule.
+#[test]
+fn a_registered_cargo_member_passes() {
+    let root = workspace_tree("roster-registered-cargo", &["crates/widgets"]);
+    let partition = "
+[partition]
+
+[[partition.rule]]
+order = 1
+path = \"crates/widgets/\"
+owner = \"doc.one\"
+
+[[partition.rule]]
+order = 2
+path = \"\"
+owner = \"doc.one\"
+";
+    let source = document(
+        ONE_PREFIX_WITH_PACKAGE_FAMILY,
+        partition,
+        NO_PROFILES,
+        EMPTY_K,
+    );
+    let adoption = load(&source).expect("the fixture loads");
+    assert!(
+        adoption.verify_package_roster(&root).is_ok(),
+        "crates/widgets/ has a partition rule of its own"
+    );
+}
+
+/// The Gradle build is named by `android/build.gradle.kts`, the one anchor
+/// a 15-module build carries exactly once — an unlisted build is located the
+/// same way an unlisted crate is.
+#[test]
+fn an_unregistered_android_build_is_located() {
+    let root = tree("roster-unregistered-android", &["android/build.gradle.kts"]);
+    let source = document(
+        ONE_PREFIX_WITH_PACKAGE_FAMILY,
+        TOTAL_PARTITION,
+        NO_PROFILES,
+        EMPTY_K,
+    );
+    let adoption = load(&source).expect("the fixture loads");
+    let error = adoption
+        .verify_package_roster(&root)
+        .expect_err("android/ has no partition rule of its own");
+    let AdoptionError::UnregisteredPackage {
+        ref package,
+        ref derived_prefix,
+        ..
+    } = error
+    else {
+        panic!("expected UnregisteredPackage, got {error:?}");
+    };
+    assert_eq!(package, "android");
+    assert_eq!(derived_prefix, "ANDROID");
+}
+
+/// The npm package is named by `web/package.json` existing, read for
+/// existence alone — this check parses no JSON.
+#[test]
+fn an_unregistered_web_package_is_located() {
+    let root = tree("roster-unregistered-web", &["web/package.json"]);
+    let source = document(
+        ONE_PREFIX_WITH_PACKAGE_FAMILY,
+        TOTAL_PARTITION,
+        NO_PROFILES,
+        EMPTY_K,
+    );
+    let adoption = load(&source).expect("the fixture loads");
+    let error = adoption
+        .verify_package_roster(&root)
+        .expect_err("web/ has no partition rule of its own");
+    let AdoptionError::UnregisteredPackage { ref package, .. } = error else {
+        panic!("expected UnregisteredPackage, got {error:?}");
+    };
+    assert_eq!(package, "web");
+}
+
+/// A root with no readable workspace manifest and no android or web build
+/// has nothing to reconcile: Cargo well-formedness is not this check's
+/// question, so it passes with an empty roster.
+#[test]
+fn a_root_with_no_build_manifests_has_nothing_to_reconcile() {
+    let root = tree("roster-no-manifests", &["README.md"]);
+    let source = document(
+        ONE_PREFIX_WITH_PACKAGE_FAMILY,
+        TOTAL_PARTITION,
+        NO_PROFILES,
+        EMPTY_K,
+    );
+    let adoption = load(&source).expect("the fixture loads");
+    assert!(
+        adoption.verify_package_roster(&root).is_ok(),
+        "no Cargo.toml, no android/, no web/ — nothing to reconcile"
+    );
+}
+
+/// The check over this repository's own adoption data and its own root: the
+/// six Cargo crates, android, and web every one has a partition rule of its
+/// own.
+#[test]
+fn the_ruled_corpus_registers_every_package_it_names() {
+    let root = corpus_adoption_path()
+        .parent()
+        .expect("the corpus root")
+        .to_path_buf();
+    ruled()
+        .verify_package_roster(&root)
+        .expect("every real package has a partition rule of its own");
 }
