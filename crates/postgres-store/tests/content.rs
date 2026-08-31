@@ -68,6 +68,7 @@ async fn post(
         Some("title"),
         None,
         body,
+        None,
     )
     .await
     .expect("post");
@@ -103,6 +104,7 @@ async fn comment(
         order,
         created_at,
         body,
+        None,
     )
     .await
     .expect("comment");
@@ -217,7 +219,7 @@ async fn landing_one_write_leaves_another_writes_pending_version(pool: PgPool) {
     let id = post(&pool, author, Some(order(1, 0)), at(0), "genesis").await;
 
     let mut tx = pool.begin().await.expect("tx");
-    content::insert_post_version(&mut tx, id, Some("title"), None, "first edit", None, at(10))
+    content::insert_post_version(&mut tx, id, Some("title"), None, "first edit", None, None, at(10))
         .await
         .expect("first");
     content::insert_post_version(
@@ -226,6 +228,7 @@ async fn landing_one_write_leaves_another_writes_pending_version(pool: PgPool) {
         Some("title"),
         None,
         "second edit",
+        None,
         None,
         at(20),
     )
@@ -253,10 +256,10 @@ async fn discarding_one_write_leaves_another_writes_pending_version(pool: PgPool
     let author = actor(&pool, "author").await;
     let id = post(&pool, author, Some(order(1, 0)), at(0), "genesis").await;
     let mut tx = pool.begin().await.expect("tx");
-    content::insert_post_version(&mut tx, id, Some("title"), None, "doomed", None, at(10))
+    content::insert_post_version(&mut tx, id, Some("title"), None, "doomed", None, None, at(10))
         .await
         .expect("first");
-    content::insert_post_version(&mut tx, id, Some("title"), None, "survivor", None, at(20))
+    content::insert_post_version(&mut tx, id, Some("title"), None, "survivor", None, None, at(20))
         .await
         .expect("second");
     tx.commit().await.expect("commit");
@@ -358,6 +361,7 @@ async fn the_edit_whose_record_landed_last_renders_the_post(pool: PgPool) {
         Some("title"),
         None,
         "landed later",
+        None,
         Some(order(9, 0)),
         at(100),
     )
@@ -369,6 +373,7 @@ async fn the_edit_whose_record_landed_last_renders_the_post(pool: PgPool) {
         Some("title"),
         None,
         "landed earlier",
+        None,
         Some(order(2, 0)),
         at(200),
     )
@@ -403,10 +408,10 @@ async fn the_comment_edit_whose_record_landed_last_renders_the_comment(pool: PgP
     let id = comment(&pool, commenter, host, Some(order(1, 1)), at(10), "genesis").await;
 
     let mut tx = pool.begin().await.expect("tx");
-    content::insert_comment_version(&mut tx, id, "landed later", Some(order(9, 0)), at(100))
+    content::insert_comment_version(&mut tx, id, "landed later", None, Some(order(9, 0)), at(100))
         .await
         .expect("later record");
-    content::insert_comment_version(&mut tx, id, "landed earlier", Some(order(2, 0)), at(200))
+    content::insert_comment_version(&mut tx, id, "landed earlier", None, Some(order(2, 0)), at(200))
         .await
         .expect("earlier record");
     tx.commit().await.expect("commit");
@@ -438,7 +443,7 @@ async fn a_pending_edit_outranks_a_version_that_landed_after_it_was_signed(pool:
     let id = post(&pool, author, Some(order(1, 0)), at(0), "genesis").await;
 
     let mut tx = pool.begin().await.expect("tx");
-    content::insert_post_version(&mut tx, id, Some("title"), None, "pending", None, at(10))
+    content::insert_post_version(&mut tx, id, Some("title"), None, "pending", None, None, at(10))
         .await
         .expect("pending edit");
     content::insert_post_version(
@@ -447,6 +452,7 @@ async fn a_pending_edit_outranks_a_version_that_landed_after_it_was_signed(pool:
         Some("title"),
         None,
         "landed",
+        None,
         Some(order(9, 0)),
         at(20),
     )
@@ -486,6 +492,7 @@ async fn a_landed_version_without_coordinates_falls_below_one_with_them(pool: Pg
         Some("title"),
         None,
         "ordered by the graph",
+        None,
         Some(order(2, 0)),
         at(10),
     )

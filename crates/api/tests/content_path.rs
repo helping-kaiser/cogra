@@ -124,6 +124,7 @@ impl Rig {
                 tags: vec![],
                 references: vec![],
                 attachments: vec![],
+                sensitive: Default::default(),
             },
         )
         .await
@@ -158,6 +159,7 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
             tags: vec![],
             references: vec![],
             attachments: vec![],
+            sensitive: Default::default(),
         },
     )
     .await
@@ -234,6 +236,7 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
             description: None,
             content: Some("Old body".into()),
             attachments: vec![],
+            sensitive: Default::default(),
         },
     )
     .await
@@ -262,6 +265,7 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
             description: None,
             content: Some("New body".into()),
             attachments: vec![],
+            sensitive: Default::default(),
         },
     )
     .await
@@ -290,6 +294,7 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
             description: Some("Sub".into()),
             content: Some("Newer body".into()),
             attachments: vec![],
+            sensitive: Default::default(),
         },
     )
     .await
@@ -336,6 +341,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             description: None,
             content: Some("Body".into()),
             attachments: vec![],
+            sensitive: Default::default(),
         },
     )
     .await;
@@ -352,6 +358,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             description: None,
             content: Some("Body".into()),
             attachments: vec![],
+            sensitive: Default::default(),
         },
     )
     .await;
@@ -368,6 +375,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             description: None,
             content: Some("Body".into()),
             attachments: vec![],
+            sensitive: Default::default(),
         },
     )
     .await
@@ -383,6 +391,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             description: None,
             content: Some("Body".into()),
             attachments: vec![],
+            sensitive: Default::default(),
         },
     )
     .await;
@@ -400,6 +409,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             description: None,
             content: Some("Body".into()),
             attachments: vec![],
+            sensitive: Default::default(),
         },
     )
     .await
@@ -434,6 +444,7 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
             references: vec![],
             p_interest: Some(0.6),
             attachments: vec![],
+            sensitive: Default::default(),
         },
     )
     .await
@@ -468,6 +479,7 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
             references: vec![],
             p_interest: None,
             attachments: vec![],
+            sensitive: Default::default(),
         },
     )
     .await
@@ -502,6 +514,7 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
             id: comment.node,
             content: "First! (edited)".into(),
             attachments: vec![],
+            sensitive: Default::default(),
         },
     )
     .await
@@ -537,6 +550,7 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
             references: vec![],
             p_interest: None,
             attachments: vec![],
+            sensitive: Default::default(),
         },
     )
     .await;
@@ -632,6 +646,7 @@ async fn the_chain_head_tracks_the_newest_landed_edit(pool: PgPool) {
             description: None,
             content: Some("B".into()),
             attachments: vec![],
+            sensitive: Default::default(),
         },
     )
     .await
@@ -686,6 +701,7 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
             references: vec![],
             p_interest: None,
             attachments: vec![],
+            sensitive: Default::default(),
         },
     )
     .await
@@ -898,6 +914,7 @@ mod galleries {
             tags: vec![],
             references: vec![],
             attachments,
+            sensitive: Default::default(),
         }
     }
 
@@ -994,6 +1011,7 @@ mod galleries {
                 tags: vec![],
                 references: vec![],
                 attachments: placements(&[a, b]),
+                sensitive: Default::default(),
             },
         )
         .await
@@ -1013,6 +1031,7 @@ mod galleries {
                 description: Some("The pending words".into()),
                 content: None,
                 attachments: placements(&[b, c]),
+                sensitive: Default::default(),
             },
         )
         .await
@@ -1104,6 +1123,7 @@ mod galleries {
                 description: None,
                 content: None,
                 attachments: placements(&[b]),
+                sensitive: Default::default(),
             },
         )
         .await
@@ -1143,6 +1163,7 @@ mod galleries {
                 tags: vec![],
                 references: vec![],
                 attachments: placements(&[a]),
+                sensitive: Default::default(),
             },
         )
         .await
@@ -1274,6 +1295,7 @@ mod galleries {
                     tags: vec![],
                     references: vec![],
                     attachments: placements(&five),
+                    sensitive: Default::default(),
                 },
             )
             .await,
@@ -1319,6 +1341,7 @@ mod galleries {
                     description: None,
                     content: Some("Words".into()),
                     attachments: placements(&[a]),
+                    sensitive: Default::default(),
                 },
             )
             .await,
