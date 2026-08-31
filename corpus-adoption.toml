@@ -1209,20 +1209,24 @@ external party; it does not reach the corpus's own acceptee.)
 # takes. The headline counts of KND tab:kinds:headline-counts therefore
 # do NOT move: they derive from the tables alone.
 #
-# THE VOCABULARY IS TRIMMED TO WHAT THE CORPUS USES. Six genres, each
-# with live documents on the day it is recorded; a seventh considered
-# and left out is Proposal, `proposal` — this corpus holds no
-# recommendation awaiting adoption, its one options comparison
-# (docs/implementation/graph-db-options.md) being an accepted decision
-# record. It enters the day one is written, by the same route as these.
+# THE VOCABULARY IS WHAT THE CORPUS USES, MEASURED. Seven genres, each
+# with live documents on the day it is recorded. The census was taken
+# over all 92 titled sources of the carrier and the working-notes
+# owner, and it trimmed nothing: `proposal` was the one genre expected
+# to be idle — the corpus's single options comparison
+# (docs/implementation/graph-db-options.md) is an ACCEPTED decision
+# record, `rec` — and the working notes carry a live recommendation
+# awaiting a ruling all the same. A genre with no live document would
+# be recorded nowhere; every row here is a row the corpus needs.
 #
-# FOUR OF THE SIX KIND TOKENS ARE THE REGISTRY'S OWN, taken from KND
+# FIVE OF THE SEVEN KIND TOKENS ARE THE REGISTRY'S OWN, taken from KND
 # conv:kinds:records and conv:kinds:setup — Record `rec`, Report `rep`,
-# Register `reg`, Specification `spec` — so a document of that genre
-# carries the token its genre already has, and no second token names
-# one concept (KND inv:kinds:one-kind). Two tokens are new: `plan` and
-# `guide` name genres the registry has no row for at all, and neither
-# collides with an assigned token (KND inv:kinds:distinctness).
+# Register `reg`, Proposal `proposal`, Specification `spec` — so a
+# document of that genre carries the token its genre already has, and
+# no second token names one concept (KND inv:kinds:one-kind). Two
+# tokens are new: `plan` and `guide` name genres the registry has no
+# row for at all, and neither collides with an assigned token (KND
+# inv:kinds:distinctness).
 #
 # NO RESERVED KIND IS EVER A TITLE KIND. K is [reserved-kinds]; a
 # document ABOUT tests or modules is still a record, report, register,
@@ -1233,7 +1237,7 @@ external party; it does not reach the corpus's own acceptee.)
 [kinds.extensions]
 hybrids     = []
 empty_in_v1 = false
-reason      = "the six Document pairs below; every other head in this corpus validates against C as published"
+reason      = "the seven Document pairs below; every other head in this corpus validates against C as published"
 revisit_when = "a document adopts an environment name the registry does not catalogue, or a local hybrid — either enters by a recorded decision, per KND inf:kinds:hybrid for the hybrid case"
 
 [[kinds.extensions.rows]]
@@ -1249,6 +1253,11 @@ status = "firm"
 [[kinds.extensions.rows]]
 name   = "Document"
 kind   = "reg"
+status = "firm"
+
+[[kinds.extensions.rows]]
+name   = "Document"
+kind   = "proposal"
 status = "firm"
 
 [[kinds.extensions.rows]]
@@ -1307,6 +1316,14 @@ spelling = "Register"
 source   = "crates/cogra-linter/docs/environment-kinds.md, KND conv:kinds:records — the registry names itself an instance, 'a kept, cited register, classified reg by its own table'"
 locator  = "corpus-adoption.toml [kinds.evidence]"
 sense    = "a document that is a maintained list: the kind registry, the generated label registers and companion attestation register, and the consolidated open questions"
+
+[[kinds.evidence.owned]]
+name     = "Document"
+kind     = "proposal"
+spelling = "Proposal"
+source   = "crates/cogra-linter/docs/environment-kinds.md, KND conv:kinds:records — the row that carries the full word deliberately, the standard abbreviation being entrenched for Proposition"
+locator  = "corpus-adoption.toml [kinds.evidence]"
+sense    = "a document that is a recommendation or design awaiting adoption: a working note that measures something and asks for a ruling on it"
 
 [[kinds.evidence.owned]]
 name     = "Document"
