@@ -456,6 +456,14 @@
       "y": 12980,
       "w": 390,
       "h": 844
+    },
+    {
+      "file": "Money.dc.html",
+      "title": "Money · the CGT figure",
+      "x": 0,
+      "y": 14040,
+      "w": 390,
+      "h": 844
     }
   ],
   "annotations": [
@@ -570,6 +578,13 @@
       "y": 12980,
       "w": 290,
       "text": "FEED · The filter (item 19, growing item 4). The trigger sits on the CograBand's right edge — the band never spends its full width on identity alone — and scrolls away and back with it. EVERY feed view wears it, guests and applicants too: filtering is a read control. The trigger speaks deviations only ('Posts' at rest; 'Posts · photos · newest' when flipped; past the pill's budget the extras collapse to a count — '3 kinds · 4 changes', the far-from-default board). The sheet: ten kinds that combine — ONE list shared with search, 'Profiles' everywhere — forms of post, the Order section (Ranked/Newest + 'Show what you've already seen', DEFAULT OFF: what you've seen stays out until asked back; impression-based, device-local, shared transiently with the viewer's ranker; identical section on search), what else is admitted, Reset, and the sheet's own '?' (The filter dialog — names the settings default). Applies live. Everything off is allowed: the feed's empty state answers, not the chip."
+    },
+    {
+      "id": "sec-money",
+      "x": -340,
+      "y": 14040,
+      "w": 290,
+      "text": "MONEY · The CGT figure (item 11, system). One shape for every amount: two decimals, thousands grouped, the mark trailing where the unit word would sit. Dust is '< 0.01' — never 0.00, a shown number that lies — exact value one layer down; zero is '0', plainly (a new member's true state). Amounts are never negative: a minus is an OUTFLOW on a history line; positive inflows opt into '+'. No colour on direction — the system has no green, and error-colouring spending would call it a failure. The unit is the MARK everywhere (jakob 2026-08-31: the word 'CGT' repeated everywhere doesn't look nice); the word appears once — the wallet's balance headline, mark and word adjacent, its '?' explaining both as CoGra's own money. The mark is the BRAND MARK on the coin (jakob 2026-08-31, round 2): cogra-mark.svg verbatim, knocked out monochrome in the on-primary on the primary disc. Round 1's lone C read as any game's coin; CG letters, a CG interlock, and c+dot were drawn and rejected against it. The wallet's surfaces are item 12; pending amounts wait for it."
     }
   ],
   "launch": {
