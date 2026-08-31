@@ -12,7 +12,8 @@
 #          designated typed-data classes ...... [typed-data]
 #          citation-index designations ........ [citation-indexes]
 #          scanned-region recognition ......... [scanned-regions]
-#   plus   banned-token sets .................. [banned-tokens]
+#   plus   the claim discipline for tests ...... [claims]
+#          banned-token sets .................. [banned-tokens]
 #          the carrier's exclusions ........... [carrier]
 #          the kind registry's adoption ....... [kinds]
 #          head recognition per format ........ [head-recognition]
@@ -462,13 +463,28 @@ note  = "empty prefix matches everything not matched above: README.md, CONTRIBUT
 #
 # RULED 2026-08-21.
 #
-# LBL sig:labels:profiles requires FIVE data per profile:
+# LBL sig:labels:profiles requires SEVEN data per profile:
 #   kind token, census, classification rule (the area derives from
-#   it), name transformation, standard place.
+#   it), name transformation, standard place, collision rule,
+#   activation.
 # LBL inv:labels:inventory then binds: within each owner, EVERY asset
 # of the census carries EXACTLY ONE label of the kind at the standard
 # place; the derivation is INJECTIVE; and no label of the kind occurs
 # without a covered asset.
+#
+# COLLISION AND ACTIVATION — RULED 2026-08-31, adopted from the
+# sibling linter's profile signature, which carries both and whose
+# per-owner activation is a finer staging instrument than the
+# all-or-nothing status below. The two are recorded per profile from
+# this commit; the amendment to LBL sig:labels:profiles lands with it.
+# Activation has two shapes and one meaning. 'every-owner' is a
+# profile in force corpus-wide — a crate added tomorrow is judged the
+# day it appears, which is the safety the v1 profiles already have and
+# must not lose. 'declared' enumerates the owners whose migration wave
+# has closed, and an owner outside the list has its covered assets
+# COUNTED and reported nowhere. Neither shape reaches a label already
+# carried: placement, collision and resolution bind from a label's
+# first commit, in every owner.
 #
 # Two profiles in v1, both Rust, both named by ARCH
 # conv:linter:rust-frontend ("a test profile recognizing
@@ -595,6 +611,34 @@ Markdown is a slice-1 frontend, so the register's own file is scanned
 from the first slice; nothing here waits on a later one.
 """
 
+  [profiles.profile.collision]
+  equivalence = "the derived label, within one owner"
+  reports     = "every contributing asset, and never a survivor"
+  note = """
+LBL sig:labels:profiles asks for the equivalence this profile is
+judged under, at least the derived label and the bare identifier
+beside it wherever the standard place cannot tell two assets sharing
+one apart. Here the label alone decides, and the standard place is
+why: a per-owner register keys its rows by label, so two tests of one
+owner sharing an identifier across areas — test:unit:empty_is_clean
+and test:integration:empty_is_clean — occupy two rows and are told
+apart by the evidence itself. The sibling linter states its own test
+profile's requirement on the IDENTIFIER, because it can; the
+difference is the standard place and nothing else, and recording the
+equivalence per profile is what makes the difference legible instead
+of implicit.
+"""
+
+  [profiles.profile.activation]
+  scope = "every-owner"
+  note = """
+In force over every owner of the partition, which is where this
+profile has stood since it entered Pi. The shape matters as much as
+the value: an enumerated activation would let a crate added tomorrow
+escape the inventory judgment in silence, and this profile has no
+migration left to stage.
+"""
+
 # ---------------------------------------------------------------
 # Profile 2: Rust modules
 # ---------------------------------------------------------------
@@ -676,6 +720,26 @@ profile rather than a cleanup after it, and a module added from here
 on carries its label in the commit that adds it.
 """
 
+  [profiles.profile.collision]
+  equivalence = "the derived label, within one owner"
+  reports     = "every contributing asset, and never a survivor"
+  note = """
+The label alone, and here the standard place makes the identifier
+clause vacuous rather than merely unnecessary: every module definition
+carries its own inner doc comment, so two assets sharing an identifier
+carry two pieces of evidence and no reading of either is ambiguous.
+The area is constant for this profile, so label collision and
+identifier collision are the same event.
+"""
+
+  [profiles.profile.activation]
+  scope = "every-owner"
+  note = """
+In force over every owner, for the reason the test profile's is: the
+89-definition migration has landed, and a module added tomorrow
+carries its label in the commit that adds it.
+"""
+
 # --- Profiles deliberately NOT in v1 ----------------------------
 # Naming them keeps K's reservations legible (see [reserved-kinds]).
 #   func      Rust/Kotlin/TS functions  — census is large; no ruling
@@ -688,6 +752,134 @@ on carries its label in the commit that adds it.
 # the deciding commit must, in the same commit, retire or rename every
 # authored mint of the claimed kind. K below keeps that cost at zero
 # by forbidding those kinds to authors from the start.
+
+
+####################################################################
+# [claims] — the claim discipline for tests
+#
+# RULED 2026-08-31, adopted from the sibling linter's test
+# documentation policy.
+#
+# WHAT IT IS. A derived test label names the function; it claims that
+# an asset of that class and name exists in that owner and nothing
+# more (LBL cav:labels:assets). What the test ESTABLISHES is a
+# separate fact, and no derivation can compute it. So each covered
+# test carries a second, authored label naming the statement it
+# evidences: its own claim, minted in its documentation comment, or a
+# citation of the claim a sibling test minted. One asset, two labels,
+# one facet each.
+#
+# WHY THE KIND IS AUTHORED. KND conv:kinds:results rows both Claim and
+# Assertion at 'claim', in the Results-and-assertions family — not in
+# KND conv:kinds:assets, which is K (see [reserved-kinds]). The
+# families divide exactly where the warrant does: an Assets kind is
+# headed by "the identifier it already bears", a Results kind by "a
+# heading an author composes". A claim is composed, so 'claim' lies
+# outside K, no profile governs it, and every claim mint stands on an
+# authorship warrant (LBL inf:labels:authorship-warrant). The row is a
+# BASE row of C, so no X_A extension is owed: [kinds.extensions] is
+# untouched by this adoption.
+#
+# WHY IT RIDES THE TEST PROFILE. The claim's subject is the covered
+# test, so the census is the rust-test profile's and never a second
+# one. The two stay separate all the same: the profile's inventory
+# judgment and this discipline's coverage judgment report different
+# defects about different labels, and neither absorbs the other.
+#
+# STAGED, PER OWNER. 1476 covered tests is not one migration. The
+# activation below closes waves owner by owner: an owner in the list
+# owes a claim on every covered test, an owner outside it has its
+# claimless tests COUNTED — visible in `cogra-lint report`, reported
+# as findings nowhere. What is staged is the UNWRITTEN claim alone. A
+# claim that exists is held to everything from its first commit —
+# placement, uniqueness, resolution — in every owner, closed or not,
+# because a written claim that is wrong is a defect and not a
+# schedule.
+####################################################################
+
+[claims]
+kind   = "claim"
+rides  = "rust-test"
+source = "KND conv:kinds:results — the Claim and Assertion rows, both 'claim'"
+
+  [claims.standard_place]
+  place = "the covered test's own documentation comment"
+  form  = "the final documentation line, carrying the occurrence alone: a mint ´claim:<area>:<name>´, or a citation (´claim:<area>:<name>´)"
+  note = """
+THE DIVERGENCE, RECORDED. The sibling linter puts its claim on the
+line directly ABOVE the final one, because its test profile's standard
+place is the final line and the derived label is sitting there. This
+corpus's test profile places its derived label in a generated register
+instead ([profiles] profile rust-test, standard_place), so the final
+documentation line of a test is empty of labels and the claim takes
+it. Same rule — the claim is last among what the author writes — with
+the one line the other discipline occupies given back.
+A line carrying the occurrence AND other words is a defect, not a
+mint: the reader of a claim line should not have to find it.
+"""
+
+  [claims.statement]
+  rule = "the documentation lines above the claim line, blank lines dropped, joined by one space"
+  note = """
+The label names the statement; these lines ARE the statement, and the
+generated matrix presents them. A citing test needs none — the
+statement was written where the claim was minted, and repeating it
+would be a second authority on one fact.
+A claim whose statement is empty is counted and reported nowhere: a
+mint with no statement is a name for nothing, and the count is what
+makes the debt legible. It is a finding once its owner's wave closes,
+by the same rule as an unwritten claim.
+"""
+
+  [claims.collision]
+  equivalence = "the claim label, within one owner"
+  reports     = "both locations, the second leading"
+  note = """
+Two tests minting one claim label is LBL inv:labels:unique-mint, which
+already reports it; the equivalence is recorded here because the
+discipline fixes one and because the repair is particular. A claim two
+tests both mint is a claim neither statement distinguishes: the repair
+is to say what tells them apart, or to make one cite the other, never
+to rename around the collision.
+"""
+
+  [claims.activation]
+  scope  = "declared"
+  owners = ["pkg.cogra-linter"]
+  note = """
+PILOT WAVE, 2026-08-31: pkg.cogra-linter alone. Its tests are the
+discipline's own, which makes them the right corpus to learn the cost
+on, and their documentation comments already carried claim-shaped
+prose from the sweeps that wrote them.
+The other five owners with covered assets — pkg.api,
+pkg.cogra-interchange, pkg.common, pkg.l1-standin, pkg.postgres-store
+— are outside the list and their covered tests are counted. Each joins
+by one edit to this array, in the commit that lands its wave.
+"""
+
+  [claims.matrix]
+  register = "one per ACTIVATED owner, at <owner tree root>/claim-matrix.md"
+  form     = "one row per claim, ordered bytewise by claim label; the claim and every test are cited, never minted; a row's tests are the test that mints the claim and every test that cites it, ordered bytewise by label"
+  note = """
+A view of claims against the tests that carry them, generated by the
+one generator and compared byte-exact like every other register (ARCH
+rule:linter:register-freshness). It is a REGISTER of the owner in the
+sense [profiles] uses, and its title mints reg:registers:claim-matrix
+the way each label-register.md mints reg:registers:label-register —
+ownership disambiguating the repeat (LBL cav:labels:coexistence).
+Every occurrence in it is a CITATION. That is what makes a row break
+when the test it names is renamed or deleted, and it is why no row
+mints anything: the claim's mint is at the test, and a second bare
+occurrence would be LBL inv:labels:unique-mint's business.
+Nothing here participates in what it presents (LBL
+inv:labels:generated-compliance): the rows are generated from the
+census and from occurrences harvested at the tests, and a citation
+mints nothing, so no row can feed the set it was generated from.
+AN UNACTIVATED OWNER GETS NO MATRIX. A file of no rows is not a view
+of an empty relation, it is a register with nothing to present; the
+owner's count travels in `report` instead, and the matrix arrives with
+the wave.
+"""
 
 
 ####################################################################

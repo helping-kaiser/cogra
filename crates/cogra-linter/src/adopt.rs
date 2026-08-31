@@ -176,6 +176,8 @@ pub struct Adoption {
     pub profiles: Profiles,
     /// K: the kinds intended for derivation only.
     pub reserved_kinds: ReservedKinds,
+    /// The claim discipline, where the corpus adopts it.
+    pub claims: Option<Claims>,
     /// The designated typed-data classes; empty in version 1.
     pub typed_data: TypedData,
     /// The citation-index designations; empty in version 1.
@@ -738,7 +740,7 @@ impl Profiles {
     }
 }
 
-/// One inventory profile: the five data a profile fixes, plus its identity
+/// One inventory profile: the seven data a profile fixes, plus its identity
 /// and its standing.
 #[derive(Clone, Debug)]
 pub struct Profile {
@@ -756,6 +758,69 @@ pub struct Profile {
     pub name_transformation: NameTransformation,
     /// Where the label is carried.
     pub standard_place: Place,
+    /// The equivalence two covered assets of one owner collide under.
+    pub collision: Collision,
+    /// The owners the profile is in force over.
+    pub activation: Activation,
+}
+
+/// The equivalence under which two covered assets of one owner collide.
+///
+/// The datum is the profile's because the standard place decides it: a place
+/// that tells two assets sharing an identifier apart is judged on the label
+/// alone, and one that cannot needs the identifier beside it
+/// (´[LBL-sig:labels:profiles]´). Both of this corpus's profiles come out at
+/// the label, and recording the equivalence is what makes that a reading
+/// rather than an assumption.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
+pub struct Collision {
+    /// The equivalence, as the adoption data states it.
+    pub equivalence: Box<str>,
+    /// What a collision names.
+    pub reports: Box<str>,
+}
+
+/// The owners a profile or a discipline is in force over.
+///
+/// Two shapes and one meaning (´[LBL-sig:labels:profiles]´).
+/// [`Activation::EveryOwner`] is in force corpus-wide, so an owner added
+/// tomorrow is judged the day it appears; [`Activation::Declared`] enumerates
+/// the owners whose migration wave has closed, and an owner outside the list
+/// is counted rather than reported. Neither shape reaches a label already
+/// carried: what is staged is the unwritten label alone.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Activation {
+    /// In force over every owner of the partition.
+    EveryOwner,
+    /// In force over exactly the owners named.
+    Declared {
+        /// The owners whose wave has closed, in the order the data names
+        /// them.
+        owners: Vec<OwnerId>,
+    },
+}
+
+impl Activation {
+    /// Whether the activation holds `owner` to the requirement.
+    #[must_use]
+    pub fn admits(&self, owner: &OwnerId) -> bool {
+        match self {
+            Activation::EveryOwner => true,
+            Activation::Declared { owners } => owners.contains(owner),
+        }
+    }
+
+    /// How many owners the activation names, where it names them.
+    ///
+    /// `None` for [`Activation::EveryOwner`], whose count is the partition's
+    /// and not the activation's to state.
+    #[must_use]
+    pub fn declared(&self) -> Option<usize> {
+        match self {
+            Activation::EveryOwner => None,
+            Activation::Declared { owners } => Some(owners.len()),
+        }
+    }
 }
 
 /// Whether a profile is in force, or registered and waiting on its
@@ -825,6 +890,53 @@ pub struct Place {
     /// The form the label takes there.
     #[serde(default)]
     pub form: Option<Box<str>>,
+}
+
+/// The claim discipline for tests: the authored statement each covered test
+/// evidences.
+///
+/// A derived test label names the function and claims nothing about what it
+/// establishes (´[LBL-cav:labels:assets]´). This discipline puts the second,
+/// authored fact beside it: each covered test of an activated owner mints its
+/// own claim in its documentation comment, or cites the claim a sibling
+/// minted. The kind lies outside K — the registry rows it in the
+/// results-and-assertions family, not the assets family — so every claim
+/// stands on an authorship warrant (´[LBL-inf:labels:authorship-warrant]´)
+/// and no profile governs it.
+#[derive(Clone, Debug)]
+pub struct Claims {
+    /// The kind a claim label carries.
+    pub kind: Kind,
+    /// The profile whose census the discipline covers.
+    pub rides: ProfileId,
+    /// Where the registry row the kind comes from is.
+    pub source: Box<str>,
+    /// Where the claim occurrence stands.
+    pub standard_place: Place,
+    /// What the statement is, and where it is read from.
+    pub statement: Statement,
+    /// The equivalence two claims of one owner collide under.
+    pub collision: Collision,
+    /// The owners whose authoring wave has closed.
+    pub activation: Activation,
+    /// The generated view of claims against the tests that carry them.
+    pub matrix: Matrix,
+}
+
+/// What a claim's statement is: the prose the label names.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
+pub struct Statement {
+    /// The rule, as the adoption data states it.
+    pub rule: Box<str>,
+}
+
+/// The generated per-owner view of claims against the tests that carry them.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
+pub struct Matrix {
+    /// Which file, where the owner is activated.
+    pub register: Box<str>,
+    /// The form its rows take.
+    pub form: Box<str>,
 }
 
 /// K: the kinds intended for derivation only.
@@ -1400,6 +1512,8 @@ struct RawAdoption {
     profiles: RawProfiles,
     #[serde(rename = "reserved-kinds")]
     reserved_kinds: ReservedKinds,
+    #[serde(default)]
+    claims: Option<RawClaims>,
     #[serde(rename = "typed-data")]
     typed_data: TypedData,
     #[serde(rename = "citation-indexes")]
@@ -1557,6 +1671,29 @@ struct RawProfile {
     classification: Option<Classification>,
     name_transformation: Option<NameTransformation>,
     standard_place: Option<Place>,
+    collision: Option<Collision>,
+    activation: Option<RawActivation>,
+}
+
+/// `[…activation]`, whose `scope` chooses between the two shapes.
+#[derive(serde::Deserialize)]
+struct RawActivation {
+    scope: Spanned<Box<str>>,
+    #[serde(default)]
+    owners: Vec<Spanned<OwnerId>>,
+}
+
+/// `[claims]`, the one discipline section outside Π.
+#[derive(serde::Deserialize)]
+struct RawClaims {
+    kind: Spanned<Kind>,
+    rides: Spanned<ProfileId>,
+    source: Box<str>,
+    standard_place: Option<Place>,
+    statement: Option<Statement>,
+    collision: Option<Collision>,
+    activation: Option<RawActivation>,
+    matrix: Option<Matrix>,
 }
 
 /// The row a `toml::Spanned` sits in, as a location the reader can open.
@@ -1584,7 +1721,13 @@ impl RawAdoption {
             .transpose()?;
         let profiles = self
             .profiles
-            .validate(source, origin, &self.reserved_kinds)?;
+            .validate(source, origin, &signature, &self.reserved_kinds)?;
+        let claims = self
+            .claims
+            .map(|declared| {
+                declared.validate(source, origin, &signature, &profiles, &self.reserved_kinds)
+            })
+            .transpose()?;
         for (section, prefixes) in [
             ("[carrier] exclude_trees", &self.carrier.exclude_trees),
             ("[carrier] generated_files", &self.carrier.generated_files),
@@ -1613,6 +1756,7 @@ impl RawAdoption {
             partition,
             profiles,
             reserved_kinds: self.reserved_kinds,
+            claims,
             typed_data: self.typed_data,
             citation_indexes: self.citation_indexes,
             scanned_regions: self.scanned_regions,
@@ -1821,11 +1965,12 @@ impl RawProfiles {
         self,
         source: &str,
         origin: &Path,
+        signature: &Signature,
         reserved: &ReservedKinds,
     ) -> Result<Profiles, AdoptionError> {
         let mut profiles = Vec::with_capacity(self.profiles.len());
         for raw in self.profiles {
-            profiles.push(raw.validate(source, origin, reserved)?);
+            profiles.push(raw.validate(source, origin, signature, reserved)?);
         }
         let found = profiles
             .iter()
@@ -1851,6 +1996,7 @@ impl RawProfile {
         self,
         source: &str,
         origin: &Path,
+        signature: &Signature,
         reserved: &ReservedKinds,
     ) -> Result<Profile, AdoptionError> {
         let id = self.id.as_ref().clone();
@@ -1880,6 +2026,11 @@ impl RawProfile {
                 kind: kind.to_string(),
             });
         }
+        let activation = self
+            .activation
+            .as_ref()
+            .ok_or_else(|| incomplete("activation"))?
+            .validate(source, origin, signature, &format!("profile {id_text}"))?;
         Ok(Profile {
             id,
             kind,
@@ -1894,6 +2045,119 @@ impl RawProfile {
             standard_place: self
                 .standard_place
                 .ok_or_else(|| incomplete("standard place"))?,
+            collision: self.collision.ok_or_else(|| incomplete("collision rule"))?,
+            activation,
+        })
+    }
+}
+
+impl RawActivation {
+    /// The two shapes, and the three things a declared one must not say.
+    ///
+    /// A scope outside the two words is refused rather than defaulted: an
+    /// activation is the instrument that decides who owes what, and a
+    /// misspelling that quietly became the permissive shape would close every
+    /// wave at once.
+    fn validate(
+        &self,
+        source: &str,
+        origin: &Path,
+        signature: &Signature,
+        section: &str,
+    ) -> Result<Activation, AdoptionError> {
+        let at = row(&self.scope, source, origin);
+        match &**self.scope.as_ref() {
+            "every-owner" => Ok(Activation::EveryOwner),
+            "declared" => {
+                let mut owners: Vec<OwnerId> = Vec::with_capacity(self.owners.len());
+                for named in &self.owners {
+                    let owner = named.as_ref();
+                    let at = row(named, source, origin);
+                    if !signature.registers(owner) {
+                        return Err(AdoptionError::ActivationUnknownOwner {
+                            at,
+                            section: section.to_owned(),
+                            owner: owner.to_string(),
+                        });
+                    }
+                    if owners.contains(owner) {
+                        return Err(AdoptionError::ActivationRepeatedOwner {
+                            at,
+                            section: section.to_owned(),
+                            owner: owner.to_string(),
+                        });
+                    }
+                    owners.push(owner.clone());
+                }
+                if owners.is_empty() {
+                    return Err(AdoptionError::ActivationEmpty {
+                        at,
+                        section: section.to_owned(),
+                    });
+                }
+                Ok(Activation::Declared { owners })
+            }
+            other => Err(AdoptionError::ActivationScopeUnknown {
+                at,
+                section: section.to_owned(),
+                scope: other.to_owned(),
+            }),
+        }
+    }
+}
+
+impl RawClaims {
+    /// The claim discipline, checked against Π and K.
+    ///
+    /// Two checks carry the discipline's soundness. The kind must lie outside
+    /// K, because a claim stands on an authorship warrant and a reserved kind
+    /// admits none (´[LBL-inv:labels:warrant-totality]´). And the profile it
+    /// rides must be registered, because the discipline's census is that
+    /// profile's and a name Π does not know would cover nothing while reading
+    /// like a subscription.
+    fn validate(
+        self,
+        source: &str,
+        origin: &Path,
+        signature: &Signature,
+        profiles: &Profiles,
+        reserved: &ReservedKinds,
+    ) -> Result<Claims, AdoptionError> {
+        let opens_at = row(&self.kind, source, origin);
+        let incomplete = |datum: &'static str| AdoptionError::ClaimIncomplete {
+            at: opens_at.clone(),
+            datum,
+        };
+        let kind = self.kind.as_ref().clone();
+        if reserved.contains(&kind) {
+            return Err(AdoptionError::ClaimKindReserved {
+                at: opens_at,
+                kind: kind.to_string(),
+            });
+        }
+        let rides = self.rides.as_ref().clone();
+        if !profiles.profiles.iter().any(|one| one.id == rides) {
+            return Err(AdoptionError::ClaimProfileUnknown {
+                at: row(&self.rides, source, origin),
+                id: rides.to_string(),
+            });
+        }
+        let activation = self
+            .activation
+            .as_ref()
+            .ok_or_else(|| incomplete("activation"))?
+            .validate(source, origin, signature, "the claim discipline")?;
+        Ok(Claims {
+            kind,
+            rides,
+            source: self.source,
+            standard_place: self
+                .standard_place
+                .ok_or_else(|| incomplete("standard place"))?,
+            statement: self.statement.ok_or_else(|| incomplete("statement rule"))?,
+            collision: self.collision.ok_or_else(|| incomplete("collision rule"))?,
+            activation,
+            matrix: self.matrix.ok_or_else(|| incomplete("matrix"))?,
         })
     }
 }
