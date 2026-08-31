@@ -361,14 +361,12 @@ class ComposeWizardViewModel @Inject constructor(
         // Uploads start on leaving DETAILS, not the crop stage.
         //
         // NAMED DEVIATION from `ComposeUploading`'s footnote ("Pictures
-        // upload while you write — signing waits for them"), forced by the
-        // contract: `altText` rides `UploadMediaInput` and there is no
-        // `updateMedia` — D3 makes an asset row immutable after upload. The
-        // descriptions are authored on Details (`DescribeSheet`), so an
-        // upload started at crop-exit would silently drop every description
-        // written after it, which is a lie told to the one person trusting
-        // it. Waiting until Details is done is what makes the boarded
-        // placement of Describe honest.
+        // upload while you write — signing waits for them") — no longer a
+        // forced one. A description rides `AttachmentClaim` at prepare
+        // rather than the upload, so an upload started at crop-exit drops
+        // nothing the author writes afterwards. Moving the start is a
+        // wizard change with its own boards, not part of the contract
+        // change that freed it.
         //
         // The waiting still shows exactly where the boards draw it:
         // `ComposeSealUploading` gates the seal on `UploadStatusLine`, and
@@ -519,8 +517,7 @@ class ComposeWizardViewModel @Inject constructor(
                 _state.update { it.withUpload(uri, AssetUpload.Failed(UNREADABLE)) }
                 return@launch
             }
-            val altText = _state.value.picked.firstOrNull { it.uri == uri }?.altText?.ifBlank { null }
-            when (val outcome = media.uploadMedia(picture, altText)) {
+            when (val outcome = media.uploadMedia(picture)) {
                 is Outcome.Success -> _state.update {
                     it.withUpload(uri, AssetUpload.Done(outcome.value.id))
                 }
@@ -569,7 +566,9 @@ class ComposeWizardViewModel @Inject constructor(
                     references = current.referenceSection.references.map { it.toClaim() },
                     attachments = if (current.mode == BodyMode.Media) {
                         current.picked.mapNotNull { asset ->
-                            asset.mediaId?.let { AttachmentClaim(it) }
+                            asset.mediaId?.let {
+                                AttachmentClaim(it, asset.altText.ifBlank { null })
+                            }
                         }
                     } else {
                         emptyList()

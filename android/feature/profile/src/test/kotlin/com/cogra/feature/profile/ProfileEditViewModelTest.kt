@@ -72,7 +72,6 @@ class ProfileEditViewModelTest {
 
         override suspend fun uploadMedia(
             picture: ProcessedPicture,
-            altText: String?,
         ): Outcome<MediaAssetView> {
             calls += 1
             return outcome

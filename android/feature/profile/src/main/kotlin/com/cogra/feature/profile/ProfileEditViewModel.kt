@@ -159,7 +159,7 @@ class ProfileEditViewModel @Inject constructor(
             val next = if (processed == null) {
                 ProfileImageState.Failed(uri, UNREADABLE)
             } else {
-                when (val outcome = media.uploadMedia(processed, altText = null)) {
+                when (val outcome = media.uploadMedia(processed)) {
                     is Outcome.Success ->
                         ProfileImageState.Uploaded(outcome.value.id, outcome.value.url)
                     is Outcome.Refused ->

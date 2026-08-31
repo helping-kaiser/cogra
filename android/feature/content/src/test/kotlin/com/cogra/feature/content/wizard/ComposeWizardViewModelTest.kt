@@ -93,7 +93,6 @@ class ComposeWizardViewModelTest {
         /** Per-URI scripting, so one asset can fail while the rest land. */
         var failures = mutableSetOf<String>()
         var uploads = 0
-        var lastAltText: String? = null
         private var next = 0
 
         /** The URI each call is for, in order, so failures can be aimed. */
@@ -101,17 +100,15 @@ class ComposeWizardViewModelTest {
 
         override suspend fun uploadMedia(
             picture: ProcessedPicture,
-            altText: String?,
         ): Outcome<MediaAssetView> {
             uploads += 1
-            lastAltText = altText
             val uri = pending.removeFirstOrNull().orEmpty()
             if (uri in failures) {
                 return Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "too big")))
             }
             next += 1
             return Outcome.Success(
-                MediaAssetView("m$next", "https://media/m$next", altText, FieldStatus.NORMAL, 1f),
+                MediaAssetView("m$next", "https://media/m$next", null, FieldStatus.NORMAL, 1f),
             )
         }
     }
@@ -303,7 +300,7 @@ class ComposeWizardViewModelTest {
     }
 
     @Test
-    fun altTextRidesItsOwnUpload() = runTest(dispatcher) {
+    fun aDescriptionRidesTheAttachmentRatherThanTheUpload() = runTest(dispatcher) {
         val vm = viewModel()
         vm.start()
         dispatcher.scheduler.advanceUntilIdle()
@@ -313,14 +310,15 @@ class ComposeWizardViewModelTest {
         vm.onNext() // body -> crop
         vm.onNext() // crop -> details, where descriptions are authored
         vm.onAltTextChange("a", "A salt crust")
-        vm.onNext() // details -> seal, and only now does the upload run
+        vm.onNext() // details -> seal
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onSign()
         dispatcher.scheduler.advanceUntilIdle()
 
-        // The description has to be on the wire with its own bytes:
-        // `altText` rides `UploadMediaInput` and an asset row is immutable
-        // after upload (D3), so an upload that started earlier would have
-        // dropped it.
-        assertThat(media.lastAltText).isEqualTo("A salt crust")
+        // The description is a fact about the placement, so it travels on
+        // the claim and not with the bytes: an upload that ran before the
+        // author typed anything is still the right upload.
+        assertThat(content.lastAttachments.single().altText).isEqualTo("A salt crust")
     }
 
     // -- The author's own sensitive mark --
@@ -370,9 +368,11 @@ class ComposeWizardViewModelTest {
     fun blankAltTextRidesAsNullRatherThanAnEmptyDescription() = runTest(dispatcher) {
         val vm = viewModel()
         vm.toSealWithMedia("a")
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
         // An empty string is a value, and a decorative asset needs a
         // null description rather than a described nothing (D20).
-        assertThat(media.lastAltText).isNull()
+        assertThat(content.lastAttachments.single().altText).isNull()
     }
 
     // -- The ways out --
