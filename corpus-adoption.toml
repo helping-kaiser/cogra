@@ -1028,6 +1028,42 @@ document's heading anchors carry sec accordingly. The heading's own
 text is a title and is classified by nothing.
 """
 
+[[head-recognition.form]]
+id       = "title"
+language = "markdown"
+shape    = "the FIRST level-one heading of a source, followed by the separator and the mint"
+head     = "Document — the same word for every source; the mint's kind is what varies"
+note = """
+RULED 2026-08-31, extending this section. The first structural
+level-one heading is the source's sole Title head and carries exactly
+one AUTHORED mint naming the document concept itself; its environment
+name is Document and its KIND names the document's GENRE, drawn from
+the Document pairs of [kinds.extensions]. The checker derives neither
+kind, area, nor name from title spelling or location — as everywhere
+else, the author declares and the registry validates.
+FIRST ONLY. A later level-one heading is an ordinary division and
+takes the "heading" form's rung, exactly as before. The rule reads
+FIRST and not TOPMOST-LEVEL: a source whose deepest heading is ## has
+no title head and is exempt.
+COVERAGE. Every Markdown source of the carrier with a level-one
+heading participates, generated registers included; a source without
+one is exempt and NOTHING is synthesized for it. An unminted title is
+the frontend's markdown-title-unminted finding.
+GENERATED SOURCES HEAD NOTHING. KND judg:kinds:head-validation:
+"Generated registers are not authored heads and form no judgment", and
+KND inv:kinds:totality puts them outside its requirement. Their titles
+still MINT — LBL inv:labels:generated-compliance: an authorship a
+generator transcribes is that choice still — so coverage reaches them
+while validation does not.
+WHY NOT THE HEADING'S OWN TEXT. The heading form already rules that a
+heading's text is a title classified by nothing, and nothing here
+changes it: a Title head is classified by the WORD Document, not by
+what the document is called. Handing the registry "A Calculus of
+Documentation and Source Labels" would ask it to classify a proper
+noun, which is the same reason the bold form drops its parenthesized
+Title.
+"""
+
 # --- Formats with NO head form ---------------------------------
 # Listed so their absence is a decision rather than an oversight. A
 # scanned region in any of these may carry mints and citations; none
@@ -1154,24 +1190,147 @@ external party; it does not reach the corpus's own acceptee.)
 
 # --- X_A: local extensions ------------------------------------
 # KND judg:kinds:classification: recorded extensions are the only
-# further source of C_A. Empty, and stated rather than omitted, as
-# [typed-data] and [citation-indexes] are.
+# further source of C_A.
+#
+# THE DOCUMENT PAIRS, RULED 2026-08-31. [head-recognition] form
+# "title" makes the first level-one heading of a source a head whose
+# environment name is Document and whose kind names the document's
+# GENRE. The registry catalogues no Document row — it catalogues the
+# environments INSIDE a document, not the document — so every genre a
+# title may carry enters here, which is exactly the case
+# revisit_when named below: "a document adopts an environment name the
+# registry does not catalogue".
+#
+# NOT A NEW EDITION. KND sig:kinds:registry-data reserves B, H, and the
+# edition evidence base to the registry authority, and a change to them
+# "is a new edition of the registry, not a consequence of adoption".
+# Adding rows to the Convention tables would be that change; recording
+# X_A is the route adoption is given, and it is the route the ruling
+# takes. The headline counts of KND tab:kinds:headline-counts therefore
+# do NOT move: they derive from the tables alone.
+#
+# THE VOCABULARY IS TRIMMED TO WHAT THE CORPUS USES. Six genres, each
+# with live documents on the day it is recorded; a seventh considered
+# and left out is Proposal, `proposal` — this corpus holds no
+# recommendation awaiting adoption, its one options comparison
+# (docs/implementation/graph-db-options.md) being an accepted decision
+# record. It enters the day one is written, by the same route as these.
+#
+# FOUR OF THE SIX KIND TOKENS ARE THE REGISTRY'S OWN, taken from KND
+# conv:kinds:records and conv:kinds:setup — Record `rec`, Report `rep`,
+# Register `reg`, Specification `spec` — so a document of that genre
+# carries the token its genre already has, and no second token names
+# one concept (KND inv:kinds:one-kind). Two tokens are new: `plan` and
+# `guide` name genres the registry has no row for at all, and neither
+# collides with an assigned token (KND inv:kinds:distinctness).
+#
+# NO RESERVED KIND IS EVER A TITLE KIND. K is [reserved-kinds]; a
+# document ABOUT tests or modules is still a record, report, register,
+# specification, plan, or guide by its documentary role, and the
+# authored/derived split of LBL inv:labels:warrant-totality keeps it
+# so — a title mint is an AUTHORSHIP, and an authored mint may never
+# carry a kind K reserves.
 [kinds.extensions]
-rows        = []
 hybrids     = []
-empty_in_v1 = true
-reason      = "every head in this corpus validates against C as published; no head needs a pair the registry does not carry"
+empty_in_v1 = false
+reason      = "the six Document pairs below; every other head in this corpus validates against C as published"
 revisit_when = "a document adopts an environment name the registry does not catalogue, or a local hybrid — either enters by a recorded decision, per KND inf:kinds:hybrid for the hybrid case"
+
+[[kinds.extensions.rows]]
+name   = "Document"
+kind   = "rec"
+status = "firm"
+
+[[kinds.extensions.rows]]
+name   = "Document"
+kind   = "rep"
+status = "firm"
+
+[[kinds.extensions.rows]]
+name   = "Document"
+kind   = "reg"
+status = "firm"
+
+[[kinds.extensions.rows]]
+name   = "Document"
+kind   = "spec"
+status = "firm"
+
+[[kinds.extensions.rows]]
+name   = "Document"
+kind   = "plan"
+status = "firm"
+
+[[kinds.extensions.rows]]
+name   = "Document"
+kind   = "guide"
+status = "firm"
 
 # --- E_A: the evidence base -----------------------------------
 # KND sig:kinds:acceptee splits E_A in two: an adopted component taken
 # by reference, and an owned component held first-hand covering X_A
-# and any status the acceptee strengthens. With X_A empty and no
-# strengthening, the owned component is empty and E_A is the edition's
-# entire evidence base — the default, verbatim.
+# and any status the acceptee strengthens. No status is strengthened,
+# so the owned component covers X_A exactly: one record per extension
+# row, each identifying the pair, an exact quoted spelling, a source, a
+# locator, and the sense — the five a record owes.
+#
+# WHAT THE EVIDENCE IS. For the four genres whose token the registry
+# already assigns, the source is the registry's own row: the genre is
+# attested there, and what the record adds is that a whole DOCUMENT of
+# that genre is the environment a title names. For `plan` and `guide`
+# the source is the corpus itself, where the genre is in live,
+# uncontested use.
 [kinds.evidence]
-adopted = "the edition evidence base of crates/cogra-linter/docs/environment-kinds.md, taken by reference"
-owned   = []
+adopted     = "the edition evidence base of crates/cogra-linter/docs/environment-kinds.md, taken by reference"
+recorded_in = "corpus-adoption.toml [kinds.evidence]"
+
+[[kinds.evidence.owned]]
+name     = "Document"
+kind     = "rec"
+spelling = "Record"
+source   = "crates/cogra-linter/docs/environment-kinds.md, KND conv:kinds:records"
+locator  = "corpus-adoption.toml [kinds.evidence]"
+sense    = "a document that is a durable decision and its consequences: the corpus's adoption notes, its commissioning records, and its one numbered decision record"
+
+[[kinds.evidence.owned]]
+name     = "Document"
+kind     = "rep"
+spelling = "Report"
+source   = "crates/cogra-linter/docs/environment-kinds.md, KND conv:kinds:records"
+locator  = "corpus-adoption.toml [kinds.evidence]"
+sense    = "a document that is findings: the audit phase artifacts of the two built crates, adversarial review over a merged crate"
+
+[[kinds.evidence.owned]]
+name     = "Document"
+kind     = "reg"
+spelling = "Register"
+source   = "crates/cogra-linter/docs/environment-kinds.md, KND conv:kinds:records — the registry names itself an instance, 'a kept, cited register, classified reg by its own table'"
+locator  = "corpus-adoption.toml [kinds.evidence]"
+sense    = "a document that is a maintained list: the kind registry, the generated label registers and companion attestation register, and the consolidated open questions"
+
+[[kinds.evidence.owned]]
+name     = "Document"
+kind     = "spec"
+spelling = "Specification"
+source   = "crates/cogra-linter/docs/environment-kinds.md, KND conv:kinds:setup"
+locator  = "corpus-adoption.toml [kinds.evidence]"
+sense    = "a document that fixes normative meaning, requirements, or interface shape: the label calculus, the interchange conventions, the primitive and instance documents of docs/, and the ratified concept and design artifacts of a built crate"
+
+[[kinds.evidence.owned]]
+name     = "Document"
+kind     = "plan"
+spelling = "Plan"
+source   = "this corpus: docs/implementation/roadmap.md ('the living sequencing plan'), design/backlog.md ('one ordered queue'), crates/cogra-linter/docs/kickoff.md ('a map and a plan, not a spec')"
+locator  = "corpus-adoption.toml [kinds.evidence]"
+sense    = "a document that is an ordered course of work, a backlog included. The registry catalogues no Plan row and no plan token, so the genre and its token are both this corpus's"
+
+[[kinds.evidence.owned]]
+name     = "Document"
+kind     = "guide"
+spelling = "Guide"
+source   = "this corpus: docs/implementation/development.md ('Development Guide'), CONTRIBUTING.md ('This guide is for human contributors'), and the README and CLAUDE.md family of every tree"
+locator  = "corpus-adoption.toml [kinds.evidence]"
+sense    = "a document that orients and instructs, README material included. The registry catalogues no Guide row and no guide token, so the genre and its token are both this corpus's"
 
 # --- sigma_A: the status map ----------------------------------
 # KND judg:kinds:attestation: an acceptee may STRENGTHEN a base row's
