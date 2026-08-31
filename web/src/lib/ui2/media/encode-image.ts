@@ -93,10 +93,11 @@ export type EncodeOptions = {
  * The rectangle of the source the frame actually shows, in source pixels.
  *
  * It inverts what `cropStyle` does on screen, so what uploads is what the
- * author framed. Two steps, in the order the browser applies them: the picture
- * is cover-fitted to the frame, then scaled about the focal point. Cover-fitting
- * first is what bounds the result — every focal point in the unit square keeps
- * the frame covered, so the rectangle can never run off the source.
+ * author framed. The frame shows a window of `cover / zoom`, and the focal
+ * point slides that window across everything the source has left over — the
+ * band the cover fit trims plus the slack the zoom opens. Sliding it by the
+ * leftover exactly is what bounds the result: at focal point 0 the window sits
+ * on one edge, at 1 on the other, and it can never run off the source.
  */
 export function sourceRect(
   imageWidth: number,
@@ -113,12 +114,9 @@ export function sourceRect(
   const coverHeight = sourceRatio > ratio ? imageHeight : imageWidth / ratio;
   const width = coverWidth / zoom;
   const height = coverHeight / zoom;
-  // `transform-origin` keeps the focal point fixed, so the window slides across
-  // the trimmed region in proportion to how much slack the zoom opened up.
-  const slack = 1 - 1 / zoom;
   return {
-    x: (imageWidth - coverWidth) / 2 + x * slack * coverWidth,
-    y: (imageHeight - coverHeight) / 2 + y * slack * coverHeight,
+    x: (imageWidth - width) * x,
+    y: (imageHeight - height) * y,
     width,
     height,
   };
