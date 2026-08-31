@@ -15,6 +15,12 @@ export interface ActsCardProps {
   rows?: readonly ActsCardRow[];
   /** e.g. "3 signed actions". */
   total?: React.ReactNode;
+  /**
+   * The all-or-nothing subline under the total — "they land together, or
+   * none does". Pass it whenever the seal commits more than one act; omit on
+   * a single-act seal.
+   */
+  note?: string;
 }
 
 export declare function ActsCard(props: ActsCardProps): JSX.Element;
