@@ -480,6 +480,20 @@ fn attachment_drafts(
         .collect()
 }
 
+/// The seal's two sensitive controls as one draft. They arrive apart
+/// because the seal presents them apart — a switch and the sheet it opens
+/// — and are reconciled against each other in `content::self_mark`, once,
+/// so create and edit refuse the same combination alike.
+fn self_mark_draft(
+    sensitive: Option<bool>,
+    reason: Option<String>,
+) -> crate::content::SelfMarkDraft {
+    crate::content::SelfMarkDraft {
+        sensitive: sensitive.unwrap_or(false),
+        reason,
+    }
+}
+
 /// A new Post: one genesis Publish whose envelope carries the display
 /// fields (post.md §1), plus one Tag record per declared topic — each
 /// its own priced act. Fields are raw scalars; moderation is
@@ -512,6 +526,14 @@ struct PreparePostInput {
     /// refused rather than deduplicated. Attaching mints no record and
     /// adds nothing to the batch's cost.
     attachments: Option<Vec<AttachmentInput>>,
+    /// The author's own sensitive mark — the seal's switch. It veils the
+    /// **whole body** (media, words and description as one region) and
+    /// leaves the title and topics readable, so choosing to look is
+    /// informed. Defaults to false.
+    sensitive: Option<bool>,
+    /// The optional public reason shown on the veil. Refused without
+    /// `sensitive: true`; blank counts as none.
+    sensitive_reason: Option<String>,
 }
 
 /// A Post edit: the complete new content state, the same field set a
@@ -528,6 +550,11 @@ struct PreparePostEditInput {
     /// The gallery the edit leaves standing — complete, not a delta.
     /// Reordering pictures is this one act, priced once.
     attachments: Option<Vec<AttachmentInput>>,
+    /// The self-mark the edit leaves standing — complete state like the
+    /// body, so omitting it or sending false unmarks the post.
+    sensitive: Option<bool>,
+    /// The reason the edit leaves standing; same rules a create runs.
+    sensitive_reason: Option<String>,
 }
 
 /// A new Comment: one genesis Review — A leg to the target, terminal
@@ -550,6 +577,11 @@ struct PrepareCommentInput {
     /// optional media, deliberately asymmetric to a post's exclusive-or:
     /// an answer is words first.
     attachments: Option<Vec<AttachmentInput>>,
+    /// The author's own sensitive mark. A comment seals through the same
+    /// seal a post does, so it carries the same switch.
+    sensitive: Option<bool>,
+    /// The optional public reason shown on the veil.
+    sensitive_reason: Option<String>,
 }
 
 /// One standalone topic declaration on existing content — the gesture
@@ -628,6 +660,10 @@ struct PrepareCommentEditInput {
     content: String,
     /// The gallery the edit leaves standing — complete, not a delta.
     attachments: Option<Vec<AttachmentInput>>,
+    /// The self-mark the edit leaves standing, complete like the body.
+    sensitive: Option<bool>,
+    /// The reason the edit leaves standing.
+    sensitive_reason: Option<String>,
 }
 
 /// A profile update's field set — omitted = untouched, explicit null =
@@ -2028,6 +2064,7 @@ impl Mutation {
             tags: tag_drafts(&input.tags),
             references: reference_drafts(&input.references),
             attachments: attachment_drafts(&input.attachments),
+            sensitive: self_mark_draft(input.sensitive, input.sensitive_reason),
         };
         match crate::content::prepare_post(pool, boundary, cfg.gc_after_epochs, v.user_id, draft)
             .await
@@ -2056,6 +2093,7 @@ impl Mutation {
             description: input.description,
             content: input.content,
             attachments: attachment_drafts(&input.attachments),
+            sensitive: self_mark_draft(input.sensitive, input.sensitive_reason),
         };
         match crate::content::prepare_post_edit(
             pool,
@@ -2095,6 +2133,7 @@ impl Mutation {
             tags: tag_drafts(&input.tags),
             references: reference_drafts(&input.references),
             attachments: attachment_drafts(&input.attachments),
+            sensitive: self_mark_draft(input.sensitive, input.sensitive_reason),
         };
         match crate::content::prepare_comment(pool, boundary, cfg.gc_after_epochs, v.user_id, draft)
             .await
@@ -2235,6 +2274,7 @@ impl Mutation {
             id: input.id,
             content: input.content,
             attachments: attachment_drafts(&input.attachments),
+            sensitive: self_mark_draft(input.sensitive, input.sensitive_reason),
         };
         match crate::content::prepare_comment_edit(
             pool,
