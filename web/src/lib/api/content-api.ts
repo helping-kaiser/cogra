@@ -8,6 +8,7 @@ import type { ApolloClient } from "@apollo/client";
 
 import {
   CommentRepliesDocument,
+  CommentSelfMarkDocument,
   PostDetailDocument,
   PostsDocument,
   PrepareCommentDocument,
@@ -46,8 +47,19 @@ export function isPending(node: { landing: { state: LandingState } }): boolean {
   return node.landing.state === "PENDING";
 }
 
+/**
+ * The detail read's own post.
+ *
+ * NOT `PostView`, which is the FEED query's node: the two queries select
+ * different things, and typing the detail's post as the list's hid every field
+ * only the detail asks for — `sensitiveSelfMark` among them, which the edit
+ * switch needs. The list shape stays assignable to every component that takes a
+ * `PostView`, so naming the detail's shape honestly costs those nothing.
+ */
+export type PostDetailView = NonNullable<PostDetailQuery["post"]>;
+
 export type PostDetail = {
-  post: PostView;
+  post: PostDetailView;
   comments: Page<CommentView>;
 };
 
@@ -220,6 +232,29 @@ export async function fetchPostDetail(
       hasNextPage: post.comments.pageInfo.hasNextPage,
     },
   });
+}
+
+/**
+ * The author's own sensitive mark on one comment — what its edit switch shows.
+ *
+ * Its own read rather than a field on the detail query: see the operation's own
+ * note. Null means the comment is gone; the caller keeps the switch where it
+ * was rather than guessing at false, because guessing false would offer to
+ * unveil something the author had veiled.
+ */
+export async function fetchCommentSelfMark(
+  client: ApolloClient,
+  id: string,
+): Promise<Outcome<boolean | null>> {
+  const fetched = await fetchOutcome(() =>
+    client.query({
+      query: CommentSelfMarkDocument,
+      variables: { id },
+      fetchPolicy: "network-only",
+    }),
+  );
+  if (fetched.kind !== "success") return fetched;
+  return success(fetched.value.comment?.sensitiveSelfMark ?? null);
 }
 
 function liftPrepared(payload: {
