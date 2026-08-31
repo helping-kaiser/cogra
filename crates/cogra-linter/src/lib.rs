@@ -237,6 +237,7 @@ pub fn check(a: &Adoption, root: &Path) -> Result<Run, RunError> {
         }));
     }
     a.verify_spellings(root)?;
+    a.verify_reach_against_manifests(root)?;
     let walking = Instant::now();
     let (sources, failures) = match Walk::new(a, root).sources() {
         Ok(sources) => (sources, Vec::new()),

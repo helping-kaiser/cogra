@@ -135,6 +135,67 @@ pub enum AdoptionError {
         /// The kind it governs.
         kind: String,
     },
+    /// A `[reach]` row names an owner no prefix registers.
+    ///
+    /// Either end of the edge: an owner Σ registers nothing for can be named
+    /// by no imported citation, so a permission written for it or into it
+    /// governs nothing while looking exactly like one that does.
+    #[error("reach names owner {owner}, which no prefix registers")]
+    ReachUnknownOwner {
+        /// The row the offending name sits in.
+        at: Location,
+        /// The owner it names.
+        owner: String,
+    },
+    /// One owner heads two `[reach]` rows.
+    #[error("owner {owner} heads more than one reach row")]
+    ReachDuplicateOwner {
+        /// The row of the second one.
+        at: Location,
+        /// The owner.
+        owner: String,
+    },
+    /// A `[reach]` row names its own owner.
+    ///
+    /// An owner reaches itself by being itself, and an import naming the
+    /// citing owner is underivable whatever the graph says, so the edge is
+    /// unwritable rather than redundant.
+    #[error("reach row for {owner} names itself, and an owner reaches itself by being itself")]
+    ReachSelfEdge {
+        /// The row.
+        at: Location,
+        /// The owner.
+        owner: String,
+    },
+    /// One `[reach]` row names one target twice.
+    #[error("reach row for {owner} names {target} more than once")]
+    ReachRepeatedTarget {
+        /// The row.
+        at: Location,
+        /// The owner the row constrains.
+        owner: String,
+        /// The target it repeats.
+        target: String,
+    },
+    /// A declared reach omits a dependency the build system already carries.
+    ///
+    /// The one direction the comparison runs: a package that compiles against
+    /// another may cite it, so a declaration omitting the edge forbids what
+    /// the build requires. A declared edge Cargo does not carry is no defect —
+    /// that is how every document owner reaches anything at all.
+    #[error(
+        "reach for {owner} omits {depends_on}, which {manifest} declares as a path dependency"
+    )]
+    ReachContradictsManifest {
+        /// The row whose targets omit it.
+        at: Location,
+        /// The owner the row constrains.
+        owner: String,
+        /// The owner its manifest depends on.
+        depends_on: String,
+        /// The manifest that declares the dependency.
+        manifest: String,
+    },
     /// The stated effective-profile count disagrees with the file.
     #[error("the effective profile count {stated} disagrees with the {found} profiles not staged")]
     EffectiveCountMismatch {
@@ -164,6 +225,11 @@ impl AdoptionError {
             | AdoptionError::PathSpelling { at, .. }
             | AdoptionError::ProfileIncomplete { at, .. }
             | AdoptionError::UngovernedKindNotReserved { at, .. }
+            | AdoptionError::ReachUnknownOwner { at, .. }
+            | AdoptionError::ReachDuplicateOwner { at, .. }
+            | AdoptionError::ReachSelfEdge { at, .. }
+            | AdoptionError::ReachRepeatedTarget { at, .. }
+            | AdoptionError::ReachContradictsManifest { at, .. }
             | AdoptionError::EffectiveCountMismatch { at, .. } => Some(at),
         }
     }
