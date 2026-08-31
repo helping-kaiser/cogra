@@ -26,17 +26,19 @@
       --surface-container: #221f1e; --surface-container-high: #2c2928; --surface-container-highest: #373433;
       --outline: #968f8d; --outline-variant: #4b4644;
     }
+    [data-flow] { position: relative; }
+    [data-flow]::after { content: attr(data-flow); position: absolute; top: -7px; right: -7px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }
   </style>
 </helmet>
 <div class="screen" data-theme="{{theme}}" style="width: 390px; height: 844px; display: flex; flex-direction: column; background: var(--surface); color: var(--on-surface); overflow: hidden; box-sizing: border-box;">
 
   <div style="min-height: 48px; display: flex; align-items: center; gap: 4px; padding: 0 12px; flex: none;">
-    <span style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></span>
+    <span data-flow="1" style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></span>
     <h1 style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 400;">What you sign</h1>
     <span style="flex: 1;"></span>
-    <span style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg></span>
+    <span data-flow="2" style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg></span>
     <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant); margin-right: 8px;">Last step</span>
-    <span style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; border: 1px solid var(--outline); color: var(--on-surface-variant); font-size: 12px; line-height: 16px; font-weight: 500; flex: none; margin-right: 12px;">?</span>
+    <span data-flow="3" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; border: 1px solid var(--outline); color: var(--on-surface-variant); font-size: 12px; line-height: 16px; font-weight: 500; flex: none; margin-right: 12px;">?</span>
   </div>
 
   <div style="flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 8px 24px 24px 24px; overflow: hidden;">
@@ -50,11 +52,11 @@
         <span style="flex: none; font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">1 action</span>
       </div>
       <div style="display: flex; align-items: center; gap: 8px; min-height: 38px; border-bottom: 1px solid var(--outline-variant);">
-        <span style="flex: 1; font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; color: var(--primary);">+ Add a topic</span>
+        <span data-flow="4" style="flex: 1; font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; color: var(--primary);">+ Add a topic</span>
         <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">1 more action</span>
       </div>
       <div style="display: flex; align-items: center; gap: 8px; min-height: 38px; border-bottom: 1px solid var(--outline-variant);">
-        <span style="flex: 1; font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; color: var(--primary);">+ Cite something — a post, a person, a comment, an item</span>
+        <span data-flow="5" style="flex: 1; font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; color: var(--primary);">+ Cite something — a post, a person, a comment, an item</span>
         <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">1 more action</span>
       </div>
       <div style="display: flex; align-items: center; gap: 8px; min-height: 46px;">
@@ -66,25 +68,25 @@
       <div style="display: flex; align-items: center; gap: 8px; min-height: 40px; border-top: 1px solid var(--outline-variant);">
         <span style="flex: 1; font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">Toward what you answer</span>
         <span style="display: inline-flex; align-items: baseline; gap: 4px;"><span aria-hidden="true" style="font-size: 14px; line-height: 18px;">&#128578;</span><span style="font-size: 12px; line-height: 16px; color: var(--on-surface-variant);">+0.10 / +0.10</span></span>
-        <span style="font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px; color: var(--primary);">Adjust</span>
+        <span data-flow="6" style="font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px; color: var(--primary);">Adjust</span>
       </div>
       <div style="display: flex; align-items: center; gap: 8px; min-height: 40px; border-top: 1px solid var(--outline-variant);">
         <span style="flex: 1; font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">License</span>
         <span style="font-size: 14px; line-height: 20px; letter-spacing: 0.25px; color: var(--on-surface-variant);">Public domain — your default</span>
-        <span style="font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px; color: var(--primary);">Change</span>
+        <span data-flow="7" style="font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px; color: var(--primary);">Change</span>
       </div>
       <div style="display: flex; align-items: center; gap: 8px; min-height: 40px; border-top: 1px solid var(--outline-variant); border-bottom: 1px solid var(--outline-variant);">
         <span style="flex: 1; font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">Sensitive</span>
         <span style="font-size: 14px; line-height: 20px; letter-spacing: 0.25px; color: var(--on-surface-variant);">Not marked</span>
-        <span style="font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px; color: var(--primary);">Mark</span>
+        <span data-flow="8" style="font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px; color: var(--primary);">Mark</span>
       </div>
     </div>
 
     <div style="flex: 1;"></div>
 
     <div style="display: flex; flex-direction: column; gap: 8px;">
-      <div style="display: flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 24px; min-width: 64px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Sign comment</div>
-      <div style="display: flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 24px; min-width: 64px; border-radius: 9999px; color: var(--primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Back</div>
+      <div data-flow="9" style="display: flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 24px; min-width: 64px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Sign comment</div>
+      <div data-flow="10" style="display: flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 24px; min-width: 64px; border-radius: 9999px; color: var(--primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Back</div>
     </div>
 
   </div>
