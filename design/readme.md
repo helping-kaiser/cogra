@@ -448,7 +448,7 @@ exists in `web/src/lib/ui/` (and, unless noted, in Android's
 | `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow` |
 | `components/forms/` | `TextField`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
 | `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand` |
-| `components/compose/` | `MediaThumb`, `PickedRow`, `DescribeCounter`, `PickedSheet`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `ActsCard` |
+| `components/compose/` | `WizardHeader`, `MediaThumb`, `PickedRow`, `DescribeCounter`, `PickedSheet`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `ActsCard` |
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader` |
 | `components/states/` | `EmptyState`, `LoadingState` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending` |
@@ -1375,6 +1375,18 @@ media and comment editing.
   values the implementation session caught are conformed instead: the
   Cover badge to `label-small`, the full-focus writing bodies to
   16/24, the draft prompt's buttons to true button padding.
+- **The wizard has two ways out, fixed** (jakob, round 4): **the
+  header arrow steps ONE STAGE BACK**, never out of the flow — Details
+  reaches crop with it, the platform back gesture does the same — and
+  **the X leaves the whole flow from any stage, draft kept, with no
+  confirmation** (nothing is lost: every leave keeps the draft, and
+  the draft prompt is the return surface). The seal's own Back pill is
+  the same one-stage step, labeled. `WizardHeader` is the master —
+  every composer-flow stage wears it (post wizard, reply, edits, the
+  profile picture); the X sits between the title and the stage's
+  trailing controls so Next keeps the right edge. The em-dash rule
+  stands unchanged (jakob, same round): em dashes carry asides,
+  everywhere copy-voice says so.
 - **The slice ships componentized** (`components/compose/`):
   `MediaThumb` (the authoring tile and its upload states), `PickedRow`
   + `DescribeCounter`, `PickedSheet` (Show all), `DescribeSheet`,

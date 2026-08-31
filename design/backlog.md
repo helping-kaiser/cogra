@@ -232,9 +232,12 @@ findings, same day): *Pick · the web variant* (no device-gallery API
 in browsers — file picker + drop target replace the grid); the
 all-or-nothing subline healed into `ActsCard.note` (every multi-act
 seal; single-act seals omit it); off-role type values conformed to
-the pinned M3 roles (M3 stays the default, no sub-roles). Open with
-jakob: the em-dash question (copy-voice blesses them — global call),
-and the wizard's cancel affordance (brief delivered).
+the pinned M3 roles (M3 stays the default, no sub-roles). Round 4
+(same day, both open threads closed): the em-dash rule STANDS
+(copy-voice unchanged), and the wizard's ways out are fixed — arrow
+= one stage back, the new X = leave from any stage with the draft
+kept, no confirmation; `WizardHeader` is the master and every
+composer-flow board (JSX and hand-authored alike) wears the X.
 
 ### 13 · Post Score drill-down · *design*
 Four screens — FeedEntry → RankPath → RankHop → raw records — each
