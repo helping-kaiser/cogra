@@ -2,6 +2,7 @@ package com.cogra.feature.content.wizard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
@@ -411,6 +412,11 @@ class ComposeWizardViewModel @Inject constructor(
     fun onSealBack() {
         _state.value.retreated()?.let { _state.value = it }
     }
+
+    /** The screen's one `?`; every one opens the house plain dialog. */
+    fun onOpenHelp(topic: HelpTopic) = _state.update { it.copy(help = topic) }
+
+    fun onCloseHelp() = _state.update { it.copy(help = null) }
 
     fun onOpenSheet(sheet: SealSheet) = _state.update { it.copy(sheet = sheet) }
 

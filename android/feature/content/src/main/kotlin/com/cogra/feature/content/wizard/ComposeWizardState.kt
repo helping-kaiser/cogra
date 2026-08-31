@@ -1,5 +1,6 @@
 package com.cogra.feature.content.wizard
 
+import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.core.designsystem.v2.compose.PickedPicture
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.domain.compose.ComposeDraft
@@ -162,6 +163,12 @@ data class ComposeWizardState(
      * (`design/components/compose/DescribeSheet.prompt.md`).
      */
     val describingIndex: Int? = null,
+
+    /**
+     * The screen's one `?`, open (design/readme.md §13: at most one per
+     * screen, and every one opens the house plain dialog).
+     */
+    val help: HelpTopic? = null,
 
     // -- Flow state --
     /** A held draft offered back before anything is authored. */

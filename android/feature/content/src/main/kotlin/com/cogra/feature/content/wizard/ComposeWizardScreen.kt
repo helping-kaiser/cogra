@@ -28,8 +28,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.v2.atom.CograButton
+import com.cogra.core.designsystem.v2.atom.HelpDialog
 import com.cogra.core.designsystem.v2.atom.WizardHeader
 import com.cogra.core.designsystem.v2.compose.DescribeSheet
+import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.core.designsystem.v2.compose.PickedSheet
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.token.Layout
@@ -131,12 +133,15 @@ fun ComposeWizardRoute(
         onPDirectedChange = viewModel::onPDirectedChange,
         onNext = viewModel::onNext,
         onBack = { if (!viewModel.onBack()) viewModel.onLeave() },
+        onLeave = viewModel::onLeave,
         onSealBack = viewModel::onSealBack,
         onManagePictures = viewModel::onOpenPickedSheet,
         onDescribePictures = viewModel::onDescribeFirst,
         onDescribeAt = viewModel::onDescribe,
         onMovePick = viewModel::onMovePick,
         onRemovePickAt = viewModel::onRemovePickAt,
+        onOpenHelp = viewModel::onOpenHelp,
+        onCloseHelp = viewModel::onCloseHelp,
         onSign = viewModel::onSign,
         onContinueDraft = viewModel::onContinueDraft,
         onDiscardDraft = viewModel::onDiscardDraft,
@@ -193,12 +198,15 @@ internal fun ComposeWizardScreen(
     onPDirectedChange: (Double) -> Unit,
     onNext: () -> Unit,
     onBack: () -> Unit,
+    onLeave: () -> Unit,
     onSealBack: () -> Unit,
     onManagePictures: () -> Unit,
     onDescribePictures: () -> Unit,
     onDescribeAt: (Int) -> Unit,
     onMovePick: (Int, Int) -> Unit,
     onRemovePickAt: (Int) -> Unit,
+    onOpenHelp: (HelpTopic) -> Unit,
+    onCloseHelp: () -> Unit,
     onSign: () -> Unit,
     onContinueDraft: () -> Unit,
     onDiscardDraft: () -> Unit,
@@ -237,11 +245,21 @@ internal fun ComposeWizardScreen(
         WizardHeader(
             title = state.headerTitle(),
             onBack = onBack,
-            backContentDescription = "Back",
+            // The X leaves from any stage, draft kept, nothing to confirm.
+            onLeave = onLeave,
             actionText = state.headerAction(),
             onAction = onNext,
             actionEnabled = state.headerActionEnabled(),
             trailingNote = if (state.step == WizardStep.Seal) "Last step" else null,
+            // The seal's one `?`. On the key-absent seal it belongs to the
+            // key notice instead — the key story outranks the seal story
+            // there, and a screen carries only one (design/readme.md §13).
+            onHelp = if (state.step == WizardStep.Seal && !state.keyAbsent) {
+                { onOpenHelp(HelpTopic.SignedActions) }
+            } else {
+                null
+            },
+            helpContentDescription = HelpTopic.SignedActions.title,
             testTag = "wizard_header",
         )
 
@@ -373,6 +391,7 @@ internal fun ComposeWizardScreen(
                     value = describing.altText,
                     onValueChange = { onAltTextChange(describing.uri, it) },
                     onDone = onCloseSheet,
+                    onHelp = { onOpenHelp(HelpTopic.DescribingPictures) },
                     testTag = "wizard_describe_sheet",
                 )
 
@@ -398,6 +417,17 @@ internal fun ComposeWizardScreen(
                 else -> Unit
             }
         }
+    }
+
+    // The screen's one `?`, over whatever is showing. A dialog rather than
+    // a sheet: it explains the surface behind it rather than continuing it.
+    state.help?.let { topic ->
+        HelpDialog(
+            title = topic.title,
+            paragraphs = topic.paragraphs,
+            onClose = onCloseHelp,
+            testTag = "wizard_help_dialog",
+        )
     }
 }
 
