@@ -59,7 +59,7 @@ import {
   sensitiveSignature,
 } from "@/lib/ui/post-media";
 import {
-  commentAttachmentIds,
+  commentAttachmentClaims,
   commentGate,
   pickInto,
   removeFrom,
@@ -427,7 +427,7 @@ export function PostView({
         license,
         tags: draftTags,
         references: draftReferences,
-        attachments: commentAttachmentIds(draftMedia) ?? undefined,
+        attachments: commentAttachmentClaims(draftMedia) ?? undefined,
       }),
     );
     if (prepared.kind === "refused") {

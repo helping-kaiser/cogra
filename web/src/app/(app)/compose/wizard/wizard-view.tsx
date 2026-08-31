@@ -29,7 +29,7 @@ import type { StagedWriteView } from "@/lib/api/writes-api";
 import { TransportError } from "@/lib/ui/transport-error";
 import {
   advanceGate,
-  attachmentIds,
+  attachmentClaims,
   bodyContent,
   emptyWizard,
   sealGate,
@@ -266,7 +266,7 @@ export function ComposeWizard({
         license: state.license,
         tags: state.tags,
         references: state.references,
-        attachments: attachmentIds(state) ?? undefined,
+        attachments: attachmentClaims(state) ?? undefined,
       }),
     );
 

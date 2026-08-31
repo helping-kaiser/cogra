@@ -92,17 +92,32 @@ function referenceInputs(references: readonly ReferenceDraft[] | undefined) {
 }
 
 /**
+ * One placement being authored: the asset, and what it is a picture of.
+ *
+ * The description travels here rather than with the upload because it is a
+ * fact about this placement — the same asset can read differently in two
+ * posts, and correcting a description is a new version of the post rather
+ * than a re-upload. That is what lets the composer upload at pick time.
+ */
+export type GalleryEntryDraft = {
+  mediaId: string;
+  /** Empty is not a description; an undescribed picture sends null. */
+  altText: string | null;
+};
+
+/**
  * The gallery, as the contract wants it: the list IS the order, so
  * `displayOrder` states each entry's own index and `isCover` is true on the
  * first and nowhere else. A value that disagrees with its position is refused
  * rather than quietly overridden, so both are derived here and never passed in.
  */
-export function attachmentInputs(mediaIds: readonly string[] | undefined) {
-  if (mediaIds === undefined || mediaIds.length === 0) return null;
-  return mediaIds.map((mediaId, index) => ({
-    mediaId,
+export function attachmentInputs(entries: readonly GalleryEntryDraft[] | undefined) {
+  if (entries === undefined || entries.length === 0) return null;
+  return entries.map((entry, index) => ({
+    mediaId: entry.mediaId,
     displayOrder: index,
     isCover: index === 0,
+    altText: entry.altText === null || entry.altText.trim() === "" ? null : entry.altText.trim(),
   }));
 }
 
@@ -275,8 +290,8 @@ export async function preparePost(
     license: LicenseChoice;
     tags?: readonly TagDraft[];
     references?: readonly ReferenceDraft[];
-    /** Asset ids already uploaded, in gallery order. */
-    attachments?: readonly string[];
+    /** Assets already uploaded, in gallery order, each with its description. */
+    attachments?: readonly GalleryEntryDraft[];
     /** The author's own sensitive mark. Omitted counts as false. */
     sensitive?: boolean;
     sensitiveReason?: string;
@@ -355,8 +370,8 @@ export async function prepareComment(
     license: LicenseChoice;
     tags?: readonly TagDraft[];
     references?: readonly ReferenceDraft[];
-    /** Asset ids, in the author's order; the first leads the comment. */
-    attachments?: readonly string[];
+    /** The pictures, in the author's order, each with its description. */
+    attachments?: readonly GalleryEntryDraft[];
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(

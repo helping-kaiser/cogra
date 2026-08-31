@@ -14,6 +14,7 @@
 // reader who taps "Add pictures instead" and changes their mind would otherwise
 // lose their paragraphs to a mis-tap — but only the active side is ever sent.
 
+import type { GalleryEntryDraft } from "@/lib/api/content-api";
 import type { Crop } from "@/lib/ui2/media/crop";
 import { CENTERED } from "@/lib/ui2/media/crop";
 import { POST_SHAPES, type PostShape } from "@/lib/ui2/media/aspect";
@@ -228,14 +229,20 @@ export function signedActions(state: WizardState): number {
 }
 
 /** The gallery in order, or null while any asset is still unresolved. */
-export function attachmentIds(state: WizardState): readonly string[] | null {
+export function attachmentClaims(state: WizardState): readonly GalleryEntryDraft[] | null {
   if (state.mode === "words") return null;
-  const ids: string[] = [];
+  const claims: GalleryEntryDraft[] = [];
   for (const asset of state.assets) {
     if (asset.upload.kind !== "done") return null;
-    ids.push(asset.upload.mediaId);
+    // Blank is not a description: a decorative picture carries null so a
+    // screen reader is told "no description" rather than "described as
+    // nothing".
+    claims.push({
+      mediaId: asset.upload.mediaId,
+      altText: asset.altText.trim() === "" ? null : asset.altText.trim(),
+    });
   }
-  return ids;
+  return claims;
 }
 
 /** The words half, or null on a media post — the XOR, as the input wants it. */

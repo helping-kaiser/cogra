@@ -282,10 +282,15 @@ data class MediaAssetView(
  *
  * `displayOrder` and `isCover` are not free values: the contract
  * refuses an entry whose stated index contradicts its array position,
- * so the claim carries only the asset and the list's own order decides
- * the rest.
+ * so the list's own order decides both and the claim states neither.
+ *
+ * [altText] is authored here rather than at the upload because it is a
+ * fact about this placement: the same asset can read differently in two
+ * posts, and correcting a description is a new version of the post
+ * rather than a re-upload. Blank is not a description — an undescribed
+ * picture carries null.
  */
-data class AttachmentClaim(val mediaId: String)
+data class AttachmentClaim(val mediaId: String, val altText: String? = null)
 
 /**
  * A three-valued profile media field: omitted = untouched, explicit

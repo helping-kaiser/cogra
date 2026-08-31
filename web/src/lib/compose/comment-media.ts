@@ -17,6 +17,7 @@
 // crop it carries is simply never framed, which is exactly what "no crop step"
 // means — `encodeForUpload` then keeps the source's own shape.
 
+import type { GalleryEntryDraft } from "@/lib/api/content-api";
 import { CENTERED } from "@/lib/ui2/media/crop";
 import type { AssetUpload, PickedAsset } from "./wizard";
 
@@ -113,12 +114,18 @@ export function commentGate(words: string, media: CommentMedia): Gate {
 }
 
 /** The gallery in order, or null while any picture is still unresolved. */
-export function commentAttachmentIds(media: CommentMedia): readonly string[] | null {
+export function commentAttachmentClaims(media: CommentMedia): readonly GalleryEntryDraft[] | null {
   if (media.length === 0) return null;
-  const ids: string[] = [];
+  const claims: GalleryEntryDraft[] = [];
   for (const asset of media) {
     if (asset.upload.kind !== "done") return null;
-    ids.push(asset.upload.mediaId);
+    // Blank is not a description: a decorative picture carries null so a
+    // screen reader is told "no description" rather than "described as
+    // nothing".
+    claims.push({
+      mediaId: asset.upload.mediaId,
+      altText: asset.altText.trim() === "" ? null : asset.altText.trim(),
+    });
   }
-  return ids;
+  return claims;
 }

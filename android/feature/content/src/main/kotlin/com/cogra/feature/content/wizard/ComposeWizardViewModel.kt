@@ -382,18 +382,12 @@ class ComposeWizardViewModel @Inject constructor(
         // Uploads start on leaving DETAILS, not the crop stage.
         //
         // NAMED DEVIATION from `ComposeUploading`'s footnote ("Pictures
-        // upload while you write — signing waits for them"), forced by
-        // what the client can currently say: `altText` rides
-        // `UploadMediaInput`, and D3 makes an asset row immutable after
-        // upload, so the only way a description written on Details
-        // reaches the server is the upload that carries it. Starting at
-        // crop-exit would silently drop every description written after
-        // it, which is a lie told to the one person trusting it.
-        //
-        // It ends when alt text stops riding the upload (jakob
-        // 2026-08-31: "the media and its alt text are two seperate
-        // things") — a pre-uploaded picture then has nothing left to
-        // race, and the pick becomes the honest moment to start.
+        // upload while you write — signing waits for them") — no longer a
+        // forced one. A description rides `AttachmentClaim` at prepare
+        // rather than the upload, so an upload started at crop-exit drops
+        // nothing the author writes afterwards. Moving the start is a
+        // wizard change with its own boards, not part of the contract
+        // change that freed it.
         //
         // The waiting still shows exactly where the boards draw it:
         // `ComposeSealUploading` gates the seal on `UploadStatusLine`, and
@@ -543,8 +537,7 @@ class ComposeWizardViewModel @Inject constructor(
                 _state.update { it.withUpload(uri, AssetUpload.Failed(UNREADABLE)) }
                 return@launch
             }
-            val altText = _state.value.picked.firstOrNull { it.uri == uri }?.altText?.ifBlank { null }
-            when (val outcome = media.uploadMedia(picture, altText)) {
+            when (val outcome = media.uploadMedia(picture)) {
                 is Outcome.Success -> _state.update {
                     it.withUpload(uri, AssetUpload.Done(outcome.value.id))
                 }
@@ -593,7 +586,9 @@ class ComposeWizardViewModel @Inject constructor(
                     references = current.referenceSection.references.map { it.toClaim() },
                     attachments = if (current.mode == BodyMode.Media) {
                         current.picked.mapNotNull { asset ->
-                            asset.mediaId?.let { AttachmentClaim(it) }
+                            asset.mediaId?.let {
+                                AttachmentClaim(it, asset.altText.ifBlank { null })
+                            }
                         }
                     } else {
                         emptyList()

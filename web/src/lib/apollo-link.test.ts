@@ -52,7 +52,7 @@ describe("the terminating link", () => {
 
     await clientWith("t0ken").mutate({
       mutation: UploadMediaDocument,
-      variables: { input: { file, altText: "a salt crust" } },
+      variables: { input: { file } },
     });
 
     const body = calls[0]!.init.body;
@@ -62,7 +62,6 @@ describe("the terminating link", () => {
     // The spec's three parts, in its own vocabulary.
     const operations = JSON.parse(form.get("operations") as string);
     expect(operations.variables.input.file).toBeNull();
-    expect(operations.variables.input.altText).toBe("a salt crust");
 
     const map = JSON.parse(form.get("map") as string);
     expect(Object.values(map)).toEqual([["variables.input.file"]]);

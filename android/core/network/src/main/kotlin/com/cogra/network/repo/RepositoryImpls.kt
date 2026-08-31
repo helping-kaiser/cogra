@@ -786,6 +786,7 @@ private fun List<AttachmentClaim>.toInput(): Optional<List<AttachmentInput>?> =
                 mediaId = claim.mediaId,
                 displayOrder = index,
                 isCover = Optional.present(index == 0),
+                altText = Optional.presentIfNotNull(claim.altText),
             )
         },
     )
@@ -807,7 +808,11 @@ private fun List<AttachmentClaim>.toInput(): Optional<List<AttachmentInput>?> =
 private fun List<AttachmentClaim>.toCommentInput(): Optional<List<AttachmentInput>?> =
     Optional.present(
         mapIndexed { index, claim ->
-            AttachmentInput(mediaId = claim.mediaId, displayOrder = index)
+            AttachmentInput(
+                mediaId = claim.mediaId,
+                displayOrder = index,
+                altText = Optional.presentIfNotNull(claim.altText),
+            )
         },
     )
 

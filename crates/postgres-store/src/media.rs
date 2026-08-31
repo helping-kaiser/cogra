@@ -7,16 +7,16 @@
 //! the natural query is always parent to attachments (data-model.md "Why
 //! parents point at attachments").
 //!
-//! The **bytes** are immutable after upload: the digest names them
-//! permanently and the object is cacheable forever. The row's **alt text**
-//! is not — it is the author's current description of the picture, and
-//! [`update_alt_text`] is the one surface that changes it.
+//! An asset row is **immutable after upload**: there is no update surface
+//! for one, the digest names the bytes permanently, and the object is
+//! cacheable forever. A description is not the asset's to hold — alt text
+//! rides the payload envelope and the junction row caches it per version,
+//! so writing or correcting one is a new version of the parent and the
+//! bytes never move again (data-model.md "Media attachments").
 //!
-//! That needs no version rows, because the history the append-only rule
-//! protects is already kept somewhere better: every act's payload envelope
-//! snapshots the alt text at prepare, so what was *published* is witnessed
-//! per record and permanent. The row carries the current value; the
-//! records carry what each post said.
+//! That is also why the same asset can read differently in two parents:
+//! the description belongs to the placement, and each version's junction
+//! row carries what that version's manifest witnessed.
 //!
 //! `author_id` here is Postgres-native truth rather than a cached
 //! derivation — media is not a graph node, so there is no graph-side
@@ -36,7 +36,6 @@ pub struct MediaAttachment {
     pub storage_key: String,
     pub mime_type: String,
     pub size_bytes: Option<i64>,
-    pub alt_text: Option<String>,
     pub options: serde_json::Value,
     pub redaction_reason: Option<String>,
     pub redacted_at: Option<DateTime<Utc>>,
@@ -74,7 +73,6 @@ pub async fn insert(
     storage_key: &str,
     mime_type: &str,
     size_bytes: i64,
-    alt_text: Option<&str>,
     options: &serde_json::Value,
 ) -> Result<MediaAttachment, sqlx::Error> {
     sqlx::query_as!(
@@ -82,12 +80,12 @@ pub async fn insert(
         r#"
         INSERT INTO media_attachments
             (id, author_id, digest, digest_algo, storage_key,
-             mime_type, size_bytes, alt_text, options)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+             mime_type, size_bytes, options)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         ON CONFLICT (author_id, digest)
             DO UPDATE SET author_id = media_attachments.author_id
         RETURNING id, author_id, digest, digest_algo, storage_key,
-                  mime_type, size_bytes, alt_text,
+                  mime_type, size_bytes,
                   options AS "options!: serde_json::Value",
                   redaction_reason, redacted_at, created_at
         "#,
@@ -98,7 +96,6 @@ pub async fn insert(
         storage_key,
         mime_type,
         size_bytes,
-        alt_text,
         options,
     )
     .fetch_one(pool)
@@ -114,6 +111,23 @@ pub struct GalleryEntry {
     /// Which asset leads a multi-asset post. Always false on a comment
     /// gallery, which has no cover column and no lead asset.
     pub is_cover: bool,
+    /// The description this version's manifest witnessed for this
+    /// placement — a fact about the parent–asset relationship, which is
+    /// why the same asset can read differently in two parents.
+    pub alt_text: Option<String>,
+}
+
+/// One entry of a gallery as it is written: the asset, and the
+/// description the record witnessed for it.
+///
+/// Both come out of the payload envelope's manifest at promotion, never
+/// out of the request that produced it — the digest names the asset and
+/// per-asset map key 2 names the description (data-model.md "The payload
+/// envelope"). That is what makes a gallery rebuildable from the record.
+#[derive(Debug, Clone)]
+pub struct GalleryPlacement {
+    pub attachment_id: Uuid,
+    pub alt_text: Option<String>,
 }
 
 /// Writes one version's gallery, in order.
@@ -122,28 +136,33 @@ pub struct GalleryEntry {
 /// index 0, the same convention the payload envelope's manifest carries
 /// (`common::envelope::MediaAsset`, whose array position is the gallery
 /// order). Storing a second, independent index would let Postgres and the
-/// witnessed record disagree about what a reader sees.
+/// witnessed record disagree about what a reader sees. `alt_text` is the
+/// same fact said twice for the same reason — the row caches what the
+/// manifest entry carried, so a read serves the version's own description
+/// without decoding a payload.
 ///
 /// Idempotent on re-running the write that produced it: a retried
 /// pre-sign re-inserts the same rows onto the same version.
 pub async fn attach_to_post_version(
     tx: &mut Transaction<'_, Postgres>,
     post_version_id: i64,
-    attachment_ids: &[Uuid],
+    gallery: &[GalleryPlacement],
 ) -> Result<(), sqlx::Error> {
-    if attachment_ids.is_empty() {
+    if gallery.is_empty() {
         return Ok(());
     }
-    let orders: Vec<i16> = (0..attachment_ids.len() as i16).collect();
+    let (ids, alts) = split_placements(gallery);
+    let orders: Vec<i16> = (0..gallery.len() as i16).collect();
     sqlx::query!(
         "INSERT INTO post_attachments
-             (post_version_id, attachment_id, display_order, is_cover)
-         SELECT $1, a.id, a.ord, a.ord = 0
-         FROM unnest($2::uuid[], $3::smallint[]) AS a(id, ord)
+             (post_version_id, attachment_id, display_order, is_cover, alt_text)
+         SELECT $1, a.id, a.ord, a.ord = 0, a.alt
+         FROM unnest($2::uuid[], $3::smallint[], $4::text[]) AS a(id, ord, alt)
          ON CONFLICT (post_version_id, attachment_id) DO NOTHING",
         post_version_id,
-        attachment_ids,
+        &ids,
         &orders,
+        &alts as &[Option<String>],
     )
     .execute(&mut **tx)
     .await?;
@@ -156,25 +175,38 @@ pub async fn attach_to_post_version(
 pub async fn attach_to_comment_version(
     tx: &mut Transaction<'_, Postgres>,
     comment_version_id: i64,
-    attachment_ids: &[Uuid],
+    gallery: &[GalleryPlacement],
 ) -> Result<(), sqlx::Error> {
-    if attachment_ids.is_empty() {
+    if gallery.is_empty() {
         return Ok(());
     }
-    let orders: Vec<i16> = (0..attachment_ids.len() as i16).collect();
+    let (ids, alts) = split_placements(gallery);
+    let orders: Vec<i16> = (0..gallery.len() as i16).collect();
     sqlx::query!(
         "INSERT INTO comment_attachments
-             (comment_version_id, attachment_id, display_order)
-         SELECT $1, a.id, a.ord
-         FROM unnest($2::uuid[], $3::smallint[]) AS a(id, ord)
+             (comment_version_id, attachment_id, display_order, alt_text)
+         SELECT $1, a.id, a.ord, a.alt
+         FROM unnest($2::uuid[], $3::smallint[], $4::text[]) AS a(id, ord, alt)
          ON CONFLICT (comment_version_id, attachment_id) DO NOTHING",
         comment_version_id,
-        attachment_ids,
+        &ids,
         &orders,
+        &alts as &[Option<String>],
     )
     .execute(&mut **tx)
     .await?;
     Ok(())
+}
+
+/// The gallery as the two parallel arrays `unnest` zips back together.
+/// One `unnest` over parallel arrays is what keeps the whole gallery one
+/// statement, and the arrays have to be built before the query borrows
+/// them.
+fn split_placements(gallery: &[GalleryPlacement]) -> (Vec<Uuid>, Vec<Option<String>>) {
+    gallery
+        .iter()
+        .map(|p| (p.attachment_id, p.alt_text.clone()))
+        .unzip()
 }
 
 struct GalleryRow {
@@ -207,7 +239,6 @@ fn gallery_entry(row: GalleryRow) -> (i64, GalleryEntry) {
                 storage_key: row.storage_key,
                 mime_type: row.mime_type,
                 size_bytes: row.size_bytes,
-                alt_text: row.alt_text,
                 options: row.options,
                 redaction_reason: row.redaction_reason,
                 redacted_at: row.redacted_at,
@@ -215,6 +246,7 @@ fn gallery_entry(row: GalleryRow) -> (i64, GalleryEntry) {
             },
             display_order: row.display_order,
             is_cover: row.is_cover,
+            alt_text: row.alt_text,
         },
     )
 }
@@ -232,9 +264,9 @@ pub async fn post_galleries(
     let rows = sqlx::query_as!(
         GalleryRow,
         r#"SELECT j.post_version_id AS "version_id!", j.display_order,
-                  j.is_cover,
+                  j.is_cover, j.alt_text,
                   m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,
-                  m.mime_type, m.size_bytes, m.alt_text,
+                  m.mime_type, m.size_bytes,
                   m.options AS "options!: serde_json::Value",
                   m.redaction_reason, m.redacted_at, m.created_at
            FROM post_attachments j
@@ -257,9 +289,9 @@ pub async fn comment_galleries(
     let rows = sqlx::query_as!(
         GalleryRow,
         r#"SELECT j.comment_version_id AS "version_id!", j.display_order,
-                  FALSE AS "is_cover!",
+                  FALSE AS "is_cover!", j.alt_text,
                   m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,
-                  m.mime_type, m.size_bytes, m.alt_text,
+                  m.mime_type, m.size_bytes,
                   m.options AS "options!: serde_json::Value",
                   m.redaction_reason, m.redacted_at, m.created_at
            FROM comment_attachments j
@@ -291,7 +323,7 @@ pub async fn assets_by_digests(
         MediaAttachment,
         r#"
         SELECT id, author_id, digest, digest_algo, storage_key,
-               mime_type, size_bytes, alt_text,
+               mime_type, size_bytes,
                options AS "options!: serde_json::Value",
                redaction_reason, redacted_at, created_at
         FROM media_attachments
@@ -314,7 +346,7 @@ pub async fn assets_by_ids(
         MediaAttachment,
         r#"
         SELECT id, author_id, digest, digest_algo, storage_key,
-               mime_type, size_bytes, alt_text,
+               mime_type, size_bytes,
                options AS "options!: serde_json::Value",
                redaction_reason, redacted_at, created_at
         FROM media_attachments
@@ -332,45 +364,13 @@ pub async fn by_id(pool: &PgPool, id: Uuid) -> Result<Option<MediaAttachment>, s
         MediaAttachment,
         r#"
         SELECT id, author_id, digest, digest_algo, storage_key,
-               mime_type, size_bytes, alt_text,
+               mime_type, size_bytes,
                options AS "options!: serde_json::Value",
                redaction_reason, redacted_at, created_at
         FROM media_attachments
         WHERE id = $1
         "#,
         id,
-    )
-    .fetch_optional(pool)
-    .await
-}
-
-/// Rewrites one asset's alt text, returning the updated row.
-///
-/// Scoped to the owner in the statement itself rather than after a read,
-/// so no window exists between checking who owns the asset and writing to
-/// it. A redacted asset is excluded for the same reason its bytes are
-/// gone: there is nothing left to describe. Either miss returns `None`,
-/// and the caller turns that into the refusal a client reads.
-pub async fn update_alt_text(
-    pool: &PgPool,
-    id: Uuid,
-    author_id: Uuid,
-    alt_text: Option<&str>,
-) -> Result<Option<MediaAttachment>, sqlx::Error> {
-    sqlx::query_as!(
-        MediaAttachment,
-        r#"
-        UPDATE media_attachments
-        SET alt_text = $3
-        WHERE id = $1 AND author_id = $2 AND redacted_at IS NULL
-        RETURNING id, author_id, digest, digest_algo, storage_key,
-                  mime_type, size_bytes, alt_text,
-                  options AS "options!: serde_json::Value",
-                  redaction_reason, redacted_at, created_at
-        "#,
-        id,
-        author_id,
-        alt_text,
     )
     .fetch_optional(pool)
     .await

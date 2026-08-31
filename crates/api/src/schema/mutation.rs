@@ -54,13 +54,6 @@ const MAX_KEY_BACKUP_BYTES: usize = 4096;
 /// An upload challenge stays live this long (auth.md "Key recovery") —
 /// one signing round trip on the device, not a window worth parking in.
 const KEY_BACKUP_CHALLENGE_TTL_MINUTES: i64 = 5;
-/// Alt text cap. It rides the payload envelope, which is bounded whole by
-/// `M_payload`, and overrunning that bound is a hard L1 formation error
-/// rather than a friendly refusal — so the friendly refusal happens here,
-/// at the upload, where the author can still fix it. Ten assets at this
-/// length is a tenth of the envelope's budget.
-const MAX_ALT_TEXT_CHARS: usize = 1000;
-
 /// The transport-tier refusal for a request that needed a session.
 fn unauthenticated() -> async_graphql::Error {
     use async_graphql::ErrorExtensions;
@@ -458,6 +451,12 @@ struct AttachmentInput {
     media_id: Uuid,
     display_order: i32,
     is_cover: Option<bool>,
+    /// The picture's description — the manifest entry's witnessed alt
+    /// text (data-model.md, per-asset map key 2). Authored here, at
+    /// prepare time, never at upload: it is a fact about this placement,
+    /// so the same asset can read differently in two parents, and
+    /// correcting it is a new version of the parent, never a re-upload.
+    alt_text: Option<String>,
 }
 
 impl AttachmentInput {
@@ -466,6 +465,7 @@ impl AttachmentInput {
             media_id: self.media_id,
             display_order: self.display_order,
             is_cover: self.is_cover,
+            alt_text: self.alt_text.clone(),
         }
     }
 }
@@ -681,16 +681,16 @@ struct PrepareProfileUpdateInput {
     avatar_media_id: async_graphql::MaybeUndefined<Uuid>,
 }
 
-/// Uploads one asset. `altText` is the one layout-adjacent fact the
-/// server cannot infer and the author must supply; aspect ratio and
-/// duration are derived from the bytes.
+/// Uploads one asset. Bytes and nothing authored: a description rides
+/// `AttachmentInput` at prepare, so a picture can upload the moment it is
+/// picked and be described any time before signing — nothing gates on the
+/// other. Aspect ratio and duration are derived from the bytes.
 ///
 /// `actAs` is not here: a Collective is the only non-user actor there is
 /// and Collectives arrive with slice 5, so the uploader is the viewer.
 #[derive(InputObject)]
 struct UploadMediaInput {
     file: Upload,
-    alt_text: Option<String>,
 }
 
 /// The asset, or the refusal that explains what was wrong with the file.
@@ -706,49 +706,6 @@ impl UploadMediaPayload {
             media: None,
             user_errors: vec![error],
         }
-    }
-}
-
-/// Rewrites an uploaded asset's description. Two-valued rather than the
-/// profile's three: `altText` is the only field, so a call always says
-/// what the description should now be — text sets it, null or blank
-/// clears it. Nothing else about an asset can be edited; the bytes are
-/// what the digest names.
-#[derive(InputObject)]
-struct UpdateMediaInput {
-    media_id: Uuid,
-    alt_text: Option<String>,
-}
-
-/// The updated asset, or the refusal.
-#[derive(SimpleObject)]
-struct UpdateMediaPayload {
-    media: Option<MediaAttachmentType>,
-    user_errors: Vec<UserError>,
-}
-
-impl UpdateMediaPayload {
-    fn refused(error: UserError) -> Self {
-        Self {
-            media: None,
-            user_errors: vec![error],
-        }
-    }
-}
-
-/// The description as it will be stored: trimmed, length-checked, and
-/// blank folded to absent so "" and null cannot mean two different
-/// nothings. Shared by upload and update so one picture cannot be
-/// described by two different rules.
-fn checked_alt_text(raw: Option<&str>) -> Result<Option<String>, UserError> {
-    match raw.map(str::trim) {
-        Some(alt) if alt.chars().count() > MAX_ALT_TEXT_CHARS => Err(UserError::at(
-            ErrorCode::BadInput,
-            format!("alt text is longer than {MAX_ALT_TEXT_CHARS} characters"),
-            vec!["altText".into()],
-        )),
-        Some(alt) if !alt.is_empty() => Ok(Some(alt.to_string())),
-        _ => Ok(None),
     }
 }
 
@@ -2034,11 +1991,6 @@ impl Mutation {
         )
         .await?;
 
-        let alt_text = match checked_alt_text(input.alt_text.as_deref()) {
-            Ok(alt) => alt,
-            Err(e) => return Ok(UploadMediaPayload::refused(e)),
-        };
-
         let pool = ctx.data::<PgPool>()?;
         let config = ctx.data::<MediaConfig>()?;
         let blobs = ctx.data::<Arc<dyn BlobStore>>()?;
@@ -2064,61 +2016,11 @@ impl Mutation {
             }
         };
 
-        let row =
-            media::store_asset(pool, blobs.as_ref(), v.user_id, asset, alt_text.as_deref()).await?;
+        let row = media::store_asset(pool, blobs.as_ref(), v.user_id, asset).await?;
         Ok(UploadMediaPayload {
-            media: Some(MediaAttachmentType(row)),
+            media: Some(MediaAttachmentType::asset(row)),
             user_errors: vec![],
         })
-    }
-
-    /// Rewrites an uploaded asset's description.
-    ///
-    /// The bytes never change — the digest names them and the object is
-    /// cached forever on that promise. What changes is the author's
-    /// current description of them, which the next act to carry this
-    /// asset will witness. Acts that already carry it keep the
-    /// description they sealed: a published post says what it said, and
-    /// changing that is an edit.
-    ///
-    /// The window this exists for is the compose wizard's: the client
-    /// uploads while the author is still writing, so the description is
-    /// typed after the bytes are already stored.
-    async fn update_media(
-        &self,
-        ctx: &Context<'_>,
-        input: UpdateMediaInput,
-    ) -> async_graphql::Result<UpdateMediaPayload> {
-        let v = member_viewer(ctx).await?;
-        let limits = ctx.data::<RateLimitConfig>()?;
-        guard_window(
-            ctx,
-            scope::MEDIA_UPDATE_ACCOUNT,
-            &v.user_id.to_string(),
-            limits.media_update_account,
-        )
-        .await?;
-
-        let alt_text = match checked_alt_text(input.alt_text.as_deref()) {
-            Ok(alt) => alt,
-            Err(e) => return Ok(UpdateMediaPayload::refused(e)),
-        };
-
-        let pool = ctx.data::<PgPool>()?;
-        let updated =
-            media::update_alt_text(pool, input.media_id, v.user_id, alt_text.as_deref()).await?;
-
-        match updated {
-            Some(row) => Ok(UpdateMediaPayload {
-                media: Some(MediaAttachmentType(row)),
-                user_errors: vec![],
-            }),
-            None => Ok(UpdateMediaPayload::refused(UserError::at(
-                ErrorCode::NotFound,
-                "no such asset",
-                vec!["mediaId".into()],
-            ))),
-        }
     }
 
     /// Prepares a new Post: one genesis Publish through the ordinary
