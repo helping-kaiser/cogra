@@ -191,11 +191,14 @@ fn assert_the_expected_edits(source: &str, minor: &str, cut_keys: usize) {
     );
 }
 
+/// Deriving the open companion frees the minor, cuts each enumerated key, adds the wildcard, and edits nothing else.
+/// ´claim:companion:the-companion-makes-exactly-the-allowed-edits´
 #[test]
 fn the_companion_frees_the_minor_cuts_each_key_and_adds_the_wildcard() {
     assert_the_expected_edits(ASSIGNED, "2", 2);
 }
 
+/// (´claim:companion:the-companion-makes-exactly-the-allowed-edits´)
 #[test]
 fn the_edits_are_the_only_ones_whatever_the_theory_enumerates() {
     assert_the_expected_edits(r#"e = {0 => "com.example", 1 => [0, 0, uint]}"#, "0", 0);
@@ -216,6 +219,9 @@ fn the_edits_are_the_only_ones_whatever_the_theory_enumerates() {
 
 /// The edit is at the minor and nowhere else in the triple: a theory whose
 /// major and minor are the same number still frees only the second element.
+///
+/// Only the second element of the coordinate triple is freed, even where major and minor read alike.
+/// ´claim:companion:only-the-minor-position-is-freed´
 #[test]
 fn a_repeated_coordinate_frees_only_the_minor() {
     let theory = parse(r#"e = {0 => "com.example", 1 => [4, 4, uint]}"#);
@@ -229,6 +235,9 @@ fn a_repeated_coordinate_frees_only_the_minor() {
 
 /// The wildcard the companion gains is the base theory's own clause,
 /// character for character as the base theory prints it.
+///
+/// The wildcard the companion gains is the base theory's own clause, character for character.
+/// ´claim:companion:the-wildcard-is-the-base-theorys-own´
 #[test]
 fn the_wildcard_is_the_base_theorys() {
     let theory = parse(ASSIGNED);
@@ -238,6 +247,8 @@ fn the_wildcard_is_the_base_theorys() {
     assert!(cogra_interchange::global().to_cddl().contains(wildcard));
 }
 
+/// A companion carries the theory's label and takes the theory's coordinate as its floor.
+/// ´claim:companion:the-companion-keeps-label-and-floor´
 #[test]
 fn the_companion_keeps_the_label_and_the_floor() {
     let theory = parse(ASSIGNED);
@@ -248,6 +259,9 @@ fn the_companion_keeps_the_label_and_the_floor() {
 }
 
 /// The type and the requiredness stand; what the key gains is the cut.
+///
+/// An enumerated key gains the cut and keeps both its type and whether it is required.
+/// ´claim:companion:a-cut-key-keeps-type-and-requiredness´
 #[test]
 fn every_content_key_keeps_its_type_and_its_requiredness() {
     let theory = parse(ASSIGNED);
@@ -261,6 +275,9 @@ fn every_content_key_keeps_its_type_and_its_requiredness() {
 /// optional key is rejected, where the companion's wildcard would
 /// otherwise have readmitted it (´alg:xchg:companion´). A conforming value
 /// there still holds, and so does the key's absence.
+///
+/// The cut makes a wrong value at a known optional key a rejection under tolerance, where a conforming value and an absent key still hold.
+/// ´claim:companion:the-cut-binds-a-known-key-under-tolerance´
 #[test]
 fn a_mistyped_optional_key_is_rejected_tolerantly() {
     let theory = parse(r#"e = {0 => "com.example", 1 => [1, 2, uint], ? 2 => tstr}"#);
@@ -278,6 +295,9 @@ fn a_mistyped_optional_key_is_rejected_tolerantly() {
 
 /// The rules below the root are not the map, so the derivation does not
 /// reach them: a theory's own vocabulary comes through untouched.
+///
+/// Derivation reaches the root map alone, so a theory's own vocabulary comes through unchanged.
+/// ´claim:companion:rules-below-the-root-are-untouched´
 #[test]
 fn the_rules_below_the_root_come_through_untouched() {
     let theory = parse(concat!(
@@ -291,6 +311,9 @@ fn the_rules_below_the_root_come_through_untouched() {
 /// The companion of the minimal theory is the minimal theory's envelope
 /// with the base theory's wildcard: nothing is enumerated, and the two
 /// edits still land.
+///
+/// A theory that enumerates nothing still gains the freed minor and the wildcard, and nothing besides.
+/// ´claim:companion:an-empty-theory-still-gains-both-edits´
 #[test]
 fn the_companion_of_a_theory_that_enumerates_nothing() {
     let theory = parse(r#"e = {0 => "com.example", 1 => [3, 9, uint]}"#);
@@ -302,6 +325,9 @@ fn the_companion_of_a_theory_that_enumerates_nothing() {
 
 /// Derivation is a function of the immutable theory: two companions of one
 /// theory are the same text, and the theory is unchanged by the asking.
+///
+/// Deriving twice gives the same companion and leaves the theory it was derived from unchanged.
+/// ´claim:companion:derivation-is-a-function-of-the-theory´
 #[test]
 fn deriving_twice_gives_the_same_companion() {
     let theory = parse(ASSIGNED);
@@ -314,6 +340,9 @@ fn deriving_twice_gives_the_same_companion() {
 
 /// The obligation is only as good as the diff behind it, so the diff is
 /// exercised on cases whose answer is known by hand.
+///
+/// The diff the obligation rests on reports the hunks of cases whose answer is known by hand.
+/// ´claim:companion:the-diff-behind-the-obligation-holds´
 #[test]
 fn the_diff_reads_the_hunks_it_is_asked_about() {
     let before = tokens("a = {1, 2, 3}");
