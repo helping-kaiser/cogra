@@ -147,10 +147,6 @@ class AvatarFlowViewModel @Inject constructor(
                 bio = profile.bio.value,
                 websiteUrl = profile.websiteUrl.value,
                 avatar = MediaFieldUpdate.Set(mediaId),
-                // The profile has ONE image; the cover is left untouched
-                // rather than cleared, because this flow has no opinion
-                // about a field it does not draw.
-                cover = MediaFieldUpdate.Untouched,
             )
             val prepared = when (outcome) {
                 is Outcome.Success -> outcome.value

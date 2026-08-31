@@ -44,7 +44,6 @@ function myProfileHandler({ avatar = null }: { avatar?: unknown } = {}) {
           bio: { __typename: "ModeratedText", value: "Old bio", status: "NORMAL" },
           websiteUrl: { __typename: "ModeratedText", value: null, status: "NORMAL" },
           avatar,
-          cover: null,
         },
       },
     }),
@@ -249,7 +248,6 @@ describe("ProfileEditPage", () => {
 
       await waitFor(() => expect(seen.input).toBeDefined());
       expect(seen.input).not.toHaveProperty("avatarMediaId");
-      expect(seen.input).not.toHaveProperty("coverMediaId");
     });
 
     it("sends an explicit null to clear one", async () => {
@@ -265,8 +263,6 @@ describe("ProfileEditPage", () => {
 
       await waitFor(() => expect(seen.input).toBeDefined());
       expect(seen.input).toHaveProperty("avatarMediaId", null);
-      // The cover was untouched, and must not be dragged along.
-      expect(seen.input).not.toHaveProperty("coverMediaId");
     });
 
     it("offers the removal back before it is saved", async () => {
@@ -320,8 +316,6 @@ describe("ProfileEditPage", () => {
       fireEvent.click(screen.getByTestId("profile-edit-save"));
 
       await waitFor(() => expect(seen.input).toHaveProperty("avatarMediaId", "m-9"));
-      // The cover was never touched, so it must not be written at all.
-      expect(seen.input).not.toHaveProperty("coverMediaId");
       await waitFor(() => expect(push).toHaveBeenCalledWith("/profile"));
     });
   });

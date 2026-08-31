@@ -1,0 +1,90 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE media_attachments\n        SET alt_text = $3\n        WHERE id = $1 AND author_id = $2 AND redacted_at IS NULL\n        RETURNING id, author_id, digest, digest_algo, storage_key,\n                  mime_type, size_bytes, alt_text,\n                  options AS \"options!: serde_json::Value\",\n                  redaction_reason, redacted_at, created_at\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "author_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "digest",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 3,
+        "name": "digest_algo",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "storage_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "mime_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "size_bytes",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "alt_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "options!: serde_json::Value",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 9,
+        "name": "redaction_reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "redacted_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "1bf99565c64bed793ebbbf4ca996418c68bb95a15929d0d9c7d68d6ab6fd608f"
+}

@@ -68,7 +68,6 @@ data class ProfileEditUiState(
     val bio: String = "",
     val websiteUrl: String = "",
     val avatar: ProfileImageState = ProfileImageState.Held(null),
-    val cover: ProfileImageState = ProfileImageState.Held(null),
     val submitting: Boolean = false,
     val emptyName: Boolean = false,
     val refused: Boolean = false,
@@ -78,7 +77,7 @@ data class ProfileEditUiState(
 ) {
     /** A picture is still on its way; saving would name nothing. */
     val imagesPending: Boolean
-        get() = avatar is ProfileImageState.Picked || cover is ProfileImageState.Picked
+        get() = avatar is ProfileImageState.Picked
 }
 
 /**
@@ -123,7 +122,6 @@ class ProfileEditViewModel @Inject constructor(
                                 // would otherwise discard an upload still
                                 // in flight.
                                 avatar = it.avatar.orHeld(profile.avatar?.url),
-                                cover = it.cover.orHeld(profile.cover?.url),
                             )
                         }
                     }
@@ -139,30 +137,25 @@ class ProfileEditViewModel @Inject constructor(
     fun onWebsiteChange(v: String) = _state.update { it.copy(websiteUrl = v) }
     fun onSavedConsumed() = _state.update { it.copy(saved = false) }
 
-    // -- The two pictures (D13) --
+    // -- The profile picture (D13) --
 
     /**
-     * A picked avatar or cover: cropped to its fixed shape, processed
-     * and uploaded exactly as a post's pictures are — same pipeline,
-     * same `uploadMedia`, only the shape differs.
+     * A picked avatar: cropped to its fixed shape, processed and
+     * uploaded exactly as a post's pictures are — same pipeline, same
+     * `uploadMedia`, only the shape differs.
      */
-    fun onAvatarPicked(uri: String) = pick(uri, AVATAR_RATIO, avatar = true)
-
-    fun onCoverPicked(uri: String) = pick(uri, COVER_RATIO, avatar = false)
+    fun onAvatarPicked(uri: String) = pick(uri)
 
     /** Back to the monogram, which is the designed placeholder. */
     fun onAvatarCleared() = _state.update { it.copy(avatar = ProfileImageState.Cleared) }
 
-    fun onCoverCleared() = _state.update { it.copy(cover = ProfileImageState.Cleared) }
-
-    private fun pick(uri: String, ratio: Float, avatar: Boolean) {
-        val picked = ProfileImageState.Picked(uri)
-        _state.update { if (avatar) it.copy(avatar = picked) else it.copy(cover = picked) }
+    private fun pick(uri: String) {
+        _state.update { it.copy(avatar = ProfileImageState.Picked(uri)) }
         viewModelScope.launch {
             // The fixed crop is centred: the profile form has no
             // framing step, so the picture is taken from the middle of
             // whatever was picked rather than from a corner.
-            val processed = processor.process(uri, CropSpec(targetRatio = ratio))
+            val processed = processor.process(uri, CropSpec(targetRatio = AVATAR_RATIO))
             val next = if (processed == null) {
                 ProfileImageState.Failed(uri, UNREADABLE)
             } else {
@@ -174,7 +167,7 @@ class ProfileEditViewModel @Inject constructor(
                     is Outcome.Failed -> ProfileImageState.Failed(uri, TRANSPORT)
                 }
             }
-            _state.update { if (avatar) it.copy(avatar = next) else it.copy(cover = next) }
+            _state.update { it.copy(avatar = next) }
         }
     }
 
@@ -193,7 +186,6 @@ class ProfileEditViewModel @Inject constructor(
                     bio = s.bio.ifBlank { null },
                     websiteUrl = s.websiteUrl.trim().ifBlank { null },
                     avatar = s.avatar.toUpdate(),
-                    cover = s.cover.toUpdate(),
                 )
             ) {
                 is Outcome.Success -> outcome.value
@@ -216,9 +208,8 @@ class ProfileEditViewModel @Inject constructor(
     }
 
     private companion object {
-        /** D13's fixed crops: a circle-masked square, and a wide cover. */
+        /** D13's fixed crop: a circle-masked square. */
         const val AVATAR_RATIO = 1f
-        const val COVER_RATIO = 1.91f
 
         const val UNREADABLE = "That file could not be read as a picture."
         const val REFUSED = "The server would not take that picture."

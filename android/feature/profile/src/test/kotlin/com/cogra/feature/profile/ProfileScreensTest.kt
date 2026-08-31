@@ -185,8 +185,6 @@ class ProfileScreensTest {
                 onWebsiteChange = {},
                 onPickAvatar = {},
                 onClearAvatar = {},
-                onPickCover = {},
-                onClearCover = {},
                 onSubmit = onSubmit,
                 onRetry = {},
                 onBack = {},
