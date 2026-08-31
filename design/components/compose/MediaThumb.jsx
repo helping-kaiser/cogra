@@ -94,8 +94,8 @@ export function MediaThumb({
             borderRadius: "var(--radius-full)",
             background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
             color: "var(--on-surface-snackbar, #ffffff)",
-            fontSize: "10px",
-            lineHeight: "14px",
+            fontSize: "var(--text-label-small)",
+            lineHeight: "var(--text-label-small--line-height)",
             fontWeight: "var(--text-label-small--font-weight)",
             letterSpacing: "0.5px",
           }}

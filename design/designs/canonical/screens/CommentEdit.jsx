@@ -13,7 +13,7 @@ function FieldLabel({ children }) {
 export function Screen() {
   return (
     <>
-      <PageHeader title="Edit comment" backHref="#" backLabel="Back" action={<SystemHelpDot ariaLabel="Editing" />} />
+      <WizardHeader title="Edit comment" action={<SystemHelpDot ariaLabel="Editing" />} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
           Your comment on "The long way home".

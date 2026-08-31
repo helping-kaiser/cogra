@@ -31,10 +31,8 @@ function ChipMini({ children }) {
 export function Screen() {
   return (
     <>
-      <PageHeader
+      <WizardHeader
         title="What you sign"
-        backHref="#"
-        backLabel="Back"
         action={
           <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>Last step</span>
@@ -62,6 +60,7 @@ export function Screen() {
             },
           ]}
           total="3 signed actions"
+          note="they land together, or none does"
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
