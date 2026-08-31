@@ -462,6 +462,9 @@ mod tests {
     /// A minted token verifies back to its own viewer, and nothing else
     /// verifies at all: neither a token signed by a different service key
     /// nor garbage in place of one.
+    ///
+    /// An access token verifies back to the viewer it was minted for, and a token under any other key verifies as nothing at all.
+    /// ´claim:auth:a-token-verifies-only-for-its-own-viewer´
     #[test]
     fn access_tokens_round_trip_and_reject_forgeries() {
         let cfg = AuthConfig::ephemeral().expect("cfg");
@@ -476,6 +479,8 @@ mod tests {
         assert!(verify_access_token(&cfg, "not-a-token").is_none());
     }
 
+    /// A password hash verifies the password it was made from and rejects every other.
+    /// ´claim:auth:a-password-hash-verifies-only-its-own-password´
     #[test]
     fn password_hashing_verifies_and_rejects() {
         let hash = hash_password("correct horse battery staple").expect("hashes");
@@ -484,6 +489,8 @@ mod tests {
         assert!(!verify_password("not-a-phc-string", "anything"));
     }
 
+    /// Password strength here is length alone: twelve characters admit anything, and no composition rule narrows that.
+    /// ´claim:auth:password-strength-is-length-alone´
     #[test]
     fn password_floor_is_twelve_characters_no_composition_rules() {
         assert!(check_password("elevenchars").is_err());
@@ -512,6 +519,8 @@ mod tests {
 
     use std::future::Future;
 
+    /// A password the breach corpus knows is refused, and the refusal says the corpus is why.
+    /// ´claim:auth:a-breached-password-is-refused-with-its-reason´
     #[tokio::test]
     async fn breached_passwords_are_rejected_with_the_reason() {
         let err = validate_new_password(&ScriptedCorpus(Ok(true)), "long enough password")
@@ -520,6 +529,8 @@ mod tests {
         assert!(err.contains("data breach"), "the reason names the breach");
     }
 
+    /// A password the corpus does not know passes the gate.
+    /// ´claim:auth:an-unbreached-password-passes´
     #[tokio::test]
     async fn clean_passwords_pass_the_corpus() {
         assert!(
@@ -529,6 +540,8 @@ mod tests {
         );
     }
 
+    /// An unreachable breach corpus admits the password rather than shutting every account out of registration.
+    /// ´claim:auth:the-corpus-gate-fails-open´
     #[tokio::test]
     async fn a_corpus_failure_fails_open() {
         assert!(
@@ -541,6 +554,9 @@ mod tests {
     /// The length floor is checked first, so an under-floor password never
     /// reaches the corpus: even against a breached-everything corpus the
     /// refusal carries the floor's message, not the breach one.
+    ///
+    /// The length floor is decided before the corpus is consulted, so an under-floor password is refused for its length whatever the corpus would have said.
+    /// ´claim:auth:the-floor-precedes-the-corpus´
     #[tokio::test]
     async fn the_floor_refuses_before_the_corpus_runs() {
         let err = validate_new_password(&ScriptedCorpus(Ok(true)), "short")
@@ -549,6 +565,8 @@ mod tests {
         assert!(err.contains("12 characters"));
     }
 
+    /// A handle is checked against its own grammar and folded to one canonical spelling.
+    /// ´claim:auth:a-handle-folds-to-one-spelling´
     #[test]
     fn handles_fold_and_validate() {
         assert_eq!(normalize_handle("Alice_01").expect("ok"), "alice_01");
@@ -560,6 +578,8 @@ mod tests {
         assert!(normalize_handle("Ünïcode").is_err());
     }
 
+    /// An email is normalized to one spelling and admitted under a deliberately lenient grammar.
+    /// ´claim:auth:an-email-normalizes-under-a-lenient-grammar´
     #[test]
     fn emails_normalize_and_validate_leniently() {
         assert_eq!(
@@ -573,6 +593,8 @@ mod tests {
         assert!(normalize_email(&format!("{}@example.com", "x".repeat(250))).is_err());
     }
 
+    /// A minted token secret is safe to carry in a URL and hashes to the same digest every time it is presented.
+    /// ´claim:auth:a-token-secret-is-url-safe-and-stably-hashed´
     #[test]
     fn token_secrets_are_url_safe_and_hash_consistently() {
         let s = new_secret();
@@ -584,6 +606,9 @@ mod tests {
     /// A seal opens under its own parent token and under nothing else: a
     /// different token derives a different key, and a truncated or
     /// corrupted seal fails its tag.
+    ///
+    /// A sealed successor opens under its own parent token and under nothing else, a foreign token and a damaged seal failing alike.
+    /// ´claim:auth:a-seal-opens-only-under-its-parent´
     #[test]
     fn sealed_successors_open_only_under_the_parent_token() {
         let parent = new_secret();
