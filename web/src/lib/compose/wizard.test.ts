@@ -86,6 +86,23 @@ describe("the step sequence", () => {
     expect(run(words, { type: "back" }, { type: "back" }).step).toBe("pick");
   });
 
+  it("steps back ONE stage at a time down the media path", () => {
+    // The ruling (jakob 2026-08-31): back steps back one stage — it never jumps
+    // to the start and never leaves the wizard from the middle. The draft is
+    // kept either way, so there is no cancellation affordance to reach.
+    const sealed = run(emptyWizard(), picks(1), { type: "goto", step: "seal" });
+    const details = wizardReducer(sealed, { type: "back" });
+    expect(details.step).toBe("details");
+    const crop = wizardReducer(details, { type: "back" });
+    expect(crop.step).toBe("crop");
+    const pick = wizardReducer(crop, { type: "back" });
+    expect(pick.step).toBe("pick");
+    // And the body survives every one of those steps — stepping back is not a
+    // discard.
+    expect(pick.assets).toHaveLength(1);
+    expect(pick.mode).toBe("media");
+  });
+
   it("refuses a goto the mode does not have", () => {
     const words = run(emptyWizard(), { type: "mode", mode: "words" });
     expect(wizardReducer(words, { type: "goto", step: "crop" }).step).toBe("pick");
