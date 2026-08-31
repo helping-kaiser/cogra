@@ -17,18 +17,80 @@ class CropStateTest {
 
     private val viewport = Size(300f, 400f)
 
-    private fun state(): CropState =
-        CropState(CropState.MIN_SCALE, Offset.Zero).apply { this.viewport = this@CropStateTest.viewport }
+    private fun state(sourceRatio: Float = CropState.UNKNOWN_RATIO): CropState =
+        CropState(CropState.MIN_SCALE, Offset.Zero)
+            .apply { measured(this@CropStateTest.viewport, sourceRatio) }
 
     @Test
-    fun anUnzoomedFrameCannotBePannedAtAll() {
+    fun anUnzoomedFrameOfTheSameShapeCannotBePannedAtAll() {
         val state = state()
 
         state.panBy(Offset(500f, 500f))
 
-        // At scale 1 the picture exactly covers the viewport, so there is
-        // nowhere to go.
+        // A picture whose ratio matches the frame's exactly covers it, so
+        // there is nowhere to go without zooming.
         assertThat(state.offset).isEqualTo(Offset.Zero)
+    }
+
+    @Test
+    fun aWiderPictureSlidesAcrossItsFrameWithoutAnyZoom() {
+        // 2:1 into the 3:4 frame: the cover fit draws it 800 wide against a
+        // 300-wide frame, so there is 250px of slack on each side — and
+        // reaching it is the whole point of choosing a shape.
+        val state = state(sourceRatio = 2f)
+
+        state.panBy(Offset(1000f, 1000f))
+
+        assertThat(state.offset.x).isWithin(0.01f).of(250f)
+        assertThat(state.offset.y).isEqualTo(0f)
+    }
+
+    @Test
+    fun aTallerPictureSlidesUpAndDownRatherThanSideways() {
+        val state = state(sourceRatio = 0.5f)
+
+        state.panBy(Offset(1000f, 1000f))
+
+        assertThat(state.offset.x).isEqualTo(0f)
+        // Drawn 300x600 in a 300x400 frame: 100px of slack each way.
+        assertThat(state.offset.y).isWithin(0.01f).of(100f)
+    }
+
+    @Test
+    fun changingTheFramesShapeReFramesAgainstTheNewOneAndNotTheOld() {
+        val state = state(sourceRatio = 2f)
+        state.panBy(Offset(1000f, 0f))
+        assertThat(state.offset.x).isWithin(0.01f).of(250f)
+
+        // The author switches the post to a wide shape. The same picture
+        // now nearly fills it, so the framing that was legal has to come
+        // back inside the new geometry — the crop is cut from the original
+        // either way, never from the previous crop.
+        state.measured(Size(300f, 200f), sourceRatio = 2f)
+
+        // Drawn 400x200 in a 300x200 frame: 50px of slack each way.
+        assertThat(state.offset.x).isWithin(0.01f).of(50f)
+    }
+
+    @Test
+    fun theSameMeasurementReportedAgainChangesNothing() {
+        val state = state(sourceRatio = 2f)
+        state.panBy(Offset(200f, 0f))
+
+        repeat(5) { state.measured(viewport, 2f) }
+
+        assertThat(state.offset.x).isWithin(0.01f).of(200f)
+    }
+
+    @Test
+    fun theFramingReadsBackTheZoomAndWhereTheFrameSits() {
+        val state = state(sourceRatio = 2f)
+
+        assertThat(state.framingDescription()).isEqualTo("Zoom 100%, centred")
+
+        state.panBy(Offset(1000f, 0f))
+
+        assertThat(state.framingDescription()).isEqualTo("Zoom 100%, at the left")
     }
 
     @Test
@@ -171,7 +233,7 @@ class CropStateTest {
     fun aLateMeasurementReClampsWhateverWasAlreadyThere() {
         val state = CropState(2f, Offset(1000f, 1000f))
 
-        state.viewport = viewport
+        state.measured(viewport, CropState.UNKNOWN_RATIO)
 
         // The offset was set before anything knew how big the viewport was;
         // measuring has to bring it inside rather than trust it.
