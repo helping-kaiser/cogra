@@ -328,15 +328,19 @@ cross-referencing `flows.json` against the screen list (edges to
 missing boards; boards nothing reaches). 1+3 are the core; new
 boards enter the manifest from the round that lands this item.
 
-**Round 1 landed 2026-08-31** (jakob: "all agreed, go with entry
-first" — four outcome kinds board/pattern/terminal/gap, build-stamped
-numbers, 8 pages, maps at both levels, infrastructure + Entry first).
-The pipeline (`shell.mjs`, `flow-markers.mjs`, `gen-maps.mjs`,
-`check-flows.mjs`), the paged canvas, and a fully wired Entry page —
-19 boards, 147 edges, 47 gaps — are in; readme §13 *Canvas pages and
-flows* records the shape. Remaining, page by page: wire Compose,
-Comments, Feed & Search, Money & Wallet, Media, Patterns; design the
-pattern boards the Entry gaps name (guest gate, network error, the
-reader's post menu, field-error states, the key-absent acting paths)
-and take the open rulings (topic destination; applicant acting
-rights; the profile screen is its own future item).
+**Rounds 1–6 landed 2026-08-31** (jakob: "all agreed, go with entry
+first", then "work out all the PRs and merge them on your own" —
+four outcome kinds board/pattern/terminal/gap, build-stamped numbers,
+8 pages, maps at both levels). The pipeline (`shell.mjs`,
+`flow-markers.mjs`, `gen-maps.mjs`, `check-flows.mjs`), the paged
+canvas, and EVERY page wired: Entry, Money & Wallet, Feed & Search,
+Comments, Compose, Media + Patterns — 573 edges over all 81 boards,
+no board unreached, no interactable unedged, check-flows green.
+Readme §13 *Canvas pages and flows* records the shape. **The wiring
+is done; what remains is design work the 125 gaps name**: the
+guest-gate and network-error pattern boards, the reader's post and
+comment menus, the topic picker, field/mismatch error states, the
+key-absent acting paths, the wallet's owed record views (settlement /
+tip / rail), the standalone post detail, the item/chat/offer
+surfaces, and two rulings for jakob (topic destination; applicant
+acting rights). The profile screen and the Sky stay their own items.

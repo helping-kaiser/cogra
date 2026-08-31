@@ -1,6 +1,6 @@
 {
   "$doc": "The flow manifest (backlog item 22). Every interactive element on a board of a wired page carries data-flow=\"n\" (1..n per board, badges drawn by the shell); each number has exactly one edge here, whose `to` lists every outcome: a board, a declared terminal, or an explicit gap (a design still owed — honest, greppable, reported by check-flows.mjs and drawn on the generated maps). Repeated per-post elements are tagged on the first post instance only. `entries` declares how a screen is reached other than by a tap (app open, mail link, time); a screen on a wired page must be an entry or an edge target.",
-  "wired": ["entry", "money", "feed", "comments", "compose"],
+  "wired": ["entry", "money", "feed", "comments", "compose", "media", "patterns"],
   "terminals": {
     "back": "Back — returns to the previous screen",
     "self": "Acts on this screen — state changes in place",
@@ -15,7 +15,9 @@
     "CommentEditActs": "the acts sheet covers the edit — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "RefsSheet": "the topics-and-references sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "RemoveMenu": "the own-post sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
-    "RemoveConfirm": "the think-twice dialog covers the post detail — everything beneath the scrim is inactive in this state; only the dialog (and its scrim) is live"
+    "RemoveConfirm": "the think-twice dialog covers the post detail — everything beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
+    "ComposePicked": "the Show-all sheet covers the pick — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "ComposeDescribe": "the describe sheet covers the details — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live"
   },
   "entries": {
     "Main": "arrival through an invite link — the inviter's borrowed view",
@@ -27,7 +29,9 @@
     "WalletSetup": "the wallet tab's first open — no rail key, no address yet",
     "ReplyMedia": "a thread whose comments carry pictures — the same sheet, a state not a tap",
     "ReplyPicturesWeb": "the reply's pictures state in a browser — platform, not a tap",
-    "ComposeExpired": "the notice card arrives when an act expires unlanded — time, not a tap"
+    "ComposeExpired": "the notice card arrives when an act expires unlanded — time, not a tap",
+    "ComposePickWeb": "the wizard's pick step in a browser — platform, not a tap",
+    "AvatarCrop": "changing the profile picture — its entry lives on the profile screen, itself still a gap"
   },
   "kinds": {
     "Theme": "reference",
@@ -622,6 +626,76 @@
     { "from": "ComposeExpired", "via": 14, "label": "nav · Explore", "to": [{ "board": "Explore" }] },
     { "from": "ComposeExpired", "via": 15, "label": "nav · New post", "to": [{ "board": "ComposeDraft", "case": "a draft is kept — the prompt first" }] },
     { "from": "ComposeExpired", "via": 16, "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
-    { "from": "ComposeExpired", "via": 17, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] }
+    { "from": "ComposeExpired", "via": 17, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] },
+
+    { "from": "FeedGallery", "via": 1, "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
+    { "from": "FeedGallery", "via": 2, "label": "author chip", "to": [{ "gap": "profile screen (not designed)" }] },
+    { "from": "FeedGallery", "via": 3, "label": "post overflow ⋮", "to": [{ "gap": "reader's post menu — licence terms / cite (not boarded)" }] },
+    { "from": "FeedGallery", "via": 4, "label": "the gallery pager", "to": [{ "terminal": "self", "case": "swipes between the frames — the dots read position" }] },
+    { "from": "FeedGallery", "via": 5, "label": "More (caption)", "to": [{ "terminal": "self", "case": "the caption unfolds" }] },
+    { "from": "FeedGallery", "via": 6, "label": "topic chip", "to": [{ "gap": "topic destination (not ruled)" }] },
+    { "from": "FeedGallery", "via": 7, "label": "stance face", "to": [{ "terminal": "self", "case": "tap — a positive act lands" }, { "board": "VouchBackPad", "case": "press-and-hold — the pad blooms (master board)" }] },
+    { "from": "FeedGallery", "via": 8, "label": "Post Score", "to": [{ "gap": "Post Score drill-down (backlog item 13)" }] },
+    { "from": "FeedGallery", "via": 9, "label": "comment count", "to": [{ "board": "ReplyEntry" }] },
+    { "from": "FeedGallery", "via": 10, "label": "nav · Feed", "to": [{ "terminal": "self", "case": "already here" }] },
+    { "from": "FeedGallery", "via": 11, "label": "nav · Explore", "to": [{ "board": "Explore" }] },
+    { "from": "FeedGallery", "via": 12, "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
+    { "from": "FeedGallery", "via": 13, "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
+    { "from": "FeedGallery", "via": 14, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] },
+
+    { "from": "ComposePicked", "via": 1, "label": "drag handles", "to": [{ "terminal": "self", "case": "drag to reorder — the first is the cover" }] },
+    { "from": "ComposePicked", "via": 2, "label": "Describe", "to": [{ "board": "ComposeDescribe" }] },
+    { "from": "ComposePicked", "via": 3, "label": "remove ×", "to": [{ "terminal": "self", "case": "the picture leaves the batch" }] },
+    { "from": "ComposePicked", "via": 4, "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — pick, details, or edit, wherever it opened" }] },
+    { "from": "ComposePicked", "via": 5, "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
+
+    { "from": "ComposeDescribe", "via": 1, "label": "? — Describing pictures", "to": [{ "board": "HelpDialog", "case": "the Describing-pictures text" }] },
+    { "from": "ComposeDescribe", "via": 2, "label": "What's in the picture", "to": [{ "terminal": "self", "case": "typing — witnessed at sign, never gating the upload" }] },
+    { "from": "ComposeDescribe", "via": 3, "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
+    { "from": "ComposeDescribe", "via": 4, "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
+
+    { "from": "ComposeUploading", "via": 1, "label": "back arrow", "to": [{ "board": "ComposeCrop", "case": "one stage back" }] },
+    { "from": "ComposeUploading", "via": 2, "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept, uploads finish quietly" }] },
+    { "from": "ComposeUploading", "via": 3, "label": "picked row", "to": [{ "board": "ComposePicked", "case": "the whole row opens Show all" }] },
+    { "from": "ComposeUploading", "via": 4, "label": "Retry", "to": [{ "terminal": "self", "case": "the failed upload tries again" }] },
+    { "from": "ComposeUploading", "via": 5, "label": "Remove it", "to": [{ "terminal": "self", "case": "the failed picture leaves the batch" }] },
+    { "from": "ComposeUploading", "via": 6, "label": "Describe the pictures", "to": [{ "board": "ComposeDescribe" }] },
+    { "from": "ComposeUploading", "via": 7, "label": "Title", "to": [{ "terminal": "self", "case": "typing" }] },
+    { "from": "ComposeUploading", "via": 8, "label": "Description", "to": [{ "terminal": "self", "case": "typing" }] },
+    { "from": "ComposeUploading", "via": 9, "label": "topic chip ×", "to": [{ "terminal": "self", "case": "the topic leaves" }] },
+    { "from": "ComposeUploading", "via": 10, "label": "Add a topic", "to": [{ "gap": "the topic picker (not boarded)" }] },
+    { "from": "ComposeUploading", "via": 11, "label": "Next", "to": [{ "board": "ComposeSealUploading", "case": "uploads still running — the gated seal" }, { "board": "ComposeSeal", "case": "uploads done" }] },
+
+    { "from": "ComposeSealUploading", "via": 1, "label": "back arrow", "to": [{ "board": "ComposeUploading", "case": "one stage back — details, uploads running" }] },
+    { "from": "ComposeSealUploading", "via": 2, "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept, uploads finish quietly" }] },
+    { "from": "ComposeSealUploading", "via": 3, "label": "? — Signed actions", "to": [{ "board": "HelpDialog", "case": "the Signed-actions text" }] },
+    { "from": "ComposeSealUploading", "via": 4, "label": "Change (license)", "to": [{ "board": "ComposeLicense" }] },
+    { "from": "ComposeSealUploading", "via": 5, "label": "Adjust (your stance)", "to": [{ "board": "ComposePad" }] },
+    { "from": "ComposeSealUploading", "via": 6, "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
+    { "from": "ComposeSealUploading", "via": 7, "label": "Sign and publish (disabled)", "to": [{ "terminal": "self", "case": "disabled — signing waits for the pictures" }, { "board": "ComposeLanded", "case": "uploads land — signing proceeds" }] },
+    { "from": "ComposeSealUploading", "via": 8, "label": "Back", "to": [{ "board": "ComposeUploading", "case": "one stage back" }] },
+
+    { "from": "ComposePickWeb", "via": 1, "label": "back arrow", "to": [{ "terminal": "back", "case": "the first stage — leaves toward where compose began, draft kept" }] },
+    { "from": "ComposePickWeb", "via": 2, "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },
+    { "from": "ComposePickWeb", "via": 3, "label": "Next", "to": [{ "board": "ComposeCrop", "case": "pictures — the crop" }, { "board": "ComposeCover", "case": "a video — its face" }] },
+    { "from": "ComposePickWeb", "via": 4, "label": "Write words instead", "to": [{ "board": "ComposeWords" }] },
+    { "from": "ComposePickWeb", "via": 5, "label": "Show all", "to": [{ "board": "ComposePicked" }] },
+    { "from": "ComposePickWeb", "via": 6, "label": "tray remove ×", "to": [{ "terminal": "self", "case": "the picture leaves the tray" }] },
+    { "from": "ComposePickWeb", "via": 7, "label": "the drop region", "to": [{ "terminal": "self", "case": "dropped files land in the tray" }] },
+    { "from": "ComposePickWeb", "via": 8, "label": "Choose from your files", "to": [{ "terminal": "os", "case": "the browser's file dialog" }] },
+
+    { "from": "AvatarCrop", "via": 1, "label": "back arrow", "to": [{ "terminal": "back", "case": "one stage back — where the picture was chosen" }] },
+    { "from": "AvatarCrop", "via": 2, "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow" }] },
+    { "from": "AvatarCrop", "via": 3, "label": "Next", "to": [{ "board": "AvatarSeal" }] },
+    { "from": "AvatarCrop", "via": 4, "label": "the crop stage", "to": [{ "terminal": "self", "case": "drag to move, pinch to zoom" }] },
+
+    { "from": "AvatarSeal", "via": 1, "label": "back arrow", "to": [{ "board": "AvatarCrop", "case": "one stage back" }] },
+    { "from": "AvatarSeal", "via": 2, "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow" }] },
+    { "from": "AvatarSeal", "via": 3, "label": "? — Changing your picture", "to": [{ "board": "HelpDialog", "case": "the Changing-your-picture text" }] },
+    { "from": "AvatarSeal", "via": 4, "label": "Sign the change", "to": [{ "terminal": "back", "case": "signed — shown everywhere you appear" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "gap": "network-error pattern board (not designed)", "case": "offline" }] },
+    { "from": "AvatarSeal", "via": 5, "label": "Back", "to": [{ "board": "AvatarCrop", "case": "one stage back" }] },
+
+    { "from": "HelpDialog", "via": 1, "label": "Close", "to": [{ "terminal": "back", "case": "the dialog closes — back to the screen that asked" }] },
+    { "from": "HelpDialog", "via": 2, "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the dialog closes" }] }
   ]
 }
