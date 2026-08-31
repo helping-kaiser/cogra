@@ -145,6 +145,18 @@ pub enum AdoptionError {
         /// What the file's own profiles say.
         found: usize,
     },
+    /// A build-system package has no partition rule of its own.
+    #[error(
+        "package {package} has no partition rule of its own; its paths fall to the residual owner, and R-PKG' would derive the prefix {derived_prefix} for it"
+    )]
+    UnregisteredPackage {
+        /// The row of the residual rule the package's paths fall to.
+        at: Location,
+        /// The package, by the name its build system gives it.
+        package: String,
+        /// The prefix R-PKG′ would derive for it.
+        derived_prefix: String,
+    },
     /// The file's schema major version is not the one this build reads.
     #[error(
         "adoption data states schema major version {found}, and this build reads major version {expected}"
@@ -177,6 +189,7 @@ impl AdoptionError {
             | AdoptionError::ProfileIncomplete { at, .. }
             | AdoptionError::UngovernedKindNotReserved { at, .. }
             | AdoptionError::EffectiveCountMismatch { at, .. }
+            | AdoptionError::UnregisteredPackage { at, .. }
             | AdoptionError::UnsupportedSchemaVersion { at, .. } => Some(at),
         }
     }
@@ -285,6 +298,11 @@ mod tests {
                 at: row(),
                 stated: 1,
                 found: 0,
+            },
+            AdoptionError::UnregisteredPackage {
+                at: row(),
+                package: String::from("widgets"),
+                derived_prefix: String::from("WIDGETS"),
             },
             AdoptionError::UnsupportedSchemaVersion {
                 at: row(),
