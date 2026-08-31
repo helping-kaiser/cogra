@@ -396,13 +396,21 @@ class ComposeWizardViewModelTest {
     }
 
     @Test
-    fun backLeavesFromEveryStageAndKeepsTheDraft() = runTest(dispatcher) {
+    fun backWalksOneStageAndLeavesOnlyFromTheFirst() = runTest(dispatcher) {
         val vm = viewModel()
         vm.toSealWithMedia("a")
         assertThat(vm.state.value.step).isEqualTo(WizardStep.Seal)
 
-        // Back never walks the stages backwards: it reports "not handled"
-        // so the route leaves, and the draft survives.
+        // Back always goes back one step (jakob 2026-08-31), absorbing the
+        // gesture until the first stage has nowhere left to retreat to.
+        assertThat(vm.onBack()).isTrue()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Details)
+        assertThat(vm.onBack()).isTrue()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Crop)
+        assertThat(vm.onBack()).isTrue()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Body)
+
+        // Only the first stage reports "not handled", so the route leaves.
         assertThat(vm.onBack()).isFalse()
         vm.onLeave()
         dispatcher.scheduler.advanceUntilIdle()
@@ -412,14 +420,18 @@ class ComposeWizardViewModelTest {
     }
 
     @Test
-    fun backClosesAnOpenSheetBeforeItLeaves() = runTest(dispatcher) {
+    fun backClosesAnOpenSheetBeforeItStepsBack() = runTest(dispatcher) {
         val vm = viewModel()
         vm.toSealWithMedia("a")
         vm.onOpenSheet(SealSheet.License)
 
+        // The sheet is a drawer over the seal: it closes first, and the
+        // stage only moves on the next gesture.
         assertThat(vm.onBack()).isTrue()
         assertThat(vm.state.value.sheet).isEqualTo(SealSheet.None)
-        assertThat(vm.onBack()).isFalse()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Seal)
+        assertThat(vm.onBack()).isTrue()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Details)
     }
 
     @Test

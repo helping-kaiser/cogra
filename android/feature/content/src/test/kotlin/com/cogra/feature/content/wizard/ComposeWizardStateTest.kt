@@ -43,7 +43,7 @@ class ComposeWizardStateTest {
     @Test
     fun aFreshComposerStartsOnThePictures() {
         // Images-first: `ComposeDraft` captions the stage behind its offer
-        // "Or start fresh — pick one picture…", which is the picker.
+        // "Or start fresh —", pointing at the picker grid below it.
         assertThat(ComposeWizardState().mode).isEqualTo(BodyMode.Media)
         assertThat(ComposeWizardState().step).isEqualTo(WizardStep.Body)
     }

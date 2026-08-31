@@ -232,8 +232,7 @@ class ComposeWizardScreenTest {
 
         // The board re-words the stage behind the offer and drops the
         // branch: the question on the table is the draft.
-        compose.onNodeWithText("Or start fresh — pick one picture, several, or one video.")
-            .assertExists()
+        compose.onNodeWithText("Or start fresh —").assertExists()
         compose.onNodeWithTag("wizard_switch_words").assertDoesNotExist()
     }
 

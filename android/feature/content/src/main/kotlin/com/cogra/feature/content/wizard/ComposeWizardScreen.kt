@@ -215,9 +215,9 @@ internal fun ComposeWizardScreen(
     modifier: Modifier = Modifier,
 ) {
     // Back is the header's arrow and the system gesture alike, and both
-    // leave: the author is never held inside the wizard by a stage they
-    // have to unwind, and the draft survives regardless. The ways back
-    // *between* stages are drawn into the stages themselves.
+    // step back one stage (jakob 2026-08-31). Leaving happens from the
+    // first stage, where there is no earlier stage to reach; the draft
+    // survives either way, being written continuously rather than on exit.
     BackHandler(onBack = onBack)
 
     Column(
@@ -394,8 +394,11 @@ private fun ColumnScope.BodyStage(
                 // `ComposeDraft` re-words the caption behind its offer and
                 // drops the branch: with a draft on the table the question
                 // is that draft, and the grid below it is the alternative.
+                // The short form is jakob's (2026-08-31) — the dash points
+                // at the grid, which says "pick pictures" better than a
+                // sentence repeating the fresh-composer caption could.
                 text = if (state.draftOffer != null) {
-                    "Or start fresh — pick one picture, several, or one video."
+                    "Or start fresh —"
                 } else {
                     "Pick one picture, several, or one video."
                 },

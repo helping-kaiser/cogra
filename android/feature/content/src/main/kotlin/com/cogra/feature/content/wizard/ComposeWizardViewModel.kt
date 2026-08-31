@@ -348,13 +348,18 @@ class ComposeWizardViewModel @Inject constructor(
     }
 
     /**
-     * The header's arrow and the system gesture.
+     * The header's arrow and the system gesture: **always one step back**
+     * (jakob 2026-08-31).
      *
-     * Returns true only when there was something *inside* the wizard to
-     * dismiss. Back never walks the stages backwards: it leaves, and the
-     * draft is kept — the boards put the ways back into the stages
-     * themselves (`ComposeDetails`' Crop and Edit, `ComposeSeal`'s Back),
-     * so the arrow is the way out rather than one more step to unwind.
+     * Returns true when the gesture was absorbed inside the wizard, false
+     * only from the first stage — where there is no earlier stage and
+     * back therefore leaves. The draft survives either way: it is written
+     * continuously as the author works, so stepping back and walking out
+     * both keep it.
+     *
+     * The crop step is the wizard's only second entrance, reached with
+     * this arrow — which is why `PickedRow` carries no `Crop` link
+     * (design/components/compose/PickedRow.prompt.md).
      */
     fun onBack(): Boolean {
         if (_state.value.sheet != SealSheet.None) {
@@ -367,7 +372,9 @@ class ComposeWizardViewModel @Inject constructor(
             _state.update { it.copy(outcome = WizardOutcome.DraftKept) }
             return true
         }
-        return false
+        val back = _state.value.retreated() ?: return false
+        _state.value = back
+        return true
     }
 
     /** `ComposeSeal`'s Back pill: one stage, not out of the wizard. */
@@ -375,7 +382,7 @@ class ComposeWizardViewModel @Inject constructor(
         _state.value.retreated()?.let { _state.value = it }
     }
 
-    /** `ComposeDetails`' two ways back — `Edit` to the body, `Crop` to the crop. */
+    /** `ComposeDetails`' way back to the body's words. */
     fun onReturnTo(step: WizardStep) = _state.update { it.returnedTo(step) }
 
     fun onOpenSheet(sheet: SealSheet) = _state.update { it.copy(sheet = sheet) }
