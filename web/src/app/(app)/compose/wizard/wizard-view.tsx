@@ -34,6 +34,7 @@ import {
   sealGate,
   shapeRatio,
   wizardReducer,
+  type PickedAsset,
   type WizardAction,
   type WizardState,
 } from "@/lib/compose/wizard";
@@ -56,6 +57,9 @@ function pathIndex(field: readonly string[] | null, head: string): number | null
   const index = Number(field[1]);
   return Number.isInteger(index) ? index : null;
 }
+
+/** A stable empty list, so the preview effect does not re-run on every render. */
+const NO_ASSETS: readonly PickedAsset[] = [];
 
 const HEADINGS: Record<WizardState["step"], string> = {
   pick: "New post",
@@ -94,6 +98,9 @@ export function ComposeWizard({
   const [referenceErrors, setReferenceErrors] = useState<Readonly<Record<number, string>>>({});
 
   const previews = usePreviewUrls(state.assets);
+  // The offered draft's own cover, which the card draws before the draft has
+  // been adopted and its assets are still nobody's.
+  const offeredPreviews = usePreviewUrls(offered?.assets ?? NO_ASSETS);
 
   // The Reference affordance: a detail surface sends the author here with the
   // node it wants cited, and the chip arrives prefilled. It resolves through
@@ -349,6 +356,10 @@ export function ComposeWizard({
             <PillButton testId="wizard-next" size="sm" onClick={() => dispatch({ type: "advance" })}>
               Next
             </PillButton>
+          ) : state.step === "seal" ? (
+            // The seal carries no forward pill — signing happens on the surface
+            // — but the board still names where the reader has got to.
+            <span className="text-body-small text-on-surface-variant">Last step</span>
           ) : undefined
         }
         testId="wizard-header"
@@ -357,6 +368,7 @@ export function ComposeWizard({
       {offered !== null && (
         <DraftCard
           draft={offered}
+          previews={offeredPreviews}
           onContinue={() => {
             setState(offered);
             setOffered(null);
@@ -455,23 +467,39 @@ export function ComposeWizard({
 // is already holding an unpublished post.
 function DraftCard({
   draft,
+  previews,
   onContinue,
   onDiscard,
 }: {
   draft: WizardState;
+  previews: Readonly<Record<string, string>>;
   onContinue: () => void;
   onDiscard: () => void;
 }) {
   const summary = draftSummary(draft);
+  const cover = draft.assets[0];
   return (
     <div
       data-testid="wizard-draft-card"
       className="mx-6 my-2 flex flex-none flex-col gap-2 rounded-medium bg-surface-container-highest p-4"
     >
-      <h2 className="m-0 text-title-small">Your draft is here</h2>
-      <div className="flex flex-col">
-        <span className="text-body-medium">{summary.title}</span>
-        <span className="text-label-small text-on-surface-variant">{summary.detail}</span>
+      <h2 className="m-0 text-title-medium">Your draft is here</h2>
+      <div className="flex items-center gap-2">
+        {cover !== undefined && (
+          <div className="size-10 flex-none overflow-hidden rounded-small">
+            {/* eslint-disable-next-line @next/next/no-img-element -- a blob: URL
+                for bytes that never left the device. */}
+            <img
+              src={previews[cover.id] ?? ""}
+              alt=""
+              className="block size-full object-cover"
+            />
+          </div>
+        )}
+        <span className="flex flex-1 flex-col">
+          <span className="text-body-medium">{summary.title}</span>
+          <span className="text-body-small text-on-surface-variant">{summary.detail}</span>
+        </span>
       </div>
       <div className="flex justify-end gap-2">
         <PillButton testId="wizard-draft-discard" variant="text" onClick={onDiscard}>
