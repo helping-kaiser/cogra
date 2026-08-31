@@ -763,6 +763,10 @@ mod tests {
         }
     }
 
+    /// Vector 1: a minimal body, and the shortest envelope there is.
+    ///
+    /// The encoder produces, byte for byte, what the specification's normative value vectors pin.
+    /// ´claim:envelope:every-value-vector-encodes-to-its-pinned-bytes´
     #[test]
     fn vector_1_minimal_body() {
         let bytes = envelope("hello 🌍", BTreeMap::new()).encode();
@@ -773,6 +777,9 @@ mod tests {
         assert_eq!(Envelope::decode(&bytes).expect("valid").body, "hello 🌍");
     }
 
+    /// Vector 2: a body beside a link extension.
+    ///
+    /// (´claim:envelope:every-value-vector-encodes-to-its-pinned-bytes´)
     #[test]
     fn vector_2_body_and_link() {
         let mut ext = BTreeMap::new();
@@ -787,6 +794,9 @@ mod tests {
         Envelope::decode(&bytes).expect("valid");
     }
 
+    /// Vector 3: binary usr bytes.
+    ///
+    /// (´claim:envelope:every-value-vector-encodes-to-its-pinned-bytes´)
     #[test]
     fn vector_3_usr_binary() {
         let mut ext = BTreeMap::new();
@@ -799,6 +809,9 @@ mod tests {
         Envelope::decode(&bytes).expect("valid");
     }
 
+    /// Vector 4: a guild key, read back and written again.
+    ///
+    /// (´claim:envelope:every-value-vector-encodes-to-its-pinned-bytes´)
     #[test]
     fn vector_4_guild_key_round_trip() {
         let mut ext = BTreeMap::new();
@@ -818,12 +831,17 @@ mod tests {
 
     /// The vector pins the serialized form of the already-normalized body
     /// "café"; the §3 normalize transform that produces it is out of scope.
+    ///
+    /// (´claim:envelope:every-value-vector-encodes-to-its-pinned-bytes´)
     #[test]
     fn vector_5_nfc_form() {
         let bytes = envelope("café", BTreeMap::new()).encode();
         assert_eq!(bytes, hex("D9D9F7 A2 00 84 01010101 01 65 636166C3A9"));
     }
 
+    /// Vector 6: a body at the maximum length.
+    ///
+    /// (´claim:envelope:every-value-vector-encodes-to-its-pinned-bytes´)
     #[test]
     fn vector_6_max_body() {
         let bytes = envelope(&"a".repeat(140), BTreeMap::new()).encode();
@@ -832,6 +850,9 @@ mod tests {
         assert_eq!(bytes, expected);
     }
 
+    /// Vector 7: several extensions at once.
+    ///
+    /// (´claim:envelope:every-value-vector-encodes-to-its-pinned-bytes´)
     #[test]
     fn vector_7_multiple_extensions() {
         let mut ext = BTreeMap::new();
@@ -848,6 +869,9 @@ mod tests {
         Envelope::decode(&bytes).expect("valid");
     }
 
+    /// Vector 8: a multi-byte grapheme cluster.
+    ///
+    /// (´claim:envelope:every-value-vector-encodes-to-its-pinned-bytes´)
     #[test]
     fn vector_8_multi_byte_cluster() {
         let bytes = envelope("photographer 🇩🇪", BTreeMap::new()).encode();
@@ -858,6 +882,9 @@ mod tests {
         assert_eq!(bytes.len(), 33);
     }
 
+    /// Vector 9: whitespace kept exactly as written.
+    ///
+    /// (´claim:envelope:every-value-vector-encodes-to-its-pinned-bytes´)
     #[test]
     fn vector_9_whitespace_preservation() {
         let bytes = envelope("a  b\n\nc", BTreeMap::new()).encode();
@@ -868,6 +895,9 @@ mod tests {
         assert_eq!(bytes.len(), 19);
     }
 
+    /// Vector 10: an empty body, which is a value and not an absence.
+    ///
+    /// (´claim:envelope:every-value-vector-encodes-to-its-pinned-bytes´)
     #[test]
     fn vector_10_empty_body() {
         let bytes = envelope("", BTreeMap::new()).encode();
@@ -879,6 +909,8 @@ mod tests {
     /// The canonical bytes of the already-trimmed output "a\n\nb"; the §3
     /// transform that produces it is out of scope, its result is what is
     /// pinned.
+    ///
+    /// (´claim:envelope:every-value-vector-encodes-to-its-pinned-bytes´)
     #[test]
     fn vector_16_per_line_trim_output() {
         let bytes = envelope("a\n\nb", BTreeMap::new()).encode();
@@ -886,6 +918,8 @@ mod tests {
         assert_eq!(bytes.len(), 16);
     }
 
+    /// A payload that does not open with the self-describe tag is no envelope at all.
+    /// ´claim:envelope:a-payload-without-the-magic-is-no-envelope´
     #[test]
     fn rejects_missing_magic() {
         let mut bytes = envelope("", BTreeMap::new()).encode();
@@ -895,6 +929,9 @@ mod tests {
 
     /// The bytes carry `{0: 1, 1: ""}`: the version must be an array of four
     /// uints, never a scalar.
+    ///
+    /// The package version is four uints and nothing else.
+    /// ´claim:envelope:the-version-is-four-uints-and-nothing-else´
     #[test]
     fn rejects_scalar_version() {
         let bytes = hex("D9D9F7 A2 00 01 01 60");
@@ -904,6 +941,9 @@ mod tests {
         ));
     }
 
+    /// The other way to get the shape wrong: three axes where four are owed.
+    ///
+    /// (´claim:envelope:the-version-is-four-uints-and-nothing-else´)
     #[test]
     fn rejects_three_axis_vector() {
         let bytes = hex("D9D9F7 A2 00 83 010101 01 60");
@@ -915,6 +955,9 @@ mod tests {
 
     /// The bytes carry `{0: [1,1,1,1], 1: "x", 7: 42}` — key 7 is outside
     /// the package's allowed top-level set.
+    ///
+    /// A top-level key outside the package's own set refuses the envelope.
+    /// ´claim:envelope:an-unknown-top-level-key-refuses-the-envelope´
     #[test]
     fn rejects_unknown_top_level_key() {
         let bytes = hex("D9D9F7 A3 00 84 01010101 01 61 78 07 18 2A");
@@ -923,6 +966,9 @@ mod tests {
 
     /// The bytes carry `{0: [1,1,1,1], 1: "x", 2: {5: h'00'}}` — extension
     /// key 5 falls in the reserved range with nothing allocated to it.
+    ///
+    /// An extension key in the reserved range with nothing allocated to it refuses the envelope.
+    /// ´claim:envelope:an-unallocated-reserved-key-refuses-the-envelope´
     #[test]
     fn rejects_unallocated_reserved_key() {
         let bytes = hex("D9D9F7 A3 00 84 01010101 01 61 78 02 A1 05 41 00");
@@ -932,6 +978,9 @@ mod tests {
     /// Three in-band empties, each of which must have been an omission
     /// instead: an empty link at key 0, empty usr bytes at key 3, and the
     /// empty extension map, which must drop key 2 altogether.
+    ///
+    /// An in-band empty is an omission that was not taken, and is refused rather than folded into absence.
+    /// ´claim:envelope:an-in-band-empty-is-refused-rather-than-folded´
     #[test]
     fn rejects_empty_registered_values_and_empty_map() {
         let empty_link = hex("D9D9F7 A3 00 84 01010101 01 60 02 A1 00 60");
@@ -953,6 +1002,9 @@ mod tests {
 
     /// Vector 15: a package axis of 2 denies the whole envelope, not merely
     /// the parts this reader does not understand.
+    ///
+    /// An unknown package axis denies the whole envelope, never only the parts this reader cannot read.
+    /// ´claim:envelope:an-unknown-package-version-denies-the-whole-envelope´
     #[test]
     fn rejects_unknown_package_version() {
         let bytes = hex("D9D9F7 A2 00 84 02010101 01 62 6869");
@@ -965,6 +1017,9 @@ mod tests {
     /// Vector 10's content with the body length in the two-byte form
     /// (`78 00` for text(0)): the decoder is lenient about head widths, so
     /// this parses and then fails Gate C2 on re-encoding.
+    ///
+    /// Re-encoding is what refuses a non-canonical form, so a lenient parse never admits a second encoding.
+    /// ´claim:envelope:re-encoding-is-what-refuses-a-non-canonical-form´
     #[test]
     fn rejects_non_canonical_encoding() {
         let bytes = hex("D9D9F7 A2 00 84 01010101 01 78 00");
@@ -973,6 +1028,9 @@ mod tests {
 
     /// The extension map carries `{2: "de", 0: "https://e.com/"}` — keys in
     /// descending order, which no canonical encoding produces.
+    ///
+    /// Extension keys ride in ascending order, whatever an unsorted map would decode to.
+    /// ´claim:envelope:extension-keys-ride-in-ascending-order´
     #[test]
     fn rejects_unsorted_extension_keys() {
         let bytes = hex(
@@ -981,6 +1039,8 @@ mod tests {
         assert_eq!(Envelope::decode(&bytes), Err(EnvelopeError::NonCanonical));
     }
 
+    /// A byte after the envelope is trailing input, and refuses the whole decode.
+    /// ´claim:envelope:a-trailing-byte-refuses-the-decode´
     #[test]
     fn rejects_trailing_bytes() {
         let mut bytes = envelope("", BTreeMap::new()).encode();
@@ -1037,6 +1097,9 @@ mod tests {
     /// a full create, a create with only a body, an edit carrying one
     /// changed field, an edit clearing a field by present-and-empty, and a
     /// create whose empty body is itself a value (api-spec.md).
+    ///
+    /// Presence survives the round trip in every shape it carries meaning, absence and present-and-empty apart.
+    /// ´claim:envelope:presence-survives-every-shape-that-means-something´
     #[test]
     fn cogra_round_trips_create_and_edit_shapes() {
         for content in [
@@ -1058,6 +1121,9 @@ mod tests {
     /// reason. Each round-trips, and the unmarked one leaves both keys out
     /// — so an edit that drops the mark encodes exactly like a post that
     /// never carried one.
+    ///
+    /// The self-mark's three states each round-trip, and the unmarked state leaves its keys out entirely, so dropping the mark encodes like never having carried it.
+    /// ´claim:envelope:the-self-mark-round-trips-in-three-states´
     #[test]
     fn cogra_round_trips_the_sensitive_mark() {
         for mark in [
@@ -1086,6 +1152,8 @@ mod tests {
         }
     }
 
+    /// A sensitive reason without the mark is refused at decode, so the guild schema never carries a warning with no switch behind it.
+    /// ´claim:envelope:a-reason-without-the-mark-is-no-document´
     #[test]
     fn cogra_rejects_a_sensitive_reason_without_the_mark() {
         let mut inner = BTreeMap::new();
@@ -1102,6 +1170,9 @@ mod tests {
 
     /// The mark is presence, so any encoding other than `1` is a payload
     /// claiming a state the guild schema does not have.
+    ///
+    /// The mark is presence alone, so any encoded value other than one is refused as a state the guild schema does not have.
+    /// ´claim:envelope:the-mark-is-presence-alone´
     #[test]
     fn cogra_rejects_a_sensitive_mark_with_an_unexpected_value() {
         for value in [Value::Uint(0), Value::Uint(2), Value::Text("yes".into())] {
@@ -1122,6 +1193,9 @@ mod tests {
 
     /// Guild key 49258 is 0xC06A, which rides as the two-byte uint
     /// `19 C0 6A` — the needle searched for below.
+    ///
+    /// The guild envelope is canonical and magic-prefixed, and its guild key rides where the package puts it.
+    /// ´claim:envelope:the-guild-envelope-is-canonical-and-magic-prefixed´
     #[test]
     fn cogra_envelope_is_canonical_and_magic_prefixed() {
         let bytes = cogra(Some("t"), None, Some("b")).encode_payload();
@@ -1131,6 +1205,8 @@ mod tests {
         assert_eq!(Envelope::decode(&bytes).expect("valid").encode(), bytes);
     }
 
+    /// A guild payload of an unsupported schema version is refused rather than read as far as it goes.
+    /// ´claim:envelope:an-unsupported-guild-schema-version-is-refused´
     #[test]
     fn cogra_rejects_wrong_schema_version() {
         let mut inner = BTreeMap::new();
@@ -1145,6 +1221,8 @@ mod tests {
         );
     }
 
+    /// The node id is required and is sixteen bytes, and a payload missing either is refused.
+    /// ´claim:envelope:the-node-id-is-required-and-sixteen-bytes´
     #[test]
     fn cogra_rejects_missing_or_short_node_id() {
         let mut inner = BTreeMap::new();
@@ -1164,6 +1242,8 @@ mod tests {
         );
     }
 
+    /// A guild payload leaves the package body empty and carries exactly one guild key.
+    /// ´claim:envelope:a-guild-payload-is-one-key-and-an-empty-body´
     #[test]
     fn cogra_rejects_nonempty_pce_body_and_foreign_guild_keys() {
         let content = cogra(None, None, Some("x"));
@@ -1184,6 +1264,9 @@ mod tests {
     /// Key 6 (provenance) is still declared and unbuilt, so it is still
     /// refused on read — allocating key 5 lifted the rejection for the
     /// manifest alone.
+    ///
+    /// A key that is declared and unbuilt is still refused on read, and an allocation lifts the refusal for that key alone.
+    /// ´claim:envelope:a-declared-but-unbuilt-key-is-still-refused´
     #[test]
     fn cogra_rejects_the_unbuilt_provenance_key() {
         let mut inner = BTreeMap::new();
@@ -1202,6 +1285,9 @@ mod tests {
     /// whose order is its array position, alt text present and absent on
     /// the same manifest, and a media post — an empty body beside a
     /// manifest, which is what the body XOR produces.
+    ///
+    /// Every media manifest shape that carries meaning survives the round trip.
+    /// ´claim:envelope:every-manifest-shape-that-means-something-round-trips´
     #[test]
     fn manifest_round_trips_gallery_shapes() {
         let galleries = [
@@ -1225,6 +1311,9 @@ mod tests {
     /// An absent manifest and an empty gallery are one state, and the
     /// encoder produces only the absent form — so key 5 never rides an
     /// envelope that has nothing to say with it.
+    ///
+    /// An absent manifest and an empty gallery are one state, and only the absent form is ever written or read.
+    /// ´claim:envelope:an-empty-gallery-and-an-absent-manifest-are-one-state´
     #[test]
     fn an_empty_gallery_omits_the_manifest_key() {
         let bytes = cogra(None, None, Some("text only")).encode_payload();
@@ -1241,6 +1330,9 @@ mod tests {
         );
     }
 
+    /// The read side of the same state: the in-band empty is refused, not folded.
+    ///
+    /// (´claim:envelope:an-empty-gallery-and-an-absent-manifest-are-one-state´)
     #[test]
     fn manifest_rejects_an_in_band_empty_gallery() {
         refuses_media(
@@ -1249,6 +1341,8 @@ mod tests {
         );
     }
 
+    /// A manifest is an array of maps, and any other shape is refused rather than coerced.
+    /// ´claim:envelope:a-manifest-is-an-array-of-maps´
     #[test]
     fn manifest_rejects_a_non_array_value() {
         refuses_media(
@@ -1258,6 +1352,9 @@ mod tests {
         refuses_media(Value::Uint(5), "media manifest must be an array");
     }
 
+    /// The same rule one level down, at the entry.
+    ///
+    /// (´claim:envelope:a-manifest-is-an-array-of-maps´)
     #[test]
     fn manifest_rejects_an_entry_that_is_not_a_map() {
         refuses_media(
@@ -1269,6 +1366,9 @@ mod tests {
     /// The nested map runs the outer envelope's reserved-key discipline:
     /// a key a v1 reader does not know refuses the envelope rather than
     /// being dropped, so no reader renders an asset it half-understood.
+    ///
+    /// A manifest entry runs the envelope's own reserved-key discipline, so no reader renders an asset it half-understood.
+    /// ´claim:envelope:a-manifest-entry-keeps-the-reserved-key-discipline´
     #[test]
     fn manifest_rejects_an_unallocated_entry_key() {
         refuses_media(
@@ -1281,6 +1381,8 @@ mod tests {
         );
     }
 
+    /// An asset carries a well-sized digest or it is refused, nothing else identifying it.
+    /// ´claim:envelope:an-asset-carries-a-well-sized-digest´
     #[test]
     fn manifest_rejects_a_missing_or_mis_sized_digest() {
         refuses_media(
@@ -1308,6 +1410,8 @@ mod tests {
         }
     }
 
+    /// An asset carries a usable mime type or it is refused, nothing else saying how to render it.
+    /// ´claim:envelope:an-asset-carries-a-usable-mime-type´
     #[test]
     fn manifest_rejects_a_missing_or_empty_mime() {
         refuses_media(
@@ -1336,6 +1440,9 @@ mod tests {
     /// Absent alt text is the decorative case; a present-and-empty one
     /// would be a second encoding of it, so it is refused rather than
     /// folded — the same rule PCE §4.4 applies to its own optionals.
+    ///
+    /// Absent alt text is the decorative case, so a present-and-empty one is refused rather than folded into it.
+    /// ´claim:envelope:absent-alt-text-is-the-decorative-case´
     #[test]
     fn manifest_rejects_alt_text_that_is_empty_or_not_text() {
         refuses_media(
@@ -1358,6 +1465,9 @@ mod tests {
 
     /// A manifest is content-family only: the profile reader refuses it
     /// exactly as it refuses every other content key.
+    ///
+    /// Each guild family refuses the other family's keys rather than passing over them.
+    /// ´claim:envelope:each-guild-family-refuses-the-others-keys´
     #[test]
     fn profile_rejects_a_media_manifest() {
         assert_eq!(
@@ -1370,6 +1480,9 @@ mod tests {
 
     /// Two galleries differing only in order encode to different bytes,
     /// which is what makes position load-bearing rather than incidental.
+    ///
+    /// Two galleries differing only in order encode differently, which is what makes position load-bearing.
+    /// ´claim:envelope:gallery-order-is-witnessed-by-the-bytes´
     #[test]
     fn manifest_order_is_witnessed() {
         let mut forward = cogra(None, None, None);
@@ -1396,6 +1509,9 @@ mod tests {
 
     /// The three states an image slot carries, on both slots and in every
     /// combination that means something: untouched, replaced, and cleared.
+    ///
+    /// An image slot round-trips in all three states it carries, in every combination that means something.
+    /// ´claim:envelope:an-image-slot-round-trips-in-all-three-states´
     #[test]
     fn profile_round_trips_every_image_slot_state() {
         let cases = [
@@ -1422,6 +1538,9 @@ mod tests {
 
     /// An untouched slot rides no key at all, so "leave the avatar alone"
     /// and "clear the avatar" cannot collide on the wire.
+    ///
+    /// An untouched slot rides no key, so leaving an image alone and clearing it cannot collide on the wire.
+    /// ´claim:envelope:an-untouched-slot-rides-no-key´
     #[test]
     fn an_untouched_image_slot_omits_its_key() {
         let bytes = profile(Some("Ada"), None, None).encode_payload();
@@ -1448,6 +1567,9 @@ mod tests {
 
     /// A slot holds one picture. Two would make "the avatar" ambiguous,
     /// and a bare map would be a second encoding of the one-asset case.
+    ///
+    /// An image slot holds exactly one asset, so neither two of them nor a bare map is admitted.
+    /// ´claim:envelope:an-image-slot-holds-exactly-one-asset´
     #[test]
     fn profile_rejects_an_image_slot_that_is_not_one_asset() {
         refuses_profile_image(
@@ -1469,6 +1591,9 @@ mod tests {
 
     /// The entry inside a slot is the same admission a gallery entry gets:
     /// one reader, one rule, whichever key the asset arrived under.
+    ///
+    /// One asset admission serves every key an asset can arrive under.
+    /// ´claim:envelope:one-asset-admission-serves-every-key´
     #[test]
     fn profile_image_entries_run_the_manifest_admission() {
         refuses_profile_image(
@@ -1490,6 +1615,8 @@ mod tests {
 
     /// The content family refuses the profile's image keys the way the
     /// profile family refuses the content family's manifest.
+    ///
+    /// (´claim:envelope:each-guild-family-refuses-the-others-keys´)
     #[test]
     fn content_rejects_the_profile_image_keys() {
         for key in [COGRA_KEY_AVATAR, COGRA_KEY_COVER] {
@@ -1512,6 +1639,9 @@ mod tests {
     /// The same presence semantics as content: a full payload, an edit
     /// carrying one changed field, and an edit clearing bio and website by
     /// present-and-empty.
+    ///
+    /// The profile family carries the presence semantics content does, clearing by present-and-empty included.
+    /// ´claim:envelope:the-profile-family-shares-the-presence-semantics´
     #[test]
     fn profile_round_trips_edit_shapes() {
         for content in [
@@ -1527,6 +1657,9 @@ mod tests {
         }
     }
 
+    /// And at the payload, where each reader refuses the other's whole document.
+    ///
+    /// (´claim:envelope:each-guild-family-refuses-the-others-keys´)
     #[test]
     fn profile_and_content_readers_reject_each_other() {
         let profile_bytes = profile(Some("Ada"), None, None).encode_payload();
@@ -1541,6 +1674,9 @@ mod tests {
         );
     }
 
+    /// The profile family's own assigned-and-unbuilt key, refused the same way.
+    ///
+    /// (´claim:envelope:a-declared-but-unbuilt-key-is-still-refused´)
     #[test]
     fn profile_rejects_assigned_but_unbuilt_payout_key() {
         let mut inner = BTreeMap::new();
@@ -1555,6 +1691,8 @@ mod tests {
         );
     }
 
+    /// A profile payload needs its node id, and a field that is not text is refused rather than coerced.
+    /// ´claim:envelope:a-profile-field-is-text-and-its-node-id-is-required´
     #[test]
     fn profile_rejects_missing_node_and_non_text_field() {
         let mut inner = BTreeMap::new();
