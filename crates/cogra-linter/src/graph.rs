@@ -188,6 +188,19 @@ pub struct AssetNode {
     pub area: Area,
     /// Where the profile's standard place puts the label for this asset.
     pub place: Place,
+    /// Where the asset sits, in whole-file coordinates.
+    ///
+    /// No derivation reads it, and (´[LBL-judg:labels:derivation]´) is why:
+    /// position never enters a derived label. It is here so that a finding
+    /// *about* an asset can point at it, which is a diagnostic's affair and
+    /// not a warrant's.
+    pub span: ByteSpan,
+    /// The asset's own documentation, as logical lines.
+    ///
+    /// The claim discipline's whole subject (´dec:lint:claim-standing´). It
+    /// travels on the node because the frontend resolved it and no later
+    /// stage should re-read bytes to recover what a parser already settled.
+    pub documentation: Vec<Box<str>>,
 }
 
 /// A registered inventory profile, effective or staged.
@@ -239,7 +252,7 @@ pub enum PairOrigin {
 pub enum EdgeW {
     /// Ω: Owner → Source, Owner → Asset, Owner → Label.
     Owns,
-    /// Structure: Source → Region, Region → Mint | Citation | Head.
+    /// Structure: Source → Region | Asset, Region → Mint | Citation | Head.
     Contains,
     /// The minting judgment: Mint → Label.
     Mints,

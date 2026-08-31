@@ -199,6 +199,8 @@ impl Build {
                 register: None,
                 form: None,
             },
+            span: ByteSpan::new(0, 0),
+            documentation: Vec::new(),
         }));
         self.g.add_edge(owner, node, EdgeW::Owns);
         self.g.add_edge(profile, node, EdgeW::Covers);
@@ -1011,6 +1013,7 @@ fn no_judgment_rule_identifier_is_label_shaped() {
         .iter()
         .chain(&kinds::RULES)
         .chain(&judge::RULES)
+        .chain(&judge::claims::RULES)
         .chain(&judge::freshness::RULES)
         .chain(&cogra_linter::registers::RULES)
         .chain(&cogra_linter::RULES)

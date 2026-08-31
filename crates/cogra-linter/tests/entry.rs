@@ -512,6 +512,7 @@ fn the_named_generation_and_the_harvest_produce_one_register() {
                 place: profile.standard_place.clone(),
                 span: cogra_linter::ByteSpan::new(0, 0),
                 opens: 0,
+                documentation: Vec::new(),
             },
             cogra_linter::Asset {
                 profile: profile.id.clone(),
@@ -520,6 +521,7 @@ fn the_named_generation_and_the_harvest_produce_one_register() {
                 place: profile.standard_place.clone(),
                 span: cogra_linter::ByteSpan::new(0, 0),
                 opens: 0,
+                documentation: Vec::new(),
             },
         ],
     )]

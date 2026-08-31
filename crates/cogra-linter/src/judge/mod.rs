@@ -22,6 +22,7 @@
 //! pre-tokenizer already makes for the same reason
 //! (´[ARCH-req:linter:diagnostics-not-panics]´).
 
+pub mod claims;
 pub mod freshness;
 pub mod kinds;
 pub mod labels;
@@ -92,6 +93,7 @@ pub fn judge_all(
     found.extend(labels::anchor_harvest(g, a));
     found.extend(labels::synthetic_citation(g, a));
     found.extend(labels::citation_reach(g, a));
+    found.extend(claims::claims(g, a));
     match kinds {
         Some(registry) => found.extend(kinds::head_validation(g, registry)),
         None => found.push(suppressed(g, a)),

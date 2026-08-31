@@ -245,6 +245,17 @@ pub struct Asset {
     /// standard place is a file of the owner's rather than a position in this
     /// one.
     pub opens: usize,
+    /// The asset's own documentation comment, as logical lines: leaders
+    /// resolved away, each line trimmed, a block comment's interior split at
+    /// its breaks. Empty where the asset carries no documentation.
+    ///
+    /// The frontend answers it for the reason it answers [`Asset::opens`] —
+    /// it holds the tree, and an item's documentation is a fact the parser
+    /// has already resolved. It is what the claim discipline reads: the
+    /// statement a covered test evidences is written here, and a run that
+    /// re-derived these lines from bytes would be reading back structure the
+    /// parser had settled (´dec:lint:claim-standing´).
+    pub documentation: Vec<String>,
 }
 
 /// A `mod name;` declaration, which is not a definition and not an asset.
@@ -412,6 +423,7 @@ pub fn backing_definitions<'s>(
                 place: profile.standard_place.clone(),
                 span: ByteSpan::new(0, 0),
                 opens: 0,
+                documentation: Vec::new(),
             };
             (src, asset)
         })
