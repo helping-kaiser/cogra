@@ -37,7 +37,7 @@ fn adoption_text() -> &'static str {
     })
 }
 
-/// The ruled adoption, which declares no reach graph.
+/// The ruled adoption, which declares the corpus's own reach graph.
 fn ruled() -> &'static Adoption {
     static LOADED: OnceLock<Adoption> = OnceLock::new();
     LOADED.get_or_init(|| {
@@ -46,20 +46,41 @@ fn ruled() -> &'static Adoption {
     })
 }
 
-/// The ruled adoption with a `[reach]` section appended.
+/// The ruled adoption text with its own `[reach]` section cut away.
 ///
-/// Appended rather than spliced: the section is the file's last, it names no
-/// value any earlier section reads, and a fixture that rewrites the middle of
-/// a thousand-line file is one that fails for a reason of its own.
+/// The section is the file's last, so the cut is a truncation at the header
+/// line rather than a splice: a fixture that rewrites the middle of a
+/// thousand-line file is one that fails for a reason of its own. The line is
+/// matched exactly, so the section's own commentary about `[reach]` is not a
+/// second candidate.
+fn reachless_text() -> &'static str {
+    static CUT: OnceLock<String> = OnceLock::new();
+    CUT.get_or_init(|| {
+        let text = adoption_text();
+        let at = text
+            .lines()
+            .position(|line| line == "[reach]")
+            .expect("the ruled adoption declares a reach section");
+        text.lines().take(at).collect::<Vec<_>>().join("\n")
+    })
+}
+
+/// The ruled adoption with the graph under test in place of its own.
+fn reachless() -> Adoption {
+    Adoption::from_str(reachless_text(), Path::new("corpus-adoption.toml"))
+        .expect("the adoption loads without its reach section")
+}
+
+/// The ruled adoption with the section under test in place of its own.
 fn with_reach(section: &str) -> Adoption {
-    let text = format!("{}\n{section}", adoption_text());
+    let text = format!("{}\n{section}", reachless_text());
     Adoption::from_str(&text, Path::new("corpus-adoption.toml"))
         .expect("the section under test loads")
 }
 
 /// The same, where the section is the one being refused.
 fn refused(section: &str) -> AdoptionError {
-    let text = format!("{}\n{section}", adoption_text());
+    let text = format!("{}\n{section}", reachless_text());
     Adoption::from_str(&text, Path::new("corpus-adoption.toml"))
         .expect_err("the planted defect is refused")
 }
@@ -135,16 +156,67 @@ fn refusals(run: &Run) -> Vec<String> {
         .collect()
 }
 
-/// The ruled corpus declares no graph, so the clause has no subject
+/// The ruled corpus declares the layered graph its own citations walk
 /// (´dec:lint:reach-declared´).
 ///
-/// This corpus declares no reach graph, so the clause has no subject.
-/// ´claim:reach:the-ruled-corpus-declares-no-graph´
+/// This corpus declares a row for each of its three citing owners and each of
+/// the four disciplines, and none for the twelve owners that cite nothing.
+/// ´claim:reach:the-ruled-corpus-declares-its-measured-graph´
 #[test]
-fn the_ruled_adoption_declares_no_reach_graph() {
+fn the_ruled_adoption_declares_the_corpus_graph() {
+    let reach = ruled().reach.as_ref().expect("the graph is ruled");
+    assert_eq!(reach.rows.len(), 7, "seven rows, one per constrained owner");
+
+    let disciplines = [
+        "doc.label-calculus",
+        "doc.kind-registry",
+        "doc.identity-adjudication",
+        "doc.interchange-conventions",
+    ];
+    for name in disciplines {
+        let owner = OwnerId::new(name);
+        let row = reach.row(&owner).expect("a discipline carries a row");
+        assert!(row.may_cite.is_empty(), "{name} stands on nothing here");
+    }
+
+    let architecture = OwnerId::new("doc.linter-architecture");
+    for name in disciplines {
+        assert!(
+            reach.permits(&architecture, &OwnerId::new(name)),
+            "the architecture stands on {name}",
+        );
+    }
+    for package in ["pkg.cogra-linter", "pkg.cogra-interchange"] {
+        let owner = OwnerId::new(package);
+        assert!(
+            reach.permits(&owner, &architecture),
+            "{package} stands on the architecture",
+        );
+        for name in disciplines {
+            assert!(
+                reach.permits(&owner, &OwnerId::new(name)),
+                "{package} stands on {name}",
+            );
+        }
+    }
     assert!(
-        ruled().reach.is_none(),
-        "the graph is jakob's to rule, and until he does the section is absent",
+        !reach.permits(&architecture, &OwnerId::new("pkg.cogra-linter")),
+        "nothing in the graph points downward",
+    );
+    assert!(
+        !reach.permits(
+            &OwnerId::new("pkg.cogra-interchange"),
+            &OwnerId::new("pkg.cogra-linter")
+        ),
+        "the two packages are independent and the graph says so",
+    );
+    assert!(
+        reach.row(&OwnerId::new("pkg.api")).is_none(),
+        "an owner that cites nothing carries no row",
+    );
+    assert!(
+        ruled().verify_reach_against_manifests(&root()).is_ok(),
+        "the declaration omits no path dependency the build carries",
     );
 }
 
@@ -155,7 +227,7 @@ fn the_ruled_adoption_declares_no_reach_graph() {
 /// ´claim:reach:an-absent-section-permits-everything´
 #[test]
 fn an_absent_section_permits_every_import() {
-    let run = check_sources(ruled(), corpus());
+    let run = check_sources(&reachless(), corpus());
     assert!(
         refusals(&run).is_empty(),
         "an absent section is vacuously permissive: {:?}",
@@ -507,5 +579,5 @@ may_cite = [
 /// ´claim:reach:an-absent-section-contradicts-nothing´
 #[test]
 fn an_absent_section_contradicts_no_manifest() {
-    assert!(ruled().verify_reach_against_manifests(&root()).is_ok());
+    assert!(reachless().verify_reach_against_manifests(&root()).is_ok());
 }

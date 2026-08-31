@@ -1,5 +1,8 @@
 package com.cogra.feature.content.wizard
 
+import com.cogra.core.designsystem.v2.compose.HelpTopic
+import com.cogra.core.designsystem.v2.compose.PickedPicture
+import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
@@ -67,20 +70,11 @@ data class PickedAsset(
 }
 
 /**
- * Which sheet is open over the seal (`ComposeLicense`, `ComposePad`).
- * One at a time: each is a drawer the reader opened over the same
- * screen.
- *
- * **`ComposeSensitive` is not here, and that is deliberate.** The
- * contract cannot carry an author's self-mark: `PreparePostInput` has
- * no sensitive field and no mutation sets one — `SENSITIVE` exists only
- * as a read-side `FieldModerationStatus` the server assigns. A sheet
- * that said "Marked" while sending nothing would be a lie told to the
- * one person trusting it, so the board is left unbuilt until the
- * contract can express it. The *reading* half — the whole-body veil —
- * is built and works the moment a verdict exists.
+ * Which sheet is open over the seal (`ComposeLicense`, `ComposePad`,
+ * `ComposeSensitive`). One at a time: each is a drawer the reader opened
+ * over the same screen.
  */
-enum class SealSheet { None, License, Stance }
+enum class SealSheet { None, License, Stance, Sensitive }
 
 /**
  * How the wizard ended.
@@ -118,9 +112,9 @@ data class ComposeWizardState(
     /**
      * The composer opens on the pictures. `ComposeDraft` draws its offer
      * over the picker grid and captions the stage behind it "Or start
-     * fresh — pick one picture, several, or one video", which is the
-     * board saying in as many words which half a fresh composer starts
-     * on; `ComposeWords` is the half reached by "Write words instead".
+     * fresh —", which is the board saying which half a fresh composer
+     * starts on; `ComposeWords` is the half reached by "Write words
+     * instead".
      */
     val mode: BodyMode = BodyMode.Media,
 
@@ -143,7 +137,41 @@ data class ComposeWizardState(
     val license: LicenseChoice = LicenseChoice.PublicDomain,
     /** The author's own attachment to the post (`ComposePad`). */
     val pDirected: Double = DEFAULT_P_DIRECTED,
+
+    /**
+     * The author's own sensitive mark (`ComposeSensitive`).
+     *
+     * It veils the pictures and the description until a reader chooses
+     * to look; the title stays readable, so choosing is informed.
+     */
+    val sensitive: Boolean = false,
+
+    /** Shown on the veil when the author gave one; blank counts as none. */
+    val sensitiveReason: String = "",
+
     val sheet: SealSheet = SealSheet.None,
+
+    /**
+     * The Show all sheet (`PickedSheet`) — the per-picture manager, opened
+     * by the pick step's "Show all" and by the details step's picked row.
+     * Order, cover, remove and describe live there and nowhere else.
+     */
+    val pickedSheetOpen: Boolean = false,
+
+    /**
+     * Which picture `DescribeSheet` is describing, by index into [picked].
+     *
+     * Alt text is authored here and never on the crop step: a geometry
+     * step is no place for a keyboard
+     * (`design/components/compose/DescribeSheet.prompt.md`).
+     */
+    val describingIndex: Int? = null,
+
+    /**
+     * The screen's one `?`, open (design/readme.md §13: at most one per
+     * screen, and every one opens the house plain dialog).
+     */
+    val help: HelpTopic? = null,
 
     // -- Flow state --
     /** A held draft offered back before anything is authored. */
@@ -159,6 +187,16 @@ data class ComposeWizardState(
 ) {
     /** Every pick that has an id on the server. */
     val uploadedIds: List<String> get() = picked.mapNotNull { it.mediaId }
+
+    /** Any drawer open over the current stage. */
+    val anySheetOpen: Boolean
+        get() = sheet != SealSheet.None || pickedSheetOpen || describingIndex != null
+
+    /** How many picks carry a description — `DescribeCounter`'s count. */
+    val describedCount: Int get() = picked.count { it.altText.isNotBlank() }
+
+    /** Uploads still in flight, for `UploadStatusLine`'s "n of m". */
+    val uploadsDone: Int get() = uploadedIds.size
 
     val uploadsRunning: Boolean get() = picked.any { it.upload is AssetUpload.Running }
 
@@ -266,6 +304,21 @@ data class ComposeWizardState(
     }
 }
 
+/**
+ * The picks as the composer's components see them.
+ *
+ * The mapping is explicit and lives here rather than in the design system,
+ * which carries no domain dependency (android/CLAUDE.md).
+ */
+fun ComposeWizardState.pickedPictures(): List<PickedPicture> = picked.map { asset ->
+    PickedPicture(
+        item = MediaItem(asset.uri, asset.sourceRatio ?: 1f, asset.altText.ifBlank { null }),
+        described = asset.altText.isNotBlank(),
+        uploading = asset.upload is AssetUpload.Running,
+        failed = asset.upload is AssetUpload.Failed,
+    )
+}
+
 // ---------------------------------------------------------------------
 // Transitions. Pure functions on the state, so every branch of the
 // wizard is a JVM test rather than a UI one.
@@ -290,32 +343,27 @@ fun ComposeWizardState.advanced(): ComposeWizardState? = when (step) {
 }
 
 /**
- * One stage back, for the seal's own `Back` pill. The header's arrow is
- * not this: it leaves the wizard from every stage, keeping the draft.
+ * One stage back — the header's arrow, the system gesture, and the
+ * seal's own `Back` pill alike (jakob 2026-08-31: back "always goes back
+ * one step").
  *
- * Null where there is no earlier stage to reach.
+ * Null where there is no earlier stage to reach, which is what makes the
+ * first stage the one place back leaves from. The draft is kept either
+ * way; it is written continuously rather than at the exit.
  */
-fun ComposeWizardState.retreated(): ComposeWizardState? = when (step) {
-    WizardStep.Body -> null
-    WizardStep.Crop -> copy(step = WizardStep.Body)
-    WizardStep.Details -> if (hasCropStep) copy(step = WizardStep.Crop) else copy(step = WizardStep.Body)
-    WizardStep.Seal -> if (sheet != SealSheet.None) copy(sheet = SealSheet.None) else copy(step = WizardStep.Details)
+fun ComposeWizardState.retreated(): ComposeWizardState? = when {
+    // A sheet is a drawer over the stage: it closes before the stage moves.
+    anySheetOpen -> closedSheets()
+    step == WizardStep.Body -> null
+    step == WizardStep.Crop -> copy(step = WizardStep.Body)
+    step == WizardStep.Details ->
+        if (hasCropStep) copy(step = WizardStep.Crop) else copy(step = WizardStep.Body)
+    else -> copy(step = WizardStep.Details)
 }
 
-/**
- * A jump straight back to a stage already passed — the details board's
- * `Crop` and `Edit`, which are two different destinations rather than
- * one affordance drawn twice.
- *
- * Only ever backwards, and never onto the crop stage a words post does
- * not have: a jump forward would skip the readiness the `Next` pill is
- * there to enforce.
- */
-fun ComposeWizardState.returnedTo(target: WizardStep): ComposeWizardState = when {
-    target.ordinal >= step.ordinal -> this
-    target == WizardStep.Crop && !hasCropStep -> this
-    else -> copy(step = target, sheet = SealSheet.None)
-}
+/** Drops every drawer without moving the stage. */
+fun ComposeWizardState.closedSheets(): ComposeWizardState =
+    copy(sheet = SealSheet.None, pickedSheetOpen = false, describingIndex = null)
 
 /**
  * Switches the body's half. Both halves survive the switch — the
@@ -348,7 +396,24 @@ fun ComposeWizardState.removePick(uri: String): ComposeWizardState = copy(
     picked = picked.filterNot { it.uri == uri },
     // The framing cursor must not point past the end after a removal.
     framingIndex = framingIndex.coerceAtMost((picked.size - 2).coerceAtLeast(0)),
+    // A sheet describing the removed picture has nothing left to describe.
+    describingIndex = null,
 )
+
+/**
+ * Moves one pick in the order — `PickedSheet`'s drag, and its move-earlier
+ * / move-later accessibility actions.
+ *
+ * **The first one is the cover, and the badge travels with reorder**: there
+ * is no separate cover flag to keep in step, because the order *is* the
+ * answer. The contract derives `displayOrder` and `isCover` from this list,
+ * so nothing here carries an index that could disagree with itself.
+ */
+fun ComposeWizardState.movedPick(from: Int, to: Int): ComposeWizardState {
+    if (from !in picked.indices || to !in picked.indices || from == to) return this
+    val reordered = picked.toMutableList().apply { add(to, removeAt(from)) }
+    return copy(picked = reordered)
+}
 
 /** Records one asset's upload state without disturbing the others (D5). */
 fun ComposeWizardState.withUpload(uri: String, upload: AssetUpload): ComposeWizardState =

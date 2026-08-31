@@ -115,6 +115,9 @@ async fn fixture(pool: &PgPool) {
 /// alone, and the open channel adds `r6` ahead of it on epoch. Gardening
 /// answers with nothing, its withdrawal being a record rather than an
 /// erasure.
+///
+/// The topic fold and both of its read channels agree with a fold computed by hand from the fixture.
+/// ´claim:topics:the-fold-agrees-with-a-hand-computation´
 #[sqlx::test(migrations = "../../migrations")]
 async fn hand_computed_fold_agrees(pool: PgPool) {
     fixture(&pool).await;

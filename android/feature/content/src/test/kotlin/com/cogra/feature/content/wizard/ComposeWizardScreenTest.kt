@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.semantics.SemanticsActions
+import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
@@ -44,8 +45,13 @@ class ComposeWizardScreenTest {
     private var draftDiscards = 0
 
     private var permissionRequests = 0
-    private var editBodies = 0
-    private var editCrops = 0
+    private var leaves = 0
+    private var helps = mutableListOf<HelpTopic>()
+    private var manages = 0
+    private var describes = 0
+    private var describedAt = mutableListOf<Int>()
+    private var moves = mutableListOf<Pair<Int, Int>>()
+    private var removals = mutableListOf<Int>()
     private var sealBacks = 0
 
     @Composable
@@ -75,11 +81,19 @@ class ComposeWizardScreenTest {
             onCloseSheet = {},
             onLicenseChange = {},
             onPDirectedChange = {},
+            onSensitiveChange = {},
+            onSensitiveReasonChange = {},
             onNext = { nexts += 1 },
             onBack = { backs += 1 },
+            onLeave = { leaves += 1 },
             onSealBack = { sealBacks += 1 },
-            onEditBody = { editBodies += 1 },
-            onEditCrop = { editCrops += 1 },
+            onOpenHelp = { helps += it },
+            onCloseHelp = {},
+            onManagePictures = { manages += 1 },
+            onDescribePictures = { describes += 1 },
+            onDescribeAt = { describedAt += it },
+            onMovePick = { from, to -> moves += (from to to) },
+            onRemovePickAt = { removals += it },
             onSign = { signs += 1 },
             onContinueDraft = { draftContinues += 1 },
             onDiscardDraft = { draftDiscards += 1 },
@@ -154,11 +168,77 @@ class ComposeWizardScreenTest {
     }
 
     @Test
-    fun thePickStageShowsTheTrayAndTheCoverMark() {
+    fun theSealSaysWhereTheSensitiveMarkStands() {
+        compose.setContent { Wizard(words.copy(step = WizardStep.Seal)) }
+        compose.onNodeWithText("Not marked").assertExists()
+        compose.onNodeWithTag("wizard_seal_sensitive_action").performClick()
+        assertThat(sheets).containsExactly(SealSheet.Sensitive)
+    }
+
+    @Test
+    fun aMarkedSealSaysSoAndOffersToChangeIt() {
+        compose.setContent {
+            Wizard(words.copy(step = WizardStep.Seal, sensitive = true))
+        }
+        compose.onNodeWithText("Marked").assertExists()
+        // Bound to the tag, not the word: the license row says "Change" too.
+        compose.onNodeWithTag("wizard_seal_sensitive_action").assertIsDisplayed()
+    }
+
+    @Test
+    fun theReasonIsOnlyLiveOnceTheMarkIs() {
+        // The contract refuses a reason without the mark, so the field is
+        // not offered before the switch is on.
+        compose.setContent {
+            Wizard(words.copy(step = WizardStep.Seal, sheet = SealSheet.Sensitive))
+        }
+        compose.onNodeWithTag("wizard_sensitive_reason").assertIsNotEnabled()
+
+        compose.onNodeWithText(
+            "Veils the pictures and the description until a reader chooses to look.",
+        ).assertExists()
+    }
+
+    @Test
+    fun theArrowStepsAndTheXLeaves() {
+        // Two ways out, each doing one thing (jakob 2026-08-31). The X is
+        // wired to leaving, not to the stage-stepping arrow.
+        compose.setContent { Wizard(withPicks.copy(step = WizardStep.Details)) }
+
+        compose.onNodeWithTag("wizard_header_leave").performClick()
+        assertThat(leaves).isEqualTo(1)
+        assertThat(backs).isEqualTo(0)
+
+        compose.onNodeWithTag("wizard_header_back").performClick()
+        assertThat(backs).isEqualTo(1)
+        assertThat(leaves).isEqualTo(1)
+    }
+
+    @Test
+    fun theSealCarriesTheOneQuestionMarkAndTheKeyAbsentSealDoesNot() {
+        compose.setContent { Wizard(words.copy(step = WizardStep.Seal)) }
+        compose.onNodeWithTag("wizard_header_help").performClick()
+        assertThat(helps).containsExactly(HelpTopic.SignedActions)
+    }
+
+    @Test
+    fun theKeyStoryOutranksTheSealStoryWhenTheKeyIsGone() {
+        // One `?` per screen: on the key-absent seal it belongs to the key
+        // notice, so the header carries none.
+        compose.setContent { Wizard(words.copy(step = WizardStep.Seal, keyAbsent = true)) }
+        compose.onNodeWithTag("wizard_header_help").assertDoesNotExist()
+    }
+
+    @Test
+    fun thePickStageShowsTheTrayAndOpensTheShowAllSheet() {
         compose.setContent { Wizard(withPicks) }
         compose.onNodeWithTag("wizard_picked_count").assertIsDisplayed()
         compose.onNodeWithTag("wizard_tray_0").assertIsDisplayed()
         compose.onNodeWithTag("wizard_tray_1").assertIsDisplayed()
+
+        // The tray shows; the sheet manages.
+        compose.onNodeWithTag("wizard_show_all").performClick()
+        assertThat(manages).isEqualTo(1)
     }
 
     @Test
@@ -232,8 +312,7 @@ class ComposeWizardScreenTest {
 
         // The board re-words the stage behind the offer and drops the
         // branch: the question on the table is the draft.
-        compose.onNodeWithText("Or start fresh — pick one picture, several, or one video.")
-            .assertExists()
+        compose.onNodeWithText("Or start fresh —").assertExists()
         compose.onNodeWithTag("wizard_switch_words").assertDoesNotExist()
     }
 
@@ -278,44 +357,76 @@ class ComposeWizardScreenTest {
     // -- The details stage --
 
     @Test
-    fun theCropStageDescribesThePictureBeingFramed() {
+    fun theCropStageCarriesNoKeyboard() {
         compose.setContent { Wizard(withPicks.copy(step = WizardStep.Crop)) }
-        // The description sits beside the picture it describes, and it
-        // has to exist before the bytes move: `uploadMedia` takes the
-        // alt text and there is no `updateMedia`.
-        compose.onNodeWithTag("wizard_alt_0").assertExists()
-        // The second picture's field appears when it is the one framed.
-        compose.onNodeWithTag("wizard_alt_1").assertDoesNotExist()
+
+        // Never from the crop step: a geometry step is no place for a
+        // keyboard. Descriptions are authored on Details, in DescribeSheet.
+        compose.onNodeWithTag("wizard_alt_0").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_describe_sheet").assertDoesNotExist()
     }
 
     @Test
-    fun theSecondPicturesDescriptionFollowsTheFilmstrip() {
-        compose.setContent { Wizard(withPicks.copy(step = WizardStep.Crop, framingIndex = 1)) }
-        compose.onNodeWithTag("wizard_alt_1").assertExists()
-    }
-
-    @Test
-    fun aFailedUploadOffersARetryForThatPictureAlone() {
+    fun aFailedUploadCarriesItsWordsAndBothWaysOut() {
         val state = withPicks
             .copy(step = WizardStep.Details)
             .withUpload("b", AssetUpload.Failed("too big"))
         compose.setContent { Wizard(state) }
-        compose.onNodeWithTag("wizard_upload_retry_1").performScrollTo().performClick()
-        assertThat(retries).containsExactly("b")
+
+        // The line carries the failure's words; the tile only wears the
+        // badge, because retry does not fit in 48dp.
+        compose.onNodeWithTag("wizard_upload_failed_1").performScrollTo().assertExists()
+        compose.onNodeWithText("too big", substring = true).assertExists()
     }
 
     @Test
-    fun theDetailsRowsTwoWaysBackGoToTwoDifferentPlaces() {
+    fun thePickedRowOpensTheShowAllSheetAndCarriesNoCropOrEditLinks() {
         compose.setContent { Wizard(withPicks.copy(step = WizardStep.Details)) }
 
-        compose.onNodeWithTag("wizard_details_crop").performScrollTo().performClick()
-        compose.onNodeWithTag("wizard_details_edit").performScrollTo().performClick()
+        // "none" (jakob 2026-08-31): managing the set is the sheet's job,
+        // and the crop step is reached with Back.
+        compose.onNodeWithTag("wizard_details_crop").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_details_edit").assertDoesNotExist()
 
-        // The board draws Crop and Edit side by side because they are two
-        // destinations; wiring both to the same one made them a duplicate.
-        assertThat(editCrops).isEqualTo(1)
-        assertThat(editBodies).isEqualTo(1)
+        compose.onNodeWithTag("wizard_picked_row").performScrollTo().performClick()
+        assertThat(manages).isEqualTo(1)
         assertThat(backs).isEqualTo(0)
+    }
+
+    @Test
+    fun theDetailsStageCountsWhatHasBeenDescribed() {
+        val state = withPicks
+            .copy(step = WizardStep.Details)
+            .withAltText("a", "A salt crust")
+        compose.setContent { Wizard(state) }
+
+        compose.onNodeWithText("· 1 of 2 described").performScrollTo().assertExists()
+        compose.onNodeWithTag("wizard_describe_counter").performScrollTo().performClick()
+        assertThat(describes).isEqualTo(1)
+    }
+
+    @Test
+    fun theShowAllSheetManagesOneSetAndNothingElseDoes() {
+        val state = withPicks.copy(step = WizardStep.Details, pickedSheetOpen = true)
+        compose.setContent { Wizard(state) }
+
+        compose.onNodeWithText("The first one is the cover — drag to reorder.").assertExists()
+        compose.onNodeWithTag("wizard_picked_sheet_row_1_describe").performClick()
+        assertThat(describedAt).containsExactly(1)
+
+        compose.onNodeWithTag("wizard_picked_sheet_row_1_remove").performClick()
+        assertThat(removals).containsExactly(1)
+    }
+
+    @Test
+    fun theDescribeSheetIsWhereAltTextIsAuthored() {
+        val state = withPicks.copy(step = WizardStep.Details, describingIndex = 0)
+        compose.setContent { Wizard(state) }
+
+        compose.onNodeWithTag("wizard_describe_sheet_field").assertExists()
+        compose.onNodeWithText(
+            "Read aloud to people who can't see it, and shown if the picture can't load.",
+        ).assertExists()
     }
 
     // -- The seal --
@@ -364,11 +475,11 @@ class ComposeWizardScreenTest {
     }
 
     @Test
-    fun theSealOffersNoSensitiveMarkItCannotSend() {
-        // The contract carries no author self-mark, so a row promising
-        // one would be a lie told to the person trusting it.
+    fun theSealCarriesTheAuthorsOwnSensitiveMark() {
+        // The contract carries the self-mark now, so the row is real: it
+        // says where the mark stands and opens the sheet that sets it.
         compose.setContent { Wizard(ComposeWizardState(body = "x", step = WizardStep.Seal)) }
-        compose.onNodeWithTag("wizard_seal_sensitive").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_seal_sensitive").assertIsDisplayed()
     }
 
     @Test

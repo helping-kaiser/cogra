@@ -442,6 +442,8 @@ open class ThrowingContentRepository : ContentRepository {
         tags: List<TagClaim>,
         references: List<ReferenceClaim>,
         attachments: List<AttachmentClaim>,
+        sensitive: Boolean,
+        sensitiveReason: String?,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun preparePostEdit(
         id: String,

@@ -221,6 +221,9 @@ mod tests {
 
     /// A fully populated body and a minimal one — every optional absent —
     /// both survive the round trip.
+    ///
+    /// A proposal round-trips whether every optional is present or every one absent.
+    /// ´claim:wire:a-proposal-round-trips-full-or-minimal´
     #[test]
     fn proposal_round_trips() {
         let p = proposal();
@@ -247,6 +250,8 @@ mod tests {
         );
     }
 
+    /// The wire form carries the body's canonical bytes verbatim, so what travels is what was signed.
+    /// ´claim:wire:the-wire-carries-the-canonical-signing-base-verbatim´
     #[test]
     fn the_wire_body_is_the_canonical_signing_base() {
         let p = proposal();
@@ -257,6 +262,8 @@ mod tests {
         assert_eq!(d.bytes().expect("body"), p.body.canonical_bytes());
     }
 
+    /// A verified act round-trips with every part of the handshake it carries.
+    /// ´claim:wire:a-verified-act-round-trips-with-all-its-parts´
     #[test]
     fn verified_act_round_trips() {
         let act = VerifiedAct {
@@ -276,6 +283,8 @@ mod tests {
         );
     }
 
+    /// A pre-commitment round-trips as the nonce and the signature it holds.
+    /// ´claim:wire:a-pre-commitment-round-trips´
     #[test]
     fn pre_commitment_round_trips() {
         let blob = encode_pre_commitment(&[9; 32], &[7; 64]);
@@ -288,6 +297,9 @@ mod tests {
     /// trailing garbage, and a bad identifier inside an otherwise valid
     /// envelope each surface as their own error rather than decoding into a
     /// plausible-looking proposal.
+    ///
+    /// Malformed input surfaces as its own error rather than decoding into a plausible-looking proposal.
+    /// ´claim:wire:malformed-input-is-refused-rather-than-misread´
     #[test]
     fn malformed_input_is_refused_not_misread() {
         let mut e = Encoder::new();
