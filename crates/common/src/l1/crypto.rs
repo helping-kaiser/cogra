@@ -89,6 +89,9 @@ mod tests {
     /// A signature verifies only under the tag and message it was made for:
     /// the same message under another domain tag and a tampered message both
     /// refuse. Garbage signature bytes refuse rather than panic.
+    ///
+    /// A signature verifies only under the tag and the message it was made for, and garbage refuses rather than panics.
+    /// ´claim:crypto:a-signature-verifies-only-under-its-own-tag-and-message´
     #[test]
     fn signatures_verify_and_are_domain_separated() {
         let key = SigningKey::generate(&mut OsRng);
@@ -115,6 +118,8 @@ mod tests {
         ));
     }
 
+    /// A commitment binds its tag, its salt, and its payload, so changing any one of the three changes it.
+    /// ´claim:crypto:a-commitment-binds-its-tag-salt-and-payload´
     #[test]
     fn commitments_bind() {
         let salt = [7u8; SALT_LEN];
@@ -130,6 +135,9 @@ mod tests {
 
     /// Without the length prefixes, two different part lists sharing a
     /// concatenation would hash identically.
+    ///
+    /// Length framing is what keeps two different part lists from hashing alike.
+    /// ´claim:crypto:length-framing-separates-parts-that-would-otherwise-concatenate´
     #[test]
     fn length_framing_prevents_concatenation_ambiguity() {
         assert_ne!(
@@ -138,6 +146,8 @@ mod tests {
         );
     }
 
+    /// An address derives from a public key at a fixed length, and derives the same one every time.
+    /// ´claim:crypto:an-address-derives-stably-from-its-public-key´
     #[test]
     fn address_derivation_is_stable() {
         let key = SigningKey::from_bytes(&[42u8; 32]);

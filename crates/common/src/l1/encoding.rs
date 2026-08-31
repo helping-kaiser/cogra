@@ -276,6 +276,8 @@ mod tests {
         e.finish()
     }
 
+    /// An unsigned integer is written in the minimal head its magnitude admits, and never a wider one.
+    /// ´claim:encoding:an-integer-is-written-in-its-minimal-head´
     #[test]
     fn golden_uints() {
         assert_eq!(
@@ -322,6 +324,8 @@ mod tests {
         );
     }
 
+    /// Each major type is written in the one form the specification fixes for it.
+    /// ´claim:encoding:each-major-type-is-written-in-its-fixed-form´
     #[test]
     fn golden_text_bytes_array() {
         assert_eq!(
@@ -351,6 +355,8 @@ mod tests {
     }
 
     /// Tag 55799 is the envelope magic, written D9 D9F7 (RFC 8949 §3.4.6).
+    ///
+    /// (´claim:encoding:each-major-type-is-written-in-its-fixed-form´)
     #[test]
     fn golden_map_and_tag() {
         assert_eq!(
@@ -377,6 +383,9 @@ mod tests {
 
     /// The 8-byte form is written verbatim from the bit pattern, so -0.0
     /// keeps its sign bit: one encoding per bit pattern, no normalization.
+    ///
+    /// A float is written verbatim from its bit pattern, so a negative zero keeps its sign.
+    /// ´claim:encoding:a-float-is-written-verbatim-from-its-bit-pattern´
     #[test]
     fn golden_float() {
         assert_eq!(
@@ -393,6 +402,8 @@ mod tests {
         );
     }
 
+    /// One value encodes to one byte string, every time it is written.
+    /// ´claim:encoding:one-value-encodes-to-one-byte-string´
     #[test]
     fn encoding_is_deterministic() {
         let a = enc(|e| {

@@ -263,6 +263,8 @@ mod tests {
         }
     }
 
+    /// One body has one canonical encoding, and a change to any field produces another.
+    /// ´claim:handshake:one-body-has-one-canonical-encoding´
     #[test]
     fn canonical_bytes_are_stable_and_field_sensitive() {
         let a = body();
@@ -275,12 +277,16 @@ mod tests {
         assert_ne!(a.canonical_bytes(), c.canonical_bytes());
     }
 
+    /// An act identifier and its source endpoint both derive from the body, never from anything beside it.
+    /// ´claim:handshake:the-act-identifier-derives-from-the-body-alone´
     #[test]
     fn act_id_derives_from_body() {
         assert_eq!(body().act_id().to_string(), "act:alice:3:opinion");
         assert_eq!(body().source().to_string(), "addr:alice");
     }
 
+    /// The dependency encoding is order-sensitive, and an empty list has an encoding of its own.
+    /// ´claim:handshake:the-dependency-encoding-is-order-sensitive´
     #[test]
     fn deps_encoding_is_order_sensitive() {
         let d1 = ActId::parse("act:a:1:opinion").expect("ok");
