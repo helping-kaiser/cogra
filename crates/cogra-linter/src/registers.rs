@@ -946,6 +946,8 @@ pub const RULES: [crate::diag::RuleId; 0] = [];
 mod tests {
     use super::*;
 
+    /// A generated table pads every column to its widest cell.
+    /// ´claim:tables:a-table-pads-to-its-widest-cell´
     #[test]
     fn a_table_pads_every_column_to_its_widest_cell() {
         let rows = vec![vec![String::from("Declared hybrids"), String::from("3")]];
@@ -956,6 +958,8 @@ mod tests {
         );
     }
 
+    /// A short row pads rather than narrowing the table.
+    /// ´claim:tables:a-short-row-pads´
     #[test]
     fn a_short_row_pads_rather_than_narrowing_the_table() {
         let rows = vec![vec![String::from("one")]];
@@ -963,6 +967,8 @@ mod tests {
         assert_eq!(table, "| a   | b |\n| --- | - |\n| one |   |\n");
     }
 
+    /// An owner scope admits that owner's own registers alone.
+    /// ´claim:tables:an-owner-scope-admits-one-owner´
     #[test]
     fn an_owner_scope_admits_only_that_owners_label_registers() {
         let register = |scope: RegisterScope| Register {

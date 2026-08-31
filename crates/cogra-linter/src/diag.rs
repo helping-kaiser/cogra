@@ -284,6 +284,8 @@ mod tests {
         }
     }
 
+    /// The diagnostic order's first key is the path.
+    /// ´claim:diagnostics:the-first-key-is-the-path´
     #[test]
     fn the_first_key_is_the_path() {
         let earlier = diagnostic("a.md", 900, "z-rule");
@@ -291,6 +293,8 @@ mod tests {
         assert!(earlier < later);
     }
 
+    /// Its second key is the start offset.
+    /// ´claim:diagnostics:the-second-key-is-the-offset´
     #[test]
     fn the_second_key_is_the_start_offset() {
         let earlier = diagnostic("a.md", 4, "z-rule");
@@ -298,6 +302,8 @@ mod tests {
         assert!(earlier < later);
     }
 
+    /// Its third key is the rule.
+    /// ´claim:diagnostics:the-third-key-is-the-rule´
     #[test]
     fn the_third_key_is_the_rule() {
         let earlier = diagnostic("a.md", 4, "a-rule");
@@ -305,6 +311,8 @@ mod tests {
         assert!(earlier < later);
     }
 
+    /// The message decides nothing in the order.
+    /// ´claim:diagnostics:the-message-decides-nothing´
     #[test]
     fn the_message_decides_nothing() {
         let mut one = diagnostic("a.md", 4, "a-rule");
@@ -313,6 +321,8 @@ mod tests {
         assert_eq!(one.cmp(&other), Ordering::Equal);
     }
 
+    /// Sorting is stable under shuffling, so one corpus gives one sequence.
+    /// ´claim:diagnostics:sorting-is-stable´
     #[test]
     fn sorting_is_stable_under_shuffling() {
         let mut one = vec![
@@ -332,6 +342,8 @@ mod tests {
         assert_eq!(one, other);
     }
 
+    /// A location counts lines and columns from one.
+    /// ´claim:diagnostics:locations-count-from-one´
     #[test]
     fn a_location_counts_lines_and_columns_from_one() {
         let source = "alpha\nbeta\ngamma";
@@ -341,6 +353,8 @@ mod tests {
         assert_eq!((third.line, third.column), (3, 3));
     }
 
+    /// A location past the end of a file reports its last line.
+    /// ´claim:diagnostics:a-location-past-the-end-clamps´
     #[test]
     fn a_location_past_the_end_reports_the_last_line() {
         let source = "alpha\nbeta";
@@ -348,6 +362,7 @@ mod tests {
         assert_eq!(past.line, 2);
     }
 
+    /// (´claim:diagnostics:no-rule-identifier-is-label-shaped´)
     #[test]
     fn a_rule_identifier_is_never_label_shaped() {
         for rule in crate::carrier::RULES {

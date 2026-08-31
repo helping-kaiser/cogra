@@ -226,6 +226,9 @@ owner = \"doc.one\"
 /// nothing at all — and on a case-insensitive filesystem the author sees the
 /// tree exactly where the prefix says it is. The check is what makes the
 /// byte-exactness say so.
+///
+/// A configured path the tree spells otherwise is located, matching being byte-exact.
+/// ´claim:adoption:a-misspelled-path-is-located´
 #[test]
 fn a_configured_path_the_tree_spells_otherwise_is_located() {
     let root = tree("spelling-case", &["docs/README.md"]);
@@ -249,6 +252,9 @@ fn a_configured_path_the_tree_spells_otherwise_is_located() {
 
 /// The mismatch may sit at any component, and the finding names the whole
 /// path as the tree spells it rather than the one component that differs.
+///
+/// A misspelling at any component names the whole path as the tree spells it.
+/// ´claim:adoption:a-misspelling-names-the-whole-path´
 #[test]
 fn a_misspelling_deeper_in_a_path_names_the_whole_spelling() {
     let root = tree("spelling-deep", &["docs/primitive/layers.md"]);
@@ -265,6 +271,9 @@ fn a_misspelling_deeper_in_a_path_names_the_whole_spelling() {
 
 /// A file path is checked the same way, and reported without a trailing
 /// separator it never carried.
+///
+/// A misspelled file path is reported without a separator it never carried.
+/// ´claim:adoption:a-file-path-is-reported-as-a-file´
 #[test]
 fn a_misspelled_file_path_is_reported_as_a_file() {
     let root = tree("spelling-file", &["docs/Layers.md"]);
@@ -282,6 +291,9 @@ fn a_misspelled_file_path_is_reported_as_a_file() {
 /// Absence is not a misspelling. A configured root that is simply not in the
 /// tree — a build output, a gitignored junction — passes here; whether its
 /// absence matters is the walk's question.
+///
+/// Absence is not a misspelling, and a configured root simply not in the tree passes.
+/// ´claim:adoption:absence-is-no-misspelling´
 #[test]
 fn a_configured_path_that_is_simply_absent_is_no_misspelling() {
     let root = tree("spelling-absent", &["docs/README.md"]);
@@ -297,6 +309,9 @@ fn a_configured_path_that_is_simply_absent_is_no_misspelling() {
 
 /// The path that is spelled right passes, which is what keeps the check from
 /// being vacuous.
+///
+/// A path spelled the way the tree spells it passes, which keeps the check from being vacuous.
+/// ´claim:adoption:a-correct-path-passes´
 #[test]
 fn a_configured_path_the_tree_spells_the_same_way_passes() {
     let root = tree("spelling-exact", &["docs/primitive/layers.md"]);
@@ -312,6 +327,9 @@ fn a_configured_path_the_tree_spells_the_same_way_passes() {
 
 /// Every section that configures a path is collected, so none of them can be
 /// checked by accident and none forgotten.
+///
+/// Every section that configures a path contributes it, so none is checked by accident.
+/// ´claim:adoption:every-section-contributes-its-paths´
 #[test]
 fn every_configuring_section_contributes_its_paths() {
     let adoption = ruled();
@@ -341,6 +359,9 @@ fn every_configuring_section_contributes_its_paths() {
 
 /// The ruled adoption is spelled the way this repository spells its own
 /// trees — the check over the corpus it was written for.
+///
+/// This corpus's own adoption data is spelled the way its tree is.
+/// ´claim:adoption:the-ruled-paths-are-spelled-right´
 #[test]
 fn the_ruled_adoption_is_spelled_the_way_the_corpus_root_spells_it() {
     let root = corpus_adoption_path()
@@ -352,12 +373,16 @@ fn the_ruled_adoption_is_spelled_the_way_the_corpus_root_spells_it() {
         .expect("every configured path is spelled as the tree spells it");
 }
 
+/// This corpus's own adoption data loads.
+/// ´claim:adoption:the-ruled-adoption-loads´
 #[test]
 fn the_ruled_adoption_loads() {
     let adoption = ruled();
     assert_eq!(&*adoption.meta.ruled, "2026-08-21");
 }
 
+/// The meta section arrives with the values it states.
+/// ´claim:adoption:the-meta-section-round-trips´
 #[test]
 fn the_meta_section_round_trips() {
     let meta = ruled().meta;
@@ -377,6 +402,9 @@ fn the_meta_section_round_trips() {
 }
 
 /// Major is enforced; minor and patch are carried, advisory only.
+///
+/// The schema major is enforced while its minor and patch are carried as advisory.
+/// ´claim:adoption:the-schema-major-is-enforced´
 #[test]
 fn a_schema_major_this_build_reads_loads() {
     let source = document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K)
@@ -388,6 +416,9 @@ fn a_schema_major_this_build_reads_loads() {
 /// A major this build does not read is refused with a located error naming
 /// both majors — never silently misinterpreted as the shape this build
 /// expects.
+///
+/// A schema major this build does not read is refused with both majors named.
+/// ´claim:adoption:a-foreign-schema-major-is-refused´
 #[test]
 fn a_schema_major_below_this_build_is_refused() {
     let source = document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K)
@@ -405,6 +436,8 @@ fn a_schema_major_below_this_build_is_refused() {
 
 /// The same refusal for a major ahead of this build — the reader has no
 /// obligation to guess forward compatibility it was never built for.
+///
+/// (´claim:adoption:a-foreign-schema-major-is-refused´)
 #[test]
 fn a_schema_major_above_this_build_is_refused() {
     let source = document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K)
@@ -416,6 +449,8 @@ fn a_schema_major_above_this_build_is_refused() {
     assert_eq!(found, 2);
 }
 
+/// The carrier section arrives with the values it states.
+/// ´claim:adoption:the-carrier-section-round-trips´
 #[test]
 fn the_carrier_section_round_trips() {
     let carrier = ruled().carrier;
@@ -438,6 +473,8 @@ fn the_carrier_section_round_trips() {
     );
 }
 
+/// The carrier section decides what is excluded and what is generated.
+/// ´claim:adoption:the-carrier-decides-exclusion-and-generation´
 #[test]
 fn the_carrier_decides_what_is_excluded_and_what_is_generated() {
     let carrier = ruled().carrier;
@@ -448,6 +485,8 @@ fn the_carrier_decides_what_is_excluded_and_what_is_generated() {
     assert!(!carrier.is_generated(Path::new("Cargo.toml")));
 }
 
+/// The signature section arrives with the values it states.
+/// ´claim:adoption:the-signature-section-round-trips´
 #[test]
 fn the_signature_section_round_trips() {
     let signature = ruled().signature;
@@ -475,6 +514,8 @@ fn the_signature_section_round_trips() {
     assert!(!records.registered);
 }
 
+/// The package family derives a prefix for every package name by its own rule.
+/// ´claim:adoption:the-package-family-derives-prefixes´
 #[test]
 fn the_package_family_derives_its_prefixes() {
     let signature = ruled().signature;
@@ -500,6 +541,8 @@ fn the_package_family_derives_its_prefixes() {
     assert!(!signature.registers(&OwnerId::new("doc.nowhere")));
 }
 
+/// The partition section arrives with the values it states.
+/// ´claim:adoption:the-partition-section-round-trips´
 #[test]
 fn the_partition_section_round_trips() {
     let partition = ruled().partition;
@@ -516,6 +559,8 @@ fn the_partition_section_round_trips() {
     assert_eq!(last.owner, OwnerId::new("tree.repo-root"));
 }
 
+/// The partition assigns an owner by first match.
+/// ´claim:adoption:the-partition-assigns-by-first-match´
 #[test]
 fn the_partition_assigns_by_first_match() {
     let partition = ruled().partition;
@@ -543,6 +588,8 @@ fn the_partition_assigns_by_first_match() {
     );
 }
 
+/// The partition is total by its last rule's empty prefix.
+/// ´claim:adoption:the-partition-is-total´
 #[test]
 fn the_partition_is_total_by_its_last_rule() {
     let partition = ruled().partition;
@@ -556,6 +603,8 @@ fn the_partition_is_total_by_its_last_rule() {
     );
 }
 
+/// The two optional roots of this corpus are its working-note trees.
+/// ´claim:adoption:the-optional-roots-are-the-working-notes´
 #[test]
 fn the_two_optional_roots_are_the_working_notes() {
     let partition = ruled().partition;
@@ -574,6 +623,8 @@ fn the_two_optional_roots_are_the_working_notes() {
     );
 }
 
+/// The profiles section arrives with the values it states.
+/// ´claim:adoption:the-profiles-section-round-trips´
 #[test]
 fn the_profiles_section_round_trips() {
     let profiles = ruled().profiles;
@@ -619,6 +670,8 @@ fn the_profiles_section_round_trips() {
     );
 }
 
+/// A staged profile carries the condition it waits on.
+/// ´claim:adoption:a-staged-profile-carries-its-condition´
 #[test]
 fn a_staged_profile_carries_the_condition_it_waits_on() {
     let profiles = "
@@ -670,6 +723,8 @@ reserved_ungoverned = []
     assert_eq!(adoption.profiles.effective().count(), 0);
 }
 
+/// The reserved-kinds section arrives with the values it states.
+/// ´claim:adoption:the-reserved-kinds-section-round-trips´
 #[test]
 fn the_reserved_kinds_section_round_trips() {
     let reserved = ruled().reserved_kinds;
@@ -684,6 +739,8 @@ fn the_reserved_kinds_section_round_trips() {
     );
 }
 
+/// The typed-data section arrives with the values it states.
+/// ´claim:adoption:the-typed-data-section-round-trips´
 #[test]
 fn the_typed_data_section_round_trips() {
     let typed = ruled().typed_data;
@@ -693,6 +750,8 @@ fn the_typed_data_section_round_trips() {
     assert!(typed.revisit_when.is_some());
 }
 
+/// The citation-index section arrives with the values it states.
+/// ´claim:adoption:the-citation-index-section-round-trips´
 #[test]
 fn the_citation_index_section_round_trips() {
     let indexes = ruled().citation_indexes;
@@ -701,6 +760,8 @@ fn the_citation_index_section_round_trips() {
     assert!(indexes.reason.is_some());
 }
 
+/// The scanned-region section arrives with the values it states.
+/// ´claim:adoption:the-scanned-region-section-round-trips´
 #[test]
 fn the_scanned_region_section_round_trips() {
     let scanned = ruled().scanned_regions;
@@ -722,6 +783,8 @@ fn the_scanned_region_section_round_trips() {
     assert_eq!(scanned.none[0].languages.len(), 8);
 }
 
+/// A language is named in the scanned regions only where a frontend reads it.
+/// ´claim:adoption:a-language-is-named-where-it-is-read´
 #[test]
 fn a_language_is_named_only_where_a_frontend_reads_it() {
     let scanned = ruled().scanned_regions;
@@ -751,6 +814,8 @@ fn a_language_is_named_only_where_a_frontend_reads_it() {
     );
 }
 
+/// The head-recognition section arrives with the values it states.
+/// ´claim:adoption:the-head-recognition-section-round-trips´
 #[test]
 fn the_head_recognition_section_round_trips() {
     let heads = ruled().head_recognition;
@@ -766,6 +831,8 @@ fn the_head_recognition_section_round_trips() {
     assert_eq!(heads.none[0].languages.len(), 3);
 }
 
+/// The banned-token section arrives with the values it states.
+/// ´claim:adoption:the-banned-token-section-round-trips´
 #[test]
 fn the_banned_token_section_round_trips() {
     let banned = ruled().banned_tokens;
@@ -779,6 +846,9 @@ fn the_banned_token_section_round_trips() {
 /// Each row's `class` is the lexer's own vocabulary token, and it arrives
 /// as written — the key the rule is read from, beside the `token` prose
 /// that no code reads.
+///
+/// Every banned-token row names its class in the lexer's own vocabulary, as written.
+/// ´claim:adoption:every-ban-row-names-a-lexer-class´
 #[test]
 fn every_banned_token_row_names_its_class_in_the_lexers_vocabulary() {
     let banned = ruled().banned_tokens;
@@ -797,6 +867,9 @@ fn every_banned_token_row_names_its_class_in_the_lexers_vocabulary() {
 /// The registry document is named by its own key, and `registry_document`
 /// reads that key and nothing else — no prose, no compiled-in path, and no
 /// positional read of `[meta] discipline_docs`.
+///
+/// The registry document is read from its own key and from nothing else.
+/// ´claim:adoption:the-registry-document-is-read-from-its-key´
 #[test]
 fn the_registry_document_is_read_from_its_key() {
     let adoption = ruled();
@@ -820,6 +893,8 @@ fn the_registry_document_is_read_from_its_key() {
 
 /// A fixture naming a different registry gets that one: the key is the
 /// datum, so the reading follows the file rather than this corpus.
+///
+/// (´claim:adoption:the-registry-document-is-read-from-its-key´)
 #[test]
 fn the_registry_document_follows_the_key() {
     let source = document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K);
@@ -832,6 +907,9 @@ fn the_registry_document_follows_the_key() {
 
 /// `[kinds]` without its registry key names no document, so the data will
 /// not load at all rather than leaving the bootstrap to guess one.
+///
+/// A kinds section without its registry key will not load at all.
+/// ´claim:adoption:a-registryless-kinds-section-is-refused´
 #[test]
 fn a_kinds_section_with_no_registry_key_is_refused() {
     let source = document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K)
@@ -844,6 +922,8 @@ fn a_kinds_section_with_no_registry_key_is_refused() {
     );
 }
 
+/// The kinds section arrives with the values it states.
+/// ´claim:adoption:the-kinds-section-round-trips´
 #[test]
 fn the_kinds_section_round_trips() {
     let kinds = ruled().kinds;
@@ -872,6 +952,8 @@ fn the_kinds_section_round_trips() {
     );
 }
 
+/// The enforcement section arrives with the values it states.
+/// ´claim:adoption:the-enforcement-section-round-trips´
 #[test]
 fn the_enforcement_section_round_trips() {
     let enforcement = ruled().enforcement;
@@ -896,6 +978,9 @@ fn the_enforcement_section_round_trips() {
 /// what is never committed: the working notes, whose roots are gitignored
 /// junctions. They are owned so a note resolves rather than falling outside
 /// the partition, and advisory because no build should fail on one.
+///
+/// A finding's enforcement is decided by its path.
+/// ´claim:adoption:enforcement-follows-the-path´
 #[test]
 fn enforcement_is_decided_by_the_finding_s_path() {
     let enforcement = ruled().enforcement;
@@ -921,12 +1006,16 @@ fn enforcement_is_decided_by_the_finding_s_path() {
     );
 }
 
+/// A minimal adoption naming every required section loads.
+/// ´claim:adoption:a-minimal-adoption-loads´
 #[test]
 fn a_minimal_adoption_loads() {
     let source = document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K);
     assert!(load(&source).is_ok(), "the fixtures' own base must load");
 }
 
+/// An unreadable adoption file is an error and not a finding.
+/// ´claim:adoption:an-unreadable-file-is-an-error´
 #[test]
 fn an_unreadable_file_is_an_error_and_not_a_finding() {
     let error = Adoption::load(Path::new("no-such-corpus-adoption.toml"))
@@ -935,12 +1024,16 @@ fn an_unreadable_file_is_an_error_and_not_a_finding() {
     assert!(error.at().is_none());
 }
 
+/// Malformed adoption data is a syntax error.
+/// ´claim:adoption:malformed-data-is-a-syntax-error´
 #[test]
 fn malformed_toml_is_a_syntax_error() {
     let error = load("[meta\n").expect_err("an unclosed table header");
     assert!(matches!(error, AdoptionError::Syntax(_)));
 }
 
+/// A partition rule naming an unregistered owner is located at its row.
+/// ´claim:adoption:an-unregistered-rule-owner-is-located´
 #[test]
 fn a_partition_rule_naming_an_unregistered_owner_is_located() {
     let partition = "
@@ -969,6 +1062,8 @@ owner = \"doc.one\"
     assert!(row(&source, &error).contains("doc.nobody-registers-this"));
 }
 
+/// A registration the prefix grammar refuses is located at its row.
+/// ´claim:adoption:a-malformed-prefix-is-located´
 #[test]
 fn a_registration_the_prefix_grammar_refuses_is_located() {
     let signature = "[signature]
@@ -990,6 +1085,8 @@ owner = \"doc.one\"
     assert!(row(&source, &error).contains("Lbl"));
 }
 
+/// A prefix registered twice is located at the second registration.
+/// ´claim:adoption:a-duplicate-prefix-is-located´
 #[test]
 fn a_prefix_registered_twice_is_located_at_the_second_registration() {
     let signature = "[signature]
@@ -1017,6 +1114,8 @@ owner = \"doc.two\"
     );
 }
 
+/// A partition whose last rule carries a prefix is not total.
+/// ´claim:adoption:a-prefixed-last-rule-is-not-total´
 #[test]
 fn a_partition_whose_last_rule_carries_a_prefix_is_not_total() {
     let partition = "
@@ -1037,6 +1136,9 @@ owner = \"doc.one\"
 /// walks the stored array — so a rule whose order is not its position would
 /// match in an order its own row contradicts. The campaign that found this
 /// flipped `order = 4` to `order = 8`; the loader now refuses it.
+///
+/// A rule whose stated order is not its position is refused at that row.
+/// ´claim:adoption:an-order-must-be-its-position´
 #[test]
 fn a_rule_whose_order_is_not_its_position_is_located() {
     let partition = "
@@ -1072,6 +1174,8 @@ owner = \"doc.one\"
 
 /// A repeated order is the same defect: two rules claiming one position, and
 /// the row named is the one that is wrong.
+///
+/// (´claim:adoption:an-order-must-be-its-position´)
 #[test]
 fn a_repeated_order_is_refused_at_the_second_rule() {
     let partition = "
@@ -1097,6 +1201,9 @@ owner = \"doc.one\"
 
 /// The ruled adoption's own orders are its positions, which is what the
 /// check asserts of every file it loads.
+///
+/// This corpus's own partition states each rule's position.
+/// ´claim:adoption:the-ruled-orders-are-positions´
 #[test]
 fn the_ruled_partition_states_each_rules_position() {
     for (index, rule) in ruled().partition.rules.iter().enumerate() {
@@ -1142,6 +1249,8 @@ reserved_ungoverned = []
     assert!(row(&source, &error).contains("rust-test"));
 }
 
+/// A staged profile waiting on nothing stated is incomplete.
+/// ´claim:adoption:a-conditionless-staged-profile-is-incomplete´
 #[test]
 fn a_staged_profile_with_no_entry_condition_is_incomplete() {
     let profiles = "
@@ -1169,6 +1278,8 @@ reserved_ungoverned = []
     assert_eq!(datum, "entry condition");
 }
 
+/// A profile governing a kind the reserved set does not hold is located.
+/// ´claim:adoption:an-unreserved-governed-kind-is-located´
 #[test]
 fn a_profile_governing_a_kind_outside_k_is_located() {
     let profiles = "
@@ -1216,6 +1327,8 @@ enters_when = \"the register generation lands\"
     assert!(row(&source, &error).contains("test"));
 }
 
+/// A stated effective count no profile supports is located at that row.
+/// ´claim:adoption:a-wrong-effective-count-is-located´
 #[test]
 fn a_stated_effective_count_that_no_profile_supports_is_located() {
     let profiles = "
@@ -1232,6 +1345,8 @@ effective = 1
     assert!(row(&source, &error).contains("effective = 1"));
 }
 
+/// An effective profile is counted among those in force.
+/// ´claim:adoption:an-effective-profile-is-counted´
 #[test]
 fn an_effective_profile_is_counted() {
     let profiles = "
@@ -1281,6 +1396,9 @@ reserved_ungoverned = []
 /// A Cargo workspace member with no partition rule of its own falls to the
 /// residual owner unnoticed until this check — R-PKG′ would have derived
 /// WIDGETS for it, and the located error names both.
+///
+/// A workspace member with no partition rule of its own is located, with its derived prefix named.
+/// ´claim:adoption:an-unregistered-member-is-located´
 #[test]
 fn an_unregistered_cargo_member_is_located() {
     let root = workspace_tree("roster-unregistered-cargo", &["crates/widgets"]);
@@ -1313,6 +1431,9 @@ fn an_unregistered_cargo_member_is_located() {
 
 /// A Cargo workspace member with a partition rule of its own passes: the
 /// check is about the roster's completeness, not a judgment on the rule.
+///
+/// A workspace member with a partition rule of its own passes.
+/// ´claim:adoption:a-registered-member-passes´
 #[test]
 fn a_registered_cargo_member_passes() {
     let root = workspace_tree("roster-registered-cargo", &["crates/widgets"]);
@@ -1345,6 +1466,9 @@ owner = \"doc.one\"
 /// The Gradle build is named by `android/build.gradle.kts`, the one anchor
 /// a 15-module build carries exactly once — an unlisted build is located the
 /// same way an unlisted crate is.
+///
+/// An unlisted Gradle build is located the way an unlisted crate is.
+/// ´claim:adoption:an-unregistered-android-build-is-located´
 #[test]
 fn an_unregistered_android_build_is_located() {
     let root = tree("roster-unregistered-android", &["android/build.gradle.kts"]);
@@ -1372,6 +1496,9 @@ fn an_unregistered_android_build_is_located() {
 
 /// The npm package is named by `web/package.json` existing, read for
 /// existence alone — this check parses no JSON.
+///
+/// An unlisted npm package is located by its manifest's existence alone.
+/// ´claim:adoption:an-unregistered-web-package-is-located´
 #[test]
 fn an_unregistered_web_package_is_located() {
     let root = tree("roster-unregistered-web", &["web/package.json"]);
@@ -1394,6 +1521,9 @@ fn an_unregistered_web_package_is_located() {
 /// A root with no readable workspace manifest and no android or web build
 /// has nothing to reconcile: Cargo well-formedness is not this check's
 /// question, so it passes with an empty roster.
+///
+/// A root with no build manifest at all has nothing to reconcile and passes.
+/// ´claim:adoption:no-manifests-means-nothing-to-reconcile´
 #[test]
 fn a_root_with_no_build_manifests_has_nothing_to_reconcile() {
     let root = tree("roster-no-manifests", &["README.md"]);
@@ -1413,6 +1543,9 @@ fn a_root_with_no_build_manifests_has_nothing_to_reconcile() {
 /// The check over this repository's own adoption data and its own root: the
 /// six Cargo crates, android, and web every one has a partition rule of its
 /// own.
+///
+/// This repository registers every package it names.
+/// ´claim:adoption:the-ruled-roster-is-complete´
 #[test]
 fn the_ruled_corpus_registers_every_package_it_names() {
     let root = corpus_adoption_path()

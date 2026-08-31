@@ -2165,6 +2165,8 @@ impl RawClaims {
 mod tests {
     use super::*;
 
+    /// A tree prefix matches its tree and nothing beside it.
+    /// ´claim:paths:a-tree-prefix-matches-its-tree´
     #[test]
     fn a_tree_prefix_matches_its_tree_and_nothing_beside_it() {
         let prefix = PathPrefix::new("crates/api/");
@@ -2174,6 +2176,8 @@ mod tests {
         assert!(!prefix.matches(Path::new("crates/common/src/lib.rs")));
     }
 
+    /// A file prefix matches that file alone.
+    /// ´claim:paths:a-file-prefix-matches-one-file´
     #[test]
     fn a_file_prefix_matches_that_file_alone() {
         let prefix = PathPrefix::new("docs/primitive/layer1-interface.md");
@@ -2182,6 +2186,8 @@ mod tests {
         assert!(!prefix.matches(Path::new("docs/primitive/")));
     }
 
+    /// The empty prefix matches everything, which is what makes the partition total.
+    /// ´claim:paths:the-empty-prefix-matches-everything´
     #[test]
     fn the_empty_prefix_matches_everything() {
         let prefix = PathPrefix::new("");
@@ -2189,6 +2195,8 @@ mod tests {
         assert!(prefix.matches(Path::new("a/b/c/d.rs")));
     }
 
+    /// A path prefix is literal and carries no pattern dialect.
+    /// ´claim:paths:a-prefix-is-literal´
     #[test]
     fn a_prefix_carries_no_pattern_dialect() {
         let prefix = PathPrefix::new("docs/*.md");
@@ -2196,6 +2204,8 @@ mod tests {
         assert!(prefix.matches(Path::new("docs/*.md")));
     }
 
+    /// A configured path is spelled one way on every platform.
+    /// ´claim:paths:a-path-is-spelled-one-way´
     #[test]
     fn a_path_is_spelled_one_way_on_every_platform() {
         assert_eq!(relative_str(Path::new("crates/api/src")), "crates/api/src");

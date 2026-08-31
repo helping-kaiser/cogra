@@ -484,6 +484,9 @@ mod tests {
 
     /// (´dec:lint:staged-profiles´): the named regeneration refuses an id
     /// `[profiles]` does not register.
+    ///
+    /// An unregistered profile name is refused by the command line rather than measured.
+    /// ´claim:cli:an-unregistered-profile-is-refused´
     #[test]
     fn a_named_regeneration_refuses_an_unregistered_profile() {
         let root = Path::new("does-not-need-to-exist");
@@ -499,6 +502,8 @@ mod tests {
     /// (´dec:lint:staged-profiles´): the migrations measurement refuses the
     /// same unregistered id through the same lookup, rather than reporting
     /// nothing to measure.
+    ///
+    /// (´claim:cli:an-unregistered-profile-is-refused´)
     #[test]
     fn a_migrations_measurement_refuses_an_unregistered_profile() {
         let root = Path::new("does-not-need-to-exist");

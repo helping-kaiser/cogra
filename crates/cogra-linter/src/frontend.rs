@@ -488,18 +488,24 @@ mod tests {
         }
     }
 
+    /// A contiguous region locates by addition alone.
+    /// ´claim:pieces:a-contiguous-region-locates-by-addition´
     #[test]
     fn a_contiguous_region_locates_by_addition() {
         let one = region(vec![ByteSpan::new(10, 20)], "0123456789");
         assert_eq!(one.locate(ByteSpan::new(2, 5)), ByteSpan::new(12, 15));
     }
 
+    /// A span crossing a piece boundary covers the structure between the pieces.
+    /// ´claim:pieces:a-crossing-span-covers-the-structure´
     #[test]
     fn a_span_crossing_a_piece_boundary_covers_the_structure_between() {
         let one = region(vec![ByteSpan::new(0, 3), ByteSpan::new(9, 12)], "abcdef");
         assert_eq!(one.locate(ByteSpan::new(1, 5)), ByteSpan::new(1, 11));
     }
 
+    /// An offset on a boundary belongs to the piece it faces.
+    /// ´claim:pieces:a-boundary-offset-faces-one-piece´
     #[test]
     fn an_offset_on_a_boundary_belongs_to_the_piece_it_faces() {
         let one = region(vec![ByteSpan::new(0, 3), ByteSpan::new(9, 12)], "abcdef");
@@ -508,12 +514,16 @@ mod tests {
         assert_eq!(one.locate(ByteSpan::new(3, 6)), ByteSpan::new(9, 12));
     }
 
+    /// An offset past the text lands at the last piece.
+    /// ´claim:pieces:an-offset-past-the-text-clamps´
     #[test]
     fn an_offset_past_the_text_lands_at_the_last_piece() {
         let one = region(vec![ByteSpan::new(4, 7)], "abc");
         assert_eq!(one.locate(ByteSpan::new(90, 90)), ByteSpan::new(7, 7));
     }
 
+    /// A region with no pieces spans nothing.
+    /// ´claim:pieces:a-pieceless-region-spans-nothing´
     #[test]
     fn a_region_with_no_pieces_spans_nothing() {
         let one = region(Vec::new(), "");
@@ -528,6 +538,8 @@ mod tests {
             .collect()
     }
 
+    /// A crate root backs its declarations from its own directory.
+    /// ´claim:layout:a-crate-root-backs-from-its-directory´
     #[test]
     fn a_crate_root_backs_from_its_own_directory() {
         assert_eq!(
@@ -536,6 +548,8 @@ mod tests {
         );
     }
 
+    /// A module file backs from the directory named after it.
+    /// ´claim:layout:a-module-file-backs-from-its-namesake´
     #[test]
     fn a_module_file_backs_from_the_directory_named_after_it() {
         assert_eq!(
@@ -547,6 +561,8 @@ mod tests {
         );
     }
 
+    /// A module-root file backs from its own directory like a crate root.
+    /// ´claim:layout:a-mod-file-backs-like-a-root´
     #[test]
     fn a_mod_file_backs_from_its_own_directory_like_a_root() {
         assert_eq!(
@@ -558,6 +574,8 @@ mod tests {
         );
     }
 
+    /// A test-target entry point backs from its own directory.
+    /// ´claim:layout:a-test-entry-backs-from-its-directory´
     #[test]
     fn a_test_target_entry_point_backs_from_its_own_directory() {
         assert_eq!(
@@ -566,6 +584,8 @@ mod tests {
         );
     }
 
+    /// A tests directory inside a library target roots nothing.
+    /// ´claim:layout:an-inner-tests-directory-roots-nothing´
     #[test]
     fn a_tests_directory_inside_a_lib_target_roots_nothing() {
         assert_eq!(
