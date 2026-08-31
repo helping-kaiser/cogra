@@ -9,7 +9,7 @@ export function Screen() {
           author={ADA}
           content=""
           timestamp="4h"
-          media={[{ src: "post-photo.jpg", ratio: "landscape", fit: "cover" }]}
+          media={[{ src: "post-photo.jpg", ratio: "wide", fit: "cover" }]}
           bundle={mkBundle(0.1, 0.1)}
           score="11.40"
           comments={2}
