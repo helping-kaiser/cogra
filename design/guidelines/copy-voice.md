@@ -115,6 +115,12 @@ title, at most two short paragraphs, Close. The texts, verbatim
   description until a reader chooses to look. The title stays
   readable, so choosing is informed. / Your reason, if you give one,
   is shown on the veil. The mark is public and travels with the post.
+- **Describing pictures** (the describe sheet): A description is
+  read aloud by screen readers and shown when a picture can't load —
+  plain words about what's there. It travels with the picture,
+  public like the rest of the post. / Nothing is described for you:
+  a picture without a description is skipped by screen readers,
+  never guessed at.
 - **Your key** (key absent at the seal): Signing needs your key, and
   it isn't on this browser. Nothing is signed or sent without it — the
   draft stays on this device. / Restore the key with your recovery
@@ -152,6 +158,11 @@ title, at most two short paragraphs, Close. The texts, verbatim
   always means CGT. / It's yours the moment it lands: earnings are
   paid straight to you, held by your key, never by CoGra. Every
   amount can be traced to what paid it.
+- **Changing your picture** (the profile-picture seal): Your profile
+  is a public record, and changes to it are signed actions in your
+  name — the picture changes the moment yours lands. / The community
+  pool covers the signing, like your posts. The record that you
+  changed it stays, like every signed action.
 - **The filter** (the feed's and search's filter sheets): What you
   let in, and in what order — the kinds combine freely, ranked or
   newest is one choice, and what you've already seen stays out
