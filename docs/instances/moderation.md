@@ -74,6 +74,30 @@ passed Proposal clears the mark with a newer Tag whose payload
 records the un-classification, and the Postgres flag is lifted.
 Symmetric bars apply (§4).
 
+### The author's own mark
+
+An author marks their own content sensitive as they compose it —
+one switch on the seal, with an optional public reason
+([api-spec.md "Content authoring"](../implementation/api-spec.md)).
+No Proposal and no vote: warning about your own post needs
+nobody's permission.
+
+The mark rides the witnessed payload alongside the body it
+describes (guild keys 13 and 14,
+[data-model.md "The payload envelope"](../implementation/data-model.md#the-payload-envelope)),
+so it is the author's own signed statement rather than a note the
+server keeps about them, and a rebuilt mirror restores it with the
+version it belongs to. Its reach is **fixed** where a verdict's is
+chosen: the body veils as one region — media, words and
+description together — and the title and topics stay readable, so
+choosing to look is informed.
+
+A content act carries the complete content state, so an edit that
+omits the mark unmarks the content; there is no separate
+withdrawal gesture. Both marks read back as the same `SENSITIVE`
+status on the same fields — the author's optional reason is what
+tells a reader which one they are looking at.
+
 ### `illegal` — whole-record redaction
 
 A passing `'illegal'` Proposal fires the redaction cascade

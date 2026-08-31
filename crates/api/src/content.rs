@@ -12,7 +12,7 @@
 //! their landing-order columns are projections of the mirror, and the
 //! envelope bytes verify against the L1 witness.
 
-use common::envelope::CograContent;
+use common::envelope::{CograContent, SensitiveMark};
 use common::l1::census::Family;
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::content::LandingOrder;
@@ -324,6 +324,22 @@ pub struct PostDraft {
     /// costs no θ: the digests ride the Publish that is already being
     /// paid for.
     pub attachments: Vec<AttachmentDraft>,
+    /// The author's own sensitive mark and its optional public reason,
+    /// as the seal's switch sends them. Validated together by
+    /// [`self_mark`].
+    pub sensitive: SelfMarkDraft,
+}
+
+/// The self-mark as the write surface carries it: the switch and the
+/// sheet's reason, still unvalidated against each other.
+///
+/// The two arrive apart because that is how the seal presents them — one
+/// switch, one optional line — and are reconciled once, in [`self_mark`],
+/// so create and edit refuse the same combination for the same reason.
+#[derive(Default)]
+pub struct SelfMarkDraft {
+    pub sensitive: bool,
+    pub reason: Option<String>,
 }
 
 /// An edit's complete field set: the payload is the Post's whole new
@@ -339,6 +355,9 @@ pub struct PostEditDraft {
     /// the order is written with the rest of the post, and per-picture
     /// pricing has never existed.
     pub attachments: Vec<AttachmentDraft>,
+    /// The self-mark the edit leaves standing. Complete state like the
+    /// rest: an edit that sends `sensitive: false` unmarks the post.
+    pub sensitive: SelfMarkDraft,
 }
 
 pub struct CommentDraft {
@@ -356,6 +375,10 @@ pub struct CommentDraft {
     /// The gallery at creation. A comment is text **plus** optional media,
     /// deliberately asymmetric to a post's XOR: an answer is words first.
     pub attachments: Vec<AttachmentDraft>,
+    /// The author's own sensitive mark. A comment seals through the same
+    /// seal a post does (design/readme.md §13), so it carries the same
+    /// switch.
+    pub sensitive: SelfMarkDraft,
 }
 
 pub struct CommentEditDraft {
@@ -363,6 +386,8 @@ pub struct CommentEditDraft {
     pub content: String,
     /// The gallery the edit leaves standing, complete.
     pub attachments: Vec<AttachmentDraft>,
+    /// The self-mark the edit leaves standing, complete like the body.
+    pub sensitive: SelfMarkDraft,
 }
 
 /// A prepared content write: the staged batch plus the L2 node id the
@@ -430,6 +455,25 @@ fn post_body(content: Option<String>, gallery: &PlannedGallery) -> Result<String
     }
 }
 
+/// The author's self-mark as the envelope carries it, or a refusal.
+///
+/// A reason without the switch is refused rather than dropped: the author
+/// wrote a warning nobody would ever be shown, and silently discarding it
+/// would sign a state they did not intend. A blank reason is no reason —
+/// the same rule the body runs, where absent and present-and-empty both
+/// render as nothing.
+fn self_mark(draft: SelfMarkDraft) -> Result<Option<SensitiveMark>, ContentError> {
+    let reason = draft.reason.filter(|r| !r.trim().is_empty());
+    match (draft.sensitive, reason) {
+        (false, Some(_)) => Err(ContentError::BadInput {
+            field: "sensitiveReason",
+            message: "a reason needs the mark it explains — set sensitive to true".into(),
+        }),
+        (false, None) => Ok(None),
+        (true, reason) => Ok(Some(SensitiveMark { reason })),
+    }
+}
+
 async fn author_address(pool: &PgPool, viewer: Uuid) -> Result<String, ContentError> {
     store::actor_identity(pool, viewer)
         .await
@@ -462,6 +506,7 @@ pub async fn prepare_post<B: L1Boundary>(
     let citations = references::plan_batch(pool, &draft.references).await?;
     let gallery = media::plan_gallery(pool, viewer, GalleryKind::Post, &draft.attachments).await?;
     let body = post_body(draft.content, &gallery)?;
+    let mark = self_mark(draft.sensitive)?;
     let address = author_address(pool, viewer).await?;
     prepare::check_batch_solvency(boundary, &address, batch_acts(&tags, &citations)).await?;
     let node = Uuid::new_v4();
@@ -471,6 +516,7 @@ pub async fn prepare_post<B: L1Boundary>(
         description: draft.description,
         body: Some(body),
         media: gallery.manifest,
+        sensitive: mark,
     }
     .encode_payload();
     let prepared = prepare::prepare(
@@ -616,6 +662,7 @@ pub async fn prepare_post_edit<B: L1Boundary>(
     }
     let gallery = media::plan_gallery(pool, viewer, GalleryKind::Post, &draft.attachments).await?;
     let body = post_body(draft.content, &gallery)?;
+    let mark = self_mark(draft.sensitive)?;
     let address = author_address(pool, viewer).await?;
     let node =
         chained_edit_target(pool, viewer, Family::Publish, &post.l1_node_id, &address).await?;
@@ -625,6 +672,7 @@ pub async fn prepare_post_edit<B: L1Boundary>(
         description: draft.description,
         body: Some(body),
         media: gallery.manifest,
+        sensitive: mark,
     }
     .encode_payload();
     let prepared = prepare::prepare(
@@ -674,6 +722,7 @@ pub async fn prepare_comment<B: L1Boundary>(
     let citations = references::plan_batch(pool, &draft.references).await?;
     let gallery =
         media::plan_gallery(pool, viewer, GalleryKind::Comment, &draft.attachments).await?;
+    let mark = self_mark(draft.sensitive)?;
     let parent = parent_node(pool, draft.target).await?;
     let address = author_address(pool, viewer).await?;
     prepare::check_batch_solvency(boundary, &address, batch_acts(&tags, &citations)).await?;
@@ -684,6 +733,7 @@ pub async fn prepare_comment<B: L1Boundary>(
         description: None,
         body: Some(draft.content),
         media: gallery.manifest,
+        sensitive: mark,
     }
     .encode_payload();
     let prepared = prepare::prepare(
@@ -751,6 +801,7 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
     }
     let gallery =
         media::plan_gallery(pool, viewer, GalleryKind::Comment, &draft.attachments).await?;
+    let mark = self_mark(draft.sensitive)?;
     let address = author_address(pool, viewer).await?;
     let node =
         chained_edit_target(pool, viewer, Family::Review, &comment.l1_node_id, &address).await?;
@@ -761,6 +812,7 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
         description: None,
         body: Some(draft.content),
         media: gallery.manifest,
+        sensitive: mark,
     }
     .encode_payload();
     let prepared = prepare::prepare(
@@ -906,6 +958,7 @@ pub async fn stage_pending(
                 clear_to_null(&content.title),
                 clear_to_null(&content.description),
                 content.body.as_deref().unwrap_or_default(),
+                content.sensitive.as_ref(),
             )
             .await?;
             attach_post(&mut tx, version, &gallery).await?;
@@ -920,6 +973,7 @@ pub async fn stage_pending(
                 clear_to_null(&content.title),
                 clear_to_null(&content.description),
                 content.body.as_deref().unwrap_or_default(),
+                content.sensitive.as_ref(),
                 None,
                 created_at,
             )
@@ -939,6 +993,7 @@ pub async fn stage_pending(
                 None,
                 created_at,
                 content.body.as_deref().unwrap_or_default(),
+                content.sensitive.as_ref(),
             )
             .await?;
             attach_comment(&mut tx, version, &gallery).await?;
@@ -951,6 +1006,7 @@ pub async fn stage_pending(
                 &mut tx,
                 comment.id,
                 content.body.as_deref().unwrap_or_default(),
+                content.sensitive.as_ref(),
                 None,
                 created_at,
             )
@@ -1127,6 +1183,7 @@ async fn land_one(
                     clear_to_null(&content.title),
                     clear_to_null(&content.description),
                     content.body.as_deref().unwrap_or_default(),
+                    content.sensitive.as_ref(),
                 )
                 .await?;
                 attach_post(&mut tx, version, &gallery).await?;
@@ -1143,6 +1200,7 @@ async fn land_one(
                     clear_to_null(&content.title),
                     clear_to_null(&content.description),
                     content.body.as_deref().unwrap_or_default(),
+                    content.sensitive.as_ref(),
                     Some(order),
                     created_at,
                 )
@@ -1167,6 +1225,7 @@ async fn land_one(
                     Some(order),
                     created_at,
                     content.body.as_deref().unwrap_or_default(),
+                    content.sensitive.as_ref(),
                 )
                 .await?;
                 attach_comment(&mut tx, version, &gallery).await?;
@@ -1183,6 +1242,7 @@ async fn land_one(
                     &mut tx,
                     comment.id,
                     content.body.as_deref().unwrap_or_default(),
+                    content.sensitive.as_ref(),
                     Some(order),
                     created_at,
                 )

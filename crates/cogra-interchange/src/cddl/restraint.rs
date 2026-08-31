@@ -856,6 +856,9 @@ mod tests {
     /// The prelude's float names, read off the prelude itself: `float64`
     /// pins a width and `float` does not, which is the whole of what
     /// `fixes_canonical_form` reports.
+    ///
+    /// A prelude float name that pins a width is read as fixed, and one admitting several as loose.
+    /// ´claim:restraint:the-prelude-float-names-pin-their-widths´
     #[test]
     fn the_prelude_float_names_pin_their_widths() {
         assert_eq!(shape("float64").float, Pin::Fixed(DOUBLE));
@@ -868,6 +871,9 @@ mod tests {
 
     /// A prelude name that admits something unrestrained beside the
     /// restrained kind is not a provision, and this is why.
+    ///
+    /// A prelude name admitting something unrestrained beside the restrained kind has no sole kind.
+    /// ´claim:restraint:a-mixed-prelude-name-admits-something-plain´
     #[test]
     fn a_mixed_prelude_name_admits_something_plain_as_well() {
         assert!(shape("number").plain);
@@ -877,6 +883,8 @@ mod tests {
         assert_eq!(shape("unsigned").sole_kind(), None);
     }
 
+    /// A prelude tag name is read as the tag kind, its number fixed only where the name pins one.
+    /// ´claim:restraint:the-prelude-tag-names-pin-their-numbers´
     #[test]
     fn the_prelude_tag_names_pin_their_numbers() {
         assert_eq!(shape("time").tag, Pin::Fixed(1));
@@ -885,6 +893,8 @@ mod tests {
         assert_eq!(shape("bigint").sole_kind(), Some(Restrained::Tag));
     }
 
+    /// The freely admitted simple values are read as plain, where the undefined value pins its own.
+    /// ´claim:restraint:the-freely-admitted-simple-values-are-plain´
     #[test]
     fn the_freely_admitted_simple_values_are_not_restrained() {
         assert_eq!(shape("bool"), Shape::plain());
@@ -893,6 +903,8 @@ mod tests {
         assert_eq!(shape("undefined").simple, Pin::Fixed(23));
     }
 
+    /// A cycle among the rules terminates the shape walk rather than running on forever.
+    /// ´claim:restraint:a-cycle-terminates-the-shape-walk´
     #[test]
     fn a_cycle_among_the_rules_terminates_the_shape() {
         let theory = match Theory::parse(concat!(
