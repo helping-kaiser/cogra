@@ -62,6 +62,13 @@ fun CograTextField(
      * the box sits at its 44dp minimum under an empty screen.
      */
     fillHeight: Boolean = false,
+    /**
+     * A field the surface is not currently accepting. Used where the
+     * contract would refuse the value anyway — `ComposeSensitive`'s
+     * reason before the mark is on — so an author never types into a box
+     * whose contents would be thrown away.
+     */
+    enabled: Boolean = true,
     testTag: String? = null,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -77,7 +84,7 @@ fun CograTextField(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
-                color = colors.onSurface,
+                color = if (enabled) colors.onSurface else colors.onSurface.copy(alpha = DISABLED),
                 modifier = Modifier.weight(1f),
             )
             if (optional) {
@@ -91,10 +98,13 @@ fun CograTextField(
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
+            enabled = enabled,
             singleLine = singleLine,
             minLines = minLines,
             textStyle = LocalTextStyle.current.merge(
-                MaterialTheme.typography.bodyLarge.copy(color = colors.onSurface),
+                MaterialTheme.typography.bodyLarge.copy(
+                    color = if (enabled) colors.onSurface else colors.onSurface.copy(alpha = DISABLED),
+                ),
             ),
             cursorBrush = SolidColor(colors.primary),
             modifier = Modifier
@@ -102,7 +112,10 @@ fun CograTextField(
                 .then(if (fillHeight) Modifier.weight(1f) else Modifier)
                 .defaultMinSize(minHeight = Layout.FieldHeight)
                 .border(
-                    BorderStroke(1.dp, colors.outline),
+                    BorderStroke(
+                        1.dp,
+                        if (enabled) colors.outline else colors.outline.copy(alpha = DISABLED),
+                    ),
                     MaterialTheme.shapes.extraSmall,
                 )
                 .padding(horizontal = Space.x3, vertical = 10.dp)
@@ -135,6 +148,17 @@ private fun CograTextFieldVariants() {
                 minLines = 3,
             )
             CograTextField(value = "", onValueChange = {}, label = "Title", optional = true)
+            CograTextField(
+                value = "",
+                onValueChange = {},
+                label = "Why?",
+                optional = true,
+                optionalLabel = "Optional — shown on the veil",
+                enabled = false,
+            )
         }
     }
 }
+
+/** Material's own disabled-content opacity (`--state-disabled`). */
+private const val DISABLED = 0.38f

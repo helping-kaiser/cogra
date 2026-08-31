@@ -56,6 +56,8 @@ class ComposeWizardViewModelTest {
         var outcome: Outcome<PreparedContentView>? = null
         var lastContent: String? = null
         var lastAttachments: List<AttachmentClaim> = emptyList()
+        var lastSensitive: Boolean? = null
+        var lastSensitiveReason: String? = null
         var calls = 0
 
         override suspend fun preparePost(
@@ -66,10 +68,14 @@ class ComposeWizardViewModelTest {
             tags: List<TagClaim>,
             references: List<ReferenceClaim>,
             attachments: List<AttachmentClaim>,
+            sensitive: Boolean,
+            sensitiveReason: String?,
         ): Outcome<PreparedContentView> {
             calls += 1
             lastContent = content
             lastAttachments = attachments
+            lastSensitive = sensitive
+            lastSensitiveReason = sensitiveReason
             return outcome ?: Outcome.Success(
                 PreparedContentView("node-1", listOf(sealer.stage(Family.PUBLISH))),
             )
@@ -166,6 +172,22 @@ class ComposeWizardViewModelTest {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+    }
+
+    /**
+     * Walks a words post to the seal, runs [atTheSeal], then signs — so a
+     * test can set the seal's own choices where an author would.
+     */
+    private fun ComposeWizardViewModel.signWords(atTheSeal: () -> Unit = {}) {
+        start()
+        dispatcher.scheduler.advanceUntilIdle()
+        onModeChange(BodyMode.Words)
+        onBodyChange("Salt maps of the coast road")
+        onNext() // body -> details
+        onNext() // details -> seal
+        atTheSeal()
+        onSign()
+        dispatcher.scheduler.advanceUntilIdle()
     }
 
     /** Walks a media post from an empty wizard to the seal, uploads done. */
@@ -299,6 +321,49 @@ class ComposeWizardViewModelTest {
         // after upload (D3), so an upload that started earlier would have
         // dropped it.
         assertThat(media.lastAltText).isEqualTo("A salt crust")
+    }
+
+    // -- The author's own sensitive mark --
+
+    @Test
+    fun anUnmarkedPostStatesTheMarkExplicitlyRatherThanOmittingIt() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.signWords()
+
+        // An edit payload is the complete state, so an OMITTED mark
+        // unmarks. Always sending the switch's value is what keeps the
+        // create and edit paths one piece of code.
+        assertThat(content.lastSensitive).isFalse()
+        assertThat(content.lastSensitiveReason).isNull()
+    }
+
+    @Test
+    fun aMarkedPostCarriesItsReason() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.signWords {
+            vm.onSensitiveChange(true)
+            vm.onSensitiveReasonChange("One rubbing includes a dead seabird.")
+        }
+
+        assertThat(content.lastSensitive).isTrue()
+        assertThat(content.lastSensitiveReason).isEqualTo("One rubbing includes a dead seabird.")
+    }
+
+    @Test
+    fun unmarkingDropsTheReasonWithIt() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.signWords {
+            vm.onSensitiveChange(true)
+            vm.onSensitiveReasonChange("A dead seabird.")
+            vm.onSensitiveChange(false)
+
+            // The contract refuses a reason without the mark, so keeping
+            // one would send a value guaranteed to come back as an error.
+            assertThat(vm.state.value.sensitiveReason).isEmpty()
+        }
+
+        assertThat(content.lastSensitive).isFalse()
+        assertThat(content.lastSensitiveReason).isNull()
     }
 
     @Test

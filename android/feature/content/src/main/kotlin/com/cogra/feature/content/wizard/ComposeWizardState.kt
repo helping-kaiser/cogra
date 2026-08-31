@@ -70,20 +70,11 @@ data class PickedAsset(
 }
 
 /**
- * Which sheet is open over the seal (`ComposeLicense`, `ComposePad`).
- * One at a time: each is a drawer the reader opened over the same
- * screen.
- *
- * **`ComposeSensitive` is not here, and that is deliberate.** The
- * contract cannot carry an author's self-mark: `PreparePostInput` has
- * no sensitive field and no mutation sets one — `SENSITIVE` exists only
- * as a read-side `FieldModerationStatus` the server assigns. A sheet
- * that said "Marked" while sending nothing would be a lie told to the
- * one person trusting it, so the board is left unbuilt until the
- * contract can express it. The *reading* half — the whole-body veil —
- * is built and works the moment a verdict exists.
+ * Which sheet is open over the seal (`ComposeLicense`, `ComposePad`,
+ * `ComposeSensitive`). One at a time: each is a drawer the reader opened
+ * over the same screen.
  */
-enum class SealSheet { None, License, Stance }
+enum class SealSheet { None, License, Stance, Sensitive }
 
 /**
  * How the wizard ended.
@@ -146,6 +137,18 @@ data class ComposeWizardState(
     val license: LicenseChoice = LicenseChoice.PublicDomain,
     /** The author's own attachment to the post (`ComposePad`). */
     val pDirected: Double = DEFAULT_P_DIRECTED,
+
+    /**
+     * The author's own sensitive mark (`ComposeSensitive`).
+     *
+     * It veils the pictures and the description until a reader chooses
+     * to look; the title stays readable, so choosing is informed.
+     */
+    val sensitive: Boolean = false,
+
+    /** Shown on the veil when the author gave one; blank counts as none. */
+    val sensitiveReason: String = "",
+
     val sheet: SealSheet = SealSheet.None,
 
     /**

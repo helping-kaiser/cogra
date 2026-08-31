@@ -83,6 +83,8 @@ class ComposePostViewModelTest {
             tags: List<TagClaim>,
             references: List<ReferenceClaim>,
             attachments: List<com.cogra.domain.AttachmentClaim>,
+            sensitive: Boolean,
+            sensitiveReason: String?,
         ): Outcome<PreparedContentView> {
             lastCreate = listOf(title, description, content, license, tags)
             lastCreateReferences = references

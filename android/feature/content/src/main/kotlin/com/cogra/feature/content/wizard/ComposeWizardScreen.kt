@@ -131,6 +131,8 @@ fun ComposeWizardRoute(
         onCloseSheet = viewModel::onCloseSheet,
         onLicenseChange = viewModel::onLicenseChange,
         onPDirectedChange = viewModel::onPDirectedChange,
+        onSensitiveChange = viewModel::onSensitiveChange,
+        onSensitiveReasonChange = viewModel::onSensitiveReasonChange,
         onNext = viewModel::onNext,
         onBack = { if (!viewModel.onBack()) viewModel.onLeave() },
         onLeave = viewModel::onLeave,
@@ -196,6 +198,8 @@ internal fun ComposeWizardScreen(
     onCloseSheet: () -> Unit,
     onLicenseChange: (LicenseChoice) -> Unit,
     onPDirectedChange: (Double) -> Unit,
+    onSensitiveChange: (Boolean) -> Unit,
+    onSensitiveReasonChange: (String) -> Unit,
     onNext: () -> Unit,
     onBack: () -> Unit,
     onLeave: () -> Unit,
@@ -412,6 +416,15 @@ internal fun ComposeWizardScreen(
                     onChange = onPDirectedChange,
                     onDone = onCloseSheet,
                     onCancel = onCloseSheet,
+                )
+
+                state.sheet == SealSheet.Sensitive -> SensitiveSheet(
+                    marked = state.sensitive,
+                    reason = state.sensitiveReason,
+                    onMarkedChange = onSensitiveChange,
+                    onReasonChange = onSensitiveReasonChange,
+                    onDone = onCloseSheet,
+                    onHelp = { onOpenHelp(HelpTopic.MarkingAsSensitive) },
                 )
 
                 else -> Unit
