@@ -1129,6 +1129,24 @@ mod galleries {
         rig.land(&prepared, &key).await;
         assert_eq!(rendered(&rig.pool, prepared.node).await, vec![a, b]);
 
+        media_store::update_alt_text(&rig.pool, a, actor, Some("described later"))
+            .await
+            .expect("updates");
+        let again = CograContent::decode_payload(&prepared.writes[0].proposal.payload)
+            .expect("decodes");
+        assert_eq!(
+            again.media[0].alt_text.as_deref(),
+            Some("picture 1"),
+            "a landed record says what it said: the manifest snapshotted \
+             the row at prepare and no later edit reaches it"
+        );
+        assert_eq!(
+            rendered(&rig.pool, prepared.node).await,
+            vec![a, b],
+            "and the gallery still resolves — the digest, not the \
+             description, is what binds a manifest entry to its row"
+        );
+
         let version = content_store::post(&rig.pool, prepared.node)
             .await
             .expect("reads")
