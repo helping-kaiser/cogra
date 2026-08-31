@@ -682,3 +682,98 @@ async fn a_refused_prepare_reports_user_errors(pool: PgPool) {
         "expected a Dimension validation refusal: {response}"
     );
 }
+
+/// One asset in two posts, described differently in each — the property
+/// the detached model exists for. The description is not the asset's to
+/// hold: it rides the payload envelope and the version's junction row
+/// caches it, so the same picture reads one way here and another there
+/// (data-model.md "Media attachments").
+///
+/// The round trip is what this checks: authored at prepare, witnessed in
+/// the record the device signs, served back off the junction — never
+/// fetched from the asset, which holds no description at all.
+///
+/// The same asset reads differently in two parents, each version's gallery serving the description its own manifest witnessed.
+/// ´claim:media:a-description-belongs-to-the-placement´
+#[sqlx::test(migrations = "../../migrations")]
+async fn one_asset_reads_differently_in_two_posts(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (author_id, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    // The asset row without the upload path: the byte pipeline has its own
+    // end-to-end test and nothing here is about bytes.
+    let asset = Uuid::new_v4();
+    postgres_store::media::insert(
+        &rig.pool,
+        asset,
+        author_id,
+        &[7; 32],
+        "sha256",
+        &format!("{asset}.webp"),
+        "image/webp",
+        1024,
+        &json!({ "v": 1, "aspect_ratio": "1:1" }),
+    )
+    .await
+    .expect("asset row");
+
+    let mut posted = Vec::new();
+    for description in ["The harbour at dawn", "My grandfather's boat"] {
+        let prepared = rig
+            .gql(
+                Some(&token),
+                PREPARE_POST,
+                json!({ "input": {
+                    "content": description,
+                    "license": { "attribution": 1.0, "provenance": 0.0 },
+                    "attachments": [{
+                        "mediaId": asset.to_string(),
+                        "displayOrder": 0,
+                        "isCover": true,
+                        "altText": description,
+                    }],
+                }}),
+            )
+            .await;
+        assert_eq!(
+            prepared["preparePost"]["userErrors"]
+                .as_array()
+                .expect("array"),
+            &Vec::<Value>::new()
+        );
+        let node = prepared["preparePost"]["node"]
+            .as_str()
+            .expect("node id")
+            .to_string();
+        rig.sign_prepared(&token, &key, &prepared["preparePost"]["writes"])
+            .await;
+        rig.close_and_ingest().await;
+        posted.push((node, description));
+    }
+
+    for (node, description) in posted {
+        let read = rig
+            .gql(
+                None,
+                r#"query($id: UUID!) { post(id: $id) {
+                     attachments { id altText }
+                   } }"#,
+                json!({ "id": node }),
+            )
+            .await;
+        let gallery = read["post"]["attachments"]
+            .as_array()
+            .expect("gallery list");
+        assert_eq!(gallery.len(), 1);
+        assert_eq!(
+            gallery[0]["id"],
+            asset.to_string(),
+            "both posts point at the one asset"
+        );
+        assert_eq!(
+            gallery[0]["altText"], description,
+            "each version serves the description its own manifest witnessed"
+        );
+    }
+}
