@@ -130,8 +130,9 @@ instantiated for Comments:
   causal chain; same-parent siblings are a branch and the
   incumbent holds
   ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
-- **Granularity:** the whole Comment — body and media manifest
-  together, the winning payload read as the complete state. The
+- **Granularity:** the whole Comment — body, media manifest, and
+  the author's own sensitive mark together, the winning payload
+  read as the complete state ([moderation.md §1](moderation.md)). The
   attachment rows are keyed on the version row, so the gallery
   follows the winning version as the body does: a pending edit
   that expires takes its gallery with it, and a superseded
