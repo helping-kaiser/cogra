@@ -7,7 +7,10 @@
 // authored, optional, and never invented; a picture without one is skipped by
 // screen readers rather than guessed at.
 
+import { useState } from "react";
+
 import { BottomSheet } from "../bottom-sheet";
+import { HelpDialog, HELP_TOPICS } from "../help-dialog";
 import { PillButton } from "../pill-button";
 import { TextField } from "../text-field";
 
@@ -29,18 +32,34 @@ export function DescribeSheet({
   position?: { index: number; total: number };
   testId?: string;
 }) {
+  const [help, setHelp] = useState(false);
   return (
     <BottomSheet open={open} onClose={onClose} title="Describe this picture" testId={testId}>
       <div className="flex flex-col gap-3">
-        {position && position.total > 1 ? (
-          <p className="m-0 text-label-small text-on-surface-variant">
-            Picture {position.index + 1} of {position.total}
-          </p>
-        ) : null}
+        <div className="flex items-center gap-2">
+          {position && position.total > 1 ? (
+            <p className="m-0 flex-1 text-label-small text-on-surface-variant">
+              Picture {position.index + 1} of {position.total}
+            </p>
+          ) : (
+            <span className="flex-1" />
+          )}
+          {/* The sheet's own `?` — it carries the full explanation, so the
+              field beneath it can stay one short line. */}
+          <button
+            type="button"
+            data-testid={`${testId}-help`}
+            aria-label="Describing pictures"
+            onClick={() => setHelp(true)}
+            className="cg-state cg-focus flex size-8 flex-none items-center justify-center rounded-full border border-outline-variant text-label-large text-primary"
+          >
+            ?
+          </button>
+        </div>
         <div className="flex h-[180px] items-center justify-center overflow-hidden rounded-medium bg-surface-container-high">
           {src ? (
-            // eslint-disable-next-line @next/next/no-img-element -- a blob: URL
-            // for bytes that have not left the device.
+            // A blob: URL for bytes that have not left the device.
+            // eslint-disable-next-line @next/next/no-img-element
             <img src={src} alt="" aria-hidden="true" className="block max-h-full max-w-full" />
           ) : null}
         </div>
@@ -62,6 +81,13 @@ export function DescribeSheet({
           </PillButton>
         </div>
       </div>
+
+      <HelpDialog
+        open={help}
+        onClose={() => setHelp(false)}
+        topic={HELP_TOPICS.describingPictures}
+        testId={`${testId}-help-dialog`}
+      />
     </BottomSheet>
   );
 }

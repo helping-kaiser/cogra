@@ -775,8 +775,21 @@ export function PostView({
                   body when the comment is marked. */}
               <BodyRegion veiled={bodyIsSensitive(comment)} testId={`comment-${comment.id}`}>
                 <p className="text-body-medium">{comment.content.value}</p>
+                {/* A COMMENT IS WORDS FIRST and its pictures join them: below
+                    the words, INSET at the card's medium rung rather than
+                    full-bleed (they are an attachment, not the body), and
+                    capped at comment scale so a comment never turns into a
+                    post. Comment pictures never crop, so multiples share a
+                    fixed square frame and each whole frame fits inside it. */}
                 {hasMedia(comment) && (
-                  <PostMedia node={comment} testId={`comment-media-${comment.id}`} />
+                  <PostMedia
+                    node={comment}
+                    bleed="none"
+                    radius="var(--radius-medium)"
+                    ratio={comment.attachments.length > 1 ? 1 : undefined}
+                    maxHeight="220px"
+                    testId={`comment-media-${comment.id}`}
+                  />
                 )}
               </BodyRegion>
               <LicenseTerms

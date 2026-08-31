@@ -54,6 +54,15 @@ describe("DescribeSheet", () => {
     expect(screen.queryByText(/Picture 1 of 1/)).toBeNull();
   });
 
+  it("carries the ? that says nothing is described for you", () => {
+    open();
+    fireEvent.click(screen.getByTestId("describe-sheet-help"));
+    expect(screen.getByTestId("describe-sheet-help-dialog")).toHaveAttribute(
+      "aria-label",
+      "Describing pictures",
+    );
+  });
+
   it("leaves the preview out of the screen reader's way — the field is the content", () => {
     open();
     const preview = screen.getByTestId("describe-sheet").querySelector("img");

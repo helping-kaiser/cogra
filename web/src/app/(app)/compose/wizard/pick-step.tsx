@@ -237,7 +237,7 @@ function MediaBody({
           </span>
           <PillButton
             testId="wizard-open-picker"
-            variant="outline"
+            variant="outlined"
             disabled={full}
             onClick={() => input.current?.click()}
           >
