@@ -34,6 +34,7 @@ export function PickStep({
   onMode,
   onPick,
   onUnpick,
+  onManage,
 }: {
   mode: "words" | "media";
   words: string;
@@ -44,6 +45,7 @@ export function PickStep({
   onMode: (next: "words" | "media") => void;
   onPick: (files: readonly File[]) => void;
   onUnpick: (id: string) => void;
+  onManage: () => void;
 }) {
   return mode === "words" ? (
     <WordsBody words={words} error={error} onWords={onWords} onMode={onMode} />
@@ -55,6 +57,7 @@ export function PickStep({
       onMode={onMode}
       onPick={onPick}
       onUnpick={onUnpick}
+      onManage={onManage}
     />
   );
 }
@@ -127,6 +130,7 @@ function MediaBody({
   onMode,
   onPick,
   onUnpick,
+  onManage,
 }: {
   assets: readonly PickedAsset[];
   previews: Readonly<Record<string, string>>;
@@ -134,6 +138,7 @@ function MediaBody({
   onMode: (next: "words" | "media") => void;
   onPick: (files: readonly File[]) => void;
   onUnpick: (id: string) => void;
+  onManage: () => void;
 }) {
   const input = useRef<HTMLInputElement | null>(null);
   const [over, setOver] = useState(false);
@@ -152,9 +157,21 @@ function MediaBody({
 
       {assets.length > 0 && (
         <div className="flex flex-none flex-col gap-1.5 border-b border-outline-variant px-6 pb-3 pt-1">
-          <span className="text-label-medium text-on-surface-variant">
-            Picked · {assets.length}
-          </span>
+          <div className="flex items-baseline gap-2">
+            <span className="flex-1 text-label-medium text-on-surface-variant">
+              Picked · {assets.length}
+            </span>
+            {/* The way into the per-picture manager: reorder (first is the
+                cover), remove, describe. The tray itself stays a summary. */}
+            <button
+              type="button"
+              data-testid="wizard-show-all"
+              onClick={onManage}
+              className="cg-state cg-focus cursor-pointer border-0 bg-transparent p-0 text-label-small text-primary"
+            >
+              Show all
+            </button>
+          </div>
           <div className="flex items-center gap-2">
             <ul className="m-0 flex list-none gap-2 overflow-x-auto p-0">
               {assets.map((asset, index) => (

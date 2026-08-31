@@ -362,9 +362,9 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       return { ...state, pDirected: Math.min(1, Math.max(-1, action.pDirected)) };
 
     case "goto":
-      // Only backwards, and only to a step this mode has: the seal's "Crop" and
-      // "Edit" shortcuts are the reason this exists, and neither may skip a gate
-      // by jumping forward.
+      // Only backwards, and only to a step this mode has: a jump may never skip
+      // a gate. Switching sides is what still uses it — the shortcut links the
+      // details step once carried are gone (jakob 2026-08-31, "none").
       return stepsFor(state.mode).includes(action.step) ? { ...state, step: action.step } : state;
 
     case "advance": {
