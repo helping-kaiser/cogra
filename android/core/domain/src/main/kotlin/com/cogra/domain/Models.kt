@@ -515,6 +515,20 @@ data class Page<T>(
     val hasNextPage: Boolean,
 )
 
+/**
+ * The author's own sensitive mark on one node, read on its own.
+ *
+ * Not part of [PostView]: the veil a reader sees is the OR of this mark
+ * and a moderator's verdict, and only this half is a thing an edit may
+ * carry (api-spec.md "Two states, and the statuses are their OR"). The
+ * edit form reads it so the record it prepares re-states it.
+ */
+data class SelfMarkView(
+    val sensitive: Boolean,
+    /** Null when unmarked, and when the mark carries no reason. */
+    val reason: String?,
+)
+
 /** A post with its first page of comments — the detail read. */
 data class PostDetail(
     val post: PostView,

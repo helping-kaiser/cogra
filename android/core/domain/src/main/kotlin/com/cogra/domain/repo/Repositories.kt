@@ -24,6 +24,7 @@ import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ReferenceCandidateView
+import com.cogra.domain.SelfMarkView
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.TaggedContentView
@@ -213,14 +214,31 @@ interface ContentRepository {
     ): Outcome<PreparedContentView>
 
     /**
+     * The author's own sensitive mark on one post; null for an unknown
+     * id. Read on its own rather than off [post] — the detail read's
+     * fragment is priced per feed entry and per comment, and this is
+     * wanted once, when an edit opens.
+     */
+    suspend fun postSelfMark(id: String): Outcome<SelfMarkView?>
+
+    /**
      * The full intended field set — the edit form holds every field, so
-     * all three ride as present values; a null title/description clears.
+     * all of them ride as present values; a null title/description
+     * clears.
+     *
+     * [sensitive] and [sensitiveReason] are the author's own mark, and
+     * they are not optional here: an edit record carries the complete
+     * content state, so a mark the edit does not re-state is a mark the
+     * edit removes. The caller passes what it read from [postSelfMark],
+     * unchanged, unless the author moved the switch.
      */
     suspend fun preparePostEdit(
         id: String,
         title: String?,
         description: String?,
         content: String,
+        sensitive: Boolean = false,
+        sensitiveReason: String? = null,
     ): Outcome<PreparedContentView>
 
     /**
