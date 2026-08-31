@@ -28,12 +28,14 @@
     }
     a { color: var(--primary); text-decoration: none; }
     a:hover { color: var(--primary); }
+    [data-flow] { position: relative; }
+    [data-flow]::after { content: attr(data-flow); position: absolute; top: -7px; right: -7px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }
   </style>
 </helmet>
 <div class="screen" data-theme="{{theme}}" style="width: 390px; height: 844px; display: flex; flex-direction: column; background: var(--surface); color: var(--on-surface); overflow: hidden; box-sizing: border-box;">
 
   <div style="min-height: 48px; display: flex; align-items: center; padding: 0 12px; flex: none;">
-    <span style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></span>
+    <span data-flow="1" style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></span>
   </div>
 
   <div style="flex: 1; display: flex; flex-direction: column; padding: 8px 24px 32px 24px; overflow: hidden;">
@@ -43,15 +45,15 @@
 
     <div style="margin-top: 32px; display: flex; flex-direction: column; gap: 4px;">
       <label style="font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Recovery code</label>
-      <div style="display: flex; align-items: center; height: 40px; border: 1px solid var(--outline); border-radius: 4px; background: transparent; padding: 8px 12px; box-sizing: border-box; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; line-height: 20px; color: var(--on-surface-variant);">XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX</div>
+      <div data-flow="2" style="display: flex; align-items: center; height: 40px; border: 1px solid var(--outline); border-radius: 4px; background: transparent; padding: 8px 12px; box-sizing: border-box; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; line-height: 20px; color: var(--on-surface-variant);">XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX</div>
     </div>
 
-    <div style="margin-top: 16px; display: flex; align-items: center; gap: 12px; min-height: 48px;">
+    <div data-flow="3" style="margin-top: 16px; display: flex; align-items: center; gap: 12px; min-height: 48px;">
       <span style="width: 18px; height: 18px; border: 1px solid var(--outline); border-radius: 4px; flex: none;"></span>
       <span style="font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">Don't remember this account on this device</span>
     </div>
 
-    <div style="margin-top: 16px; display: flex; align-items: center; justify-content: center; min-height: 40px; padding: 8px 16px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Restore the key</div>
+    <div data-flow="4" style="margin-top: 16px; display: flex; align-items: center; justify-content: center; min-height: 40px; padding: 8px 16px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Restore the key</div>
 
     <p style="margin: 24px 0 0 0; font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">This is the only way to restore your key. If the code is gone too, the key can't be brought back — your sign-in still works.</p>
 
