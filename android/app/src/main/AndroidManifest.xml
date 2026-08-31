@@ -3,6 +3,31 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!--
+        `ComposePick` draws the reader's own newest pictures inside the
+        app, which means reading MediaStore rather than handing the whole
+        choice to the system picker.
+
+        The declaration follows the current guidance at
+        developer.android.com/training/data-storage/shared/media#request-permissions:
+        READ_MEDIA_IMAGES from API 33, READ_MEDIA_VISUAL_USER_SELECTED
+        from API 34 so a reader may grant a chosen subset instead of the
+        whole library, and READ_EXTERNAL_STORAGE capped at API 32 for the
+        versions that predate the split. Requesting the two READ_MEDIA
+        permissions together is what Android documents for a partial-access
+        aware app; asking for READ_MEDIA_IMAGES alone would show the
+        all-or-nothing dialog on API 34+.
+    -->
+    <uses-permission
+        android:name="android.permission.READ_MEDIA_IMAGES"
+        android:minSdkVersion="33" />
+    <uses-permission
+        android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED"
+        android:minSdkVersion="34" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
     <application
         android:name=".CograApp"
         android:allowBackup="false"
