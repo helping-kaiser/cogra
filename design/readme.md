@@ -1275,9 +1275,12 @@ canvas's *Money · the CGT figure*.
   (a new member's true state, not a failure).
 - **The unit is the mark, never the word** (jakob 2026-08-31 —
   spelling "CGT" on every figure doesn't look nice): `CgtMark`, the
-  primary disc with the wordmark's lowercase c cut out, 1em,
-  baseline-aligned, trailing the figure where the unit word would sit.
-  Theme-correct through the primary pair; never a new colour rung.
+  primary disc carrying the brand mark (cogra-mark.svg verbatim,
+  knocked out monochrome — a lone C in a disc is any game's coin),
+  1em, baseline-aligned, trailing the figure where the unit word
+  would sit. Theme-correct through the primary pair; never a new
+  colour rung. Round-2 candidates (CG letters, CG interlock, c+dot)
+  stay drawn on the spec board until the pick is confirmed.
 - **The word appears once** — the wallet's balance headline sets
   `unit`, mark and word adjacent so the reader learns the equivalence,
   and the headline's "?" (*What is CGT?*, text in copy-voice.md) says

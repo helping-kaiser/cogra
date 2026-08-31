@@ -19,7 +19,8 @@ export interface MoneyFigureProps {
 
 export declare function MoneyFigure(props: MoneyFigureProps): JSX.Element;
 
-/** The CGT mark alone — the primary coin with the lowercase c cut out.
+/** The CGT mark alone — the primary coin carrying the brand mark
+ * (cogra-mark.svg, knocked out monochrome).
  * 1em by default, baseline-aligned, aria-hidden. */
 export interface CgtMarkProps {
   size?: number | string;

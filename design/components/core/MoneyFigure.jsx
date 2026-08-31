@@ -23,7 +23,11 @@ export function formatCgt(amount) {
 }
 
 /* The CGT mark. Scales with the surrounding text (1em), sits on the text
-   baseline, and reads in both themes through the primary pair. */
+   baseline, and reads in both themes through the primary pair. A bare C in a
+   disc is any game's coin (jakob 2026-08-31), so the coin carries the brand
+   mark itself — cogra-mark.svg verbatim, knocked out monochrome in the
+   on-primary (the two-colour original needs its own ground; a coin has only
+   the disc). */
 export function CgtMark({ size = "1em", style }) {
   return (
     <svg
@@ -34,13 +38,16 @@ export function CgtMark({ size = "1em", style }) {
       style={{ verticalAlign: "-0.125em", flex: "none", ...style }}
     >
       <circle cx="10" cy="10" r="10" fill="var(--primary)" />
-      <path
-        d="M 13.2 5.9 A 5.2 5.2 0 1 0 13.2 14.1"
-        fill="none"
-        stroke="var(--on-primary)"
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
+      <g transform="translate(2.26 2.26) scale(0.155)" fill="none" stroke="var(--on-primary)">
+        <circle cx="50.00" cy="38.35" r="22.52" strokeWidth="15.66" />
+        <path
+          d="M72.520 17.220 L72.520 62.560 C72.450 63.280 72.340 65.460 72.090 66.870 C71.830 68.290 71.480 69.710 70.980 71.050 C70.470 72.390 69.830 73.720 69.060 74.920 C68.280 76.130 67.360 77.280 66.330 78.270 C65.300 79.270 64.110 80.150 62.880 80.890 C61.660 81.620 60.310 82.210 58.950 82.690 C57.600 83.170 56.180 83.500 54.760 83.740 C53.340 83.980 51.890 84.080 50.450 84.140 C49.010 84.200 47.560 84.170 46.120 84.090 C44.680 84.020 42.520 83.760 41.810 83.690"
+          strokeWidth="15.66"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle cx="53.53" cy="34.82" r="8.52" fill="var(--on-primary)" stroke="none" />
+      </g>
     </svg>
   );
 }
