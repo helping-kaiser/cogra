@@ -1,30 +1,42 @@
 package com.cogra.feature.content.wizard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PermMedia
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograTextField
+import com.cogra.core.designsystem.v2.atom.Hairline
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.MediaThumb
 import com.cogra.core.designsystem.v2.media.ThumbBadge
@@ -64,63 +76,92 @@ internal fun ColumnScope.WordsStepBody(
 }
 
 /**
- * `ComposePick` — the media half.
+ * `ComposePick` — the media half, as the board draws it.
  *
- * **The device grid is the system photo picker, not an in-app one.**
- * The canonical board draws a grid of the reader's own photos with
- * selection badges, which on Android means holding `READ_MEDIA_IMAGES`
- * and querying `MediaStore`. Android's own guidance is the opposite:
- * the photo picker
- * (developer.android.com/training/data-storage/shared/photopicker) is
- * the documented way to let someone hand over specific pictures, needs
- * no permission at all, and is what a privacy-by-construction app
- * should be asking for. So the board's dashed "Your photos app" tile
- * opens it and the grid below shows what came back — the picks, in
- * their order, each tappable to drop. Named as a deviation rather than
- * quietly matched.
+ * The grid is the reader's **own newest pictures, in the app**, each
+ * tile toggling its pick in place: the board's affordance is a set you
+ * browse and badge, not a handover to another app. That needs a media
+ * permission, so [PickStage] draws the permission's own three answers —
+ * not asked, granted (fully or partially), refused — around the same
+ * grid.
+ *
+ * The board's first tile is kept exactly as drawn: a dashed "Your photos
+ * app" tile that opens the system picker, for the reader who would
+ * rather choose there, or whose picture is not among the newest.
+ *
+ * Note the geometry: the tray sits in the 24dp screen gutter above a
+ * hairline, and the grid below runs to a 4dp margin with a 3dp seam.
+ * The two are deliberately different — the grid is a sheet of pictures,
+ * not a form field.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun ColumnScope.PickStepBody(
+internal fun ColumnScope.PickStage(
     state: ComposeWizardState,
+    permission: MediaPermission,
+    onRequestPermission: () -> Unit,
+    onOpenSettings: () -> Unit,
     onOpenPicker: () -> Unit,
     onTogglePick: (String) -> Unit,
 ) {
     if (state.picked.isNotEmpty()) {
         PickedTray(state = state, onRemove = onTogglePick)
+        Hairline()
     }
-    FlowRow(
+
+    val picks = state.picked.map { it.uri }
+    LazyVerticalGrid(
+        // Three columns is the board's own grid: at its 390dp width a
+        // third of the row inside a 4dp margin and 3dp seams is 125dp,
+        // the tile the board draws. Fixed rather than adaptive so a
+        // narrower phone keeps the composition instead of dropping to two
+        // wide tiles.
+        columns = GridCells.Fixed(GRID_COLUMNS),
         modifier = Modifier
             .fillMaxWidth()
             .weight(1f)
-            .verticalScroll(rememberScrollState()),
+            .testTag("wizard_pick_grid"),
+        contentPadding = PaddingValues(start = GridEdge, end = GridEdge, top = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(GridSeam),
         verticalArrangement = Arrangement.spacedBy(GridSeam),
     ) {
-        PhotosAppTile(onClick = onOpenPicker)
-        state.picked.forEachIndexed { index, asset ->
-            MediaThumb(
-                item = MediaItem(asset.uri, asset.sourceRatio ?: 1f, asset.altText.ifBlank { null }),
-                size = PickerTile,
-                badge = ThumbBadge.Order(index + 1),
-                onClick = { onTogglePick(asset.uri) },
-                contentDescription = "Picture ${index + 1}, picked. Activate to remove it.",
-                testTag = "wizard_pick_$index",
-            )
+        item(key = "photos_app") { PhotosAppTile(onClick = onOpenPicker) }
+
+        if (permission is MediaPermission.Granted) {
+            items(state.deviceImages, key = { it.uri }) { image ->
+                val order = picks.indexOf(image.uri).takeIf { it >= 0 }
+                MediaThumb(
+                    item = MediaItem(image.uri, image.aspectRatio),
+                    size = null,
+                    corner = 0.dp,
+                    // A filled numbered disc for a pick, an empty ring for
+                    // the rest — the board's whole selection language.
+                    badge = ThumbBadge.Order(order?.plus(1)),
+                    onClick = { onTogglePick(image.uri) },
+                    contentDescription = if (order == null) {
+                        "A picture. Activate to pick it."
+                    } else {
+                        "Picture ${order + 1}, picked. Activate to remove it."
+                    },
+                    testTag = "wizard_grid_${image.uri}",
+                )
+            }
         }
     }
+
+    // The permission's answer sits under the grid rather than replacing
+    // it: the "Your photos app" tile works whatever was granted, so the
+    // stage is never a dead end.
+    PermissionNote(permission, onRequestPermission, onOpenSettings)
 }
 
 /**
  * The picked tray: the count, then every pick in order — the first
- * wearing `Cover`, the rest a remove badge — and the line that says why
- * the first one is different.
+ * wearing `Cover`, the rest a remove badge — and, on the same line, the
+ * sentence that says why the first one is different.
  *
- * The whole row scrolls rather than truncating behind a `Show all`. The
- * board draws that affordance beside two picks and defines nothing for
- * it to open, so a scrollable tray is the conservative reading:
- * everything picked stays reachable, and nothing hides behind a control
- * whose destination is undesigned.
+ * The row scrolls rather than truncating behind the board's `Show all`,
+ * whose destination is not drawn anywhere; that affordance is frozen
+ * pending its own design.
  */
 @Composable
 private fun PickedTray(
@@ -129,7 +170,9 @@ private fun PickedTray(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = Layout.ScreenGutter, end = Layout.ScreenGutter, top = 4.dp, bottom = Space.x3),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(
@@ -157,33 +200,60 @@ private fun PickedTray(
                     testTag = "wizard_tray_$index",
                 )
             }
+            Text(
+                text = "The first one is the cover.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
-        Text(
-            text = "The first one is the cover.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 
 /**
- * The tile that opens the system photo picker, drawn at the grid's own
- * tile size so it sits in the grid rather than beside it.
+ * The board's first tile: a dashed outline, the folder glyph, and the
+ * label under it — a tile in the grid rather than a button dropped into
+ * one. It opens the system photo picker, which needs no permission at
+ * all, so it is also the way through when the grid's own is refused.
  */
 @Composable
 private fun PhotosAppTile(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.size(PickerTile),
-        contentAlignment = Alignment.Center,
+    val outline = MaterialTheme.colorScheme.outline
+    val dash = with(LocalDensity.current) {
+        Stroke(
+            width = 1.dp.toPx(),
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 4.dp.toPx())),
+        )
+    }
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+            .drawBehind { drawRect(color = outline, style = dash) }
+            .clickable(role = Role.Button, onClick = onClick)
+            .testTag("wizard_open_picker"),
+        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        CograButton(
+        Icon(
+            imageVector = Icons.Filled.PermMedia,
+            // The label below carries the meaning; the glyph repeats it.
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(24.dp),
+        )
+        Text(
             text = "Your photos app",
-            onClick = onClick,
-            kind = ButtonKind.Outlined,
-            testTag = "wizard_open_picker",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary,
+            textAlign = TextAlign.Center,
         )
     }
 }
+
+/** The grid's own margin and seam, read off `ComposePick`. */
+private val GridEdge = 4.dp
+
+private const val GRID_COLUMNS = 3
 
 /**
  * `ComposeDraft` — the held draft, offered back before the picker takes

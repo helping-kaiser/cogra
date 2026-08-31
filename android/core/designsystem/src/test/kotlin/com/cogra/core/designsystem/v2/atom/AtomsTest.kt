@@ -1,7 +1,10 @@
 package com.cogra.core.designsystem.v2.atom
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertTouchHeightIsEqualTo
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsSelected
@@ -137,6 +140,30 @@ class AtomsTest {
     }
 
     @Test
+    fun theHeadersActionSitsHardAgainstTheRightEdgeWhateverTheTitle() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                Column(Modifier.width(390.dp)) {
+                    WizardHeader(
+                        title = "Crop",
+                        onBack = {},
+                        actionText = "Next",
+                        onAction = {},
+                        testTag = "header",
+                    )
+                }
+            }
+        }
+
+        // The board hands the leftover width to a spacer, which puts the
+        // pill against the far edge of the header's content box. A short
+        // title must not pull it back toward the middle.
+        val header = compose.onNodeWithTag("header").getUnclippedBoundsInRoot()
+        val action = compose.onNodeWithTag("header_action").getUnclippedBoundsInRoot()
+        assertThat((header.right - action.right).value).isWithin(TOLERANCE).of(0f)
+    }
+
+    @Test
     fun theSealsTrailingNoteIsANoteRatherThanAControl() {
         compose.setContent {
             Cogra2PreviewTheme {
@@ -202,3 +229,6 @@ class AtomsTest {
         assertThat(clicked).isTrue()
     }
 }
+
+/** Layout arithmetic lands on whole pixels, not whole dp. */
+private const val TOLERANCE = 1f

@@ -471,16 +471,18 @@ private fun CograNavGraphContent(
                 if (!editing) {
                     ComposeWizardRoute(
                         referenceTargetId = entry.toRoute<ComposePost>().referenceTargetId,
-                        // The wizard's signed post lands on the feed for
-                        // the same reason the composer's does: content
-                        // exists at authoring, not at landing
-                        // (substrate.md §6), and the author finds it at
-                        // the top still settling.
-                        onSigned = {
+                        // `ComposeLanded` lands on the post itself, not on
+                        // the feed: the author's next question is what
+                        // they just made, and a feed landing answers a
+                        // different one. The wizard leaves the stack
+                        // first, so back from the post reaches the feed
+                        // rather than the composer that made it.
+                        onSigned = { nodeId ->
                             navController.popBackStack<Feed>(inclusive = false)
                             navController.currentBackStackEntry
                                 ?.savedStateHandle
                                 ?.set(CONTENT_SIGNED_RESULT, true)
+                            navController.navigate(PostDetail(nodeId))
                         },
                         // "Nothing was spent — your draft is saved": the
                         // notice belongs on the feed, which is where the

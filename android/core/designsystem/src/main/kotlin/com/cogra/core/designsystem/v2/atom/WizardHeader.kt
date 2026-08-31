@@ -75,16 +75,19 @@ fun WizardHeader(
             Box(Modifier.size(Layout.TouchTargetMin))
         }
 
+        // The board gives the title its natural width and lets a `flex: 1`
+        // spacer absorb the rest, which puts the trailing pill hard against
+        // the right edge. One filling weight does both jobs: the title draws
+        // at the start of the space it is given, the leftover stays inside
+        // it, and the pill is pushed flush right whatever the title's length.
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f, fill = false),
+            modifier = Modifier.weight(1f),
         )
-
-        Box(Modifier.weight(1f))
 
         // The seal's "Last step" — the one place a wizard header states where
         // the reader is, and it is a plain note rather than a step count.

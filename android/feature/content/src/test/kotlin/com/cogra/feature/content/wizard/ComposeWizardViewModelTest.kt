@@ -16,6 +16,8 @@ import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
 import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.DeviceImage
+import com.cogra.domain.media.DeviceImageSource
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.signing.WriteSigner
@@ -135,11 +137,23 @@ class ComposeWizardViewModelTest {
         }
     }
 
+    /** `ComposePick`'s grid, scripted: the wizard only ever reads it. */
+    private val deviceImages = object : DeviceImageSource {
+        var offered = listOf(DeviceImage("a", 1f), DeviceImage("b", 1.5f))
+        var calls = 0
+
+        override suspend fun newestImages(limit: Int): List<DeviceImage> {
+            calls += 1
+            return offered.take(limit)
+        }
+    }
+
     private fun viewModel() = ComposeWizardViewModel(
         content = content,
         references = references,
         media = media,
         processor = processor,
+        deviceImages = deviceImages,
         drafts = drafts,
         signer = WriteSigner(sealer, identity),
     )
@@ -174,6 +188,7 @@ class ComposeWizardViewModelTest {
         val vm = viewModel()
         vm.start()
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Words)
         vm.onBodyChange("Salt maps of the coast road")
         vm.onNext()
         vm.onNext()
@@ -296,6 +311,7 @@ class ComposeWizardViewModelTest {
         val vm = viewModel()
         vm.start()
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Words)
         vm.onBodyChange("Salt maps")
         vm.onNext()
         vm.onNext()
@@ -311,6 +327,7 @@ class ComposeWizardViewModelTest {
         val vm = viewModel()
         vm.start()
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Words)
         vm.onBodyChange("Salt maps")
         vm.onTitleChange("Salt maps of the coast road")
         vm.onNext()
@@ -326,6 +343,105 @@ class ComposeWizardViewModelTest {
             .isEqualTo("Salt maps of the coast road")
         // The promise the notice makes: the draft is there.
         assertThat(drafts.held?.body).isEqualTo("Salt maps")
+    }
+
+    @Test
+    fun theDraftIsWrittenAsItIsMadeRatherThanOnlyOnTheWayOut() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onModeChange(BodyMode.Words)
+        vm.onBodyChange("half a thought")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // Nothing was left, nothing was signed, and the process could die
+        // here — the draft is already on disk.
+        assertThat(vm.state.value.outcome).isNull()
+        assertThat(drafts.held?.body).isEqualTo("half a thought")
+    }
+
+    @Test
+    fun aLifecycleStopWritesWithoutWaitingOutTheDebounce() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onModeChange(BodyMode.Words)
+        vm.onBodyChange("typed and backgrounded")
+        vm.persistNow()
+        // Well short of the debounce: the stop's write does not wait, and
+        // nothing scheduled after it may cancel it.
+        dispatcher.scheduler.advanceTimeBy(1)
+        dispatcher.scheduler.runCurrent()
+
+        assertThat(drafts.held?.body).isEqualTo("typed and backgrounded")
+    }
+
+    @Test
+    fun nothingIsWrittenWhileAHeldDraftIsStillBeingOffered() = runTest(dispatcher) {
+        drafts.held = ComposeDraft(DraftBodyKind.Words, body = "an older draft")
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // The wizard behind the offer is empty, and persisting an empty
+        // wizard clears the store — which would destroy the very draft the
+        // offer is about.
+        assertThat(drafts.held?.body).isEqualTo("an older draft")
+
+        vm.onDiscardDraft()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(drafts.held).isNull()
+    }
+
+    @Test
+    fun backLeavesFromEveryStageAndKeepsTheDraft() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toSealWithMedia("a")
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Seal)
+
+        // Back never walks the stages backwards: it reports "not handled"
+        // so the route leaves, and the draft survives.
+        assertThat(vm.onBack()).isFalse()
+        vm.onLeave()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.outcome).isEqualTo(WizardOutcome.DraftKept)
+        assertThat(drafts.held).isNotNull()
+    }
+
+    @Test
+    fun backClosesAnOpenSheetBeforeItLeaves() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toSealWithMedia("a")
+        vm.onOpenSheet(SealSheet.License)
+
+        assertThat(vm.onBack()).isTrue()
+        assertThat(vm.state.value.sheet).isEqualTo(SealSheet.None)
+        assertThat(vm.onBack()).isFalse()
+    }
+
+    @Test
+    fun theSealsBackPillIsTheOneThatStepsBack() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toSealWithMedia("a")
+
+        vm.onSealBack()
+
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Details)
+    }
+
+    @Test
+    fun aGrantedPermissionFillsThePickerGrid() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onMediaPermissionGranted()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.deviceImages.map { it.uri }).containsExactly("a", "b").inOrder()
     }
 
     @Test
@@ -360,6 +476,7 @@ class ComposeWizardViewModelTest {
         val vm = viewModel()
         vm.start()
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Words)
         vm.onBodyChange("Salt maps")
         vm.onNext()
         vm.onNext()
@@ -436,6 +553,7 @@ class ComposeWizardViewModelTest {
         val vm = viewModel()
         vm.start()
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Words)
         vm.onBodyChange("Salt maps")
         vm.onNext()
         vm.onNext()
@@ -452,6 +570,7 @@ class ComposeWizardViewModelTest {
         val vm = viewModel()
         vm.start()
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Words)
         vm.onBodyChange("Salt maps")
         vm.onNext()
         vm.onNext()
