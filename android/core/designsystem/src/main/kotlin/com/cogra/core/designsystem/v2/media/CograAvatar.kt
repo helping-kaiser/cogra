@@ -3,7 +3,6 @@ package com.cogra.core.designsystem.v2.media
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,28 +63,6 @@ fun CograAvatar(
     }
 }
 
-/**
- * A profile cover: the wide crop of D13, at the medium rung like any other
- * inline block. There is no cover on the profile header by design
- * (design/readme.md §7) — this exists for the crop step and for surfaces
- * that do carry one.
- */
-@Composable
-fun CograCover(
-    modifier: Modifier = Modifier,
-    url: Any? = null,
-    contentDescription: String? = null,
-    testTag: String? = null,
-) {
-    MediaTile(
-        item = MediaItem(url = url, aspectRatio = 1.91f, altText = contentDescription),
-        modifier = modifier,
-        shape = MaterialTheme.shapes.medium,
-        capToTallest = false,
-        testTag = testTag,
-    )
-}
-
 @ThemePreviews
 @Composable
 private fun CograAvatarFallbacks() {
@@ -94,7 +71,6 @@ private fun CograAvatarFallbacks() {
             // No picture, and a picture that cannot load, look alike.
             CograAvatar(name = "Mira", size = 48.dp)
             CograAvatar(name = "Ada", size = 24.dp)
-            CograCover()
         }
     }
 }

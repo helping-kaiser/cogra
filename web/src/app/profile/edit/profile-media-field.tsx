@@ -1,6 +1,7 @@
 "use client";
 
-// The avatar and cover pickers (D13) — the post picker's parts at a fixed shape.
+// The avatar picker (D13) — the post picker's parts at a fixed shape. The
+// profile carries one image, so this is the only one.
 //
 // THE THREE VALUES ARE THE WHOLE POINT of this component. A profile update is
 // three-valued where a content edit is two-valued: omitted leaves the picture
@@ -19,9 +20,8 @@ import { useEffect, useMemo, useRef } from "react";
 import { Button } from "@/lib/ui/button";
 import { MonogramAvatar } from "@/lib/ui2/monogram-avatar";
 import { CropFrame } from "@/lib/ui2/media/crop-frame";
-import { MediaTile } from "@/lib/ui2/media/media-tile";
 import { CENTERED, type Crop } from "@/lib/ui2/media/crop";
-import { AVATAR_RATIO, COVER_RATIO } from "@/lib/ui2/media/aspect";
+import { AVATAR_RATIO } from "@/lib/ui2/media/aspect";
 
 /** What the field is holding, before any of it has been uploaded. */
 export type ProfileMediaChoice =
@@ -31,7 +31,7 @@ export type ProfileMediaChoice =
 
 export const UNCHANGED: ProfileMediaChoice = { kind: "unchanged" };
 
-export const PROFILE_RATIOS = { avatar: AVATAR_RATIO, cover: COVER_RATIO } as const;
+export const PROFILE_RATIOS = { avatar: AVATAR_RATIO } as const;
 
 export function ProfileMediaField({
   kind,
@@ -41,7 +41,8 @@ export function ProfileMediaField({
   onChoice,
   testIdPrefix,
 }: {
-  kind: "avatar" | "cover";
+  /** The profile's one image. Named so the test ids read as they mean. */
+  kind: "avatar";
   /** For the monogram the avatar falls back to. */
   name: string;
   /** What the profile carries today, or null where it carries nothing. */
@@ -63,7 +64,7 @@ export function ProfileMediaField({
     return () => URL.revokeObjectURL(preview);
   }, [preview]);
 
-  const label = kind === "avatar" ? "Avatar" : "Cover";
+  const label = "Avatar";
   const showing = choice.kind === "cleared" ? null : (preview ?? currentUrl);
 
   return (
@@ -80,20 +81,12 @@ export function ProfileMediaField({
           onChange={(crop) => onChoice({ ...choice, crop })}
           testId={`${testIdPrefix}-${kind}-crop`}
         />
-      ) : kind === "avatar" ? (
+      ) : (
         <MonogramAvatar
           name={name}
           src={showing}
           size={96}
           testId={`${testIdPrefix}-avatar-preview`}
-        />
-      ) : (
-        <MediaTile
-          src={showing}
-          altText=""
-          ratio={COVER_RATIO}
-          fit="cover"
-          testId={`${testIdPrefix}-cover-preview`}
         />
       )}
 
@@ -147,9 +140,7 @@ export function ProfileMediaField({
 
       {choice.kind === "cleared" && (
         <p className="m-0 text-label-small text-on-surface-variant">
-          {kind === "avatar"
-            ? "Saving replaces it with your monogram."
-            : "Saving removes the cover."}
+          Saving replaces it with your monogram.
         </p>
       )}
     </div>

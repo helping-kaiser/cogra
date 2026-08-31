@@ -483,7 +483,6 @@ open class ThrowingProfileRepository : ProfileRepository {
         bio: String?,
         websiteUrl: String?,
         avatar: MediaFieldUpdate,
-        cover: MediaFieldUpdate,
     ): Outcome<List<PreparedWriteView>> = throw UnsupportedOperationException()
 }
 

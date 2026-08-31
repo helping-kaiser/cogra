@@ -185,7 +185,6 @@ internal fun ProfileFields.toDomain(): ProfileView = ProfileView(
     bio = ModeratedField(bio.value, bio.status.toDomain()),
     websiteUrl = ModeratedField(websiteUrl.value, websiteUrl.status.toDomain()),
     avatar = avatar?.mediaFields?.toDomain(),
-    cover = cover?.mediaFields?.toDomain(),
 )
 
 /**
