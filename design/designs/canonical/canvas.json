@@ -552,6 +552,86 @@
       "y": 16160,
       "w": 390,
       "h": 844
+    },
+    {
+      "file": "Wallet.dc.html",
+      "title": "Wallet · at rest",
+      "x": 0,
+      "y": 17220,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "WalletEmpty.dc.html",
+      "title": "Wallet · a new member's zero",
+      "x": 480,
+      "y": 17220,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "WalletSetup.dc.html",
+      "title": "Wallet · first open",
+      "x": 960,
+      "y": 17220,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "WalletAddressSeal.dc.html",
+      "title": "Wallet · publish the address",
+      "x": 1440,
+      "y": 17220,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "WalletChange.dc.html",
+      "title": "Wallet · change the address",
+      "x": 1920,
+      "y": 17220,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "WalletKeyAbsent.dc.html",
+      "title": "Wallet · key elsewhere",
+      "x": 0,
+      "y": 18280,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "WalletGuest.dc.html",
+      "title": "Wallet · as a guest",
+      "x": 480,
+      "y": 18280,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "WalletApplicant.dc.html",
+      "title": "Wallet · as an applicant",
+      "x": 960,
+      "y": 18280,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "WalletCampaign.dc.html",
+      "title": "Wallet · your campaign",
+      "x": 1440,
+      "y": 18280,
+      "w": 390,
+      "h": 844
+    },
+    {
+      "file": "WalletCampaigns.dc.html",
+      "title": "Wallet · campaigns",
+      "x": 1920,
+      "y": 18280,
+      "w": 390,
+      "h": 844
     }
   ],
   "annotations": [
@@ -637,7 +717,7 @@
       "x": 640,
       "y": -300,
       "w": 640,
-      "text": "THE ? CONTENTS — each ? opens a plain dialog (see 'The ? dialog' board): title, at most two short paragraphs, Close. The copy, verbatim:\n\nSEAL (post + reply) · 'Signed actions': Each piece of a post — the post itself, every topic, every citation — is its own signed action, written in your name. They sign together: all of them land, or none does. / You don't pay for these — a shared community pool covers members' signings. The pool is real and finite, so each action still counts.\n\nLICENSE SHEET · 'The license': Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it. / The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.\n\nSENSITIVE SHEET · 'Marking as sensitive': The mark veils the pictures and the description until a reader chooses to look. The title stays readable, so choosing is informed. / Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.\n\nKEY ABSENT · 'Your key': Signing needs your key, and it isn't on this browser. Nothing is signed or sent without it — the draft stays on this device. / Restore the key with your recovery code to finish. Restoring here is the only way to complete this write.\n\nPOST PAD · 'Where you stand on it': Publishing also signs where you stand on your own post — for or against, from a gentle +0.10 by default. / Your own post always reaches you in full, so only for-or-against is yours to set. Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.\n\nREPLY PAD · 'Toward what you answer': Replying also signs where you stand on the post you answer — for or against, and how much of it reaches you. It starts at a gentle +0.10 / +0.10 and rides the same signature as your reply. / Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nEDIT · 'Editing': An edit replaces the whole post; earlier versions stay public under 'Edited' unless you remove them. An edit never bumps the post as new. / Topic and citation changes ride the same signing, each as its own signed action. The license never changes.\n\nCITE · 'Citing': A citation is its own signed action and carries where you stand on what you cite. You can cite anything on CoGra — start with @handle or #topic to reach comments, messages, and offers. / Comments and chat messages can also be cited from themselves — open one and choose 'Cite in a new post'.\n\nSEARCH · 'Searching' (the Explore tab and the citing picker): Search reads names and titles, never bodies. Start with @handle to search one person's work — including their comments and offers, found through what they point at. Start with #topic to search inside a topic. / Results put what's closest to you first — the numbers are your view, no one else's. Below the line, what's still beyond your reach, newest first. Your searches stay on this device.\n\nFILTER SHEET · 'The filter' (the feed's and search's sheets): What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen stays out unless you ask for it back. Every change applies as you tap; nothing here is signed or shared. / It lasts until you change it, on this device only. Your default lives in settings."
+      "text": "THE ? CONTENTS — each ? opens a plain dialog (see 'The ? dialog' board): title, at most two short paragraphs, Close. The copy, verbatim:\n\nSEAL (post + reply) · 'Signed actions': Each piece of a post — the post itself, every topic, every citation — is its own signed action, written in your name. They sign together: all of them land, or none does. / You don't pay for these — a shared community pool covers members' signings. The pool is real and finite, so each action still counts.\n\nLICENSE SHEET · 'The license': Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it. / The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.\n\nSENSITIVE SHEET · 'Marking as sensitive': The mark veils the pictures and the description until a reader chooses to look. The title stays readable, so choosing is informed. / Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.\n\nKEY ABSENT · 'Your key': Signing needs your key, and it isn't on this browser. Nothing is signed or sent without it — the draft stays on this device. / Restore the key with your recovery code to finish. Restoring here is the only way to complete this write.\n\nPOST PAD · 'Where you stand on it': Publishing also signs where you stand on your own post — for or against, from a gentle +0.10 by default. / Your own post always reaches you in full, so only for-or-against is yours to set. Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.\n\nREPLY PAD · 'Toward what you answer': Replying also signs where you stand on the post you answer — for or against, and how much of it reaches you. It starts at a gentle +0.10 / +0.10 and rides the same signature as your reply. / Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nEDIT · 'Editing': An edit replaces the whole post; earlier versions stay public under 'Edited' unless you remove them. An edit never bumps the post as new. / Topic and citation changes ride the same signing, each as its own signed action. The license never changes.\n\nCITE · 'Citing': A citation is its own signed action and carries where you stand on what you cite. You can cite anything on CoGra — start with @handle or #topic to reach comments, messages, and offers. / Comments and chat messages can also be cited from themselves — open one and choose 'Cite in a new post'.\n\nSEARCH · 'Searching' (the Explore tab and the citing picker): Search reads names and titles, never bodies. Start with @handle to search one person's work — including their comments and offers, found through what they point at. Start with #topic to search inside a topic. / Results put what's closest to you first — the numbers are your view, no one else's. Below the line, what's still beyond your reach, newest first. Your searches stay on this device.\n\nFILTER SHEET · 'The filter' (the feed's and search's sheets): What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen stays out unless you ask for it back. Every change applies as you tap; nothing here is signed or shared. / It lasts until you change it, on this device only. Your default lives in settings.\n\nDESCRIBE SHEET · 'Describing pictures': A description is read aloud by screen readers and shown when a picture can't load — plain words about what's there. It travels with the picture, public like the rest of the post. / Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.\n\nPROFILE-PICTURE SEAL · 'Changing your picture': Your profile is a public record, and changes to it are signed actions in your name — the picture changes the moment yours lands. / The community pool covers the signing, like your posts. The record that you changed it stays, like every signed action.\n\nWALLET BALANCE · 'What is CGT?': CGT is CoGra's own money. Advertisers fund campaigns with it, and it pays the people whose posts and stances carried real reach — the small coin always means CGT. / It's yours the moment it lands: earnings are paid straight to you, held by your key, never by CoGra. Every amount can be traced to what paid it, and the ≈ value reads the public CGT–L-BTC market — it moves with the market and is never a promise.\n\nWALLET SET-UP · 'Your wallet key': Your wallet gets its own key — created on this device, never held by CoGra, restored by the same recovery code as your signing key. One code, both keys. / Publishing your payout address is a signed action. The address is public, payouts and tips land there, and every change to it stays on your public record."
     },
     {
       "id": "note-cite",
@@ -680,6 +760,13 @@
       "y": 15100,
       "w": 290,
       "text": "THE MEDIA SLICE (jakob 2026-08-31, for the product's media rebuild). The GALLERY IS A PAGER: every picture shares the post's one crop shape, swiped whole, dots only — never a '1/n' pill. Caps: 10 pictures or 1 video (+ its cover) per post; 4 pictures per comment. UPLOAD STARTS AFTER THE CROP — the crop happens on the device, only the cropped export is ever uploaded (the original can hold what the author never meant to share); comment pictures never crop, so they upload at pick. Progress rides the thumbnails as rings; a failed picture is marked on its tile with Retry · Remove beside it; the SEAL gates — signing waits for the pictures. DESCRIPTIONS (alt text) are authored, optional, never invented: entered per picture from the details step ('Describe the pictures · n of m described') and from the picked tray's Show all sheet — the per-picture manager (reorder, first = cover, remove, describe). Comment media is words-first: inset at the card's medium rung, capped at comment scale, same pager. Comment edit mirrors the post's one-screen-one-batch, license locked. Profile: ONE image — the avatar (no cover, per the ProfileHeader ruling); changing it is a SIGNED ACT with its own seal. Sensitive veils the WHOLE gallery, never one picture. Round 2 (jakob, same day): the details row carries NO Crop/Edit links ('none') — the row itself opens Show all; crop is one Back away — and the slice ships componentized (components/compose/: MediaThumb, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, UploadStatusLine, UploadErrorLine, ActsCard), every board here rendered from the design system. Round 3 (implementation session's findings, same day): WEB has no device-gallery API, so 'Pick · the web variant' replaces the grid with the file picker + drop target — the rest of the step identical. The seal drift is healed in the component: ActsCard's note subline ('they land together, or none does') rides every MULTI-act seal's total; a single-act seal omits it. On the key-absent seal the ONE '?' belongs to the key notice (the 'Your key' dialog), not the header — one ? per screen, the key story outranks the seal story there. Off-role type values conformed to the pinned M3 roles (badge to label-small, writing bodies to 16/24, draft buttons to true padding) — M3 stays the default; no sub-roles added. Round 4 (jakob): THE WIZARD'S WAYS OUT — the header arrow steps ONE STAGE BACK, never out of the flow (Details reaches crop with it; the platform back gesture matches); the X leaves the whole flow from ANY stage, draft kept, NO confirmation (the draft prompt is the return surface); the seal's Back pill is the same one-stage step, labeled. WizardHeader is the master; every composer-flow stage wears the X, between the title and the trailing controls. The em-dash rule stands (asides keep their em dashes, per copy-voice)."
+    },
+    {
+      "id": "sec-wallet",
+      "x": -340,
+      "y": 17220,
+      "w": 290,
+      "text": "WALLET (item 12, jakob's rulings 2026-08-31, grounded in a doc audit + the L0-on-Liquid decision). The balance headline is the ONE surface spelling CGT (mark + word + the What-is-CGT '?'), with the ≈ L-BTC VALUE line read from the public CGT–L-BTC market (the protocol's own ladder, live from genesis) — an estimate, never a promise, hidden at zero. NO free-form send (tipping IS the user-to-user send; off-graph moves are any Liquid tool's job) and NO cash-out surface. HISTORY: one stream, newest first — payouts, tips in and out, campaign money — every line opening what paid it; an unlanded payout wears Still settling (the pending look item 11 deferred here); direction by sign and words, never colour. CAMPAIGNS: money view only (deposit, escrow, window, settles-as-public-record); the campaign card will click through to a details page when one exists. THE RAIL KEY IS BORN LAZILY at first wallet open (docs: ledger.md Keys) — no new recovery code, the key joins the one container under the one code ('Your wallet key' ?); the ceremony's single signed act is publishing the payout address. The address renders WHOLE, mono, never truncated (checking it is the point); changing it is a seal — parallel Registration, newest wins, every prior address stays witnessed. Key-absent: balance and history stay readable (public chain), signing needs the key — restore-first. Guest: the honest explanation + the join prompt. Applicant: the wallet opens with membership — nothing locked, nothing yet to show. ROUND 2 (jakob, same day — 'make it sexy', direction A blessed WITH the gradient): the balance is a TROPHY — the hero rides THE BRAND WASH (--surface-hero, the one decorative gradient surface, first of its kind; jakob: the product reads 'basic' next to Instagram's brand feel, this is the start of fixing that) with the brand coin GHOSTED oversized into the corner, display-size figure, and the real recent-earnings delta chip. Progress: the EARNED BARS — every bar a real settlement, tappable, latest wears primary (honest decoration; nothing modeled). History rows are IDENTITY ROWS: the disc is who the money moved with (tipper's face, campaign's cover, glyph), wearing the direction badge; the amount stays uncoloured. THE CAMPAIGN MOVED TO ITS OWN SUBPAGE (Wallet · your campaign — committing 12,500 is a big deal): money facts + its rail history; the main page keeps one entry row. The address lives in a CARD with copy + Change (compact at rest, captioned on the zero state and seals). Zero-state wording is PATH-TRUE: campaigns pay when paths between crowd and target run through you; posting is how paths start, not a guarantee. Key notice LEADS the key-absent board, inset like every card. Guest prompt centered; applicant told plainly: come back after approval — earnings can't land until the address exists. ROUND 3 (jakob, same day): AT REST THE ADDRESS IS ONE LINE, high on the page (PayoutAddressRow — the one place the address may shorten, head…tail; it is an entry point, and the full card with copy/Change/caption is one tap away; the never-truncate rule holds on every checking surface — the card, the seals, the zero state where the full card sits high). THE CAMPAIGN SECTION IS GONE from the main page: campaign money is ORDINARY HISTORY — three kinds: escrow out at creation, top-up out, return in when the payout wasn't full — and the wallet keeps only the CAMPAIGNS DOOR to the campaigns page ('Wallet · campaigns'): Start a campaign, the Yours/You-took-part segments, Open with amounts, Past with outcomes; a listed campaign opens the money subpage ('Wallet · your campaign'). THE MOMENT SCREENS WEAR THE WASH (WashCard — the wash + ghost coin extracted as one master; at most one per screen): first open, guest, and applicant are a person's first look at the money side and must not read as settings."
     }
   ],
   "launch": {

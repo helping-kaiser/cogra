@@ -43,7 +43,7 @@ class ComposeWizardStateTest {
     @Test
     fun aFreshComposerStartsOnThePictures() {
         // Images-first: `ComposeDraft` captions the stage behind its offer
-        // "Or start fresh — pick one picture…", which is the picker.
+        // "Or start fresh —", pointing at the picker grid below it.
         assertThat(ComposeWizardState().mode).isEqualTo(BodyMode.Media)
         assertThat(ComposeWizardState().step).isEqualTo(WizardStep.Body)
     }
@@ -62,36 +62,54 @@ class ComposeWizardStateTest {
         assertThat(words.retreated()).isNull()
     }
 
-    // -- The details board's two ways back --
+    // -- The picked-pictures manager --
 
     @Test
-    fun cropAndEditReachTwoDifferentStages() {
-        val atDetails = media.advanced()!!.advanced()!!
+    fun reorderingCarriesTheCoverWithIt() {
+        val three = media.copy(
+            picked = listOf(PickedAsset("a"), PickedAsset("b"), PickedAsset("c")),
+        )
 
-        assertThat(atDetails.returnedTo(WizardStep.Crop).step).isEqualTo(WizardStep.Crop)
-        assertThat(atDetails.returnedTo(WizardStep.Body).step).isEqualTo(WizardStep.Body)
+        // The first one is the cover, and there is no separate cover flag
+        // to fall out of step with the order.
+        val moved = three.movedPick(from = 2, to = 0)
+
+        assertThat(moved.picked.map { it.uri }).containsExactly("c", "a", "b").inOrder()
     }
 
     @Test
-    fun aWordsPostHasNoCropToReturnTo() {
-        val atDetails = words.advanced()!!
+    fun aMoveOutsideTheTrayIsNoMove() {
+        val two = media.copy(picked = listOf(PickedAsset("a"), PickedAsset("b")))
 
-        assertThat(atDetails.returnedTo(WizardStep.Crop).step).isEqualTo(WizardStep.Details)
+        assertThat(two.movedPick(0, 5).picked).isEqualTo(two.picked)
+        assertThat(two.movedPick(-1, 0).picked).isEqualTo(two.picked)
+        assertThat(two.movedPick(1, 1).picked).isEqualTo(two.picked)
     }
 
     @Test
-    fun aJumpNeverSkipsForward() {
-        // Forward is the `Next` pill's business, and only it knows whether
-        // the stage is ready.
-        assertThat(media.returnedTo(WizardStep.Seal).step).isEqualTo(WizardStep.Body)
-        assertThat(media.returnedTo(WizardStep.Body).step).isEqualTo(WizardStep.Body)
+    fun everyDrawerClosesBeforeTheStageMoves() {
+        val atDetails = media.advanced()!!.advanced()!!.copy(pickedSheetOpen = true)
+
+        val closed = atDetails.retreated()!!
+        assertThat(closed.pickedSheetOpen).isFalse()
+        assertThat(closed.step).isEqualTo(WizardStep.Details)
+
+        // Only then does back walk the stages.
+        assertThat(closed.retreated()?.step).isEqualTo(WizardStep.Crop)
     }
 
     @Test
-    fun leavingTheSealForAnEarlierStageClosesItsSheet() {
-        val sealed = words.copy(step = WizardStep.Seal, sheet = SealSheet.License)
+    fun describingCountsOnlyWhatWasActuallyWritten() {
+        val state = media.copy(
+            picked = listOf(
+                PickedAsset("a", altText = "A salt crust"),
+                PickedAsset("b"),
+                PickedAsset("c", altText = "   "),
+            ),
+        )
 
-        assertThat(sealed.returnedTo(WizardStep.Details).sheet).isEqualTo(SealSheet.None)
+        // Alt text is authored, never invented — blank is not described.
+        assertThat(state.describedCount).isEqualTo(1)
     }
 
     @Test
