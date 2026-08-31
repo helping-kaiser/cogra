@@ -66,8 +66,8 @@ export function CropStep({
         testId="wizard-crop-frame"
       />
 
-      <p className="m-0 text-label-small text-on-surface-variant">
-        One shape for the whole post. Drag to move, or use the controls.
+      <p className="m-0 text-body-small text-on-surface-variant">
+        One shape for the whole post. Drag to move, pinch to zoom.
       </p>
 
       {assets.length > 1 && (

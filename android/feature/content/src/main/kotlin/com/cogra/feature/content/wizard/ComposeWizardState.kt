@@ -4,6 +4,7 @@ import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
 import com.cogra.domain.compose.DraftShape
+import com.cogra.domain.media.DeviceImage
 import com.cogra.domain.LicenseChoice
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagSectionState
@@ -114,11 +115,20 @@ sealed interface WizardOutcome {
  */
 data class ComposeWizardState(
     val step: WizardStep = WizardStep.Body,
-    val mode: BodyMode = BodyMode.Words,
+    /**
+     * The composer opens on the pictures. `ComposeDraft` draws its offer
+     * over the picker grid and captions the stage behind it "Or start
+     * fresh — pick one picture, several, or one video", which is the
+     * board saying in as many words which half a fresh composer starts
+     * on; `ComposeWords` is the half reached by "Write words instead".
+     */
+    val mode: BodyMode = BodyMode.Media,
 
     // -- The body --
     val body: String = "",
     val picked: List<PickedAsset> = emptyList(),
+    /** The device's newest pictures, once a media permission allows them. */
+    val deviceImages: List<DeviceImage> = emptyList(),
     val shape: DraftShape = DraftShape.Tall,
     /** Which pick the crop step is framing, by index into [picked]. */
     val framingIndex: Int = 0,
@@ -280,14 +290,31 @@ fun ComposeWizardState.advanced(): ComposeWizardState? = when (step) {
 }
 
 /**
- * The back arrow. Null at the first stage, where back leaves the wizard
- * entirely — which is the route's decision, not the state's.
+ * One stage back, for the seal's own `Back` pill. The header's arrow is
+ * not this: it leaves the wizard from every stage, keeping the draft.
+ *
+ * Null where there is no earlier stage to reach.
  */
 fun ComposeWizardState.retreated(): ComposeWizardState? = when (step) {
     WizardStep.Body -> null
     WizardStep.Crop -> copy(step = WizardStep.Body)
     WizardStep.Details -> if (hasCropStep) copy(step = WizardStep.Crop) else copy(step = WizardStep.Body)
     WizardStep.Seal -> if (sheet != SealSheet.None) copy(sheet = SealSheet.None) else copy(step = WizardStep.Details)
+}
+
+/**
+ * A jump straight back to a stage already passed — the details board's
+ * `Crop` and `Edit`, which are two different destinations rather than
+ * one affordance drawn twice.
+ *
+ * Only ever backwards, and never onto the crop stage a words post does
+ * not have: a jump forward would skip the readiness the `Next` pill is
+ * there to enforce.
+ */
+fun ComposeWizardState.returnedTo(target: WizardStep): ComposeWizardState = when {
+    target.ordinal >= step.ordinal -> this
+    target == WizardStep.Crop && !hasCropStep -> this
+    else -> copy(step = target, sheet = SealSheet.None)
 }
 
 /**

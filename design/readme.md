@@ -1,4 +1,4 @@
-# CoGra Design System
+# CoGra Design System · `guide:design:design-system`
 
 CoGra (Content Graph) is a social network built on real relationships
 between people. What you see is shaped only by the connections you make.

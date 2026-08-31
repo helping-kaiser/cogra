@@ -1,4 +1,4 @@
-# Miner API
+# Miner API · `spec:implementation:miner-api`
 
 The ranking surface. The backend API ([api-spec.md](api-spec.md))
 deliberately does not rank: it serves each viewer their `χ`-bounded

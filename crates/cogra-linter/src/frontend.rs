@@ -233,6 +233,29 @@ pub struct Asset {
     pub place: Place,
     /// Where the asset sits, in whole-file coordinates.
     pub span: ByteSpan,
+    /// Where the asset's own documentation opens, in whole-file
+    /// coordinates: byte 0 for a definition a whole file backs, and the byte
+    /// after the opening brace for one written inline.
+    ///
+    /// The frontend answers it because the frontend holds the tree. Where a
+    /// profile's standard place is the asset itself, this is the byte a label
+    /// line goes before, and a run that had to re-derive it from the source
+    /// would be reading structure out of bytes that a parser had already
+    /// resolved. It carries no meaning for a register-placed profile, whose
+    /// standard place is a file of the owner's rather than a position in this
+    /// one.
+    pub opens: usize,
+    /// The asset's own documentation comment, as logical lines: leaders
+    /// resolved away, each line trimmed, a block comment's interior split at
+    /// its breaks. Empty where the asset carries no documentation.
+    ///
+    /// The frontend answers it for the reason it answers [`Asset::opens`] —
+    /// it holds the tree, and an item's documentation is a fact the parser
+    /// has already resolved. It is what the claim discipline reads: the
+    /// statement a covered test evidences is written here, and a run that
+    /// re-derived these lines from bytes would be reading back structure the
+    /// parser had settled (´dec:lint:claim-standing´).
+    pub documentation: Vec<String>,
 }
 
 /// A `mod name;` declaration, which is not a definition and not an asset.
@@ -399,6 +422,8 @@ pub fn backing_definitions<'s>(
                 area: area.clone(),
                 place: profile.standard_place.clone(),
                 span: ByteSpan::new(0, 0),
+                opens: 0,
+                documentation: Vec::new(),
             };
             (src, asset)
         })
@@ -463,18 +488,24 @@ mod tests {
         }
     }
 
+    /// A contiguous region locates by addition alone.
+    /// ´claim:pieces:a-contiguous-region-locates-by-addition´
     #[test]
     fn a_contiguous_region_locates_by_addition() {
         let one = region(vec![ByteSpan::new(10, 20)], "0123456789");
         assert_eq!(one.locate(ByteSpan::new(2, 5)), ByteSpan::new(12, 15));
     }
 
+    /// A span crossing a piece boundary covers the structure between the pieces.
+    /// ´claim:pieces:a-crossing-span-covers-the-structure´
     #[test]
     fn a_span_crossing_a_piece_boundary_covers_the_structure_between() {
         let one = region(vec![ByteSpan::new(0, 3), ByteSpan::new(9, 12)], "abcdef");
         assert_eq!(one.locate(ByteSpan::new(1, 5)), ByteSpan::new(1, 11));
     }
 
+    /// An offset on a boundary belongs to the piece it faces.
+    /// ´claim:pieces:a-boundary-offset-faces-one-piece´
     #[test]
     fn an_offset_on_a_boundary_belongs_to_the_piece_it_faces() {
         let one = region(vec![ByteSpan::new(0, 3), ByteSpan::new(9, 12)], "abcdef");
@@ -483,12 +514,16 @@ mod tests {
         assert_eq!(one.locate(ByteSpan::new(3, 6)), ByteSpan::new(9, 12));
     }
 
+    /// An offset past the text lands at the last piece.
+    /// ´claim:pieces:an-offset-past-the-text-clamps´
     #[test]
     fn an_offset_past_the_text_lands_at_the_last_piece() {
         let one = region(vec![ByteSpan::new(4, 7)], "abc");
         assert_eq!(one.locate(ByteSpan::new(90, 90)), ByteSpan::new(7, 7));
     }
 
+    /// A region with no pieces spans nothing.
+    /// ´claim:pieces:a-pieceless-region-spans-nothing´
     #[test]
     fn a_region_with_no_pieces_spans_nothing() {
         let one = region(Vec::new(), "");
@@ -503,6 +538,8 @@ mod tests {
             .collect()
     }
 
+    /// A crate root backs its declarations from its own directory.
+    /// ´claim:layout:a-crate-root-backs-from-its-directory´
     #[test]
     fn a_crate_root_backs_from_its_own_directory() {
         assert_eq!(
@@ -511,6 +548,8 @@ mod tests {
         );
     }
 
+    /// A module file backs from the directory named after it.
+    /// ´claim:layout:a-module-file-backs-from-its-namesake´
     #[test]
     fn a_module_file_backs_from_the_directory_named_after_it() {
         assert_eq!(
@@ -522,6 +561,8 @@ mod tests {
         );
     }
 
+    /// A module-root file backs from its own directory like a crate root.
+    /// ´claim:layout:a-mod-file-backs-like-a-root´
     #[test]
     fn a_mod_file_backs_from_its_own_directory_like_a_root() {
         assert_eq!(
@@ -533,6 +574,8 @@ mod tests {
         );
     }
 
+    /// A test-target entry point backs from its own directory.
+    /// ´claim:layout:a-test-entry-backs-from-its-directory´
     #[test]
     fn a_test_target_entry_point_backs_from_its_own_directory() {
         assert_eq!(
@@ -541,6 +584,8 @@ mod tests {
         );
     }
 
+    /// A tests directory inside a library target roots nothing.
+    /// ´claim:layout:an-inner-tests-directory-roots-nothing´
     #[test]
     fn a_tests_directory_inside_a_lib_target_roots_nothing() {
         assert_eq!(

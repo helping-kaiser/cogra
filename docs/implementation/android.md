@@ -1,4 +1,4 @@
-# Android App
+# Android App · `spec:implementation:android-app`
 
 The reference frontend: a native Android app living in `android/`,
 sharing this repository with the backend

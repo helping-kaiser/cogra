@@ -96,6 +96,9 @@ fn covered(text: &str, span: ByteSpan) -> &str {
 }
 
 /// Mint, prose: a bare delimited span mints, delimiters inside the span.
+///
+/// A bare delimited span mints, its delimiters inside the span.
+/// ´claim:forms:a-bare-span-mints´
 #[test]
 fn prose_mint() {
     let text = "the head carries `sec:labels:syntax` and nothing else";
@@ -108,6 +111,9 @@ fn prose_mint() {
 }
 
 /// Same-owner citation, prose: the parenthesis is part of the occurrence.
+///
+/// An immediate parenthesis around a bare span makes a same-owner citation.
+/// ´claim:forms:a-parenthesis-makes-a-citation´
 #[test]
 fn prose_same_owner_citation() {
     let text = "as (`inv:labels:unique-mint`) has it";
@@ -121,6 +127,9 @@ fn prose_same_owner_citation() {
 
 /// Imported citation, prose: parentheses and brackets are both part of the
 /// occurrence, and the prefix names the owner (´[LBL-inf:labels:imported-citation]´).
+///
+/// Parentheses and brackets are both part of an imported citation, and the prefix names the owner.
+/// ´claim:forms:brackets-name-the-owner´
 #[test]
 fn prose_imported_citation() {
     let text = "see (`[SPEC-def:parser:tokenizer]`) upstream";
@@ -139,6 +148,8 @@ fn prose_imported_citation() {
 }
 
 /// Mint, code: the acute delimits, and its two bytes are inside the span.
+///
+/// (´claim:forms:a-bare-span-mints´)
 #[test]
 fn code_mint() {
     let text = "mints ´def:parser:tokenizer´ here";
@@ -151,6 +162,8 @@ fn code_mint() {
 }
 
 /// Same-owner citation, code.
+///
+/// (´claim:forms:a-parenthesis-makes-a-citation´)
 #[test]
 fn code_same_owner_citation() {
     let text = "cited from its own package: (´test:integration:decode-roundtrip´)";
@@ -166,6 +179,8 @@ fn code_same_owner_citation() {
 }
 
 /// Imported citation, code.
+///
+/// (´claim:forms:brackets-name-the-owner´)
 #[test]
 fn code_imported_citation() {
     let text = "(´[CODEC-test:integration:decode-roundtrip]´)";
@@ -184,6 +199,9 @@ fn code_imported_citation() {
 }
 
 /// Every span is reported in whole-file coordinates: region-local plus base.
+///
+/// Every span is reported in whole-file coordinates, region-local plus base.
+/// ´claim:forms:spans-are-whole-file´
 #[test]
 fn spans_are_whole_file() {
     let text = "(`a:b:c`)";
@@ -198,6 +216,8 @@ fn spans_are_whole_file() {
 }
 
 /// Every span is reported in whole-file coordinates in code too.
+///
+/// (´claim:forms:spans-are-whole-file´)
 #[test]
 fn code_spans_are_whole_file() {
     let scan = scan_code("´a:b:c´", 10);
@@ -206,6 +226,9 @@ fn code_spans_are_whole_file() {
 
 /// Atomicity: one region carries as many occurrences as it has spans, each
 /// read on its own.
+///
+/// One region carries as many occurrences as it has spans, each read on its own.
+/// ´claim:forms:occurrences-are-atomic´
 #[test]
 fn several_occurrences_in_one_region() {
     let text = "`a:b:c` then (`d:e:f`) then (`[P-g:h:i]`)";
@@ -217,6 +240,8 @@ fn several_occurrences_in_one_region() {
 }
 
 /// Atomicity: the same three forms, in the code syntax.
+///
+/// (´claim:forms:occurrences-are-atomic´)
 #[test]
 fn several_occurrences_in_one_code_region() {
     let scan = scan_code("´a:b:c´ then (´d:e:f´) then (´[P-g:h:i]´)", 0);
@@ -228,6 +253,9 @@ fn several_occurrences_in_one_code_region() {
 
 /// The citation form needs both parentheses: an opening one alone leaves a
 /// mint, since no other bracketing is an occurrence.
+///
+/// The citation form needs both parentheses, so one alone leaves a mint.
+/// ´claim:forms:one-parenthesis-leaves-a-mint´
 #[test]
 fn opening_parenthesis_alone_is_a_mint() {
     let text = "(`a:b:c` and more";
@@ -236,6 +264,8 @@ fn opening_parenthesis_alone_is_a_mint() {
 }
 
 /// The citation form needs both parentheses: a closing one alone leaves a mint.
+///
+/// (´claim:forms:one-parenthesis-leaves-a-mint´)
 #[test]
 fn closing_parenthesis_alone_is_a_mint() {
     let text = "text `a:b:c`) more";
@@ -245,6 +275,9 @@ fn closing_parenthesis_alone_is_a_mint() {
 
 /// The parenthesis must be immediate: a space between it and the span leaves a
 /// mint, since no other spacing is an occurrence.
+///
+/// The parenthesis must be immediate, so a space before the span leaves a mint.
+/// ´claim:forms:the-parenthesis-must-be-immediate´
 #[test]
 fn spaced_parenthesis_is_not_a_citation() {
     let text = "( `a:b:c` )";
@@ -254,6 +287,9 @@ fn spaced_parenthesis_is_not_a_citation() {
 
 /// Atomicity: the occurrence is the delimited span with its immediate
 /// parenthesis, so a citation closing a parenthetical remark still cites.
+///
+/// A citation closing a parenthetical remark still cites, the occurrence being atomic.
+/// ´claim:forms:a-citation-in-a-remark-still-cites´
 #[test]
 fn citation_inside_a_parenthetical_remark() {
     let text = "(see also (`a:b:c`))";
@@ -266,6 +302,9 @@ fn citation_inside_a_parenthetical_remark() {
 
 /// No nesting: an imported form inside an imported form parses as no form, and
 /// its bracket is warned about instead.
+///
+/// Forms do not nest: an imported form inside one parses as no form.
+/// ´claim:forms:forms-do-not-nest´
 #[test]
 fn nested_imported_forms_refused() {
     let text = "(`[A-[B-a:b:c]]`)";
@@ -276,6 +315,8 @@ fn nested_imported_forms_refused() {
 
 /// No nesting: a bracketed interior whose label field is itself bracketed is
 /// no occurrence.
+///
+/// (´claim:forms:forms-do-not-nest´)
 #[test]
 fn bracket_inside_the_label_refused() {
     let scan = prose("(`[A-a:b:[c]]`)");
@@ -284,6 +325,9 @@ fn bracket_inside_the_label_refused() {
 
 /// A span that parses as no form is ordinary text — an ordinary code span in
 /// prose is never an occurrence and never a warning.
+///
+/// A span that parses as no form is ordinary text and never a warning.
+/// ´claim:forms:an-unparsed-span-is-text´
 #[test]
 fn ordinary_code_span_is_text() {
     let scan = prose("run `cargo fmt` before pushing");
@@ -291,6 +335,8 @@ fn ordinary_code_span_is_text() {
 }
 
 /// A span that parses as no form is ordinary text: a filename is not a label.
+///
+/// (´claim:forms:an-unparsed-span-is-text´)
 #[test]
 fn filename_span_is_text() {
     let scan = prose("the file `Cargo.toml` says so");
@@ -299,6 +345,8 @@ fn filename_span_is_text() {
 
 /// A span that parses as no form is ordinary text: a Rust identifier that
 /// happens to carry colons is not a label.
+///
+/// (´claim:forms:an-unparsed-span-is-text´)
 #[test]
 fn path_span_is_text() {
     let scan = prose("the type `common::l1::Record` is shared");
@@ -306,6 +354,8 @@ fn path_span_is_text() {
 }
 
 /// A span that parses as no form is ordinary text: an empty span mints nothing.
+///
+/// (´claim:forms:an-unparsed-span-is-text´)
 #[test]
 fn empty_span_is_text() {
     let scan = prose("an empty `` span");
@@ -314,6 +364,9 @@ fn empty_span_is_text() {
 
 /// Participation: displayed material is shown and not meant, so a
 /// double-backtick span mints nothing (´[LBL-judg:labels:participation]´).
+///
+/// Displayed material is shown and not meant, so a double-backtick span mints nothing.
+/// ´claim:forms:a-displayed-span-mints-nothing´
 #[test]
 fn displayed_span_mints_nothing() {
     let scan = prose("displayed: ``sec:labels:syntax``");
@@ -322,6 +375,9 @@ fn displayed_span_mints_nothing() {
 
 /// Participation: a displayed span carries no near-miss either — material
 /// deliberately shown is not a defect to warn about.
+///
+/// Displayed material carries no near-miss either.
+/// ´claim:forms:a-displayed-span-warns-nothing´
 #[test]
 fn displayed_span_warns_nothing() {
     let scan = prose("displayed: ``Sec:labels:syntax``");
@@ -330,6 +386,9 @@ fn displayed_span_warns_nothing() {
 
 /// Near-miss, MisplacedBracket: a bracketed interior outside any parenthesis
 /// is no occurrence.
+///
+/// A bracketed interior that is no occurrence is warned about as a misplaced bracket.
+/// ´claim:forms:a-misplaced-bracket-is-warned-about´
 #[test]
 fn bracket_outside_parenthesis() {
     let text = "wrongly `[SPEC-a:b:c]` bare";
@@ -342,6 +401,8 @@ fn bracket_outside_parenthesis() {
 
 /// Near-miss, MisplacedBracket: a parenthesized bracketed interior whose
 /// prefix is not prefix-shaped.
+///
+/// (´claim:forms:a-misplaced-bracket-is-warned-about´)
 #[test]
 fn lowercase_prefix_is_a_misplaced_bracket() {
     let scan = prose("(`[spec-a:b:c]`)");
@@ -350,6 +411,8 @@ fn lowercase_prefix_is_a_misplaced_bracket() {
 }
 
 /// Near-miss, MisplacedBracket: a bracketed interior with no separating hyphen.
+///
+/// (´claim:forms:a-misplaced-bracket-is-warned-about´)
 #[test]
 fn missing_separator_is_a_misplaced_bracket() {
     let scan = prose("(`[SPECa:b:c]`)");
@@ -357,6 +420,8 @@ fn missing_separator_is_a_misplaced_bracket() {
 }
 
 /// Near-miss, MisplacedBracket: a bracket the author opened and never closed.
+///
+/// (´claim:forms:a-misplaced-bracket-is-warned-about´)
 #[test]
 fn unclosed_bracket_is_a_misplaced_bracket() {
     let scan = prose("(`[SPEC-a:b:c`)");
@@ -364,6 +429,8 @@ fn unclosed_bracket_is_a_misplaced_bracket() {
 }
 
 /// Near-miss, MisplacedBracket: a bracket closed and never opened.
+///
+/// (´claim:forms:a-misplaced-bracket-is-warned-about´)
 #[test]
 fn unopened_bracket_is_a_misplaced_bracket() {
     let scan = prose("(`SPEC-a:b:c]`)");
@@ -371,6 +438,8 @@ fn unopened_bracket_is_a_misplaced_bracket() {
 }
 
 /// Near-miss, MisplacedBracket: a bracketed interior whose label is defective.
+///
+/// (´claim:forms:a-misplaced-bracket-is-warned-about´)
 #[test]
 fn bracketed_defective_label() {
     let scan = prose("(`[SPEC-a:b]`)");
@@ -379,6 +448,9 @@ fn bracketed_defective_label() {
 
 /// Near-miss, WrongCase: an interior whose only defect is casing, located at
 /// the byte the parse stopped on.
+///
+/// An interior whose only defect is casing is warned about at the byte the parse stopped on.
+/// ´claim:forms:a-casing-defect-is-warned-about´
 #[test]
 fn wrong_case_in_the_kind() {
     let text = "`Sec:labels:syntax`";
@@ -388,6 +460,8 @@ fn wrong_case_in_the_kind() {
 }
 
 /// Near-miss, WrongCase: casing inside the name, located at its byte.
+///
+/// (´claim:forms:a-casing-defect-is-warned-about´)
 #[test]
 fn wrong_case_in_the_name() {
     let text = "(`inv:labels:uniqueMint`)";
@@ -397,6 +471,8 @@ fn wrong_case_in_the_name() {
 
 /// Near-miss, WrongCase: an all-uppercase interior is still only a casing
 /// defect.
+///
+/// (´claim:forms:a-casing-defect-is-warned-about´)
 #[test]
 fn wrong_case_throughout() {
     let scan = prose("`SEC:LABELS:SYNTAX`");
@@ -405,6 +481,9 @@ fn wrong_case_throughout() {
 
 /// Near-miss, InteriorSpacing: whitespace inside the delimiters, located at the
 /// offending space.
+///
+/// Whitespace inside the delimiters is warned about at the offending space.
+/// ´claim:forms:interior-spacing-is-warned-about´
 #[test]
 fn interior_spacing_around_the_label() {
     let scan = prose("` a:b:c `");
@@ -416,6 +495,8 @@ fn interior_spacing_around_the_label() {
 }
 
 /// Near-miss, InteriorSpacing: whitespace before a colon.
+///
+/// (´claim:forms:interior-spacing-is-warned-about´)
 #[test]
 fn interior_spacing_before_a_colon() {
     let scan = prose("(`a:b :c`)");
@@ -426,6 +507,8 @@ fn interior_spacing_before_a_colon() {
 }
 
 /// Near-miss, InteriorSpacing: whitespace inside a bracketed interior.
+///
+/// (´claim:forms:interior-spacing-is-warned-about´)
 #[test]
 fn interior_spacing_inside_a_bracket() {
     let scan = prose("(`[SPEC- a:b:c]`)");
@@ -437,6 +520,9 @@ fn interior_spacing_inside_a_bracket() {
 
 /// An interior with both spacing and casing defects is the spacing warning:
 /// WrongCase claims casing is the *only* defect.
+///
+/// An interior with both defects gives the spacing warning, casing claiming to be the only one.
+/// ´claim:forms:spacing-beats-casing´
 #[test]
 fn spacing_beats_casing() {
     let scan = prose("` A:b:c `");
@@ -447,6 +533,9 @@ fn spacing_beats_casing() {
 }
 
 /// An interior that is neither label-shaped nor near it is text, not a warning.
+///
+/// An interior neither label-shaped nor near it is text, not a warning.
+/// ´claim:forms:a-far-interior-is-text´
 #[test]
 fn far_from_a_label_is_text() {
     let scan = prose("`this is prose in a code span`");
@@ -456,6 +545,9 @@ fn far_from_a_label_is_text() {
 /// Near-miss, SeveralToOneParenthesis: two label-shaped spans in one
 /// parenthesis are no citation form at all, and the parenthesis is warned about
 /// as a whole.
+///
+/// Two label-shaped spans in one parenthesis are no citation form, and the parenthesis is warned about.
+/// ´claim:forms:several-to-one-is-warned-about´
 #[test]
 fn several_to_one_parenthesis() {
     let text = "(`a:b:c` and `d:e:f`)";
@@ -472,6 +564,9 @@ fn several_to_one_parenthesis() {
 /// The warning explains the shape; suppressing the mints would hide the very
 /// bare occurrences the unique-mint invariant exists to catch
 /// (´[LBL-inv:labels:unique-mint]´).
+///
+/// The spans of a several-to-one parenthesis still mint, a bare occurrence being a mint wherever it sits.
+/// ´claim:forms:several-to-one-still-mints´
 #[test]
 fn several_to_one_parenthesis_still_mints() {
     let scan = prose("(`a:b:c` and `d:e:f`)");
@@ -484,6 +579,8 @@ fn several_to_one_parenthesis_still_mints() {
 }
 
 /// Near-miss, SeveralToOneParenthesis: the count is the parenthesis's own.
+///
+/// (´claim:forms:several-to-one-is-warned-about´)
 #[test]
 fn several_to_one_parenthesis_counts_three() {
     let scan = prose("(`a:b:c`, `d:e:f`, `g:h:i`)");
@@ -495,6 +592,9 @@ fn several_to_one_parenthesis_counts_three() {
 
 /// One label-shaped span in one parenthesis is the citation form and no
 /// warning.
+///
+/// One label-shaped span in one parenthesis is the citation form and no warning.
+/// ´claim:forms:one-to-one-is-no-warning´
 #[test]
 fn one_to_one_parenthesis_is_no_warning() {
     let scan = prose("(`a:b:c`)");
@@ -503,6 +603,9 @@ fn one_to_one_parenthesis_is_no_warning() {
 
 /// The several-to-one count is the innermost parenthesis's, so a nested
 /// parenthesis is not warned about twice.
+///
+/// The several-to-one count is the innermost parenthesis's, so a nesting is not warned about twice.
+/// ´claim:forms:the-count-is-the-innermost-parenthesis´
 #[test]
 fn several_to_one_counts_the_innermost_parenthesis() {
     let scan = prose("((`a:b:c` `d:e:f`))");
@@ -511,6 +614,9 @@ fn several_to_one_counts_the_innermost_parenthesis() {
 
 /// A parenthesis inside a delimited span disturbs no count: the span's own
 /// bytes are skipped.
+///
+/// A parenthesis inside a delimited span disturbs no count, the span's own bytes being skipped.
+/// ´claim:forms:a-parenthesis-inside-a-span-is-skipped´
 #[test]
 fn parenthesis_inside_a_span_is_not_a_group() {
     let scan = prose("`fn f(x)` and (`a:b:c`)");
@@ -520,6 +626,9 @@ fn parenthesis_inside_a_span_is_not_a_group() {
 
 /// Near-miss, BacktickInCode: in scanned code text a label-shaped backtick span
 /// is where the acute was meant.
+///
+/// In scanned code text a label-shaped backtick span is where the acute was meant, and is warned about.
+/// ´claim:forms:a-backtick-in-code-is-warned-about´
 #[test]
 fn backtick_in_code() {
     let text = "see `inv:labels:unique-mint` above";
@@ -532,6 +641,8 @@ fn backtick_in_code() {
 
 /// Near-miss, BacktickInCode: the warning covers the parentheses too, since
 /// that is the occurrence the author meant.
+///
+/// (´claim:forms:a-backtick-in-code-is-warned-about´)
 #[test]
 fn backtick_in_code_with_parentheses() {
     let text = "see (`inv:labels:unique-mint`) above";
@@ -543,6 +654,8 @@ fn backtick_in_code_with_parentheses() {
 }
 
 /// Near-miss, BacktickInCode: the bracketed form too.
+///
+/// (´claim:forms:a-backtick-in-code-is-warned-about´)
 #[test]
 fn backtick_in_code_imported() {
     let scan = scan_code("(`[SPEC-a:b:c]`)", 0);
@@ -550,6 +663,9 @@ fn backtick_in_code_imported() {
 }
 
 /// An ordinary backtick span in code text is text, not a warning.
+///
+/// An ordinary backtick span in code text is text and not a warning.
+/// ´claim:forms:an-ordinary-backtick-in-code-is-text´
 #[test]
 fn ordinary_backtick_in_code_is_text() {
     let scan = scan_code("returns `Ok(())` on success", 0);
@@ -557,6 +673,9 @@ fn ordinary_backtick_in_code_is_text() {
 }
 
 /// Near-misses of one region are reported in span order.
+///
+/// Near-misses of one region are reported in span order.
+/// ´claim:forms:near-misses-are-ordered´
 #[test]
 fn near_misses_are_ordered() {
     let scan = prose("`Sec:labels:syntax` then ` a:b:c ` then `[P-d:e:f]`");
@@ -572,6 +691,9 @@ fn near_misses_are_ordered() {
 }
 
 /// Occurrence accessors read the label and the span of every form.
+///
+/// Every occurrence form answers for its label and its span.
+/// ´claim:forms:every-form-answers-for-label-and-span´
 #[test]
 fn occurrence_accessors() {
     let scan = prose("(`[P-a:b:c]`)");

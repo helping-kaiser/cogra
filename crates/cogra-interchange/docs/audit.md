@@ -1,4 +1,4 @@
-# The Interchange Crate — Audit
+# The Interchange Crate — Audit · `rep:xchg:audit`
 
 _Phase 5 of the standard engineering process: the audit. Three adversarial review lanes over the merged crate, each a fresh reader, plus orchestrator reproduction of every Critical and Major._
 

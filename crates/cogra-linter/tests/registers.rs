@@ -58,8 +58,13 @@ fn text(reg: &Register) -> &str {
 }
 
 /// (´dec:lint:one-generator´): what the corpus's own run generates today —
-/// the companion register, the registry document's generated region, and the
-/// test profile's label register for each owner with covered assets.
+/// the companion register, the registry document's generated region, the test
+/// profile's label register for each owner with covered assets, and the claim
+/// matrix of each owner whose authoring wave has closed
+/// (´dec:lint:claim-activation´).
+///
+/// The corpus's own run generates a register in each of the scopes it declares.
+/// ´claim:registers:every-scope-is-generated´
 #[test]
 fn the_corpus_generates_a_register_for_every_scope() {
     let scopes: Vec<String> = generated()
@@ -67,20 +72,32 @@ fn the_corpus_generates_a_register_for_every_scope() {
         .map(|reg| format!("{} {:?}", reg.path.display(), reg.scope))
         .collect();
     println!("{}", scopes.join("\n"));
-    let label_registers = generated()
-        .iter()
-        .filter(|reg| matches!(reg.scope, RegisterScope::LabelRegister { .. }))
-        .count();
-    assert_eq!(generated().len(), label_registers + 2, "{scopes:?}");
+    let of = |wanted: fn(&RegisterScope) -> bool| {
+        generated().iter().filter(|reg| wanted(&reg.scope)).count()
+    };
+    let label_registers = of(|scope| matches!(scope, RegisterScope::LabelRegister { .. }));
+    let matrices = of(|scope| matches!(scope, RegisterScope::ClaimMatrix { .. }));
+    assert_eq!(
+        generated().len(),
+        label_registers + matrices + 2,
+        "{scopes:?}"
+    );
     assert!(
         label_registers > 1,
         "the corpus's tests span several owners: {scopes:?}"
+    );
+    assert_eq!(
+        matrices, 1,
+        "one owner's authoring wave has closed: {scopes:?}"
     );
 }
 
 /// (´[KND-tab:kinds:headline-counts]´): the generated region is the table
 /// the registry document carries, and the splice is byte-exact against the
 /// span the document's own table occupies.
+///
+/// A generated region is spliced byte-exact against the span its host table occupies.
+/// ´claim:registers:the-region-matches-its-host-span´
 #[test]
 fn the_headline_region_matches_its_host_span() {
     let reg = one(&RegisterScope::Region {
@@ -106,6 +123,9 @@ fn the_headline_region_matches_its_host_span() {
 
 /// (´[KND-req:kinds:attestation-register]´): the companion register presents
 /// its evidence and status rows and exactly Hom(C_A).
+///
+/// The companion register presents its evidence and status rows and exactly the relation's homonyms.
+/// ´claim:registers:the-attestation-register-presents-evidence´
 #[test]
 fn the_attestation_register_presents_evidence_and_homonyms() {
     let reg = one(&RegisterScope::Attestation);
@@ -125,6 +145,9 @@ fn the_attestation_register_presents_evidence_and_homonyms() {
 
 /// (´dec:lint:no-digest´): the comparison is exact bytes, and `Stale` names
 /// the offset of the first difference rather than a digest of either side.
+///
+/// The freshness comparison is exact bytes, and staleness names an offset rather than a digest.
+/// ´claim:registers:the-comparison-is-exact-bytes´
 #[test]
 fn the_comparison_is_exact_bytes() {
     let reg = one(&RegisterScope::Attestation);
@@ -139,6 +162,15 @@ fn the_comparison_is_exact_bytes() {
 /// (´[KND-req:kinds:attestation-register]´): the register presents exactly
 /// the pairs of the relation, in the recorded ordering, with the status the
 /// edition records for each.
+///
+/// The relation is C_A and not C: the register is the acceptee's, and the
+/// extension rows are rows of it. The headline counts are the registry
+/// edition's own and stay behind by exactly the extensions
+/// (´[KND-tab:kinds:headline-counts]´), which is the difference asserted
+/// here rather than assumed away.
+///
+/// The attestation register presents exactly the pairs of the effective relation, in the recorded ordering.
+/// ´claim:registers:the-attestation-rows-are-the-relation´
 #[test]
 fn the_attestation_register_orders_its_rows_by_name_then_kind() {
     let reg = one(&RegisterScope::Attestation);
@@ -152,8 +184,14 @@ fn the_attestation_register_orders_its_rows_by_name_then_kind() {
     let kinds = run().kinds.as_ref().expect("the relation parsed");
     assert_eq!(
         rows.len(),
-        kinds.headline_counts().rows,
-        "one row per pair of the relation"
+        kinds.rows().count(),
+        "one row per pair of the effective relation"
+    );
+    let extensions = adoption().kinds.extensions.rows.len();
+    assert_eq!(
+        rows.len(),
+        kinds.headline_counts().rows + extensions,
+        "the edition's counts stay behind C_A by exactly the extensions"
     );
     let keyed: Vec<(&str, &str)> = rows.iter().map(|row| (row[1], row[2])).collect();
     let mut sorted = keyed.clone();
@@ -168,6 +206,9 @@ fn the_attestation_register_orders_its_rows_by_name_then_kind() {
 /// (´[KND-inv:kinds:attestation-coverage]´): the daggered rows of the
 /// edition are exactly the borderline rows of the register, and the corpus's
 /// own record of them agrees.
+///
+/// The daggered rows of the edition are exactly the borderline rows of the register.
+/// ´claim:registers:daggered-rows-are-the-borderline-ones´
 #[test]
 fn the_borderline_rows_are_the_editions_daggered_ones() {
     let reg = one(&RegisterScope::Attestation);
@@ -190,6 +231,9 @@ fn the_borderline_rows_are_the_editions_daggered_ones() {
 
 /// (´[LBL-cav:labels:coexistence]´): a scoped regeneration touches one
 /// owner's registers and leaves the corpus-wide ones alone.
+///
+/// A scoped regeneration touches one owner's registers and leaves the corpus-wide ones alone.
+/// ´claim:registers:an-owner-scope-is-scoped´
 #[test]
 fn an_owner_scope_touches_no_corpus_wide_register() {
     let scope = Scope::Owner(cogra_linter::OwnerId::new("pkg.api"));
@@ -248,6 +292,9 @@ fn named() -> &'static Vec<Register> {
 /// per-owner registers, one for each owner with covered assets, and what it
 /// emits is what the corpus carries — the registers generated on the way into
 /// Π are the ones the check now compares against, byte for byte.
+///
+/// A named regeneration emits exactly the per-owner registers the corpus carries.
+/// ´claim:registers:a-named-regeneration-emits-what-is-carried´
 #[test]
 fn a_named_regeneration_emits_the_committed_registers() {
     let spelled: Vec<String> = named()
@@ -280,6 +327,9 @@ fn a_named_regeneration_emits_the_committed_registers() {
 /// (´[ARCH-req:linter:determinism]´): a second census over the same corpus
 /// produces the same bytes, which is the property the exact comparison rests
 /// on the day the registers are committed.
+///
+/// A second census over one corpus produces the same register bytes.
+/// ´claim:registers:regeneration-is-byte-stable´
 #[test]
 fn a_named_regeneration_is_byte_identical_on_a_second_walk() {
     let profile = adoption()
@@ -300,6 +350,9 @@ fn a_named_regeneration_is_byte_identical_on_a_second_walk() {
 /// read one census — the same machinery, so the registers a migration
 /// generates are the ones the measurement counted its distance against, and
 /// the distance the measurement reports on this corpus is zero.
+///
+/// The measurement and the named regeneration read one census.
+/// ´claim:registers:measurement-and-regeneration-read-one-census´
 #[test]
 fn the_measurement_and_the_named_regeneration_agree_on_the_census() {
     let before = before_entry();
@@ -320,6 +373,9 @@ fn the_measurement_and_the_named_regeneration_agree_on_the_census() {
 /// (´dec:lint:staged-profiles´): a whole-corpus regeneration emits a register
 /// only for a profile whose standard place is one — the test profile's, and
 /// not the module profile's, whose labels sit at their own definitions.
+///
+/// A whole-corpus regeneration emits a register only for a profile whose standard place is one.
+/// ´claim:registers:only-register-placed-profiles-emit´
 #[test]
 fn a_whole_corpus_regeneration_emits_only_what_is_in_force() {
     let profiles: Vec<ProfileId> = generated()
@@ -341,6 +397,9 @@ fn a_whole_corpus_regeneration_emits_only_what_is_in_force() {
 
 /// (`[profiles]`): the register's rows are ordered bytewise by label, which
 /// is the form the profile's standard place fixes.
+///
+/// A register's rows are ordered bytewise by label.
+/// ´claim:registers:rows-are-ordered-bytewise´
 #[test]
 fn every_register_orders_its_rows_bytewise_by_label() {
     for reg in named() {

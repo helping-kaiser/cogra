@@ -47,6 +47,7 @@ pub mod bans;
 pub mod carrier;
 pub mod diag;
 pub mod error;
+pub mod fix;
 pub mod frontend;
 pub mod frontend_kotlin;
 pub mod frontend_md;
@@ -58,21 +59,24 @@ pub mod migrate;
 pub mod pretokenize;
 pub mod registers;
 pub mod render;
+pub mod report;
 pub mod scan;
 pub mod timing;
 
 pub use adopt::{
-    Adoption, Area, BannedToken, BannedTokens, Carrier, Census, CitationIndexes, Classification,
-    ConfiguredPath, EnforcementPartition, HeadForm, HeadMatching, HeadRecognition,
-    HeadlessLanguages, Kind, KindEvidence, KindExtensions, KindGenerator, KindRegister,
-    KindStatuses, KindsAdoption, Language, Meta, NameTransformation, OwnerId, Partition,
-    PartitionRule, PathPrefix, Place, PrefixFamily, Profile, ProfileId, ProfileStatus, Profiles,
-    ReservedKinds, ScannedLanguage, ScannedRegions, Signature, TypedData, UnscannedLanguages,
+    Activation, Adoption, Area, BannedToken, BannedTokens, Carrier, Census, CitationIndexes,
+    Claims, Classification, Collision, ConfiguredPath, EnforcementPartition, HeadForm,
+    HeadMatching, HeadRecognition, HeadlessLanguages, Kind, KindEvidence, KindExtensions,
+    KindGenerator, KindRegister, KindStatuses, KindsAdoption, Language, Matrix, Meta,
+    NameTransformation, OwnerId, Partition, PartitionRule, PathPrefix, Place, PrefixFamily,
+    Profile, ProfileId, ProfileStatus, Profiles, Reach, ReachRow, ReservedKinds, ScannedLanguage,
+    ScannedRegions, Signature, Statement, TypedData, UnscannedLanguages,
 };
 pub use bans::BanRule;
 pub use carrier::{SourceFile, Walk, WalkOutcome};
 pub use diag::{ByteSpan, Diagnostic, Enforcement, Location, Related, RuleId, Severity};
 pub use error::{AdoptionError, GenerateError, RunError, WalkError};
+pub use fix::{Insertion, Sweep};
 pub use frontend::{
     Asset, Declaration, Head, Parsed, Region, RegionKind, Table, backing_definitions,
 };
@@ -81,16 +85,18 @@ pub use graph::{
     Corpus, EdgeW, NodeKind, NodeW, Registries, degree_along, edge_view, in_along, nodes_of,
     out_along, owner_of, owner_view, source_of,
 };
+pub use judge::claims::{ClaimCensus, ClaimLine, Defect, Form, OwnerTally, Standing};
 pub use judge::kinds::{
     Attestation, Bound, Device, DeviceFamily, HeadVerdict, HeadlineCounts, KindRegistry, Reduced,
     Reduction,
 };
-pub use migrate::{Migration, Remaining, distances};
+pub use migrate::{Migration, Remaining, Unplaced, distances};
 pub use pretokenize::{CommentForm, LexClass, Lexeme, LiteralForm, PreTokenized, pretokenize};
 pub use registers::{
-    Freshness, Register, RegisterScope, Scope, Written, compare, label_registers_of,
-    regenerate_all, write_all,
+    Freshness, Register, RegisterScope, Scope, Written, compare, label_registers_of, matrix_path,
+    regenerate_all, register_path, write_all,
 };
+pub use report::{Cited, Reverse, Survey, Tally};
 pub use scan::{
     DelimitedSpan, Delimiter, DelimiterFailure, Expectation, Label, LabelSyntax, NearMiss,
     NearMissKind, Occurrence, Prefix, RegionScan, Syntax, scan_code, scan_prose,
@@ -223,12 +229,17 @@ impl Run {
 /// which is the linter unable to do its job and not a fact about the corpus
 /// (´crit:lint:error-or-finding´).
 ///
+/// The package roster is reconciled here for the identical reason: it too
+/// reads the root's own build manifests, which [`Adoption::load`] never
+/// sees. See [`Adoption::verify_package_roster`].
+///
 /// # Errors
 ///
 /// [`RunError::Walk`] when `root` is not a directory, and
 /// [`RunError::Adoption`] when a configured path is spelled otherwise than
-/// the root spells it. Nothing else: a traversal failure inside a directory
-/// that exists is a diagnostic beside a shorter source list, never an empty
+/// the root spells it, or a build-system package has no partition rule of
+/// its own. Nothing else: a traversal failure inside a directory that
+/// exists is a diagnostic beside a shorter source list, never an empty
 /// carrier (´[LBL-cav:labels:coexistence]´).
 pub fn check(a: &Adoption, root: &Path) -> Result<Run, RunError> {
     if !root.is_dir() {
@@ -237,6 +248,8 @@ pub fn check(a: &Adoption, root: &Path) -> Result<Run, RunError> {
         }));
     }
     a.verify_spellings(root)?;
+    a.verify_package_roster(root)?;
+    a.verify_reach_against_manifests(root)?;
     let walking = Instant::now();
     let (sources, failures) = match Walk::new(a, root).sources() {
         Ok(sources) => (sources, Vec::new()),
@@ -326,6 +339,9 @@ struct Harvest<'a> {
     derivations: Vec<Derivation>,
     declared: Vec<(PathBuf, String)>,
     defined: Vec<(ProfileId, PathBuf, String)>,
+    /// Each source's node, by path, so that an asset settled by the pairing
+    /// reaches the source it sits in as directly as one settled inline does.
+    sources: BTreeMap<PathBuf, NodeIndex>,
     registry: Option<(Parsed, String)>,
 }
 
@@ -370,6 +386,7 @@ impl<'a> Harvest<'a> {
             derivations: Vec::new(),
             declared: Vec::new(),
             defined: Vec::new(),
+            sources: BTreeMap::new(),
             registry: None,
         };
         let mut ids: BTreeSet<OwnerId> = a
@@ -414,6 +431,7 @@ impl<'a> Harvest<'a> {
         if let Some(owner) = owner {
             self.g.add_edge(owner, source, EdgeW::Owns);
         }
+        self.sources.insert(src.path.clone(), source);
 
         let parsed = match frontend::parse(src, pre, self.a) {
             Ok(parsed) => parsed,
@@ -585,9 +603,18 @@ impl<'a> Harvest<'a> {
             identifier: Box::from(asset.identifier.as_str()),
             area: asset.area.clone(),
             place: asset.place.clone(),
+            span: asset.span,
+            documentation: asset
+                .documentation
+                .iter()
+                .map(|line| Box::from(line.as_str()))
+                .collect(),
         }));
         if let Some(owner) = owner {
             self.g.add_edge(owner, node, EdgeW::Owns);
+        }
+        if let Some(source) = self.sources.get(path).copied() {
+            self.g.add_edge(source, node, EdgeW::Contains);
         }
         if let Some(profile) = self.profiles.get(&asset.profile).copied() {
             self.g.add_edge(profile, node, EdgeW::Covers);

@@ -1,4 +1,4 @@
-# The Corpus Linter — Design
+# The Corpus Linter — Design · `spec:lint:design`
 
 _Phase 2 of the standard engineering process: the design. The review of 2026-08-25 ratified it; implementation follows behind the Gate at the end._
 
@@ -34,12 +34,15 @@ src/
   judge/
     mod.rs          the judgment surface: run every judgment, collect findings
     labels.rs       unique mint, total resolution, warrant totality, inventory
+    claims.rs       the claim standing of every covered test, and its census
     kinds.rs        registry-as-data, presentation reduction, head validation
     freshness.rs    exact byte comparison of every generated register
-  registers.rs      the generators: label registers, headline counts, attestation
+  registers.rs      the generators: label registers, claim matrices, headline counts, attestation
   migrate.rs        the migrations report: each staged profile's distance
+  fix.rs            the sweep: one profile's labels, written where its assets are
+  report.rs         the reference report: orphans, hubs, per-owner counts, reverse lookup
   diag.rs           ByteSpan, Diagnostic, Severity, Location, RuleId, the total order
-  render.rs         diagnostic rendering and the run summary
+  render.rs         diagnostic rendering, the run summary, every mode's output form
   error.rs          the thiserror taxonomy
   timing.rs         per-phase wall clock, the report of (`[ARCH-req:linter:timing]`)
 tests/              acceptance suites and the vector corpora
@@ -48,7 +51,7 @@ fuzz/               audit-phase targets; absent from the version-1 tree
 
 **Remark (What this adds to the ruled module list)** · `rem:lint:module-additions`
 
-The architecture rules the module set `pretokenize`, `frontend_md`, `frontend_rust`, `frontend_web`, `frontend_kotlin`, `scan`, `bans`, `graph`, `judge`, `render`, and a thin binary (`[ARCH-dec:linter:crate-layout]`). Every one of those names survives here unchanged; `pretokenize` and `judge` gain children, which leaves them the modules they were. Eight modules are added, and each is named rather than slipped in, because a module map that quietly grows past its ruling is the first way a ratified boundary erodes. `adopt` holds the subsystem the architecture gives a Signature but no module (`[ARCH-sig:linter:adoption-data]`), and it is the whole of the first slice. `carrier` holds the walk and the owner assignment — R17 and R18 of (`tab:lint:functional`) — which run before any frontend and belong to neither. `frontend` holds the data contract the four frontends produce — which is the line a frontend would leave along — and the one step over that contract no single frontend can take (`dec:lint:cross-source-pairing`). `registers` holds the generator side of register freshness, kept apart from `judge::freshness`, which only compares: one generator serving both the check and the regeneration mode is what (`req:lint:register-generator`) means by one generator, and separating production from comparison is what stops the check from acquiring a second one. `diag` holds the diagnostic type and its total order, `render` only formats what `diag` has already ordered. `error` holds the taxonomy, per the repository's error rule. `timing` holds the per-phase clock of (`req:lint:timing`). `migrate` holds the measurement of (`dec:lint:migrations-subcommand`), which is outside `judge` because it judges nothing: it computes a staged profile's census, which no check may do, and returns distances rather than diagnostics.
+The architecture rules the module set `pretokenize`, `frontend_md`, `frontend_rust`, `frontend_web`, `frontend_kotlin`, `scan`, `bans`, `graph`, `judge`, `render`, and a thin binary (`[ARCH-dec:linter:crate-layout]`). Every one of those names survives here unchanged; `pretokenize` and `judge` gain children, which leaves them the modules they were. Ten modules are added, and each is named rather than slipped in, because a module map that quietly grows past its ruling is the first way a ratified boundary erodes. `adopt` holds the subsystem the architecture gives a Signature but no module (`[ARCH-sig:linter:adoption-data]`), and it is the whole of the first slice. `carrier` holds the walk and the owner assignment — R17 and R18 of (`tab:lint:functional`) — which run before any frontend and belong to neither. `frontend` holds the data contract the four frontends produce — which is the line a frontend would leave along — and the one step over that contract no single frontend can take (`dec:lint:cross-source-pairing`). `registers` holds the generator side of register freshness, kept apart from `judge::freshness`, which only compares: one generator serving both the check and the regeneration mode is what (`req:lint:register-generator`) means by one generator, and separating production from comparison is what stops the check from acquiring a second one. `diag` holds the diagnostic type and its total order, `render` only formats what `diag` has already ordered. `error` holds the taxonomy, per the repository's error rule. `timing` holds the per-phase clock of (`req:lint:timing`). `migrate` holds the measurement of (`dec:lint:migrations-subcommand`), which is outside `judge` because it judges nothing: it computes a staged profile's census, which no check may do, and returns distances rather than diagnostics. `fix` holds the sweep of (`dec:lint:fix-subcommand`), kept apart from `migrate` on the same line that keeps `registers` apart from `judge::freshness` — one module measures and one writes at what it measured, and a writer folded into a measurement is how a measurement acquires an opinion. `report` holds the reading of (`dec:lint:report-subcommand`), which belongs to neither `judge`, whose subject is what is wrong, nor `render`, which spells what someone else selected: selecting orphans and hubs out of a completed graph is a third thing, and the module map had no name for it.
 
 **Remark (Where a crate split would fall)** · `rem:lint:split-lines`
 
@@ -126,6 +129,13 @@ pub struct AssetNode {
     pub area: Area,
     /// Where the profile's standard place puts the label for this asset.
     pub place: Place,
+    /// Where the asset sits. No derivation reads it — position never enters a
+    /// derived label (`[LBL-judg:labels:derivation]`) — and a finding *about*
+    /// an asset needs it to point anywhere at all.
+    pub span: ByteSpan,
+    /// The asset's own documentation, as logical lines
+    /// (`dec:lint:claim-standing`).
+    pub documentation: Vec<Box<str>>,
 }
 
 pub struct ProfileNode { pub id: ProfileId, pub kind: Kind, pub status: ProfileStatus }
@@ -293,6 +303,9 @@ pub struct Adoption {
     pub partition: Partition,
     pub profiles: Profiles,
     pub reserved_kinds: ReservedKinds,
+    /// The claim discipline, where the corpus adopts it
+    /// (`dec:lint:claim-standing`).
+    pub claims: Option<Claims>,
     pub typed_data: TypedData,
     pub citation_indexes: CitationIndexes,
     pub scanned_regions: ScannedRegions,
@@ -304,6 +317,9 @@ pub struct Adoption {
     /// The failing set, as literal path prefixes
     /// (`dec:lint:enforcement-partition`).
     pub enforcement: EnforcementPartition,
+    /// Which owners an owner's imports may name, where the corpus declares
+    /// it at all (`dec:lint:reach-declared`).
+    pub reach: Option<Reach>,
 }
 
 impl Adoption {
@@ -398,6 +414,18 @@ pub struct WalkOutcome { pub sources: Vec<SourceFile>, pub failures: Vec<Diagnos
 ```
 
 `Walk::sources` returns the sources *and* the traversal failures, and never trades one for the other: an unreadable tree is a reported diagnostic beside a shorter source list, which is exactly the case the caveat forbids collapsing into an empty carrier. An absent `optional` root contributes neither a source nor a diagnostic.
+
+**Decision (Reach is declared, and checked against Cargo where both exist)** · `dec:lint:reach-declared`
+
+Σ registers which prefixes name an owner and Ω assigns each source an owner. Between them an imported citation either resolves or does not, and neither says whether the citing owner had any business importing from the cited one: a primitive document importing from a web package resolves exactly as cleanly as one importing from the label calculus. `[reach]` is the relation that says so, one optional row per owner naming the owners its imports may reach.
+
+The relation is declared and not derived. A derivation would have to read one dependency graph, and this corpus has three build systems — Cargo, Gradle, npm — and five document owners that appear in none of them; a Cargo-only derivation would leave fourteen of nineteen owners unconstrained while looking total. Where a Cargo edge *does* exist it is a check rather than a source: a package that compiles against another may cite it, so a declaration omitting that edge forbids what the build already requires and is refused at load. The comparison runs in that direction only. A declared edge Cargo does not carry is no defect at all — it is how every document owner reaches anything, and it is the whole reason the graph is declared.
+
+Three properties fix what the section means. An owner reaches itself, so a same-owner citation is permitted by structure and a row naming its own owner is refused rather than ignored. Reach is the declared edge and not its closure: the owner in the middle of a two-step path is the one whose declaration would have to say so. And a row constrains its own owner and no other — an owner the section does not name reaches everything, exactly as it does with no section at all. That last one is what makes the graph adoptable one owner at a time rather than all nineteen at once, and it is why an absent section and an empty one are the same judgment.
+
+The judgment's domain is the imported citations alone. A same-owner citation is an owner reaching itself; an import whose prefix Σ does not register names no owner to test and is already `label-unregistered-prefix`; an import naming the citing owner is already `label-self-qualified-import`. What is left is exactly the edges a reach graph is about, and each is one lookup against one row.
+
+*Awaiting its adoption data.* The mechanism is implemented and the corpus writes no `[reach]` section, so the clause runs over every import and passes vacuously — the same standing the anchor harvest and the synthetic citation hold, and implemented for the same reason. Which graph this corpus should declare is a ruling, not a derivation: the measured edge set and a recommended declaration sit in the working notes for that ruling, and the section lands when it is made.
 
 **Decision (Staged profiles compute nothing)** · `dec:lint:staged-profiles`
 
@@ -665,6 +693,12 @@ pub struct Asset {
     pub area: Area,
     pub place: Place,
     pub span: ByteSpan,
+    pub opens: usize,
+    /// The asset's own documentation, as logical lines: leaders resolved
+    /// away, each trimmed, a block comment split at its breaks. The frontend
+    /// answers it because the frontend holds the tree, exactly as it answers
+    /// `opens` (`dec:lint:claim-standing`).
+    pub documentation: Vec<String>,
 }
 
 /// One table of a document, as its cells' regions spell it. The cell texts
@@ -818,6 +852,16 @@ pub mod labels {
     pub fn synthetic_citation(g: &Corpus, a: &Adoption) -> Vec<Diagnostic>;
 }
 
+pub mod claims {
+    /// Every covered test of an activated owner carries a claim, and every
+    /// claim stands where the discipline puts it (`dec:lint:claim-standing`).
+    pub fn claims(g: &Corpus, a: &Adoption) -> Vec<Diagnostic>;
+    /// What the claims come to, over every owner, activated or not.
+    pub fn census(g: &Corpus, a: &Adoption) -> ClaimCensus;
+    /// One test's standing, read by the judgment and by the generator alike.
+    pub fn standing(documentation: &[Box<str>], kind: &Kind) -> Standing;
+}
+
 pub mod kinds {
     pub fn head_validation(g: &Corpus, k: &KindRegistry) -> Vec<Diagnostic>;
 }
@@ -855,6 +899,8 @@ The architecture states each invariant as a graph query (`[ARCH-tab:linter:judgm
 | (`[LBL-inv:labels:generated-compliance]`) | every occurrence in a `generated` region is a `Mint` with an incoming `Derives` or a `Citation` with a `ResolvesTo`; a region's `presents` set is excluded from the harvest it feeds |
 | (`[LBL-inf:labels:anchor-harvest]`) | `EdgeFiltered` view over `Anchors` from a designated document's body regions into the designated upstream owner; empty domain today |
 | (`[LBL-inf:labels:synthetic-citation]`) | designated typed-data strings become `Citation` nodes like any other; empty domain today |
+| (`dec:lint:reach-declared`) | for each `Citation` carrying a prefix: its `Cites` target lies in the citing owner's declared row, or the citing owner heads none; no section declared today |
+| (`dec:lint:claim-standing`) | for the profile `[claims]` rides: each covered `Asset`'s own documentation lines, scanned one at a time for an occurrence of the claim kind; zero is a finding where the activation admits the asset's owner and a count everywhere else, two is a defect, and one away from the final line or sharing it is a defect in every owner |
 | (`[KND-judg:kinds:head-validation]`) | every `Head` node has out-degree exactly one over `ValidatesAs`; zero is an uncatalogued pair, two is an ambiguous reduction |
 | (`[IDN-rule:identity:well-founded-graph]`) | `petgraph::algo::is_cyclic_directed` over the relevant view, when identity checking lands; no subject in version 1 |
 
@@ -954,9 +1000,41 @@ The overriding rows need no separate datum. `HeadVerdict::Exact` is tried before
 
 `[head-recognition]` of the adoption data fixes which participating regions are heads, and `frontend_md` reads it rather than knowing it: the two Markdown forms this corpus writes — a bold `Kind (Title)` run opening a block, and a heading, each closed by the separator and the mint — the separator itself, and the languages that have no head form at all. A code comment is a scanned region that carries occurrences and heads nothing, which is why `frontend_rust` produces no `Head` values.
 
-Two details are load-bearing and are fixed here. For the bold form the head is the text up to the opening parenthesis: the Title names this instance and the head names the genre, and handing the Title to the registry would ask it to classify a proper noun. For a heading the head is the rung the format supplies and not the heading's own text, exactly as (`[KND-def:kinds:presentation-reduction]`) rules for named divisions — Markdown's rung is Section, which the registry classifies `sec`, and every heading anchor in the corpus carries `sec` accordingly.
+Two details are load-bearing and are fixed here. For the bold form the head is the text up to the opening parenthesis: the Title names this instance and the head names the genre, and handing the Title to the registry would ask it to classify a proper noun. For a heading the head is the rung the format supplies and not the heading's own text, exactly as (`[KND-def:kinds:presentation-reduction]`) rules for named divisions — Markdown's rung is Section, which the registry classifies `sec`, and every section anchor in the corpus carries `sec` accordingly.
 
 Matching is case-exact, ruled, and the consequence is named rather than discovered: `HeadVerdict::Uncatalogued` fires on a head whose only defect is capitalization, and its diagnostic names the catalogue spelling, so the finding reads as the correction it is. Folding case would be the cheaper-looking road and the wrong one — it would make Table and table one name and widen N by a rule no row of the registry authorizes.
+
+**Decision (The document's title is its third head form)** · `dec:lint:title-head`
+
+The first structural level-one heading of a Markdown source is its Title head: its environment name is `Document`, its kind names the document's *genre*, and its mint names the document concept itself. `frontend_md` claims the title when the heading opens, not when it closes, so a later level-one heading is an ordinary division under the heading form whatever it says; and the rule reads *first* rather than *topmost level*, so a source whose deepest heading is `##` has no title head at all. The form is `[head-recognition]`'s like the other two, and the walker knows only which of the three the adoption data declares.
+
+`Document` is the same word for every source, and the kind is what varies. That is the same division the bold form draws: the head is what the registry classifies, and what this document is *called* is a proper noun no registry can classify. Since the registry catalogues the environments inside a document and no Document row of its own, the seven genres this corpus writes — `rec`, `rep`, `reg`, `proposal`, `spec`, `plan`, `guide` — enter C_A as the recorded extensions of `[kinds.extensions]`, and validation is then the ordinary judgment of (`[KND-judg:kinds:head-validation]`) with no title-shaped special case anywhere in the checker. The genre vocabulary is declaration data, so a genre is added by a recorded decision and never by a code change.
+
+Coverage follows a structural title. Every Markdown source of the carrier that has a level-one heading participates, and one that has none is exempt: nothing is synthesized for it, because a mint with no author's choice behind it is exactly the absence (`[LBL-inv:labels:generated-compliance]`) forbids a generator to fill. An unminted title is the frontend's `markdown-title-unminted`, reported at the heading, and it is the frontend's finding because the frontend is the only thing that knows which heading came first.
+
+Generated sources reach coverage and not validation, and the two clauses come from different disciplines. Their titles *mint*: an authorship a generator transcribes is that choice still, so `label_register_bytes` and the attestation generator write their own `reg:registers:…` mints and the freshness compare stays byte-exact over them. Their heads form no judgment: (`[KND-judg:kinds:head-validation]`) puts generated registers outside authored heads and (`[KND-inv:kinds:totality]`) outside its requirement, so `frontend_md` emits no `Head` value for a generated source at all — the clause was vacuous while no generated register carried a mint, and the title is what makes it bite.
+
+## The claim discipline · `sec:lint:claims`
+
+**Decision (A claim's standing is read from the tree, at one place)** · `dec:lint:claim-standing`
+
+A covered test's claim is an authored label on the **final line of its own documentation comment**, alone on that line: a mint `´claim:area:name´`, or a citation `(´claim:area:name´)` of the claim a sibling minted. The line above it is the **statement** — the one sentence the label names, which the generated matrix presents.
+
+Three shapes here are the corpus's rather than the source discipline's, and each is a consequence of a choice made earlier. The sibling linter puts the claim on the *second*-to-last line because its test profile's standard place is the last one; this corpus's test profile places its derived label in a per-owner register instead (`[profiles]`), so the last line is free and the claim takes it. The sibling's statement is the whole gloss above the claim, joined; here it is one line, because a test's documentation in this corpus routinely cites the design clause it discharges, and a whole-gloss rule would copy those citations into a generated file — a second occurrence of what an author wrote once, in a syntax that changes on the way, the documentation being code and the matrix prose. And a statement carrying a backtick is a finding rather than an escape, because the matrix presents the line as prose and a span there would mint or cite; escaping it silently would hide from the author that their line is read as prose at all.
+
+The documentation reaches the judgment as logical lines on the `Asset` and then the `AssetNode`, filled by `frontend_rust` from the doc attributes `syn` already resolved — the same warrant `Asset::opens` travels on (`sig:lint:frontend-api`). A pass that re-derived those lines from bytes would be reading back structure a parser had settled, and would be free to disagree with it. The occurrence forms are read by `scan_code` over one line at a time and never by matching a formatted string, so the reader of a claim and the harvest that mints it cannot drift; and `registers` calls the same `standing` the judgment calls, so a matrix can never say something about a test the check disagrees with.
+
+**Decision (The claim discipline rides the calculus's own judgments)** · `dec:lint:claims-ride-the-calculus`
+
+`judge::claims` reports six things and no more: a covered test of an activated owner with no claim, a claim not on the final line, a claim sharing its line, a documentation carrying two, a citation of another owner's claim, and a mint whose statement is missing or quoted. It does **not** check that a minted claim is unique in its owner, and it does **not** resolve a cited one.
+
+It does not, because it need not. A claim is an ordinary label in the one graph: a claim minted twice is (`[LBL-inv:labels:unique-mint]`)'s finding with both locations, and a citation reaching no mint is (`[LBL-inv:labels:total-resolution]`)'s with the import form suggested where one would help. The sibling linter re-implements both inside its claim pass because its claims live in a registry of their own; ours are in the graph every other label is in, so the invariants that already quantify over every owner cover them without a second voice — and a second voice is how two readings of one fact come to differ. What is left for this module is exactly what the calculus cannot see, because the calculus knows nothing of tests: whether a covered asset carries a claim at all, and whether the one it carries stands where the discipline puts it.
+
+**Decision (Activation stages the wave, and stages nothing else)** · `dec:lint:claim-activation`
+
+`[claims]` `activation` names the owners whose authoring wave has closed. A covered test of an owner outside that list carries no obligation and produces no finding; its count travels in `report` and nowhere else (`dec:lint:report-subcommand`). Suppressing the count as well would leave an unclosed wave indistinguishable from a closed one, which is the one thing the staging must not do.
+
+The staging reaches the **unwritten** claim alone. Placement, aloneness, foreignness, and a quoted statement are judged in every owner from a claim's first commit, because a written claim that is wrong is a defect and not a schedule — and because a discipline that let a defect ride until a wave closed would collect a wave's worth of them to fix at once. Widening the activation is one edit to an array, which is what makes the migration a commit rather than a code change; the same grammar carries a profile's own activation (`sig:lint:adoption-api`), where `every-owner` is the shape that keeps a crate added tomorrow from escaping in silence.
 
 ## Registers · `sec:lint:registers`
 
@@ -971,6 +1049,9 @@ pub struct Register { pub path: PathBuf, pub bytes: Vec<u8>, pub scope: Register
 pub enum RegisterScope {
     /// One per owner with covered assets, for one inventory profile.
     LabelRegister { owner: OwnerId, profile: ProfileId },
+    /// One per activated owner: its claims against the tests that carry
+    /// them (`dec:lint:claim-activation`).
+    ClaimMatrix { owner: OwnerId },
     /// The companion attestation register (`[KND-req:kinds:attestation-register]`).
     Attestation,
     /// A generated region inside an authored file, not a whole file
@@ -1148,9 +1229,97 @@ The measurement walks the corpus itself rather than reading one `Parsed`, becaus
 
 It is never part of `check`, and the separation is the whole of why it is safe. `check` runs the judgments the adoption data puts in force, and a staged profile is not in force (`dec:lint:staged-profiles`); a census computed inside that run would be a half-computed pass of exactly the kind (`[LBL-inv:labels:two-pass]`) exists to forbid. `migrations` is its own run with its own pass 1, it judges nothing, it emits no diagnostic and no verdict, and it always exits `0` on a corpus it could read. What it produces is a measurement, and a measurement reported as a measurement costs the staging nothing.
 
+**Decision (The sweep writes what the measurement reports)** · `dec:lint:fix-subcommand`
+
+`cogra-lint fix --profile <id>` writes the derived label of every covered asset that does not carry one, at the standard place the asset itself is. It is the mechanized form of the module migration this corpus made by hand across eighty-nine definitions, and it exists because every future comment-placed profile repeats that migration. The command and its two design points — the working-tree precondition and the settle property — are adopted from a sibling corpus linter maintained outside this repository; what is adapted rather than taken is recorded at the end of this clause.
+
+```rust
+/// What one sweep of a profile came to.
+pub struct Sweep { pub profile: ProfileId, pub writes: Vec<Insertion> }
+
+impl Sweep {
+    pub fn settled(&self) -> bool;
+    /// The sources a write would touch, in path order, each once.
+    pub fn touches(&self) -> Vec<PathBuf>;
+}
+
+/// One label line, and the byte of one source it is written before.
+pub struct Insertion {
+    pub path: PathBuf,
+    pub at: Location,
+    pub label: Label,
+    pub offset: usize,
+    /// Exactly the bytes written, newline included.
+    pub text: String,
+}
+
+pub fn sweep(a: &Adoption, root: &Path, profile: &ProfileId) -> Result<Sweep, RunError>;
+pub fn apply(sweep: &Sweep, root: &Path) -> Result<Written, GenerateError>;
+```
+
+It measures nothing of its own. What is missing and where is `migrate::unplaced`, which is `migrations`' own second half made public: the covered assets of one registered profile whose standard place is the asset itself and which carry no mint of their derived label in an inner documentation comment of their source, each with the byte a label line goes before. The measurement renders those as its remaining lines and the sweep writes at them, off one walk and one recognizer. That is what makes the settle property a consequence rather than a hope — a corpus the measurement calls arrived is one the sweep writes nothing into, and a second sweep over what the first wrote is empty by the recognizer that found the work.
+
+Status is not consulted, exactly as the named regeneration does not consult it (`dec:lint:staged-profiles`). A migration lands while its profile is still staged, so the staged reading is the normal one; asking the same question of a profile in force answers with what the inventory clause would report, and answering it costs nothing.
+
+The write is an insertion and never a replacement. The label line goes before the first line of the asset's own documentation, so an authored comment keeps every byte its author gave it and gains a line above it — the one shape that cannot lose prose. Where that documentation opens is the frontend's answer and not a reading of the bytes: `Asset::opens` is byte 0 for a definition a whole file backs and the byte after the opening brace for one written inline, because the frontend holds the tree and a writer that re-derived the position from the source would be reading structure a parser had already resolved. Four shapes follow from it, and all four are pinned as bytes in the acceptance suite: the label line joins an inner documentation comment that already opens the position, or opens one of its own above code with a blank line under it; an inline definition takes its own column plus four, and gets the line it needs where its brace has none.
+
+`fix` reports no verdict, so it never exits `1`. A covered asset with no label at its standard place is what the inventory judgment reports, and `check` reports it; a sweep that graded its own listing would be saying the same thing twice under a different name. It exits `0` on any corpus it could sweep and `2` where it refused to start (`dec:lint:fix-precondition`).
+
+Three points of the adopted contract are adapted, and each is named because the source contract argues for the other reading. Its `fix` takes a *write* flag and reports without one, on the ground that a dry-run opt-in makes writing the default; this one takes `--dry-run`, because `regenerate` already spells that flag and one binary with two write polarities is worse than either polarity. Its object is JSON on stdout under a repository-wide output contract; this one prints the located form (`dec:lint:diagnostic-format`), because that contract is theirs and this crate has one form already. And its sweep reaches a findings status for assets whose standard place it refused to write; this one has no such class, because the only asset it can refuse is one deriving no well-formed label, which the inventory judgment already reports and which a second report would double-count.
+
+**Decision (The sweep refuses a working tree it cannot review)** · `dec:lint:fix-precondition`
+
+`fix` is the only mode that edits sources it was not asked for by name, so it is the only one with a precondition on the state of the working tree. Before writing, it asks `git status --porcelain` about exactly the sources it would rewrite, and refuses unless every one of them is clean. Staged and unstaged changes both count, and so does a source git is not tracking at all: what the precondition protects is the reviewability of the edit, and an untracked file's prior bytes cannot be recovered to review against.
+
+```rust
+/// Which of `paths` the working tree carries uncommitted work in.
+pub fn modified(root: &Path, paths: &[PathBuf]) -> std::io::Result<Vec<PathBuf>>;
+```
+
+This is the one place the crate runs another program, and it is deliberate: whether a file carries uncommitted work is a fact about the repository and not about the corpus, so no walk of the tree can answer it. The porcelain format is git's own documented script interface, stable across versions by its own guarantee, which is why it is the one that is parsed and why nothing here reads the human format.
+
+A refusal is not a finding. Nothing was examined, so there is no listing, stdout stays empty, and the exit code is `2` — the code this binary gives its own inability to proceed. The distinction is the whole content of the class: `1` says the run happened and the corpus is wrong, `2` says the run did not happen. The same code covers the second refusal, a profile whose standard place is a generated register: there is no position in any source for such a label to occupy, and the message names `regenerate --profile` rather than reporting an empty sweep, because an operator who asked for the wrong mode wants to be told which one is right.
+
+`--allow-dirty` sweeps anyway. It exists because the precondition is a review discipline and not a safety property — the writer is total on what it writes either way — and because a migration is sometimes taken in a tree that already holds the commit preparing for it.
+
+**Decision (The report describes the reference graph)** · `dec:lint:report-subcommand`
+
+`cogra-lint report` says what the corpus's citation structure looks like: the summary counts, the mints nothing cites, the most-cited labels, and one row per owner. `report --label <label>` answers for one label instead — where it is minted, and every citation that reaches it. It is adopted from the same sibling linter, whose `report` this corpus had no equivalent of at all: several thousand mints, and no way to ask which of them are cited or by whom short of grep.
+
+```rust
+pub struct Cited { pub label: Label, pub owner: OwnerId, pub at: Location, pub citations: usize }
+pub struct Tally { pub owner: OwnerId, pub mints: usize, pub writes: usize, pub cited: usize }
+
+pub struct Survey {
+    pub sources: usize, pub owners: usize,
+    pub mints: usize, pub citations: usize, pub resolved: usize,
+    /// Cut to the length asked for; the whole counts travel beside them.
+    pub orphans: Vec<Cited>, pub orphaned: usize,
+    pub hubs: Vec<Cited>, pub cited: usize,
+    pub tally: Vec<Tally>,
+}
+
+pub struct Reverse { pub owner: OwnerId, pub minted: Vec<Location>, pub cited: Vec<Location> }
+
+pub fn survey(run: &Run, a: &Adoption, top: usize) -> Survey;
+pub fn reverse(run: &Run, label: &Label) -> Vec<Reverse>;
+```
+
+`Survey` carries the claim census beside its own counts, and the adoption data reach `survey` for it alone: which owners the activation admits is a declaration, and it is the one figure in the report a completed run does not already hold. The census is where an unactivated owner's unwritten claims are visible at all (`dec:lint:claim-activation`), and it judges nothing and moves no exit status, like every other figure here.
+
+It adds no pass. Every number is in the graph when the check finishes, and the module selects, counts and orders what pass 2 left behind — which is why a third run over the tree was never needed for it. It walks nothing, parses nothing, and adds no edge.
+
+It judges nothing either, and so exits `0` however long its listing runs. A mint nobody cites is ordinary; a label a hundred sources cite is ordinary; a status that graded either would be inventing a judgment the disciplines do not make. The judgments that read this same structure — unresolved citation, uncarried inventory, the warrant arms — are `judge`'s, the check runs them, and this mode reports none of them a second time.
+
+One thing is refused: a `--label` that is not a well-formed label. Asking for the citations of a token no occurrence could carry is a mistake in the question, and answering "none" would hide it, so the parse happens before the run and the refusal costs no walk. A well-formed label no owner carries is the opposite case and answers empty, because that is a fact about the corpus.
+
+Two shapes are adapted from the source contract. Its `--top` bounds the hubs alone, its orphans travelling whole inside a JSON object; here it bounds each listing, because this corpus has two thousand orphan mints and a terminal report of two thousand lines is one nobody reads — each header carries its whole count, so a cut listing never understates what is there. And its per-owner counts live in a separate `coverage` command, which this one folds into the owner section rather than adding a fourth mode for three numbers.
+
+Order is the whole contract. The registries are `HashMap`s, so no listing is produced by iterating one: every list is sorted by keys total over the corpus — the label, then the owner — and the hubs are ranked by a stable sort over a list already in that order, so ties come out in it and the cut falls in the same place on every run (`[ARCH-req:linter:determinism]`).
+
 **Signature (Command line)** · `sig:lint:cli-api`
 
-Three modes: a check that writes nothing, an explicit mode that regenerates in place (`[ARCH-rule:linter:register-freshness]`), and the measurement of (`dec:lint:migrations-subcommand`).
+Five modes: a check that writes nothing, an explicit mode that regenerates in place (`[ARCH-rule:linter:register-freshness]`), the measurement of (`dec:lint:migrations-subcommand`), the sweep of (`dec:lint:fix-subcommand`), and the report of (`dec:lint:report-subcommand`).
 
 ```rust
 #[derive(clap::Parser)]
@@ -1190,10 +1359,36 @@ enum Command {
         #[arg(long)]
         profile: Option<String>,
     },
+    /// Write one profile's derived labels at the standard place its covered
+    /// assets themselves are (`dec:lint:fix-subcommand`).
+    Fix {
+        /// The profile to sweep.
+        #[arg(long)]
+        profile: String,
+        /// Report what would be written and write nothing.
+        #[arg(long)]
+        dry_run: bool,
+        /// Sweep even where a source it would rewrite carries uncommitted
+        /// work (`dec:lint:fix-precondition`).
+        #[arg(long)]
+        allow_dirty: bool,
+    },
+    /// Report the reference graph. Judges nothing and writes nothing
+    /// (`dec:lint:report-subcommand`).
+    Report {
+        /// Answer for one label instead.
+        #[arg(long)]
+        label: Option<String>,
+        /// How many entries to name in each listing.
+        #[arg(long, default_value_t = 20)]
+        top: usize,
+    },
 }
 ```
 
-Exit codes are the machine-readable half of (`[ARCH-req:linter:diagnostics-not-panics]`): `0` is a clean corpus, `1` is findings on the failing set (`dec:lint:enforcement-partition`), `2` is the linter's own failure — a malformed adoption file, an unusable root, a write that failed. That findings and crashes are different codes is what lets a CI lane tell "the corpus is wrong" from "the linter is broken", and the concept names that distinction as a consumer requirement (`sig:lint:consumers`). `regenerate` and `migrations` exit `1` only on findings of their own scope, and `migrations` has none.
+Exit codes are the machine-readable half of (`[ARCH-req:linter:diagnostics-not-panics]`): `0` is a clean corpus, `1` is findings on the failing set (`dec:lint:enforcement-partition`), `2` is the linter's own failure — a malformed adoption file, an unusable root, a write that failed, a precondition the sweep could not establish. That findings and crashes are different codes is what lets a CI lane tell "the corpus is wrong" from "the linter is broken", and the concept names that distinction as a consumer requirement (`sig:lint:consumers`). Only the check reports a verdict, so only the check reaches `1`: the other four exit `0` on any corpus they could read and `2` where they could not read it or could not proceed, and a refusal to run is never dressed as a finding about the corpus.
+
+The Makefile gains no target for either addition. `make ci` runs the check, and neither of these belongs in a lane: the sweep is a deliberate act taken once per migration, under a precondition a lane would have to be told to ignore, and the report is a question an author asks interactively and reads. A target that wrapped either would be a shorter spelling of a command nothing runs twice the same way.
 
 `clap` with its `derive` feature is the technical answer to a technical question, and it is taken rather than debated: it is the argument parser the Rust ecosystem documents, the derive API is the one its own documentation leads with, and the alternative — hand-rolling three subcommands — buys nothing and loses the help output CI operators read. Version and features are in (`tab:lint:dependencies`).
 
@@ -1364,6 +1559,8 @@ Counts are the design's estimate of scope, to be met or explained, not a ceiling
 | Judgments | the four gates, clause by clause | ~55 | one test per clause, named for it |
 | Registers | (`sig:lint:register-api`) | ~18 | `Current`, `Stale` with the first differing offset, `Staged`; scoped regeneration ignoring another owner's defects; the spliced generated region |
 | Diagnostics | (`conv:lint:diagnostic-order`) | ~12 | the three sort keys; totality on the corpus; the exit-code mapping |
+| Sweep | (`dec:lint:fix-subcommand`) | ~18 | the four insertion shapes pinned as bytes; a dry run and a write agreeing byte for byte; a second sweep writing nothing; a staged profile swept as one in force; the working-tree precondition over a repository the test builds (`dec:lint:fix-precondition`) |
+| Report | (`dec:lint:report-subcommand`) | ~15 | the orphan and hub listings pinned as text; each header's whole count under a cut; the per-owner tally in owner order; the reverse lookup located; a label no owner carries answering empty |
 | Properties | (`tab:lint:metatheorem-tests`) | 10 | proptest, default 256 cases, budgeted separately |
 | Corpus acceptance | (`rep:lint:first-corpus`) | ~8 | the four disciplines, the architecture, the interchange artifacts, the linter's own concept and design |
 | Doc tests | the public API | ~45 | compiled by `cargo test` |

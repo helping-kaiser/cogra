@@ -1,4 +1,4 @@
-# Adoption data — rationale, rulings, findings
+# Adoption data — rationale, rulings, findings · `rec:lint:adoption-notes`
 
 Companion to `corpus-adoption.toml`. Drafted 2026-08-20 against the
 repository at branch `jakob/docs/linter-adoption-draft` (read-only);
@@ -316,16 +316,28 @@ decision. The acceptee is named rather than described because
 no-personal-names rule governs the L1 team — an external party — not
 this corpus's own acceptee.
 
-Three consequences, plainly. **X_A is empty**, so C_A = C and every
-head validates against the published relation — a claim the linter
-checks rather than one this file asserts. **Nothing is strengthened**,
-so σ_A is the edition's statuses unchanged and the corpus clause of
-``inv:kinds:attestation-coverage`` holds trivially; the daggered rows
-and the single candidate are recorded so that clause has something to
-be checked against. And **one generator serves every generated
-register**, because ``rule:linter:register-freshness`` already fixes
-regeneration plus exact byte compare as the mechanism, and a second
-generator would be a second source of truth.
+Three consequences, plainly. **X_A carries the seven Document pairs and
+nothing else** (R24), so every head but a title validates against the
+published relation — a claim the linter checks rather than one this
+file asserts — and each extension row is answered by one owned
+evidence record, which is the whole of E_A's owned component.
+**Nothing is strengthened**, so σ_A is the edition's statuses unchanged
+and the corpus clause of ``inv:kinds:attestation-coverage`` holds; the
+daggered rows and the single candidate are recorded so that clause has
+something to be checked against, and every extension row is firm. And
+**one generator serves every generated register**, because
+``rule:linter:register-freshness`` already fixes regeneration plus
+exact byte compare as the mechanism, and a second generator would be a
+second source of truth.
+
+The extensions and the edition are held apart on purpose.
+``sig:kinds:registry-data`` reserves B, H, and the edition evidence
+base to the registry authority and calls a change to them a new
+edition, so the Document pairs enter through X_A — the route adoption
+is given, and the one this corpus is entitled to take. The headline
+counts therefore do not move: they are the edition's own, taken from
+the tables before any extension is added, while the companion register
+presents C_A and stands ahead of them by exactly seven rows.
 
 The headline counts need one distinction. ``tab:kinds:headline-counts``
 is a generated *region* inside an authored file, not a generated file:
@@ -579,10 +591,11 @@ case-exact.** ``def:kinds:presentation-reduction`` hands the format's
 head mapping to adoption and nothing had recorded it, while
 ``inv:kinds:totality`` demands exactly one validation judgment per
 participating authored head — a demand that cannot be met while "head"
-is undefined. `[head-recognition]` records the two forms this corpus
-writes, a bold `Kind (Title)` run and a Markdown heading, each closed
-by the separator and the mint, and names the languages with no head
-form so their silence is a decision rather than an omission.
+is undefined. `[head-recognition]` records the forms this corpus
+writes — a bold `Kind (Title)` run, a Markdown heading, and, since
+R24, the title — each closed by the separator and the mint, and names
+the languages with no head form so their silence is a decision rather
+than an omission.
 Case-exactness follows from the judgment's own word: h must be an
 *exact* catalogue name, the registry catalogues its names capitalized,
 and folding case would widen N by a rule no row authorizes. The one
@@ -604,6 +617,101 @@ adoption datum travels: each completed migration is one commit adding
 one prefix. Enforcement never touches severity; an error is an error
 wherever it is found, and the partition decides only whether the lane
 fails on it.
+
+Ruled 2026-08-31, R24 and R25 — the document-title extension.
+
+**R24 — The first level-one heading is the document's Title head, and
+its kind names the document's genre.** The extension is the discipline
+author's own, adopted after a merits comparison, and this corpus takes
+its semantics whole: the first structural level-one heading is a
+source's sole Title head, its environment name is Document, it carries
+exactly one authored mint, and later level-one headings stay ordinary
+divisions. The checker derives neither kind, area, nor name from title
+spelling or location — as everywhere else, the author declares and the
+registry validates. What the ruling buys is that a *document* becomes
+citable as itself: before it, the corpus could cite a section of a
+document and never the document, and the workaround was a path, which
+no citation may be (``ansatz:labels:path-derivation``). A title
+citation asserts the document concept's continued existence in the
+named owner, and nothing more — not its bytes, its spelling, its path,
+or the set of heads nested beneath it.
+
+Coverage follows a structural title, which is what keeps the rule from
+needing a list. Every Markdown source of the carrier with a level-one
+heading participates, generated registers included; a source without
+one is exempt and nothing is synthesized for it, because a mint no
+author chose is an absence that
+``inv:labels:generated-compliance`` forbids a generator to fill. The
+two generated-register clauses come from different disciplines and do
+different work: a register's title *mints*, on the authorship its
+generator transcribes, while its heads form no validation judgment,
+since ``judg:kinds:head-validation`` puts generated registers outside
+authored heads. That second clause was vacuous until a generated
+register carried a mint; the title is what makes it bite.
+
+**R25 — The genre vocabulary is X_A, measured, and trimmed to nothing.**
+The registry catalogues the environments *inside* a document and no
+Document row, so every genre a title may carry is an extension row —
+exactly the case `[kinds.extensions]`'s own `revisit_when` named. The
+census over all 92 titled sources of the carrier and the working-note
+owner returned seven genres in live use: `rec`, `rep`, `reg`,
+`proposal`, `spec`, `plan`, `guide`. `proposal` was the one expected to
+be idle, the corpus's single options comparison being an accepted
+decision record rather than a recommendation; a working note awaiting a
+ruling carries it, so it stays. Five tokens are the registry's own, so
+a genre already catalogued keeps its token and no second token names
+one concept (``inv:kinds:one-kind``); `plan` and `guide` are new, name
+genres the registry has no row for, and collide with nothing
+(``inv:kinds:distinctness``). No reserved kind is ever a title kind: a
+document *about* tests is still a record or a report by its
+documentary role, and the authored/derived split settles that before
+any occurrence exists.
+
+**R26 — A profile fixes seven data, and activation is the finer staging
+instrument.** The sibling linter's profile signature carries two the
+calculus's did not: a collision rule and a per-owner activation. Both are
+adopted, and the amendment to ``sig:labels:profiles`` lands with them.
+The collision rule is the equivalence a profile is judged under, and it
+is a profile's own datum because its *standard place* decides it: a
+register keyed by label tells two assets sharing an identifier apart, and
+a place at the asset gives each its own evidence, so both v1 profiles
+come out at the label where the sibling's test profile comes out at the
+identifier. Recording it makes that a reading rather than an assumption.
+Activation is the shape that matters more. The staged-entry rule of R19
+is all-or-nothing: a profile is in Π or it is not, and its migration is
+one commit however large the corpus. Activation splits that per owner —
+and keeps the all-or-nothing shape available as `every-owner`,
+deliberately, because an enumerated activation on the two v1 profiles
+would let a crate added tomorrow escape the inventory judgment in
+silence. What is staged is the unwritten label alone: placement,
+collision, and resolution bind from a label's first commit in every
+owner, closed or not.
+
+**R27 — The claim discipline rides the test profile, and the calculus
+judges most of it.** A derived test label names the function and claims
+nothing about what it establishes (``cav:labels:assets``), so each
+covered test carries a second, authored label naming the statement it
+evidences. The kind is `claim`, a *base* row of the registry's
+results-and-assertions family — Claim and Assertion both — so no X_A
+extension is owed and `[kinds.extensions]` is untouched: the families
+divide exactly where the warrant does, an Assets kind being headed by
+the identifier the code already bears and a Results kind by a heading an
+author composes. `claim` therefore lies outside K, no profile governs
+it, and every claim mint stands on an authorship warrant. Three
+divergences from the source discipline are this corpus's own, and each
+follows from a choice made earlier. The claim takes the *final*
+documentation line rather than the second-to-last, because this corpus's
+test profile puts its derived label in a register and leaves that line
+free. The statement is *one* line rather than the whole gloss, because a
+test's documentation here routinely cites the design clause it discharges
+and a whole-gloss rule would copy those citations into a generated file,
+in a syntax that changes on the way. And the judgment reports six things
+and no more: uniqueness and resolution are ``inv:labels:unique-mint``'s
+and ``inv:labels:total-resolution``'s, which already quantify over every
+owner, so a second voice would be a place for two readings of one fact to
+differ. The pilot wave closed over `pkg.cogra-linter` alone — its own
+discipline's tests — and the other five owners with covered assets are
+counted in `report` and reported nowhere until their waves land.
 
 ---
 
@@ -637,3 +745,9 @@ corpus: a slice that adds Rust sources re-measures them.
 | Live imported citations (2026-08-25) | `ICX` 70, `ARCH` 60, `LBL` 59, `KND` 19, `IDN` 14 in prose, plus 1 `ICX` in Rust; `SPEC` and `CODEC` occur once each inside fenced illustrations and participate in nothing |
 | Label-shaped backtick spans in `.rs` doc comments (2026-08-25) | 88 — near-miss warnings, since the code syntax is the acute |
 | Label spans in `layer1-interface.md` | ~364, across 15 areas, 14 kind tokens (outside the carrier) |
+| Titled sources (2026-08-31) | 80 in the carrier and 12 in the working-note trees, each carrying one Title mint; 3 Markdown files carry a level-one heading and no title, all outside the carrier (`layer1-interface.md` and the vendored Kotlin grammar's two) |
+| Title genres in live use (2026-08-31) | all 7 declared: `spec` 46, `guide` 17, `reg` 11, `rep` 10, `rec` 4, `plan` 3, `proposal` 1 |
+| Extension rows, X_A (2026-08-31) | 7, all `Document`, each with one owned evidence record; C_A stands 7 rows ahead of the edition's 349 |
+| Covered tests, whole corpus (2026-08-31) | 1859, by the claim census: `pkg.cogra-linter` 842, `pkg.cogra-interchange` 474, `pkg.api` 348, `pkg.common` 118, `pkg.postgres-store` 62, `pkg.l1-standin` 15 |
+| Claims after the pilot wave (2026-08-31) | 842 tests claimed, 685 minting and 157 citing a sibling's, over 37 thematic areas; `pkg.cogra-linter` at 0 unclaimed, the other five owners counted and reported nowhere |
+| Claim areas in live use (2026-08-31) | 37, the largest `grammar` 84, `markdown` 73, `lexer` 71, `adoption` 67; the vocabulary is free and censused rather than declared |

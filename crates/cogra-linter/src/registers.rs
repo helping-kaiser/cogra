@@ -29,7 +29,7 @@
 //! reason the registry document is not in `[carrier]` `generated_files`
 //! (´dec:lint:one-generator´).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -41,6 +41,7 @@ use crate::diag::ByteSpan;
 use crate::error::GenerateError;
 use crate::frontend::Asset;
 use crate::graph::{AssetNode, Corpus, EdgeW, NodeW, Registries, out_along};
+use crate::judge::claims::{Form, Standing, standing};
 use crate::judge::kinds::{HeadlineCounts, KindRegistry};
 use crate::scan::Label;
 
@@ -71,6 +72,29 @@ pub fn register_path(owner_tree: &Path) -> PathBuf {
     owner_tree.join(LABEL_REGISTER)
 }
 
+/// The file name a per-owner claim matrix carries.
+const CLAIM_MATRIX: &str = "claim-matrix.md";
+
+/// Where one owner's claim matrix sits, given that owner's tree.
+///
+/// Beside its label register, and for the same reason: a register lies inside
+/// the tree of the owner it presents, so its own occurrences fall under that
+/// owner's partition rule.
+///
+/// ```
+/// use cogra_linter::registers::matrix_path;
+/// use std::path::Path;
+///
+/// assert_eq!(
+///     matrix_path(Path::new("crates/api")),
+///     Path::new("crates/api/claim-matrix.md"),
+/// );
+/// ```
+#[must_use]
+pub fn matrix_path(owner_tree: &Path) -> PathBuf {
+    owner_tree.join(CLAIM_MATRIX)
+}
+
 /// A register as the generator produces it: a path and the exact bytes.
 ///
 /// For a whole-file register the path is the file. For a
@@ -96,6 +120,12 @@ pub enum RegisterScope {
         owner: OwnerId,
         /// The profile whose standard place it is.
         profile: ProfileId,
+    },
+    /// One per activated owner: the claims of that owner against the tests
+    /// that carry them (`[claims]`).
+    ClaimMatrix {
+        /// The owner whose claims it presents.
+        owner: OwnerId,
     },
     /// The companion attestation register
     /// (´[KND-req:kinds:attestation-register]´).
@@ -139,7 +169,8 @@ pub enum Freshness {
 pub enum Scope {
     /// Every register the generator produced.
     WholeCorpus,
-    /// Only the label registers of one owner.
+    /// Only the registers of one owner: its label registers and its claim
+    /// matrix.
     Owner(OwnerId),
 }
 
@@ -149,7 +180,8 @@ impl Scope {
     pub fn admits(&self, reg: &Register) -> bool {
         match (self, &reg.scope) {
             (Scope::WholeCorpus, _) => true,
-            (Scope::Owner(wanted), RegisterScope::LabelRegister { owner, .. }) => wanted == owner,
+            (Scope::Owner(wanted), RegisterScope::LabelRegister { owner, .. })
+            | (Scope::Owner(wanted), RegisterScope::ClaimMatrix { owner }) => wanted == owner,
             (Scope::Owner(_), _) => false,
         }
     }
@@ -199,6 +231,7 @@ pub fn regenerate_all(
     k: Option<&KindRegistry>,
 ) -> Vec<Register> {
     let mut out = label_registers(g, r, a);
+    out.extend(claim_matrices(g, a));
     if let Some(k) = k {
         out.push(attestation(a, k));
         if let Some(span) = k.headline_region() {
@@ -492,6 +525,141 @@ fn label_registers(g: &Corpus, r: &Registries, a: &Adoption) -> Vec<Register> {
     out
 }
 
+/// The per-activated-owner claim matrices: each owner's claims against the
+/// tests that carry them (`[claims]`).
+///
+/// An unactivated owner gets none. A file of no rows is not a view of an empty
+/// relation but a register with nothing to present, and the owner's count
+/// travels in `report` until its wave closes.
+///
+/// The standing of each test is read by [`crate::judge::claims::standing`] and
+/// by nothing else here. One reader serves the judgment and the view, so a
+/// matrix can never say something about a test that the check disagrees with.
+fn claim_matrices(g: &Corpus, a: &Adoption) -> Vec<Register> {
+    let Some(declared) = a.claims.as_ref() else {
+        return Vec::new();
+    };
+    let Some(profile) = a
+        .profiles
+        .effective()
+        .find(|profile| profile.id == declared.rides)
+    else {
+        return Vec::new();
+    };
+    let Some(node) = profile_node(g, &profile.id) else {
+        return Vec::new();
+    };
+    let mut held: BTreeMap<OwnerId, BTreeMap<Label, MatrixRow>> = BTreeMap::new();
+    for asset in out_along(g, node, EdgeW::Covers) {
+        let Some(NodeW::Asset(weight)) = g.node_weight(asset) else {
+            continue;
+        };
+        let Some(owner) = crate::graph::owner_of(g, asset).and_then(|at| owner_named(g, at)) else {
+            continue;
+        };
+        if !declared.activation.admits(&owner) {
+            continue;
+        }
+        let Standing::Claimed(line) = standing(&weight.documentation, &declared.kind) else {
+            continue;
+        };
+        let Some(test) = derived_label(profile, &weight.identifier, &weight.area) else {
+            continue;
+        };
+        let row = held
+            .entry(owner)
+            .or_default()
+            .entry(line.label)
+            .or_default();
+        row.tests.insert(test);
+        if line.form == Form::Mint {
+            row.statement = line.statement;
+        }
+    }
+    held.into_iter()
+        .map(|(owner, rows)| Register {
+            path: matrix_path(&owner_root(a, &owner)),
+            bytes: claim_matrix_bytes(&owner, profile, &rows),
+            scope: RegisterScope::ClaimMatrix { owner },
+        })
+        .collect()
+}
+
+/// One row of a claim matrix: the statement, and the tests that carry it.
+#[derive(Default)]
+struct MatrixRow {
+    /// The statement, from the test that mints the claim. Empty where no test
+    /// of the owner mints it, which is a citation resolving nowhere and
+    /// (´[LBL-inv:labels:total-resolution]´)'s finding rather than this
+    /// generator's to invent around.
+    statement: String,
+    /// Every test that mints or cites the claim, ordered bytewise.
+    tests: BTreeSet<Label>,
+}
+
+/// One owner's claim matrix: one row per claim, ordered bytewise by claim
+/// label.
+///
+/// Every occurrence in it is a citation, and that is the whole design: a row
+/// naming a test that was renamed or deleted dangles and fails resolution,
+/// while no row mints anything — the claim's mint is at the test, and a second
+/// bare occurrence would be (´[LBL-inv:labels:unique-mint]´)'s business. The
+/// Title alone mints, as every titled source of the carrier does
+/// (´dec:lint:title-head´).
+fn claim_matrix_bytes(
+    owner: &OwnerId,
+    profile: &Profile,
+    rows: &BTreeMap<Label, MatrixRow>,
+) -> Vec<u8> {
+    let mut out = String::new();
+    let _ = writeln!(out, "# Claim matrix \u{b7} `{CLAIM_MATRIX_MINT}`\n");
+    out.push_str(GENERATED);
+    let _ = write!(
+        out,
+        "\nOwner {}, profile {}: one row per claim, ordered bytewise by claim\nlabel. Every occurrence is a citation; the tests of a row are the test\nthat mints the claim and every test that cites it.\n\n",
+        owner.as_str(),
+        profile.id.as_str()
+    );
+    let table: Vec<Vec<String>> = rows
+        .iter()
+        .map(|(label, row)| {
+            vec![
+                format!("(`{}`)", label.as_str()),
+                cell(&row.statement),
+                row.tests
+                    .iter()
+                    .map(|test| format!("(`{}`)", test.as_str()))
+                    .collect::<Vec<String>>()
+                    .join(" "),
+            ]
+        })
+        .collect();
+    out.push_str(&markdown_table(&["Claim", "Statement", "Tests"], &table));
+    out.into_bytes()
+}
+
+/// One statement, as a table cell.
+///
+/// A pipe is the table's own delimiter, so a statement carrying one is escaped
+/// rather than allowed to end its cell early. Nothing else is escaped, because
+/// nothing else in a statement is the format's: a backtick is refused at the
+/// test by (´dec:lint:claim-standing´) rather than escaped here, since escaping
+/// it would hide from the author that the matrix reads their line as prose.
+fn cell(statement: &str) -> String {
+    statement.replace('|', "\\|")
+}
+
+/// The Title mint every per-owner claim matrix carries.
+const CLAIM_MATRIX_MINT: &str = "reg:registers:claim-matrix";
+
+/// The owner a node names.
+fn owner_named(g: &Corpus, owner: NodeIndex) -> Option<OwnerId> {
+    match g.node_weight(owner) {
+        Some(NodeW::Owner(weight)) => Some(weight.id.clone()),
+        _ => None,
+    }
+}
+
 /// The rows one owner's covered assets contribute, ordered bytewise by label.
 ///
 /// An asset whose transformed identifier is no well-formed name contributes
@@ -567,9 +735,16 @@ fn profile_node(g: &Corpus, id: &ProfileId) -> Option<NodeIndex> {
 
 /// One owner's label register: one row per covered asset, ordered bytewise
 /// by label, each label in the Markdown mint form `[profiles]` fixes.
+///
+/// The title carries the register's own mint, as every titled source of the
+/// carrier does (´dec:lint:title-head´). It is an authorship a generator
+/// transcribes and is that choice still
+/// (´[LBL-inv:labels:generated-compliance]´): the name is the same in every
+/// owner, and ownership is what keeps the mints apart
+/// (´[LBL-cav:labels:coexistence]´).
 fn label_register_bytes(owner: &OwnerId, profile: &Profile, rows: &[(Label, String)]) -> Vec<u8> {
     let mut out = String::new();
-    out.push_str("# Label register\n\n");
+    let _ = writeln!(out, "# Label register \u{b7} `{LABEL_REGISTER_MINT}`\n");
     out.push_str(GENERATED);
     let _ = write!(
         out,
@@ -584,6 +759,12 @@ fn label_register_bytes(owner: &OwnerId, profile: &Profile, rows: &[(Label, Stri
     out.push_str(&markdown_table(&["Label", "Asset"], &table));
     out.into_bytes()
 }
+
+/// The Title mint every per-owner label register carries.
+const LABEL_REGISTER_MINT: &str = "reg:registers:label-register";
+
+/// The Title mint the companion attestation register carries.
+const ATTESTATION_MINT: &str = "reg:registers:attestation-register";
 
 /// The line every generated register opens with, so that a reader who opens
 /// one is told what it is before anything else.
@@ -601,11 +782,14 @@ const GENERATED: &str = "Generated by the corpus linter's regeneration mode, and
 fn attestation(a: &Adoption, k: &KindRegistry) -> Register {
     let locator = a.registry_document();
     let mut out = String::new();
-    out.push_str("# Companion attestation register\n\n");
+    let _ = writeln!(
+        out,
+        "# Companion attestation register \u{b7} `{ATTESTATION_MINT}`\n"
+    );
     out.push_str(GENERATED);
     let _ = write!(
         out,
-        "\nAcceptee: {}.\n\nEvidence base, adopted component:\n{}\n\nEvidence base, owned records: {}. Every row below therefore carries the\nadopted component's own source and locator, and no status is strengthened,\nso the status map is the edition's unchanged.\n\n## Evidence and status\n\n",
+        "\nAcceptee: {}.\n\nEvidence base, adopted component:\n{}\n\nEvidence base, owned records: {}, one per row of the local extension set.\nA row sourced `adopted` carries the adopted component's own source and\nlocator; a row sourced `owned` carries its record's. No status is\nstrengthened, so the status map is the edition's unchanged.\n\n## Evidence and status\n\n",
         a.kinds.acceptee,
         a.kinds.evidence.adopted,
         a.kinds.evidence.owned.len(),
@@ -615,12 +799,27 @@ fn attestation(a: &Adoption, k: &KindRegistry) -> Register {
         .rows()
         .enumerate()
         .map(|(at, (name, kind, status))| {
+            let (source, where_) = if k.is_local(name, kind) {
+                let record = a
+                    .kinds
+                    .evidence
+                    .owned
+                    .iter()
+                    .find(|record| &*record.name == name && &record.kind == kind);
+                let where_ = record.map_or_else(
+                    || String::from(&*a.kinds.evidence.recorded_in),
+                    |record| record.locator.to_string(),
+                );
+                (OWNED, where_)
+            } else {
+                (ADOPTED, locator.display().to_string())
+            };
             vec![
                 name.to_owned(),
                 format!("`{}`", kind.as_str()),
                 String::from(status.token()),
-                String::from(ADOPTED),
-                locator.display().to_string(),
+                String::from(source),
+                where_,
                 (at + 1).to_string(),
             ]
         })
@@ -668,6 +867,10 @@ fn attestation(a: &Adoption, k: &KindRegistry) -> Register {
 /// What a base row's source cell says: the adopted component of the evidence
 /// base, which the register's own preamble spells out in full.
 const ADOPTED: &str = "adopted";
+
+/// What an extension row's source cell says: the owned component, held
+/// first-hand by the acceptee (´[KND-sig:kinds:acceptee]´).
+const OWNED: &str = "owned";
 
 /// The headline counts of the registry document, as the region they occupy.
 ///
@@ -747,6 +950,8 @@ pub const RULES: [crate::diag::RuleId; 0] = [];
 mod tests {
     use super::*;
 
+    /// A generated table pads every column to its widest cell.
+    /// ´claim:tables:a-table-pads-to-its-widest-cell´
     #[test]
     fn a_table_pads_every_column_to_its_widest_cell() {
         let rows = vec![vec![String::from("Declared hybrids"), String::from("3")]];
@@ -757,6 +962,8 @@ mod tests {
         );
     }
 
+    /// A short row pads rather than narrowing the table.
+    /// ´claim:tables:a-short-row-pads´
     #[test]
     fn a_short_row_pads_rather_than_narrowing_the_table() {
         let rows = vec![vec![String::from("one")]];
@@ -764,6 +971,8 @@ mod tests {
         assert_eq!(table, "| a   | b |\n| --- | - |\n| one |   |\n");
     }
 
+    /// An owner scope admits that owner's own registers alone.
+    /// ´claim:tables:an-owner-scope-admits-one-owner´
     #[test]
     fn an_owner_scope_admits_only_that_owners_label_registers() {
         let register = |scope: RegisterScope| Register {
