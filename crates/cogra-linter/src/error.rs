@@ -145,6 +145,18 @@ pub enum AdoptionError {
         /// What the file's own profiles say.
         found: usize,
     },
+    /// The file's schema major version is not the one this build reads.
+    #[error(
+        "adoption data states schema major version {found}, and this build reads major version {expected}"
+    )]
+    UnsupportedSchemaVersion {
+        /// The row `schema_version` sits in.
+        at: Location,
+        /// The major version the file states.
+        found: u32,
+        /// The major version this build reads.
+        expected: u32,
+    },
 }
 
 impl AdoptionError {
@@ -164,7 +176,8 @@ impl AdoptionError {
             | AdoptionError::PathSpelling { at, .. }
             | AdoptionError::ProfileIncomplete { at, .. }
             | AdoptionError::UngovernedKindNotReserved { at, .. }
-            | AdoptionError::EffectiveCountMismatch { at, .. } => Some(at),
+            | AdoptionError::EffectiveCountMismatch { at, .. }
+            | AdoptionError::UnsupportedSchemaVersion { at, .. } => Some(at),
         }
     }
 }
@@ -272,6 +285,11 @@ mod tests {
                 at: row(),
                 stated: 1,
                 found: 0,
+            },
+            AdoptionError::UnsupportedSchemaVersion {
+                at: row(),
+                found: 2,
+                expected: 1,
             },
         ];
         for error in &errors {
