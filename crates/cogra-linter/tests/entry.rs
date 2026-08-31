@@ -447,6 +447,12 @@ fn a_staged_profile_derives_nothing() {
 /// (´[LBL-inv:labels:generated-compliance]´): the register is a generated
 /// region whose every occurrence is a warranted mint, which is the clause
 /// holding over the one generated carrier file this corpus will gain.
+///
+/// Both authorities appear here, and the clause covers both: every label
+/// the profile derives stands on its one derivation, while the register's
+/// own Title mint (´dec:lint:title-head´) stands on the authorship the
+/// generator transcribes and carries no derivation at all. Generation is a
+/// fact about the pen, and warrants attach to no pen.
 #[test]
 fn the_generated_register_complies() {
     let run = entered_corpus();
@@ -459,18 +465,22 @@ fn the_generated_register_complies() {
         !generated.is_empty(),
         "the register's regions are generated"
     );
+    let mut titles = 0;
     for region in generated {
         for held in out_along(&run.graph, region, EdgeW::Contains) {
-            if run.graph.node_weight(held).map(NodeW::kind) != Some(NodeKind::Mint) {
+            let Some(NodeW::Mint(weight)) = run.graph.node_weight(held) else {
                 continue;
-            }
+            };
+            let authored = weight.label.kind() == "reg";
+            titles += usize::from(authored);
             assert_eq!(
                 in_along(&run.graph, held, EdgeW::Derives).count(),
-                1,
-                "every mint of the register stands on exactly one derivation"
+                usize::from(!authored),
+                "a derived mint of the register stands on exactly one derivation, an authored one on none"
             );
         }
     }
+    assert!(titles > 0, "the register carries its own Title mint");
     assert!(of(run, "label-generated-dangling").is_empty());
 }
 

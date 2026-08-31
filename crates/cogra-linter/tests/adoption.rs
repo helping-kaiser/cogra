@@ -68,6 +68,7 @@ hybrids = []
 
 [kinds.evidence]
 adopted = \"the edition evidence base\"
+recorded_in = \"the adoption data\"
 owned = []
 
 [kinds.statuses]
@@ -668,10 +669,12 @@ fn the_head_recognition_section_round_trips() {
     let heads = ruled().head_recognition;
     assert_eq!(&*heads.separator, "·");
     assert_eq!(heads.matching, HeadMatching::CaseExact);
-    assert_eq!(heads.forms.len(), 2);
+    assert_eq!(heads.forms.len(), 3);
     assert_eq!(&*heads.forms[0].id, "environment-head");
     assert_eq!(heads.forms[0].language, Language::new("markdown"));
     assert_eq!(&*heads.forms[1].id, "heading");
+    assert_eq!(&*heads.forms[2].id, "title");
+    assert_eq!(heads.forms[2].language, Language::new("markdown"));
     assert_eq!(heads.none.len(), 1);
     assert_eq!(heads.none[0].languages.len(), 3);
 }
@@ -757,10 +760,17 @@ fn a_kinds_section_with_no_registry_key_is_refused() {
 #[test]
 fn the_kinds_section_round_trips() {
     let kinds = ruled().kinds;
-    assert!(kinds.extensions.rows.is_empty());
+    assert_eq!(kinds.extensions.rows.len(), 6);
+    assert!(
+        kinds
+            .extensions
+            .rows
+            .iter()
+            .all(|row| &*row.name == "Document" && &*row.status == "firm")
+    );
     assert!(kinds.extensions.hybrids.is_empty());
-    assert!(kinds.extensions.empty_in_v1);
-    assert!(kinds.evidence.owned.is_empty());
+    assert!(!kinds.extensions.empty_in_v1);
+    assert_eq!(kinds.evidence.owned.len(), kinds.extensions.rows.len());
     assert!(kinds.statuses.strengthenings.is_empty());
     assert_eq!(kinds.statuses.daggered.len(), 3);
     assert_eq!(kinds.statuses.candidates.len(), 1);
