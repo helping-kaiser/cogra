@@ -55,14 +55,18 @@ pub const FOREIGN: RuleId = RuleId::new("claim-foreign");
 /// A minted claim with no statement above it.
 pub const STATEMENT_MISSING: RuleId = RuleId::new("claim-statement-missing");
 
+/// A statement carrying a backtick, which the matrix would present as prose.
+pub const STATEMENT_QUOTED: RuleId = RuleId::new("claim-statement-quoted");
+
 /// Every rule this module can report.
-pub const RULES: [RuleId; 6] = [
+pub const RULES: [RuleId; 7] = [
     MISSING,
     MISPLACED,
     NOT_ALONE,
     REPEATED,
     FOREIGN,
     STATEMENT_MISSING,
+    STATEMENT_QUOTED,
 ];
 
 /// Which form a claim occurrence takes at a covered test.
@@ -81,8 +85,8 @@ pub struct ClaimLine {
     pub label: Label,
     /// Whether the test mints it or cites it.
     pub form: Form,
-    /// The documentation above the claim line, blank lines dropped and the
-    /// rest joined by one space. Empty for a citation, whose statement was
+    /// The last non-empty documentation line above the claim line: the
+    /// statement the label names. Empty for a citation, whose statement was
     /// written where the claim was minted.
     pub statement: String,
 }
@@ -198,18 +202,30 @@ pub fn claims(g: &Corpus, a: &Adoption) -> Vec<Diagnostic> {
         let standing = standing(&weight.documentation, &declared.kind);
         let Some(at) = at_asset(g, asset) else { continue };
         match standing {
-            Standing::Claimed(line) => {
-                if line.form == Form::Mint && line.statement.is_empty() && activated {
+            Standing::Claimed(line) if line.form == Form::Mint => {
+                if line.statement.is_empty() {
+                    if activated {
+                        found.push(finding(
+                            STATEMENT_MISSING,
+                            at,
+                            format!(
+                                "covered test {name} of {owner} mints {} with no statement above it",
+                                line.label
+                            ),
+                        ));
+                    }
+                } else if line.statement.contains('`') {
                     found.push(finding(
-                        STATEMENT_MISSING,
+                        STATEMENT_QUOTED,
                         at,
                         format!(
-                            "covered test {name} of {owner} mints {} with no statement above it",
+                            "the statement of {} carries a backtick, which the claim matrix would present as a prose span",
                             line.label
                         ),
                     ));
                 }
             }
+            Standing::Claimed(_) => {}
             Standing::Unclaimed => {
                 if activated {
                     found.push(finding(
@@ -333,14 +349,25 @@ pub fn standing(documentation: &[Box<str>], kind: &Kind) -> Standing {
     })
 }
 
-/// The statement a mint's documentation states, above the claim line.
+/// The statement a mint's documentation states: the last non-empty line above
+/// the claim line.
+///
+/// One line and not the whole documentation above it, which is where this
+/// corpus parts from the sibling linter's gloss. A test's documentation here
+/// routinely cites the design clause it discharges, and a whole-gloss rule
+/// would copy those citations into the generated matrix — a second occurrence
+/// of something its author wrote once, and one whose form changes on the way,
+/// since the documentation is code syntax and the matrix is prose. One
+/// authored line, written for the purpose, travels cleanly
+/// (´dec:lint:claim-standing´).
 fn statement(lines: &[Box<str>]) -> String {
     lines
         .iter()
+        .rev()
         .map(|line| line.trim())
-        .filter(|line| !line.is_empty())
-        .collect::<Vec<&str>>()
-        .join(" ")
+        .find(|line| !line.is_empty())
+        .unwrap_or_default()
+        .to_owned()
 }
 
 /// The covered assets of the profile the discipline rides, in index order.

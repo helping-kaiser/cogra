@@ -111,6 +111,10 @@ generated_files = [
   "crates/common/label-register.md",
   "crates/l1-standin/label-register.md",
   "crates/postgres-store/label-register.md",
+  # The per-owner claim matrices, one per ACTIVATED owner, materialized
+  # on 2026-08-31 by the pilot wave; see [claims] matrix. The list grows
+  # by one file in the commit that closes each further owner's wave.
+  "crates/cogra-linter/claim-matrix.md",
 ]
 
 # Vendored trees: sources kept in-repo that the carrier does not scan.
@@ -819,16 +823,27 @@ mint: the reader of a claim line should not have to find it.
 """
 
   [claims.statement]
-  rule = "the documentation lines above the claim line, blank lines dropped, joined by one space"
+  rule = "the last non-empty documentation line above the claim line"
   note = """
-The label names the statement; these lines ARE the statement, and the
-generated matrix presents them. A citing test needs none — the
-statement was written where the claim was minted, and repeating it
-would be a second authority on one fact.
-A claim whose statement is empty is counted and reported nowhere: a
-mint with no statement is a name for nothing, and the count is what
-makes the debt legible. It is a finding once its owner's wave closes,
-by the same rule as an unwritten claim.
+The label names the statement; this line IS the statement, and the
+generated matrix presents it. A citing test writes none — the statement
+was written where the claim was minted, and repeating it would be a
+second authority on one fact.
+ONE LINE, NOT THE WHOLE GLOSS. The sibling linter takes everything
+above the claim line, joined. This corpus cannot: a test's
+documentation here routinely cites the design clause the test
+discharges, and a whole-gloss rule would copy those citations into the
+matrix — a second occurrence of what its author wrote once, and one
+whose syntax changes on the way, the documentation being code (acute)
+and the matrix prose (backtick). One line, written for the purpose,
+travels cleanly and leaves the rest of the documentation where it is.
+NO BACKTICK IN A STATEMENT. The matrix presents the line as prose, so a
+backtick span in it would mint or cite there. The rule is checked
+rather than trusted, and it binds wherever a claim is minted: a written
+statement that is wrong is a defect and not a schedule.
+A mint whose statement is empty is a name for nothing. It is counted
+everywhere and a finding once its owner's wave closes, by the same rule
+as an unwritten claim.
 """
 
   [claims.collision]
