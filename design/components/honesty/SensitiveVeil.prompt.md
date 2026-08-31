@@ -1,16 +1,18 @@
 Two states, opposite granularity. Get that wrong and the design misrepresents the data model.
 
-**`SensitiveVeil` — per field, per attachment.**
+**`SensitiveVeil` — the whole body, as one.**
 
 ```jsx
-<SensitiveScope>            {/* once per post */}
-  <h3><SensitiveVeil kind="text">{post.title}</SensitiveVeil></h3>
-  <SensitiveVeil radius="0px"><MediaAttachment src={…} /></SensitiveVeil>
-</SensitiveScope>
+<h3>{post.title}</h3>          {/* title and topics stay readable */}
+<SensitiveVeil reason={post.sensitiveReason} radius="0px">
+  <MediaAttachment src={…} />
+  <p>{post.content}</p>
+  <p>{post.description}</p>
+</SensitiveVeil>
 ```
 
-- A **title, a description, a text body, and each media attachment** can be veiled alone — `FieldModerationStatus` exists per field for exactly this, and per-field granularity exists for sensitive *only*. One image in a gallery is veiled while its neighbours read normally. Never blanket a post: that throws away the one thing the data model went out of its way to keep.
-- **Reveal is per post.** `SensitiveScope` makes one tap answer for every veil inside — the reader decided once, and asking again per item turns one decision into five. A veil with no scope governs only itself, the right default for a lone tile.
+- **One veil covers the body**: media, text and description together. The title and topics sit outside it and stay readable, so a reader can decide from the frame without touching the content.
+- **One tap reveals everything** — the reader decided once, and asking again per item turns one decision into five. An author's optional reason is shown on the veil.
 - **The content stays mounted and keeps its space**, so revealing moves nothing. Text is blurred in place rather than replaced: the reader can see there *is* a sentence.
 - **No `error` colouring, no warning glyph, no red.** A neutral wash of the standard scrim and a plain chip.
 - **`radius` is authoritative and forwarded to the child**, so pass it once. A veiled tile in a flush gallery must not end up rounded beside a square neighbour — media meets the card's straight sides, never its corners.
