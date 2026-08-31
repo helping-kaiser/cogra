@@ -394,6 +394,9 @@ mod tests {
     /// The identity of a type is the printed expression plus the rules it
     /// reaches — and the prelude is not among them, however deep the type
     /// reaches into it.
+    ///
+    /// The identity of a type is its printed expression with the theory's own rules it reaches, the prelude left out.
+    /// ´claim:inclusion:an-identity-is-the-expression-and-the-rules-it-reaches´
     #[test]
     fn the_identity_of_a_type_carries_its_own_rules_and_not_the_prelude() {
         let theory = theory(concat!(
@@ -412,6 +415,9 @@ mod tests {
 
     /// A cycle among the rules a type reaches terminates: the closure is a
     /// set, and a name already in it is not walked twice.
+    ///
+    /// A cycle among the rules a type reaches terminates, the closure being a set.
+    /// ´claim:inclusion:a-cycle-among-reached-rules-terminates´
     #[test]
     fn a_cycle_among_the_reached_rules_terminates() {
         let theory = theory(concat!(
