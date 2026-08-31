@@ -893,14 +893,15 @@ pub struct KindsAdoption {
 /// X_A: the acceptee's local extensions to the classification relation.
 #[derive(Clone, Debug, serde::Deserialize)]
 pub struct KindExtensions {
-    /// Extension rows. Empty in version 1.
-    pub rows: Vec<Box<str>>,
-    /// Local hybrids. Empty in version 1.
+    /// Extension rows, each a name-and-kind pair of C_A that is no row of C.
+    #[serde(default)]
+    pub rows: Vec<KindExtensionRow>,
+    /// Local hybrids.
     pub hybrids: Vec<Box<str>>,
     /// Whether emptiness here is the recorded state.
     #[serde(default)]
     pub empty_in_v1: bool,
-    /// Why the set is empty.
+    /// Why the set is what it is.
     #[serde(default)]
     pub reason: Option<Box<str>>,
     /// What would reopen the section.
@@ -908,13 +909,51 @@ pub struct KindExtensions {
     pub revisit_when: Option<Box<str>>,
 }
 
+/// One recorded extension row: a pair of C_A the base registry does not
+/// carry (´[KND-sig:kinds:registry-data]´).
+#[derive(Clone, Debug, serde::Deserialize)]
+pub struct KindExtensionRow {
+    /// The exact catalogue name.
+    pub name: Box<str>,
+    /// The kind it is classified by.
+    pub kind: Kind,
+    /// σ_A's status for the pair: firm or borderline, never candidate
+    /// (´[KND-inv:kinds:attestation-coverage]´).
+    pub status: Box<str>,
+}
+
 /// E_A: the evidence base, adopted by reference and owned first-hand.
 #[derive(Clone, Debug, serde::Deserialize)]
 pub struct KindEvidence {
     /// The component taken by reference.
     pub adopted: Box<str>,
-    /// The component held first-hand.
-    pub owned: Vec<Box<str>>,
+    /// Where the owned records are kept, which is the locator a local pair
+    /// falls back to when no record names it.
+    pub recorded_in: Box<str>,
+    /// The component held first-hand, one record per extension row.
+    #[serde(default)]
+    pub owned: Vec<KindEvidenceRecord>,
+}
+
+/// One owned evidence record, covering one pair of X_A.
+///
+/// (´[KND-sig:kinds:acceptee]´) fixes what a record identifies: the pair,
+/// an exact quoted spelling, a source, a locator, and context enough to
+/// adjudicate the catalogued sense.
+#[derive(Clone, Debug, serde::Deserialize)]
+pub struct KindEvidenceRecord {
+    /// The name of the pair this record covers.
+    pub name: Box<str>,
+    /// The kind of the pair this record covers.
+    pub kind: Kind,
+    /// The exact quoted spelling the source carries.
+    pub spelling: Box<str>,
+    /// Where the evidence comes from.
+    pub source: Box<str>,
+    /// Where in that source it sits.
+    pub locator: Box<str>,
+    /// The catalogued sense the pair names.
+    pub sense: Box<str>,
 }
 
 /// σ_A: the status map, which strengthens edition statuses and never

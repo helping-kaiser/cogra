@@ -605,7 +605,7 @@ fn attestation(a: &Adoption, k: &KindRegistry) -> Register {
     out.push_str(GENERATED);
     let _ = write!(
         out,
-        "\nAcceptee: {}.\n\nEvidence base, adopted component:\n{}\n\nEvidence base, owned records: {}. Every row below therefore carries the\nadopted component's own source and locator, and no status is strengthened,\nso the status map is the edition's unchanged.\n\n## Evidence and status\n\n",
+        "\nAcceptee: {}.\n\nEvidence base, adopted component:\n{}\n\nEvidence base, owned records: {}, one per row of the local extension set.\nA row sourced `adopted` carries the adopted component's own source and\nlocator; a row sourced `owned` carries its record's. No status is\nstrengthened, so the status map is the edition's unchanged.\n\n## Evidence and status\n\n",
         a.kinds.acceptee,
         a.kinds.evidence.adopted,
         a.kinds.evidence.owned.len(),
@@ -615,12 +615,27 @@ fn attestation(a: &Adoption, k: &KindRegistry) -> Register {
         .rows()
         .enumerate()
         .map(|(at, (name, kind, status))| {
+            let (source, where_) = if k.is_local(name, kind) {
+                let record = a
+                    .kinds
+                    .evidence
+                    .owned
+                    .iter()
+                    .find(|record| &*record.name == name && &record.kind == kind);
+                let where_ = record.map_or_else(
+                    || String::from(&*a.kinds.evidence.recorded_in),
+                    |record| record.locator.to_string(),
+                );
+                (OWNED, where_)
+            } else {
+                (ADOPTED, locator.display().to_string())
+            };
             vec![
                 name.to_owned(),
                 format!("`{}`", kind.as_str()),
                 String::from(status.token()),
-                String::from(ADOPTED),
-                locator.display().to_string(),
+                String::from(source),
+                where_,
                 (at + 1).to_string(),
             ]
         })
@@ -668,6 +683,10 @@ fn attestation(a: &Adoption, k: &KindRegistry) -> Register {
 /// What a base row's source cell says: the adopted component of the evidence
 /// base, which the register's own preamble spells out in full.
 const ADOPTED: &str = "adopted";
+
+/// What an extension row's source cell says: the owned component, held
+/// first-hand by the acceptee (´[KND-sig:kinds:acceptee]´).
+const OWNED: &str = "owned";
 
 /// The headline counts of the registry document, as the region they occupy.
 ///
