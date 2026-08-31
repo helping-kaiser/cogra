@@ -115,6 +115,7 @@ generated_files = [
   # on 2026-08-31 by the pilot wave; see [claims] matrix. The list grows
   # by one file in the commit that closes each further owner's wave.
   "crates/cogra-linter/claim-matrix.md",
+  "crates/common/claim-matrix.md",
   "crates/l1-standin/claim-matrix.md",
   "crates/postgres-store/claim-matrix.md",
 ]
@@ -863,7 +864,12 @@ to rename around the collision.
 
   [claims.activation]
   scope  = "declared"
-  owners = ["pkg.cogra-linter", "pkg.l1-standin", "pkg.postgres-store"]
+  owners = [
+    "pkg.cogra-linter",
+    "pkg.common",
+    "pkg.l1-standin",
+    "pkg.postgres-store",
+  ]
   note = """
 PILOT WAVE, 2026-08-31: pkg.cogra-linter alone. Its tests are the
 discipline's own, which makes them the right corpus to learn the cost
@@ -876,10 +882,15 @@ THIRD WAVE, 2026-08-31: pkg.postgres-store, sixty-two covered tests over
 eight suites, and the first wave to need citation: four tests state
 nothing their sibling has not stated, and cite it rather than mint a
 second authority on one fact.
-The other three owners with covered assets — pkg.api,
-pkg.cogra-interchange, pkg.common — are outside the list and their
-covered tests are counted. Each joins by one edit to this array, in the
-commit that lands its wave.
+FOURTH WAVE, 2026-08-31: pkg.common, a hundred and eighteen covered
+tests over twelve areas, twenty-three of them citing. The specification
+vector suites are what the citation form is for — eleven tests pinning
+eleven byte strings evidence one statement, and eleven statements
+restating eleven test names would evidence nothing.
+The other two owners with covered assets — pkg.api and
+pkg.cogra-interchange — are outside the list and their covered tests are
+counted. Each joins by one edit to this array, in the commit that lands
+its wave.
 """
 
   [claims.matrix]
