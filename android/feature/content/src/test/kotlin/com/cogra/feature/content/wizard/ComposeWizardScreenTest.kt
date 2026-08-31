@@ -229,6 +229,12 @@ class ComposeWizardScreenTest {
         compose.onNodeWithTag("wizard_draft_discard").performClick()
         assertThat(draftContinues).isEqualTo(1)
         assertThat(draftDiscards).isEqualTo(1)
+
+        // The board re-words the stage behind the offer and drops the
+        // branch: the question on the table is the draft.
+        compose.onNodeWithText("Or start fresh — pick one picture, several, or one video.")
+            .assertExists()
+        compose.onNodeWithTag("wizard_switch_words").assertDoesNotExist()
     }
 
     // -- The crop stage --

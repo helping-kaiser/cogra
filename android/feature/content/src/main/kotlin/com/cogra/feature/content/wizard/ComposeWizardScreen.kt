@@ -260,7 +260,7 @@ internal fun ComposeWizardScreen(
                     onTogglePick = onTogglePick,
                 )
 
-                WizardStep.Crop -> WizardBody(scrollable = true) {
+                WizardStep.Crop -> WizardBody(scrollable = true, bottom = Space.x4) {
                     CropStepBody(
                         state = state,
                         onShapeChange = onShapeChange,
@@ -270,7 +270,7 @@ internal fun ComposeWizardScreen(
                     )
                 }
 
-                WizardStep.Details -> WizardBody {
+                WizardStep.Details -> WizardBody(top = Space.x3, bottom = Space.x4) {
                     DetailsStepBody(
                         state = state,
                         onTitleChange = onTitleChange,
@@ -391,8 +391,15 @@ private fun ColumnScope.BodyStage(
         }
         BodyMode.Media -> {
             WizardCaption(
-                text = "Pick one picture, several, or one video.",
-                actionText = "Write words instead",
+                // `ComposeDraft` re-words the caption behind its offer and
+                // drops the branch: with a draft on the table the question
+                // is that draft, and the grid below it is the alternative.
+                text = if (state.draftOffer != null) {
+                    "Or start fresh — pick one picture, several, or one video."
+                } else {
+                    "Pick one picture, several, or one video."
+                },
+                actionText = "Write words instead".takeIf { state.draftOffer == null },
                 onAction = { onModeChange(BodyMode.Words) },
                 actionTestTag = "wizard_switch_words",
             )
