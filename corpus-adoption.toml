@@ -114,6 +114,7 @@ generated_files = [
   # The per-owner claim matrices, one per ACTIVATED owner, materialized
   # on 2026-08-31 by the pilot wave; see [claims] matrix. The list grows
   # by one file in the commit that closes each further owner's wave.
+  "crates/api/claim-matrix.md",
   "crates/cogra-interchange/claim-matrix.md",
   "crates/cogra-linter/claim-matrix.md",
 ]
@@ -862,7 +863,11 @@ to rename around the collision.
 
   [claims.activation]
   scope  = "declared"
-  owners = ["pkg.cogra-interchange", "pkg.cogra-linter"]
+  owners = [
+    "pkg.api",                # joined 2026-08-31, the api wave
+    "pkg.cogra-interchange",  # joined 2026-08-31, the interchange wave
+    "pkg.cogra-linter",       # joined 2026-08-31, the pilot wave
+  ]
   note = """
 PILOT WAVE, 2026-08-31: pkg.cogra-linter alone. Its tests are the
 discipline's own, which makes them the right corpus to learn the cost
