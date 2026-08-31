@@ -204,6 +204,41 @@ moves off the profile in item 12, so settle the figure first.
 ### 12 · Wallet · *design*
 Balance, where CGT came from, active campaigns, `payoutAddress`.
 
+### 21 · The media slice · *design + system* · **built**
+Inserted 2026-08-31 (jakob), ahead of item 12: the product's media
+rebuild needed the five designs its lanes had been inventing, plus
+comment media and comment editing. Rulings in readme §13 *The media
+slice* and on the canvas's `sec-media` note. Built: `MediaGallery`
+became the PAGER (one frame at the post's one crop shape, dots only,
+no count pill; ratio vocabulary now `tall`/`square`/`wide`),
+`CommentCard` grew `media` (inset, comment-scale cap, never cropped,
+max four); boards *Feed · the gallery pager*, *Comments · pictures &
+own comment* (Edit + Edited on an own comment), *Pick · show all*
+(the per-picture manager: reorder/cover/remove/describe), *Describe
+a picture* (+ "?"), *Details · uploading, one failed* (rings, Retry ·
+Remove), *Seal · waiting on uploads* (signing gated), *Reply ·
+pictures attached*, *Edit comment* (one batch, license locked),
+*Profile picture · crop* and *· what you sign* (avatar change is a
+signed act; NO profile cover — the ProfileHeader ruling stands).
+Upload starts after the crop: only the cropped export ever leaves
+the device. Caps: 10 pictures or 1 video per post, 4 per comment.
+Round 2 (same day): the details row's Crop/Edit shortcut links are
+GONE ("none") — the row opens the Show all sheet, crop is one Back
+away — and the slice is fully componentized: `components/compose/`
+(`MediaThumb`, `PickedRow`+`DescribeCounter`, `PickedSheet`,
+`DescribeSheet`, `UploadStatusLine`+`UploadErrorLine`, `ActsCard`),
+all ten boards rendered from the pipeline. Round 3 (implementation
+findings, same day): *Pick · the web variant* (no device-gallery API
+in browsers — file picker + drop target replace the grid); the
+all-or-nothing subline healed into `ActsCard.note` (every multi-act
+seal; single-act seals omit it); off-role type values conformed to
+the pinned M3 roles (M3 stays the default, no sub-roles). Round 4
+(same day, both open threads closed): the em-dash rule STANDS
+(copy-voice unchanged), and the wizard's ways out are fixed — arrow
+= one stage back, the new X = leave from any stage with the draft
+kept, no confirmation; `WizardHeader` is the master and every
+composer-flow board (JSX and hand-authored alike) wears the X.
+
 ### 13 · Post Score drill-down · *design*
 Four screens — FeedEntry → RankPath → RankHop → raw records — each
 carrying a small cover of the post it came from. The register is graph,
