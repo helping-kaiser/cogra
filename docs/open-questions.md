@@ -25,7 +25,7 @@ within a phase, order is flexible.
 |:---:|:---:|:---:|---|
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
 | 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
-| 1a. Media follow-ups (with the next media bite) | 4 | **Q47, Q48, Q49, Q50** | The sensitive self-mark's missing contract field (a ruled product behaviour nothing can reach), the profile envelope keys' ratification (built and encoded against by both clients), the query-budget re-derivation (the heaviest read clears the stated headroom by 224), and where a landed compose returns the author. All four are cheap to answer and all four block or shape the follow-up slice. |
+| 1a. Media follow-ups (with the next media bite) | 4 | **Q47, Q48, Q49, Q50** | Whether a reader is told which kind of sensitive mark they are looking at, the new envelope keys' ratification (built and encoded against by both clients), the query-budget re-derivation (the heaviest read clears the stated headroom by 224), and where a landed compose returns the author. All four are cheap to answer and all four block or shape the follow-up slice. |
 | 2a. Stance control (slice 2.2, both clients) | 1 | **Q42** | The resting face an unauthored stance target wears. Cheap to answer and worth answering soon: the two clients are shipping the control now, and a face is a shared contract exactly as §8.4's anchor table is. |
 | 2b. Profile surface (with slice 2.2) | 3 | **Q35, Q36, Q41** | The profile header's connection count (which fold counts as a connection — answerable now that every passive class rides one stance control), the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without all three. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
@@ -167,48 +167,42 @@ the wait proves painful before the substrate swap.
 
 ---
 
-## Q47 — The sensitive self-mark has no contract field
+## Q47 — Whose sensitive mark is a reader looking at?
 
 **Where it shows up:**
-[api-spec.md "Content authoring"](implementation/api-spec.md)
-(the prepare inputs),
-[moderation.md §1](instances/moderation.md) (read-side flags)
-**Status:** open; both clients shipped the compose wizard without
-the sheet
+[api-spec.md "Per-field moderation"](implementation/api-spec.md),
+[moderation.md §1](instances/moderation.md)
+**Status:** open; the contract carries both marks and tells them
+apart, no design says whether the veil should
 
 ### Context
 
-Q45(4) rules that authors can self-mark content sensitive with an
-optional public reason, and that the mark veils body and
-description while the title stays readable. The veil itself is
-built — a sensitive post blurs as one region — but nothing an
-author sends can *set* it: `PreparePostInput` carries no
-sensitivity field and no reason, so the only route to the state
-is a moderation verdict.
-
-The wizard shipped without the sheet on both platforms rather
-than shipping a control that writes nowhere. That is the honest
-interim, and it leaves a ruled product behaviour unreachable.
+An author self-marks with `sensitive` plus an optional public
+`sensitiveReason` on the content inputs, and the mark reads back
+as `SENSITIVE` on exactly the fields a moderator's verdict would
+reach. That sameness is deliberate — it is what lets the veil both
+clients already draw fire unchanged — and it means the status
+alone never says which kind of mark it is. Only the presence of
+`sensitiveReason` does, and only when the author gave one.
 
 ### The question
 
-What shape does the self-mark take on the write surface — a
-boolean plus an optional reason string on the content inputs, or
-a small input object — and does an author's own mark read back
-differently from a moderator's, given that
-`FieldModerationStatus` carries one `SENSITIVE` for both? The
-second half is the real question: the reader-facing difference
-between "the author warned you" and "the platform did" is a
-product decision, not a schema one.
+Should the veil tell a reader that the *author* warned them rather
+than the platform, and if so on what — the reason's presence is a
+weak signal, since an author may mark without giving one. The
+reader-facing difference between "the author warned you" and "the
+platform did" is a product decision, not a schema one; the
+contract can express either.
 
 ---
 
-## Q48 — The profile's envelope keys await ratification
+## Q48 — The new envelope keys await ratification
 
 **Where it shows up:**
 [data-model.md "The payload envelope"](implementation/data-model.md#the-payload-envelope)
-(guild keys 11 and 12)
-**Status:** built and in use; the allocation itself is unratified
+(guild keys 11–14)
+**Status:** built and in use; the allocations themselves are
+unratified
 
 ### Context
 
@@ -220,19 +214,26 @@ An avatar is a picture a reader is shown, so witnessing it like
 any other picture follows from the manifest's own rule, and alt
 text rides with it.
 
-The shape is built, tested, and documented as the current state.
-What has not happened is the ruling: the key allocation was made
-by the build lane inside the profile family's reserved range, not
-decided in a design session the way keys 2–10 were.
+Keys 13 and 14 arrived the same way: the author's own sensitive
+mark and its optional reason, allocated by the build lane so the
+mark would be witnessed with the body it describes rather than
+kept as a server-side note — which is also what lets a rebuilt
+mirror restore it.
+
+The shapes are built, tested, and documented as the current state.
+What has not happened is the ruling: the allocations were made by
+build lanes, not decided in a design session the way keys 2–10
+were.
 
 ### The question
 
-Are 11 and 12 the right allocation, and is the one-asset slot the
-right shape for a profile picture — or should a profile image
-carry more than a gallery entry does? The keyspace is CoGra's own
-and additive, so a different answer is a schema-version bump
-rather than a rewrite; the cost of deciding late is that both
-clients already encode against it.
+Are 11–14 the right allocations; is the one-asset slot the right
+shape for a profile picture — or should a profile image carry more
+than a gallery entry does; and is a self-mark witnessed payload at
+all, rather than L2 display state? The keyspace is CoGra's own and
+additive, so a different answer is a schema-version bump rather
+than a rewrite; the cost of deciding late is that both clients
+already encode against it.
 
 ---
 

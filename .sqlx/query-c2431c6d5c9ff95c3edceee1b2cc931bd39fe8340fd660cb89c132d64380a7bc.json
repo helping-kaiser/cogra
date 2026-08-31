@@ -1,0 +1,121 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM (\n               SELECT p.id, p.author_id, p.l1_node_id, p.license,\n                      p.landed_epoch, p.act_time, p.position, p.created_at,\n                      v.title, v.description,\n                      v.content AS \"content!\", v.redaction_reason,\n                      v.sensitive AS \"sensitive!\", v.sensitive_reason,\n                      v.pending AS \"version_pending!\",\n                      v.created_at AS \"version_created_at!\",\n                      v.version_id AS \"version_id!\"\n               FROM posts p\n               JOIN LATERAL (\n                   SELECT title, description, content, redaction_reason,\n                          sensitive, sensitive_reason,\n                          pending, created_at, version_id\n                   FROM post_versions WHERE post_id = p.id\n                   ORDER BY pending DESC,\n                            landed_epoch DESC NULLS LAST,\n                            act_time DESC NULLS LAST,\n                            position DESC NULLS LAST,\n                            created_at DESC, version_id DESC\n                   LIMIT 1\n               ) v ON TRUE\n               WHERE p.landed_epoch IS NULL\n                 AND ($1::timestamptz IS NULL\n                      OR ($3 AND (($2::uuid IS NULL AND p.created_at > $1)\n                                  OR ($2 IS NOT NULL\n                                      AND (p.created_at, p.id) > ($1, $2))))\n                      OR (NOT $3 AND (($2::uuid IS NULL AND p.created_at < $1)\n                                      OR ($2 IS NOT NULL\n                                          AND (p.created_at, p.id) < ($1, $2)))))\n               ORDER BY\n                   CASE WHEN $3 THEN p.created_at END ASC,\n                   CASE WHEN $3 THEN p.id END ASC,\n                   p.created_at DESC, p.id DESC\n               LIMIT $4\n           ) page\n           ORDER BY created_at DESC, id DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "author_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "l1_node_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "license",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "landed_epoch",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "act_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "position",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "content!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "redaction_reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "sensitive!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 13,
+        "name": "sensitive_reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "version_pending!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 15,
+        "name": "version_created_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 16,
+        "name": "version_id!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Uuid",
+        "Bool",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      false,
+      true,
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "c2431c6d5c9ff95c3edceee1b2cc931bd39fe8340fd660cb89c132d64380a7bc"
+}
