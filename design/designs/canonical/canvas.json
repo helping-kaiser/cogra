@@ -6,7 +6,8 @@
       "x": 0,
       "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "entry"
     },
     {
       "file": "FeedBare.dc.html",
@@ -14,7 +15,8 @@
       "x": 480,
       "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "entry"
     },
     {
       "file": "InviteEntry.dc.html",
@@ -22,16 +24,18 @@
       "x": 960,
       "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "entry"
     },
     {
       "file": "Theme.dc.html",
       "title": "Canvas theme",
-      "x": 1440,
-      "y": 0,
+      "x": -340,
+      "y": 560,
       "w": 300,
       "h": 180,
-      "is_interactive": true
+      "is_interactive": true,
+      "page": "overview"
     },
     {
       "file": "Join.dc.html",
@@ -39,7 +43,8 @@
       "x": 0,
       "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "entry"
     },
     {
       "file": "JoinInvalid.dc.html",
@@ -47,7 +52,8 @@
       "x": 480,
       "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "entry"
     },
     {
       "file": "Verified.dc.html",
@@ -55,7 +61,8 @@
       "x": 960,
       "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "entry"
     },
     {
       "file": "KeyCeremony.dc.html",
@@ -63,7 +70,8 @@
       "x": 0,
       "y": 2120,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "entry"
     },
     {
       "file": "KeyConfirm.dc.html",
@@ -71,7 +79,8 @@
       "x": 480,
       "y": 2120,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "entry"
     },
     {
       "file": "RecoveryCode.dc.html",
@@ -79,7 +88,8 @@
       "x": 960,
       "y": 2120,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "entry"
     },
     {
       "file": "KeyDecline.dc.html",
@@ -87,7 +97,8 @@
       "x": 1440,
       "y": 2120,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "entry"
     },
     {
       "file": "ApplicantFeed.dc.html",
@@ -95,7 +106,8 @@
       "x": 0,
       "y": 3180,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "entry"
     },
     {
       "file": "ApplicantWaiting.dc.html",
@@ -103,7 +115,8 @@
       "x": 480,
       "y": 3180,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "entry"
     },
     {
       "file": "VouchBack.dc.html",
@@ -111,7 +124,8 @@
       "x": 960,
       "y": 3180,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "entry"
     },
     {
       "file": "VouchBackPad.dc.html",
@@ -119,7 +133,8 @@
       "x": 1440,
       "y": 3180,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "entry"
     },
     {
       "file": "SignIn.dc.html",
@@ -127,7 +142,8 @@
       "x": 0,
       "y": 4240,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "entry"
     },
     {
       "file": "Reset.dc.html",
@@ -135,7 +151,8 @@
       "x": 480,
       "y": 4240,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "entry"
     },
     {
       "file": "Restore.dc.html",
@@ -143,7 +160,8 @@
       "x": 960,
       "y": 4240,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "entry"
     },
     {
       "file": "KeyElsewhere.dc.html",
@@ -151,648 +169,838 @@
       "x": 1440,
       "y": 4240,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "entry"
     },
     {
       "file": "ComposePick.dc.html",
       "title": "Compose · pick the body",
       "x": 0,
-      "y": 5560,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "ComposeCrop.dc.html",
       "title": "Compose · the crop",
       "x": 480,
-      "y": 5560,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "ComposeCover.dc.html",
       "title": "Compose · the video's face",
       "x": 960,
-      "y": 5560,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "ComposeDetails.dc.html",
       "title": "Compose · details",
       "x": 1440,
-      "y": 5560,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "ComposeSeal.dc.html",
       "title": "Compose · what you sign",
       "x": 1920,
-      "y": 5560,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "ReferencePicker.dc.html",
       "title": "Cite something",
       "x": 2400,
-      "y": 5560,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "ComposeLicense.dc.html",
       "title": "Seal · license sheet",
       "x": 0,
-      "y": 6620,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "ComposePad.dc.html",
       "title": "Seal · your stance on it",
       "x": 480,
-      "y": 6620,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "ComposeSensitive.dc.html",
       "title": "Seal · sensitive sheet",
       "x": 960,
-      "y": 6620,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "ComposeKeyAbsent.dc.html",
       "title": "Seal · key absent",
       "x": 1440,
-      "y": 6620,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "HelpDialog.dc.html",
       "title": "The ? dialog",
-      "x": 2400,
-      "y": 6620,
+      "x": 0,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "patterns"
     },
     {
       "file": "ComposeWords.dc.html",
       "title": "Compose · words body",
       "x": 0,
-      "y": 7680,
+      "y": 2120,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "ComposeDraft.dc.html",
       "title": "Compose · draft kept",
       "x": 480,
-      "y": 7680,
+      "y": 2120,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "ComposeLanded.dc.html",
       "title": "Signed · still settling",
       "x": 960,
-      "y": 7680,
+      "y": 2120,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "ComposeExpired.dc.html",
       "title": "Didn't land · the notice",
       "x": 1440,
-      "y": 7680,
+      "y": 2120,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "ReplyEntry.dc.html",
       "title": "Comments · the thread",
       "x": 0,
-      "y": 8740,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "comments"
     },
     {
       "file": "ReplyMedia.dc.html",
       "title": "Comments · pictures & own comment",
       "x": 480,
-      "y": 8740,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "comments"
     },
     {
       "file": "CommentEdit.dc.html",
       "title": "Edit comment",
       "x": 960,
-      "y": 8740,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "comments"
     },
     {
       "file": "CommentEditActs.dc.html",
       "title": "Edit comment · the acts",
       "x": 1440,
-      "y": 8740,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "comments"
     },
     {
       "file": "ReplyCompose.dc.html",
       "title": "Reply · write",
       "x": 0,
-      "y": 9800,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "comments"
     },
     {
       "file": "ReplyPictures.dc.html",
       "title": "Reply · pictures attached",
       "x": 480,
-      "y": 9800,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "comments"
     },
     {
       "file": "ReplyPicturesWeb.dc.html",
       "title": "Reply · pictures on the web",
       "x": 960,
-      "y": 9800,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "comments"
     },
     {
       "file": "ReplyPad.dc.html",
       "title": "Reply · the pad",
       "x": 1440,
-      "y": 9800,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "comments"
     },
     {
       "file": "ReplySeal.dc.html",
       "title": "Reply · what you sign",
       "x": 1920,
-      "y": 9800,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "comments"
     },
     {
       "file": "EditCompose.dc.html",
       "title": "Edit post",
       "x": 0,
-      "y": 10860,
+      "y": 3180,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "RemoveMenu.dc.html",
       "title": "Own post · menu",
       "x": 480,
-      "y": 10860,
+      "y": 3180,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "RemoveConfirm.dc.html",
       "title": "Remove · think twice",
       "x": 960,
-      "y": 10860,
+      "y": 3180,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "Removed.dc.html",
       "title": "Removed by its author",
       "x": 1440,
-      "y": 10860,
+      "y": 3180,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "EditActs.dc.html",
       "title": "Edit · the actions",
       "x": 1920,
-      "y": 10860,
+      "y": 3180,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "LadderSmall.dc.html",
       "title": "Post ladder · small forms",
       "x": 0,
-      "y": 11920,
+      "y": 4240,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "LadderMax.dc.html",
       "title": "Post ladder · the cap",
       "x": 480,
-      "y": 11920,
+      "y": 4240,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "LadderStates.dc.html",
       "title": "Post ladder · veiled & removed",
       "x": 960,
-      "y": 11920,
+      "y": 4240,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "LadderTopics.dc.html",
       "title": "Post ladder · many topics",
       "x": 1440,
-      "y": 11920,
+      "y": 4240,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "RefsSheet.dc.html",
       "title": "Topics & references · the sheet",
       "x": 1920,
-      "y": 11920,
+      "y": 4240,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "compose"
     },
     {
       "file": "Explore.dc.html",
       "title": "Explore · at rest",
       "x": 0,
-      "y": 12980,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "feed"
     },
     {
       "file": "ExploreSearch.dc.html",
       "title": "Explore · searching",
       "x": 480,
-      "y": 12980,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "feed"
     },
     {
       "file": "ExploreFilter.dc.html",
       "title": "Explore · the filter sheet",
       "x": 960,
-      "y": 12980,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "feed"
     },
     {
       "file": "ExploreNone.dc.html",
       "title": "Explore · nothing found",
       "x": 1440,
-      "y": 12980,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "feed"
     },
     {
       "file": "Feed.dc.html",
       "title": "Feed · signed in",
       "x": 0,
-      "y": 14040,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "feed"
     },
     {
       "file": "FeedSheet.dc.html",
       "title": "Feed · the filter sheet",
       "x": 480,
-      "y": 14040,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "feed"
     },
     {
       "file": "FeedNarrowed.dc.html",
       "title": "Feed · narrowed",
       "x": 960,
-      "y": 14040,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "feed"
     },
     {
       "file": "FeedNothing.dc.html",
       "title": "Feed · everything off",
       "x": 1440,
-      "y": 14040,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "feed"
     },
     {
       "file": "FeedFar.dc.html",
       "title": "Feed · far from default",
       "x": 1920,
-      "y": 14040,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "feed"
     },
     {
       "file": "Money.dc.html",
       "title": "Money · the CGT figure",
       "x": 0,
-      "y": 15100,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "money"
     },
     {
       "file": "FeedGallery.dc.html",
       "title": "Feed · the gallery pager",
       "x": 0,
-      "y": 16160,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "media"
     },
     {
       "file": "ComposePicked.dc.html",
       "title": "Pick · show all",
       "x": 480,
-      "y": 16160,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "media"
     },
     {
       "file": "ComposeDescribe.dc.html",
       "title": "Describe a picture",
       "x": 960,
-      "y": 16160,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "media"
     },
     {
       "file": "ComposeUploading.dc.html",
       "title": "Details · uploading, one failed",
       "x": 1440,
-      "y": 16160,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "media"
     },
     {
       "file": "ComposeSealUploading.dc.html",
       "title": "Seal · waiting on uploads",
       "x": 1920,
-      "y": 16160,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "media"
     },
     {
       "file": "ComposePickWeb.dc.html",
       "title": "Pick · the web variant",
       "x": 2400,
-      "y": 16160,
+      "y": 0,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "media"
     },
     {
       "file": "AvatarCrop.dc.html",
       "title": "Profile picture · crop",
       "x": 0,
-      "y": 17220,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "media"
     },
     {
       "file": "AvatarSeal.dc.html",
       "title": "Profile picture · what you sign",
       "x": 480,
-      "y": 17220,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "media"
     },
     {
       "file": "Wallet.dc.html",
       "title": "Wallet · at rest",
       "x": 0,
-      "y": 18280,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "money"
     },
     {
       "file": "WalletEmpty.dc.html",
       "title": "Wallet · a new member's zero",
       "x": 480,
-      "y": 18280,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "money"
     },
     {
       "file": "WalletSetup.dc.html",
       "title": "Wallet · first open",
       "x": 960,
-      "y": 18280,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "money"
     },
     {
       "file": "WalletAddressSeal.dc.html",
       "title": "Wallet · publish the address",
       "x": 1440,
-      "y": 18280,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "money"
     },
     {
       "file": "WalletChange.dc.html",
       "title": "Wallet · change the address",
       "x": 1920,
-      "y": 18280,
+      "y": 1060,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "money"
     },
     {
       "file": "WalletKeyAbsent.dc.html",
       "title": "Wallet · key elsewhere",
       "x": 0,
-      "y": 19340,
+      "y": 2120,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "money"
     },
     {
       "file": "WalletGuest.dc.html",
       "title": "Wallet · as a guest",
       "x": 480,
-      "y": 19340,
+      "y": 2120,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "money"
     },
     {
       "file": "WalletApplicant.dc.html",
       "title": "Wallet · as an applicant",
       "x": 960,
-      "y": 19340,
+      "y": 2120,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "money"
     },
     {
       "file": "WalletCampaign.dc.html",
       "title": "Wallet · your campaign",
       "x": 1440,
-      "y": 19340,
+      "y": 2120,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "money"
     },
     {
       "file": "WalletCampaigns.dc.html",
       "title": "Wallet · campaigns",
       "x": 1920,
-      "y": 19340,
+      "y": 2120,
       "w": 390,
-      "h": 844
+      "h": 844,
+      "page": "money"
+    },
+    {
+      "file": "MapOverview.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1320,
+      "h": 520,
+      "page": "overview",
+      "title": "CoGra · flow overview"
+    },
+    {
+      "file": "MapEntry.dc.html",
+      "x": -1580,
+      "y": 0,
+      "w": 1160,
+      "h": 2542,
+      "page": "entry",
+      "title": "Entry · flow map"
+    },
+    {
+      "file": "MapCompose.dc.html",
+      "x": -2160,
+      "y": 0,
+      "w": 1740,
+      "h": 752,
+      "page": "compose",
+      "title": "Compose · flow map"
+    },
+    {
+      "file": "MapComments.dc.html",
+      "x": -1870,
+      "y": 0,
+      "w": 1450,
+      "h": 388,
+      "page": "comments",
+      "title": "Comments · flow map"
+    },
+    {
+      "file": "MapFeed.dc.html",
+      "x": -1870,
+      "y": 0,
+      "w": 1450,
+      "h": 388,
+      "page": "feed",
+      "title": "Feed & Search · flow map"
+    },
+    {
+      "file": "MapMoney.dc.html",
+      "x": -1870,
+      "y": 0,
+      "w": 1450,
+      "h": 524,
+      "page": "money",
+      "title": "Money & Wallet · flow map"
+    },
+    {
+      "file": "MapMedia.dc.html",
+      "x": -2160,
+      "y": 0,
+      "w": 1740,
+      "h": 388,
+      "page": "media",
+      "title": "Media · flow map"
+    },
+    {
+      "file": "MapPatterns.dc.html",
+      "x": -980,
+      "y": 0,
+      "w": 560,
+      "h": 274,
+      "page": "patterns",
+      "title": "Patterns & reference · flow map"
     }
   ],
   "annotations": [
     {
       "id": "canonical",
-      "x": 0,
-      "y": -240,
+      "x": -340,
+      "y": 0,
       "w": 560,
-      "text": "CANONICAL — the decided CoGra app. Each row is a section; this canvas grows as sections are decided. Options and ideation live on standalone canvases ('CoGra entry' holds the entry section's three directions; 'CoGra compose' holds the compose rounds).\n\nSection ENTRY, decided 2026-08-27: the landing is the live public feed (Open door) with a borrowed-view band; every ceremonial step is a full-focus screen. People and photos are mock; @mira is the inviter, @noa stands in for the genesis moderator.\n\nSection COMPOSE, decided 2026-08-27 (rows below Entry): the body-first wizard — pick the body, cover for video, one details screen, then the seal. @sol is the member writing.\n\nTheme: use the 'Canvas theme' board to the right — one tap themes every screen. A screen's own chip can pin light or dark; 'auto' follows your system."
+      "text": "CANONICAL — the decided CoGra app, split into pages (the page bar above). Every page opens with a generated flow map; boards carry small orange flow numbers, and flows.json in the repo binds each number to its outcomes — screens, terminals, or explicit gaps (designs still owed). The Entry page is fully wired; the others follow page by page. Maps and numbers are generated by the build (design/_build) — never edit them by hand. Ideation stays on its own canvases; this canvas only grows as sections are decided.",
+      "page": "overview"
     },
     {
       "id": "sec-arrive",
       "x": -340,
       "y": 0,
       "w": 290,
-      "text": "ENTRY · Arrive & browse\n\nA guest feed is ranked from a borrowed vantage point: an invite link carries its inviter's view, a bare arrival borrows the genesis moderator's. The band names the borrowed view and carries the one join entry. The APK line rides the collapsing top (dev phase; a store link later)."
+      "text": "ENTRY · Arrive & browse\n\nA guest feed is ranked from a borrowed vantage point: an invite link carries its inviter's view, a bare arrival borrows the genesis moderator's. The band names the borrowed view and carries the one join entry. The APK line rides the collapsing top (dev phase; a store link later).",
+      "page": "entry"
     },
     {
       "id": "sec-join",
       "x": -340,
       "y": 1060,
       "w": 290,
-      "text": "ENTRY · Join\n\nInvite entry, the vouch screen (the inviter's face leads), the unusable-link state, and the landing page of the verification mail. Handle 3–30 chars a–z 0–9 _, password 12+, both checked at the form."
+      "text": "ENTRY · Join\n\nInvite entry, the vouch screen (the inviter's face leads), the unusable-link state, and the landing page of the verification mail. Handle 3–30 chars a–z 0–9 _, password 12+, both checked at the form.",
+      "page": "entry"
     },
     {
       "id": "sec-key",
       "x": -340,
       "y": 2120,
       "w": 290,
-      "text": "ENTRY · Your key\n\nCreated on this device, never held by CoGra. 'Create my recovery code' first opens the think-twice dialog — Cancel falls back to Your key, 'Show my code' commits. The code screen is a TRAP: no back arrow, the only way out is the code typed or pasted back ('I've written it down'). Copy stays — pasting into a password manager is a legitimate keeping. Declining backup is a destructive dialog whose SAFE action is filled."
+      "text": "ENTRY · Your key\n\nCreated on this device, never held by CoGra. 'Create my recovery code' first opens the think-twice dialog — Cancel falls back to Your key, 'Show my code' commits. The code screen is a TRAP: no back arrow, the only way out is the code typed or pasted back ('I've written it down'). Copy stays — pasting into a password manager is a legitimate keeping. Declining backup is a destructive dialog whose SAFE action is filled.",
+      "page": "entry"
     },
     {
       "id": "sec-applicant",
       "x": -340,
       "y": 3180,
       "w": 290,
-      "text": "ENTRY · Applicant days\n\nSame shell as a member, application riding as cards: verify + key first, then waiting on the inviter, then the landing moment. The first vouch opens the STANCE PAD (not sliders), preloaded at +0.10 / +0.10, resting 16px above the bottom bar. Onboarding is per-control and the pad is the ONLY control on these screens that gets first-time explainers: what it is for, how it opens (hold a face; a plain tap signs +0.10 / +0.10), that nothing signs until Set, and that the input can be swapped in settings. Acting is gated but visible (compose at 38%). The borrowed view persists until this first stance."
+      "text": "ENTRY · Applicant days\n\nSame shell as a member, application riding as cards: verify + key first, then waiting on the inviter, then the landing moment. The first vouch opens the STANCE PAD (not sliders), preloaded at +0.10 / +0.10, resting 16px above the bottom bar. Onboarding is per-control and the pad is the ONLY control on these screens that gets first-time explainers: what it is for, how it opens (hold a face; a plain tap signs +0.10 / +0.10), that nothing signs until Set, and that the input can be swapped in settings. Acting is gated but visible (compose at 38%). The borrowed view persists until this first stance.",
+      "page": "entry"
     },
     {
       "id": "sec-signin",
       "x": -340,
       "y": 4240,
       "w": 290,
-      "text": "ENTRY · Sign in & restore\n\nSign in (with the APK line), password reset (no account enumeration; reset revokes every session), restoring the key, and the key-elsewhere banner. 'Restore your key' and 'Key elsewhere' carry a wording tweak: browser ('on this browser') vs app ('in this app') — the Android app says app, the web says browser. Login restores the service session; only the recovery code restores the key."
+      "text": "ENTRY · Sign in & restore\n\nSign in (with the APK line), password reset (no account enumeration; reset revokes every session), restoring the key, and the key-elsewhere banner. 'Restore your key' and 'Key elsewhere' carry a wording tweak: browser ('on this browser') vs app ('in this app') — the Android app says app, the web says browser. Login restores the service session; only the recovery code restores the key.",
+      "page": "entry"
     },
     {
       "id": "sec-compose-wizard",
       "x": -340,
-      "y": 5560,
+      "y": 0,
       "w": 290,
-      "text": "COMPOSE · The wizard\n\nBody first (the Instagram/YouTube spine): pick the body → crop → (cover, video only) → details → the seal; 'Write words instead' is the text path and skips crop and cover. The body is words OR what you show, never both. The pick screen: a PICKED TRAY on top (one line, 'Show all' on overflow) over the newest-first grid; the grid's first tile opens the device's own photos app, and picks made there land in the tray. THE CROP (Instagram's model): one shape for the whole post — Tall 4:5, Square 1:1, or Wide 1.91:1 — with drag-to-move and pinch-to-zoom per picture; 4:5 as the tallest shape is what guarantees the post ladder's height cap. Screens carry no step numbers (paths differ in length; the title names the stage, only the seal says 'Last step'). COPY RULE (2026-08-27): captions are one short line; the full explanation lives behind a small ? that opens a plain dialog — AT MOST ONE ? PER SCREEN, top-right of the header (or of the sheet/card it explains: the pads carry their own). It covers every compose explainer: cost and the community pool, the all-or-nothing batch, license terms and immutability, the stance side effects, the pending lifecycle, edit history. BUTTONS: filled and outlined pills carry 24px side padding and a 64px minimum width, so short labels (Next, Set, Done) keep their weight. The example everywhere: 1 post + 2 topics + 1 reference = 4 signed actions."
+      "text": "COMPOSE · The wizard\n\nBody first (the Instagram/YouTube spine): pick the body → crop → (cover, video only) → details → the seal; 'Write words instead' is the text path and skips crop and cover. The body is words OR what you show, never both. The pick screen: a PICKED TRAY on top (one line, 'Show all' on overflow) over the newest-first grid; the grid's first tile opens the device's own photos app, and picks made there land in the tray. THE CROP (Instagram's model): one shape for the whole post — Tall 4:5, Square 1:1, or Wide 1.91:1 — with drag-to-move and pinch-to-zoom per picture; 4:5 as the tallest shape is what guarantees the post ladder's height cap. Screens carry no step numbers (paths differ in length; the title names the stage, only the seal says 'Last step'). COPY RULE (2026-08-27): captions are one short line; the full explanation lives behind a small ? that opens a plain dialog — AT MOST ONE ? PER SCREEN, top-right of the header (or of the sheet/card it explains: the pads carry their own). It covers every compose explainer: cost and the community pool, the all-or-nothing batch, license terms and immutability, the stance side effects, the pending lifecycle, edit history. BUTTONS: filled and outlined pills carry 24px side padding and a 64px minimum width, so short labels (Next, Set, Done) keep their weight. The example everywhere: 1 post + 2 topics + 1 reference = 4 signed actions.",
+      "page": "compose"
     },
     {
       "id": "sec-compose-seal",
       "x": -340,
-      "y": 6620,
+      "y": 1060,
       "w": 290,
-      "text": "COMPOSE · The seal\n\n'What you sign' is a place, not a popup — no 'don't ask again'. The manifest lists every act with its cost; the batch lands whole or not at all (resolves Q43). The three row-openers present ONE way (decided 2026-08-27): license and sensitive rise as BOTTOM SHEETS; the stance keeps the pad's own floating card, which is deliberately the same pad as everywhere else. License reads your default (a settings entry — new ruling), immutable after signing. Every stance the write signs is shown and adjustable: the post's own attachment is a ONE-AXIS pad (For/Against only — your own post always reaches you fully). Sensitive is one switch with a fixed per-field policy: it veils the BODY and the DESCRIPTION; the title and topics stay readable so choosing to look is informed. Optional reason, shown on the veil (new product decision — API field to add). Key absent = restore first: nothing staged, the draft stays on device, tertiary colouring — a waiting state, never error."
+      "text": "COMPOSE · The seal\n\n'What you sign' is a place, not a popup — no 'don't ask again'. The manifest lists every act with its cost; the batch lands whole or not at all (resolves Q43). The three row-openers present ONE way (decided 2026-08-27): license and sensitive rise as BOTTOM SHEETS; the stance keeps the pad's own floating card, which is deliberately the same pad as everywhere else. License reads your default (a settings entry — new ruling), immutable after signing. Every stance the write signs is shown and adjustable: the post's own attachment is a ONE-AXIS pad (For/Against only — your own post always reaches you fully). Sensitive is one switch with a fixed per-field policy: it veils the BODY and the DESCRIPTION; the title and topics stay readable so choosing to look is informed. Optional reason, shown on the veil (new product decision — API field to add). Key absent = restore first: nothing staged, the draft stays on device, tertiary colouring — a waiting state, never error.",
+      "page": "compose"
     },
     {
       "id": "sec-compose-after",
       "x": -340,
-      "y": 7680,
+      "y": 2120,
       "w": 290,
-      "text": "COMPOSE · Words, drafts, and after\n\nThe words body is the same wizard minus the cover step. Leaving mid-write keeps ONE local draft per target, on this device only — no discard confirm, the draft IS the safety. Signing exits to the post's own detail view: the post at top wearing 'Still settling' (its place in the feed comes as it settles), snackbar 'Signed — it's in the thread now, still settling.' If the act expires unlanded (Q38): a calm notice card in the shell — content left every reader's view, nothing was spent, the draft is saved. Never error colouring."
+      "text": "COMPOSE · Words, drafts, and after\n\nThe words body is the same wizard minus the cover step. Leaving mid-write keeps ONE local draft per target, on this device only — no discard confirm, the draft IS the safety. Signing exits to the post's own detail view: the post at top wearing 'Still settling' (its place in the feed comes as it settles), snackbar 'Signed — it's in the thread now, still settling.' If the act expires unlanded (Q38): a calm notice card in the shell — content left every reader's view, nothing was spent, the draft is saved. Never error colouring.",
+      "page": "compose"
     },
     {
       "id": "sec-compose-reply",
       "x": -340,
-      "y": 8740,
+      "y": 0,
       "w": 290,
-      "text": "COMMENTS · The thread\n\nThe thread lives in a BOTTOM SHEET over the post (ruled 2026-08-28), near full height with a sliver of the post above; replies collapse behind counts, deeper answers flatten to @handles at one indent, the entry row is pinned at the sheet's foot. Comment media is words-first (media slice, 2026-08-31): pictures sit below the words, inset at the card's medium rung, never cropped — a single picture at its own ratio, multiples in the pager on a fixed square frame, four max. The viewer's OWN comment wears Edit and — once edited — the same Edited marker posts wear. EDITING A COMMENT is the post's one-screen-one-batch at comment scale (words, pictures + the describe counter, topics, citations; license locked); its acts footer ('This creates n signed actions') opens the ACTS SHEET — the EditActs pattern rendered with ActsCard: the sheet title carries the count, the card the rows and the all-or-nothing note. Boards: the thread · pictures & own comment · Edit comment · Edit comment's acts."
+      "text": "COMMENTS · The thread\n\nThe thread lives in a BOTTOM SHEET over the post (ruled 2026-08-28), near full height with a sliver of the post above; replies collapse behind counts, deeper answers flatten to @handles at one indent, the entry row is pinned at the sheet's foot. Comment media is words-first (media slice, 2026-08-31): pictures sit below the words, inset at the card's medium rung, never cropped — a single picture at its own ratio, multiples in the pager on a fixed square frame, four max. The viewer's OWN comment wears Edit and — once edited — the same Edited marker posts wear. EDITING A COMMENT is the post's one-screen-one-batch at comment scale (words, pictures + the describe counter, topics, citations; license locked); its acts footer ('This creates n signed actions') opens the ACTS SHEET — the EditActs pattern rendered with ActsCard: the sheet title carries the count, the card the rows and the all-or-nothing note. Boards: the thread · pictures & own comment · Edit comment · Edit comment's acts.",
+      "page": "comments"
     },
     {
       "id": "sec-compose-edit",
       "x": -340,
-      "y": 10860,
+      "y": 3180,
       "w": 290,
-      "text": "COMPOSE · Edit & remove the post\n\nAn edit is one screen and one batch (ruled 2026-08-27): the content edit PLUS topic and citation changes ride together — each add or withdrawal is its own priced act, the cost line reads the live total, and tapping it opens the breakdown sheet ('Edit · 1, Topic added · 1, Topic withdrawn · 1'), landing whole or not at all like every batch. License shown read-only with a lock. Earlier versions stay public under 'Edited'. Remove is the erasure path: own-post menu (a bottom sheet) → a think-twice dialog whose SAFE action is filled → the visible mark. 'Removed by its author' must never read like a moderation verdict — the two marks stay distinct. The thread and every response remain. Comment editing lives in the Comments rows above."
+      "text": "COMPOSE · Edit & remove the post\n\nAn edit is one screen and one batch (ruled 2026-08-27): the content edit PLUS topic and citation changes ride together — each add or withdrawal is its own priced act, the cost line reads the live total, and tapping it opens the breakdown sheet ('Edit · 1, Topic added · 1, Topic withdrawn · 1'), landing whole or not at all like every batch. License shown read-only with a lock. Earlier versions stay public under 'Edited'. Remove is the erasure path: own-post menu (a bottom sheet) → a think-twice dialog whose SAFE action is filled → the visible mark. 'Removed by its author' must never read like a moderation verdict — the two marks stay distinct. The thread and every response remain. Comment editing lives in the Comments rows above.",
+      "page": "compose"
     },
     {
       "id": "help-contents",
-      "x": 640,
-      "y": -300,
+      "x": -340,
+      "y": 0,
       "w": 640,
-      "text": "THE ? CONTENTS — each ? opens a plain dialog (see 'The ? dialog' board): title, at most two short paragraphs, Close. The copy, verbatim:\n\nSEAL (post + reply) · 'Signed actions': Each piece of a post — the post itself, every topic, every citation — is its own signed action, written in your name. They sign together: all of them land, or none does. / You don't pay for these — a shared community pool covers members' signings. The pool is real and finite, so each action still counts.\n\nLICENSE SHEET · 'The license': Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it. / The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.\n\nSENSITIVE SHEET · 'Marking as sensitive': The mark veils the pictures and the description until a reader chooses to look. The title stays readable, so choosing is informed. / Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.\n\nKEY ABSENT · 'Your key': Signing needs your key, and it isn't on this browser. Nothing is signed or sent without it — the draft stays on this device. / Restore the key with your recovery code to finish. Restoring here is the only way to complete this write.\n\nPOST PAD · 'Where you stand on it': Publishing also signs where you stand on your own post — for or against, from a gentle +0.10 by default. / Your own post always reaches you in full, so only for-or-against is yours to set. Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.\n\nREPLY PAD · 'Toward what you answer': Replying also signs where you stand on the post you answer — for or against, and how much of it reaches you. It starts at a gentle +0.10 / +0.10 and rides the same signature as your reply. / Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nEDIT · 'Editing': An edit replaces the whole post; earlier versions stay public under 'Edited' unless you remove them. An edit never bumps the post as new. / Topic and citation changes ride the same signing, each as its own signed action. The license never changes.\n\nCITE · 'Citing': A citation is its own signed action and carries where you stand on what you cite. You can cite anything on CoGra — start with @handle or #topic to reach comments, messages, and offers. / Comments and chat messages can also be cited from themselves — open one and choose 'Cite in a new post'.\n\nSEARCH · 'Searching' (the Explore tab and the citing picker): Search reads names and titles, never bodies. Start with @handle to search one person's work — including their comments and offers, found through what they point at. Start with #topic to search inside a topic. / Results put what's closest to you first — the numbers are your view, no one else's. Below the line, what's still beyond your reach, newest first. Your searches stay on this device.\n\nFILTER SHEET · 'The filter' (the feed's and search's sheets): What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen stays out unless you ask for it back. Every change applies as you tap; nothing here is signed or shared. / It lasts until you change it, on this device only. Your default lives in settings.\n\nDESCRIBE SHEET · 'Describing pictures': A description is read aloud by screen readers and shown when a picture can't load — plain words about what's there. It travels with the picture, public like the rest of the post. / Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.\n\nPROFILE-PICTURE SEAL · 'Changing your picture': Your profile is a public record, and changes to it are signed actions in your name — the picture changes the moment yours lands. / The community pool covers the signing, like your posts. The record that you changed it stays, like every signed action.\n\nWALLET BALANCE · 'What is CGT?': CGT is CoGra's own money. Advertisers fund campaigns with it, and it pays the people whose posts and stances carried real reach — the small coin always means CGT. / It's yours the moment it lands: earnings are paid straight to you, held by your key, never by CoGra. Every amount can be traced to what paid it, and the ≈ value reads the public CGT–L-BTC market — it moves with the market and is never a promise.\n\nWALLET SET-UP · 'Your wallet key': Your wallet gets its own key — created on this device, never held by CoGra, restored by the same recovery code as your signing key. One code, both keys. / Publishing your payout address is a signed action. The address is public, payouts and tips land there, and every change to it stays on your public record."
+      "text": "THE ? CONTENTS — each ? opens a plain dialog (see 'The ? dialog' board): title, at most two short paragraphs, Close. The copy, verbatim:\n\nSEAL (post + reply) · 'Signed actions': Each piece of a post — the post itself, every topic, every citation — is its own signed action, written in your name. They sign together: all of them land, or none does. / You don't pay for these — a shared community pool covers members' signings. The pool is real and finite, so each action still counts.\n\nLICENSE SHEET · 'The license': Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it. / The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.\n\nSENSITIVE SHEET · 'Marking as sensitive': The mark veils the pictures and the description until a reader chooses to look. The title stays readable, so choosing is informed. / Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.\n\nKEY ABSENT · 'Your key': Signing needs your key, and it isn't on this browser. Nothing is signed or sent without it — the draft stays on this device. / Restore the key with your recovery code to finish. Restoring here is the only way to complete this write.\n\nPOST PAD · 'Where you stand on it': Publishing also signs where you stand on your own post — for or against, from a gentle +0.10 by default. / Your own post always reaches you in full, so only for-or-against is yours to set. Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.\n\nREPLY PAD · 'Toward what you answer': Replying also signs where you stand on the post you answer — for or against, and how much of it reaches you. It starts at a gentle +0.10 / +0.10 and rides the same signature as your reply. / Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nEDIT · 'Editing': An edit replaces the whole post; earlier versions stay public under 'Edited' unless you remove them. An edit never bumps the post as new. / Topic and citation changes ride the same signing, each as its own signed action. The license never changes.\n\nCITE · 'Citing': A citation is its own signed action and carries where you stand on what you cite. You can cite anything on CoGra — start with @handle or #topic to reach comments, messages, and offers. / Comments and chat messages can also be cited from themselves — open one and choose 'Cite in a new post'.\n\nSEARCH · 'Searching' (the Explore tab and the citing picker): Search reads names and titles, never bodies. Start with @handle to search one person's work — including their comments and offers, found through what they point at. Start with #topic to search inside a topic. / Results put what's closest to you first — the numbers are your view, no one else's. Below the line, what's still beyond your reach, newest first. Your searches stay on this device.\n\nFILTER SHEET · 'The filter' (the feed's and search's sheets): What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen stays out unless you ask for it back. Every change applies as you tap; nothing here is signed or shared. / It lasts until you change it, on this device only. Your default lives in settings.\n\nDESCRIBE SHEET · 'Describing pictures': A description is read aloud by screen readers and shown when a picture can't load — plain words about what's there. It travels with the picture, public like the rest of the post. / Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.\n\nPROFILE-PICTURE SEAL · 'Changing your picture': Your profile is a public record, and changes to it are signed actions in your name — the picture changes the moment yours lands. / The community pool covers the signing, like your posts. The record that you changed it stays, like every signed action.\n\nWALLET BALANCE · 'What is CGT?': CGT is CoGra's own money. Advertisers fund campaigns with it, and it pays the people whose posts and stances carried real reach — the small coin always means CGT. / It's yours the moment it lands: earnings are paid straight to you, held by your key, never by CoGra. Every amount can be traced to what paid it, and the ≈ value reads the public CGT–L-BTC market — it moves with the market and is never a promise.\n\nWALLET SET-UP · 'Your wallet key': Your wallet gets its own key — created on this device, never held by CoGra, restored by the same recovery code as your signing key. One code, both keys. / Publishing your payout address is a signed action. The address is public, payouts and tips land there, and every change to it stays on your public record.",
+      "page": "patterns"
     },
     {
       "id": "note-cite",
       "x": 2880,
-      "y": 5560,
+      "y": 0,
       "w": 290,
-      "text": "Citing — reached from Details. Searches everything citable: posts by title, people by name/handle, items by name, proposals by title, chats by name, campaigns by anchor, offers via their item. Comments and chat messages are cited from themselves — every content's overflow menu carries 'Cite in a new post'. These result rows are the seed of item 9's search."
+      "text": "Citing — reached from Details. Searches everything citable: posts by title, people by name/handle, items by name, proposals by title, chats by name, campaigns by anchor, offers via their item. Comments and chat messages are cited from themselves — every content's overflow menu carries 'Cite in a new post'. These result rows are the seed of item 9's search.",
+      "page": "compose"
     },
     {
       "id": "sec-compose-ladder",
       "x": -340,
-      "y": 11920,
+      "y": 4240,
       "w": 290,
-      "text": "COMPOSE · The post ladder — every container state in one place\n\nFrom the smallest form (one line of words, nothing else) through bare media to the maximal collapsed container, plus the marked states: sensitive-veiled (blur + neutral wash + the author's reason; title and interaction row stay readable), removed by its author, and removed under the platform's rules — the two removal marks deliberately read differently.\n\nTHE HEIGHT RULE (2026-08-27): a post card's collapsed form never exceeds the screen height minus the bottom bar and the top safe zone — designed against the app / downloadable-webapp viewport, not browser chrome. Collapse order: the media and the interaction row NEVER shrink; tags and references collapse to one line under the description; the title clamps to one line; the description to two. The expanded detail view may be taller than the screen."
+      "text": "COMPOSE · The post ladder — every container state in one place\n\nFrom the smallest form (one line of words, nothing else) through bare media to the maximal collapsed container, plus the marked states: sensitive-veiled (blur + neutral wash + the author's reason; title and interaction row stay readable), removed by its author, and removed under the platform's rules — the two removal marks deliberately read differently.\n\nTHE HEIGHT RULE (2026-08-27): a post card's collapsed form never exceeds the screen height minus the bottom bar and the top safe zone — designed against the app / downloadable-webapp viewport, not browser chrome. Collapse order: the media and the interaction row NEVER shrink; tags and references collapse to one line under the description; the title clamps to one line; the description to two. The expanded detail view may be taller than the screen.",
+      "page": "compose"
     },
     {
       "id": "sec-search",
       "x": -340,
-      "y": 12980,
+      "y": 0,
       "w": 280,
-      "text": "SEARCH — the Explore tab (item 9, rulings in readme §13 / Q46). At rest: the field, the orbit hero (item 16’s future 3D view), device-local recents. Searching: the worded filter trigger + the one “?”, ranked rows wearing the graph glyph, the seam, the aged tail. Scope operators @handle / #topic; indirect hits say their target on the second line."
+      "text": "SEARCH — the Explore tab (item 9, rulings in readme §13 / Q46). At rest: the field, the orbit hero (item 16’s future 3D view), device-local recents. Searching: the worded filter trigger + the one “?”, ranked rows wearing the graph glyph, the seam, the aged tail. Scope operators @handle / #topic; indirect hits say their target on the second line.",
+      "page": "feed"
     },
     {
       "id": "sec-feed",
       "x": -340,
-      "y": 14040,
+      "y": 1060,
       "w": 290,
-      "text": "FEED · The filter (item 19, growing item 4). The trigger sits on the CograBand's right edge — the band never spends its full width on identity alone — and scrolls away and back with it. EVERY feed view wears it, guests and applicants too: filtering is a read control. The trigger speaks deviations only ('Posts' at rest; 'Posts · photos · newest' when flipped; past the pill's budget the extras collapse to a count — '3 kinds · 4 changes', the far-from-default board). The sheet: ten kinds that combine — ONE list shared with search, 'Profiles' everywhere — forms of post, the Order section (Ranked/Newest + 'Show what you've already seen', DEFAULT OFF: what you've seen stays out until asked back; impression-based, device-local, shared transiently with the viewer's ranker; identical section on search), what else is admitted, Reset, and the sheet's own '?' (The filter dialog — names the settings default). Applies live. Everything off is allowed: the feed's empty state answers, not the chip."
+      "text": "FEED · The filter (item 19, growing item 4). The trigger sits on the CograBand's right edge — the band never spends its full width on identity alone — and scrolls away and back with it. EVERY feed view wears it, guests and applicants too: filtering is a read control. The trigger speaks deviations only ('Posts' at rest; 'Posts · photos · newest' when flipped; past the pill's budget the extras collapse to a count — '3 kinds · 4 changes', the far-from-default board). The sheet: ten kinds that combine — ONE list shared with search, 'Profiles' everywhere — forms of post, the Order section (Ranked/Newest + 'Show what you've already seen', DEFAULT OFF: what you've seen stays out until asked back; impression-based, device-local, shared transiently with the viewer's ranker; identical section on search), what else is admitted, Reset, and the sheet's own '?' (The filter dialog — names the settings default). Applies live. Everything off is allowed: the feed's empty state answers, not the chip.",
+      "page": "feed"
     },
     {
       "id": "sec-money",
       "x": -340,
-      "y": 15100,
+      "y": 0,
       "w": 290,
-      "text": "MONEY · The CGT figure (item 11, system). One shape for every amount: two decimals, thousands grouped, the mark trailing where the unit word would sit. Dust is '< 0.01' — never 0.00, a shown number that lies — exact value one layer down; zero is '0', plainly (a new member's true state). Amounts are never negative: a minus is an OUTFLOW on a history line; positive inflows opt into '+'. No colour on direction — the system has no green, and error-colouring spending would call it a failure. The unit is the MARK everywhere (jakob 2026-08-31: the word 'CGT' repeated everywhere doesn't look nice); the word appears once — the wallet's balance headline, mark and word adjacent, its '?' explaining both as CoGra's own money. The mark is the BRAND MARK on the coin (jakob 2026-08-31, round 2): cogra-mark.svg verbatim, knocked out monochrome in the on-primary on the primary disc. Round 1's lone C read as any game's coin; CG letters, a CG interlock, and c+dot were drawn and rejected against it. The wallet's surfaces are item 12; pending amounts wait for it."
+      "text": "MONEY · The CGT figure (item 11, system). One shape for every amount: two decimals, thousands grouped, the mark trailing where the unit word would sit. Dust is '< 0.01' — never 0.00, a shown number that lies — exact value one layer down; zero is '0', plainly (a new member's true state). Amounts are never negative: a minus is an OUTFLOW on a history line; positive inflows opt into '+'. No colour on direction — the system has no green, and error-colouring spending would call it a failure. The unit is the MARK everywhere (jakob 2026-08-31: the word 'CGT' repeated everywhere doesn't look nice); the word appears once — the wallet's balance headline, mark and word adjacent, its '?' explaining both as CoGra's own money. The mark is the BRAND MARK on the coin (jakob 2026-08-31, round 2): cogra-mark.svg verbatim, knocked out monochrome in the on-primary on the primary disc. Round 1's lone C read as any game's coin; CG letters, a CG interlock, and c+dot were drawn and rejected against it. The wallet's surfaces are item 12; pending amounts wait for it.",
+      "page": "money"
     },
     {
       "id": "sec-media",
       "x": -340,
-      "y": 16160,
+      "y": 0,
       "w": 290,
-      "text": "THE MEDIA SLICE (jakob 2026-08-31, for the product's media rebuild). The GALLERY IS A PAGER: every picture shares the post's one crop shape, swiped whole, dots only — never a '1/n' pill. Caps: 10 pictures or 1 video (+ its cover) per post; 4 pictures per comment. UPLOAD STARTS AFTER THE CROP — the crop happens on the device, only the cropped export is ever uploaded (the original can hold what the author never meant to share); comment pictures never crop, so they upload at pick. Progress rides the thumbnails as rings; a failed picture is marked on its tile with Retry · Remove beside it; the SEAL gates — signing waits for the pictures. DESCRIPTIONS (alt text) are authored, optional, never invented: entered per picture from the details step ('Describe the pictures · n of m described') and from the picked tray's Show all sheet — the per-picture manager (reorder, first = cover, remove, describe). Comment media is words-first: inset at the card's medium rung, capped at comment scale, same pager. Comment edit mirrors the post's one-screen-one-batch, license locked. Profile: ONE image — the avatar (no cover, per the ProfileHeader ruling); changing it is a SIGNED ACT with its own seal. Sensitive veils the WHOLE gallery, never one picture. Round 2 (jakob, same day): the details row carries NO Crop/Edit links ('none') — the row itself opens Show all; crop is one Back away — and the slice ships componentized (components/compose/: MediaThumb, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, UploadStatusLine, UploadErrorLine, ActsCard), every board here rendered from the design system. Round 3 (implementation session's findings, same day): WEB has no device-gallery API, so 'Pick · the web variant' replaces the grid with the file picker + drop target — the rest of the step identical. The seal drift is healed in the component: ActsCard's note subline ('they land together, or none does') rides every MULTI-act seal's total; a single-act seal omits it. On the key-absent seal the ONE '?' belongs to the key notice (the 'Your key' dialog), not the header — one ? per screen, the key story outranks the seal story there. Off-role type values conformed to the pinned M3 roles (badge to label-small, writing bodies to 16/24, draft buttons to true padding) — M3 stays the default; no sub-roles added. Round 4 (jakob): THE WIZARD'S WAYS OUT — the header arrow steps ONE STAGE BACK, never out of the flow (Details reaches crop with it; the platform back gesture matches); the X leaves the whole flow from ANY stage, draft kept, NO confirmation (the draft prompt is the return surface); the seal's Back pill is the same one-stage step, labeled. WizardHeader is the master; every composer-flow stage wears the X, between the title and the trailing controls. The em-dash rule stands (asides keep their em dashes, per copy-voice). Round 5 (implementation session's findings, jakob's rulings 2026-08-31): COMMENTS HAVE NO PICK STAGE — '+ Add' opens the platform's own picker (Android's photo-picker sheet; the browser's file dialog on web), never the post wizard's grid; the one web addition is the drop path — files dropped anywhere on the composer are accepted, the quiet hint beside Add says so ('Reply · pictures on the web'). ALT TEXT IS DETACHED FROM THE UPLOAD (product ruling, recorded in api-spec/data-model): the upload moves bytes only; a description is witnessed in the act's manifest and rides the prepare input per placement — so comment pictures upload at pick, descriptions land at sign, NOTHING GATES on the other, and there is no alt-text-vs-upload race. The describe entry is the same counter line everywhere the composer shows picked pictures — the reply composer already wore it; Edit comment now does too. THE EDIT'S ACTS FOOTER OPENS A SHEET: 'This creates n signed actions' opens the M3 modal bottom sheet (the EditActs pattern — 'Edit comment · the acts' renders it with ActsCard; the sheet title carries the count, the card the rows and the all-or-nothing note). The sheet is the peek-from-a-composer pattern; ceremony screens keep the inline ActsCard — two patterns, one component. EditActs' pre-component note wording conformed to the ActsCard standard."
+      "text": "THE MEDIA SLICE (jakob 2026-08-31, for the product's media rebuild). The GALLERY IS A PAGER: every picture shares the post's one crop shape, swiped whole, dots only — never a '1/n' pill. Caps: 10 pictures or 1 video (+ its cover) per post; 4 pictures per comment. UPLOAD STARTS AFTER THE CROP — the crop happens on the device, only the cropped export is ever uploaded (the original can hold what the author never meant to share); comment pictures never crop, so they upload at pick. Progress rides the thumbnails as rings; a failed picture is marked on its tile with Retry · Remove beside it; the SEAL gates — signing waits for the pictures. DESCRIPTIONS (alt text) are authored, optional, never invented: entered per picture from the details step ('Describe the pictures · n of m described') and from the picked tray's Show all sheet — the per-picture manager (reorder, first = cover, remove, describe). Comment media is words-first: inset at the card's medium rung, capped at comment scale, same pager. Comment edit mirrors the post's one-screen-one-batch, license locked. Profile: ONE image — the avatar (no cover, per the ProfileHeader ruling); changing it is a SIGNED ACT with its own seal. Sensitive veils the WHOLE gallery, never one picture. Round 2 (jakob, same day): the details row carries NO Crop/Edit links ('none') — the row itself opens Show all; crop is one Back away — and the slice ships componentized (components/compose/: MediaThumb, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, UploadStatusLine, UploadErrorLine, ActsCard), every board here rendered from the design system. Round 3 (implementation session's findings, same day): WEB has no device-gallery API, so 'Pick · the web variant' replaces the grid with the file picker + drop target — the rest of the step identical. The seal drift is healed in the component: ActsCard's note subline ('they land together, or none does') rides every MULTI-act seal's total; a single-act seal omits it. On the key-absent seal the ONE '?' belongs to the key notice (the 'Your key' dialog), not the header — one ? per screen, the key story outranks the seal story there. Off-role type values conformed to the pinned M3 roles (badge to label-small, writing bodies to 16/24, draft buttons to true padding) — M3 stays the default; no sub-roles added. Round 4 (jakob): THE WIZARD'S WAYS OUT — the header arrow steps ONE STAGE BACK, never out of the flow (Details reaches crop with it; the platform back gesture matches); the X leaves the whole flow from ANY stage, draft kept, NO confirmation (the draft prompt is the return surface); the seal's Back pill is the same one-stage step, labeled. WizardHeader is the master; every composer-flow stage wears the X, between the title and the trailing controls. The em-dash rule stands (asides keep their em dashes, per copy-voice). Round 5 (implementation session's findings, jakob's rulings 2026-08-31): COMMENTS HAVE NO PICK STAGE — '+ Add' opens the platform's own picker (Android's photo-picker sheet; the browser's file dialog on web), never the post wizard's grid; the one web addition is the drop path — files dropped anywhere on the composer are accepted, the quiet hint beside Add says so ('Reply · pictures on the web'). ALT TEXT IS DETACHED FROM THE UPLOAD (product ruling, recorded in api-spec/data-model): the upload moves bytes only; a description is witnessed in the act's manifest and rides the prepare input per placement — so comment pictures upload at pick, descriptions land at sign, NOTHING GATES on the other, and there is no alt-text-vs-upload race. The describe entry is the same counter line everywhere the composer shows picked pictures — the reply composer already wore it; Edit comment now does too. THE EDIT'S ACTS FOOTER OPENS A SHEET: 'This creates n signed actions' opens the M3 modal bottom sheet (the EditActs pattern — 'Edit comment · the acts' renders it with ActsCard; the sheet title carries the count, the card the rows and the all-or-nothing note). The sheet is the peek-from-a-composer pattern; ceremony screens keep the inline ActsCard — two patterns, one component. EditActs' pre-component note wording conformed to the ActsCard standard.",
+      "page": "media"
     },
     {
       "id": "sec-wallet",
       "x": -340,
-      "y": 18280,
+      "y": 1060,
       "w": 290,
-      "text": "WALLET (item 12, jakob's rulings 2026-08-31, grounded in a doc audit + the L0-on-Liquid decision). The balance headline is the ONE surface spelling CGT (mark + word + the What-is-CGT '?'), with the ≈ L-BTC VALUE line read from the public CGT–L-BTC market (the protocol's own ladder, live from genesis) — an estimate, never a promise, hidden at zero. NO free-form send (tipping IS the user-to-user send; off-graph moves are any Liquid tool's job) and NO cash-out surface. HISTORY: one stream, newest first — payouts, tips in and out, campaign money — every line opening what paid it; an unlanded payout wears Still settling (the pending look item 11 deferred here); direction by sign and words, never colour. CAMPAIGNS: money view only (deposit, escrow, window, settles-as-public-record); the campaign card will click through to a details page when one exists. THE RAIL KEY IS BORN LAZILY at first wallet open (docs: ledger.md Keys) — no new recovery code, the key joins the one container under the one code ('Your wallet key' ?); the ceremony's single signed act is publishing the payout address. The address renders WHOLE, mono, never truncated (checking it is the point); changing it is a seal — parallel Registration, newest wins, every prior address stays witnessed. Key-absent: balance and history stay readable (public chain), signing needs the key — restore-first. Guest: the honest explanation + the join prompt. Applicant: the wallet opens with membership — nothing locked, nothing yet to show. ROUND 2 (jakob, same day — 'make it sexy', direction A blessed WITH the gradient): the balance is a TROPHY — the hero rides THE BRAND WASH (--surface-hero, the one decorative gradient surface, first of its kind; jakob: the product reads 'basic' next to Instagram's brand feel, this is the start of fixing that) with the brand coin GHOSTED oversized into the corner, display-size figure, and the real recent-earnings delta chip. Progress: the EARNED BARS — every bar a real settlement, tappable, latest wears primary (honest decoration; nothing modeled). History rows are IDENTITY ROWS: the disc is who the money moved with (tipper's face, campaign's cover, glyph), wearing the direction badge; the amount stays uncoloured. THE CAMPAIGN MOVED TO ITS OWN SUBPAGE (Wallet · your campaign — committing 12,500 is a big deal): money facts + its rail history; the main page keeps one entry row. The address lives in a CARD with copy + Change (compact at rest, captioned on the zero state and seals). Zero-state wording is PATH-TRUE: campaigns pay when paths between crowd and target run through you; posting is how paths start, not a guarantee. Key notice LEADS the key-absent board, inset like every card. Guest prompt centered; applicant told plainly: come back after approval — earnings can't land until the address exists. ROUND 3 (jakob, same day): AT REST THE ADDRESS IS ONE LINE, high on the page (PayoutAddressRow — the one place the address may shorten, head…tail; it is an entry point, and the full card with copy/Change/caption is one tap away; the never-truncate rule holds on every checking surface — the card, the seals, the zero state where the full card sits high). THE CAMPAIGN SECTION IS GONE from the main page: campaign money is ORDINARY HISTORY — three kinds: escrow out at creation, top-up out, return in when the payout wasn't full — and the wallet keeps only the CAMPAIGNS DOOR to the campaigns page ('Wallet · campaigns'): Start a campaign, the Yours/You-took-part segments, Open with amounts, Past with outcomes; a listed campaign opens the money subpage ('Wallet · your campaign'). THE MOMENT SCREENS WEAR THE WASH (WashCard — the wash + ghost coin extracted as one master; at most one per screen): first open, guest, and applicant are a person's first look at the money side and must not read as settings."
+      "text": "WALLET (item 12, jakob's rulings 2026-08-31, grounded in a doc audit + the L0-on-Liquid decision). The balance headline is the ONE surface spelling CGT (mark + word + the What-is-CGT '?'), with the ≈ L-BTC VALUE line read from the public CGT–L-BTC market (the protocol's own ladder, live from genesis) — an estimate, never a promise, hidden at zero. NO free-form send (tipping IS the user-to-user send; off-graph moves are any Liquid tool's job) and NO cash-out surface. HISTORY: one stream, newest first — payouts, tips in and out, campaign money — every line opening what paid it; an unlanded payout wears Still settling (the pending look item 11 deferred here); direction by sign and words, never colour. CAMPAIGNS: money view only (deposit, escrow, window, settles-as-public-record); the campaign card will click through to a details page when one exists. THE RAIL KEY IS BORN LAZILY at first wallet open (docs: ledger.md Keys) — no new recovery code, the key joins the one container under the one code ('Your wallet key' ?); the ceremony's single signed act is publishing the payout address. The address renders WHOLE, mono, never truncated (checking it is the point); changing it is a seal — parallel Registration, newest wins, every prior address stays witnessed. Key-absent: balance and history stay readable (public chain), signing needs the key — restore-first. Guest: the honest explanation + the join prompt. Applicant: the wallet opens with membership — nothing locked, nothing yet to show. ROUND 2 (jakob, same day — 'make it sexy', direction A blessed WITH the gradient): the balance is a TROPHY — the hero rides THE BRAND WASH (--surface-hero, the one decorative gradient surface, first of its kind; jakob: the product reads 'basic' next to Instagram's brand feel, this is the start of fixing that) with the brand coin GHOSTED oversized into the corner, display-size figure, and the real recent-earnings delta chip. Progress: the EARNED BARS — every bar a real settlement, tappable, latest wears primary (honest decoration; nothing modeled). History rows are IDENTITY ROWS: the disc is who the money moved with (tipper's face, campaign's cover, glyph), wearing the direction badge; the amount stays uncoloured. THE CAMPAIGN MOVED TO ITS OWN SUBPAGE (Wallet · your campaign — committing 12,500 is a big deal): money facts + its rail history; the main page keeps one entry row. The address lives in a CARD with copy + Change (compact at rest, captioned on the zero state and seals). Zero-state wording is PATH-TRUE: campaigns pay when paths between crowd and target run through you; posting is how paths start, not a guarantee. Key notice LEADS the key-absent board, inset like every card. Guest prompt centered; applicant told plainly: come back after approval — earnings can't land until the address exists. ROUND 3 (jakob, same day): AT REST THE ADDRESS IS ONE LINE, high on the page (PayoutAddressRow — the one place the address may shorten, head…tail; it is an entry point, and the full card with copy/Change/caption is one tap away; the never-truncate rule holds on every checking surface — the card, the seals, the zero state where the full card sits high). THE CAMPAIGN SECTION IS GONE from the main page: campaign money is ORDINARY HISTORY — three kinds: escrow out at creation, top-up out, return in when the payout wasn't full — and the wallet keeps only the CAMPAIGNS DOOR to the campaigns page ('Wallet · campaigns'): Start a campaign, the Yours/You-took-part segments, Open with amounts, Past with outcomes; a listed campaign opens the money subpage ('Wallet · your campaign'). THE MOMENT SCREENS WEAR THE WASH (WashCard — the wash + ghost coin extracted as one master; at most one per screen): first open, guest, and applicant are a person's first look at the money side and must not read as settings.",
+      "page": "money"
     },
     {
       "id": "sec-reply-composer",
       "x": -340,
-      "y": 9800,
+      "y": 1060,
       "w": 290,
-      "text": "COMMENTS · The reply composer\n\nThe comment box in the thread is an ENTRY, not a composer: tapping it opens the same full-focus flow, pre-targeted, parent pinned. Two steps — words, then the seal. A comment is TEXT PLUS OPTIONAL MEDIA (comment.md; text required) — deliberately asymmetric to the post's words-XOR-media body, because an answer is words first; '+ Add pictures' rides the writing step, and COMMENTS HAVE NO PICK STAGE (ruled 2026-08-31): it opens the platform's own picker — Android's photo-picker sheet, the browser's file dialog on web — never the post wizard's grid; the web board adds the drop-anywhere path. Comment pictures never crop, so they upload at pick; descriptions ride the signed act (detached from the upload — no race, nothing gates) and are entered from the describe counter. The reply's stance on its parent (+0.10 / +0.10 default) is DISCLOSED on the seal and adjustable on the full two-axis pad: 'Replying also signs where you stand on the post it answers.' Topics and citations can join a comment from its seal, each row raising the count. Boards: write (words) · pictures attached · pictures on the web · the pad · what you sign."
+      "text": "COMMENTS · The reply composer\n\nThe comment box in the thread is an ENTRY, not a composer: tapping it opens the same full-focus flow, pre-targeted, parent pinned. Two steps — words, then the seal. A comment is TEXT PLUS OPTIONAL MEDIA (comment.md; text required) — deliberately asymmetric to the post's words-XOR-media body, because an answer is words first; '+ Add pictures' rides the writing step, and COMMENTS HAVE NO PICK STAGE (ruled 2026-08-31): it opens the platform's own picker — Android's photo-picker sheet, the browser's file dialog on web — never the post wizard's grid; the web board adds the drop-anywhere path. Comment pictures never crop, so they upload at pick; descriptions ride the signed act (detached from the upload — no race, nothing gates) and are entered from the describe counter. The reply's stance on its parent (+0.10 / +0.10 default) is DISCLOSED on the seal and adjustable on the full two-axis pad: 'Replying also signs where you stand on the post it answers.' Topics and citations can join a comment from its seal, each row raising the count. Boards: write (words) · pictures attached · pictures on the web · the pad · what you sign.",
+      "page": "comments"
     }
   ],
   "launch": {
-    "view": "canvas"
-  }
+    "view": "canvas",
+    "page": "overview"
+  },
+  "pages": [
+    {
+      "id": "overview",
+      "name": "Overview"
+    },
+    {
+      "id": "entry",
+      "name": "Entry"
+    },
+    {
+      "id": "compose",
+      "name": "Compose"
+    },
+    {
+      "id": "comments",
+      "name": "Comments"
+    },
+    {
+      "id": "feed",
+      "name": "Feed & Search"
+    },
+    {
+      "id": "money",
+      "name": "Money & Wallet"
+    },
+    {
+      "id": "media",
+      "name": "Media"
+    },
+    {
+      "id": "patterns",
+      "name": "Patterns & reference"
+    }
+  ]
 }
