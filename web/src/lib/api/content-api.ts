@@ -355,6 +355,8 @@ export async function prepareComment(
     license: LicenseChoice;
     tags?: readonly TagDraft[];
     references?: readonly ReferenceDraft[];
+    /** Asset ids, in the author's order; the first leads the comment. */
+    attachments?: readonly string[];
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -366,6 +368,9 @@ export async function prepareComment(
             target: fields.target,
             content: fields.content,
             license: fields.license,
+            // A comment is words PLUS optional pictures — the words-or-media
+            // XOR is the post's rule alone (D16), so both travel together.
+            attachments: attachmentInputs(fields.attachments),
             // Tagging is part of the compose gesture on a comment as on
             // a post (api-spec.md `PrepareCommentInput.tags`, "same rules
             // as on a Post") — one batch on the minting record.

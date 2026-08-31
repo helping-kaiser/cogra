@@ -14,7 +14,24 @@ import { PostView } from "./post-view";
 // The post and every comment read their own standing, so the read is a
 // default rather than something each test remembers: an unhandled one
 // degrades the control silently instead of failing the test.
-const server = startMswServer(...stanceHandlers());
+//
+// Opening a comment's editor reads that comment's OWN sensitive mark for the
+// same reason — it is not on the thread read — so it gets the same treatment:
+// unmarked by default, and a test that cares says so with its own handler.
+const server = startMswServer(
+  ...stanceHandlers(),
+  graphql.query("CommentSelfMark", ({ variables }) =>
+    HttpResponse.json({
+      data: {
+        comment: {
+          __typename: "Comment",
+          id: variables.id,
+          sensitiveSelfMark: false,
+        },
+      },
+    }),
+  ),
+);
 
 function moderated(value: string | null) {
   return { __typename: "ModeratedText", value, status: "NORMAL" };
@@ -395,6 +412,9 @@ describe("PostView", () => {
           target: "p1",
           content: "Nice one",
           license: { attribution: 1, provenance: 0 },
+          // A comment with no pictures states an absent gallery rather than
+          // an empty one — the pictures are the optional half.
+          attachments: null,
           // The composer always sends its lists; empty is "no topics"
           // and "no references", the shape `preparePost` already uses.
           tags: [],
@@ -1358,6 +1378,40 @@ describe("PostView", () => {
       expect(screen.getByTestId("comment-edit-tag-0-confidence")).toHaveValue("0.8");
       // No creation batch here, so no batch cap.
       expect(screen.queryByTestId("comment-edit-tag-cap")).not.toBeInTheDocument();
+    });
+
+    // Round 4: the display state is the OR of the author's mark and the
+    // moderator's, and neither side can clear the other. Re-stating the OR on
+    // an edit would quietly adopt a moderator's verdict as the author's own
+    // mark, which the author could then never take back.
+    it("carries the author's own sensitive mark on an edit, never a moderator's", async () => {
+      let sent: { sensitive?: boolean } | null = null;
+      server.use(
+        graphql.query("PostDetail", () => HttpResponse.json({ data: ownComment([]) })),
+        // The reader sees a veiled comment — but that veil is the moderator's.
+        graphql.query("CommentSelfMark", () =>
+          HttpResponse.json({
+            data: { comment: { __typename: "Comment", id: "c1", sensitiveSelfMark: false } },
+          }),
+        ),
+        graphql.mutation("PrepareCommentEdit", ({ variables }) => {
+          sent = (variables.input as { sensitive?: boolean }) ?? null;
+          return HttpResponse.json({ data: editPayload() });
+        }),
+      );
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+
+      fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+        target: { value: "new words" },
+      });
+      fireEvent.click(screen.getByTestId("comment-edit-save"));
+
+      await waitFor(() => expect(sent).not.toBeNull());
+      expect(sent!.sensitive).toBe(false);
     });
 
     it("stages the edit record and one Tag act per change, in one signing pass", async () => {
