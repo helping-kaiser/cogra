@@ -56,6 +56,10 @@ export function MonogramAvatar({
           // so the browser is told exactly that instead of assuming 100vw and
           // downloading a feed-sized image for a 40px disc.
           sizes={`${size}px`}
+          // Same rule as the media tile: served media is display-ready by
+          // construction, so the optimizer adds nothing and refuses the dev
+          // topology's private-IP origin.
+          unoptimized
           className="object-cover"
           onError={() => setFailed(true)}
         />

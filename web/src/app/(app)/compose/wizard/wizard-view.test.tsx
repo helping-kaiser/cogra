@@ -191,10 +191,56 @@ describe("the compose wizard", () => {
     fireEvent.click(screen.getByTestId("wizard-next"));
 
     fireEvent.click(await screen.findByTestId("wizard-sign"));
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/feed?compose=landed"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
     expect(variables!.input.content).toBe("Three weekends at low tide.");
     // The XOR, on the wire: a words post carries no gallery at all.
     expect(variables!.input.attachments).toBeNull();
+  });
+
+  // The hand test found framing dead on everything past the first picture, so
+  // what is asserted is that each one carries its OWN framing and keeps it.
+  it("frames every picked picture, not just the first", async () => {
+    render();
+    await pick(["one.jpg", "two.jpg", "three.jpg"]);
+    fireEvent.click(screen.getByTestId("wizard-next"));
+
+    const origin = () =>
+      screen.getByTestId("wizard-crop-frame").querySelector("img")!.style.transformOrigin;
+
+    // Each picture starts centred and is framed on its own.
+    for (const index of [0, 1, 2]) {
+      fireEvent.click(screen.getByTestId(`wizard-crop-pick-${index}`));
+      expect(origin()).toBe("50% 50%");
+      for (let press = 0; press <= index; press += 1) {
+        fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "ArrowLeft" });
+      }
+    }
+
+    // Coming back finds each one as it was left, so no picture's framing was
+    // written over another's.
+    for (const [index, expected] of [
+      [0, "55% 50%"],
+      [1, "60% 50%"],
+      [2, "65% 50%"],
+    ] as const) {
+      fireEvent.click(screen.getByTestId(`wizard-crop-pick-${index}`));
+      expect(origin()).toBe(expected);
+    }
+  });
+
+  // Switching shape re-cuts from the ORIGINAL, so the framing survives it.
+  it("keeps each picture's framing across a shape switch", async () => {
+    render();
+    await pick(["one.jpg", "two.jpg"]);
+    fireEvent.click(screen.getByTestId("wizard-next"));
+
+    fireEvent.click(screen.getByTestId("wizard-crop-pick-1"));
+    fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "ArrowDown" });
+    fireEvent.click(screen.getByTestId("wizard-shape-wide"));
+
+    const frame = screen.getByTestId("wizard-crop-frame");
+    expect(frame.style.aspectRatio).toBe("1.91 / 1");
+    expect(frame.querySelector("img")!.style.transformOrigin).toBe("50% 45%");
   });
 
   it("refuses to leave the pick screen with no body", async () => {
@@ -250,7 +296,7 @@ describe("the compose wizard", () => {
     await waitFor(() => expect(screen.getByTestId("wizard-sign")).not.toBeDisabled());
 
     fireEvent.click(screen.getByTestId("wizard-sign"));
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/feed?compose=landed"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
 
     expect(variables!.input.attachments).toEqual([
       { mediaId: "m-a", displayOrder: 0, isCover: true },
@@ -385,5 +431,44 @@ describe("the compose wizard", () => {
 
     fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
     expect(await screen.findByTestId("wizard-title")).toBeInTheDocument();
+  });
+
+  // The fix-round-2 ruling: the draft is kept continuously, and the only thing
+  // that discards it is the offer's own Discard.
+  it("holds what was typed without waiting to be told to", async () => {
+    const drafts = fakeDrafts();
+    render(drafts);
+
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), {
+      target: { value: "half a thought" },
+    });
+
+    await waitFor(() => expect(drafts.held()?.words).toBe("half a thought"));
+  });
+
+  it("hands the draft to disk when the tab goes away", async () => {
+    const drafts = fakeDrafts();
+    render(drafts);
+
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "unsaved yet" } });
+    // The coalescing window has not elapsed; the tab going away must not wait
+    // for it. `pagehide` rather than `beforeunload`, which mobile does not fire.
+    window.dispatchEvent(new Event("pagehide"));
+
+    await waitFor(() => expect(drafts.held()?.words).toBe("unsaved yet"));
+  });
+
+  it("keeps the draft when the reader simply leaves", async () => {
+    const drafts = fakeDrafts();
+    render(drafts);
+
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "come back to me" } });
+    fireEvent.click(screen.getByTestId("header-back"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/feed"));
+    expect(drafts.held()?.words).toBe("come back to me");
   });
 });

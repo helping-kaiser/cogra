@@ -1,4 +1,4 @@
-# CoGra
+# CoGra · `guide:repo:readme`
 
 **CoGra** (Content Graph) is the **graph-architecture exploration**
 for **Peer Network**'s next evolution — a social media platform

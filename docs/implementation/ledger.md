@@ -1,4 +1,4 @@
-# Ledger
+# Ledger · `spec:implementation:ledger`
 
 The rail is the ledger of money, and the rail has a name: **CGT is
 an issued asset on the Liquid Network**, traded natively against

@@ -328,13 +328,18 @@ pub struct HeadlineCounts {
 pub struct KindRegistry {
     pairs: BTreeMap<Box<str>, BTreeSet<Kind>>,
     borderline: BTreeSet<(Box<str>, Kind)>,
+    /// The pairs X_A contributed, which is what tells the companion
+    /// register which component of the evidence base stands behind a row.
+    local: BTreeSet<(Box<str>, Kind)>,
+    /// The edition's own counts, taken before X_A is added: the headline
+    /// table derives from the registry's tables alone and never from a
+    /// corpus's extensions (´[KND-tab:kinds:headline-counts]´).
+    base: HeadlineCounts,
     headline: Option<ByteSpan>,
     families: BTreeSet<DeviceFamily>,
     modifiers: BTreeSet<Box<str>>,
     unrecognized: Vec<Box<str>>,
     unapplied: Vec<Box<str>>,
-    declared_hybrids: usize,
-    device_classes: usize,
 }
 
 impl KindRegistry {
@@ -357,17 +362,41 @@ impl KindRegistry {
         Reader::new(doc, src, a).read()
     }
 
-    /// Add the acceptee's recorded extensions. Empty in version 1.
+    /// Add the acceptee's recorded extensions: C_A = C ∪ X_A
+    /// (´[KND-sig:kinds:registry-data]´).
     ///
-    /// `[kinds.extensions]` records its rows as free text and records them
-    /// empty, so no spelling for one is fixed by any ratified document. A
-    /// recorded row is therefore carried unapplied rather than guessed at,
-    /// and [`KindRegistry::unapplied_extensions`] is where it shows.
+    /// A recorded row joins the relation and is thereafter indistinguishable
+    /// to classification, reduction, and validation — an extension is a row
+    /// of C_A, and only the evidence behind it differs. What it never joins
+    /// is the edition: [`KindRegistry::headline_counts`] was taken before
+    /// this call, and a pair recorded here stays answerable as local
+    /// ([`KindRegistry::is_local`]) for the companion register's source
+    /// column.
+    ///
+    /// The local hybrids stay unapplied. A hybrid is derived rather than
+    /// declared (´[KND-inf:kinds:hybrid]´), and this corpus declares none,
+    /// so no spelling for one is fixed by any ratified document.
     #[must_use]
     pub fn with_extensions(mut self, x: &KindExtensions) -> KindRegistry {
-        self.unapplied.extend(x.rows.iter().cloned());
+        for row in &x.rows {
+            self.pairs
+                .entry(row.name.clone())
+                .or_default()
+                .insert(row.kind.clone());
+            self.local.insert((row.name.clone(), row.kind.clone()));
+            if &*row.status == Attestation::Borderline.token() {
+                self.borderline.insert((row.name.clone(), row.kind.clone()));
+            }
+        }
         self.unapplied.extend(x.hybrids.iter().cloned());
         self
+    }
+
+    /// Whether a pair reached C_A through X_A rather than through the
+    /// registry's own tables.
+    #[must_use]
+    pub fn is_local(&self, name: &str, kind: &Kind) -> bool {
+        self.local.contains(&(Box::from(name), kind.clone()))
     }
 
     /// The extension rows carried but not applied.
@@ -574,20 +603,16 @@ impl KindRegistry {
 
     /// The five counts of (´[KND-tab:kinds:headline-counts]´), derived from
     /// the tables alone.
+    ///
+    /// They are the edition's, so they are taken when the tables are read
+    /// and never recomputed over C_A: an adopting corpus's extensions are
+    /// no part of the registry's own inventory
+    /// (´[KND-sig:kinds:registry-data]´), and a headline table that grew
+    /// with X_A would publish one corpus's facts in a document that
+    /// materializes none.
     #[must_use]
     pub fn headline_counts(&self) -> HeadlineCounts {
-        HeadlineCounts {
-            names: self.pairs.len(),
-            rows: self.pairs.values().map(BTreeSet::len).sum(),
-            kinds: self
-                .pairs
-                .values()
-                .flatten()
-                .collect::<BTreeSet<&Kind>>()
-                .len(),
-            declared_hybrids: self.declared_hybrids,
-            device_classes: self.device_classes,
-        }
+        self.base
     }
 
     /// Whether the relation holds this exact pair.
@@ -797,16 +822,28 @@ impl<'a> Reader<'a> {
         }
         self.hybrids();
         if self.findings.is_empty() {
+            let base = HeadlineCounts {
+                names: self.pairs.len(),
+                rows: self.pairs.values().map(BTreeSet::len).sum(),
+                kinds: self
+                    .pairs
+                    .values()
+                    .flatten()
+                    .collect::<BTreeSet<&Kind>>()
+                    .len(),
+                declared_hybrids: self.declared.len(),
+                device_classes: self.device_classes,
+            };
             Ok(KindRegistry {
                 pairs: self.pairs,
                 borderline: self.borderline,
+                local: BTreeSet::new(),
+                base,
                 headline: self.headline,
                 families: self.families,
                 modifiers: self.modifiers,
                 unrecognized: self.unrecognized,
                 unapplied: Vec::new(),
-                declared_hybrids: self.declared.len(),
-                device_classes: self.device_classes,
             })
         } else {
             self.findings.sort();

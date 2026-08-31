@@ -418,7 +418,7 @@ fn attributed(
                 .iter()
                 .any(|segment| harness.iter().any(|token| token == segment))
         })
-        .map(|hit| asset(profile, &hit.identifier, area.clone(), hit.span))
+        .map(|hit| asset(profile, &hit.identifier, area.clone(), hit))
         .collect()
 }
 
@@ -439,7 +439,7 @@ fn definitions(walk: &Walk, profile: &Profile) -> Vec<Asset> {
     };
     walk.modules
         .iter()
-        .map(|hit| asset(profile, &hit.identifier, area.clone(), hit.span))
+        .map(|hit| asset(profile, &hit.identifier, area.clone(), hit))
         .collect()
 }
 
@@ -448,13 +448,14 @@ fn definitions(walk: &Walk, profile: &Profile) -> Vec<Asset> {
 /// The name transformation is not applied here: an [`Asset`] holds the
 /// identifier as the language spells it, and turning it into a label's name
 /// segment is the derivation's affair.
-fn asset(profile: &Profile, identifier: &str, area: Area, span: ByteSpan) -> Asset {
+fn asset(profile: &Profile, identifier: &str, area: Area, hit: &Hit) -> Asset {
     Asset {
         profile: profile.id.clone(),
         identifier: String::from(identifier),
         area,
         place: profile.standard_place.clone(),
-        span,
+        span: hit.span,
+        opens: hit.opens,
     }
 }
 
@@ -667,6 +668,10 @@ struct Doc {
 struct Hit {
     identifier: String,
     span: ByteSpan,
+    /// Where the item's own documentation opens, in whole-file coordinates:
+    /// the byte after the brace that opens its body, which is the first
+    /// position an inner documentation comment of it can occupy.
+    opens: usize,
     /// The final segments of the item's own attribute paths.
     attributes: Vec<String>,
 }
@@ -681,10 +686,17 @@ struct Walk {
 }
 
 impl Walk {
-    fn function(&mut self, ident: &syn::Ident, attrs: &[syn::Attribute], span: ByteSpan) {
+    fn function(
+        &mut self,
+        ident: &syn::Ident,
+        attrs: &[syn::Attribute],
+        span: ByteSpan,
+        opens: usize,
+    ) {
         self.functions.push(Hit {
             identifier: ident.to_string(),
             span,
+            opens,
             attributes: attrs.iter().filter_map(final_segment).collect(),
         });
     }
@@ -706,12 +718,14 @@ impl<'ast> Visit<'ast> for Walk {
     }
 
     fn visit_item_fn(&mut self, item: &'ast syn::ItemFn) {
-        self.function(&item.sig.ident, &item.attrs, range(item.span()));
+        let opens = range(item.block.brace_token.span.open()).end;
+        self.function(&item.sig.ident, &item.attrs, range(item.span()), opens);
         syn::visit::visit_item_fn(self, item);
     }
 
     fn visit_impl_item_fn(&mut self, item: &'ast syn::ImplItemFn) {
-        self.function(&item.sig.ident, &item.attrs, range(item.span()));
+        let opens = range(item.block.brace_token.span.open()).end;
+        self.function(&item.sig.ident, &item.attrs, range(item.span()), opens);
         syn::visit::visit_impl_item_fn(self, item);
     }
 
@@ -720,10 +734,11 @@ impl<'ast> Visit<'ast> for Walk {
             syn::visit::visit_item_mod(self, item);
             return;
         }
-        if item.content.is_some() {
+        if let Some((brace, _)) = &item.content {
             self.modules.push(Hit {
                 identifier: item.ident.to_string(),
                 span: range(item.span()),
+                opens: range(brace.span.open()).end,
                 attributes: item.attrs.iter().filter_map(final_segment).collect(),
             });
         } else {

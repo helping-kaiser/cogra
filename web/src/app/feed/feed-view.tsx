@@ -120,12 +120,7 @@ export function FeedView({
       {phase === "signedIn" && <StatusBanners />}
       {/* What the wizard just did, if anything. Dismissing drops the query
           value, so the notice cannot come back on a reload. */}
-      {outcome !== null && (
-        <ComposeNotice
-          outcome={outcome}
-          onDismiss={() => router.replace("/feed")}
-        />
-      )}
+      {outcome !== null && <ComposeNotice onDismiss={() => router.replace("/feed")} />}
       {transportFault === "refresh" && (
         <div className="flex items-center gap-3">
           {/* With posts on screen the fault means "stale", not "gone":

@@ -1,3 +1,8 @@
+# Web agent rules · `guide:web:agent-rules`
+
+Everything below the marker is written and re-added by `next dev`; this
+heading sits outside it so the file keeps its title across regenerations.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

@@ -1,4 +1,4 @@
-# Layers
+# Layers · `spec:primitive:layers`
 
 CoGra is **append-only everywhere that matters**. Every piece of
 authored or expressed state is layered rather than overwritten,

@@ -1,4 +1,4 @@
-# Items
+# Items · `spec:instances:items`
 
 An **Item** is a physical or digital good — something that can be
 owned, transferred, and talked about. On the substrate an Item

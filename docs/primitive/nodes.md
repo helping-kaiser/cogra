@@ -1,4 +1,4 @@
-# Nodes
+# Nodes · `spec:primitive:nodes`
 
 The catalog of node types across the substrate: the L1 node types
 CoGra's concepts resolve to, and the overlay node types of CoGra's

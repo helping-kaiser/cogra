@@ -1,4 +1,4 @@
-# The Interchange Crate — Concept
+# The Interchange Crate — Concept · `spec:xchg:concept`
 
 _Phase 1 of the standard engineering process: concept. Review closes this phase; the design candidate follows._
 
