@@ -163,9 +163,14 @@ private fun ActBlock(state: ComposeWizardState) {
             )
         }
         Hairline()
+        val acts = state.signedActionCount
         SummaryRow(
-            headline = "${state.signedActionCount} signed actions",
-            detail = "they land together, or none does",
+            headline = if (acts == 1) "1 signed action" else "$acts signed actions",
+            // The all-or-nothing subline rides the total **whenever the
+            // seal commits more than one act**, and is omitted on a
+            // single-act seal, where there is nothing for it to be true of
+            // (design/readme.md §13, the healed seal drift).
+            detail = "they land together, or none does".takeIf { acts > 1 },
             testTag = "wizard_seal_total",
         )
     }

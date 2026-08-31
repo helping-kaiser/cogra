@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.PriorityHigh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +29,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -150,8 +150,16 @@ fun MediaThumb(
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
             .clearAndSetSemantics {
                 // One node for the whole thumbnail: the badge is a property
-                // of the pick, not a second control to hunt for.
-                this.contentDescription = contentDescription ?: item.altText ?: "Picture"
+                // of the pick, not a second control to hunt for. An upload
+                // state outranks the picture's own name, because it is the
+                // thing that changed and the thing that needs acting on.
+                this.contentDescription = when {
+                    failed -> "Didn't upload"
+                    uploading && progress != null ->
+                        "Uploading, ${(progress.coerceIn(0f, 1f) * 100).toInt()}%"
+                    uploading -> "Uploading"
+                    else -> contentDescription ?: item.altText ?: "Picture"
+                }
             },
     ) {
         AsyncImage(
@@ -186,11 +194,13 @@ private fun BoxScope.UploadRing(progress: Float?) {
     Box(
         modifier = Modifier
             .matchParentSize()
-            .background(MediaOverlay.Badge),
+            .background(MediaOverlay.UploadScrim),
         contentAlignment = Alignment.Center,
     ) {
         val ring = Modifier.size(RingSize)
-        val ink = MaterialTheme.colorScheme.primary
+        // White on its own scrim rather than `primary`: the ring sits on
+        // arbitrary pixels, so it cannot follow the surface.
+        val ink = MediaOverlay.BadgeInk
         val track = MediaOverlay.BadgeInk.copy(alpha = 0.35f)
         if (progress == null) {
             // The board draws a determinate ring, but `uploadMedia` reports
@@ -219,8 +229,11 @@ private fun BoxScope.UploadRing(progress: Float?) {
 }
 
 /**
- * The failed tile's mark. The words are the error line's — this only says
- * *which* tile, which is the one thing 48dp can carry.
+ * The failed tile's mark: an 18dp `error` dot carrying a bare `!`.
+ *
+ * The words are the error line's — this only says *which* tile, which is
+ * the one thing 48dp can carry. The tile's remove X gives way to it, so a
+ * failed picture has exactly one story and one place to act on it.
  */
 @Composable
 private fun BoxScope.FailedBadge() {
@@ -228,21 +241,20 @@ private fun BoxScope.FailedBadge() {
         modifier = Modifier
             .align(Alignment.TopEnd)
             .padding(3.dp)
-            .size(16.dp)
+            .size(18.dp)
             .clip(CircleShape)
             .background(MaterialTheme.colorScheme.error),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            imageVector = Icons.Filled.PriorityHigh,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onError,
-            modifier = Modifier.size(10.dp),
+        Text(
+            text = "!",
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onError,
         )
     }
 }
 
-private val RingSize = 18.dp
+private val RingSize = 26.dp
 private val RingStroke = 3.dp
 
 @Composable

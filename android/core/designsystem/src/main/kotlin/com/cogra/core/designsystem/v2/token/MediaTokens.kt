@@ -72,6 +72,9 @@ object MediaOverlay {
     /** The scrim behind a duration, a `Cover` mark, or a remove affordance. */
     val Badge = Color(0x8C000000)
 
+    /** The lighter scrim an upload ring rides — `rgba(0,0,0,0.35)`. */
+    val UploadScrim = Color(0x59000000)
+
     /** Ink on [Badge]; white rather than `onSurface` for the same reason. */
     val BadgeInk = Color(0xFFFFFFFF)
 
