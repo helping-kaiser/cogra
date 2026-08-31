@@ -834,6 +834,8 @@ mod tests {
         }
     }
 
+    /// Every document of the standard's own corpus parses into rules.
+    /// ´claim:parse:the-standards-corpus-parses´
     #[test]
     fn every_corpus_document_parses() {
         for (what, source) in CORPUS {
@@ -846,6 +848,9 @@ mod tests {
 
     /// Figure 14 defines 40 rules, `any` through `undefined`, the first of
     /// them `any = #`.
+    ///
+    /// The standard's prelude is read as its forty rules, in the order and the shape it wrote them.
+    /// ´claim:parse:the-prelude-is-read-as-the-standard-wrote-it´
     #[test]
     fn the_prelude_is_read_the_way_the_rfc_wrote_it() {
         let (_, prelude) = CORPUS[2];
@@ -863,6 +868,9 @@ mod tests {
     /// comments as `S`, a rule boundary without a newline, and each assignment
     /// operator. `a = (1)` is the parenthesis that is a type rather than a
     /// group, and the two socket rules take a plug through `/=` and `//=`.
+    ///
+    /// A document is one rule or many, in any surrounding trivia, under each assignment operator.
+    /// ´claim:parse:a-document-is-a-sequence-of-rules´
     #[test]
     fn cddl_and_rule() {
         assert_eq!(
@@ -887,6 +895,9 @@ mod tests {
     /// `genericparm` and `genericarg`: one parameter and several, `S` inside
     /// the angle brackets, an argument that is a whole `type1`, and arguments
     /// after `~`, after `&`, and inside a group.
+    ///
+    /// Generic parameters and arguments parse wherever the grammar puts them.
+    /// ´claim:parse:generic-parameters-and-arguments-parse´
     #[test]
     fn generic_parameters_and_arguments() {
         assert_eq!(
@@ -908,6 +919,9 @@ mod tests {
     /// `type` and `type1`: one alternative and several, both range operators,
     /// a range over names, and control operators — including `.lorem`, a
     /// control name no one defines, which the grammar admits all the same.
+    ///
+    /// A type parses as one alternative or several, with either range operator and with any control operator.
+    /// ´claim:parse:types-and-choices-parse´
     #[test]
     fn types_and_choices() {
         assert_eq!(
@@ -930,6 +944,9 @@ mod tests {
     /// type, a map, an array, `~`, both `&` forms, and each tag and
     /// major-type head down to the bare `#`. A tag number may be written in
     /// another base, and the grammar's `DIGIT` reaches 9.
+    ///
+    /// Every alternative the grammar gives a type parses, from a value down to the bare data-item head.
+    /// ´claim:parse:every-type-alternative-parses´
     #[test]
     fn type2_alternatives() {
         assert_eq!(
@@ -958,6 +975,9 @@ mod tests {
     /// makes `{}` and `[]` groups at all, and `optcom` with a comma, without
     /// one, and trailing. Since `grpchoice = *(grpent optcom)` admits no
     /// entries, a choice may be empty on either side of the `//`.
+    ///
+    /// A group parses with one choice or several, empty on either side, and with the comma optional throughout.
+    /// ´claim:parse:groups-and-group-choices-parse´
     #[test]
     fn group_and_grpchoice() {
         assert_eq!(
@@ -982,6 +1002,9 @@ mod tests {
     /// before it, a member key, both together, and an inline group with and
     /// without an occurrence indicator or a choice. `a = [group-name]` is the
     /// alternative the RFC marks preempted, reached through the first.
+    ///
+    /// Every alternative the grammar gives a group entry parses.
+    /// ´claim:parse:every-group-entry-alternative-parses´
     #[test]
     fn grpent_alternatives() {
         assert_eq!(
@@ -1003,6 +1026,9 @@ mod tests {
     /// literal key type, with a range, and with a type as the key; and the
     /// colon form after a bareword, a number, a text literal, and a byte
     /// string.
+    ///
+    /// Every member-key form parses, the arrow forms and the colon forms alike.
+    /// ´claim:parse:every-member-key-form-parses´
     #[test]
     fn memberkey_forms() {
         assert_eq!(
@@ -1024,6 +1050,9 @@ mod tests {
     /// Every `occur` form: `*`, `+`, `?`, and the bounded indicator with a
     /// lower bound, an upper bound, and both — the bounds writable in another
     /// base. The last has the indicator standing before a member key.
+    ///
+    /// Every occurrence indicator parses, the bounded ones with either bound and with both.
+    /// ´claim:parse:every-occurrence-form-parses´
     #[test]
     fn occur_forms() {
         assert_eq!(
@@ -1044,6 +1073,9 @@ mod tests {
     /// Every `value` form: numbers in each base and each float spelling,
     /// including a hexfloat; text plain, empty, and carrying an escape; and
     /// byte strings unqualified, base 16, and base 64.
+    ///
+    /// Every literal form parses, in each base and each spelling the grammar admits.
+    /// ´claim:parse:every-value-form-parses´
     #[test]
     fn value_forms() {
         assert_eq!(
@@ -1075,6 +1107,9 @@ mod tests {
     /// so no lower bound. A control operator needs the space that keeps it out
     /// of the name in front of it; without that space `text.size` is one name,
     /// and a legal one.
+    ///
+    /// A missing space changes what parses, so each of these snippets reads as something other than what it resembles.
+    /// ´claim:parse:the-absence-of-a-space-is-load-bearing´
     #[test]
     fn the_absence_of_space_is_load_bearing() {
         assert_eq!(
@@ -1090,6 +1125,9 @@ mod tests {
     }
 
     /// `cddl = S 1*(rule S)` requires a rule.
+    ///
+    /// A document holding no rule is refused, trivia being no rule.
+    /// ´claim:parse:a-document-needs-a-rule´
     #[test]
     fn refuses_an_empty_document() {
         let error = refuse("");
@@ -1097,12 +1135,15 @@ mod tests {
         assert!(error.detail.contains("at least one rule"));
     }
 
+    /// (´claim:parse:a-document-needs-a-rule´)
     #[test]
     fn refuses_a_document_of_only_trivia() {
         let error = refuse("; nothing but a comment\n");
         assert!(error.detail.contains("at least one rule"));
     }
 
+    /// A rule is refused where its name, its assignment, or its body is missing.
+    /// ´claim:parse:a-rule-needs-a-name-an-assignment-and-a-body´
     #[test]
     fn refuses_a_bare_name_with_no_assignment() {
         let error = refuse("a");
@@ -1110,18 +1151,22 @@ mod tests {
         assert!(error.detail.contains("`=`"));
     }
 
+    /// (´claim:parse:a-rule-needs-a-name-an-assignment-and-a-body´)
     #[test]
     fn refuses_an_assignment_with_no_body() {
         let error = refuse("a =");
         assert_eq!((error.line, error.column), (1, 4));
     }
 
+    /// (´claim:parse:a-rule-needs-a-name-an-assignment-and-a-body´)
     #[test]
     fn refuses_a_rule_that_does_not_start_with_a_name() {
         let error = refuse("= 1");
         assert_eq!((error.line, error.column), (1, 1));
     }
 
+    /// An unclosed bracket, brace or parenthesis is refused naming the closer it wanted.
+    /// ´claim:parse:an-unclosed-bracket-names-the-closer-it-wanted´
     #[test]
     fn refuses_an_unclosed_array() {
         let error = refuse("a = [1, 2");
@@ -1129,30 +1174,36 @@ mod tests {
         assert!(error.detail.contains("`]`"));
     }
 
+    /// (´claim:parse:an-unclosed-bracket-names-the-closer-it-wanted´)
     #[test]
     fn refuses_an_unclosed_map() {
         let error = refuse("a = {b: 1");
         assert!(error.detail.contains("`}`"));
     }
 
+    /// (´claim:parse:an-unclosed-bracket-names-the-closer-it-wanted´)
     #[test]
     fn refuses_an_unclosed_parenthesis() {
         let error = refuse("a = (int");
         assert!(error.detail.contains("`)`"));
     }
 
+    /// A bracket closed by the wrong closer is refused at that closer.
+    /// ´claim:parse:a-bracket-closed-by-the-wrong-one-is-refused´
     #[test]
     fn refuses_a_bracket_closed_by_the_wrong_one() {
         let error = refuse("a = [1}");
         assert_eq!((error.line, error.column), (1, 7));
     }
 
+    /// (´claim:parse:an-unclosed-bracket-names-the-closer-it-wanted´)
     #[test]
     fn refuses_an_unclosed_generic_parameter_list() {
         let error = refuse("a<b = 1");
         assert!(error.detail.contains("`>`"));
     }
 
+    /// (´claim:parse:an-unclosed-bracket-names-the-closer-it-wanted´)
     #[test]
     fn refuses_an_unclosed_generic_argument_list() {
         let error = refuse("a = b<int");
@@ -1160,12 +1211,16 @@ mod tests {
     }
 
     /// `genericparm` requires at least one id.
+    ///
+    /// A generic parameter or argument list must hold at least one entry.
+    /// ´claim:parse:a-generic-list-may-not-be-empty´
     #[test]
     fn refuses_empty_generic_parameters() {
         let error = refuse("a<> = 1");
         assert_eq!((error.line, error.column), (1, 3));
     }
 
+    /// (´claim:parse:a-generic-list-may-not-be-empty´)
     #[test]
     fn refuses_empty_generic_arguments() {
         let error = refuse("a = b<>");
@@ -1173,12 +1228,17 @@ mod tests {
     }
 
     /// `genericarg` holds `type1`, which cannot be a choice.
+    ///
+    /// A generic argument holds one type and no choice.
+    /// ´claim:parse:a-generic-argument-is-no-type-choice´
     #[test]
     fn refuses_a_generic_argument_that_is_a_type_choice() {
         let error = refuse("a = b<int / text>");
         assert!(error.detail.contains("`>`"));
     }
 
+    /// A range with no upper bound is refused.
+    /// ´claim:parse:a-range-needs-its-upper-bound´
     #[test]
     fn refuses_a_range_with_no_upper_bound() {
         let error = refuse("a = 1 ..");
@@ -1186,18 +1246,24 @@ mod tests {
     }
 
     /// `type1` admits one operation, so the second is unexpected.
+    ///
+    /// One type admits one range or control operation, so a second is unexpected.
+    /// ´claim:parse:a-type-admits-one-operation´
     #[test]
     fn refuses_a_chained_range() {
         let error = refuse("a = 1 .. 2 .. 3");
         assert_eq!((error.line, error.column), (1, 12));
     }
 
+    /// A control operator is refused where its name or its operand is missing.
+    /// ´claim:parse:a-control-operator-needs-a-name-and-an-operand´
     #[test]
     fn refuses_a_control_operator_with_no_operand() {
         let error = refuse("a = text .size");
         assert!(error.detail.contains("expected a type"));
     }
 
+    /// (´claim:parse:a-control-operator-needs-a-name-and-an-operand´)
     #[test]
     fn refuses_a_control_operator_with_no_name() {
         let error = refuse("a = text . 4");
@@ -1205,30 +1271,38 @@ mod tests {
         assert!(error.detail.contains("control-operator"));
     }
 
+    /// A type choice with nothing behind the slash is refused.
+    /// ´claim:parse:a-choice-needs-its-second-alternative´
     #[test]
     fn refuses_a_type_choice_with_no_second_alternative() {
         let error = refuse("a = int /");
         assert!(error.detail.contains("expected a type"));
     }
 
+    /// A map entry is refused where the key or the value beside its arrow is missing.
+    /// ´claim:parse:an-entry-needs-both-sides-of-its-arrow´
     #[test]
     fn refuses_an_arrow_with_no_key_in_front_of_it() {
         let error = refuse("a = {=> 1}");
         assert_eq!((error.line, error.column), (1, 6));
     }
 
+    /// (´claim:parse:an-entry-needs-both-sides-of-its-arrow´)
     #[test]
     fn refuses_a_member_key_with_no_value() {
         let error = refuse("a = {b:}");
         assert_eq!((error.line, error.column), (1, 8));
     }
 
+    /// (´claim:parse:an-entry-needs-both-sides-of-its-arrow´)
     #[test]
     fn refuses_an_arrow_with_no_value() {
         let error = refuse("a = {b =>}");
         assert_eq!((error.line, error.column), (1, 10));
     }
 
+    /// A cut marker with no arrow behind it is refused.
+    /// ´claim:parse:a-cut-marker-needs-its-arrow´
     #[test]
     fn refuses_a_cut_marker_without_an_arrow() {
         let error = refuse("a = {b ^ 1}");
@@ -1236,12 +1310,17 @@ mod tests {
     }
 
     /// `optcom` follows an entry; it does not precede one.
+    ///
+    /// A comma follows a group entry and precedes none.
+    /// ´claim:parse:a-comma-follows-an-entry-and-precedes-none´
     #[test]
     fn refuses_a_leading_comma_in_a_group() {
         let error = refuse("a = {, b: 1}");
         assert_eq!((error.line, error.column), (1, 6));
     }
 
+    /// An occurrence indicator with no entry behind it is refused.
+    /// ´claim:parse:an-occurrence-indicator-needs-its-entry´
     #[test]
     fn refuses_an_occurrence_indicator_with_no_entry() {
         let error = refuse("a = [*]");
@@ -1250,6 +1329,8 @@ mod tests {
 
     /// `occur = [uint] "*" [uint]` admits no space, so the `2` here is an
     /// entry of its own and `*3` is left wanting one.
+    ///
+    /// (´claim:parse:an-occurrence-indicator-needs-its-entry´)
     #[test]
     fn refuses_an_occurrence_indicator_held_off_from_its_bound() {
         let error = refuse("a = [2 *3]");
@@ -1257,30 +1338,38 @@ mod tests {
         assert!(error.detail.contains("expected a type"));
     }
 
+    /// A tag is refused where its enclosed type or its closing parenthesis is missing.
+    /// ´claim:parse:a-tag-needs-a-type-and-its-closing-parenthesis´
     #[test]
     fn refuses_a_tag_whose_parenthesis_is_empty() {
         let error = refuse("a = #6.24()");
         assert!(error.detail.contains("expected a type"));
     }
 
+    /// (´claim:parse:a-tag-needs-a-type-and-its-closing-parenthesis´)
     #[test]
     fn refuses_a_tag_with_no_closing_parenthesis() {
         let error = refuse("a = #6.24(bstr");
         assert!(error.detail.contains("`)`"));
     }
 
+    /// An unwrap and an enumeration each need a name behind them.
+    /// ´claim:parse:an-unwrap-and-an-enumeration-need-a-name´
     #[test]
     fn refuses_an_unwrap_with_no_name() {
         let error = refuse("a = ~1");
         assert_eq!((error.line, error.column), (1, 6));
     }
 
+    /// (´claim:parse:an-unwrap-and-an-enumeration-need-a-name´)
     #[test]
     fn refuses_an_enumeration_with_no_name() {
         let error = refuse("a = &1");
         assert_eq!((error.line, error.column), (1, 6));
     }
 
+    /// A token left over after a complete rule is refused where it stands.
+    /// ´claim:parse:nothing-may-follow-a-complete-rule´
     #[test]
     fn refuses_a_stray_token_after_a_complete_rule() {
         let error = refuse("a = 1 ]");
@@ -1288,6 +1377,8 @@ mod tests {
     }
 
     /// A group entry may sit beside another; a rule body may not.
+    ///
+    /// (´claim:parse:nothing-may-follow-a-complete-rule´)
     #[test]
     fn refuses_two_types_juxtaposed_at_the_top_level() {
         let error = refuse("a = 1 2");
@@ -1296,6 +1387,9 @@ mod tests {
 
     /// `rule = typename [genericparm] S assignt`: no `S` before the
     /// parameters.
+    ///
+    /// Generic parameters must touch the name they belong to.
+    /// ´claim:parse:generic-parameters-may-not-be-held-off´
     #[test]
     fn refuses_generic_parameters_held_off_by_a_space() {
         let error = refuse("a <b> = 1");
@@ -1303,6 +1397,8 @@ mod tests {
         assert!(error.detail.contains("`=`"));
     }
 
+    /// A fault the scanner finds is reported through the parser's own channel.
+    /// ´claim:parse:a-lexical-fault-arrives-through-the-same-channel´
     #[test]
     fn refuses_lexical_faults_through_the_same_channel() {
         assert!(refuse("a = \"open").detail.contains("unterminated text"));
@@ -1310,6 +1406,8 @@ mod tests {
         assert!(refuse("a = !").detail.contains("unexpected character"));
     }
 
+    /// A refusal names the line and the column the parser gave up at.
+    /// ´claim:parse:a-refusal-is-located-where-it-happened´
     #[test]
     fn locates_a_refusal_on_the_line_it_happened() {
         let error = refuse("a = 1\nb = 2\nc = [3");
@@ -1317,6 +1415,9 @@ mod tests {
     }
 
     /// Located, not a panic: the refusal points at where the descent gave up.
+    ///
+    /// A type nested past the depth bound is a located refusal and no crash.
+    /// ´claim:parse:nesting-past-the-bound-is-located-not-fatal´
     #[test]
     fn refuses_a_type_nested_past_the_depth_bound() {
         let deep = format!("a = {}1{}", "(".repeat(400), ")".repeat(400));
@@ -1327,6 +1428,9 @@ mod tests {
 
     /// Eight levels of array nesting — deeper than any real theory — is well
     /// within the bound.
+    ///
+    /// Nesting deeper than any real theory is still well inside the bound.
+    /// ´claim:parse:a-realistic-nesting-is-well-inside-the-bound´
     #[test]
     fn a_realistically_nested_theory_still_parses() {
         let nested = format!("a = {}uint{}", "[".repeat(8), "]".repeat(8));
@@ -1339,6 +1443,9 @@ mod tests {
     /// depth-`d` entry 2^d work, and forty levels of any of these shapes would
     /// not finish. The time bound is generous, so the guard survives a slow
     /// machine without ever admitting a parser that doubles.
+    ///
+    /// A group entry's leading type is parsed once, so deep nesting costs one descent and not an exponential walk.
+    /// ´claim:parse:a-group-entry-is-parsed-once´
     #[test]
     fn a_deeply_nested_group_entry_parses_without_reparsing() {
         let depth = 40;
@@ -1370,6 +1477,9 @@ mod tests {
     /// The value after `=>` is a whole `type`, so its first `type1` — the one
     /// the entry parsed while looking for the arrow — must go on to collect
     /// the remaining `/`-choices rather than standing alone.
+    ///
+    /// The value behind an arrow is a whole type, and it keeps every alternative written there.
+    /// ´claim:parse:an-arrow-value-keeps-its-choices´
     #[test]
     fn a_content_key_carries_a_value_with_choices() {
         let cddl = accept("a = {2 => x / y / z}");
@@ -1392,42 +1502,53 @@ mod tests {
         assert_eq!(value.choices.len(), 3, "the value keeps all three choices");
     }
 
+    /// A plain assignment is read as a type where it can be, and as a group where it cannot.
+    /// ´claim:parse:a-plain-rule-prefers-the-type-reading´
     #[test]
     fn an_equals_rule_takes_the_type_reading_when_there_is_one() {
         let cddl = accept("a = (1)");
         assert!(matches!(cddl.rules[0].body, RuleBody::Type(_)));
     }
 
+    /// (´claim:parse:a-plain-rule-prefers-the-type-reading´)
     #[test]
     fn an_equals_rule_falls_back_to_the_group_reading() {
         let cddl = accept("a = (1, 2)");
         assert!(matches!(cddl.rules[0].body, RuleBody::Group(_)));
     }
 
+    /// (´claim:parse:a-plain-rule-prefers-the-type-reading´)
     #[test]
     fn an_equals_rule_reads_a_member_key_as_a_group() {
         let cddl = accept("a = ( rater: text )");
         assert!(matches!(cddl.rules[0].body, RuleBody::Group(_)));
     }
 
+    /// An occurrence indicator in a plain rule's body forces the group reading.
+    /// ´claim:parse:an-occurrence-indicator-forces-the-group-reading´
     #[test]
     fn an_occurrence_indicator_forces_the_group_reading() {
         let cddl = accept("a = * text");
         assert!(matches!(cddl.rules[0].body, RuleBody::Group(_)));
     }
 
+    /// An augmenting assignment settles the reading by itself, group or type as its operator says.
+    /// ´claim:parse:an-augmenting-assignment-settles-the-reading´
     #[test]
     fn a_group_choice_assignment_is_always_a_group() {
         let cddl = accept("a //= 1");
         assert!(matches!(cddl.rules[0].body, RuleBody::Group(_)));
     }
 
+    /// (´claim:parse:an-augmenting-assignment-settles-the-reading´)
     #[test]
     fn a_type_choice_assignment_is_always_a_type() {
         let cddl = accept("a /= 1");
         assert!(matches!(cddl.rules[0].body, RuleBody::Type(_)));
     }
 
+    /// A rule's span covers exactly the text it was read from, and carries where that text began.
+    /// ´claim:parse:a-rule-spans-the-text-it-was-read-from´
     #[test]
     fn a_rule_spans_the_text_it_was_read_from() {
         let source = "a = 1\nbb = [2]";
@@ -1437,6 +1558,8 @@ mod tests {
         assert_eq!((second.span.line, second.span.column), (2, 1));
     }
 
+    /// A rule name's span covers the name and nothing around it.
+    /// ´claim:parse:a-name-spans-only-itself´
     #[test]
     fn a_name_spans_only_itself() {
         let source = "reputation-object = 1";
@@ -1445,6 +1568,8 @@ mod tests {
         assert_eq!(&source[name.span.start..name.span.end], "reputation-object");
     }
 
+    /// A socket is recognised by its name alone, and the two kinds are told apart.
+    /// ´claim:parse:a-socket-is-recognised-by-its-name´
     #[test]
     fn sockets_are_recognised_by_their_names() {
         let cddl = accept("$a = 1\n$$b = (c: 1)\nd = 2");
