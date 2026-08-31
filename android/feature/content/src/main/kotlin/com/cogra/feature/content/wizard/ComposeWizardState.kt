@@ -118,9 +118,9 @@ data class ComposeWizardState(
     /**
      * The composer opens on the pictures. `ComposeDraft` draws its offer
      * over the picker grid and captions the stage behind it "Or start
-     * fresh — pick one picture, several, or one video", which is the
-     * board saying in as many words which half a fresh composer starts
-     * on; `ComposeWords` is the half reached by "Write words instead".
+     * fresh —", which is the board saying which half a fresh composer
+     * starts on; `ComposeWords` is the half reached by "Write words
+     * instead".
      */
     val mode: BodyMode = BodyMode.Media,
 
@@ -290,10 +290,13 @@ fun ComposeWizardState.advanced(): ComposeWizardState? = when (step) {
 }
 
 /**
- * One stage back, for the seal's own `Back` pill. The header's arrow is
- * not this: it leaves the wizard from every stage, keeping the draft.
+ * One stage back — the header's arrow, the system gesture, and the
+ * seal's own `Back` pill alike (jakob 2026-08-31: back "always goes back
+ * one step").
  *
- * Null where there is no earlier stage to reach.
+ * Null where there is no earlier stage to reach, which is what makes the
+ * first stage the one place back leaves from. The draft is kept either
+ * way; it is written continuously rather than at the exit.
  */
 fun ComposeWizardState.retreated(): ComposeWizardState? = when (step) {
     WizardStep.Body -> null
