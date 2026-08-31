@@ -42,6 +42,8 @@ import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.PostView
+import com.cogra.domain.content.SensitiveMark
+import com.cogra.domain.content.isRevealed
 import com.cogra.feature.content.R
 import com.cogra.feature.stance.StanceControlRoute
 
@@ -80,6 +82,7 @@ fun FeedRoute(
         onOpenDraft = onOpenDraft,
         onRefresh = viewModel::refresh,
         onLoadMore = viewModel::loadMore,
+        onReveal = viewModel::onReveal,
         onOpenPost = onOpenPost,
         onOpenActor = onOpenActor,
         onOpenTopic = onOpenTopic,
@@ -106,6 +109,8 @@ fun FeedScreen(
     expiredLabel: String? = null,
     onExpiredDismissed: () -> Unit = {},
     onOpenDraft: () -> Unit = {},
+    /** A reader chose to look at one veiled body, as it stands. */
+    onReveal: (String, SensitiveMark) -> Unit = { _, _ -> },
     /**
      * The stance control a post card carries (design.md §6), hoisted so
      * the screen stays free of DI and previewable.
@@ -231,6 +236,8 @@ fun FeedScreen(
                                     onOpenActor = onOpenActor,
                                     onOpenTopic = onOpenTopic,
                                     onOpenPost = onOpenPost,
+                                    revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
+                                    onReveal = { onReveal(post.id, post.sensitiveMark()) },
                                     stanceControl = stanceControl,
                                 )
                             }
@@ -359,6 +366,8 @@ private fun PostCard(
     onOpenTopic: (String) -> Unit,
     /** A referenced post opens on its own detail, not this card's. */
     onOpenPost: (String) -> Unit,
+    revealed: Boolean,
+    onReveal: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
 ) {
     Card(
@@ -398,6 +407,8 @@ private fun PostCard(
                 // reader scrolling the feed is choosing between posts,
                 // not looking at one picture.
                 onOpenMedia = onClick,
+                revealed = revealed,
+                onReveal = onReveal,
             )
             if (post.landing.isPending) {
                 PendingMarker(testTag = "feed_post_pending_${post.id}")

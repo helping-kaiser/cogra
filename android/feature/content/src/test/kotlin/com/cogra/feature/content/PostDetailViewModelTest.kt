@@ -16,6 +16,7 @@ import com.cogra.domain.ReferenceClaimView
 import com.cogra.domain.UserError
 import com.cogra.domain.content.LandingSignal
 import com.cogra.domain.content.NodeLanding
+import com.cogra.domain.content.SensitiveReveals
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
@@ -49,6 +50,7 @@ class PostDetailViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
     private val landings = LandingSignal()
+    private val reveals = SensitiveReveals()
     private val actor = ActorKey.generate()
     private val identity = FakeIdentityStore().apply { seed = actor.seed() }
     private val sealer = SealingWriteRepository(actor)
@@ -204,6 +206,7 @@ class PostDetailViewModelTest {
         WriteSigner(sealer, identity),
         landings,
         identity,
+        reveals,
     )
 
     /**
