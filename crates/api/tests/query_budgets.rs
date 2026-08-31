@@ -52,6 +52,9 @@ fn nested_query(levels: usize) -> String {
 
 /// Fifteen `invitedBy` hops under `me` come to 17 field levels, past the
 /// budget.
+///
+/// The depth budget cuts at its stated level, rejecting a query past it during validation.
+/// ´claim:budgets:the-depth-budget-cuts-where-it-says´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_query_past_the_depth_budget_is_rejected(pool: PgPool) {
     let schema = schema(pool, QueryBudgets::release());
@@ -62,6 +65,8 @@ async fn a_query_past_the_depth_budget_is_rejected(pool: PgPool) {
 /// Ten hops come to depth 12, inside the budget. The anonymous viewer
 /// resolves `me` to null; the point is that validation let the query
 /// through at all.
+///
+/// (´claim:budgets:the-depth-budget-cuts-where-it-says´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_query_within_the_depth_budget_passes_validation(pool: PgPool) {
     let schema = schema(pool, QueryBudgets::release());
@@ -74,6 +79,9 @@ async fn a_query_within_the_depth_budget_passes_validation(pool: PgPool) {
 /// Two connection levels no longer reach it: the clients themselves
 /// page three deep, so the ceiling that admits them sits above any
 /// two-level product.
+///
+/// The complexity budget refuses the multiplicative blowup of nested full pages while sitting above any product the clients' own paging reaches.
+/// ´claim:budgets:the-complexity-budget-refuses-the-blowup´
 #[sqlx::test(migrations = "../../migrations")]
 async fn nested_full_page_connections_exceed_the_complexity_budget(pool: PgPool) {
     let schema = schema(pool, QueryBudgets::release());
@@ -86,6 +94,7 @@ async fn nested_full_page_connections_exceed_the_complexity_budget(pool: PgPool)
     assert_eq!(first_error(&response), "Query is too complex.");
 }
 
+/// (´claim:budgets:the-complexity-budget-refuses-the-blowup´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_modest_connection_query_fits_the_budget(pool: PgPool) {
     let schema = schema(pool, QueryBudgets::release());
@@ -99,6 +108,9 @@ async fn a_modest_connection_query_fits_the_budget(pool: PgPool) {
 /// flip point is what keeps that bound from drifting silently: one
 /// `relevance` per row prices the whole read at `1 + (50 + 1)` — the
 /// `post` field, then the fold field plus its bound many one-cost rows.
+///
+/// A field taking no page argument charges the bound it declares, and pinning the flip point exactly is what keeps that bound from drifting silently.
+/// ´claim:budgets:an-unpaged-field-charges-its-declared-bound´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_fold_list_charges_its_stated_bound(pool: PgPool) {
     let query = "{ post(id: \"00000000-0000-0000-0000-000000000000\") { topics { relevance } } }";
@@ -121,6 +133,8 @@ async fn a_fold_list_charges_its_stated_bound(pool: PgPool) {
 /// With no `first`/`last` the field prices at the default page size,
 /// 20 × child. A budget sized just under that rejects the bare read,
 /// which is what proves omission is not free.
+///
+/// (´claim:budgets:a-connection-prices-the-requested-or-default-page´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_unpriced_connection_charges_the_default_page(pool: PgPool) {
     let schema = schema(
@@ -187,6 +201,9 @@ fragment TypeRef on __Type {
 /// nothing for introspection: the dev budgets have to keep admitting the
 /// playground's own schema fetch. Depth is what that costs — 13 `ofType`
 /// levels — not complexity, which comes to 181.
+///
+/// The dev budgets keep admitting the playground's own schema fetch, which the library's limits carve out nothing for.
+/// ´claim:budgets:the-dev-budgets-admit-introspection´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_dev_budgets_admit_the_standard_introspection_query(pool: PgPool) {
     let schema = schema(pool, QueryBudgets::dev());
@@ -194,6 +211,8 @@ async fn the_dev_budgets_admit_the_standard_introspection_query(pool: PgPool) {
     assert!(response.errors.is_empty(), "{:?}", response.errors);
 }
 
+/// The release posture serves no introspection at all.
+/// ´claim:budgets:the-release-posture-hides-the-schema´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_release_posture_serves_no_introspection(pool: PgPool) {
     let schema = schema(pool, QueryBudgets::release());
@@ -205,6 +224,8 @@ async fn the_release_posture_serves_no_introspection(pool: PgPool) {
     );
 }
 
+/// A page past the cap refuses rather than being silently clamped down to it.
+/// ´claim:budgets:an-over-sized-page-refuses´
 #[tokio::test]
 async fn pages_over_the_cap_refuse_instead_of_clamping() {
     let items: Vec<String> = (0..3).map(|i| i.to_string()).collect();
@@ -221,6 +242,8 @@ async fn pages_over_the_cap_refuse_instead_of_clamping() {
     }
 }
 
+/// A read that names no page size is served the declared default.
+/// ´claim:budgets:an-unqualified-read-gets-the-default´
 #[tokio::test]
 async fn an_unqualified_read_gets_the_default_page() {
     let items: Vec<String> = (0..(DEFAULT_PAGE_SIZE as usize + 5))
@@ -235,6 +258,8 @@ async fn an_unqualified_read_gets_the_default_page() {
 
 /// A `first` at the cap is served, and a bare `last` pages from the end
 /// without picking up the default page size on the way.
+///
+/// (´claim:budgets:an-over-sized-page-refuses´)
 #[tokio::test]
 async fn explicit_pages_at_the_cap_still_work() {
     let items: Vec<String> = (0..5).map(|i| i.to_string()).collect();
@@ -253,6 +278,9 @@ async fn explicit_pages_at_the_cap_still_work() {
 /// an omitted page charges the default, and out-of-range arguments price
 /// at the bounds — the resolver refuses those separately, so the cost
 /// function never has to.
+///
+/// A connection prices at the page it was asked for, at the default when it named none, and at the bounds when the argument is out of range, the resolver refusing those separately.
+/// ´claim:budgets:a-connection-prices-the-requested-or-default-page´
 #[test]
 fn connection_cost_prices_the_requested_or_default_page() {
     assert_eq!(connection_cost(Some(10), None, 3), 31);
