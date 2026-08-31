@@ -869,6 +869,9 @@ fn expected_variant(mutation: Mutation) -> &'static str {
 /// One million levels deep, which the data language admits because it
 /// bounds nesting nowhere. Decoding, encoding, and dropping are each
 /// iterative, and this is what says so.
+///
+/// A value a million levels deep decodes, encodes and drops without the call stack.
+/// ´claim:properties:the-deep-paths-are-iterative´
 #[test]
 fn a_value_nested_one_million_deep_decodes_encodes_and_drops() {
     const DEPTH: usize = 1_000_000;
@@ -891,6 +894,9 @@ fn a_value_nested_one_million_deep_decodes_encodes_and_drops() {
 /// which is the `Hash`/`PartialEq` contract; and the document carrying the
 /// value has `to_value` clone it into a map for the base theory to judge,
 /// both walking it without the call stack.
+///
+/// The derived walks and the two deep consumers carry a million-deep value without the call stack either.
+/// ´claim:properties:the-derived-walks-are-iterative-too´
 #[test]
 fn a_value_nested_one_million_deep_clones_hashes_compares_and_satisfies() {
     use std::collections::hash_map::DefaultHasher;
@@ -921,6 +927,8 @@ fn a_value_nested_one_million_deep_clones_hashes_compares_and_satisfies() {
 
 /// The same depth reached through all three recursive constructors, so
 /// that no teardown path is left to the compiler's glue.
+///
+/// (´claim:properties:the-deep-paths-are-iterative´)
 #[test]
 fn a_deep_chain_of_arrays_maps_and_tags_drops() {
     const UNITS: usize = 200_000;
@@ -938,6 +946,8 @@ fn a_deep_chain_of_arrays_maps_and_tags_drops() {
 
 /// A chain of tags alone: the recursion the value model carries without
 /// an array or a map anywhere to intercept it.
+///
+/// (´claim:properties:the-deep-paths-are-iterative´)
 #[test]
 fn a_deep_chain_of_tags_alone_drops() {
     const DEPTH: usize = 500_000;

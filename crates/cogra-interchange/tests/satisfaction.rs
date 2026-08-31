@@ -80,12 +80,15 @@ fn mismatches(verdict: Satisfaction) -> Vec<cogra_interchange::Mismatch> {
     }
 }
 
+/// The base theory admits a document whatever its content, from none at all to any value at any key.
+/// ´claim:satisfaction:the-base-theory-admits-any-document´
 #[test]
 fn the_base_theory_admits_a_document_with_no_content() {
     let document = document("com.example", Version::new(1, 0, 0), Vec::new());
     assert!(satisfies_global(&document).holds());
 }
 
+/// (´claim:satisfaction:the-base-theory-admits-any-document´)
 #[test]
 fn the_base_theory_admits_every_content_key_and_every_value() {
     let document = document(
@@ -103,6 +106,9 @@ fn the_base_theory_admits_every_content_key_and_every_value() {
 /// The base theory's key 0 is `namespace-label`, which is
 /// `namespace-form .size (3..255)` over a `.regexp` — so this judgment runs
 /// the conventions' own pattern through the seam on every document.
+///
+/// Judging against the base theory runs the conventions' own namespace pattern on every document.
+/// ´claim:satisfaction:the-base-theory-runs-the-conventions-pattern´
 #[test]
 fn the_base_theory_runs_the_conventions_pattern() {
     for label in ["a.b", "com.example", "a-b.c9.d", "0.0"] {
@@ -111,6 +117,8 @@ fn the_base_theory_runs_the_conventions_pattern() {
     }
 }
 
+/// A document carrying exactly what an assigned theory enumerates satisfies it.
+/// ´claim:satisfaction:a-document-of-the-theorys-shape-satisfies-it´
 #[test]
 fn a_document_of_the_theorys_shape_satisfies_it() {
     let theory = theory(concat!(
@@ -126,6 +134,8 @@ fn a_document_of_the_theorys_shape_satisfies_it() {
     assert!(satisfies(&document, &theory).holds());
 }
 
+/// A key the theory marks optional may be absent from the document.
+/// ´claim:satisfaction:an-optional-key-may-be-absent´
 #[test]
 fn an_optional_key_may_be_absent() {
     let theory = theory(r#"e = {0 => "com.example", 1 => [1, 0, uint], ? 2 => tstr}"#);
@@ -133,6 +143,8 @@ fn an_optional_key_may_be_absent() {
     assert!(satisfies(&document, &theory).holds());
 }
 
+/// A required key absent from the document is a mismatch at that key, reported as an absence.
+/// ´claim:satisfaction:a-required-key-may-not-be-absent´
 #[test]
 fn a_required_key_may_not_be_absent() {
     let theory = theory_of("tstr");
@@ -145,6 +157,9 @@ fn a_required_key_may_not_be_absent() {
 
 /// The assignable fragment closes the map, so a key the theory does not
 /// enumerate is a mismatch and not an extension.
+///
+/// The fragment closes the map, so a key the theory does not enumerate is a mismatch and no extension.
+/// ´claim:satisfaction:the-enumerated-map-is-closed´
 #[test]
 fn a_key_the_theory_does_not_enumerate_is_refused() {
     let theory = theory_of("tstr");
@@ -159,6 +174,8 @@ fn a_key_the_theory_does_not_enumerate_is_refused() {
     assert!(mismatches[0].expected().contains("does not enumerate"));
 }
 
+/// A document of another label fails the theory at the envelope's label key.
+/// ´claim:satisfaction:the-pinned-label-is-matched´
 #[test]
 fn the_pinned_label_is_matched() {
     let theory = theory_of("tstr");
@@ -168,6 +185,8 @@ fn the_pinned_label_is_matched() {
     assert_eq!(mismatches[0].key(), None);
 }
 
+/// The pinned major and minor must both match, and the patch is free to be anything.
+/// ´claim:satisfaction:the-pins-bind-major-and-minor-and-free-the-patch´
 #[test]
 fn the_pinned_major_and_minor_are_matched_and_the_patch_is_free() {
     let theory = theory(r#"e = {0 => "com.example", 1 => [1, 2, uint]}"#);
@@ -182,6 +201,8 @@ fn the_pinned_major_and_minor_are_matched_and_the_patch_is_free() {
     }
 }
 
+/// Every failing key is reported in ascending order, and no passing one is.
+/// ´claim:satisfaction:every-failing-key-is-reported-in-order´
 #[test]
 fn every_failing_key_is_reported_in_ascending_order() {
     let theory = theory(concat!(
@@ -201,6 +222,8 @@ fn every_failing_key_is_reported_in_ascending_order() {
     assert_eq!(keys, [Some(2), Some(4)]);
 }
 
+/// The companion admits a document stamped above the theory and carrying keys the theory never named.
+/// ´claim:satisfaction:the-companion-frees-the-minor-and-admits-unknown-keys´
 #[test]
 fn the_companion_frees_the_minor_and_admits_unknown_keys() {
     let theory = theory(r#"e = {0 => "com.example", 1 => [1, 2, uint], 2 => tstr}"#);
@@ -214,6 +237,8 @@ fn the_companion_frees_the_minor_and_admits_unknown_keys() {
     assert!(satisfies_open(&document, &open).holds());
 }
 
+/// A key the theory typed keeps that type under the companion, and the mismatch names it.
+/// ´claim:satisfaction:the-companion-keeps-the-types-it-was-derived-from´
 #[test]
 fn the_companion_keeps_every_type_it_was_derived_from() {
     let theory = theory(r#"e = {0 => "com.example", 1 => [1, 2, uint], 2 => tstr}"#);
@@ -228,6 +253,8 @@ fn the_companion_keeps_every_type_it_was_derived_from() {
     assert_eq!(mismatches[0].expected(), "tstr");
 }
 
+/// The companion keeps the label and the major pinned, freeing the minor alone.
+/// ´claim:satisfaction:the-companion-keeps-label-and-major-pinned´
 #[test]
 fn the_companion_keeps_the_major_and_the_label_pinned() {
     let theory = theory(r#"e = {0 => "com.example", 1 => [1, 2, uint]}"#);
@@ -242,6 +269,9 @@ fn the_companion_keeps_the_major_and_the_label_pinned() {
 
 /// The companion carries the theory's compiled patterns rather than
 /// recompiling them, and the tolerant judgment runs them.
+///
+/// The companion carries the theory's compiled patterns, and the tolerant judgment runs them.
+/// ´claim:satisfaction:the-companion-runs-the-theorys-patterns´
 #[test]
 fn the_companion_runs_the_theorys_patterns() {
     let theory = theory_of(r#"tstr .regexp "[a-z]+""#);
@@ -250,6 +280,8 @@ fn the_companion_runs_the_theorys_patterns() {
     assert!(!satisfies_open(&document_of(text("ABC")), &open).holds());
 }
 
+/// A literal admits the one value it names and nothing else.
+/// ´claim:satisfaction:a-literal-matches-only-itself´
 #[test]
 fn a_literal_matches_only_that_value() {
     assert!(admits("5", Value::Unsigned(5)));
@@ -262,12 +294,17 @@ fn a_literal_matches_only_that_value() {
 
 /// "no conversions defined": an integer literal is no float and a float
 /// literal is no integer.
+///
+/// An integer literal is no float and a float literal no integer: nothing is converted.
+/// ´claim:satisfaction:a-literal-converts-nothing´
 #[test]
 fn a_literal_converts_nothing() {
     assert!(!admits("1", float(1.0)));
     assert!(!admits("1.0", Value::Unsigned(1)));
 }
 
+/// A byte literal reads the same in hex, in text, and in base64.
+/// ´claim:satisfaction:a-byte-literal-is-read-in-every-notation´
 #[test]
 fn a_byte_literal_is_read_in_every_notation() {
     assert!(admits("h'0815'", bytes(&[0x08, 0x15])));
@@ -276,6 +313,8 @@ fn a_byte_literal_is_read_in_every_notation() {
     assert!(admits("b64'aGVsbG8='", bytes(b"hello")));
 }
 
+/// Each prelude type admits the values of the major type it names, and no others.
+/// ´claim:satisfaction:a-prelude-type-matches-its-major-type´
 #[test]
 fn the_prelude_types_match_their_major_types() {
     assert!(admits("uint", Value::Unsigned(0)));
@@ -293,6 +332,8 @@ fn the_prelude_types_match_their_major_types() {
     assert!(admits("any", array(vec![Value::Null])));
 }
 
+/// The prelude's number admits integers and floats alike, where its float admits floats alone.
+/// ´claim:satisfaction:the-prelude-number-types-span-both-kinds´
 #[test]
 fn the_prelude_number_types_admit_both_kinds() {
     assert!(admits("number", Value::Unsigned(1)));
@@ -307,6 +348,9 @@ fn the_prelude_number_types_admit_both_kinds() {
 /// have to be serialized as half-precision floats". A value representable
 /// in binary16 is representable in binary32 and binary64 too, while 1.1 needs
 /// binary64.
+///
+/// A float width names the set of values that width can represent, and not how they are serialized.
+/// ´claim:satisfaction:a-float-width-is-a-set-of-values´
 #[test]
 fn the_float_widths_are_sets_of_values_and_not_serializations() {
     assert!(admits("float16", float(1.5)));
@@ -318,6 +362,8 @@ fn the_float_widths_are_sets_of_values_and_not_serializations() {
     assert!(admits("float64", float(1.1)));
 }
 
+/// A tagged prelude type admits its own tag number alone, and never the bare content.
+/// ´claim:satisfaction:a-tagged-prelude-type-matches-its-tag´
 #[test]
 fn a_tagged_prelude_type_matches_its_tag() {
     assert!(admits("uri", Value::Tag(Tag::new(32, text("a:b")))));
@@ -326,6 +372,8 @@ fn a_tagged_prelude_type_matches_its_tag() {
     assert!(admits("time", Value::Tag(Tag::new(1, Value::Unsigned(0)))));
 }
 
+/// A major-type form admits exactly the values of that major type.
+/// ´claim:satisfaction:a-major-type-form-matches-by-major-type´
 #[test]
 fn a_major_type_matches_by_major_type() {
     assert!(admits("#0", Value::Unsigned(1)));
@@ -342,6 +390,9 @@ fn a_major_type_matches_by_major_type() {
 
 /// The additional information 0 through 23 stands in the head; 24 and above
 /// takes an argument byte.
+///
+/// Additional information written after a major type narrows it to that argument.
+/// ´claim:satisfaction:additional-information-narrows-a-major-type´
 #[test]
 fn an_additional_information_narrows_a_major_type() {
     assert!(admits("#0.5", Value::Unsigned(5)));
@@ -356,6 +407,9 @@ fn an_additional_information_narrows_a_major_type() {
 }
 
 /// A bare `#6(...)` tags with any number.
+///
+/// A tagged type admits a tag of its number carrying content of its type, where a bare one takes any number.
+/// ´claim:satisfaction:a-tagged-type-matches-number-and-content´
 #[test]
 fn a_tagged_type_matches_its_number_and_its_content() {
     assert!(admits("#6.42(tstr)", Value::Tag(Tag::new(42, text("a")))));
@@ -367,6 +421,8 @@ fn a_tagged_type_matches_its_number_and_its_content() {
     assert!(admits("#6(tstr)", Value::Tag(Tag::new(9, text("a")))));
 }
 
+/// A type choice admits a value any one of its alternatives admits.
+/// ´claim:satisfaction:a-type-choice-matches-any-alternative´
 #[test]
 fn a_type_choice_matches_any_alternative() {
     assert!(admits("uint / tstr", Value::Unsigned(1)));
@@ -374,6 +430,8 @@ fn a_type_choice_matches_any_alternative() {
     assert!(!admits("uint / tstr", Value::Null));
 }
 
+/// An array matches its group in order, and neither a short array nor a long one matches.
+/// ´claim:satisfaction:an-array-matches-its-group-in-order´
 #[test]
 fn an_array_matches_its_group_in_order() {
     assert!(admits(
@@ -391,6 +449,8 @@ fn an_array_matches_its_group_in_order() {
     ));
 }
 
+/// An array entry may itself be an array, matched the same way at every level.
+/// ´claim:satisfaction:arrays-nest´
 #[test]
 fn arrays_nest() {
     assert!(admits(
@@ -413,6 +473,9 @@ fn arrays_nest() {
 /// the document it matches. A document nested past the matcher's depth bound
 /// is answered as a mismatch rather than overflowing the stack: a theory and
 /// a document a hostile party controls must not crash the judge.
+///
+/// A document nested past the matcher's bound is answered as a mismatch rather than overflowing the stack.
+/// ´claim:satisfaction:a-deep-document-is-answered-not-survived´
 #[test]
 fn a_recursive_theory_against_a_deep_document_is_bounded() {
     let theory = theory_with("nest", "nest = [nest] / 0");
@@ -427,6 +490,8 @@ fn a_recursive_theory_against_a_deep_document_is_bounded() {
     assert!(!satisfies(&document_of(deep(500_000)), &theory).holds());
 }
 
+/// A member key written in an array is documentation and constrains nothing.
+/// ´claim:satisfaction:an-array-member-key-is-documentary´
 #[test]
 fn an_array_member_key_is_documentary() {
     assert!(admits(
@@ -437,6 +502,9 @@ fn an_array_member_key_is_documentary() {
 
 /// Order in the map is no part of the question: the entries pick members
 /// wherever they sit.
+///
+/// A map's entries pick members wherever they sit, order being no part of the question.
+/// ´claim:satisfaction:a-map-matches-by-picking-members´
 #[test]
 fn a_map_matches_by_picking_members() {
     assert!(admits(
@@ -459,6 +527,8 @@ fn a_map_matches_by_picking_members() {
     ));
 }
 
+/// A map matches only where every one of its members has been picked.
+/// ´claim:satisfaction:a-map-must-be-consumed-whole´
 #[test]
 fn a_map_must_be_consumed_whole() {
     assert!(!admits(
@@ -480,6 +550,9 @@ fn a_map_must_be_consumed_whole() {
 /// The RFC's own example of a cut, §3.5.4: with the cut, the data item
 /// `{"optional-key": "nonsense"}` no longer matches, because the key alone
 /// locks in the pick.
+///
+/// A cut locks in a pick on the key alone, so a wrong value there cannot fall through to a wildcard.
+/// ´claim:satisfaction:a-cut-locks-in-a-pick-by-key-alone´
 #[test]
 fn a_cut_locks_in_a_pick_by_key_alone() {
     let without = r#"{? "optional-key" => int, * tstr => any}"#;
@@ -496,6 +569,9 @@ fn a_cut_locks_in_a_pick_by_key_alone() {
 /// fails half way must give back the members it had already taken: here the
 /// first takes `a` and then wants a `b` that is not there, and the second
 /// wants the `a` the first had taken.
+///
+/// An alternative that fails half way gives back the members it had already taken.
+/// ´claim:satisfaction:a-failed-alternative-gives-its-members-back´
 #[test]
 fn a_failed_group_choice_in_a_map_gives_its_members_back() {
     let both = map(vec![
@@ -509,6 +585,8 @@ fn a_failed_group_choice_in_a_map_gives_its_members_back() {
     ));
 }
 
+/// Each occurrence indicator admits exactly the repetitions it names.
+/// ´claim:satisfaction:the-occurrence-indicators-bound-repetition´
 #[test]
 fn the_occurrence_indicators_bound_repetition() {
     assert!(admits("[* uint]", array(Vec::new())));
@@ -526,6 +604,8 @@ fn the_occurrence_indicators_bound_repetition() {
     ));
 }
 
+/// A bounded occurrence binds at both ends, and an omitted bound binds at neither.
+/// ´claim:satisfaction:a-bounded-occurrence-bounds-both-ends´
 #[test]
 fn a_bounded_occurrence_bounds_both_ends() {
     let three = array(vec![
@@ -552,6 +632,8 @@ fn a_bounded_occurrence_bounds_both_ends() {
     assert!(admits("[*3 uint]", three));
 }
 
+/// A repeated group repeats whole, a partial trailing copy matching nothing.
+/// ´claim:satisfaction:a-group-repeats-as-a-unit´
 #[test]
 fn a_group_repeats_as_a_unit() {
     assert!(admits(
@@ -574,6 +656,9 @@ fn a_group_repeats_as_a_unit() {
 /// match anything". The same shape with the repetition bounded away from the
 /// last element matches, which is what says the failure is the greed and not a
 /// defect of the matcher.
+///
+/// An occurrence takes everything it can and never gives it back, so what follows may be left nothing.
+/// ´claim:satisfaction:an-occurrence-is-greedy-and-never-backtracks´
 #[test]
 fn a_greedy_occurrence_leaves_nothing_for_what_follows() {
     assert!(!admits("[* uint, uint]", array(vec![Value::Unsigned(1)])));
@@ -587,6 +672,8 @@ fn a_greedy_occurrence_leaves_nothing_for_what_follows() {
     ));
 }
 
+/// A group choice takes the first alternative that matches and fails where none does.
+/// ´claim:satisfaction:a-group-choice-takes-the-first-match´
 #[test]
 fn a_group_choice_takes_the_first_alternative_that_matches() {
     assert!(admits(
@@ -597,6 +684,8 @@ fn a_group_choice_takes_the_first_alternative_that_matches() {
     assert!(!admits("[uint, uint // tstr]", array(vec![Value::Null])));
 }
 
+/// An inclusive range admits both of its bounds and nothing outside them.
+/// ´claim:satisfaction:an-inclusive-range-includes-its-upper-bound´
 #[test]
 fn an_inclusive_range_includes_its_upper_bound() {
     assert!(!admits("1..3", Value::Unsigned(0)));
@@ -605,12 +694,16 @@ fn an_inclusive_range_includes_its_upper_bound() {
     assert!(!admits("1..3", Value::Unsigned(4)));
 }
 
+/// An exclusive range stops below its upper bound.
+/// ´claim:satisfaction:an-exclusive-range-excludes-its-upper-bound´
 #[test]
 fn an_exclusive_range_excludes_it() {
     assert!(admits("1...3", Value::Unsigned(2)));
     assert!(!admits("1...3", Value::Unsigned(3)));
 }
 
+/// A range's bounds may be reached through rule references.
+/// ´claim:satisfaction:a-range-bound-may-be-a-rule-reference´
 #[test]
 fn a_range_reaches_its_bounds_through_rule_references() {
     let theory = theory_with("byte", "byte = 0..max-byte\nmax-byte = 255");
@@ -618,6 +711,8 @@ fn a_range_reaches_its_bounds_through_rule_references() {
     assert!(!satisfies(&document_of(Value::Unsigned(256)), &theory).holds());
 }
 
+/// A range may reach below zero, bounding the negative integers the same way.
+/// ´claim:satisfaction:a-range-spans-the-negative-integers´
 #[test]
 fn a_range_spans_the_negative_integers() {
     assert!(admits("-3..3", Value::integer(-3).expect("in range")));
@@ -628,6 +723,9 @@ fn a_range_spans_the_negative_integers() {
 /// values) or between floating-point values (matching floating-point
 /// values)." The RFC's own `BAD-range1 = 0..10.0` is NOT DEFINED, and admits
 /// nothing on either side of the line.
+///
+/// A range runs between integers or between floats, and a mixed one admits nothing on either side.
+/// ´claim:satisfaction:integer-and-float-ranges-do-not-mix´
 #[test]
 fn integer_and_floating_point_ranges_do_not_mix() {
     assert!(admits("0.0..1.0", float(0.5)));
@@ -641,6 +739,9 @@ fn integer_and_floating_point_ranges_do_not_mix() {
 /// directly controls the number of bytes in the string." Bytes, not
 /// characters: three two-byte characters are six, and "a€" is two characters
 /// and four bytes.
+///
+/// The size control counts bytes, so a text string is measured in bytes and never in characters.
+/// ´claim:satisfaction:size-counts-bytes´
 #[test]
 fn size_on_a_text_string_counts_bytes() {
     assert!(admits("tstr .size 3", text("abc")));
@@ -651,12 +752,15 @@ fn size_on_a_text_string_counts_bytes() {
     assert!(!admits("tstr .size 2", text("a€")));
 }
 
+/// (´claim:satisfaction:size-counts-bytes´)
 #[test]
 fn size_on_a_byte_string_counts_bytes() {
     assert!(admits("bstr .size 4", bytes(&[0, 1, 2, 3])));
     assert!(!admits("bstr .size 4", bytes(&[0, 1, 2])));
 }
 
+/// The size control takes a whole control type, a range among them, and not only a literal.
+/// ´claim:satisfaction:size-takes-a-control-type´
 #[test]
 fn size_takes_a_control_type_and_not_only_a_literal() {
     assert!(admits("bstr .size (1..63)", bytes(&[0])));
@@ -668,6 +772,9 @@ fn size_takes_a_control_type_and_not_only_a_literal() {
 /// "`uint .size N` is equivalent to `0...BYTES_N`, where
 /// BYTES_N == 256**N" — a range, and not a count of the bytes the value
 /// happens to need.
+///
+/// Size on an unsigned integer is a range over its value, and no count of the bytes it happens to need.
+/// ´claim:satisfaction:size-on-an-integer-is-a-range´
 #[test]
 fn size_on_an_unsigned_integer_is_a_range() {
     assert!(admits("uint .size 3", Value::Unsigned(0)));
@@ -683,6 +790,8 @@ fn size_on_an_unsigned_integer_is_a_range() {
 /// value happens to need would say nothing of the kind. A range of oversized
 /// widths is satisfied the same way, and eight is unchanged: the widths at or
 /// below it still bound the value.
+///
+/// (´claim:satisfaction:size-on-an-integer-is-a-range´)
 #[test]
 fn size_on_an_unsigned_integer_admits_every_uint_past_eight_bytes() {
     assert!(admits("uint .size 9", Value::Unsigned(5)));
@@ -695,12 +804,16 @@ fn size_on_an_unsigned_integer_admits_every_uint_past_eight_bytes() {
     assert!(admits("uint .size 8", Value::Unsigned(u64::MAX)));
 }
 
+/// A target the size control is not defined for is refused rather than given some reading.
+/// ´claim:satisfaction:size-refuses-an-undefined-target´
 #[test]
 fn size_refuses_a_target_it_is_not_defined_for() {
     assert!(!admits("any .size 1", Value::Null));
     assert!(!admits("any .size 1", array(vec![Value::Unsigned(1)])));
 }
 
+/// A pattern must match the whole string, an anchored match being the only one.
+/// ´claim:satisfaction:a-pattern-matches-the-whole-string´
 #[test]
 fn regexp_matches_the_whole_string() {
     assert!(admits(r#"tstr .regexp "[a-z]+""#, text("abc")));
@@ -709,6 +822,8 @@ fn regexp_matches_the_whole_string() {
     assert!(!admits(r#"tstr .regexp "[a-z]+""#, text("")));
 }
 
+/// A target that is no text string is refused by the pattern control.
+/// ´claim:satisfaction:a-pattern-refuses-a-target-that-is-no-text´
 #[test]
 fn regexp_refuses_a_target_that_is_no_text_string() {
     assert!(!admits(r#"any .regexp "[a-z]+""#, bytes(b"abc")));
@@ -716,6 +831,9 @@ fn regexp_refuses_a_target_that_is_no_text_string() {
 
 /// The conventions' own pattern, reached through a rule reference — the
 /// shape `namespace-form` has in the base theory.
+///
+/// A pattern may be reached through a rule reference, as the base theory reaches its own.
+/// ´claim:satisfaction:a-pattern-may-be-reached-through-a-reference´
 #[test]
 fn regexp_reaches_its_pattern_through_a_rule_reference() {
     let theory = theory_with(
@@ -731,6 +849,9 @@ fn regexp_reaches_its_pattern_through_a_rule_reference() {
 /// budget is a mismatch of its own kind, naming the budget and the pattern
 /// — never a panic, and never a silent `false`
 /// (´dec:xchg:regexp-engine´).
+///
+/// A pattern exhausting the seam's budget is a located mismatch naming the budget and the pattern, never a panic.
+/// ´claim:satisfaction:an-exhausted-pattern-budget-is-a-mismatch´
 #[test]
 fn an_exhausted_regexp_budget_is_a_located_mismatch() {
     let theory = theory_of(r#"tstr .regexp "(a+)+b""#);
@@ -754,6 +875,8 @@ fn an_exhausted_regexp_budget_is_a_located_mismatch() {
 /// A subject the same pattern answers about within the budget gets an
 /// ordinary answer, which is what says the refusal above is about the
 /// budget and not about the pattern.
+///
+/// (´claim:satisfaction:an-exhausted-pattern-budget-is-a-mismatch´)
 #[test]
 fn the_same_pattern_answers_a_short_subject() {
     let theory = theory_of(r#"tstr .regexp "(a+)+b""#);
@@ -764,6 +887,9 @@ fn the_same_pattern_answers_a_short_subject() {
 /// "a `.bits` control on an unsigned integer `i` indicates that for all
 /// unsigned integers `n` where `(i & (1 << n)) != 0`, `n` must be in the
 /// control type."
+///
+/// The bits control asks that every set bit of an integer be numbered in its control type.
+/// ´claim:satisfaction:bits-numbers-the-set-bits-of-an-integer´
 #[test]
 fn bits_on_an_unsigned_integer_numbers_its_set_bits() {
     let theory = theory_with("uint .bits rwx", "rwx = &(r: 2, w: 1, x: 0)");
@@ -783,6 +909,9 @@ fn bits_on_an_unsigned_integer_numbers_its_set_bits() {
 
 /// "Bits are counted the usual way, bit number `n` being set in `str`
 /// meaning that `(str[n >> 3] & (1 << (n & 7))) != 0`."
+///
+/// Bits of a byte string are numbered across its bytes the usual way.
+/// ´claim:satisfaction:bits-counts-across-a-byte-strings-bytes´
 #[test]
 fn bits_on_a_byte_string_counts_across_the_bytes() {
     let theory = theory_with("bstr .bits flags", "flags = &(low: 0, high: 8)");
@@ -791,12 +920,16 @@ fn bits_on_a_byte_string_counts_across_the_bytes() {
     assert!(!satisfies(&document_of(bytes(&[0x02])), &theory).holds());
 }
 
+/// The bits control takes a range as its control type.
+/// ´claim:satisfaction:bits-takes-a-range-as-a-control-type´
 #[test]
 fn bits_takes_a_range_as_a_control_type() {
     assert!(admits("uint .bits (0..3)", Value::Unsigned(0b1111)));
     assert!(!admits("uint .bits (0..3)", Value::Unsigned(0b1_0000)));
 }
 
+/// The ordering controls compare numerically, across the integer and floating-point line.
+/// ´claim:satisfaction:the-orderings-compare-numerically´
 #[test]
 fn the_orderings_compare_numerically() {
     assert!(admits("uint .gt 3", Value::Unsigned(4)));
@@ -810,6 +943,8 @@ fn the_orderings_compare_numerically() {
     assert!(admits("int .gt -3", Value::integer(-2).expect("in range")));
 }
 
+/// An ordering control over a target that is no number admits nothing.
+/// ´claim:satisfaction:the-orderings-are-numeric-only´
 #[test]
 fn the_orderings_are_defined_only_for_numeric_types() {
     assert!(!admits(r#"tstr .gt "a""#, text("b")));
@@ -820,6 +955,9 @@ fn the_orderings_are_defined_only_for_numeric_types() {
 /// line, and everything else compares as the structure it is — "text
 /// strings are equal ... if they are bytewise identical". "All other cases are
 /// not equal (e.g., comparing a text string with a byte string).
+///
+/// Equality compares numbers numerically and everything else as the structure it is.
+/// ´claim:satisfaction:equality-is-numeric-for-numbers-and-structural-otherwise´
 #[test]
 fn equality_is_numeric_for_numbers_and_structural_otherwise() {
     assert!(admits("uint .eq 3", Value::Unsigned(3)));
@@ -835,6 +973,8 @@ fn equality_is_numeric_for_numbers_and_structural_otherwise() {
     assert!(!admits(r#"any .eq "a""#, bytes(b"a")));
 }
 
+/// The inequality control admits exactly what equality refuses.
+/// ´claim:satisfaction:ne-is-the-negation-of-eq´
 #[test]
 fn ne_is_the_negation_of_eq() {
     assert!(admits("uint .ne 3", Value::Unsigned(4)));
@@ -847,6 +987,9 @@ fn ne_is_the_negation_of_eq() {
 /// over the wire". So a present value equal to the default fails, and an
 /// absent optional member stays absent — nothing materializes a default. The
 /// target still has to match: zero fails the `.gt 0` and not the default.
+///
+/// A default refuses its own value on the wire and materializes nothing, the target still having to match.
+/// ´claim:satisfaction:default-is-the-inequality-it-implies´
 #[test]
 fn default_is_the_ne_it_implies() {
     let theory = theory(concat!(
@@ -866,6 +1009,8 @@ fn default_is_the_ne_it_implies() {
 
 /// Nothing puts a 7 at key 2: the document is unchanged by the judgment, and a
 /// 7 arriving on the wire is refused.
+///
+/// (´claim:satisfaction:default-is-the-inequality-it-implies´)
 #[test]
 fn an_absent_optional_member_stays_absent_under_a_default() {
     let theory = theory(concat!(
@@ -882,6 +1027,8 @@ fn an_absent_optional_member_stays_absent_under_a_default() {
     assert!(!satisfies(&sent, &theory).holds());
 }
 
+/// A rule reference matches whatever its definition matches.
+/// ´claim:satisfaction:a-rule-reference-stands-for-its-definition´
 #[test]
 fn a_rule_reference_stands_for_its_definition() {
     let theory = theory_with("inner", "inner = [* uint]");
@@ -889,6 +1036,8 @@ fn a_rule_reference_stands_for_its_definition() {
     assert!(!satisfies(&document_of(text("a")), &theory).holds());
 }
 
+/// A group rule named in an array splices its members into that array.
+/// ´claim:satisfaction:a-group-rule-splices-into-an-array´
 #[test]
 fn a_group_rule_splices_into_an_array() {
     let theory = theory_with("[header, uint]", "header = (tstr, tstr)");
@@ -912,6 +1061,9 @@ fn a_group_rule_splices_into_an_array() {
 ///
 /// §3.7: unwrapping "strip[s] the type defined for a name by one layer,
 /// exposing the underlying group (for maps and arrays) or type (for tags)".
+///
+/// Unwrapping strips one layer, exposing a tag's type or a container's group.
+/// ´claim:satisfaction:unwrapping-strips-one-layer´
 #[test]
 fn unwrapping_strips_one_layer() {
     let theory = theory_with("[~basic, uint]", "basic = [tstr, tstr]");
@@ -931,6 +1083,9 @@ fn unwrapping_strips_one_layer() {
 }
 
 /// §2.2.2.2: `&` builds a choice out of a group's values.
+///
+/// An enumeration admits the values of the group it is built from and no others.
+/// ´claim:satisfaction:an-enumeration-admits-its-groups-values´
 #[test]
 fn an_enumeration_admits_the_values_of_its_group() {
     let theory = theory_with("&basecolors", "basecolors = (black: 0, red: 1, green: 2)");
@@ -944,6 +1099,9 @@ fn an_enumeration_admits_the_values_of_its_group() {
 /// §3.9: "it is not an error if there is no definition for a socket at all;
 /// this then means there is no way to satisfy the rule (i.e., the choice is
 /// empty)."
+///
+/// A socket with no plug is an empty choice: it admits nothing, and that is no error.
+/// ´claim:satisfaction:an-unplugged-socket-admits-nothing´
 #[test]
 fn an_unplugged_socket_admits_nothing() {
     assert!(!admits("$extension", Value::Null));
@@ -951,6 +1109,8 @@ fn an_unplugged_socket_admits_nothing() {
     assert!(!admits("[+ $$extension]", array(vec![Value::Null])));
 }
 
+/// A socket admits exactly what its plugs admit.
+/// ´claim:satisfaction:a-plugged-socket-admits-its-plugs´
 #[test]
 fn a_plugged_socket_admits_its_plugs() {
     let theory = theory_with("$message", "$message /= [1, tstr]\n$message /= [2, uint]");
@@ -971,6 +1131,8 @@ fn a_plugged_socket_admits_its_plugs() {
     assert!(!satisfies(&document_of(array(vec![Value::Unsigned(3)])), &theory).holds());
 }
 
+/// A generic rule is instantiated separately at each argument it is given.
+/// ´claim:satisfaction:a-generic-rule-is-instantiated-at-its-argument´
 #[test]
 fn a_generic_rule_is_instantiated_at_its_argument() {
     let theory = theory_with("[list<uint>, list<tstr>]", "list<t> = [* t]");
@@ -995,12 +1157,17 @@ fn a_generic_rule_is_instantiated_at_its_argument() {
 
 /// A rule that reaches itself without consuming anything denotes no value,
 /// and the judgment says so rather than recursing forever.
+///
+/// A rule reaching itself without consuming anything denotes no value, and the judgment says so.
+/// ´claim:satisfaction:a-rule-cycle-admits-nothing´
 #[test]
 fn a_rule_cycle_that_consumes_nothing_admits_nothing() {
     let theory = theory_with("a", "a = b\nb = a");
     assert!(!satisfies(&document_of(Value::Null), &theory).holds());
 }
 
+/// A rule recursing through a value matches as deep as the value goes.
+/// ´claim:satisfaction:recursion-through-a-value-follows-its-depth´
 #[test]
 fn a_rule_that_recurses_through_a_value_matches_to_the_depth_of_the_value() {
     let theory = theory_with("tree", "tree = uint / [* tree]");
