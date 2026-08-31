@@ -1414,8 +1414,9 @@ pub enum FieldModerationStatus {
 
 /// Node-level moderation cache — the cheap "is anything wrong here"
 /// check; the substrate-visible verdict is the Tag record behind it
-/// (moderation.md). Constant NORMAL until the moderation slice stores
-/// verdicts (api-spec.md "Content nodes").
+/// (moderation.md). SENSITIVE here is the author's own mark; moderator
+/// verdicts reach it with the moderation slice (api-spec.md "Content
+/// nodes").
 #[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
 #[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
 pub enum ModerationStatus {
@@ -1493,6 +1494,25 @@ impl ModeratedText {
             }
         }
     }
+
+    /// A body field under the row's redaction state *and* its author's own
+    /// sensitive mark. The value still travels — SENSITIVE is a read-side
+    /// filter, not a removal (moderation.md §1) — and the client veils it.
+    ///
+    /// Redaction wins where both apply: a removed value has nothing left
+    /// to warn about, and `illegal` takes precedence over `sensitive`
+    /// (moderation.md §1).
+    fn veiled(value: Option<String>, redacted: bool, sensitive: bool) -> Self {
+        let text = Self::from_version(value, redacted);
+        if sensitive && text.status == FieldModerationStatus::Normal {
+            Self {
+                status: FieldModerationStatus::Sensitive,
+                ..text
+            }
+        } else {
+            text
+        }
+    }
 }
 
 /// Where a node stands relative to L1 finality. PENDING: authored and
@@ -1567,9 +1587,10 @@ impl PostType {
     }
 
     async fn description(&self) -> ModeratedText {
-        ModeratedText::from_version(
+        ModeratedText::veiled(
             self.0.description.clone(),
             self.0.redaction_reason.is_some(),
+            self.0.sensitive,
         )
     }
 
@@ -1578,10 +1599,27 @@ impl PostType {
     /// both, so exactly one of `content.value` and `attachments` carries
     /// it. Words that belong beside a picture are the `description`.
     async fn content(&self) -> ModeratedText {
-        ModeratedText::from_version(
+        ModeratedText::veiled(
             Some(self.0.content.clone()).filter(|c| !c.is_empty()),
             self.0.redaction_reason.is_some(),
+            self.0.sensitive,
         )
+    }
+
+    /// The public reason the author gave for their own sensitive mark —
+    /// null when the post is unmarked, when the mark carries no reason,
+    /// and when the payload has been removed. Shown on the veil, so a
+    /// reader chooses whether to look knowing what they would look at
+    /// (design/readme.md §13).
+    ///
+    /// The mark itself is not a separate field: it is what the body's
+    /// statuses already say.
+    async fn sensitive_reason(&self) -> Option<String> {
+        self.0
+            .redaction_reason
+            .is_none()
+            .then(|| self.0.sensitive_reason.clone())
+            .flatten()
     }
 
     /// The gallery, in the author's order, the first entry the cover.
@@ -1602,7 +1640,7 @@ impl PostType {
     /// The gallery's moderation state — one state for the whole set, not
     /// one per picture.
     async fn attachments_status(&self) -> FieldModerationStatus {
-        attachments_status(self.0.redaction_reason.is_some())
+        attachments_status(self.0.redaction_reason.is_some(), self.0.sensitive)
     }
 
     async fn author(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<User>> {
@@ -1615,7 +1653,7 @@ impl PostType {
     }
 
     async fn moderation_status(&self) -> ModerationStatus {
-        ModerationStatus::Normal
+        node_moderation_status(self.0.sensitive)
     }
 
     /// This post's direct comments — genesis Reviews whose A leg
@@ -1717,10 +1755,21 @@ impl CommentType {
     }
 
     async fn content(&self) -> ModeratedText {
-        ModeratedText::from_version(
+        ModeratedText::veiled(
             Some(self.0.content.clone()),
             self.0.redaction_reason.is_some(),
+            self.0.sensitive,
         )
+    }
+
+    /// The public reason the author gave for their own sensitive mark;
+    /// same three nulls a post's carries.
+    async fn sensitive_reason(&self) -> Option<String> {
+        self.0
+            .redaction_reason
+            .is_none()
+            .then(|| self.0.sensitive_reason.clone())
+            .flatten()
     }
 
     /// The gallery, in the author's order — at most four, and no cover: a
@@ -1736,7 +1785,7 @@ impl CommentType {
 
     /// The gallery's moderation state — one state for the whole set.
     async fn attachments_status(&self) -> FieldModerationStatus {
-        attachments_status(self.0.redaction_reason.is_some())
+        attachments_status(self.0.redaction_reason.is_some(), self.0.sensitive)
     }
 
     async fn author(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<User>> {
@@ -1765,7 +1814,7 @@ impl CommentType {
     }
 
     async fn moderation_status(&self) -> ModerationStatus {
-        ModerationStatus::Normal
+        node_moderation_status(self.0.sensitive)
     }
 
     /// This comment's direct replies, newest-first: pending entries,
@@ -2193,13 +2242,24 @@ async fn comment_gallery(
 /// body as a unit, media and text and description together, never one
 /// picture inside a set.
 ///
-/// Constant NORMAL until the moderation slice stores verdicts, like every
-/// other status on a content node.
-fn attachments_status(redacted: bool) -> FieldModerationStatus {
-    if redacted {
-        FieldModerationStatus::Redacted
+/// An author's own sensitive mark reaches it like every other body field;
+/// moderator verdicts arrive with the moderation slice.
+fn attachments_status(redacted: bool, sensitive: bool) -> FieldModerationStatus {
+    match (redacted, sensitive) {
+        (true, _) => FieldModerationStatus::Redacted,
+        (false, true) => FieldModerationStatus::Sensitive,
+        (false, false) => FieldModerationStatus::Normal,
+    }
+}
+
+/// The node-level cache behind an author's self-mark — the cheap "is
+/// anything wrong here" check a client reads before deciding to fetch the
+/// body at all (api-spec.md "Per-field moderation").
+fn node_moderation_status(sensitive: bool) -> ModerationStatus {
+    if sensitive {
+        ModerationStatus::Sensitive
     } else {
-        FieldModerationStatus::Normal
+        ModerationStatus::Normal
     }
 }
 

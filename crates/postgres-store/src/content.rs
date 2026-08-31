@@ -15,6 +15,7 @@
 //! mirror-derived column they are rebuildable and never authoritative
 //! (data-model.md "The Boundary Rule").
 
+use common::envelope::SensitiveMark;
 use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
 
@@ -103,6 +104,13 @@ pub struct Post {
     pub description: Option<String>,
     pub content: String,
     pub redaction_reason: Option<String>,
+    /// The author's own sensitive mark on this version — the body veils,
+    /// the title stays readable. Versioned with the rest of the content
+    /// state, so an edit that drops it unmarks the post.
+    pub sensitive: bool,
+    /// The public reason shown on the veil; None when the author gave
+    /// none, and never set without `sensitive`.
+    pub sensitive_reason: Option<String>,
     /// Whether the rendered version is an edit that has not landed.
     pub version_pending: bool,
     /// The current version row's timestamp — `updatedAt` when it differs
@@ -139,6 +147,10 @@ pub struct Comment {
     pub created_at: Timestamp,
     pub content: String,
     pub redaction_reason: Option<String>,
+    /// The author's own sensitive mark on this version; same semantics a
+    /// post's carries.
+    pub sensitive: bool,
+    pub sensitive_reason: Option<String>,
     pub version_pending: bool,
     pub version_created_at: Timestamp,
     /// The current version row's own key; the gallery hangs off it, the
@@ -173,6 +185,7 @@ pub async fn insert_post(
     title: Option<&str>,
     description: Option<&str>,
     content: &str,
+    mark: Option<&SensitiveMark>,
 ) -> Result<Option<i64>, ContentError> {
     let inserted = sqlx::query!(
         "INSERT INTO posts
@@ -198,14 +211,17 @@ pub async fn insert_post(
     }
     let version_id = sqlx::query_scalar!(
         "INSERT INTO post_versions
-             (post_id, title, description, content, pending, created_at,
+             (post_id, title, description, content, sensitive,
+              sensitive_reason, pending, created_at,
               landed_epoch, act_time, position)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
          RETURNING version_id",
         id,
         title,
         description,
         content,
+        mark.is_some(),
+        mark.and_then(|m| m.reason.as_deref()),
         order.is_none(),
         created_at,
         order.map(|o| o.landed_epoch),
@@ -232,20 +248,24 @@ pub async fn insert_post_version(
     title: Option<&str>,
     description: Option<&str>,
     content: &str,
+    mark: Option<&SensitiveMark>,
     order: Option<LandingOrder>,
     created_at: Timestamp,
 ) -> Result<Option<i64>, ContentError> {
     Ok(sqlx::query_scalar!(
         "INSERT INTO post_versions
-             (post_id, title, description, content, pending, created_at,
+             (post_id, title, description, content, sensitive,
+              sensitive_reason, pending, created_at,
               landed_epoch, act_time, position)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
          ON CONFLICT (post_id, created_at) DO NOTHING
          RETURNING version_id",
         post_id,
         title,
         description,
         content,
+        mark.is_some(),
+        mark.and_then(|m| m.reason.as_deref()),
         order.is_none(),
         created_at,
         order.map(|o| o.landed_epoch),
@@ -270,6 +290,7 @@ pub async fn insert_comment(
     order: Option<LandingOrder>,
     created_at: Timestamp,
     content: &str,
+    mark: Option<&SensitiveMark>,
 ) -> Result<Option<i64>, ContentError> {
     let inserted = sqlx::query!(
         "INSERT INTO comments
@@ -297,12 +318,14 @@ pub async fn insert_comment(
     }
     let version_id = sqlx::query_scalar!(
         "INSERT INTO comment_versions
-             (comment_id, content, pending, created_at,
-              landed_epoch, act_time, position)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+             (comment_id, content, sensitive, sensitive_reason, pending,
+              created_at, landed_epoch, act_time, position)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
          RETURNING version_id",
         id,
         content,
+        mark.is_some(),
+        mark.and_then(|m| m.reason.as_deref()),
         order.is_none(),
         created_at,
         order.map(|o| o.landed_epoch),
@@ -320,18 +343,21 @@ pub async fn insert_comment_version(
     tx: &mut Transaction<'_, Postgres>,
     comment_id: Uuid,
     content: &str,
+    mark: Option<&SensitiveMark>,
     order: Option<LandingOrder>,
     created_at: Timestamp,
 ) -> Result<Option<i64>, ContentError> {
     Ok(sqlx::query_scalar!(
         "INSERT INTO comment_versions
-             (comment_id, content, pending, created_at,
-              landed_epoch, act_time, position)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+             (comment_id, content, sensitive, sensitive_reason, pending,
+              created_at, landed_epoch, act_time, position)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
          ON CONFLICT (comment_id, created_at) DO NOTHING
          RETURNING version_id",
         comment_id,
         content,
+        mark.is_some(),
+        mark.and_then(|m| m.reason.as_deref()),
         order.is_none(),
         created_at,
         order.map(|o| o.landed_epoch),
@@ -615,6 +641,8 @@ fn post_from_row(row: PostRow) -> Post {
         description: row.description,
         content: row.content,
         redaction_reason: row.redaction_reason,
+        sensitive: row.sensitive,
+        sensitive_reason: row.sensitive_reason,
         version_pending: row.version_pending,
         version_created_at: row.version_created_at,
         version_id: row.version_id,
@@ -634,6 +662,8 @@ struct PostRow {
     description: Option<String>,
     content: String,
     redaction_reason: Option<String>,
+    sensitive: bool,
+    sensitive_reason: Option<String>,
     version_pending: bool,
     version_created_at: Timestamp,
     version_id: i64,
@@ -649,12 +679,14 @@ pub async fn post(pool: &PgPool, id: Uuid) -> Result<Option<Post>, ContentError>
                   p.landed_epoch, p.act_time, p.position, p.created_at,
                   v.title, v.description,
                   v.content AS "content!", v.redaction_reason,
+                  v.sensitive AS "sensitive!", v.sensitive_reason,
                   v.pending AS "version_pending!",
                   v.created_at AS "version_created_at!",
                   v.version_id AS "version_id!"
            FROM posts p
            JOIN LATERAL (
-               SELECT title, description, content, redaction_reason, pending,
+               SELECT title, description, content, redaction_reason,
+                      sensitive, sensitive_reason, pending,
                       created_at, version_id
                FROM post_versions WHERE post_id = p.id
                ORDER BY pending DESC,
@@ -681,12 +713,14 @@ pub async fn post_by_node(pool: &PgPool, l1_node_id: &str) -> Result<Option<Post
                   p.landed_epoch, p.act_time, p.position, p.created_at,
                   v.title, v.description,
                   v.content AS "content!", v.redaction_reason,
+                  v.sensitive AS "sensitive!", v.sensitive_reason,
                   v.pending AS "version_pending!",
                   v.created_at AS "version_created_at!",
                   v.version_id AS "version_id!"
            FROM posts p
            JOIN LATERAL (
-               SELECT title, description, content, redaction_reason, pending,
+               SELECT title, description, content, redaction_reason,
+                      sensitive, sensitive_reason, pending,
                       created_at, version_id
                FROM post_versions WHERE post_id = p.id
                ORDER BY pending DESC,
@@ -717,12 +751,14 @@ pub async fn posts_by_nodes(
                   p.landed_epoch, p.act_time, p.position, p.created_at,
                   v.title, v.description,
                   v.content AS "content!", v.redaction_reason,
+                  v.sensitive AS "sensitive!", v.sensitive_reason,
                   v.pending AS "version_pending!",
                   v.created_at AS "version_created_at!",
                   v.version_id AS "version_id!"
            FROM posts p
            JOIN LATERAL (
-               SELECT title, description, content, redaction_reason, pending,
+               SELECT title, description, content, redaction_reason,
+                      sensitive, sensitive_reason, pending,
                       created_at, version_id
                FROM post_versions WHERE post_id = p.id
                ORDER BY pending DESC,
@@ -902,12 +938,14 @@ async fn list_posts_landed(
                       p.landed_epoch, p.act_time, p.position, p.created_at,
                       v.title, v.description,
                       v.content AS "content!", v.redaction_reason,
+                      v.sensitive AS "sensitive!", v.sensitive_reason,
                       v.pending AS "version_pending!",
                       v.created_at AS "version_created_at!",
                       v.version_id AS "version_id!"
                FROM posts p
                JOIN LATERAL (
                    SELECT title, description, content, redaction_reason,
+                          sensitive, sensitive_reason,
                           pending, created_at, version_id
                    FROM post_versions
                    WHERE post_id = p.id AND ($6 OR NOT pending)
@@ -962,12 +1000,14 @@ async fn list_posts_pending(
                       p.landed_epoch, p.act_time, p.position, p.created_at,
                       v.title, v.description,
                       v.content AS "content!", v.redaction_reason,
+                      v.sensitive AS "sensitive!", v.sensitive_reason,
                       v.pending AS "version_pending!",
                       v.created_at AS "version_created_at!",
                       v.version_id AS "version_id!"
                FROM posts p
                JOIN LATERAL (
                    SELECT title, description, content, redaction_reason,
+                          sensitive, sensitive_reason,
                           pending, created_at, version_id
                    FROM post_versions WHERE post_id = p.id
                    ORDER BY pending DESC,
@@ -1014,6 +1054,8 @@ fn comment_from_row(row: CommentRow) -> Comment {
         created_at: row.created_at,
         content: row.content,
         redaction_reason: row.redaction_reason,
+        sensitive: row.sensitive,
+        sensitive_reason: row.sensitive_reason,
         version_pending: row.version_pending,
         version_created_at: row.version_created_at,
         version_id: row.version_id,
@@ -1033,6 +1075,8 @@ struct CommentRow {
     created_at: Timestamp,
     content: String,
     redaction_reason: Option<String>,
+    sensitive: bool,
+    sensitive_reason: Option<String>,
     version_pending: bool,
     version_created_at: Timestamp,
     version_id: i64,
@@ -1046,13 +1090,14 @@ pub async fn comment(pool: &PgPool, id: Uuid) -> Result<Option<Comment>, Content
                   c.l1_node_id, c.license, c.landed_epoch, c.act_time,
                   c.position, c.created_at,
                   v.content AS "content!", v.redaction_reason,
+                  v.sensitive AS "sensitive!", v.sensitive_reason,
                   v.pending AS "version_pending!",
                   v.created_at AS "version_created_at!",
                   v.version_id AS "version_id!"
            FROM comments c
            JOIN LATERAL (
-               SELECT content, redaction_reason, pending, created_at,
-                      version_id
+               SELECT content, redaction_reason, sensitive, sensitive_reason,
+                      pending, created_at, version_id
                FROM comment_versions WHERE comment_id = c.id
                ORDER BY pending DESC,
                         landed_epoch DESC NULLS LAST,
@@ -1080,13 +1125,14 @@ pub async fn comment_by_node(
                   c.l1_node_id, c.license, c.landed_epoch, c.act_time,
                   c.position, c.created_at,
                   v.content AS "content!", v.redaction_reason,
+                  v.sensitive AS "sensitive!", v.sensitive_reason,
                   v.pending AS "version_pending!",
                   v.created_at AS "version_created_at!",
                   v.version_id AS "version_id!"
            FROM comments c
            JOIN LATERAL (
-               SELECT content, redaction_reason, pending, created_at,
-                      version_id
+               SELECT content, redaction_reason, sensitive, sensitive_reason,
+                      pending, created_at, version_id
                FROM comment_versions WHERE comment_id = c.id
                ORDER BY pending DESC,
                         landed_epoch DESC NULLS LAST,
@@ -1116,13 +1162,14 @@ pub async fn comments_by_nodes(
                   c.l1_node_id, c.license, c.landed_epoch, c.act_time,
                   c.position, c.created_at,
                   v.content AS "content!", v.redaction_reason,
+                  v.sensitive AS "sensitive!", v.sensitive_reason,
                   v.pending AS "version_pending!",
                   v.created_at AS "version_created_at!",
                   v.version_id AS "version_id!"
            FROM comments c
            JOIN LATERAL (
-               SELECT content, redaction_reason, pending, created_at,
-                      version_id
+               SELECT content, redaction_reason, sensitive, sensitive_reason,
+                      pending, created_at, version_id
                FROM comment_versions WHERE comment_id = c.id
                ORDER BY pending DESC,
                         landed_epoch DESC NULLS LAST,
@@ -1185,13 +1232,14 @@ async fn comments_landed(
                       c.l1_node_id, c.license, c.landed_epoch, c.act_time,
                       c.position, c.created_at,
                       v.content AS "content!", v.redaction_reason,
+                      v.sensitive AS "sensitive!", v.sensitive_reason,
                       v.pending AS "version_pending!",
                       v.created_at AS "version_created_at!",
                       v.version_id AS "version_id!"
                FROM comments c
                JOIN LATERAL (
-                   SELECT content, redaction_reason, pending, created_at,
-                          version_id
+                   SELECT content, redaction_reason, sensitive,
+                          sensitive_reason, pending, created_at, version_id
                    FROM comment_versions
                    WHERE comment_id = c.id AND ($7 OR NOT pending)
                    ORDER BY pending DESC,
@@ -1244,13 +1292,14 @@ async fn comments_pending(
                       c.l1_node_id, c.license, c.landed_epoch, c.act_time,
                       c.position, c.created_at,
                       v.content AS "content!", v.redaction_reason,
+                      v.sensitive AS "sensitive!", v.sensitive_reason,
                       v.pending AS "version_pending!",
                       v.created_at AS "version_created_at!",
                       v.version_id AS "version_id!"
                FROM comments c
                JOIN LATERAL (
-                   SELECT content, redaction_reason, pending, created_at,
-                          version_id
+                   SELECT content, redaction_reason, sensitive,
+                          sensitive_reason, pending, created_at, version_id
                    FROM comment_versions WHERE comment_id = c.id
                    ORDER BY pending DESC,
                             landed_epoch DESC NULLS LAST,
