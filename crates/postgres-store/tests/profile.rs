@@ -61,7 +61,6 @@ async fn current_profile_serves_the_newest_version(pool: PgPool) {
         "Ada L",
         Some("Curious."),
         None,
-        None,
         Some("https://ada.example"),
         order(1, 0),
     )
@@ -101,21 +100,12 @@ async fn same_instant_writes_both_land_and_the_later_one_is_current(pool: PgPool
     let actor = seed_actor(&pool, "ada").await;
 
     let mut tx = pool.begin().await.expect("tx");
-    profile::insert_profile_version(&mut tx, actor, "First", None, None, None, None, order(1, 0))
+    profile::insert_profile_version(&mut tx, actor, "First", None, None, None, order(1, 0))
         .await
         .expect("first insert");
-    profile::insert_profile_version(
-        &mut tx,
-        actor,
-        "Second",
-        None,
-        None,
-        None,
-        None,
-        order(1, 0),
-    )
-    .await
-    .expect("second insert");
+    profile::insert_profile_version(&mut tx, actor, "Second", None, None, None, order(1, 0))
+        .await
+        .expect("second insert");
     tx.commit().await.expect("commits");
 
     let stamps: Vec<chrono::DateTime<chrono::Utc>> = sqlx::query_scalar(
@@ -158,7 +148,6 @@ async fn the_record_that_landed_last_is_current_even_when_written_first(pool: Pg
         None,
         None,
         None,
-        None,
         order(9, 0),
     )
     .await
@@ -170,7 +159,6 @@ async fn the_record_that_landed_last_is_current_even_when_written_first(pool: Pg
         &mut tx,
         actor,
         "Landed earlier",
-        None,
         None,
         None,
         None,
@@ -217,7 +205,7 @@ async fn a_row_without_coordinates_never_outranks_a_landed_one(pool: PgPool) {
     let actor = seed_actor(&pool, "ada").await;
 
     let mut tx = pool.begin().await.expect("tx");
-    profile::insert_profile_version(&mut tx, actor, "Ada L", None, None, None, None, order(1, 0))
+    profile::insert_profile_version(&mut tx, actor, "Ada L", None, None, None, order(1, 0))
         .await
         .expect("inserts");
     tx.commit().await.expect("commits");

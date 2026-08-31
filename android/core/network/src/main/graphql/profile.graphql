@@ -22,9 +22,6 @@ fragment ProfileFields on User {
   avatar {
     ...MediaFields
   }
-  cover {
-    ...MediaFields
-  }
 }
 
 query UserByHandle($handle: String!) {

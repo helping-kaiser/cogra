@@ -539,6 +539,28 @@ pub fn public_url(base_url: &str, storage_key: &str) -> String {
     format!("{}/{}", base_url.trim_end_matches('/'), storage_key)
 }
 
+/// Rewrites one asset's description, owner-scoped.
+///
+/// Returns `None` when the asset is not this author's, does not exist, or
+/// has been redacted — one answer for all three, so the surface cannot be
+/// used to find out which assets exist or who uploaded them.
+///
+/// Only the row moves. Every act that already witnessed this asset carries
+/// the description it snapshotted at prepare (`plan_gallery`), and no
+/// promotion re-reads it: a landed record's alt text is fixed the way its
+/// body is, and changing what a *published* post says is an edit act. What
+/// this surface is for is the window before that — the wizard uploads
+/// while the author is still writing, so the description arrives after the
+/// bytes did.
+pub async fn update_alt_text(
+    pool: &PgPool,
+    id: Uuid,
+    author: Uuid,
+    alt_text: Option<&str>,
+) -> Result<Option<store::MediaAttachment>, sqlx::Error> {
+    store::update_alt_text(pool, id, author, alt_text).await
+}
+
 /// Writes the object, then the row.
 ///
 /// A retried upload of the same picture by the same author resolves to

@@ -153,13 +153,17 @@ integer-keyed map — the guild schema:
 | 9 | website URL (profile) | tstr |
 | 10 | payout address (profile) — **assigned**, arrives with the rail ([ledger.md](ledger.md)) | tstr |
 | 11 | avatar (profile) — a one-asset slot | array of maps |
-| 12 | cover (profile) — a one-asset slot | array of maps |
+| 12 | **retired** — never reallocated | — |
 | 13 | the author's own sensitive mark — `1` when marked, key absent when not | uint |
 | 14 | the mark's optional public reason, valid only with key 13 | tstr |
 
-Keys 2–6 and 13–14 ride Publish/Review payloads; keys 7–12 ride the
+Keys 2–6 and 13–14 ride Publish/Review payloads; keys 7–11 ride the
 parallel-Registration profile payload ([user.md §4](../primitive/user.md#4-postgres-side-content),
 [substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
+
+Key 12 is **retired**, not returned to the unallocated pool: a number
+that once meant something is never given a second meaning, so a payload
+carrying it is refused rather than read as whatever 12 might mean next.
 
 Keys 13 and 14 carry the author's own sensitive mark and its
 optional public reason ([moderation.md §1](../instances/moderation.md)).
@@ -186,10 +190,10 @@ rather than ignored, so a v2 field cannot be silently dropped by
 a v1 reader that would then render an asset it did not fully
 understand.
 
-Keys 11 and 12 carry the profile's avatar and cover as that same
-per-asset map, one deep — the same reader renders a gallery and
+Key 11 carries the profile's avatar — its one image — as that same
+per-asset map, one deep: the same reader renders a gallery and
 an avatar, and an avatar's alt text is witnessed like any other
-picture's. A profile payload is a delta, so each slot is
+picture's. A profile payload is a delta, so the slot is
 three-valued and each state has exactly one encoding: absent
 leaves the slot alone, `[]` clears it, `[asset]` sets it. The
 content family's manifest refuses an in-band empty for the
@@ -578,7 +582,6 @@ CREATE TABLE actor_profile_versions (
     display_name     TEXT        NOT NULL,
     bio              TEXT,
     avatar_id        UUID        REFERENCES media_attachments(id),
-    cover_id         UUID        REFERENCES media_attachments(id),
     website_url      TEXT,
     redaction_reason TEXT,
     landed_epoch     BIGINT,
@@ -1500,8 +1503,8 @@ reverse. So:
   attachment-on-parent. Per-relationship facts (`display_order`,
   `is_cover`) live on the junction, not on the asset.
 - 1:1 parents reference attachments via a direct FK column on
-  their version rows (`actor_profile_versions.avatar_id` /
-  `.cover_id`, `chat_versions.image_id`).
+  their version rows (`actor_profile_versions.avatar_id`,
+  `chat_versions.image_id`).
 
 Junctions cost more rows than an array column would, but each
 junction row is FK-enforced, supports per-relationship metadata

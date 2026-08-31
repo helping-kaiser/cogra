@@ -7,10 +7,16 @@
 //! the natural query is always parent to attachments (data-model.md "Why
 //! parents point at attachments").
 //!
-//! The row is immutable after upload. There is no update surface and
-//! there never will be: alt text rides the payload envelope, so editing
-//! it is a new record either way, and an asset that cannot change needs
-//! no version rows.
+//! The **bytes** are immutable after upload: the digest names them
+//! permanently and the object is cacheable forever. The row's **alt text**
+//! is not — it is the author's current description of the picture, and
+//! [`update_alt_text`] is the one surface that changes it.
+//!
+//! That needs no version rows, because the history the append-only rule
+//! protects is already kept somewhere better: every act's payload envelope
+//! snapshots the alt text at prepare, so what was *published* is witnessed
+//! per record and permanent. The row carries the current value; the
+//! records carry what each post said.
 //!
 //! `author_id` here is Postgres-native truth rather than a cached
 //! derivation — media is not a graph node, so there is no graph-side
@@ -338,6 +344,38 @@ pub async fn by_id(pool: &PgPool, id: Uuid) -> Result<Option<MediaAttachment>, s
     .await
 }
 
+/// Rewrites one asset's alt text, returning the updated row.
+///
+/// Scoped to the owner in the statement itself rather than after a read,
+/// so no window exists between checking who owns the asset and writing to
+/// it. A redacted asset is excluded for the same reason its bytes are
+/// gone: there is nothing left to describe. Either miss returns `None`,
+/// and the caller turns that into the refusal a client reads.
+pub async fn update_alt_text(
+    pool: &PgPool,
+    id: Uuid,
+    author_id: Uuid,
+    alt_text: Option<&str>,
+) -> Result<Option<MediaAttachment>, sqlx::Error> {
+    sqlx::query_as!(
+        MediaAttachment,
+        r#"
+        UPDATE media_attachments
+        SET alt_text = $3
+        WHERE id = $1 AND author_id = $2 AND redacted_at IS NULL
+        RETURNING id, author_id, digest, digest_algo, storage_key,
+                  mime_type, size_bytes, alt_text,
+                  options AS "options!: serde_json::Value",
+                  redaction_reason, redacted_at, created_at
+        "#,
+        id,
+        author_id,
+        alt_text,
+    )
+    .fetch_optional(pool)
+    .await
+}
+
 /// Collects assets nobody kept.
 ///
 /// An upload precedes the write that references it, so a compose the
@@ -386,8 +424,7 @@ pub async fn sweep_orphans(
           AND NOT EXISTS (SELECT 1 FROM chat_message_attachments a WHERE a.attachment_id = m.id)
           AND NOT EXISTS (SELECT 1 FROM item_attachments         a WHERE a.attachment_id = m.id)
           AND NOT EXISTS (
-                SELECT 1 FROM actor_profile_versions p
-                WHERE p.avatar_id = m.id OR p.cover_id = m.id)
+                SELECT 1 FROM actor_profile_versions p WHERE p.avatar_id = m.id)
           AND NOT EXISTS (SELECT 1 FROM chat_versions c WHERE c.image_id = m.id)
         RETURNING id, storage_key
         "#,

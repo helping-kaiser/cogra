@@ -215,8 +215,9 @@ const PREPARE_POST_EDIT: &str = r#"mutation($input: PreparePostEditInput!) {
 }"#;
 
 /// Everything a client needs to draw the veil: the title's status outside
-/// it, the body's three statuses inside it, the node-level cache, and the
-/// author's reason.
+/// it, the body's three statuses inside it, the node-level cache, the
+/// author's reason, and — for the edit switch rather than the veil — the
+/// author's own mark on its own.
 const READ_VEIL: &str = r#"query($id: UUID!) { post(id: $id) {
   title { value status }
   description { value status }
@@ -224,6 +225,7 @@ const READ_VEIL: &str = r#"query($id: UUID!) { post(id: $id) {
   attachmentsStatus
   moderationStatus
   sensitiveReason
+  sensitiveSelfMark
 } }"#;
 
 /// The whole slice-2 round trip: a post composed and signed "on the
@@ -466,6 +468,10 @@ async fn a_self_marked_post_veils_its_body_and_keeps_its_title(pool: PgPool) {
     assert_eq!(post["moderationStatus"], "SENSITIVE");
     assert_eq!(post["sensitiveReason"], "Depicts an injury");
     assert_eq!(
+        post["sensitiveSelfMark"], true,
+        "the switch an edit screen reads is the author's own mark"
+    );
+    assert_eq!(
         post["content"]["value"], "The body nobody sees unmarked.",
         "SENSITIVE is a filter, not a removal — the value still travels"
     );
@@ -496,6 +502,10 @@ async fn a_self_marked_post_veils_its_body_and_keeps_its_title(pool: PgPool) {
     assert_eq!(post["attachmentsStatus"], "NORMAL");
     assert_eq!(post["moderationStatus"], "NORMAL");
     assert!(post["sensitiveReason"].is_null());
+    assert_eq!(
+        post["sensitiveSelfMark"], false,
+        "and the switch follows the author's own mark, never a verdict"
+    );
 
     let remarked = rig
         .gql(

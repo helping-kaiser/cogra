@@ -20,10 +20,9 @@ export type PostShape = keyof typeof POST_SHAPES;
 
 export const POST_SHAPE_ORDER: readonly PostShape[] = ["tall", "square", "wide"];
 
-// The avatar and the cover are not post bodies and do not take a post shape
-// (D13). They are listed here so every fixed ratio in the client has one home.
+// The avatar is not a post body and does not take a post shape (D13). It is
+// listed here so every fixed ratio in the client has one home.
 export const AVATAR_RATIO = 1;
-export const COVER_RATIO = 1.91;
 
 // The portrait cap, as a bound on the TILE rather than on the picture.
 //
