@@ -227,6 +227,9 @@ impl Rig {
 /// Opinion pair, the joiner's act has debited their own funded balance,
 /// and the account's rows are the ones registration created, with the
 /// session list showing the registration device.
+///
+/// The whole admission arc holds through the real HTTP surface: a link becomes an account, two proofs, an approval, a funded burn, a landed Registration and a reciprocating act, with nothing but ordinary sessions throughout.
+/// ´claim:onboarding:the-admission-arc-holds-end-to-end´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -592,6 +595,9 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
 /// `l0Address` carry the account's own attached key for its viewer,
 /// null before the ceremony — and never resolve for anyone else, keyed
 /// key or not.
+///
+/// An account's attached key reads for its own viewer alone, null before the ceremony and absent for everyone else.
+/// ´claim:onboarding:the-attached-key-reads-for-its-viewer-only´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_attached_key_reads_for_its_viewer_only(pool: PgPool) {
     let rig = Rig::new(pool).await;
