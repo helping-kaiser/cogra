@@ -18,6 +18,7 @@
 #          the kind registry's adoption ....... [kinds]
 #          head recognition per format ........ [head-recognition]
 #          the enforcement partition .......... [enforcement]
+#          the owner reach graph .............. [reach]
 #
 # Conventions in this file:
 #   * References to discipline labels are written PLAIN (no backticks,
@@ -1781,5 +1782,102 @@ failing = [
 #   LINTER rep:lint:first-corpus scoped acceptance towards: the failing
 #   set grew with each migration, and this was the last one.
 
+
+####################################################################
+# [reach] — which owners an owner's imports may name
+#
+# RULED 2026-08-31, from the measured graph.
+#
+# LINTER dec:lint:reach-declared: Sigma says which prefixes name an
+# owner and Omega says which owner holds a source, and between them an
+# imported citation either resolves or does not. Neither has an opinion
+# about whether the citing owner had any business importing from the
+# cited one. This section is that opinion, as data.
+#
+# THE MEASUREMENT THE RULING STANDS ON. Walked over the real tree:
+# 11 distinct owner-to-owner edges, 640 imported citations, 3 citing
+# owners out of 19. The graph is already strictly layered and has no
+# cycles — the four discipline documents make no imported citation at
+# all, the architecture cites the four and nothing else, and the two
+# packages cite documents and never each other. What the rows below do
+# is make that property enforced instead of merely true.
+#
+# ONE ALLOWANCE OVER THE MEASUREMENT. pkg.cogra-interchange is given
+# the three discipline documents it does not cite today, so that both
+# packages carry the same tier-0 set. The rule the section states is
+# "implementation may stand on any discipline document", which is a
+# rule; freezing the accident of what happens to be cited today is not.
+#
+# A MISSING ROW CONSTRAINS NOTHING. Twelve owners carry no citation
+# whatever and get no row — pkg.api, pkg.common, pkg.l1-standin,
+# pkg.postgres-store, pkg.android, pkg.web, the four docs trees, the
+# working notes, and the repo root. A row for one of them today would
+# constrain a future rather than a present, and would be written
+# without evidence about what it will need to cite when the discipline
+# reaches it. That is also what makes the graph adoptable one owner at
+# a time: an owner the section does not name reaches everything,
+# exactly as it does with no section at all.
+#
+# THE EMPTY ROWS ARE THE STRONGEST CLAIM HERE. The four disciplines
+# stand on nothing in this corpus, and they are meant to be separately
+# adoptable. If one of them ever wants to cite another, the repair is
+# one line in this section — which is the point of declaring the graph
+# — but it should be a deliberate edit and never a surprise.
+#
+# CHECKED AGAINST CARGO, ONE DIRECTION. A path dependency the owner's
+# manifest carries and this section omits is refused at load; a
+# declared edge Cargo does not carry is no defect at all, and is how
+# every document owner reaches anything.
+####################################################################
+
+[reach]
+
+# Tier 1 — the architecture stands on the four disciplines.
+[[reach.owner]]
+owner    = "doc.linter-architecture"
+may_cite = [
+  "doc.label-calculus",
+  "doc.kind-registry",
+  "doc.identity-adjudication",
+  "doc.interchange-conventions",
+]
+
+# Tier 2 — implementation stands on the disciplines and the architecture.
+[[reach.owner]]
+owner    = "pkg.cogra-linter"
+may_cite = [
+  "doc.label-calculus",
+  "doc.kind-registry",
+  "doc.identity-adjudication",
+  "doc.interchange-conventions",
+  "doc.linter-architecture",
+]
+
+[[reach.owner]]
+owner    = "pkg.cogra-interchange"
+may_cite = [
+  "doc.label-calculus",
+  "doc.kind-registry",
+  "doc.identity-adjudication",
+  "doc.interchange-conventions",
+  "doc.linter-architecture",
+]
+
+# Tier 0 — the disciplines stand on nothing in this corpus.
+[[reach.owner]]
+owner    = "doc.label-calculus"
+may_cite = []
+
+[[reach.owner]]
+owner    = "doc.kind-registry"
+may_cite = []
+
+[[reach.owner]]
+owner    = "doc.identity-adjudication"
+may_cite = []
+
+[[reach.owner]]
+owner    = "doc.interchange-conventions"
+may_cite = []
 
 
