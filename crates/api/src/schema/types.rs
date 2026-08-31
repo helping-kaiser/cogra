@@ -2889,10 +2889,6 @@ impl MediaAttachmentType {
 
 #[cfg(test)]
 mod sensitive_tests {
-    //! ´mod:module:sensitive-tests´
-    //!
-    //! The two-state veil, exercised in both directions.
-
     use super::*;
 
     /// Every combination of the two marks, so neither direction can be

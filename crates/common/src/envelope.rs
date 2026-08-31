@@ -1534,6 +1534,9 @@ mod tests {
     /// Key 12 held the profile cover and is retired rather than returned
     /// to the unallocated pool, so a payload carrying it is refused with
     /// the retirement named — never read as whatever 12 might mean next.
+    ///
+    /// A retired guild key is refused with its retirement named rather than returned to the unallocated pool, so a number that once meant something never gets a second meaning.
+    /// ´claim:envelope:a-retired-guild-key-stays-refused´
     #[test]
     fn profile_refuses_the_retired_cover_key() {
         let mut inner = BTreeMap::new();
