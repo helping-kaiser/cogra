@@ -188,7 +188,9 @@ pub enum AdoptionError {
     /// an identifier the code already bears. A kind in K admits derivation
     /// only, so a claim of such a kind could stand on no warrant at all
     /// (´[LBL-inv:labels:warrant-totality]´).
-    #[error("the claim discipline names kind {kind}, which is reserved in K and admits no authorship")]
+    #[error(
+        "the claim discipline names kind {kind}, which is reserved in K and admits no authorship"
+    )]
     ClaimKindReserved {
         /// The row the kind sits in.
         at: Location,

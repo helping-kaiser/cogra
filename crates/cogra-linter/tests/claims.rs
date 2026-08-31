@@ -120,7 +120,10 @@ fn a_cited_claim_carries_no_statement() {
 #[test]
 fn documentation_without_a_claim_is_unclaimed() {
     assert_eq!(
-        standing(&lines(&["Prose.", "(´dec:lint:claim-standing´)"]), &claim_kind()),
+        standing(
+            &lines(&["Prose.", "(´dec:lint:claim-standing´)"]),
+            &claim_kind()
+        ),
         Standing::Unclaimed,
         "a citation of another kind is not a claim"
     );
@@ -242,7 +245,10 @@ fn an_unclaimed_test_of_an_unactivated_owner_is_only_counted() {
         .by_owner
         .get(&OwnerId::new("pkg.l1-standin"))
         .expect("the owner is tallied even though its wave is open");
-    assert_eq!((held.covered, held.unclaimed, held.activated), (1, 1, false));
+    assert_eq!(
+        (held.covered, held.unclaimed, held.activated),
+        (1, 1, false)
+    );
 }
 
 /// (´dec:lint:claim-activation´): the staging reaches the unwritten claim
@@ -355,7 +361,10 @@ fn the_census_counts_activated_and_open_owners_alike() {
         ],
     );
     let counted = census(&run.graph, adoption());
-    assert_eq!((counted.covered, counted.claimed, counted.unclaimed), (2, 1, 1));
+    assert_eq!(
+        (counted.covered, counted.claimed, counted.unclaimed),
+        (2, 1, 1)
+    );
     assert_eq!((counted.mints, counted.citations), (1, 0));
     assert_eq!(counted.by_area.get("x").copied(), Some(1));
 }

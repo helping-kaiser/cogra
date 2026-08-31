@@ -236,7 +236,10 @@ fn a_label_no_owner_carries_answers_empty() {
 /// ´claim:report:the-survey-is-deterministic´
 #[test]
 fn two_surveys_of_one_run_agree() {
-    assert_eq!(survey(surveyed(), adoption(), 20), survey(surveyed(), adoption(), 20));
+    assert_eq!(
+        survey(surveyed(), adoption(), 20),
+        survey(surveyed(), adoption(), 20)
+    );
     let one = label("dec:standin:hub");
     assert_eq!(reverse(surveyed(), &one), reverse(surveyed(), &one));
 }

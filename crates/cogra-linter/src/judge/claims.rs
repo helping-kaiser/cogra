@@ -200,7 +200,9 @@ pub fn claims(g: &Corpus, a: &Adoption) -> Vec<Diagnostic> {
         };
         let name = weight.identifier.clone();
         let standing = standing(&weight.documentation, &declared.kind);
-        let Some(at) = at_asset(g, asset) else { continue };
+        let Some(at) = at_asset(g, asset) else {
+            continue;
+        };
         match standing {
             Standing::Claimed(line) if line.form == Form::Mint => {
                 if line.statement.is_empty() {

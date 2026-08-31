@@ -264,9 +264,10 @@ fn every_committed_register_is_current() {
     );
     assert_eq!(
         registers.len(),
-        8,
-        "the companion register, the headline region, and the test profile's \
-         label register for each of the six owners with covered assets"
+        9,
+        "the companion register, the headline region, the test profile's label \
+         register for each of the six owners with covered assets, and the claim \
+         matrix of the one owner whose authoring wave has closed"
     );
     for reg in &registers {
         let (held, _) = cogra_linter::registers::committed(reg, &run().sources);

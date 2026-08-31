@@ -1655,7 +1655,11 @@ fn an_every_owner_activation_admits_an_owner_it_never_names() {
     let declared = adoption.claims.expect("the claim discipline is adopted");
     assert_eq!(declared.activation, Activation::EveryOwner);
     assert!(declared.activation.admits(&OwnerId::new("doc.one")));
-    assert!(declared.activation.admits(&OwnerId::new("never.registered")));
+    assert!(
+        declared
+            .activation
+            .admits(&OwnerId::new("never.registered"))
+    );
     assert_eq!(declared.activation.declared(), None);
 }
 
@@ -1800,7 +1804,8 @@ reserved_ungoverned = [\"claim\"]
 /// ´claim:adoption:an-unridden-profile-is-refused´
 #[test]
 fn a_claim_discipline_riding_an_unregistered_profile_is_refused() {
-    let source = claims_document(EVERY_OWNER).replace("\"rust-test\"\nsource", "\"rust-none\"\nsource");
+    let source =
+        claims_document(EVERY_OWNER).replace("\"rust-test\"\nsource", "\"rust-none\"\nsource");
     let error = load(&source).expect_err("a profile Pi does not register");
     let AdoptionError::ClaimProfileUnknown { ref id, .. } = error else {
         panic!("expected ClaimProfileUnknown, got {error:?}");
@@ -1827,7 +1832,11 @@ fn the_ruled_claim_discipline_activates_one_owner() {
         "a claim stands on an authorship warrant"
     );
     assert_eq!(declared.activation.declared(), Some(1));
-    assert!(declared.activation.admits(&OwnerId::new("pkg.cogra-linter")));
+    assert!(
+        declared
+            .activation
+            .admits(&OwnerId::new("pkg.cogra-linter"))
+    );
     assert!(!declared.activation.admits(&OwnerId::new("pkg.api")));
 }
 
