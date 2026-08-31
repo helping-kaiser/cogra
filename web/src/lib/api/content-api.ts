@@ -284,6 +284,13 @@ export async function preparePostEdit(
     title: string | null;
     description: string | null;
     content: string;
+    /**
+     * REQUIRED, and deliberately not optional: an edit is COMPLETE STATE, so
+     * omitting the mark unmarks a post the author had marked. Making the caller
+     * state it is what stops that happening by forgetting.
+     */
+    sensitive: boolean;
+    sensitiveReason?: string;
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -296,6 +303,7 @@ export async function preparePostEdit(
             title: fields.title,
             description: fields.description,
             content: fields.content,
+            ...sensitiveInput(fields.sensitive, fields.sensitiveReason),
           },
         },
       }),
@@ -345,13 +353,21 @@ export async function prepareComment(
 
 export async function prepareCommentEdit(
   client: ApolloClient,
-  fields: { id: string; content: string },
+  // `sensitive` is required for the same reason it is on a post edit: an edit
+  // is complete state, so an omitted mark unveils a comment its author veiled.
+  fields: { id: string; content: string; sensitive: boolean; sensitiveReason?: string },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
     () =>
       client.mutate({
         mutation: PrepareCommentEditDocument,
-        variables: { input: { id: fields.id, content: fields.content } },
+        variables: {
+          input: {
+            id: fields.id,
+            content: fields.content,
+            ...sensitiveInput(fields.sensitive, fields.sensitiveReason),
+          },
+        },
       }),
     (data) => data.prepareCommentEdit.userErrors,
     (data) => liftPrepared(data.prepareCommentEdit),
