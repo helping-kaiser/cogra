@@ -1487,16 +1487,16 @@ impl ModeratedText {
         }
     }
 
-    /// A body field under the row's redaction state *and* its author's own
-    /// sensitive mark. The value still travels — SENSITIVE is a read-side
+    /// A body field under the row's redaction state *and* the sensitive
+    /// marks on it. The value still travels — SENSITIVE is a read-side
     /// filter, not a removal (moderation.md §1) — and the client veils it.
     ///
     /// Redaction wins where both apply: a removed value has nothing left
     /// to warn about, and `illegal` takes precedence over `sensitive`
     /// (moderation.md §1).
-    fn veiled(value: Option<String>, redacted: bool, sensitive: bool) -> Self {
+    fn veiled(value: Option<String>, redacted: bool, marks: SensitiveMarks) -> Self {
         let text = Self::from_version(value, redacted);
-        if sensitive && text.status == FieldModerationStatus::Normal {
+        if marks.veiled() && text.status == FieldModerationStatus::Normal {
             Self {
                 status: FieldModerationStatus::Sensitive,
                 ..text
@@ -1582,7 +1582,7 @@ impl PostType {
         ModeratedText::veiled(
             self.0.description.clone(),
             self.0.redaction_reason.is_some(),
-            self.0.sensitive,
+            SensitiveMarks::of(self.0.sensitive),
         )
     }
 
@@ -1594,8 +1594,20 @@ impl PostType {
         ModeratedText::veiled(
             Some(self.0.content.clone()).filter(|c| !c.is_empty()),
             self.0.redaction_reason.is_some(),
-            self.0.sensitive,
+            SensitiveMarks::of(self.0.sensitive),
         )
+    }
+
+    /// The author's **own** sensitive mark, alone — not the veil.
+    ///
+    /// The body statuses carry the veil, which is the OR of this mark and
+    /// a moderator's verdict. An edit switch must read this field
+    /// instead: it is the author's own state, the only one an edit can
+    /// change, and a switch bound to the OR would show a moderated post
+    /// as self-marked and then silently claim to unmark it
+    /// (moderation.md §1).
+    async fn sensitive_self_mark(&self) -> bool {
+        self.0.sensitive
     }
 
     /// The public reason the author gave for their own sensitive mark —
@@ -1603,9 +1615,6 @@ impl PostType {
     /// and when the payload has been removed. Shown on the veil, so a
     /// reader chooses whether to look knowing what they would look at
     /// (design/readme.md §13).
-    ///
-    /// The mark itself is not a separate field: it is what the body's
-    /// statuses already say.
     async fn sensitive_reason(&self) -> Option<String> {
         self.0
             .redaction_reason
@@ -1632,7 +1641,10 @@ impl PostType {
     /// The gallery's moderation state — one state for the whole set, not
     /// one per picture.
     async fn attachments_status(&self) -> FieldModerationStatus {
-        attachments_status(self.0.redaction_reason.is_some(), self.0.sensitive)
+        attachments_status(
+            self.0.redaction_reason.is_some(),
+            SensitiveMarks::of(self.0.sensitive),
+        )
     }
 
     async fn author(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<User>> {
@@ -1645,7 +1657,7 @@ impl PostType {
     }
 
     async fn moderation_status(&self) -> ModerationStatus {
-        node_moderation_status(self.0.sensitive)
+        node_moderation_status(SensitiveMarks::of(self.0.sensitive))
     }
 
     /// This post's direct comments — genesis Reviews whose A leg
@@ -1750,8 +1762,14 @@ impl CommentType {
         ModeratedText::veiled(
             Some(self.0.content.clone()),
             self.0.redaction_reason.is_some(),
-            self.0.sensitive,
+            SensitiveMarks::of(self.0.sensitive),
         )
+    }
+
+    /// The author's own sensitive mark, alone — the state an edit switch
+    /// reads, for the reasons a post's carries.
+    async fn sensitive_self_mark(&self) -> bool {
+        self.0.sensitive
     }
 
     /// The public reason the author gave for their own sensitive mark;
@@ -1777,7 +1795,10 @@ impl CommentType {
 
     /// The gallery's moderation state — one state for the whole set.
     async fn attachments_status(&self) -> FieldModerationStatus {
-        attachments_status(self.0.redaction_reason.is_some(), self.0.sensitive)
+        attachments_status(
+            self.0.redaction_reason.is_some(),
+            SensitiveMarks::of(self.0.sensitive),
+        )
     }
 
     async fn author(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<User>> {
@@ -1806,7 +1827,7 @@ impl CommentType {
     }
 
     async fn moderation_status(&self) -> ModerationStatus {
-        node_moderation_status(self.0.sensitive)
+        node_moderation_status(SensitiveMarks::of(self.0.sensitive))
     }
 
     /// This comment's direct replies, newest-first: pending entries,
@@ -2225,6 +2246,50 @@ async fn comment_gallery(
         .collect())
 }
 
+/// The two sensitive marks a body can carry (moderation.md §1).
+///
+/// They are **independent states**, and that is the whole point: the
+/// author's own mark is their statement about their own content, a
+/// moderator's verdict is the platform's. Neither side can clear the
+/// other. An author who edits to "not sensitive" cannot lift a
+/// moderator's veil, and a moderator who decides a post is ordinary
+/// cannot lift the author's — both readings end in a veil, because what
+/// a reader is shown is the **OR** of the two.
+///
+/// They never share a cell. The author's mark lives on the version row
+/// it describes, witnessed in the payload alongside the body it veils;
+/// a verdict lives in the moderation slice's own store. One side writing
+/// therefore cannot overwrite the other by construction rather than by
+/// care.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SensitiveMarks {
+    /// The author's own mark, witnessed in the payload (guild keys
+    /// 13–14) and stored on the version row.
+    pub self_mark: bool,
+    /// A moderator's verdict.
+    pub moderation: bool,
+}
+
+impl SensitiveMarks {
+    /// The marks on one content version.
+    ///
+    /// `moderation` reads false until the moderation slice stores
+    /// verdicts. It is a field rather than a constant folded into the
+    /// author's mark so that slice supplies a value here and no read
+    /// logic anywhere else changes.
+    fn of(self_mark: bool) -> Self {
+        Self {
+            self_mark,
+            moderation: false,
+        }
+    }
+
+    /// What a reader is shown: either mark veils.
+    fn veiled(self) -> bool {
+        self.self_mark || self.moderation
+    }
+}
+
 /// The gallery's own moderation state, beside the list rather than on the
 /// items in it.
 ///
@@ -2233,22 +2298,19 @@ async fn comment_gallery(
 /// because that is what a reader is shown: a sensitive verdict blurs the
 /// body as a unit, media and text and description together, never one
 /// picture inside a set.
-///
-/// An author's own sensitive mark reaches it like every other body field;
-/// moderator verdicts arrive with the moderation slice.
-fn attachments_status(redacted: bool, sensitive: bool) -> FieldModerationStatus {
-    match (redacted, sensitive) {
+fn attachments_status(redacted: bool, marks: SensitiveMarks) -> FieldModerationStatus {
+    match (redacted, marks.veiled()) {
         (true, _) => FieldModerationStatus::Redacted,
         (false, true) => FieldModerationStatus::Sensitive,
         (false, false) => FieldModerationStatus::Normal,
     }
 }
 
-/// The node-level cache behind an author's self-mark — the cheap "is
-/// anything wrong here" check a client reads before deciding to fetch the
-/// body at all (api-spec.md "Per-field moderation").
-fn node_moderation_status(sensitive: bool) -> ModerationStatus {
-    if sensitive {
+/// The node-level cache behind the veil — the cheap "is anything wrong
+/// here" check a client reads before deciding to fetch the body at all
+/// (api-spec.md "Per-field moderation").
+fn node_moderation_status(marks: SensitiveMarks) -> ModerationStatus {
+    if marks.veiled() {
         ModerationStatus::Sensitive
     } else {
         ModerationStatus::Normal
@@ -2822,5 +2884,110 @@ impl MediaAttachmentType {
 
     async fn created_at(&self) -> DateTime<Utc> {
         self.0.created_at
+    }
+}
+
+#[cfg(test)]
+mod sensitive_tests {
+    //! ´mod:module:sensitive-tests´
+    //!
+    //! The two-state veil, exercised in both directions.
+
+    use super::*;
+
+    /// Every combination of the two marks, so neither direction can be
+    /// asserted by accident. The two off-diagonal rows are the ruling:
+    /// an author who unmarks a moderated post is still veiled, and a
+    /// moderator who finds a self-marked post ordinary is too.
+    ///
+    /// Either sensitive mark veils and neither clears the other, so an author's unmark cannot lift a moderator's veil and a moderator's clear cannot lift the author's.
+    /// ´claim:moderation:either-mark-veils-and-neither-clears-the-other´
+    #[test]
+    fn either_mark_veils_and_neither_clears_the_other() {
+        let marks = |self_mark, moderation| SensitiveMarks {
+            self_mark,
+            moderation,
+        };
+
+        assert!(!marks(false, false).veiled(), "neither mark, no veil");
+        assert!(marks(true, false).veiled(), "the author's mark alone");
+        assert!(
+            marks(false, true).veiled(),
+            "a moderator's verdict alone — an author editing to \
+             'not sensitive' does not lift it"
+        );
+        assert!(
+            marks(true, true).veiled(),
+            "both, and a moderator clearing theirs would still leave \
+             the author's"
+        );
+
+        for (redacted, self_mark, moderation, expected) in [
+            (false, false, false, FieldModerationStatus::Normal),
+            (false, true, false, FieldModerationStatus::Sensitive),
+            (false, false, true, FieldModerationStatus::Sensitive),
+            (false, true, true, FieldModerationStatus::Sensitive),
+            (true, false, true, FieldModerationStatus::Redacted),
+            (true, true, false, FieldModerationStatus::Redacted),
+        ] {
+            assert_eq!(
+                attachments_status(redacted, marks(self_mark, moderation)),
+                expected,
+                "redacted={redacted} self={self_mark} moderation={moderation}"
+            );
+        }
+    }
+
+    /// The node-level cache and the body fields read the same OR, so a
+    /// client that checks the cheap flag before fetching the body is
+    /// never told two different things.
+    ///
+    /// The node-level status and the body fields read the same OR of the two marks, so the cheap check never disagrees with the body.
+    /// ´claim:moderation:the-node-status-and-the-body-agree´
+    #[test]
+    fn the_node_status_and_the_body_read_one_state() {
+        for (self_mark, moderation) in [(true, false), (false, true), (true, true)] {
+            let marks = SensitiveMarks {
+                self_mark,
+                moderation,
+            };
+            assert_eq!(node_moderation_status(marks), ModerationStatus::Sensitive);
+            assert_eq!(
+                ModeratedText::veiled(Some("body".into()), false, marks).status,
+                FieldModerationStatus::Sensitive,
+            );
+        }
+
+        let neither = SensitiveMarks {
+            self_mark: false,
+            moderation: false,
+        };
+        assert_eq!(node_moderation_status(neither), ModerationStatus::Normal);
+        assert_eq!(
+            ModeratedText::veiled(Some("body".into()), false, neither).status,
+            FieldModerationStatus::Normal,
+        );
+    }
+
+    /// The author's own mark is what an edit switch reads, and it is not
+    /// the veil: a moderated post the author never marked reads
+    /// `sensitiveSelfMark: false` while its body reads SENSITIVE. A
+    /// switch bound to the veil would show that post as self-marked and
+    /// then claim to unmark something it cannot touch.
+    ///
+    /// The author's own mark is separable from the veil, so a moderated post the author never marked reads an unset switch beside a sensitive body.
+    /// ´claim:moderation:the-self-mark-is-separable-from-the-veil´
+    #[test]
+    fn the_self_mark_is_readable_apart_from_the_veil() {
+        let moderated_only = SensitiveMarks {
+            self_mark: false,
+            moderation: true,
+        };
+        assert!(moderated_only.veiled(), "the reader sees a veil");
+        assert!(
+            !moderated_only.self_mark,
+            "and the author's own switch is off — the two are not one \
+             value read twice"
+        );
     }
 }
