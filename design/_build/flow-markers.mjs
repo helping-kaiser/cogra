@@ -251,6 +251,73 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+// The Comments page (JSX boards; the three hand boards carry their attributes
+// directly). Sheet boards are scanExempt; badges stamped on under-scrim
+// repeats sit dimmed beneath the wash, which reads correctly.
+Object.assign(FLOW_MARKERS, {
+  ReplyEntry: [
+    { n: 1, find: '<a href="/u/', tag: "a", all: true },
+    { n: 2, find: 'aria-label="More on this comment"', tag: "button", all: true },
+    { n: 3, find: '<a href="/t/', tag: "a", all: true },
+    { n: 4, find: 'aria-label="Your stance on this comment', tag: "button", all: true },
+    { n: 4, find: 'aria-label="Take a stance on this comment"', tag: "button", all: true },
+    { n: 4, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 5, find: ">Reply</button>", tag: "button", all: true },
+    { n: 6, find: "View 2 replies", tag: "button" },
+    { n: 7, find: "Add a comment</label>", tag: "label" },
+    { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ReplyMedia: [
+    { n: 1, find: '<a href="/u/', tag: "a", all: true },
+    { n: 2, find: 'aria-label="More on this comment"', tag: "button", all: true },
+    { n: 3, find: "scroll-snap-type:x mandatory", tag: "div" },
+    { n: 4, find: 'aria-label="Your stance on this comment', tag: "button", all: true },
+    { n: 4, find: 'aria-label="Take a stance on this comment"', tag: "button", all: true },
+    { n: 4, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 5, find: ">Reply</button>", tag: "button", all: true },
+    { n: 6, find: ">Edit</button>", tag: "button" },
+    { n: 7, find: "Add a comment</label>", tag: "label" },
+    { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  CommentEdit: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="Editing"', tag: "button" },
+    { n: 4, find: 'rows="3"', tag: "textarea" },
+    { n: 5, find: 'aria-label="Remove this picture"', tag: "button" },
+    { n: 6, find: "+ Add · 1 of 4", tag: "button" },
+    { n: 7, find: ">Describe the pictures</button>", tag: "button" },
+    { n: 8, find: "#glovebox", tag: "span" },
+    { n: 9, find: ">Add a topic</button>", tag: "button" },
+    { n: 10, find: "+ Cite something", tag: "button" },
+    { n: 11, find: "This creates 2 signed actions", tag: "div" },
+    { n: 12, find: ">Sign the edit</button>", tag: "button" },
+  ],
+  CommentEditActs: [
+    { n: 1, find: ">Done</button>", tag: "button" },
+    { n: 2, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ReplyPictures: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: "almost catches it.", tag: "p" },
+    { n: 5, find: 'aria-label="Remove this picture"', tag: "button" },
+    { n: 6, find: ">Describe the pictures</button>", tag: "button" },
+    { n: 7, find: "+ Add pictures · 2 of 4", tag: "button" },
+  ],
+  ReplyPicturesWeb: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: "almost catches it.", tag: "p" },
+    { n: 5, find: 'aria-label="Remove this picture"', tag: "button" },
+    { n: 6, find: ">Describe the pictures</button>", tag: "button" },
+    { n: 7, find: "+ Add pictures · 2 of 4", tag: "button" },
+    { n: 8, find: "…or drop them here.", tag: "span" },
+  ],
+});
+
 export function applyFlowMarkers(name, html) {
   const markers = FLOW_MARKERS[name];
   if (!markers) return html;

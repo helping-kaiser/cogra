@@ -1,6 +1,6 @@
 {
   "$doc": "The flow manifest (backlog item 22). Every interactive element on a board of a wired page carries data-flow=\"n\" (1..n per board, badges drawn by the shell); each number has exactly one edge here, whose `to` lists every outcome: a board, a declared terminal, or an explicit gap (a design still owed — honest, greppable, reported by check-flows.mjs and drawn on the generated maps). Repeated per-post elements are tagged on the first post instance only. `entries` declares how a screen is reached other than by a tap (app open, mail link, time); a screen on a wired page must be an entry or an edge target.",
-  "wired": ["entry", "money", "feed"],
+  "wired": ["entry", "money", "feed", "comments"],
   "terminals": {
     "back": "Back — returns to the previous screen",
     "self": "Acts on this screen — state changes in place",
@@ -9,7 +9,10 @@
   "scanExempt": {
     "VouchBackPad": "the scrim wash covers the shell — its semantic elements (band, nav, the vouch card's own controls) are inactive in this state; only the parked pad is live",
     "FeedSheet": "the filter sheet covers the feed — the trigger, post cards, and nav beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
-    "ExploreFilter": "the search filter sheet covers the results — the field, trigger, rows, and nav beneath the scrim are inactive in this state; only the sheet (and its scrim) is live"
+    "ExploreFilter": "the search filter sheet covers the results — the field, trigger, rows, and nav beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
+    "ReplyEntry": "the comments sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "ReplyMedia": "the comments sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "CommentEditActs": "the acts sheet covers the edit — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live"
   },
   "entries": {
     "Main": "arrival through an invite link — the inviter's borrowed view",
@@ -18,7 +21,9 @@
     "Verified": "opened from the verification mail",
     "ApplicantWaiting": "ApplicantFeed once every task card is done — time, not a tap",
     "VouchBack": "the approval landing — arrives with the next open, not a tap",
-    "WalletSetup": "the wallet tab's first open — no rail key, no address yet"
+    "WalletSetup": "the wallet tab's first open — no rail key, no address yet",
+    "ReplyMedia": "a thread whose comments carry pictures — the same sheet, a state not a tap",
+    "ReplyPicturesWeb": "the reply's pictures state in a browser — platform, not a tap"
   },
   "kinds": {
     "Theme": "reference",
@@ -380,6 +385,80 @@
     { "from": "FeedFar", "via": 12, "label": "nav · Explore", "to": [{ "board": "Explore" }] },
     { "from": "FeedFar", "via": 13, "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "FeedFar", "via": 14, "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
-    { "from": "FeedFar", "via": 15, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] }
+    { "from": "FeedFar", "via": 15, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] },
+
+    { "from": "ReplyEntry", "via": 1, "label": "comment author chips", "to": [{ "gap": "profile screen (not designed)" }] },
+    { "from": "ReplyEntry", "via": 2, "label": "comment overflow ⋮", "to": [{ "gap": "the comment's menu — cite / licence terms (not boarded)" }] },
+    { "from": "ReplyEntry", "via": 3, "label": "comment topic chips", "to": [{ "gap": "topic destination (not ruled)" }] },
+    { "from": "ReplyEntry", "via": 4, "label": "comment stance face", "to": [{ "terminal": "self", "case": "tap — a positive act lands" }, { "board": "VouchBackPad", "case": "press-and-hold — the pad blooms (master board)" }] },
+    { "from": "ReplyEntry", "via": 5, "label": "Reply", "to": [{ "board": "ReplyCompose", "case": "the composer, pre-targeted at that comment" }] },
+    { "from": "ReplyEntry", "via": 6, "label": "View n replies", "to": [{ "terminal": "self", "case": "the branch unfolds" }] },
+    { "from": "ReplyEntry", "via": 7, "label": "Add a comment", "to": [{ "board": "ReplyCompose", "case": "the full-focus composer, parent pinned" }] },
+    { "from": "ReplyEntry", "via": 8, "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — back to where it was opened" }] },
+
+    { "from": "ReplyMedia", "via": 1, "label": "comment author chips", "to": [{ "gap": "profile screen (not designed)" }] },
+    { "from": "ReplyMedia", "via": 2, "label": "comment overflow ⋮", "to": [{ "gap": "the comment's menu — cite / licence terms (not boarded)" }] },
+    { "from": "ReplyMedia", "via": 3, "label": "the two-picture pager", "to": [{ "terminal": "self", "case": "swipes between the pictures" }] },
+    { "from": "ReplyMedia", "via": 4, "label": "comment stance face", "to": [{ "terminal": "self", "case": "tap — a positive act lands" }, { "board": "VouchBackPad", "case": "press-and-hold — the pad blooms (master board)" }] },
+    { "from": "ReplyMedia", "via": 5, "label": "Reply", "to": [{ "board": "ReplyCompose", "case": "the composer, pre-targeted at that comment" }] },
+    { "from": "ReplyMedia", "via": 6, "label": "Edit (own comment)", "to": [{ "board": "CommentEdit" }] },
+    { "from": "ReplyMedia", "via": 7, "label": "Add a comment", "to": [{ "board": "ReplyCompose", "case": "the full-focus composer, parent pinned" }] },
+    { "from": "ReplyMedia", "via": 8, "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — back to where it was opened" }] },
+
+    { "from": "CommentEdit", "via": 1, "label": "back arrow", "to": [{ "board": "ReplyMedia", "case": "one stage back — the thread" }] },
+    { "from": "CommentEdit", "via": 2, "label": "X — leave", "to": [{ "board": "ReplyMedia", "case": "the thread — draft kept" }] },
+    { "from": "CommentEdit", "via": 3, "label": "? — Editing", "to": [{ "board": "HelpDialog", "case": "the Editing text" }] },
+    { "from": "CommentEdit", "via": 4, "label": "Words", "to": [{ "terminal": "self", "case": "typing" }] },
+    { "from": "CommentEdit", "via": 5, "label": "remove picture ×", "to": [{ "terminal": "self", "case": "the picture leaves the batch" }] },
+    { "from": "CommentEdit", "via": 6, "label": "+ Add · 1 of 4", "to": [{ "terminal": "os", "case": "the platform's own picker — comments have no pick stage" }] },
+    { "from": "CommentEdit", "via": 7, "label": "Describe the pictures", "to": [{ "board": "ComposeDescribe", "case": "the describe sheet (master on the media page)" }] },
+    { "from": "CommentEdit", "via": 8, "label": "topic chip ×", "to": [{ "terminal": "self", "case": "the topic leaves the edit" }] },
+    { "from": "CommentEdit", "via": 9, "label": "Add a topic", "to": [{ "gap": "the topic picker (not boarded)" }] },
+    { "from": "CommentEdit", "via": 10, "label": "+ Cite something", "to": [{ "board": "ReferencePicker" }] },
+    { "from": "CommentEdit", "via": 11, "label": "This creates 2 signed actions", "to": [{ "board": "CommentEditActs" }] },
+    { "from": "CommentEdit", "via": 12, "label": "Sign the edit", "to": [{ "board": "ReplyMedia", "case": "signed — the thread, the edit settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "gap": "network-error pattern board (not designed)", "case": "offline" }] },
+
+    { "from": "CommentEditActs", "via": 1, "label": "Done", "to": [{ "board": "CommentEdit", "case": "the sheet closes" }] },
+    { "from": "CommentEditActs", "via": 2, "label": "scrim — tap outside", "to": [{ "board": "CommentEdit", "case": "the sheet closes" }] },
+
+    { "from": "ReplyCompose", "via": 1, "label": "back arrow", "to": [{ "board": "ReplyEntry", "case": "one stage back — the thread" }] },
+    { "from": "ReplyCompose", "via": 2, "label": "X — leave", "to": [{ "board": "ReplyEntry", "case": "the thread — draft kept" }] },
+    { "from": "ReplyCompose", "via": 3, "label": "Next", "to": [{ "board": "ReplySeal" }] },
+    { "from": "ReplyCompose", "via": 4, "label": "the words", "to": [{ "terminal": "self", "case": "typing" }] },
+    { "from": "ReplyCompose", "via": 5, "label": "+ Add pictures", "to": [{ "terminal": "os", "case": "the platform's own picker — comments have no pick stage" }, { "board": "ReplyPictures", "case": "picks land in the tray" }] },
+
+    { "from": "ReplyPictures", "via": 1, "label": "back arrow", "to": [{ "board": "ReplyEntry", "case": "one stage back — the thread" }] },
+    { "from": "ReplyPictures", "via": 2, "label": "X — leave", "to": [{ "board": "ReplyEntry", "case": "the thread — draft kept" }] },
+    { "from": "ReplyPictures", "via": 3, "label": "Next", "to": [{ "board": "ReplySeal" }, { "board": "ComposeSealUploading", "case": "uploads still running — the gated seal (master on the media page)" }] },
+    { "from": "ReplyPictures", "via": 4, "label": "the words", "to": [{ "terminal": "self", "case": "typing" }] },
+    { "from": "ReplyPictures", "via": 5, "label": "remove picture ×", "to": [{ "terminal": "self", "case": "the picture leaves the tray" }] },
+    { "from": "ReplyPictures", "via": 6, "label": "Describe the pictures", "to": [{ "board": "ComposeDescribe", "case": "the describe sheet (master on the media page)" }] },
+    { "from": "ReplyPictures", "via": 7, "label": "+ Add pictures · 2 of 4", "to": [{ "terminal": "os", "case": "the platform's own picker" }] },
+
+    { "from": "ReplyPicturesWeb", "via": 1, "label": "back arrow", "to": [{ "board": "ReplyEntry", "case": "one stage back — the thread" }] },
+    { "from": "ReplyPicturesWeb", "via": 2, "label": "X — leave", "to": [{ "board": "ReplyEntry", "case": "the thread — draft kept" }] },
+    { "from": "ReplyPicturesWeb", "via": 3, "label": "Next", "to": [{ "board": "ReplySeal" }, { "board": "ComposeSealUploading", "case": "uploads still running — the gated seal (master on the media page)" }] },
+    { "from": "ReplyPicturesWeb", "via": 4, "label": "the words", "to": [{ "terminal": "self", "case": "typing" }] },
+    { "from": "ReplyPicturesWeb", "via": 5, "label": "remove picture ×", "to": [{ "terminal": "self", "case": "the picture leaves the tray" }] },
+    { "from": "ReplyPicturesWeb", "via": 6, "label": "Describe the pictures", "to": [{ "board": "ComposeDescribe", "case": "the describe sheet (master on the media page)" }] },
+    { "from": "ReplyPicturesWeb", "via": 7, "label": "+ Add pictures · 2 of 4", "to": [{ "terminal": "os", "case": "the browser's file dialog" }] },
+    { "from": "ReplyPicturesWeb", "via": 8, "label": "…or drop them here", "to": [{ "terminal": "self", "case": "dropped files land in the tray" }] },
+
+    { "from": "ReplyPad", "via": 1, "label": "? — how stances work", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
+    { "from": "ReplyPad", "via": 2, "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick" }] },
+    { "from": "ReplyPad", "via": 3, "label": "Cancel", "to": [{ "board": "ReplySeal", "case": "nothing staged" }] },
+    { "from": "ReplyPad", "via": 4, "label": "Set", "to": [{ "board": "ReplySeal", "case": "the adjusted stance on the seal" }] },
+    { "from": "ReplyPad", "via": 5, "label": "scrim — press outside", "to": [{ "board": "ReplySeal", "case": "stages nothing" }] },
+
+    { "from": "ReplySeal", "via": 1, "label": "back arrow", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words" }, { "board": "ReplyPictures", "case": "…or the pictures state" }] },
+    { "from": "ReplySeal", "via": 2, "label": "X — leave", "to": [{ "board": "ReplyEntry", "case": "leaves the flow — draft kept" }] },
+    { "from": "ReplySeal", "via": 3, "label": "? — Signed actions", "to": [{ "board": "HelpDialog", "case": "the Signed-actions text" }] },
+    { "from": "ReplySeal", "via": 4, "label": "+ Add a topic", "to": [{ "gap": "the topic picker (not boarded)" }] },
+    { "from": "ReplySeal", "via": 5, "label": "+ Cite something", "to": [{ "board": "ReferencePicker" }] },
+    { "from": "ReplySeal", "via": 6, "label": "Adjust (the stance)", "to": [{ "board": "ReplyPad" }] },
+    { "from": "ReplySeal", "via": 7, "label": "Change (license)", "to": [{ "board": "ComposeLicense", "case": "the license sheet (master on the compose page)" }] },
+    { "from": "ReplySeal", "via": 8, "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
+    { "from": "ReplySeal", "via": 9, "label": "Sign comment", "to": [{ "board": "ReplyEntry", "case": "signed — the thread, the comment settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "gap": "network-error pattern board (not designed)", "case": "offline" }] },
+    { "from": "ReplySeal", "via": 10, "label": "Back", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words" }, { "board": "ReplyPictures", "case": "…or the pictures state" }] }
   ]
 }
