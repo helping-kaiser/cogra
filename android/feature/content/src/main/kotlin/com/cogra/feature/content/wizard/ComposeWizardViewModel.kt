@@ -270,15 +270,17 @@ class ComposeWizardViewModel @Inject constructor(
      * to Details and edits — rare, but silently keeping the old words would
      * be worse than the extra call.
      */
-    fun onAltTextChange(uri: String, text: String) = _state.update { state ->
-        val described = state.withAltText(uri, text)
-        val asset = described.picked.firstOrNull { it.uri == uri }
-        if (asset?.upload is AssetUpload.Done) {
-            described.withUpload(uri, AssetUpload.Idle)
-        } else {
-            described
-        }
-    }
+    /**
+     * Describing a picture never touches its upload: the description is
+     * a fact about the placement and rides `AttachmentClaim` at prepare,
+     * so the bytes already on the server are still the right bytes.
+     *
+     * This is the whole reason pictures may go up before the author has
+     * written anything — an upload invalidated by every keystroke could
+     * only ever start at the seal.
+     */
+    fun onAltTextChange(uri: String, text: String) =
+        _state.update { it.withAltText(uri, text) }
 
     fun onTagInputChange(value: String) = updateTags { it.withInput(value) }
 
