@@ -2212,7 +2212,7 @@ async fn profile_image(
     Ok(postgres_store::media::by_id(pool, id)
         .await
         .map_err(|e| async_graphql::Error::new(e.to_string()))?
-        .map(MediaAttachmentType))
+        .map(MediaAttachmentType::asset))
 }
 
 /// One node's gallery, in gallery order, through the loader that batches
@@ -2227,7 +2227,7 @@ async fn post_gallery(
         .await?
         .unwrap_or_default()
         .into_iter()
-        .map(|entry| MediaAttachmentType(entry.asset))
+        .map(MediaAttachmentType::placement)
         .collect())
 }
 
@@ -2242,7 +2242,7 @@ async fn comment_gallery(
         .await?
         .unwrap_or_default()
         .into_iter()
-        .map(|entry| MediaAttachmentType(entry.asset))
+        .map(MediaAttachmentType::placement)
         .collect())
 }
 
@@ -2786,12 +2786,42 @@ pub struct MediaOptions {
 /// points back — so it carries no records. Bytes live in the media
 /// service, verifiable against the digest committed in the referencing
 /// payload envelope.
-pub struct MediaAttachmentType(pub postgres_store::media::MediaAttachment);
+///
+/// The asset row is the whole of it except `altText`, which is a fact
+/// about the *placement* rather than about the bytes: a gallery entry
+/// carries the description its version's manifest witnessed, and the same
+/// asset can read differently in two parents (data-model.md "Media
+/// attachments"). Outside a placement — a fresh upload, a profile picture
+/// — there is no description to serve.
+pub struct MediaAttachmentType {
+    pub asset: postgres_store::media::MediaAttachment,
+    pub alt_text: Option<String>,
+}
+
+impl MediaAttachmentType {
+    /// The asset outside any placement: a fresh upload, or a profile
+    /// picture the profile update input authors no description for.
+    pub fn asset(asset: postgres_store::media::MediaAttachment) -> Self {
+        Self {
+            asset,
+            alt_text: None,
+        }
+    }
+
+    /// One gallery entry: the asset and the description this version's
+    /// junction row cached from its manifest.
+    fn placement(entry: postgres_store::media::GalleryEntry) -> Self {
+        Self {
+            asset: entry.asset,
+            alt_text: entry.alt_text,
+        }
+    }
+}
 
 #[Object(name = "MediaAttachment")]
 impl MediaAttachmentType {
     async fn id(&self) -> Uuid {
-        self.0.id
+        self.asset.id
     }
 
     /// Absolute, and minted per read from the media origin's configured
@@ -2801,7 +2831,7 @@ impl MediaAttachmentType {
         let config = ctx.data::<crate::media::MediaConfig>()?;
         Ok(crate::media::public_url(
             &config.base_url,
-            &self.0.storage_key,
+            &self.asset.storage_key,
         ))
     }
 
@@ -2810,17 +2840,17 @@ impl MediaAttachmentType {
     /// can hash the bytes it was served and compare them against the
     /// record that carries them.
     async fn digest(&self) -> String {
-        hex::encode(&self.0.digest)
+        hex::encode(&self.asset.digest)
     }
 
     /// The algorithm `digest` is under — `sha256` today. It rides beside
     /// the digest so a reader never infers it from a length.
     async fn digest_algo(&self) -> &str {
-        &self.0.digest_algo
+        &self.asset.digest_algo
     }
 
     async fn mime_type(&self) -> &str {
-        &self.0.mime_type
+        &self.asset.mime_type
     }
 
     /// The stored size. `Int` is 32-bit per the GraphQL specification
@@ -2828,17 +2858,24 @@ impl MediaAttachmentType {
     /// rather than wrapping into a wrong number — unreachable under the
     /// upload cap, and the honest answer if the cap ever moves.
     async fn size_bytes(&self) -> Option<i32> {
-        self.0.size_bytes.and_then(|n| i32::try_from(n).ok())
+        self.asset.size_bytes.and_then(|n| i32::try_from(n).ok())
     }
 
-    /// Null once the asset is removed: alt text is what a blind reader
-    /// *reads*, so redaction takes it with the picture rather than leaving
-    /// a description of bytes that are gone.
+    /// The description the referencing version witnessed for this
+    /// placement — resolved from that version's junction row, never from
+    /// the asset, which holds none. Null when undescribed, and null in a
+    /// context that is not a placement at all: a fresh upload has nothing
+    /// to describe yet, and a profile picture is named beside a display
+    /// name rather than described.
+    ///
+    /// Null once the asset is removed, too: alt text is what a blind
+    /// reader *reads*, so redaction takes it with the picture rather than
+    /// leaving a description of bytes that are gone.
     async fn alt_text(&self) -> Option<&str> {
-        if self.0.redacted_at.is_some() {
+        if self.asset.redacted_at.is_some() {
             return None;
         }
-        self.0.alt_text.as_deref()
+        self.alt_text.as_deref()
     }
 
     /// NORMAL, or REDACTED once the bytes are removed — the visible mark
@@ -2853,7 +2890,7 @@ impl MediaAttachmentType {
     /// per-asset sensitivity was ruled against, one image blurring alone
     /// being the UI the product does not want.
     async fn status(&self) -> FieldModerationStatus {
-        if self.0.redacted_at.is_some() {
+        if self.asset.redacted_at.is_some() {
             FieldModerationStatus::Redacted
         } else {
             FieldModerationStatus::Normal
@@ -2863,13 +2900,13 @@ impl MediaAttachmentType {
     async fn options(&self) -> MediaOptions {
         MediaOptions {
             aspect_ratio: self
-                .0
+                .asset
                 .options
                 .get("aspect_ratio")
                 .and_then(|v| v.as_str())
                 .map(str::to_string),
             duration_ms: self
-                .0
+                .asset
                 .options
                 .get("duration_ms")
                 .and_then(|v| v.as_i64())
@@ -2879,11 +2916,11 @@ impl MediaAttachmentType {
 
     /// The account that uploaded the asset.
     async fn author(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<User>> {
-        author_user(ctx, self.0.author_id).await
+        author_user(ctx, self.asset.author_id).await
     }
 
     async fn created_at(&self) -> DateTime<Utc> {
-        self.0.created_at
+        self.asset.created_at
     }
 }
 
