@@ -109,6 +109,9 @@ fn covered(assets: &[cogra_linter::Asset]) -> Vec<&str> {
 }
 
 /// `[scanned-regions]`, first scanned form: outer line doc comments.
+///
+/// An outer line documentation comment is a scanned region.
+/// ´claim:rust:an-outer-line-doc-is-a-region´
 #[test]
 fn an_outer_line_doc_comment_is_a_region() {
     assert_eq!(
@@ -118,6 +121,9 @@ fn an_outer_line_doc_comment_is_a_region() {
 }
 
 /// Second form: inner line doc comments.
+///
+/// An inner line documentation comment is a scanned region.
+/// ´claim:rust:an-inner-line-doc-is-a-region´
 #[test]
 fn an_inner_line_doc_comment_is_a_region() {
     assert_eq!(
@@ -127,6 +133,9 @@ fn an_inner_line_doc_comment_is_a_region() {
 }
 
 /// Third form: outer block doc comments.
+///
+/// An outer block documentation comment is a scanned region.
+/// ´claim:rust:an-outer-block-doc-is-a-region´
 #[test]
 fn an_outer_block_doc_comment_is_a_region() {
     assert_eq!(
@@ -136,6 +145,9 @@ fn an_outer_block_doc_comment_is_a_region() {
 }
 
 /// Fourth form: inner block doc comments.
+///
+/// An inner block documentation comment is a scanned region.
+/// ´claim:rust:an-inner-block-doc-is-a-region´
 #[test]
 fn an_inner_block_doc_comment_is_a_region() {
     assert_eq!(
@@ -146,6 +158,9 @@ fn an_inner_block_doc_comment_is_a_region() {
 
 /// Fifth form: a written `#[doc = "…"]` attribute, which is no comment and
 /// therefore no comment kind.
+///
+/// A written documentation attribute is a scanned region, and no comment kind.
+/// ´claim:rust:a-written-doc-attribute-is-a-region´
 #[test]
 fn a_written_doc_attribute_is_a_region() {
     assert_eq!(
@@ -156,6 +171,9 @@ fn a_written_doc_attribute_is_a_region() {
 
 /// The region unit of `[scanned-regions]`: a run of consecutive `///`
 /// lines is ONE logical region.
+///
+/// A run of consecutive line documentation comments is one logical region.
+/// ´claim:rust:a-run-of-doc-lines-is-one-region´
 #[test]
 fn a_run_of_outer_doc_lines_is_one_region() {
     let regions = regions("/// one\n/// two\n/// three\nstruct X;\n");
@@ -165,6 +183,9 @@ fn a_run_of_outer_doc_lines_is_one_region() {
 
 /// The run's pieces are one per line, so a diagnostic points at the line
 /// the defect is on and not at the whole run.
+///
+/// A run's pieces are one per line, so a diagnostic points at the line and not the run.
+/// ´claim:rust:a-run-carries-one-piece-per-line´
 #[test]
 fn a_run_carries_one_piece_per_line() {
     let regions = regions("/// one\n/// two\nstruct X;\n");
@@ -174,12 +195,18 @@ fn a_run_carries_one_piece_per_line() {
 }
 
 /// A blank line ends the run: the region unit says *consecutive* lines.
+///
+/// A blank line ends a run, the region unit being consecutive lines.
+/// ´claim:rust:a-blank-line-ends-a-run´
 #[test]
 fn a_blank_line_ends_a_run() {
     assert_eq!(regions("/// one\n\n/// two\nstruct X;\n").len(), 2);
 }
 
 /// An empty `///` line does not end a run — it is a line of it.
+///
+/// An empty documentation line is a line of the run and does not end it.
+/// ´claim:rust:an-empty-doc-line-continues-a-run´
 #[test]
 fn an_empty_doc_line_continues_a_run() {
     let regions = regions("/// one\n///\n/// two\nstruct X;\n");
@@ -189,12 +216,18 @@ fn an_empty_doc_line_continues_a_run() {
 
 /// Two items' doc comments are two regions: the item between them is not
 /// whitespace, so the run is broken.
+///
+/// An item between two runs breaks them, so two items carry two regions.
+/// ´claim:rust:an-item-breaks-a-run´
 #[test]
 fn two_items_carry_two_regions() {
     assert_eq!(regions("/// a\nstruct A;\n/// b\nstruct B;\n").len(), 2);
 }
 
 /// An inner run and an outer run are different forms and never merge.
+///
+/// An inner run and an outer run are different forms and never merge.
+/// ´claim:rust:inner-and-outer-runs-never-merge´
 #[test]
 fn an_inner_run_never_joins_an_outer_one() {
     assert_eq!(regions("//! inner\n/// outer\nstruct X;\n").len(), 2);
@@ -202,6 +235,9 @@ fn an_inner_run_never_joins_an_outer_one() {
 
 /// Block doc comments are one region each, never a run: only line forms
 /// assemble.
+///
+/// Block documentation comments are one region each; only line forms assemble.
+/// ´claim:rust:block-docs-do-not-assemble´
 #[test]
 fn block_doc_comments_do_not_assemble() {
     assert_eq!(regions("/** a */\n/** b */\nstruct X;\n").len(), 2);
@@ -213,6 +249,9 @@ fn block_doc_comments_do_not_assemble() {
 /// The fence lines themselves belong to the fenced stretch: they are the
 /// example's own delimiters, and letting them participate is what used to
 /// give the backtick something to pair across.
+///
+/// A run carrying a fence is cut into a participating stretch and a fenced one, the fence lines belonging to the example.
+/// ´claim:rust:a-fenced-example-does-not-participate´
 #[test]
 fn f2_a_fenced_example_does_not_participate() {
     let regions = regions(
@@ -234,6 +273,9 @@ fn f2_a_fenced_example_does_not_participate() {
 
 /// The fence bytes stay in the pieces: a region records the file ranges it
 /// was assembled from, and the cut moves none of them.
+///
+/// The cut moves no bytes: a region records the file ranges it was assembled from.
+/// ´claim:rust:the-cut-moves-no-bytes´
 #[test]
 fn f2_the_fence_bytes_stay_in_the_pieces() {
     let text = "/// a\n/// ```\n/// b\n/// ```\n/// c\nstruct X;\n";
@@ -257,6 +299,9 @@ fn f2_the_fence_bytes_stay_in_the_pieces() {
 
 /// A mint written inside a fenced example is not a mint, so a citation of it
 /// resolves nowhere — the fixture the audit reproduced the leak with.
+///
+/// A mint written inside a fenced example is no mint, so a citation of it resolves nowhere.
+/// ´claim:rust:a-fenced-mint-is-no-mint´
 #[test]
 fn f2_a_fenced_mint_resolves_no_citation() {
     let rust = SourceFile {
@@ -296,6 +341,9 @@ fn f2_a_fenced_mint_resolves_no_citation() {
 /// The witness is a fixture rather than the corpus: every Rust crate has
 /// completed the ban sweep and entered the failing set, so no advisory
 /// tree in the corpus carries a finding to read this off any more.
+///
+/// Enforcement is orthogonal to severity: an error is an error wherever it is found.
+/// ´claim:rust:enforcement-does-not-change-severity´
 #[test]
 fn an_advisory_finding_keeps_its_severity() {
     let banned = SourceFile {
@@ -324,18 +372,26 @@ fn an_advisory_finding_keeps_its_severity() {
 }
 
 /// The leader is resolved away: no region's text carries a `///`.
+///
+/// A line documentation leader is resolved away and appears in no region's text.
+/// ´claim:rust:a-line-leader-is-resolved-away´
 #[test]
 fn the_line_leader_is_resolved_away() {
     assert_eq!(texts("/// doc\nstruct X;\n"), vec![String::from(" doc")]);
 }
 
 /// The inner leader likewise.
+///
+/// (´claim:rust:a-line-leader-is-resolved-away´)
 #[test]
 fn the_inner_leader_is_resolved_away() {
     assert_eq!(texts("//! doc\nstruct X;\n"), vec![String::from(" doc")]);
 }
 
 /// A block form's delimiters are resolved away at both ends.
+///
+/// A block form's delimiters are resolved away at both ends.
+/// ´claim:rust:block-delimiters-are-resolved-away´
 #[test]
 fn the_block_delimiters_are_resolved_away() {
     assert_eq!(
@@ -345,6 +401,9 @@ fn the_block_delimiters_are_resolved_away() {
 }
 
 /// A written attribute's region is the literal's interior.
+///
+/// A written attribute's region is its string literal's interior.
+/// ´claim:rust:an-attribute-yields-its-interior´
 #[test]
 fn a_written_attribute_yields_the_literal_interior() {
     assert_eq!(
@@ -354,6 +413,8 @@ fn a_written_attribute_yields_the_literal_interior() {
 }
 
 /// And a raw literal's interior, hashes and all resolved away.
+///
+/// (´claim:rust:an-attribute-yields-its-interior´)
 #[test]
 fn a_raw_written_attribute_yields_its_interior() {
     assert_eq!(
@@ -364,6 +425,9 @@ fn a_raw_written_attribute_yields_its_interior() {
 
 /// A plain comment is no scanned region: `[scanned-regions]` lists it under
 /// `not_scanned`, and `[banned-tokens]` forbids it outright.
+///
+/// A plain comment is no scanned region and is forbidden outright.
+/// ´claim:rust:a-plain-comment-is-no-region´
 #[test]
 fn a_plain_comment_is_no_region() {
     assert!(regions("// note\nstruct X;\n").is_empty());
@@ -372,6 +436,9 @@ fn a_plain_comment_is_no_region() {
 
 /// A pieces-sum invariant: the pieces are copied verbatim, so their lengths
 /// sum to the text's length. That is what makes `Region::locate` exact.
+///
+/// A region's pieces are copied verbatim, so their lengths sum to its text's length.
+/// ´claim:rust:the-pieces-sum-to-the-text´
 #[test]
 fn the_pieces_sum_to_the_text() {
     for fixture in [
@@ -389,6 +456,9 @@ fn the_pieces_sum_to_the_text() {
 
 /// Rust's regions carry the code syntax: the acute belongs to the label
 /// syntax and classifies locally (´dec:lint:two-scan-entries´).
+///
+/// A Rust region carries the code syntax, where the acute classifies locally.
+/// ´claim:rust:a-region-carries-the-code-syntax´
 #[test]
 fn a_rust_region_carries_the_code_syntax() {
     let regions = regions("/// doc\nstruct X;\n");
@@ -397,12 +467,18 @@ fn a_rust_region_carries_the_code_syntax() {
 }
 
 /// Doc comments are the scanned regions, so they participate.
+///
+/// Documentation comments are the scanned regions, so they participate.
+/// ´claim:rust:a-doc-region-participates´
 #[test]
 fn a_doc_region_participates() {
     assert!(regions("/// doc\nstruct X;\n")[0].participates);
 }
 
 /// A generated source's regions are generated.
+///
+/// A generated source's regions are generated.
+/// ´claim:rust:a-generated-source-yields-generated-regions´
 #[test]
 fn a_generated_source_yields_generated_regions() {
     let mut src = source("/// doc\nstruct X;\n");
@@ -414,6 +490,9 @@ fn a_generated_source_yields_generated_regions() {
 
 /// This frontend produces no heads: a code comment carries occurrences and
 /// heads nothing (´dec:lint:head-recognition´).
+///
+/// The Rust frontend produces no heads, a code comment heading nothing.
+/// ´claim:rust:the-rust-frontend-heads-nothing´
 #[test]
 fn the_rust_frontend_produces_no_heads() {
     assert!(
@@ -424,6 +503,9 @@ fn the_rust_frontend_produces_no_heads() {
 }
 
 /// And no tables.
+///
+/// The Rust frontend produces no tables.
+/// ´claim:rust:the-rust-frontend-tables-nothing´
 #[test]
 fn the_rust_frontend_produces_no_tables() {
     assert!(parse("/// | a | b |\nstruct X;\n").tables.is_empty());
@@ -431,6 +513,9 @@ fn the_rust_frontend_produces_no_tables() {
 
 /// An occurrence in a doc region scans out of the region's logical text and
 /// locates back into the file: the whole point of the pieces mapping.
+///
+/// An occurrence scanned out of a region's logical text locates back into the file.
+/// ´claim:rust:an-occurrence-locates-back-into-the-file´
 #[test]
 fn an_occurrence_locates_back_into_the_file() {
     let text = "/// see \u{b4}sig:lint:pretokenizer-api\u{b4} for the rest\nstruct X;\n";
@@ -451,6 +536,9 @@ fn an_occurrence_locates_back_into_the_file() {
 /// A region-local span crossing a piece boundary maps to a file span that
 /// covers the leader the logical text resolved away: the whole of what the
 /// author wrote, markers included.
+///
+/// A span crossing a piece boundary covers the leader the logical text resolved away.
+/// ´claim:rust:a-crossing-span-covers-its-leaders´
 #[test]
 fn a_span_across_a_run_covers_the_leader_between() {
     let text = "/// one\n/// two\nstruct X;\n";
@@ -462,6 +550,9 @@ fn a_span_across_a_run_covers_the_leader_between() {
 
 /// A source that is not UTF-8 is a located finding and never a panic
 /// (´crit:lint:error-or-finding´).
+///
+/// A source that is not UTF-8 is a located finding and never a panic.
+/// ´claim:rust:a-non-utf8-source-is-a-finding´
 #[test]
 fn a_source_that_is_not_utf8_is_a_finding() {
     let mut src = source("");
@@ -475,6 +566,9 @@ fn a_source_that_is_not_utf8_is_a_finding() {
 
 /// But the pre-tokenizer still runs on those bytes, so a ban still fires:
 /// a lexical fact does not wait on an AST.
+///
+/// The pre-tokenizer still runs on those bytes, a lexical fact waiting on no tree.
+/// ´claim:rust:the-pretokenizer-runs-on-any-bytes´
 #[test]
 fn a_source_that_is_not_utf8_still_pre_tokenizes() {
     let bytes = [0xffu8, b'\n', b'/', b'/', b' ', b'x', b'\n'];
@@ -484,6 +578,9 @@ fn a_source_that_is_not_utf8_still_pre_tokenizes() {
 }
 
 /// A source `syn` rejects is a located finding too.
+///
+/// A source the parser rejects is a located finding too.
+/// ´claim:rust:an-unparsable-source-is-located´
 #[test]
 fn an_unparsable_source_is_a_located_finding() {
     let src = source("fn ( { ]\n");
@@ -498,6 +595,9 @@ fn an_unparsable_source_is_a_located_finding() {
 /// and the caller holding the source completes them: which file the bytes
 /// came from and whether findings there fail the lane are the two fields no
 /// byte-level lexer can know.
+///
+/// The lexer's diagnostics arrive unstamped and the caller holding the source completes them.
+/// ´claim:rust:lexer-findings-are-stamped-by-their-caller´
 #[test]
 fn the_lexer_s_failures_are_stamped_with_their_source() {
     let src = source("/* never closed\n");
@@ -513,6 +613,9 @@ fn the_lexer_s_failures_are_stamped_with_their_source() {
 
 /// The dispatcher reaches this frontend for a Rust source
 /// (´dec:lint:frontend-dispatch´).
+///
+/// The dispatcher routes a Rust source to the Rust frontend.
+/// ´claim:rust:the-dispatcher-reaches-the-rust-frontend´
 #[test]
 fn the_dispatcher_reaches_the_rust_frontend() {
     let src = source("/// doc\nstruct X;\n");
@@ -526,6 +629,9 @@ fn the_dispatcher_reaches_the_rust_frontend() {
 }
 
 /// The test census recognizes a bare `#[test]`.
+///
+/// The test census recognizes a bare test attribute.
+/// ´claim:rust:a-bare-test-attribute-covers´
 #[test]
 fn the_test_census_recognizes_a_bare_test_attribute() {
     let out = censuses("#[test]\nfn decode_roundtrip() {}\n", CargoTarget::LibOrBin);
@@ -533,6 +639,9 @@ fn the_test_census_recognizes_a_bare_test_attribute() {
 }
 
 /// And the two qualified harness paths `[profiles]` lists.
+///
+/// The test census recognizes the qualified harness paths the adoption data lists.
+/// ´claim:rust:the-qualified-harnesses-cover´
 #[test]
 fn the_test_census_recognizes_the_qualified_harnesses() {
     let out = censuses(
@@ -544,6 +653,9 @@ fn the_test_census_recognizes_the_qualified_harnesses() {
 
 /// The open rule: any attribute path whose final segment is a harness
 /// token, so a fourth harness needs no code change.
+///
+/// Any attribute path whose final segment is a harness token covers, so a fourth harness needs no code change.
+/// ´claim:rust:the-open-rule-admits-a-new-harness´
 #[test]
 fn the_open_rule_admits_an_unlisted_harness() {
     let out = censuses("#[some::other::test]\nfn c() {}\n", CargoTarget::LibOrBin);
@@ -551,6 +663,9 @@ fn the_open_rule_admits_an_unlisted_harness() {
 }
 
 /// A function carrying no harness attribute is not covered.
+///
+/// A function carrying no harness attribute is not covered.
+/// ´claim:rust:an-unattributed-function-is-uncovered´
 #[test]
 fn an_unattributed_function_is_not_covered() {
     let out = censuses("fn plain() {}\n", CargoTarget::LibOrBin);
@@ -558,6 +673,9 @@ fn an_unattributed_function_is_not_covered() {
 }
 
 /// An attribute whose final segment is not a harness token does not cover.
+///
+/// An attribute whose final segment is no harness token does not cover.
+/// ´claim:rust:an-unrelated-attribute-does-not-cover´
 #[test]
 fn an_unrelated_attribute_does_not_cover() {
     let out = censuses("#[inline]\nfn plain() {}\n", CargoTarget::LibOrBin);
@@ -565,6 +683,9 @@ fn an_unrelated_attribute_does_not_cover() {
 }
 
 /// A test method inside an `impl` is covered like any other function.
+///
+/// A test method inside an implementation is covered like any other function.
+/// ´claim:rust:a-test-method-is-covered´
 #[test]
 fn a_test_method_is_covered() {
     let out = censuses(
@@ -576,6 +697,9 @@ fn a_test_method_is_covered() {
 
 /// The classification rule is the Cargo target: a lib or bin target's tests
 /// are `unit`, and a `tests/` target's are `integration`.
+///
+/// The Cargo target decides the area: a library or binary target's tests are unit, a test target's integration.
+/// ´claim:rust:the-target-decides-the-area´
 #[test]
 fn the_target_decides_the_area() {
     let fixture = "#[test]\nfn one() {}\n";
@@ -588,6 +712,9 @@ fn the_target_decides_the_area() {
 
 /// The asset carries the bare identifier the language exposes, untransformed:
 /// turning it into a label's name segment is the derivation's affair.
+///
+/// A covered asset carries the bare identifier untransformed, the name segment being the derivation's affair.
+/// ´claim:rust:an-asset-carries-its-bare-identifier´
 #[test]
 fn a_covered_asset_carries_the_bare_identifier() {
     let out = censuses("#[test]\nfn decode_roundtrip() {}\n", CargoTarget::LibOrBin);
@@ -595,6 +722,9 @@ fn a_covered_asset_carries_the_bare_identifier() {
 }
 
 /// And the profile's own standard place.
+///
+/// A covered asset carries its profile's own standard place.
+/// ´claim:rust:an-asset-carries-its-profiles-place´
 #[test]
 fn a_covered_asset_carries_the_profile_s_place() {
     let out = censuses("#[test]\nfn one() {}\n", CargoTarget::LibOrBin);
@@ -608,6 +738,9 @@ fn a_covered_asset_carries_the_profile_s_place() {
 }
 
 /// The module census counts an inline `mod name { … }` as one definition.
+///
+/// The module census counts an inline module item as one definition.
+/// ´claim:rust:an-inline-module-is-a-definition´
 #[test]
 fn an_inline_module_is_a_definition() {
     let out = censuses("mod record_mirror { }\n", CargoTarget::LibOrBin);
@@ -616,6 +749,9 @@ fn an_inline_module_is_a_definition() {
 
 /// A `mod name;` declaration is not a definition and not an asset: the
 /// definition backing it is another file (´conv:lint:rust-surface´).
+///
+/// A module declaration is not a definition and not an asset.
+/// ´claim:rust:a-declaration-is-no-definition´
 #[test]
 fn a_module_declaration_is_not_a_definition() {
     let out = censuses("mod rig;\n", CargoTarget::LibOrBin);
@@ -631,6 +767,8 @@ fn a_module_declaration_is_not_a_definition() {
 
 /// Nine declarations of one module are nine declarations and no assets,
 /// which is the measured shape `[profiles]` records for `mod rig;`.
+///
+/// (´claim:rust:a-declaration-is-no-definition´)
 #[test]
 fn repeated_declarations_produce_no_assets() {
     let out = censuses("mod rig;\nmod rig;\nmod rig;\n", CargoTarget::LibOrBin);
@@ -640,6 +778,9 @@ fn repeated_declarations_produce_no_assets() {
 
 /// `#[cfg(test)]` modules are excluded: they are test scaffolding, and what
 /// lives inside them is the test profile's business.
+///
+/// A test-configured module is excluded from the module census as test scaffolding.
+/// ´claim:rust:a-cfg-test-module-is-excluded´
 #[test]
 fn a_cfg_test_module_is_excluded() {
     let out = censuses("#[cfg(test)]\nmod tests { }\n", CargoTarget::LibOrBin);
@@ -648,6 +789,9 @@ fn a_cfg_test_module_is_excluded() {
 
 /// The exclusion is exact: `#[cfg(feature = "test")]` names a feature and
 /// not the test configuration, so it excludes nothing.
+///
+/// The exclusion is exact: a feature named test is not the test configuration.
+/// ´claim:rust:the-exclusion-is-exact´
 #[test]
 fn a_feature_named_test_is_not_the_test_configuration() {
     let out = censuses(
@@ -658,6 +802,9 @@ fn a_feature_named_test_is_not_the_test_configuration() {
 }
 
 /// A nested inline module is a definition too, and both are counted.
+///
+/// A nested inline module is a definition too, and both are counted.
+/// ´claim:rust:nested-modules-are-both-definitions´
 #[test]
 fn nested_inline_modules_are_both_definitions() {
     let out = censuses("mod outer { mod inner { } }\n", CargoTarget::LibOrBin);
@@ -669,6 +816,9 @@ fn nested_inline_modules_are_both_definitions() {
 /// A `#[cfg(test)]` module's contents are not walked for definitions
 /// either: the exclusion is of the module, and the test census still sees
 /// what is inside it.
+///
+/// The exclusion is of the module, and the test census still sees what is inside it.
+/// ´claim:rust:the-exclusion-does-not-hide-the-tests´
 #[test]
 fn a_cfg_test_module_still_holds_its_tests() {
     let out = censuses(
@@ -681,6 +831,9 @@ fn a_cfg_test_module_still_holds_its_tests() {
 
 /// Both ruled Rust profiles are recognized by their rows' own shape, so a
 /// third would need no match on its name.
+///
+/// Both ruled Rust profiles are recognized by their rows' own shape, so a third needs no match on its name.
+/// ´claim:rust:profiles-are-recognized-by-shape´
 #[test]
 fn both_ruled_rust_profiles_are_recognized() {
     let recognized: Vec<&str> = adoption()
@@ -697,6 +850,9 @@ fn both_ruled_rust_profiles_are_recognized() {
 /// under a fixture that stages the module profile, `Parsed::assets` carries
 /// the test profile's covered function alone, though the source defines a
 /// module beside it.
+///
+/// A staged profile puts nothing in the run.
+/// ´claim:rust:a-staged-profile-puts-nothing-in-the-run´
 #[test]
 fn a_staged_profile_puts_nothing_in_the_run() {
     let staging = module_staged();
@@ -716,6 +872,9 @@ fn a_staged_profile_puts_nothing_in_the_run() {
 
 /// (´dec:lint:staged-profiles´): entering Π flipped fields and nothing else,
 /// so the same source read under the ruled data carries both censuses.
+///
+/// A profile in force puts its census in the run, entering having flipped fields and nothing else.
+/// ´claim:rust:a-profile-in-force-puts-its-census-in-the-run´
 #[test]
 fn a_profile_in_force_puts_its_census_in_the_run() {
     let parsed = parse("#[test]\nfn one() {}\nmod two { }\n");
@@ -725,6 +884,9 @@ fn a_profile_in_force_puts_its_census_in_the_run() {
 
 /// The censuses are computed whatever a profile's status is: computing is not
 /// judging, which is why entering Π flips fields rather than writing code.
+///
+/// A census is computed whatever its profile's status: computing is not judging.
+/// ´claim:rust:computing-is-not-judging´
 #[test]
 fn the_census_is_computed_even_though_it_is_inert() {
     let out = censuses("#[test]\nfn one() {}\nmod two { }\n", CargoTarget::LibOrBin);
@@ -735,6 +897,9 @@ fn the_census_is_computed_even_though_it_is_inert() {
 /// The end-to-end fixture: the frontend over one real crate source. Its doc
 /// regions are found, nothing is unclassified, and every region's pieces
 /// map back into the file.
+///
+/// The Rust frontend reads a real crate source end to end, every region mapping back into the file.
+/// ´claim:rust:the-frontend-reads-a-real-source´
 #[test]
 fn the_frontend_reads_a_real_crate_source() {
     let at = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/scan.rs");
@@ -791,6 +956,9 @@ fn the_frontend_reads_a_real_crate_source() {
 /// The same source's own label occurrences scan out of its regions and
 /// locate back into real file bytes, which is what the frontend exists to
 /// make possible.
+///
+/// A real source's own occurrences scan out of its regions and locate back into its bytes.
+/// ´claim:rust:a-real-sources-occurrences-locate´
 #[test]
 fn a_real_source_s_occurrences_locate_into_the_file() {
     let at = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/scan.rs");
@@ -822,6 +990,8 @@ fn a_real_source_s_occurrences_locate_into_the_file() {
 
 /// No rule identifier of this module is label-shaped: `lint` is a reserved
 /// kind no profile governs (´sig:lint:diagnostic-api´).
+///
+/// (´claim:diagnostics:no-rule-identifier-is-label-shaped´)
 #[test]
 fn no_rust_frontend_rule_identifier_is_label_shaped() {
     for rule in frontend_rust::RULES {

@@ -68,6 +68,9 @@ fn texts(text: &str) -> Vec<String> {
 }
 
 /// `[scanned-regions]`, first scanned form: line comments.
+///
+/// A TypeScript line comment is a scanned region.
+/// ´claim:web:a-line-comment-is-a-region´
 #[test]
 fn a_line_comment_is_a_region() {
     assert_eq!(
@@ -78,6 +81,9 @@ fn a_line_comment_is_a_region() {
 }
 
 /// Second scanned form: block comments.
+///
+/// A TypeScript block comment is a scanned region.
+/// ´claim:web:a-block-comment-is-a-region´
 #[test]
 fn a_block_comment_is_a_region() {
     assert_eq!(
@@ -92,6 +98,9 @@ fn a_block_comment_is_a_region() {
 
 /// Third scanned form: JSDoc block comments, which carry the `/** */`
 /// spelling and so the comment form of that spelling.
+///
+/// A JSDoc block comment is a scanned region.
+/// ´claim:web:a-jsdoc-comment-is-a-region´
 #[test]
 fn a_jsdoc_comment_is_a_region() {
     assert_eq!(
@@ -102,6 +111,9 @@ fn a_jsdoc_comment_is_a_region() {
 
 /// An empty block comment is no documentation that happens to be empty:
 /// `/**/` closes where a JSDoc leader would still be opening.
+///
+/// An empty block comment is plain, closing where a JSDoc leader would still be opening.
+/// ´claim:web:an-empty-block-comment-is-plain´
 #[test]
 fn an_empty_block_comment_is_plain() {
     assert_eq!(
@@ -112,6 +124,8 @@ fn an_empty_block_comment_is_plain() {
 }
 
 /// And neither is `/***/`, by the same rule.
+///
+/// (´claim:web:an-empty-block-comment-is-plain´)
 #[test]
 fn a_three_star_block_comment_is_plain() {
     assert_eq!(
@@ -124,6 +138,9 @@ fn a_three_star_block_comment_is_plain() {
 /// swc's out-of-band comments store": a run of `//` lines is that many
 /// comments and therefore that many regions, where a `///` run in Rust is
 /// one.
+///
+/// A run of line comments is that many regions, the region unit being one comment.
+/// ´claim:web:a-run-of-line-comments-is-many-regions´
 #[test]
 fn a_run_of_line_comments_is_one_region_each() {
     assert_eq!(
@@ -138,6 +155,9 @@ fn a_run_of_line_comments_is_one_region_each() {
 
 /// A JSDoc comment's gutter is a leader and is resolved away; the line
 /// breaks inside it are not, and stay.
+///
+/// A JSDoc gutter is a leader and is resolved away, while its line breaks stay.
+/// ´claim:web:a-jsdoc-gutter-is-resolved-away´
 #[test]
 fn a_jsdoc_gutter_is_resolved_away() {
     assert_eq!(
@@ -148,6 +168,9 @@ fn a_jsdoc_gutter_is_resolved_away() {
 
 /// A plain block comment has no gutter convention, so a `*` inside one is
 /// content and survives.
+///
+/// A plain block comment has no gutter convention, so a star inside one is content.
+/// ´claim:web:a-plain-block-comment-keeps-its-stars´
 #[test]
 fn a_plain_block_comment_keeps_its_stars() {
     assert_eq!(
@@ -158,6 +181,9 @@ fn a_plain_block_comment_keeps_its_stars() {
 
 /// A JSDoc line that is only its gutter contributes only its line break,
 /// which is what keeps a blank documentation line blank.
+///
+/// A JSDoc line that is only its gutter contributes only its line break.
+/// ´claim:web:a-bare-gutter-line-contributes-its-break´
 #[test]
 fn a_bare_jsdoc_gutter_line_contributes_its_break() {
     assert_eq!(
@@ -169,12 +195,17 @@ fn a_bare_jsdoc_gutter_line_contributes_its_break() {
 /// `[scanned-regions]` puts string literals outside what is scanned, and a
 /// `//` inside one is not a comment: `swc` lexed it as a string, so it
 /// never reaches the comments store.
+///
+/// A comment leader inside a literal never reaches the comments store.
+/// ´claim:web:a-leader-in-a-literal-is-no-comment´
 #[test]
 fn a_line_leader_inside_a_string_is_not_a_comment() {
     assert!(regions("const x = \"// not a comment\";\n").is_empty());
 }
 
 /// The same for a block leader.
+///
+/// (´claim:web:a-leader-in-a-literal-is-no-comment´)
 #[test]
 fn a_block_leader_inside_a_string_is_not_a_comment() {
     assert!(regions("const x = '/* not a comment */';\n").is_empty());
@@ -182,6 +213,9 @@ fn a_block_leader_inside_a_string_is_not_a_comment() {
 
 /// Template literals are literals too, interpolation and all: neither the
 /// literal parts nor the `${}` holes yield a region.
+///
+/// A template literal is a literal throughout, its interpolation holes included.
+/// ´claim:web:a-template-literal-is-not-scanned´
 #[test]
 fn a_template_literal_is_not_scanned() {
     assert!(regions("const x = `a // b ${ y } /* c */ d`;\n").is_empty());
@@ -190,6 +224,9 @@ fn a_template_literal_is_not_scanned() {
 /// A comment inside a template literal's interpolation is a comment: the
 /// hole is code, and this is the boundary an AST frontend gets right and a
 /// pattern search does not (´[ARCH-ansatz:linter:regex-scanning]´).
+///
+/// A comment inside an interpolation is a comment, the hole being code.
+/// ´claim:web:a-comment-in-a-hole-is-a-comment´
 #[test]
 fn a_comment_inside_an_interpolation_is_a_comment() {
     assert_eq!(
@@ -200,6 +237,9 @@ fn a_comment_inside_an_interpolation_is_a_comment() {
 
 /// `[scanned-regions]` puts JSX text outside what is scanned; a `//` in it
 /// is text the parser reads as text.
+///
+/// JSX text is outside what is scanned.
+/// ´claim:web:jsx-text-is-not-scanned´
 #[test]
 fn jsx_text_is_not_scanned() {
     let src = named("x.tsx", "const a = <p>// not a comment</p>;\n");
@@ -209,6 +249,8 @@ fn jsx_text_is_not_scanned() {
 
 /// A comment inside a JSX expression container is still a comment, for the
 /// reason the interpolation case is: the container holds code.
+///
+/// (´claim:web:a-comment-in-a-hole-is-a-comment´)
 #[test]
 fn a_comment_inside_a_jsx_container_is_a_comment() {
     let src = named("x.tsx", "const a = <p>{/* real */}</p>;\n");
@@ -226,6 +268,9 @@ fn a_comment_inside_a_jsx_container_is_a_comment() {
 /// A `.tsx` source parses its JSX, which a `.ts` source of the same bytes
 /// does not: `TsSyntax::tsx` is read off the extension `[scanned-regions]`
 /// lists beside `.ts`.
+///
+/// A tsx source parses its JSX where a ts source of the same bytes does not.
+/// ´claim:web:tsx-parses-its-jsx´
 #[test]
 fn tsx_parses_where_ts_does_not() {
     let text = "const a = <p>hi</p>;\n";
@@ -244,6 +289,9 @@ fn tsx_parses_where_ts_does_not() {
 
 /// An ambient declaration file parses as one: its bodies are types where a
 /// `.ts` file's are values.
+///
+/// An ambient declaration file parses as one, its bodies being types.
+/// ´claim:web:a-declaration-file-is-ambient´
 #[test]
 fn a_declaration_file_parses_as_ambient() {
     let src = named("x.d.ts", "// one\ndeclare const x: number;\n");
@@ -255,6 +303,9 @@ fn a_declaration_file_parses_as_ambient() {
 /// An acute-delimited label in a comment scans as an occurrence: the
 /// comment is scanned code text, where the acute is the label delimiter
 /// (´dec:lint:two-scan-entries´).
+///
+/// An acute-delimited label in a web comment scans as an occurrence.
+/// ´claim:web:an-acute-label-in-a-comment-scans´
 #[test]
 fn an_acute_label_in_a_comment_scans_as_an_occurrence() {
     let regions = regions("// mints \u{b4}def:web:widget\u{b4} here\nconst x = 1;\n");
@@ -265,6 +316,9 @@ fn an_acute_label_in_a_comment_scans_as_an_occurrence() {
 
 /// The same label inside a string literal scans as nothing, because the
 /// literal is no region at all.
+///
+/// A label inside a literal scans as nothing, the literal being no region at all.
+/// ´claim:web:a-label-in-a-literal-scans-as-nothing´
 #[test]
 fn an_acute_label_in_a_string_scans_as_nothing() {
     assert!(regions("const x = \"\u{b4}def:web:widget\u{b4}\";\n").is_empty());
@@ -272,6 +326,9 @@ fn an_acute_label_in_a_string_scans_as_nothing() {
 
 /// A region carries the code syntax, which is what routes it to
 /// [`scan_code`] rather than to the prose entry (´dec:lint:two-scan-entries´).
+///
+/// A web region carries the code syntax and routes to the code scanner.
+/// ´claim:web:a-region-carries-the-code-syntax´
 #[test]
 fn a_web_region_carries_the_code_syntax() {
     for region in regions("// one\n/** two */\nconst x = 1;\n") {
@@ -282,6 +339,9 @@ fn a_web_region_carries_the_code_syntax() {
 
 /// A region's pieces are file ranges copied verbatim, so their lengths sum
 /// to the logical text's length and each is a slice of the file.
+///
+/// A region's pieces are verbatim file ranges whose lengths sum to its logical text.
+/// ´claim:web:the-pieces-reconstruct-the-text´
 #[test]
 fn a_region_s_pieces_reconstruct_its_text() {
     let text = "/**\n * one\n * two\n */\nconst x = 1;\n";
@@ -299,6 +359,9 @@ fn a_region_s_pieces_reconstruct_its_text() {
 
 /// Byte offsets are the file's own, not the source map's: a label after a
 /// multibyte character locates at the bytes it was written at.
+///
+/// Byte offsets are the file's own, so a label after a multibyte character locates exactly.
+/// ´claim:web:offsets-are-the-files-own´
 #[test]
 fn an_occurrence_after_a_multibyte_character_locates_exactly() {
     let text = "// \u{e4}\u{f6}\u{fc} \u{b4}def:web:widget\u{b4}\nconst x = 1;\n";
@@ -310,6 +373,8 @@ fn an_occurrence_after_a_multibyte_character_locates_exactly() {
 
 /// And the first comment of a file starts where the file does, which is
 /// what the source map's own numbering would otherwise shift by one.
+///
+/// (´claim:web:offsets-are-the-files-own´)
 #[test]
 fn the_first_comment_of_a_file_starts_at_its_first_byte() {
     let regions = regions("// one\nconst x = 1;\n");
@@ -318,6 +383,9 @@ fn the_first_comment_of_a_file_starts_at_its_first_byte() {
 
 /// A syntax error is a hard, located diagnostic and never a silently
 /// skipped region (´[ARCH-req:linter:diagnostics-not-panics]´).
+///
+/// A syntax error is a located diagnostic and never a silently skipped region.
+/// ´claim:web:a-syntax-error-is-located´
 #[test]
 fn a_syntax_error_is_a_located_diagnostic() {
     let src = source("// one\nconst = = ;\n");
@@ -340,6 +408,9 @@ fn a_syntax_error_is_a_located_diagnostic() {
 /// A source that is not UTF-8 cannot be read at all, and unlike its Rust
 /// counterpart it leaves nothing behind to enforce: TypeScript has no
 /// entry in `[banned-tokens]`.
+///
+/// A web source that is not UTF-8 leaves nothing behind to enforce.
+/// ´claim:web:a-non-utf8-source-leaves-nothing´
 #[test]
 fn a_web_source_that_is_not_utf8_is_an_error() {
     let mut src = source("");
@@ -351,6 +422,9 @@ fn a_web_source_that_is_not_utf8_is_an_error() {
 
 /// `[head-recognition]` gives TypeScript no head form: a code comment
 /// carries occurrences and heads no environment.
+///
+/// The web frontend produces no heads, TypeScript having no head form.
+/// ´claim:web:the-web-frontend-heads-nothing´
 #[test]
 fn the_web_frontend_produces_no_heads() {
     let parsed =
@@ -360,6 +434,9 @@ fn the_web_frontend_produces_no_heads() {
 
 /// `[profiles]` registers no TypeScript profile in version 1, so the
 /// frontend settles no census and pairs nothing across sources.
+///
+/// The web frontend settles no census, no TypeScript profile being registered.
+/// ´claim:web:the-web-frontend-covers-nothing´
 #[test]
 fn the_web_frontend_produces_no_assets() {
     let parsed = parse("export class Widget {}\nexport function make() {}\n");
@@ -371,6 +448,9 @@ fn the_web_frontend_produces_no_assets() {
 /// The dispatcher routes a TypeScript source here, which is the whole of
 /// what wiring a frontend means: `[scanned-regions]` already named the
 /// extensions, and the carrier already carried the files.
+///
+/// The dispatcher routes a TypeScript source to the web frontend.
+/// ´claim:web:the-dispatcher-reaches-the-web-frontend´
 #[test]
 fn the_dispatcher_reaches_the_web_frontend() {
     let src = source("// one\nconst x = 1;\n");
@@ -386,6 +466,9 @@ fn the_dispatcher_reaches_the_web_frontend() {
 /// Regions come out in file order however the comments store enumerated
 /// them, which is what makes the frontend's output byte-deterministic
 /// (´[ARCH-req:linter:determinism]´).
+///
+/// Regions come out in file order however the comments store enumerated them.
+/// ´claim:web:regions-are-ordered-by-position´
 #[test]
 fn regions_are_ordered_by_position() {
     let mut text = String::new();
@@ -402,6 +485,9 @@ fn regions_are_ordered_by_position() {
 /// A comment attached to two tokens at once is still one comment: reading
 /// both halves of the store and keying on the comment's own span is what
 /// keeps a trailing comment from arriving twice.
+///
+/// A comment attached to two tokens at once is still one region.
+/// ´claim:web:a-trailing-comment-is-one-region´
 #[test]
 fn a_trailing_comment_is_one_region() {
     assert_eq!(
@@ -412,6 +498,9 @@ fn a_trailing_comment_is_one_region() {
 
 /// The end-to-end fixture: the frontend over one real web source. Its
 /// comments are found, and every region's pieces map back into the file.
+///
+/// The web frontend reads a real source end to end, every region mapping back into the file.
+/// ´claim:web:the-frontend-reads-a-real-source´
 #[test]
 fn the_frontend_reads_a_real_web_source() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
@@ -448,6 +537,9 @@ fn the_frontend_reads_a_real_web_source() {
 
 /// No rule identifier of this module is label-shaped: `lint` is a reserved
 /// kind no profile governs (´sig:lint:diagnostic-api´).
+///
+/// No rule identifier the linter emits is label-shaped.
+/// ´claim:diagnostics:no-rule-identifier-is-label-shaped´
 #[test]
 fn no_web_frontend_rule_identifier_is_label_shaped() {
     for rule in frontend_web::RULES {

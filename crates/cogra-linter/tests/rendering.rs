@@ -67,6 +67,9 @@ fn ran(at: &Path, args: &[&str]) -> (i32, String) {
 ///
 /// The fixture carries both committed registers as the corpus commits them,
 /// so freshness has nothing to report and neither has any other judgment.
+///
+/// A corpus clean on the failing set exits zero.
+/// ´claim:exits:a-clean-corpus-exits-zero´
 #[test]
 fn a_clean_failing_set_exits_zero() {
     let at = fixture("exit-clean");
@@ -77,6 +80,9 @@ fn a_clean_failing_set_exits_zero() {
 
 /// (´dec:lint:enforcement-partition´), (´sig:lint:cli-api´): findings on the
 /// failing set exit `1`, and the finding is rendered in the ruled form.
+///
+/// Findings on the failing set exit one, rendered in the ruled form.
+/// ´claim:exits:findings-exit-one´
 #[test]
 fn findings_on_the_failing_set_exit_one() {
     let at = fixture("exit-findings");
@@ -110,6 +116,9 @@ fn findings_on_the_failing_set_exit_one() {
 
 /// (´sig:lint:cli-api´): the linter's own failure exits `2`, which is what
 /// lets a lane tell it from a corpus that is wrong.
+///
+/// The linter's own failure exits two, which a lane can tell from a wrong corpus.
+/// ´claim:exits:the-linters-own-failure-exits-two´
 #[test]
 fn the_linters_own_failure_exits_two() {
     let missing = std::env::temp_dir().join("cogra-lint-absent-root");
@@ -121,6 +130,9 @@ fn the_linters_own_failure_exits_two() {
 
 /// (´[ARCH-rule:linter:register-freshness]´): a dry run reports and writes
 /// nothing, and exits `0` because it found nothing of its own scope.
+///
+/// A dry run reports what would change and writes nothing.
+/// ´claim:exits:a-dry-run-writes-nothing´
 #[test]
 fn a_dry_run_writes_nothing() {
     let at = fixture("dry-run");
@@ -151,6 +163,9 @@ fn a_dry_run_writes_nothing() {
 /// (´dec:lint:migrations-subcommand´): the measurement exits `0` on a corpus
 /// it could read, because it reports no verdict — and with every profile of
 /// `[profiles]` in force it says so rather than printing an empty report.
+///
+/// The migration measurement reports no verdict and so always exits zero.
+/// ´claim:exits:the-measurement-exits-zero´
 #[test]
 fn the_measurement_always_exits_zero() {
     let at = fixture("migrations");

@@ -667,6 +667,52 @@ document *about* tests is still a record or a report by its
 documentary role, and the authored/derived split settles that before
 any occurrence exists.
 
+**R26 — A profile fixes seven data, and activation is the finer staging
+instrument.** The sibling linter's profile signature carries two the
+calculus's did not: a collision rule and a per-owner activation. Both are
+adopted, and the amendment to ``sig:labels:profiles`` lands with them.
+The collision rule is the equivalence a profile is judged under, and it
+is a profile's own datum because its *standard place* decides it: a
+register keyed by label tells two assets sharing an identifier apart, and
+a place at the asset gives each its own evidence, so both v1 profiles
+come out at the label where the sibling's test profile comes out at the
+identifier. Recording it makes that a reading rather than an assumption.
+Activation is the shape that matters more. The staged-entry rule of R19
+is all-or-nothing: a profile is in Π or it is not, and its migration is
+one commit however large the corpus. Activation splits that per owner —
+and keeps the all-or-nothing shape available as `every-owner`,
+deliberately, because an enumerated activation on the two v1 profiles
+would let a crate added tomorrow escape the inventory judgment in
+silence. What is staged is the unwritten label alone: placement,
+collision, and resolution bind from a label's first commit in every
+owner, closed or not.
+
+**R27 — The claim discipline rides the test profile, and the calculus
+judges most of it.** A derived test label names the function and claims
+nothing about what it establishes (``cav:labels:assets``), so each
+covered test carries a second, authored label naming the statement it
+evidences. The kind is `claim`, a *base* row of the registry's
+results-and-assertions family — Claim and Assertion both — so no X_A
+extension is owed and `[kinds.extensions]` is untouched: the families
+divide exactly where the warrant does, an Assets kind being headed by
+the identifier the code already bears and a Results kind by a heading an
+author composes. `claim` therefore lies outside K, no profile governs
+it, and every claim mint stands on an authorship warrant. Three
+divergences from the source discipline are this corpus's own, and each
+follows from a choice made earlier. The claim takes the *final*
+documentation line rather than the second-to-last, because this corpus's
+test profile puts its derived label in a register and leaves that line
+free. The statement is *one* line rather than the whole gloss, because a
+test's documentation here routinely cites the design clause it discharges
+and a whole-gloss rule would copy those citations into a generated file,
+in a syntax that changes on the way. And the judgment reports six things
+and no more: uniqueness and resolution are ``inv:labels:unique-mint``'s
+and ``inv:labels:total-resolution``'s, which already quantify over every
+owner, so a second voice would be a place for two readings of one fact to
+differ. The pilot wave closed over `pkg.cogra-linter` alone — its own
+discipline's tests — and the other five owners with covered assets are
+counted in `report` and reported nowhere until their waves land.
+
 ---
 
 ## Measurements
@@ -702,3 +748,6 @@ corpus: a slice that adds Rust sources re-measures them.
 | Titled sources (2026-08-31) | 80 in the carrier and 12 in the working-note trees, each carrying one Title mint; 3 Markdown files carry a level-one heading and no title, all outside the carrier (`layer1-interface.md` and the vendored Kotlin grammar's two) |
 | Title genres in live use (2026-08-31) | all 7 declared: `spec` 46, `guide` 17, `reg` 11, `rep` 10, `rec` 4, `plan` 3, `proposal` 1 |
 | Extension rows, X_A (2026-08-31) | 7, all `Document`, each with one owned evidence record; C_A stands 7 rows ahead of the edition's 349 |
+| Covered tests, whole corpus (2026-08-31) | 1859, by the claim census: `pkg.cogra-linter` 842, `pkg.cogra-interchange` 474, `pkg.api` 348, `pkg.common` 118, `pkg.postgres-store` 62, `pkg.l1-standin` 15 |
+| Claims after the pilot wave (2026-08-31) | 842 tests claimed, 685 minting and 157 citing a sibling's, over 37 thematic areas; `pkg.cogra-linter` at 0 unclaimed, the other five owners counted and reported nowhere |
+| Claim areas in live use (2026-08-31) | 37, the largest `grammar` 84, `markdown` 73, `lexer` 71, `adoption` 67; the vocabulary is free and censused rather than declared |
