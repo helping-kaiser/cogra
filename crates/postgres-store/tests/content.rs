@@ -144,6 +144,9 @@ async fn page(pool: &PgPool, cursor: Option<ContentCursor>, limit: i64) -> Vec<P
 /// alone cannot key the walk. Walking one entry at a time must visit both
 /// without the exclusive cursor swallowing the sibling that shares its
 /// instant, and must then end rather than loop on the tie.
+///
+/// Two pending entries sharing one authoring instant both survive a one-at-a-time walk, which then ends rather than looping.
+/// ´claim:content:a-shared-instant-loses-no-pending-entry´
 #[sqlx::test(migrations = "../../migrations")]
 async fn same_instant_pending_entries_paginate_without_loss(pool: PgPool) {
     let author = actor(&pool, "author").await;
@@ -176,6 +179,9 @@ async fn same_instant_pending_entries_paginate_without_loss(pool: PgPool) {
 /// into the landed one, under the cursor the client is still holding. Page
 /// two must resume where that entry actually sits now, serving the rest and
 /// nothing twice.
+///
+/// A page resumes where its cursor entry actually sits when that entry lands between the two reads.
+/// ´claim:content:a-page-boundary-survives-its-entry-landing´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_page_boundary_survives_the_entry_landing_under_it(pool: PgPool) {
     let author = actor(&pool, "author").await;
@@ -211,6 +217,9 @@ async fn a_page_boundary_survives_the_entry_landing_under_it(pool: PgPool) {
 /// A node can carry two unlanded edits, each staged by its own write and
 /// dated from its own pre-commitment. Landing the earlier one drops its
 /// pending mark and only its own.
+///
+/// Resolving one staged write drops its own pending mark and leaves another write's pending version standing.
+/// ´claim:content:resolving-one-write-spares-anothers-pending-version´
 #[sqlx::test(migrations = "../../migrations")]
 async fn landing_one_write_leaves_another_writes_pending_version(pool: PgPool) {
     let author = actor(&pool, "author").await;
@@ -248,6 +257,9 @@ async fn landing_one_write_leaves_another_writes_pending_version(pool: PgPool) {
     );
 }
 
+/// The same at the discard, which reaches the resolution the other way.
+///
+/// (´claim:content:resolving-one-write-spares-anothers-pending-version´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn discarding_one_write_leaves_another_writes_pending_version(pool: PgPool) {
     let author = actor(&pool, "author").await;
@@ -279,6 +291,9 @@ async fn discarding_one_write_leaves_another_writes_pending_version(pool: PgPool
 /// comment that already landed is ordered fact and not expiry's to remove:
 /// it stays, and reads as an orphan whose `target` resolves to null
 /// (data-model.md "Content nodes").
+///
+/// Discarding a pending post takes the pending thread beneath it and leaves the landed replies standing as orphans.
+/// ´claim:content:discarding-a-pending-post-takes-only-what-is-pending´
 #[sqlx::test(migrations = "../../migrations")]
 async fn discarding_a_pending_post_takes_the_pending_thread_under_it(pool: PgPool) {
     let author = actor(&pool, "author").await;
@@ -346,6 +361,9 @@ async fn discarding_a_pending_post_takes_the_pending_thread_under_it(pool: PgPoo
 /// what a promotion pass replaying two epochs out of order produces. The
 /// records decide which one renders, and the listing read resolves the same
 /// version as the single read.
+///
+/// The version whose record landed last renders the node, whatever order the edits were authored in.
+/// ´claim:content:the-record-that-landed-last-renders-the-node´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_edit_whose_record_landed_last_renders_the_post(pool: PgPool) {
     let author = actor(&pool, "author").await;
@@ -395,6 +413,9 @@ async fn the_edit_whose_record_landed_last_renders_the_post(pool: PgPool) {
     assert_eq!(listed[0].content, "landed later");
 }
 
+/// The same for a comment, whose edits take their own read path.
+///
+/// (´claim:content:the-record-that-landed-last-renders-the-node´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_comment_edit_whose_record_landed_last_renders_the_comment(pool: PgPool) {
     let author = actor(&pool, "author").await;
@@ -432,6 +453,9 @@ async fn the_comment_edit_whose_record_landed_last_renders_the_comment(pool: PgP
 /// author's own text, from the moment they signed it (substrate.md §6). A
 /// reader who asked for only what the graph has settled skips it and gets
 /// the newest landed version instead.
+///
+/// An unlanded edit renders above every landed version for its own author, and a settled read skips it.
+/// ´claim:content:a-pending-edit-outranks-every-landed-version´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_pending_edit_outranks_a_version_that_landed_after_it_was_signed(pool: PgPool) {
     let author = actor(&pool, "author").await;
@@ -474,6 +498,9 @@ async fn a_pending_edit_outranks_a_version_that_landed_after_it_was_signed(pool:
 /// ordered. Written through raw SQL because no store function can
 /// produce a landed row without coordinates any more, which is the
 /// point: only the migration's own legacy rows look like this.
+///
+/// A content version carrying no landing coordinates falls below every version the graph ordered.
+/// ´claim:content:a-version-without-coordinates-ranks-last´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_landed_version_without_coordinates_falls_below_one_with_them(pool: PgPool) {
     let author = actor(&pool, "author").await;
