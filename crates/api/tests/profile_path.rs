@@ -371,7 +371,6 @@ mod pictures {
             &format!("{id}.webp"),
             "image/webp",
             1024,
-            Some("a face"),
             &serde_json::json!({ "v": 1, "aspect_ratio": "1:1" }),
         )
         .await

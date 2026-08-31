@@ -1016,7 +1016,7 @@ mod galleries {
     //! the expiry the whole re-keying exists for.
 
     use super::*;
-    use api::media::AttachmentDraft;
+    use api::media::{self, AttachmentDraft};
     use postgres_store::media as media_store;
 
     /// An asset row without the upload path: the byte pipeline has its own
@@ -1034,7 +1034,6 @@ mod galleries {
             &format!("{id}.webp"),
             "image/webp",
             1024,
-            Some(&format!("picture {fill}")),
             &serde_json::json!({ "v": 1, "aspect_ratio": "4:5" }),
         )
         .await
@@ -1042,6 +1041,10 @@ mod galleries {
         id
     }
 
+    /// The gallery as a client states it, each entry described. The
+    /// description is authored here rather than on the asset, which is
+    /// the whole point: the same asset can read differently in two
+    /// parents.
     fn placements(ids: &[Uuid]) -> Vec<AttachmentDraft> {
         ids.iter()
             .enumerate()
@@ -1049,6 +1052,7 @@ mod galleries {
                 media_id: *id,
                 display_order: i as i32,
                 is_cover: Some(i == 0),
+                alt_text: Some(format!("picture {}", i + 1)),
             })
             .collect()
     }
@@ -1065,6 +1069,22 @@ mod galleries {
             .expect("gallery")
             .into_iter()
             .map(|(_, entry)| entry.asset.id)
+            .collect()
+    }
+
+    /// The descriptions the rendered gallery carries, in the same order —
+    /// read off the junction rows, which is where a placement's alt text
+    /// lives (data-model.md "Media attachments").
+    async fn described(pool: &PgPool, post_id: Uuid) -> Vec<Option<String>> {
+        let post = content_store::post(pool, post_id)
+            .await
+            .expect("reads")
+            .expect("post");
+        media_store::post_galleries(pool, &[post.version_id])
+            .await
+            .expect("gallery")
+            .into_iter()
+            .map(|(_, entry)| entry.alt_text)
             .collect()
     }
 
@@ -1129,22 +1149,11 @@ mod galleries {
         rig.land(&prepared, &key).await;
         assert_eq!(rendered(&rig.pool, prepared.node).await, vec![a, b]);
 
-        media_store::update_alt_text(&rig.pool, a, actor, Some("described later"))
-            .await
-            .expect("updates");
-        let again =
-            CograContent::decode_payload(&prepared.writes[0].proposal.payload).expect("decodes");
         assert_eq!(
-            again.media[0].alt_text.as_deref(),
-            Some("picture 1"),
-            "a landed record says what it said: the manifest snapshotted \
-             the row at prepare and no later edit reaches it"
-        );
-        assert_eq!(
-            rendered(&rig.pool, prepared.node).await,
-            vec![a, b],
-            "and the gallery still resolves — the digest, not the \
-             description, is what binds a manifest entry to its row"
+            described(&rig.pool, prepared.node).await,
+            vec![Some("picture 1".to_string()), Some("picture 2".to_string())],
+            "each junction row caches what this version's manifest \
+             witnessed, so a gallery read never decodes a payload"
         );
 
         let version = content_store::post(&rig.pool, prepared.node)
@@ -1406,7 +1415,8 @@ mod galleries {
         let (actor, _key) = rig.funded_actor("alice").await;
         let (stranger, _stranger_key) = rig.funded_actor("mallory").await;
         let mine = asset(&rig.pool, actor, 1).await;
-        let theirs = asset(&rig.pool, stranger, 2).await;
+        let second = asset(&rig.pool, actor, 2).await;
+        let theirs = asset(&rig.pool, stranger, 3).await;
 
         let mut eleven = Vec::new();
         for fill in 10..21u8 {
@@ -1420,6 +1430,7 @@ mod galleries {
                     media_id: mine,
                     display_order: 3,
                     is_cover: None,
+                    alt_text: None,
                 }],
                 vec!["attachments".into(), "0".into(), "displayOrder".into()],
             ),
@@ -1429,11 +1440,13 @@ mod galleries {
                         media_id: mine,
                         display_order: 0,
                         is_cover: None,
+                        alt_text: None,
                     },
                     AttachmentDraft {
                         media_id: mine,
                         display_order: 1,
                         is_cover: None,
+                        alt_text: None,
                     },
                 ],
                 vec!["attachments".into(), "1".into(), "mediaId".into()],
@@ -1445,6 +1458,26 @@ mod galleries {
             (
                 placements(&[theirs]),
                 vec!["attachments".into(), "0".into(), "mediaId".into()],
+            ),
+            // A description past the cap names the entry it came from, not
+            // the gallery: the refusal has to reach the one field the
+            // author can still fix.
+            (
+                vec![
+                    AttachmentDraft {
+                        media_id: mine,
+                        display_order: 0,
+                        is_cover: Some(true),
+                        alt_text: Some("fine".into()),
+                    },
+                    AttachmentDraft {
+                        media_id: second,
+                        display_order: 1,
+                        is_cover: Some(false),
+                        alt_text: Some("x".repeat(media::MAX_ALT_TEXT_CHARS + 1)),
+                    },
+                ],
+                vec!["attachments".into(), "1".into(), "altText".into()],
             ),
         ];
 
