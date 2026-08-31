@@ -134,6 +134,141 @@ impl Rig {
     }
 }
 
+/// The self-mark is witnessed, not Postgres-side bookkeeping: it rides
+/// the envelope the device signs, so a reader can check the veil against
+/// the record and a mirror rebuild restores it with the body it belongs
+/// to. The display row is the projection of that payload.
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_self_mark_rides_the_signed_payload_into_the_display_row(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.funded_actor("alice").await;
+
+    let prepared = content::prepare_post(
+        &rig.pool,
+        &rig.boundary,
+        GC,
+        actor,
+        PostDraft {
+            title: Some("A hard thing".into()),
+            description: None,
+            content: Some("The body".into()),
+            license: license(),
+            p_directed: None,
+            tags: vec![],
+            references: vec![],
+            attachments: vec![],
+            sensitive: content::SelfMarkDraft {
+                sensitive: true,
+                reason: Some("  Depicts an injury  ".into()),
+            },
+        },
+    )
+    .await
+    .expect("prepares");
+
+    let decoded =
+        CograContent::decode_payload(&prepared.writes[0].proposal.payload).expect("decodes");
+    let mark = decoded.sensitive.as_ref().expect("the payload carries it");
+    assert_eq!(mark.reason.as_deref(), Some("  Depicts an injury  "));
+
+    rig.land(&prepared, &key).await;
+
+    let post = content_store::post(&rig.pool, prepared.node)
+        .await
+        .expect("reads")
+        .expect("post row");
+    assert!(post.sensitive);
+    assert_eq!(post.sensitive_reason.as_deref(), Some("  Depicts an injury  "));
+
+    let edit = content::prepare_post_edit(
+        &rig.pool,
+        &rig.boundary,
+        GC,
+        actor,
+        content::PostEditDraft {
+            id: prepared.node,
+            title: Some("A hard thing".into()),
+            description: None,
+            content: Some("Softened".into()),
+            attachments: vec![],
+            sensitive: Default::default(),
+        },
+    )
+    .await
+    .expect("prepares edit");
+    assert!(
+        CograContent::decode_payload(&edit.writes[0].proposal.payload)
+            .expect("decodes")
+            .sensitive
+            .is_none(),
+        "an edit carries the complete content state, so an unmarked edit omits the keys"
+    );
+    rig.land(&edit, &key).await;
+
+    let post = content_store::post(&rig.pool, prepared.node)
+        .await
+        .expect("reads")
+        .expect("post row");
+    assert!(!post.sensitive);
+    assert!(post.sensitive_reason.is_none());
+}
+
+/// A blank reason is no reason, and a reason without the switch is a
+/// refusal rather than a silent drop — the author would otherwise sign a
+/// warning nobody is ever shown.
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_self_mark_reconciles_its_switch_and_its_reason(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, _key) = rig.funded_actor("alice").await;
+
+    let draft = |sensitive: bool, reason: Option<&str>| PostDraft {
+        title: None,
+        description: None,
+        content: Some("The body".into()),
+        license: license(),
+        p_directed: None,
+        tags: vec![],
+        references: vec![],
+        attachments: vec![],
+        sensitive: content::SelfMarkDraft {
+            sensitive,
+            reason: reason.map(Into::into),
+        },
+    };
+
+    let blank = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft(true, Some("  ")))
+        .await
+        .expect("prepares");
+    assert_eq!(
+        CograContent::decode_payload(&blank.writes[0].proposal.payload)
+            .expect("decodes")
+            .sensitive
+            .expect("marked")
+            .reason,
+        None,
+        "a blank reason is no reason"
+    );
+
+    let refused = content::prepare_post(
+        &rig.pool,
+        &rig.boundary,
+        GC,
+        actor,
+        draft(false, Some("why")),
+    )
+    .await;
+    assert!(
+        matches!(
+            refused,
+            Err(content::ContentError::BadInput {
+                field: "sensitiveReason",
+                ..
+            })
+        ),
+        "a reason without the mark is refused"
+    );
+}
+
 /// The gesture is a genesis Publish — target the mint of its own act,
 /// `p_i` census-fixed at 1, the license structural — and its envelope
 /// decodes back to the draft, node id included. Landing leaves the
