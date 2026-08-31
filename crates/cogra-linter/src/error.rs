@@ -135,6 +135,82 @@ pub enum AdoptionError {
         /// The kind it governs.
         kind: String,
     },
+    /// An activation's `scope` is neither of the two shapes.
+    #[error("{section} activation scope {scope} is neither every-owner nor declared")]
+    ActivationScopeUnknown {
+        /// The row the scope sits in.
+        at: Location,
+        /// The section the activation belongs to.
+        section: String,
+        /// What was written.
+        scope: String,
+    },
+    /// A declared activation names an owner no prefix registers.
+    ///
+    /// An owner Σ registers nothing for owes nothing and is held to nothing,
+    /// so naming it closes a wave over no assets while reading exactly like a
+    /// wave that closed.
+    #[error("{section} activation names owner {owner}, which no prefix registers")]
+    ActivationUnknownOwner {
+        /// The row the offending name sits in.
+        at: Location,
+        /// The section the activation belongs to.
+        section: String,
+        /// The owner it names.
+        owner: String,
+    },
+    /// A declared activation names one owner twice.
+    #[error("{section} activation names owner {owner} more than once")]
+    ActivationRepeatedOwner {
+        /// The row of the second one.
+        at: Location,
+        /// The section the activation belongs to.
+        section: String,
+        /// The owner.
+        owner: String,
+    },
+    /// A declared activation names no owner at all.
+    ///
+    /// An empty declared activation and an activation over no owner are the
+    /// same state written two ways, and the second is the one a reader can
+    /// tell from an accident: a discipline that holds nobody to anything is
+    /// registered by not being written.
+    #[error("{section} declares an activation over no owner")]
+    ActivationEmpty {
+        /// The row the scope sits in.
+        at: Location,
+        /// The section the activation belongs to.
+        section: String,
+    },
+    /// `[claims]` names a kind reserved in K.
+    ///
+    /// A claim is authored: its head is a statement its author composes, not
+    /// an identifier the code already bears. A kind in K admits derivation
+    /// only, so a claim of such a kind could stand on no warrant at all
+    /// (´[LBL-inv:labels:warrant-totality]´).
+    #[error("the claim discipline names kind {kind}, which is reserved in K and admits no authorship")]
+    ClaimKindReserved {
+        /// The row the kind sits in.
+        at: Location,
+        /// The kind it names.
+        kind: String,
+    },
+    /// `[claims]` rides a profile Π does not register.
+    #[error("the claim discipline rides profile {id}, which is not registered")]
+    ClaimProfileUnknown {
+        /// The row the name sits in.
+        at: Location,
+        /// The profile it names.
+        id: String,
+    },
+    /// `[claims]` lacks one of the data it fixes.
+    #[error("the claim discipline fixes no {datum}")]
+    ClaimIncomplete {
+        /// The row the section opens at.
+        at: Location,
+        /// The datum it lacks.
+        datum: &'static str,
+    },
     /// A `[reach]` row names an owner no prefix registers.
     ///
     /// Either end of the edge: an owner Σ registers nothing for can be named
@@ -247,6 +323,13 @@ impl AdoptionError {
             | AdoptionError::PathSpelling { at, .. }
             | AdoptionError::ProfileIncomplete { at, .. }
             | AdoptionError::UngovernedKindNotReserved { at, .. }
+            | AdoptionError::ActivationScopeUnknown { at, .. }
+            | AdoptionError::ActivationUnknownOwner { at, .. }
+            | AdoptionError::ActivationRepeatedOwner { at, .. }
+            | AdoptionError::ActivationEmpty { at, .. }
+            | AdoptionError::ClaimKindReserved { at, .. }
+            | AdoptionError::ClaimProfileUnknown { at, .. }
+            | AdoptionError::ClaimIncomplete { at, .. }
             | AdoptionError::ReachUnknownOwner { at, .. }
             | AdoptionError::ReachDuplicateOwner { at, .. }
             | AdoptionError::ReachSelfEdge { at, .. }
