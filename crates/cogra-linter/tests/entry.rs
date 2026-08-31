@@ -501,6 +501,7 @@ fn the_named_generation_and_the_harvest_produce_one_register() {
                 area: cogra_linter::Area::new("unit"),
                 place: profile.standard_place.clone(),
                 span: cogra_linter::ByteSpan::new(0, 0),
+                opens: 0,
             },
             cogra_linter::Asset {
                 profile: profile.id.clone(),
@@ -508,6 +509,7 @@ fn the_named_generation_and_the_harvest_produce_one_register() {
                 area: cogra_linter::Area::new("integration"),
                 place: profile.standard_place.clone(),
                 span: cogra_linter::ByteSpan::new(0, 0),
+                opens: 0,
             },
         ],
     )]

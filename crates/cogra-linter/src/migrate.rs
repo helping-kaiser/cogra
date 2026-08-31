@@ -32,6 +32,16 @@
 //! which is the standard place's form; that the comment opens the module's
 //! own body is not checked, and the measurement says as much rather than
 //! claiming more than it looked at.
+//!
+//! # What the sweep borrows
+//!
+//! [`unplaced`] is that second measurement named and made public: the covered
+//! assets of one registered profile whose standard place is the asset itself
+//! and which do not carry their label there, each with the byte a label line
+//! goes before. [`distances`] renders them as lines and [`crate::fix`] writes
+//! at them, off one walk and one recognizer, so a migration's measurement and
+//! the sweep that discharges it cannot come to disagree
+//! (´dec:lint:fix-subcommand´).
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -45,7 +55,7 @@ use crate::frontend_rust::{self, CargoTarget};
 use crate::pretokenize::rust::RUST;
 use crate::pretokenize::{CommentForm, pretokenize};
 use crate::registers::{derived_label, owner_root, register_path};
-use crate::scan::{Occurrence, scan_code};
+use crate::scan::{Label, Occurrence, scan_code};
 
 /// One staged profile's distance from its entry condition.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -77,6 +87,31 @@ pub struct Remaining {
     pub at: Location,
     /// One line saying what is missing there.
     pub note: String,
+}
+
+/// One covered asset of a comment-placed profile that does not carry its
+/// derived label at its standard place.
+///
+/// The measurement's own finding, given a name and a byte offset so that a
+/// writer can act on it. [`distances`] renders these as [`Remaining`] lines
+/// and [`crate::fix`] writes at them, off one walk and one recognizer: what a
+/// measurement calls a step still owed is exactly what a sweep fills in, and
+/// two answers to that question would be two migrations
+/// (´dec:lint:fix-subcommand´).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Unplaced {
+    /// The source the definition sits in.
+    pub source: PathBuf,
+    /// The label its profile's transformation derives from it.
+    pub label: Label,
+    /// Where the definition sits.
+    pub at: Location,
+    /// The byte a label line goes before: the asset's documentation opening
+    /// ([`Asset::opens`]).
+    pub opens: usize,
+    /// Whether an inner documentation comment already opens there, which is
+    /// what decides whether a label line joins a comment or starts one.
+    pub documented: bool,
 }
 
 /// Measure every staged profile's remaining distance.
@@ -297,6 +332,65 @@ fn registers_missing(
     out
 }
 
+/// Every covered asset of one registered profile that does not carry its
+/// derived label at the asset itself.
+///
+/// Status is not consulted, exactly as [`census`] does not consult it: a
+/// migration lands while its profile is still staged, and the same question
+/// asked of a profile in force answers with what the inventory clause would
+/// report. A profile whose standard place is a generated register has none of
+/// these, because its labels are not carried at an asset at all.
+///
+/// The order is the census's own — by source path, then by the position each
+/// definition occupies in it (´[ARCH-req:linter:determinism]´).
+///
+/// ```no_run
+/// use cogra_linter::{ProfileId, migrate};
+/// use std::path::Path;
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let root = Path::new(".");
+/// let adoption = cogra_linter::Adoption::load(&root.join("corpus-adoption.toml"))?;
+///
+/// for one in migrate::unplaced(&adoption, root, &ProfileId::new("rust-module"))? {
+///     println!("{} owes {}", one.source.display(), one.label.as_str());
+/// }
+/// # Ok(())
+/// # }
+/// ```
+///
+/// # Errors
+///
+/// [`RunError::Walk`] when `root` is not a directory, exactly as [`census`]
+/// and [`distances`] report it.
+pub fn unplaced(a: &Adoption, root: &Path, profile: &ProfileId) -> Result<Vec<Unplaced>, RunError> {
+    if !root.is_dir() {
+        return Err(RunError::Walk(WalkError::NotADirectory {
+            path: root.to_path_buf(),
+        }));
+    }
+    let sources = match Walk::new(a, root).sources() {
+        Ok(sources) => sources,
+        Err(outcome) => outcome.sources,
+    };
+    let Some(registered) = a.profiles.profiles.iter().find(|one| one.id == *profile) else {
+        return Ok(Vec::new());
+    };
+    if registered.standard_place.register.is_some() {
+        return Ok(Vec::new());
+    }
+    let census = census_of(a, registered, &sources);
+    let mut out: Vec<Unplaced> = census
+        .iter()
+        .flat_map(|(src, held)| unplaced_in(a, registered, src, held))
+        .collect();
+    out.sort_by(|one, other| {
+        one.source
+            .cmp(&other.source)
+            .then(one.opens.cmp(&other.opens))
+    });
+    Ok(out)
+}
+
 /// The assets a comment-placed profile still waits on, each located at its
 /// own definition.
 fn comments_missing(
@@ -304,53 +398,88 @@ fn comments_missing(
     profile: &Profile,
     census: &[(&SourceFile, Vec<Asset>)],
 ) -> Vec<Remaining> {
-    let mut out = Vec::new();
-    for (src, held) in census {
-        let carried = carried_by(src, a);
-        let Ok(text) = std::str::from_utf8(&src.bytes) else {
-            continue;
-        };
-        for asset in held {
-            let Some(label) = derived_label(profile, &asset.identifier, &asset.area) else {
-                continue;
-            };
-            if carried.iter().any(|one| *one == label.as_str()) {
-                continue;
-            }
-            out.push(Remaining {
-                at: Location::in_source(src.path.clone(), asset.span, text),
-                note: format!(
-                    "this definition carries no inner documentation comment minting {}",
-                    label.as_str()
-                ),
-            });
-        }
-    }
-    out
+    census
+        .iter()
+        .flat_map(|(src, held)| unplaced_in(a, profile, src, held))
+        .map(|one| Remaining {
+            note: format!(
+                "this definition carries no inner documentation comment minting {}",
+                one.label.as_str()
+            ),
+            at: one.at,
+        })
+        .collect()
 }
 
-/// Every label one source mints inside an inner documentation comment.
-fn carried_by(src: &SourceFile, a: &Adoption) -> Vec<String> {
+/// One source's share of them, off one parse of it.
+///
+/// The recognizer is the standard place's own form: a mint of the derived
+/// label inside an inner documentation comment of this source. That the
+/// comment opens the definition's own body is not checked, which is what the
+/// measurement says of itself and what the harvest's warrant says of the same
+/// place (´dec:lint:migrations-subcommand´).
+fn unplaced_in(a: &Adoption, profile: &Profile, src: &SourceFile, held: &[Asset]) -> Vec<Unplaced> {
+    let Ok(text) = std::str::from_utf8(&src.bytes) else {
+        return Vec::new();
+    };
     let pre = pretokenize(src.language.as_ref(), &src.bytes);
     let Ok(parsed) = frontend_rust::parse(src, &pre, a) else {
         return Vec::new();
     };
+    let carried: Vec<String> = parsed
+        .regions
+        .iter()
+        .filter(|region| {
+            matches!(
+                region.kind,
+                crate::frontend::RegionKind::Comment(
+                    CommentForm::LineInnerDoc | CommentForm::BlockInnerDoc
+                )
+            )
+        })
+        .flat_map(|region| scan_code(&region.text, 0).occurrences)
+        .filter_map(|occurrence| match occurrence {
+            Occurrence::Mint { label, .. } => Some(label.as_str().to_owned()),
+            _ => None,
+        })
+        .collect();
+    let opens: Vec<usize> = pre
+        .comments()
+        .filter(|(_, form)| matches!(form, CommentForm::LineInnerDoc | CommentForm::BlockInnerDoc))
+        .map(|(span, _)| span.start)
+        .collect();
+
     let mut out = Vec::new();
-    for region in &parsed.regions {
-        if !matches!(
-            region.kind,
-            crate::frontend::RegionKind::Comment(CommentForm::LineInnerDoc)
-                | crate::frontend::RegionKind::Comment(CommentForm::BlockInnerDoc)
-        ) {
+    for asset in held {
+        let Some(label) = derived_label(profile, &asset.identifier, &asset.area) else {
+            continue;
+        };
+        if carried.iter().any(|one| *one == label.as_str()) {
             continue;
         }
-        for occurrence in scan_code(&region.text, 0).occurrences {
-            if let Occurrence::Mint { label, .. } = occurrence {
-                out.push(label.as_str().to_owned());
-            }
-        }
+        out.push(Unplaced {
+            source: src.path.clone(),
+            at: Location::in_source(src.path.clone(), asset.span, text),
+            opens: asset.opens,
+            documented: opens
+                .iter()
+                .any(|start| blank_between(text, asset.opens, *start)),
+            label,
+        });
     }
     out
+}
+
+/// Whether nothing but whitespace separates two offsets of one source.
+///
+/// What decides that a comment opens *at* a position rather than somewhere
+/// after it, and so whether a label line joins that comment or starts one of
+/// its own. The comment's own start is the lexer's answer and not the parsed
+/// region's: a region begins at the comment's interior, past a leader the
+/// frontend resolved away, and a writer that took the interior for the comment
+/// would find `//! ` between them and call the two apart.
+fn blank_between(text: &str, from: usize, to: usize) -> bool {
+    to >= from && text.get(from..to).is_some_and(|gap| gap.trim().is_empty())
 }
 
 /// What a staged profile records itself as waiting on.
