@@ -9,7 +9,7 @@ export function Screen() {
           title="Salt maps of the coast road"
           description="Rubbings from three weekends at low tide — paper against the salt crust."
           timestamp="3d"
-          media={[{ src: "post-photo.jpg", ratio: "landscape", fit: "cover" }]}
+          media={[{ src: "post-photo.jpg", ratio: "wide", fit: "cover" }]}
           sensitive={{ reason: "One rubbing includes a dead seabird." }}
           score="9.10"
           comments={2}
