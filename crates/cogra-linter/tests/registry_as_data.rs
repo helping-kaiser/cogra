@@ -17,7 +17,7 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
-use cogra_linter::frontend::{Parsed, Table};
+use cogra_linter::frontend::{Head, Parsed, Table};
 use cogra_linter::{
     Adoption, Diagnostic, HeadVerdict, HeadlineCounts, Kind, KindRegistry, Language, OwnerId,
     SourceFile, frontend_md, judge,
@@ -853,15 +853,31 @@ fn the_findings_are_ordered() {
     assert_eq!(findings, sorted);
 }
 
-/// `X_A` is empty in version 1, and adding it changes nothing.
+/// `X_A` joins the relation and leaves the edition's counts alone: a
+/// recorded extension is a row of C_A that the registry's own tables never
+/// carried, so classification sees it and the headline counts do not
+/// (´[KND-sig:kinds:registry-data]´).
 #[test]
-fn the_empty_extensions_change_nothing() {
+fn the_extensions_join_the_relation_without_moving_the_edition() {
     let doc = table("Environment", &[("Theorem", "`thm`")]);
     let registry = from(&doc).expect("parses");
     let before = registry.headline_counts();
+    let rows = &adoption().kinds.extensions.rows;
+    assert!(!rows.is_empty(), "the corpus records extensions");
     let after = registry.with_extensions(&adoption().kinds.extensions);
     assert_eq!(after.headline_counts(), before);
     assert!(after.unapplied_extensions().is_empty());
+    for row in rows {
+        assert_eq!(
+            after.validate(&row.name, &row.kind),
+            HeadVerdict::Exact,
+            "{} {}",
+            row.name,
+            row.kind
+        );
+        assert!(after.is_local(&row.name, &row.kind));
+    }
+    assert!(!after.is_local("Theorem", &Kind::new("thm")));
 }
 
 /// Every device family the registry declares has a routine here, so
@@ -904,11 +920,13 @@ fn every_head_written_under_the_discipline_validates() {
         }
     }
     assert_eq!(failed, [] as [String; 0]);
-    assert_eq!(heads, 429);
+    assert_eq!(heads, 447);
 }
 
-/// Every heading anchor in the corpus carries `sec`, which is the rung the
-/// format supplies classified by the registry's own structure table.
+/// Every section anchor in the corpus carries `sec`, which is the rung the
+/// format supplies classified by the registry's own structure table; and
+/// the one head that is no rung is the document itself
+/// (´dec:lint:title-head´), which carries its genre.
 #[test]
 fn every_heading_anchor_carries_the_rungs_kind() {
     let text = std::fs::read_to_string(root().join(REGISTRY)).expect("readable");
@@ -917,4 +935,11 @@ fn every_heading_anchor_carries_the_rungs_kind() {
     for head in rungs {
         assert_eq!(head.declared.as_str(), "sec");
     }
+    let titles: Vec<&Head> = parsed
+        .heads
+        .iter()
+        .filter(|head| head.text == "Document")
+        .collect();
+    assert_eq!(titles.len(), 1);
+    assert_eq!(titles[0].declared.as_str(), "reg");
 }

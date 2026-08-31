@@ -2,19 +2,30 @@
 
 // The crop frame — Instagram's model, as the compose wizard rules it: ONE shape
 // for the whole post (Tall 4:5, Square 1:1, Wide 1.91:1), with drag-to-move and
-// zoom framing per picture.
+// pinch-to-zoom framing per picture. Those two gestures are what the canvas's
+// caption promises in as many words, which is why the pinch is implemented here
+// rather than left to a control the canvas does not draw.
 //
-// THE NON-DRAG ROUTE IS NOT OPTIONAL. design.md §10: "every drag gesture has a
-// non-drag equivalent", and D17 names this component specifically — the crop
-// step must be completable without a gesture. So the pointer drag is one input
-// and the discrete nudge/zoom controls are another, both writing the same
-// model, and the controls are REAL BUTTONS on screen rather than a hidden
-// keyboard affordance: a reader who cannot drag needs to see that there is
-// another way, and the crop screen has the room the feed card does not.
+// THE NON-DRAG ROUTE IS KEYBOARD, AND IT IS INVISIBLE ON PURPOSE. design.md §10
+// requires every drag gesture to have a non-drag equivalent, and D17 names this
+// component. The canvas draws no nudge or zoom controls, and the fix-round-2
+// ruling settles the conflict in the canvas's favour: the requirement is met
+// without drawing anything. The frame is therefore a focusable control —
 //
-// The canvas draws the caption "One shape for the whole post. Drag to move,
-// pinch to zoom." and does not draw these controls — they are the accessibility
-// requirement, added deliberately and flagged as a divergence from the drawing.
+//   · arrow keys      move the framing by one step
+//   · + / = and - / _ zoom in and out by one step
+//   · Home            return to the centre at rest
+//
+// — described to assistive technology by a visually hidden paragraph, so a
+// reader who cannot drag is TOLD what to do rather than left to guess at an
+// affordance that is not painted. Anyone changing this file: the keyboard route
+// is the accessibility requirement, not a convenience. It may not be dropped,
+// and `crop-frame.test.tsx` fails if it is.
+//
+// THE FRAME NEEDS THE PICTURE'S OWN SHAPE. Panning spans the cover overflow
+// (see `crop.ts`), which only exists relative to the source's aspect ratio, so
+// the natural size is read off the loaded image. Before it loads there is
+// nothing to pan across and nothing drawn to pan, which is the same state.
 
 import { useRef, useState } from "react";
 
@@ -23,8 +34,6 @@ import {
   canPan,
   cropStyle,
   dragBy,
-  MAX_ZOOM,
-  MIN_ZOOM,
   NUDGE_STEP,
   ZOOM_STEP,
   nudge,
@@ -64,52 +73,142 @@ export function CropFrame({
 }) {
   const frameRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<{ id: number; x: number; y: number } | null>(null);
+  /** Every pointer currently down, so a second finger can be recognised. */
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  /** The finger spread the current zoom was measured from. */
+  const pinchRef = useRef<number | null>(null);
   const [dragging, setDragging] = useState(false);
+  /** The source's own width / height, once the browser has decoded it. */
+  const [sourceRatio, setSourceRatio] = useState<number | null>(null);
 
-  const pannable = canPan(crop);
+  const frameRatio = SHAPE_RATIO[shape];
+  const ratio = sourceRatio ?? frameRatio;
+  const pannable = canPan(crop, ratio, frameRatio);
+
+  const spread = (): number | null => {
+    const [a, b] = [...pointers.current.values()];
+    if (a === undefined || b === undefined) return null;
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  };
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    event.currentTarget.setPointerCapture(event.pointerId);
+    const pinch = spread();
+    if (pinch !== null) {
+      // The second finger takes over: a pinch zooms rather than drags.
+      pinchRef.current = pinch;
+      dragRef.current = null;
+      setDragging(false);
+      return;
+    }
     if (!pannable) return;
     dragRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
-    event.currentTarget.setPointerCapture(event.pointerId);
     setDragging(true);
   };
 
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const drag = dragRef.current;
     const frame = frameRef.current;
-    if (!drag || drag.id !== event.pointerId || !frame) return;
+    if (frame === null) return;
+    if (pointers.current.has(event.pointerId)) {
+      pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    }
+
+    // Pinch first: while two fingers are down there is no drag to apply.
+    const started = pinchRef.current;
+    if (started !== null) {
+      const now = spread();
+      if (now !== null && started > 0) {
+        onChange(zoomBy(crop, crop.zoom * (now / started) - crop.zoom));
+        pinchRef.current = now;
+      }
+      return;
+    }
+
+    const drag = dragRef.current;
+    if (!drag || drag.id !== event.pointerId) return;
     const rect = frame.getBoundingClientRect();
     onChange(
-      dragBy(crop, event.clientX - drag.x, event.clientY - drag.y, rect.width, rect.height),
+      dragBy(
+        crop,
+        event.clientX - drag.x,
+        event.clientY - drag.y,
+        rect.width,
+        rect.height,
+        ratio,
+        frameRatio,
+      ),
     );
     dragRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
   };
 
   const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    pointers.current.delete(event.pointerId);
+    if (pointers.current.size < 2) pinchRef.current = null;
     if (dragRef.current?.id !== event.pointerId) return;
     dragRef.current = null;
     setDragging(false);
   };
 
+  const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const step = (dx: number, dy: number) => {
+      event.preventDefault();
+      onChange(nudge(crop, dx, dy));
+    };
+    switch (event.key) {
+      // Arrow keys move the PICTURE, matching the drag: pressing Left sends the
+      // picture left, which brings its right-hand side into the frame.
+      case "ArrowLeft":
+        return step(NUDGE_STEP, 0);
+      case "ArrowRight":
+        return step(-NUDGE_STEP, 0);
+      case "ArrowUp":
+        return step(0, NUDGE_STEP);
+      case "ArrowDown":
+        return step(0, -NUDGE_STEP);
+      case "+":
+      case "=":
+        event.preventDefault();
+        return onChange(zoomBy(crop, ZOOM_STEP));
+      case "-":
+      case "_":
+        event.preventDefault();
+        return onChange(zoomBy(crop, -ZOOM_STEP));
+      case "Home":
+        event.preventDefault();
+        return onChange(CENTERED);
+      default:
+        return;
+    }
+  };
+
   const round = shape === "avatar";
+  const describedBy = `${testId}-keys`;
 
   return (
-    <div className="flex flex-col gap-3">
+    <>
       <div
         ref={frameRef}
         data-testid={testId}
+        // A focusable group rather than a button: it takes keys and reports a
+        // value, but activating it does nothing, and a button that ignores
+        // Enter would lie about itself.
+        role="group"
+        tabIndex={0}
+        aria-label="The picture's framing"
+        aria-describedby={describedBy}
         style={{
-          aspectRatio: cssRatio(SHAPE_RATIO[shape]),
+          aspectRatio: cssRatio(frameRatio),
           borderRadius: round ? "var(--radius-full)" : "var(--radius-medium)",
           touchAction: "none",
           cursor: pannable ? (dragging ? "grabbing" : "grab") : "default",
         }}
-        className="relative w-full overflow-hidden bg-surface-container-high select-none"
+        className="cg-focus relative w-full select-none overflow-hidden bg-surface-container-high"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
+        onKeyDown={onKeyDown}
       >
         {/* A plain <img>, not next/image: the source here is a device-local
             `blob:`/`data:` URL for a file the reader just picked, which the
@@ -120,6 +219,12 @@ export function CropFrame({
           src={src}
           alt={alt}
           draggable={false}
+          onLoad={(event) => {
+            const image = event.currentTarget;
+            if (image.naturalWidth > 0 && image.naturalHeight > 0) {
+              setSourceRatio(image.naturalWidth / image.naturalHeight);
+            }
+          }}
           style={cropStyle(crop)}
           className="block size-full"
         />
@@ -134,113 +239,10 @@ export function CropFrame({
           <span style={{ background: GUIDE }} className="absolute inset-x-0 top-2/3 h-px" />
         </span>
       </div>
-
-      <p className="m-0 text-body-small text-on-surface-variant">
-        One shape for the whole post. Drag to move, or use the controls.
+      <p id={describedBy} className="sr-only">
+        Drag the picture to move it, or use the arrow keys. Press plus to zoom in, minus to zoom
+        out, and Home to centre it again.
       </p>
-
-      {/* The non-drag equivalent (design.md §10, D17). Grouped and labelled so
-          it reads as one control rather than five loose buttons. */}
-      <div
-        role="group"
-        aria-label="Framing"
-        data-testid={`${testId}-controls`}
-        className="flex items-center gap-2"
-      >
-        <NudgeButton
-          testId={`${testId}-left`}
-          label="Move the picture left"
-          disabled={!pannable}
-          onPress={() => onChange(nudge(crop, NUDGE_STEP, 0))}
-        >
-          <ArrowGlyph rotate={180} />
-        </NudgeButton>
-        <NudgeButton
-          testId={`${testId}-right`}
-          label="Move the picture right"
-          disabled={!pannable}
-          onPress={() => onChange(nudge(crop, -NUDGE_STEP, 0))}
-        >
-          <ArrowGlyph rotate={0} />
-        </NudgeButton>
-        <NudgeButton
-          testId={`${testId}-up`}
-          label="Move the picture up"
-          disabled={!pannable}
-          onPress={() => onChange(nudge(crop, 0, NUDGE_STEP))}
-        >
-          <ArrowGlyph rotate={-90} />
-        </NudgeButton>
-        <NudgeButton
-          testId={`${testId}-down`}
-          label="Move the picture down"
-          disabled={!pannable}
-          onPress={() => onChange(nudge(crop, 0, -NUDGE_STEP))}
-        >
-          <ArrowGlyph rotate={90} />
-        </NudgeButton>
-
-        <span className="flex-1" />
-
-        <NudgeButton
-          testId={`${testId}-zoom-out`}
-          label="Zoom out"
-          disabled={crop.zoom <= MIN_ZOOM}
-          onPress={() => onChange(zoomBy(crop, -ZOOM_STEP))}
-        >
-          <span aria-hidden="true">−</span>
-        </NudgeButton>
-        <NudgeButton
-          testId={`${testId}-zoom-in`}
-          label="Zoom in"
-          disabled={crop.zoom >= MAX_ZOOM}
-          onPress={() => onChange(zoomBy(crop, ZOOM_STEP))}
-        >
-          <span aria-hidden="true">+</span>
-        </NudgeButton>
-      </div>
-    </div>
-  );
-}
-
-function NudgeButton({
-  children,
-  label,
-  testId,
-  disabled,
-  onPress,
-}: {
-  children: React.ReactNode;
-  label: string;
-  testId: string;
-  disabled: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      data-testid={testId}
-      aria-label={label}
-      disabled={disabled}
-      onClick={onPress}
-      className="cg-state cg-focus flex size-12 items-center justify-center rounded-full border border-outline text-on-surface-variant disabled:opacity-40"
-    >
-      {children}
-    </button>
-  );
-}
-
-function ArrowGlyph({ rotate }: { rotate: number }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width={20}
-      height={20}
-      fill="currentColor"
-      aria-hidden="true"
-      style={{ transform: `rotate(${rotate}deg)` }}
-    >
-      <path d="M4 13h12.17l-5.59 5.59L12 20l8-8-8-8-1.42 1.41L16.17 11H4v2z" />
-    </svg>
+    </>
   );
 }

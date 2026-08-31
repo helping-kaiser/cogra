@@ -1,4 +1,4 @@
-# Authorship
+# Authorship · `spec:primitive:authorship`
 
 **Invariant:** authorship is **intrinsic to every L1 record** —
 never derived, never stored as an edge, never inferred from

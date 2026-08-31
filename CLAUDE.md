@@ -1,4 +1,4 @@
-# CLAUDE.md
+# CLAUDE.md · `guide:repo:claude-instructions`
 
 This file is loaded into every Claude Code conversation on this
 repo. **The rules below are operative, not background reading.**

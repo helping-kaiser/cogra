@@ -1,4 +1,4 @@
-# Edges
+# Edges · `spec:primitive:edges`
 
 The edge catalog across the substrate: the L1 edge families CoGra
 authors — with what each family means as a CoGra gesture — and the

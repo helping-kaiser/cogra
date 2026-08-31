@@ -1,4 +1,4 @@
-# Feed Ranking
+# Feed Ranking · `spec:primitive:feed-ranking`
 
 What a viewing user sees, and in what order. The feed is a
 **terminal** concern on the substrate: PeerNetworks Layer 1
