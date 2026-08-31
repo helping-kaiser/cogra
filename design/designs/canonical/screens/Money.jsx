@@ -1,41 +1,7 @@
 /* Money — the CGT figure's spec board (item 11). A system board like Theme:
-   the mark candidates (the pick), the figure's states, and the balance
-   headline — the one surface that spells the word. The B and C marks are
-   ideation drawn here only; the system ships exactly one mark (CgtMark). */
-
-/* Round-2 candidates (jakob: the lone C is any game's coin — try CG). All on
-   the winning disc; the letters and interlock are drawn here only. */
-function MarkCG({ size = "1em" }) {
-  return (
-    <svg viewBox="0 0 20 20" width={size} height={size} aria-hidden="true" style={{ verticalAlign: "-0.125em", flex: "none" }}>
-      <circle cx="10" cy="10" r="10" fill="var(--primary)" />
-      <path d="M 8.59 7.63 A 3.1 3.1 0 1 0 8.59 12.37" fill="none" stroke="var(--on-primary)" strokeWidth="2" strokeLinecap="round" />
-      <path d="M 15.39 7.63 A 3.1 3.1 0 1 0 15.39 12.37" fill="none" stroke="var(--on-primary)" strokeWidth="2" strokeLinecap="round" />
-      <path d="M 15.6 10.4 L 13.4 10.4" fill="none" stroke="var(--on-primary)" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function MarkInterlock({ size = "1em" }) {
-  return (
-    <svg viewBox="0 0 20 20" width={size} height={size} aria-hidden="true" style={{ verticalAlign: "-0.125em", flex: "none" }}>
-      <circle cx="10" cy="10" r="10" fill="var(--primary)" />
-      <path d="M 10.83 6.63 A 4.4 4.4 0 1 0 10.83 13.37" fill="none" stroke="var(--on-primary)" strokeWidth="2.2" strokeLinecap="round" />
-      <path d="M 15.43 6.63 A 4.4 4.4 0 1 0 15.43 13.37" fill="none" stroke="var(--on-primary)" strokeWidth="2.2" strokeLinecap="round" />
-      <path d="M 15.6 10.3 L 12.6 10.3" fill="none" stroke="var(--on-primary)" strokeWidth="2.2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function MarkCDot({ size = "1em" }) {
-  return (
-    <svg viewBox="0 0 20 20" width={size} height={size} aria-hidden="true" style={{ verticalAlign: "-0.125em", flex: "none" }}>
-      <circle cx="10" cy="10" r="10" fill="var(--primary)" />
-      <path d="M 13.2 5.9 A 5.2 5.2 0 1 0 13.2 14.1" fill="none" stroke="var(--on-primary)" strokeWidth="2.8" strokeLinecap="round" />
-      <circle cx="10.4" cy="9.3" r="1.55" fill="var(--on-primary)" />
-    </svg>
-  );
-}
+   the mark (the brand mark on the coin — decided 2026-08-31, after a lone C
+   read as any game's coin), the figure's states, and the balance headline —
+   the one surface that spells the word. */
 
 function SpecLabel({ children }) {
   return (
@@ -52,20 +18,6 @@ function SpecLabel({ children }) {
     >
       {children}
     </span>
-  );
-}
-
-function Candidate({ tag, name, mark }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-start", flex: 1 }}>
-      <span style={{ fontSize: "var(--text-label-medium)", lineHeight: "var(--text-label-medium--line-height)", fontWeight: "var(--text-label-medium--font-weight)", color: "var(--text-secondary)" }}>
-        {tag} · {name}
-      </span>
-      <span style={{ fontSize: 32, lineHeight: 1 }}>{mark}</span>
-      <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>
-        2.00 {mark}
-      </span>
-    </div>
   );
 }
 
@@ -88,12 +40,14 @@ export function Screen() {
         One shape for every amount. The unit is the mark, never the word — the word appears once, on the balance headline, beside its "?".
       </p>
 
-      <SpecLabel>The mark, round two — the coin won; a lone C is any game's coin</SpecLabel>
-      <div style={{ display: "flex", gap: 12 }}>
-        <Candidate tag="A" name="CG" mark={<MarkCG />} />
-        <Candidate tag="B" name="CG locked" mark={<MarkInterlock />} />
-        <Candidate tag="C" name="the logo" mark={<CgtMark />} />
-        <Candidate tag="D" name="c + dot" mark={<MarkCDot />} />
+      <SpecLabel>The mark — the brand mark on the coin, 1em, scales with its text</SpecLabel>
+      <div style={{ display: "flex", gap: 20, alignItems: "baseline" }}>
+        <span style={{ fontSize: 14 }}><CgtMark /></span>
+        <span style={{ fontSize: 20 }}><CgtMark /></span>
+        <span style={{ fontSize: 32 }}><CgtMark /></span>
+        <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>
+          2.00 <CgtMark />
+        </span>
       </div>
 
       <SpecLabel>The figure — rest, large, dust, zero</SpecLabel>
