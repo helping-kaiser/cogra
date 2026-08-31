@@ -86,6 +86,9 @@ class ComposeWizardViewModel @Inject constructor(
      * the store — so writing before the held draft has been read and
      * answered would destroy the very draft the offer is about. Nothing
      * is written until the offer is settled one way or the other.
+     *
+     * It is also how a landed post stays landed: publishing disarms the
+     * writer for good, and nothing re-arms it.
      */
     private var armed = false
 
@@ -119,12 +122,22 @@ class ComposeWizardViewModel @Inject constructor(
     // -- The draft offer (`ComposeDraft`) --
 
     fun onContinueDraft() {
-        val held = _state.value.draftOffer ?: return
-        _state.value = ComposeWizardState.from(held)
+        val current = _state.value
+        val held = current.draftOffer ?: return
+        // The grid belongs to the device, not to the draft. Restoring
+        // replaces what was *authored*; carrying the grid across is what
+        // keeps the pick stage from emptying out under the offer — the
+        // permission effect fires on a *change* of permission, and
+        // answering the offer changes none, so a wiped grid was never
+        // refilled and the stage kept only its photos-app tile.
+        _state.value = ComposeWizardState.from(held).copy(deviceImages = current.deviceImages)
         armed = true
         // A restored media draft re-reads every asset's shape: the crop
         // preview needs it, and the URIs may no longer resolve.
         _state.value.picked.forEach { readSourceRatio(it.uri) }
+        // A draft can be days old and the library has moved on since;
+        // one query is cheaper than showing a stale roll.
+        refreshDeviceImages()
     }
 
     fun onDiscardDraft() {
@@ -213,7 +226,15 @@ class ComposeWizardViewModel @Inject constructor(
      * granted — including a re-grant, since a partial grant may have
      * gained pictures since the last look.
      */
-    fun onMediaPermissionGranted() {
+    fun onMediaPermissionGranted() = refreshDeviceImages()
+
+    /**
+     * Re-reads the roll into the grid.
+     *
+     * Safe to call without a permission: the source answers an empty list
+     * rather than throwing, so a caller never has to ask first.
+     */
+    private fun refreshDeviceImages() {
         viewModelScope.launch {
             _state.update { it.copy(deviceImages = deviceImages.newestImages(DEVICE_IMAGE_PAGE)) }
         }
@@ -603,6 +624,16 @@ class ComposeWizardViewModel @Inject constructor(
 
             when {
                 results.all { it is WriteResult.Done } -> {
+                    // The post is published: this wizard has nothing left
+                    // to keep. Disarming *before* the clear is what makes
+                    // the clear final — `outcome` alone could not, because
+                    // the route consumes it the moment it navigates, and
+                    // the state it leaves behind still holds every word
+                    // and pick of the post that just landed. The next
+                    // `ON_STOP` then wrote them straight back
+                    // (jakob 2026-08-31: "once a post is sent its draft
+                    // should be gone").
+                    armed = false
                     draftSaveJob?.cancel()
                     drafts.clear()
                     _state.update {
