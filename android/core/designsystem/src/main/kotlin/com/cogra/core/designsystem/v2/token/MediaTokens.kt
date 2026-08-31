@@ -29,6 +29,37 @@ enum class AvatarShape(val ratio: Float) {
 }
 
 /**
+ * The height cap a post's media obeys, and the pager that shows it
+ * (`--media-max-height`, `--post-chrome-height` on the canonical boards).
+ *
+ * **A post fits the screen.** The cap is the viewport less the top safe
+ * area, the bottom bar, and the *worst-case* non-media chrome — measured on
+ * the heaviest post the system can produce (title, two-line caption,
+ * opener, honesty marker, affordance row, padding). Budgeting for the
+ * average ships a layout that fits four posts in five, and the fifth is the
+ * one with something to say. A short post never reaches the cap; it is a
+ * maximum, not a target, and a capped tile *fits* its frame rather than
+ * cropping further to obey it.
+ */
+object MediaFrame {
+    /** `--post-chrome-height`: the worst-case non-media chrome. */
+    val PostChrome = 360.dp
+
+    /** The floor of `max(180px, …)` — a cap can never squeeze past this. */
+    val MinHeight = 180.dp
+
+    /** A comment's pictures are an attachment, not a body: a tighter cap. */
+    val CommentMaxHeight = 220.dp
+
+    /** The pager's dot: `width:6px; height:6px`. */
+    val Dot = 6.dp
+
+    /** `gap:6px` between dots, `padding:8px 0 0` above the row. */
+    val DotGap = 6.dp
+    val DotRowTopPadding = 8.dp
+}
+
+/**
  * Colours that sit *on media* rather than on a theme surface.
  *
  * These are the one place a 2.0 component names a literal instead of reading
