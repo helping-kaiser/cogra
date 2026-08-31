@@ -54,6 +54,8 @@ fn found(sources: &[SourceFile], path: &str) -> SourceFile {
         .clone()
 }
 
+/// The walk takes the carrier and leaves every configured exclusion behind.
+/// ´claim:walk:the-walk-takes-the-carrier´
 #[test]
 fn the_walk_takes_the_carrier_and_leaves_the_exclusions() {
     let root = tree("carrier-exclusions", &CORPUS);
@@ -75,6 +77,8 @@ fn the_walk_takes_the_carrier_and_leaves_the_exclusions() {
     assert_eq!(paths.len(), 8);
 }
 
+/// The walked sources are ordered by path and never by the directory's own order.
+/// ´claim:walk:sources-are-ordered-by-path´
 #[test]
 fn the_walk_is_sorted_by_path_and_not_by_directory_order() {
     let root = tree("carrier-order", &CORPUS);
@@ -102,6 +106,8 @@ fn the_walk_is_sorted_by_path_and_not_by_directory_order() {
     );
 }
 
+/// A source takes its owner from the first partition rule that matches it.
+/// ´claim:walk:the-owner-is-the-first-match´
 #[test]
 fn every_source_takes_its_owner_by_first_match() {
     let root = tree("carrier-owners", &CORPUS);
@@ -141,6 +147,8 @@ fn every_source_takes_its_owner_by_first_match() {
     );
 }
 
+/// Ownership is total by the partition's last rule, so no source is unowned.
+/// ´claim:walk:ownership-is-total´
 #[test]
 fn ownership_is_total_and_needs_no_diagnostic() {
     let root = tree(
@@ -157,6 +165,8 @@ fn ownership_is_total_and_needs_no_diagnostic() {
     }
 }
 
+/// A source carries a language only where a frontend reads that language.
+/// ´claim:walk:a-language-means-a-frontend´
 #[test]
 fn a_source_carries_its_language_only_where_a_frontend_reads_it() {
     let root = tree(
@@ -187,6 +197,8 @@ fn a_source_carries_its_language_only_where_a_frontend_reads_it() {
     );
 }
 
+/// A committed generated file stays in the carrier and is marked as generated.
+/// ´claim:walk:a-generated-file-is-kept-and-marked´
 #[test]
 fn a_committed_generated_file_is_marked_and_kept() {
     let root = tree("carrier-generated", &CORPUS);
@@ -198,6 +210,8 @@ fn a_committed_generated_file_is_marked_and_kept() {
     assert!(!found(&sources, "README.md").generated);
 }
 
+/// A walked source carries the bytes the run read, not a promise to read them later.
+/// ´claim:walk:a-source-carries-its-bytes´
 #[test]
 fn a_source_carries_its_bytes() {
     let root = tree("carrier-bytes", &["README.md"]);
@@ -208,6 +222,8 @@ fn a_source_carries_its_bytes() {
     assert_eq!(sources[0].bytes, b"the bytes of README.md\n");
 }
 
+/// An absent optional root is silent.
+/// ´claim:walk:an-absent-optional-root-is-silent´
 #[test]
 fn an_absent_optional_root_is_silent() {
     let root = tree("carrier-absent-optional", &["README.md"]);
@@ -219,6 +235,8 @@ fn an_absent_optional_root_is_silent() {
     );
 }
 
+/// A present optional root is walked like any other.
+/// ´claim:walk:a-present-optional-root-is-walked´
 #[test]
 fn a_present_optional_root_is_walked_like_any_other() {
     let root = tree(
@@ -319,6 +337,9 @@ fn walked(paths: &[&str]) -> Vec<SourceFile> {
 /// A configured root the walk found nothing under is reported: `optional` is
 /// the adoption data's own way of saying an absence is legal, and a row
 /// without it promises a tree the corpus has.
+///
+/// A configured root the walk found nothing under is reported unless it is optional.
+/// ´claim:walk:an-unmatched-root-is-reported´
 #[test]
 fn f8_a_non_optional_root_matching_no_source_is_reported() {
     let adoption = with_an_absent_required_root();
@@ -339,6 +360,9 @@ fn f8_a_non_optional_root_matching_no_source_is_reported() {
 /// An optional root matching no source stays silent: both of this corpus's
 /// working-note roots are gitignored junctions that are simply absent on
 /// some machines.
+///
+/// An optional root matching no source stays silent.
+/// ´claim:walk:an-optional-unmatched-root-is-silent´
 #[test]
 fn f8_an_optional_root_matching_no_source_stays_silent() {
     let adoption = with_an_absent_required_root();
@@ -353,6 +377,9 @@ fn f8_an_optional_root_matching_no_source_stays_silent() {
 
 /// A root the walk did reach is silent, and an empty carrier leaves every
 /// configured root unmatched.
+///
+/// A root the walk reached is silent.
+/// ´claim:walk:a-reached-root-is-silent´
 #[test]
 fn f8_a_root_the_walk_reached_is_silent() {
     let adoption = with_an_absent_required_root();
@@ -375,6 +402,8 @@ fn f8_a_root_the_walk_reached_is_silent() {
     );
 }
 
+/// An unreadable entry is a diagnostic beside a shorter list, never an empty carrier.
+/// ´claim:walk:an-unreadable-entry-is-a-diagnostic´
 #[cfg(unix)]
 #[test]
 fn an_unreadable_entry_is_a_diagnostic_beside_a_shorter_list() {

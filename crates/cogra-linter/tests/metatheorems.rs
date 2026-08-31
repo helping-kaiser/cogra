@@ -203,6 +203,9 @@ fn minted(run: &cogra_linter::Run) -> BTreeSet<(String, String)> {
 /// suppression: the registry document is not among these two files, and
 /// (´dec:lint:registry-bootstrap´) says so loudly rather than treating every
 /// head as valid.
+///
+/// The generated corpora carry occurrences, so the properties over them are about something.
+/// ´claim:metatheory:generated-corpora-carry-occurrences´
 #[test]
 fn the_generated_documents_carry_occurrences() {
     let document = Document {
@@ -240,6 +243,9 @@ proptest! {
     /// the run entry orders its sources by path whatever order they arrive
     /// in, so a shuffled traversal reaches an identical harvest and not one
     /// that has to be repaired.
+    ///
+    /// Over shuffled traversal orders the rendered output is byte-identical.
+    /// ´claim:metatheory:resolution-ignores-traversal-order´
     #[test]
     fn resolution_is_independent_of_traversal_order(
         corpus in any_corpus(),
@@ -260,6 +266,9 @@ proptest! {
 
     /// (´conv:lint:diagnostic-order´): two runs over one generated corpus
     /// emit the same sequence.
+    ///
+    /// Two runs over one corpus emit the same diagnostic sequence.
+    /// ´claim:metatheory:two-runs-emit-one-sequence´
     #[test]
     fn two_runs_emit_the_same_sequence(corpus in any_corpus()) {
         let one = cogra_linter::check_sources(adoption(), sources(&corpus, false));
@@ -270,6 +279,9 @@ proptest! {
     /// (´conv:lint:diagnostic-order´): the comparator is a total order —
     /// antisymmetric, transitive, and total on the corpus, two diagnostics
     /// with the same path, offset, and rule being the same finding.
+    ///
+    /// The diagnostic comparator is a total order on the corpus.
+    /// ´claim:metatheory:the-diagnostic-order-is-total´
     #[test]
     fn the_diagnostic_order_is_total(corpus in any_corpus()) {
         let run = cogra_linter::check_sources(adoption(), sources(&corpus, false));
@@ -293,6 +305,9 @@ proptest! {
     ///
     /// The spans move, so the findings' offsets move with them; what the
     /// theorem fixes is the registries, and that is what is compared.
+    ///
+    /// A re-forming that preserves every label value leaves the registries unchanged.
+    /// ´claim:metatheory:presentation-does-not-change-denotation´
     #[test]
     fn a_re_forming_that_preserves_labels_preserves_the_registries(corpus in any_corpus()) {
         let before = cogra_linter::check_sources(adoption(), sources(&corpus, false));
@@ -314,6 +329,9 @@ proptest! {
 
     /// (´sig:lint:index-maps´) over generated corpora harvested by the run
     /// entry rather than by hand: every key of `mints` is a key of `labels`.
+    ///
+    /// Every key of the minting registry is a key of the label registry.
+    /// ´claim:metatheory:every-mint-has-a-label-node´
     #[test]
     fn every_minted_label_is_a_carried_label(corpus in any_corpus()) {
         let run = cogra_linter::check_sources(adoption(), sources(&corpus, false));
@@ -461,6 +479,9 @@ impl Lapse {
 
 /// (´[LBL-metathm:labels:warrant-lapse]´): a derivation lapses when the
 /// asset's name changes, and exactly the citations of that facet dangle.
+///
+/// Renaming an asset dangles exactly the citations of its name.
+/// ´claim:metatheory:renaming-dangles-the-name-facet´
 #[test]
 fn renaming_an_asset_dangles_the_citations_of_its_name() {
     let cited = [(0, "test:unit:alpha"), (0, "test:unit:beta")];
@@ -472,6 +493,9 @@ fn renaming_an_asset_dangles_the_citations_of_its_name() {
 
 /// (´[LBL-metathm:labels:warrant-lapse]´): a derivation lapses when the
 /// classification changes, and exactly the citations of that facet dangle.
+///
+/// Reclassifying an asset dangles exactly the citations of its area.
+/// ´claim:metatheory:reclassifying-dangles-the-area-facet´
 #[test]
 fn reclassifying_an_asset_dangles_the_citations_of_its_area() {
     let cited = [(0, "test:unit:alpha")];
@@ -485,6 +509,9 @@ fn reclassifying_an_asset_dangles_the_citations_of_its_area() {
 /// (´[LBL-metathm:labels:warrant-lapse]´): moving an asset across packages
 /// dangles exactly the imports under the old package's prefix — ownership
 /// enters a citation only through the import prefix.
+///
+/// Moving an asset across packages dangles exactly the imports under the old prefix.
+/// ´claim:metatheory:a-package-move-dangles-old-imports´
 #[test]
 fn moving_an_asset_across_packages_dangles_the_imports_under_the_old_prefix() {
     let cited = [(1, "test:unit:alpha")];
@@ -507,6 +534,9 @@ fn moving_an_asset_across_packages_dangles_the_imports_under_the_old_prefix() {
 /// The move here is a second source under the same owner, which is what a
 /// within-package move is and which the derivation never reads
 /// (´[LBL-ansatz:labels:path-derivation]´).
+///
+/// Moving an asset within its package lapses nothing.
+/// ´claim:metatheory:a-within-package-move-lapses-nothing´
 #[test]
 fn moving_an_asset_within_its_package_lapses_nothing() {
     let cited = [(0, "test:unit:alpha"), (1, "test:unit:alpha")];
@@ -531,6 +561,9 @@ fn moving_an_asset_within_its_package_lapses_nothing() {
 /// presents — is owed to slice 6 and flagged in this file's header: nothing
 /// in this corpus constructs a `PresentedSet`, because no citation index is
 /// designated and no label register has been generated yet.
+///
+/// A generated occurrence enters the registries exactly as an authored one does.
+/// ´claim:metatheory:a-generated-occurrence-is-an-occurrence´
 #[test]
 fn a_generated_occurrence_enters_the_registries_in_full() {
     let sources = vec![
@@ -624,6 +657,9 @@ fn register_findings(run: &cogra_linter::Run) -> Vec<String> {
 /// The write is a real one, against a real root: the whole point of the
 /// obligation is that what the generator produced and what landed on disk
 /// are the same bytes, and an in-memory assertion could not tell.
+///
+/// Regeneration is idempotent, and a check run after a write finds every register current.
+/// ´claim:metatheory:regeneration-is-idempotent´
 #[test]
 fn regeneration_is_idempotent_and_a_check_after_a_write_is_current() {
     let at = temporary("one-generator");
@@ -681,6 +717,9 @@ fn regeneration_is_idempotent_and_a_check_after_a_write_is_current() {
 /// forbids in as many words — Ê_A never stands as evidence for itself. The
 /// property is that adding the register to the corpus changes neither the
 /// relation it presents nor the bytes the generator produces.
+///
+/// Adding a generated register to the corpus changes neither what it presents nor its own bytes.
+/// ´claim:metatheory:a-register-feeds-nothing-it-presents´
 #[test]
 fn the_companion_register_feeds_nothing_it_presents() {
     let at = temporary("no-self-support");
