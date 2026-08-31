@@ -71,7 +71,7 @@ export function SealStep({
 
   return (
     <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 pb-6 pt-2">
-      <p className="m-0 text-label-small text-on-surface-variant">
+      <p className="m-0 text-body-small text-on-surface-variant">
         {heading} — {bodyLine}.
       </p>
 
@@ -219,7 +219,7 @@ function ActRow({ label, detail, count }: { label: string; detail: string; count
     <div className="flex min-h-11 items-center gap-2 border-b border-outline-variant">
       <span className="w-19 flex-none text-label-medium text-on-surface-variant">{label}</span>
       <span className="min-w-0 flex-1 truncate text-body-medium">{detail}</span>
-      <span className="flex-none text-label-small text-on-surface-variant">
+      <span className="flex-none text-body-small text-on-surface-variant">
         {count === 1 ? "1 action" : `${count} actions`}
       </span>
     </div>
