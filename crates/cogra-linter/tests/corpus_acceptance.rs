@@ -262,12 +262,17 @@ fn every_committed_register_is_current() {
         adoption(),
         run().kinds.as_ref(),
     );
+    let activated = adoption()
+        .claims
+        .as_ref()
+        .and_then(|claims| claims.activation.declared())
+        .expect("this corpus declares its activated owners");
     assert_eq!(
         registers.len(),
-        9,
+        8 + activated,
         "the companion register, the headline region, the test profile's label \
-         register for each of the six owners with covered assets, and the claim \
-         matrix of the one owner whose authoring wave has closed"
+         register for each of the six owners with covered assets, and one claim \
+         matrix per owner whose authoring wave has closed"
     );
     for reg in &registers {
         let (held, _) = cogra_linter::registers::committed(reg, &run().sources);

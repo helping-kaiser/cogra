@@ -337,6 +337,9 @@ mod tests {
     /// The wildcard is built as a tree and the base theory's is parsed from
     /// the conventions' text; the two printing alike is what says the tree
     /// is the schema's own clause and not a lookalike.
+    ///
+    /// The wildcard built as a tree prints as the base theory's own clause, so it is that clause and no lookalike.
+    /// ´claim:companion:the-built-wildcard-is-the-schemas-clause´
     #[test]
     fn the_built_wildcard_prints_as_the_base_theorys() {
         let span = Span {
@@ -353,6 +356,9 @@ mod tests {
 
     /// The rewrite is a rewrite of the parsed tree: the companion's printed
     /// form reparses as CDDL, which a text edit could not promise.
+    ///
+    /// Derivation rewrites the parsed tree, so the companion's printed form reparses as CDDL.
+    /// ´claim:companion:the-companion-reparses-as-cddl´
     #[test]
     fn the_companion_reparses_as_cddl() {
         let open =
@@ -366,6 +372,9 @@ mod tests {
 
     /// The relaxation is not in the fragment — it is the clause an assigned
     /// theory replaces by enumeration — so the companion is no theory.
+    ///
+    /// The companion carries the relaxation an assigned theory replaces, so it is itself no assignable theory.
+    /// ´claim:companion:the-companion-is-no-assignable-theory´
     #[test]
     fn the_companion_is_not_an_assignable_theory() {
         let open = theory(r#"e = {0 => "com.example", 1 => [1, 2, uint]}"#).open_companion();

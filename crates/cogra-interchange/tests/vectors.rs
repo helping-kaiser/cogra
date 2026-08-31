@@ -51,6 +51,8 @@ fn corpus() -> Vec<Row> {
         .collect()
 }
 
+/// The vector corpus still holds the 67 canonical rows and 26 refusals it was seeded with.
+/// ´claim:vectors:the-corpus-keeps-its-seeded-counts´
 #[test]
 fn corpus_has_the_seeded_shape() {
     let rows = corpus();
@@ -59,6 +61,8 @@ fn corpus_has_the_seeded_shape() {
     assert_eq!(rows.len() - canonical, REFUSAL_ROWS);
 }
 
+/// Every canonical vector of the standard decodes, re-encodes to the same bytes, and round-trips.
+/// ´claim:vectors:a-canonical-vector-re-encodes-to-its-own-bytes´
 #[test]
 fn canonical_rows_decode_reencode_identically_and_roundtrip() {
     let rows = corpus();
@@ -91,6 +95,8 @@ fn canonical_rows_decode_reencode_identically_and_roundtrip() {
     assert_eq!(driven, CANONICAL_ROWS);
 }
 
+/// Every refusal vector is refused inside its own bytes and as the variant its reason names.
+/// ´claim:vectors:a-refusal-vector-is-refused-where-it-stands´
 #[test]
 fn refusal_rows_are_refused_with_a_located_error() {
     let rows = corpus();
