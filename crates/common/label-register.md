@@ -79,6 +79,7 @@ label.
 | `test:unit:pre-commitment-round-trips`                                   | pre_commitment_round_trips                                   |
 | `test:unit:profile-and-content-readers-reject-each-other`                | profile_and_content_readers_reject_each_other                |
 | `test:unit:profile-image-entries-run-the-manifest-admission`             | profile_image_entries_run_the_manifest_admission             |
+| `test:unit:profile-refuses-the-retired-cover-key`                        | profile_refuses_the_retired_cover_key                        |
 | `test:unit:profile-rejects-a-media-manifest`                             | profile_rejects_a_media_manifest                             |
 | `test:unit:profile-rejects-an-image-slot-that-is-not-one-asset`          | profile_rejects_an_image_slot_that_is_not_one_asset          |
 | `test:unit:profile-rejects-assigned-but-unbuilt-payout-key`              | profile_rejects_assigned_but_unbuilt_payout_key              |
