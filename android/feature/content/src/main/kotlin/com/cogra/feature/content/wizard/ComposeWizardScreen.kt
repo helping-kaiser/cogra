@@ -24,6 +24,8 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.WizardHeader
@@ -65,6 +67,11 @@ fun ComposeWizardRoute(
 
     LaunchedEffect(Unit) { viewModel.start(referenceTargetId) }
 
+    // The last moment the process is guaranteed to be alive. The draft is
+    // already written continuously as the author works; this closes the
+    // window between the final keystroke and a background kill.
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.persistNow() }
+
     LaunchedEffect(state.outcome) {
         when (val outcome = state.outcome) {
             is WizardOutcome.Landed -> {
@@ -83,8 +90,9 @@ fun ComposeWizardRoute(
         }
     }
 
-    // The system photo picker: no permission, no MediaStore query, and
-    // the reader hands over exactly the pictures they meant to
+    // The system photo picker, behind the board's own "Your photos app"
+    // tile — the second way in, beside the in-app grid, and the one that
+    // never needs a permission
     // (developer.android.com/training/data-storage/shared/photopicker).
     // It lives on the route rather than in the screen so the screen
     // stays stateless and previewable.
@@ -92,8 +100,13 @@ fun ComposeWizardRoute(
         ActivityResultContracts.PickMultipleVisualMedia(ComposeWizardState.MAX_POST_ASSETS),
     ) { uris -> uris.forEach { viewModel.onTogglePick(it.toString()) } }
 
+    // The in-app grid's permission, which the pick stage draws around
+    // the grid rather than in front of it.
+    val permission = rememberMediaPermission(onGranted = viewModel::onMediaPermissionGranted)
+
     ComposeWizardScreen(
         state = state,
+        permission = permission,
         onBodyChange = viewModel::onBodyChange,
         onModeChange = viewModel::onModeChange,
         onOpenPicker = {
@@ -115,6 +128,9 @@ fun ComposeWizardRoute(
         onPDirectedChange = viewModel::onPDirectedChange,
         onNext = viewModel::onNext,
         onBack = { if (!viewModel.onBack()) viewModel.onLeave() },
+        onSealBack = viewModel::onSealBack,
+        onEditBody = { viewModel.onReturnTo(WizardStep.Body) },
+        onEditCrop = { viewModel.onReturnTo(WizardStep.Crop) },
         onSign = viewModel::onSign,
         onContinueDraft = viewModel::onContinueDraft,
         onDiscardDraft = viewModel::onDiscardDraft,
@@ -153,6 +169,7 @@ fun ComposeWizardRoute(
 @Composable
 internal fun ComposeWizardScreen(
     state: ComposeWizardState,
+    permission: MediaPermissionController,
     onBodyChange: (String) -> Unit,
     onModeChange: (BodyMode) -> Unit,
     onOpenPicker: () -> Unit,
@@ -170,6 +187,9 @@ internal fun ComposeWizardScreen(
     onPDirectedChange: (Double) -> Unit,
     onNext: () -> Unit,
     onBack: () -> Unit,
+    onSealBack: () -> Unit,
+    onEditBody: () -> Unit,
+    onEditCrop: () -> Unit,
     onSign: () -> Unit,
     onContinueDraft: () -> Unit,
     onDiscardDraft: () -> Unit,
@@ -194,8 +214,10 @@ internal fun ComposeWizardScreen(
     keyBanner: @Composable () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    // Back is the header's arrow and the system gesture alike: one
-    // stage at a time, and out of the wizard from the first.
+    // Back is the header's arrow and the system gesture alike, and both
+    // leave: the author is never held inside the wizard by a stage they
+    // have to unwind, and the draft survives regardless. The ways back
+    // *between* stages are drawn into the stages themselves.
     BackHandler(onBack = onBack)
 
     Column(
@@ -231,6 +253,7 @@ internal fun ComposeWizardScreen(
             when (state.step) {
                 WizardStep.Body -> BodyStage(
                     state = state,
+                    permission = permission,
                     onBodyChange = onBodyChange,
                     onModeChange = onModeChange,
                     onOpenPicker = onOpenPicker,
@@ -253,8 +276,8 @@ internal fun ComposeWizardScreen(
                         onTitleChange = onTitleChange,
                         onDescriptionChange = onDescriptionChange,
                         onRetryUpload = onRetryUpload,
-                        onEditBody = onBack,
-                        onEditCrop = onBack,
+                        onEditBody = onEditBody,
+                        onEditCrop = onEditCrop,
                         topics = {
                             // The 2.3 section, embedded rather than
                             // rebuilt: only its surroundings changed.
@@ -299,7 +322,7 @@ internal fun ComposeWizardScreen(
                         state = state,
                         onOpenSheet = onOpenSheet,
                         onSign = onSign,
-                        onBack = onBack,
+                        onBack = onSealBack,
                         onRestoreKey = onRestoreKey,
                         onKeepDraft = onKeepDraft,
                     )
@@ -340,10 +363,17 @@ internal fun ComposeWizardScreen(
     }
 }
 
-/** `ComposeWords` and `ComposePick` share the caption band above them. */
+/**
+ * `ComposeWords` and `ComposePick` share the caption band above them,
+ * and nothing else: the words half sits in the 24dp screen gutter like
+ * a form, and the picker's grid runs to a 4dp margin like a sheet of
+ * pictures, so the pick stage lays itself out rather than borrowing
+ * [WizardBody].
+ */
 @Composable
 private fun ColumnScope.BodyStage(
     state: ComposeWizardState,
+    permission: MediaPermissionController,
     onBodyChange: (String) -> Unit,
     onModeChange: (BodyMode) -> Unit,
     onOpenPicker: () -> Unit,
@@ -366,7 +396,14 @@ private fun ColumnScope.BodyStage(
                 onAction = { onModeChange(BodyMode.Words) },
                 actionTestTag = "wizard_switch_words",
             )
-            WizardBody(gap = Space.x2) { PickStepBody(state, onOpenPicker, onTogglePick) }
+            PickStage(
+                state = state,
+                permission = permission.permission,
+                onRequestPermission = permission.request,
+                onOpenSettings = permission.openSettings,
+                onOpenPicker = onOpenPicker,
+                onTogglePick = onTogglePick,
+            )
         }
     }
 }
