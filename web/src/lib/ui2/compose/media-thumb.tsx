@@ -96,8 +96,9 @@ export function MediaThumb({
       className="relative flex flex-none items-center justify-center overflow-hidden bg-surface-container-high"
     >
       {src ? (
-        // eslint-disable-next-line @next/next/no-img-element -- a blob: URL for
-        // bytes that have not left the device.
+        // A blob: URL for bytes that have not left the device, so there is
+        // nothing for the optimizer to fetch (web.md §Media).
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={src}
           alt={alt}

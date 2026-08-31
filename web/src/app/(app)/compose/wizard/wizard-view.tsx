@@ -16,7 +16,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
-import { HeaderBar } from "@/lib/ui2/header-bar";
+import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
+import { HelpDialog, HELP_TOPICS } from "@/lib/ui2/help-dialog";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { preparePost } from "@/lib/api/content-api";
 import { fetchReferenceCandidates } from "@/lib/api/references-api";
@@ -98,6 +99,7 @@ export function ComposeWizard({
   // move the sheet onto a different picture.
   const [managing, setManaging] = useState(false);
   const [describing, setDescribing] = useState<string | null>(null);
+  const [help, setHelp] = useState(false);
   const [busy, setBusy] = useState(false);
   const [refusal, setRefusal] = useState<string | null>(null);
   const [transportFailed, setTransportFailed] = useState(false);
@@ -369,9 +371,13 @@ export function ComposeWizard({
         onBack={leave}
         backLabel={state.step === "pick" ? "Back to feed" : "Back a step"}
         onLeave={leaveFlow}
-        // The seal board carries a `?`. It opens the help dialog of HelpDialog,
-        // which has no 2.0 component yet — so the slot stays empty rather than
-        // holding a control that does nothing when pressed.
+        // The seal board's `?`, opening the house help dialog with copy-voice's
+        // "Signed actions". One `?` per screen, so only the seal carries one.
+        help={
+          state.step === "seal" ? (
+            <HelpButton onOpen={() => setHelp(true)} label="Signed actions" />
+          ) : undefined
+        }
         action={
           state.step === "pick" ? (
             <PickAction onNext={() => dispatch({ type: "advance" })} disabled={!gate.ok} />
@@ -530,6 +536,13 @@ export function ComposeWizard({
           total: state.assets.length,
         }}
         testId="wizard-describe-sheet"
+      />
+
+      <HelpDialog
+        open={help}
+        onClose={() => setHelp(false)}
+        topic={HELP_TOPICS.signedActions}
+        testId="wizard-help"
       />
     </main>
   );
