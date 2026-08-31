@@ -426,7 +426,7 @@ fn unplaced_in(a: &Adoption, profile: &Profile, src: &SourceFile, held: &[Asset]
     let Ok(parsed) = frontend_rust::parse(src, &pre, a) else {
         return Vec::new();
     };
-    let inner: Vec<&crate::frontend::Region> = parsed
+    let carried: Vec<String> = parsed
         .regions
         .iter()
         .filter(|region| {
@@ -437,14 +437,16 @@ fn unplaced_in(a: &Adoption, profile: &Profile, src: &SourceFile, held: &[Asset]
                 )
             )
         })
-        .collect();
-    let carried: Vec<String> = inner
-        .iter()
         .flat_map(|region| scan_code(&region.text, 0).occurrences)
         .filter_map(|occurrence| match occurrence {
             Occurrence::Mint { label, .. } => Some(label.as_str().to_owned()),
             _ => None,
         })
+        .collect();
+    let opens: Vec<usize> = pre
+        .comments()
+        .filter(|(_, form)| matches!(form, CommentForm::LineInnerDoc | CommentForm::BlockInnerDoc))
+        .map(|(span, _)| span.start)
         .collect();
 
     let mut out = Vec::new();
@@ -459,9 +461,9 @@ fn unplaced_in(a: &Adoption, profile: &Profile, src: &SourceFile, held: &[Asset]
             source: src.path.clone(),
             at: Location::in_source(src.path.clone(), asset.span, text),
             opens: asset.opens,
-            documented: inner
+            documented: opens
                 .iter()
-                .any(|region| blank_between(text, asset.opens, region.span().start)),
+                .any(|start| blank_between(text, asset.opens, *start)),
             label,
         });
     }
@@ -471,9 +473,11 @@ fn unplaced_in(a: &Adoption, profile: &Profile, src: &SourceFile, held: &[Asset]
 /// Whether nothing but whitespace separates two offsets of one source.
 ///
 /// What decides that a comment opens *at* a position rather than somewhere
-/// after it: the leader and the indentation between them are structure, and a
-/// definition whose first non-blank byte opens an inner documentation comment
-/// is one whose label line joins that comment rather than starting a second.
+/// after it, and so whether a label line joins that comment or starts one of
+/// its own. The comment's own start is the lexer's answer and not the parsed
+/// region's: a region begins at the comment's interior, past a leader the
+/// frontend resolved away, and a writer that took the interior for the comment
+/// would find `//! ` between them and call the two apart.
 fn blank_between(text: &str, from: usize, to: usize) -> bool {
     to >= from && text.get(from..to).is_some_and(|gap| gap.trim().is_empty())
 }
