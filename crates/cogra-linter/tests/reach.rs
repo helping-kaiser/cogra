@@ -23,9 +23,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
-use cogra_linter::{
-    Adoption, AdoptionError, Language, OwnerId, Run, SourceFile, check_sources,
-};
+use cogra_linter::{Adoption, AdoptionError, Language, OwnerId, Run, SourceFile, check_sources};
 
 fn root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
@@ -63,8 +61,7 @@ fn with_reach(section: &str) -> Adoption {
 fn refused(section: &str) -> AdoptionError {
     let text = format!("{}\n{section}", adoption_text());
     Adoption::from_str(&text, Path::new("corpus-adoption.toml"))
-        .err()
-        .expect("the planted defect is refused")
+        .expect_err("the planted defect is refused")
 }
 
 /// The two owners the judgment fixtures run between, chosen because neither
@@ -189,7 +186,10 @@ fn an_import_outside_the_declared_reach_is_located() {
         PathBuf::from("docs/primitive/reach-lane.md"),
         "the finding sits on the citing source, which is where the repair is",
     );
-    assert_eq!(one.primary.line, 3, "and on the line that writes the import");
+    assert_eq!(
+        one.primary.line, 3,
+        "and on the line that writes the import"
+    );
     assert!(
         one.message.contains(CITING) && one.message.contains(CITED),
         "the message names both ends: {}",
@@ -400,8 +400,7 @@ may_cite = [\"pkg.common\"]
     );
     let error = adoption
         .verify_reach_against_manifests(&root())
-        .err()
-        .expect("the omitted dependency is a contradiction");
+        .expect_err("the omitted dependency is a contradiction");
     assert!(
         matches!(
             &error,
