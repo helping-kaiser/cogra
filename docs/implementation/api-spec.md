@@ -746,6 +746,14 @@ type ModeratedMedia {
 enum FieldModerationStatus { NORMAL SENSITIVE REDACTED }
 ```
 
+SENSITIVE reaches these fields two ways: a passed moderation
+Proposal, and the **author's own mark** at compose time
+("Content authoring" below). They read alike by design — the same
+status on the same fields — and a self-mark's reach is fixed: the
+body veils as one region and the title stays NORMAL beside it.
+`sensitiveReason` on a content node is the author's own optional
+line, null for a moderator's verdict.
+
 A media *gallery* (a list) can't wrap generically, so those fields
 keep their list and carry a sibling
 `attachmentsStatus: FieldModerationStatus!` — **one state for the
@@ -990,6 +998,11 @@ type Post implements Node {
    body is its gallery. Exactly one of content.value and
    attachments carries the body."
   content: ModeratedText!
+  "The public reason the author gave for their own sensitive mark;
+   null when unmarked, when the mark carries no reason, and when
+   the payload has been removed. The mark itself is not a field:
+   it is what the body's statuses already say."
+  sensitiveReason: String
   author: Actor!
   "The gallery, in the author's order, the first entry the cover."
   attachments: [MediaAttachment!]!
@@ -1025,6 +1038,9 @@ type Post implements Node {
 type Comment implements Node {
   "The body."
   content: ModeratedText!
+  "The author's own sensitive-mark reason; same three nulls a
+   post's carries."
+  sensitiveReason: String
   author: Actor!
   "The node this comment is on — the Review's parent."
   target: CommentTarget!
@@ -2835,6 +2851,13 @@ input PreparePostInput {
   tags: [TagInput!]
   references: [ReferenceInput!]
   license: LicenseInput!
+  "The author's own sensitive mark — the seal's switch. Veils the
+   whole body (media, words and description as one region) and
+   leaves the title and topics readable. Defaults to false."
+  sensitive: Boolean
+  "The mark's optional public reason, shown on the veil. Refused
+   without sensitive: true; blank counts as none."
+  sensitiveReason: String
   "The Publish record's attachment parameter; defaults to the
    low-defaults policy value (+0.1)."
   pDirected: Dimension
@@ -2853,6 +2876,10 @@ input PreparePostEditInput {
   description: String
   content: String!
   attachments: [AttachmentInput!]
+  "The self-mark the edit leaves standing — complete state like the
+   body, so omitting it unmarks the post."
+  sensitive: Boolean
+  sensitiveReason: String
 }
 
 "Author a Comment — stages the Review (targeting whatever it
@@ -2866,6 +2893,10 @@ input PrepareCommentInput {
   tags: [TagInput!]
   references: [ReferenceInput!]
   license: LicenseInput!
+  "The author's own sensitive mark. A comment seals through the
+   same seal a post does, so it carries the same switch."
+  sensitive: Boolean
+  sensitiveReason: String
   pDirected: Dimension
   pInterest: Dimension
   actAs: UUID
@@ -2875,6 +2906,9 @@ input PrepareCommentEditInput {
   id: UUID!
   content: String!
   attachments: [AttachmentInput!]
+  "The self-mark the edit leaves standing, complete like the body."
+  sensitive: Boolean
+  sensitiveReason: String
 }
 
 "One standalone topic declaration on existing content — the gesture
@@ -2991,6 +3025,22 @@ extend type Mutation {
   uploadMedia(input: UploadMediaInput!): UploadMediaPayload!
 }
 ```
+
+**The author's own sensitive mark.** `sensitive` is the seal's
+switch and `sensitiveReason` the line the sheet offers; both ride
+the witnessed payload with the body they describe (guild keys
+13–14, [data-model.md](data-model.md#the-payload-envelope)), so
+the veil a reader is shown is the author's signed statement. Its
+reach is fixed, not chosen: `description`, `content` and
+`attachmentsStatus` read SENSITIVE together and `title` stays
+NORMAL beside them, which is exactly the whole-body veil both
+clients already draw — so a self-mark needs no new read plumbing.
+The node-level `moderationStatus` reads SENSITIVE with them, and
+`sensitiveReason` serves the line. A reason without the switch is
+a field-level `userError` on `["sensitiveReason"]` rather than a
+silent drop; a blank reason is no reason. Because a content act
+carries the complete content state, an edit that omits the switch
+unmarks the content — there is no withdrawal gesture.
 
 A content edit input carries the whole content state, so its
 optional text fields are two-valued: a value renders, omitted or
