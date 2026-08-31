@@ -52,6 +52,9 @@ const ARGUMENT_MAJORS: [u8; 7] = [0, 1, 2, 3, 4, 5, 6];
 /// belongs in the initial byte, so every wide class spelling it is
 /// non-preferred; and the boundary below each class is the greatest argument
 /// the next narrower class holds, spelled one class too wide.
+///
+/// A head spelled wider than its argument needs is refused in every argument-bearing major type and every width class.
+/// ´claim:encoding:a-head-wider-than-its-argument-is-refused´
 #[test]
 fn non_preferred_heads_are_refused_across_major_types_and_classes() {
     let mut cases = 0;
@@ -81,6 +84,9 @@ fn non_preferred_heads_are_refused_across_major_types_and_classes() {
 /// Array lengths either side of the immediate-byte boundary and over the uint8
 /// boundary, then the same boundaries for map entry counts, keys `0..n`
 /// ascending.
+///
+/// The preferred head on either side of each argument-class boundary is accepted and re-encodes to itself.
+/// ´claim:encoding:the-preferred-head-at-each-boundary-is-accepted´
 #[test]
 fn preferred_heads_at_the_class_boundaries_are_accepted() {
     let mut cases = 0;
@@ -120,6 +126,9 @@ fn preferred_heads_at_the_class_boundaries_are_accepted() {
 
 /// Each head at the top level and again one level down, where the offset must
 /// follow the item rather than the input.
+///
+/// An indefinite-length head is refused for every container type, at the top level and one level down, where it stands.
+/// ´claim:encoding:an-indefinite-length-is-refused-where-it-stands´
 #[test]
 fn indefinite_lengths_are_refused_for_every_container_type() {
     let mut cases = 0;
@@ -138,6 +147,9 @@ fn indefinite_lengths_are_refused_for_every_container_type() {
 /// (0xf5) before false; the RFC's own worked example reversed, [100] before
 /// [-1]; duplicate integer keys; duplicate compound keys; and a failure inside
 /// a nested map, located inside it.
+///
+/// Map keys ascend bytewise over their encodings and are pairwise distinct, the refusal located at the offending key.
+/// ´claim:encoding:map-keys-are-sorted-bytewise-and-distinct´
 #[test]
 fn map_keys_must_be_sorted_bytewise_and_be_pairwise_distinct() {
     let mut cases = 0;
@@ -166,6 +178,9 @@ fn map_keys_must_be_sorted_bytewise_and_be_pairwise_distinct() {
 /// Accepted, in order: 2^-25, below every binary16 subnormal; the least
 /// binary32 value; the least normal binary64 value and its negation; and the
 /// two zeroes at binary16, negative zero being a structure of its own.
+///
+/// A float written wider than its value needs is refused, and the values that genuinely need their width are accepted.
+/// ´claim:encoding:a-float-stands-in-its-shortest-form´
 #[test]
 fn floating_point_values_must_stand_in_their_shortest_form() {
     let mut refused = 0;
@@ -204,6 +219,9 @@ fn floating_point_values_must_stand_in_their_shortest_form() {
 
 /// The same bytes are one item and a remainder to the prefix decoder, which is
 /// the routing surface's whole point.
+///
+/// Bytes after a complete item are refused, where the prefix read takes that item and reports what it consumed.
+/// ´claim:encoding:trailing-bytes-are-refused-not-ignored´
 #[test]
 fn trailing_bytes_after_the_item_are_refused() {
     let mut cases = 0;
@@ -226,6 +244,9 @@ fn trailing_bytes_after_the_item_are_refused() {
 
 /// The fixtures, in order: `{"a": 1, "b": [2, 3]}`, `[1, [2, 3], [4, 5]]`,
 /// `1(1363896240)`, and `{[100]: 1, [-1]: 2}`.
+///
+/// Every proper prefix of a complete name is refused as truncation at the length it was given.
+/// ´claim:encoding:every-proper-prefix-is-truncation´
 #[test]
 fn every_proper_prefix_of_a_fixture_is_truncated() {
     let mut cases = 0;
@@ -251,6 +272,9 @@ fn every_proper_prefix_of_a_fixture_is_truncated() {
 /// at all, and a break inside a definite-length container is still a break.
 /// And the two-byte simple value form does not reach below 32 (RFC 8949 §3.3),
 /// those values having a one-byte spelling.
+///
+/// Reserved additional information, a break outside an indefinite container, and an under-32 two-byte simple value are each ill-formed.
+/// ´claim:encoding:a-reserved-or-stray-head-is-ill-formed´
 #[test]
 fn ill_formed_heads_are_refused() {
     let mut cases = 0;
@@ -279,6 +303,8 @@ fn ill_formed_heads_are_refused() {
     assert_eq!(cases, 35);
 }
 
+/// Each simple-value encoding decodes to the value it names, the booleans, null and undefined among them.
+/// ´claim:encoding:a-simple-value-decodes-to-what-it-names´
 #[test]
 fn simple_values_stand_where_their_encodings_put_them() {
     let mut cases = 0;
@@ -314,6 +340,9 @@ fn simple_values_stand_where_their_encodings_put_them() {
 /// sequence; a surrogate, which UTF-8 excludes; a sequence valid up to its
 /// second byte; and an invalid four-byte sequence. The same bytes inside a
 /// byte string are a byte string.
+///
+/// A text string whose payload is not valid UTF-8 is refused at that payload, where the same bytes as a byte string stand.
+/// ´claim:encoding:a-text-string-must-be-valid-utf8´
 #[test]
 fn text_strings_must_be_valid_utf8() {
     let mut cases = 0;
@@ -336,6 +365,8 @@ fn text_strings_must_be_valid_utf8() {
     assert_eq!(cases, 5);
 }
 
+/// A tag carries exactly one enclosed item, nesting and the widest tag number included.
+/// ´claim:encoding:a-tag-carries-exactly-one-item´
 #[test]
 fn tagged_items_carry_exactly_one_enclosed_item() {
     let mut cases = 0;
@@ -381,6 +412,9 @@ fn tagged_items_carry_exactly_one_enclosed_item() {
 /// decoder must answer from the length it has and not from the count it was
 /// handed. The last row is the small case of the same rule: a map of one entry
 /// needs two bytes, not one.
+///
+/// A count larger than the input could hold is answered as truncation rather than believed and allocated for.
+/// ´claim:encoding:a-declared-count-is-answered-from-the-input´
 #[test]
 fn a_declared_count_beyond_the_input_is_truncation_rather_than_an_allocation() {
     assert_refused(&hex_to_bytes("9bffffffffffffffff"), "Truncated", 9);
@@ -392,6 +426,9 @@ fn a_declared_count_beyond_the_input_is_truncation_rather_than_an_allocation() {
 
 /// The invariant lives in the constructor: a map built out of order encodes
 /// canonically because it was reordered on the way in.
+///
+/// A map is sorted where it is built, so the encoder writes canonically without sorting anything.
+/// ´claim:encoding:construction-sorts-and-the-encoder-does-not´
 #[test]
 fn construction_sorts_and_the_encoder_does_not() {
     let map = Map::new([
