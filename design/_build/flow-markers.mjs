@@ -92,6 +92,75 @@ export const FLOW_MARKERS = {
   ],
 };
 
+// The Money & Wallet page. PageHeader/WizardHeader backs render as <a href>;
+// nav ports the shared helper (the active tab's edge is `self` in flows.json).
+Object.assign(FLOW_MARKERS, {
+  Wallet: [
+    { n: 1, find: 'aria-label="What is CGT?"', tag: "button" },
+    { n: 2, find: "Payouts land at", tag: "button" },
+    { n: 3, find: 'aria-label="Settlement', tag: "button", all: true },
+    { n: 4, find: "1 open · start a new one", tag: "button" },
+    { n: 5, find: "Payout · settling", tag: "button" },
+    { n: 6, find: "Campaign settled", tag: "button" },
+    { n: 7, find: "Campaign return ·", tag: "button" },
+    { n: 8, find: "Tip from @tobias", tag: "button" },
+    ...nav(9),
+  ],
+  WalletEmpty: [
+    { n: 1, find: 'aria-label="What is CGT?"', tag: "button" },
+    { n: 2, find: 'aria-label="Copy the address"', tag: "button" },
+    { n: 3, find: ">Change</button>", tag: "button" },
+    ...nav(4),
+  ],
+  WalletSetup: [
+    { n: 1, find: 'aria-label="Your wallet key"', tag: "button" },
+    { n: 2, find: ">Create and publish</button>", tag: "button" },
+    ...nav(3),
+  ],
+  WalletAddressSeal: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave"', tag: "button" },
+    { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
+    { n: 4, find: 'aria-label="Copy the address"', tag: "button" },
+    { n: 5, find: ">Sign and publish</button>", tag: "button" },
+    { n: 6, find: ">Back</button>", tag: "button" },
+  ],
+  WalletChange: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
+    { n: 4, find: 'aria-label="Copy the address"', tag: "button" },
+    { n: 5, find: ">Sign the change</button>", tag: "button" },
+    { n: 6, find: ">Back</button>", tag: "button" },
+  ],
+  WalletKeyAbsent: [
+    { n: 1, find: ">Restore the key</button>", tag: "button" },
+    { n: 2, find: 'aria-label="What is CGT?"', tag: "button" },
+    { n: 3, find: "Campaign settled", tag: "button" },
+    { n: 4, find: "Tip from @tobias", tag: "button" },
+    ...nav(5),
+  ],
+  WalletGuest: [
+    { n: 1, find: ">Keep browsing</button>", tag: "button" },
+    { n: 2, find: ">Sign in or join</button>", tag: "button" },
+    ...nav(3),
+  ],
+  WalletApplicant: [...nav(1)],
+  WalletCampaign: [
+    { n: 1, find: 'aria-label="Back to the wallet"', tag: "a" },
+    { n: 2, find: "Campaign deposit", tag: "button" },
+  ],
+  WalletCampaigns: [
+    { n: 1, find: 'aria-label="Back to the wallet"', tag: "a" },
+    { n: 2, find: ">Start a campaign</button>", tag: "button" },
+    { n: 3, find: ">Yours</button>", tag: "button" },
+    { n: 4, find: ">You took part</button>", tag: "button" },
+    { n: 5, find: "In escrow · runs 6 more days", tag: "button" },
+    { n: 6, find: "Settled 28 Aug", tag: "button" },
+    { n: 6, find: "Settled 12 Jul", tag: "button" },
+  ],
+});
+
 export function applyFlowMarkers(name, html) {
   const markers = FLOW_MARKERS[name];
   if (!markers) return html;
