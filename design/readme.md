@@ -1356,6 +1356,25 @@ media and comment editing.
   linear wizard. A second entrance to the same step is the two-menus
   pattern the system refuses. The shortcut links the details and edit
   boards had carried since the compose section are deleted.
+- **Web picks through the browser** (round 3, from the implementation
+  session's findings): browsers have no device-gallery API, so the web
+  pick step replaces the newest-images grid with one calm region — the
+  file picker button and a drop target ("Choose from your files" /
+  "…or drop them here") — the caption, the picked tray, and the text
+  path identical to the app's (*Pick · the web variant*).
+- **The seal's total row carries the all-or-nothing subline on every
+  multi-act seal** — "they land together, or none does" — and omits it
+  on a single-act seal. It had drifted across the hand boards (on the
+  key-absent and sheet states, missing from the seal itself); it now
+  lives once, as `ActsCard`'s `note`. On the key-absent seal the one
+  "?" belongs to the key notice (the *Your key* dialog), not the
+  header — one "?" per screen, and the key story outranks the seal
+  story there. Every "?" opens the house plain dialog (the pattern the
+  *HelpDialog* board draws); the texts are copy-voice's.
+- **The pinned M3 roles stay the default — no sub-roles.** The stray
+  values the implementation session caught are conformed instead: the
+  Cover badge to `label-small`, the full-focus writing bodies to
+  16/24, the draft prompt's buttons to true button padding.
 - **The slice ships componentized** (`components/compose/`):
   `MediaThumb` (the authoring tile and its upload states), `PickedRow`
   + `DescribeCounter`, `PickedSheet` (Show all), `DescribeSheet`,
