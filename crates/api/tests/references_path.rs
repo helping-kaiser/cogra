@@ -124,6 +124,7 @@ impl Rig {
                 tags: vec![],
                 references: vec![],
                 attachments: vec![],
+                sensitive: Default::default(),
             },
         )
         .await
