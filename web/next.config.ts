@@ -50,6 +50,16 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: privateNetworkOrigins,
   images: {
     remotePatterns: mediaPatterns,
+    // THE OTHER HALF OF THE SAME PROBLEM, and the one the allowlist hides.
+    // Next refuses to fetch an absolute image url whose hostname resolves to a
+    // PRIVATE ip — `localhost`, or the LAN address a phone reaches the dev
+    // server on — and reports it with the same "not allowed" message the
+    // allowlist uses, so an allowlisted host still fails. In development the
+    // media origin IS that private address by design (the `/media` proxy
+    // below), and fetching it is the intent rather than an SSRF: the flag is
+    // therefore on in development and OFF in production, where a private-ip
+    // media origin would be exactly the mistake the guard exists to catch.
+    dangerouslyAllowLocalIP: process.env.NODE_ENV !== "production",
     // Stored assets are already WebP — the client re-encodes before upload
     // (D11) — so the optimizer's only remaining job is resizing, and it should
     // not spend a second lossy pass converting between modern formats.
