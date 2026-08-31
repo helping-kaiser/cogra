@@ -187,9 +187,11 @@ platform ships natively (WebCrypto, Android Keystore/Tink):
   blob is malleable.
 - **Contents.** The plaintext is the deterministic-CBOR array
   `[seed bytes, container version 1]` — today the actor key's
-  32-byte Ed25519 seed. Future client-held secrets (the
-  Collective splits) extend the array — "the blob is a
-  container", concretely.
+  32-byte Ed25519 seed. Further client-held secrets extend the
+  array — "the blob is a container", concretely: the rail key's
+  seed joins at the wallet's set-up moment
+  ([ledger.md "Keys"](ledger.md#keys)), the Collective splits
+  when Collectives ship.
 - **Wire form.** The blob crosses the API base64-encoded — into
   `uploadKeyBackup`, out of `User.keyBackup`.
 - **Size bound.** Uploads over 4 KiB refuse as `BAD_INPUT`. The
