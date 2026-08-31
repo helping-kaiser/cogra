@@ -86,6 +86,33 @@ describe("the step sequence", () => {
     expect(run(words, { type: "back" }, { type: "back" }).step).toBe("pick");
   });
 
+  it("reorders the set, and the first picture is what the cover means", () => {
+    const three = run(emptyWizard(), picks(3));
+    const moved = wizardReducer(three, { type: "reorder", from: 2, to: 0 });
+    expect(moved.assets.map((a) => a.id)).toEqual(["a2", "a0", "a1"]);
+  });
+
+  it("carries the focus with the picture that moved, not with its old slot", () => {
+    const three = run(emptyWizard(), picks(3), { type: "focus", index: 2 });
+    const moved = wizardReducer(three, { type: "reorder", from: 2, to: 0 });
+    // The reader was framing a2; they are still framing a2.
+    expect(moved.focused).toBe(0);
+    expect(moved.assets[moved.focused].id).toBe("a2");
+  });
+
+  it("shifts a bystander's focus by one when a picture moves past it", () => {
+    const three = run(emptyWizard(), picks(3), { type: "focus", index: 0 });
+    const moved = wizardReducer(three, { type: "reorder", from: 2, to: 0 });
+    expect(moved.assets[moved.focused].id).toBe("a0");
+  });
+
+  it("ignores a reorder that goes nowhere or off the end", () => {
+    const three = run(emptyWizard(), picks(3));
+    expect(wizardReducer(three, { type: "reorder", from: 1, to: 1 })).toBe(three);
+    expect(wizardReducer(three, { type: "reorder", from: 0, to: 9 })).toBe(three);
+    expect(wizardReducer(three, { type: "reorder", from: -1, to: 0 })).toBe(three);
+  });
+
   it("steps back ONE stage at a time down the media path", () => {
     // The ruling (jakob 2026-08-31): back steps back one stage — it never jumps
     // to the start and never leaves the wizard from the middle. The draft is

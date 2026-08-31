@@ -245,6 +245,7 @@ export type WizardAction =
   | { type: "words"; words: string }
   | { type: "pick"; assets: readonly { id: string; file: Blob }[] }
   | { type: "unpick"; id: string }
+  | { type: "reorder"; from: number; to: number }
   | { type: "focus"; index: number }
   | { type: "shape"; shape: PostShape }
   | { type: "crop"; id: string; crop: Crop }
@@ -297,6 +298,28 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
     case "unpick": {
       const assets = state.assets.filter((asset) => asset.id !== action.id);
       return { ...state, assets, focused: Math.min(state.focused, Math.max(0, assets.length - 1)) };
+    }
+
+    case "reorder": {
+      // ORDER IS THE COVER: the first picture leads the post, so moving one is
+      // how the cover is chosen and there is no separate cover control. The
+      // focus follows the picture that moved rather than the position, or a
+      // reorder on the crop step would silently reframe a different picture.
+      const { from, to } = action;
+      const last = state.assets.length - 1;
+      if (from === to || from < 0 || to < 0 || from > last || to > last) return state;
+      const assets = [...state.assets];
+      const [moved] = assets.splice(from, 1);
+      assets.splice(to, 0, moved);
+      const focused =
+        state.focused === from
+          ? to
+          : state.focused > from && state.focused <= to
+            ? state.focused - 1
+            : state.focused >= to && state.focused < from
+              ? state.focused + 1
+              : state.focused;
+      return { ...state, assets, focused };
     }
 
     case "focus":
