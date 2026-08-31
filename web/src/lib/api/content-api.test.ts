@@ -333,12 +333,17 @@ describe("prepareComment", () => {
       target: "p1",
       content: "Two from the sea wall.",
       license: { attribution: 0, provenance: 0.5 },
-      attachments: ["m-a", "m-b"],
+      attachments: [
+        { mediaId: "m-a", altText: "the sea wall at dusk" },
+        { mediaId: "m-b", altText: "  " },
+      ],
     });
 
+    // The description travels with the placement, and blank is not a
+    // description: a picture the author left undescribed rides as null.
     expect(variables!.input.attachments).toEqual([
-      { mediaId: "m-a", displayOrder: 0, isCover: true },
-      { mediaId: "m-b", displayOrder: 1, isCover: false },
+      { mediaId: "m-a", displayOrder: 0, isCover: true, altText: "the sea wall at dusk" },
+      { mediaId: "m-b", displayOrder: 1, isCover: false, altText: null },
     ]);
   });
 
