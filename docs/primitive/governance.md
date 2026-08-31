@@ -1,4 +1,4 @@
-# Governance
+# Governance · `spec:primitive:governance`
 
 CoGra uses **weighted role-based voting** as a recurring primitive.
 Every governance decision — admitting a collective member,

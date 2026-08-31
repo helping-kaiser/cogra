@@ -1,4 +1,4 @@
-# ADR-001: Graph Store Selection
+# ADR-001: Graph Store Selection · `rec:implementation:graph-store-selection`
 
 **Status**: Accepted
 **Date**: 2026-07-22

@@ -1,4 +1,4 @@
-# Iconography
+# Iconography · `guide:design:iconography`
 
 **Material Symbols, one weight and one fill style throughout** — mixing
 fills is the most common way an icon set starts to look accidental.

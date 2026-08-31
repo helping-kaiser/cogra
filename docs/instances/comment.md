@@ -1,4 +1,4 @@
-# Comment
+# Comment · `spec:instances:comment`
 
 The **Comment** is CoGra's universal response surface — a reply
 or annotation authored by a User or Collective on another node.

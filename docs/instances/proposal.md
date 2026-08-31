@@ -1,4 +1,4 @@
-# Proposal
+# Proposal · `spec:instances:proposal`
 
 The **Proposal** is the carrier of a governance decision. Its
 public face lives on PeerNetworks Layer 1 as three kinds of
