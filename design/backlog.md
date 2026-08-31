@@ -222,6 +222,12 @@ pictures attached*, *Edit comment* (one batch, license locked),
 signed act; NO profile cover — the ProfileHeader ruling stands).
 Upload starts after the crop: only the cropped export ever leaves
 the device. Caps: 10 pictures or 1 video per post, 4 per comment.
+Round 2 (same day): the details row's Crop/Edit shortcut links are
+GONE ("none") — the row opens the Show all sheet, crop is one Back
+away — and the slice is fully componentized: `components/compose/`
+(`MediaThumb`, `PickedRow`+`DescribeCounter`, `PickedSheet`,
+`DescribeSheet`, `UploadStatusLine`+`UploadErrorLine`, `ActsCard`),
+all ten boards rendered from the pipeline.
 
 ### 13 · Post Score drill-down · *design*
 Four screens — FeedEntry → RankPath → RankHop → raw records — each
