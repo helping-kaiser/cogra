@@ -178,6 +178,15 @@ headings, buttons, marketing copy, or empty states. The single arrow in
 horizontal-then-vertical order. Counts are spelled with their noun:
 `1 signed action` / `3 signed actions`.
 
+**Money** is `MoneyFigure`'s and never formatted by hand: two decimals,
+thousands grouped (`12,500.00`), the CGT mark trailing where a unit word
+would sit. Dust is `< 0.01` — never `0.00`, a shown number that lies —
+with the exact value one layer down; zero is `0`, plainly. Amounts are
+never negative: a minus is an outflow on a history line, `signed` opts
+inflows into `+`, dust never signs, and direction never carries a
+colour. The word "CGT" appears on exactly one kind of surface — the
+balance headline, mark and word adjacent, beside its "?".
+
 **Punctuation.** Em dashes carry the asides. Ellipsis (…) marks
 in-progress states. Sentences end with periods in body copy; labels and
 buttons carry none.
@@ -435,7 +444,7 @@ exists in `web/src/lib/ui/` (and, unless noted, in Android's
 
 | Directory | Components |
 |---|---|
-| `components/core/` | `Button`, `Card`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip`, `HelpDot` |
+| `components/core/` | `Button`, `Card`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip`, `HelpDot`, `MoneyFigure`, `CgtMark` |
 | `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow` |
 | `components/forms/` | `TextField`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
 | `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand` |
@@ -1250,6 +1259,44 @@ every surface that draws its meaning:
 - The stance **anchor table** (`StanceReadout.jsx`) and the decided
   **copy strings** (`guidelines/copy-voice.md`) are atoms of the
   same kind: one assignment, many surfaces.
+
+### Money figures — 2026-08-31
+
+Item 11, settled ahead of the wallet (item 12) so its surfaces have a
+figure to draw. The rules live in §3 (*Money*) and in
+`components/core/MoneyFigure.jsx`; the spec board is the canonical
+canvas's *Money · the CGT figure*.
+
+- **One shape for every CGT amount** — balance, earning, tip, campaign
+  amount, price: two decimals, thousands grouped, dust as `< 0.01`
+  (exact value one layer down — every number stays explainable, and
+  money is explainable by construction: a payout is a recomputable
+  settlement leaf, a tip carries its transaction pointer), zero as `0`
+  (a new member's true state, not a failure).
+- **The unit is the mark, never the word** (jakob 2026-08-31 —
+  spelling "CGT" on every figure doesn't look nice): `CgtMark`, the
+  primary disc carrying the brand mark (cogra-mark.svg verbatim,
+  knocked out monochrome — a lone C in a disc is any game's coin),
+  1em, baseline-aligned, trailing the figure where the unit word
+  would sit. Theme-correct through the primary pair; never a new
+  colour rung. Decided over CG letters, a CG interlock, and c+dot
+  (round 2, same day) — two letters smudge at 1em, and the logo is
+  the one form no other product's coin can wear.
+- **The word appears once** — the wallet's balance headline sets
+  `unit`, mark and word adjacent so the reader learns the equivalence,
+  and the headline's "?" (*What is CGT?*, text in copy-voice.md) says
+  both are CoGra's own money.
+- **Direction, never colour.** Amounts are never negative — balances
+  are balances and payout shares floor at zero — so a minus is an
+  outflow on a history line and `signed` opts inflows into `+`; dust
+  never signs (its line's words carry direction); no green exists, and
+  `error`-colouring an outflow would call spending a failure.
+- **Pending amounts wait for the wallet session** (jakob 2026-08-31),
+  where the surfaces that need them are drawn.
+- The CGT Registry **precision is unpinned in the docs** (ledger.md
+  names the registry entry, no value); the display rule is
+  deliberately precision-independent — dust collapses to `< 0.01`
+  whatever the chain's smallest unit turns out to be.
 
 ## 14. Index
 
