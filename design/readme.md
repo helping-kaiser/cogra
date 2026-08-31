@@ -1378,6 +1378,16 @@ set of findings; jakob's rulings 2026-08-31):
   peek-from-a-composer pattern; ceremony screens keep the inline
   `ActsCard` — two patterns, one component. EditActs'
   pre-component note wording is conformed to the card's standard.
+- **The canvas gained one unified Comments section** (same day —
+  the comment boards had split across rows far apart and read as
+  duplicates; none were: each draws a distinct state). Two
+  adjacent rows now hold all nine: **the thread** (*Comments ·
+  the thread* — renamed from "the sheet" — · *pictures & own
+  comment* · *Edit comment* · *its acts*) and **the reply
+  composer** (*write* · *pictures attached* · *pictures on the
+  web* · *the pad* · *what you sign*), each row with its own
+  section note; post edit & remove keeps its own row below,
+  retitled "Edit & remove the post".
 
 ### The wallet — 2026-08-31
 
