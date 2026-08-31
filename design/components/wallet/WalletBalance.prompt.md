@@ -1,11 +1,11 @@
-Use `WalletBalance` as the wallet's headline — nowhere else. It is the ONE surface that spells the word CGT (readme §13, Money figures): everywhere else the mark alone is the unit.
+Use `WalletBalance` as the wallet's hero — nowhere else. It is the ONE surface that spells the word CGT (readme §13, Money figures) and the ONE surface riding the brand wash.
 
 ```jsx
-<WalletBalance amount={128.4} approx="0.00087" onHelp={openWhatIsCgt} />
+<WalletBalance amount={128.4} approx="0.00087" delta="+14.40 this week" onHelp={openWhatIsCgt} />
 ```
 
 What holds:
 
-- The "?" is *What is CGT?* (copy-voice) — the headline teaches the mark-word equivalence and the "?" explains both as CoGra's own money.
-- **The ≈ line is an estimate, ruled in** (jakob 2026-08-31): read from the public CGT–L-BTC market — the protocol's own ladder, live from genesis — so it exists the moment the wallet does. It moves with the market and is never a promise; omit `approx` when there is no reading, and it hides itself at zero balance (nothing to price).
-- Never render a fiat figure here; the market the product owns quotes L-BTC.
+- **The brand wash** (`--surface-hero`) is the one decorative gradient surface (blessed 2026-08-31) — a trophy treatment for the few places a figure IS the page, never a default card fill. The ghosted oversized `CgtMark` in the corner is texture, not a second logo, and is aria-hidden.
+- The figure sits at `display-small` — this page exists to make earning feel like something.
+- The "?" is *What is CGT?*; the ≈ line reads the public CGT–L-BTC market (an estimate, never a promise, hidden at zero); `delta` is real recent earnings, omitted when nothing is new. Never fiat.

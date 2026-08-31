@@ -1,6 +1,9 @@
-/* The wallet at zero — a new member after set-up: the true state, plainly
-   (readme §13, Money figures: zero renders "0", never 0.00). No ≈ line —
-   nothing to price. The empty history says how money starts arriving. */
+/* The wallet at zero — a new member after set-up: the hero still wears the
+   wash (the trophy shelf is there, waiting), the figure is the true "0", no
+   ≈ line (nothing to price). The empty words are PATH-TRUE (jakob's round-2
+   correction): earnings come from campaigns when the paths between an
+   advertiser's crowd and their target run through you — posting alone is
+   how paths start, not a guarantee. */
 export function Screen() {
   return (
     <>
@@ -9,20 +12,24 @@ export function Screen() {
         <WalletBalance amount={0} onHelp={() => {}} />
 
         <SectionLabel>History</SectionLabel>
-        <div style={{ flex: "none", padding: "8px 24px 0" }}>
+        <div style={{ flex: "none", padding: "4px 24px 0" }}>
           <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
-            Nothing here yet — earnings land as your posts and stances reach people, and tips land the moment someone sends one.
+            Nothing here yet. Earnings come from campaigns — paid when the paths between an advertiser's crowd and their target run through you.
+          </p>
+          <p style={{ margin: "8px 0 0", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
+            Posting, connecting, and taking stances is how paths start running through you. Tips land the moment someone sends one.
           </p>
         </div>
 
         <div style={{ flex: 1 }} />
 
-        <SectionLabel>Payouts land at</SectionLabel>
-        <div style={{ padding: "0 24px 8px", display: "flex", flexDirection: "column", gap: 4 }}>
-          <PayoutAddress address={SOL_ADDRESS} label="" onChange={() => {}} />
-          <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
-            The address is public — and so is every change to it.
-          </p>
+        <div style={{ padding: "0 16px 8px" }}>
+          <PayoutAddress
+            address={SOL_ADDRESS}
+            onCopy={() => {}}
+            onChange={() => {}}
+            caption="The address is public — and so is every change to it."
+          />
         </div>
       </div>
       <BottomNav active="wallet" slots={ALL_SLOTS} inline />
