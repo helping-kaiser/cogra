@@ -15,31 +15,36 @@ const privateNetworkOrigins = [
 // Where served media lives. The contract mints ABSOLUTE urls from
 // MEDIA_BASE_URL, so `next/image` sees an external src and needs the host
 // allowlisted — `images.domains` was removed in Next 16, and `remotePatterns`
-// is the documented replacement. A same-origin deployment (media proxied
-// through the web origin, which is what dev does) matches no pattern and needs
-// none, so the list is empty unless the env var says otherwise.
+// is the documented replacement.
+//
+// THE ALLOWLIST IS NOT OPTIONAL IN DEVELOPMENT. Next checks by HOSTNAME for
+// every src that does not begin with `/`, and it makes no exception for the
+// app's own origin: dev's same-origin `http://localhost:3000/media/...` is an
+// absolute url like any other, so an empty pattern list rejects every served
+// picture — a throw in dev, a 400 from the optimizer in a build. The default
+// therefore mirrors the API's own (`crates/api/src/media/mod.rs`), so the two
+// agree about where media lives even when neither is given the env var.
 //
 // `protocol`, `port`, and `search` are pinned rather than left to the implied
 // `**` wildcard: the docs warn that omitting them "may allow malicious actors
 // to optimize urls you did not intend", and an image optimizer pointed at an
 // attacker-chosen host is an open proxy.
-const mediaOrigin = process.env.MEDIA_BASE_URL;
-const mediaPatterns = mediaOrigin
-  ? (() => {
-      const url = new URL(mediaOrigin);
-      return [
-        {
-          protocol: url.protocol.replace(":", "") as "http" | "https",
-          hostname: url.hostname,
-          port: url.port,
-          // D6 puts every asset under `/media/{id}`; nothing else on that host
-          // is ours to optimize.
-          pathname: "/media/**",
-          search: "",
-        },
-      ];
-    })()
-  : [];
+const mediaOrigin = process.env.MEDIA_BASE_URL ?? "http://localhost:3000/media";
+const mediaPatterns = (() => {
+  const url = new URL(mediaOrigin);
+  return [
+    {
+      protocol: url.protocol.replace(":", "") as "http" | "https",
+      hostname: url.hostname,
+      port: url.port,
+      // D6 puts every asset under the base url's own path; nothing else on
+      // that host is ours to optimize. Taken from the url rather than fixed at
+      // `/media`, which a media origin serving from any other path would miss.
+      pathname: `${url.pathname.replace(/\/$/, "")}/**`,
+      search: "",
+    },
+  ];
+})();
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: privateNetworkOrigins,
