@@ -1,4 +1,4 @@
-# Authentication
+# Authentication · `spec:implementation:auth`
 
 Server-side credential management for CoGra. **Auth gates the
 service, never the graph.** Reading needs nothing — the shared

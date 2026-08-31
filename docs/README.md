@@ -1,4 +1,4 @@
-# CoGra Docs
+# CoGra Docs · `guide:docs:docs-index`
 
 CoGra is a Layer 2 on the **PeerNetworks Layer 1** substrate;
 [`primitive/layer1-interface.md`](primitive/layer1-interface.md) is

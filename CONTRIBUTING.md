@@ -1,4 +1,4 @@
-# Contributing to CoGra
+# Contributing to CoGra · `guide:repo:contributing`
 
 This guide is for human contributors. [CLAUDE.md](CLAUDE.md) is
 the AI-facing equivalent. Shared rules (hard design rules,

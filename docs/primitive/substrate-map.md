@@ -1,4 +1,4 @@
-# Substrate Map
+# Substrate Map · `spec:primitive:substrate-map`
 
 The per-concept routing table: where every CoGra concept lives on
 the substrate. Each row names its **primary mechanism** from the

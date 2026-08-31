@@ -1,4 +1,4 @@
-# Invariants
+# Invariants · `spec:primitive:invariants`
 
 A discoverable index of the load-bearing invariants of the CoGra
 protocol. Each entry is one line — a short statement and a link to

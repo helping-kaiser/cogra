@@ -1,4 +1,4 @@
-# Token (CGT)
+# Token (CGT) · `spec:primitive:token`
 
 **CGT** is CoGra's native token: the reward economy's unit — what
 advertisers fund campaigns in and contributors earn, settled on
