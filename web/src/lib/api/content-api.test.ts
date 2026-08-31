@@ -8,6 +8,7 @@ import {
   prepareComment,
   preparePost,
   preparePostEdit,
+  sensitiveInput,
 } from "./content-api";
 import { startMswServer } from "@/test/msw";
 
@@ -243,9 +244,23 @@ describe("preparePostEdit", () => {
         });
       }),
     );
-    await preparePostEdit(client(), { id: "p1", title: null, description: null, content: "B" });
+    await preparePostEdit(client(), {
+      id: "p1",
+      title: null,
+      description: null,
+      content: "B",
+      sensitive: true,
+    });
     expect(variables).toEqual({
-      input: { id: "p1", title: null, description: null, content: "B" },
+      input: {
+        id: "p1",
+        title: null,
+        description: null,
+        content: "B",
+        // An edit re-states the mark rather than dropping it.
+        sensitive: true,
+        sensitiveReason: null,
+      },
     });
   });
 });
@@ -339,5 +354,34 @@ describe("prepareComment", () => {
     ).toEqual([{ name: "rust", pDirected: 0.4, pInterest: 0.8 }]);
     // The whole batch comes back for the one signing pass.
     if (outcome.kind === "success") expect(outcome.value.writes).toHaveLength(2);
+  });
+});
+
+describe("sensitiveInput", () => {
+  it("states the mark as false rather than omitting it", () => {
+    // THE EDIT TRAP: an edit is complete state, so an omitted `sensitive`
+    // UNMARKS a post the author had marked. The switch's value is always
+    // stated, in both directions.
+    expect(sensitiveInput(undefined, undefined)).toEqual({
+      sensitive: false,
+      sensitiveReason: null,
+    });
+  });
+
+  it("carries the reason only with the mark", () => {
+    // A reason without the mark is a field-level refusal on the server, so it
+    // is never sent alone.
+    expect(sensitiveInput(false, "a dead seabird")).toEqual({
+      sensitive: false,
+      sensitiveReason: null,
+    });
+    expect(sensitiveInput(true, "a dead seabird")).toEqual({
+      sensitive: true,
+      sensitiveReason: "a dead seabird",
+    });
+  });
+
+  it("counts a blank reason as none", () => {
+    expect(sensitiveInput(true, "   ")).toEqual({ sensitive: true, sensitiveReason: null });
   });
 });

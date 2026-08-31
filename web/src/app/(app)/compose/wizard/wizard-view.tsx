@@ -16,7 +16,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
-import { HeaderBar } from "@/lib/ui2/header-bar";
+import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
+import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { preparePost } from "@/lib/api/content-api";
 import { fetchReferenceCandidates } from "@/lib/api/references-api";
@@ -49,6 +50,8 @@ import { usePreviewUrls } from "@/lib/compose/previews";
 import { PickAction, PickStep } from "./pick-step";
 import { CropStep } from "./crop-step";
 import { DetailsStep } from "./details-step";
+import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
+import { PickedSheet } from "@/lib/ui2/compose/picked-sheet";
 import { SealStep, type SealSheet } from "./seal-step";
 
 /** The refusal path shapes the batched sections use, down to their index. */
@@ -91,6 +94,14 @@ export function ComposeWizard({
   const [offered, setOffered] = useState<WizardState | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [sheet, setSheet] = useState<SealSheet>("none");
+  // Show all, and the describe sheet it can open. Describing holds an asset id
+  // rather than an index so a remove or a reorder underneath it cannot silently
+  // move the sheet onto a different picture.
+  const [managing, setManaging] = useState(false);
+  const [describing, setDescribing] = useState<string | null>(null);
+  // Which explanation is open, if any — the `?`s share one dialog because only
+  // one can be open at a time and each names its own topic.
+  const [help, setHelp] = useState<HelpTopic | null>(null);
   const [busy, setBusy] = useState(false);
   const [refusal, setRefusal] = useState<string | null>(null);
   const [transportFailed, setTransportFailed] = useState(false);
@@ -211,14 +222,17 @@ export function ComposeWizard({
     dispatch({ type: "upload", id, upload: { kind: "waiting" } });
   };
 
-  // Going back to re-crop invalidates the bytes that were uploaded from the old
-  // framing, so everything starts again. The orphaned assets are the server's to
-  // sweep — they are attached to nothing (D5).
-  const backToCrop = () => {
+  // Re-cropping invalidates the bytes that were uploaded from the old framing,
+  // so everything starts again. The orphaned assets are the server's to sweep —
+  // they are attached to nothing (D5).
+  //
+  // This hangs off the step change rather than off a button: the picked row
+  // carries no "Crop" shortcut any more (jakob 2026-08-31, "none"), so Back is
+  // the only way to the crop step and it is where the invalidation belongs.
+  const invalidateUploads = () => {
     started.current.clear();
     setState((current) => ({
       ...current,
-      step: "crop",
       assets: current.assets.map((asset) => ({ ...asset, upload: { kind: "waiting" } })),
     }));
   };
@@ -237,6 +251,8 @@ export function ComposeWizard({
         title: state.title.trim() === "" ? null : state.title,
         description: state.description.trim() === "" ? null : state.description,
         content: bodyContent(state),
+        sensitive: state.sensitive,
+        sensitiveReason: state.sensitiveReason,
         license: state.license,
         tags: state.tags,
         references: state.references,
@@ -321,14 +337,26 @@ export function ComposeWizard({
   const gate = advanceGate(state);
   const seal = sealGate(state);
 
+  // The arrow: ONE STAGE BACK, never out of the flow (jakob, round 4). From the
+  // first stage there is no stage to step to, so that one lands on the feed.
   const leave = () => {
     const previous = state.step;
     // Leaving keeps the draft — written here rather than left to the coalescing
     // timer, which the navigation would otherwise outrun.
     keep();
+    // Stepping back off Details lands on Crop in a media post, and whatever was
+    // uploaded came from the framing the author is about to change.
+    if (previous === "details" && state.mode === "media") invalidateUploads();
     dispatch({ type: "back" });
-    // Already on the first screen: leaving the wizard is leaving the surface.
     if (previous === "pick") router.push("/feed");
+  };
+
+  // The X: OUT OF THE FLOW from any stage, draft kept, NO confirmation —
+  // nothing is lost, and the draft prompt is the return surface. Without it an
+  // author five stages deep was stuck backing out tap by tap.
+  const leaveFlow = () => {
+    keep();
+    router.push("/feed");
   };
 
   if (!loaded) {
@@ -346,9 +374,14 @@ export function ComposeWizard({
         title={HEADINGS[state.step]}
         onBack={leave}
         backLabel={state.step === "pick" ? "Back to feed" : "Back a step"}
-        // The seal board carries a `?`. It opens the help dialog of HelpDialog,
-        // which has no 2.0 component yet — so the slot stays empty rather than
-        // holding a control that does nothing when pressed.
+        onLeave={leaveFlow}
+        // The seal board's `?`, opening the house help dialog with copy-voice's
+        // "Signed actions". One `?` per screen, so only the seal carries one.
+        help={
+          state.step === "seal" ? (
+            <HelpButton onOpen={() => setHelp(HELP_TOPICS.signedActions)} label="Signed actions" />
+          ) : undefined
+        }
         action={
           state.step === "pick" ? (
             <PickAction onNext={() => dispatch({ type: "advance" })} disabled={!gate.ok} />
@@ -380,6 +413,21 @@ export function ComposeWizard({
         />
       )}
 
+      {/* The other way out of the offer, said rather than drawn: the pick screen
+          below is already the way to start fresh, so this names it instead of
+          adding a second control that would compete with Continue. Discarding
+          is the card's own affordance and the only route to it. */}
+      {offered !== null && (
+        <div className="flex flex-none items-center gap-2 px-6 py-2">
+          <p
+            data-testid="wizard-draft-fresh"
+            className="m-0 flex-1 text-body-medium text-on-surface-variant"
+          >
+            Or start fresh — pick one picture, several, or one video.
+          </p>
+        </div>
+      )}
+
       {transportFailed && (
         <div className="px-6">
           <TransportError testId="wizard-transport-error" />
@@ -405,6 +453,7 @@ export function ComposeWizard({
             })
           }
           onUnpick={(id) => dispatch({ type: "unpick", id })}
+          onManage={() => setManaging(true)}
         />
       )}
 
@@ -417,7 +466,6 @@ export function ComposeWizard({
           onShape={(shape) => dispatch({ type: "shape", shape })}
           onFocus={(index) => dispatch({ type: "focus", index })}
           onCrop={(id, crop) => dispatch({ type: "crop", id, crop })}
-          onAltText={(id, altText) => dispatch({ type: "altText", id, altText })}
         />
       )}
 
@@ -436,9 +484,10 @@ export function ComposeWizard({
           onDescription={(description) => dispatch({ type: "description", description })}
           onTags={(tags) => dispatch({ type: "tags", tags })}
           onReferences={(references) => dispatch({ type: "references", references })}
-          onCrop={backToCrop}
-          onEdit={() => dispatch({ type: "goto", step: "pick" })}
+          onManage={() => setManaging(true)}
+          onDescribe={() => setDescribing(state.assets[0]?.id ?? null)}
           onRetry={retry}
+          onRemove={(id) => dispatch({ type: "unpick", id })}
           onNext={() => dispatch({ type: "advance" })}
         />
       )}
@@ -454,11 +503,56 @@ export function ComposeWizard({
           onSheet={setSheet}
           onLicense={(license) => dispatch({ type: "license", license })}
           onPDirected={(pDirected) => dispatch({ type: "pDirected", pDirected })}
+          onSensitive={(sensitive) => dispatch({ type: "sensitive", sensitive })}
+          onSensitiveReason={(sensitiveReason) =>
+            dispatch({ type: "sensitiveReason", sensitiveReason })
+          }
+          onHelp={() => setHelp(HELP_TOPICS.markingAsSensitive)}
           onSign={() => void submit()}
           onBack={() => dispatch({ type: "back" })}
           onRestoreKey={() => router.push("/restore")}
         />
       )}
+
+      {/* Show all and the describe sheet live on the wizard rather than inside a
+          step, because both are reached from more than one screen and a sheet
+          owned by a step would close when the step changed under it. */}
+      <PickedSheet
+        open={managing}
+        onClose={() => setManaging(false)}
+        items={state.assets.map((asset) => ({
+          id: asset.id,
+          src: previews[asset.id] ?? null,
+          altText: asset.altText === "" ? null : asset.altText,
+          described: asset.altText.trim() !== "",
+        }))}
+        onDescribe={(id) => setDescribing(id)}
+        onRemove={(id) => dispatch({ type: "unpick", id })}
+        onMove={(from, to) => dispatch({ type: "reorder", from, to })}
+        testId="wizard-picked-sheet"
+      />
+
+      <DescribeSheet
+        open={describing !== null}
+        onClose={() => setDescribing(null)}
+        src={describing === null ? null : (previews[describing] ?? null)}
+        value={state.assets.find((asset) => asset.id === describing)?.altText ?? ""}
+        onChange={(altText) => {
+          if (describing !== null) dispatch({ type: "altText", id: describing, altText });
+        }}
+        position={{
+          index: state.assets.findIndex((asset) => asset.id === describing),
+          total: state.assets.length,
+        }}
+        testId="wizard-describe-sheet"
+      />
+
+      <HelpDialog
+        open={help !== null}
+        onClose={() => setHelp(null)}
+        topic={help ?? HELP_TOPICS.signedActions}
+        testId="wizard-help"
+      />
     </main>
   );
 }

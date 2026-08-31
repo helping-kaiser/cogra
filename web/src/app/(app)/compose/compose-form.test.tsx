@@ -196,6 +196,9 @@ describe("ComposeForm", () => {
         references: [],
         // The 1.0 form authors words only; the gallery is the wizard's.
         attachments: null,
+        // Always stated, never omitted — an omitted mark is an unmark.
+        sensitive: false,
+        sensitiveReason: null,
       },
     });
   });
@@ -386,7 +389,15 @@ describe("ComposeForm", () => {
 
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
     expect(editVariables).toEqual({
-      input: { id: "p1", title: null, description: null, content: "New body" },
+      input: {
+        id: "p1",
+        title: null,
+        description: null,
+        content: "New body",
+        // The edit re-states the mark the post carries, rather than dropping it.
+        sensitive: false,
+        sensitiveReason: null,
+      },
     });
   });
 
