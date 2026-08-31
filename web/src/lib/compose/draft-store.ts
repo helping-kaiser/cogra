@@ -75,8 +75,27 @@ function afterReload(upload: PickedAsset["upload"]): PickedAsset["upload"] {
   return upload.kind === "done" ? upload : { kind: "waiting" };
 }
 
+/**
+ * WHY A SAVE CAN OUTLIVE THE CLEAR THAT SHOULD HAVE BEATEN IT.
+ *
+ * `save` cannot write until it has read every picked blob back out, and with
+ * ten pictures attached that read is genuinely slow. A save that started before
+ * the post was signed is therefore still sitting in `arrayBuffer()` when
+ * `clear` deletes the row — and when it finally lands it writes the draft back,
+ * which is precisely the draft that survives a successful publish.
+ *
+ * Ordering the two transactions would not help: the stale save's write is
+ * correctly ordered, it is simply no longer wanted. So each write carries the
+ * generation it began in and `clear` bumps that generation — a save whose
+ * generation is stale drops its write instead of resurrecting what was just
+ * cleared. A save issued AFTER the clear starts in the new generation and is
+ * kept, which is what lets the next compose session save normally.
+ */
+let generation = 0;
+
 export const composeDraftStore: ComposeDraftStore = {
   async save(state) {
+    const startedIn = generation;
     const assets: StoredAsset[] = await Promise.all(
       state.assets.map(async ({ file, ...rest }) => ({
         ...rest,
@@ -84,6 +103,7 @@ export const composeDraftStore: ComposeDraftStore = {
         fileType: file.type,
       })),
     );
+    if (startedIn !== generation) return;
     const draft: StoredDraft = {
       savedAt: new Date().toISOString(),
       state: { ...state, assets },
@@ -106,6 +126,7 @@ export const composeDraftStore: ComposeDraftStore = {
   },
 
   async clear() {
+    generation += 1;
     await run("readwrite", (store) => store.delete(KEY));
   },
 };
