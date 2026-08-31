@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300..900&amp;display=swap">
+  <style>
+    body { margin: 0; }
+    .screen {
+      --primary: #9f4100; --on-primary: #ffffff;
+      --primary-container: #ef6c1a; --on-primary-container: #4f1d00;
+      --secondary-container: #feaa81; --on-secondary-container: #783c1c;
+      --surface: #fff8f6; --on-surface: #251913; --on-surface-variant: #584237;
+      --surface-container: #ffeae1; --surface-container-high: #fbe3d9; --surface-container-highest: #f5ded4;
+      --outline: #8c7165; --outline-variant: #e0c0b2;
+      --error: #a5004a; --on-error: #ffffff;
+      font-family: 'Figtree', 'Segoe UI', system-ui, sans-serif;
+    }
+    .screen[data-theme="dark"] {
+      --primary: #ff8d50; --on-primary: #341100;
+      --secondary-container: #743918; --on-secondary-container: #f8a57b;
+      --surface: #151312; --on-surface: #e8e1df; --on-surface-variant: #cdc5c2;
+      --surface-container: #221f1e; --surface-container-high: #2c2928; --surface-container-highest: #373433;
+      --outline: #968f8d; --outline-variant: #4b4644;
+      --error: #ff6b95; --on-error: #66002b;
+    }
+  </style>
+</helmet>
+<div class="screen" data-theme="{{theme}}" style="width: 390px; height: 844px; display: flex; flex-direction: column; background: var(--surface); color: var(--on-surface); overflow: hidden; box-sizing: border-box;">
+  <div style="min-height: 48px; display: flex; align-items: center; gap: 4px; padding: 0 12px; flex: none;">
+    <span style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></span>
+    <h1 style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 400;">Details</h1>
+    <span style="flex: 1;"></span>
+    
+  </div>
+  <div style="flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 12px 24px 16px 24px; overflow: hidden;">
+
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="position: relative; width: 48px; height: 48px; border-radius: 8px; overflow: hidden; flex: none;"><img src="post-photo.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></div>
+      <div style="position: relative; width: 48px; height: 48px; border-radius: 8px; overflow: hidden; flex: none;"><img src="gallery-market.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"><span style="position: absolute; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center;"><svg viewBox="0 0 28 28" width="26" height="26" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="3"></circle><circle cx="14" cy="14" r="12" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-dasharray="49 75.4" transform="rotate(-90 14 14)"></circle></svg></span></div>
+      <div style="position: relative; width: 48px; height: 48px; border-radius: 8px; overflow: hidden; flex: none;"><img src="gallery-honey.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0.5;"><span style="position: absolute; right: 3px; top: 3px; width: 18px; height: 18px; border-radius: 9999px; background: var(--error); color: var(--on-error); display: flex; align-items: center; justify-content: center; font-size: 12px; line-height: 16px; font-weight: 700;">!</span></div>
+      <span style="flex: 1; font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">3 pictures — the body</span>
+      <span style="font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; color: var(--primary); margin-right: 8px;">Crop</span>
+      <span style="font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; color: var(--primary);">Edit</span>
+    </div>
+
+    <p style="margin: 0; font-size: 12px; line-height: 16px; letter-spacing: 0.4px;"><span style="color: var(--error);">One picture didn't upload.</span> <span style="font-weight: 500; letter-spacing: 0.5px; color: var(--primary);">Retry</span> <span style="color: var(--on-surface-variant);">·</span> <span style="font-weight: 500; letter-spacing: 0.5px; color: var(--primary);">Remove it</span></p>
+
+    <p style="margin: 0; font-size: 12px; line-height: 16px; letter-spacing: 0.4px;"><span style="font-weight: 500; letter-spacing: 0.5px; color: var(--primary);">Describe the pictures</span> <span style="color: var(--on-surface-variant);">· 1 of 3 described</span></p>
+
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <div style="display: flex; align-items: baseline; gap: 8px;">
+        <label style="flex: 1; font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Title</label>
+        <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">Optional</span>
+      </div>
+      <div style="min-height: 44px; display: flex; align-items: center; padding: 10px 12px; border-radius: 4px; border: 1px solid var(--outline); font-size: 16px; line-height: 24px; letter-spacing: 0.5px; box-sizing: border-box;">Sunday at the tide market</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <div style="display: flex; align-items: baseline; gap: 8px;">
+        <label style="flex: 1; font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Description</label>
+        <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">Optional</span>
+      </div>
+      <div style="padding: 10px 12px; border-radius: 4px; border: 1px solid var(--outline); font-size: 16px; line-height: 24px; letter-spacing: 0.5px; height: 68px; overflow: hidden; box-sizing: border-box;">Everything the flats give up in one morning.</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <label style="font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Topics</label>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <span style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px; border-radius: 9999px; background: var(--secondary-container); color: var(--on-secondary-container); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">#tidemarket<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg></span>
+        <span style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px; border-radius: 9999px; border: 1px solid var(--outline); color: var(--on-surface-variant); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Add a topic</span>
+      </div>
+    </div>
+
+    <div style="flex: 1;"></div>
+
+    <p style="margin: 0; font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant); text-align: center;">Pictures upload while you write — signing waits for them.</p>
+    <div style="display: flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 24px; min-width: 64px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Next</div>
+
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"theme":{"editor":"enum","options":["auto","light","dark"],"default":"auto"}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    this.media = window.matchMedia("(prefers-color-scheme: dark)");
+    this.onScheme = () => this.forceUpdate();
+    this.media.addEventListener("change", this.onScheme);
+    this.onMsg = (event) => {
+      const d = event.data;
+      if (d && (d.cograTheme === "light" || d.cograTheme === "dark" || d.cograTheme === "auto")) {
+        if (!this.state || this.state.remote !== d.cograTheme) this.setState({ remote: d.cograTheme });
+      } else if (d && d.cograThemeQuery && this.state && this.state.remote && event.source) {
+        try { event.source.postMessage({ cograTheme: this.state.remote }, "*"); } catch (e) {}
+      }
+    };
+    window.addEventListener("message", this.onMsg);
+    try {
+      const askWalk = (w, depth) => {
+        if (depth > 5) return;
+        let n = 0;
+        try { n = w.length; } catch (e) { n = 0; }
+        for (let i = 0; i < n; i++) {
+          let c = null;
+          try { c = w[i]; } catch (e) { c = null; }
+          if (c) {
+            try { c.postMessage({ cograThemeQuery: true }, "*"); } catch (e) {}
+            askWalk(c, depth + 1);
+          }
+        }
+      };
+      askWalk(window.top, 0);
+    } catch (e) {}
+  }
+  componentDidUpdate(prevProps) {
+    if (prevProps.theme !== this.props.theme && this.state && this.state.remote) {
+      this.setState({ remote: null });
+    }
+  }
+  componentWillUnmount() {
+    if (this.media) this.media.removeEventListener("change", this.onScheme);
+    window.removeEventListener("message", this.onMsg);
+  }
+  renderVals() {
+    const remote = this.state ? this.state.remote : null;
+    const mode = remote ?? this.props.theme ?? "auto";
+    const dark = mode === "auto"
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+      : mode === "dark";
+    return { theme: dark ? "dark" : "light" };
+  }
+}
+</script>
+</body>
+</html>
