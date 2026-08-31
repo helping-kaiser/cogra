@@ -20,11 +20,13 @@ export function MonogramAvatar({ name, size = "sm", src }) {
   const [failed, setFailed] = React.useState(false);
   const initial = (name ?? "").trim().charAt(0).toUpperCase() || "?";
   const box =
-    size === "lg"
-      ? { height: "64px", width: "64px", fontSize: "var(--text-headline-small)" }
-      : size === "md"
-        ? { height: "32px", width: "32px", fontSize: "var(--text-label-medium)" }
-        : { height: "24px", width: "24px", fontSize: "var(--text-label-small)" };
+    typeof size === "number"
+      ? { height: `${size}px`, width: `${size}px`, fontSize: "var(--text-label-large)" }
+      : size === "lg"
+        ? { height: "64px", width: "64px", fontSize: "var(--text-headline-small)" }
+        : size === "md"
+          ? { height: "32px", width: "32px", fontSize: "var(--text-label-medium)" }
+          : { height: "24px", width: "24px", fontSize: "var(--text-label-small)" };
   return (
     <span
       aria-hidden="true"

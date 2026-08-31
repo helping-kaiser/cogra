@@ -1,6 +1,6 @@
-/* The wallet for a guest: the tab exists and answers honestly — what CGT is
-   for, and that earning takes membership. The join prompt is the standard
-   one; nothing here pretends a wallet exists. */
+/* The wallet for a guest (round 2: reworded, prompt centered): what CGT is
+   for in one honest breath, and the standard join prompt — centered, not
+   left-bound. Nothing pretends a wallet exists. */
 export function Screen() {
   return (
     <>
@@ -11,14 +11,16 @@ export function Screen() {
             The wallet
           </h2>
           <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
-            CGT pays the people whose posts and stances carry real reach — held by their own key, never by CoGra.
+            CGT is how CoGra pays its people — for the reach their posts and stances actually deliver, held by their own key, never by CoGra.
           </p>
           <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
-            You're browsing as a guest — sign in or join to earn and tip.
+            Join, and what you grow here lands here.
           </p>
         </Card>
         <div style={{ flex: 1 }} />
-        <JoinPrompt inline />
+        <div style={{ display: "flex", justifyContent: "center", padding: "0 16px 8px" }}>
+          <JoinPrompt inline />
+        </div>
       </div>
       <BottomNav active="wallet" slots={ALL_SLOTS} inline />
     </>

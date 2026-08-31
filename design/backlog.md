@@ -213,6 +213,14 @@ to `docs/` as their own PR. Two new "?" texts (*Your wallet key*;
 *What is CGT?* extended with the market-≈ sentence); pending
 amounts (deferred from item 11) landed as `LedgerRow pending`.
 Balance, where CGT came from, active campaigns, `payoutAddress`.
+Round 2 (same day, "make it sexy" — direction A + gradient
+blessed): `--surface-hero` (the one brand-wash gradient surface),
+the hero with the ghosted coin + delta chip, `EarnedChart`
+(settlement bars, honest decoration), identity rows with direction
+badges, the campaign's own subpage (*Wallet · your campaign*), the
+address in a card with copy, and the round of wording fixes
+(path-true zero state, key notice leads, centered guest prompt,
+unmissable applicant return).
 
 ### 21 · The media slice · *design + system* · **built**
 Inserted 2026-08-31 (jakob), ahead of item 12: the product's media

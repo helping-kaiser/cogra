@@ -1394,6 +1394,44 @@ born lazily — recorded in the product docs, PR #537). The boards:
 - **Key-absent is read-only, honestly**: balance and history stay
   readable — the address and the chain are public — and only signing
   needs the key; the restore-first notice says exactly that.
+
+**Round 2 — the trophy pass** (jakob, same day: the first cut read
+"sad — text and numbers"; direction A blessed *with* the gradient,
+explicitly as a first move against the product reading "basic"
+next to brands like Instagram):
+
+- **The brand wash** — `--surface-hero` in tokens/colors.css, the
+  system's ONE decorative gradient surface (both stops existing
+  palette values; the recipe is the only new thing). It dresses the
+  few places a figure IS the page — the wallet's hero first — and is
+  never a default card fill. The hero adds the **ghosted oversized
+  brand coin** cropped by the card's edge (texture, not a second
+  logo, aria-hidden) and the **delta chip** ("+14.40 this week" —
+  real recent earnings, omitted when nothing is new).
+- **`EarnedChart`** — the progress strip: earnings per settlement as
+  bars, every bar a real public settlement and tappable into it —
+  the traceability promise is what makes a chart admissible. Latest
+  bar wears `primary` (recency, never direction); zero settlements
+  are visible stubs.
+- **History rows are identity rows** — the disc leads (the tipper's
+  face, the paying campaign's cover, a glyph), wearing a small
+  direction badge (`arrow_outward`, rotated for in); the amount is
+  never coloured. `MonogramAvatar` accepts a numeric size for the
+  40px list-avatar rung.
+- **The campaign has its own subpage** (*Wallet · your campaign*) —
+  committing a deposit is a big deal: the money facts (deposit,
+  escrow, window, one-public-record settlement, unspent-returns) and
+  its rail history; the main page keeps one entry row.
+- **The address lives in a card** — label, **copy**, Change, the
+  address whole and mono; compact at rest, captioned on the zero
+  state and the seals.
+- Wording fixes: the zero state is **path-true** (campaigns pay when
+  the paths between an advertiser's crowd and their target run
+  through you; posting is how paths start, not a guarantee); the
+  key notice **leads** the key-absent board, inset like every card;
+  the guest prompt is centered; the applicant is told plainly to
+  come back after approval — earnings can't land until the address
+  exists.
 - **The picked row carries no "Crop" or "Edit" links** (jakob, same
   day: "none") — the whole row is the affordance and opens the Show
   all sheet; re-cropping is the crop step's job, one Back away in the

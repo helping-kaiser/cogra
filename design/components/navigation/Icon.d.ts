@@ -35,6 +35,9 @@ export interface IconProps {
     | "drag_indicator"
     | "lock"
     | "expand_more"
+    | "chevron_right"
+    | "arrow_outward"
+    | "content_copy"
     | "graph"
     | "mark";
   size?: number;

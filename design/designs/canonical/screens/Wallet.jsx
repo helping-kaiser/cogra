@@ -1,49 +1,55 @@
-/* The wallet at rest (item 12, jakob's rulings 2026-08-31): the balance
-   headline with the market ≈, one history stream newest first (a pending
-   payout wearing Still settling — the pending look item 11 deferred here),
-   the member's own campaign as a money view, and the witnessed payout
-   address. No free-form send (tipping IS the send), no cash-out — moving
-   CGT elsewhere is any Liquid tool's job, and the wallet says where the
-   money lives, not where to sell it. */
+/* The wallet at rest (item 12 round 2 — direction A, jakob 2026-08-31): the
+   balance as a trophy on the brand wash, the earnings bars beneath it, the
+   history as identity rows, the campaign as ONE entry row into its own
+   subpage (WalletCampaign), and the address in its card. This page is the
+   user's reach paying off — it should feel like it. */
 export function Screen() {
   return (
     <>
       <CograBand />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 0 0" }}>
-        <WalletBalance amount={128.4} approx="0.00087" onHelp={() => {}} />
+        <WalletBalance amount={128.4} approx="0.00087" delta="+14.40 this week" onHelp={() => {}} />
+
+        <div style={{ height: 12, flex: "none" }} />
+        <EarnedChart
+          height={48}
+          caption="Earned · last 8 settlements"
+          points={[
+            { amount: 2.1 },
+            { amount: 4.6 },
+            { amount: 0 },
+            { amount: 3.2 },
+            { amount: 7.9 },
+            { amount: 5.4 },
+            { amount: 9.8 },
+            { amount: 12.4, label: 'Settlement of "Sunday at the tide market" — 12.40', onOpen: () => {} },
+          ]}
+        />
 
         <SectionLabel>History</SectionLabel>
-        <div style={{ display: "flex", flexDirection: "column", padding: "0 24px" }}>
-          <LedgerRow words="Payout · settling" amount={3.1} pending />
-          <LedgerRow words='Payout · "Sunday at the tide market"' when="2d" amount={12.4} onOpen={() => {}} />
-          <LedgerRow words="Tip from @tobias" when="4d" amount={2} onOpen={() => {}} />
-          <LedgerRow words="Tip to @ada" when="5d" amount={-2} onOpen={() => {}} />
-          <LedgerRow words='Payout · "The long way home"' when="8d" amount={0.0003} onOpen={() => {}} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
+          <LedgerRow words="Payout · settling" context="Campaign settlement underway" amount={3.1} pending glyph="campaign" />
+          <LedgerRow words='Payout · "Sunday at the tide market"' context="Campaign settled" when="2d" amount={12.4} image="gallery-market.jpg" onOpen={() => {}} />
+          <LedgerRow words="Tip from @tobias" context='On "Salt maps of the coast road"' when="4d" amount={2} name="Tobias Lindqvist" onOpen={() => {}} />
         </div>
 
         <SectionLabel>Your campaign</SectionLabel>
         <div style={{ padding: "0 16px" }}>
-          <Card style={{ flex: "none" }}>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
-              <span style={{ fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
-                Sunday at the tide market
-              </span>
-              <span style={{ flex: "none", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-                <MoneyFigure amount={12500} />
-              </span>
-            </div>
-            <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
-              In escrow · runs 6 more days · settles as one public record
-            </p>
-          </Card>
+          <LedgerRow
+            words='"Sunday at the tide market"'
+            context="In escrow · settles in 6 days"
+            amount={-12500}
+            glyph="campaign"
+            onOpen={() => {}}
+          />
         </div>
 
-        <SectionLabel>Payouts land at</SectionLabel>
-        <div style={{ padding: "0 24px", display: "flex", flexDirection: "column", gap: 4 }}>
-          <PayoutAddress address={SOL_ADDRESS} label="" onChange={() => {}} />
-          <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
-            The address is public — and so is every change to it.
-          </p>
+        <div style={{ flex: 1 }} />
+
+        {/* Compact here — the public-record caption lives on the zero state
+            and the seals; the rest-state wallet keeps the card lean. */}
+        <div style={{ padding: "0 16px 8px" }}>
+          <PayoutAddress address={SOL_ADDRESS} onCopy={() => {}} onChange={() => {}} />
         </div>
       </div>
       <BottomNav active="wallet" slots={ALL_SLOTS} inline />

@@ -56,6 +56,7 @@ const {
   WalletBalance,
   LedgerRow,
   PayoutAddress,
+  EarnedChart,
   StancePad,
   StanceReadout,
   SensitiveVeil,
