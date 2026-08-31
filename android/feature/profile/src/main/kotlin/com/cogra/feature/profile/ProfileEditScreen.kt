@@ -42,6 +42,8 @@ import com.cogra.core.designsystem.v2.media.CograCover
 @Composable
 fun ProfileEditRoute(
     onSaved: () -> Unit,
+    /** A picked profile picture, handed to the crop-and-seal flow. */
+    onPicturePicked: (String) -> Unit,
     onBack: () -> Unit,
     viewModel: ProfileEditViewModel = hiltViewModel(),
 ) {
@@ -65,9 +67,12 @@ fun ProfileEditRoute(
     // One picker per picture: the system photo picker, so no media
     // permission is ever requested
     // (developer.android.com/training/data-storage/shared/photopicker).
+    // The avatar's pick opens the profile-picture FLOW (`AvatarCrop` →
+    // `AvatarSeal`) rather than uploading in place: changing your picture
+    // is a signed act and gets its own seal (design/readme.md §13).
     val avatarPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia(),
-    ) { uri -> uri?.let { viewModel.onAvatarPicked(it.toString()) } }
+    ) { uri -> uri?.let { onPicturePicked(it.toString()) } }
     val coverPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia(),
     ) { uri -> uri?.let { viewModel.onCoverPicked(it.toString()) } }

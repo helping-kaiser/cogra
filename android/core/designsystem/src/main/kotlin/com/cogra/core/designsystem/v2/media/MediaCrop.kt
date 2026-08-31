@@ -21,7 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -66,13 +70,14 @@ fun MediaCrop(
     state: CropState,
     modifier: Modifier = Modifier,
     caption: String = "One shape for the whole post. Drag to move, pinch to zoom.",
+    mask: CropMask = CropMask.Thirds,
     testTag: String? = null,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Space.x3),
     ) {
-        CropViewport(item, shape, state, testTag)
+        CropViewport(item, shape, state, mask, testTag)
 
         Text(
             text = caption,
@@ -82,11 +87,24 @@ fun MediaCrop(
     }
 }
 
+/**
+ * What is drawn over the picture being framed.
+ *
+ * [Thirds] is the post composer's: hairline thirds over a rectangular
+ * frame, because the whole frame is what gets stored. [Circle] is the
+ * profile picture's (`AvatarCrop`): a circular aperture with everything
+ * outside it dimmed, because a circle is how the avatar is *seen*
+ * everywhere, and framing to a square you cannot see the edges of is
+ * guesswork.
+ */
+enum class CropMask { Thirds, Circle }
+
 @Composable
 private fun CropViewport(
     item: MediaItem,
     shape: MediaShape,
     state: CropState,
+    mask: CropMask,
     testTag: String?,
 ) {
     val nudgeActions = listOf(
@@ -146,9 +164,49 @@ private fun CropViewport(
                     translationY = state.offset.y
                 },
         )
-        RuleOfThirds()
+        when (mask) {
+            CropMask.Thirds -> RuleOfThirds()
+            CropMask.Circle -> CircleAperture()
+        }
     }
 }
+
+/**
+ * The avatar's aperture: a clear circle, everything outside it dimmed, and
+ * a hairline rim so the edge is visible against a light picture.
+ *
+ * Drawn rather than composed from shapes because "dim everything except
+ * this circle" is one even-odd path, and stacking four dimming boxes round
+ * a hole leaves seams at the corners.
+ */
+@Composable
+private fun CircleAperture() {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .drawWithContent {
+                drawContent()
+                val inset = size.minDimension * ApertureInset
+                val radius = (size.minDimension - inset * 2) / 2f
+                val centre = Offset(size.width / 2f, size.height / 2f)
+                val scrim = Path().apply {
+                    addRect(Rect(Offset.Zero, size))
+                    addOval(Rect(centre, radius))
+                    fillType = PathFillType.EvenOdd
+                }
+                drawPath(scrim, MediaOverlay.CropScrim)
+                drawCircle(
+                    color = MediaOverlay.CropRule,
+                    radius = radius,
+                    center = centre,
+                    style = Stroke(width = 1.dp.toPx()),
+                )
+            },
+    )
+}
+
+/** `21 / 342` on `AvatarCrop`: the ring of stage left around the circle. */
+private const val ApertureInset = 0.0614f
 
 /** The canvas's hairline thirds, drawn over the picture. */
 @Composable
