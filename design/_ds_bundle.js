@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"MediaAttachment","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/proposed/MediaViewer.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"}],"sourceHashes":{"components/content/CommentCard.jsx":"d9862de81cc2","components/content/OverflowMenu.jsx":"5a5ff330770c","components/content/PostCard.jsx":"0c4b5b373a10","components/content/ReferenceRow.jsx":"bad43ae893d4","components/content/TopicsLine.jsx":"b3bfa12c4d86","components/core/BottomSheet.jsx":"04aa46ec17d9","components/core/Button.jsx":"ff5a90231bbe","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"48c703bd16e0","components/core/HelpDot.jsx":"eabf92544b27","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c3fc1cd30267","components/forms/PasswordField.jsx":"38bf37cacbb0","components/forms/RecoveryCode.jsx":"b89705800497","components/forms/SearchBar.jsx":"2ed2d91945fc","components/forms/TextField.jsx":"ad5b7c03b0c1","components/honesty/PendingMarker.jsx":"28eaaf4ffa77","components/honesty/SensitiveVeil.jsx":"92e923dee41b","components/honesty/TransportError.jsx":"2f66269a8f3c","components/navigation/BorrowedViewBand.jsx":"66c07c53862e","components/navigation/BottomNav.jsx":"53a749d4ddf1","components/navigation/CograBand.jsx":"1d092a6d8618","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"8fedb2f39e19","components/navigation/Icon.jsx":"8a0c2f850379","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"be9af2dd1404","components/navigation/SegmentedFilter.jsx":"63d3f3e7404c","components/people/ActorChip.jsx":"924eeeb34308","components/people/ProfileHeader.jsx":"f6159ea12140","components/proposed/ExplainableNumber.jsx":"b29af54b996a","components/proposed/MediaAttachment.jsx":"fa1b541a8999","components/proposed/MediaViewer.jsx":"3a09af18787e","components/stance/SeveranceConfirm.jsx":"1a0dbafb9e95","components/stance/StanceAlternates.jsx":"0b50770f4aa0","components/stance/StanceCoachMark.jsx":"4d4cfdcab8db","components/stance/StanceControl.jsx":"2b4d515f933a","components/stance/StancePad.jsx":"f6eda3aa07e3","components/stance/StanceReadout.jsx":"004726c35cdd","components/stance/StanceSlider.jsx":"325286a6b95d","components/states/EmptyState.jsx":"ada7c8e59cc9","designs/core-loop/app.jsx":"44ff990afba5","designs/core-loop/data.jsx":"534511e4e114"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/proposed/MediaAttachment.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"MediaAttachment","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/proposed/MediaViewer.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"}],"sourceHashes":{"components/content/CommentCard.jsx":"fb7ee820bf9d","components/content/OverflowMenu.jsx":"5a5ff330770c","components/content/PostCard.jsx":"0c4b5b373a10","components/content/ReferenceRow.jsx":"bad43ae893d4","components/content/TopicsLine.jsx":"b3bfa12c4d86","components/core/BottomSheet.jsx":"04aa46ec17d9","components/core/Button.jsx":"ff5a90231bbe","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"48c703bd16e0","components/core/HelpDot.jsx":"eabf92544b27","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c3fc1cd30267","components/forms/PasswordField.jsx":"38bf37cacbb0","components/forms/RecoveryCode.jsx":"b89705800497","components/forms/SearchBar.jsx":"2ed2d91945fc","components/forms/TextField.jsx":"ad5b7c03b0c1","components/honesty/PendingMarker.jsx":"28eaaf4ffa77","components/honesty/SensitiveVeil.jsx":"92e923dee41b","components/honesty/TransportError.jsx":"2f66269a8f3c","components/navigation/BorrowedViewBand.jsx":"66c07c53862e","components/navigation/BottomNav.jsx":"53a749d4ddf1","components/navigation/CograBand.jsx":"1d092a6d8618","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"8fedb2f39e19","components/navigation/Icon.jsx":"8a0c2f850379","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"be9af2dd1404","components/navigation/SegmentedFilter.jsx":"63d3f3e7404c","components/people/ActorChip.jsx":"924eeeb34308","components/people/ProfileHeader.jsx":"f6159ea12140","components/proposed/ExplainableNumber.jsx":"b29af54b996a","components/proposed/MediaAttachment.jsx":"94880620d847","components/proposed/MediaViewer.jsx":"3a09af18787e","components/stance/SeveranceConfirm.jsx":"1a0dbafb9e95","components/stance/StanceAlternates.jsx":"0b50770f4aa0","components/stance/StanceCoachMark.jsx":"4d4cfdcab8db","components/stance/StanceControl.jsx":"2b4d515f933a","components/stance/StancePad.jsx":"f6eda3aa07e3","components/stance/StanceReadout.jsx":"004726c35cdd","components/stance/StanceSlider.jsx":"325286a6b95d","components/states/EmptyState.jsx":"ada7c8e59cc9","designs/core-loop/app.jsx":"44ff990afba5","designs/core-loop/data.jsx":"1a69aa16a143"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/proposed/MediaAttachment.jsx"}]} */
 
 (() => {
 
@@ -3029,9 +3029,282 @@ function TopicsLine({
 __ds_scope.TopicsLine = TopicsLine;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/TopicsLine.jsx", error: String((e && e.message) || e) }); }
 
+// components/proposed/MediaAttachment.jsx
+try { (() => {
+const { Icon } = __ds_scope;
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+/* PROPOSED — design.md §6's "media attachment", with the two rules that were open
+   last session now settled by the product (2026-08-26 hand-off).
+
+   DECIDED, and built here:
+   · "aspect-ratio-reserved tile with optional alt text; gallery layout for
+     multiples. SPACE IS RESERVED BEFORE LOAD SO CONTENT NEVER JUMPS." That is the
+     load-bearing rule and the reason this exists ahead of the feature: a layout
+     designed without reserved space is a layout that will jump.
+   · A POST FITS THE SCREEN. The card — author row, media, text, affordances —
+     must sit inside the phone's height minus the top safe area and the bottom
+     bar, or the reader never sees a post whole and has to scroll to reach the
+     affordances. Media is the only part that can flex, so the cap lands here:
+     `--media-max-height`, which budgets for the WORST-CASE chrome rather than the
+     average — see tokens/spacing.css. A capped tile is not cropped: the frame is
+     fitted inside whatever height is left.
+   · The tile sits at the medium (12px) rung inside a card, on
+     `surfaceContainerHigh` — a step above the card's own fill, so an unloaded
+     tile reads as a reserved region rather than a hole.
+   · Alt text is authored, optional, and never invented. A tile with none is
+     `aria-hidden`, because a decorative-by-omission image is better than a
+     machine-guessed description.
+   · THE RATIO VOCABULARY IS THE CROP RULING'S (readme §13, compose): tall 4:5,
+     square 1:1, wide 1.91:1 — one shape for the whole post, chosen at the crop
+     step. `tall` is also the CAP: uncropped media (a comment's pictures never
+     crop — jakob 2026-08-31) is not shown taller than 4:5; a 9:16 tile eats a
+     phone screen whole, which is the opposite of a scrollable feed.
+   · THE FRAME IS SHOWN WHOLE (2026-08-26; without exception since 2026-08-31).
+     The cap bounds the TILE, not the picture: a taller frame is fitted inside it
+     and the reserved surface shows at the sides, rather than the frame being cut.
+     Nothing about the author's crop is decided by the layout. The bars are plain
+     surfaceContainerHigh — the same reserved region the tile already is — and
+     never a blurred enlargement of the photo itself, which invents image where
+     there is none and is exactly the attention device §1 rules out.
+   · VIDEO AUTOPLAYS, MUTED, and the mute decision is GLOBAL AND STICKY. Unmute
+     one video and the next one down is already unmuted; mute it again and they
+     all go quiet. Tapping every clip to start it is friction with no upside, and
+     a per-video mute state means the reader re-decides the same thing on every
+     scroll. It only plays while it is actually on screen (half-visible, via
+     IntersectionObserver) — offscreen video is neither calm nor cheap.
+
+   The sound toggle shows the CURRENT state (`volume_up` = sound on) and its
+   accessible name says what the tap will DO. A sensitive post veils the WHOLE
+   gallery, never per-picture (jakob 2026-08-31) — the veil wraps this component
+   where the card renders it.
+
+   `src`-less tiles render the reserved region with a label saying what belongs
+   there. Real photography for mocks now lives in `assets/photos/`. */
+
+const RATIOS = {
+  tall: "4 / 5",
+  square: "1 / 1",
+  wide: "1.91 / 1"
+};
+
+/* The global mute decision. One value for every video on every surface, so a
+   reader decides "sound on" once. Module-level rather than context: a feed and a
+   detail view mounted from different trees still share it. */
+const muteStore = {
+  muted: true,
+  listeners: new Set(),
+  set(next) {
+    if (this.muted === next) return;
+    this.muted = next;
+    this.listeners.forEach(fn => fn(next));
+  }
+};
+function useGlobalMute() {
+  const [muted, setLocal] = React.useState(muteStore.muted);
+  React.useEffect(() => {
+    muteStore.listeners.add(setLocal);
+    setLocal(muteStore.muted);
+    return () => muteStore.listeners.delete(setLocal);
+  }, []);
+  return [muted, next => muteStore.set(next)];
+}
+function MediaAttachment({
+  src,
+  poster,
+  alt,
+  ratio = "wide",
+  kind = "image",
+  label = "Media",
+  radius = "var(--radius-medium)",
+  fit = "contain",
+  maxHeight = "var(--media-max-height)"
+}) {
+  const [muted, setMuted] = useGlobalMute();
+  const videoRef = React.useRef(null);
+  const frameRef = React.useRef(null);
+
+  /* Play only while at least half the tile is on screen. */
+  React.useEffect(() => {
+    const frame = frameRef.current;
+    if (kind !== "video" || !src || !frame || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(([entry]) => {
+      const video = videoRef.current;
+      if (!video) return;
+      if (entry.isIntersecting) video.play().catch(() => {});else video.pause();
+    }, {
+      threshold: 0.5
+    });
+    observer.observe(frame);
+    return () => observer.disconnect();
+  }, [kind, src]);
+  React.useEffect(() => {
+    if (videoRef.current) videoRef.current.muted = muted;
+  }, [muted]);
+  return /*#__PURE__*/React.createElement("div", {
+    ref: frameRef,
+    style: {
+      position: "relative",
+      aspectRatio: RATIOS[ratio] ?? ratio,
+      width: "100%",
+      maxHeight,
+      minHeight: 0,
+      overflow: "hidden",
+      borderRadius: radius,
+      background: "var(--surface-container-high)"
+    }
+  }, src && kind === "video" ? /*#__PURE__*/React.createElement("video", {
+    ref: videoRef,
+    src: src,
+    poster: poster,
+    muted: muted,
+    autoPlay: true,
+    loop: true,
+    playsInline: true,
+    preload: "metadata",
+    "aria-label": alt,
+    style: {
+      display: "block",
+      width: "100%",
+      height: "100%",
+      objectFit: fit
+    }
+  }) : src ? /*#__PURE__*/React.createElement("img", {
+    src: src,
+    alt: alt ?? "",
+    "aria-hidden": alt ? undefined : "true",
+    style: {
+      display: "block",
+      width: "100%",
+      height: "100%",
+      objectFit: fit
+    }
+  }) : /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      inset: 0,
+      display: "grid",
+      placeItems: "center",
+      fontSize: "var(--text-label-medium)",
+      color: "var(--text-secondary)"
+    }
+  }, label), kind === "video" && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": muted ? "Turn sound on" : "Turn sound off",
+    "aria-pressed": !muted,
+    onClick: event => {
+      event.stopPropagation();
+      setMuted(!muted);
+    },
+    className: "cg-state cg-focus",
+    style: {
+      position: "absolute",
+      left: "8px",
+      bottom: "8px",
+      display: "grid",
+      placeItems: "center",
+      width: "36px",
+      height: "36px",
+      border: "none",
+      borderRadius: "var(--radius-full)",
+      background: "var(--surface-snackbar)",
+      color: "var(--on-surface-snackbar)",
+      padding: 0,
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: muted ? "volume_off" : "volume_up",
+    size: 20
+  })));
+}
+
+/* THE GALLERY IS A PAGER (jakob 2026-08-31). Every picture in a post shares the
+   post's one crop shape, so the honest layout is one frame at that shape,
+   swiped: each picture is shown WHOLE, exactly as its author shaped it, and the
+   card's height is one frame's height regardless of count. Dots below carry the
+   position — dots only, no "1/n" count pill (ruled against). The earlier
+   lead-tile-plus-square-strip layout is rejected: its secondary squares
+   re-cropped frames the author had deliberately shaped, half-undoing the
+   one-crop ruling. The cap is authoring-side — at most TEN pictures, or ONE
+   video (with its cover) — the gallery renders what it is given.
+
+   Every frame renders at the ONE frame ratio: the explicit `ratio` prop, else
+   the first item's, so uncropped sets (a comment's pictures) pass a fixed frame
+   (square) and fit each whole frame inside it — a pager whose height changed
+   per swipe would bounce the card under the reader's thumb. */
+function MediaGallery({
+  items = [],
+  ratio,
+  radius,
+  maxHeight
+}) {
+  const [page, setPage] = React.useState(0);
+  const stripRef = React.useRef(null);
+  if (items.length === 0) return null;
+  if (items.length === 1) {
+    return /*#__PURE__*/React.createElement(MediaAttachment, _extends({}, items[0], {
+      ratio: items[0].ratio ?? ratio ?? "wide",
+      radius: radius ?? items[0].radius,
+      maxHeight: maxHeight ?? items[0].maxHeight
+    }));
+  }
+  const frameRatio = ratio ?? items[0].ratio ?? "wide";
+  const onScroll = () => {
+    const strip = stripRef.current;
+    if (!strip || strip.clientWidth === 0) return;
+    const next = Math.round(strip.scrollLeft / strip.clientWidth);
+    if (next !== page) setPage(next);
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    ref: stripRef,
+    onScroll: onScroll,
+    style: {
+      display: "flex",
+      overflowX: "auto",
+      scrollSnapType: "x mandatory",
+      scrollbarWidth: "none"
+    }
+  }, items.map((item, index) => /*#__PURE__*/React.createElement("div", {
+    key: item.src ?? index,
+    style: {
+      flex: "none",
+      width: "100%",
+      scrollSnapAlign: "start"
+    }
+  }, /*#__PURE__*/React.createElement(MediaAttachment, _extends({}, item, {
+    ratio: frameRatio,
+    radius: radius ?? item.radius,
+    maxHeight: maxHeight ?? item.maxHeight
+  }))))), /*#__PURE__*/React.createElement("div", {
+    "aria-label": `Picture ${page + 1} of ${items.length}`,
+    style: {
+      display: "flex",
+      justifyContent: "center",
+      gap: "6px",
+      padding: "8px 0 0"
+    }
+  }, items.map((item, index) => /*#__PURE__*/React.createElement("span", {
+    key: item.src ?? index,
+    style: {
+      width: "6px",
+      height: "6px",
+      borderRadius: "var(--radius-full)",
+      background: index === page ? "var(--primary)" : "var(--border-hairline)"
+    }
+  }))));
+}
+__ds_scope.useGlobalMute = useGlobalMute;
+__ds_scope.MediaAttachment = MediaAttachment;
+__ds_scope.MediaGallery = MediaGallery;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/proposed/MediaAttachment.jsx", error: String((e && e.message) || e) }); }
+
 // components/content/CommentCard.jsx
 try { (() => {
-const { Card, Button, ActorChip, PendingMarker, EditedMarker, LicenseTerms, StanceControl, OverflowMenu, TopicsLine } = __ds_scope;
+const { Card, Button, ActorChip, PendingMarker, EditedMarker, LicenseTerms, StanceControl, OverflowMenu, TopicsLine, MediaGallery } = __ds_scope;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* The comment of design.md §6 — "author, body, timestamp, media, nested replies,
    stance control", in its top-level and nested variants. Extracted from
@@ -3062,6 +3335,7 @@ function CommentCard({
   author,
   content,
   timestamp,
+  media,
   license,
   pending = false,
   edited = false,
@@ -3130,7 +3404,11 @@ function CommentCard({
       fontSize: "var(--text-body-medium)",
       lineHeight: "var(--text-body-medium--line-height)"
     }
-  }, withMentions(content)), /*#__PURE__*/React.createElement(TopicsLine, {
+  }, withMentions(content)), Array.isArray(media) && media.length > 0 && /*#__PURE__*/React.createElement(MediaGallery, {
+    items: media,
+    ratio: media.length > 1 ? "square" : undefined,
+    maxHeight: "220px"
+  }), /*#__PURE__*/React.createElement(TopicsLine, {
     topics: topics,
     references: references,
     onOpenReferences: onOpenReferences
@@ -3282,263 +3560,6 @@ function ExplainableNumber({
 }
 __ds_scope.ExplainableNumber = ExplainableNumber;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/proposed/ExplainableNumber.jsx", error: String((e && e.message) || e) }); }
-
-// components/proposed/MediaAttachment.jsx
-try { (() => {
-const { Icon } = __ds_scope;
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-/* PROPOSED — design.md §6's "media attachment", with the two rules that were open
-   last session now settled by the product (2026-08-26 hand-off).
-
-   DECIDED, and built here:
-   · "aspect-ratio-reserved tile with optional alt text; gallery layout for
-     multiples. SPACE IS RESERVED BEFORE LOAD SO CONTENT NEVER JUMPS." That is the
-     load-bearing rule and the reason this exists ahead of the feature: a layout
-     designed without reserved space is a layout that will jump.
-   · A POST FITS THE SCREEN. The card — author row, media, text, affordances —
-     must sit inside the phone's height minus the top safe area and the bottom
-     bar, or the reader never sees a post whole and has to scroll to reach the
-     affordances. Media is the only part that can flex, so the cap lands here:
-     `--media-max-height`, which budgets for the WORST-CASE chrome rather than the
-     average — see tokens/spacing.css. A capped tile is not cropped: the frame is
-     fitted inside whatever height is left.
-   · The tile sits at the medium (12px) rung inside a card, on
-     `surfaceContainerHigh` — a step above the card's own fill, so an unloaded
-     tile reads as a reserved region rather than a hole.
-   · Alt text is authored, optional, and never invented. A tile with none is
-     `aria-hidden`, because a decorative-by-omission image is better than a
-     machine-guessed description.
-   · PORTRAIT CAP 4:5. Taller media (3:4, 2:3, 9:16) is not shown taller — a 9:16
-     tile eats a phone screen whole, which is the opposite of a scrollable feed;
-     4:5 is the cap because it is the widely-used default.
-   · THE FRAME IS SHOWN WHOLE (2026-08-26). The cap bounds the TILE, not the
-     picture: a taller frame is fitted inside it and the reserved surface shows at
-     the sides, rather than the frame being cut. Nothing about the author's crop is
-     decided by the layout. The bars are plain surfaceContainerHigh — the same
-     reserved region the tile already is — and never a blurred enlargement of the
-     photo itself, which invents image where there is none and is exactly the
-     attention device §1 rules out.
-     THE ONE EXCEPTION is a gallery's SECONDARY tiles: those squares are an index
-     into the set, not the media itself, so they crop to stay a legible grid. The
-     lead tile, and any single attachment, always shows the whole frame.
-   · VIDEO AUTOPLAYS, MUTED, and the mute decision is GLOBAL AND STICKY. Unmute
-     one video and the next one down is already unmuted; mute it again and they
-     all go quiet. Tapping every clip to start it is friction with no upside, and
-     a per-video mute state means the reader re-decides the same thing on every
-     scroll. It only plays while it is actually on screen (half-visible, via
-     IntersectionObserver) — offscreen video is neither calm nor cheap.
-
-   The sound toggle shows the CURRENT state (`volume_up` = sound on) and its
-   accessible name says what the tap will DO. Still open: the interaction between
-   a gallery and §9's sensitive blur.
-
-   `src`-less tiles render the reserved region with a label saying what belongs
-   there. Real photography for mocks now lives in `assets/photos/`. */
-
-const RATIOS = {
-  landscape: "16 / 9",
-  square: "1 / 1",
-  portrait: "4 / 5"
-};
-
-/* The global mute decision. One value for every video on every surface, so a
-   reader decides "sound on" once. Module-level rather than context: a feed and a
-   detail view mounted from different trees still share it. */
-const muteStore = {
-  muted: true,
-  listeners: new Set(),
-  set(next) {
-    if (this.muted === next) return;
-    this.muted = next;
-    this.listeners.forEach(fn => fn(next));
-  }
-};
-function useGlobalMute() {
-  const [muted, setLocal] = React.useState(muteStore.muted);
-  React.useEffect(() => {
-    muteStore.listeners.add(setLocal);
-    setLocal(muteStore.muted);
-    return () => muteStore.listeners.delete(setLocal);
-  }, []);
-  return [muted, next => muteStore.set(next)];
-}
-function MediaAttachment({
-  src,
-  poster,
-  alt,
-  ratio = "landscape",
-  kind = "image",
-  label = "Media",
-  radius = "var(--radius-medium)",
-  fit = "contain",
-  maxHeight = "var(--media-max-height)"
-}) {
-  const [muted, setMuted] = useGlobalMute();
-  const videoRef = React.useRef(null);
-  const frameRef = React.useRef(null);
-
-  /* Play only while at least half the tile is on screen. */
-  React.useEffect(() => {
-    const frame = frameRef.current;
-    if (kind !== "video" || !src || !frame || typeof IntersectionObserver === "undefined") return;
-    const observer = new IntersectionObserver(([entry]) => {
-      const video = videoRef.current;
-      if (!video) return;
-      if (entry.isIntersecting) video.play().catch(() => {});else video.pause();
-    }, {
-      threshold: 0.5
-    });
-    observer.observe(frame);
-    return () => observer.disconnect();
-  }, [kind, src]);
-  React.useEffect(() => {
-    if (videoRef.current) videoRef.current.muted = muted;
-  }, [muted]);
-  return /*#__PURE__*/React.createElement("div", {
-    ref: frameRef,
-    style: {
-      position: "relative",
-      aspectRatio: RATIOS[ratio] ?? ratio,
-      width: "100%",
-      maxHeight,
-      minHeight: 0,
-      overflow: "hidden",
-      borderRadius: radius,
-      background: "var(--surface-container-high)"
-    }
-  }, src && kind === "video" ? /*#__PURE__*/React.createElement("video", {
-    ref: videoRef,
-    src: src,
-    poster: poster,
-    muted: muted,
-    autoPlay: true,
-    loop: true,
-    playsInline: true,
-    preload: "metadata",
-    "aria-label": alt,
-    style: {
-      display: "block",
-      width: "100%",
-      height: "100%",
-      objectFit: fit
-    }
-  }) : src ? /*#__PURE__*/React.createElement("img", {
-    src: src,
-    alt: alt ?? "",
-    "aria-hidden": alt ? undefined : "true",
-    style: {
-      display: "block",
-      width: "100%",
-      height: "100%",
-      objectFit: fit
-    }
-  }) : /*#__PURE__*/React.createElement("span", {
-    style: {
-      position: "absolute",
-      inset: 0,
-      display: "grid",
-      placeItems: "center",
-      fontSize: "var(--text-label-medium)",
-      color: "var(--text-secondary)"
-    }
-  }, label), kind === "video" && /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    "aria-label": muted ? "Turn sound on" : "Turn sound off",
-    "aria-pressed": !muted,
-    onClick: event => {
-      event.stopPropagation();
-      setMuted(!muted);
-    },
-    className: "cg-state cg-focus",
-    style: {
-      position: "absolute",
-      left: "8px",
-      bottom: "8px",
-      display: "grid",
-      placeItems: "center",
-      width: "36px",
-      height: "36px",
-      border: "none",
-      borderRadius: "var(--radius-full)",
-      background: "var(--surface-snackbar)",
-      color: "var(--on-surface-snackbar)",
-      padding: 0,
-      cursor: "pointer"
-    }
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: muted ? "volume_off" : "volume_up",
-    size: 20
-  })));
-}
-
-/* One, two, or three-and-more, and nothing cleverer. The first tile leads at the
-   post's own ratio; the rest share a row of squares, so the reserved height is a
-   function of the count alone and can be computed before anything loads. A
-   fourth-and-beyond count shows three and a remainder — a gallery that grows a
-   new row per image changes the height of every card below it. */
-function MediaGallery({
-  items = [],
-  ratio = "landscape",
-  radius
-}) {
-  if (items.length === 0) return null;
-  if (items.length === 1) {
-    return /*#__PURE__*/React.createElement(MediaAttachment, _extends({}, items[0], {
-      ratio: items[0].ratio ?? ratio,
-      radius: radius ?? items[0].radius
-    }));
-  }
-  const [lead, ...rest] = items;
-  const shown = rest.slice(0, 2);
-  const remainder = rest.length - shown.length;
-  // The CAP IS ON THE WHOLE GALLERY, not each tile: lead and strip together have
-  // to leave the rest of the card on screen. Roughly 60/40, because the lead is
-  // the media and the strip is only an index into the set.
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "2px",
-      maxHeight: "var(--media-max-height)",
-      overflow: "hidden"
-    }
-  }, /*#__PURE__*/React.createElement(MediaAttachment, _extends({}, lead, {
-    ratio: lead.ratio ?? ratio,
-    radius: radius ?? lead.radius,
-    maxHeight: "calc(var(--media-max-height) * 0.6)"
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "grid",
-      gridTemplateColumns: `repeat(${shown.length}, 1fr)`,
-      gap: "2px"
-    }
-  }, shown.map((item, index) => /*#__PURE__*/React.createElement("div", {
-    key: item.src ?? index,
-    style: {
-      position: "relative"
-    }
-  }, /*#__PURE__*/React.createElement(MediaAttachment, _extends({}, item, {
-    ratio: "square",
-    fit: "cover",
-    radius: radius ?? item.radius,
-    maxHeight: "calc(var(--media-max-height) * 0.4)"
-  })), remainder > 0 && index === shown.length - 1 && /*#__PURE__*/React.createElement("span", {
-    style: {
-      position: "absolute",
-      inset: 0,
-      display: "grid",
-      placeItems: "center",
-      borderRadius: radius ?? "var(--radius-medium)",
-      background: "var(--scrim-dialog)",
-      color: "var(--inverse-on-surface)",
-      fontSize: "var(--text-title-medium)"
-    }
-  }, "+", remainder)))));
-}
-__ds_scope.useGlobalMute = useGlobalMute;
-__ds_scope.MediaAttachment = MediaAttachment;
-__ds_scope.MediaGallery = MediaGallery;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/proposed/MediaAttachment.jsx", error: String((e && e.message) || e) }); }
 
 // components/proposed/MediaViewer.jsx
 try { (() => {
