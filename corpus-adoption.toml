@@ -47,6 +47,13 @@ discipline_docs  = [
   "crates/cogra-linter/docs/interchange-conventions.md",
 ]
 
+# ADDED 2026-08-31: the config envelope's version gate, from the comparison
+# study against the colleague's adoption files. Only major is enforced —
+# checked at load, refused when it is not 1; minor and patch are carried,
+# advisory. No namespace key: this file is singular, one corpus, one
+# adoption, so there is nothing for a namespace to distinguish it from.
+schema_version   = [1, 0, 0]
+
 
 ####################################################################
 # [carrier] — what the corpus IS

@@ -306,6 +306,9 @@ pub struct Adoption {
     /// The failing set, as literal path prefixes
     /// (`dec:lint:enforcement-partition`).
     pub enforcement: EnforcementPartition,
+    /// Which owners an owner's imports may name, where the corpus declares
+    /// it at all (`dec:lint:reach-declared`).
+    pub reach: Option<Reach>,
 }
 
 impl Adoption {
@@ -400,6 +403,18 @@ pub struct WalkOutcome { pub sources: Vec<SourceFile>, pub failures: Vec<Diagnos
 ```
 
 `Walk::sources` returns the sources *and* the traversal failures, and never trades one for the other: an unreadable tree is a reported diagnostic beside a shorter source list, which is exactly the case the caveat forbids collapsing into an empty carrier. An absent `optional` root contributes neither a source nor a diagnostic.
+
+**Decision (Reach is declared, and checked against Cargo where both exist)** · `dec:lint:reach-declared`
+
+Σ registers which prefixes name an owner and Ω assigns each source an owner. Between them an imported citation either resolves or does not, and neither says whether the citing owner had any business importing from the cited one: a primitive document importing from a web package resolves exactly as cleanly as one importing from the label calculus. `[reach]` is the relation that says so, one optional row per owner naming the owners its imports may reach.
+
+The relation is declared and not derived. A derivation would have to read one dependency graph, and this corpus has three build systems — Cargo, Gradle, npm — and five document owners that appear in none of them; a Cargo-only derivation would leave fourteen of nineteen owners unconstrained while looking total. Where a Cargo edge *does* exist it is a check rather than a source: a package that compiles against another may cite it, so a declaration omitting that edge forbids what the build already requires and is refused at load. The comparison runs in that direction only. A declared edge Cargo does not carry is no defect at all — it is how every document owner reaches anything, and it is the whole reason the graph is declared.
+
+Three properties fix what the section means. An owner reaches itself, so a same-owner citation is permitted by structure and a row naming its own owner is refused rather than ignored. Reach is the declared edge and not its closure: the owner in the middle of a two-step path is the one whose declaration would have to say so. And a row constrains its own owner and no other — an owner the section does not name reaches everything, exactly as it does with no section at all. That last one is what makes the graph adoptable one owner at a time rather than all nineteen at once, and it is why an absent section and an empty one are the same judgment.
+
+The judgment's domain is the imported citations alone. A same-owner citation is an owner reaching itself; an import whose prefix Σ does not register names no owner to test and is already `label-unregistered-prefix`; an import naming the citing owner is already `label-self-qualified-import`. What is left is exactly the edges a reach graph is about, and each is one lookup against one row.
+
+*Awaiting its adoption data.* The mechanism is implemented and the corpus writes no `[reach]` section, so the clause runs over every import and passes vacuously — the same standing the anchor harvest and the synthetic citation hold, and implemented for the same reason. Which graph this corpus should declare is a ruling, not a derivation: the measured edge set and a recommended declaration sit in the working notes for that ruling, and the section lands when it is made.
 
 **Decision (Staged profiles compute nothing)** · `dec:lint:staged-profiles`
 
@@ -857,6 +872,7 @@ The architecture states each invariant as a graph query (`[ARCH-tab:linter:judgm
 | (`[LBL-inv:labels:generated-compliance]`) | every occurrence in a `generated` region is a `Mint` with an incoming `Derives` or a `Citation` with a `ResolvesTo`; a region's `presents` set is excluded from the harvest it feeds |
 | (`[LBL-inf:labels:anchor-harvest]`) | `EdgeFiltered` view over `Anchors` from a designated document's body regions into the designated upstream owner; empty domain today |
 | (`[LBL-inf:labels:synthetic-citation]`) | designated typed-data strings become `Citation` nodes like any other; empty domain today |
+| (`dec:lint:reach-declared`) | for each `Citation` carrying a prefix: its `Cites` target lies in the citing owner's declared row, or the citing owner heads none; no section declared today |
 | (`[KND-judg:kinds:head-validation]`) | every `Head` node has out-degree exactly one over `ValidatesAs`; zero is an uncatalogued pair, two is an ambiguous reduction |
 | (`[IDN-rule:identity:well-founded-graph]`) | `petgraph::algo::is_cyclic_directed` over the relevant view, when identity checking lands; no subject in version 1 |
 

@@ -17,7 +17,7 @@ use cogra_linter::graph::{
     SourceNode, owner_of,
 };
 use cogra_linter::scan::{Label, Syntax};
-use cogra_linter::{ByteSpan, OwnerId, Partition, PartitionRule, PathPrefix};
+use cogra_linter::{ByteSpan, Location, OwnerId, Partition, PartitionRule, PathPrefix};
 use petgraph::stable_graph::NodeIndex;
 use proptest::prelude::*;
 
@@ -63,7 +63,13 @@ fn any_partition() -> impl Strategy<Value = Partition> {
             owner: OwnerId::new("tree.residual"),
             optional: false,
         });
-        Partition { rules }
+        let residual_at = Location::new(
+            PathBuf::from("corpus-adoption.toml"),
+            ByteSpan::new(0, 0),
+            1,
+            1,
+        );
+        Partition { rules, residual_at }
     })
 }
 
