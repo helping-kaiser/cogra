@@ -1,243 +1,188 @@
 package com.cogra.core.designsystem.v2.media
 
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 /**
- * The framing arithmetic, tested without composition — the same split the
- * stance pad uses, and the reason the clamping lives in a plain class.
+ * The only crop geometry we still own: the discrete nudge and zoom the
+ * invisible non-gesture route needs, which the cropper library has no
+ * notion of.
  *
- * The invariant under test throughout: **the frame never leaves the
- * picture.** Every offset is bounded by how far the zoom has pushed the
- * picture past the viewport, so no state can expose the reserved surface.
+ * Dragging, pinching and the ratio itself belong to `CropImageView` and
+ * are not re-tested here — adopting a cropper was precisely so that they
+ * would stop being ours to get wrong. What is tested is what we added
+ * around it, in fractions of the picture so it runs on the JVM with no
+ * view anywhere near it.
+ *
+ * The invariant throughout: **the window never leaves the picture, and
+ * never changes shape.** A nudge or a zoom that clipped instead of
+ * sliding would silently re-shape a post the author set to one ratio.
  */
 class CropStateTest {
 
-    private val viewport = Size(300f, 400f)
+    /** A half-size window sitting in the middle of the picture. */
+    private val centred = CropFraming(0.25f, 0.25f, 0.75f, 0.75f)
 
-    private fun state(sourceRatio: Float = CropState.UNKNOWN_RATIO): CropState =
-        CropState(CropState.MIN_SCALE, Offset.Zero)
-            .apply { measured(this@CropStateTest.viewport, sourceRatio) }
+    private fun CropFraming.assertShapeMatches(other: CropFraming) {
+        assertThat(width).isWithin(TOLERANCE).of(other.width)
+        assertThat(height).isWithin(TOLERANCE).of(other.height)
+    }
+
+    // -- Nudging --
 
     @Test
-    fun anUnzoomedFrameOfTheSameShapeCannotBePannedAtAll() {
-        val state = state()
+    fun aNudgeMovesTheWindowByAShareOfItsOwnSize() {
+        val moved = CropWindowMath.nudged(centred, NudgeDirection.Right)
 
-        state.panBy(Offset(500f, 500f))
-
-        // A picture whose ratio matches the frame's exactly covers it, so
-        // there is nowhere to go without zooming.
-        assertThat(state.offset).isEqualTo(Offset.Zero)
+        assertThat(moved.left)
+            .isWithin(TOLERANCE)
+            .of(centred.left + centred.width * CropWindowMath.NUDGE_FRACTION)
+        moved.assertShapeMatches(centred)
     }
 
     @Test
-    fun aWiderPictureSlidesAcrossItsFrameWithoutAnyZoom() {
-        // 2:1 into the 3:4 frame: the cover fit draws it 800 wide against a
-        // 300-wide frame, so there is 250px of slack on each side — and
-        // reaching it is the whole point of choosing a shape.
-        val state = state(sourceRatio = 2f)
+    fun aNudgeAtTheEdgeStopsThereRatherThanLeavingThePicture() {
+        val atRight = CropFraming(0.5f, 0.25f, 1f, 0.75f)
 
-        state.panBy(Offset(1000f, 1000f))
+        val moved = CropWindowMath.nudged(atRight, NudgeDirection.Right)
 
-        assertThat(state.offset.x).isWithin(0.01f).of(250f)
-        assertThat(state.offset.y).isEqualTo(0f)
+        assertThat(moved.right).isWithin(TOLERANCE).of(1f)
+        assertThat(moved.left).isWithin(TOLERANCE).of(atRight.left)
+        moved.assertShapeMatches(atRight)
     }
 
     @Test
-    fun aTallerPictureSlidesUpAndDownRatherThanSideways() {
-        val state = state(sourceRatio = 0.5f)
+    fun aNudgePastTheEdgeSlidesBackWholeInsteadOfBeingClipped() {
+        // Nearly at the edge: the step would overshoot, and clipping it
+        // would hand back a window of a different shape.
+        val nearRight = CropFraming(0.49f, 0.25f, 0.99f, 0.75f)
 
-        state.panBy(Offset(1000f, 1000f))
+        val moved = CropWindowMath.nudged(nearRight, NudgeDirection.Right)
 
-        assertThat(state.offset.x).isEqualTo(0f)
-        // Drawn 300x600 in a 300x400 frame: 100px of slack each way.
-        assertThat(state.offset.y).isWithin(0.01f).of(100f)
+        assertThat(moved.right).isWithin(TOLERANCE).of(1f)
+        moved.assertShapeMatches(nearRight)
     }
 
     @Test
-    fun changingTheFramesShapeReFramesAgainstTheNewOneAndNotTheOld() {
-        val state = state(sourceRatio = 2f)
-        state.panBy(Offset(1000f, 0f))
-        assertThat(state.offset.x).isWithin(0.01f).of(250f)
+    fun everyDirectionMovesTheWayItIsNamed() {
+        assertThat(CropWindowMath.nudged(centred, NudgeDirection.Left).left)
+            .isLessThan(centred.left)
+        assertThat(CropWindowMath.nudged(centred, NudgeDirection.Right).left)
+            .isGreaterThan(centred.left)
+        assertThat(CropWindowMath.nudged(centred, NudgeDirection.Up).top)
+            .isLessThan(centred.top)
+        assertThat(CropWindowMath.nudged(centred, NudgeDirection.Down).top)
+            .isGreaterThan(centred.top)
+    }
 
-        // The author switches the post to a wide shape. The same picture
-        // now nearly fills it, so the framing that was legal has to come
-        // back inside the new geometry — the crop is cut from the original
-        // either way, never from the previous crop.
-        state.measured(Size(300f, 200f), sourceRatio = 2f)
+    // -- Zooming --
 
-        // Drawn 400x200 in a 300x200 frame: 50px of slack each way.
-        assertThat(state.offset.x).isWithin(0.01f).of(50f)
+    @Test
+    fun zoomingInShrinksTheWindowAboutItsCentreAndKeepsItsShape() {
+        val zoomed = CropWindowMath.zoomed(centred, inward = true)
+
+        assertThat(zoomed.width).isLessThan(centred.width)
+        // One factor on both axes: the ratio is what the whole post was
+        // set to, and a discrete zoom may not change it.
+        assertThat(zoomed.width / zoomed.height)
+            .isWithin(TOLERANCE)
+            .of(centred.width / centred.height)
+        assertThat((zoomed.left + zoomed.right) / 2f)
+            .isWithin(TOLERANCE)
+            .of((centred.left + centred.right) / 2f)
     }
 
     @Test
-    fun theSameMeasurementReportedAgainChangesNothing() {
-        val state = state(sourceRatio = 2f)
-        state.panBy(Offset(200f, 0f))
+    fun zoomingOutStopsWhereTheWindowWouldOutgrowThePicture() {
+        val nearlyWhole = CropFraming(0.01f, 0.01f, 0.99f, 0.99f)
 
-        repeat(5) { state.measured(viewport, 2f) }
+        val zoomed = CropWindowMath.zoomed(nearlyWhole, inward = false)
 
-        assertThat(state.offset.x).isWithin(0.01f).of(200f)
+        assertThat(zoomed.width).isAtMost(1f + TOLERANCE)
+        assertThat(zoomed.height).isAtMost(1f + TOLERANCE)
+        assertThat(zoomed.left).isAtLeast(-TOLERANCE)
+        assertThat(zoomed.top).isAtLeast(-TOLERANCE)
     }
 
     @Test
-    fun theFramingReadsBackTheZoomAndWhereTheFrameSits() {
-        val state = state(sourceRatio = 2f)
+    fun aWholeWindowCannotZoomOutAnyFurther() {
+        val zoomed = CropWindowMath.zoomed(CropFraming.Whole, inward = false)
 
-        assertThat(state.framingDescription()).isEqualTo("Zoom 100%, centred")
-
-        state.panBy(Offset(1000f, 0f))
-
-        assertThat(state.framingDescription()).isEqualTo("Zoom 100%, at the left")
+        assertThat(zoomed.width).isWithin(TOLERANCE).of(1f)
+        assertThat(zoomed.height).isWithin(TOLERANCE).of(1f)
     }
 
     @Test
-    fun zoomingInAllowsPanningInProportion() {
-        val state = state()
+    fun zoomingInStopsAtTheSmallestWindowWorthFraming() {
+        var window = centred
+        repeat(TOO_MANY_STEPS) { window = CropWindowMath.zoomed(window, inward = true) }
 
-        state.zoomBy(2f)
-        state.panBy(Offset(1000f, 1000f))
-
-        // (scale - 1) * size / 2 — half the overhang, on each axis.
-        assertThat(state.offset.x).isWithin(0.01f).of(150f)
-        assertThat(state.offset.y).isWithin(0.01f).of(200f)
+        assertThat(window.width).isAtLeast(CropWindowMath.MIN_WINDOW - TOLERANCE)
+        assertThat(window.height).isAtLeast(CropWindowMath.MIN_WINDOW - TOLERANCE)
     }
 
-    @Test
-    fun panningIsClampedOnBothSides() {
-        val state = state()
-
-        state.zoomBy(2f)
-        state.panBy(Offset(-1000f, -1000f))
-
-        assertThat(state.offset.x).isWithin(0.01f).of(-150f)
-        assertThat(state.offset.y).isWithin(0.01f).of(-200f)
-    }
+    // -- The state's own reporting --
 
     @Test
-    fun zoomIsBoundedAtBothEnds() {
-        val state = state()
-
-        state.zoomBy(100f)
-        assertThat(state.scale).isEqualTo(CropState.MAX_SCALE)
-
-        state.zoomBy(0.001f)
-        assertThat(state.scale).isEqualTo(CropState.MIN_SCALE)
-    }
-
-    @Test
-    fun zoomingBackOutPullsAnOutOfRangeOffsetWithIt() {
-        val state = state()
-        state.zoomBy(3f)
-        state.panBy(Offset(1000f, 1000f))
-        val panned = state.offset
-        assertThat(panned.x).isGreaterThan(0f)
-
-        state.zoomBy(1f / 3f)
-
-        // Back at scale 1 there is no overhang left, so the offset that was
-        // legal a moment ago has to be pulled home rather than left dangling.
-        assertThat(state.offset).isEqualTo(Offset.Zero)
-    }
-
-    @Test
-    fun eachNudgeMovesOneStepOfTheViewport() {
-        val state = state()
-        state.zoomBy(2f)
-
-        state.nudge(NudgeDirection.Left)
-
-        assertThat(state.offset.x)
-            .isWithin(0.01f)
-            .of(viewport.width * CropState.NUDGE_FRACTION)
-        assertThat(state.offset.y).isEqualTo(0f)
-    }
-
-    @Test
-    fun oppositeNudgesCancel() {
-        val state = state()
-        state.zoomBy(2f)
-
-        state.nudge(NudgeDirection.Left)
-        state.nudge(NudgeDirection.Right)
-
-        assertThat(state.offset.x).isWithin(0.01f).of(0f)
-    }
-
-    @Test
-    fun verticalNudgesMoveOnlyTheVerticalAxis() {
-        val state = state()
-        state.zoomBy(2f)
-
-        state.nudge(NudgeDirection.Up)
-
-        assertThat(state.offset.x).isEqualTo(0f)
-        assertThat(state.offset.y)
-            .isWithin(0.01f)
-            .of(viewport.height * CropState.NUDGE_FRACTION)
-
-        state.nudge(NudgeDirection.Down)
-        assertThat(state.offset.y).isWithin(0.01f).of(0f)
-    }
-
-    @Test
-    fun nudgingIsClampedLikeDragging() {
-        val state = state()
-        state.zoomBy(2f)
-
-        repeat(50) { state.nudge(NudgeDirection.Left) }
-
-        assertThat(state.offset.x).isWithin(0.01f).of(150f)
-    }
-
-    @Test
-    fun steppedZoomWalksInBothDirections() {
-        val state = state()
-
-        state.stepZoom(inward = true)
-        assertThat(state.scale).isWithin(0.001f).of(CropState.ZOOM_STEP)
-
-        state.stepZoom(inward = false)
-        assertThat(state.scale).isWithin(0.001f).of(CropState.MIN_SCALE)
-    }
-
-    @Test
-    fun theZoomControlsReportWhenTheyWouldDoNothing() {
-        val state = state()
-
-        // Fully out: only inward is available.
-        assertThat(state.canZoom(inward = true)).isTrue()
-        assertThat(state.canZoom(inward = false)).isFalse()
-
-        state.zoomBy(CropState.MAX_SCALE)
-
-        assertThat(state.canZoom(inward = true)).isFalse()
-        assertThat(state.canZoom(inward = false)).isTrue()
-    }
-
-    @Test
-    fun resetReturnsToTheUntouchedFraming() {
-        val state = state()
-        state.zoomBy(3f)
-        state.panBy(Offset(100f, 100f))
+    fun aShapeSwitchIsWhatResetsTheFramingRatherThanCarryingItOver() {
+        val state = CropState(centred)
 
         state.reset()
 
-        assertThat(state.scale).isEqualTo(CropState.MIN_SCALE)
-        assertThat(state.offset).isEqualTo(Offset.Zero)
+        // The re-frame is against the original: the next shape starts
+        // from the whole picture, never from where the last one sat
+        // (jakob 2026-08-31).
+        assertThat(state.framing).isEqualTo(CropFraming.Whole)
     }
 
     @Test
-    fun aLateMeasurementReClampsWhateverWasAlreadyThere() {
-        val state = CropState(2f, Offset(1000f, 1000f))
+    fun anActionWithNoViewAttachedIsStillRecorded() {
+        val state = CropState(centred)
 
-        state.measured(viewport, CropState.UNKNOWN_RATIO)
+        state.nudge(NudgeDirection.Right)
 
-        // The offset was set before anything knew how big the viewport was;
-        // measuring has to bring it inside rather than trust it.
-        assertThat(state.offset.x).isWithin(0.01f).of(150f)
-        assertThat(state.offset.y).isWithin(0.01f).of(200f)
+        assertThat(state.framing.left).isGreaterThan(centred.left)
+    }
+
+    @Test
+    fun theFramingReadsBackAsWordsForAReaderWhoCannotSeeIt() {
+        val state = CropState(CropFraming(0f, 0.25f, 0.5f, 0.75f))
+
+        val description = state.framingDescription()
+
+        // Named rather than a percentage of a viewport nobody can see.
+        assertThat(description).contains("at the left")
+        assertThat(description).contains("%")
+    }
+
+    @Test
+    fun aCentredWindowSaysSoRatherThanNamingAnEdge() {
+        val state = CropState(centred)
+
+        assertThat(state.framingDescription()).contains("centred")
+    }
+
+    // -- Clamping on the way in --
+
+    @Test
+    fun aWindowFromOutsideTheUnitSquareIsClampedIntoIt() {
+        val clamped = CropFraming.of(-0.5f, -0.5f, 1.5f, 1.5f)
+
+        assertThat(clamped).isEqualTo(CropFraming.Whole)
+    }
+
+    @Test
+    fun anInvertedWindowIsFlattenedRatherThanLeftNegative() {
+        val clamped = CropFraming.of(0.8f, 0.8f, 0.2f, 0.2f)
+
+        assertThat(clamped.width).isAtLeast(0f)
+        assertThat(clamped.height).isAtLeast(0f)
+    }
+
+    private companion object {
+        const val TOLERANCE = 0.001f
+
+        /** More zoom steps than the clamp can possibly allow. */
+        const val TOO_MANY_STEPS = 100
     }
 }

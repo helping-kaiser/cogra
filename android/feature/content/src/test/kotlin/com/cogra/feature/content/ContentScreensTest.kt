@@ -534,6 +534,7 @@ class ContentScreensTest {
                 onOpenPost = onOpenPost,
                 onReference = onReference,
                 onSignInOrJoin = onSignInOrJoin,
+                onReveal = { _, _ -> },
                 onBack = {},
             )
         }

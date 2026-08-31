@@ -247,15 +247,36 @@ describe("the picker", () => {
     expect(run(emptyWizard(), { type: "focus", index: 3 }).focused).toBe(0);
   });
 
-  it("keeps per-picture framing when the post's shape changes", () => {
+  // Round 5: "shape-switch must allow re-framing any section at any ratio". The
+  // measured rectangle carries the OLD shape, so keeping it would bake the old
+  // shape into the upload; dropping it makes the cropper measure a fresh one
+  // against the original picture. Where the reader had put each picture — the
+  // position and the zoom — is theirs and stays.
+  it("re-frames every picture against the original when the post's shape changes", () => {
     const framed = run(
       emptyWizard(),
       picks(2),
-      { type: "crop", id: "a1", crop: { zoom: 2, x: 0.25, y: 0.75 } },
+      {
+        type: "crop",
+        id: "a1",
+        crop: { x: 12, y: -8, zoom: 2, area: { x: 0, y: 100, width: 800, height: 1000 } },
+      },
       { type: "shape", shape: "wide" },
     );
     expect(framed.shape).toBe("wide");
-    expect(framed.assets[1]!.crop).toEqual({ zoom: 2, x: 0.25, y: 0.75 });
+    expect(framed.assets[1]!.crop).toEqual({ x: 12, y: -8, zoom: 2, area: null });
+    expect(framed.assets[0]!.crop.area).toBeNull();
+  });
+
+  it("leaves the framing untouched when the shape does not actually change", () => {
+    const area = { x: 0, y: 100, width: 800, height: 1000 };
+    const framed = run(
+      emptyWizard(),
+      picks(1),
+      { type: "crop", id: "a0", crop: { x: 1, y: 2, zoom: 2, area } },
+      { type: "shape", shape: "tall" },
+    );
+    expect(framed.assets[0]!.crop.area).toEqual(area);
   });
 });
 

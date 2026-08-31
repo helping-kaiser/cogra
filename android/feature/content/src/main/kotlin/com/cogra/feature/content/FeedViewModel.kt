@@ -6,6 +6,8 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.PostView
 import com.cogra.domain.content.LandingSignal
 import com.cogra.domain.content.NodeLanding
+import com.cogra.domain.content.SensitiveMark
+import com.cogra.domain.content.SensitiveReveals
 import com.cogra.domain.repo.ContentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -39,6 +41,12 @@ data class FeedUiState(
      */
     val includePending: Boolean = true,
     val transportFault: TransportFault? = null,
+    /**
+     * The veiled bodies this reader has chosen to look at, against the
+     * marks they chose under. App-wide rather than per card, so a reveal
+     * made here is still made when the post opens.
+     */
+    val reveals: Map<String, SensitiveMark> = emptyMap(),
 )
 
 /**
@@ -50,13 +58,23 @@ data class FeedUiState(
 class FeedViewModel @Inject constructor(
     private val content: ContentRepository,
     landings: LandingSignal,
+    private val reveals: SensitiveReveals,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FeedUiState())
     val state = _state.asStateFlow()
 
+    /** A reader chose to look at a veiled body, as it stands right now. */
+    fun onReveal(nodeId: String, mark: SensitiveMark) = reveals.reveal(nodeId, mark)
+
     init {
         refresh()
+        // The reveal set is app-wide, so a choice made on the detail
+        // screen reaches the card here too — being asked twice about the
+        // same body reads as the app forgetting.
+        viewModelScope.launch {
+            reveals.revealed.collect { revealed -> _state.update { it.copy(reveals = revealed) } }
+        }
         // A node the device has since read afresh — the reader opened
         // the post and pulled to refresh until it landed — carries its
         // state back to the card that is still on screen. The page
