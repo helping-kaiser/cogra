@@ -574,12 +574,16 @@ mod tests {
         }
     }
 
+    /// A text literal carrying no escape denotes exactly its own characters.
+    /// ´claim:ast:an-unescaped-literal-denotes-itself´
     #[test]
     fn an_unescaped_literal_denotes_itself() {
         assert_eq!(denote("com.example"), "com.example");
         assert_eq!(denote(""), "");
     }
 
+    /// Each escape the JSON rules name is resolved to the character it stands for.
+    /// ´claim:ast:the-json-escapes-are-resolved´
     #[test]
     fn the_json_escapes_are_resolved() {
         assert_eq!(denote(r#"a\"b"#), "a\"b");
@@ -595,11 +599,16 @@ mod tests {
     /// The one level of string escaping RFC 8610 §3.8.3.1 puts in front of
     /// the XSD rules: the conventions' pattern is written `\\.` and reaches
     /// the engine as `\.`.
+    ///
+    /// A doubled backslash denotes one, which is the level of escaping standing in front of a pattern.
+    /// ´claim:ast:a-doubled-backslash-denotes-one´
     #[test]
     fn a_doubled_backslash_denotes_one() {
         assert_eq!(denote(r"[a-z0-9]\\."), r"[a-z0-9]\.");
     }
 
+    /// A Unicode escape denotes the character its code point names, wherever in the literal it stands.
+    /// ´claim:ast:a-unicode-escape-denotes-its-character´
     #[test]
     fn a_unicode_escape_denotes_its_character() {
         assert_eq!(denote("\\u0041"), "A");
@@ -607,6 +616,8 @@ mod tests {
         assert_eq!(denote("a\\u0041b"), "aAb");
     }
 
+    /// A surrogate pair denotes the one character it encodes.
+    /// ´claim:ast:a-surrogate-pair-denotes-one-character´
     #[test]
     fn a_surrogate_pair_denotes_one_character() {
         assert_eq!(denote("\\ud83d\\ude00"), "\u{1f600}");
@@ -614,18 +625,25 @@ mod tests {
 
     /// `SESC` admits escapes JSON does not and gives them no meaning, so an
     /// escape of any other character denotes that character.
+    ///
+    /// An escape the rules give no meaning denotes the character behind the backslash.
+    /// ´claim:ast:an-unnamed-escape-denotes-its-character´
     #[test]
     fn an_escape_the_rules_do_not_name_denotes_its_character() {
         assert_eq!(denote(r"\q"), "q");
         assert_eq!(denote(r"\'"), "'");
     }
 
+    /// A Unicode escape without its four digits is refused as incomplete.
+    /// ´claim:ast:a-broken-unicode-escape-is-refused´
     #[test]
     fn a_broken_unicode_escape_is_refused() {
         assert!(refuse(r"\u12").detail.contains("incomplete"));
         assert!(refuse(r"\uzzzz").detail.contains("incomplete"));
     }
 
+    /// A surrogate without its partner is refused, whichever half is missing.
+    /// ´claim:ast:an-unpaired-surrogate-is-refused´
     #[test]
     fn an_unpaired_surrogate_is_refused() {
         assert!(refuse(r"\ud83d").detail.contains("low surrogate"));
@@ -638,6 +656,8 @@ mod tests {
         assert!(refuse(r"\ude00").detail.contains("surrogate"));
     }
 
+    /// A backslash at the end of a literal escapes nothing and is refused.
+    /// ´claim:ast:a-trailing-backslash-is-refused´
     #[test]
     fn a_trailing_backslash_is_refused() {
         assert!(refuse("a\\").detail.contains("backslash"));

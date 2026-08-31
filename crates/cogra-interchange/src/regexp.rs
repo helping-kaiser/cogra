@@ -192,6 +192,9 @@ mod tests {
     /// recovering anchoring from a span check: a leftmost-first engine
     /// matches `a` in `a|ab` and reports span 0..1, so a span check would
     /// reject a subject XSD accepts through the second alternative.
+    ///
+    /// A pattern matches only where it accounts for the whole subject, a superstring and a substring alike failing.
+    /// ´claim:regexp:a-pattern-matches-the-whole-subject´
     #[test]
     fn xsd_whole_string_matching() {
         let p = compile("a");
@@ -217,6 +220,9 @@ mod tests {
 
     /// Both alternatives are reachable, which is what a span check would
     /// break even against an anchored engine.
+    ///
+    /// Anchoring leaves both branches of an alternation reachable, which a span check would not.
+    /// ´claim:regexp:every-alternative-stays-reachable´
     #[test]
     fn alternation_reaches_its_second_branch() {
         let p = compile("a|ab");
@@ -224,6 +230,8 @@ mod tests {
         assert!(p.is_match("a").expect("within budget"));
     }
 
+    /// The anchor characters of other dialects are ordinary characters here.
+    /// ´claim:regexp:the-anchor-characters-are-ordinary´
     #[test]
     fn caret_is_an_ordinary_character() {
         let p = compile("^a");
@@ -231,6 +239,7 @@ mod tests {
         assert!(!p.is_match("a").expect("within budget"));
     }
 
+    /// (´claim:regexp:the-anchor-characters-are-ordinary´)
     #[test]
     fn dollar_is_an_ordinary_character() {
         let p = compile("a$");
@@ -241,11 +250,16 @@ mod tests {
     /// The engine reads an escaped `$` as an error rather than as the
     /// character, which is stricter than treating `$` as ordinary and is
     /// the engine's own reading of the XSD escape table.
+    ///
+    /// An escape the XSD table does not name is refused rather than read as the character.
+    /// ´claim:regexp:an-escape-outside-the-table-is-refused´
     #[test]
     fn an_escaped_dollar_is_refused() {
         assert!(matches!(refuse(r"a\$"), RegexpError::Malformed { .. }));
     }
 
+    /// A character class subtracts the class written inside it.
+    /// ´claim:regexp:a-character-class-subtracts´
     #[test]
     fn character_classes_subtract() {
         let p = compile("[a-z-[aeiou]]");
@@ -255,6 +269,8 @@ mod tests {
         assert!(!p.is_match("u").expect("within budget"));
     }
 
+    /// The name-start and name escapes admit the characters XML names in them.
+    /// ´claim:regexp:the-xml-name-escapes-are-understood´
     #[test]
     fn the_xml_name_start_escape_is_understood() {
         let p = compile(r"\i");
@@ -265,6 +281,7 @@ mod tests {
         assert!(!p.is_match("-").expect("within budget"));
     }
 
+    /// (´claim:regexp:the-xml-name-escapes-are-understood´)
     #[test]
     fn the_xml_name_escape_is_understood() {
         let p = compile(r"\c");
@@ -275,6 +292,8 @@ mod tests {
         assert!(!p.is_match(" ").expect("within budget"));
     }
 
+    /// Each name escape has a complement admitting exactly what it refuses.
+    /// ´claim:regexp:the-name-escapes-have-complements´
     #[test]
     fn the_name_escapes_have_complements() {
         let start = compile(r"\I");
@@ -289,6 +308,9 @@ mod tests {
     /// The divergence in the dangerous direction: an engine reading `a*?`
     /// as a lazy quantifier would accept a pattern XSD rejects and match a
     /// different language. This engine rejects it.
+    ///
+    /// A lazy quantifier is refused rather than read as a language XSD never names.
+    /// ´claim:regexp:a-lazy-quantifier-is-refused´
     #[test]
     fn lazy_quantifiers_are_refused() {
         assert!(matches!(refuse("a*?"), RegexpError::Malformed { .. }));
@@ -296,16 +318,22 @@ mod tests {
         assert!(matches!(refuse("a{2,3}?"), RegexpError::Malformed { .. }));
     }
 
+    /// A backreference is refused, XSD having none.
+    /// ´claim:regexp:a-backreference-is-refused´
     #[test]
     fn backreferences_are_refused() {
         assert!(matches!(refuse(r"(a)\1"), RegexpError::Malformed { .. }));
     }
 
+    /// Lookaround is refused, XSD having none.
+    /// ´claim:regexp:lookaround-is-refused´
     #[test]
     fn lookaround_is_refused() {
         assert!(matches!(refuse("(?=a)b"), RegexpError::Malformed { .. }));
     }
 
+    /// A malformed pattern is refused with the engine's own account of what is wrong with it.
+    /// ´claim:regexp:a-malformed-pattern-carries-an-account´
     #[test]
     fn malformed_patterns_carry_the_engines_account() {
         for pattern in ["[a-", "(a", "a{2,1}", "*a"] {
@@ -319,6 +347,8 @@ mod tests {
         }
     }
 
+    /// A bounded quantifier admits the counts between its bounds and no others.
+    /// ´claim:regexp:a-bounded-quantifier-binds-both-ends´
     #[test]
     fn quantifiers_and_bounds_behave() {
         let p = compile("a{2,3}");
@@ -327,6 +357,8 @@ mod tests {
         assert!(p.is_match("aaa").expect("within budget"));
     }
 
+    /// A pattern able to match nothing matches the empty subject.
+    /// ´claim:regexp:a-nullable-pattern-matches-the-empty-subject´
     #[test]
     fn the_empty_subject_matches_a_nullable_pattern() {
         let p = compile("a*");
@@ -334,6 +366,8 @@ mod tests {
         assert!(p.is_match("aaa").expect("within budget"));
     }
 
+    /// A Unicode category class admits the characters of that category alone.
+    /// ´claim:regexp:a-unicode-category-is-understood´
     #[test]
     fn unicode_categories_are_understood() {
         let p = compile(r"\p{Lu}+");
@@ -343,6 +377,9 @@ mod tests {
 
     /// The engine counts characters, not bytes: three non-ASCII characters
     /// are three units to `.{3}`.
+    ///
+    /// The engine counts characters and not bytes, so a non-ASCII character is one unit.
+    /// ´claim:regexp:the-engine-counts-characters´
     #[test]
     fn non_ascii_subjects_match_by_character() {
         let p = compile(".{3}");
@@ -350,12 +387,16 @@ mod tests {
         assert!(!p.is_match("ä").expect("within budget"));
     }
 
+    /// A compiled pattern reports the source it was given, character for character.
+    /// ´claim:regexp:the-source-is-the-pattern-as-given´
     #[test]
     fn the_source_is_the_pattern_as_given() {
         let p = compile("[a-z-[aeiou]]");
         assert_eq!(p.source(), "[a-z-[aeiou]]");
     }
 
+    /// A clone of a compiled pattern matches what the original matched and carries its source.
+    /// ´claim:regexp:a-clone-matches-what-the-original-matched´
     #[test]
     fn a_clone_matches_what_the_original_matched() {
         let p = compile("a+");
@@ -366,6 +407,9 @@ mod tests {
 
     /// The conventions' own pattern, as it is denoted after the CDDL level
     /// of string escaping is undone.
+    ///
+    /// The conventions' namespace pattern admits labels and refuses the near misses around them.
+    /// ´claim:regexp:the-namespace-pattern-recognizes-labels´
     #[test]
     fn the_namespace_form_pattern_recognizes_labels() {
         let p = compile(r"[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+");
@@ -387,6 +431,9 @@ mod tests {
     /// ran 761 seconds unbounded when first measured — so every case must
     /// now finish fast, either with an answer or with the budget refusal,
     /// and a refusal is never disguised as "no match".
+    ///
+    /// A pattern with no linear-time bound finishes inside the budget, answering or refusing but never running on.
+    /// ´claim:regexp:the-budget-bounds-every-walk´
     #[test]
     fn pathological_patterns() {
         let bound = Duration::from_secs(2);
@@ -426,6 +473,9 @@ mod tests {
     /// Compilation runs the pattern once against the empty string, because
     /// the engine computes `matches_empty_string` eagerly. The seam cannot
     /// prevent it, so it is measured here beside the match guard.
+    ///
+    /// Compiling a nested-quantifier pattern is fast, the engine's eager empty-string match included.
+    /// ´claim:regexp:compiling-a-pathological-pattern-is-fast´
     #[test]
     fn compilation_of_a_pathological_pattern_is_fast() {
         let budget = Duration::from_secs(2);
