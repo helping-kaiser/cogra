@@ -1,7 +1,10 @@
 package com.cogra.core.designsystem.v2.atom
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertTouchHeightIsEqualTo
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsSelected
@@ -12,6 +15,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
+import com.cogra.core.designsystem.v2.token.Layout
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -137,6 +141,31 @@ class AtomsTest {
     }
 
     @Test
+    fun theHeadersActionSitsHardAgainstTheRightEdgeWhateverTheTitle() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                Column(Modifier.width(390.dp)) {
+                    WizardHeader(
+                        title = "Crop",
+                        onBack = {},
+                        actionText = "Next",
+                        onAction = {},
+                        testTag = "header",
+                    )
+                }
+            }
+        }
+
+        // The board draws the pill inside the header's own 12dp gutter. A
+        // short title must not pull it toward the middle.
+        val header = compose.onNodeWithTag("header").getUnclippedBoundsInRoot()
+        val action = compose.onNodeWithTag("header_action").getUnclippedBoundsInRoot()
+        assertThat((header.right - action.right).value)
+            .isWithin(TOLERANCE)
+            .of(Layout.TopBarPadding.value)
+    }
+
+    @Test
     fun theSealsTrailingNoteIsANoteRatherThanAControl() {
         compose.setContent {
             Cogra2PreviewTheme {
@@ -202,3 +231,6 @@ class AtomsTest {
         assertThat(clicked).isTrue()
     }
 }
+
+/** Layout arithmetic lands on whole pixels, not whole dp. */
+private const val TOLERANCE = 1f
