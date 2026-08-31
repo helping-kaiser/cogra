@@ -183,9 +183,7 @@ pub enum AdoptionError {
     /// another may cite it, so a declaration omitting the edge forbids what
     /// the build requires. A declared edge Cargo does not carry is no defect —
     /// that is how every document owner reaches anything at all.
-    #[error(
-        "reach for {owner} omits {depends_on}, which {manifest} declares as a path dependency"
-    )]
+    #[error("reach for {owner} omits {depends_on}, which {manifest} declares as a path dependency")]
     ReachContradictsManifest {
         /// The row whose targets omit it.
         at: Location,

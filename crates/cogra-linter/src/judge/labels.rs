@@ -553,8 +553,10 @@ pub fn citation_reach(g: &Corpus, a: &Adoption) -> Vec<Diagnostic> {
         let Some(prefix) = weight.prefix.as_ref() else {
             continue;
         };
-        let (Some(from), Some(into)) = (owner_of(g, citation), out_along(g, citation, EdgeW::Cites).next())
-        else {
+        let (Some(from), Some(into)) = (
+            owner_of(g, citation),
+            out_along(g, citation, EdgeW::Cites).next(),
+        ) else {
             continue;
         };
         let (from, into) = (owner_id(g, from), owner_id(g, into));
