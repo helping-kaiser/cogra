@@ -246,6 +246,7 @@ async fn post_from_the_phone_read_it_back(pool: PgPool) {
             None,
             r#"{ posts(first: 10) { edges { cursor node {
                  id title { value status } content { value }
+                 attachments { id altText } attachmentsStatus
                  author { id handle } moderationStatus createdAt updatedAt
                } } pageInfo { hasNextPage hasPreviousPage } } }"#,
             json!({}),
@@ -261,6 +262,11 @@ async fn post_from_the_phone_read_it_back(pool: PgPool) {
     assert_eq!(post["author"]["handle"], "author");
     assert_eq!(post["author"]["id"], author_id.to_string());
     assert_eq!(post["moderationStatus"], "NORMAL");
+    assert_eq!(
+        post["attachments"].as_array().expect("gallery list").len(),
+        0
+    );
+    assert_eq!(post["attachmentsStatus"], "NORMAL");
     assert_eq!(listing["posts"]["pageInfo"]["hasNextPage"], false);
 
     let node = rig
@@ -309,6 +315,7 @@ async fn post_from_the_phone_read_it_back(pool: PgPool) {
             r#"query($id: UUID!) { post(id: $id) {
                  comments(first: 10) { edges { node {
                    id content { value } author { handle }
+                   attachments { id }
                    target { __typename ... on Post { id } }
                  } } }
                } }"#,
