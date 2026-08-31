@@ -153,7 +153,7 @@ export function CommentAttachments({
       <div className="flex flex-wrap items-baseline gap-2">
         <label
           data-testid={`${testIdPrefix}-add-media`}
-          className={`cg-state cg-focus-within cursor-pointer text-label-small font-medium text-primary ${
+          className={`cg-state cg-focus-within cursor-pointer text-label-small text-primary ${
             full ? "pointer-events-none opacity-50" : ""
           }`}
         >
