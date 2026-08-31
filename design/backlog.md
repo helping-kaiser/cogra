@@ -186,7 +186,17 @@ on the wash, no surface of their own. Drawn on the post-ladder row. Still open i
 leaving and returning to the post, and how the reader's 0–10 severity
 setting maps to blur-or-not. No `error` colouring, no warning glyph.
 
-### 11 · Money & CGT figures · *system*
+### 11 · Money & CGT figures · *system* · **built**
+`components/core/MoneyFigure.jsx` (`MoneyFigure`, `CgtMark`,
+`formatCgt`), the *Money* card, and the canonical canvas's
+*Money · the CGT figure* spec board (2026-08-31; rulings in readme §3
+*Money* + §13 *Money figures*). Two decimals, thousands grouped, dust
+as `< 0.01`, zero as `0`; a minus is an outflow, dust never signs,
+direction never a colour. The unit is the mark — the primary coin
+carrying the brand mark, knocked out monochrome — trailing the
+figure; the word "CGT" appears
+once, on the wallet's balance headline beside its "?" (*What is
+CGT?*, copy-voice.md). Pending amounts deliberately wait for item 12.
 Balances, earnings, campaign amounts: how a figure is formatted, when it
 carries a unit, and what it does at zero and negative. `payoutAddress`
 moves off the profile in item 12, so settle the figure first.
