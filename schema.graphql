@@ -231,6 +231,11 @@ type Comment implements Node {
 	landing: Landing!
 	content: ModeratedText!
 	"""
+	The public reason the author gave for their own sensitive mark;
+	same three nulls a post's carries.
+	"""
+	sensitiveReason: String
+	"""
 	The gallery, in the author's order — at most four, and no cover: a
 	comment's media supports its words rather than replacing them, so
 	nothing here leads the way a post's first picture does.
@@ -771,8 +776,9 @@ type ModeratedText {
 """
 Node-level moderation cache — the cheap "is anything wrong here"
 check; the substrate-visible verdict is the Tag record behind it
-(moderation.md). Constant NORMAL until the moderation slice stores
-verdicts (api-spec.md "Content nodes").
+(moderation.md). SENSITIVE here is the author's own mark; moderator
+verdicts reach it with the moderation slice (api-spec.md "Content
+nodes").
 """
 enum ModerationStatus {
 	NORMAL
@@ -1148,6 +1154,17 @@ type Post implements Node {
 	"""
 	content: ModeratedText!
 	"""
+	The public reason the author gave for their own sensitive mark —
+	null when the post is unmarked, when the mark carries no reason,
+	and when the payload has been removed. Shown on the veil, so a
+	reader chooses whether to look knowing what they would look at
+	(design/readme.md §13).
+	
+	The mark itself is not a separate field: it is what the body's
+	statuses already say.
+	"""
+	sensitiveReason: String
+	"""
 	The gallery, in the author's order, the first entry the cover.
 	
 	A bounded list rather than a connection: the write side caps a post
@@ -1247,6 +1264,14 @@ input PrepareCommentEditInput {
 	The gallery the edit leaves standing — complete, not a delta.
 	"""
 	attachments: [AttachmentInput!]
+	"""
+	The self-mark the edit leaves standing, complete like the body.
+	"""
+	sensitive: Boolean
+	"""
+	The reason the edit leaves standing.
+	"""
+	sensitiveReason: String
 }
 
 """
@@ -1278,6 +1303,15 @@ input PrepareCommentInput {
 	an answer is words first.
 	"""
 	attachments: [AttachmentInput!]
+	"""
+	The author's own sensitive mark. A comment seals through the same
+	seal a post does, so it carries the same switch.
+	"""
+	sensitive: Boolean
+	"""
+	The optional public reason shown on the veil.
+	"""
+	sensitiveReason: String
 }
 
 """
@@ -1324,6 +1358,15 @@ input PreparePostEditInput {
 	Reordering pictures is this one act, priced once.
 	"""
 	attachments: [AttachmentInput!]
+	"""
+	The self-mark the edit leaves standing — complete state like the
+	body, so omitting it or sending false unmarks the post.
+	"""
+	sensitive: Boolean
+	"""
+	The reason the edit leaves standing; same rules a create runs.
+	"""
+	sensitiveReason: String
 }
 
 """
@@ -1369,6 +1412,18 @@ input PreparePostInput {
 	adds nothing to the batch's cost.
 	"""
 	attachments: [AttachmentInput!]
+	"""
+	The author's own sensitive mark — the seal's switch. It veils the
+	**whole body** (media, words and description as one region) and
+	leaves the title and topics readable, so choosing to look is
+	informed. Defaults to false.
+	"""
+	sensitive: Boolean
+	"""
+	The optional public reason shown on the veil. Refused without
+	`sensitive: true`; blank counts as none.
+	"""
+	sensitiveReason: String
 }
 
 """

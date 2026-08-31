@@ -24,6 +24,8 @@ fn atom(n: usize) -> String {
     "a".repeat(n)
 }
 
+/// A label the ABNF admits parses and reads back as the string it was given.
+/// ´claim:labels:the-grammar-admits-what-the-abnf-admits´
 #[test]
 fn the_grammar_accepts() {
     let accepted = [
@@ -52,6 +54,8 @@ fn the_grammar_accepts() {
     }
 }
 
+/// A label outside the ABNF is refused with the variant and the message its defect calls for.
+/// ´claim:labels:a-refused-label-names-its-defect´
 #[test]
 fn the_grammar_refuses() {
     let refused: [(&str, &str, &str); 24] = [
@@ -154,6 +158,9 @@ fn the_grammar_refuses() {
 
 /// A character position counts characters, so a non-ASCII character costs
 /// one however many bytes it occupies.
+///
+/// A refusal locates its character by characters, so a multi-byte character costs one position.
+/// ´claim:labels:a-position-counts-characters´
 #[test]
 fn a_bad_character_is_located_in_characters_not_bytes() {
     let error = NamespaceLabel::parse("aä.b").expect_err("non-ASCII");
@@ -166,6 +173,8 @@ fn a_bad_character_is_located_in_characters_not_bytes() {
     ));
 }
 
+/// A label of 255 bytes is admitted and one of 256 is refused as too long.
+/// ´claim:labels:the-length-bound-is-255-bytes´
 #[test]
 fn the_length_bound_admits_255_bytes_and_refuses_256() {
     let edge = format!("{}.b", atom(253));
@@ -181,6 +190,9 @@ fn the_length_bound_admits_255_bytes_and_refuses_256() {
 /// The length bound is checked before the characters are, which is what
 /// makes the refusal of an over-long string independent of what else is
 /// wrong with it.
+///
+/// An over-long string is refused for its length whatever else is wrong with it.
+/// ´claim:labels:length-is-judged-first´
 #[test]
 fn length_is_judged_before_the_alphabet() {
     let over = format!("{}.B", atom(254));
@@ -191,6 +203,9 @@ fn length_is_judged_before_the_alphabet() {
 /// A hyphen may not stand at either edge of an atom, but any number of
 /// them may stand in its interior: the ABNF's inner repetition admits
 /// `alnum / "-"` without further condition.
+///
+/// A hyphen stands anywhere inside an atom and at neither of its edges.
+/// ´claim:labels:a-hyphen-is-interior-only´
 #[test]
 fn hyphens_are_interior_only_and_unlimited_there() {
     assert!(NamespaceLabel::parse("a-b-c.d").is_ok());
@@ -199,6 +214,8 @@ fn hyphens_are_interior_only_and_unlimited_there() {
     assert!(NamespaceLabel::parse("ab-.c").is_err());
 }
 
+/// A label gives back its atoms in the order they descend the namespace tree.
+/// ´claim:labels:atoms-read-out-in-order´
 #[test]
 fn atoms_descend_the_tree() {
     let label = NamespaceLabel::parse("org.cogra.feed.rank").expect("a label");
@@ -208,6 +225,8 @@ fn atoms_descend_the_tree() {
     );
 }
 
+/// A label has a parent while more than two atoms remain, and none at the two-atom root.
+/// ´claim:labels:a-parent-stops-at-two-atoms´
 #[test]
 fn a_parent_exists_while_two_atoms_remain() {
     let label = NamespaceLabel::parse("org.cogra.feed.rank").expect("a label");
@@ -220,6 +239,9 @@ fn a_parent_exists_while_two_atoms_remain() {
 
 /// The relation is atom-wise: the byte-wise reading would make `com.exa`
 /// an authority over `com.example`, which it is not.
+///
+/// Prefix authority runs atom by atom, so a shared run of bytes is no authority.
+/// ´claim:labels:prefix-authority-is-atom-wise´
 #[test]
 fn prefix_authority_is_atom_wise() {
     let parent = NamespaceLabel::parse("com.example").expect("a label");
@@ -234,6 +256,8 @@ fn prefix_authority_is_atom_wise() {
     assert!(!parent.is_prefix_of(&elsewhere));
 }
 
+/// Every route into the type runs the one scanner and refuses the same strings.
+/// ´claim:labels:every-route-runs-one-scanner´
 #[test]
 fn every_route_into_the_type_is_the_same_scanner() {
     let parsed = NamespaceLabel::parse("com.example").expect("a label");
