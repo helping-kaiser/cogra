@@ -905,8 +905,6 @@ placeholder instead of a silent gap.
 type User implements Node & Actor {
   "Free-text profile bio."
   bio: ModeratedText!
-  "Profile cover image. User-only — Collectives carry no cover."
-  cover: ModeratedMedia!
 
   # Private viewer state — each field resolves only when the authenticated
   # viewer is this User; null otherwise (see "Private viewer state" below).
@@ -2986,7 +2984,6 @@ input PrepareProfileUpdateInput {
   displayName: String
   bio: String
   avatarMediaId: UUID
-  coverMediaId: UUID
   websiteUrl: String
   payoutAddress: String
   actAs: UUID
