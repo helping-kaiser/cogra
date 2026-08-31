@@ -36,6 +36,7 @@ use std::path::Path;
 
 use crate::diag::{Diagnostic, Enforcement, Location, Severity};
 use crate::fix::Insertion;
+use crate::judge::claims::ClaimCensus;
 use crate::registers::{Freshness, Register, RegisterScope};
 use crate::report::{Cited, Reverse, Survey};
 use crate::scan::Label;
@@ -130,6 +131,9 @@ pub fn freshness(reg: &Register, found: &Freshness) -> String {
                 profile.as_str()
             )
         }
+        RegisterScope::ClaimMatrix { owner } => {
+            format!("claim matrix of {}", owner.as_str())
+        }
         RegisterScope::Attestation => String::from("attestation register"),
         RegisterScope::Region { span, .. } => {
             format!("generated region at bytes {}..{}", span.start, span.end)
@@ -205,6 +209,47 @@ pub fn survey(found: &Survey) -> String {
             one.writes,
             one.cited
         );
+    }
+
+    out.push_str(&claims(&found.claims));
+    out
+}
+
+/// What the claims come to, and what each owner's wave still owes.
+///
+/// An owner outside the activation prints `counted`, which is the whole
+/// visible difference the staging makes: its unwritten claims are here and
+/// nowhere else, because the check reports none of them (`[claims]`).
+fn claims(found: &ClaimCensus) -> String {
+    if found.covered == 0 {
+        return String::new();
+    }
+    let mut out = format!(
+        "\nclaims · {} covered tests · {} claimed ({} minted, {} cited) · {} unclaimed\n",
+        found.covered, found.claimed, found.mints, found.citations, found.unclaimed
+    );
+    if found.defective > 0 {
+        let _ = writeln!(out, "  {} not at the standard place", found.defective);
+    }
+    for (owner, tally) in &found.by_owner {
+        let _ = writeln!(
+            out,
+            "  {} · {} covered · {} unclaimed · {}",
+            owner.as_str(),
+            tally.covered,
+            tally.unclaimed,
+            if tally.activated {
+                "wave closed"
+            } else {
+                "counted, wave open"
+            }
+        );
+    }
+    if !found.by_area.is_empty() {
+        let _ = write!(out, "\nclaim areas · {}\n", found.by_area.len());
+        for (area, held) in &found.by_area {
+            let _ = writeln!(out, "  {area} · {held} tests");
+        }
     }
     out
 }
@@ -289,6 +334,8 @@ mod tests {
         }
     }
 
+    /// A related location follows its finding, indented beneath it.
+    /// ´claim:rendering:a-related-location-is-indented´
     #[test]
     fn a_related_location_follows_indented_four_spaces() {
         let mut finding = one("a.md");
@@ -305,12 +352,16 @@ mod tests {
         assert_eq!(lines.next(), Some("    b.md:9:2: the first mint sits here"));
     }
 
+    /// A rendered path is spelled with forward slashes on every platform.
+    /// ´claim:rendering:paths-render-with-forward-slashes´
     #[test]
     fn a_path_is_spelled_with_forward_slashes_on_every_platform() {
         let nested = one("crates/cogra-linter/docs/design.md");
         assert!(diagnostic(&nested).starts_with("crates/cogra-linter/docs/design.md:3:7:"));
     }
 
+    /// The run summary counts both halves of the enforcement partition.
+    /// ´claim:rendering:the-summary-counts-both-halves´
     #[test]
     fn the_summary_counts_both_halves() {
         let mut failing = one("a.md");

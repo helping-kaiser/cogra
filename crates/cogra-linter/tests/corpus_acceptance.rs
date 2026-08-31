@@ -89,6 +89,9 @@ fn counted() -> BTreeMap<&'static str, usize> {
 /// (´rep:lint:first-corpus´): the milestone. The four discipline documents
 /// practice the disciplines they define, and the linter finds nothing
 /// against them.
+///
+/// The four discipline documents practice the disciplines they define.
+/// ´claim:corpus:the-discipline-documents-lint-clean´
 #[test]
 fn the_four_discipline_documents_lint_clean() {
     let mut against = Vec::new();
@@ -110,6 +113,9 @@ fn the_four_discipline_documents_lint_clean() {
 
 /// (´rep:lint:first-corpus´): the architecture and the linter's own phase
 /// artifacts, which is the second half of the milestone.
+///
+/// The architecture and the linter's own phase artifacts lint clean.
+/// ´claim:corpus:the-phase-artifacts-lint-clean´
 #[test]
 fn the_linters_own_phase_artifacts_lint_clean() {
     let mut against = Vec::new();
@@ -140,6 +146,9 @@ fn the_linters_own_phase_artifacts_lint_clean() {
 /// Each completed migration adds a prefix to that list, and this test grows
 /// with it by construction: it names no path, so widening the failing set
 /// widens what it asserts.
+///
+/// The whole failing set of this corpus is clean.
+/// ´claim:corpus:the-failing-set-is-clean´
 #[test]
 fn the_failing_set_is_clean() {
     let against: Vec<String> = run().failing().map(spell).collect();
@@ -163,6 +172,9 @@ fn the_failing_set_is_clean() {
 /// frontend before slices 7 and 8, but they carry nothing for the linter
 /// to report. What is left is a corpus clean at both enforcements, which
 /// the failing half asserts separately.
+///
+/// The advisory remainder of this corpus is empty.
+/// ´claim:corpus:the-advisory-remainder-is-empty´
 #[test]
 fn the_advisory_remainder_is_empty() {
     let by_rule = counted();
@@ -194,6 +206,9 @@ fn the_advisory_remainder_is_empty() {
 
 /// (´[ARCH-req:linter:determinism]´): two runs over one tree emit one
 /// output, byte for byte.
+///
+/// Two runs over one tree emit one output, byte for byte.
+/// ´claim:corpus:two-runs-emit-one-output´
 #[test]
 fn two_runs_emit_byte_identical_findings() {
     let again = cogra_linter::check(adoption(), &root()).expect("a second run");
@@ -207,6 +222,9 @@ fn two_runs_emit_byte_identical_findings() {
 /// the registry document parses out of its own tables, and every
 /// participating head in the corpus validates as exactly one catalogued
 /// pair — no suppression, no uncatalogued head, no ambiguous reduction.
+///
+/// Every participating head in the corpus validates as exactly one catalogued pair.
+/// ´claim:corpus:every-head-validates´
 #[test]
 fn every_head_in_the_corpus_validates() {
     assert!(
@@ -233,6 +251,9 @@ fn every_head_in_the_corpus_validates() {
 /// register had never been generated and the headline table carried a count
 /// no derivation produced. From it on, an edit to either is a finding, and
 /// regeneration is its only repair.
+///
+/// Every register the generator produces is byte-identical to what is committed.
+/// ´claim:corpus:every-register-is-current´
 #[test]
 fn every_committed_register_is_current() {
     let registers = cogra_linter::registers::regenerate_all(
@@ -243,9 +264,10 @@ fn every_committed_register_is_current() {
     );
     assert_eq!(
         registers.len(),
-        8,
-        "the companion register, the headline region, and the test profile's \
-         label register for each of the six owners with covered assets"
+        9,
+        "the companion register, the headline region, the test profile's label \
+         register for each of the six owners with covered assets, and the claim \
+         matrix of the one owner whose authoring wave has closed"
     );
     for reg in &registers {
         let (held, _) = cogra_linter::registers::committed(reg, &run().sources);
@@ -267,6 +289,9 @@ fn every_committed_register_is_current() {
 
 /// (´sig:lint:index-maps´) over the real run: every key of `mints` is a key
 /// of `labels`, and every `ResolvesTo` target is a node `labels` holds.
+///
+/// The registries stay coherent over the real corpus and not only over fixtures.
+/// ´claim:corpus:the-registries-stay-coherent´
 #[test]
 fn the_registries_stay_coherent_over_the_real_corpus() {
     let registries = &run().registries;
@@ -294,6 +319,9 @@ fn the_registries_stay_coherent_over_the_real_corpus() {
 /// crosses an operating-system boundary — the checkout is Windows-side and
 /// the toolchain runs in a Linux distro — while the analysis is the
 /// linter's own cost and crosses nothing.
+///
+/// A full-corpus run reports its wall time, the walk measured apart from the analysis.
+/// ´claim:corpus:the-run-reports-its-wall-time´
 #[test]
 fn the_full_corpus_run_reports_its_wall_time() {
     let walking = Instant::now();

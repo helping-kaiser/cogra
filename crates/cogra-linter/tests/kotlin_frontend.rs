@@ -73,6 +73,9 @@ fn texts(text: &str) -> Vec<String> {
 /// The vendored `parser.c` declares ABI 14 and the runtime admits a range;
 /// asserting the load here is what keeps
 /// [`frontend_kotlin::NO_PARSER`] a rule that never fires.
+///
+/// The vendored grammar and the runtime agree about the ABI.
+/// ´claim:kotlin:the-grammar-loads´
 #[test]
 fn the_vendored_grammar_loads_into_the_runtime() {
     let language: tree_sitter::Language = frontend_kotlin::LANGUAGE.into();
@@ -88,6 +91,9 @@ fn the_vendored_grammar_loads_into_the_runtime() {
 }
 
 /// `[scanned-regions]`, first scanned form: line comments.
+///
+/// A Kotlin line comment is a scanned region.
+/// ´claim:kotlin:a-line-comment-is-a-region´
 #[test]
 fn a_kotlin_line_comment_is_a_region() {
     assert_eq!(
@@ -98,6 +104,9 @@ fn a_kotlin_line_comment_is_a_region() {
 }
 
 /// Second scanned form: block comments.
+///
+/// A Kotlin block comment is a scanned region.
+/// ´claim:kotlin:a-block-comment-is-a-region´
 #[test]
 fn a_kotlin_block_comment_is_a_region() {
     assert_eq!(
@@ -109,6 +118,9 @@ fn a_kotlin_block_comment_is_a_region() {
 
 /// Third scanned form: KDoc, which the grammar emits as its own node kind
 /// rather than as a block comment this frontend would have to re-read.
+///
+/// KDoc is a scanned region, emitted by the grammar as its own node kind.
+/// ´claim:kotlin:kdoc-is-a-region´
 #[test]
 fn a_kdoc_comment_is_a_region() {
     assert_eq!(
@@ -120,6 +132,9 @@ fn a_kdoc_comment_is_a_region() {
 /// An empty block comment is no documentation that happens to be empty: the
 /// scanner's own rule is that `/**/` closes where a KDoc leader would still
 /// be opening.
+///
+/// An empty block comment is plain, closing where a KDoc leader would still be opening.
+/// ´claim:kotlin:an-empty-block-comment-is-plain´
 #[test]
 fn an_empty_kotlin_block_comment_is_plain() {
     assert_eq!(
@@ -133,6 +148,9 @@ fn an_empty_kotlin_block_comment_is_plain() {
 /// scanner asks only whether the byte after `/**` closes the comment, and a
 /// third star does not, so `/***/` is KDoc with an empty interior. The
 /// frontend follows the grammar rather than second-guessing it.
+///
+/// A three-star block comment is KDoc with an empty interior, the frontend following the grammar.
+/// ´claim:kotlin:three-stars-are-kdoc´
 #[test]
 fn a_three_star_block_comment_is_kdoc_with_no_interior() {
     assert_eq!(
@@ -144,6 +162,9 @@ fn a_three_star_block_comment_is_kdoc_with_no_interior() {
 
 /// Kotlin block comments nest, which is why they are scanner tokens: the
 /// whole of `/* a /* b */ c */` is one comment and one region.
+///
+/// Kotlin block comments nest, and a nested one is one region.
+/// ´claim:kotlin:a-nested-block-comment-is-one-region´
 #[test]
 fn a_nested_block_comment_is_one_region() {
     assert_eq!(
@@ -155,6 +176,9 @@ fn a_nested_block_comment_is_one_region() {
 /// `[scanned-regions]`' region unit for Kotlin is "one comment node from the
 /// grammar": a run of `//` lines is that many nodes and therefore that many
 /// regions, where a `///` run in Rust is one.
+///
+/// A run of line comments is that many regions, the region unit being one comment node.
+/// ´claim:kotlin:a-run-of-line-comments-is-many-regions´
 #[test]
 fn a_run_of_kotlin_line_comments_is_one_region_each() {
     assert_eq!(
@@ -169,6 +193,9 @@ fn a_run_of_kotlin_line_comments_is_one_region_each() {
 
 /// A KDoc comment's gutter is a leader and is resolved away; the line breaks
 /// inside it are not, and stay.
+///
+/// A KDoc gutter is a leader and is resolved away, while its line breaks stay.
+/// ´claim:kotlin:a-kdoc-gutter-is-resolved-away´
 #[test]
 fn a_kdoc_gutter_is_resolved_away() {
     assert_eq!(
@@ -179,6 +206,9 @@ fn a_kdoc_gutter_is_resolved_away() {
 
 /// A plain block comment has no gutter convention, so a `*` inside one is
 /// content and survives.
+///
+/// A plain block comment has no gutter convention, so a star inside one is content.
+/// ´claim:kotlin:a-plain-block-comment-keeps-its-stars´
 #[test]
 fn a_plain_kotlin_block_comment_keeps_its_stars() {
     assert_eq!(
@@ -189,6 +219,9 @@ fn a_plain_kotlin_block_comment_keeps_its_stars() {
 
 /// A KDoc line that is only its gutter contributes only its line break,
 /// which is what keeps a blank documentation line blank.
+///
+/// A KDoc line that is only its gutter contributes only its line break.
+/// ´claim:kotlin:a-bare-gutter-line-contributes-its-break´
 #[test]
 fn a_bare_kdoc_gutter_line_contributes_its_break() {
     assert_eq!(
@@ -199,6 +232,9 @@ fn a_bare_kdoc_gutter_line_contributes_its_break() {
 
 /// A line comment ends at the newline and does not include it: the region's
 /// last byte is the comment's, so a diagnostic never points one line on.
+///
+/// A line comment ends at the newline without including it.
+/// ´claim:kotlin:a-line-comment-stops-before-its-newline´
 #[test]
 fn a_kotlin_line_comment_stops_before_its_newline() {
     let regions = regions("// one\nval x = 1\n");
@@ -213,6 +249,9 @@ fn a_kotlin_line_comment_stops_before_its_newline() {
 /// positions where the string's content token begins and a comment could
 /// otherwise be lexed. The grammar makes it unreachable by giving the body to
 /// the scanner, which refuses to produce anything else inside a string.
+///
+/// A comment leader inside a Kotlin string yields no comment node and so no region.
+/// ´claim:kotlin:a-leader-in-a-string-is-no-comment´
 #[test]
 fn a_line_leader_inside_a_kotlin_string_is_not_a_comment() {
     assert!(regions("val x = \"// not a comment\"\n").is_empty());
@@ -222,12 +261,17 @@ fn a_line_leader_inside_a_kotlin_string_is_not_a_comment() {
 /// block comment closes, so the string would still parse and no error node
 /// would mark it. A label written there would become a real occurrence, which
 /// is exactly what `[scanned-regions]` promises cannot happen.
+///
+/// (´claim:kotlin:a-leader-in-a-string-is-no-comment´)
 #[test]
 fn a_block_leader_inside_a_kotlin_string_is_not_a_comment() {
     assert!(regions("val x = \"/* not a comment */\"\n").is_empty());
 }
 
 /// Character literals are outside what is scanned too.
+///
+/// A Kotlin character literal is outside what is scanned.
+/// ´claim:kotlin:a-character-literal-is-not-scanned´
 #[test]
 fn a_character_literal_is_not_scanned() {
     assert!(regions("val x = '/'\nval y = '*'\n").is_empty());
@@ -239,6 +283,9 @@ fn a_character_literal_is_not_scanned() {
 /// The leader after `${y}` is the other position a content token begins at,
 /// and the one reachable in ordinary code. The `a // b` before the hole never
 /// was: it sits inside one content run, where the lexer does not stop.
+///
+/// A string template is a literal throughout, its interpolation holes included.
+/// ´claim:kotlin:a-string-template-is-not-scanned´
 #[test]
 fn a_string_template_is_not_scanned() {
     assert!(regions("val x = \"a // b ${y} /* c */ d\"\n").is_empty());
@@ -247,6 +294,8 @@ fn a_string_template_is_not_scanned() {
 /// What does hold today, and why the corpus is clean: a comment leader in
 /// the middle of a string's content token is content, which is every URL the
 /// Android tree writes.
+///
+/// (´claim:kotlin:a-leader-in-a-string-is-no-comment´)
 #[test]
 fn a_url_inside_a_string_is_not_a_comment() {
     assert!(regions("val x = \"https://cogra.example/join/$id\"\n").is_empty());
@@ -255,6 +304,9 @@ fn a_url_inside_a_string_is_not_a_comment() {
 
 /// A raw string carries no region either, however many lines and leaders it
 /// spans.
+///
+/// A raw string carries no region, however many lines and leaders it spans.
+/// ´claim:kotlin:a-raw-string-is-not-scanned´
 #[test]
 fn a_raw_string_is_not_scanned() {
     assert!(regions("val x = \"\"\"\n// not a comment\n/** nor this */\n\"\"\"\n").is_empty());
@@ -263,6 +315,9 @@ fn a_raw_string_is_not_scanned() {
 /// A comment inside a template's interpolation is a comment: the hole is
 /// code, and this is the boundary an AST frontend gets right and a pattern
 /// search does not (´[ARCH-ansatz:linter:regex-scanning]´).
+///
+/// A comment inside a template's interpolation is a comment, the hole being code.
+/// ´claim:kotlin:a-comment-in-a-hole-is-a-comment´
 #[test]
 fn a_comment_inside_a_kotlin_interpolation_is_a_comment() {
     assert_eq!(
@@ -274,6 +329,9 @@ fn a_comment_inside_a_kotlin_interpolation_is_a_comment() {
 /// An acute-delimited label in a comment scans as an occurrence: the comment
 /// is scanned code text, where the acute is the label delimiter
 /// (´dec:lint:two-scan-entries´).
+///
+/// An acute-delimited label in a Kotlin comment scans as an occurrence.
+/// ´claim:kotlin:an-acute-label-in-a-comment-scans´
 #[test]
 fn an_acute_label_in_a_kotlin_comment_scans_as_an_occurrence() {
     let regions = regions("// mints \u{b4}def:android:widget\u{b4} here\nval x = 1\n");
@@ -283,6 +341,8 @@ fn an_acute_label_in_a_kotlin_comment_scans_as_an_occurrence() {
 }
 
 /// The same in KDoc, whose gutter is resolved away first.
+///
+/// (´claim:kotlin:an-acute-label-in-a-comment-scans´)
 #[test]
 fn an_acute_label_in_kdoc_scans_as_an_occurrence() {
     let regions = regions("/**\n * \u{b4}def:android:widget\u{b4}\n */\nval x = 1\n");
@@ -292,6 +352,9 @@ fn an_acute_label_in_kdoc_scans_as_an_occurrence() {
 
 /// The same label inside a string literal scans as nothing, because the
 /// literal is no region at all.
+///
+/// A label inside a Kotlin literal scans as nothing, the literal being no region.
+/// ´claim:kotlin:a-label-in-a-literal-scans-as-nothing´
 #[test]
 fn an_acute_label_in_a_kotlin_string_scans_as_nothing() {
     assert!(regions("val x = \"\u{b4}def:android:widget\u{b4}\"\n").is_empty());
@@ -299,6 +362,9 @@ fn an_acute_label_in_a_kotlin_string_scans_as_nothing() {
 
 /// A region carries the code syntax, which is what routes it to
 /// [`scan_code`] rather than to the prose entry (´dec:lint:two-scan-entries´).
+///
+/// A Kotlin region carries the code syntax and routes to the code scanner.
+/// ´claim:kotlin:a-region-carries-the-code-syntax´
 #[test]
 fn a_kotlin_region_carries_the_code_syntax() {
     for region in regions("// one\n/** two */\nval x = 1\n") {
@@ -309,6 +375,9 @@ fn a_kotlin_region_carries_the_code_syntax() {
 
 /// A region's pieces are file ranges copied verbatim, so their lengths sum
 /// to the logical text's length and each is a slice of the file.
+///
+/// A region's pieces are verbatim file ranges whose lengths sum to its logical text.
+/// ´claim:kotlin:the-pieces-reconstruct-the-text´
 #[test]
 fn a_kotlin_region_s_pieces_reconstruct_its_text() {
     let text = "/**\n * one\n * two\n */\nval x = 1\n";
@@ -326,6 +395,9 @@ fn a_kotlin_region_s_pieces_reconstruct_its_text() {
 
 /// Byte offsets are the file's own: a label after a multibyte character
 /// locates at the bytes it was written at, not at the characters.
+///
+/// Byte offsets are the file's own, so a label after a multibyte character locates exactly.
+/// ´claim:kotlin:offsets-are-the-files-own´
 #[test]
 fn a_kotlin_occurrence_after_a_multibyte_character_locates_exactly() {
     let text = "// \u{e4}\u{f6}\u{fc} \u{b4}def:android:widget\u{b4}\nval x = 1\n";
@@ -337,6 +409,8 @@ fn a_kotlin_occurrence_after_a_multibyte_character_locates_exactly() {
 
 /// And a multibyte character inside a resolved-away KDoc gutter shifts
 /// nothing either, which is the case a piece boundary makes interesting.
+///
+/// (´claim:kotlin:offsets-are-the-files-own´)
 #[test]
 fn an_occurrence_in_kdoc_after_a_multibyte_character_locates_exactly() {
     let text = "/**\n * \u{e4}\u{f6}\u{fc}\n * \u{b4}def:android:widget\u{b4}\n */\nval x = 1\n";
@@ -349,6 +423,9 @@ fn an_occurrence_in_kdoc_after_a_multibyte_character_locates_exactly() {
 /// A top-level statement is what a script is made of, and the grammar's one
 /// root takes the specification's wider `script` shape, so it parses like any
 /// other source rather than reporting anything.
+///
+/// A top-level statement parses like any other source, the grammar's root taking the script shape.
+/// ´claim:kotlin:a-script-parses´
 #[test]
 fn a_top_level_statement_is_not_a_finding() {
     let parsed = frontend_kotlin::parse(&source("val x = 1\nprintln(x)\n"), adoption())
@@ -362,6 +439,9 @@ fn a_top_level_statement_is_not_a_finding() {
 
 /// A syntax error is a hard, located diagnostic and never a silently skipped
 /// region (´[ARCH-req:linter:diagnostics-not-panics]´).
+///
+/// A syntax error is a located diagnostic and never a silently skipped region.
+/// ´claim:kotlin:a-syntax-error-is-located´
 #[test]
 fn a_kotlin_syntax_error_is_a_located_diagnostic() {
     let parsed = frontend_kotlin::parse(&source("val x = 1\nclass ) {\n"), adoption())
@@ -385,6 +465,9 @@ fn a_kotlin_syntax_error_is_a_located_diagnostic() {
 
 /// The regions travel beside the findings and are never traded for them: a
 /// file with an error node still yields every comment that parsed.
+///
+/// A file with an error node still yields every comment that parsed.
+/// ´claim:kotlin:regions-survive-an-error-node´
 #[test]
 fn regions_survive_an_error_node() {
     let parsed = frontend_kotlin::parse(&source("// kept\nval x = 1\nclass ) {\n"), adoption())
@@ -403,6 +486,9 @@ fn regions_survive_an_error_node() {
 /// A source that is not UTF-8 cannot be read at all, and unlike its Rust
 /// counterpart it leaves nothing behind to enforce: Kotlin has no entry in
 /// `[banned-tokens]`.
+///
+/// A Kotlin source that is not UTF-8 leaves nothing behind to enforce.
+/// ´claim:kotlin:a-non-utf8-source-leaves-nothing´
 #[test]
 fn a_kotlin_source_that_is_not_utf8_is_an_error() {
     let mut src = source("");
@@ -414,6 +500,9 @@ fn a_kotlin_source_that_is_not_utf8_is_an_error() {
 
 /// `[head-recognition]` gives Kotlin no head form: a code comment carries
 /// occurrences and heads no environment.
+///
+/// The Kotlin frontend produces no heads, Kotlin having no head form.
+/// ´claim:kotlin:the-kotlin-frontend-heads-nothing´
 #[test]
 fn the_kotlin_frontend_produces_no_heads() {
     let parsed =
@@ -423,6 +512,9 @@ fn the_kotlin_frontend_produces_no_heads() {
 
 /// `[profiles]` registers no Kotlin profile in version 1, so the frontend
 /// settles no census and pairs nothing across sources.
+///
+/// The Kotlin frontend settles no census, no Kotlin profile being registered.
+/// ´claim:kotlin:the-kotlin-frontend-covers-nothing´
 #[test]
 fn the_kotlin_frontend_produces_no_assets() {
     let parsed = parse("class Widget\nfun make() {}\n");
@@ -434,6 +526,9 @@ fn the_kotlin_frontend_produces_no_assets() {
 /// The dispatcher routes a Kotlin source here, which is the whole of what
 /// wiring a frontend means: `[scanned-regions]` already named the extension,
 /// and the carrier already carried the files.
+///
+/// The dispatcher routes a Kotlin source to the Kotlin frontend.
+/// ´claim:kotlin:the-dispatcher-reaches-the-kotlin-frontend´
 #[test]
 fn the_dispatcher_reaches_the_kotlin_frontend() {
     let src = source("// one\nval x = 1\n");
@@ -448,6 +543,9 @@ fn the_dispatcher_reaches_the_kotlin_frontend() {
 
 /// Regions come out in file order, which is what makes the frontend's output
 /// byte-deterministic (´[ARCH-req:linter:determinism]´).
+///
+/// Regions come out in file order, which is what makes the output byte-deterministic.
+/// ´claim:kotlin:regions-are-ordered-by-position´
 #[test]
 fn kotlin_regions_are_ordered_by_position() {
     let mut text = String::new();
@@ -462,6 +560,9 @@ fn kotlin_regions_are_ordered_by_position() {
 }
 
 /// A trailing comment is one region, wherever the grammar hangs its node.
+///
+/// A trailing comment is one region, wherever the grammar hangs its node.
+/// ´claim:kotlin:a-trailing-comment-is-one-region´
 #[test]
 fn a_trailing_kotlin_comment_is_one_region() {
     assert_eq!(
@@ -472,6 +573,9 @@ fn a_trailing_kotlin_comment_is_one_region() {
 
 /// The end-to-end fixture: the frontend over one real Kotlin source. Its
 /// comments are found, and every region's pieces map back into the file.
+///
+/// The Kotlin frontend reads a real source end to end, every region mapping back into the file.
+/// ´claim:kotlin:the-frontend-reads-a-real-source´
 #[test]
 fn the_frontend_reads_a_real_kotlin_source() {
     let at = "android/core/domain/src/main/kotlin/com/cogra/domain/Models.kt";
@@ -518,6 +622,9 @@ fn the_frontend_reads_a_real_kotlin_source() {
 /// every `.kt` source of the carrier and fails if any comment node has a
 /// string literal above it — so the defect cannot activate silently, it
 /// activates as a red test on the commit that writes the string.
+///
+/// No Kotlin source of the carrier puts a comment node inside a string literal.
+/// ´claim:kotlin:no-corpus-comment-sits-in-a-string´
 #[test]
 fn no_corpus_comment_node_sits_inside_a_string() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
@@ -599,6 +706,8 @@ fn collect_kt(at: &Path, out: &mut Vec<PathBuf>) {
 
 /// No rule identifier of this module is label-shaped: `lint` is a reserved
 /// kind no profile governs (´sig:lint:diagnostic-api´).
+///
+/// (´claim:diagnostics:no-rule-identifier-is-label-shaped´)
 #[test]
 fn no_kotlin_frontend_rule_identifier_is_label_shaped() {
     for rule in frontend_kotlin::RULES {

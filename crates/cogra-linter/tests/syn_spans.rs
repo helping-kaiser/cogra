@@ -26,6 +26,8 @@ fn at(range: std::ops::Range<usize>) -> &'static str {
     &FIXTURE[range]
 }
 
+/// An item span is the item's own byte range, and never empty.
+/// ´claim:spans:an-item-span-is-its-own-byte-range´
 #[test]
 fn an_item_span_is_the_item_s_own_byte_range() -> Result<(), syn::Error> {
     let file = syn::parse_file(FIXTURE)?;
@@ -42,6 +44,8 @@ fn an_item_span_is_the_item_s_own_byte_range() -> Result<(), syn::Error> {
     Ok(())
 }
 
+/// An identifier's span covers the identifier and nothing around it.
+/// ´claim:spans:an-identifier-span-is-the-identifier-alone´
 #[test]
 fn an_identifier_span_is_the_identifier_alone() -> Result<(), syn::Error> {
     let file = syn::parse_file(FIXTURE)?;
@@ -54,6 +58,8 @@ fn an_identifier_span_is_the_identifier_alone() -> Result<(), syn::Error> {
     Ok(())
 }
 
+/// A documentation comment's span is the line it was written on.
+/// ´claim:spans:a-doc-comment-span-is-its-own-line´
 #[test]
 fn a_documentation_comment_carries_the_span_of_its_own_line() -> Result<(), syn::Error> {
     let file = syn::parse_file(FIXTURE)?;
@@ -78,6 +84,8 @@ fn a_documentation_comment_carries_the_span_of_its_own_line() -> Result<(), syn:
     Ok(())
 }
 
+/// Two items of one file occupy disjoint byte ranges.
+/// ´claim:spans:two-item-ranges-are-disjoint´
 #[test]
 fn the_ranges_of_two_items_do_not_overlap() -> Result<(), syn::Error> {
     let file = syn::parse_file(FIXTURE)?;

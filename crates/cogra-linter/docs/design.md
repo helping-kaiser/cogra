@@ -34,9 +34,10 @@ src/
   judge/
     mod.rs          the judgment surface: run every judgment, collect findings
     labels.rs       unique mint, total resolution, warrant totality, inventory
+    claims.rs       the claim standing of every covered test, and its census
     kinds.rs        registry-as-data, presentation reduction, head validation
     freshness.rs    exact byte comparison of every generated register
-  registers.rs      the generators: label registers, headline counts, attestation
+  registers.rs      the generators: label registers, claim matrices, headline counts, attestation
   migrate.rs        the migrations report: each staged profile's distance
   fix.rs            the sweep: one profile's labels, written where its assets are
   report.rs         the reference report: orphans, hubs, per-owner counts, reverse lookup
@@ -128,6 +129,13 @@ pub struct AssetNode {
     pub area: Area,
     /// Where the profile's standard place puts the label for this asset.
     pub place: Place,
+    /// Where the asset sits. No derivation reads it — position never enters a
+    /// derived label (`[LBL-judg:labels:derivation]`) — and a finding *about*
+    /// an asset needs it to point anywhere at all.
+    pub span: ByteSpan,
+    /// The asset's own documentation, as logical lines
+    /// (`dec:lint:claim-standing`).
+    pub documentation: Vec<Box<str>>,
 }
 
 pub struct ProfileNode { pub id: ProfileId, pub kind: Kind, pub status: ProfileStatus }
@@ -295,6 +303,9 @@ pub struct Adoption {
     pub partition: Partition,
     pub profiles: Profiles,
     pub reserved_kinds: ReservedKinds,
+    /// The claim discipline, where the corpus adopts it
+    /// (`dec:lint:claim-standing`).
+    pub claims: Option<Claims>,
     pub typed_data: TypedData,
     pub citation_indexes: CitationIndexes,
     pub scanned_regions: ScannedRegions,
@@ -682,6 +693,12 @@ pub struct Asset {
     pub area: Area,
     pub place: Place,
     pub span: ByteSpan,
+    pub opens: usize,
+    /// The asset's own documentation, as logical lines: leaders resolved
+    /// away, each trimmed, a block comment split at its breaks. The frontend
+    /// answers it because the frontend holds the tree, exactly as it answers
+    /// `opens` (`dec:lint:claim-standing`).
+    pub documentation: Vec<String>,
 }
 
 /// One table of a document, as its cells' regions spell it. The cell texts
@@ -835,6 +852,16 @@ pub mod labels {
     pub fn synthetic_citation(g: &Corpus, a: &Adoption) -> Vec<Diagnostic>;
 }
 
+pub mod claims {
+    /// Every covered test of an activated owner carries a claim, and every
+    /// claim stands where the discipline puts it (`dec:lint:claim-standing`).
+    pub fn claims(g: &Corpus, a: &Adoption) -> Vec<Diagnostic>;
+    /// What the claims come to, over every owner, activated or not.
+    pub fn census(g: &Corpus, a: &Adoption) -> ClaimCensus;
+    /// One test's standing, read by the judgment and by the generator alike.
+    pub fn standing(documentation: &[Box<str>], kind: &Kind) -> Standing;
+}
+
 pub mod kinds {
     pub fn head_validation(g: &Corpus, k: &KindRegistry) -> Vec<Diagnostic>;
 }
@@ -873,6 +900,7 @@ The architecture states each invariant as a graph query (`[ARCH-tab:linter:judgm
 | (`[LBL-inf:labels:anchor-harvest]`) | `EdgeFiltered` view over `Anchors` from a designated document's body regions into the designated upstream owner; empty domain today |
 | (`[LBL-inf:labels:synthetic-citation]`) | designated typed-data strings become `Citation` nodes like any other; empty domain today |
 | (`dec:lint:reach-declared`) | for each `Citation` carrying a prefix: its `Cites` target lies in the citing owner's declared row, or the citing owner heads none; no section declared today |
+| (`dec:lint:claim-standing`) | for the profile `[claims]` rides: each covered `Asset`'s own documentation lines, scanned one at a time for an occurrence of the claim kind; zero is a finding where the activation admits the asset's owner and a count everywhere else, two is a defect, and one away from the final line or sharing it is a defect in every owner |
 | (`[KND-judg:kinds:head-validation]`) | every `Head` node has out-degree exactly one over `ValidatesAs`; zero is an uncatalogued pair, two is an ambiguous reduction |
 | (`[IDN-rule:identity:well-founded-graph]`) | `petgraph::algo::is_cyclic_directed` over the relevant view, when identity checking lands; no subject in version 1 |
 
@@ -986,6 +1014,28 @@ Coverage follows a structural title. Every Markdown source of the carrier that h
 
 Generated sources reach coverage and not validation, and the two clauses come from different disciplines. Their titles *mint*: an authorship a generator transcribes is that choice still, so `label_register_bytes` and the attestation generator write their own `reg:registers:…` mints and the freshness compare stays byte-exact over them. Their heads form no judgment: (`[KND-judg:kinds:head-validation]`) puts generated registers outside authored heads and (`[KND-inv:kinds:totality]`) outside its requirement, so `frontend_md` emits no `Head` value for a generated source at all — the clause was vacuous while no generated register carried a mint, and the title is what makes it bite.
 
+## The claim discipline · `sec:lint:claims`
+
+**Decision (A claim's standing is read from the tree, at one place)** · `dec:lint:claim-standing`
+
+A covered test's claim is an authored label on the **final line of its own documentation comment**, alone on that line: a mint `´claim:area:name´`, or a citation `(´claim:area:name´)` of the claim a sibling minted. The line above it is the **statement** — the one sentence the label names, which the generated matrix presents.
+
+Three shapes here are the corpus's rather than the source discipline's, and each is a consequence of a choice made earlier. The sibling linter puts the claim on the *second*-to-last line because its test profile's standard place is the last one; this corpus's test profile places its derived label in a per-owner register instead (`[profiles]`), so the last line is free and the claim takes it. The sibling's statement is the whole gloss above the claim, joined; here it is one line, because a test's documentation in this corpus routinely cites the design clause it discharges, and a whole-gloss rule would copy those citations into a generated file — a second occurrence of what an author wrote once, in a syntax that changes on the way, the documentation being code and the matrix prose. And a statement carrying a backtick is a finding rather than an escape, because the matrix presents the line as prose and a span there would mint or cite; escaping it silently would hide from the author that their line is read as prose at all.
+
+The documentation reaches the judgment as logical lines on the `Asset` and then the `AssetNode`, filled by `frontend_rust` from the doc attributes `syn` already resolved — the same warrant `Asset::opens` travels on (`sig:lint:frontend-api`). A pass that re-derived those lines from bytes would be reading back structure a parser had settled, and would be free to disagree with it. The occurrence forms are read by `scan_code` over one line at a time and never by matching a formatted string, so the reader of a claim and the harvest that mints it cannot drift; and `registers` calls the same `standing` the judgment calls, so a matrix can never say something about a test the check disagrees with.
+
+**Decision (The claim discipline rides the calculus's own judgments)** · `dec:lint:claims-ride-the-calculus`
+
+`judge::claims` reports six things and no more: a covered test of an activated owner with no claim, a claim not on the final line, a claim sharing its line, a documentation carrying two, a citation of another owner's claim, and a mint whose statement is missing or quoted. It does **not** check that a minted claim is unique in its owner, and it does **not** resolve a cited one.
+
+It does not, because it need not. A claim is an ordinary label in the one graph: a claim minted twice is (`[LBL-inv:labels:unique-mint]`)'s finding with both locations, and a citation reaching no mint is (`[LBL-inv:labels:total-resolution]`)'s with the import form suggested where one would help. The sibling linter re-implements both inside its claim pass because its claims live in a registry of their own; ours are in the graph every other label is in, so the invariants that already quantify over every owner cover them without a second voice — and a second voice is how two readings of one fact come to differ. What is left for this module is exactly what the calculus cannot see, because the calculus knows nothing of tests: whether a covered asset carries a claim at all, and whether the one it carries stands where the discipline puts it.
+
+**Decision (Activation stages the wave, and stages nothing else)** · `dec:lint:claim-activation`
+
+`[claims]` `activation` names the owners whose authoring wave has closed. A covered test of an owner outside that list carries no obligation and produces no finding; its count travels in `report` and nowhere else (`dec:lint:report-subcommand`). Suppressing the count as well would leave an unclosed wave indistinguishable from a closed one, which is the one thing the staging must not do.
+
+The staging reaches the **unwritten** claim alone. Placement, aloneness, foreignness, and a quoted statement are judged in every owner from a claim's first commit, because a written claim that is wrong is a defect and not a schedule — and because a discipline that let a defect ride until a wave closed would collect a wave's worth of them to fix at once. Widening the activation is one edit to an array, which is what makes the migration a commit rather than a code change; the same grammar carries a profile's own activation (`sig:lint:adoption-api`), where `every-owner` is the shape that keeps a crate added tomorrow from escaping in silence.
+
 ## Registers · `sec:lint:registers`
 
 **Signature (Register surface)** · `sig:lint:register-api`
@@ -999,6 +1049,9 @@ pub struct Register { pub path: PathBuf, pub bytes: Vec<u8>, pub scope: Register
 pub enum RegisterScope {
     /// One per owner with covered assets, for one inventory profile.
     LabelRegister { owner: OwnerId, profile: ProfileId },
+    /// One per activated owner: its claims against the tests that carry
+    /// them (`dec:lint:claim-activation`).
+    ClaimMatrix { owner: OwnerId },
     /// The companion attestation register (`[KND-req:kinds:attestation-register]`).
     Attestation,
     /// A generated region inside an authored file, not a whole file
@@ -1248,9 +1301,11 @@ pub struct Survey {
 
 pub struct Reverse { pub owner: OwnerId, pub minted: Vec<Location>, pub cited: Vec<Location> }
 
-pub fn survey(run: &Run, top: usize) -> Survey;
+pub fn survey(run: &Run, a: &Adoption, top: usize) -> Survey;
 pub fn reverse(run: &Run, label: &Label) -> Vec<Reverse>;
 ```
+
+`Survey` carries the claim census beside its own counts, and the adoption data reach `survey` for it alone: which owners the activation admits is a declaration, and it is the one figure in the report a completed run does not already hold. The census is where an unactivated owner's unwritten claims are visible at all (`dec:lint:claim-activation`), and it judges nothing and moves no exit status, like every other figure here.
 
 It adds no pass. Every number is in the graph when the check finishes, and the module selects, counts and orders what pass 2 left behind — which is why a third run over the tree was never needed for it. It walks nothing, parses nothing, and adds no edge.
 
