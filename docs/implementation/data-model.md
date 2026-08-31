@@ -154,10 +154,21 @@ integer-keyed map — the guild schema:
 | 10 | payout address (profile) — **assigned**, arrives with the rail ([ledger.md](ledger.md)) | tstr |
 | 11 | avatar (profile) — a one-asset slot | array of maps |
 | 12 | cover (profile) — a one-asset slot | array of maps |
+| 13 | the author's own sensitive mark — `1` when marked, key absent when not | uint |
+| 14 | the mark's optional public reason, valid only with key 13 | tstr |
 
-Keys 2–6 ride Publish/Review payloads; keys 7–12 ride the
+Keys 2–6 and 13–14 ride Publish/Review payloads; keys 7–12 ride the
 parallel-Registration profile payload ([user.md §4](../primitive/user.md#4-postgres-side-content),
 [substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
+
+Keys 13 and 14 carry the author's own sensitive mark and its
+optional public reason ([moderation.md §1](../instances/moderation.md)).
+A mark is presence, so one state has one encoding and two payloads
+cannot disagree about the same unmarked post; a reason without the
+mark is refused rather than dropped. Witnessing them is what makes
+the veil the author's own statement rather than a note the server
+keeps, and what lets a rebuilt mirror restore the mark with the
+version it belongs to.
 
 A manifest entry is a nested integer-keyed map: key 0 the
 **digest** of the bytes (32-byte bstr, SHA-256), key 1 the
@@ -384,9 +395,11 @@ A **redaction tombstone** is just another version row: its
 visible marker, and the prior values move to the retention
 archive ([retention-archive.md](../primitive/retention-archive.md),
 [erasure.md](../instances/erasure.md)). The
-tombstone's `created_at` is the removed-at instant. Per-field
-sensitive flags and the verdict vocabulary are operational
-metadata rows; the substrate-visible verdict is the Tag record
+tombstone's `created_at` is the removed-at instant. An author's
+own sensitive mark is part of the content state and rides the
+version row; a *moderator's* per-field flags and the verdict
+vocabulary are operational metadata rows, and the
+substrate-visible verdict is the Tag record
 ([moderation.md](../instances/moderation.md)).
 
 Current-version reads order
@@ -658,6 +671,13 @@ CREATE TABLE post_versions (
     description      TEXT,       -- optional short summary / subtitle
     content          TEXT        NOT NULL,
     redaction_reason TEXT,
+    -- The author's own sensitive mark, mirrored from guild keys 13/14
+    -- of the version's witnessed payload. Versioned with the rest of
+    -- the content state, so an edit that omits it writes an unmarked
+    -- version and the history keeps both. Its per-field reach is fixed
+    -- (moderation.md §1), so no column names a field.
+    sensitive        BOOLEAN     NOT NULL DEFAULT FALSE,
+    sensitive_reason TEXT,
     pending          BOOLEAN     NOT NULL DEFAULT FALSE,
     landed_epoch     BIGINT,
     act_time         BIGINT,
@@ -665,6 +685,7 @@ CREATE TABLE post_versions (
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version_id       BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     UNIQUE (post_id, created_at),
+    CHECK (sensitive_reason IS NULL OR sensitive),
     CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
 );
 CREATE INDEX post_versions_current_idx
@@ -698,6 +719,9 @@ CREATE TABLE comment_versions (
     comment_id       UUID        NOT NULL REFERENCES comments(id),
     content          TEXT        NOT NULL,
     redaction_reason TEXT,
+    -- The author's own sensitive mark; same semantics a post's carries.
+    sensitive        BOOLEAN     NOT NULL DEFAULT FALSE,
+    sensitive_reason TEXT,
     pending          BOOLEAN     NOT NULL DEFAULT FALSE,
     landed_epoch     BIGINT,
     act_time         BIGINT,
@@ -705,6 +729,7 @@ CREATE TABLE comment_versions (
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version_id       BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     UNIQUE (comment_id, created_at),
+    CHECK (sensitive_reason IS NULL OR sensitive),
     CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
 );
 CREATE INDEX comment_versions_current_idx
