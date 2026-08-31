@@ -32,11 +32,12 @@ use std::path::PathBuf;
 use petgraph::stable_graph::NodeIndex;
 
 use crate::Run;
-use crate::adopt::OwnerId;
+use crate::adopt::{Adoption, OwnerId};
 use crate::diag::Location;
 use crate::graph::{
     Corpus, EdgeW, NodeKind, NodeW, in_along, nodes_of, out_along, owner_of, source_of,
 };
+use crate::judge::claims::{ClaimCensus, census};
 use crate::scan::Label;
 
 /// One label of one owner, located at its mint and counted by its citations.
@@ -91,6 +92,14 @@ pub struct Survey {
     pub cited: usize,
     /// One row per owner, in owner order.
     pub tally: Vec<Tally>,
+    /// What the claims come to, and what each owner's unclosed wave still
+    /// owes (´dec:lint:report-subcommand´).
+    ///
+    /// This is where an unactivated owner's unwritten claims are visible at
+    /// all: the check reports none of them, so a count nobody printed would
+    /// leave an unclosed wave indistinguishable from a closed one. It judges
+    /// nothing and moves no exit status, like every other figure here.
+    pub claims: ClaimCensus,
 }
 
 /// Where one label of one owner is minted, and every citation that reaches it.
@@ -123,13 +132,17 @@ pub struct Reverse {
 /// let adoption = cogra_linter::Adoption::load(&root.join("corpus-adoption.toml"))?;
 /// let checked = cogra_linter::check(&adoption, root)?;
 ///
-/// let found = survey(&checked, 20);
+/// let found = survey(&checked, &adoption, 20);
 /// println!("{} mints, {} of them cited by nothing", found.mints, found.orphans.len());
 /// # Ok(())
 /// # }
 /// ```
+///
+/// The adoption data reach it because the claim census is the one figure here
+/// a completed run does not already hold: which owners the activation admits
+/// is a declaration and not a fact about the graph.
 #[must_use]
-pub fn survey(run: &Run, top: usize) -> Survey {
+pub fn survey(run: &Run, a: &Adoption, top: usize) -> Survey {
     let g = &run.graph;
     let citations: Vec<NodeIndex> = nodes_of(g, NodeKind::Citation).collect();
     let resolved = citations
@@ -191,6 +204,7 @@ pub fn survey(run: &Run, top: usize) -> Survey {
         hubs,
         cited,
         tally: tally(run, &citations),
+        claims: census(g, a),
     }
 }
 

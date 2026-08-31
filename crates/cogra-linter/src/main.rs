@@ -457,7 +457,7 @@ fn report(a: &Adoption, root: &Path, label: Option<&str>, top: usize) -> Result<
 
     match &wanted {
         Some(one) => print!("{}", render::reverse(one, &report::reverse(&checked, one))),
-        None => print!("{}", render::survey(&report::survey(&checked, top))),
+        None => print!("{}", render::survey(&report::survey(&checked, a, top))),
     }
     println!("{}", render::timing(&checked.timing));
     Ok(CLEAN)

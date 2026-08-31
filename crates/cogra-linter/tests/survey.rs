@@ -93,7 +93,7 @@ fn section(rendered: &str, header: &str) -> String {
 /// occurrence, and how many citations reached a mint.
 #[test]
 fn the_summary_counts_what_the_run_holds() {
-    let found = survey(surveyed(), 20);
+    let found = survey(surveyed(), adoption(), 20);
     assert_eq!(found.sources, 4);
     assert_eq!(found.mints, 5);
     assert_eq!(found.citations, 4);
@@ -109,7 +109,7 @@ fn the_summary_counts_what_the_run_holds() {
 /// listed at its own mint and in label order, and it is not a finding.
 #[test]
 fn the_orphans_are_the_mints_nothing_cites() {
-    let found = survey(surveyed(), 20);
+    let found = survey(surveyed(), adoption(), 20);
     assert_eq!(
         section(&render::survey(&found), "orphan mints"),
         concat!(
@@ -125,7 +125,7 @@ fn the_orphans_are_the_mints_nothing_cites() {
 /// most first, and the header carries the whole count whatever the cut.
 #[test]
 fn the_hubs_are_the_cited_labels_most_first() {
-    let found = survey(surveyed(), 20);
+    let found = survey(surveyed(), adoption(), 20);
     assert_eq!(
         section(&render::survey(&found), "hub labels"),
         concat!(
@@ -140,7 +140,7 @@ fn the_hubs_are_the_cited_labels_most_first() {
 /// header understates what the corpus holds.
 #[test]
 fn a_cut_listing_still_names_its_whole_count() {
-    let found = survey(surveyed(), 1);
+    let found = survey(surveyed(), adoption(), 1);
     assert_eq!(found.orphans.len(), 1);
     assert_eq!(found.orphaned, 3);
     assert_eq!(found.hubs.len(), 1);
@@ -149,7 +149,7 @@ fn a_cut_listing_still_names_its_whole_count() {
     assert!(rendered.contains("orphan mints · 1 of 3"), "{rendered}");
     assert!(rendered.contains("hub labels · 1 of 2"), "{rendered}");
 
-    let none = survey(surveyed(), 0);
+    let none = survey(surveyed(), adoption(), 0);
     assert!(none.orphans.is_empty() && none.hubs.is_empty());
     assert!(render::survey(&none).contains("hub labels · 0 of 2"));
 }
@@ -158,7 +158,7 @@ fn a_cut_listing_still_names_its_whole_count() {
 /// mints, what its own sources cite, and what reaches it.
 #[test]
 fn each_owner_is_tallied_by_what_it_mints_and_what_it_cites() {
-    let found = survey(surveyed(), 20);
+    let found = survey(surveyed(), adoption(), 20);
     let mine = found
         .tally
         .iter()
@@ -212,7 +212,7 @@ fn a_label_no_owner_carries_answers_empty() {
 /// and neither is produced by iterating a registry.
 #[test]
 fn two_surveys_of_one_run_agree() {
-    assert_eq!(survey(surveyed(), 20), survey(surveyed(), 20));
+    assert_eq!(survey(surveyed(), adoption(), 20), survey(surveyed(), adoption(), 20));
     let one = label("dec:standin:hub");
     assert_eq!(reverse(surveyed(), &one), reverse(surveyed(), &one));
 }
