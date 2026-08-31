@@ -12,7 +12,7 @@ function Host({
   shape = "tall" as const,
   initial = CENTERED,
 }: {
-  shape?: "tall" | "square" | "wide" | "avatar" | "cover";
+  shape?: "tall" | "square" | "wide" | "avatar";
   initial?: Crop;
 }) {
   const [crop, setCrop] = useState(initial);
