@@ -168,7 +168,6 @@ fn draft(
         bio: bio.map(Into::into),
         website_url: website_url.map(Into::into),
         avatar_media_id: None,
-        cover_media_id: None,
     }
 }
 
@@ -355,8 +354,8 @@ async fn refuses_an_update_without_the_anchoring_registration(pool: PgPool) {
 mod pictures {
     //! ´mod:module:pictures´
     //!
-    //! The avatar and cover slots, whose three values differ from every
-    //! other profile field's two.
+    //! The avatar slot — the profile's one image — whose three values
+    //! differ from every other profile field's two.
 
     use super::*;
     use postgres_store::media as media_store;
@@ -380,23 +379,19 @@ mod pictures {
         id
     }
 
-    fn with_pictures(
-        avatar: Option<Option<Uuid>>,
-        cover: Option<Option<Uuid>>,
-    ) -> ProfileUpdateDraft {
+    fn with_picture(avatar: Option<Option<Uuid>>) -> ProfileUpdateDraft {
         ProfileUpdateDraft {
             avatar_media_id: avatar,
-            cover_media_id: cover,
             ..draft(None, None, None)
         }
     }
 
-    async fn current(pool: &PgPool, actor: Uuid) -> (Option<Uuid>, Option<Uuid>) {
-        let version = profile_store::current_profile(pool, actor)
+    async fn current(pool: &PgPool, actor: Uuid) -> Option<Uuid> {
+        profile_store::current_profile(pool, actor)
             .await
             .expect("reads")
-            .expect("profile");
-        (version.avatar_id, version.cover_id)
+            .expect("profile")
+            .avatar_id
     }
 
     /// All three values, in the one order that tells them apart: set,
@@ -411,30 +406,24 @@ mod pictures {
         let rig = Rig::new(pool).await;
         let (actor, key) = rig.registered_actor("ada").await;
         let face = asset(&rig.pool, actor, 1).await;
-        let banner = asset(&rig.pool, actor, 2).await;
 
-        rig.land_update(
-            actor,
-            &key,
-            with_pictures(Some(Some(face)), Some(Some(banner))),
-        )
-        .await;
-        assert_eq!(current(&rig.pool, actor).await, (Some(face), Some(banner)));
+        rig.land_update(actor, &key, with_picture(Some(Some(face))))
+            .await;
+        assert_eq!(current(&rig.pool, actor).await, Some(face));
 
         rig.land_update(actor, &key, draft(None, Some("a new bio"), None))
             .await;
         assert_eq!(
             current(&rig.pool, actor).await,
-            (Some(face), Some(banner)),
-            "an update that says nothing about the pictures leaves them"
+            Some(face),
+            "an update that says nothing about the picture leaves it"
         );
 
-        rig.land_update(actor, &key, with_pictures(Some(None), None))
-            .await;
+        rig.land_update(actor, &key, with_picture(Some(None))).await;
         assert_eq!(
             current(&rig.pool, actor).await,
-            (None, Some(banner)),
-            "an explicit clear takes the avatar and only the avatar"
+            None,
+            "an explicit clear takes the avatar back to the monogram"
         );
     }
 
@@ -450,10 +439,7 @@ mod pictures {
         let (stranger, _stranger_key) = rig.registered_actor("mallory").await;
         let theirs = asset(&rig.pool, stranger, 3).await;
 
-        match rig
-            .update(actor, with_pictures(Some(Some(theirs)), None))
-            .await
-        {
+        match rig.update(actor, with_picture(Some(Some(theirs)))).await {
             Err(ProfileError::Media(e)) => {
                 assert_eq!(e.path, vec!["avatarMediaId".to_string()]);
             }
@@ -461,11 +447,11 @@ mod pictures {
         }
 
         match rig
-            .update(actor, with_pictures(None, Some(Some(Uuid::new_v4()))))
+            .update(actor, with_picture(Some(Some(Uuid::new_v4()))))
             .await
         {
             Err(ProfileError::Media(e)) => {
-                assert_eq!(e.path, vec!["coverMediaId".to_string()]);
+                assert_eq!(e.path, vec!["avatarMediaId".to_string()]);
             }
             other => panic!("expected a media refusal, got {other:?}"),
         }
@@ -480,7 +466,7 @@ mod pictures {
         let rig = Rig::new(pool).await;
         let (actor, _key) = rig.registered_actor("ada").await;
         let face = asset(&rig.pool, actor, 1).await;
-        rig.update(actor, with_pictures(Some(Some(face)), None))
+        rig.update(actor, with_picture(Some(Some(face))))
             .await
             .expect("prepares");
     }

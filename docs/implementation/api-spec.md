@@ -746,13 +746,16 @@ type ModeratedMedia {
 enum FieldModerationStatus { NORMAL SENSITIVE REDACTED }
 ```
 
-SENSITIVE reaches these fields two ways: a passed moderation
-Proposal, and the **author's own mark** at compose time
-("Content authoring" below). They read alike by design — the same
-status on the same fields — and a self-mark's reach is fixed: the
-body veils as one region and the title stays NORMAL beside it.
-`sensitiveReason` on a content node is the author's own optional
-line, null for a moderator's verdict.
+SENSITIVE reaches these fields from two **independent** marks: a
+passed moderation Proposal, and the **author's own mark** at
+compose time ("Content authoring" below). The status is their OR,
+and neither side can clear the other
+([moderation.md](../instances/moderation.md)). They read alike by
+design — the same status on the same fields — and a self-mark's
+reach is fixed: the body veils as one region and the title stays
+NORMAL beside it. `sensitiveReason` on a content node is the
+author's own optional line, null for a moderator's verdict; the
+author's mark on its own reads `sensitiveSelfMark`.
 
 A media *gallery* (a list) can't wrap generically, so those fields
 keep their list and carry a sibling
@@ -909,8 +912,6 @@ placeholder instead of a silent gap.
 type User implements Node & Actor {
   "Free-text profile bio."
   bio: ModeratedText!
-  "Profile cover image. User-only — Collectives carry no cover."
-  cover: ModeratedMedia!
 
   # Private viewer state — each field resolves only when the authenticated
   # viewer is this User; null otherwise (see "Private viewer state" below).
@@ -1002,10 +1003,13 @@ type Post implements Node {
    body is its gallery. Exactly one of content.value and
    attachments carries the body."
   content: ModeratedText!
+  "The author's own sensitive mark, alone — not the veil, which is
+   the OR of this and a moderator's verdict. An edit switch reads
+   this: it is the only one of the two an edit can change."
+  sensitiveSelfMark: Boolean!
   "The public reason the author gave for their own sensitive mark;
    null when unmarked, when the mark carries no reason, and when
-   the payload has been removed. The mark itself is not a field:
-   it is what the body's statuses already say."
+   the payload has been removed."
   sensitiveReason: String
   author: Actor!
   "The gallery, in the author's order, the first entry the cover."
@@ -1042,6 +1046,9 @@ type Post implements Node {
 type Comment implements Node {
   "The body."
   content: ModeratedText!
+  "The author's own sensitive mark, alone — the state an edit
+   switch reads, for the reasons a post's carries."
+  sensitiveSelfMark: Boolean!
   "The author's own sensitive-mark reason; same three nulls a
    post's carries."
   sensitiveReason: String
@@ -2997,7 +3004,6 @@ input PrepareProfileUpdateInput {
   displayName: String
   bio: String
   avatarMediaId: UUID
-  coverMediaId: UUID
   websiteUrl: String
   payoutAddress: String
   actAs: UUID
@@ -3015,6 +3021,18 @@ input UploadMediaInput {
   file: Upload!
 }
 type UploadMediaPayload { media: MediaAttachment! }
+
+"Rewrite an uploaded asset's description. Owner-only, and a
+ stranger's attempt answers exactly as one on an asset that does
+ not exist. Two-valued: altText is the only field, so a call always
+ says what the description should now be — text sets it, null or
+ blank clears it. The bytes never move; nothing else about an asset
+ is editable."
+input UpdateMediaInput {
+  mediaId: UUID!
+  altText: String
+}
+type UpdateMediaPayload { media: MediaAttachment }
 
 "A prepared content write: the staged handshake plus `node` — the
  L2 id the envelope binds to the minted node, and the id the
@@ -3036,8 +3054,31 @@ extend type Mutation {
   prepareCommentEdit(input: PrepareCommentEditInput!): PrepareContentPayload!
   prepareProfileUpdate(input: PrepareProfileUpdateInput!): PreparePayload!
   uploadMedia(input: UploadMediaInput!): UploadMediaPayload!
+  updateMedia(input: UpdateMediaInput!): UpdateMediaPayload!
 }
 ```
+
+**Describing a picture.** A client uploads while its author is
+still writing — that is what keeps the wizard responsive — so the
+description is typed after the bytes are already stored, and
+`updateMedia` is how it reaches them. The bytes stay immutable:
+only `alt_text` moves, and the digest that names the bytes is
+untouched.
+
+What a *published* post says does not move with it. Every act's
+manifest snapshots the description at prepare, and promotion binds
+a manifest entry to its asset by digest alone, so a landed record
+keeps the alt text it witnessed and no later edit reaches it.
+Changing what a published post says is an edit act, exactly as it
+is for the body. `MediaAttachment.altText` serves the row, so it
+can differ from what an older record witnessed: the record is the
+published statement, the row is the current one.
+
+Its own budget, `RATE_LIMIT_MEDIA_UPDATE_PER_ACCOUNT` (240/hour),
+rather than the upload budget: that one bounds disk, and a
+ten-picture post spending ten uploads plus ten descriptions
+against it would be throttled by a limit sized to sit well above
+exactly that gesture.
 
 **The author's own sensitive mark.** `sensitive` is the seal's
 switch and `sensitiveReason` the line the sheet offers; both ride
@@ -3047,13 +3088,28 @@ the veil a reader is shown is the author's signed statement. Its
 reach is fixed, not chosen: `description`, `content` and
 `attachmentsStatus` read SENSITIVE together and `title` stays
 NORMAL beside them, which is exactly the whole-body veil both
-clients already draw — so a self-mark needs no new read plumbing.
-The node-level `moderationStatus` reads SENSITIVE with them, and
-`sensitiveReason` serves the line. A reason without the switch is
-a field-level `userError` on `["sensitiveReason"]` rather than a
-silent drop; a blank reason is no reason. Because a content act
-carries the complete content state, an edit that omits the switch
-unmarks the content — there is no withdrawal gesture.
+clients already draw. The node-level `moderationStatus` reads
+SENSITIVE with them, and `sensitiveReason` serves the line. A
+reason without the switch is a field-level `userError` on
+`["sensitiveReason"]` rather than a silent drop; a blank reason is
+no reason. Because a content act carries the complete content
+state, an edit that omits the switch unmarks the content — there
+is no withdrawal gesture.
+
+**Two states, and the statuses are their OR.** The author's mark
+and a moderator's verdict are independent, and neither side can
+clear the other ([moderation.md](../instances/moderation.md)): an
+author editing to "not sensitive" cannot lift a verdict, and a
+verdict cleared to normal cannot lift the author's mark. Every
+status field above reads the OR of the two.
+
+`Post.sensitiveSelfMark` and `Comment.sensitiveSelfMark` expose
+the **author's own mark alone** — not the veil. That is what an
+edit switch binds to: it is the only one of the two an edit can
+change, and a switch bound to the OR would show a moderated post
+as self-marked and then claim to unmark something it cannot
+touch. A reader draws the veil from the statuses; an author's
+edit screen draws its switch from this.
 
 A content edit input carries the whole content state, so its
 optional text fields are two-valued: a value renders, omitted or
@@ -3117,7 +3173,9 @@ says so.
 by the API: the store is its own service, so `MediaAttachment.url`
 is absolute and minted per read from a configured base. Objects
 carry `Cache-Control: public, max-age=31536000, immutable`, which
-is safe because an asset is immutable after upload, and the store
+is safe because an asset's bytes are immutable after upload — a
+description can change, but nothing the store serves does — and the
+store
 answers ranged requests natively. A removed object answers 404 —
 the visible mark for a redaction rides
 `MediaAttachment.status` and the client placeholder it drives,

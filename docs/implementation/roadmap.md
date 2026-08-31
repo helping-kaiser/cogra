@@ -255,7 +255,7 @@ can land in any order — 2.3 (topics) needs only the text core.
   sheets, snackbars — the frame every content-era surface hangs
   from.
 - Profile reads: `actor` / `user` by id or handle, the profile
-  screen (avatar, cover, bio, authored content via
+  screen (avatar, bio, authored content via
   `records(author:)`), and actor chips linking every @handle
   ([api-spec.md](api-spec.md)).
 - Profile editing: `prepareProfileUpdate` — a parallel
@@ -339,10 +339,12 @@ the start — and delivery splits by content kind.
   S3 because the store eventually leaves this machine
   ([architecture.md](architecture.md)). Uploads enter through
   `uploadMedia`, which sniffs, strips metadata, probes by
-  decoding, digests, and writes the object before the row.
+  decoding, digests, and writes the object before the row;
+  `updateMedia` writes a picture's description afterwards, since
+  a client uploads while its author is still writing.
 - **The envelope's media manifest** (guild key 5) and the
-  profile's avatar and cover slots (keys 11 and 12) — digest,
-  mime and alt text per asset, array position carrying order
+  profile's avatar slot (key 11) — digest, mime and alt text per
+  asset, array position carrying order
   ([data-model.md](data-model.md)).
 - **Version-keyed galleries**: post and comment attachment rows
   key on the version row, so the gallery follows the winning
@@ -353,9 +355,9 @@ the start — and delivery splits by content kind.
   ([api-spec.md](api-spec.md)).
 - **Galleries as bounded fold lists**, ten per post and four per
   comment, priced at their caps rather than a page size.
-- **Avatars and covers** through the same upload path, with
-  three-valued profile updates and the monogram as the permanent
-  no-picture fallback.
+- **Avatars** through the same upload path — the profile's one
+  image — with three-valued profile updates and the monogram as
+  the permanent no-picture fallback.
 - **The compose wizard**, built as ruled and visually matched to
   the design canvas — body-first pick, crop, details, licence
   sheet, sensitive self-mark, seal screen — layered atoms →

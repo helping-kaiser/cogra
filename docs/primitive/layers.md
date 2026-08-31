@@ -132,9 +132,11 @@ history.
 A parent's gallery is display content like the rest: its
 attachment rows are keyed on the version row and follow the
 winning version exactly as the text does. A media asset carries
-no version rows because it is never edited — an asset is
-immutable after upload, and a corrected caption or a different
-crop is a new asset.
+no version rows even so. Its bytes never change — a different crop
+is a new asset — and its one mutable field, the description, is
+witnessed per record: every act's payload envelope snapshots it,
+so what each post published is kept in the records rather than in
+rows beside them.
 
 Named carve-outs to append-only exist only on the Postgres side
 and only for operational state, not history:

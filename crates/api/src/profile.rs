@@ -79,14 +79,13 @@ pub struct ProfileUpdateDraft {
     pub display_name: Option<String>,
     pub bio: Option<String>,
     pub website_url: Option<String>,
-    /// The avatar, three-valued: `None` untouched, `Some(None)` cleared
-    /// back to the monogram, `Some(Some(id))` replaced. The text fields
-    /// above are two-valued and encode their clear as the empty string; a
-    /// picture has no empty string, so the two shapes stay apart rather
-    /// than one pretending to be the other.
+    /// The avatar — the profile's one image — three-valued: `None`
+    /// untouched, `Some(None)` cleared back to the monogram,
+    /// `Some(Some(id))` replaced. The text fields above are two-valued and
+    /// encode their clear as the empty string; a picture has no empty
+    /// string, so the two shapes stay apart rather than one pretending to
+    /// be the other.
     pub avatar_media_id: Option<Option<Uuid>>,
-    /// The cover, same three values.
-    pub cover_media_id: Option<Option<Uuid>>,
 }
 
 /// Prepares a profile update: a parallel Registration toward the
@@ -110,7 +109,6 @@ pub async fn prepare_profile_update<B: L1Boundary>(
         && draft.bio.is_none()
         && draft.website_url.is_none()
         && draft.avatar_media_id.is_none()
-        && draft.cover_media_id.is_none()
     {
         return Err(ProfileError::BadInput {
             field: "input",
@@ -145,16 +143,12 @@ pub async fn prepare_profile_update<B: L1Boundary>(
     let avatar =
         crate::media::plan_profile_image(pool, viewer, "avatarMediaId", draft.avatar_media_id)
             .await?;
-    let cover =
-        crate::media::plan_profile_image(pool, viewer, "coverMediaId", draft.cover_media_id)
-            .await?;
     let payload = CograProfile {
         node: viewer,
         display_name: draft.display_name,
         bio: draft.bio,
         website_url: draft.website_url,
         avatar,
-        cover,
     }
     .encode_payload();
     let prepared = prepare::prepare(
@@ -264,10 +258,6 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
         crate::media::resolve_profile_image(pool, write.actor_id, &update.avatar).await?,
         current.avatar_id,
     );
-    let cover_id = merge_image(
-        crate::media::resolve_profile_image(pool, write.actor_id, &update.cover).await?,
-        current.cover_id,
-    );
     let mut tx = pool
         .begin()
         .await
@@ -280,7 +270,6 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
         &display_name,
         bio.as_deref(),
         avatar_id,
-        cover_id,
         website_url.as_deref(),
         order,
     )

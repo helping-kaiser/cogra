@@ -566,7 +566,6 @@ data class ProfileView(
     val websiteUrl: ModeratedField,
     /** Null for an account that has never set one — the monogram (D13). */
     val avatar: MediaAssetView? = null,
-    val cover: MediaAssetView? = null,
 )
 
 /** A tappable link from a chronicle row into the content it touched. */

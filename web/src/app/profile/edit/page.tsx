@@ -46,9 +46,7 @@ export default function ProfileEditPage() {
   const [refusedMessage, setRefusedMessage] = useState<string | null>(null);
   const [signIncomplete, setSignIncomplete] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [avatar, setAvatar] = useState<ProfileMediaChoice>(UNCHANGED);
-  const [cover, setCover] = useState<ProfileMediaChoice>(UNCHANGED);
 
   useEffect(() => {
     if (phase === "signedOut") router.replace("/login");
@@ -67,7 +65,6 @@ export default function ProfileEditPage() {
           setBio(outcome.value.bio.value ?? "");
           setWebsiteUrl(outcome.value.websiteUrl.value ?? "");
           setAvatarUrl(outcome.value.avatar?.url ?? null);
-          setCoverUrl(outcome.value.cover?.url ?? null);
         } else {
           setTransportFailed(true);
         }
@@ -124,10 +121,7 @@ export default function ProfileEditPage() {
     // The pictures go up BEFORE the record is prepared: an update naming an
     // asset id that does not exist yet would be refused, and a refusal at that
     // point would have already cost the author their framing.
-    const uploaded = await Promise.all([
-      resolve(avatar, PROFILE_RATIOS.avatar),
-      resolve(cover, PROFILE_RATIOS.cover),
-    ]);
+    const uploaded = [await resolve(avatar, PROFILE_RATIOS.avatar)];
     const failure = uploaded.find((result) => result.error !== undefined);
     if (failure?.error !== undefined) {
       setSubmitting(false);
@@ -141,7 +135,6 @@ export default function ProfileEditPage() {
         bio: bio.trim() === "" ? null : bio,
         websiteUrl: websiteUrl.trim() === "" ? null : websiteUrl.trim(),
         avatar: uploaded[0].selection,
-        cover: uploaded[1].selection,
       }),
     );
     if (prepared.kind === "refused") {
@@ -189,14 +182,6 @@ export default function ProfileEditPage() {
             currentUrl={avatarUrl}
             choice={avatar}
             onChoice={setAvatar}
-            testIdPrefix="profile-edit"
-          />
-          <ProfileMediaField
-            kind="cover"
-            name={displayName}
-            currentUrl={coverUrl}
-            choice={cover}
-            onChoice={setCover}
             testIdPrefix="profile-edit"
           />
           <label className="flex flex-col gap-1 text-label-large">
