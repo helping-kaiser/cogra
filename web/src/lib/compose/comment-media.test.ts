@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   COMMENT_ATTACHMENT_CAP,
-  commentAttachmentIds,
+  commentAttachmentClaims,
   commentGate,
   NO_COMMENT_MEDIA,
   pickInto,
@@ -104,7 +104,7 @@ describe("the comment gate", () => {
 
 describe("what goes on the wire", () => {
   it("is null when there are no pictures — a comment is words plus optional media", () => {
-    expect(commentAttachmentIds(NO_COMMENT_MEDIA)).toBeNull();
+    expect(commentAttachmentClaims(NO_COMMENT_MEDIA)).toBeNull();
   });
 
   it("withholds the whole gallery while any picture is unresolved", () => {
@@ -112,14 +112,14 @@ describe("what goes on the wire", () => {
       kind: "done",
       mediaId: "m0",
     });
-    expect(commentAttachmentIds(media)).toBeNull();
+    expect(commentAttachmentClaims(media)).toBeNull();
   });
 
   it("keeps the author's order, so the first picture leads", () => {
-    expect(commentAttachmentIds(done(pickInto(NO_COMMENT_MEDIA, picks(3))))).toEqual([
-      "m0",
-      "m1",
-      "m2",
+    expect(commentAttachmentClaims(done(pickInto(NO_COMMENT_MEDIA, picks(3))))).toEqual([
+      { mediaId: "m0", altText: null },
+      { mediaId: "m1", altText: null },
+      { mediaId: "m2", altText: null },
     ]);
   });
 });

@@ -133,12 +133,12 @@ interface DeviceImageSource {
  */
 interface MediaRepository {
     /**
-     * Uploads one processed picture. [altText] is the one
-     * layout-adjacent fact the server cannot infer, so it rides here
-     * rather than on the attach.
+     * Uploads one processed picture: bytes and nothing authored.
+     *
+     * A description is a fact about a placement, not about the asset, so
+     * it rides `AttachmentClaim` at prepare instead — which is what lets
+     * a picture upload the moment it is picked, with nothing gating on
+     * whether it has been described yet.
      */
-    suspend fun uploadMedia(
-        picture: ProcessedPicture,
-        altText: String?,
-    ): Outcome<MediaAssetView>
+    suspend fun uploadMedia(picture: ProcessedPicture): Outcome<MediaAssetView>
 }

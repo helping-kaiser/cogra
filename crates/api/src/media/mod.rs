@@ -231,6 +231,20 @@ pub const MAX_POST_ATTACHMENTS: usize = 10;
 /// media, deliberately asymmetric to a post's words-or-media body.
 pub const MAX_COMMENT_ATTACHMENTS: usize = 4;
 
+/// How long one picture's description may be.
+///
+/// It rides the payload envelope, which is bounded whole by `M_payload`
+/// (64 KiB at the stand-in). Overrunning that bound is a formation error
+/// naming a byte count, so the friendly refusal happens here instead —
+/// field-scoped, at prepare, naming the entry the author can still fix.
+///
+/// The bound lives beside `MAX_POST_ATTACHMENTS` because the two multiply
+/// and the product is what has to fit: ten descriptions at this cap is
+/// 10 000 characters, ~15% of the envelope in ASCII and under two thirds
+/// of it in the worst case UTF-8 admits. Moving either number re-does that
+/// arithmetic — it is not headroom either one owns alone.
+pub const MAX_ALT_TEXT_CHARS: usize = 1000;
+
 /// Which parent a gallery is being planned for. The two differ in how
 /// many assets they take and in whether a cover means anything.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -256,12 +270,19 @@ impl GalleryKind {
 }
 
 /// One attachment placement as the wire states it — an asset already
-/// uploaded, and where it sits in the gallery.
+/// uploaded, where it sits in the gallery, and what it is a picture of.
+///
+/// The description is here rather than on the upload because it is a fact
+/// about *this placement*: the same asset can read differently in two
+/// parents, and correcting a description is a new version of the parent,
+/// never a re-upload (data-model.md "Media attachments"). That is what
+/// lets a client upload the moment a picture is picked.
 #[derive(Debug, Clone)]
 pub struct AttachmentDraft {
     pub media_id: Uuid,
     pub display_order: i32,
     pub is_cover: Option<bool>,
+    pub alt_text: Option<String>,
 }
 
 /// A field-level refusal carrying the path into the input that names the
@@ -325,7 +346,12 @@ fn gallery_path(index: usize, field: &str) -> Vec<String> {
 ///    the two to agree is what stops Postgres and the witnessed record
 ///    from telling a reader two different stories. Same for `isCover`,
 ///    which the manifest expresses as "index 0".
-/// 3. **The assets.** Every id must name an un-redacted asset **this
+/// 3. **The descriptions.** Trimmed, length-checked, and blank folded to
+///    absent so `""` and null cannot mean two different nothings. This is
+///    where a description is checked because this is where one is
+///    authored: the upload carries bytes and nothing authored, and the
+///    manifest entry composed below is what the record witnesses.
+/// 4. **The assets.** Every id must name an un-redacted asset **this
 ///    author uploaded** — the anti-hijack rule (data-model.md "Why parents
 ///    point at attachments"). Cross-author re-use is not a permission this
 ///    path can grant: sharing someone else's picture is a link to their
@@ -354,6 +380,7 @@ pub async fn plan_gallery(
     }
 
     let mut ids: Vec<Uuid> = Vec::with_capacity(drafts.len());
+    let mut alts: Vec<Option<String>> = Vec::with_capacity(drafts.len());
     for (i, draft) in drafts.iter().enumerate() {
         if draft.display_order != i as i32 {
             return Err(GalleryError::at(
@@ -375,6 +402,10 @@ pub async fn plan_gallery(
             )
             .into());
         }
+        alts.push(
+            checked_alt_text(draft.alt_text.as_deref())
+                .map_err(|message| GalleryError::at(gallery_path(i, "altText"), message))?,
+        );
         if ids.contains(&draft.media_id) {
             return Err(GalleryError::at(
                 gallery_path(i, "mediaId"),
@@ -407,7 +438,7 @@ pub async fn plan_gallery(
             )
             .into());
         }
-        manifest.push(manifest_entry(asset)?);
+        manifest.push(manifest_entry(asset, alts[i].clone())?);
     }
     Ok(PlannedGallery {
         attachment_ids: ids,
@@ -415,12 +446,32 @@ pub async fn plan_gallery(
     })
 }
 
+/// The description as the manifest will carry it: trimmed, length-checked,
+/// and blank folded to absent so `""` and null cannot mean two different
+/// nothings. The caller supplies the field path; the message is the same
+/// wherever a description is authored.
+fn checked_alt_text(raw: Option<&str>) -> Result<Option<String>, String> {
+    match raw.map(str::trim) {
+        Some(alt) if alt.chars().count() > MAX_ALT_TEXT_CHARS => Err(format!(
+            "alt text is longer than {MAX_ALT_TEXT_CHARS} characters"
+        )),
+        Some(alt) if !alt.is_empty() => Ok(Some(alt.to_string())),
+        _ => Ok(None),
+    }
+}
+
 /// One asset's manifest entry — the three facts a reader needs to render
 /// it honestly. Everything the server measured (aspect ratio, byte size,
 /// duration) stays out: an author signs what they wrote, never a
 /// measurement.
+///
+/// The description comes from the caller rather than from the asset row,
+/// because the row holds none: alt text is a fact about this placement,
+/// and this entry is where the author's statement about it is sealed
+/// (data-model.md "Media attachments").
 fn manifest_entry(
     asset: &store::MediaAttachment,
+    alt_text: Option<String>,
 ) -> Result<common::envelope::MediaAsset, GalleryPlanError> {
     let digest = asset.digest.as_slice().try_into().map_err(|_| {
         GalleryPlanError::Internal(format!("asset {} carries a mis-sized digest", asset.id))
@@ -428,7 +479,7 @@ fn manifest_entry(
     Ok(common::envelope::MediaAsset {
         digest,
         mime: asset.mime_type.clone(),
-        alt_text: asset.alt_text.clone().filter(|t| !t.is_empty()),
+        alt_text,
     })
 }
 
@@ -443,6 +494,11 @@ fn manifest_entry(
 ///
 /// The same anti-hijack rule a gallery runs: the picture must be one this
 /// author uploaded, and it must not have been removed.
+///
+/// The slot's manifest entry carries no description: `avatarMediaId` is
+/// the whole input (api-spec.md `PrepareProfileUpdateInput`), so there is
+/// nothing authored here to witness. An avatar is named beside a display
+/// name, and the name is what a reader is read.
 pub async fn plan_profile_image(
     pool: &PgPool,
     author: Uuid,
@@ -470,7 +526,7 @@ pub async fn plan_profile_image(
     if asset.redacted_at.is_some() {
         return Err(GalleryError::at(path, "this asset has been removed").into());
     }
-    Ok(Some(Some(manifest_entry(asset)?)))
+    Ok(Some(Some(manifest_entry(asset, None)?)))
 }
 
 /// The asset one profile image slot's manifest entry names, resolved the
@@ -490,11 +546,11 @@ pub async fn resolve_profile_image(
     let Some(asset) = chosen else {
         return Ok(Some(None));
     };
-    let ids = resolve_manifest(pool, author, std::slice::from_ref(asset)).await?;
-    Ok(Some(ids.first().copied()))
+    let placements = resolve_manifest(pool, author, std::slice::from_ref(asset)).await?;
+    Ok(Some(placements.first().map(|p| p.attachment_id)))
 }
 
-/// The asset ids a landed or staged payload's manifest names, in the
+/// The gallery a landed or staged payload's manifest names, in the
 /// manifest's own order — how a gallery is written from the record rather
 /// than from the request that produced it.
 ///
@@ -502,6 +558,9 @@ pub async fn resolve_profile_image(
 /// asset, so the record is the source the junction rows are derived from.
 /// That is what makes a gallery rebuildable: a mirror rebuild replays the
 /// payload and reconstructs the same rows without the original request.
+/// Each placement's description is read off the same entry for the same
+/// reason — the junction row caches what the version's manifest witnessed,
+/// so a gallery read never has to decode a payload.
 ///
 /// A digest with no row is dropped rather than failing the promotion. The
 /// record is ordered fact whatever CoGra holds; a manifest entry whose
@@ -511,7 +570,7 @@ pub async fn resolve_manifest(
     pool: &PgPool,
     author: Uuid,
     manifest: &[common::envelope::MediaAsset],
-) -> Result<Vec<Uuid>, sqlx::Error> {
+) -> Result<Vec<store::GalleryPlacement>, sqlx::Error> {
     if manifest.is_empty() {
         return Ok(Vec::new());
     }
@@ -522,7 +581,10 @@ pub async fn resolve_manifest(
         .filter_map(|entry| {
             rows.iter()
                 .find(|row| row.digest == entry.digest)
-                .map(|row| row.id)
+                .map(|row| store::GalleryPlacement {
+                    attachment_id: row.id,
+                    alt_text: entry.alt_text.clone(),
+                })
         })
         .collect())
 }
@@ -539,29 +601,11 @@ pub fn public_url(base_url: &str, storage_key: &str) -> String {
     format!("{}/{}", base_url.trim_end_matches('/'), storage_key)
 }
 
-/// Rewrites one asset's description, owner-scoped.
-///
-/// Returns `None` when the asset is not this author's, does not exist, or
-/// has been redacted — one answer for all three, so the surface cannot be
-/// used to find out which assets exist or who uploaded them.
-///
-/// Only the row moves. Every act that already witnessed this asset carries
-/// the description it snapshotted at prepare (`plan_gallery`), and no
-/// promotion re-reads it: a landed record's alt text is fixed the way its
-/// body is, and changing what a *published* post says is an edit act. What
-/// this surface is for is the window before that — the wizard uploads
-/// while the author is still writing, so the description arrives after the
-/// bytes did.
-pub async fn update_alt_text(
-    pool: &PgPool,
-    id: Uuid,
-    author: Uuid,
-    alt_text: Option<&str>,
-) -> Result<Option<store::MediaAttachment>, sqlx::Error> {
-    store::update_alt_text(pool, id, author, alt_text).await
-}
-
 /// Writes the object, then the row.
+///
+/// Bytes and derived facts only: the row carries nothing the author typed,
+/// which is what lets a picture upload the moment it is picked
+/// (data-model.md "Media attachments").
 ///
 /// A retried upload of the same picture by the same author resolves to
 /// the row that already exists — the object written on this attempt is
@@ -574,7 +618,6 @@ pub async fn store_asset(
     blobs: &dyn BlobStore,
     author: Uuid,
     asset: ProcessedAsset,
-    alt_text: Option<&str>,
 ) -> anyhow::Result<store::MediaAttachment> {
     let id = Uuid::new_v4();
     let key = storage_key(id);
@@ -592,7 +635,6 @@ pub async fn store_asset(
         &key,
         webp::MIME,
         size_bytes,
-        alt_text,
         &options,
     )
     .await?;

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT id, author_id, digest, digest_algo, storage_key,\n               mime_type, size_bytes, alt_text,\n               options AS \"options!: serde_json::Value\",\n               redaction_reason, redacted_at, created_at\n        FROM media_attachments\n        WHERE id = $1\n        ",
+  "query": "\n        INSERT INTO media_attachments\n            (id, author_id, digest, digest_algo, storage_key,\n             mime_type, size_bytes, options)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)\n        ON CONFLICT (author_id, digest)\n            DO UPDATE SET author_id = media_attachments.author_id\n        RETURNING id, author_id, digest, digest_algo, storage_key,\n                  mime_type, size_bytes,\n                  options AS \"options!: serde_json::Value\",\n                  redaction_reason, redacted_at, created_at\n        ",
   "describe": {
     "columns": [
       {
@@ -40,33 +40,35 @@
       },
       {
         "ordinal": 7,
-        "name": "alt_text",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 8,
         "name": "options!: serde_json::Value",
         "type_info": "Jsonb"
       },
       {
-        "ordinal": 9,
+        "ordinal": 8,
         "name": "redaction_reason",
         "type_info": "Text"
       },
       {
-        "ordinal": 10,
+        "ordinal": 9,
         "name": "redacted_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 11,
+        "ordinal": 10,
         "name": "created_at",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Uuid",
+        "Uuid",
+        "Bytea",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Jsonb"
       ]
     },
     "nullable": [
@@ -77,12 +79,11 @@
       false,
       false,
       true,
-      true,
       false,
       true,
       true,
       false
     ]
   },
-  "hash": "86e26fd93d118b6856ee45853db5e6845110f89839b0953a151b820f36db5fb0"
+  "hash": "5f7b08176abce8e9eca82e2c262aa799a2c2faf47275c4d2c5cc0efae2109cd1"
 }

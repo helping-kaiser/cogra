@@ -263,8 +263,16 @@ describe("the compose wizard", () => {
   });
 
   it("uploads each picture and attaches them in the order they were picked", async () => {
-    let variables: { input: { attachments: { mediaId: string; displayOrder: number; isCover: boolean }[] } } | null =
-      null;
+    let variables: {
+      input: {
+        attachments: {
+          mediaId: string;
+          displayOrder: number;
+          isCover: boolean;
+          altText: string | null;
+        }[];
+      };
+    } | null = null;
     server.use(
       uploadOk(["m-a", "m-b"]),
       graphql.mutation("PreparePost", ({ variables: v }) => {
@@ -314,9 +322,12 @@ describe("the compose wizard", () => {
     fireEvent.click(screen.getByTestId("wizard-sign"));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
 
+    // The description rides the attachment, not the upload: it was typed
+    // long after the bytes were already stored, and it still reaches the
+    // record that the signature covers.
     expect(variables!.input.attachments).toEqual([
-      { mediaId: "m-a", displayOrder: 0, isCover: true },
-      { mediaId: "m-b", displayOrder: 1, isCover: false },
+      { mediaId: "m-a", displayOrder: 0, isCover: true, altText: "paper against the salt crust" },
+      { mediaId: "m-b", displayOrder: 1, isCover: false, altText: null },
     ]);
   });
 

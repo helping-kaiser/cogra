@@ -3022,18 +3022,6 @@ input UploadMediaInput {
 }
 type UploadMediaPayload { media: MediaAttachment! }
 
-"Rewrite an uploaded asset's description. Owner-only, and a
- stranger's attempt answers exactly as one on an asset that does
- not exist. Two-valued: altText is the only field, so a call always
- says what the description should now be — text sets it, null or
- blank clears it. The bytes never move; nothing else about an asset
- is editable."
-input UpdateMediaInput {
-  mediaId: UUID!
-  altText: String
-}
-type UpdateMediaPayload { media: MediaAttachment }
-
 "A prepared content write: the staged handshake plus `node` — the
  L2 id the envelope binds to the minted node, and the id the
  content reads serve once the record lands. The client needs it to
@@ -3054,31 +3042,34 @@ extend type Mutation {
   prepareCommentEdit(input: PrepareCommentEditInput!): PrepareContentPayload!
   prepareProfileUpdate(input: PrepareProfileUpdateInput!): PreparePayload!
   uploadMedia(input: UploadMediaInput!): UploadMediaPayload!
-  updateMedia(input: UpdateMediaInput!): UpdateMediaPayload!
 }
 ```
 
-**Describing a picture.** A client uploads while its author is
-still writing — that is what keeps the wizard responsive — so the
-description is typed after the bytes are already stored, and
-`updateMedia` is how it reaches them. The bytes stay immutable:
-only `alt_text` moves, and the digest that names the bytes is
-untouched.
+**Describing a picture.** A description is a fact about the
+placement, not about the asset, so it is authored on
+`AttachmentInput` at prepare and never on the upload. Two
+consequences the wizard is built on: a picture uploads the moment
+it is picked, because nothing about the upload waits on a
+description; and the same asset can read differently in two
+parents, because each parent states its own.
 
-What a *published* post says does not move with it. Every act's
-manifest snapshots the description at prepare, and promotion binds
-a manifest entry to its asset by digest alone, so a landed record
-keeps the alt text it witnessed and no later edit reaches it.
-Changing what a published post says is an edit act, exactly as it
-is for the body. `MediaAttachment.altText` serves the row, so it
-can differ from what an older record witnessed: the record is the
-published statement, the row is the current one.
+Correcting a description is an **edit of the parent**, exactly as
+correcting a typo in the body is. The manifest the act witnesses
+carries the description, promotion writes it onto the version's
+junction row, and a superseded version keeps the row it landed
+with — so `MediaAttachment.altText` resolves per placement, from
+the referencing version's row, and a landed record says what it
+said. The asset row holds no description at all and is immutable
+after upload.
 
-Its own budget, `RATE_LIMIT_MEDIA_UPDATE_PER_ACCOUNT` (240/hour),
-rather than the upload budget: that one bounds disk, and a
-ten-picture post spending ten uploads plus ten descriptions
-against it would be throttled by a limit sized to sit well above
-exactly that gesture.
+Blank is not a description: a description is trimmed, folded to
+absent when it is empty, and capped at **1000 characters** —
+refused field-level at `["attachments", "<i>", "altText"]`, at the
+same prepare that would otherwise overrun `M_payload` with a
+formation error naming only a byte count. Outside a placement
+`altText` reads null: a fresh upload has nothing to describe yet,
+and `PrepareProfileUpdateInput` authors no description for an
+avatar.
 
 **The author's own sensitive mark.** `sensitive` is the seal's
 switch and `sensitiveReason` the line the sheet offers; both ride
@@ -3158,6 +3149,10 @@ says so.
   before a single act is staged, each refusal naming the offender
   at `["attachments", "<i>", "mediaId"]`. The caps are what make
   the gallery a bounded fold list rather than a connection.
+- **1000 characters per description**, refused at
+  `["attachments", "<i>", "altText"]`. It multiplies with the
+  count cap and the product is what has to fit inside `M_payload`,
+  the descriptions riding the envelope with the digests.
 - **Sixty uploads per account per hour**
   (`RATE_LIMIT_UPLOAD_PER_ACCOUNT`) — well above the widest
   gallery gesture, well below a script. An upload precedes any

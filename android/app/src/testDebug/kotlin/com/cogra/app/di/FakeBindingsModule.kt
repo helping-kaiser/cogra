@@ -343,7 +343,6 @@ class ScriptedMediaRepository : ThrowingMediaRepository() {
 
     override suspend fun uploadMedia(
         picture: ProcessedPicture,
-        altText: String?,
     ): Outcome<MediaAssetView> = outcome
 }
 

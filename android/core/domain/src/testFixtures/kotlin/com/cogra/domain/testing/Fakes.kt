@@ -496,7 +496,6 @@ open class ThrowingProfileRepository : ProfileRepository {
 open class ThrowingMediaRepository : MediaRepository {
     override suspend fun uploadMedia(
         picture: ProcessedPicture,
-        altText: String?,
     ): Outcome<MediaAssetView> = throw UnsupportedOperationException()
 }
 
