@@ -339,9 +339,9 @@ the start — and delivery splits by content kind.
   S3 because the store eventually leaves this machine
   ([architecture.md](architecture.md)). Uploads enter through
   `uploadMedia`, which sniffs, strips metadata, probes by
-  decoding, digests, and writes the object before the row;
-  `updateMedia` writes a picture's description afterwards, since
-  a client uploads while its author is still writing.
+  decoding, digests, and writes the object before the row — bytes
+  and nothing authored, so a picture uploads the moment it is
+  picked.
 - **The envelope's media manifest** (guild key 5) and the
   profile's avatar slot (key 11) — digest, mime and alt text per
   asset, array position carrying order
