@@ -233,6 +233,18 @@ pub struct Asset {
     pub place: Place,
     /// Where the asset sits, in whole-file coordinates.
     pub span: ByteSpan,
+    /// Where the asset's own documentation opens, in whole-file
+    /// coordinates: byte 0 for a definition a whole file backs, and the byte
+    /// after the opening brace for one written inline.
+    ///
+    /// The frontend answers it because the frontend holds the tree. Where a
+    /// profile's standard place is the asset itself, this is the byte a label
+    /// line goes before, and a run that had to re-derive it from the source
+    /// would be reading structure out of bytes that a parser had already
+    /// resolved. It carries no meaning for a register-placed profile, whose
+    /// standard place is a file of the owner's rather than a position in this
+    /// one.
+    pub opens: usize,
 }
 
 /// A `mod name;` declaration, which is not a definition and not an asset.
@@ -399,6 +411,7 @@ pub fn backing_definitions<'s>(
                 area: area.clone(),
                 place: profile.standard_place.clone(),
                 span: ByteSpan::new(0, 0),
+                opens: 0,
             };
             (src, asset)
         })

@@ -1,4 +1,4 @@
-# Corpus Linter — Implementation Kickoff
+# Corpus Linter — Implementation Kickoff · `plan:lint:kickoff`
 
 Starting point for the linter build. A fresh session reads `CLAUDE.md`,
 then this. It is a map and a plan, not a spec: the specs are the

@@ -1,4 +1,4 @@
-# Platform guidelines
+# Platform guidelines · `spec:instances:platform-guidelines`
 
 The normative document the Network references when classifying
 content via the [moderation](moderation.md) primitive. Three

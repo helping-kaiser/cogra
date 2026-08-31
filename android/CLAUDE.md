@@ -1,4 +1,4 @@
-# android/CLAUDE.md
+# android/CLAUDE.md · `guide:android:claude-instructions`
 
 Android-specific assistant rules. The root
 [CLAUDE.md](../CLAUDE.md) holds the shared mission, design boundaries,

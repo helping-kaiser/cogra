@@ -139,6 +139,12 @@ fn the_comparison_is_exact_bytes() {
 /// (´[KND-req:kinds:attestation-register]´): the register presents exactly
 /// the pairs of the relation, in the recorded ordering, with the status the
 /// edition records for each.
+///
+/// The relation is C_A and not C: the register is the acceptee's, and the
+/// extension rows are rows of it. The headline counts are the registry
+/// edition's own and stay behind by exactly the extensions
+/// (´[KND-tab:kinds:headline-counts]´), which is the difference asserted
+/// here rather than assumed away.
 #[test]
 fn the_attestation_register_orders_its_rows_by_name_then_kind() {
     let reg = one(&RegisterScope::Attestation);
@@ -152,8 +158,14 @@ fn the_attestation_register_orders_its_rows_by_name_then_kind() {
     let kinds = run().kinds.as_ref().expect("the relation parsed");
     assert_eq!(
         rows.len(),
-        kinds.headline_counts().rows,
-        "one row per pair of the relation"
+        kinds.rows().count(),
+        "one row per pair of the effective relation"
+    );
+    let extensions = adoption().kinds.extensions.rows.len();
+    assert_eq!(
+        rows.len(),
+        kinds.headline_counts().rows + extensions,
+        "the edition's counts stay behind C_A by exactly the extensions"
     );
     let keyed: Vec<(&str, &str)> = rows.iter().map(|row| (row[1], row[2])).collect();
     let mut sorted = keyed.clone();
