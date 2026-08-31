@@ -7,7 +7,7 @@ import React from "react";
    the footer row. The all-or-nothing sentence, when a seal carries more than
    one act, belongs to the screen below the card, not in it. */
 
-export function ActsCard({ rows = [], total }) {
+export function ActsCard({ rows = [], total, note }) {
   return (
     <div
       style={{
@@ -68,10 +68,9 @@ export function ActsCard({ rows = [], total }) {
           </span>
         </div>
       ))}
-      <div style={{ display: "flex", alignItems: "center", minHeight: "48px" }}>
+      <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: "2px", minHeight: "48px", padding: "6px 0" }}>
         <span
           style={{
-            flex: 1,
             fontSize: "var(--text-body-medium)",
             lineHeight: "var(--text-body-medium--line-height)",
             fontWeight: "var(--text-label-large--font-weight)",
@@ -79,6 +78,23 @@ export function ActsCard({ rows = [], total }) {
         >
           {total}
         </span>
+        {/* The all-or-nothing subline — "they land together, or none does" —
+            rides the total whenever the seal commits more than one act. It had
+            drifted: on the key-absent and sheet boards but not the seal itself
+            (found by the implementation session, 2026-08-31); now it lives
+            here once. */}
+        {note && (
+          <span
+            style={{
+              fontSize: "var(--text-label-small)",
+              lineHeight: "var(--text-label-small--line-height)",
+              letterSpacing: "0.4px",
+              color: "var(--text-secondary)",
+            }}
+          >
+            {note}
+          </span>
+        )}
       </div>
     </div>
   );
