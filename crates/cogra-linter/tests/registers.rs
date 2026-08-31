@@ -58,8 +58,10 @@ fn text(reg: &Register) -> &str {
 }
 
 /// (´dec:lint:one-generator´): what the corpus's own run generates today —
-/// the companion register, the registry document's generated region, and the
-/// test profile's label register for each owner with covered assets.
+/// the companion register, the registry document's generated region, the test
+/// profile's label register for each owner with covered assets, and the claim
+/// matrix of each owner whose authoring wave has closed
+/// (´dec:lint:claim-activation´).
 ///
 /// The corpus's own run generates a register in each of the scopes it declares.
 /// ´claim:registers:every-scope-is-generated´
@@ -70,14 +72,23 @@ fn the_corpus_generates_a_register_for_every_scope() {
         .map(|reg| format!("{} {:?}", reg.path.display(), reg.scope))
         .collect();
     println!("{}", scopes.join("\n"));
-    let label_registers = generated()
-        .iter()
-        .filter(|reg| matches!(reg.scope, RegisterScope::LabelRegister { .. }))
-        .count();
-    assert_eq!(generated().len(), label_registers + 2, "{scopes:?}");
+    let of = |wanted: fn(&RegisterScope) -> bool| {
+        generated().iter().filter(|reg| wanted(&reg.scope)).count()
+    };
+    let label_registers = of(|scope| matches!(scope, RegisterScope::LabelRegister { .. }));
+    let matrices = of(|scope| matches!(scope, RegisterScope::ClaimMatrix { .. }));
+    assert_eq!(
+        generated().len(),
+        label_registers + matrices + 2,
+        "{scopes:?}"
+    );
     assert!(
         label_registers > 1,
         "the corpus's tests span several owners: {scopes:?}"
+    );
+    assert_eq!(
+        matrices, 1,
+        "one owner's authoring wave has closed: {scopes:?}"
     );
 }
 

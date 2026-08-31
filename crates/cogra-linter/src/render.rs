@@ -36,8 +36,8 @@ use std::path::Path;
 
 use crate::diag::{Diagnostic, Enforcement, Location, Severity};
 use crate::fix::Insertion;
-use crate::registers::{Freshness, Register, RegisterScope};
 use crate::judge::claims::ClaimCensus;
+use crate::registers::{Freshness, Register, RegisterScope};
 use crate::report::{Cited, Reverse, Survey};
 use crate::scan::Label;
 use crate::timing::Timing;

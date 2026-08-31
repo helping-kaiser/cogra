@@ -566,7 +566,11 @@ fn claim_matrices(g: &Corpus, a: &Adoption) -> Vec<Register> {
         let Some(test) = derived_label(profile, &weight.identifier, &weight.area) else {
             continue;
         };
-        let row = held.entry(owner).or_default().entry(line.label).or_default();
+        let row = held
+            .entry(owner)
+            .or_default()
+            .entry(line.label)
+            .or_default();
         row.tests.insert(test);
         if line.form == Form::Mint {
             row.statement = line.statement;

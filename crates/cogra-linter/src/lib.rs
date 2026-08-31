@@ -85,13 +85,13 @@ pub use graph::{
     Corpus, EdgeW, NodeKind, NodeW, Registries, degree_along, edge_view, in_along, nodes_of,
     out_along, owner_of, owner_view, source_of,
 };
+pub use judge::claims::{ClaimCensus, ClaimLine, Defect, Form, OwnerTally, Standing};
 pub use judge::kinds::{
     Attestation, Bound, Device, DeviceFamily, HeadVerdict, HeadlineCounts, KindRegistry, Reduced,
     Reduction,
 };
 pub use migrate::{Migration, Remaining, Unplaced, distances};
 pub use pretokenize::{CommentForm, LexClass, Lexeme, LiteralForm, PreTokenized, pretokenize};
-pub use judge::claims::{ClaimCensus, ClaimLine, Defect, Form, OwnerTally, Standing};
 pub use registers::{
     Freshness, Register, RegisterScope, Scope, Written, compare, label_registers_of, matrix_path,
     regenerate_all, register_path, write_all,
