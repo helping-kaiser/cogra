@@ -23,6 +23,8 @@ fn test_app(pool: PgPool) -> axum::Router {
     )
 }
 
+/// The health endpoint reports liveness.
+/// ´claim:server:health-reports-liveness´
 #[sqlx::test(migrations = "../../migrations")]
 async fn health_endpoint_reports_liveness(pool: PgPool) {
     let app = test_app(pool);
@@ -39,6 +41,8 @@ async fn health_endpoint_reports_liveness(pool: PgPool) {
     assert_eq!(body_json(response).await["status"], "ok");
 }
 
+/// The health query reports the store and the mirror alongside liveness.
+/// ´claim:server:health-reports-store-and-mirror´
 #[sqlx::test(migrations = "../../migrations")]
 async fn graphql_health_reports_store_and_mirror(pool: PgPool) {
     let app = test_app(pool);
@@ -65,6 +69,9 @@ async fn graphql_health_reports_store_and_mirror(pool: PgPool) {
 /// With the cursor table dropped out from under the resolver, the failed
 /// read surfaces as null — never as the legitimate "-1, nothing
 /// ingested", which a probe would read as a healthy empty mirror.
+///
+/// A failed cursor read surfaces as null, never as the legitimate nothing-ingested value a probe would read as a healthy empty mirror.
+/// ´claim:server:a-failed-read-is-null-not-a-value´
 #[sqlx::test(migrations = "../../migrations")]
 async fn health_reports_a_failed_cursor_read_as_null(pool: PgPool) {
     sqlx::query("DROP TABLE mirror_epoch_cursor")
@@ -109,6 +116,8 @@ async fn gql(app: axum::Router, query: String) -> serde_json::Value {
     json["data"].clone()
 }
 
+/// The host's own seal key is served for clients to verify against.
+/// ´claim:server:the-host-seal-key-is-served´
 #[sqlx::test(migrations = "../../migrations")]
 async fn graphql_serves_the_host_seal_key(pool: PgPool) {
     use base64::Engine;
@@ -161,6 +170,9 @@ async fn seed_link(
 /// resolves but unusable; an unknown id resolves to null, so a guess
 /// learns nothing. Expiry is compared as an instant rather than a string,
 /// because Postgres stores microseconds.
+///
+/// An invite link's capability reads anonymously, live, revoked and unknown each answering in their own way so a guess at an identifier learns nothing.
+/// ´claim:server:an-invite-link-reads-anonymously´
 #[sqlx::test(migrations = "../../migrations")]
 async fn invite_link_check_reads_the_capability_anonymously(pool: PgPool) {
     let expires = chrono::Utc::now() + chrono::Duration::days(1);
@@ -199,6 +211,7 @@ async fn invite_link_check_reads_the_capability_anonymously(pool: PgPool) {
     assert!(data["inviteLinkCheck"].is_null());
 }
 
+/// (´claim:server:an-invite-link-reads-anonymously´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn invite_link_check_reads_expiry_as_unusable(pool: PgPool) {
     let link = seed_link(
