@@ -243,9 +243,6 @@ proptest! {
     /// the run entry orders its sources by path whatever order they arrive
     /// in, so a shuffled traversal reaches an identical harvest and not one
     /// that has to be repaired.
-    ///
-    /// Over shuffled traversal orders the rendered output is byte-identical.
-    /// ´claim:metatheory:resolution-ignores-traversal-order´
     #[test]
     fn resolution_is_independent_of_traversal_order(
         corpus in any_corpus(),
@@ -266,9 +263,6 @@ proptest! {
 
     /// (´conv:lint:diagnostic-order´): two runs over one generated corpus
     /// emit the same sequence.
-    ///
-    /// Two runs over one corpus emit the same diagnostic sequence.
-    /// ´claim:metatheory:two-runs-emit-one-sequence´
     #[test]
     fn two_runs_emit_the_same_sequence(corpus in any_corpus()) {
         let one = cogra_linter::check_sources(adoption(), sources(&corpus, false));
@@ -279,9 +273,6 @@ proptest! {
     /// (´conv:lint:diagnostic-order´): the comparator is a total order —
     /// antisymmetric, transitive, and total on the corpus, two diagnostics
     /// with the same path, offset, and rule being the same finding.
-    ///
-    /// The diagnostic comparator is a total order on the corpus.
-    /// ´claim:metatheory:the-diagnostic-order-is-total´
     #[test]
     fn the_diagnostic_order_is_total(corpus in any_corpus()) {
         let run = cogra_linter::check_sources(adoption(), sources(&corpus, false));
@@ -305,9 +296,6 @@ proptest! {
     ///
     /// The spans move, so the findings' offsets move with them; what the
     /// theorem fixes is the registries, and that is what is compared.
-    ///
-    /// A re-forming that preserves every label value leaves the registries unchanged.
-    /// ´claim:metatheory:presentation-does-not-change-denotation´
     #[test]
     fn a_re_forming_that_preserves_labels_preserves_the_registries(corpus in any_corpus()) {
         let before = cogra_linter::check_sources(adoption(), sources(&corpus, false));
@@ -329,9 +317,6 @@ proptest! {
 
     /// (´sig:lint:index-maps´) over generated corpora harvested by the run
     /// entry rather than by hand: every key of `mints` is a key of `labels`.
-    ///
-    /// Every key of the minting registry is a key of the label registry.
-    /// ´claim:metatheory:every-mint-has-a-label-node´
     #[test]
     fn every_minted_label_is_a_carried_label(corpus in any_corpus()) {
         let run = cogra_linter::check_sources(adoption(), sources(&corpus, false));
