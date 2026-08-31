@@ -86,9 +86,14 @@ fn the_corpus_generates_a_register_for_every_scope() {
         label_registers > 1,
         "the corpus's tests span several owners: {scopes:?}"
     );
+    let activated = adoption()
+        .claims
+        .as_ref()
+        .and_then(|claims| claims.activation.declared())
+        .expect("this corpus declares its activated owners");
     assert_eq!(
-        matrices, 1,
-        "one owner's authoring wave has closed: {scopes:?}"
+        matrices, activated,
+        "one matrix per owner whose authoring wave has closed: {scopes:?}"
     );
 }
 
