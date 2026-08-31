@@ -19,13 +19,12 @@ enum class MediaShape(val ratio: Float, val label: String) {
 }
 
 /**
- * The fixed crops the avatar and cover paths take (D13). Both reuse the post
- * picker; only the shape and the mask differ.
+ * The fixed crop the avatar path takes (D13) — the profile's one image. It
+ * reuses the post picker; only the shape and the mask differ.
  */
 enum class AvatarShape(val ratio: Float) {
     /** Circle-masked on render; the stored bytes are the square. */
     Avatar(1f),
-    Cover(1.91f),
 }
 
 /**

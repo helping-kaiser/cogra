@@ -40,20 +40,19 @@ import {
   zoomBy,
   type Crop,
 } from "./crop";
-import { AVATAR_RATIO, COVER_RATIO, cssRatio, POST_SHAPES, type PostShape } from "./aspect";
+import { AVATAR_RATIO, cssRatio, POST_SHAPES, type PostShape } from "./aspect";
 
 const GUIDE = "rgba(255, 255, 255, 0.55)";
 
-// The frame's shape. A post takes one of the three ruled shapes; an avatar and
-// a cover are their own fixed frames and are not post shapes (D13).
-export type CropFrameShape = PostShape | "avatar" | "cover";
+// The frame's shape. A post takes one of the three ruled shapes; the
+// profile's avatar is its own fixed frame and is not a post shape (D13).
+export type CropFrameShape = PostShape | "avatar";
 
 const SHAPE_RATIO: Record<CropFrameShape, number> = {
   tall: POST_SHAPES.tall.ratio,
   square: POST_SHAPES.square.ratio,
   wide: POST_SHAPES.wide.ratio,
   avatar: AVATAR_RATIO,
-  cover: COVER_RATIO,
 };
 
 export function CropFrame({

@@ -37,7 +37,6 @@ import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.media.CograAvatar
-import com.cogra.core.designsystem.v2.media.CograCover
 
 @Composable
 fun ProfileEditRoute(
@@ -62,15 +61,11 @@ fun ProfileEditRoute(
         }
     }
 
-    // One picker per picture: the system photo picker, so no media
-    // permission is ever requested
+    // The system photo picker, so no media permission is ever requested
     // (developer.android.com/training/data-storage/shared/photopicker).
     val avatarPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia(),
     ) { uri -> uri?.let { viewModel.onAvatarPicked(it.toString()) } }
-    val coverPicker = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia(),
-    ) { uri -> uri?.let { viewModel.onCoverPicked(it.toString()) } }
 
     ProfileEditScreen(
         state = state,
@@ -83,12 +78,6 @@ fun ProfileEditRoute(
             )
         },
         onClearAvatar = viewModel::onAvatarCleared,
-        onPickCover = {
-            coverPicker.launch(
-                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-            )
-        },
-        onClearCover = viewModel::onCoverCleared,
         onSubmit = viewModel::onSubmit,
         onRetry = viewModel::load,
         onBack = onBack,
@@ -104,8 +93,6 @@ fun ProfileEditScreen(
     onWebsiteChange: (String) -> Unit,
     onPickAvatar: () -> Unit,
     onClearAvatar: () -> Unit,
-    onPickCover: () -> Unit,
-    onClearCover: () -> Unit,
     onSubmit: () -> Unit,
     onRetry: () -> Unit,
     onBack: () -> Unit,
@@ -152,11 +139,10 @@ fun ProfileEditScreen(
                     }
                 }
                 else -> {
-                    // The two pictures (D13). Both go through the same
-                    // pipeline a post's pictures do; only the crop
-                    // differs — a circle-masked square, and a wide
-                    // cover — and the monogram is the permanent
-                    // fallback rather than an empty state.
+                    // The profile's one picture (D13). It goes through the
+                    // same pipeline a post's pictures do; only the crop
+                    // differs — a circle-masked square — and the monogram
+                    // is the permanent fallback rather than an empty state.
                     ProfileImageRow(
                         label = stringResource(R.string.profile_edit_avatar),
                         image = state.avatar,
@@ -170,20 +156,6 @@ fun ProfileEditScreen(
                             size = 72.dp,
                             url = state.avatar.previewUrl,
                             testTag = "profile_edit_avatar_preview",
-                        )
-                    }
-                    ProfileImageRow(
-                        label = stringResource(R.string.profile_edit_cover),
-                        image = state.cover,
-                        name = state.displayName,
-                        onPick = onPickCover,
-                        onClear = onClearCover,
-                        testTagPrefix = "profile_edit_cover",
-                    ) {
-                        CograCover(
-                            url = state.cover.previewUrl,
-                            modifier = Modifier.fillMaxWidth(),
-                            testTag = "profile_edit_cover_preview",
                         )
                     }
                     OutlinedTextField(

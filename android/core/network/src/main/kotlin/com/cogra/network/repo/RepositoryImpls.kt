@@ -822,7 +822,6 @@ class ProfileRepositoryImpl @Inject constructor(
         bio: String?,
         websiteUrl: String?,
         avatar: MediaFieldUpdate,
-        cover: MediaFieldUpdate,
     ): Outcome<List<PreparedWriteView>> = guard.run {
         client.mutation(
             PrepareProfileUpdateMutation(
@@ -830,7 +829,7 @@ class ProfileRepositoryImpl @Inject constructor(
                 // rides as present; a present null clears (api-spec.md
                 // "Content authoring") — the display name never nulls.
                 //
-                // The two media fields are the exception and the reason
+                // The avatar is the exception and the reason
                 // `MediaFieldUpdate` exists: an untouched picture must
                 // be ABSENT, not a present null, because a present null
                 // is the clear (D13).
@@ -839,7 +838,6 @@ class ProfileRepositoryImpl @Inject constructor(
                     bio = Optional.present(bio),
                     websiteUrl = Optional.present(websiteUrl),
                     avatarMediaId = avatar.toOptional(),
-                    coverMediaId = cover.toOptional(),
                 ),
             ),
         ).payloadOutcome({ it.prepareProfileUpdate.userErrors.map { e -> e.userErrorFields } }) { data ->

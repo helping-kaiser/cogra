@@ -30,7 +30,6 @@
     <string name="profile_edit_website">Website</string>
     <string name="profile_edit_save">Save</string>
     <string name="profile_edit_avatar">Picture</string>
-    <string name="profile_edit_cover">Cover</string>
     <string name="profile_edit_image_choose">Choose a picture</string>
     <string name="profile_edit_image_clear">Back to %1$s</string>
     <string name="profile_edit_image_sending">Sending…</string>

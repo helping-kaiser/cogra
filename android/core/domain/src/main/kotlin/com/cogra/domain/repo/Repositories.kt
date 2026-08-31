@@ -327,7 +327,6 @@ interface ProfileRepository {
          * say which one it means.
          */
         avatar: MediaFieldUpdate = MediaFieldUpdate.Untouched,
-        cover: MediaFieldUpdate = MediaFieldUpdate.Untouched,
     ): Outcome<List<PreparedWriteView>>
 }
 

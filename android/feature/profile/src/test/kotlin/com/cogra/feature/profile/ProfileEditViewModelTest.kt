@@ -50,18 +50,15 @@ class ProfileEditViewModelTest {
         override suspend fun myProfile(): Outcome<ProfileView?> = mine
 
         var lastAvatar: MediaFieldUpdate? = null
-        var lastCover: MediaFieldUpdate? = null
 
         override suspend fun prepareProfileUpdate(
             displayName: String,
             bio: String?,
             websiteUrl: String?,
             avatar: MediaFieldUpdate,
-            cover: MediaFieldUpdate,
         ): Outcome<List<PreparedWriteView>> {
             lastUpdate = Triple(displayName, bio, websiteUrl)
             lastAvatar = avatar
-            lastCover = cover
             return prepareOutcome ?: Outcome.Success(listOf(sealer.stage(Family.REGISTRATION)))
         }
     }
@@ -178,7 +175,6 @@ class ProfileEditViewModelTest {
         vm.onSubmit()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(profiles.lastAvatar).isEqualTo(MediaFieldUpdate.Untouched)
-        assertThat(profiles.lastCover).isEqualTo(MediaFieldUpdate.Untouched)
         assertThat(media.calls).isEqualTo(0)
     }
 
@@ -190,8 +186,6 @@ class ProfileEditViewModelTest {
         vm.onSubmit()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(profiles.lastAvatar).isEqualTo(MediaFieldUpdate.Clear)
-        // The cover was never touched, so the clear does not spread.
-        assertThat(profiles.lastCover).isEqualTo(MediaFieldUpdate.Untouched)
     }
 
     @Test
@@ -207,15 +201,12 @@ class ProfileEditViewModelTest {
     }
 
     @Test
-    fun theAvatarCropIsSquareAndTheCoverIsWide() = runTest(dispatcher) {
+    fun theAvatarCropIsSquare() = runTest(dispatcher) {
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         vm.onAvatarPicked("content://pick/1")
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(processor.lastCrop?.targetRatio).isEqualTo(1f)
-        vm.onCoverPicked("content://pick/2")
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(processor.lastCrop?.targetRatio).isEqualTo(1.91f)
     }
 
     @Test

@@ -27,15 +27,6 @@ query UserProfile($handle: String!) {
       altText
       status
     }
-    cover {
-      id
-      url
-      altText
-      status
-      options {
-        aspectRatio
-      }
-    }
   }
 }
 
@@ -62,15 +53,6 @@ query MyProfile {
       url
       altText
       status
-    }
-    cover {
-      id
-      url
-      altText
-      status
-      options {
-        aspectRatio
-      }
     }
   }
 }
