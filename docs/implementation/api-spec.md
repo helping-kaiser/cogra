@@ -746,13 +746,16 @@ type ModeratedMedia {
 enum FieldModerationStatus { NORMAL SENSITIVE REDACTED }
 ```
 
-SENSITIVE reaches these fields two ways: a passed moderation
-Proposal, and the **author's own mark** at compose time
-("Content authoring" below). They read alike by design — the same
-status on the same fields — and a self-mark's reach is fixed: the
-body veils as one region and the title stays NORMAL beside it.
-`sensitiveReason` on a content node is the author's own optional
-line, null for a moderator's verdict.
+SENSITIVE reaches these fields from two **independent** marks: a
+passed moderation Proposal, and the **author's own mark** at
+compose time ("Content authoring" below). The status is their OR,
+and neither side can clear the other
+([moderation.md](../instances/moderation.md)). They read alike by
+design — the same status on the same fields — and a self-mark's
+reach is fixed: the body veils as one region and the title stays
+NORMAL beside it. `sensitiveReason` on a content node is the
+author's own optional line, null for a moderator's verdict; the
+author's mark on its own reads `sensitiveSelfMark`.
 
 A media *gallery* (a list) can't wrap generically, so those fields
 keep their list and carry a sibling
@@ -996,10 +999,13 @@ type Post implements Node {
    body is its gallery. Exactly one of content.value and
    attachments carries the body."
   content: ModeratedText!
+  "The author's own sensitive mark, alone — not the veil, which is
+   the OR of this and a moderator's verdict. An edit switch reads
+   this: it is the only one of the two an edit can change."
+  sensitiveSelfMark: Boolean!
   "The public reason the author gave for their own sensitive mark;
    null when unmarked, when the mark carries no reason, and when
-   the payload has been removed. The mark itself is not a field:
-   it is what the body's statuses already say."
+   the payload has been removed."
   sensitiveReason: String
   author: Actor!
   "The gallery, in the author's order, the first entry the cover."
@@ -1036,6 +1042,9 @@ type Post implements Node {
 type Comment implements Node {
   "The body."
   content: ModeratedText!
+  "The author's own sensitive mark, alone — the state an edit
+   switch reads, for the reasons a post's carries."
+  sensitiveSelfMark: Boolean!
   "The author's own sensitive-mark reason; same three nulls a
    post's carries."
   sensitiveReason: String
@@ -3066,13 +3075,28 @@ the veil a reader is shown is the author's signed statement. Its
 reach is fixed, not chosen: `description`, `content` and
 `attachmentsStatus` read SENSITIVE together and `title` stays
 NORMAL beside them, which is exactly the whole-body veil both
-clients already draw — so a self-mark needs no new read plumbing.
-The node-level `moderationStatus` reads SENSITIVE with them, and
-`sensitiveReason` serves the line. A reason without the switch is
-a field-level `userError` on `["sensitiveReason"]` rather than a
-silent drop; a blank reason is no reason. Because a content act
-carries the complete content state, an edit that omits the switch
-unmarks the content — there is no withdrawal gesture.
+clients already draw. The node-level `moderationStatus` reads
+SENSITIVE with them, and `sensitiveReason` serves the line. A
+reason without the switch is a field-level `userError` on
+`["sensitiveReason"]` rather than a silent drop; a blank reason is
+no reason. Because a content act carries the complete content
+state, an edit that omits the switch unmarks the content — there
+is no withdrawal gesture.
+
+**Two states, and the statuses are their OR.** The author's mark
+and a moderator's verdict are independent, and neither side can
+clear the other ([moderation.md](../instances/moderation.md)): an
+author editing to "not sensitive" cannot lift a verdict, and a
+verdict cleared to normal cannot lift the author's mark. Every
+status field above reads the OR of the two.
+
+`Post.sensitiveSelfMark` and `Comment.sensitiveSelfMark` expose
+the **author's own mark alone** — not the veil. That is what an
+edit switch binds to: it is the only one of the two an edit can
+change, and a switch bound to the OR would show a moderated post
+as self-marked and then claim to unmark something it cannot
+touch. A reader draws the veil from the statuses; an author's
+edit screen draws its switch from this.
 
 A content edit input carries the whole content state, so its
 optional text fields are two-valued: a value renders, omitted or
