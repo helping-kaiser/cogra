@@ -1539,6 +1539,58 @@ next to brands like Instagram):
   pipeline; `TextField` grew the `corner` hint ("Optional") and `Icon`
   the `close`/`drag_indicator`/`lock`/`expand_more` glyphs.
 
+### Canvas pages and flows — 2026-08-31
+
+Item 22, jakob's brief: the flat canvas had outgrown human and
+machine reading — every screen must have an entry point, every
+interactable must lead somewhere, and completeness must be checked,
+not trusted. All five shape questions answered "all agreed, go with
+entry first". What stands:
+
+- **The canvas is paged** (`canvas.json` `pages`): Overview · Entry ·
+  Compose · Comments · Feed & Search · Money & Wallet · Media ·
+  Patterns & reference. Every board and note names its page; each
+  page's rows restart at y 0; the canvas opens on the Overview.
+- **`flows.json` is the flow law** (`designs/canonical/flows.json`).
+  Every interactive element on a board of a **wired** page carries
+  `data-flow="n"` (1..n per board, drawn as a small orange badge by
+  the shell); each number has exactly one edge `{from, via, label,
+  to}`, and `to` lists every outcome as one of four kinds: a
+  **board**, a shared **pattern board**, a declared **terminal**
+  (`back` / `self` / `os`), or an explicit **gap** — a design still
+  owed, greppable, listed by the checker, drawn red on the maps.
+  `entries` records the non-tap ways onto a screen (app open, a mail
+  link, time passing); a screen on a wired page must be an entry or
+  an edge target. `kinds` marks reference boards (anatomy plates,
+  the maps themselves) that are vocabulary, not destinations;
+  `scanExempt` names boards whose semantic elements are inactive in
+  the drawn state (the pad board under its scrim).
+- **Numbers are stamped by the build, never by components.** JSX
+  screens get them from `_build/flow-markers.mjs` — markup anchors
+  applied after render, throwing on drift — so the design system
+  never carries canvas metadata; hand boards carry the attributes
+  directly. Repeated per-post controls wear the same number on every
+  instance: one edge covers them.
+- **The maps are generated** (`_build/gen-maps.mjs`): one flow-map
+  board per page (cards mirroring the page grid, every edge as a
+  numbered line, arrows for same-page jumps, `⤴ page` for cross-page
+  ones) plus the Overview map (wired state, edge and gap counts,
+  cross-page totals). Never hand-drawn, so never lying; the script
+  also maintains the maps' own canvas entries.
+- **`_build/check-flows.mjs` is the gate**: it fails on structural
+  lies — an edge to a missing board or undeclared terminal, a
+  number without an edge, an edge without its number, an untagged
+  semantic element on a wired page, a screen nothing reaches — and
+  reports gaps without failing. Full pipeline:
+  `node bundle.mjs && node render-screens.mjs && node gen-maps.mjs
+  && node check-flows.mjs`.
+- **Entry is wired** (19 boards, 147 edges, 47 gaps). The gap list
+  is the visible to-do: the guest-gate and network-error pattern
+  boards, the reader's post menu, field-error states, the key-absent
+  acting paths, the topic destination ruling, the profile screen,
+  and item 13's Post Score drill-down. The other pages wire
+  page by page in later rounds.
+
 ## 14. Index
 
 **Root**
@@ -1552,6 +1604,11 @@ next to brands like Instagram):
   `npm install` once in `_build/`, then `node _build/bundle.mjs`.
   `_ds_manifest.json` is the claude.ai Design app's own metadata and is
   refreshed only by that app, on an explicit sync-back.
+- `_build/render-screens.mjs`, `shell.mjs`, `flow-markers.mjs`,
+  `gen-maps.mjs`, `check-flows.mjs` — the canonical-canvas pipeline
+  (§13, *Canvas pages and flows*): render the screens, stamp the flow
+  numbers, generate the maps, gate the result. Run all four after any
+  screen, component, or flows.json edit.
 
 **`tokens/`** — `fonts.css`, `colors.css`, `typography.css`,
 `shape.css`, `spacing.css`, `motion.css`, `transitions.css`,
