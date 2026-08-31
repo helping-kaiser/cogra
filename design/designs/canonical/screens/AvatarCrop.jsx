@@ -4,7 +4,7 @@
 export function Screen() {
   return (
     <>
-      <PageHeader title="Your picture" backHref="#" backLabel="Back" action={<Button size="sm">Next</Button>} />
+      <WizardHeader title="Your picture" leaveLabel="Leave" action={<Button size="sm">Next</Button>} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
         <div style={{ position: "relative", width: 342, height: 342, borderRadius: "var(--radius-medium)", overflow: "hidden", flex: "none" }}>
           <img

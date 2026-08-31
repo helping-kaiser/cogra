@@ -5,7 +5,7 @@
 export function Screen() {
   return (
     <>
-      <PageHeader title="Reply" backHref="#" backLabel="Back" action={<Button size="sm">Next</Button>} />
+      <WizardHeader title="Reply" action={<Button size="sm">Next</Button>} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 56, padding: "8px 12px", borderRadius: "var(--radius-small)", background: "var(--surface-container-highest, var(--surface-container-high))" }}>
           <img src="ava1.jpg" alt="" style={{ width: 32, height: 32, borderRadius: "var(--radius-full)", objectFit: "cover", flex: "none" }} />
