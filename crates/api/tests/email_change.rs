@@ -211,6 +211,9 @@ fn codes(payload: &Value) -> Vec<&str> {
 /// Neither proof alone moves the stored address; the change applies on
 /// the second one whichever side it arrives from. Both orders are run in
 /// turn — original side first, then new side first.
+///
+/// Neither proof alone moves the stored address: the change applies on the second one, whichever side it arrives from.
+/// ´claim:auth:an-email-change-needs-both-sides´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_change_applies_once_both_sides_confirm_in_either_order(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -250,6 +253,9 @@ async fn the_change_applies_once_both_sides_confirm_in_either_order(pool: PgPool
 /// the consumed code still gets the real reason instead of a token error,
 /// and once the address frees up within the TTL that same retry applies
 /// the fully-proven change.
+///
+/// An address taken between the two proofs reports as in use rather than as a transport fault, and the change row stays live so a retry inside the window still says why and still applies once the address frees.
+/// ´claim:auth:a-collision-is-reported-and-the-change-survives-it´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_collision_surfaces_email_in_use_and_retries_stay_truthful(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -285,6 +291,8 @@ async fn a_collision_surfaces_email_in_use_and_retries_stay_truthful(pool: PgPoo
     assert_eq!(rig.stored_email(user).await, "wanted@example.com");
 }
 
+/// A confirmation code with no pending change behind it is a token error.
+/// ´claim:auth:a-code-without-a-change-is-a-token-error´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_garbage_code_with_no_pending_change_is_a_token_error(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -300,6 +308,9 @@ async fn a_garbage_code_with_no_pending_change_is_a_token_error(pool: PgPool) {
 /// The new-side token is scoped to its own viewer: another authenticated
 /// account cannot spend it, and the attempt leaves the owner's proof
 /// intact for them to complete afterwards.
+///
+/// The new-side proof is scoped to its own viewer, and a foreign account's attempt to spend it neither succeeds nor consumes it.
+/// ´claim:auth:the-new-side-proof-is-scoped-to-its-viewer´
 #[sqlx::test(migrations = "../../migrations")]
 async fn another_accounts_new_side_token_is_invalid_and_not_consumed(pool: PgPool) {
     let rig = Rig::new(pool);

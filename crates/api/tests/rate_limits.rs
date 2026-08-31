@@ -139,6 +139,9 @@ fn login_vars(email: &str, password: &str) -> Value {
 
 /// The per-IP window is keyed by IP alone, so tripping it on one address
 /// leaves another getting the ordinary refusal.
+///
+/// The login window is keyed by address alone, so tripping it on one leaves another getting the ordinary refusal.
+/// ´claim:ratelimit:the-login-window-is-keyed-by-address´
 #[sqlx::test(migrations = "../../migrations")]
 async fn login_per_ip_window_trips_and_leaves_other_ips_alone(pool: PgPool) {
     let mut limits = RateLimitConfig::unlimited();
@@ -182,6 +185,9 @@ async fn login_per_ip_window_trips_and_leaves_other_ips_alone(pool: PgPool) {
 /// The backoff is keyed by email alone, so attempts come from distinct
 /// IPs here. Once it bites, even the correct password is refused at the
 /// gate, and another account is untouched.
+///
+/// The login backoff is keyed by email alone, and once it bites even the correct password is refused at the gate while another account is untouched.
+/// ´claim:ratelimit:the-backoff-is-keyed-by-email´
 #[sqlx::test(migrations = "../../migrations")]
 async fn login_backoff_blocks_after_consecutive_failures(pool: PgPool) {
     let mut limits = RateLimitConfig::unlimited();
@@ -224,6 +230,9 @@ async fn login_backoff_blocks_after_consecutive_failures(pool: PgPool) {
 /// The backoff must not become an account-existence oracle: an email with
 /// no account behind it blocks after the same consecutive failures, with
 /// the same refusal.
+///
+/// The backoff must not become an account-existence oracle, so an email with no account behind it blocks after the same failures with the same refusal.
+/// ´claim:ratelimit:the-backoff-is-no-existence-oracle´
 #[sqlx::test(migrations = "../../migrations")]
 async fn login_backoff_arms_for_unknown_accounts_identically(pool: PgPool) {
     let mut limits = RateLimitConfig::unlimited();
@@ -254,6 +263,9 @@ async fn login_backoff_arms_for_unknown_accounts_identically(pool: PgPool) {
 
 /// A success restarts the run, so two further failures are again below
 /// the threshold and the correct password still works.
+///
+/// A success restarts the consecutive run, so the failures after it count from zero again.
+/// ´claim:ratelimit:a-success-clears-the-run´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_successful_login_clears_the_consecutive_run(pool: PgPool) {
     let mut limits = RateLimitConfig::unlimited();
@@ -319,6 +331,9 @@ fn register_vars(link: Uuid, n: u32) -> Value {
 /// consulted; a second IP passes its own budget, but the link's third
 /// slot was the last, so the fourth counted submit trips the per-link
 /// budget.
+///
+/// The registration budgets are consulted in order, the address budget before the link's, so each trips on its own terms.
+/// ´claim:ratelimit:the-register-budgets-check-in-order´
 #[sqlx::test(migrations = "../../migrations")]
 async fn register_budgets_per_ip_and_per_link(pool: PgPool) {
     let mut limits = RateLimitConfig::unlimited();
@@ -349,6 +364,9 @@ async fn register_budgets_per_ip_and_per_link(pool: PgPool) {
 
 /// A re-arm is an application submit, so the same IP budget refuses it
 /// before any flow logic runs.
+///
+/// A re-arm is a registration submit, so it spends the same budget and is refused before any flow logic runs.
+/// ´claim:ratelimit:a-re-arm-spends-the-register-budget´
 #[sqlx::test(migrations = "../../migrations")]
 async fn apply_with_invite_spends_the_register_budget(pool: PgPool) {
     let mut limits = RateLimitConfig::unlimited();
@@ -391,6 +409,9 @@ async fn apply_with_invite_spends_the_register_budget(pool: PgPool) {
 
 /// The tripped per-email budget answers the same `ok: true` and just
 /// stops mailing — no visible difference to enumerate with.
+///
+/// The per-email budget trips silently, answering exactly as before and simply not mailing, so nothing enumerates from it.
+/// ´claim:ratelimit:the-email-budget-trips-silently´
 #[sqlx::test(migrations = "../../migrations")]
 async fn reset_requests_trip_the_email_budget_silently(pool: PgPool) {
     let mut limits = RateLimitConfig::unlimited();
@@ -428,6 +449,8 @@ async fn reset_requests_trip_the_email_budget_silently(pool: PgPool) {
 
 /// An unknown address spends budget and trips exactly like a known one,
 /// with the same payload before and after the trip.
+///
+/// (´claim:ratelimit:the-email-budget-trips-silently´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn reset_requests_for_unknown_emails_are_indistinguishable(pool: PgPool) {
     let mut limits = RateLimitConfig::unlimited();
@@ -453,6 +476,9 @@ async fn reset_requests_for_unknown_emails_are_indistinguishable(pool: PgPool) {
 
 /// The per-IP budget is the visible half of the pair: tripping it refuses
 /// outright rather than answering `ok: true`.
+///
+/// The per-address budget is the visible half of the pair, refusing outright where its partner stays quiet.
+/// ´claim:ratelimit:the-address-budget-trips-visibly´
 #[sqlx::test(migrations = "../../migrations")]
 async fn reset_requests_trip_the_ip_budget_visibly(pool: PgPool) {
     let mut limits = RateLimitConfig::unlimited();
@@ -484,6 +510,8 @@ async fn reset_requests_trip_the_ip_budget_visibly(pool: PgPool) {
 
 /// Resends trip the same way: same `ok`, no mail, and an unknown email
 /// answers identically.
+///
+/// (´claim:ratelimit:the-email-budget-trips-silently´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn resends_trip_the_email_budget_silently(pool: PgPool) {
     let mut limits = RateLimitConfig::unlimited();
@@ -529,6 +557,9 @@ async fn resends_trip_the_email_budget_silently(pool: PgPool) {
 /// The confirmation verbs share one per-IP budget, so two guesses through
 /// `verifyEmail` spend it and the third is refused even through a
 /// different verb.
+///
+/// The confirmation verbs share one per-address budget, so guesses spent through one are refused through any other.
+/// ´claim:ratelimit:the-confirmation-verbs-share-one-budget´
 #[sqlx::test(migrations = "../../migrations")]
 async fn token_confirmations_share_one_ip_budget(pool: PgPool) {
     let mut limits = RateLimitConfig::unlimited();
@@ -565,6 +596,9 @@ async fn token_confirmations_share_one_ip_budget(pool: PgPool) {
 /// A window counts attempts and resets when it expires. A zero-length
 /// window has always just expired, so every attempt is the first of a
 /// fresh one.
+///
+/// A window counts attempts and resets when it expires, a zero-length one having always just expired.
+/// ´claim:ratelimit:a-window-counts-and-resets´
 #[sqlx::test(migrations = "../../migrations")]
 async fn windows_count_and_reset(pool: PgPool) {
     for expected in 1..=3 {
@@ -584,6 +618,9 @@ async fn windows_count_and_reset(pool: PgPool) {
 /// The delay arms at the threshold and doubles from there, under a cap:
 /// the 3rd failure yields 2.0 × 2⁰ = 2s, the 4th 2.0 × 2¹ = 4s, and the
 /// 5th would be 8s but caps at 5s.
+///
+/// The delay arms at the threshold, doubles from there, and stops at the cap.
+/// ´claim:ratelimit:the-backoff-doubles-under-a-cap´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_backoff_arms_at_the_threshold_doubles_and_caps(pool: PgPool) {
     let blocked = || rate_limit::blocked_until(&pool, "b", "k");
@@ -616,6 +653,9 @@ async fn the_backoff_arms_at_the_threshold_doubles_and_caps(pool: PgPool) {
 /// An armed, still-blocking row has to survive any sweep. With a zero
 /// idle bound every settled row is stale, so that blocking row is the
 /// only one left standing.
+///
+/// An armed row that is still blocking survives any sweep, however stale everything settled around it has become.
+/// ´claim:ratelimit:a-blocking-row-survives-the-sweep´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_sweep_removes_idle_rows_and_keeps_blocking_ones(pool: PgPool) {
     rate_limit::count_in_window(&pool, "sweep", "idle", 3600.0)

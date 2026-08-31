@@ -236,6 +236,9 @@ fn photo_with_location() -> Vec<u8> {
 /// recomputed here from the bytes the store actually holds, which is the
 /// transitive witness executed rather than asserted — and those bytes no
 /// longer carry the author's location.
+///
+/// The digest the contract publishes is the digest of the bytes the store actually holds, and those bytes no longer carry the author's location.
+/// ´claim:media:the-published-digest-is-the-stored-bytes´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_upload_stores_stripped_bytes_under_their_own_digest(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -294,6 +297,9 @@ async fn an_upload_stores_stripped_bytes_under_their_own_digest(pool: PgPool) {
 /// A retried upload is the row that already exists, not a second one —
 /// and it leaves exactly one object behind, because the duplicate the
 /// retry wrote is collected on the spot.
+///
+/// A retried upload is the row that already exists rather than a second one, and the duplicate object it wrote is collected on the spot.
+/// ´claim:media:a-retried-upload-is-the-same-asset´
 #[sqlx::test(migrations = "../../migrations")]
 async fn re_uploading_the_same_picture_returns_the_same_asset(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -330,6 +336,9 @@ async fn re_uploading_the_same_picture_returns_the_same_asset(pool: PgPool) {
 
 /// A file that is not what the upload accepts is refused as data on the
 /// payload, naming `file`, and nothing is written on either side.
+///
+/// A file the upload does not accept is refused as data against the field that carried it, with nothing written on either side.
+/// ´claim:media:a-refused-upload-names-its-field-and-writes-nothing´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_file_that_is_not_a_webp_image_is_refused_by_field(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -353,6 +362,9 @@ async fn a_file_that_is_not_a_webp_image_is_refused_by_field(pool: PgPool) {
 }
 
 /// An asset nobody attached is collected, row and object together.
+///
+/// An asset nobody attached is collected, row and stored object together.
+/// ´claim:media:an-unattached-asset-is-swept-whole´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_unattached_asset_is_swept_with_its_object(pool: PgPool) {
     let rig = Rig::new(pool);

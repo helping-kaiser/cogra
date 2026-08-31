@@ -644,6 +644,9 @@ mod tests {
 
     /// The three crop shapes the composer offers, at the pixel sizes a
     /// phone actually produces, plus the degenerate ends.
+    ///
+    /// An aspect ratio is the pixel shape reduced to lowest terms, at the sizes a phone produces and at the degenerate ends alike.
+    /// ´claim:media:an-aspect-ratio-is-the-shape-in-lowest-terms´
     #[test]
     fn the_aspect_ratio_is_the_shape_in_lowest_terms() {
         assert_eq!(ratio(1080, 1350), "4:5");
@@ -655,6 +658,8 @@ mod tests {
         assert_eq!(ratio(1023, 1367), "1023:1367");
     }
 
+    /// Processing admits a real image and digests exactly the bytes it goes on to store.
+    /// ´claim:media:processing-digests-what-it-stores´
     #[test]
     fn processing_accepts_a_real_image_and_digests_what_it_stores() {
         let processed = process(&one_pixel(), DEFAULT_MAX_UPLOAD_BYTES).expect("a valid image");
@@ -670,6 +675,9 @@ mod tests {
     /// The digest a reader recomputes from the served bytes has to match
     /// the one the envelope commits — which is only true if the strip
     /// happens before the digest, never after.
+    ///
+    /// Metadata is stripped before the digest is taken, so the digest a reader recomputes from the served bytes is the one the envelope commits.
+    /// ´claim:media:the-strip-precedes-the-digest´
     #[test]
     fn stripping_metadata_changes_the_digest() {
         let clean = one_pixel();
@@ -694,6 +702,8 @@ mod tests {
         );
     }
 
+    /// Bytes the media policy excludes are refused at processing rather than stored.
+    /// ´claim:media:the-policy-refuses-at-processing´
     #[test]
     fn processing_refuses_what_the_policy_excludes() {
         assert_eq!(
@@ -708,6 +718,9 @@ mod tests {
 
     /// A file's own claim about its type never gets a vote — the caller
     /// hands over bytes and the bytes decide.
+    ///
+    /// A file's own claim about its type never gets a vote: the bytes decide, whatever the name says.
+    /// ´claim:media:the-bytes-decide-the-type´
     #[test]
     fn a_renamed_file_is_still_refused() {
         let mut png = Vec::from(b"\x89PNG\r\n\x1a\n".as_slice());
@@ -718,6 +731,8 @@ mod tests {
         );
     }
 
+    /// An asset's storage key and public URL derive from its identifier alone, so nothing about the upload leaks into either.
+    /// ´claim:media:the-storage-key-derives-from-the-id´
     #[test]
     fn the_storage_key_and_url_are_derived_from_the_id_alone() {
         let id = Uuid::from_bytes([3; 16]);

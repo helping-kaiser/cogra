@@ -249,6 +249,8 @@ mod tests {
         act
     }
 
+    /// An approval names the act it was made for, and the witness carries that name.
+    /// ´claim:client:an-approval-names-the-act-it-was-made-for´
     #[test]
     fn approve_happy_path() {
         let actor = ActorKey::generate();
@@ -261,6 +263,8 @@ mod tests {
         assert_eq!(witness.act_id, pre.proposal.body.act_id());
     }
 
+    /// A body altered after pre-signing fails approval.
+    /// ´claim:client:a-body-altered-after-pre-signing-fails-approval´
     #[test]
     fn approve_rejects_altered_body() {
         let actor = ActorKey::generate();
@@ -275,6 +279,8 @@ mod tests {
         );
     }
 
+    /// A seal made by a key that is not the host's fails approval.
+    /// ´claim:client:a-seal-from-the-wrong-key-fails-approval´
     #[test]
     fn approve_rejects_bad_seal() {
         let actor = ActorKey::generate();
@@ -291,6 +297,9 @@ mod tests {
 
     /// A host that swaps a salt after sealing leaves an opening the client
     /// can no longer recompute.
+    ///
+    /// An opening the client cannot recompute fails approval.
+    /// ´claim:client:an-opening-the-client-cannot-recompute-fails-approval´
     #[test]
     fn approve_rejects_wrong_commitment_opening() {
         let actor = ActorKey::generate();
@@ -307,6 +316,9 @@ mod tests {
 
     /// Recovery works from the sealed act alone, without the pre-signed
     /// proposal, and signs the very same message the ordinary step 4 does.
+    ///
+    /// Recovery signs the very message the ordinary step signs, from the sealed act alone.
+    /// ´claim:client:recovery-signs-the-same-message-from-the-sealed-act-alone´
     #[test]
     fn approve_recovered_happy_path() {
         let actor = ActorKey::generate();
@@ -323,6 +335,8 @@ mod tests {
         assert_eq!(witness.approval_signature, ordinary.approval_signature);
     }
 
+    /// Recovery proves authorship rather than matching it, so nothing this key did not author can be recovered.
+    /// ´claim:client:recovery-proves-authorship-rather-than-matching-it´
     #[test]
     fn approve_recovered_rejects_a_foreign_act() {
         let actor = ActorKey::generate();
@@ -339,6 +353,8 @@ mod tests {
 
     /// Recovery proves authorship instead of matching it, so a payload this
     /// key never pre-signed fails the proof.
+    ///
+    /// (´claim:client:recovery-proves-authorship-rather-than-matching-it´)
     #[test]
     fn approve_recovered_rejects_a_tampered_payload() {
         let actor = ActorKey::generate();
@@ -353,6 +369,9 @@ mod tests {
         );
     }
 
+    /// The same on the recovery path, which reads the host key no differently.
+    ///
+    /// (´claim:client:a-seal-from-the-wrong-key-fails-approval´)
     #[test]
     fn approve_recovered_rejects_a_bad_seal() {
         let actor = ActorKey::generate();
@@ -367,6 +386,9 @@ mod tests {
         );
     }
 
+    /// And the same opening, which recovery must recompute just as approval does.
+    ///
+    /// (´claim:client:an-opening-the-client-cannot-recompute-fails-approval´)
     #[test]
     fn approve_recovered_rejects_a_wrong_commitment_opening() {
         let actor = ActorKey::generate();

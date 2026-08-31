@@ -425,7 +425,7 @@ Three properties fix what the section means. An owner reaches itself, so a same-
 
 The judgment's domain is the imported citations alone. A same-owner citation is an owner reaching itself; an import whose prefix Σ does not register names no owner to test and is already `label-unregistered-prefix`; an import naming the citing owner is already `label-self-qualified-import`. What is left is exactly the edges a reach graph is about, and each is one lookup against one row.
 
-*Awaiting its adoption data.* The mechanism is implemented and the corpus writes no `[reach]` section, so the clause runs over every import and passes vacuously — the same standing the anchor harvest and the synthetic citation hold, and implemented for the same reason. Which graph this corpus should declare is a ruling, not a derivation: the measured edge set and a recommended declaration sit in the working notes for that ruling, and the section lands when it is made.
+*The declared graph.* Seven rows, ruled from the measured edge set: the four disciplines stand on nothing, the architecture stands on the four, and the two packages stand on the disciplines and the architecture. The twelve owners that cite nothing carry no row, so the section constrains what the corpus does today rather than a future it has no evidence about. One row reaches past the measurement — `pkg.cogra-interchange` is given the three discipline documents it does not cite — because the rule the section states is that implementation may stand on any discipline, not that today's citations are the ceiling.
 
 **Decision (Staged profiles compute nothing)** · `dec:lint:staged-profiles`
 

@@ -86,6 +86,9 @@ async fn funded_actor(host: &StandIn, micro: i64) -> ActorKey {
 /// record with one leg (first edge at both endpoints, so τ = 0), and the
 /// θ-debit, count increment, and burn total all land as expected. The
 /// ingest read (`epochs_since`) returns the same package back.
+///
+/// A completed handshake closes into one published record, and the ingest read returns it unchanged.
+/// ´claim:handshake:a-completed-act-closes-into-a-published-record´
 #[sqlx::test(migrations = "../../migrations")]
 async fn handshake_lands_a_record(pool: PgPool) {
     let host = standin(pool);
@@ -123,6 +126,8 @@ async fn handshake_lands_a_record(pool: PgPool) {
     assert!(host.epochs_since(0).await.expect("epochs").is_empty());
 }
 
+/// An epoch with nothing approved in it publishes no package at all.
+/// ´claim:close:an-empty-epoch-publishes-nothing´
 #[sqlx::test(migrations = "../../migrations")]
 async fn empty_close_publishes_nothing(pool: PgPool) {
     let host = standin(pool);
@@ -130,6 +135,8 @@ async fn empty_close_publishes_nothing(pool: PgPool) {
     assert!(host.epochs_since(-1).await.expect("ok").is_empty());
 }
 
+/// The close loop publishes an approved act on its interval, with no close asked for.
+/// ´claim:close:the-interval-loop-publishes-without-being-asked´
 #[sqlx::test(migrations = "../../migrations")]
 async fn close_loop_publishes_on_the_interval(pool: PgPool) {
     let host = standin(pool);
@@ -158,6 +165,9 @@ async fn close_loop_publishes_on_the_interval(pool: PgPool) {
 /// else's Profile, a fixed-parameter family given non-fixed (p_d, p_i),
 /// and a payload over M_payload — all reject at seal. None produces a
 /// Layer-1 object, so a subsequent close has nothing to publish.
+///
+/// A proposal that fails formation rejects at seal and leaves no Layer 1 object behind.
+/// ´claim:seal:formation-failures-leave-no-record-behind´
 #[sqlx::test(migrations = "../../migrations")]
 async fn seal_rejects_formation_failures(pool: PgPool) {
     let host = standin(pool);
@@ -189,6 +199,9 @@ async fn seal_rejects_formation_failures(pool: PgPool) {
 /// does not bind to the signing key, a proposal body tampered after
 /// pre-signing, and a payload tampered after pre-signing (which
 /// mismatches the pre-digest).
+///
+/// A proposal whose signature does not bind its author, body, and payload rejects at seal.
+/// ´claim:seal:authentication-failures-reject-at-seal´
 #[sqlx::test(migrations = "../../migrations")]
 async fn seal_rejects_authentication_failures(pool: PgPool) {
     let host = standin(pool);
@@ -220,6 +233,9 @@ async fn seal_rejects_authentication_failures(pool: PgPool) {
 /// Reusing an act identifier is equivocation and rejects with Conflict;
 /// reusing an author-local sequence number under a different family
 /// rejects the same way, via UNIQUE(author, seq).
+///
+/// Reusing an act identifier or an author-local sequence number rejects as a conflict.
+/// ´claim:seal:identifier-reuse-is-a-conflict´
 #[sqlx::test(migrations = "../../migrations")]
 async fn seal_rejects_identifier_reuse_and_key_change(pool: PgPool) {
     let host = standin(pool);
@@ -246,6 +262,9 @@ async fn seal_rejects_identifier_reuse_and_key_change(pool: PgPool) {
 /// wrong key rejects with Authentication (mallory signing the same
 /// message must not verify as the actor); and the genuine witness
 /// lands, with a second approval idempotent.
+///
+/// Only the actor's own approval witness lands the act, and approving twice lands it once.
+/// ´claim:handshake:only-the-actors-own-witness-approves´
 #[sqlx::test(migrations = "../../migrations")]
 async fn approve_verifies_the_witness(pool: PgPool) {
     let host = standin(pool);
@@ -287,6 +306,9 @@ async fn approve_verifies_the_witness(pool: PgPool) {
 /// An actor with no burn fails W1 at close, deferring the act
 /// indefinitely; crediting a burn restores capacity immediately
 /// (layer1-interface.md §7.1), and the act lands at the next close.
+///
+/// An author who cannot pay the θ-debit defers until a burn funds the act.
+/// ´claim:close:an-unfunded-act-defers-until-its-burn-lands´
 #[sqlx::test(migrations = "../../migrations")]
 async fn insolvent_authors_defer_until_funded(pool: PgPool) {
     let host = standin(pool);
@@ -309,6 +331,9 @@ async fn insolvent_authors_defer_until_funded(pool: PgPool) {
 /// depending on a same-close act lands after it, at a strictly greater
 /// Lamport time, whatever the approval order — here the dependent is
 /// approved first and its dependency arrives after.
+///
+/// A dependency defers its dependent until it lands, then precedes it in both the order and the causal key.
+/// ´claim:close:a-dependency-defers-then-precedes-its-dependent´
 #[sqlx::test(migrations = "../../migrations")]
 async fn dependencies_defer_and_order(pool: PgPool) {
     let host = standin(pool);
@@ -355,6 +380,9 @@ async fn dependencies_defer_and_order(pool: PgPool) {
 /// same pre-act state — first appearance of every endpoint, so τ = 0 on
 /// both — and one act consummates exactly one θ-debit and one count
 /// increment, never per leg.
+///
+/// A hyper act projects two legs at one causal key and consummates exactly one θ-debit.
+/// ´claim:record:a-hyper-act-projects-two-legs-at-one-key´
 #[sqlx::test(migrations = "../../migrations")]
 async fn hyper_acts_project_two_legs_at_one_key(pool: PgPool) {
     let host = standin(pool);
@@ -408,6 +436,9 @@ async fn hyper_acts_project_two_legs_at_one_key(pool: PgPool) {
 /// An ordinary-role Send toward an existing Message stays legal — L1's
 /// permission set keeps it, and CoGra's transcript fold, not formation,
 /// is what ignores it.
+///
+/// A Bid may only mint a fresh Offer, where an ordinary Send toward an existing Message stays legal.
+/// ´claim:seal:bid-mints-fresh-where-send-may-revisit´
 #[sqlx::test(migrations = "../../migrations")]
 async fn bid_is_fresh_mint_only_while_ordinary_send_stays_legal(pool: PgPool) {
     let host = standin(pool);
@@ -457,6 +488,9 @@ async fn bid_is_fresh_mint_only_while_ordinary_send_stays_legal(pool: PgPool) {
 /// The revise gesture: a Publish toward an existing Content node is
 /// well-formed at the substrate (seal.rs) and lands as a revision rather
 /// than a fresh mint.
+///
+/// A Publish toward an existing Content node lands as a revision rather than a fresh mint.
+/// ´claim:record:a-publish-toward-an-existing-mint-revises´
 #[sqlx::test(migrations = "../../migrations")]
 async fn publish_toward_an_existing_mint_revises_rather_than_mints(pool: PgPool) {
     let host = standin(pool);
@@ -490,6 +524,9 @@ async fn publish_toward_an_existing_mint_revises_rather_than_mints(pool: PgPool)
 /// enters the Chat the act creates, the T-leg mints it. The T-leg's
 /// (p_d, p_i) reads back transposed from the act's own (census.rs
 /// `leg_params`).
+///
+/// A founding Participant lands both legs at the act's own mint, the T-leg's parameters transposed.
+/// ´claim:record:a-founding-participant-self-loops-at-its-mint´
 #[sqlx::test(migrations = "../../migrations")]
 async fn founding_participant_self_loops_at_its_own_mint(pool: PgPool) {
     let host = standin(pool);
@@ -542,6 +579,9 @@ async fn founding_participant_self_loops_at_its_own_mint(pool: PgPool) {
 /// from the Registration — max(0, 1) = 1 → τ = 1 − 1/(1+1) = 0.5. Later
 /// acts never contribute to an earlier act's maturity: the epoch-0
 /// record still reads τ = 0 through the ingest surface.
+///
+/// Maturity reads the degree the endpoints carried before the act, and no later act revises it.
+/// ´claim:record:maturity-reads-the-degree-before-the-act´
 #[sqlx::test(migrations = "../../migrations")]
 async fn maturity_grows_with_prior_degree(pool: PgPool) {
     let host = standin(pool);
@@ -563,6 +603,9 @@ async fn maturity_grows_with_prior_degree(pool: PgPool) {
 /// With the epoch target act budget set to 1, the epoch fills at one act
 /// and closes on approve, so each of two submitted acts lands in its own
 /// epoch.
+///
+/// An epoch closes as soon as the act budget fills, so each act lands in its own epoch.
+/// ´claim:close:the-act-budget-caps-the-epoch´
 #[sqlx::test(migrations = "../../migrations")]
 async fn act_budget_caps_the_epoch(pool: PgPool) {
     let host = StandIn::new(

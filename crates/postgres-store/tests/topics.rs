@@ -130,6 +130,9 @@ fn names(claims: &[topics::TopicClaim]) -> Vec<&str> {
 
 /// Several claims about the same (author, content, Type) bundle: only the
 /// newest is the author's current claim, and the earlier ones are history.
+///
+/// Within one bundle only the newest claim stands, and the earlier ones are history.
+/// ´claim:topics:only-the-newest-claim-of-a-bundle-stands´
 #[sqlx::test(migrations = "../../migrations")]
 async fn newest_wins_within_a_bundle(pool: PgPool) {
     let post = content_of("alice", 0);
@@ -158,6 +161,9 @@ async fn newest_wins_within_a_bundle(pool: PgPool) {
 
 /// Inside one epoch the causal key orders the bundle: act_time decides
 /// first, and position breaks a tie at equal act_time.
+///
+/// Inside one epoch act time orders a bundle and position breaks the tie.
+/// ´claim:topics:the-causal-key-orders-a-bundle-inside-one-epoch´
 #[sqlx::test(migrations = "../../migrations")]
 async fn within_one_epoch_the_causal_key_decides(pool: PgPool) {
     let post = content_of("alice", 0);
@@ -200,6 +206,9 @@ async fn within_one_epoch_the_causal_key_decides(pool: PgPool) {
 /// The un-tag is a further Tag at relevance 0, held at full confidence. It
 /// is an ordinary record: the earlier claim becomes history rather than
 /// being erased, so both acts keep both legs on the graph.
+///
+/// A withdrawal is a further claim at relevance zero, so the earlier claim becomes history rather than being erased.
+/// ´claim:topics:a-withdrawal-is-a-record-and-never-an-erasure´
 #[sqlx::test(migrations = "../../migrations")]
 async fn relevance_zero_withdraws_the_pair(pool: PgPool) {
     let post = content_of("alice", 0);
@@ -240,6 +249,8 @@ async fn relevance_zero_withdraws_the_pair(pool: PgPool) {
     assert_eq!(records, 4, "both acts keep both legs — nothing is erased");
 }
 
+/// A withdrawn topic can be claimed again, the newest claim standing as always.
+/// ´claim:topics:a-withdrawn-topic-can-be-claimed-again´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_topic_can_be_reclaimed_after_withdrawal(pool: PgPool) {
     let post = content_of("alice", 0);
@@ -272,6 +283,9 @@ async fn a_topic_can_be_reclaimed_after_withdrawal(pool: PgPool) {
 
 /// Each Type is its own bundle, so withdrawing one leaves the other
 /// standing.
+///
+/// Withdrawing one Type leaves every other Type's claim standing.
+/// ´claim:topics:a-withdrawal-reaches-one-type-only´
 #[sqlx::test(migrations = "../../migrations")]
 async fn each_type_folds_in_its_own_bundle(pool: PgPool) {
     let post = content_of("alice", 0);
@@ -316,6 +330,9 @@ async fn each_type_folds_in_its_own_bundle(pool: PgPool) {
 /// row. Its mirror image, a claim at full relevance held at zero
 /// confidence, is still a claim: read from the wrong column it would
 /// vanish.
+///
+/// Relevance is the T-leg's transposed inclination and confidence its transposed distance, and swapping the two changes the answer.
+/// ´claim:topics:relevance-and-confidence-read-from-the-transposed-leg´
 #[sqlx::test(migrations = "../../migrations")]
 async fn relevance_is_read_from_the_transposed_leg(pool: PgPool) {
     let post = content_of("alice", 0);
@@ -374,6 +391,9 @@ async fn relevance_is_read_from_the_transposed_leg(pool: PgPool) {
 /// transposed — the same claim in opposite columns, so a fold that reads
 /// one rule for both halves gets exactly one of them wrong. A staged
 /// withdrawal at full confidence withdraws just as a landed one does.
+///
+/// A staged claim carries the act's own tuple where the landed leg carries it transposed.
+/// ´claim:topics:a-staged-claim-carries-the-untransposed-tuple´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_staged_claim_is_not_transposed(pool: PgPool) {
     let post = content_of("alice", 0);
@@ -411,6 +431,9 @@ async fn a_staged_claim_is_not_transposed(pool: PgPool) {
 /// the viewer's forward-path weight, so this slice reads only the
 /// content-intrinsic channel. A stranger's claim is still on the graph and
 /// readable through its own author — it is scoped out, not erased.
+///
+/// The chip row reads the content-intrinsic channel alone, so a stranger's claim is scoped out rather than erased.
+/// ´claim:topics:the-chip-row-reads-the-content-intrinsic-channel´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_chip_row_shows_only_the_content_authors_own_tags(pool: PgPool) {
     let post = content_of("alice", 0);
@@ -445,6 +468,9 @@ async fn a_chip_row_shows_only_the_content_authors_own_tags(pool: PgPool) {
 
 /// One author's withdrawal leaves another's claim standing: folding across
 /// authors would let one author's un-tag hide another's claim.
+///
+/// One author's withdrawal cannot hide another author's claim.
+/// ´claim:topics:one-authors-withdrawal-cannot-hide-anothers-claim´
 #[sqlx::test(migrations = "../../migrations")]
 async fn bundles_of_different_authors_do_not_fold_together(pool: PgPool) {
     let post = content_of("alice", 0);
@@ -483,6 +509,9 @@ async fn bundles_of_different_authors_do_not_fold_together(pool: PgPool) {
 /// author tagging their own post — and drops a third party's tag of
 /// someone else's. The any-author channel is the union of both, and the
 /// page reads the same transposed leg the chip row does.
+///
+/// The topic page's author-owned channel admits only content-intrinsic claims, and the any-author channel is the union of both.
+/// ´claim:topics:the-topic-page-offers-two-channels´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_topic_page_gates_third_party_claims(pool: PgPool) {
     let alices = content_of("alice", 0);
@@ -518,6 +547,8 @@ async fn the_topic_page_gates_third_party_claims(pool: PgPool) {
     assert_eq!(all.len(), 2, "the union is the documented fold");
 }
 
+/// The topic page folds each bundle before listing, and orders the survivors newest first.
+/// ´claim:topics:the-topic-page-orders-its-survivors-newest-first´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_topic_page_folds_and_orders_newest_first(pool: PgPool) {
     let first = content_of("alice", 0);
@@ -568,6 +599,8 @@ async fn the_topic_page_folds_and_orders_newest_first(pool: PgPool) {
 /// The same guard as the chip row, at the other read direction: a
 /// withdrawal held at full confidence must drop the node, and a claim held
 /// at zero confidence must keep it. Swapping the two columns inverts both.
+///
+/// (´claim:topics:relevance-and-confidence-read-from-the-transposed-leg´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_topic_page_reads_relevance_from_the_transposed_leg(pool: PgPool) {
     let withdrawn = content_of("alice", 0);
@@ -606,6 +639,9 @@ async fn the_topic_page_reads_relevance_from_the_transposed_leg(pool: PgPool) {
 /// An unlanded act is not on the graph, so only the L2 view counts it —
 /// and only for its own author. Another actor's in-flight act is nobody
 /// else's to see.
+///
+/// An act still in flight is seen by its own author's L2 view and by nobody else.
+/// ´claim:topics:an-unlanded-act-is-seen-only-by-its-own-author´
 #[sqlx::test(migrations = "../../migrations")]
 async fn pending_claims_are_counted_only_in_the_l2_view(pool: PgPool) {
     let post = content_of("alice", 0);
@@ -646,6 +682,9 @@ async fn pending_claims_are_counted_only_in_the_l2_view(pool: PgPool) {
 
 /// A withdrawal still in flight supersedes the landed claim it replaces
 /// for its own author: L1 still shows the claim, L2 does not.
+///
+/// A withdrawal still in flight supersedes the landed claim it replaces, for its own author alone.
+/// ´claim:topics:a-pending-claim-supersedes-the-landed-one-it-replaces´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_pending_claim_supersedes_a_landed_one(pool: PgPool) {
     let post = content_of("alice", 0);
@@ -677,6 +716,9 @@ async fn a_pending_claim_supersedes_a_landed_one(pool: PgPool) {
     );
 }
 
+/// The topic page takes the same split, at the other read direction.
+///
+/// (´claim:topics:an-unlanded-act-is-seen-only-by-its-own-author´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_topic_page_takes_the_same_pending_split(pool: PgPool) {
     let post = content_of("alice", 0);
@@ -710,6 +752,9 @@ async fn the_topic_page_takes_the_same_pending_split(pool: PgPool) {
 /// No viewer, no pending half: an anonymous read cannot see anyone's acts
 /// in flight, so asking for them without a viewer falls back to the landed
 /// view.
+///
+/// Asking for pending claims without a viewer falls back to the landed view.
+/// ´claim:topics:pending-claims-need-a-viewer´
 #[sqlx::test(migrations = "../../migrations")]
 async fn include_pending_needs_a_viewer(pool: PgPool) {
     let post = content_of("alice", 0);
@@ -736,6 +781,9 @@ async fn include_pending_needs_a_viewer(pool: PgPool) {
 /// The Moderator's verdict is a Tag at (0, 0) carrying its payload. It
 /// declares no topic, so folds must read it individually rather than
 /// through the topic surface.
+///
+/// A verdict mark declares no topic, so the topic surface must read it individually or not at all.
+/// ´claim:topics:a-verdict-mark-declares-no-topic´
 #[sqlx::test(migrations = "../../migrations")]
 async fn verdict_marks_are_not_topics(pool: PgPool) {
     let post = content_of("alice", 0);
@@ -765,6 +813,9 @@ async fn verdict_marks_are_not_topics(pool: PgPool) {
 
 /// The verdict is excluded from the bundle entirely, so it cannot win the
 /// newest-wins pick and withdraw the author's own standing claim.
+///
+/// A verdict is excluded from the bundle, so it can never win the newest-wins pick and withdraw a standing claim.
+/// ´claim:topics:a-verdict-never-wins-a-bundle´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_verdict_mark_does_not_hide_a_real_claim(pool: PgPool) {
     let post = content_of("moderator", 0);
@@ -843,6 +894,9 @@ async fn plan_of(pool: &PgPool, sql: &str) -> String {
 /// by a nested loop over its primary key or built into a hash is a
 /// join-strategy choice the planner remakes as the table grows; the leg
 /// side is the one an index has to serve.
+///
+/// Both fold directions are served by the mirror's existing indexes, with no scan of the leg table.
+/// ´claim:topics:both-fold-directions-are-served-by-existing-indexes´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_fold_reads_through_existing_indexes(pool: PgPool) {
     seed_bulk_tags(&pool).await;
@@ -879,6 +933,9 @@ async fn the_fold_reads_through_existing_indexes(pool: PgPool) {
 
 /// The registry keys a canonical name by its derived id, and the upsert is
 /// idempotent: the row is the same row and the id the same id.
+///
+/// The registry keys a canonical name by its derived id, and the upsert is idempotent in both the row and the id.
+/// ´claim:topics:the-registry-upserts-a-name-by-its-derived-id´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_registry_upserts_by_derived_id(pool: PgPool) {
     let mut conn = pool.acquire().await.expect("conn");
@@ -906,6 +963,9 @@ async fn the_registry_upserts_by_derived_id(pool: PgPool) {
 
 /// D4: a Type is anchored vacuously, so a name resolves whether or not the
 /// registry has seen it — and a read must not make it seen.
+///
+/// A Type is anchored vacuously, so resolving a name reads without ever making it seen.
+/// ´claim:topics:resolving-a-name-writes-nothing´
 #[sqlx::test(migrations = "../../migrations")]
 async fn resolving_a_name_never_writes_a_row(pool: PgPool) {
     assert_eq!(
@@ -929,6 +989,9 @@ async fn resolving_a_name_never_writes_a_row(pool: PgPool) {
 
 /// D5: the name and the act that references it commit together, so an
 /// abandoned prepare leaves no row behind.
+///
+/// A name and the act referencing it commit together, so an abandoned prepare leaves no name behind.
+/// ´claim:topics:an-abandoned-prepare-leaves-no-name-behind´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_registry_rolls_back_with_its_transaction(pool: PgPool) {
     let mut tx = pool.begin().await.expect("begins");

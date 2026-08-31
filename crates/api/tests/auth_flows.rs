@@ -57,6 +57,9 @@ async fn backdate_rotation(pool: &PgPool, session_id: Uuid) {
 /// the device label across. Replaying the consumed token past the grace
 /// window reads as theft and kills every session, while garbage and
 /// expired tokens are merely invalid.
+///
+/// A refresh consumes its token and mints a successor carrying the device across, and replaying the consumed token past the grace window reads as theft and kills every session.
+/// ´claim:auth:rotation-consumes-and-reuse-is-theft´
 #[sqlx::test(migrations = "../../migrations")]
 async fn sessions_rotate_and_reuse_revokes_everything(pool: PgPool) {
     let cfg = AuthConfig::ephemeral().expect("cfg");
@@ -115,6 +118,9 @@ async fn sessions_rotate_and_reuse_revokes_everything(pool: PgPool) {
 /// The immediate replay — the retry that lost its response — gets the
 /// same successor back, not an error and not a fork. No detection fires,
 /// and that successor still refreshes normally afterwards.
+///
+/// An immediate replay inside the grace window is handed the same successor rather than an error or a fork, and no detection fires.
+/// ´claim:auth:a-grace-replay-is-idempotent´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_grace_window_replay_returns_the_same_successor(pool: PgPool) {
     let cfg = AuthConfig::ephemeral().expect("cfg");
@@ -148,6 +154,9 @@ async fn a_grace_window_replay_returns_the_same_successor(pool: PgPool) {
 /// Once the chain has moved on — the successor itself consumed — the
 /// idempotent answer no longer exists even inside the grace window, so
 /// the replay reads as theft.
+///
+/// Once the successor is itself consumed the idempotent answer no longer exists, so even a grace-window replay reads as theft.
+/// ´claim:auth:a-moved-on-chain-ends-the-grace-answer´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_grace_replay_with_a_consumed_successor_is_theft(pool: PgPool) {
     let cfg = AuthConfig::ephemeral().expect("cfg");
@@ -177,6 +186,9 @@ async fn a_grace_replay_with_a_consumed_successor_is_theft(pool: PgPool) {
 /// The double-fire race: whichever request loses the rotation still comes
 /// back with the winner's successor rather than an error, and exactly one
 /// live session remains — the shared successor.
+///
+/// Two refreshes racing on one token converge: the loser is handed the winner's successor rather than an error, and exactly one session survives.
+/// ´claim:auth:concurrent-refreshes-converge´
 #[sqlx::test(migrations = "../../migrations")]
 async fn concurrent_refreshes_of_one_token_converge_on_one_successor(pool: PgPool) {
     let cfg = AuthConfig::ephemeral().expect("cfg");
@@ -209,6 +221,9 @@ async fn concurrent_refreshes_of_one_token_converge_on_one_successor(pool: PgPoo
 /// alarm and no collateral: the kept session survives unstamped.
 /// Security-initiated revocation, from a password change or reset,
 /// replays just as benignly.
+///
+/// A token revoked by the owner or by a credential change replays benignly, raising no alarm and taking no other session with it.
+/// ´claim:auth:a-revoked-token-replays-benignly´
 #[sqlx::test(migrations = "../../migrations")]
 async fn owner_and_security_revoked_tokens_replay_benignly(pool: PgPool) {
     let cfg = AuthConfig::ephemeral().expect("cfg");
@@ -256,6 +271,9 @@ async fn owner_and_security_revoked_tokens_replay_benignly(pool: PgPool) {
 /// the take both returns and clears it. A later detection overwrites an
 /// undelivered mark with its own time, so the notice always carries the
 /// latest incident.
+///
+/// Detection stamps the account and the take both returns and clears the mark, a later detection overwriting an undelivered one so the notice carries the latest incident.
+/// ´claim:auth:the-reuse-mark-is-stamped-taken-and-refreshed´
 #[sqlx::test(migrations = "../../migrations")]
 async fn reuse_detection_stamps_the_account_and_take_clears(pool: PgPool) {
     let cfg = AuthConfig::ephemeral().expect("cfg");
@@ -322,6 +340,9 @@ async fn reuse_detection_stamps_the_account_and_take_clears(pool: PgPool) {
 /// throughout. Revoke-others counts only what was still live, so it
 /// reports the one remaining session rather than both — the first
 /// revocation had already taken the other.
+///
+/// A revocation reaches only what it names, and revoke-others reports only the sessions that were still live to take.
+/// ´claim:auth:revocations-scope-to-their-target´
 #[sqlx::test(migrations = "../../migrations")]
 async fn revocations_scope_to_their_target(pool: PgPool) {
     let cfg = AuthConfig::ephemeral().expect("cfg");
@@ -371,6 +392,9 @@ async fn revocations_scope_to_their_target(pool: PgPool) {
 /// A reset token is consumed exactly once — a second consumption fails,
 /// as do expired ones — and the reset path rotates the password hash and
 /// revokes every session.
+///
+/// A reset token is spendable exactly once, and spending it rotates the password hash and revokes every session.
+/// ´claim:auth:a-reset-is-single-use-and-total´
 #[sqlx::test(migrations = "../../migrations")]
 async fn password_resets_are_single_use_and_revoke_all_sessions(pool: PgPool) {
     let cfg = AuthConfig::ephemeral().expect("cfg");
@@ -445,6 +469,8 @@ async fn password_resets_are_single_use_and_revoke_all_sessions(pool: PgPool) {
 /// The original side alone changes nothing; the change applies when the
 /// new side lands, and a wrong token matches nothing on the way.
 /// Re-applying afterwards is idempotent.
+///
+/// (´claim:auth:an-email-change-needs-both-sides´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_email_change_applies_only_when_both_sides_stand(pool: PgPool) {
     let user = seed_user(&pool, "alice", "old@example.com", "a strong password").await;
@@ -510,6 +536,8 @@ async fn the_email_change_applies_only_when_both_sides_stand(pool: PgPool) {
 
 /// Another authenticated account presenting the owner's token matches
 /// nothing, and the attempt does not consume the owner's proof.
+///
+/// (´claim:auth:the-new-side-proof-is-scoped-to-its-viewer´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_new_side_token_is_scoped_to_its_account(pool: PgPool) {
     let owner = seed_user(&pool, "alice", "a@example.com", "a strong password").await;
@@ -542,6 +570,8 @@ async fn the_new_side_token_is_scoped_to_its_account(pool: PgPool) {
 /// The address gets registered before the change completes, so the
 /// fully-proven change reports it in use. The change row stays live:
 /// once the address frees up, a retry within the TTL applies it.
+///
+/// (´claim:auth:a-collision-is-reported-and-the-change-survives-it´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_proven_email_change_colliding_with_a_registered_address_reports_in_use(pool: PgPool) {
     let user = seed_user(&pool, "alice", "old@example.com", "a strong password").await;
@@ -595,6 +625,8 @@ async fn a_proven_email_change_colliding_with_a_registered_address_reports_in_us
     );
 }
 
+/// A handle change answers to the one namespace every actor kind shares.
+/// ´claim:auth:a-handle-change-answers-to-the-one-namespace´
 #[sqlx::test(migrations = "../../migrations")]
 async fn handle_changes_respect_the_one_namespace(pool: PgPool) {
     let user = seed_user(&pool, "alice", "a@example.com", "a strong password").await;
@@ -617,6 +649,7 @@ async fn handle_changes_respect_the_one_namespace(pool: PgPool) {
     assert_eq!(identity.handle, "fresh_name");
 }
 
+/// (´claim:keys:a-backup-blob-round-trips-and-replacement-overwrites´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn key_backup_replacement_overwrites_the_one_row(pool: PgPool) {
     let user = seed_user(&pool, "alice", "a@example.com", "a strong password").await;

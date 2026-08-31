@@ -267,6 +267,9 @@ async fn assert_corpus_fits(schema: &ApiSchema, posture: &str) {
 /// The guard the release posture never had: production budgets have to
 /// admit every operation both clients ship, or the app cannot talk to
 /// the server it was built against.
+///
+/// The budgets admit every operation both clients ship, or the apps cannot talk to the server they were built against.
+/// ´claim:budgets:the-budgets-admit-every-shipped-operation´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_release_budgets_admit_every_client_operation(pool: PgPool) {
     let schema = schema(pool, QueryBudgets::release());
@@ -275,6 +278,8 @@ async fn the_release_budgets_admit_every_client_operation(pool: PgPool) {
 
 /// The dev posture is looser, but it is what every device build talks
 /// to — a document that trips it is broken for everyone developing.
+///
+/// (´claim:budgets:the-budgets-admit-every-shipped-operation´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_dev_budgets_admit_every_client_operation(pool: PgPool) {
     let schema = schema(pool, QueryBudgets::dev());
@@ -337,6 +342,9 @@ fn depth_probe(depth: usize) -> QueryBudgets {
 ///
 /// The numbers themselves are printed, so `--nocapture` reads out the
 /// table a re-derivation works from.
+///
+/// The ceilings are measured rather than chosen, and the measurement is re-run on every pass so growth into the stated headroom is seen coming.
+/// ´claim:budgets:the-ceilings-are-measured-every-run´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_budget_ceilings_keep_their_stated_headroom(pool: PgPool) {
     let mut heaviest = (String::new(), 0usize);
@@ -378,6 +386,9 @@ async fn the_budget_ceilings_keep_their_stated_headroom(pool: PgPool) {
 /// The extraction is load-bearing — an operation silently dropped would
 /// make the guards above pass by not looking. Both corpora carry the
 /// post-detail read, which is the heaviest document either client sends.
+///
+/// The extraction is load-bearing, an operation silently dropped making the guards pass by not looking, so both corpora are checked to carry the heaviest document either client sends.
+/// ´claim:budgets:the-corpora-carry-what-the-guards-read-them-for´
 #[test]
 fn the_corpora_carry_the_operations_they_are_read_for() {
     for relative in [

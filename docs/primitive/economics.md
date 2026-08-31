@@ -478,11 +478,19 @@ community's admission fund**, distinct from the team treasury
 kind: CGT converted to L0 burns at members', system actors', and
 Collectives' own addresses (``rem:gates:guild-funding``; conversion
 mechanics in [token.md](token.md)) — covering the θ-debits the
-community's members would otherwise pay out of pocket. Subsidy
+community's members would otherwise pay out of pocket. **The
+admission burn that clears an approved applicant's first write
+([auth.md](../implementation/auth.md#approval-and-landing)) is
+this fund's outflow too**: an invitation is community-funded the
+same way a member's ordinary acts are. Subsidy
 generosity and per-member caps are governed network parameters
 alongside `reserve_share` itself, so the community that pays the
 fee also governs the rate and the spending policy — opt-in, opt-out,
-and rebalanceable in low-activity times by vote.
+and rebalanceable in low-activity times by vote. The caps are the
+fund's own protection: normal behavior — writing, vouching,
+inviting at a human pace — never meets them, and an actor past
+them funds their own burns until the window turns, so neither
+invite floods nor act spam can drain what the community set aside.
 
 Because inflow (the settlement line) and outflow (on-chain burns)
 are both public, the steady-state target — **advertiser revenue

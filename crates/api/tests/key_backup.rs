@@ -171,6 +171,8 @@ impl Rig {
     }
 }
 
+/// A signed backup blob round-trips, and a replacement overwrites the one row the account keeps rather than accumulating beside it.
+/// ´claim:keys:a-backup-blob-round-trips-and-replacement-overwrites´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_signed_upload_roundtrips_and_replacement_overwrites(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -195,6 +197,9 @@ async fn a_signed_upload_roundtrips_and_replacement_overwrites(pool: PgPool) {
 
 /// Enabling backup destroys nothing, so the first upload stays silent.
 /// Every later one replaces a recovery path and mails the notice.
+///
+/// The first upload destroys no recovery path and stays silent; every later one replaces one and mails the notice.
+/// ´claim:keys:only-a-replacement-mails-the-notice´
 #[sqlx::test(migrations = "../../migrations")]
 async fn only_replacement_mails_the_notice(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -215,6 +220,9 @@ async fn only_replacement_mails_the_notice(pool: PgPool) {
 /// The cap is on decoded bytes, not the encoded payload: one byte over
 /// refuses and leaves the store untouched, while exactly 4096 still
 /// stores.
+///
+/// The size cap is on the decoded blob, and one byte over refuses while leaving the store untouched.
+/// ´claim:keys:the-cap-is-on-the-decoded-blob´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_blob_over_the_cap_refuses_and_stores_nothing(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -234,6 +242,9 @@ async fn a_blob_over_the_cap_refuses_and_stores_nothing(pool: PgPool) {
 /// The stolen-login attacker holds a live session but no actor key. They
 /// can still take a challenge, but nothing they sign with verifies, so
 /// the blob — and with it the account's recovery path — survives.
+///
+/// A live session is not enough to overwrite the blob: without the actor key nothing signed verifies, so a stolen login cannot take the account's recovery path.
+/// ´claim:keys:a-session-alone-cannot-overwrite-the-blob´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_session_without_the_actor_key_cannot_overwrite_the_blob(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -265,6 +276,8 @@ async fn a_session_without_the_actor_key_cannot_overwrite_the_blob(pool: PgPool)
     assert_eq!(rig.mailer.subjects_for(EMAIL), Vec::<String>::new());
 }
 
+/// A signature authorizes the bytes it was made over and no others.
+/// ´claim:keys:a-signature-authorizes-only-its-own-bytes´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_signature_for_other_bytes_does_not_authorize_this_blob(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -288,6 +301,9 @@ async fn a_signature_for_other_bytes_does_not_authorize_this_blob(pool: PgPool) 
 
 /// A successful upload spends its challenge, so replaying the very same
 /// bytes and signature a second time is refused as CHALLENGE_EXPIRED.
+///
+/// A challenge is spent by the upload it authorizes, so replaying the very same bytes and signature is refused.
+/// ´claim:keys:a-challenge-is-single-use´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_challenge_is_single_use(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -313,6 +329,8 @@ async fn a_challenge_is_single_use(pool: PgPool) {
     assert_eq!(error["field"][0], "challenge");
 }
 
+/// A challenge past its lifetime refuses.
+/// ´claim:keys:an-expired-challenge-refuses´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_expired_challenge_refuses(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -339,6 +357,8 @@ async fn an_expired_challenge_refuses(pool: PgPool) {
     assert!(rig.stored_backup(&account.token).await.is_null());
 }
 
+/// A challenge this server never issued refuses, so one cannot simply be invented.
+/// ´claim:keys:an-uninvited-challenge-refuses´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_challenge_never_issued_refuses(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -355,6 +375,8 @@ async fn a_challenge_never_issued_refuses(pool: PgPool) {
     );
 }
 
+/// Issuing a challenge discards the previous one, so at most one ever stands per account.
+/// ´claim:keys:at-most-one-challenge-stands´
 #[sqlx::test(migrations = "../../migrations")]
 async fn issuing_again_discards_the_previous_challenge(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -380,6 +402,9 @@ async fn issuing_again_discards_the_previous_challenge(pool: PgPool) {
 /// A wrong-key signature is refused without spending the challenge, so
 /// the rightful holder can still use the same one — otherwise every
 /// wrong-key attempt would cost a fresh round trip for no security gain.
+///
+/// A wrong-key signature is refused without spending the challenge, so a wrong attempt costs the rightful holder no fresh round trip.
+/// ´claim:keys:a-refusal-does-not-spend-the-challenge´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_bad_signature_does_not_burn_the_challenge(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -412,6 +437,8 @@ async fn a_bad_signature_does_not_burn_the_challenge(pool: PgPool) {
     );
 }
 
+/// Malformed encoding is refused against the field that carried it.
+/// ´claim:keys:malformed-encoding-names-its-field´
 #[sqlx::test(migrations = "../../migrations")]
 async fn malformed_base64_refuses_on_the_offending_field(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -439,6 +466,8 @@ async fn malformed_base64_refuses_on_the_offending_field(pool: PgPool) {
     }
 }
 
+/// An account with no attached key can neither take a challenge nor upload, there being nothing to verify a signature against.
+/// ´claim:keys:no-attached-key-is-no-backup´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_account_with_no_attached_key_cannot_challenge_or_upload(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -462,6 +491,8 @@ async fn an_account_with_no_attached_key_cannot_challenge_or_upload(pool: PgPool
     );
 }
 
+/// Taking a challenge needs a session.
+/// ´claim:keys:a-challenge-needs-a-session´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_challenge_needs_a_session(pool: PgPool) {
     let rig = Rig::new(pool);
