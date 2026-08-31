@@ -64,13 +64,13 @@ pub mod scan;
 pub mod timing;
 
 pub use adopt::{
-    Adoption, Area, BannedToken, BannedTokens, Carrier, Census, CitationIndexes, Classification,
-    ConfiguredPath, EnforcementPartition, HeadForm, HeadMatching, HeadRecognition,
-    HeadlessLanguages, Kind, KindEvidence, KindExtensions, KindGenerator, KindRegister,
-    KindStatuses, KindsAdoption, Language, Meta, NameTransformation, OwnerId, Partition,
-    PartitionRule, PathPrefix, Place, PrefixFamily, Profile, ProfileId, ProfileStatus, Profiles,
-    Reach, ReachRow, ReservedKinds, ScannedLanguage, ScannedRegions, Signature, TypedData,
-    UnscannedLanguages,
+    Activation, Adoption, Area, BannedToken, BannedTokens, Carrier, Census, CitationIndexes,
+    Claims, Classification, Collision, ConfiguredPath, EnforcementPartition, HeadForm,
+    HeadMatching, HeadRecognition, HeadlessLanguages, Kind, KindEvidence, KindExtensions,
+    KindGenerator, KindRegister, KindStatuses, KindsAdoption, Language, Matrix, Meta,
+    NameTransformation, OwnerId, Partition, PartitionRule, PathPrefix, Place, PrefixFamily,
+    Profile, ProfileId, ProfileStatus, Profiles, Reach, ReachRow, ReservedKinds, ScannedLanguage,
+    ScannedRegions, Signature, Statement, TypedData, UnscannedLanguages,
 };
 pub use bans::BanRule;
 pub use carrier::{SourceFile, Walk, WalkOutcome};
@@ -91,9 +91,10 @@ pub use judge::kinds::{
 };
 pub use migrate::{Migration, Remaining, Unplaced, distances};
 pub use pretokenize::{CommentForm, LexClass, Lexeme, LiteralForm, PreTokenized, pretokenize};
+pub use judge::claims::{ClaimCensus, ClaimLine, Defect, Form, OwnerTally, Standing};
 pub use registers::{
-    Freshness, Register, RegisterScope, Scope, Written, compare, label_registers_of,
-    regenerate_all, write_all,
+    Freshness, Register, RegisterScope, Scope, Written, compare, label_registers_of, matrix_path,
+    regenerate_all, register_path, write_all,
 };
 pub use report::{Cited, Reverse, Survey, Tally};
 pub use scan::{

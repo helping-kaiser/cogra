@@ -12,8 +12,8 @@
 use std::path::{Path, PathBuf};
 
 use cogra_linter::{
-    Adoption, AdoptionError, Enforcement, HeadMatching, Kind, Language, OwnerId, PathPrefix,
-    Prefix, ProfileId, ProfileStatus,
+    Activation, Adoption, AdoptionError, Enforcement, HeadMatching, Kind, Language, OwnerId,
+    PathPrefix, Prefix, ProfileId, ProfileStatus,
 };
 
 fn corpus_adoption_path() -> PathBuf {
@@ -646,6 +646,13 @@ enters_when = \"every module definition carries its inner doc comment\"
 
   [profiles.profile.standard_place]
   place = \"the module's INNER documentation comment\"
+
+  [profiles.profile.collision]
+  equivalence = \"the derived label, within one owner\"
+  reports = \"every contributing asset\"
+
+  [profiles.profile.activation]
+  scope = \"every-owner\"
 ";
     let reserved = "
 [reserved-kinds]
@@ -1103,8 +1110,10 @@ fn the_ruled_partition_states_each_rules_position() {
     }
 }
 
+/// A profile stating fewer than its seven data is refused at its own row.
+/// ´claim:adoption:an-incomplete-profile-is-located´
 #[test]
-fn a_profile_missing_one_of_its_five_data_is_located() {
+fn a_profile_missing_one_of_its_seven_data_is_located() {
     let profiles = "
 [profiles]
 count = 1
@@ -1186,6 +1195,13 @@ enters_when = \"the register generation lands\"
 
   [profiles.profile.standard_place]
   place = \"a generated register of the owner\"
+
+  [profiles.profile.collision]
+  equivalence = \"the derived label, within one owner\"
+  reports = \"every contributing asset\"
+
+  [profiles.profile.activation]
+  scope = \"every-owner\"
 ";
     let source = document(ONE_PREFIX, TOTAL_PARTITION, profiles, EMPTY_K);
     let error = load(&source).expect_err("a governed kind that K does not reserve");
@@ -1241,6 +1257,13 @@ status = \"effective\"
 
   [profiles.profile.standard_place]
   place = \"a generated register of the owner\"
+
+  [profiles.profile.collision]
+  equivalence = \"the derived label, within one owner\"
+  reports = \"every contributing asset\"
+
+  [profiles.profile.activation]
+  scope = \"every-owner\"
 ";
     let reserved = "
 [reserved-kinds]
@@ -1399,4 +1422,296 @@ fn the_ruled_corpus_registers_every_package_it_names() {
     ruled()
         .verify_package_roster(&root)
         .expect("every real package has a partition rule of its own");
+}
+
+/// An effective test profile with every one of its seven data, for the
+/// `[claims]` fixtures to ride.
+const RIDDEN_PROFILE: &str = "
+[profiles]
+count = 1
+effective = 1
+
+[[profiles.profile]]
+id = \"rust-test\"
+kind = \"test\"
+status = \"effective\"
+
+  [profiles.profile.census]
+  language = \"rust\"
+  recognizer = \"a test-attributed fn\"
+
+  [profiles.profile.classification]
+  rule = \"the Cargo target\"
+  areas = { lib_or_bin_target = \"unit\" }
+
+  [profiles.profile.name_transformation]
+  rule = \"the bare identifier, hyphenated\"
+
+  [profiles.profile.standard_place]
+  place = \"a generated register of the owner\"
+
+  [profiles.profile.collision]
+  equivalence = \"the derived label, within one owner\"
+  reports = \"every contributing asset\"
+
+  [profiles.profile.activation]
+  scope = \"every-owner\"
+";
+
+/// K reserving the one kind `RIDDEN_PROFILE` governs.
+const TEST_K: &str = "
+[reserved-kinds]
+source = \"the assets family\"
+count = 1
+governed = [\"test\"]
+reserved_ungoverned = []
+";
+
+/// A `[claims]` section around whatever activation is being planted.
+fn claims_section(activation: &str) -> String {
+    format!(
+        "
+[claims]
+kind = \"claim\"
+rides = \"rust-test\"
+source = \"the results family\"
+
+  [claims.standard_place]
+  place = \"the covered test's own documentation comment\"
+  form = \"the final documentation line\"
+
+  [claims.statement]
+  rule = \"the last non-empty line above the claim line\"
+
+  [claims.collision]
+  equivalence = \"the claim label, within one owner\"
+  reports = \"both locations\"
+
+  [claims.matrix]
+  register = \"one per activated owner\"
+  form = \"one row per claim\"
+{activation}"
+    )
+}
+
+/// A whole document carrying the ridden profile and a `[claims]` section.
+fn claims_document(activation: &str) -> String {
+    document(
+        ONE_PREFIX,
+        TOTAL_PARTITION,
+        RIDDEN_PROFILE,
+        &format!("{TEST_K}{}", claims_section(activation)),
+    )
+}
+
+/// The permissive activation shape, spelled once.
+const EVERY_OWNER: &str = "
+  [claims.activation]
+  scope = \"every-owner\"
+";
+
+/// (´[LBL-sig:labels:profiles]´): the permissive shape is in force over every
+/// owner, so an owner added tomorrow is judged the day it appears.
+///
+/// An every-owner activation admits every owner, named or not.
+/// ´claim:adoption:every-owner-admits-anyone´
+#[test]
+fn an_every_owner_activation_admits_an_owner_it_never_names() {
+    let source = claims_document(EVERY_OWNER);
+    let adoption = load(&source).expect("an every-owner activation");
+    let declared = adoption.claims.expect("the claim discipline is adopted");
+    assert_eq!(declared.activation, Activation::EveryOwner);
+    assert!(declared.activation.admits(&OwnerId::new("doc.one")));
+    assert!(declared.activation.admits(&OwnerId::new("never.registered")));
+    assert_eq!(declared.activation.declared(), None);
+}
+
+/// (´dec:lint:claim-activation´): a declared activation admits the owners it
+/// names and no others, which is what closes one wave at a time.
+///
+/// A declared activation admits exactly the owners it names.
+/// ´claim:adoption:a-declared-activation-admits-what-it-names´
+#[test]
+fn a_declared_activation_admits_only_the_owners_it_names() {
+    let source = claims_document(
+        "
+  [claims.activation]
+  scope = \"declared\"
+  owners = [\"doc.one\"]
+",
+    );
+    let adoption = load(&source).expect("a declared activation");
+    let declared = adoption.claims.expect("the claim discipline is adopted");
+    assert!(declared.activation.admits(&OwnerId::new("doc.one")));
+    assert!(!declared.activation.admits(&OwnerId::new("doc.two")));
+    assert_eq!(declared.activation.declared(), Some(1));
+}
+
+/// (´dec:lint:claim-activation´): an activation naming an owner Σ registers
+/// nothing for closes a wave over no assets while reading like a closed one.
+///
+/// An activation naming an unregistered owner is refused at its own row.
+/// ´claim:adoption:an-unregistered-activation-owner-is-located´
+#[test]
+fn an_activation_naming_an_unregistered_owner_is_located() {
+    let source = claims_document(
+        "
+  [claims.activation]
+  scope = \"declared\"
+  owners = [\"pkg.nowhere\"]
+",
+    );
+    let error = load(&source).expect_err("an owner no prefix registers");
+    let AdoptionError::ActivationUnknownOwner { ref owner, .. } = error else {
+        panic!("expected ActivationUnknownOwner, got {error:?}");
+    };
+    assert_eq!(owner, "pkg.nowhere");
+    assert!(row(&source, &error).contains("pkg.nowhere"));
+}
+
+/// (´dec:lint:claim-activation´): one owner named twice is one permission
+/// written twice, and two spellings of it are a place to drift apart.
+///
+/// An activation naming one owner twice is refused.
+/// ´claim:adoption:a-repeated-activation-owner-is-refused´
+#[test]
+fn an_activation_naming_one_owner_twice_is_refused() {
+    let source = claims_document(
+        "
+  [claims.activation]
+  scope = \"declared\"
+  owners = [\"doc.one\", \"doc.one\"]
+",
+    );
+    let error = load(&source).expect_err("one owner named twice");
+    assert!(
+        matches!(error, AdoptionError::ActivationRepeatedOwner { .. }),
+        "expected ActivationRepeatedOwner, got {error:?}"
+    );
+}
+
+/// (´dec:lint:claim-activation´): a discipline holding nobody to anything is
+/// registered by not being written, so an empty declared list is refused.
+///
+/// A declared activation over no owner is refused.
+/// ´claim:adoption:an-empty-activation-is-refused´
+#[test]
+fn a_declared_activation_over_no_owner_is_refused() {
+    let source = claims_document(
+        "
+  [claims.activation]
+  scope = \"declared\"
+  owners = []
+",
+    );
+    let error = load(&source).expect_err("a declared activation naming nobody");
+    assert!(
+        matches!(error, AdoptionError::ActivationEmpty { .. }),
+        "expected ActivationEmpty, got {error:?}"
+    );
+}
+
+/// (´dec:lint:claim-activation´): the scope is refused rather than defaulted,
+/// because a misspelling that quietly became the permissive shape would close
+/// every wave at once.
+///
+/// An activation scope outside the two shapes is refused rather than defaulted.
+/// ´claim:adoption:an-unknown-activation-scope-is-refused´
+#[test]
+fn an_unknown_activation_scope_is_refused() {
+    let source = claims_document(
+        "
+  [claims.activation]
+  scope = \"sometimes\"
+",
+    );
+    let error = load(&source).expect_err("a scope that is neither shape");
+    let AdoptionError::ActivationScopeUnknown { ref scope, .. } = error else {
+        panic!("expected ActivationScopeUnknown, got {error:?}");
+    };
+    assert_eq!(scope, "sometimes");
+}
+
+/// (´[LBL-inv:labels:warrant-totality]´): a kind in K admits derivation only,
+/// so a claim of such a kind could stand on no warrant at all.
+///
+/// A claim discipline naming a kind reserved in K is refused.
+/// ´claim:adoption:a-reserved-claim-kind-is-refused´
+#[test]
+fn a_claim_discipline_naming_a_reserved_kind_is_refused() {
+    let reserved = "
+[reserved-kinds]
+source = \"the assets family\"
+count = 2
+governed = [\"test\"]
+reserved_ungoverned = [\"claim\"]
+";
+    let source = document(
+        ONE_PREFIX,
+        TOTAL_PARTITION,
+        RIDDEN_PROFILE,
+        &format!("{reserved}{}", claims_section(EVERY_OWNER)),
+    );
+    let error = load(&source).expect_err("a claim kind reserved in K");
+    let AdoptionError::ClaimKindReserved { ref kind, .. } = error else {
+        panic!("expected ClaimKindReserved, got {error:?}");
+    };
+    assert_eq!(kind, "claim");
+}
+
+/// (´dec:lint:claim-standing´): the discipline's census is the ridden
+/// profile's, so a name Π does not know would cover nothing while reading like
+/// a subscription.
+///
+/// A claim discipline riding an unregistered profile is refused.
+/// ´claim:adoption:an-unridden-profile-is-refused´
+#[test]
+fn a_claim_discipline_riding_an_unregistered_profile_is_refused() {
+    let source = claims_document(EVERY_OWNER).replace("\"rust-test\"\nsource", "\"rust-none\"\nsource");
+    let error = load(&source).expect_err("a profile Pi does not register");
+    let AdoptionError::ClaimProfileUnknown { ref id, .. } = error else {
+        panic!("expected ClaimProfileUnknown, got {error:?}");
+    };
+    assert_eq!(id, "rust-none");
+}
+
+/// (´dec:lint:claim-standing´): the corpus's own `[claims]` states the pilot
+/// wave, and the roster is read rather than recited.
+///
+/// The ruled corpus activates the claim discipline for one owner alone.
+/// ´claim:adoption:the-ruled-claims-name-one-owner´
+#[test]
+fn the_ruled_claim_discipline_activates_one_owner() {
+    let adoption = ruled();
+    let declared = adoption
+        .claims
+        .as_ref()
+        .expect("this corpus adopts the discipline");
+    assert_eq!(declared.kind, Kind::new("claim"));
+    assert_eq!(declared.rides, ProfileId::new("rust-test"));
+    assert!(
+        !adoption.reserved_kinds.contains(&declared.kind),
+        "a claim stands on an authorship warrant"
+    );
+    assert_eq!(declared.activation.declared(), Some(1));
+    assert!(declared.activation.admits(&OwnerId::new("pkg.cogra-linter")));
+    assert!(!declared.activation.admits(&OwnerId::new("pkg.api")));
+}
+
+/// (´[LBL-sig:labels:profiles]´): both v1 profiles are in force corpus-wide,
+/// so a crate added tomorrow cannot escape the inventory judgment in silence.
+///
+/// Every registered profile of this corpus is in force over every owner.
+/// ´claim:adoption:the-ruled-profiles-are-in-force-everywhere´
+#[test]
+fn every_ruled_profile_is_activated_over_every_owner() {
+    for profile in &ruled().profiles.profiles {
+        assert_eq!(
+            profile.activation,
+            Activation::EveryOwner,
+            "profile {} is enumerated rather than corpus-wide",
+            profile.id.as_str()
+        );
+        assert!(profile.collision.equivalence.contains("derived label"));
+    }
 }
