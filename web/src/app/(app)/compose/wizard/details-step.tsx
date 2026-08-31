@@ -146,7 +146,7 @@ function BodyStrip({
             </li>
           ))}
         </ul>
-        <span className="flex-1 text-label-small text-on-surface-variant">
+        <span className="flex-1 text-body-small text-on-surface-variant">
           {assets.length === 1 ? "1 picture — the body" : `${assets.length} pictures — the body`}
         </span>
         <TextAction testId="wizard-recrop" onClick={onCrop}>
