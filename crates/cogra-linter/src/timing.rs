@@ -178,6 +178,8 @@ fn milliseconds(took: Duration) -> String {
 mod tests {
     use super::*;
 
+    /// The five measured phases are the architecture's own.
+    /// ´claim:timing:the-phases-are-the-architectures´
     #[test]
     fn the_five_phases_are_the_architectures_own() {
         let named: Vec<&str> = Phase::ALL.iter().map(|one| one.token()).collect();
@@ -187,6 +189,8 @@ mod tests {
         );
     }
 
+    /// Every phase has its own slot.
+    /// ´claim:timing:every-phase-has-its-slot´
     #[test]
     fn every_phase_has_its_own_slot() {
         let mut slots: Vec<usize> = Phase::ALL.iter().map(|one| one.slot()).collect();
@@ -195,6 +199,8 @@ mod tests {
         assert_eq!(slots.len(), Phase::ALL.len());
     }
 
+    /// A phase measured twice sums.
+    /// ´claim:timing:a-phase-measured-twice-sums´
     #[test]
     fn a_phase_measured_twice_sums() {
         let mut timing = Timing::new();
@@ -206,6 +212,8 @@ mod tests {
         );
     }
 
+    /// An unmeasured phase is absent and never zero.
+    /// ´claim:timing:an-unmeasured-phase-is-absent´
     #[test]
     fn an_unmeasured_phase_is_absent_and_never_zero() {
         let timing = Timing::new();
@@ -214,6 +222,8 @@ mod tests {
         assert!(timing.to_string().contains("judge —"));
     }
 
+    /// The total is the measured phases together.
+    /// ´claim:timing:the-total-is-the-phases-together´
     #[test]
     fn the_total_is_the_measured_phases_together() {
         let mut timing = Timing::new();
@@ -222,6 +232,8 @@ mod tests {
         assert_eq!(timing.total(), Duration::from_millis(15));
     }
 
+    /// The timing report names every phase in run order.
+    /// ´claim:timing:the-report-names-every-phase´
     #[test]
     fn the_report_names_every_phase_in_run_order() {
         let mut timing = Timing::new();

@@ -67,6 +67,15 @@ internal fun ColumnScope.WizardBody(
     modifier: Modifier = Modifier,
     gap: androidx.compose.ui.unit.Dp = Space.x3,
     /**
+     * The stage's own lead and tail. The boards do not share one: the
+     * words half and the seal breathe 8 above and 24 below, the crop
+     * closes at 16, and the details board leads at 12. Defaulting to the
+     * common pair and naming the exceptions is what keeps each stage on
+     * its own board rather than on an average of them.
+     */
+    top: androidx.compose.ui.unit.Dp = Space.x2,
+    bottom: androidx.compose.ui.unit.Dp = Layout.ScreenGutter,
+    /**
      * Whether the stage scrolls when it does not fit.
      *
      * The canonical boards are drawn at 390×844 and fit exactly there,
@@ -90,8 +99,8 @@ internal fun ColumnScope.WizardBody(
             .padding(
                 start = Layout.ScreenGutter,
                 end = Layout.ScreenGutter,
-                top = Space.x2,
-                bottom = Layout.ScreenGutter,
+                top = top,
+                bottom = bottom,
             ),
         verticalArrangement = Arrangement.spacedBy(gap),
         content = content,

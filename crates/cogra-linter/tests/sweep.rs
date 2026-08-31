@@ -107,6 +107,9 @@ fn swept(a: &Adoption, at: &Path) -> Sweep {
 
 /// (´dec:lint:fix-subcommand´): the sweep finds one label to place per covered
 /// asset that does not carry one, and locates each at its own definition.
+///
+/// The sweep finds one label per covered asset carrying none, located at its definition.
+/// ´claim:sweep:one-label-per-unplaced-asset´
 #[test]
 fn a_sweep_finds_one_label_for_every_unplaced_asset() {
     let at = temporary("sweep-finds");
@@ -133,6 +136,9 @@ fn a_sweep_finds_one_label_for_every_unplaced_asset() {
 
 /// (´dec:lint:fix-subcommand´): what a write puts in each source is the form
 /// the corpus carries, byte for byte, in all four shapes.
+///
+/// What a write puts in a source is the form the corpus carries, byte for byte.
+/// ´claim:sweep:a-write-produces-the-carried-form´
 #[test]
 fn a_write_produces_the_form_the_corpus_carries() {
     let at = temporary("sweep-form");
@@ -166,6 +172,9 @@ fn a_write_produces_the_form_the_corpus_carries() {
 /// (´dec:lint:fix-subcommand´): a dry run and a write describe one thing. What
 /// the sweep reported is exactly what the bytes on disk became, spliced at the
 /// offsets it named.
+///
+/// A dry run and a write describe one thing, spliced at the offsets the run named.
+/// ´claim:sweep:a-dry-run-and-a-write-agree´
 #[test]
 fn a_dry_run_and_a_write_agree_byte_for_byte() {
     let at = temporary("sweep-parity");
@@ -196,6 +205,9 @@ fn a_dry_run_and_a_write_agree_byte_for_byte() {
 
 /// (´dec:lint:fix-subcommand´): the sweep settles. A second one over a corpus
 /// the first wrote finds nothing, by the same recognizer that found the work.
+///
+/// The sweep settles: a second one over what the first wrote finds nothing.
+/// ´claim:sweep:the-sweep-settles´
 #[test]
 fn a_second_sweep_writes_nothing() {
     let at = temporary("sweep-settles");
@@ -222,6 +234,9 @@ fn a_second_sweep_writes_nothing() {
 /// (´dec:lint:staged-profiles´): the sweep is how a staged migration lands, so
 /// a staged profile and one in force are swept alike — the census is the same
 /// census and the standard place is the same place.
+///
+/// A staged profile and one in force are swept alike, which is how a migration lands.
+/// ´claim:sweep:staging-does-not-change-the-sweep´
 #[test]
 fn a_staged_profile_is_swept_exactly_as_one_in_force() {
     let at = temporary("sweep-staged");
@@ -235,6 +250,9 @@ fn a_staged_profile_is_swept_exactly_as_one_in_force() {
 /// (´dec:lint:fix-subcommand´): a profile whose standard place is a generated
 /// register has nothing at any asset to sweep, so the sweep is empty and the
 /// command line refuses the profile by name rather than reporting it.
+///
+/// A register-placed profile has nothing at any asset to sweep.
+/// ´claim:sweep:a-register-placed-profile-sweeps-nothing´
 #[test]
 fn a_register_placed_profile_sweeps_nothing() {
     let at = temporary("sweep-register");
@@ -247,6 +265,9 @@ fn a_register_placed_profile_sweeps_nothing() {
 /// (´dec:lint:fix-subcommand´): a name `[profiles]` does not register sweeps
 /// nothing, which is a fact about the name — the command line refuses it, and
 /// the library does not invent a census for it.
+///
+/// An unregistered profile name sweeps nothing, and no census is invented for it.
+/// ´claim:sweep:an-unregistered-profile-sweeps-nothing´
 #[test]
 fn an_unregistered_profile_sweeps_nothing() {
     let at = temporary("sweep-unregistered");
@@ -257,6 +278,9 @@ fn an_unregistered_profile_sweeps_nothing() {
 }
 
 /// (´[ARCH-req:linter:determinism]´): two sweeps of one corpus are one sweep.
+///
+/// Two sweeps of one corpus are one sweep.
+/// ´claim:sweep:the-sweep-is-deterministic´
 #[test]
 fn two_sweeps_of_one_corpus_agree() {
     let at = temporary("sweep-determinism");
@@ -281,6 +305,9 @@ fn git(at: &Path, args: &[&str]) {
 /// (´dec:lint:fix-precondition´): a source the sweep would rewrite is dirty
 /// while it is untracked, dirty again once it is modified after a commit, and
 /// clean in between — which is the whole of what the precondition asks.
+///
+/// The precondition reads the working tree of exactly the sources the sweep would rewrite.
+/// ´claim:sweep:the-precondition-reads-what-it-would-rewrite´
 #[test]
 fn the_precondition_reads_the_working_tree_of_what_it_would_rewrite() {
     let at = temporary("sweep-precondition");
@@ -332,6 +359,9 @@ fn the_precondition_reads_the_working_tree_of_what_it_would_rewrite() {
 /// (´dec:lint:fix-precondition´): a root that is no repository is a
 /// precondition the sweep cannot establish, which is an error and not an
 /// answer of "clean".
+///
+/// A root that is no repository is an error rather than an answer of clean.
+/// ´claim:sweep:no-repository-is-an-error´
 #[test]
 fn a_root_that_is_no_repository_cannot_answer_the_precondition() {
     let at = temporary("sweep-no-repository");
@@ -344,6 +374,9 @@ fn a_root_that_is_no_repository_cannot_answer_the_precondition() {
 /// (´dec:lint:fix-precondition´): asking about no source at all runs no
 /// command, because there is nothing whose state could refuse a sweep that
 /// writes nothing.
+///
+/// A sweep with nothing to write runs no version-control command at all.
+/// ´claim:sweep:a-settled-sweep-asks-nothing´
 #[test]
 fn a_settled_sweep_asks_git_nothing() {
     let at = temporary("sweep-nothing-to-ask");

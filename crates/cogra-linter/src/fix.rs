@@ -362,6 +362,8 @@ mod tests {
         }
     }
 
+    /// A file-backed definition's label joins the comment that opens its file.
+    /// ´claim:placement:a-file-backed-label-joins-the-opening-comment´
     #[test]
     fn a_file_backed_definition_joins_the_comment_that_opens_its_file() {
         let text = "//! One.\n";
@@ -371,6 +373,8 @@ mod tests {
         );
     }
 
+    /// A file with no opening comment gets one opened above its code.
+    /// ´claim:placement:a-commentless-file-opens-one´
     #[test]
     fn a_file_backed_definition_with_no_comment_opens_one_above_the_code() {
         let text = "use std::fmt;\n";
@@ -380,6 +384,8 @@ mod tests {
         );
     }
 
+    /// An empty source takes the label line alone.
+    /// ´claim:placement:an-empty-source-takes-the-line-alone´
     #[test]
     fn an_empty_source_takes_the_label_line_alone() {
         assert_eq!(
@@ -388,6 +394,8 @@ mod tests {
         );
     }
 
+    /// An inline definition's label is written on the line after its opening brace.
+    /// ´claim:placement:an-inline-label-follows-the-brace´
     #[test]
     fn an_inline_definition_writes_on_the_line_after_its_brace() {
         let text = "mod alpha {\n    //! One.\n}\n";
@@ -396,6 +404,8 @@ mod tests {
         assert_eq!(written, "    //! ´mod:module:alpha´\n    //!\n");
     }
 
+    /// An inline definition's label indents to its own column.
+    /// ´claim:placement:an-inline-label-takes-its-own-column´
     #[test]
     fn an_inline_definition_indents_to_its_own_column() {
         let text = "mod outer {\n    mod alpha {\n        use super::*;\n    }\n}\n";
@@ -404,6 +414,8 @@ mod tests {
         assert_eq!(written, "        //! ´mod:module:alpha´\n\n");
     }
 
+    /// A definition written on one line is given the line its label needs.
+    /// ´claim:placement:a-one-line-definition-gains-a-line´
     #[test]
     fn a_one_line_definition_gets_the_line_it_needs() {
         let text = "mod alpha { }\n";
@@ -413,6 +425,8 @@ mod tests {
         );
     }
 
+    /// A rename reported by the working tree names the path that exists now.
+    /// ´claim:placement:a-rename-names-the-current-path´
     #[test]
     fn a_porcelain_rename_names_the_path_that_exists_now() {
         assert_eq!(status_path("R  old.rs -> new.rs"), Some("new.rs"));

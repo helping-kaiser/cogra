@@ -77,6 +77,33 @@ interface MediaProcessor {
 }
 
 /**
+ * One picture already on the device, as the picker grid draws it.
+ *
+ * [aspectRatio] rides along because the grid reads every tile's shape at
+ * once and the store already knows it — asking the decoder per tile is
+ * how a scroll drops frames.
+ */
+data class DeviceImage(
+    val uri: String,
+    val aspectRatio: Float,
+)
+
+/**
+ * The newest pictures on the device, for `ComposePick`'s own grid.
+ *
+ * The canonical board draws the reader's photos inside the app with
+ * selection badges, which is a different affordance from handing the
+ * whole choice to the system picker: the board's grid is browsed and
+ * toggled in place, beside the tray that says which one is the cover.
+ * Reading it needs a media permission, so the grid is always behind one
+ * — see the pick step for the request and its partial-access branch.
+ */
+interface DeviceImageSource {
+    /** The [limit] most recently added pictures, newest first. */
+    suspend fun newestImages(limit: Int): List<DeviceImage>
+}
+
+/**
  * The upload verb (api-spec.md `uploadMedia`; D5).
  *
  * One asset per call, by design: a ten-picture post is ten calls the

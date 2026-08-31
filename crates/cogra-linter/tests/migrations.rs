@@ -98,6 +98,9 @@ fn temporary(name: &str) -> PathBuf {
 
 /// (´dec:lint:staged-profiles´): a staged profile is exactly what this run
 /// measures, and one is what the fixture stages.
+///
+/// The migration measurement's subject is exactly the staged profiles.
+/// ´claim:migration:staged-profiles-are-the-subject´
 #[test]
 fn every_staged_profile_is_measured() {
     let staged = staging()
@@ -113,6 +116,9 @@ fn every_staged_profile_is_measured() {
 /// (´dec:lint:staged-profiles´): a profile in force is not measured at all —
 /// its distance is no longer a fact this run has to report, and over the
 /// ruled data, where both profiles are in force, the run reports nothing.
+///
+/// A profile in force is not measured, its distance no longer being a fact to report.
+/// ´claim:migration:a-profile-in-force-is-not-measured´
 #[test]
 fn a_profile_in_force_is_not_measured() {
     let in_force = ProfileId::new("rust-test");
@@ -128,6 +134,9 @@ fn a_profile_in_force_is_not_measured() {
 /// (´dec:lint:migrations-subcommand´): the module profile's distance is its
 /// definitions counted against those still lacking the inner documentation
 /// comment, each located.
+///
+/// A profile's distance is its census counted against the assets still lacking the label, each located.
+/// ´claim:migration:distance-is-the-census-less-what-carries´
 #[test]
 fn the_module_profile_waits_on_its_inner_comments() {
     let at = temporary("migrations-remaining");
@@ -149,6 +158,9 @@ fn the_module_profile_waits_on_its_inner_comments() {
 
 /// (´dec:lint:migrations-subcommand´): over this corpus the distance is
 /// zero, which is the measurement the profile's entry into Π rested on.
+///
+/// The module profile's distance over this corpus is zero.
+/// ´claim:migration:the-module-distance-is-zero´
 #[test]
 fn the_module_migration_has_arrived_over_this_corpus() {
     let found = one("rust-module");
@@ -168,6 +180,9 @@ fn the_module_migration_has_arrived_over_this_corpus() {
 /// that itself holds an inline module definition carries two, and both are
 /// its own. Which is also the injectivity `[profiles]` records as measured,
 /// re-measured here rather than taken from the note.
+///
+/// A definition census counts definitions once and never declarations.
+/// ´claim:migration:definitions-are-counted-once´
 #[test]
 fn a_definition_declared_many_times_is_counted_once() {
     let census = migrate::census(adoption(), &root(), &ProfileId::new("rust-module"))
@@ -187,6 +202,9 @@ fn a_definition_declared_many_times_is_counted_once() {
 
 /// (´dec:lint:migrations-subcommand´): the measurement is deterministic, as
 /// every other output of the crate is (´[ARCH-req:linter:determinism]´).
+///
+/// Two measurements of one corpus agree.
+/// ´claim:migration:the-measurement-is-deterministic´
 #[test]
 fn two_measurements_agree() {
     let again = migrate::distances(staging(), &root(), None).expect("a second measurement");
@@ -194,6 +212,9 @@ fn two_measurements_agree() {
 }
 
 /// (´dec:lint:migrations-subcommand´): one profile can be measured alone.
+///
+/// One staged profile can be measured alone.
+/// ´claim:migration:one-profile-can-be-measured-alone´
 #[test]
 fn a_named_profile_is_measured_alone() {
     let only = ProfileId::new("rust-module");

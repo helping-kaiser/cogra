@@ -194,6 +194,8 @@ fn class_named(name: &str) -> Option<LexClass> {
 mod tests {
     use super::*;
 
+    /// The ban vocabulary covers every comment form the lexer decides.
+    /// ´claim:bans:the-vocabulary-covers-every-form´
     #[test]
     fn the_vocabulary_covers_every_comment_form() {
         for form in CommentForm::ALL {
@@ -201,6 +203,8 @@ mod tests {
         }
     }
 
+    /// A class name no lexer decides denotes nothing.
+    /// ´claim:bans:an-unknown-class-denotes-nothing´
     #[test]
     fn a_name_no_lexer_decides_denotes_nothing() {
         assert_eq!(class_named("semicolon"), None);

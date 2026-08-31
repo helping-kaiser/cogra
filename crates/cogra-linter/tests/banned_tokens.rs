@@ -60,6 +60,9 @@ fn ruled(class: CommentForm) -> &'static str {
 
 /// The line-comment row of `[banned-tokens]`: a plain line comment is
 /// contraband.
+///
+/// A plain line comment is contraband in this corpus's Rust sources.
+/// ´claim:bans:a-plain-line-comment-is-contraband´
 #[test]
 fn a_plain_line_comment_is_found() {
     assert_eq!(
@@ -70,6 +73,9 @@ fn a_plain_line_comment_is_found() {
 
 /// The block-comment row: a plain block comment is contraband too, by the
 /// same one decision that Rust sources carry documentation comments only.
+///
+/// A plain block comment is contraband too.
+/// ´claim:bans:a-plain-block-comment-is-contraband´
 #[test]
 fn a_plain_block_comment_is_found() {
     assert_eq!(
@@ -80,36 +86,49 @@ fn a_plain_block_comment_is_found() {
 
 /// Detection is the lexer's, never a pattern match: a `//` inside a string
 /// is not a comment and cannot be a finding.
+///
+/// A comment leader inside a literal is not a comment and cannot be a finding.
+/// ´claim:bans:a-leader-in-a-literal-is-not-a-comment´
 #[test]
 fn a_line_leader_in_a_string_is_not_found() {
     assert!(found(r#"let s = "// not a comment";"#).is_empty());
 }
 
 /// The same inside a raw string.
+///
+/// (´claim:bans:a-leader-in-a-literal-is-not-a-comment´)
 #[test]
 fn a_line_leader_in_a_raw_string_is_not_found() {
     assert!(found(r##"let s = r"// not a comment";"##).is_empty());
 }
 
 /// And inside a raw string with hashes, where the closing bar is raised.
+///
+/// (´claim:bans:a-leader-in-a-literal-is-not-a-comment´)
 #[test]
 fn a_line_leader_in_a_hashed_raw_string_is_not_found() {
     assert!(found(r###"let s = r#"a "b" // not a comment"#;"###).is_empty());
 }
 
 /// And inside a byte string.
+///
+/// (´claim:bans:a-leader-in-a-literal-is-not-a-comment´)
 #[test]
 fn a_line_leader_in_a_byte_string_is_not_found() {
     assert!(found(r#"let s = b"// not a comment";"#).is_empty());
 }
 
 /// A block leader inside a string is likewise not a comment.
+///
+/// (´claim:bans:a-leader-in-a-literal-is-not-a-comment´)
 #[test]
 fn a_block_leader_in_a_string_is_not_found() {
     assert!(found(r#"let s = "/* not a comment */";"#).is_empty());
 }
 
 /// A slash in a character literal opens nothing.
+///
+/// (´claim:bans:a-leader-in-a-literal-is-not-a-comment´)
 #[test]
 fn a_slash_character_is_not_found() {
     assert!(found("let c = '/';").is_empty());
@@ -117,6 +136,9 @@ fn a_slash_character_is_not_found() {
 
 /// The four documentation forms are `[scanned-regions]`' scanned regions,
 /// not contraband: no ban names them.
+///
+/// No documentation form is contraband: what is scanned is not what is banned.
+/// ´claim:bans:no-documentation-form-is-banned´
 #[test]
 fn no_documentation_form_is_banned() {
     assert!(found("/// outer\nstruct X;\n").is_empty());
@@ -127,6 +149,9 @@ fn no_documentation_form_is_banned() {
 
 /// `////` is plain again, so it *is* contraband — the ban follows the
 /// lexer's classification and not the count of slashes.
+///
+/// The ban follows the lexer's classification and not the count of slashes.
+/// ´claim:bans:the-ban-follows-the-lexer´
 #[test]
 fn four_slashes_are_contraband() {
     assert_eq!(found("//// not doc\n"), vec![ruled(CommentForm::LinePlain)]);
@@ -134,12 +159,17 @@ fn four_slashes_are_contraband() {
 
 /// `/**/` is the empty plain block comment, and contraband for the same
 /// reason.
+///
+/// (´claim:bans:the-ban-follows-the-lexer´)
 #[test]
 fn the_empty_block_comment_is_contraband() {
     assert_eq!(found("/**/\n"), vec![ruled(CommentForm::BlockPlain)]);
 }
 
 /// Several comments give several findings, in the order they occur.
+///
+/// Every banned occurrence is its own finding, in the order they occur.
+/// ´claim:bans:each-occurrence-is-its-own-finding´
 #[test]
 fn every_occurrence_is_its_own_finding() {
     assert_eq!(
@@ -149,6 +179,9 @@ fn every_occurrence_is_its_own_finding() {
 }
 
 /// A finding is located at the comment's own line and column.
+///
+/// A ban finding is located at its comment's own line and column.
+/// ´claim:bans:a-finding-is-located-at-its-comment´
 #[test]
 fn a_finding_is_located_at_its_comment() {
     let src = source("rust", "let x = 1;\nlet y = 2; // note\n");
@@ -163,6 +196,9 @@ fn a_finding_is_located_at_its_comment() {
 }
 
 /// The severity is the row's own, and the enforcement is the caller's.
+///
+/// A finding's severity is the row's own and its enforcement is the caller's.
+/// ´claim:bans:severity-is-the-rows-enforcement-the-callers´
 #[test]
 fn severity_comes_from_the_row_and_enforcement_from_the_caller() {
     let src = source("rust", "// note\n");
@@ -180,6 +216,9 @@ fn severity_comes_from_the_row_and_enforcement_from_the_caller() {
 
 /// The rule identifier is the row's own token, interned rather than
 /// compiled in: `[banned-tokens]` supplies identifiers as data.
+///
+/// A rule identifier is the row's own token, supplied as data rather than compiled in.
+/// ´claim:bans:the-rule-identifier-is-data´
 #[test]
 fn the_rule_identifier_is_the_row_s_own() {
     let ids: Vec<&str> = adoption()
@@ -194,6 +233,9 @@ fn the_rule_identifier_is_the_row_s_own() {
 }
 
 /// No ban applies to Markdown: `[banned-tokens]` rules Rust alone in v1.
+///
+/// Markdown carries no ban, the adoption data ruling Rust alone.
+/// ´claim:bans:markdown-carries-no-ban´
 #[test]
 fn a_markdown_source_carries_no_ban() {
     let src = source("markdown", "// this is prose\n");
@@ -202,6 +244,9 @@ fn a_markdown_source_carries_no_ban() {
 }
 
 /// A source with no language at all carries no ban either.
+///
+/// A source with no language carries no ban.
+/// ´claim:bans:no-language-means-no-ban´
 #[test]
 fn a_source_with_no_language_carries_no_ban() {
     let mut src = source("rust", "// note\n");
@@ -212,6 +257,9 @@ fn a_source_with_no_language_carries_no_ban() {
 
 /// A file `syn` cannot parse is still banned over: the ban is a lexical
 /// fact and does not wait on an AST.
+///
+/// A file the parser rejects is still banned over: the ban is lexical and waits on no tree.
+/// ´claim:bans:the-ban-waits-on-no-tree´
 #[test]
 fn an_unparsable_source_is_still_banned_over() {
     assert_eq!(
@@ -223,6 +271,9 @@ fn an_unparsable_source_is_still_banned_over() {
 /// Every row of `[banned-tokens]` names a class the pre-tokenizer decides.
 /// A row that names nothing bans nothing, and it must not be able to do so
 /// quietly (´sig:lint:bans-api´).
+///
+/// Every ruled row names a class the pre-tokenizer decides.
+/// ´claim:bans:every-row-names-a-decided-class´
 #[test]
 fn every_ruled_row_names_a_class_the_lexer_decides() {
     assert_eq!(
@@ -238,6 +289,9 @@ fn every_ruled_row_names_a_class_the_lexer_decides() {
 /// A rule is read from the row's `class` key, which carries the lexer's own
 /// vocabulary token — not from the `token` prose beside it, which is
 /// written for a reader and read by no code (´sig:lint:bans-api´).
+///
+/// A rule is read from the row's class key and never from the prose beside it.
+/// ´claim:bans:a-rule-is-read-from-its-class-key´
 #[test]
 fn a_rule_is_read_from_the_class_key() {
     for row in &adoption().banned_tokens.rules {
@@ -252,6 +306,9 @@ fn a_rule_is_read_from_the_class_key() {
 
 /// A class no lexer decides leaves the row unreadable: it bans nothing, and
 /// it is listed rather than passing as harmless.
+///
+/// A class no lexer decides leaves its row unreadable, listed rather than harmless.
+/// ´claim:bans:an-undecidable-class-is-listed´
 #[test]
 fn a_class_no_lexer_decides_leaves_the_row_unreadable() {
     let at = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../corpus-adoption.toml");
@@ -273,6 +330,9 @@ fn a_class_no_lexer_decides_leaves_the_row_unreadable() {
 
 /// The two ruled entries are the two plain comment classes, which is the
 /// design's own statement of what `[banned-tokens]` says today.
+///
+/// The two ruled entries are the two plain comment classes.
+/// ´claim:bans:the-ruled-rows-are-the-plain-comments´
 #[test]
 fn the_two_ruled_entries_are_the_plain_comment_classes() {
     let mut classes: Vec<LexClass> = bans::rules(&adoption().banned_tokens)
@@ -291,6 +351,9 @@ fn the_two_ruled_entries_are_the_plain_comment_classes() {
 
 /// The corpus acceptance clause: the linter's own Rust sources carry no
 /// banned token. The ban is adopted here first, and this is what says so.
+///
+/// The linter's own Rust sources carry no banned token.
+/// ´claim:bans:the-linters-sources-are-clean´
 #[test]
 fn the_linter_s_own_sources_carry_no_banned_token() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
