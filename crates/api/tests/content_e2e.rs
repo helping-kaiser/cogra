@@ -213,6 +213,9 @@ const PREPARE_COMMENT: &str = r#"mutation($input: PrepareCommentInput!) {
 /// the post in the thread read; the chronicle serves the same records
 /// generically, filtered by target; and one record round-trips by
 /// identifier through the `RecordId` scalar.
+///
+/// A post composed and signed on a device reads back anonymously through every read shape, the shared graph needing no session, and another member's comment serves under it in the thread.
+/// ´claim:content:a-post-round-trips-to-an-anonymous-reader´
 #[sqlx::test(migrations = "../../migrations")]
 async fn post_from_the_phone_read_it_back(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -377,6 +380,8 @@ async fn post_from_the_phone_read_it_back(pool: PgPool) {
     assert_eq!(single["record"]["family"], "PUBLISH");
 }
 
+/// Writing content needs a member session where reading needs none.
+/// ´claim:content:writes-are-member-gated-and-reads-are-not´
 #[sqlx::test(migrations = "../../migrations")]
 async fn content_writes_need_a_member_session(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -400,6 +405,9 @@ async fn content_writes_need_a_member_session(pool: PgPool) {
 /// BAD_INPUT userError pinned to the field, while an out-of-range stance
 /// never reaches the resolver at all — it refuses at the scalar boundary
 /// as a transport fault.
+///
+/// The two refusal tiers stay apart: an unresolvable target is a user error pinned to its field, while an out-of-range parameter never reaches the resolver at all.
+/// ´claim:content:the-two-refusal-tiers-stay-apart´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_refused_prepare_reports_user_errors(pool: PgPool) {
     let rig = Rig::new(pool).await;
