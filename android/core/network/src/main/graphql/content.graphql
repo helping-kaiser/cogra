@@ -208,14 +208,20 @@ query PostSelfMark($id: UUID!) {
   }
 }
 
-# The same read for a comment, and for the same reason: `CommentFields`
-# is the most multiplied fragment in the corpus, and an edit opens one
-# comment, once. It is not a nicety — `PrepareCommentEditInput` is
-# complete-state, so an edit that cannot read the standing mark cannot
-# help clearing it.
-query CommentSelfMark($id: UUID!) {
+# Everything `CommentEdit` opens on, in one read.
+#
+# The edit is complete-state on every axis — words, gallery, and the
+# author's own mark — so it has to start from what the comment actually
+# carries rather than from what a thread card happened to show. That
+# also makes the screen survive process death: it re-reads instead of
+# depending on arguments the back stack would have to carry.
+#
+# It is safe to spread `CommentFields` here for the reason `PostSelfMark`
+# is safe: an edit opens one comment, once, so the corpus's most
+# multiplied fragment is spread exactly once in this document.
+query CommentForEdit($id: UUID!) {
   comment(id: $id) {
-    id
+    ...CommentFields
     sensitiveSelfMark
     sensitiveReason
   }

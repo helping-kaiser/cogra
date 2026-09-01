@@ -24,6 +24,7 @@ import com.cogra.domain.ActorRef
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.AuthTokens
+import com.cogra.domain.CommentForEdit
 import com.cogra.domain.CommentView
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
@@ -466,7 +467,7 @@ open class ThrowingContentRepository : ContentRepository {
         pDirected: Double?,
         pInterest: Double?,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
-    override suspend fun commentSelfMark(id: String): Outcome<SelfMarkView?> =
+    override suspend fun commentForEdit(id: String): Outcome<CommentForEdit?> =
         throw UnsupportedOperationException()
     override suspend fun prepareCommentEdit(
         id: String,

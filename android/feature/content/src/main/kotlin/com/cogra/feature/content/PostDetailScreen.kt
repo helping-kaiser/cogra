@@ -20,10 +20,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -49,9 +49,10 @@ import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.CommentView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
-import com.cogra.domain.LicenseChoice
 import com.cogra.domain.PostView
 import com.cogra.feature.content.R
+import com.cogra.feature.content.reply.ReplyTarget
+import com.cogra.feature.content.reply.ReplyTargetKind
 import com.cogra.feature.stance.StanceControlRoute
 
 @Composable
@@ -62,6 +63,15 @@ fun PostDetailRoute(
     /** Null while the auth phase resolves; the comment/join affordances wait. */
     signedIn: Boolean?,
     onEdit: (String) -> Unit,
+    /**
+     * The reply wizard, pinned to what it answers — the post for
+     * `ReplyEntry` 7, the comment for `ReplyEntry` 5. The target is
+     * built here rather than by the caller because this is where the
+     * thread's own words are.
+     */
+    onReply: (ReplyTarget) -> Unit,
+    /** `ReplyMedia` 6 — `CommentEdit`, on an own comment. */
+    onEditComment: (commentId: String, parentTitle: String) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     /** A referenced post opens on its own detail. */
@@ -72,6 +82,14 @@ fun PostDetailRoute(
     onBack: () -> Unit,
     refreshSignal: Boolean = false,
     onRefreshSignalConsumed: () -> Unit = {},
+    /**
+     * A comment or an edit signed on the wizard, coming back. The thread
+     * refetches so the new state arrives from the server — a client
+     * never takes a write on by patching its own list — and the
+     * snackbar fires once.
+     */
+    commentSignedSignal: Boolean = false,
+    onCommentSignedSignalConsumed: () -> Unit = {},
     viewModel: PostDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -80,46 +98,26 @@ fun PostDetailRoute(
         onRefreshSignalConsumed()
         viewModel.refresh()
     }
+    if (commentSignedSignal) {
+        onCommentSignedSignalConsumed()
+        viewModel.onCommentSigned()
+    }
     PostDetailScreen(
         state = state,
         viewerId = viewerId,
         signedIn = signedIn,
         onRefresh = viewModel::refresh,
         onLoadMoreComments = viewModel::loadMoreComments,
-        onDraftChange = viewModel::onDraftChange,
-        onLicenseChange = viewModel::onLicenseChange,
-        onSubmitComment = viewModel::onSubmitComment,
+        onAddComment = { state.post?.let { onReply(it.asReplyTarget()) } },
+        onReplyTo = { comment -> onReply(comment.asReplyTarget()) },
+        onEditComment = { comment ->
+            onEditComment(comment.id, state.post?.title?.value.orEmpty())
+        },
         onCommentSignedShown = viewModel::onCommentSignedShown,
         onLoadMoreReplies = viewModel::onLoadMoreReplies,
-        onStartEditComment = viewModel::onStartEditComment,
-        onEditDraftChange = viewModel::onEditDraftChange,
-        onCancelEditComment = viewModel::onCancelEditComment,
-        onSubmitCommentEdit = viewModel::onSubmitCommentEdit,
-        onStartReply = viewModel::onStartReply,
-        onReplyDraftChange = viewModel::onReplyDraftChange,
-        onCancelReply = viewModel::onCancelReply,
-        onSubmitReply = viewModel::onSubmitReply,
         onToggleTagValues = viewModel::onToggleTagValues,
-        onTagInputChange = viewModel::onTagInputChange,
-        onAddTag = viewModel::onAddTag,
-        onRemoveTag = viewModel::onRemoveTag,
-        onTuneTag = viewModel::onTuneTag,
-        onDoneTuningTag = viewModel::onDoneTuningTag,
-        onTagRelevanceChange = viewModel::onTagRelevanceChange,
-        onTagConfidenceChange = viewModel::onTagConfidenceChange,
         onToggleReferenceValues = viewModel::onToggleReferenceValues,
         onReveal = viewModel::onReveal,
-        onOpenFinder = viewModel::onOpenFinder,
-        onCloseFinder = viewModel::onCloseFinder,
-        onFinderQueryChange = viewModel::onFinderQueryChange,
-        onPickReference = viewModel::onPickReference,
-        onRemoveReference = viewModel::onRemoveReference,
-        onTuneReference = viewModel::onTuneReference,
-        onDoneTuningReference = viewModel::onDoneTuningReference,
-        onReferenceRelevanceChange = viewModel::onReferenceRelevanceChange,
-        onReferenceSupportChange = viewModel::onReferenceSupportChange,
-        onConfirmSubmit = viewModel::onConfirmSubmit,
-        onDismissConfirm = viewModel::onDismissConfirm,
         onEdit = onEdit,
         onOpenActor = onOpenActor,
         onOpenTopic = onOpenTopic,
@@ -139,46 +137,20 @@ fun PostDetailScreen(
     signedIn: Boolean?,
     onRefresh: () -> Unit,
     onLoadMoreComments: () -> Unit,
-    onDraftChange: (String) -> Unit,
-    onLicenseChange: (LicenseChoice) -> Unit,
-    onSubmitComment: () -> Unit,
+    /** `ReplyEntry` 7 — the full-focus composer, this post pinned. */
+    onAddComment: () -> Unit,
+    /** `ReplyEntry` 5 — the composer, pre-targeted at that comment. */
+    onReplyTo: (CommentView) -> Unit,
+    /** `ReplyMedia` 6 — `CommentEdit`, on an own comment. */
+    onEditComment: (CommentView) -> Unit,
     onCommentSignedShown: () -> Unit,
     onLoadMoreReplies: (CommentView) -> Unit,
-    onStartEditComment: (CommentView) -> Unit,
-    onEditDraftChange: (String) -> Unit,
-    onCancelEditComment: () -> Unit,
-    onSubmitCommentEdit: () -> Unit,
-    onStartReply: (String) -> Unit,
-    onReplyDraftChange: (String) -> Unit,
-    onCancelReply: () -> Unit,
-    onSubmitReply: () -> Unit,
     /** One chip row asking to show its claim parameters, by owner id (F8). */
     onToggleTagValues: (String) -> Unit,
-    // The three authoring surfaces share one set of tag callbacks, each
-    // naming the section it belongs to (F9, F10).
-    onTagInputChange: (TagTarget, String) -> Unit,
-    onAddTag: (TagTarget) -> Unit,
-    onRemoveTag: (TagTarget, String) -> Unit,
-    onTuneTag: (TagTarget, String) -> Unit,
-    onDoneTuningTag: (TagTarget) -> Unit,
-    onTagRelevanceChange: (TagTarget, String, Double) -> Unit,
-    onTagConfidenceChange: (TagTarget, String, Double) -> Unit,
     /** A reference row asking to show its parameters, by owner id (D16). */
     onToggleReferenceValues: (String) -> Unit,
     /** A reader chose to look at one veiled body, as it stands. */
     onReveal: (String, SensitiveMark) -> Unit,
-    // The reference twin of the tag callbacks above (D10, D20).
-    onOpenFinder: (TagTarget) -> Unit,
-    onCloseFinder: (TagTarget) -> Unit,
-    onFinderQueryChange: (TagTarget, String) -> Unit,
-    onPickReference: (TagTarget, ReferenceCandidateRow) -> Unit,
-    onRemoveReference: (TagTarget, String) -> Unit,
-    onTuneReference: (TagTarget, String) -> Unit,
-    onDoneTuningReference: (TagTarget) -> Unit,
-    onReferenceRelevanceChange: (TagTarget, String, Double) -> Unit,
-    onReferenceSupportChange: (TagTarget, String, Double) -> Unit,
-    onConfirmSubmit: (Boolean) -> Unit,
-    onDismissConfirm: () -> Unit,
     onEdit: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
@@ -196,48 +168,6 @@ fun PostDetailScreen(
             snackbar.showSnackbar(signedCopy)
             onCommentSignedShown()
         }
-    }
-    val tags = remember(
-        onTagInputChange,
-        onAddTag,
-        onRemoveTag,
-        onTuneTag,
-        onDoneTuningTag,
-        onTagRelevanceChange,
-        onTagConfidenceChange,
-    ) {
-        TagCallbacks(
-            onInputChange = onTagInputChange,
-            onAdd = onAddTag,
-            onRemove = onRemoveTag,
-            onTune = onTuneTag,
-            onDoneTuning = onDoneTuningTag,
-            onRelevanceChange = onTagRelevanceChange,
-            onConfidenceChange = onTagConfidenceChange,
-        )
-    }
-    val references = remember(
-        onOpenFinder,
-        onCloseFinder,
-        onFinderQueryChange,
-        onPickReference,
-        onRemoveReference,
-        onTuneReference,
-        onDoneTuningReference,
-        onReferenceRelevanceChange,
-        onReferenceSupportChange,
-    ) {
-        ReferenceCallbacks(
-            onOpenFinder = onOpenFinder,
-            onCloseFinder = onCloseFinder,
-            onQueryChange = onFinderQueryChange,
-            onPick = onPickReference,
-            onRemove = onRemoveReference,
-            onTune = onTuneReference,
-            onDoneTuning = onDoneTuningReference,
-            onRelevanceChange = onReferenceRelevanceChange,
-            onSupportChange = onReferenceSupportChange,
-        )
     }
     val collapsingTop = rememberCollapsingTop()
     Scaffold(
@@ -342,23 +272,13 @@ fun PostDetailScreen(
                             viewerId = viewerId,
                             signedIn = signedIn,
                             onLoadMoreComments = onLoadMoreComments,
-                            onDraftChange = onDraftChange,
-                            onLicenseChange = onLicenseChange,
-                            onSubmitComment = onSubmitComment,
+                            onAddComment = onAddComment,
+                            onReplyTo = onReplyTo,
+                            onEditComment = onEditComment,
                             onLoadMoreReplies = onLoadMoreReplies,
-                            onStartEditComment = onStartEditComment,
-                            onEditDraftChange = onEditDraftChange,
-                            onCancelEditComment = onCancelEditComment,
-                            onSubmitCommentEdit = onSubmitCommentEdit,
-                            onStartReply = onStartReply,
-                            onReplyDraftChange = onReplyDraftChange,
-                            onCancelReply = onCancelReply,
-                            onSubmitReply = onSubmitReply,
                             onToggleTagValues = onToggleTagValues,
                             onToggleReferenceValues = onToggleReferenceValues,
                             onReveal = onReveal,
-                            tags = tags,
-                            references = references,
                             onOpenActor = onOpenActor,
                             onOpenTopic = onOpenTopic,
                             onOpenPost = onOpenPost,
@@ -371,16 +291,6 @@ fun PostDetailScreen(
             }
         }
     }
-    // The confirm a batch earns, whichever of the three submits staged
-    // it (F4).
-    state.confirmPending?.let { pending ->
-        MultiActionConfirm(
-            count = state.signedActions(pending),
-            testTagPrefix = "detail",
-            onConfirm = onConfirmSubmit,
-            onDismiss = onDismissConfirm,
-        )
-    }
 }
 
 @Composable
@@ -390,24 +300,14 @@ private fun PostWithThread(
     viewerId: String?,
     signedIn: Boolean?,
     onLoadMoreComments: () -> Unit,
-    onDraftChange: (String) -> Unit,
-    onLicenseChange: (LicenseChoice) -> Unit,
-    onSubmitComment: () -> Unit,
+    onAddComment: () -> Unit,
+    onReplyTo: (CommentView) -> Unit,
+    onEditComment: (CommentView) -> Unit,
     onLoadMoreReplies: (CommentView) -> Unit,
-    onStartEditComment: (CommentView) -> Unit,
-    onEditDraftChange: (String) -> Unit,
-    onCancelEditComment: () -> Unit,
-    onSubmitCommentEdit: () -> Unit,
-    onStartReply: (String) -> Unit,
-    onReplyDraftChange: (String) -> Unit,
-    onCancelReply: () -> Unit,
-    onSubmitReply: () -> Unit,
     onToggleTagValues: (String) -> Unit,
     onToggleReferenceValues: (String) -> Unit,
     /** A reader chose to look at one veiled body, as it stands. */
     onReveal: (String, SensitiveMark) -> Unit,
-    tags: TagCallbacks,
-    references: ReferenceCallbacks,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     onOpenPost: (String) -> Unit,
@@ -516,19 +416,11 @@ private fun PostWithThread(
                 viewerId = viewerId,
                 signedIn = signedIn,
                 onLoadMoreReplies = onLoadMoreReplies,
-                onStartEditComment = onStartEditComment,
-                onEditDraftChange = onEditDraftChange,
-                onCancelEditComment = onCancelEditComment,
-                onSubmitCommentEdit = onSubmitCommentEdit,
-                onStartReply = onStartReply,
-                onReplyDraftChange = onReplyDraftChange,
-                onCancelReply = onCancelReply,
-                onSubmitReply = onSubmitReply,
+                onReplyTo = onReplyTo,
+                onEditComment = onEditComment,
                 onToggleTagValues = onToggleTagValues,
                 onToggleReferenceValues = onToggleReferenceValues,
                 onReveal = onReveal,
-                tags = tags,
-                references = references,
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
                 onOpenPost = onOpenPost,
@@ -573,158 +465,74 @@ private fun PostWithThread(
                 }
             }
         }
+        // `ReplyEntry` 7: the thread's foot is the way *into* the
+        // composer, not the composer itself. The full-focus wizard is
+        // where a comment is written, so this row only opens it.
         if (signedIn == true) item {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = state.draft,
-                    onValueChange = onDraftChange,
-                    label = { Text(stringResource(R.string.content_comment_hint)) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("detail_comment_input"),
+            // It looks like the field the board draws and behaves like
+            // the button it is: a real text field would take focus and
+            // raise a keyboard for words that are typed on the next
+            // screen.
+            Surface(
+                onClick = onAddComment,
+                shape = MaterialTheme.shapes.extraLarge,
+                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("detail_add_comment"),
+            ) {
+                Text(
+                    text = stringResource(R.string.content_comment_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
                 )
-                // Declaring a topic is part of the compose gesture, not a
-                // second step afterwards (F9).
-                CommentTagSection(
-                    section = state.commentTags,
-                    target = TagTarget.COMMENT,
-                    tags = tags,
-                    testTagPrefix = "detail_comment",
-                )
-                CommentReferenceSection(
-                    section = state.commentReferences,
-                    target = TagTarget.COMMENT,
-                    references = references,
-                    testTagPrefix = "detail_comment",
-                )
-                LicenseControls(license = state.license, onLicenseChange = onLicenseChange)
-                if (state.refused) {
-                    ErrorLine(R.string.content_error_refused, "detail_refused")
-                }
-                if (state.signingFailed) {
-                    ErrorLine(
-                        if (state.signingNeedsKey) {
-                            R.string.content_error_signing_no_key
-                        } else {
-                            R.string.content_error_signing
-                        },
-                        "detail_signing_failed",
-                    )
-                }
-                if (state.submitTransportFailed) {
-                    ErrorLine(R.string.content_error_transport, "detail_comment_transport")
-                }
-                // What this submit will sign, beside the button that
-                // signs it (F4).
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    SignedActionsLine(
-                        count = state.commentSignedActions,
-                        testTag = "detail_comment_signed_actions",
-                        modifier = Modifier.weight(1f),
-                    )
-                    Button(
-                        onClick = onSubmitComment,
-                        enabled = !state.submitting && state.draft.isNotBlank(),
-                        modifier = Modifier.testTag("detail_comment_submit"),
-                    ) {
-                        Text(stringResource(R.string.content_comment_submit))
-                    }
-                }
             }
         }
     }
 }
 
 /**
- * The tag callbacks the detail view's three authoring sections share,
- * bundled so the composables carrying them stay readable. Each names the
- * section it acts on, so one set serves the comment box, the reply box,
- * and the inline editor alike (F9, F10).
+ * The post, as the composer's target card reads it (`ReplyEntry` 7).
+ *
+ * A post leads with its title; the line under it is the body, clipped,
+ * because the card gives it one line either way.
  */
-internal class TagCallbacks(
-    val onInputChange: (TagTarget, String) -> Unit,
-    val onAdd: (TagTarget) -> Unit,
-    val onRemove: (TagTarget, String) -> Unit,
-    val onTune: (TagTarget, String) -> Unit,
-    val onDoneTuning: (TagTarget) -> Unit,
-    val onRelevanceChange: (TagTarget, String, Double) -> Unit,
-    val onConfidenceChange: (TagTarget, String, Double) -> Unit,
-)
-
-/** The reference twin of [TagCallbacks], bundled for the same reason. */
-internal class ReferenceCallbacks(
-    val onOpenFinder: (TagTarget) -> Unit,
-    val onCloseFinder: (TagTarget) -> Unit,
-    val onQueryChange: (TagTarget, String) -> Unit,
-    val onPick: (TagTarget, ReferenceCandidateRow) -> Unit,
-    val onRemove: (TagTarget, String) -> Unit,
-    val onTune: (TagTarget, String) -> Unit,
-    val onDoneTuning: (TagTarget) -> Unit,
-    val onRelevanceChange: (TagTarget, String, Double) -> Unit,
-    val onSupportChange: (TagTarget, String, Double) -> Unit,
+internal fun PostView.asReplyTarget(): ReplyTarget = ReplyTarget(
+    id = id,
+    kind = ReplyTargetKind.Post,
+    title = title?.value.orEmpty(),
+    snippet = content?.value.orEmpty().clipForCard(),
+    authorHandle = author?.handle.orEmpty(),
+    avatarUrl = author?.avatar?.url,
 )
 
 /**
- * The composer's reference section, compact, inside a comment surface:
- * the same chips, finder, and per-chip sliders the post composer
- * carries — no heading, because the box it sits in already says what
- * it is.
+ * The comment, as the composer's target card reads it (`ReplyEntry` 5).
+ *
+ * A comment has no title, so its own opening words become one — the
+ * card's two lines are then the answer's subject and its context, the
+ * way a post's title and body are.
  */
-@Composable
-private fun CommentReferenceSection(
-    section: ReferenceSectionState,
-    target: TagTarget,
-    references: ReferenceCallbacks,
-    testTagPrefix: String,
-) {
-    ReferenceEntry(
-        section = section,
-        testTagPrefix = testTagPrefix,
-        showHeading = false,
-        onOpenFinder = { references.onOpenFinder(target) },
-        onCloseFinder = { references.onCloseFinder(target) },
-        onFinderQueryChange = { references.onQueryChange(target, it) },
-        onPickReference = { references.onPick(target, it) },
-        onRemoveReference = { references.onRemove(target, it) },
-        onTuneReference = { references.onTune(target, it) },
-        onDoneTuningReference = { references.onDoneTuning(target) },
-        onReferenceRelevanceChange = { id, value ->
-            references.onRelevanceChange(target, id, value)
-        },
-        onReferenceSupportChange = { id, value -> references.onSupportChange(target, id, value) },
-    )
-}
+internal fun CommentView.asReplyTarget(): ReplyTarget = ReplyTarget(
+    id = id,
+    kind = ReplyTargetKind.Comment,
+    title = content.value.orEmpty().clipForCard(TARGET_TITLE_CHARS),
+    snippet = content.value.orEmpty().clipForCard(),
+    authorHandle = author?.handle.orEmpty(),
+    avatarUrl = author?.avatar?.url,
+)
 
 /**
- * The composer's tag section, compact, inside a comment surface: the
- * same gated entry, chips, and per-chip sliders the post composer got in
- * round 1 (F9) — no heading, because the box it sits in already says
- * what it is.
+ * The card draws one line, and a route carries what it is given — so
+ * the words are clipped where they are read rather than where they are
+ * drawn.
  */
-@Composable
-private fun CommentTagSection(
-    section: TagSectionState,
-    target: TagTarget,
-    tags: TagCallbacks,
-    testTagPrefix: String,
-) {
-    TopicEntry(
-        section = section,
-        testTagPrefix = testTagPrefix,
-        showHeading = false,
-        onTagInputChange = { tags.onInputChange(target, it) },
-        onAddTag = { tags.onAdd(target) },
-        onRemoveTag = { tags.onRemove(target, it) },
-        onTuneTag = { tags.onTune(target, it) },
-        onDoneTuningTag = { tags.onDoneTuning(target) },
-        onTagRelevanceChange = { name, value -> tags.onRelevanceChange(target, name, value) },
-        onTagConfidenceChange = { name, value -> tags.onConfidenceChange(target, name, value) },
-    )
-}
+private fun String.clipForCard(limit: Int = TARGET_SNIPPET_CHARS): String =
+    if (length <= limit) this else take(limit).trimEnd() + "…"
+
+private const val TARGET_TITLE_CHARS = 48
+private const val TARGET_SNIPPET_CHARS = 120
 
 /**
  * The thread is **two levels deep on screen**: a comment, and its
@@ -739,10 +547,9 @@ private fun CommentTagSection(
 private const val MAX_INDENT_DEPTH = 1
 
 /**
- * One comment with its nested replies (design.md §6 "Comment"):
- * author chip, body, the soft "Edited" marker (design.md §9), the
- * creator's edit affordance, the reply affordance, and the expandable
- * reply thread — one prefetched level, more on demand.
+ * One comment with its replies (design.md §6 "Comment"): author chip,
+ * body, the soft "Edited" marker (design.md §9), the creator's edit
+ * affordance, the reply affordance, and the branch behind its count.
  */
 @Composable
 private fun CommentThread(
@@ -752,20 +559,12 @@ private fun CommentThread(
     viewerId: String?,
     signedIn: Boolean?,
     onLoadMoreReplies: (CommentView) -> Unit,
-    onStartEditComment: (CommentView) -> Unit,
-    onEditDraftChange: (String) -> Unit,
-    onCancelEditComment: () -> Unit,
-    onSubmitCommentEdit: () -> Unit,
-    onStartReply: (String) -> Unit,
-    onReplyDraftChange: (String) -> Unit,
-    onCancelReply: () -> Unit,
-    onSubmitReply: () -> Unit,
+    onReplyTo: (CommentView) -> Unit,
+    onEditComment: (CommentView) -> Unit,
     onToggleTagValues: (String) -> Unit,
     onToggleReferenceValues: (String) -> Unit,
     /** A reader chose to look at one veiled body, as it stands. */
     onReveal: (String, SensitiveMark) -> Unit,
-    tags: TagCallbacks,
-    references: ReferenceCallbacks,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     onOpenPost: (String) -> Unit,
@@ -803,218 +602,84 @@ private fun CommentThread(
                         testTag = "comment_author_${comment.id}",
                     )
                 }
-                if (state.editingCommentId == comment.id) {
-                    OutlinedTextField(
-                        value = state.editDraft,
-                        onValueChange = onEditDraftChange,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("comment_edit_input"),
-                    )
-                    // The editor carries the comment's topics at their
-                    // real stored values; every change is its own Tag
-                    // act, staged beside the edit record (F10).
-                    CommentTagSection(
-                        section = state.editTags,
-                        target = TagTarget.EDIT,
-                        tags = tags,
-                        testTagPrefix = "comment_edit",
-                    )
-                    // The editor carries the comment's citations too;
-                    // dropping one stages its withdrawal, whose cost
-                    // the server quotes before anything signs (D11).
-                    CommentReferenceSection(
-                        section = state.editReferences,
-                        target = TagTarget.EDIT,
-                        references = references,
-                        testTagPrefix = "comment_edit",
-                    )
-                    val withdrawalCost = state.editWithdrawalCost
-                    if (withdrawalCost != null && withdrawalCost > 0) {
-                        Text(
-                            text = pluralStringResource(
-                                R.plurals.content_references_withdrawal_cost,
-                                withdrawalCost,
-                                withdrawalCost,
-                            ),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.testTag("comment_edit_withdrawal_cost"),
-                        )
-                    }
-                    if (state.editRefused) {
-                        ErrorLine(R.string.content_error_refused, "comment_edit_refused")
-                    }
-                    if (state.editSigningFailed) {
-                        ErrorLine(
-                            if (state.signingNeedsKey) {
-                                R.string.content_error_signing_no_key
-                            } else {
-                                R.string.content_error_signing
-                            },
-                            "comment_edit_signing_failed",
-                        )
-                    }
-                    SignedActionsLine(
-                        count = state.editSignedActions,
-                        testTag = "comment_edit_signed_actions",
-                    )
-                    // The confirming action sits on the right (F7).
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        TextButton(
-                            onClick = onCancelEditComment,
-                            modifier = Modifier.testTag("comment_edit_cancel"),
-                        ) {
-                            Text(stringResource(R.string.content_comment_edit_cancel))
-                        }
-                        Button(
-                            onClick = onSubmitCommentEdit,
-                            // An edit that changed nothing has nothing
-                            // to sign (F10).
-                            enabled = !state.editSubmitting &&
-                                state.editDraft.isNotBlank() &&
-                                state.editSignedActions > 0,
-                            modifier = Modifier.testTag("comment_edit_save"),
-                        ) {
-                            Text(stringResource(R.string.content_comment_edit_save))
-                        }
-                    }
-                } else {
-                    // A comment is text **plus** optional media (D16),
-                    // so its body is never the exclusive-or a post's
-                    // is — but it veils and redacts as one region all
-                    // the same.
-                    PostBody(
-                        content = comment.content,
-                        description = null,
-                        attachments = comment.attachments,
-                        attachmentsStatus = comment.attachmentsStatus,
-                        testTagPrefix = "comment_${comment.id}",
-                        surface = BodySurface.Comment,
-                        revealed = state.reveals.isRevealed(comment.id, comment.sensitiveMark()),
-                        onReveal = { onReveal(comment.id, comment.sensitiveMark()) },
-                    )
+                // A comment is text **plus** optional media (D16),
+                // so its body is never the exclusive-or a post's
+                // is — but it veils and redacts as one region all
+                // the same.
+                PostBody(
+                    content = comment.content,
+                    description = null,
+                    attachments = comment.attachments,
+                    attachmentsStatus = comment.attachmentsStatus,
+                    testTagPrefix = "comment_${comment.id}",
+                    surface = BodySurface.Comment,
+                    revealed = state.reveals.isRevealed(comment.id, comment.sensitiveMark()),
+                    onReveal = { onReveal(comment.id, comment.sensitiveMark()) },
+                )
+                Text(
+                    licenseTerms(comment.license),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.testTag("comment_license_terms_${comment.id}"),
+                )
+                // The soft marker, friendly not forensic (design.md §9).
+                if (comment.updatedAt.isAfter(comment.createdAt)) {
                     Text(
-                        licenseTerms(comment.license),
-                        style = MaterialTheme.typography.bodySmall,
+                        text = stringResource(R.string.content_comment_edited),
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.testTag("comment_license_terms_${comment.id}"),
+                        modifier = Modifier.testTag("comment_edited_${comment.id}"),
                     )
-                    // The soft marker, friendly not forensic (design.md §9).
-                    if (comment.updatedAt.isAfter(comment.createdAt)) {
-                        Text(
-                            text = stringResource(R.string.content_comment_edited),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.testTag("comment_edited_${comment.id}"),
-                        )
-                    }
-                    if (comment.landing.isPending) {
-                        PendingMarker(testTag = "comment_pending_${comment.id}")
-                    }
-                    TopicChipRow(
-                        topics = comment.topics,
-                        onOpenTopic = onOpenTopic,
-                        testTagPrefix = "comment_${comment.id}",
-                        valuesRevealed = comment.id in state.revealedTagRows,
-                        onToggleValues = { onToggleTagValues(comment.id) },
-                    )
-                    ReferenceChipRow(
-                        references = comment.references,
-                        onOpenActor = onOpenActor,
-                        onOpenPost = onOpenPost,
-                        testTagPrefix = "comment_${comment.id}",
-                        valuesRevealed = comment.id in state.revealedReferenceRows,
-                        onToggleValues = { onToggleReferenceValues(comment.id) },
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        // A comment carries the control too (design.md §6).
-                        stanceControl(comment.id, "comment_${comment.id}")
-                        if (signedIn == true) {
-                            TextButton(
-                                onClick = { onStartReply(comment.id) },
-                                modifier = Modifier.testTag("comment_reply_${comment.id}"),
-                            ) {
-                                Text(stringResource(R.string.content_comment_reply))
-                            }
-                            // A comment is a content node like any
-                            // other, so it carries the affordance too
-                            // (D20).
-                            TextButton(
-                                onClick = { onReference(comment.id) },
-                                modifier = Modifier
-                                    .testTag("comment_reference_${comment.id}"),
-                            ) {
-                                Text(stringResource(R.string.content_reference_action))
-                            }
-                        }
-                        if (viewerId != null && comment.author?.id == viewerId) {
-                            TextButton(
-                                onClick = { onStartEditComment(comment) },
-                                modifier = Modifier.testTag("comment_edit_${comment.id}"),
-                            ) {
-                                Text(stringResource(R.string.content_edit))
-                            }
-                        }
-                    }
                 }
-            }
-        }
-        if (state.replyingToId == comment.id) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = state.replyDraft,
-                    onValueChange = onReplyDraftChange,
-                    label = { Text(stringResource(R.string.content_comment_hint)) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("comment_reply_input"),
+                if (comment.landing.isPending) {
+                    PendingMarker(testTag = "comment_pending_${comment.id}")
+                }
+                TopicChipRow(
+                    topics = comment.topics,
+                    onOpenTopic = onOpenTopic,
+                    testTagPrefix = "comment_${comment.id}",
+                    valuesRevealed = comment.id in state.revealedTagRows,
+                    onToggleValues = { onToggleTagValues(comment.id) },
                 )
-                CommentTagSection(
-                    section = state.replyTags,
-                    target = TagTarget.REPLY,
-                    tags = tags,
-                    testTagPrefix = "comment_reply",
-                )
-                CommentReferenceSection(
-                    section = state.replyReferences,
-                    target = TagTarget.REPLY,
-                    references = references,
-                    testTagPrefix = "comment_reply",
-                )
-                if (state.replyRefused) {
-                    ErrorLine(R.string.content_error_refused, "comment_reply_refused")
-                }
-                if (state.replySigningFailed) {
-                    ErrorLine(
-                        if (state.signingNeedsKey) {
-                            R.string.content_error_signing_no_key
-                        } else {
-                            R.string.content_error_signing
-                        },
-                        "comment_reply_signing_failed",
-                    )
-                }
-                if (state.replyTransportFailed) {
-                    ErrorLine(R.string.content_error_transport, "comment_reply_transport")
-                }
-                SignedActionsLine(
-                    count = state.replySignedActions,
-                    testTag = "comment_reply_signed_actions",
+                ReferenceChipRow(
+                    references = comment.references,
+                    onOpenActor = onOpenActor,
+                    onOpenPost = onOpenPost,
+                    testTagPrefix = "comment_${comment.id}",
+                    valuesRevealed = comment.id in state.revealedReferenceRows,
+                    onToggleValues = { onToggleReferenceValues(comment.id) },
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TextButton(
-                        onClick = onCancelReply,
-                        modifier = Modifier.testTag("comment_reply_cancel"),
-                    ) {
-                        Text(stringResource(R.string.content_comment_edit_cancel))
+                    // A comment carries the control too (design.md §6).
+                    stanceControl(comment.id, "comment_${comment.id}")
+                    if (signedIn == true) {
+                        // `ReplyEntry` 5 — the composer, pre-targeted.
+                        TextButton(
+                            onClick = { onReplyTo(comment) },
+                            modifier = Modifier.testTag("comment_reply_${comment.id}"),
+                        ) {
+                            Text(stringResource(R.string.content_comment_reply))
+                        }
+                        // A comment is a content node like any
+                        // other, so it carries the affordance too
+                        // (D20).
+                        TextButton(
+                            onClick = { onReference(comment.id) },
+                            modifier = Modifier
+                                .testTag("comment_reference_${comment.id}"),
+                        ) {
+                            Text(stringResource(R.string.content_reference_action))
+                        }
                     }
-                    Button(
-                        onClick = onSubmitReply,
-                        enabled = !state.replySubmitting && state.replyDraft.isNotBlank(),
-                        modifier = Modifier.testTag("comment_reply_submit"),
-                    ) {
-                        Text(stringResource(R.string.content_comment_submit))
+                    // `ReplyMedia` 6 — an own comment wears Edit, and it
+                    // opens `CommentEdit`.
+                    if (viewerId != null && comment.author?.id == viewerId) {
+                        TextButton(
+                            onClick = { onEditComment(comment) },
+                            modifier = Modifier.testTag("comment_edit_${comment.id}"),
+                        ) {
+                            Text(stringResource(R.string.content_edit))
+                        }
                     }
                 }
             }
@@ -1033,19 +698,11 @@ private fun CommentThread(
                 viewerId = viewerId,
                 signedIn = signedIn,
                 onLoadMoreReplies = onLoadMoreReplies,
-                onStartEditComment = onStartEditComment,
-                onEditDraftChange = onEditDraftChange,
-                onCancelEditComment = onCancelEditComment,
-                onSubmitCommentEdit = onSubmitCommentEdit,
-                onStartReply = onStartReply,
-                onReplyDraftChange = onReplyDraftChange,
-                onCancelReply = onCancelReply,
-                onSubmitReply = onSubmitReply,
+                onReplyTo = onReplyTo,
+                onEditComment = onEditComment,
                 onToggleTagValues = onToggleTagValues,
                 onToggleReferenceValues = onToggleReferenceValues,
                 onReveal = onReveal,
-                tags = tags,
-                references = references,
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
                 onOpenPost = onOpenPost,

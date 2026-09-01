@@ -31,6 +31,7 @@ import com.cogra.domain.testing.testMentionTarget
 import com.cogra.domain.testing.testPost
 import com.cogra.domain.testing.testReferenceClaim
 import com.cogra.domain.testing.testTopicClaim
+import com.cogra.feature.content.reply.ReplyTargetKind
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -462,28 +463,16 @@ class ContentScreensTest {
         onEdit: (String) -> Unit = {},
         onOpenActor: (String) -> Unit = {},
         onOpenTopic: (String) -> Unit = {},
-        onSubmitComment: () -> Unit = {},
         onSignInOrJoin: () -> Unit = {},
         onRefresh: () -> Unit = {},
         onLoadMoreComments: () -> Unit = {},
         onLoadMoreReplies: (com.cogra.domain.CommentView) -> Unit = {},
-        onStartEditComment: (com.cogra.domain.CommentView) -> Unit = {},
-        onSubmitCommentEdit: () -> Unit = {},
-        onStartReply: (String) -> Unit = {},
-        onSubmitReply: () -> Unit = {},
+        onAddComment: () -> Unit = {},
+        onReplyTo: (com.cogra.domain.CommentView) -> Unit = {},
+        onEditComment: (com.cogra.domain.CommentView) -> Unit = {},
         onToggleTagValues: (String) -> Unit = {},
-        onTagInputChange: (TagTarget, String) -> Unit = { _, _ -> },
-        onAddTag: (TagTarget) -> Unit = {},
-        onRemoveTag: (TagTarget, String) -> Unit = { _, _ -> },
-        onTuneTag: (TagTarget, String) -> Unit = { _, _ -> },
-        onDoneTuningTag: (TagTarget) -> Unit = {},
-        onTagRelevanceChange: (TagTarget, String, Double) -> Unit = { _, _, _ -> },
-        onTagConfidenceChange: (TagTarget, String, Double) -> Unit = { _, _, _ -> },
-        onConfirmSubmit: (Boolean) -> Unit = {},
-        onDismissConfirm: () -> Unit = {},
         onStance: (String, String) -> Unit = { _, _ -> },
         onToggleReferenceValues: (String) -> Unit = {},
-        onRemoveReference: (TagTarget, String) -> Unit = { _, _ -> },
         onOpenPost: (String) -> Unit = {},
         onReference: (String) -> Unit = {},
     ) {
@@ -495,40 +484,14 @@ class ContentScreensTest {
                 signedIn = signedIn,
                 onRefresh = onRefresh,
                 onLoadMoreComments = onLoadMoreComments,
-                onDraftChange = {},
-                onLicenseChange = {},
-                onSubmitComment = onSubmitComment,
                 onCommentSignedShown = {},
                 onLoadMoreReplies = onLoadMoreReplies,
-                onStartEditComment = onStartEditComment,
-                onEditDraftChange = {},
-                onCancelEditComment = {},
-                onSubmitCommentEdit = onSubmitCommentEdit,
-                onStartReply = onStartReply,
-                onReplyDraftChange = {},
-                onCancelReply = {},
-                onSubmitReply = onSubmitReply,
                 onToggleTagValues = onToggleTagValues,
-                onTagInputChange = onTagInputChange,
-                onAddTag = onAddTag,
-                onRemoveTag = onRemoveTag,
-                onTuneTag = onTuneTag,
-                onDoneTuningTag = onDoneTuningTag,
-                onTagRelevanceChange = onTagRelevanceChange,
-                onTagConfidenceChange = onTagConfidenceChange,
                 onToggleReferenceValues = onToggleReferenceValues,
-                onOpenFinder = {},
-                onCloseFinder = {},
-                onFinderQueryChange = { _, _ -> },
-                onPickReference = { _, _ -> },
-                onRemoveReference = onRemoveReference,
-                onTuneReference = { _, _ -> },
-                onDoneTuningReference = {},
-                onReferenceRelevanceChange = { _, _, _ -> },
-                onReferenceSupportChange = { _, _, _ -> },
-                onConfirmSubmit = onConfirmSubmit,
-                onDismissConfirm = onDismissConfirm,
                 onEdit = onEdit,
+                onAddComment = onAddComment,
+                onReplyTo = onReplyTo,
+                onEditComment = onEditComment,
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
                 onOpenPost = onOpenPost,
@@ -688,21 +651,20 @@ class ContentScreensTest {
         assertThat(editing).isEqualTo("p1")
     }
 
+    /**
+     * `ReplyEntry` 7: the thread's foot opens the composer rather than
+     * being one. Words are written on the wizard, so nothing here takes
+     * a keystroke.
+     */
     @Test
-    fun anEmptyDraftDisablesTheCommentButton() {
-        renderDetail(PostDetailUiState(loading = false, post = testPost("p1"), draft = ""))
-        compose.onNodeWithTag("detail_comment_submit").performScrollTo().assertIsNotEnabled()
-    }
-
-    @Test
-    fun aDraftEnablesAndSubmits() {
-        var submitted = false
+    fun theThreadsFootOpensTheComposerPinnedToThePost() {
+        var opened = false
         renderDetail(
-            PostDetailUiState(loading = false, post = testPost("p1"), draft = "hello"),
-            onSubmitComment = { submitted = true },
+            PostDetailUiState(loading = false, post = testPost("p1")),
+            onAddComment = { opened = true },
         )
-        compose.onNodeWithTag("detail_comment_submit").performScrollTo().performClick()
-        assertThat(submitted).isTrue()
+        compose.onNodeWithTag("detail_add_comment").performScrollTo().performClick()
+        assertThat(opened).isTrue()
     }
 
     @Test
@@ -713,8 +675,7 @@ class ContentScreensTest {
             signedIn = false,
             onSignInOrJoin = { joining = true },
         )
-        compose.onNodeWithTag("detail_comment_input").assertDoesNotExist()
-        compose.onNodeWithTag("detail_comment_submit").assertDoesNotExist()
+        compose.onNodeWithTag("detail_add_comment").assertDoesNotExist()
         compose.onNodeWithTag("detail_comment_signin").performScrollTo().performClick()
         assertThat(joining).isTrue()
     }
@@ -725,7 +686,7 @@ class ContentScreensTest {
             PostDetailUiState(loading = false, post = testPost("p1")),
             signedIn = null,
         )
-        compose.onNodeWithTag("detail_comment_input").assertDoesNotExist()
+        compose.onNodeWithTag("detail_add_comment").assertDoesNotExist()
         compose.onNodeWithTag("detail_comment_signin").assertDoesNotExist()
     }
 
@@ -772,25 +733,9 @@ class ContentScreensTest {
         compose.onNodeWithTag("detail_comment_c1").assertExists()
         compose.onNodeWithTag("detail_transport_banner").assertDoesNotExist()
         compose.onNodeWithTag("detail_more_comments").assertDoesNotExist()
-        // A read fault never lights the composer's error line.
-        compose.onNodeWithTag("detail_comment_transport").assertDoesNotExist()
         compose.onNodeWithTag("detail_more_comments_error").performScrollTo().assertExists()
         compose.onNodeWithTag("detail_more_comments_retry").performClick()
         assertThat(more).isTrue()
-    }
-
-    @Test
-    fun aSubmitTransportFaultRendersInTheComposer() {
-        renderDetail(
-            PostDetailUiState(
-                loading = false,
-                post = testPost("p1"),
-                submitTransportFailed = true,
-            ),
-        )
-        compose.onNodeWithTag("detail_comment_transport").performScrollTo().assertExists()
-        compose.onNodeWithTag("detail_transport_banner").assertDoesNotExist()
-        compose.onNodeWithTag("detail_more_comments_error").assertDoesNotExist()
     }
 
     // -- The comment thread (slice 2.1: edit affordance, nesting) --
@@ -836,8 +781,9 @@ class ContentScreensTest {
         compose.onNodeWithTag("comment_edited_c2").assertDoesNotExist()
     }
 
+    /** `ReplyMedia` 6 — Edit on an own comment opens `CommentEdit`. */
     @Test
-    fun theEditAffordanceOpensTheInlineEditor() {
+    fun theEditAffordanceOpensTheEditScreen() {
         var editing: com.cogra.domain.CommentView? = null
         renderDetail(
             PostDetailUiState(
@@ -846,27 +792,26 @@ class ContentScreensTest {
                 comments = listOf(comment("mine", authorId = "viewer")),
             ),
             viewerId = "viewer",
-            onStartEditComment = { editing = it },
+            onEditComment = { editing = it },
         )
         compose.onNodeWithTag("comment_edit_mine").performScrollTo().performClick()
         assertThat(editing?.id).isEqualTo("mine")
     }
 
+    /** Nothing is edited in place any more: the screen owns the edit. */
     @Test
-    fun theInlineEditorRendersWithSaveAndCancel() {
+    fun theThreadHoldsNoInlineEditor() {
         renderDetail(
             PostDetailUiState(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(comment("mine", authorId = "viewer")),
-                editingCommentId = "mine",
-                editDraft = "better words",
             ),
             viewerId = "viewer",
         )
-        compose.onNodeWithTag("comment_edit_input").assertExists()
-        compose.onNodeWithTag("comment_edit_save").assertExists()
-        compose.onNodeWithTag("comment_edit_cancel").assertExists()
+        compose.onNodeWithTag("comment_edit_input").assertDoesNotExist()
+        compose.onNodeWithTag("comment_edit_save").assertDoesNotExist()
+        compose.onNodeWithTag("comment_edit_cancel").assertDoesNotExist()
     }
 
     /**
@@ -927,18 +872,36 @@ class ContentScreensTest {
         compose.onNodeWithTag("comment_reply_c1").assertDoesNotExist()
     }
 
+    /**
+     * `ReplyEntry` 5: Reply opens the composer pre-targeted at **that**
+     * comment, rather than growing a box under it.
+     */
     @Test
-    fun theReplyComposerRendersUnderItsComment() {
+    fun replyOpensTheComposerPreTargetedAtThatComment() {
+        var replied: com.cogra.domain.CommentView? = null
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(comment("c1"), comment("c2")),
+            ),
+            onReplyTo = { replied = it },
+        )
+        compose.onNodeWithTag("comment_reply_c2").performScrollTo().performClick()
+        assertThat(replied?.id).isEqualTo("c2")
+    }
+
+    @Test
+    fun theThreadHoldsNoInlineReplyComposer() {
         renderDetail(
             PostDetailUiState(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(comment("c1")),
-                replyingToId = "c1",
             ),
         )
-        compose.onNodeWithTag("comment_reply_input").assertExists()
-        compose.onNodeWithTag("comment_reply_submit").assertExists()
+        compose.onNodeWithTag("comment_reply_input").assertDoesNotExist()
+        compose.onNodeWithTag("comment_reply_submit").assertDoesNotExist()
     }
 
     @Test
@@ -1110,160 +1073,47 @@ class ContentScreensTest {
         compose.onNodeWithTag("comment_c1_topic_kotlin").assertTextEquals("#kotlin")
     }
 
-    // -- Comment compose gains tags (F9) and the editor gains them (F10) --
+    // -- What the composer is pinned to (graph.json `ReplyEntry` 5, 7) --
 
+    /**
+     * "Add a comment" pins the post: the card leads with its title, and
+     * the line under it is the body the answer is about.
+     */
     @Test
-    fun theCommentBoxCarriesATagEntry() {
-        renderDetail(PostDetailUiState(loading = false, post = testPost("p1")))
-        compose.onNodeWithTag("detail_comment_tag_input").assertExists()
-        compose.onNodeWithTag("detail_comment_tag_add").assertExists()
+    fun thePostBecomesAPinnedTarget() {
+        val target = testPost("p1").asReplyTarget()
+
+        assertThat(target.id).isEqualTo("p1")
+        assertThat(target.kind).isEqualTo(ReplyTargetKind.Post)
+        assertThat(target.actLabel).endsWith("post")
     }
 
+    /**
+     * "Reply" pre-targets the comment. A comment has no title, so its
+     * own opening words become one — and the seal then says it answers a
+     * comment rather than the post.
+     */
     @Test
-    fun anAnonymousReaderGetsNoTagEntry() {
-        renderDetail(
-            PostDetailUiState(loading = false, post = testPost("p1")),
-            signedIn = false,
-        )
-        compose.onNodeWithTag("detail_comment_tag_input").assertDoesNotExist()
+    fun aCommentBecomesAPreTargetedTarget() {
+        val target = comment("c1").asReplyTarget()
+
+        assertThat(target.id).isEqualTo("c1")
+        assertThat(target.kind).isEqualTo(ReplyTargetKind.Comment)
+        assertThat(target.actLabel).endsWith("comment")
+        assertThat(target.title).isNotEmpty()
     }
 
+    /** The card draws one line, so the words are clipped before they ride a route. */
     @Test
-    fun typingIntoTheCommentTagFieldNamesItsSection() {
-        val typed = mutableListOf<Pair<TagTarget, String>>()
-        renderDetail(
-            PostDetailUiState(loading = false, post = testPost("p1")),
-            onTagInputChange = { target, text -> typed += target to text },
-        )
-        compose.onNodeWithTag("detail_comment_tag_input").performTextInput("Rust")
-        assertThat(typed).containsExactly(TagTarget.COMMENT to "Rust")
-    }
+    fun aLongBodyIsClippedForTheCard() {
+        val long = "x".repeat(400)
+        val target = comment("c1")
+            .let { it.copy(content = it.content.copy(value = long)) }
+            .asReplyTarget()
 
-    @Test
-    fun theCommentBoxRendersItsStagedChips() {
-        renderDetail(
-            PostDetailUiState(
-                loading = false,
-                post = testPost("p1"),
-                commentTags = TagSectionState(tags = tagRows("rust")),
-            ),
-        )
-        compose.onNodeWithTag("detail_comment_tag_rust").assertExists()
-    }
-
-    /** The indicator counts the minting write and each declared topic (F4). */
-    @Test
-    fun theCommentSubmitSaysWhatItWillSign() {
-        renderDetail(
-            PostDetailUiState(
-                loading = false,
-                post = testPost("p1"),
-                commentTags = TagSectionState(tags = tagRows("rust", "kotlin")),
-            ),
-        )
-        compose.onNodeWithTag("detail_comment_signed_actions")
-            .assertTextContains("3", substring = true)
-    }
-
-    @Test
-    fun theReplyBoxCarriesItsOwnTagEntry() {
-        renderDetail(
-            PostDetailUiState(
-                loading = false,
-                post = testPost("p1"),
-                comments = listOf(comment("c1")),
-                replyingToId = "c1",
-            ),
-        )
-        compose.onNodeWithTag("comment_reply_tag_input").assertExists()
-        compose.onNodeWithTag("comment_reply_signed_actions").assertExists()
-    }
-
-    @Test
-    fun theInlineEditorCarriesTheCommentsTags() {
-        renderDetail(
-            PostDetailUiState(
-                loading = false,
-                post = testPost("p1"),
-                comments = listOf(comment("c1")),
-                editingCommentId = "c1",
-                editDraft = "text",
-                editLoadedText = "text",
-                editTags = TagSectionState(tags = tagRows("rust"), loaded = tagRows("rust")),
-            ),
-            viewerId = "author-1",
-        )
-        compose.onNodeWithTag("comment_edit_tag_rust").assertExists()
-        compose.onNodeWithTag("comment_edit_tag_input").assertExists()
-    }
-
-    /** An edit that changed nothing has nothing to sign (F10). */
-    @Test
-    fun anUnchangedEditCannotBeSubmitted() {
-        val loaded = tagRows("rust")
-        renderDetail(
-            PostDetailUiState(
-                loading = false,
-                post = testPost("p1"),
-                comments = listOf(comment("c1")),
-                editingCommentId = "c1",
-                editDraft = "text",
-                editLoadedText = "text",
-                editTags = TagSectionState(tags = loaded, loaded = loaded),
-            ),
-            viewerId = "author-1",
-        )
-        compose.onNodeWithTag("comment_edit_signed_actions").assertTextContains("0", substring = true)
-        compose.onNodeWithTag("comment_edit_save").assertIsNotEnabled()
-    }
-
-    @Test
-    fun aTagOnlyEditIsSubmittable() {
-        renderDetail(
-            PostDetailUiState(
-                loading = false,
-                post = testPost("p1"),
-                comments = listOf(comment("c1")),
-                editingCommentId = "c1",
-                editDraft = "text",
-                editLoadedText = "text",
-                editTags = TagSectionState(tags = tagRows("rust"), loaded = emptyList()),
-            ),
-            viewerId = "author-1",
-        )
-        compose.onNodeWithTag("comment_edit_signed_actions").assertTextContains("1", substring = true)
-        compose.onNodeWithTag("comment_edit_save").assertIsEnabled()
-    }
-
-    @Test
-    fun aMultiActionCommentSubmitAsksFirst() {
-        renderDetail(
-            PostDetailUiState(
-                loading = false,
-                post = testPost("p1"),
-                commentTags = TagSectionState(tags = tagRows("rust")),
-                confirmPending = TagTarget.COMMENT,
-            ),
-        )
-        compose.onNodeWithTag("detail_confirm").assertExists()
-        compose.onNodeWithTag("detail_confirm_body").assertTextContains("2", substring = true)
-    }
-
-    @Test
-    fun confirmingTheBatchReportsTheDontAskChoice() {
-        var confirmed: Boolean? = null
-        renderDetail(
-            PostDetailUiState(
-                loading = false,
-                post = testPost("p1"),
-                commentTags = TagSectionState(tags = tagRows("rust")),
-                confirmPending = TagTarget.COMMENT,
-            ),
-            onConfirmSubmit = { confirmed = it },
-        )
-        compose.onNodeWithTag("detail_confirm_dont_ask").performClick()
-        compose.onNodeWithTag("detail_confirm_proceed").performClick()
-        assertThat(confirmed).isTrue()
+        assertThat(target.snippet.length).isLessThan(long.length)
+        assertThat(target.snippet).endsWith("…")
+        assertThat(target.title.length).isLessThan(target.snippet.length)
     }
 
     @Test
