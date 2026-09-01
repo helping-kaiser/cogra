@@ -47,6 +47,7 @@ jobs:
       code: ${{ steps.filter.outputs.code }}
       android: ${{ steps.frontends.outputs.android }}
       web: ${{ steps.frontends.outputs.web }}
+      design: ${{ steps.frontends.outputs.design }}
     steps:
       - uses: actions/checkout@v7
       # The Rust gate. `android/**`, `web/**`, and `design/**` are subtracted
@@ -66,9 +67,9 @@ jobs:
               - '!android/**'
               - '!web/**'
               - '!design/**'
-      # The frontend gates. Default (OR) quantifier: any of these paths fires
-      # them. Kept in their own step because the OR semantics are incompatible
-      # with the `every` quantifier the Rust gate above depends on. Both
+      # The frontend and design gates. Default (OR) quantifier: any of these
+      # paths fires them. Kept in their own step because the OR semantics are
+      # incompatible with the `every` quantifier the Rust gate above needs. Both
       # contract artifacts are listed for the same reason schema.graphql is:
       # the frontend golden-vector tests pin to client-crypto-vectors.json,
       # so a vector regeneration must run them, not just the Rust jobs.
@@ -87,6 +88,9 @@ jobs:
               - 'web/**'
               - 'schema.graphql'
               - 'client-crypto-vectors.json'
+              - '.github/workflows/**'
+            design:
+              - 'design/**'
               - '.github/workflows/**'
   # The corpus linter over its own repository, and the suite that reads the
   # same tree. Ungated on purpose (see the header): the carrier is the whole
@@ -247,3 +251,42 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+
+  design:
+    name: Design
+    needs: changes
+    if: needs.changes.outputs.design == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: design/_build
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          # No engines field and no .nvmrc under design/_build, so the major
+          # is the honest granularity: the scripts are plain ESM over Babel
+          # standalone and React DOM's server renderer, with no toolchain
+          # sensitivity below it. 24 is what the design tree is developed on
+          # and the major web/.nvmrc pins.
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: design/_build/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      # The four stages in order: bundle compiles the component sources into
+      # _ds_bundle.js, render-screens and gen-maps render the artboards and
+      # the canvas map from it, and check-flows walks the rendered tree and
+      # exits nonzero on a structural failure. That exit is the gate.
+      - name: Render the design tree
+        run: node bundle.mjs && node render-screens.mjs && node gen-maps.mjs && node check-flows.mjs
+      # The rendered outputs are committed, so a re-render that changes
+      # anything means the PR shipped stale artboards. Runs at the repo root
+      # because the pathspec is resolved against the working directory;
+      # `--intent-to-add` first so a newly generated file that was never
+      # committed reds as a diff instead of passing as untracked.
+      - name: Check the rendered tree is current
+        working-directory: .
+        run: |
+          git add --intent-to-add -- design
+          git diff --exit-code -- design
