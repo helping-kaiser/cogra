@@ -1674,7 +1674,7 @@ impl PostType {
         first: Option<i32>,
         last: Option<i32>,
         #[graphql(default = true)] include_pending: bool,
-    ) -> async_graphql::Result<KeysetConnection<CommentType>> {
+    ) -> async_graphql::Result<CommentConnection> {
         comments_connection(ctx, self.0.id, after, before, first, last, include_pending).await
     }
 
@@ -1842,7 +1842,7 @@ impl CommentType {
         first: Option<i32>,
         last: Option<i32>,
         #[graphql(default = true)] include_pending: bool,
-    ) -> async_graphql::Result<KeysetConnection<CommentType>> {
+    ) -> async_graphql::Result<CommentConnection> {
         comments_connection(ctx, self.0.id, after, before, first, last, include_pending).await
     }
 
@@ -2565,16 +2565,60 @@ pub async fn resolve_node_id(
 
 /// Connections over mirror-ordered reads carry no `nodes` shortcut —
 /// the connection convention is edges + pageInfo (api-spec.md
-/// "Pagination").
-pub type KeysetConnection<G> = Connection<
+/// "Pagination"). `F` carries connection-level fields, which
+/// async-graphql flattens beside `edges`.
+pub type KeysetConnectionWith<G, F> = Connection<
     String,
     G,
-    async_graphql::connection::EmptyFields,
+    F,
     async_graphql::connection::EmptyFields,
     async_graphql::connection::DefaultConnectionName,
     async_graphql::connection::DefaultEdgeName,
     async_graphql::connection::DisableNodesField,
 >;
+
+pub type KeysetConnection<G> = KeysetConnectionWith<G, async_graphql::connection::EmptyFields>;
+
+/// A thread connection: the comment page plus the thread's own count.
+pub type CommentConnection = KeysetConnectionWith<CommentType, CommentConnectionFields>;
+
+/// `CommentConnection`'s connection-level fields. It holds the read's
+/// coordinates rather than a computed number so the count is resolved
+/// only when asked — a caller that pages a thread without selecting
+/// `totalCount` never runs the aggregate.
+///
+/// The count is priced at zero because it is one aggregate per
+/// connection, not one per edge, and [`connection_cost`] charges
+/// `requested × child_complexity` over a child complexity that is a flat
+/// sum across the whole selection set. Zero is the only weight that
+/// survives that multiplication unscaled. The count itself saturates at
+/// [`i32::MAX`]: GraphQL's `Int` is 32-bit, no thread is that deep, and
+/// saturating beats failing the read.
+pub struct CommentConnectionFields {
+    target: Uuid,
+    include_pending: bool,
+}
+
+#[Object]
+impl CommentConnectionFields {
+    /// How many entries this thread holds in total, across every page —
+    /// the count behind a "view n replies" affordance, independent of
+    /// the cursor. Counted under the same filter that served the edges:
+    /// by default pending entries beside landed ones,
+    /// `includePending: false` only what has landed on L1.
+    #[graphql(complexity = 0)]
+    async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<i32> {
+        let pool = ctx.data::<PgPool>()?;
+        let total = postgres_store::content::count_comments_for_target(
+            pool,
+            self.target,
+            self.include_pending,
+        )
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        Ok(i32::try_from(total).unwrap_or(i32::MAX))
+    }
+}
 
 /// A keyset cursor: the landing-order key, plus — on content
 /// connections — the entry's own id. Cursors are opaque per the Relay
@@ -2711,13 +2755,35 @@ fn decode_landing_cursor(cursor: &str) -> async_graphql::Result<CursorKey> {
 /// walk reached last — trailing on a forward walk, leading on a
 /// backward one.
 pub fn keyset_connection<T, G>(
-    mut items: Vec<T>,
+    items: Vec<T>,
     page: &KeysetPage,
     cursor_of: impl Fn(&T) -> CursorKey,
     wrap: impl Fn(T) -> G,
 ) -> KeysetConnection<G>
 where
     G: async_graphql::OutputType,
+{
+    keyset_connection_with(
+        items,
+        page,
+        cursor_of,
+        wrap,
+        async_graphql::connection::EmptyFields,
+    )
+}
+
+/// [`keyset_connection`], carrying connection-level fields beside the
+/// edges.
+pub fn keyset_connection_with<T, G, F>(
+    mut items: Vec<T>,
+    page: &KeysetPage,
+    cursor_of: impl Fn(&T) -> CursorKey,
+    wrap: impl Fn(T) -> G,
+    additional_fields: F,
+) -> KeysetConnectionWith<G, F>
+where
+    G: async_graphql::OutputType,
+    F: async_graphql::ObjectType,
 {
     let has_more = items.len() as i64 > page.limit;
     if has_more {
@@ -2732,7 +2798,8 @@ where
     } else {
         (page.cursor.is_some(), has_more)
     };
-    let mut connection = KeysetConnection::new(has_previous, has_next);
+    let mut connection =
+        KeysetConnectionWith::with_additional_fields(has_previous, has_next, additional_fields);
     connection.edges.extend(
         items
             .into_iter()
@@ -2752,7 +2819,7 @@ async fn comments_connection(
     first: Option<i32>,
     last: Option<i32>,
     include_pending: bool,
-) -> async_graphql::Result<KeysetConnection<CommentType>> {
+) -> async_graphql::Result<CommentConnection> {
     let pool = ctx.data::<PgPool>()?;
     let page = keyset_page(first, after, last, before)?;
     let rows = postgres_store::content::comments_for_target(
@@ -2765,11 +2832,15 @@ async fn comments_connection(
     )
     .await
     .map_err(|e| async_graphql::Error::new(e.to_string()))?;
-    Ok(keyset_connection(
+    Ok(keyset_connection_with(
         rows,
         &page,
         |c| content_cursor_key(c.sort_key(), c.id),
         CommentType,
+        CommentConnectionFields {
+            target,
+            include_pending,
+        },
     ))
 }
 

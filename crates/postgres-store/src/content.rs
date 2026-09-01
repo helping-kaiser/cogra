@@ -1335,6 +1335,37 @@ async fn comments_pending(
     Ok(rows.into_iter().map(comment_from_row).collect())
 }
 
+/// How many entries the thread read serves for this target under the
+/// same filter, cursor-independent — what a "view n replies" affordance
+/// counts before any page is fetched.
+///
+/// The filter mirrors [`comments_for_target`] branch for branch, so the
+/// count can never disagree with the edges beside it: `include_pending`
+/// admits the unlanded entities exactly as `merge_walk` does, and the
+/// `EXISTS` restates the version lateral's row-elimination — that lateral
+/// is an inner join, so an entry with no version passing the gate is
+/// absent from the page and must be absent from the count.
+pub async fn count_comments_for_target(
+    pool: &PgPool,
+    target_id: Uuid,
+    include_pending: bool,
+) -> Result<i64, ContentError> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT COUNT(*)::bigint AS "total!"
+           FROM comments c
+           WHERE c.target_id = $1
+             AND ($2 OR c.landed_epoch IS NOT NULL)
+             AND EXISTS (
+                 SELECT 1 FROM comment_versions v
+                 WHERE v.comment_id = c.id AND ($2 OR NOT v.pending)
+             )"#,
+        target_id,
+        include_pending,
+    )
+    .fetch_one(pool)
+    .await?)
+}
+
 /// Which content kind a UUID names — the `node(id)` dispatch. The
 /// entity tables are the registry, pending rows included; a UUID in
 /// neither is not a content node (actors resolve through their own
