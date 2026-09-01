@@ -15,12 +15,14 @@ import {
   PrepareCommentEditDocument,
   PreparePostDocument,
   PreparePostEditDocument,
+  type CommentRepliesQuery,
   type LandingState,
   type PostDetailQuery,
   type PostsQuery,
 } from "@/__generated__/graphql";
 import type { License } from "@/lib/license";
 import type { ReferenceDraft } from "@/lib/references/draft";
+import type { StancePair } from "@/lib/stance/model";
 import type { TagDraft } from "@/lib/topics/draft";
 import { failed, fetchOutcome, payloadOutcome, success, type Outcome } from "./outcome";
 import { stagedFromPrepared, type StagedWriteView } from "./writes-api";
@@ -29,8 +31,16 @@ export type PostView = PostsQuery["posts"]["edges"][number]["node"];
 
 type DetailPost = NonNullable<PostDetailQuery["post"]>;
 export type CommentView = DetailPost["comments"]["edges"][number]["node"];
-/** A nested reply — one prefetched level under each comment. */
-export type ReplyView = CommentView["replies"]["edges"][number]["node"];
+/**
+ * A reply, as the EXPAND read serves it (Q49).
+ *
+ * It is no longer derived from the thread read, because the thread read no
+ * longer carries replies: a comment arrives with its branch as a count, and
+ * the nodes only exist once a reader unfolds one.
+ */
+export type ReplyView = NonNullable<
+  CommentRepliesQuery["comment"]
+>["replies"]["edges"][number]["node"];
 
 export type Page<T> = {
   items: readonly T[];
@@ -144,9 +154,6 @@ export function sensitiveInput(sensitive: boolean | undefined, reason: string | 
 /** One page per fetch; the server default is the same number. */
 export const CONTENT_PAGE_SIZE = 20;
 
-/** The reply prefetch depth of every thread read — one level. */
-export const REPLIES_FIRST = 3;
-
 /**
  * The landed-only opt-out (api-spec.md "Pagination"). Reads serve
  * pending entries by default — they are their author's content already;
@@ -167,7 +174,7 @@ export async function fetchCommentReplies(
   commentId: string,
   after: string | null = null,
   options: ListingOptions = {},
-): Promise<Outcome<Page<CommentView>>> {
+): Promise<Outcome<Page<ReplyView>>> {
   const fetched = await fetchOutcome(() =>
     client.query({
       query: CommentRepliesDocument,
@@ -175,7 +182,6 @@ export async function fetchCommentReplies(
         id: commentId,
         first: CONTENT_PAGE_SIZE,
         after,
-        repliesFirst: REPLIES_FIRST,
         includePending: includePendingOf(options),
       },
       fetchPolicy: "network-only",
@@ -230,7 +236,6 @@ export async function fetchPostDetail(
         id,
         commentsFirst: CONTENT_PAGE_SIZE,
         commentsAfter,
-        repliesFirst: REPLIES_FIRST,
         includePending: includePendingOf(options),
       },
       fetchPolicy: "network-only",
@@ -372,6 +377,12 @@ export async function prepareComment(
     references?: readonly ReferenceDraft[];
     /** The pictures, in the author's order, each with its description. */
     attachments?: readonly GalleryEntryDraft[];
+    /**
+     * Where the author stands on what they answer — the genesis Review's own
+     * pair, which the seal's Adjust sets (ReplySeal / ReplyPad). Omitted, the
+     * server applies the +0.1 policy default to each.
+     */
+    stance?: StancePair;
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -398,6 +409,8 @@ export async function prepareComment(
             // Referencing is part of the same gesture, under its own
             // ten-per-batch cap (D7).
             references: referenceInputs(fields.references),
+            pDirected: fields.stance?.pDirected ?? null,
+            pInterest: fields.stance?.pInterest ?? null,
           },
         },
       }),
@@ -410,7 +423,18 @@ export async function prepareCommentEdit(
   client: ApolloClient,
   // `sensitive` is required for the same reason it is on a post edit: an edit
   // is complete state, so an omitted mark unveils a comment its author veiled.
-  fields: { id: string; content: string; sensitive: boolean; sensitiveReason?: string },
+  fields: {
+    id: string;
+    content: string;
+    sensitive: boolean;
+    sensitiveReason?: string;
+    /**
+     * The gallery the edit LEAVES STANDING — complete, not a delta, exactly
+     * like the body and the mark. An empty gallery is sent as an empty
+     * gallery, which is what removing the last picture has to mean.
+     */
+    attachments?: readonly GalleryEntryDraft[];
+  },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
     () =>
@@ -420,6 +444,7 @@ export async function prepareCommentEdit(
           input: {
             id: fields.id,
             content: fields.content,
+            attachments: attachmentInputs(fields.attachments),
             ...sensitiveInput(fields.sensitive, fields.sensitiveReason),
           },
         },

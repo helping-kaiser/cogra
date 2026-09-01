@@ -307,6 +307,12 @@ describe("prepareComment", () => {
         attachments: null,
         tags: null,
         references: null,
+        // The seal's Adjust writes the genesis Review's own pair. A caller
+        // that names no stance sends neither, and the server applies its own
+        // +0.1 default to each — stating a value here would be this client
+        // inventing the policy.
+        pDirected: null,
+        pInterest: null,
       },
     });
   });
