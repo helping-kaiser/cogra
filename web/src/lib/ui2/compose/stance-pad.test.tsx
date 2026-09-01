@@ -103,14 +103,15 @@ describe("StancePad", () => {
     });
 
     it("stops moving the pick once the pointer is up", () => {
-      const props = draw();
+      const onChange = vi.fn();
+      draw({ onChange });
       const field = screen.getByTestId("stance-pad-field");
       measureField(field);
       fireEvent.pointerDown(field, { clientX: 100, clientY: 100, pointerId: 1 });
       fireEvent.pointerUp(field, { pointerId: 1 });
-      props.onChange.mockClear();
+      onChange.mockClear();
       fireEvent.pointerMove(field, { clientX: 180, clientY: 100, pointerId: 1 });
-      expect(props.onChange).not.toHaveBeenCalled();
+      expect(onChange).not.toHaveBeenCalled();
     });
   });
 
