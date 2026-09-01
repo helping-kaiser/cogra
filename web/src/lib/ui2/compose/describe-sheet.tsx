@@ -13,11 +13,17 @@ import { BottomSheet } from "../bottom-sheet";
 import { HelpDialog, HELP_TOPICS } from "../help-dialog";
 import { PillButton } from "../pill-button";
 import { TextField } from "../text-field";
+import { cropAspect, cropPreviewStyle } from "../media/crop-preview";
+import type { Crop } from "../media/crop";
+
+/** The boarded height of the sheet's picture. Its width follows the framing. */
+const PREVIEW_HEIGHT = 180;
 
 export function DescribeSheet({
   open,
   onClose,
   src,
+  crop,
   value,
   onChange,
   position,
@@ -26,6 +32,8 @@ export function DescribeSheet({
   open: boolean;
   onClose: () => void;
   src?: string | null;
+  /** The framing the author chose, so the sheet describes what will be seen. */
+  crop?: Crop | null;
   value: string;
   onChange: (next: string) => void;
   // "2 of 3" — which picture is being described, when the set has more than one.
@@ -33,6 +41,16 @@ export function DescribeSheet({
   testId?: string;
 }) {
   const [help, setHelp] = useState(false);
+  // A DESCRIPTION IS OF WHAT WILL BE SEEN, so this shows the framing rather
+  // than the source. The picture keeps the sheet's boarded height and takes the
+  // framing's own width, which makes the box exactly the framing's shape — so
+  // nothing is cropped a second time and nothing is squashed.
+  const aspect = cropAspect(crop);
+  const box =
+    aspect === null
+      ? null
+      : { width: Math.round(PREVIEW_HEIGHT * aspect), height: PREVIEW_HEIGHT };
+  const framing = box === null ? null : cropPreviewStyle(crop, box);
   return (
     <BottomSheet open={open} onClose={onClose} title="Describe this picture" testId={testId}>
       <div className="flex flex-col gap-3">
@@ -57,7 +75,17 @@ export function DescribeSheet({
           </button>
         </div>
         <div className="flex h-[180px] items-center justify-center overflow-hidden rounded-medium bg-surface-container-high">
-          {src ? (
+          {src && framing !== null && box !== null ? (
+            <span
+              data-testid={`${testId}-framed`}
+              style={{ width: `${box.width}px`, height: `${box.height}px` }}
+              className="relative block flex-none overflow-hidden"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- a blob:
+                  URL for bytes that have not left the device. */}
+              <img src={src} alt="" aria-hidden="true" style={framing} className="block" />
+            </span>
+          ) : src ? (
             // A blob: URL for bytes that have not left the device.
             // eslint-disable-next-line @next/next/no-img-element
             <img src={src} alt="" aria-hidden="true" className="block max-h-full max-w-full" />

@@ -16,6 +16,8 @@
 // details step or an `updateMedia` carries a late description.
 
 import { Chip } from "@/lib/ui2/chip";
+import { PillButton } from "@/lib/ui2/pill-button";
+import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import { CropFrame } from "@/lib/ui2/media/crop-frame";
 import { POST_SHAPES, POST_SHAPE_ORDER, type PostShape } from "@/lib/ui2/media/aspect";
 import type { Crop } from "@/lib/ui2/media/crop";
@@ -29,6 +31,7 @@ export function CropStep({
   onShape,
   onFocus,
   onCrop,
+  onNext,
 }: {
   assets: readonly PickedAsset[];
   previews: Readonly<Record<string, string>>;
@@ -37,6 +40,7 @@ export function CropStep({
   onShape: (next: PostShape) => void;
   onFocus: (index: number) => void;
   onCrop: (id: string, crop: Crop) => void;
+  onNext: () => void;
 }) {
   const asset = assets[focused];
   if (asset === undefined) return null;
@@ -81,18 +85,26 @@ export function CropStep({
                 aria-label={`Frame picture ${index + 1} of ${assets.length}`}
                 aria-current={index === focused}
                 onClick={() => onFocus(index)}
-                className={`cg-focus block size-12 overflow-hidden rounded-small ${
+                className={`cg-focus block rounded-small ${
                   index === focused ? "outline outline-2 outline-offset-1 outline-primary" : "opacity-65"
                 }`}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element -- a blob:
-                    URL for local bytes; there is nothing for the optimizer to do. */}
-                <img src={previews[each.id] ?? ""} alt="" className="block size-full object-cover" />
+                {/* Each tile shows ITS OWN framing, so the strip reads as the
+                    set of choices already made rather than as the originals. */}
+                <MediaThumb src={previews[each.id] ?? null} crop={each.crop} testId={`wizard-crop-tile-${index}`} />
               </button>
             </li>
           ))}
         </ul>
       )}
+
+      <div className="flex-1" />
+      {/* THE FORWARD ACTION IS AT THE BOTTOM, on every stage (jakob 2026-09-01):
+          the top-right corner used to mean Next here and X later, and an author
+          trained on the corner left the flow by accident. */}
+      <PillButton testId="wizard-next" full onClick={onNext}>
+        Next
+      </PillButton>
     </div>
   );
 }
