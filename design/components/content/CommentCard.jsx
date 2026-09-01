@@ -6,7 +6,7 @@ import { PendingMarker, EditedMarker } from "../honesty/PendingMarker.jsx";
 import { LicenseTerms } from "../forms/LicenseChooser.jsx";
 import { StanceControl } from "../stance/StanceControl.jsx";
 import { OverflowMenu } from "./OverflowMenu.jsx";
-import { Icon } from "../navigation/Icon.jsx";
+import { Icon, NODE_GLYPHS } from "../navigation/Icon.jsx";
 import { TopicsLine } from "./TopicsLine.jsx";
 import { MediaGallery } from "../proposed/MediaAttachment.jsx";
 
@@ -59,6 +59,7 @@ export function CommentCard({
   own = false,
   targetLabel = "this comment",
   target,
+  targetKind = "post",
   onOpenTarget,
   actions,
   menuItems = [],
@@ -88,7 +89,9 @@ export function CommentCard({
             shows OUT of its thread — the profile's comments view, a search
             result — the card leads with what it answers, one line, one tap to
             get there. Inside the thread the sheet's post is the context, so
-            thread surfaces simply pass no target. */}
+            thread surfaces simply pass no target. The glyph names the
+            TARGET's kind (the semantic-atoms rule) — a post unless the
+            comment answers something else. */}
         {target && onOpenTarget && (
           <button
             type="button"
@@ -109,7 +112,7 @@ export function CommentCard({
               borderRadius: "var(--radius-small)",
             }}
           >
-            <Icon name="chat_bubble" size={14} style={{ flex: "none" }} />
+            <Icon name={targetKind === "post" ? "dynamic_feed" : NODE_GLYPHS[targetKind] ?? "dynamic_feed"} size={14} style={{ flex: "none" }} />
             <span
               style={{
                 fontSize: "var(--text-label-small)",
