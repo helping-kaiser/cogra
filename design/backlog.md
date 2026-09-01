@@ -386,3 +386,21 @@ applicant may stage each kind of action **once** (one post, one
 stance, one comment, …): not browse-only, and never unlimited
 staging while approval waits. **Process:** after each slice's
 design round lands, the session compacts before the next round.
+
+**Item-23 round 1 — the profile screen — landed 2026-09-01.** Eight
+boards on the new Profile page (your own, someone else's, applicant
+days, the stances page, the posts and comments views, the edit flow
+and its seal), all wired: the 35 profile gaps flipped onto real
+boards, 689 edges · 132 gaps · 0 pending. Rulings the round produced,
+recorded in readme §13: the compact avatar-left header with the
+tappable figures row (Posts + both stance counts — never merged);
+the stances page shows each record's own value read-only
+(`StanceValue`); the wide stance anchor pairs with Message; chats
+ride the band on every tab root (edged to the chat-surface gap);
+the avatar's two flows (standalone badge → its own seal; via the
+edit screen → the edit's ONE seal covers everything); the chronicle
+as wallet-style containers; the comment's target pointer; the topic
+and applicant gaps renamed to carry their rulings. New overdue
+surfaces the round exposed as gaps: the settings screen, the invites
+screen, the profile menus. Next: round 2, the pattern boards
+(guest-gate, network-error, key-absent).
