@@ -183,7 +183,7 @@ class ContentRepositoryTest {
                    "content":{"__typename":"ModeratedText","value":"hi","status":"NORMAL"},
                    "attachments":[${mediaJson("cm1")}],
                    "attachmentsStatus":"NORMAL",
-                   "author":{"__typename":"User","id":"u2","handle":"bob","displayName":{"__typename":"ModeratedText","value":"Bob"}},
+                   "author":{"__typename":"User","id":"u2","handle":"bob","displayName":{"__typename":"ModeratedText","value":"Bob"},"avatar":null},
                    "createdAt":"2026-08-12T10:05:00+00:00",
                    "updatedAt":"2026-08-12T10:05:00+00:00",
                    "landing":${landingJson("PENDING", null)},
@@ -191,8 +191,7 @@ class ContentRepositoryTest {
                    "license":{"__typename":"License","attribution":1.0,"provenance":0.0},
                    "topics":[],
                    "references":[],
-                   "replies":{"__typename":"CommentConnection","edges":[],
-                     "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}],
+                   "replies":{"__typename":"CommentConnection","totalCount":2}}}],
                  "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":"cc"}}}}}""",
         )
         val detail = (repo().post("p1", 20, null) as Outcome.Success).value
@@ -200,6 +199,9 @@ class ContentRepositoryTest {
         assertThat(detail.post.author).isNull()
         assertThat(detail.comments.items.single().content.value).isEqualTo("hi")
         assertThat(detail.comments.items.single().author?.handle).isEqualTo("bob")
+        // Replies are counted, not carried (Q49): the thread read brings
+        // back the number behind "View n replies" and no reply bodies.
+        assertThat(detail.comments.items.single().replyCount).isEqualTo(2)
         assertThat(detail.post.license).isEqualTo(LicenseChoice.PublicDomain)
         assertThat(detail.comments.items.single().license)
             .isEqualTo(LicenseChoice(attribution = 1.0, provenance = 0.0))
