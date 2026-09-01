@@ -155,7 +155,9 @@ async fn an_unpriced_connection_charges_the_default_page(pool: PgPool) {
 /// connection's own fields and its edges. `connection_cost` multiplies
 /// that sum by the page size, so a `totalCount` carrying any weight at
 /// all would be charged once per row it does not read. Pinning both
-/// queries to the same flip point is what keeps that weight at zero.
+/// queries to the same flip point is what keeps that weight at zero: the
+/// `post` field, then the connection at its requested page times
+/// `edges { node { id } }` — three, and three only.
 ///
 /// (´claim:budgets:a-connection-prices-the-requested-or-default-page´)
 #[sqlx::test(migrations = "../../migrations")]
@@ -167,8 +169,6 @@ async fn total_count_is_not_charged_per_edge(pool: PgPool) {
     let with_count =
         format!("{{ post(id: \"{NIL_ID}\") {{ comments(first: 100) {{ totalCount {page} }} }} }}");
 
-    // The `post` field, then the connection at its requested page times
-    // `edges { node { id } }` — three, and three only.
     let cost = 1 + connection_cost(Some(100), None, 3);
     let budgets = |complexity| QueryBudgets {
         depth: 15,

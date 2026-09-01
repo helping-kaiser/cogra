@@ -602,6 +602,9 @@ async fn a_landed_version_without_coordinates_falls_below_one_with_them(pool: Pg
 /// replies the reader cannot reach. Both filters are pinned against the
 /// read itself rather than against a literal, so the two cannot drift
 /// apart silently.
+///
+/// A thread's count answers for exactly the entries its page would serve, under either pending filter.
+/// ´claim:content:a-thread-count-answers-for-its-page´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_thread_count_admits_what_the_thread_read_serves(pool: PgPool) {
     let author = actor(&pool, "author").await;
@@ -643,6 +646,8 @@ async fn the_thread_count_admits_what_the_thread_read_serves(pool: PgPool) {
 
 /// A target nobody has answered counts zero under either filter — the
 /// aggregate has no row to fall back on, so the read supplies the zero.
+///
+/// (´claim:content:a-thread-count-answers-for-its-page´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_unanswered_target_counts_zero(pool: PgPool) {
     let author = actor(&pool, "author").await;

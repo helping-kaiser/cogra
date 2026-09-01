@@ -2586,6 +2586,14 @@ pub type CommentConnection = KeysetConnectionWith<CommentType, CommentConnection
 /// coordinates rather than a computed number so the count is resolved
 /// only when asked — a caller that pages a thread without selecting
 /// `totalCount` never runs the aggregate.
+///
+/// The count is priced at zero because it is one aggregate per
+/// connection, not one per edge, and [`connection_cost`] charges
+/// `requested × child_complexity` over a child complexity that is a flat
+/// sum across the whole selection set. Zero is the only weight that
+/// survives that multiplication unscaled. The count itself saturates at
+/// [`i32::MAX`]: GraphQL's `Int` is 32-bit, no thread is that deep, and
+/// saturating beats failing the read.
 pub struct CommentConnectionFields {
     target: Uuid,
     include_pending: bool,
@@ -2598,12 +2606,6 @@ impl CommentConnectionFields {
     /// the cursor. Counted under the same filter that served the edges:
     /// by default pending entries beside landed ones,
     /// `includePending: false` only what has landed on L1.
-    ///
-    // One aggregate per connection, not one per edge, so it must stay
-    // out of the page-size multiplier in `connection_cost` — which
-    // charges `requested × child_complexity`, and child complexity is a
-    // flat sum over the whole selection set. Zero is the only weight
-    // that survives that multiplication unscaled.
     #[graphql(complexity = 0)]
     async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<i32> {
         let pool = ctx.data::<PgPool>()?;
@@ -2614,8 +2616,6 @@ impl CommentConnectionFields {
         )
         .await
         .map_err(|e| async_graphql::Error::new(e.to_string()))?;
-        // GraphQL Int is 32-bit; a thread that deep is not reachable, and
-        // saturating beats failing the whole read.
         Ok(i32::try_from(total).unwrap_or(i32::MAX))
     }
 }
