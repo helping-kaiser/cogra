@@ -334,7 +334,7 @@
     { "from": "ExploreFilter", "via": 2, "kind": "advance", "label": "kind chips", "to": [{ "terminal": "self", "case": "narrows what the search shows" }] },
     { "from": "ExploreFilter", "via": 3, "kind": "advance", "label": "Ranked / Newest", "to": [{ "terminal": "self", "case": "swaps the order" }] },
     { "from": "ExploreFilter", "via": 4, "kind": "advance", "label": "show already seen", "to": [{ "terminal": "self", "case": "the toggle flips" }] },
-    { "from": "ExploreFilter", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "ExploreSearch", "case": "the sheet closes" }] },
+    { "from": "ExploreFilter", "via": 5, "kind": "advance", "label": "scrim — tap outside", "to": [{ "board": "ExploreSearch", "case": "the sheet closes" }] },
 
     { "from": "ExploreNone", "via": 1, "kind": "advance", "label": "search field", "to": [{ "terminal": "self", "case": "typing" }, { "board": "ExploreSearch", "case": "a name something carries" }] },
     { "from": "ExploreNone", "via": 2, "kind": "advance", "label": "Everything (filter trigger)", "to": [{ "board": "ExploreFilter" }] },
@@ -367,7 +367,7 @@
     { "from": "FeedSheet", "via": 3, "kind": "advance", "label": "Ranked / Newest", "to": [{ "terminal": "self", "case": "swaps the order" }] },
     { "from": "FeedSheet", "via": 4, "kind": "advance", "label": "show already seen", "to": [{ "terminal": "self", "case": "the toggle flips" }] },
     { "from": "FeedSheet", "via": 5, "kind": "advance", "label": "Reset", "to": [{ "terminal": "self", "case": "back to the default" }] },
-    { "from": "FeedSheet", "via": 6, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "Feed", "case": "unchanged" }, { "board": "FeedNarrowed", "case": "narrowed" }, { "board": "FeedNothing", "case": "everything off" }, { "board": "FeedFar", "case": "far from the default" }] },
+    { "from": "FeedSheet", "via": 6, "kind": "advance", "label": "scrim — tap outside", "to": [{ "board": "Feed", "case": "unchanged" }, { "board": "FeedNarrowed", "case": "narrowed" }, { "board": "FeedNothing", "case": "everything off" }, { "board": "FeedFar", "case": "far from the default" }] },
 
     { "from": "FeedNarrowed", "via": 1, "kind": "advance", "label": "filter chip (deviations spelled out)", "to": [{ "board": "FeedSheet" }] },
     { "from": "FeedNarrowed", "via": 2, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
@@ -443,7 +443,7 @@
     { "from": "CommentEdit", "via": 11, "kind": "detour", "label": "This creates 2 signed actions", "to": [{ "board": "CommentEditActs" }] },
     { "from": "CommentEdit", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "board": "ReplyMedia", "case": "signed — the thread, the edit settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "gap": "network-error pattern board (not designed)", "case": "offline" }] },
 
-    { "from": "CommentEditActs", "via": 1, "kind": "back", "label": "Done", "to": [{ "board": "CommentEdit", "case": "the sheet closes" }] },
+    { "from": "CommentEditActs", "via": 1, "kind": "advance", "label": "Done", "to": [{ "board": "CommentEdit", "case": "the sheet closes" }] },
     { "from": "CommentEditActs", "via": 2, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "CommentEdit", "case": "the sheet closes" }] },
 
     { "from": "ReplyCompose", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "ReplyEntry", "case": "one stage back — the thread" }] },
@@ -533,7 +533,7 @@
     { "from": "ComposeLicense", "via": 1, "kind": "detour", "label": "? — License", "to": [{ "board": "HelpDialog", "case": "the License text" }] },
     { "from": "ComposeLicense", "via": 2, "kind": "advance", "label": "Credit options", "to": [{ "terminal": "self", "case": "one of three" }] },
     { "from": "ComposeLicense", "via": 3, "kind": "advance", "label": "Public-record options", "to": [{ "terminal": "self", "case": "one of three" }] },
-    { "from": "ComposeLicense", "via": 4, "kind": "back", "label": "Done", "to": [{ "board": "ComposeSeal", "case": "the sheet closes — the row reads the choice" }] },
+    { "from": "ComposeLicense", "via": 4, "kind": "advance", "label": "Done", "to": [{ "board": "ComposeSeal", "case": "the sheet closes — the row reads the choice" }] },
     { "from": "ComposeLicense", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "ComposeSeal", "case": "the sheet closes" }] },
 
     { "from": "ComposePad", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
@@ -545,7 +545,7 @@
     { "from": "ComposeSensitive", "via": 1, "kind": "detour", "label": "? — Sensitive", "to": [{ "board": "HelpDialog", "case": "the Sensitive text" }] },
     { "from": "ComposeSensitive", "via": 2, "kind": "advance", "label": "the switch", "to": [{ "terminal": "self", "case": "veils body and description; title and topics stay readable" }] },
     { "from": "ComposeSensitive", "via": 3, "kind": "advance", "label": "Why?", "to": [{ "terminal": "self", "case": "typing — shown on the veil" }] },
-    { "from": "ComposeSensitive", "via": 4, "kind": "back", "label": "Done", "to": [{ "board": "ComposeSeal", "case": "the sheet closes — the row reads the mark" }] },
+    { "from": "ComposeSensitive", "via": 4, "kind": "advance", "label": "Done", "to": [{ "board": "ComposeSeal", "case": "the sheet closes — the row reads the mark" }] },
     { "from": "ComposeSensitive", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "ComposeSeal", "case": "the sheet closes" }] },
 
     { "from": "ComposeKeyAbsent", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposeDetails", "case": "one stage back" }] },
@@ -579,7 +579,7 @@
     { "from": "EditCompose", "via": 11, "kind": "detour", "label": "This creates 3 signed actions", "to": [{ "board": "EditActs" }] },
     { "from": "EditCompose", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "terminal": "back", "case": "signed — the post, the edit settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "gap": "network-error pattern board (not designed)", "case": "offline" }] },
 
-    { "from": "EditActs", "via": 1, "kind": "back", "label": "Done", "to": [{ "board": "EditCompose", "case": "the sheet closes" }] },
+    { "from": "EditActs", "via": 1, "kind": "advance", "label": "Done", "to": [{ "board": "EditCompose", "case": "the sheet closes" }] },
     { "from": "EditActs", "via": 2, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "EditCompose", "case": "the sheet closes" }] },
 
     { "from": "ReferencePicker", "via": 1, "kind": "back", "label": "back — to the composer", "to": [{ "terminal": "back", "case": "the composer it was opened from" }] },
@@ -665,12 +665,12 @@
     { "from": "ComposePicked", "via": 1, "kind": "advance", "label": "drag handles", "to": [{ "terminal": "self", "case": "drag to reorder — the first is the cover" }] },
     { "from": "ComposePicked", "via": 2, "kind": "advance", "label": "Describe", "to": [{ "board": "ComposeDescribe" }] },
     { "from": "ComposePicked", "via": 3, "kind": "advance", "label": "remove ×", "to": [{ "terminal": "self", "case": "the picture leaves the batch" }] },
-    { "from": "ComposePicked", "via": 4, "kind": "back", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — pick, details, or edit, wherever it opened" }] },
+    { "from": "ComposePicked", "via": 4, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — pick, details, or edit, wherever it opened" }] },
     { "from": "ComposePicked", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
 
     { "from": "ComposeDescribe", "via": 1, "kind": "detour", "label": "? — Describing pictures", "to": [{ "board": "HelpDialog", "case": "the Describing-pictures text" }] },
     { "from": "ComposeDescribe", "via": 2, "kind": "advance", "label": "What's in the picture", "to": [{ "terminal": "self", "case": "typing — witnessed at sign, never gating the upload" }] },
-    { "from": "ComposeDescribe", "via": 3, "kind": "back", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
+    { "from": "ComposeDescribe", "via": 3, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
     { "from": "ComposeDescribe", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
 
     { "from": "ComposeUploading", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposeCrop", "case": "one stage back" }] },
@@ -773,7 +773,7 @@
     { "from": "ProfileApplicant", "via": 4, "kind": "advance", "label": "avatar change badge", "to": [{ "board": "AvatarCrop", "case": "the system picker, then the crop — the standalone shortcut" }] },
     { "from": "ProfileApplicant", "via": 5, "kind": "advance", "label": "the figures row", "to": [{ "board": "ProfileStances" }] },
     { "from": "ProfileApplicant", "via": 6, "kind": "advance", "label": "Edit profile", "to": [{ "board": "ProfileEdit" }] },
-    { "from": "ProfileApplicant", "via": 7, "kind": "advance", "label": "Invites", "to": [{ "terminal": "self", "case": "locked — the snackbar answers: invites open when you land" }] },
+    { "from": "ProfileApplicant", "via": 7, "kind": "detour", "label": "Invites", "to": [{ "terminal": "self", "case": "locked — the snackbar answers: invites open when you land", "info": true }] },
     { "from": "ProfileApplicant", "via": 8, "kind": "advance", "label": "chronicle tabs", "to": [{ "board": "ProfilePosts", "case": "Posts — the cards (master, drawn on @ada's)" }, { "board": "ProfileComments", "case": "Comments — the cards (master)" }, { "terminal": "self", "case": "Everything — the chronicle, this board" }] },
     { "from": "ProfileApplicant", "via": 9, "kind": "advance", "label": "a staged row", "to": [{ "gap": "the post detail view (not boarded standalone — drawn only under the comments sheet)" }] },
     { "from": "ProfileApplicant", "via": 10, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "ApplicantFeed" }] },
@@ -787,7 +787,7 @@
     { "from": "ProfilePosts", "via": 4, "kind": "advance", "label": "the stance anchor", "to": [{ "terminal": "self", "case": "tap — a positive act lands" }, { "board": "VouchBackPad", "case": "press-and-hold — the pad blooms (master board)" }] },
     { "from": "ProfilePosts", "via": 5, "kind": "advance", "label": "Message", "to": [{ "gap": "the chat surface (not designed)" }] },
     { "from": "ProfilePosts", "via": 6, "kind": "advance", "label": "chronicle tabs", "to": [{ "terminal": "self", "case": "Posts — already here" }, { "board": "ProfileComments", "case": "Comments" }, { "board": "ProfileOther", "case": "Everything — the chronicle" }] },
-    { "from": "ProfilePosts", "via": 7, "kind": "advance", "label": "post author chip", "to": [{ "terminal": "self", "case": "her own profile — already here" }] },
+    { "from": "ProfilePosts", "via": 7, "kind": "detour", "label": "post author chip", "to": [{ "terminal": "self", "case": "her own profile — already here", "info": true }] },
     { "from": "ProfilePosts", "via": 8, "kind": "detour", "label": "post overflow ⋮", "to": [{ "gap": "reader's post menu — licence terms / cite (not boarded)" }] },
     { "from": "ProfilePosts", "via": 9, "kind": "advance", "label": "post media", "to": [{ "board": "FeedGallery" }] },
     { "from": "ProfilePosts", "via": 10, "kind": "detour", "label": "More (caption)", "to": [{ "terminal": "self", "case": "the caption unfolds" }] },
@@ -808,7 +808,7 @@
     { "from": "ProfileComments", "via": 4, "kind": "advance", "label": "the stance anchor", "to": [{ "terminal": "self", "case": "tap — a positive act lands" }, { "board": "VouchBackPad", "case": "press-and-hold — the pad blooms (master board)" }] },
     { "from": "ProfileComments", "via": 5, "kind": "advance", "label": "Message", "to": [{ "gap": "the chat surface (not designed)" }] },
     { "from": "ProfileComments", "via": 6, "kind": "advance", "label": "chronicle tabs", "to": [{ "board": "ProfilePosts", "case": "Posts" }, { "terminal": "self", "case": "Comments — already here" }, { "board": "ProfileOther", "case": "Everything — the chronicle" }] },
-    { "from": "ProfileComments", "via": 7, "kind": "advance", "label": "comment author chip", "to": [{ "terminal": "self", "case": "her own profile — already here" }] },
+    { "from": "ProfileComments", "via": 7, "kind": "detour", "label": "comment author chip", "to": [{ "terminal": "self", "case": "her own profile — already here", "info": true }] },
     { "from": "ProfileComments", "via": 8, "kind": "detour", "label": "comment overflow ⋮", "to": [{ "gap": "the comment's menu — cite / licence terms (not boarded)" }] },
     { "from": "ProfileComments", "via": 9, "kind": "advance", "label": "comment stance", "to": [{ "terminal": "self", "case": "tap — a positive act lands" }, { "board": "VouchBackPad", "case": "press-and-hold — the pad blooms (master board)" }] },
     { "from": "ProfileComments", "via": 10, "kind": "advance", "label": "Reply", "to": [{ "board": "ReplyEntry", "case": "the thread, under its post" }] },
