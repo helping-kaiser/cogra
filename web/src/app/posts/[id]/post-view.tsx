@@ -10,16 +10,14 @@
 // prefetched level, more on demand.
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
-import { PUBLIC_DOMAIN, type License } from "@/lib/license";
 import {
   fetchCommentReplies,
   fetchCommentSelfMark,
   fetchPostDetail,
   isPending,
-  prepareComment,
   prepareCommentEdit,
   type CommentView,
   type PostDetail,
@@ -31,14 +29,12 @@ import { prepareTag } from "@/lib/api/topics-api";
 import { prepareReference, prepareReferenceWithdrawal } from "@/lib/api/references-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { tagChanges, WITHDRAWN_RELEVANCE, type TagDraft } from "@/lib/topics/draft";
-import { TAG_BATCH_CAP } from "@/lib/topics/normalize";
 import { referenceChipEntries, referenceDrafts } from "@/lib/references/claims";
 import {
   referenceActs,
   referenceChanges,
   type ReferenceDraft,
 } from "@/lib/references/draft";
-import { REFERENCE_BATCH_CAP } from "@/lib/references/normalize";
 import { ReferenceChipRow } from "@/lib/ui/reference-chip-row";
 import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
@@ -48,7 +44,7 @@ import { useWriteSigner } from "@/lib/signing/provider";
 import { ActorChip } from "@/lib/ui/actor-chip";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
-import { LicenseChooser, LicenseTerms } from "@/lib/ui/license-fields";
+import { LicenseTerms } from "@/lib/ui/license-fields";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PendingMarker } from "@/lib/ui/pending-marker";
 import {
@@ -58,23 +54,9 @@ import {
   hasMedia,
   sensitiveSignature,
 } from "@/lib/ui/post-media";
-import {
-  commentAttachmentClaims,
-  commentGate,
-  pickInto,
-  removeFrom,
-  withUpload,
-  NO_COMMENT_MEDIA,
-  type CommentMedia,
-} from "@/lib/compose/comment-media";
-import { runUpload } from "@/lib/compose/uploads";
-import { usePreviewUrls } from "@/lib/compose/previews";
-import {
-  CommentAttachments,
-  commentDropHandlers,
-} from "@/lib/ui2/compose/comment-attachments";
+import type { ReplyTarget } from "@/lib/compose/reply-wizard";
+import { commentTarget, ReplyWizard } from "./reply/reply-wizard-view";
 import { MultiActionConfirm, SignedActionsIndicator } from "@/lib/ui/signed-actions";
-import { SigningPending } from "@/lib/ui/signing-pending";
 import { StanceControl } from "@/lib/ui/stance-control";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { TopicChipRow, type TopicChipEntry } from "@/lib/ui/topic-chip-row";
@@ -131,24 +113,23 @@ function tagDrafts(
   }));
 }
 
-function pathIndex(field: readonly string[] | null, head: string): number | null {
-  if (field === null || field.length < 2 || field[0] !== head) return null;
-  const index = Number(field[1]);
-  return Number.isInteger(index) ? index : null;
-}
-
-/** Parses a `["tags", i, "name"]`-shaped refusal path down to the index. */
-function tagErrorIndex(field: readonly string[] | null): number | null {
-  return pathIndex(field, "tags");
-}
-
-/** Parses a `["references", i, …]`-shaped refusal path down to the index. */
-function referenceErrorIndex(field: readonly string[] | null): number | null {
-  return pathIndex(field, "references");
-}
-
 /** Which composer on this page a confirmation is standing in front of. */
-type PendingSubmit = "comment" | "reply" | "edit";
+type PendingSubmit = "edit";
+
+/** What the thread hands the wizard when "Add a comment" is pressed. */
+function postTarget(post: PostDetail["post"], postId: string): ReplyTarget {
+  const name = post.author?.displayName.value?.trim();
+  const handle = post.author?.handle ?? "";
+  return {
+    id: postId,
+    kind: "post",
+    label: post.title.value?.trim() || "this post",
+    authorHandle: handle,
+    authorName: name && name !== "" ? name : handle,
+    avatarUrl: post.author?.avatar?.url ?? null,
+    snippet: post.description.value ?? post.content.value ?? "",
+  };
+}
 
 function prefetchedReplies(comment: ThreadComment): {
   items: readonly ThreadComment[];
@@ -186,24 +167,12 @@ export function PostView({
   const [notFound, setNotFound] = useState(false);
   const [transportFault, setTransportFault] = useState<TransportFault | null>(null);
 
-  const [draft, setDraft] = useState("");
-  // A comment's pictures. There is no pick screen and no crop step at comment
-  // scale (the #544 boards): they are chosen from the browser's own dialog and
-  // upload while the reader writes.
-  const [draftMedia, setDraftMedia] = useState<CommentMedia>(NO_COMMENT_MEDIA);
-  const [draftTags, setDraftTags] = useState<readonly TagDraft[]>([]);
-  const [draftTagErrors, setDraftTagErrors] = useState<Readonly<Record<number, string>>>({});
-  const [draftReferences, setDraftReferences] = useState<readonly ReferenceDraft[]>([]);
-  const [draftReferenceErrors, setDraftReferenceErrors] = useState<
-    Readonly<Record<number, string>>
-  >({});
-  const [license, setLicense] = useState<License>(PUBLIC_DOMAIN);
-  const [submitting, setSubmitting] = useState(false);
-  const [refusedMessage, setRefusedMessage] = useState<string | null>(null);
-  const [signIncomplete, setSignIncomplete] = useState(false);
-  const [signingNeedsKey, setSigningNeedsKey] = useState(false);
-  // A submit that never reached the server; a composer error, not a read fault.
-  const [submitFailed, setSubmitFailed] = useState(false);
+  // BOTH DOORS OPEN THE SAME WIZARD (ReplyEntry via=5 and via=7): "Reply" on a
+  // comment pre-targets that comment, "Add a comment" at the foot of the thread
+  // pins the post. What differs is the target, so that is all this holds — the
+  // words, the pictures, the topics, the citations and the stance all live in
+  // the wizard's own machine, and nothing of a discarded comment survives here.
+  const [replying, setReplying] = useState<ReplyTarget | null>(null);
   const [commentSigned, setCommentSigned] = useState(false);
 
   // Reply threads expanded past their prefetched page, keyed by comment.
@@ -230,20 +199,9 @@ export function PostView({
   const [editReferenceErrors, setEditReferenceErrors] = useState<
     Readonly<Record<number, string>>
   >({});
-  // The inline reply — a genesis Review targeting the comment.
-  const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [replyDraft, setReplyDraft] = useState("");
-  const [replyTags, setReplyTags] = useState<readonly TagDraft[]>([]);
-  const [replyTagErrors, setReplyTagErrors] = useState<Readonly<Record<number, string>>>({});
-  const [replyReferences, setReplyReferences] = useState<readonly ReferenceDraft[]>([]);
-  const [replyReferenceErrors, setReplyReferenceErrors] = useState<
-    Readonly<Record<number, string>>
-  >({});
-  const [replySubmitting, setReplySubmitting] = useState(false);
-  const [replyFailed, setReplyFailed] = useState(false);
-  const [replyRefusedMessage, setReplyRefusedMessage] = useState<string | null>(null);
-  // F4: a submit staging more than one act asks first — one dialog for
-  // whichever composer on this page raised it.
+  // F4: a submit staging more than one act asks first. The two composers that
+  // used to raise it now seal instead — ReplySeal names every act with its
+  // price — so the edit is the one surface left that asks.
   const [confirmMultiAction, setConfirmMultiAction] = useConfirmMultiAction();
   const [confirming, setConfirming] = useState<PendingSubmit | null>(null);
 
@@ -339,150 +297,12 @@ export function PostView({
   const editReferenceChanges =
     editing === null ? [] : referenceChanges(editing.loadedReferences, editing.references);
   const editTextChanged = editing !== null && editing.draft !== editing.loadedDraft;
-  const commentActions = 1 + draftTags.length + draftReferences.length;
-
-  // ---- the comment's pictures ---------------------------------------------
-
-  const draftPreviews = usePreviewUrls(draftMedia);
-  const draftMediaGate = commentGate(draft, draftMedia);
-  // Which pictures have been handed to `runUpload` already. A ref rather than
-  // state so writing it cannot re-run the effect that reads it — and because
-  // React mounts effects twice in development, which without this would upload
-  // every picture twice.
-  const startedUploads = useRef(new Set<string>());
-
-  useEffect(() => {
-    for (const asset of draftMedia) {
-      if (asset.upload.kind !== "waiting" || startedUploads.current.has(asset.id)) continue;
-      startedUploads.current.add(asset.id);
-      // No ratio: a comment's pictures are never cropped, so the encoder keeps
-      // each picture's own shape.
-      void runUpload(client, asset, undefined, (upload) =>
-        setDraftMedia((current) => withUpload(current, asset.id, upload)),
-      );
-    }
-  }, [draftMedia, client]);
-
-  const pickCommentMedia = (files: readonly File[]) => {
-    setDraftMedia((current) =>
-      pickInto(
-        current,
-        files.map((file) => ({ id: crypto.randomUUID(), file })),
-      ),
-    );
-  };
-
-  const removeCommentMedia = (id: string) => {
-    startedUploads.current.delete(id);
-    setDraftMedia((current) => removeFrom(current, id));
-  };
-
-  const retryCommentMedia = (id: string) => {
-    startedUploads.current.delete(id);
-    setDraftMedia((current) => withUpload(current, id, { kind: "waiting" }));
-  };
-  const replyActions = 1 + replyTags.length + replyReferences.length;
   // A withdrawal is a whole counter-record batch, and the claim quotes
   // it: `withdrawalCost` comes off the raw bundle sums the clipped pair
   // has already lost, so this count is exact and every edit asks before
   // it prepares.
   const editActions =
     (editTextChanged ? 1 : 0) + editChanges.length + referenceActs(editReferenceChanges);
-
-  /** Splits a refusal into per-chip field errors and the general line. */
-  const routeRefusal = (
-    errors: readonly { message: string; field: readonly string[] | null }[],
-  ): {
-    perTag: Record<number, string>;
-    perReference: Record<number, string>;
-    general: string | null;
-  } => {
-    const perTag: Record<number, string> = {};
-    const perReference: Record<number, string> = {};
-    let general: string | null = null;
-    for (const error of errors) {
-      const tagIndex = tagErrorIndex(error.field);
-      const referenceIndex = referenceErrorIndex(error.field);
-      if (tagIndex !== null) perTag[tagIndex] = error.message;
-      else if (referenceIndex !== null) perReference[referenceIndex] = error.message;
-      // D19: a whole-batch refusal — the balance cannot carry every act
-      // — carries no field path, so it reads as one clear line.
-      else general = general ?? error.message;
-    }
-    return { perTag, perReference, general };
-  };
-
-  const runComment = async () => {
-    setSubmitting(true);
-    setRefusedMessage(null);
-    setDraftTagErrors({});
-    setDraftReferenceErrors({});
-    setSignIncomplete(false);
-    setSubmitFailed(false);
-    setCommentSigned(false);
-    const prepared = await guard.run(() =>
-      prepareComment(client, {
-        target: postId,
-        content: draft,
-        license,
-        tags: draftTags,
-        references: draftReferences,
-        attachments: commentAttachmentClaims(draftMedia) ?? undefined,
-      }),
-    );
-    if (prepared.kind === "refused") {
-      setSubmitting(false);
-      // A batched tag's field error lands at ["tags", i, "name"] and a
-      // reference's at ["references", i, …]; each reads on that exact
-      // chip, and everything else is the general line.
-      const { perTag, perReference, general } = routeRefusal(prepared.errors);
-      setDraftTagErrors(perTag);
-      setDraftReferenceErrors(perReference);
-      setRefusedMessage(
-        general ??
-          (Object.keys(perTag).length + Object.keys(perReference).length > 0
-            ? null
-            : "The server refused this write."),
-      );
-      return;
-    }
-    if (prepared.kind === "failed") {
-      setSubmitting(false);
-      setSubmitFailed(true);
-      return;
-    }
-    const done = await signAll(prepared.value.writes);
-    setSubmitting(false);
-    if (done) {
-      setDraft("");
-      // The pictures went with it, so the composer stops holding them. The
-      // started-uploads ledger is deliberately NOT cleared here: every pick
-      // mints a fresh id, so a later picture can never be mistaken for one of
-      // these, and reading a ref from here would be reading it during render.
-      setDraftMedia(NO_COMMENT_MEDIA);
-      setDraftTags([]);
-      setDraftReferences([]);
-      setCommentSigned(true);
-      // The comment is content from the moment it is signed, so re-read
-      // the thread and show it rather than sending the author away to
-      // refresh by hand. Refetching is the client's own explicit act
-      // (api-spec.md "A page is a snapshot, not a live view") — this is
-      // that act, not a merge into the page already held.
-      refresh();
-    } else {
-      setSigningNeedsKey((await store.actorKey()) === null);
-      setSignIncomplete(true);
-    }
-  };
-
-  const onSubmitComment = async () => {
-    if (submitting || !draftMediaGate.ok) return;
-    if (commentActions > 1 && confirmMultiAction) {
-      setConfirming("comment");
-      return;
-    }
-    await runComment();
-  };
 
   /**
    * F10: prepares EVERYTHING before signing anything — a refusal on the
@@ -623,69 +443,8 @@ export function PostView({
     await runEdit();
   };
 
-  const runReply = async () => {
-    if (replyingTo === null) return;
-    setReplySubmitting(true);
-    setReplyFailed(false);
-    setReplyRefusedMessage(null);
-    setReplyTagErrors({});
-    setReplyReferenceErrors({});
-    const prepared = await guard.run(() =>
-      prepareComment(client, {
-        target: replyingTo,
-        content: replyDraft,
-        license,
-        tags: replyTags,
-        references: replyReferences,
-      }),
-    );
-    if (prepared.kind === "refused") {
-      setReplySubmitting(false);
-      const { perTag, perReference, general } = routeRefusal(prepared.errors);
-      setReplyTagErrors(perTag);
-      setReplyReferenceErrors(perReference);
-      setReplyRefusedMessage(
-        general ??
-          (Object.keys(perTag).length + Object.keys(perReference).length > 0
-            ? null
-            : "The server refused this write."),
-      );
-      return;
-    }
-    if (prepared.kind === "failed") {
-      setReplySubmitting(false);
-      setReplyFailed(true);
-      return;
-    }
-    const done = await signAll(prepared.value.writes);
-    setReplySubmitting(false);
-    if (done) {
-      setReplyingTo(null);
-      setReplyDraft("");
-      setReplyTags([]);
-      setReplyReferences([]);
-      setCommentSigned(true);
-      refresh();
-    } else {
-      setReplyFailed(true);
-    }
-  };
-
-  const onSubmitReply = async () => {
-    if (replyingTo === null || replySubmitting || replyDraft.trim() === "") return;
-    if (replyActions > 1 && confirmMultiAction) {
-      setConfirming("reply");
-      return;
-    }
-    await runReply();
-  };
-
   /** The dialog's own numbers and the run it stands in front of. */
-  const confirmed = (kind: PendingSubmit) => {
-    if (kind === "comment") return { count: commentActions, busy: submitting, run: runComment };
-    if (kind === "reply") return { count: replyActions, busy: replySubmitting, run: runReply };
-    return { count: editActions, busy: editSubmitting, run: runEdit };
-  };
+  const confirmed = () => ({ count: editActions, busy: editSubmitting, run: runEdit });
 
   // The header rides every branch — a dead end (not found, transport
   // fault) is exactly where the back arrow matters most.
@@ -922,11 +681,10 @@ export function PostView({
                     variant="text"
                     size="sm"
                     onClick={() => {
-                      setReplyingTo(comment.id);
-                      setReplyDraft("");
-                      setReplyTags([]);
-                      setReplyTagErrors({});
-                      setReplyRefusedMessage(null);
+                      // ReplyEntry via=5: the composer, PRE-TARGETED at this
+                      // comment. The other door — "Add a comment" at the foot
+                      // of the thread — pins the post instead.
+                      setReplying(commentTarget(comment));
                       setEditing(null);
                     }}
                   >
@@ -990,7 +748,7 @@ export function PostView({
                       setEditReferenceErrors({});
                       setEditRefusedMessage(null);
                       setEditFailed(false);
-                      setReplyingTo(null);
+                      setReplying(null);
                     }}
                   >
                     Edit
@@ -1000,74 +758,6 @@ export function PostView({
             </>
           )}
         </Card>
-        {replyingTo === comment.id && (
-          <div className="flex flex-col gap-2">
-            <textarea
-              value={replyDraft}
-              onChange={(event) => setReplyDraft(event.target.value)}
-              rows={3}
-              aria-label="Reply"
-              data-testid="comment-reply-input"
-              className="rounded-extra-small border border-outline p-2"
-            />
-            {/* Tagging is part of the compose gesture, on a reply as on
-                anything else (F9) — one batch on the minting record, so
-                the batch cap applies. */}
-            <TagEntryField
-              tags={replyTags}
-              onChange={setReplyTags}
-              fieldErrors={replyTagErrors}
-              cap={TAG_BATCH_CAP}
-              testIdPrefix="comment-reply"
-            />
-            {/* Referencing is part of the compose gesture, on a reply as
-                on anything else — one batch on the minting record, so
-                the D7 cap applies. */}
-            <ReferenceEntryField
-              references={replyReferences}
-              onChange={setReplyReferences}
-              fieldErrors={replyReferenceErrors}
-              cap={REFERENCE_BATCH_CAP}
-              testIdPrefix="comment-reply"
-            />
-            {replyRefusedMessage && (
-              <p
-                role="alert"
-                data-testid="comment-reply-refused"
-                className="text-body-small text-error"
-              >
-                {replyRefusedMessage}
-              </p>
-            )}
-            {replyFailed && (
-              <p role="alert" data-testid="comment-reply-failed" className="text-body-small text-error">
-                That didn&apos;t send. Try again.
-              </p>
-            )}
-            <SignedActionsIndicator
-              count={replyActions}
-              testId="comment-reply-signed-actions"
-            />
-            <div className="flex gap-2">
-              <Button
-                testId="comment-reply-submit"
-                size="sm"
-                onClick={() => void onSubmitReply()}
-                disabled={replySubmitting || replyDraft.trim() === ""}
-              >
-                Sign reply
-              </Button>
-              <Button
-                testId="comment-reply-cancel"
-                variant="text"
-                size="sm"
-                onClick={() => setReplyingTo(null)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        )}
         {replies.length > 0 && (
           <ul className="flex flex-col gap-3">
             {replies.map((reply) => renderComment(reply, depth + 1))}
@@ -1216,103 +906,54 @@ export function PostView({
           Sign in or join to comment
         </Link>
       )}
+      {commentSigned && (
+        <p data-testid="comment-signed" className="text-body-medium text-success">
+          Signed — it&apos;s in the thread now, still settling.
+        </p>
+      )}
+      {/* ReplyEntry's entry row, pinned at the foot of the thread: the door
+          that pins the POST as what the comment answers. The board draws the
+          viewer's own avatar beside it; drawing one here would mean a profile
+          read this page does not otherwise make, which is exactly the cost
+          the read restructure is removing, so the row is the field alone. */}
       {phase === "signedIn" && (
-        // The drop target is the WHOLE composer, drawn nowhere — the quiet
-        // line beside Add is the only thing that says so (ReplyPicturesWeb).
         <div
-          data-testid="comment-composer"
-          className="flex flex-col gap-2"
-          {...commentDropHandlers(pickCommentMedia)}
+          data-testid="comment-entry"
+          className="flex items-center gap-3 border-t border-outline-variant pt-3"
         >
-          <label htmlFor="comment-draft" className="text-label-large">
-            Add a comment
-          </label>
-          <textarea
-            id="comment-draft"
-            data-testid="comment-draft"
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            rows={3}
-            className="rounded-extra-small border border-outline p-2"
-          />
-          {/* A comment is words PLUS optional pictures (D16 is the post's
-              rule alone), so the row sits under the words and the pictures
-              upload while the reader keeps writing. */}
-          <CommentAttachments
-            media={draftMedia}
-            previews={draftPreviews}
-            onPick={pickCommentMedia}
-            onRemove={removeCommentMedia}
-            onRetry={retryCommentMedia}
-          />
-          {/* F9: the comment compose box tags like any other composer —
-              the same gated entry, chips, and per-chip sliders, batched
-              onto the minting record under the batch cap. */}
-          <TagEntryField
-            tags={draftTags}
-            onChange={setDraftTags}
-            fieldErrors={draftTagErrors}
-            cap={TAG_BATCH_CAP}
-            testIdPrefix="comment"
-          />
-          {/* The comment box references like any other composer — the
-              same finder, chips, and per-chip sliders, batched onto the
-              minting record under the D7 cap. */}
-          <ReferenceEntryField
-            references={draftReferences}
-            onChange={setDraftReferences}
-            fieldErrors={draftReferenceErrors}
-            cap={REFERENCE_BATCH_CAP}
-            testIdPrefix="comment"
-          />
-          <LicenseChooser value={license} onChange={setLicense} testIdPrefix="comment" />
-          {refusedMessage && (
-            <p role="alert" data-testid="comment-refused" className="text-body-medium text-error">
-              {refusedMessage}
-            </p>
-          )}
-          {signIncomplete && (
-            <SigningPending needsKey={signingNeedsKey} testIdPrefix="comment" />
-          )}
-          {submitFailed && <TransportError testId="comment-transport-error" />}
-          {commentSigned && (
-            <p data-testid="comment-signed" className="text-body-medium text-success">
-              Signed — it&apos;s in the thread now, still settling.
-            </p>
-          )}
-          {/* An attachment names an asset id, so a comment cannot be prepared
-              while a picture is still on its way. Saying so plainly beats a
-              button that refuses for a reason the reader cannot see. */}
-          {!draftMediaGate.ok && draft.trim() !== "" && (
-            <p data-testid="comment-media-gate" className="m-0 text-label-small text-on-surface-variant">
-              {draftMediaGate.reason}
-            </p>
-          )}
-          {/* The cost, beside the control that pays it (F4). */}
-          <SignedActionsIndicator count={commentActions} testId="comment-signed-actions" />
-          <Button
-            testId="comment-submit"
-            onClick={() => void onSubmitComment()}
-            disabled={submitting || !draftMediaGate.ok}
+          <button
+            type="button"
+            data-testid="comment-add"
+            onClick={() => setReplying(postTarget(post, postId))}
+            className="cg-state cg-focus min-h-14 flex-1 rounded-extra-small border border-outline px-3 text-left text-body-large text-on-surface-variant"
           >
-            Sign comment
-          </Button>
+            Add a comment
+          </button>
         </div>
+      )}
+      {/* The wizard is a surface OVER the thread, and every way out of it
+          comes back here — which is why the thread keeps its scroll, its
+          unfolded branches, and the target's own name while it is open. */}
+      {replying !== null && (
+        <ReplyWizard
+          target={replying}
+          store={store}
+          onLeave={() => setReplying(null)}
+          onSigned={() => {
+            setReplying(null);
+            setCommentSigned(true);
+            refresh();
+          }}
+        />
       )}
       {confirming !== null && (
         <MultiActionConfirm
-          count={confirmed(confirming).count}
-          busy={confirmed(confirming).busy}
-          testIdPrefix={
-            confirming === "comment"
-              ? "comment"
-              : confirming === "reply"
-                ? "comment-reply"
-                : "comment-edit"
-          }
+          count={confirmed().count}
+          busy={confirmed().busy}
+          testIdPrefix="comment-edit"
           onCancel={() => setConfirming(null)}
           onConfirm={(stopAsking) => {
-            const proceed = confirmed(confirming).run;
+            const proceed = confirmed().run;
             if (stopAsking) setConfirmMultiAction(false);
             setConfirming(null);
             void proceed();

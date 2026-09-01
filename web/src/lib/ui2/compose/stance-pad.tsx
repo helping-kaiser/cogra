@@ -103,10 +103,13 @@ export function StancePad({
     <div
       ref={fieldRef}
       data-testid={`${testId}-field`}
-      role="slider"
+      // NOT `role="slider"`: a slider has one `aria-valuenow` and this field
+      // has two values, so the role would be a lie an assistive technology
+      // acts on. It is a focusable region that announces its own pair, and
+      // the paired sliders remain the declared accessible path (design.md
+      // §8.6) for anyone who wants the range through ordinary controls.
       tabIndex={0}
       aria-label={ariaLabel}
-      aria-valuetext={formatStanceWords(value)}
       onKeyDown={onKeyDown}
       onPointerDown={(event) => {
         drag.current = { x: event.clientX, y: event.clientY, base: value };
@@ -126,6 +129,13 @@ export function StancePad({
       }}
       className="cg-focus relative size-60 touch-none self-center rounded-large bg-surface-container-highest"
     >
+      {/* What the knob is worth, for a reader who cannot see where it sits.
+          It is the field's own announcement, so moving the knob says the new
+          pair without the reader hunting for the readout above. */}
+      <output aria-live="polite" data-testid={`${testId}-reading`} className="sr-only">
+        {formatStanceWords(value)}
+      </output>
+
       {/* Dead ground, drawn rather than hidden: the model reads as legible
           instead of mysterious. Inset from the corners so the captions have
           somewhere to sit. */}
