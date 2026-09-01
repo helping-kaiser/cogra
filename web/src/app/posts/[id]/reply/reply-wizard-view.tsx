@@ -29,7 +29,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
-import { prepareComment, type CommentView } from "@/lib/api/content-api";
+import { prepareComment } from "@/lib/api/content-api";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
@@ -318,8 +318,22 @@ export function ReplyWizard({
   );
 }
 
-/** What the thread hands the wizard when Reply is pressed on a comment. */
-export function commentTarget(comment: CommentView): ReplyTarget {
+/**
+ * What the thread hands the wizard when Reply is pressed on a comment.
+ *
+ * Typed on what a target actually needs rather than on `CommentView`, because
+ * the affordance sits on nested replies too and a reply node carries no
+ * `replies` of its own.
+ */
+export function commentTarget(comment: {
+  id: string;
+  content: { value?: string | null };
+  author?: {
+    handle: string;
+    displayName: { value?: string | null };
+    avatar?: { url: string } | null;
+  } | null;
+}): ReplyTarget {
   const name = comment.author?.displayName?.value?.trim();
   const handle = comment.author?.handle ?? "";
   return {

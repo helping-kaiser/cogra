@@ -52,10 +52,14 @@ describe("StancePad", () => {
 
   it("speaks the pair with its axes named, for a reader who cannot see the knob", () => {
     draw({ value: { pDirected: 0.4, pInterest: -0.2 } });
-    expect(screen.getByTestId("stance-pad-field")).toHaveAttribute(
-      "aria-valuetext",
+    expect(screen.getByTestId("stance-pad-reading")).toHaveTextContent(
       "How you stand +0.40, In your world -0.20",
     );
+  });
+
+  it("claims no widget role it cannot honour — two values are not one slider", () => {
+    draw();
+    expect(screen.getByTestId("stance-pad-field")).not.toHaveAttribute("role", "slider");
   });
 
   it("carries the label naming what the stance is toward", () => {
