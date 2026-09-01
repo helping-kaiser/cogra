@@ -21,6 +21,7 @@ import {
 } from "@/__generated__/graphql";
 import type { License } from "@/lib/license";
 import type { ReferenceDraft } from "@/lib/references/draft";
+import type { StancePair } from "@/lib/stance/model";
 import type { TagDraft } from "@/lib/topics/draft";
 import { failed, fetchOutcome, payloadOutcome, success, type Outcome } from "./outcome";
 import { stagedFromPrepared, type StagedWriteView } from "./writes-api";
@@ -372,6 +373,12 @@ export async function prepareComment(
     references?: readonly ReferenceDraft[];
     /** The pictures, in the author's order, each with its description. */
     attachments?: readonly GalleryEntryDraft[];
+    /**
+     * Where the author stands on what they answer — the genesis Review's own
+     * pair, which the seal's Adjust sets (ReplySeal / ReplyPad). Omitted, the
+     * server applies the +0.1 policy default to each.
+     */
+    stance?: StancePair;
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -398,6 +405,8 @@ export async function prepareComment(
             // Referencing is part of the same gesture, under its own
             // ten-per-batch cap (D7).
             references: referenceInputs(fields.references),
+            pDirected: fields.stance?.pDirected ?? null,
+            pInterest: fields.stance?.pInterest ?? null,
           },
         },
       }),
@@ -410,7 +419,18 @@ export async function prepareCommentEdit(
   client: ApolloClient,
   // `sensitive` is required for the same reason it is on a post edit: an edit
   // is complete state, so an omitted mark unveils a comment its author veiled.
-  fields: { id: string; content: string; sensitive: boolean; sensitiveReason?: string },
+  fields: {
+    id: string;
+    content: string;
+    sensitive: boolean;
+    sensitiveReason?: string;
+    /**
+     * The gallery the edit LEAVES STANDING — complete, not a delta, exactly
+     * like the body and the mark. An empty gallery is sent as an empty
+     * gallery, which is what removing the last picture has to mean.
+     */
+    attachments?: readonly GalleryEntryDraft[];
+  },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
     () =>
@@ -420,6 +440,7 @@ export async function prepareCommentEdit(
           input: {
             id: fields.id,
             content: fields.content,
+            attachments: attachmentInputs(fields.attachments),
             ...sensitiveInput(fields.sensitive, fields.sensitiveReason),
           },
         },
