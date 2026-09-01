@@ -94,6 +94,13 @@ export const HELP_TOPICS = {
       "Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.",
     ],
   },
+  editing: {
+    title: "Editing",
+    paragraphs: [
+      'An edit replaces the whole post; earlier versions stay public under "Edited" unless you remove them. An edit never bumps the post as new.',
+      "Topic and citation changes ride the same signing, each as its own signed action. The license never changes.",
+    ],
+  },
   changingYourPicture: {
     title: "Changing your picture",
     paragraphs: [
