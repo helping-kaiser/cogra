@@ -4,9 +4,9 @@
 export function Screen() {
   return (
     <>
-      <WizardHeader title="Your picture" leaveLabel="Leave" action={<Button size="sm">Next</Button>} />
+      <WizardHeader title="Your picture" leaveLabel="Leave" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
-        <div style={{ position: "relative", width: 342, height: 342, borderRadius: "var(--radius-medium)", overflow: "hidden", flex: "none" }}>
+        <div style={{ position: "relative", width: 390, height: 390, margin: "0 -24px", overflow: "hidden", flex: "none" }}>
           <img
             src="comment-camera.jpg"
             alt=""
@@ -16,10 +16,10 @@ export function Screen() {
             aria-hidden="true"
             style={{
               position: "absolute",
-              left: 21,
-              top: 21,
-              width: 300,
-              height: 300,
+              left: 24,
+              top: 24,
+              width: 342,
+              height: 342,
               borderRadius: "var(--radius-full)",
               boxShadow: "0 0 0 400px rgba(0,0,0,0.45)",
               border: "1px solid rgba(255,255,255,0.7)",
@@ -34,6 +34,7 @@ export function Screen() {
           One picture, shown everywhere you appear.
         </p>
         <div style={{ flex: 1 }} />
+        <Button style={{ width: "100%" }}>Next</Button>
       </div>
     </>
   );
