@@ -163,7 +163,7 @@ fun MediaThumb(
             },
     ) {
         AsyncImage(
-            model = item.url,
+            model = item.imageModel(),
             contentDescription = null,
             contentScale = fit,
             modifier = Modifier

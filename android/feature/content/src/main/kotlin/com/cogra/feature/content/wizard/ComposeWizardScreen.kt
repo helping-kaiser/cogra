@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -251,9 +252,6 @@ internal fun ComposeWizardScreen(
             onBack = onBack,
             // The X leaves from any stage, draft kept, nothing to confirm.
             onLeave = onLeave,
-            actionText = state.headerAction(),
-            onAction = onNext,
-            actionEnabled = state.headerActionEnabled(),
             trailingNote = if (state.step == WizardStep.Seal) "Last step" else null,
             // The seal's one `?`. On the key-absent seal it belongs to the
             // key notice instead — the key story outranks the seal story
@@ -290,15 +288,32 @@ internal fun ComposeWizardScreen(
                     onOpenPicker = onOpenPicker,
                     onTogglePick = onTogglePick,
                     onManagePictures = onManagePictures,
+                    onNext = onNext,
                 )
 
-                WizardStep.Crop -> WizardBody(scrollable = true, bottom = Space.x4) {
-                    CropStepBody(
-                        state = state,
-                        onShapeChange = onShapeChange,
-                        onFrameAsset = onFrameAsset,
-                        onCropsChanged = onCropsChanged,
-                    )
+                WizardStep.Crop -> {
+                    WizardBody(scrollable = true, bottom = 0.dp) {
+                        CropStepBody(
+                            state = state,
+                            onShapeChange = onShapeChange,
+                            onFrameAsset = onFrameAsset,
+                            onCropsChanged = onCropsChanged,
+                        )
+                    }
+                    // `ComposeCrop` ends on the pill. It sits below the
+                    // scrolling body rather than inside it: the stage
+                    // scrolls so the crop's required non-drag route stays
+                    // reachable (D17), and a weighted spacer cannot push
+                    // anything to the bottom of a column of unbounded
+                    // height. Where the stage fits, this is the board.
+                    WizardFooter {
+                        CograButton(
+                            text = "Next",
+                            onClick = onNext,
+                            modifier = Modifier.fillMaxWidth(),
+                            testTag = "wizard_crop_next",
+                        )
+                    }
                 }
 
                 WizardStep.Details -> WizardBody(top = Space.x3, bottom = Space.x4) {
@@ -391,6 +406,9 @@ internal fun ComposeWizardScreen(
                         describing.uri,
                         describing.sourceRatio ?: 1f,
                         describing.altText.ifBlank { null },
+                        // Describing the picture the post will carry —
+                        // the framed one, not the original it came from.
+                        state.crops[describing.uri].toFraming(),
                     ),
                     value = describing.altText,
                     onValueChange = { onAltTextChange(describing.uri, it) },
@@ -460,6 +478,7 @@ private fun ColumnScope.BodyStage(
     onOpenPicker: () -> Unit,
     onTogglePick: (String) -> Unit,
     onManagePictures: () -> Unit,
+    onNext: () -> Unit,
 ) {
     when (state.mode) {
         BodyMode.Words -> {
@@ -469,7 +488,21 @@ private fun ColumnScope.BodyStage(
                 onAction = { onModeChange(BodyMode.Media) },
                 actionTestTag = "wizard_switch_media",
             )
-            WizardBody(gap = Space.x1) { WordsStepBody(state, onBodyChange) }
+            WizardBody(gap = Space.x1) {
+                WordsStepBody(state, onBodyChange)
+                // `ComposeWords` closes the field's own column with the
+                // pill, 12dp under the field — the column's 4dp rhythm
+                // plus this 8.
+                CograButton(
+                    text = "Next",
+                    onClick = onNext,
+                    enabled = state.forwardEnabled(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = Space.x2),
+                    testTag = "wizard_words_next",
+                )
+            }
         }
         BodyMode.Media -> {
             WizardCaption(
@@ -497,6 +530,18 @@ private fun ColumnScope.BodyStage(
                 onTogglePick = onTogglePick,
                 onShowAll = onManagePictures,
             )
+            // `ComposePick` and `ComposePicked` both close on the pill in
+            // its own band under the grid — the grid runs to its own
+            // margin, so the band carries the screen gutter itself.
+            WizardFooter {
+                CograButton(
+                    text = "Next",
+                    onClick = onNext,
+                    enabled = state.forwardEnabled(),
+                    modifier = Modifier.fillMaxWidth(),
+                    testTag = "wizard_pick_next",
+                )
+            }
         }
     }
 }
@@ -511,13 +556,13 @@ internal fun ComposeWizardState.headerTitle(): String = when (step) {
     WizardStep.Seal -> "What you sign"
 }
 
-/** The header's trailing pill; the details stage puts its Next at the bottom. */
-internal fun ComposeWizardState.headerAction(): String? = when (step) {
-    WizardStep.Body, WizardStep.Crop -> "Next"
-    WizardStep.Details, WizardStep.Seal -> null
-}
-
-internal fun ComposeWizardState.headerActionEnabled(): Boolean = when (step) {
+/**
+ * Whether the stage's bottom Next may be taken.
+ *
+ * Only the body can be unready — the crop and details stages always have
+ * somewhere to go, and the seal commits by signing rather than by Next.
+ */
+internal fun ComposeWizardState.forwardEnabled(): Boolean = when (step) {
     WizardStep.Body -> bodyReady
     else -> true
 }

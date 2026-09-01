@@ -1,5 +1,7 @@
 package com.cogra.feature.profile.avatar
 
+import com.cogra.domain.media.CropSpec
+
 /**
  * The profile-picture flow's two stages (`AvatarCrop`, `AvatarSeal`).
  *
@@ -34,6 +36,16 @@ data class AvatarFlowState(
     val uri: String? = null,
     /** The picture's own ratio, for the crop preview. Null until read. */
     val sourceRatio: Float? = null,
+    /**
+     * The framing the crop stage was left at.
+     *
+     * Held here rather than only in the stage's own saveable holder
+     * because the stage is left for the seal and stepped back into: the
+     * holder dies with that composition, and the author must find the
+     * crop they made rather than a reset one (jakob 2026-09-01). The
+     * seal's preview draws this same framing.
+     */
+    val crop: CropSpec? = null,
     val upload: AvatarUpload = AvatarUpload.Idle,
     val submitting: Boolean = false,
     /** The device holds no actor key, so nothing can be signed. */

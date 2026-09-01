@@ -31,35 +31,72 @@ export function PickStep({
   assets,
   previews,
   error,
+  blocked,
   onWords,
   onMode,
   onPick,
   onUnpick,
   onManage,
+  onNext,
 }: {
   mode: "words" | "media";
   words: string;
   assets: readonly PickedAsset[];
   previews: Readonly<Record<string, string>>;
   error: string | null;
+  blocked: boolean;
   onWords: (next: string) => void;
   onMode: (next: "words" | "media") => void;
   onPick: (files: readonly File[]) => void;
   onUnpick: (id: string) => void;
   onManage: () => void;
+  onNext: () => void;
 }) {
   return mode === "words" ? (
-    <WordsBody words={words} error={error} onWords={onWords} onMode={onMode} />
+    <WordsBody
+      words={words}
+      error={error}
+      blocked={blocked}
+      onWords={onWords}
+      onMode={onMode}
+      onNext={onNext}
+    />
   ) : (
     <MediaBody
       assets={assets}
       previews={previews}
       error={error}
+      blocked={blocked}
       onMode={onMode}
       onPick={onPick}
       onUnpick={onUnpick}
       onManage={onManage}
+      onNext={onNext}
     />
+  );
+}
+
+/**
+ * THE FORWARD ACTION IS AT THE BOTTOM, on every stage (jakob 2026-09-01). The
+ * header's top-right corner used to hold Next on the early stages and the X
+ * from Details on, so an author trained on that corner left the flow by
+ * accident. The header now carries only the ways out.
+ */
+function NextAction({
+  disabled,
+  onNext,
+  className,
+}: {
+  disabled: boolean;
+  onNext: () => void;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <PillButton testId="wizard-next" full disabled={disabled} onClick={onNext}>
+        Next
+      </PillButton>
+    </div>
   );
 }
 
@@ -87,13 +124,17 @@ function Prompt({
 function WordsBody({
   words,
   error,
+  blocked,
   onWords,
   onMode,
+  onNext,
 }: {
   words: string;
   error: string | null;
+  blocked: boolean;
   onWords: (next: string) => void;
   onMode: (next: "words" | "media") => void;
+  onNext: () => void;
 }) {
   const id = useId();
   return (
@@ -119,6 +160,8 @@ function WordsBody({
             {error}
           </p>
         )}
+        {/* ComposeWords puts it right under the body, 12px down. */}
+        <NextAction disabled={blocked} onNext={onNext} className="pt-3" />
       </div>
     </>
   );
@@ -128,18 +171,22 @@ function MediaBody({
   assets,
   previews,
   error,
+  blocked,
   onMode,
   onPick,
   onUnpick,
   onManage,
+  onNext,
 }: {
   assets: readonly PickedAsset[];
   previews: Readonly<Record<string, string>>;
   error: string | null;
+  blocked: boolean;
   onMode: (next: "words" | "media") => void;
   onPick: (files: readonly File[]) => void;
   onUnpick: (id: string) => void;
   onManage: () => void;
+  onNext: () => void;
 }) {
   const input = useRef<HTMLInputElement | null>(null);
   const [over, setOver] = useState(false);
@@ -179,6 +226,7 @@ function MediaBody({
                 <li key={asset.id} className="flex-none">
                   <MediaThumb
                     src={previews[asset.id] ?? null}
+                    crop={asset.crop}
                     cover={index === 0}
                     onRemove={() => onUnpick(asset.id)}
                     removeLabel={`Remove picture ${index + 1}`}
@@ -250,16 +298,9 @@ function MediaBody({
             </p>
           )}
         </div>
+        {/* ComposePickWeb puts it below the drop region, 16px down. */}
+        <NextAction disabled={blocked} onNext={onNext} className="pt-4" />
       </div>
     </>
-  );
-}
-
-/** The header's forward action, shared by both modes. */
-export function PickAction({ onNext, disabled }: { onNext: () => void; disabled: boolean }) {
-  return (
-    <PillButton testId="wizard-next" size="sm" disabled={disabled} onClick={onNext}>
-      Next
-    </PillButton>
   );
 }

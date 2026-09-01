@@ -7,6 +7,7 @@ import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
 import com.cogra.domain.compose.DraftShape
+import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceImage
 import com.cogra.domain.LicenseChoice
 import com.cogra.feature.content.ReferenceSectionState
@@ -126,6 +127,20 @@ data class ComposeWizardState(
     val shape: DraftShape = DraftShape.Tall,
     /** Which pick the crop step is framing, by index into [picked]. */
     val framingIndex: Int = 0,
+
+    /**
+     * The framing each pick was left at, by asset URI.
+     *
+     * It lives in the state rather than only in the crop stage's own
+     * saveable holder because the stage is *left*: walking on to the
+     * details stage tears its composition down, and a saveable dies with
+     * it. Re-entering — backwards from a later stage, or forwards again
+     * from an earlier one — must show the author the crop they made
+     * rather than a reset one (jakob 2026-09-01), and the previews on
+     * every later stage have to draw that same framing, so this is also
+     * what they read.
+     */
+    val crops: Map<String, CropSpec> = emptyMap(),
 
     // -- Details --
     val title: String = "",
@@ -312,7 +327,12 @@ data class ComposeWizardState(
  */
 fun ComposeWizardState.pickedPictures(): List<PickedPicture> = picked.map { asset ->
     PickedPicture(
-        item = MediaItem(asset.uri, asset.sourceRatio ?: 1f, asset.altText.ifBlank { null }),
+        item = MediaItem(
+            asset.uri,
+            asset.sourceRatio ?: 1f,
+            asset.altText.ifBlank { null },
+            crops[asset.uri].toFraming(),
+        ),
         described = asset.altText.isNotBlank(),
         uploading = asset.upload is AssetUpload.Running,
         failed = asset.upload is AssetUpload.Failed,
@@ -396,6 +416,10 @@ fun ComposeWizardState.removePick(uri: String): ComposeWizardState = copy(
     picked = picked.filterNot { it.uri == uri },
     // The framing cursor must not point past the end after a removal.
     framingIndex = framingIndex.coerceAtMost((picked.size - 2).coerceAtLeast(0)),
+    // A framing describes a picture that is no longer in the post. Kept,
+    // it would be handed to a re-pick of the same asset as if the author
+    // had framed it this time.
+    crops = crops - uri,
     // A sheet describing the removed picture has nothing left to describe.
     describingIndex = null,
 )

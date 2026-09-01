@@ -166,6 +166,9 @@ function BodyStrip({
         items={assets.map((asset) => ({
           id: asset.id,
           src: previews[asset.id] ?? null,
+          // The row draws the framing the author left the crop step with —
+          // the source here would read as the crop having been discarded.
+          crop: asset.crop,
           ...thumbState(asset),
         }))}
         caption={

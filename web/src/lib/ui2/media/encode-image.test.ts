@@ -305,7 +305,7 @@ describe("encodeForUpload", () => {
     const area = { x: 2822.4, y: 1512, width: 1209.6, height: 1512 };
     const result = await encodeForUpload(new Blob([new Uint8Array([0]) as BlobPart]), {
       ratio: 4 / 5,
-      crop: { x: -40, y: -60, zoom: 2, area },
+      crop: { x: -40, y: -60, zoom: 2, area, areaPercent: null },
     });
 
     expect(drawn[0]!.from).toEqual(area);
@@ -328,7 +328,7 @@ describe("encodeForUpload", () => {
     const area = { x: 0, y: 250, width: 1000, height: 500 };
     await encodeForUpload(new Blob([new Uint8Array([0]) as BlobPart]), {
       ratio: 4 / 5,
-      crop: { x: 0, y: 0, zoom: 1, area },
+      crop: { x: 0, y: 0, zoom: 1, area, areaPercent: null },
     });
 
     expect(drawn[0]!.from).toEqual(area);
@@ -346,7 +346,7 @@ describe("encodeForUpload", () => {
 
     await encodeForUpload(new Blob([new Uint8Array([0]) as BlobPart]), {
       ratio: 4 / 5,
-      crop: { x: 0, y: 0, zoom: 1, area: null },
+      crop: { x: 0, y: 0, zoom: 1, area: null, areaPercent: null },
     });
 
     expect(drawn[0]!.from).toEqual({ x: 100, y: 0, width: 800, height: 1000 });
@@ -362,7 +362,7 @@ describe("encodeForUpload", () => {
     // A crop with nothing measured and no ratio has nothing to crop TO, so it
     // is ignored rather than silently reshaping the picture.
     const result = await encodeForUpload(new Blob([new Uint8Array([0]) as BlobPart]), {
-      crop: { x: 0, y: 0, zoom: 3, area: null },
+      crop: { x: 0, y: 0, zoom: 3, area: null, areaPercent: null },
     });
 
     expect(drawn[0]!.from).toEqual({ x: 0, y: 0, width: 600, height: 400 });

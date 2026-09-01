@@ -355,7 +355,10 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       return {
         ...state,
         shape: action.shape,
-        assets: state.assets.map((asset) => ({ ...asset, crop: { ...asset.crop, area: null } })),
+        assets: state.assets.map((asset) => ({
+          ...asset,
+          crop: { ...asset.crop, area: null, areaPercent: null },
+        })),
       };
     }
 

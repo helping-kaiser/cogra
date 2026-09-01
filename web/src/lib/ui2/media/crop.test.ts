@@ -4,7 +4,9 @@ import { CENTERED, clampZoom, MAX_ZOOM, MIN_ZOOM, usableArea } from "./crop";
 
 describe("the crop the wizard carries", () => {
   it("starts centred, unzoomed, and unmeasured", () => {
-    expect(CENTERED).toEqual({ x: 0, y: 0, zoom: MIN_ZOOM, area: null });
+    // Unmeasured in BOTH units: the pixels the encoder bakes and the
+    // percentages a downstream preview draws from arrive together or not at all.
+    expect(CENTERED).toEqual({ x: 0, y: 0, zoom: MIN_ZOOM, area: null, areaPercent: null });
   });
 
   it("holds the zoom inside the range the cropper is given", () => {
