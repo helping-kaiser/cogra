@@ -5,30 +5,10 @@
    place) hang off the band per design.md §6 — never down in the header. The
    chronicle sits under the icon tab row. Sol has no picture: the monogram is
    the designed fallback, and the badge on it reads as "add one". */
-function BandIcon({ name, label }) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      className="cg-state cg-focus"
-      style={{ display: "grid", placeItems: "center", height: "var(--touch-target-min)", width: "var(--touch-target-min)", border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0 }}
-    >
-      <Icon name={name} />
-    </button>
-  );
-}
-
 export function Screen() {
   return (
     <>
-      <CograBand
-        trailing={
-          <span style={{ display: "flex", alignItems: "center" }}>
-            <BandIcon name="more_vert" label="More — share your profile" />
-            <BandIcon name="settings" label="Settings" />
-          </span>
-        }
-      />
+      <ProfileBand />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader

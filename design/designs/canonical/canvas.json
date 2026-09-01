@@ -822,12 +822,48 @@
     },
     {
       "file": "MapProfile.dc.html",
-      "x": -1000,
+      "x": -1580,
       "y": 0,
-      "w": 580,
-      "h": 274,
+      "w": 1160,
+      "h": 955,
       "page": "profile",
       "title": "Profile · flow map"
+    },
+    {
+      "file": "ProfileStances.dc.html",
+      "title": "Profile · the stances page",
+      "x": 960,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileApplicant.dc.html",
+      "title": "Profile · applicant days",
+      "x": 1440,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileEdit.dc.html",
+      "title": "Edit profile",
+      "x": 0,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileEditSeal.dc.html",
+      "title": "Profile edit · what you sign",
+      "x": 480,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
     }
   ],
   "annotations": [
