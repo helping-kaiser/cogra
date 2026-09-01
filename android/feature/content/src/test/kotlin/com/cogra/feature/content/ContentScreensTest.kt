@@ -799,13 +799,13 @@ class ContentScreensTest {
         id: String,
         authorId: String = "author-1",
         edited: Boolean = false,
-        replies: com.cogra.domain.Page<com.cogra.domain.CommentView>? = null,
+        replyCount: Int = 0,
     ) = testComment(id).let { base ->
         base.copy(
             author = base.author?.copy(id = authorId),
             updatedAt = if (edited) base.updatedAt.plusSeconds(60) else base.createdAt,
             createdAt = base.createdAt,
-            replies = replies,
+            replyCount = replyCount,
         )
     }
 
@@ -869,26 +869,51 @@ class ContentScreensTest {
         compose.onNodeWithTag("comment_edit_cancel").assertExists()
     }
 
+    /**
+     * Replies arrive **counted, not carried** (Q49): a branch shows its
+     * count and nothing else until a reader opens it, so no reply is on
+     * screen and the collapsed line stands in its place.
+     */
     @Test
-    fun prefetchedRepliesNestAndOfferMore() {
+    fun aBranchIsCollapsedBehindItsCount() {
         renderDetail(
             PostDetailUiState(
                 loading = false,
                 post = testPost("p1"),
-                comments = listOf(
-                    comment(
-                        "c1",
-                        replies = com.cogra.domain.Page(
-                            listOf(comment("r1")),
-                            endCursor = "rc",
-                            hasNextPage = true,
-                        ),
-                    ),
+                comments = listOf(comment("c1", replyCount = 2)),
+            ),
+        )
+        compose.onNodeWithTag("detail_comment_r1").assertDoesNotExist()
+        compose.onNodeWithTag("replies_more_c1").assertExists()
+    }
+
+    /** A comment nobody answered offers nothing to open. */
+    @Test
+    fun aBranchlessCommentOffersNoReplyLine() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(comment("c1", replyCount = 0)),
+            ),
+        )
+        compose.onNodeWithTag("replies_more_c1").assertDoesNotExist()
+    }
+
+    /** Once opened, the fetched replies are what nests under it. */
+    @Test
+    fun anOpenedBranchNestsItsReplies() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(comment("c1", replyCount = 1)),
+                replyThreads = mapOf(
+                    "c1" to ReplyThread(items = listOf(comment("r1")), hasMore = false),
                 ),
             ),
         )
         compose.onNodeWithTag("detail_comment_r1").assertExists()
-        compose.onNodeWithTag("replies_more_c1").assertExists()
     }
 
     @Test

@@ -260,18 +260,42 @@ interface ContentRepository {
          * comment's set never leads anything.
          */
         attachments: List<AttachmentClaim> = emptyList(),
+        /**
+         * Where the author stands on what they answer — the reply
+         * seal's own pad (`ReplyPad`). Null leaves the low-defaults
+         * policy value the contract applies (+0.1 each); a comment box
+         * that offers no pad passes nothing rather than re-stating it.
+         */
+        pDirected: Double? = null,
+        pInterest: Double? = null,
     ): Outcome<PreparedContentView>
+
+    /**
+     * The author's own sensitive mark on one comment; null for an
+     * unknown id. Read when an edit opens, for the reason
+     * [postSelfMark] is: the thread read's fragment is priced per
+     * comment, and this is wanted once.
+     */
+    suspend fun commentSelfMark(id: String): Outcome<SelfMarkView?>
 
     /**
      * [attachments] is the gallery the edit leaves standing — complete,
      * not a delta, exactly like the words beside it. An edit that sends
      * an empty list therefore *clears* the gallery, which is what makes
      * removing a picture expressible at all.
+     *
+     * [sensitive] and [sensitiveReason] are complete-state for the same
+     * reason, and so are **not optional**: a mark the edit does not
+     * re-state is a mark the edit removes. `CommentEdit` draws no switch
+     * (design/backlog.md item 25 part 2 is the open question), so the
+     * caller passes what it read from [commentSelfMark], unchanged.
      */
     suspend fun prepareCommentEdit(
         id: String,
         content: String,
         attachments: List<AttachmentClaim> = emptyList(),
+        sensitive: Boolean = false,
+        sensitiveReason: String? = null,
     ): Outcome<PreparedContentView>
 
     /** A further page of one comment's direct replies (expand). */

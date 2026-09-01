@@ -30,12 +30,14 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -95,6 +97,7 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.v2.token.Space
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
@@ -623,7 +626,7 @@ private fun StancePadOverlay(
             // it: an alternate is the input, not a second opinion
             // (design.md §8.6).
             if (state.inputMode == StanceInputSurface.PAD) {
-                StanceField(state.pick, enabled = !state.busy, onPick = onPick)
+                StancePadField(state.pick, onPick = onPick, enabled = !state.busy)
             }
             StanceLandingLine(state.landing, testTagPrefix)
             if (sticky) {
@@ -842,6 +845,70 @@ private fun StanceReadout(pick: StancePoint, testTagPrefix: String) {
 }
 
 /**
+ * The four words the field's edges carry, where a surface teaches the
+ * axes on the field itself rather than beside it.
+ *
+ * `ReplyPad` draws them — the seal has no anchors row to learn the axes
+ * from, so the field says which way is which — and the bloomed stance
+ * control does not, because its readout, anchors and landing line
+ * already name both axes in words.
+ */
+@Immutable
+data class StanceFieldLabels(
+    val start: String,
+    val end: String,
+    val top: String,
+    val bottom: String,
+)
+
+/**
+ * The stance field, as every surface that offers a two-axis pick draws
+ * it: 240dp at the 16dp rung, the inert centre-lines visible, the knob
+ * at the pick.
+ *
+ * One field, two callers — the bloomed [StanceControl] and the reply
+ * seal's `ReplyPad`. They differ only in whether the edges carry
+ * [labels]: a second field drawn to a second knob would be exactly the
+ * drift a design system exists to prevent.
+ */
+@Composable
+fun StancePadField(
+    pick: StancePoint,
+    onPick: (StancePoint) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    labels: StanceFieldLabels? = null,
+    testTag: String = "stance_field",
+) {
+    val ground = MaterialTheme.colorScheme.surfaceVariant
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        StanceFieldCanvas(pick = pick, enabled = enabled, onPick = onPick, testTag = testTag)
+        if (labels != null) {
+            // The edge words sit on the field's own ground so they read as
+            // part of it rather than as four labels floating over a square.
+            StanceEdgeLabel(labels.start, Alignment.CenterStart, ground)
+            StanceEdgeLabel(labels.end, Alignment.CenterEnd, ground)
+            StanceEdgeLabel(labels.top, Alignment.TopCenter, ground)
+            StanceEdgeLabel(labels.bottom, Alignment.BottomCenter, ground)
+        }
+    }
+}
+
+@Composable
+private fun BoxScope.StanceEdgeLabel(text: String, at: Alignment, ground: Color) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier
+            .align(at)
+            .padding(Space.x2)
+            .background(ground)
+            .padding(horizontal = 2.dp),
+    )
+}
+
+/**
  * The field: a soft rounded square whose own box is the value space,
  * with its inert centre-lines drawn as visibly dead rather than hidden,
  * and the knob at the pick — never outside the drawing (design.md §8.3).
@@ -853,10 +920,11 @@ private fun StanceReadout(pick: StancePoint, testTagPrefix: String) {
  * the moment the finger lifted.
  */
 @Composable
-private fun StanceField(
+private fun StanceFieldCanvas(
     pick: StancePoint,
     enabled: Boolean,
     onPick: (StancePoint) -> Unit,
+    testTag: String,
 ) {
     val ground = MaterialTheme.colorScheme.surfaceVariant
     val dead = MaterialTheme.colorScheme.outlineVariant
@@ -889,7 +957,7 @@ private fun StanceField(
                 scaleX = bloom.value
                 scaleY = bloom.value
             }
-            .testTag("stance_field"),
+            .testTag(testTag),
     ) {
         drawStanceField(
             pick = pick,

@@ -14,6 +14,7 @@ import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ReferenceCandidateView
 import com.cogra.domain.ReferenceClaimView
+import com.cogra.domain.SelfMarkView
 import com.cogra.domain.UserError
 import com.cogra.domain.content.LandingSignal
 import com.cogra.domain.content.NodeLanding
@@ -101,14 +102,20 @@ class PostDetailViewModelTest {
         /** The gallery the last comment edit left standing. */
         var lastEditAttachments: List<AttachmentClaim> = emptyList()
 
+        /** The self-mark the last comment edit left standing. */
+        var lastEditSensitive: Boolean? = null
+
         override suspend fun prepareCommentEdit(
             id: String,
             content: String,
             attachments: List<AttachmentClaim>,
+            sensitive: Boolean,
+            sensitiveReason: String?,
         ): Outcome<PreparedContentView> {
             if (prepareFails) return Outcome.Failed(java.io.IOException("offline"))
             editPrepared += 1
             lastEditAttachments = attachments
+            lastEditSensitive = sensitive
             return Outcome.Success(
                 PreparedContentView("node-e", listOf(sealer.stage(Family.REVIEW))),
             )
@@ -133,6 +140,12 @@ class PostDetailViewModelTest {
         /** The gallery the last comment/reply creation carried. */
         var lastCommentAttachments: List<AttachmentClaim> = emptyList()
 
+        /** The self-mark the standing comment carries, for the edit to re-state. */
+        var selfMark: SelfMarkView = SelfMarkView(sensitive = false, reason = null)
+
+        override suspend fun commentSelfMark(id: String): Outcome<SelfMarkView?> =
+            Outcome.Success(selfMark)
+
         override suspend fun prepareComment(
             target: String,
             content: String,
@@ -140,6 +153,8 @@ class PostDetailViewModelTest {
             tags: List<TagClaim>,
             references: List<ReferenceClaim>,
             attachments: List<AttachmentClaim>,
+            pDirected: Double?,
+            pInterest: Double?,
         ): Outcome<PreparedContentView> {
             replyTargets += target
             commentPrepared += 1
@@ -554,20 +569,21 @@ class PostDetailViewModelTest {
         assertThat(vm.state.value.replyingToId).isEqualTo("c1")
     }
 
+    /**
+     * Opening a branch fetches it (Q49): nothing is prefetched, so the
+     * thread starts empty and the read is what fills it.
+     */
     @Test
-    fun expandingRepliesAppendsPastThePrefetch() = runTest(dispatcher) {
+    fun expandingRepliesFetchesTheBranch() = runTest(dispatcher) {
         val vm = viewModel()
         vm.start("post-1")
         dispatcher.scheduler.advanceUntilIdle()
-        val comment = testComment("c1").copy(
-            replies = Page(listOf(testComment("r0")), "rc0", hasNextPage = true),
-        )
+        val comment = testComment("c1").copy(replyCount = 1)
         vm.onLoadMoreReplies(comment)
         dispatcher.scheduler.advanceUntilIdle()
         val thread = vm.state.value.replyThreads["c1"]
         checkNotNull(thread)
-        // Seeded from the prefetch, extended by the fetched page.
-        assertThat(thread.items.map { it.id }).containsExactly("r0", "r1").inOrder()
+        assertThat(thread.items.map { it.id }).containsExactly("r1")
         assertThat(thread.hasMore).isFalse()
     }
 
