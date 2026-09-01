@@ -344,3 +344,22 @@ key-absent acting paths, the wallet's owed record views (settlement /
 tip / rail), the standalone post detail, the item/chat/offer
 surfaces, and two rulings for jakob (topic destination; applicant
 acting rights). The profile screen and the Sky stay their own items.
+Closing those gaps is item 23.
+
+### 23 · Close the gaps — in roadmap order · *design*
+
+Jakob's directive (2026-09-01): knock out all 125 flow gaps and the
+missing screens **in the order the development needs them**, keyed to
+[docs/implementation/roadmap.md](../docs/implementation/roadmap.md).
+Development currently sits in slice 2.5 — so FIRST every gap whose
+surface belongs to a slice at or before 2.5, THEN forward strictly
+in roadmap order (the Sky last, item 16 as ever). **Each round opens
+by mapping its gaps to slices against the roadmap's own text** —
+never from memory: read the slice descriptions and what each closed
+slice already shipped (flows.json's gap list is the inventory:
+grep `"gap"`). Surfaces the closed slices already SHIPPED without a
+canonical design are the most overdue of all — the profile screen
+leads that list. Rounds take the rulings they need before drawing
+(topic destination and applicant acting rights are open and block
+early gaps — ask first), design the boards, wire them so the gap
+count falls, and land with check-flows green.
