@@ -10,19 +10,6 @@ import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.PickedAsset
 
 /**
- * One picture the comment already carries, as the edit opens on it.
- *
- * It is already on the server, so it never re-uploads: the edit's
- * payload is the complete gallery, and these are the entries it keeps.
- */
-data class ExistingPicture(
-    val mediaId: String,
-    val url: String,
-    val aspectRatio: Float,
-    val altText: String?,
-)
-
-/**
  * `CommentEdit` — the post's one-screen-one-batch at comment scale.
  *
  * One screen, no stages: words, pictures, topics, citations, and the

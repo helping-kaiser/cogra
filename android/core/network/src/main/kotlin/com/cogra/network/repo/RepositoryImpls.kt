@@ -8,6 +8,7 @@ import com.apollographql.apollo.api.Optional
 import com.cogra.crypto.Family
 import com.cogra.domain.AccountState
 import com.cogra.domain.ApplicationStatus
+import com.cogra.domain.CommentForEdit
 import com.cogra.domain.CommentView
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.LoginGrant
@@ -46,7 +47,7 @@ import com.cogra.network.fetch
 import com.cogra.network.graphql.ApplicationStatusQuery
 import com.cogra.network.graphql.AuthorRecordsQuery
 import com.cogra.network.graphql.CommentRepliesQuery
-import com.cogra.network.graphql.CommentSelfMarkQuery
+import com.cogra.network.graphql.CommentForEditQuery
 import com.cogra.network.graphql.MyProfileQuery
 import com.cogra.network.graphql.PrepareProfileUpdateMutation
 import com.cogra.network.graphql.UserByHandleQuery
@@ -714,9 +715,14 @@ class ContentRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun commentSelfMark(id: String): Outcome<SelfMarkView?> = guard.run {
-        client.query(CommentSelfMarkQuery(id)).fetch().map { data ->
-            data.comment?.let { SelfMarkView(it.sensitiveSelfMark, it.sensitiveReason) }
+    override suspend fun commentForEdit(id: String): Outcome<CommentForEdit?> = guard.run {
+        client.query(CommentForEditQuery(id)).fetch().map { data ->
+            data.comment?.let {
+                CommentForEdit(
+                    comment = it.commentFields.toDomain(),
+                    selfMark = SelfMarkView(it.sensitiveSelfMark, it.sensitiveReason),
+                )
+            }
         }
     }
 
