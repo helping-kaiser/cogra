@@ -13,6 +13,14 @@
 //     and being in source pixels makes it independent of the viewport that
 //     produced it — a draft framed on a phone still encodes correctly when it
 //     is restored in a wider window.
+//   · `areaPercent` — the SAME rectangle as a fraction of the picture, the
+//     library's other half of `onCropComplete`. Two units for one rectangle is
+//     not duplication: source pixels are meaningless to a RENDERER, which has
+//     no way to learn how many pixels wide the source is, while percentages
+//     are meaningless to the ENCODER, which draws in source pixels. Held
+//     together, the pair also yields the source's own extent
+//     (`area.width * 100 / areaPercent.width`), which is what lets a thumbnail
+//     anywhere downstream show the framing without decoding the picture first.
 //
 // WHY THE OLD FOCAL-POINT MODEL IS GONE. It cover-fitted the picture to the
 // frame, so at rest a wide photograph in a 4:5 frame showed a vertical slice
@@ -43,12 +51,17 @@ export type Crop = {
    * centred rectangle, which is exactly what the frame shows at rest.
    */
   readonly area: CropArea | null;
+  /**
+   * The same rectangle as a fraction of the picture, 0–100. Null alongside
+   * `area`, and dropped with it whenever the shape changes.
+   */
+  readonly areaPercent: CropArea | null;
 };
 
 export const MIN_ZOOM = 1;
 export const MAX_ZOOM = 3;
 
-export const CENTERED: Crop = { x: 0, y: 0, zoom: MIN_ZOOM, area: null };
+export const CENTERED: Crop = { x: 0, y: 0, zoom: MIN_ZOOM, area: null, areaPercent: null };
 
 function clamp(value: number, low: number, high: number): number {
   if (!Number.isFinite(value)) return low;
@@ -74,14 +87,15 @@ export function sameCrop(a: Crop, b: Crop): boolean {
     a.x === b.x &&
     a.y === b.y &&
     a.zoom === b.zoom &&
-    (a.area === b.area ||
-      (a.area !== null &&
-        b.area !== null &&
-        a.area.x === b.area.x &&
-        a.area.y === b.area.y &&
-        a.area.width === b.area.width &&
-        a.area.height === b.area.height))
+    sameArea(a.area, b.area) &&
+    sameArea(a.areaPercent, b.areaPercent)
   );
+}
+
+function sameArea(a: CropArea | null, b: CropArea | null): boolean {
+  if (a === b) return true;
+  if (a === null || b === null) return false;
+  return a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
 }
 
 /**
