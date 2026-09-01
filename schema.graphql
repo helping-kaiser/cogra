@@ -304,6 +304,14 @@ type CommentConnection {
 	A list of edges.
 	"""
 	edges: [CommentEdge!]!
+	"""
+	How many entries this thread holds in total, across every page —
+	the count behind a "view n replies" affordance, independent of
+	the cursor. Counted under the same filter that served the edges:
+	by default pending entries beside landed ones,
+	`includePending: false` only what has landed on L1.
+	"""
+	totalCount: Int!
 }
 
 """
