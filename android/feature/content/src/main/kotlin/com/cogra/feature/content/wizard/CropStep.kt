@@ -11,6 +11,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import com.cogra.core.designsystem.v2.media.CropFraming
 import com.cogra.core.designsystem.v2.media.CropShapeChips
 import com.cogra.core.designsystem.v2.media.CropState
 import com.cogra.core.designsystem.v2.media.MediaCrop
@@ -50,8 +51,17 @@ internal fun ColumnScope.CropStepBody(
 
     // One framing per pick, keyed by the asset so re-ordering or
     // dropping a pick cannot hand its framing to a different picture.
+    //
+    // Each starts from the framing the wizard remembers for that pick.
+    // The holder itself cannot carry it: leaving the stage tears this
+    // composition down and takes its saveable state with it, so an
+    // author who stepped on to the details stage and came back — or who
+    // walked forward into the stage a second time — would find their
+    // crop reset (jakob 2026-09-01).
     val framings: Map<String, CropState> = state.picked.associate { asset ->
-        asset.uri to key(asset.uri) { rememberCropState() }
+        asset.uri to key(asset.uri) {
+            rememberCropState(initial = state.crops[asset.uri].toFraming())
+        }
     }
 
     // Reported after every composition rather than only on `Next`: a
@@ -93,7 +103,15 @@ internal fun ColumnScope.CropStepBody(
         ) {
             state.picked.forEachIndexed { index, asset ->
                 MediaThumb(
-                    item = MediaItem(asset.uri, asset.sourceRatio ?: 1f, null),
+                    // The filmstrip shows each pick as it currently
+                    // stands, so the one being framed is the only one
+                    // that ever looks unframed.
+                    item = MediaItem(
+                        asset.uri,
+                        asset.sourceRatio ?: 1f,
+                        null,
+                        framings[asset.uri]?.framing ?: CropFraming.Whole,
+                    ),
                     selected = index == state.framingIndex,
                     dimmed = index != state.framingIndex,
                     onClick = { onFrameAsset(index) },
@@ -110,6 +128,16 @@ private fun CropState.toSpec(targetRatio: Float): CropSpec = CropSpec(
     targetRatio = targetRatio,
     window = CropWindow(framing.left, framing.top, framing.right, framing.bottom),
 )
+
+/**
+ * The remembered framing as the crop viewport takes it.
+ *
+ * A pick with no framing yet opens on the whole picture, which is the
+ * cropper's cue to place its own largest window for the shape.
+ */
+internal fun CropSpec?.toFraming(): CropFraming = this?.window?.let {
+    CropFraming.of(it.left, it.top, it.right, it.bottom)
+} ?: CropFraming.Whole
 
 internal fun DraftShape.toMediaShape(): MediaShape = when (this) {
     DraftShape.Tall -> MediaShape.Tall

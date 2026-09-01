@@ -56,7 +56,7 @@ fun MediaTile(
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
     ) {
         AsyncImage(
-            model = item.url,
+            model = item.imageModel(),
             contentDescription = item.altText,
             contentScale = if (fitted) ContentScale.Fit else ContentScale.Crop,
             // A null description is what marks an image decorative — it keeps

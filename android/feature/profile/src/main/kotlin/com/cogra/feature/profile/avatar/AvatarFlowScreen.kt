@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,23 +17,23 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.Hairline
 import com.cogra.core.designsystem.v2.atom.HelpDialog
 import com.cogra.core.designsystem.v2.atom.SummaryRow
 import com.cogra.core.designsystem.v2.atom.WizardHeader
+import com.cogra.core.designsystem.v2.media.CropFraming
 import com.cogra.core.designsystem.v2.media.CropMask
 import com.cogra.core.designsystem.v2.media.CropState
 import com.cogra.core.designsystem.v2.media.MediaCrop
 import com.cogra.core.designsystem.v2.media.MediaItem
+import com.cogra.core.designsystem.v2.media.MediaThumb
 import com.cogra.core.designsystem.v2.media.rememberCropState
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.MediaShape
@@ -80,9 +79,6 @@ fun AvatarFlowScreen(
             // back, so the label says only what the control does.
             onLeave = onLeave,
             leaveContentDescription = "Leave",
-            actionText = "Next".takeIf { state.step == AvatarStep.Crop },
-            onAction = onNext,
-            actionEnabled = state.uri != null,
             trailingNote = "Last step".takeIf { state.step == AvatarStep.Seal },
             onHelp = onOpenHelp.takeIf { state.step == AvatarStep.Seal },
             helpContentDescription = "Changing your picture",
@@ -92,13 +88,17 @@ fun AvatarFlowScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                // The body takes the rest of the screen so both stages can
+                // push their committing action to the bottom, which is
+                // where every board puts it.
+                .weight(1f)
                 .padding(horizontal = Layout.ScreenGutter),
             verticalArrangement = Arrangement.spacedBy(
                 if (state.step == AvatarStep.Crop) Space.x3 else Space.x4,
             ),
         ) {
             when (state.step) {
-                AvatarStep.Crop -> CropStage(state, onCropCommitted)
+                AvatarStep.Crop -> CropStage(state, onCropCommitted, onNext)
                 AvatarStep.Seal -> SealStage(state, onSign, onBack, onRetryUpload)
             }
 
@@ -143,9 +143,17 @@ fun AvatarFlowScreen(
 private fun ColumnScope.CropStage(
     state: AvatarFlowState,
     onCropCommitted: (CropSpec) -> Unit,
+    onNext: () -> Unit,
 ) {
     val uri = state.uri ?: return
-    val crop: CropState = rememberCropState()
+    // Seeded from what the flow remembers: the stage is stepped out of
+    // and back into, and its own saveable holder does not survive that
+    // (jakob 2026-09-01).
+    val crop: CropState = rememberCropState(
+        initial = state.crop?.window
+            ?.let { CropFraming.of(it.left, it.top, it.right, it.bottom) }
+            ?: CropFraming.Whole,
+    )
 
     // Reported after every composition, not only on Next: a process death
     // between the last nudge and the next tap would otherwise upload a
@@ -171,7 +179,24 @@ private fun ColumnScope.CropStage(
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
+
+    // `AvatarCrop` closes on the spacer and the pill: the forward action
+    // is at the bottom here too, so the X keeps the corner it had on the
+    // stage before (jakob 2026-09-01).
+    Spacer(Modifier.weight(1f))
+    CograButton(
+        text = "Next",
+        onClick = onNext,
+        enabled = state.uri != null,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = Space.x4),
+        testTag = "avatar_crop_next",
+    )
 }
+
+/** The seal's own picture, read off `AvatarSeal`. */
+private val AvatarSealPreview = 64.dp
 
 /**
  * `AvatarSeal`: the picture, what signing it commits, and the two buttons.
@@ -191,13 +216,23 @@ private fun ColumnScope.SealStage(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.x3),
     ) {
-        AsyncImage(
-            model = state.uri,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(64.dp)
-                .clip(CircleShape),
+        // The framing the author left the crop stage at, so the seal
+        // shows the picture they chose rather than the original they
+        // cropped it out of (jakob 2026-09-01). A circle, because that
+        // is how the avatar is seen everywhere.
+        MediaThumb(
+            item = MediaItem(
+                url = state.uri,
+                aspectRatio = 1f,
+                framing = state.crop?.window
+                    ?.let { CropFraming.of(it.left, it.top, it.right, it.bottom) }
+                    ?: CropFraming.Whole,
+            ),
+            size = null,
+            width = AvatarSealPreview,
+            height = AvatarSealPreview,
+            corner = AvatarSealPreview / 2,
+            testTag = "avatar_seal_preview",
         )
         Column(
             modifier = Modifier.weight(1f),

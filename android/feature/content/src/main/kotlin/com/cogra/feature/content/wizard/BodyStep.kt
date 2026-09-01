@@ -205,7 +205,15 @@ private fun PickedTray(
         ) {
             state.picked.forEachIndexed { index, asset ->
                 MediaThumb(
-                    item = MediaItem(asset.uri, asset.sourceRatio ?: 1f, asset.altText.ifBlank { null }),
+                    item = MediaItem(
+                        asset.uri,
+                        asset.sourceRatio ?: 1f,
+                        asset.altText.ifBlank { null },
+                        // An author who cropped, stepped back here, and
+                        // is on their way forward again sees the crop
+                        // they made rather than the original.
+                        state.crops[asset.uri].toFraming(),
+                    ),
                     contentDescription = "Picture ${index + 1}",
                     testTag = "wizard_tray_$index",
                 )
