@@ -1,6 +1,6 @@
 // Flow-number stamps for the JSX-rendered boards (backlog item 22): after a
 // screen renders, each marker locates an element in the markup and stamps
-// data-flow="n" onto its opening tag — the number flows.json's edges reference
+// data-flow="n" onto its opening tag — the number graph.json's edges reference
 // as `via`, drawn as a badge by the shell. Annotation stays a canvas concern:
 // the design-system components never carry flow ids.
 //
@@ -93,7 +93,7 @@ export const FLOW_MARKERS = {
 };
 
 // The Money & Wallet page. PageHeader/WizardHeader backs render as <a href>;
-// nav ports the shared helper (the active tab's edge is `self` in flows.json).
+// nav ports the shared helper (the active tab's edge is `self` in graph.json).
 Object.assign(FLOW_MARKERS, {
   Wallet: [
     { n: 1, find: 'aria-label="What is CGT?"', tag: "button" },
