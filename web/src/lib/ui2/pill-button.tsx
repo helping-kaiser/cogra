@@ -6,9 +6,9 @@
 // The sizes are the canvas's own measurements (design/readme.md §13, "Button
 // rule", and the compose boards): a body button renders a TRUE 40px tall with
 // 24px side padding and a 64px minimum width, so short labels — Next, Set,
-// Done — keep their weight instead of shrinking to the width of four letters. A
-// header pill is a compact true 32px with 16px padding, which is what lets it
-// sit inside the 48px header band without crowding the title.
+// Done — keep their weight instead of shrinking to the width of four letters.
+// The compact true 32px with 16px padding is for dense rows, where a 40px pill
+// would set the row's height on its own.
 //
 // `label-large` at every size (Material's button role); the pill is Material's
 // button shape at every size — `rounded-full`, not a rung of the shape scale.
@@ -27,7 +27,7 @@ const VARIANTS = {
 const SIZES = {
   // The wizard's own action button: Next, Set, Done.
   md: "min-h-10 min-w-16 px-6 py-2.5",
-  // The header's trailing action, and dense rows.
+  // Dense rows.
   sm: "min-h-8 min-w-16 px-4 py-1.5",
 } as const;
 

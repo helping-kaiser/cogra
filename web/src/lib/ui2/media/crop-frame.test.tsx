@@ -329,10 +329,12 @@ describe("coming back to a framing already chosen", () => {
 
   it("re-seeds whichever way the reader arrives", () => {
     // Arriving from the stage BEFORE and from the stage AFTER are the same
-    // mount as far as the frame is concerned, and both must land framed.
-    for (const _direction of ["forward", "back"]) {
+    // mount as far as the frame is concerned, and both must land framed. The
+    // shape differs between the two arrivals only to prove the framing is not
+    // being carried by a stale module-level prop.
+    for (const shape of ["tall", "square"] as const) {
       const mounted = render(
-        <CropFrame src="blob:x" shape="tall" crop={FRAMED} onChange={() => {}} />,
+        <CropFrame src="blob:x" shape={shape} crop={FRAMED} onChange={() => {}} />,
       );
       expect(given().crop).toEqual({ x: -30, y: 44 });
       expect(given().zoom).toBe(1.8);
