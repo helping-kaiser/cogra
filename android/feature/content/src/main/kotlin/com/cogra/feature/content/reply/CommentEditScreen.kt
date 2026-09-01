@@ -1,6 +1,9 @@
 package com.cogra.feature.content.reply
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,6 +25,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -30,6 +35,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
@@ -52,6 +59,73 @@ import com.cogra.feature.content.ReferenceEntry
 import com.cogra.feature.content.TopicEntry
 import com.cogra.feature.content.wizard.WizardBody
 import com.cogra.feature.content.wizard.WizardFooter
+
+/**
+ * `CommentEdit`, wired.
+ *
+ * [parentTitle] is the caption's words and nothing else; everything the
+ * edit signs is read from the comment itself.
+ */
+@Composable
+fun CommentEditRoute(
+    commentId: String,
+    parentTitle: String,
+    onSaved: () -> Unit,
+    onLeave: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: CommentEditViewModel = hiltViewModel(),
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(commentId) { viewModel.start(commentId, parentTitle) }
+
+    LaunchedEffect(state.saved) {
+        if (state.saved) {
+            viewModel.onSavedConsumed()
+            onSaved()
+        }
+    }
+
+    // Comments have no pick stage: "+ Add" opens the platform's own
+    // picker (jakob 2026-08-31).
+    val picker = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickMultipleVisualMedia(CommentEditState.MAX_PICTURES),
+    ) { uris -> uris.forEach { viewModel.onPicked(it.toString()) } }
+
+    CommentEditScreen(
+        state = state,
+        onBodyChange = viewModel::onBodyChange,
+        onOpenPicker = {
+            picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+        },
+        onRemovePickAt = viewModel::onRemovePickAt,
+        onDescribePictures = viewModel::onDescribeFirst,
+        onAltTextChange = viewModel::onAltTextChange,
+        onOpenActs = viewModel::onOpenActs,
+        onCloseSheet = viewModel::onCloseSheet,
+        onOpenHelp = viewModel::onOpenHelp,
+        onCloseHelp = viewModel::onCloseHelp,
+        onSign = viewModel::onSign,
+        onLeave = onLeave,
+        onTagInputChange = viewModel::onTagInputChange,
+        onAddTag = viewModel::onAddTag,
+        onRemoveTag = viewModel::onRemoveTag,
+        onTuneTag = viewModel::onTuneTag,
+        onDoneTuningTag = viewModel::onDoneTuningTag,
+        onTagRelevanceChange = viewModel::onTagRelevanceChange,
+        onTagConfidenceChange = viewModel::onTagConfidenceChange,
+        onOpenFinder = viewModel::onOpenFinder,
+        onCloseFinder = viewModel::onCloseFinder,
+        onFinderQueryChange = viewModel::onFinderQueryChange,
+        onPickReference = viewModel::onPickReference,
+        onRemoveReference = viewModel::onRemoveReference,
+        onTuneReference = viewModel::onTuneReference,
+        onDoneTuningReference = viewModel::onDoneTuningReference,
+        onReferenceRelevanceChange = viewModel::onReferenceRelevanceChange,
+        onReferenceSupportChange = viewModel::onReferenceSupportChange,
+        modifier = modifier,
+    )
+}
 
 /**
  * `CommentEdit` — the whole comment on one screen, in one batch.

@@ -19,8 +19,10 @@ import com.cogra.domain.signing.WriteSigner
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceFinderState
 import com.cogra.feature.content.ReferenceSectionState
+import com.cogra.feature.content.TagRow
 import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.candidateRows
+import com.cogra.feature.content.editableRow
 import com.cogra.feature.content.referenceFieldIndex
 import com.cogra.feature.content.tagFieldIndex
 import com.cogra.feature.content.wizard.AssetUpload
@@ -62,47 +64,70 @@ class CommentEditViewModel @Inject constructor(
     private var started = false
 
     /**
-     * Opens the edit on the comment as it stands — and reads the mark
-     * the edit has to leave standing.
+     * Opens the edit on the comment as it stands.
      *
-     * [existing] is the gallery the comment already carries. It arrives
-     * already landed, so nothing re-uploads: the edit's payload is the
-     * complete gallery, and these are the entries it keeps.
+     * Everything but the parent's title is read rather than handed in:
+     * the edit is complete-state on every axis, so starting from a
+     * thread card's snapshot would risk signing away whatever the card
+     * did not happen to carry. [parentTitle] is only the caption's
+     * words, so it rides the route.
      */
-    fun start(
-        commentId: String,
-        parentTitle: String,
-        body: String,
-        existing: List<ExistingPicture> = emptyList(),
-    ) {
+    fun start(commentId: String, parentTitle: String) {
         if (started) return
         started = true
-        val landed = existing.map {
-            PickedAsset(
-                uri = it.url,
-                sourceRatio = it.aspectRatio,
-                altText = it.altText.orEmpty(),
-                upload = AssetUpload.Done(it.mediaId),
-            )
-        }
-        _state.update {
-            it.copy(
-                commentId = commentId,
-                parentTitle = parentTitle,
-                body = body,
-                loadedBody = body,
-                picked = landed,
-                loadedAttachmentIds = existing.map { picture -> picture.mediaId },
-            )
-        }
+        _state.update { it.copy(commentId = commentId, parentTitle = parentTitle) }
         viewModelScope.launch {
-            val mark = (content.commentSelfMark(commentId) as? Outcome.Success)?.value
-            _state.update {
-                it.copy(
-                    loading = false,
-                    sensitive = mark?.sensitive ?: false,
-                    sensitiveReason = mark?.reason,
-                )
+            when (val outcome = content.commentForEdit(commentId)) {
+                is Outcome.Success -> outcome.value?.let { loaded ->
+                    // The gallery arrives already landed, so nothing
+                    // re-uploads: these are the entries the edit keeps.
+                    val landed = loaded.comment.attachments.map { asset ->
+                        PickedAsset(
+                            uri = asset.url,
+                            sourceRatio = asset.aspectRatio,
+                            altText = asset.altText.orEmpty(),
+                            upload = AssetUpload.Done(asset.id),
+                        )
+                    }
+                    val body = loaded.comment.content.value.orEmpty()
+                    // The editor opens on what the comment actually
+                    // carries — real stored parameters, not the defaults
+                    // a fresh chip would take (F10) — so leaving a topic
+                    // alone re-declares nothing.
+                    val tags = loaded.comment.topics.map { claim ->
+                        TagRow(
+                            name = claim.hashtag.name.value.orEmpty(),
+                            relevance = claim.relevance,
+                            confidence = claim.confidence,
+                        )
+                    }
+                    // A citation this build could not type is
+                    // unaddressable — no write could name it — so it
+                    // stays out of the editable section entirely and its
+                    // absence is never read as a removal.
+                    val refs = loaded.comment.references.mapNotNull { it.editableRow() }
+                    _state.update {
+                        it.copy(
+                            loading = false,
+                            body = body,
+                            loadedBody = body,
+                            picked = landed,
+                            loadedAttachmentIds = landed.mapNotNull { p -> p.mediaId },
+                            tagSection = TagSectionState(tags = tags, loaded = tags),
+                            referenceSection = ReferenceSectionState(
+                                references = refs,
+                                loaded = refs,
+                            ),
+                            sensitive = loaded.selfMark.sensitive,
+                            sensitiveReason = loaded.selfMark.reason,
+                        )
+                    }
+                } ?: _state.update { it.copy(loading = false, refusal = GONE) }
+
+                is Outcome.Refused -> _state.update { it.copy(loading = false, refusal = GONE) }
+                is Outcome.Failed -> _state.update {
+                    it.copy(loading = false, transportFailed = true)
+                }
             }
         }
     }
@@ -398,6 +423,8 @@ class CommentEditViewModel @Inject constructor(
 
         /** A Tag at relevance 0 is how a topic is taken off (hashtag.md §4). */
         const val WITHDRAWN = 0.0
+
+        const val GONE = "That comment is no longer there."
 
         const val UNREADABLE = "That file could not be read as a picture."
         const val REFUSED = "The server would not take that picture."

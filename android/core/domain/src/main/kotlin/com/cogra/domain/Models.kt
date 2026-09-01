@@ -527,6 +527,19 @@ data class Page<T>(
  * carry (api-spec.md "Two states, and the statuses are their OR"). The
  * edit form reads it so the record it prepares re-states it.
  */
+/**
+ * One comment plus the author-only state an edit needs.
+ *
+ * The mark rides beside the comment rather than on it because it is not
+ * thread-readable: a card never shows it, and only its author's edit
+ * screen reads it — which is also the one screen that must re-state it
+ * or clear it by omission.
+ */
+data class CommentForEdit(
+    val comment: CommentView,
+    val selfMark: SelfMarkView,
+)
+
 data class SelfMarkView(
     val sensitive: Boolean,
     /** Null when unmarked, and when the mark carries no reason. */
