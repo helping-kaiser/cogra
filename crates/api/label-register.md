@@ -284,6 +284,7 @@ label.
 | `test:integration:the-un-tag-is-admitted-on-an-artifact-at-the-standing-topic-cap`          | the_un_tag_is_admitted_on_an_artifact_at_the_standing_topic_cap          |
 | `test:integration:the-view-constructor-needs-both-the-flag-and-a-viewer`                    | the_view_constructor_needs_both_the_flag_and_a_viewer                    |
 | `test:integration:token-confirmations-share-one-ip-budget`                                  | token_confirmations_share_one_ip_budget                                  |
+| `test:integration:total-count-is-not-charged-per-edge`                                      | total_count_is_not_charged_per_edge                                      |
 | `test:integration:un-tagging-is-a-further-tag-at-relevance-zero`                            | un_tagging_is_a_further_tag_at_relevance_zero                            |
 | `test:integration:un-tagging-takes-the-chip-off-the-row`                                    | un_tagging_takes_the_chip_off_the_row                                    |
 | `test:integration:unfollowing-a-topic-severs-the-affinity-bundle`                           | unfollowing_a_topic_severs_the_affinity_bundle                           |
