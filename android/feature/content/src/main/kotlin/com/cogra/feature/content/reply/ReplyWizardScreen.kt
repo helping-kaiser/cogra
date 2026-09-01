@@ -292,7 +292,6 @@ internal fun ReplyWizardScreen(
                     onChange = onStanceChange,
                     onSet = onCloseSheet,
                     onCancel = onCloseSheet,
-                    onHelp = { onOpenHelp(HelpTopic.WhereYouStand) },
                 )
 
                 state.sheet == ReplySealSheet.Topics -> CograSheetSurface(testTag = "reply_topics_sheet") {
