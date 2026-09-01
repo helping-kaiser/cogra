@@ -34,6 +34,8 @@ export function Screen() {
             stancesTaken={31}
             onCounts={() => {}}
             onCommit={() => {}}
+            onMessage={() => {}}
+            showHandle={false}
           />
         </div>
         <ChronicleTabs value="everything" />

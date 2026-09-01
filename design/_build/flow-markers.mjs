@@ -479,6 +479,21 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+/* The band's Chats affordance (jakob 2026-09-01): CograBand carries it on
+   every tab root, so every wired band board gets the marker in one sweep —
+   the number is each board's next free one, the edge points at the chat
+   surface's gap (guest boards: the guest gate's). */
+const BAND_CHATS = {
+  Main: 18, FeedBare: 18, ApplicantFeed: 18, ApplicantWaiting: 15,
+  VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 9,
+  Feed: 16, FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedGallery: 15,
+  Wallet: 14, WalletEmpty: 9, WalletSetup: 8, WalletKeyAbsent: 10,
+  WalletGuest: 8, WalletApplicant: 6,
+};
+for (const [board, n] of Object.entries(BAND_CHATS)) {
+  (FLOW_MARKERS[board] ??= []).push({ n, find: 'aria-label="Chats"', tag: "button" });
+}
+
 export function applyFlowMarkers(name, html) {
   const markers = FLOW_MARKERS[name];
   if (!markers) return html;

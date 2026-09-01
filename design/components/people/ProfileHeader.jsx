@@ -64,10 +64,12 @@ export function ProfileHeader({
   taught = true,
   bundle,
   onCommit,
+  onMessage,
   onEdit,
   onInvites,
   onAvatarChange,
   onCounts,
+  showHandle = true,
 }) {
   const name = displayName && displayName.trim() ? displayName : handle;
   const hasFigures = posts !== undefined || stancesOn !== undefined || stancesTaken !== undefined;
@@ -111,7 +113,10 @@ export function ProfileHeader({
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0, flex: 1 }}>
           <h1 style={{ margin: 0, fontSize: "var(--text-title-large)", lineHeight: "var(--text-title-large--line-height)", fontWeight: "var(--text-title-large--font-weight)", overflowWrap: "anywhere" }}>{name}</h1>
-          <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>@{handle}</span>
+          {/* The handle repeats only where the screen's top bar does not already
+              carry it — a drill-in is titled @handle, so it passes showHandle
+              false (jakob 2026-09-01). */}
+          {showHandle && <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>@{handle}</span>}
           {hasFigures &&
             (onCounts ? (
               <button
@@ -130,9 +135,11 @@ export function ProfileHeader({
       </div>
       {bio && <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{bio}</p>}
       {website && <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--primary)", overflowWrap: "anywhere" }}>{website}</span>}
-      {/* The actions row. On someone else's profile the stance IS the row —
-          the wide anchor. On your own there is no stance to take, so the row
-          is the two things you do to your own record, sharing the width. */}
+      {/* The actions row. On someone else's profile the stance leads and
+          Message stands beside it, the pair every social profile puts here
+          (jakob 2026-09-01) — the stance where Follow goes, the chat one tap
+          away. On your own there is no stance to take, so the row is the two
+          things you do to your own record. Everything shares the width. */}
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
         {own ? (
           <>
@@ -140,7 +147,16 @@ export function ProfileHeader({
             {onInvites && <Button variant="outline" size="sm" onClick={onInvites} style={{ flex: 1 }}>Invites</Button>}
           </>
         ) : (
-          <StanceControl wide targetLabel={"@" + handle} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} />
+          <>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <StanceControl wide targetLabel={"@" + handle} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} />
+            </div>
+            {onMessage && (
+              <Button variant="outline" onClick={onMessage} style={{ flex: 1 }}>
+                Message
+              </Button>
+            )}
+          </>
         )}
       </div>
     </header>
