@@ -28,13 +28,13 @@ export function Screen() {
           />
         </div>
         <ChronicleTabs value="everything" />
-        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-          <ChronicleRow label="Published a post" time="1h" snippet="First light over the flats — brought the wrong lens, kept the picture anyway." marker={<PendingMarker />} />
-          <ChronicleRow label="Took a stance" time="2h" link={false} marker={<PendingMarker />} />
-          <p style={{ margin: 0, padding: "12px 16px", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
+        <ChronicleList>
+          <ChronicleCard glyph="dynamic_feed" label="Published a post" time="1h" snippet="First light over the flats — brought the wrong lens, kept the picture anyway." pending />
+          <ChronicleCard face={{ pDirected: 0.1, pInterest: 0.1 }} label="Took a stance" context="on @mira" time="2h" link={false} pending />
+          <p style={{ margin: 0, padding: "4px 0", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
             Each kind of act stages once until you land.
           </p>
-        </div>
+        </ChronicleList>
       </div>
       <Snackbar message="Invites open when you land." />
       <BottomNav active="profile" slots={ALL_SLOTS} inline />

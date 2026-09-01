@@ -62,6 +62,7 @@ const {
   WashCard,
   StancePad,
   StanceReadout,
+  StanceValue,
   SensitiveVeil,
   SensitiveScope,
   RedactedContent,
@@ -340,26 +341,25 @@ function ProfileBand({ children }) {
   );
 }
 
-/* A person row on the stances page — the actor opens their profile, and the
-   row's trailing control is YOUR stance anchor toward them (the master, never
-   a copy): the same place Instagram's list puts its Follow button. A standing
-   shows its face and pair; none shows the muted waiting face. */
-function StanceRow({ name, handle, src, bundle }) {
+/* A person row on the stances page — the actor, and THE STANCE THE ROW IS
+   ABOUT (jakob 2026-09-01): the record's own value, face and pair, read-only.
+   Unlike a follow, a stance has sign and magnitude, so the value is the
+   row's information; acting on the person means opening their profile first
+   — the whole row does exactly that. */
+function StanceRow({ name, handle, src, pDirected, pInterest }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 56, padding: "2px 8px 2px 16px" }}>
-      <button
-        type="button"
-        className="cg-state cg-focus"
-        style={{ flex: 1, display: "flex", alignItems: "center", gap: 12, minWidth: 0, border: 0, background: "none", padding: "6px 0", cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left", borderRadius: "var(--radius-small)" }}
-      >
-        <MonogramAvatar name={name} size={40} src={src} />
-        <span style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-          <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>{name}</span>
-          <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>@{handle}</span>
-        </span>
-      </button>
-      <StanceControl targetLabel={"@" + handle} bundle={bundle} />
-    </div>
+    <button
+      type="button"
+      className="cg-state cg-focus"
+      style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", boxSizing: "border-box", minHeight: 56, border: 0, background: "none", padding: "6px 16px", cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left" }}
+    >
+      <MonogramAvatar name={name} size={40} src={src} />
+      <span style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>{name}</span>
+        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>@{handle}</span>
+      </span>
+      <StanceValue pDirected={pDirected} pInterest={pInterest} />
+    </button>
   );
 }
 
@@ -408,41 +408,67 @@ function ChronicleTabs({ value = "everything" }) {
   );
 }
 
-/* The profile's chronicle — the author's record as quiet rows, not cards: the
-   verbs of what they did, newest first (the full card presentation waits for
-   the slice-3 feed rework). A row with somewhere to go is a button; a record
-   with no destination (a stance, a profile update) is a plain row. */
-function ChronicleRow({ label, time, snippet, link = true, marker }) {
+/* The profile's chronicle as CONTAINERS, the wallet history's anatomy (jakob
+   2026-09-01 — "draw inspiration from there"): each act its own card on the
+   surface-card ground, a leading 40px disc carrying the act's kind (a glyph,
+   or the stance record's own face), the verb and its snippet, the time on the
+   trailing edge, Still settling where an act pends. A card with somewhere to
+   go is a button; a record with no destination is the same card, inert. */
+function ChronicleCard({ glyph, face, label, context, snippet, time, pending = false, link = true }) {
+  const disc = (
+    <span
+      style={{ width: 40, height: 40, borderRadius: "var(--radius-full)", background: "var(--surface-container-high)", color: "var(--text-secondary)", display: "grid", placeItems: "center", flex: "none" }}
+    >
+      {face ? <StanceValue pDirected={face.pDirected} pInterest={face.pInterest} showPair={false} /> : <Icon name={glyph ?? "history"} size={20} />}
+    </span>
+  );
   const inner = (
     <>
-      <span style={{ display: "flex", alignItems: "baseline", gap: 8, width: "100%" }}>
-        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>{label}</span>
-        {marker}
-        <span style={{ marginLeft: "auto", flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>{time}</span>
+      {disc}
+      <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+        <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+          <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>{label}</span>
+          {context && <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>{context}</span>}
+        </span>
+        {snippet && (
+          <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{snippet}</span>
+        )}
       </span>
-      {snippet && (
-        <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{snippet}</span>
-      )}
+      <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flex: "none" }}>
+        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>{time}</span>
+        {pending && <PendingMarker />}
+      </span>
     </>
   );
   const style = {
     display: "flex",
-    flexDirection: "column",
-    gap: 2,
+    alignItems: "center",
+    gap: "var(--space-3)",
     width: "100%",
     boxSizing: "border-box",
-    padding: "10px 16px",
-    borderBottom: "1px solid var(--border-hairline)",
+    border: 0,
+    borderRadius: "var(--radius-medium)",
+    background: "var(--surface-card)",
+    padding: "var(--space-3)",
     fontFamily: "var(--font-sans)",
     color: "var(--on-surface)",
     textAlign: "left",
   };
   return link ? (
-    <button type="button" className="cg-state cg-focus" style={{ ...style, border: 0, borderBottom: "1px solid var(--border-hairline)", background: "none", cursor: "pointer" }}>
+    <button type="button" className="cg-state cg-focus" style={{ ...style, cursor: "pointer" }}>
       {inner}
     </button>
   ) : (
     <div style={style}>{inner}</div>
+  );
+}
+
+/* The chronicle column: cards on 8px of surface, the wallet history's seam. */
+function ChronicleList({ children }) {
+  return (
+    <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "8px 16px 0" }}>
+      {children}
+    </div>
   );
 }
 

@@ -50,10 +50,10 @@ export function Screen() {
       <PageHeader title="@ada · Stances" backHref="#" backLabel="Back" />
       <StanceTabs value="on" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", paddingTop: 4 }}>
-        <StanceRow name="Tobias Lindqvist" handle="tobias" />
-        <StanceRow name="Sol Ferreira" handle="sol" bundle={mkBundle(0.6, 0.3)} />
-        <StanceRow name="Mira Voss" handle="mira" src="inviter.jpg" bundle={mkBundle(0.4, 0.5)} />
-        <StanceRow name="Juno Baptiste" handle="juno" />
+        <StanceRow name="Tobias Lindqvist" handle="tobias" pDirected={0.7} pInterest={0.4} />
+        <StanceRow name="Sol Ferreira" handle="sol" pDirected={0.6} pInterest={0.3} />
+        <StanceRow name="Mira Voss" handle="mira" src="inviter.jpg" pDirected={0.4} pInterest={0.5} />
+        <StanceRow name="Juno Baptiste" handle="juno" pDirected={-0.2} pInterest={0.1} />
       </div>
       <BottomNav active={null} slots={ALL_SLOTS} inline />
     </>

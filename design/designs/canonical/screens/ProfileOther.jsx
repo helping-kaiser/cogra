@@ -39,13 +39,13 @@ export function Screen() {
           />
         </div>
         <ChronicleTabs value="everything" />
-        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-          <ChronicleRow label="Published a post" time="2h" snippet="The long way home — the light does something at the third headland." />
-          <ChronicleRow label="Commented" time="1d" snippet="The glovebox camera earns its keep — this is the print from 2019." />
-          <ChronicleRow label="Took a stance" time="2d" link={false} />
-          <ChronicleRow label="Published a post" time="5d" snippet="Took the coast road instead of the tunnel. Four hours longer, worth every minute." />
-          <ChronicleRow label="Updated their profile" time="1w" link={false} />
-        </div>
+        <ChronicleList>
+          <ChronicleCard glyph="dynamic_feed" label="Published a post" time="2h" snippet="The long way home — the light does something at the third headland." />
+          <ChronicleCard glyph="chat_bubble" label="Commented" time="1d" snippet="The glovebox camera earns its keep — this is the print from 2019." />
+          <ChronicleCard face={{ pDirected: 0.6, pInterest: 0.3 }} label="Took a stance" context="on @tobias" time="2d" link={false} />
+          <ChronicleCard glyph="dynamic_feed" label="Published a post" time="5d" snippet="Took the coast road instead of the tunnel. Four hours longer, worth every minute." />
+          <ChronicleCard glyph="person" label="Updated their profile" time="1w" link={false} />
+        </ChronicleList>
       </div>
       <BottomNav active={null} slots={ALL_SLOTS} inline />
     </>
