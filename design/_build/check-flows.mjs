@@ -7,9 +7,10 @@
 //
 // Run from this directory: node check-flows.mjs   (exit 1 on any FAIL)
 
-import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { resolveAll, bless, serialize } from "./flow-engine.mjs";
 
 const t0 = Date.now();
 const here = dirname(fileURLToPath(import.meta.url));
@@ -66,6 +67,18 @@ for (const e of graph.edges ?? []) {
     if (o.board !== undefined && !boards.has(o.board)) fails.push(`edge ${key} points at unknown board "${o.board}"`);
     if (o.terminal !== undefined && !(graph.terminals ?? {})[o.terminal]) fails.push(`edge ${key} points at undeclared terminal "${o.terminal}"`);
     if (o.gap !== undefined) gaps.push(`${key}${o.case ? ` (${o.case})` : ""}: ${o.gap}`);
+    if (o.info !== undefined && (o.info !== true || o.terminal === undefined)) {
+      fails.push(`edge ${key}: "info": true marks a terminal outcome that only tells you something — it belongs on no other shape`);
+    }
+  }
+
+  // Advance to nothing is a lie. A control whose every outcome merely informs
+  // — the applicant's locked rows answering with a snackbar, a chip that lands
+  // where you already are — leaves the journey exactly where it was, so the
+  // path search must never walk it.
+  const reaches = (o) => o.board !== undefined || o.gap !== undefined || (o.terminal !== undefined && o.info !== true);
+  if (e.kind === "advance" && e.to.every((o) => !reaches(o))) {
+    fails.push(`edge ${key} is "advance" but every outcome only informs — an advance reaches a board, a gap, or a terminal that does something; this one is a "detour"`);
   }
 }
 
@@ -108,9 +121,67 @@ for (const [name, info] of boards) {
   }
 }
 
+// The flow layer. Structure above says the graph tells no lies; this says the
+// journeys the product owes still run through it.
+const flowsFile = join(dir, "flows.json");
+const witnessFile = join(dir, "flows.resolved.json");
+const rebless = process.argv.includes("--rebless");
+let flowLines = [];
+if (existsSync(flowsFile)) {
+  const declared = JSON.parse(readFileSync(flowsFile, "utf8")).flows ?? [];
+  const { results, fails: flowFails, view } = resolveAll(graph, { flows: declared });
+  fails.push(...flowFails);
+
+  const blocked = results.filter((r) => r.status === "blocked by gap");
+  flowLines.push(`flows: ${declared.length} declared · ${results.length - blocked.length} resolved · ${blocked.length} blocked by a gap`);
+  for (const r of blocked) flowLines.push(`  blocked by gap — ${r.name}: ${r.blockedBy}`);
+
+  const { witness, triage } = bless(results, view);
+  const shared = Object.entries(witness.boardsOnFlows)
+    .filter(([, row]) => row.flows.length > 1)
+    .sort((a, b) => b[1].flows.length - a[1].flows.length || a[0].localeCompare(b[0]));
+  if (shared.length) {
+    flowLines.push(`shared boards (on more than one flow): ${shared.map(([b, row]) => `${b} ×${row.flows.length}`).join(" · ")}`);
+  }
+  flowLines.push(`gap triage: ${triage.onFlow.length} of ${gaps.length} gaps sit on a flow's boards · ${triage.offFlow.length} off every flow`);
+
+  // The witness is the blessing: it drifts only when someone means it to.
+  const fresh = serialize(witness);
+  if (rebless) {
+    writeFileSync(witnessFile, fresh);
+    flowLines.push(`re-blessed ${witnessFile.split(/[\\/]/).pop()} — review the diff; that review is the blessing`);
+  } else if (!existsSync(witnessFile)) {
+    fails.push(`flows.resolved.json is missing — resolve and bless it with: node check-flows.mjs --rebless`);
+  } else if (readFileSync(witnessFile, "utf8") !== fresh) {
+    const was = JSON.parse(readFileSync(witnessFile, "utf8"));
+    const old = new Map((was.flows ?? []).map((f) => [f.name, f]));
+    const now = new Map(witness.flows.map((f) => [f.name, f]));
+    const moved = [];
+    for (const [name, f] of now) {
+      const b = old.get(name);
+      if (!b) moved.push(`${name}: newly declared`);
+      else if (JSON.stringify(b) !== JSON.stringify(f)) {
+        let at = -1;
+        for (let i = 0; i < Math.max(b.steps.length, f.steps.length); i += 1) if (b.steps[i] !== f.steps[i]) { at = i; break; }
+        moved.push(
+          at < 0
+            ? `${name}: the chain holds; its status or its boards moved (${b.status} → ${f.status})`
+            : `${name}: reroutes at step ${at + 1} of ${f.steps.length}\n      was: ${b.steps[at] ?? "(the flow ended here)"}\n      now: ${f.steps[at] ?? "(the flow ends here)"}`,
+        );
+      }
+    }
+    for (const name of old.keys()) if (!now.has(name)) moved.push(`${name}: no longer declared`);
+    if (!moved.length) moved.push("the index or the triage moved under the flows");
+    fails.push(`flows.resolved.json no longer matches the graph:\n${moved.map((m) => `  ${m}`).join("\n")}\n  Re-bless deliberately: node check-flows.mjs --rebless`);
+  }
+} else {
+  flowLines.push("flows: none declared");
+}
+
 const wiredNames = [...wired].join(", ") || "none";
 console.log(`graph: ${(graph.edges ?? []).length} edges · wired pages: ${wiredNames} · ${gaps.length} gaps · ${infos.length} boards pending`);
 console.log(`kinds: ${KINDS.map((k) => `${k} ${census[k]}`).join(" · ")}`);
+for (const l of flowLines) console.log(l);
 if (gaps.length) { console.log("gaps (designs still owed):"); for (const g of gaps) console.log(`  ${g}`); }
 for (const f of fails) console.log(`FAIL ${f}`);
 console.log(`check-flows: ${fails.length ? `${fails.length} failures` : "ok"} in ${Date.now() - t0} ms`);

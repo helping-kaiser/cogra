@@ -346,12 +346,18 @@ surfaces, and two rulings for jakob (topic destination; applicant
 acting rights). The profile screen and the Sky stay their own items.
 Closing those gaps is item 23.
 
-**The user-flow layer's foundation landed 2026-09-01** (jakob's
-rulings): the manifest is `graph.json` — it holds the screen graph,
-not flows — and every one of its 689 edges declares a `kind`
-(`advance` / `cancel` / `back` / `nav` / `detour`, no default, the
-gate fails without one). The flow engine that path-searches the
-`advance` edges is next.
+**The user-flow layer landed 2026-09-01** (jakob's rulings): the
+manifest is `graph.json` — it holds the screen graph, not flows —
+and every one of its 689 edges declares a `kind` (`advance` /
+`cancel` / `back` / `nav` / `detour`, no default, the gate fails
+without one). Over it sit `flows.json`, the hand-authored intent,
+and `flows.resolved.json`, the generated and committed witness,
+both resolved by `_build/flow-engine.mjs` inside `check-flows.mjs`:
+the search walks `advance` arcs alone, an ambiguous leg is a hard
+failure asking for a pin, a gap-ending flow is reported rather than
+failed, and drift from the blessed witness fails until `--rebless`.
+Readme §13 *The user-flow layer* records the shape. Seven seed flows
+are declared; authoring the full set is item 25.
 
 ### 23 · Close the gaps — in roadmap order · *design*
 
@@ -402,6 +408,14 @@ bundled). Three small pieces the 2.5.1 close needs:
    fit a comment-scale card. Blocks the reply-wizard lanes from
    implementing ReplySeal 1:1 (the Mark row without the veiled
    result), so this part leads the bundle.
+5. **The reply-flow leave edges still say "draft kept"** (added
+   2026-09-01, after the second-batch ruling): jakob ruled comments
+   keep no drafts — leaving the reply wizard or a comment edit
+   discards. The X-leave edges on ReplyCompose, ReplyPictures(-Web),
+   ReplySeal, and CommentEdit in graph.json still annotate "draft
+   kept"; they predate the ruling. Re-annotate to the discard, and
+   decide whether an accidental-leave guard (a discard confirm)
+   is wanted — the apps ship a silent leave-discards until then.
 
 ### 27 · The resting face an unauthored stance target wears (Q42) · *design*
 
@@ -466,3 +480,18 @@ and applicant gaps renamed to carry their rulings. New overdue
 surfaces the round exposed as gaps: the settings screen, the invites
 screen, the profile menus. Next: round 2, the pattern boards
 (guest-gate, network-error, key-absent).
+
+### 25 · Author the full user-flow set · *design*
+
+Item 22's engine is seeded with seven flows chosen to exercise every
+mechanism — the control-selector start and its convergence check, the
+two-case AvatarCrop pair, a via-pinned wizard leg, a gap-blocked
+ending. What it lacks is coverage. A round declares the journeys the
+product actually owes, surface by surface — entry and the key
+ceremonies, compose in each of its shapes, comments, wallet and rail,
+search, the profile edit paths — reviewing each with jakob, since a
+flow is a claim about intent and the graph cannot check that half.
+Two lists come out of it worth having on their own: the flows that
+resolve, frozen as witnesses and thereafter defended against silent
+rerouting, and the gaps that sit on one — which sharpens item 23's
+ordering by naming the journeys each gap actually stops.

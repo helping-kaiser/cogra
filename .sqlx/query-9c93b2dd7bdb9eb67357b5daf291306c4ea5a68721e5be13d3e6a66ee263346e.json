@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(*)::bigint AS \"total!\"\n           FROM comments c\n           WHERE c.target_id = $1\n             AND ($2 OR c.landed_epoch IS NOT NULL)\n             AND EXISTS (\n                 SELECT 1 FROM comment_versions v\n                 WHERE v.comment_id = c.id AND ($2 OR NOT v.pending)\n             )",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "9c93b2dd7bdb9eb67357b5daf291306c4ea5a68721e5be13d3e6a66ee263346e"
+}
