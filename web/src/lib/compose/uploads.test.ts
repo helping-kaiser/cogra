@@ -89,7 +89,16 @@ describe("runUpload", () => {
 
     await runUpload(
       clientAnswering({ uploadMedia: { media: { id: "m" }, userErrors: [] } }),
-      { ...asset, crop: { x: 0, y: 0, zoom: 2, area: { x: 25, y: 25, width: 50, height: 50 } } },
+      {
+        ...asset,
+        crop: {
+          x: 0,
+          y: 0,
+          zoom: 2,
+          area: { x: 25, y: 25, width: 50, height: 50 },
+          areaPercent: { x: 25, y: 25, width: 50, height: 50 },
+        },
+      },
       1,
       steps().step,
     );

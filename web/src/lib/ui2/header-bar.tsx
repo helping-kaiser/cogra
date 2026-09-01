@@ -8,9 +8,13 @@
 // the edge and was clipped. Owning the padding is what fixes that for every
 // caller at once.
 //
-// The title is `title-large` at weight 400. The trailing slot takes the
-// screen's forward action as a compact pill; the help slot takes AT MOST ONE
+// The title is `title-large` at weight 400. The help slot takes AT MOST ONE
 // `?` per screen (the copy rule of design/readme.md §13), top-right.
+//
+// THE TRAILING SLOT IS FOR PASSIVE INFORMATION — a stage label — and never for
+// the screen's forward action (jakob 2026-09-01). Next sits at the bottom of
+// the content column on every stage, so the top-right corner keeps one meaning
+// the whole way through a flow.
 
 import type { ReactNode } from "react";
 
@@ -18,8 +22,7 @@ import type { ReactNode } from "react";
 // STAGE BACK and never leaves the flow, and the X LEAVES the whole flow from any
 // stage — draft kept, no confirmation, because nothing is lost and the draft
 // prompt is the return surface. Without the X an author five stages deep was
-// stuck backing out tap by tap. The X sits between the title and the stage's
-// trailing controls, so Next keeps the right edge.
+// stuck backing out tap by tap.
 export function HeaderBar({
   title,
   onBack,
