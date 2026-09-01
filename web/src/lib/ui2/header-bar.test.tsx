@@ -2,7 +2,6 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { HeaderBar, HelpButton } from "./header-bar";
-import { PillButton } from "./pill-button";
 
 describe("HeaderBar", () => {
   it("names the stage as the page's heading", () => {
@@ -33,19 +32,18 @@ describe("HeaderBar", () => {
     expect(screen.queryByTestId("header-back")).toBeNull();
   });
 
-  it("takes the screen's forward action in its trailing slot", () => {
+  // The slot takes passive trailing information — a stage label — and never
+  // the screen's forward action, which lives at the bottom of its content
+  // (jakob 2026-09-01, after the corner changed meaning mid-flow).
+  it("takes passive trailing information in its slot", () => {
     render(
       <HeaderBar
         title="Crop"
         onBack={() => {}}
-        action={
-          <PillButton testId="next" size="sm">
-            Next
-          </PillButton>
-        }
+        action={<span data-testid="stage-label">Last step</span>}
       />,
     );
-    expect(screen.getByTestId("next")).toBeInTheDocument();
+    expect(screen.getByTestId("stage-label")).toBeInTheDocument();
   });
 
   it("carries at most one help opener, named for assistive technology", () => {

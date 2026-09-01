@@ -58,11 +58,9 @@ export function ComponentGallery() {
           title="Crop"
           onBack={() => {}}
           help={<HelpButton onOpen={() => {}} label="About the crop" />}
-          action={
-            <PillButton testId="gallery-header-next" size="sm">
-              Next
-            </PillButton>
-          }
+          // The trailing slot is for passive information — a stage label. The
+          // screen's forward action lives at the bottom of its content.
+          action={<span className="text-body-small text-on-surface-variant">Last step</span>}
         />
         <HeaderBar title="Recovery code" />
       </Section>
