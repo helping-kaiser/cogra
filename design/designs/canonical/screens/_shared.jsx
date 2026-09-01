@@ -310,6 +310,51 @@ function HelpDot({ ariaLabel = "How searching works" }) {
   return <SystemHelpDot ariaLabel={ariaLabel} />;
 }
 
+/* The chronicle's tab row (profile round, 2026-09-01): full-width icon tabs,
+   the way every social profile draws this row — the segmented pill was ruled
+   out at three options. Icon-only cells with accessible names; the selected
+   tab speaks in primary AND a 2px underline. The underline is a deliberate
+   deviation from "selection is colour only": an icon's colour alone is too
+   quiet to carry which of three same-weight glyphs is on. Screen-local until
+   it settles, then it graduates to components/. */
+function ChronicleTabs({ value = "everything" }) {
+  const TABS = [
+    { id: "posts", icon: "dynamic_feed", label: "Posts" },
+    { id: "comments", icon: "chat_bubble", label: "Comments" },
+    { id: "everything", icon: "history", label: "Everything" },
+  ];
+  return (
+    <div role="group" aria-label="What the chronicle shows" style={{ display: "flex", borderBottom: "1px solid var(--border-hairline)" }}>
+      {TABS.map((tab) => {
+        const selected = tab.id === value;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            aria-pressed={selected}
+            aria-label={tab.label}
+            className="cg-state cg-focus"
+            style={{
+              flex: 1,
+              display: "grid",
+              placeItems: "center",
+              minHeight: "var(--touch-target-min)",
+              border: 0,
+              background: "none",
+              padding: 0,
+              cursor: "pointer",
+              color: selected ? "var(--primary)" : "var(--text-secondary)",
+              boxShadow: selected ? "inset 0 -2px 0 var(--primary)" : "none",
+            }}
+          >
+            <Icon name={tab.icon} size={22} />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /* The profile's chronicle — the author's record as quiet rows, not cards: the
    verbs of what they did, newest first (the full card presentation waits for
    the slice-3 feed rework). A row with somewhere to go is a button; a record
@@ -333,13 +378,13 @@ function ChronicleRow({ label, time, snippet, link = true }) {
     width: "100%",
     boxSizing: "border-box",
     padding: "10px 16px",
-    borderTop: "1px solid var(--border-hairline)",
+    borderBottom: "1px solid var(--border-hairline)",
     fontFamily: "var(--font-sans)",
     color: "var(--on-surface)",
     textAlign: "left",
   };
   return link ? (
-    <button type="button" className="cg-state cg-focus" style={{ ...style, border: 0, borderTop: "1px solid var(--border-hairline)", background: "none", cursor: "pointer" }}>
+    <button type="button" className="cg-state cg-focus" style={{ ...style, border: 0, borderBottom: "1px solid var(--border-hairline)", background: "none", cursor: "pointer" }}>
       {inner}
     </button>
   ) : (

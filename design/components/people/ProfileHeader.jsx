@@ -2,7 +2,6 @@ import React from "react";
 import { MonogramAvatar } from "./ActorChip.jsx";
 import { Button } from "../core/Button.jsx";
 import { Icon } from "../navigation/Icon.jsx";
-import { OverflowMenu } from "../content/OverflowMenu.jsx";
 import { StanceControl } from "../stance/StanceControl.jsx";
 
 /* The profile header (backlog item 5) — specified in design.md §6, never built.
@@ -10,7 +9,15 @@ import { StanceControl } from "../stance/StanceControl.jsx";
    PEOPLE FIRST, AND A PERSON IS A TARGET. A profile is the one surface whose
    subject is a person, so the stance control on THEM leads the actions: the whole
    product is stances on things, and a person is the most consequential thing to
-   have one on.
+   have one on. On a profile it wears the wide anchor — the row's one action,
+   stretched to the row (jakob 2026-09-01, "the stance icon looks lost" at
+   anchor size). Everything rarer — mention, share — lives in the screen's
+   top-bar overflow, never down here.
+
+   THE SHAPE IS THE COMPACT ONE (jakob 2026-09-01): avatar left, the name and
+   the figures in the column beside it — the layout every social profile has
+   taught readers to parse — then bio, then the one actions row. Tight: the
+   header is a summary, not a hero.
 
    THE COUNTS ARE THE HARD PART. The thing being counted is what the repo calls a
    connection, and that word is on the banned list (readme §3) along with the rest
@@ -18,9 +25,8 @@ import { StanceControl } from "../stance/StanceControl.jsx";
    actually place: how many people have taken a stance on this person, and how many
    this person has taken. Two figures, each labelled, each plain — never one merged
    "followers" number, because there is no following here and borrowing the word
-   would describe a different product. A Posts figure may lead the row (jakob
-   2026-09-01 — the numbers a profile shows, in this product's words), and the
-   stance figures are one tap target leading to the stances page: both directions,
+   would describe a different product. A Posts figure leads the row, and the
+   figures are one tap target leading to the stances page: both directions,
    separated, never merged there either.
 
    THE AVATAR CHANGES WITHOUT THE EDIT SCREEN (jakob 2026-09-01). Changing the
@@ -37,9 +43,9 @@ import { StanceControl } from "../stance/StanceControl.jsx";
 
 function Figure({ value, label }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
+    <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
       <span style={{ fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>{value}</span>
-      <span style={{ fontSize: "var(--text-label-small)", fontWeight: 500, color: "var(--text-secondary)" }}>{label}</span>
+      <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: 500, color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{label}</span>
     </div>
   );
 }
@@ -60,12 +66,11 @@ export function ProfileHeader({
   onCommit,
   onEdit,
   onInvites,
-  onSettings,
   onAvatarChange,
   onCounts,
-  menuItems = [],
 }) {
   const name = displayName && displayName.trim() ? displayName : handle;
+  const hasFigures = posts !== undefined || stancesOn !== undefined || stancesTaken !== undefined;
   const figures = (
     <>
       {posts !== undefined && <Figure value={posts} label="Posts" />}
@@ -74,10 +79,10 @@ export function ProfileHeader({
     </>
   );
   return (
-    <header style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)", padding: "var(--space-4) 0" }}>
+    <header style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", padding: "var(--space-3) 0 var(--space-1)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4)" }}>
         <div style={{ position: "relative", flex: "none" }}>
-          <MonogramAvatar name={name} size="lg" src={avatarSrc} />
+          <MonogramAvatar name={name} size={80} src={avatarSrc} />
           {own && onAvatarChange && (
             <button
               type="button"
@@ -104,56 +109,38 @@ export function ProfileHeader({
             </button>
           )}
         </div>
-        <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-          <h1 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)", overflowWrap: "anywhere" }}>{name}</h1>
-          <span style={{ fontSize: "var(--text-body-medium)", color: "var(--text-secondary)" }}>@{handle}</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0, flex: 1 }}>
+          <h1 style={{ margin: 0, fontSize: "var(--text-title-large)", lineHeight: "var(--text-title-large--line-height)", fontWeight: "var(--text-title-large--font-weight)", overflowWrap: "anywhere" }}>{name}</h1>
+          <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>@{handle}</span>
+          {hasFigures &&
+            (onCounts ? (
+              <button
+                type="button"
+                aria-label={own ? "Your stances, both directions" : "Stances on and by @" + handle}
+                onClick={onCounts}
+                className="cg-state cg-focus"
+                style={{ display: "flex", gap: "var(--space-5)", border: 0, background: "none", padding: 0, marginTop: 4, cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left", width: "fit-content", maxWidth: "100%", borderRadius: "var(--radius-small)" }}
+              >
+                {figures}
+              </button>
+            ) : (
+              <div style={{ display: "flex", gap: "var(--space-5)", marginTop: 4 }}>{figures}</div>
+            ))}
         </div>
       </div>
       {bio && <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{bio}</p>}
       {website && <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--primary)", overflowWrap: "anywhere" }}>{website}</span>}
-      {(posts !== undefined || stancesOn !== undefined || stancesTaken !== undefined) &&
-        (onCounts ? (
-          <button
-            type="button"
-            aria-label={own ? "Your stances, both directions" : "Stances on and by @" + handle}
-            onClick={onCounts}
-            className="cg-state cg-focus"
-            style={{ display: "flex", gap: "var(--space-6)", border: 0, background: "none", padding: 0, cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left", width: "fit-content", borderRadius: "var(--radius-small)" }}
-          >
-            {figures}
-          </button>
-        ) : (
-          <div style={{ display: "flex", gap: "var(--space-6)" }}>{figures}</div>
-        ))}
-      {/* The actions row. On someone else's profile the stance leads and everything
-          rarer is in the menu. On your own there is no stance to take, so the row
-          is the two things you do to your own record. */}
+      {/* The actions row. On someone else's profile the stance IS the row —
+          the wide anchor. On your own there is no stance to take, so the row
+          is the two things you do to your own record, sharing the width. */}
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
         {own ? (
           <>
-            {onEdit && <Button variant="outline" size="sm" onClick={onEdit}>Edit profile</Button>}
-            {onInvites && <Button variant="outline" size="sm" onClick={onInvites}>Invites</Button>}
-            {onSettings && (
-              <button
-                type="button"
-                aria-label="Settings"
-                onClick={onSettings}
-                className="cg-state cg-focus"
-                style={{ display: "grid", placeItems: "center", height: "var(--touch-target-min)", width: "var(--touch-target-min)", border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", marginLeft: "auto" }}
-              >
-                <Icon name="settings" />
-              </button>
-            )}
+            {onEdit && <Button variant="outline" size="sm" onClick={onEdit} style={{ flex: 1 }}>Edit profile</Button>}
+            {onInvites && <Button variant="outline" size="sm" onClick={onInvites} style={{ flex: 1 }}>Invites</Button>}
           </>
         ) : (
-          <>
-            <StanceControl targetLabel={"@" + handle} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} />
-            {menuItems.length > 0 && (
-              <div style={{ marginLeft: "auto" }}>
-                <OverflowMenu items={menuItems} ariaLabel={"More about @" + handle} />
-              </div>
-            )}
-          </>
+          <StanceControl wide targetLabel={"@" + handle} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} />
         )}
       </div>
     </header>
