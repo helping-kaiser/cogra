@@ -26,20 +26,22 @@
       --surface-container: #221f1e; --surface-container-high: #2c2928; --surface-container-highest: #373433;
       --outline: #968f8d; --outline-variant: #4b4644;
     }
+    [data-flow] { position: relative; }
+    [data-flow]::after { content: attr(data-flow); position: absolute; top: -7px; right: -7px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }
   </style>
 </helmet>
 <div class="screen" data-theme="{{theme}}" style="width: 390px; height: 844px; display: flex; flex-direction: column; background: var(--surface); color: var(--on-surface); overflow: hidden; box-sizing: border-box;">
 
   <div style="min-height: 48px; display: flex; align-items: center; gap: 4px; padding: 0 12px; flex: none;">
-    <span style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></span>
+    <span data-flow="1" style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></span>
     <h1 style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 400;">Details</h1>
     <span style="flex: 1;"></span>
-    <span style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg></span>
+    <span data-flow="2" style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg></span>
   </div>
 
   <div style="flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 12px 24px 16px 24px; overflow: hidden;">
 
-    <div style="display: flex; align-items: center; gap: 8px;">
+    <div data-flow="3" style="display: flex; align-items: center; gap: 8px;">
       <div style="width: 48px; height: 48px; border-radius: 8px; overflow: hidden; flex: none;"><img src="post-photo.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></div>
       <div style="width: 48px; height: 48px; border-radius: 8px; overflow: hidden; flex: none;"><img src="inviter.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></div>
       <span style="flex: 1; font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">2 pictures — the body</span>
@@ -50,7 +52,7 @@
         <label style="flex: 1; font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Title</label>
         <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">Optional</span>
       </div>
-      <div style="min-height: 44px; display: flex; align-items: center; padding: 10px 12px; border-radius: 4px; border: 1px solid var(--outline); font-size: 16px; line-height: 24px; letter-spacing: 0.5px; box-sizing: border-box;">Salt maps of the coast road</div>
+      <div data-flow="4" style="min-height: 44px; display: flex; align-items: center; padding: 10px 12px; border-radius: 4px; border: 1px solid var(--outline); font-size: 16px; line-height: 24px; letter-spacing: 0.5px; box-sizing: border-box;">Salt maps of the coast road</div>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -58,15 +60,15 @@
         <label style="flex: 1; font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Description</label>
         <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">Optional</span>
       </div>
-      <div style="padding: 10px 12px; border-radius: 4px; border: 1px solid var(--outline); font-size: 16px; line-height: 24px; letter-spacing: 0.5px; height: 68px; overflow: hidden; box-sizing: border-box;">Rubbings from three weekends at low tide — paper against the salt crust.</div>
+      <div data-flow="5" style="padding: 10px 12px; border-radius: 4px; border: 1px solid var(--outline); font-size: 16px; line-height: 24px; letter-spacing: 0.5px; height: 68px; overflow: hidden; box-sizing: border-box;">Rubbings from three weekends at low tide — paper against the salt crust.</div>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 6px;">
       <label style="font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Topics</label>
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <span style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px; border-radius: 9999px; background: var(--secondary-container); color: var(--on-secondary-container); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">#fieldnotes<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg></span>
-        <span style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px; border-radius: 9999px; background: var(--secondary-container); color: var(--on-secondary-container); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">#coastroad<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg></span>
-        <span style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px; border-radius: 9999px; border: 1px solid var(--outline); color: var(--on-surface-variant); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Add a topic</span>
+        <span data-flow="6" style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px; border-radius: 9999px; background: var(--secondary-container); color: var(--on-secondary-container); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">#fieldnotes<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg></span>
+        <span data-flow="6" style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px; border-radius: 9999px; background: var(--secondary-container); color: var(--on-secondary-container); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">#coastroad<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg></span>
+        <span data-flow="7" style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px; border-radius: 9999px; border: 1px solid var(--outline); color: var(--on-surface-variant); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Add a topic</span>
       </div>
     </div>
 
@@ -79,14 +81,14 @@
           <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">Post</span>
         </span>
         <span style="display: inline-flex; align-items: baseline; gap: 4px; flex: none;"><span aria-hidden="true" style="font-size: 14px; line-height: 18px;">&#128578;</span><span style="font-size: 12px; line-height: 16px; color: var(--on-surface-variant); white-space: nowrap;">+0.10 / +0.10</span></span>
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--on-surface-variant)" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        <svg data-flow="8" viewBox="0 0 24 24" width="18" height="18" fill="var(--on-surface-variant)" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
       </div>
-      <span style="font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; color: var(--primary);">+ Cite something</span>
+      <span data-flow="9" style="font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; color: var(--primary);">+ Cite something</span>
     </div>
 
     <div style="flex: 1;"></div>
 
-    <div style="display: flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 24px; min-width: 64px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Next</div>
+    <div data-flow="10" style="display: flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 24px; min-width: 64px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Next</div>
 
   </div>
 

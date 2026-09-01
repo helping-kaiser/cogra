@@ -26,15 +26,17 @@
       --surface-container: #221f1e; --surface-container-high: #2c2928; --surface-container-highest: #373433;
       --outline: #968f8d; --outline-variant: #4b4644;
     }
+    [data-flow] { position: relative; }
+    [data-flow]::after { content: attr(data-flow); position: absolute; top: -7px; right: -7px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }
   </style>
 </helmet>
 <div class="screen" data-theme="{{theme}}" style="width: 390px; height: 844px; display: flex; flex-direction: column; background: var(--surface); color: var(--on-surface); overflow: hidden; box-sizing: border-box;">
 
   <div style="min-height: 48px; display: flex; align-items: center; gap: 4px; padding: 0 12px; flex: none;">
-    <span style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></span>
+    <span data-flow="1" style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></span>
     <h1 style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 400;">The video's face</h1>
     <span style="flex: 1;"></span>
-    <span style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg></span>
+    <span data-flow="2" style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg></span>
     <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">Video only</span>
   </div>
 
@@ -42,17 +44,17 @@
 
     <div style="position: relative; border-radius: 12px; overflow: hidden;">
       <img src="post-photo.jpg" alt="" style="display: block; width: 100%; height: 342px; object-fit: cover;">
-      <span style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 56px; height: 56px; border-radius: 9999px; background: rgba(0,0,0,0.55); color: #ffffff; display: flex; align-items: center; justify-content: center;"><svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></span>
+      <span data-flow="3" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 56px; height: 56px; border-radius: 9999px; background: rgba(0,0,0,0.55); color: #ffffff; display: flex; align-items: center; justify-content: center;"><svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></span>
       <span style="position: absolute; right: 8px; bottom: 8px; padding: 1px 8px; border-radius: 4px; background: rgba(0,0,0,0.55); color: #ffffff; font-size: 11px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px;">0:42</span>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 8px;">
       <label style="font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Cover</label>
       <div style="display: flex; gap: 8px;">
-        <div style="width: 76px; height: 76px; border-radius: 8px; overflow: hidden; outline: 2px solid var(--primary); outline-offset: 1px; flex: none;"><img src="post-photo.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></div>
-        <div style="width: 76px; height: 76px; border-radius: 8px; overflow: hidden; opacity: 0.65; flex: none;"><img src="post-photo.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.4);"></div>
-        <div style="width: 76px; height: 76px; border-radius: 8px; overflow: hidden; opacity: 0.65; flex: none;"><img src="post-photo.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.8); filter: saturate(1.3);"></div>
-        <div style="width: 76px; height: 76px; border-radius: 8px; border: 1px dashed var(--outline); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--on-surface-variant); box-sizing: border-box; flex: none;">
+        <div data-flow="4" style="width: 76px; height: 76px; border-radius: 8px; overflow: hidden; outline: 2px solid var(--primary); outline-offset: 1px; flex: none;"><img src="post-photo.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></div>
+        <div data-flow="4" style="width: 76px; height: 76px; border-radius: 8px; overflow: hidden; opacity: 0.65; flex: none;"><img src="post-photo.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.4);"></div>
+        <div data-flow="4" style="width: 76px; height: 76px; border-radius: 8px; overflow: hidden; opacity: 0.65; flex: none;"><img src="post-photo.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.8); filter: saturate(1.3);"></div>
+        <div data-flow="5" style="width: 76px; height: 76px; border-radius: 8px; border: 1px dashed var(--outline); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--on-surface-variant); box-sizing: border-box; flex: none;">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg>
           <span style="font-size: 11px; line-height: 14px; font-weight: 500; letter-spacing: 0.5px; text-align: center;">A picture</span>
         </div>
@@ -62,7 +64,7 @@
 
     <div style="flex: 1;"></div>
 
-    <div style="display: flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 24px; min-width: 64px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Next</div>
+    <div data-flow="6" style="display: flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 24px; min-width: 64px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Next</div>
 
   </div>
 
