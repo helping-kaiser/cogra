@@ -463,11 +463,17 @@ open class ThrowingContentRepository : ContentRepository {
         tags: List<TagClaim>,
         references: List<ReferenceClaim>,
         attachments: List<AttachmentClaim>,
+        pDirected: Double?,
+        pInterest: Double?,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
+    override suspend fun commentSelfMark(id: String): Outcome<SelfMarkView?> =
+        throw UnsupportedOperationException()
     override suspend fun prepareCommentEdit(
         id: String,
         content: String,
         attachments: List<AttachmentClaim>,
+        sensitive: Boolean,
+        sensitiveReason: String?,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun commentReplies(
         commentId: String,

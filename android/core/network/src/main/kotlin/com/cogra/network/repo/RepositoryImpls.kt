@@ -702,6 +702,8 @@ class ContentRepositoryImpl @Inject constructor(
         tags: List<TagClaim>,
         references: List<ReferenceClaim>,
         attachments: List<AttachmentClaim>,
+        pDirected: Double?,
+        pInterest: Double?,
     ): Outcome<PreparedContentView> = guard.run {
         client.mutation(
             PrepareCommentMutation(
@@ -712,6 +714,10 @@ class ContentRepositoryImpl @Inject constructor(
                     tags = tags.toInput(),
                     references = references.toInput(),
                     attachments = attachments.toCommentInput(),
+                    // Absent leaves the contract's own +0.1; the reply
+                    // seal's pad always names both.
+                    pDirected = Optional.presentIfNotNull(pDirected),
+                    pInterest = Optional.presentIfNotNull(pInterest),
                 ),
             ),
         ).payloadOutcome({ it.prepareComment.userErrors.map { e -> e.userErrorFields } }) { data ->
@@ -723,10 +729,18 @@ class ContentRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun commentSelfMark(id: String): Outcome<SelfMarkView?> = guard.run {
+        client.query(CommentSelfMarkQuery(id)).fetch().map { data ->
+            data.comment?.let { SelfMarkView(it.sensitiveSelfMark, it.sensitiveReason) }
+        }
+    }
+
     override suspend fun prepareCommentEdit(
         id: String,
         content: String,
         attachments: List<AttachmentClaim>,
+        sensitive: Boolean,
+        sensitiveReason: String?,
     ): Outcome<PreparedContentView> =
         guard.run {
             client.mutation(
@@ -739,6 +753,12 @@ class ContentRepositoryImpl @Inject constructor(
                         // omitted list would leave the old pictures
                         // standing and make removal unsayable.
                         attachments = attachments.toCommentInput(),
+                        // Always sent, never omitted: the mark is
+                        // complete-state too, so an absent field is read
+                        // as `false` and would silently UNMARK a comment
+                        // its author had marked.
+                        sensitive = Optional.present(sensitive),
+                        sensitiveReason = Optional.presentIfNotNull(sensitiveReason),
                     ),
                 ),
             ).payloadOutcome({ it.prepareCommentEdit.userErrors.map { e -> e.userErrorFields } }) { data ->
