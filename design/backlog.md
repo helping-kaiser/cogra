@@ -364,6 +364,61 @@ leads that list. Rounds take the rulings they need before drawing
 early gaps — ask first), design the boards, wire them so the gap
 count falls, and land with check-flows green.
 
+### 25 · Media-slice close-out designs · *design*
+
+Filed by the feature loop 2026-09-01 (jakob: designs shipped later,
+bundled). Three small pieces the 2.5.1 close needs:
+
+1. **The veil names its source** (Q47, ruled 2026-09-01): a reader
+   should see whether the *author* warned them or the platform did —
+   design the veil's wording/treatment for both marks (today the
+   author's optional reason is the only, weak, signal). Until slice 8
+   every live veil is an author mark. Touches the veil face settled in
+   item 10.
+2. **EditCompose and CommentEdit have no sensitive Mark row** — but
+   ComposeSeal and ReplySeal both carry one, and the edit contract is
+   complete-state (an edit that omits the mark unmarks), so today an
+   author can never change or clear their mark after publishing and
+   no other surface could. Feature loop's recommendation: mirror
+   ComposeSeal's row on both edit surfaces. Alternatively rule that
+   edits can't touch marks and design the unmark surface that
+   implies.
+3. **The web avatar flow**: no `AvatarCropWeb` board exists and web
+   still uses an inline form field. Feature loop's recommendation:
+   web adopts AvatarCrop/AvatarSeal 1:1 (crop and seal don't differ
+   by platform — Web variants exist only where files arrive
+   differently). Either bless that or draw the web variant.
+4. **A sensitive-marked comment has no veiled state** (added
+   2026-09-01): ReplySeal's Mark row lets a comment author self-mark
+   and the contract carries it, but no board draws a veiled comment
+   inside the comments sheet — the post veil's face doesn't obviously
+   fit a comment-scale card. Blocks the reply-wizard lanes from
+   implementing ReplySeal 1:1 (the Mark row without the veiled
+   result), so this part leads the bundle.
+
+### 27 · The resting face an unauthored stance target wears (Q42) · *design*
+
+Filed by the feature loop 2026-09-01 (jakob: to the design session).
+The one open piece of the stance control: the face a target wears
+when the viewer has authored no stance on it. Android ships 😐 as a
+placeholder; web has to match whatever is decided — a shared
+contract exactly as §8.4's anchor table is. The full context is
+[docs/open-questions.md Q42](../docs/open-questions.md); the ruling
+lands there and in design.md §8.3/§8.4.
+
+### 26 · design.md lags the media slice · *system*
+
+Filed by the feature loop 2026-09-01. `docs/implementation/design.md`
+(the design-system doc in the product docs) has absorbed none of the
+media-slice rules recorded in readme §13 *The media slice*: the
+gallery pager shape, comment-picture rules (single shows whole at its
+own ratio, multiples share the square pager, comment pictures never
+crop, max four), the describe rules (per picture, optional, never
+invented, never on crop), the full-bleed crop + bottom-forward-action
+wizard rulings (item 24), the sensitive veil's settled face, and the
+covers-are-for-videos / gallery-cover vocabulary. Port the rules;
+board-level detail stays in readme §13.
+
 ### 24 · Wizard ergonomics catch-up in the apps · *implementation*
 
 Jakob's hand test (2026-09-01) found two wizard faults, ruled and
