@@ -89,17 +89,17 @@ describe("runUpload", () => {
 
     await runUpload(
       clientAnswering({ uploadMedia: { media: { id: "m" }, userErrors: [] } }),
-      { ...asset, crop: { zoom: 2, x: 0.5, y: 0.5 } },
+      { ...asset, crop: { x: 0, y: 0, zoom: 2, area: { x: 25, y: 25, width: 50, height: 50 } } },
       1,
       steps().step,
     );
 
-    // A square shape out of a square source at zoom 2: half the source, drawn
+    // The rectangle the cropper measured is what is drawn — half the source,
     // at its own size because it is well inside the caps.
     expect(drawn).toEqual([{ w: 50, h: 50 }]);
   });
 
-  it("sends the alt text with the bytes, because it cannot be added later", async () => {
+  it("sends the bytes and nothing the author typed", async () => {
     encodable();
     const client = clientAnswering({
       uploadMedia: { media: { id: "m" }, userErrors: [] },
@@ -107,21 +107,11 @@ describe("runUpload", () => {
 
     await runUpload(client, asset, 1, steps().step);
 
+    // The description belongs to the placement, not to the asset: it
+    // rides `AttachmentInput` at prepare, which is what lets the upload
+    // start the moment the picture is picked.
     const variables = (client.mutate as ReturnType<typeof vi.fn>).mock.calls[0]![0].variables;
-    expect(variables.input.altText).toBe("paper against the salt crust");
-    expect(variables.input.file).toBeInstanceOf(File);
-  });
-
-  it("sends no alt text at all rather than an empty description", async () => {
-    encodable();
-    const client = clientAnswering({
-      uploadMedia: { media: { id: "m" }, userErrors: [] },
-    });
-
-    await runUpload(client, { ...asset, altText: "   " }, 1, steps().step);
-
-    const variables = (client.mutate as ReturnType<typeof vi.fn>).mock.calls[0]![0].variables;
-    expect(variables.input.altText).toBeNull();
+    expect(variables.input).toEqual({ file: expect.any(File) });
   });
 
   it("shows the server's own refusal, and leaves it retryable", async () => {

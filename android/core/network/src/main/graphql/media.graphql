@@ -23,8 +23,10 @@ fragment MediaFields on MediaAttachment {
   }
 }
 
-mutation UploadMedia($file: Upload!, $altText: String) {
-  uploadMedia(input: { file: $file, altText: $altText }) {
+# Bytes and nothing authored: a description rides `AttachmentInput` at
+# prepare, so a picture uploads the moment it is picked.
+mutation UploadMedia($file: Upload!) {
+  uploadMedia(input: { file: $file }) {
     media {
       ...MediaFields
     }

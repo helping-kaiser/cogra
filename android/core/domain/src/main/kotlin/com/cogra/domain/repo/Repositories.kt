@@ -24,6 +24,7 @@ import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ReferenceCandidateView
+import com.cogra.domain.SelfMarkView
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.TaggedContentView
@@ -213,14 +214,31 @@ interface ContentRepository {
     ): Outcome<PreparedContentView>
 
     /**
+     * The author's own sensitive mark on one post; null for an unknown
+     * id. Read on its own rather than off [post] — the detail read's
+     * fragment is priced per feed entry and per comment, and this is
+     * wanted once, when an edit opens.
+     */
+    suspend fun postSelfMark(id: String): Outcome<SelfMarkView?>
+
+    /**
      * The full intended field set — the edit form holds every field, so
-     * all three ride as present values; a null title/description clears.
+     * all of them ride as present values; a null title/description
+     * clears.
+     *
+     * [sensitive] and [sensitiveReason] are the author's own mark, and
+     * they are not optional here: an edit record carries the complete
+     * content state, so a mark the edit does not re-state is a mark the
+     * edit removes. The caller passes what it read from [postSelfMark],
+     * unchanged, unless the author moved the switch.
      */
     suspend fun preparePostEdit(
         id: String,
         title: String?,
         description: String?,
         content: String,
+        sensitive: Boolean = false,
+        sensitiveReason: String? = null,
     ): Outcome<PreparedContentView>
 
     /**
@@ -234,9 +252,27 @@ interface ContentRepository {
         license: LicenseChoice,
         tags: List<TagClaim> = emptyList(),
         references: List<ReferenceClaim> = emptyList(),
+        /**
+         * The gallery, in the author's order — at most
+         * [MAX_COMMENT_ATTACHMENTS]. A comment is text **plus** optional
+         * media, deliberately asymmetric to a post's exclusive-or: an
+         * answer is words first (D16). There is no cover, because a
+         * comment's set never leads anything.
+         */
+        attachments: List<AttachmentClaim> = emptyList(),
     ): Outcome<PreparedContentView>
 
-    suspend fun prepareCommentEdit(id: String, content: String): Outcome<PreparedContentView>
+    /**
+     * [attachments] is the gallery the edit leaves standing — complete,
+     * not a delta, exactly like the words beside it. An edit that sends
+     * an empty list therefore *clears* the gallery, which is what makes
+     * removing a picture expressible at all.
+     */
+    suspend fun prepareCommentEdit(
+        id: String,
+        content: String,
+        attachments: List<AttachmentClaim> = emptyList(),
+    ): Outcome<PreparedContentView>
 
     /** A further page of one comment's direct replies (expand). */
     suspend fun commentReplies(
@@ -245,6 +281,15 @@ interface ContentRepository {
         after: String?,
         includePending: Boolean = true,
     ): Outcome<Page<CommentView>>
+
+    companion object {
+        /**
+         * api-spec.md `PrepareCommentInput`: at most four per comment
+         * (D9). A comment gallery is a supporting picture, not an album
+         * — which is why it is four where a post's is ten.
+         */
+        const val MAX_COMMENT_ATTACHMENTS = 4
+    }
 }
 
 /**

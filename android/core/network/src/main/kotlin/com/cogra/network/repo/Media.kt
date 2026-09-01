@@ -36,7 +36,6 @@ class MediaRepositoryImpl @Inject constructor(
 
     override suspend fun uploadMedia(
         picture: ProcessedPicture,
-        altText: String?,
     ): Outcome<MediaAssetView> = guard.run {
         // `DefaultUpload` is Apollo's multiplatform upload body; the
         // Gradle side maps the `Upload` scalar onto it via
@@ -55,10 +54,7 @@ class MediaRepositoryImpl @Inject constructor(
             .build()
 
         client.mutation(
-            UploadMediaMutation(
-                file = upload,
-                altText = Optional.presentIfNotNull(altText),
-            ),
+            UploadMediaMutation(file = upload),
         ).payloadOutcome({ it.uploadMedia.userErrors.map { e -> e.userErrorFields } }) { data ->
             // A null asset beside empty userErrors is a server fault,
             // which is what `payload` turns it into — never a success

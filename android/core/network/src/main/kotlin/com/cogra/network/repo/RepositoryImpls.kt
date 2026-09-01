@@ -26,6 +26,7 @@ import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordLink
 import com.cogra.domain.RecordRow
+import com.cogra.domain.SelfMarkView
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.UserProfile
@@ -65,6 +66,7 @@ import com.cogra.network.graphql.KeyBackupQuery
 import com.cogra.network.graphql.LogInMutation
 import com.cogra.network.graphql.MeQuery
 import com.cogra.network.graphql.PostDetailQuery
+import com.cogra.network.graphql.PostSelfMarkQuery
 import com.cogra.network.graphql.PostsQuery
 import com.cogra.network.graphql.PrepareCommentEditMutation
 import com.cogra.network.graphql.PrepareCommentMutation
@@ -647,11 +649,19 @@ class ContentRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun postSelfMark(id: String): Outcome<SelfMarkView?> = guard.run {
+        client.query(PostSelfMarkQuery(id)).fetch().map { data ->
+            data.post?.let { SelfMarkView(it.sensitiveSelfMark, it.sensitiveReason) }
+        }
+    }
+
     override suspend fun preparePostEdit(
         id: String,
         title: String?,
         description: String?,
         content: String,
+        sensitive: Boolean,
+        sensitiveReason: String?,
     ): Outcome<PreparedContentView> = guard.run {
         client.mutation(
             PreparePostEditMutation(
@@ -663,6 +673,17 @@ class ContentRepositoryImpl @Inject constructor(
                     title = Optional.present(title),
                     description = Optional.present(description),
                     content = Optional.present(content),
+                    // The mark included: an omitted switch unmarks the
+                    // post, so carrying the author's own mark through is
+                    // the difference between an edit and a silent
+                    // withdrawal of it.
+                    sensitive = Optional.present(sensitive),
+                    // Blank counts as none, and a reason without the
+                    // switch is refused on `["sensitiveReason"]` — so the
+                    // reason rides only under its own mark.
+                    sensitiveReason = Optional.present(
+                        sensitiveReason?.takeIf { sensitive && it.isNotBlank() },
+                    ),
                 ),
             ),
         ).payloadOutcome({ it.preparePostEdit.userErrors.map { e -> e.userErrorFields } }) { data ->
@@ -680,6 +701,7 @@ class ContentRepositoryImpl @Inject constructor(
         license: LicenseChoice,
         tags: List<TagClaim>,
         references: List<ReferenceClaim>,
+        attachments: List<AttachmentClaim>,
     ): Outcome<PreparedContentView> = guard.run {
         client.mutation(
             PrepareCommentMutation(
@@ -689,6 +711,7 @@ class ContentRepositoryImpl @Inject constructor(
                     license = license.toInput(),
                     tags = tags.toInput(),
                     references = references.toInput(),
+                    attachments = attachments.toCommentInput(),
                 ),
             ),
         ).payloadOutcome({ it.prepareComment.userErrors.map { e -> e.userErrorFields } }) { data ->
@@ -700,11 +723,23 @@ class ContentRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun prepareCommentEdit(id: String, content: String): Outcome<PreparedContentView> =
+    override suspend fun prepareCommentEdit(
+        id: String,
+        content: String,
+        attachments: List<AttachmentClaim>,
+    ): Outcome<PreparedContentView> =
         guard.run {
             client.mutation(
                 PrepareCommentEditMutation(
-                    PrepareCommentEditInput(id = id, content = content),
+                    PrepareCommentEditInput(
+                        id = id,
+                        content = content,
+                        // The complete gallery, like the words beside
+                        // it: an edit payload is the whole state, so an
+                        // omitted list would leave the old pictures
+                        // standing and make removal unsayable.
+                        attachments = attachments.toCommentInput(),
+                    ),
                 ),
             ).payloadOutcome({ it.prepareCommentEdit.userErrors.map { e -> e.userErrorFields } }) { data ->
                 data.prepareCommentEdit.node?.let { node ->
@@ -772,6 +807,32 @@ private fun List<AttachmentClaim>.toInput(): Optional<List<AttachmentInput>?> =
                 mediaId = claim.mediaId,
                 displayOrder = index,
                 isCover = Optional.present(index == 0),
+                altText = Optional.presentIfNotNull(claim.altText),
+            )
+        },
+    )
+
+/**
+ * A comment's gallery on the wire.
+ *
+ * The same derived `displayOrder`, but **no cover**: a comment's set
+ * leads nothing, so there is no first picture to mark, and claiming one
+ * would state a fact about the gallery that is not true of it
+ * (`CommentView.attachments`).
+ *
+ * An empty list rides as an explicit `[]` rather than being dropped,
+ * because an edit's gallery is the complete state: removing the last
+ * picture has to be sayable, and an absent field would leave the old one
+ * standing.
+ */
+@JvmName("commentAttachmentClaimsToInput")
+private fun List<AttachmentClaim>.toCommentInput(): Optional<List<AttachmentInput>?> =
+    Optional.present(
+        mapIndexed { index, claim ->
+            AttachmentInput(
+                mediaId = claim.mediaId,
+                displayOrder = index,
+                altText = Optional.presentIfNotNull(claim.altText),
             )
         },
     )

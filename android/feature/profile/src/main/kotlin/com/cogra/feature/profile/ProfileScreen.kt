@@ -1,8 +1,9 @@
 // The profile screen (roadmap "Slice 2.1"; design.md §6 "Profile
-// header"): monogram avatar, name, handle, bio, link — and the
-// authored chronicle under filter chips. The header's
-// connection count and the connections sections arrive with the
-// stance slice (open-questions Q35); media covers with slice 2.5.
+// header"): the avatar — the account's picture, or the monogram
+// where it has none — name, handle, bio, link, and the authored
+// chronicle under filter chips. The header's connection count and
+// the connections sections arrive with the stance slice
+// (open-questions Q35).
 
 package com.cogra.feature.profile
 

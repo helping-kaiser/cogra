@@ -1044,7 +1044,7 @@ pub async fn stage_pending(
 async fn attach_post(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     version: Option<i64>,
-    gallery: &[Uuid],
+    gallery: &[postgres_store::media::GalleryPlacement],
 ) -> Result<(), ContentError> {
     if let Some(version) = version {
         postgres_store::media::attach_to_post_version(tx, version, gallery).await?;
@@ -1056,7 +1056,7 @@ async fn attach_post(
 async fn attach_comment(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     version: Option<i64>,
-    gallery: &[Uuid],
+    gallery: &[postgres_store::media::GalleryPlacement],
 ) -> Result<(), ContentError> {
     if let Some(version) = version {
         postgres_store::media::attach_to_comment_version(tx, version, gallery).await?;

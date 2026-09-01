@@ -32,6 +32,11 @@ dependencies {
     // HTTP at all — it ships no network fetcher by default.
     api(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+    // The crop step's engine. `MediaCrop` hosts the library's own
+    // `CropImageView` under our chrome, so the geometry — the whole
+    // picture on screen, the draggable window, the ratio switch — is the
+    // library's rather than ours.
+    implementation(libs.android.image.cropper)
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
     // The key gate: BiometricPrompt needs the hosting FragmentActivity,

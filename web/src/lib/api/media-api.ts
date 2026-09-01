@@ -26,24 +26,21 @@ export function uploadFilename(): string {
   return `upload.${OUTPUT_TYPE.split("/")[1]}`;
 }
 
+/**
+ * Bytes, and nothing the author typed. The description rides the prepare
+ * input's `AttachmentInput` instead, so a picture uploads the moment it is
+ * picked and neither half waits on the other.
+ */
 export async function uploadMedia(
   client: ApolloClient,
-  asset: { blob: Blob; altText: string | null },
+  asset: { blob: Blob },
 ): Promise<Outcome<MediaAsset>> {
   const file = new File([asset.blob], uploadFilename(), { type: asset.blob.type });
   return payloadOutcome(
     () =>
       client.mutate({
         mutation: UploadMediaDocument,
-        variables: {
-          input: {
-            file,
-            // Empty is not alt text. A picture the author left undescribed is
-            // sent as null so the contract can say "no description" rather than
-            // "described as nothing", which a screen reader would announce.
-            altText: asset.altText === null || asset.altText.trim() === "" ? null : asset.altText,
-          },
-        },
+        variables: { input: { file } },
       }),
     (data) => data.uploadMedia.userErrors,
     (data) => data.uploadMedia.media,

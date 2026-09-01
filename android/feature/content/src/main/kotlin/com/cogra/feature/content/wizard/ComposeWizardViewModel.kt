@@ -86,6 +86,9 @@ class ComposeWizardViewModel @Inject constructor(
      * the store — so writing before the held draft has been read and
      * answered would destroy the very draft the offer is about. Nothing
      * is written until the offer is settled one way or the other.
+     *
+     * It is also how a landed post stays landed: publishing disarms the
+     * writer for good, and nothing re-arms it.
      */
     private var armed = false
 
@@ -119,12 +122,22 @@ class ComposeWizardViewModel @Inject constructor(
     // -- The draft offer (`ComposeDraft`) --
 
     fun onContinueDraft() {
-        val held = _state.value.draftOffer ?: return
-        _state.value = ComposeWizardState.from(held)
+        val current = _state.value
+        val held = current.draftOffer ?: return
+        // The grid belongs to the device, not to the draft. Restoring
+        // replaces what was *authored*; carrying the grid across is what
+        // keeps the pick stage from emptying out under the offer — the
+        // permission effect fires on a *change* of permission, and
+        // answering the offer changes none, so a wiped grid was never
+        // refilled and the stage kept only its photos-app tile.
+        _state.value = ComposeWizardState.from(held).copy(deviceImages = current.deviceImages)
         armed = true
         // A restored media draft re-reads every asset's shape: the crop
         // preview needs it, and the URIs may no longer resolve.
         _state.value.picked.forEach { readSourceRatio(it.uri) }
+        // A draft can be days old and the library has moved on since;
+        // one query is cheaper than showing a stale roll.
+        refreshDeviceImages()
     }
 
     fun onDiscardDraft() {
@@ -213,7 +226,15 @@ class ComposeWizardViewModel @Inject constructor(
      * granted — including a re-grant, since a partial grant may have
      * gained pictures since the last look.
      */
-    fun onMediaPermissionGranted() {
+    fun onMediaPermissionGranted() = refreshDeviceImages()
+
+    /**
+     * Re-reads the roll into the grid.
+     *
+     * Safe to call without a permission: the source answers an empty list
+     * rather than throwing, so a caller never has to ask first.
+     */
+    private fun refreshDeviceImages() {
         viewModelScope.launch {
             _state.update { it.copy(deviceImages = deviceImages.newestImages(DEVICE_IMAGE_PAGE)) }
         }
@@ -249,15 +270,17 @@ class ComposeWizardViewModel @Inject constructor(
      * to Details and edits — rare, but silently keeping the old words would
      * be worse than the extra call.
      */
-    fun onAltTextChange(uri: String, text: String) = _state.update { state ->
-        val described = state.withAltText(uri, text)
-        val asset = described.picked.firstOrNull { it.uri == uri }
-        if (asset?.upload is AssetUpload.Done) {
-            described.withUpload(uri, AssetUpload.Idle)
-        } else {
-            described
-        }
-    }
+    /**
+     * Describing a picture never touches its upload: the description is
+     * a fact about the placement and rides `AttachmentClaim` at prepare,
+     * so the bytes already on the server are still the right bytes.
+     *
+     * This is the whole reason pictures may go up before the author has
+     * written anything — an upload invalidated by every keystroke could
+     * only ever start at the seal.
+     */
+    fun onAltTextChange(uri: String, text: String) =
+        _state.update { it.withAltText(uri, text) }
 
     fun onTagInputChange(value: String) = updateTags { it.withInput(value) }
 
@@ -358,23 +381,18 @@ class ComposeWizardViewModel @Inject constructor(
     fun onNext() {
         val current = _state.value
         val next = current.advanced() ?: return
-        // Uploads start on leaving DETAILS, not the crop stage.
-        //
-        // NAMED DEVIATION from `ComposeUploading`'s footnote ("Pictures
-        // upload while you write — signing waits for them"), forced by the
-        // contract: `altText` rides `UploadMediaInput` and there is no
-        // `updateMedia` — D3 makes an asset row immutable after upload. The
-        // descriptions are authored on Details (`DescribeSheet`), so an
-        // upload started at crop-exit would silently drop every description
-        // written after it, which is a lie told to the one person trusting
-        // it. Waiting until Details is done is what makes the boarded
-        // placement of Describe honest.
+        // Uploads start on leaving CROP — `ComposeUploading`'s footnote,
+        // "Pictures upload while you write — signing waits for them".
+        // Framing is settled here and nothing later changes the bytes: a
+        // description rides `AttachmentClaim` at prepare rather than the
+        // upload, so the whole Details stage is time the pictures spend
+        // on the wire instead of time the author spends waiting at the
+        // seal.
         //
         // The waiting still shows exactly where the boards draw it:
         // `ComposeSealUploading` gates the seal on `UploadStatusLine`, and
         // stepping back to Details renders the in-flight rings.
-        // Flagged for jakob — see the PR.
-        if (current.step == WizardStep.Details) startUploads(cropSpecsFor(current))
+        if (current.step == WizardStep.Crop) startUploads(cropSpecsFor(current))
         _state.value = next
     }
 
@@ -519,8 +537,7 @@ class ComposeWizardViewModel @Inject constructor(
                 _state.update { it.withUpload(uri, AssetUpload.Failed(UNREADABLE)) }
                 return@launch
             }
-            val altText = _state.value.picked.firstOrNull { it.uri == uri }?.altText?.ifBlank { null }
-            when (val outcome = media.uploadMedia(picture, altText)) {
+            when (val outcome = media.uploadMedia(picture)) {
                 is Outcome.Success -> _state.update {
                     it.withUpload(uri, AssetUpload.Done(outcome.value.id))
                 }
@@ -569,7 +586,9 @@ class ComposeWizardViewModel @Inject constructor(
                     references = current.referenceSection.references.map { it.toClaim() },
                     attachments = if (current.mode == BodyMode.Media) {
                         current.picked.mapNotNull { asset ->
-                            asset.mediaId?.let { AttachmentClaim(it) }
+                            asset.mediaId?.let {
+                                AttachmentClaim(it, asset.altText.ifBlank { null })
+                            }
                         }
                     } else {
                         emptyList()
@@ -603,6 +622,16 @@ class ComposeWizardViewModel @Inject constructor(
 
             when {
                 results.all { it is WriteResult.Done } -> {
+                    // The post is published: this wizard has nothing left
+                    // to keep. Disarming *before* the clear is what makes
+                    // the clear final — `outcome` alone could not, because
+                    // the route consumes it the moment it navigates, and
+                    // the state it leaves behind still holds every word
+                    // and pick of the post that just landed. The next
+                    // `ON_STOP` then wrote them straight back
+                    // (jakob 2026-08-31: "once a post is sent its draft
+                    // should be gone").
+                    armed = false
                     draftSaveJob?.cancel()
                     drafts.clear()
                     _state.update {

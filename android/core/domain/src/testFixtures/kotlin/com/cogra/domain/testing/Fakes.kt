@@ -51,6 +51,7 @@ import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.SelfMarkView
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.TaggedContentKind
@@ -445,11 +446,15 @@ open class ThrowingContentRepository : ContentRepository {
         sensitive: Boolean,
         sensitiveReason: String?,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
+    override suspend fun postSelfMark(id: String): Outcome<SelfMarkView?> =
+        throw UnsupportedOperationException()
     override suspend fun preparePostEdit(
         id: String,
         title: String?,
         description: String?,
         content: String,
+        sensitive: Boolean,
+        sensitiveReason: String?,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun prepareComment(
         target: String,
@@ -457,9 +462,13 @@ open class ThrowingContentRepository : ContentRepository {
         license: LicenseChoice,
         tags: List<TagClaim>,
         references: List<ReferenceClaim>,
+        attachments: List<AttachmentClaim>,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
-    override suspend fun prepareCommentEdit(id: String, content: String): Outcome<PreparedContentView> =
-        throw UnsupportedOperationException()
+    override suspend fun prepareCommentEdit(
+        id: String,
+        content: String,
+        attachments: List<AttachmentClaim>,
+    ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun commentReplies(
         commentId: String,
         first: Int,
@@ -492,7 +501,6 @@ open class ThrowingProfileRepository : ProfileRepository {
 open class ThrowingMediaRepository : MediaRepository {
     override suspend fun uploadMedia(
         picture: ProcessedPicture,
-        altText: String?,
     ): Outcome<MediaAssetView> = throw UnsupportedOperationException()
 }
 
