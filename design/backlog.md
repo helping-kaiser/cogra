@@ -346,6 +346,13 @@ surfaces, and two rulings for jakob (topic destination; applicant
 acting rights). The profile screen and the Sky stay their own items.
 Closing those gaps is item 23.
 
+**The user-flow layer's foundation landed 2026-09-01** (jakob's
+rulings): the manifest is `graph.json` — it holds the screen graph,
+not flows — and every one of its 689 edges declares a `kind`
+(`advance` / `cancel` / `back` / `nav` / `detour`, no default, the
+gate fails without one). The flow engine that path-searches the
+`advance` edges is next.
+
 ### 23 · Close the gaps — in roadmap order · *design*
 
 Jakob's directive (2026-09-01): knock out all 125 flow gaps and the
