@@ -27,6 +27,7 @@ import { useEffect, useState } from "react";
 import { COMMENT_ATTACHMENT_CAP, type CommentMedia } from "@/lib/compose/comment-media";
 import { PillButton } from "../pill-button";
 import { MediaThumb } from "./media-thumb";
+import { DescribeCounter } from "./picked-row";
 
 /** The board's tile height; the width follows each picture's own ratio. */
 const THUMB_HEIGHT = 88;
@@ -71,6 +72,7 @@ export function CommentAttachments({
   onPick,
   onRemove,
   onRetry,
+  onDescribe,
   testIdPrefix = "comment",
 }: {
   media: CommentMedia;
@@ -79,6 +81,12 @@ export function CommentAttachments({
   onPick: (files: readonly File[]) => void;
   onRemove: (id: string) => void;
   onRetry: (id: string) => void;
+  /**
+   * Opens the describe sheet on the first picture. Absent on a surface that
+   * has no sheet to open — the counter is an affordance, not a label, so it is
+   * drawn only where pressing it does something.
+   */
+  onDescribe?: () => void;
   testIdPrefix?: string;
 }) {
   const ratios = usePreviewRatios(previews);
@@ -149,6 +157,16 @@ export function CommentAttachments({
           </PillButton>
         </p>
       ))}
+
+      {/* Between the tray and the Add row, where ReplyPicturesWeb puts it. */}
+      {onDescribe && media.length > 0 && (
+        <DescribeCounter
+          described={media.filter((asset) => asset.altText.trim() !== "").length}
+          total={media.length}
+          onDescribe={onDescribe}
+          testId={`${testIdPrefix}-describe-counter`}
+        />
+      )}
 
       <div className="flex flex-wrap items-baseline gap-2">
         <label
