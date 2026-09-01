@@ -23,12 +23,12 @@ export function Screen() {
               Your profile
             </span>
             <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
-              Name, bio, and website.
+              Picture, name, bio, and website — one signed change.
             </span>
           </span>
         </div>
 
-        <ActsCard rows={[{ label: "Profile", value: "An updated bio and website", count: "1 action" }]} total="1 signed action" />
+        <ActsCard rows={[{ label: "Profile", value: "A new picture, bio and website", count: "1 action" }]} total="1 signed action" />
 
         <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
           Every change to your profile is signed in your name and stays in your public record.

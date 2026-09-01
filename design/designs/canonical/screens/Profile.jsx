@@ -27,13 +27,13 @@ export function Screen() {
           />
         </div>
         <ChronicleTabs value="everything" />
-        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-          <ChronicleRow label="Published a post" time="3d" snippet="Salt maps of the coast road — rubbings from three weekends at low tide." />
-          <ChronicleRow label="Commented" time="4d" snippet="The third headland light is real — I have a print from 2019 that almost catches it." />
-          <ChronicleRow label="Took a stance" time="5d" link={false} />
-          <ChronicleRow label="Published a post" time="1w" snippet="Three weekends of walking the same stretch at low tide." />
-          <ChronicleRow label="Updated your profile" time="2w" link={false} />
-        </div>
+        <ChronicleList>
+          <ChronicleCard glyph="dynamic_feed" label="Published a post" time="3d" snippet="Salt maps of the coast road — rubbings from three weekends at low tide." />
+          <ChronicleCard glyph="chat_bubble" label="Commented" time="4d" snippet="The third headland light is real — I have a print from 2019 that almost catches it." />
+          <ChronicleCard face={{ pDirected: 0.4, pInterest: 0.5 }} label="Took a stance" context="on @mira" time="5d" link={false} />
+          <ChronicleCard glyph="dynamic_feed" label="Published a post" time="1w" snippet="Three weekends of walking the same stretch at low tide." />
+          <ChronicleCard glyph="person" label="Updated your profile" time="2w" link={false} />
+        </ChronicleList>
       </div>
       <BottomNav active="profile" slots={ALL_SLOTS} inline />
     </>

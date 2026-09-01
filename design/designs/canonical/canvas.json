@@ -822,10 +822,10 @@
     },
     {
       "file": "MapProfile.dc.html",
-      "x": -1580,
+      "x": -2160,
       "y": 0,
-      "w": 1160,
-      "h": 955,
+      "w": 1740,
+      "h": 1200,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -861,6 +861,24 @@
       "title": "Profile edit · what you sign",
       "x": 480,
       "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfilePosts.dc.html",
+      "title": "Profile · the posts view",
+      "x": 1920,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileComments.dc.html",
+      "title": "Profile · the comments view",
+      "x": 2400,
+      "y": 0,
       "w": 390,
       "h": 844,
       "page": "profile"
