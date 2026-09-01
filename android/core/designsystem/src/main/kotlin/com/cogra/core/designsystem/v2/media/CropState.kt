@@ -85,13 +85,25 @@ class CropState internal constructor(initial: CropFraming) {
 
     /**
      * A framing that outlived its view and is waiting for the picture to
-     * come back — a rotation, or a process death mid-crop.
+     * come back — a rotation, a process death mid-crop, or a return to
+     * the crop stage from further along the wizard.
      *
      * It cannot be applied at attach time: the window is expressed
      * against the picture, and the view knows nothing about the picture
      * until the decode finishes.
      */
     private var pendingRestore: CropFraming? = null
+
+    /**
+     * Whether this picture's opening window has been placed yet.
+     *
+     * The library opens on its own inset default, which leaves the
+     * author framing inside a window smaller than the stage they were
+     * given ("the area for cropping was to small", jakob 2026-09-01).
+     * The opening window is placed explicitly instead — the largest one
+     * the shape allows — so the full-bleed viewport is filled.
+     */
+    private var seeded = false
 
     /** Reported by the view whenever the reader moves the window. */
     internal fun onWindowChanged(next: CropFraming) {
@@ -112,22 +124,48 @@ class CropState internal constructor(initial: CropFraming) {
         // A framing carried in from a previous life is put back once the
         // picture it describes is on screen, never before.
         pendingRestore = framing.takeIf { it != CropFraming.Whole }
+        seeded = false
         view.setImageUriAsync(next?.let(Uri::parse))
     }
 
     /**
-     * Puts a restored framing back, once the picture is loaded.
+     * Places the window this state wants, once the picture is loaded —
+     * either a framing carried in from a previous life, or this
+     * picture's opening window.
      *
-     * Returns true when it did, so the caller knows the window it is
-     * looking at is one this state asked for rather than one the reader
-     * dragged — reporting it back as a change would overwrite the very
-     * framing being restored.
+     * Returns true when it placed one, so the caller knows the window it
+     * is looking at is one this state asked for rather than one the
+     * reader dragged — reporting it back as a change would overwrite the
+     * very framing being placed.
+     *
+     * The library reports its own default window first, which is why
+     * both jobs live here rather than at attach time: this is the first
+     * moment the picture's dimensions are known
+     * ([CropImageView.wholeImageRect] is null until the decode finishes),
+     * and `cropRect`'s setter is the documented way to place the window
+     * against the source bitmap.
      */
-    internal fun applyPendingRestore(view: CropImageView): Boolean {
-        val restore = pendingRestore ?: return false
+    internal fun applyPendingWindow(view: CropImageView): Boolean {
         val whole = view.wholeImageRect ?: return false
-        pendingRestore = null
-        view.cropRect = CropWindowMath.rectOf(restore, whole)
+        if (whole.width() <= 0 || whole.height() <= 0) return false
+
+        val restore = pendingRestore
+        if (restore != null) {
+            pendingRestore = null
+            seeded = true
+            view.cropRect = CropWindowMath.rectOf(restore, whole)
+            return true
+        }
+
+        if (seeded) return false
+        seeded = true
+        val shape = framedShape ?: return false
+        val opening = CropWindowMath.largestWindow(
+            targetRatio = shape.ratio,
+            pictureRatio = whole.width().toFloat() / whole.height().toFloat(),
+        )
+        framing = opening
+        view.cropRect = CropWindowMath.rectOf(opening, whole)
         return true
     }
 
@@ -152,6 +190,9 @@ class CropState internal constructor(initial: CropFraming) {
         // rotation — the one thing the saveable state exists to keep.
         if (previous == null) return
         pendingRestore = null
+        // The new shape opens on its own largest window, placed the next
+        // time the library reports one — never on the previous shape's.
+        seeded = false
         view.resetCropRect()
         framing = CropFraming.Whole
     }
@@ -165,6 +206,8 @@ class CropState internal constructor(initial: CropFraming) {
      */
     fun reset() {
         framing = CropFraming.Whole
+        pendingRestore = null
+        seeded = false
         view?.resetCropRect()
     }
 
@@ -337,6 +380,31 @@ internal object CropWindowMath {
         )
     }
 
+    /**
+     * The largest window of [targetRatio] that fits a picture of
+     * [pictureRatio], centred — the window a picture opens on.
+     *
+     * Both ratios are width ÷ height. One axis always ends up whole:
+     * a window wider than the picture is as wide as the picture and
+     * short of its height, and the other way round. That is what makes
+     * this the largest window rather than merely a valid one — and
+     * placing it explicitly is what keeps the author's stage full,
+     * where the library's own default opens inset inside it.
+     */
+    fun largestWindow(targetRatio: Float, pictureRatio: Float): CropFraming {
+        if (targetRatio <= 0f || pictureRatio <= 0f) return CropFraming.Whole
+        return if (targetRatio >= pictureRatio) {
+            // As wide as the picture; the height is what gives.
+            val height = (pictureRatio / targetRatio).coerceIn(0f, 1f)
+            val top = (1f - height) / 2f
+            CropFraming(0f, top, 1f, top + height)
+        } else {
+            val width = (targetRatio / pictureRatio).coerceIn(0f, 1f)
+            val left = (1f - width) / 2f
+            CropFraming(left, 0f, left + width, 1f)
+        }
+    }
+
     /** The window as fractions of the picture it was cut from. */
     fun framingOf(rect: Rect, whole: Rect): CropFraming {
         if (whole.width() <= 0 || whole.height() <= 0) return CropFraming.Whole
@@ -365,7 +433,17 @@ private val CropStateSaver: Saver<CropState, List<Float>> = Saver(
     restore = { CropState(CropFraming(it[0], it[1], it[2], it[3])) },
 )
 
-/** Survives rotation and process death, so a half-framed crop is not lost. */
+/**
+ * Survives rotation and process death, so a half-framed crop is not lost.
+ *
+ * [initial] is the framing this picture was last left at, where the
+ * screen kept one. A stage the author walks back into — from further
+ * along the wizard, or forwards into again from an earlier stage — is
+ * re-entered on a *new* composition, so the saveable state alone cannot
+ * carry the framing across it; the screen hands the remembered framing
+ * back in here and the author sees the crop they made rather than a
+ * reset one (jakob 2026-09-01).
+ */
 @Composable
-fun rememberCropState(): CropState =
-    rememberSaveable(saver = CropStateSaver) { CropState(CropFraming.Whole) }
+fun rememberCropState(initial: CropFraming = CropFraming.Whole): CropState =
+    rememberSaveable(saver = CropStateSaver) { CropState(initial) }

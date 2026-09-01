@@ -4,11 +4,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.semantics.SemanticsActions
 import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.domain.compose.ComposeDraft
@@ -150,21 +152,41 @@ class ComposeWizardScreenTest {
     @Test
     fun theNextPillWaitsForABody() {
         compose.setContent { Wizard(words) }
-        compose.onNodeWithTag("wizard_header_action").assertIsNotEnabled()
+        compose.onNodeWithTag("wizard_words_next").assertIsNotEnabled()
     }
 
     @Test
     fun theNextPillWaitsForAPick() {
         compose.setContent { Wizard(ComposeWizardState()) }
-        compose.onNodeWithTag("wizard_header_action").assertIsNotEnabled()
+        compose.onNodeWithTag("wizard_pick_next").assertIsNotEnabled()
     }
 
     @Test
     fun aTypedBodyEnablesTheNextPill() {
         compose.setContent { Wizard(words.copy(body = "Salt maps")) }
-        compose.onNodeWithTag("wizard_header_action").assertIsEnabled()
-        compose.onNodeWithTag("wizard_header_action").performClick()
+        compose.onNodeWithTag("wizard_words_next").assertIsEnabled()
+        compose.onNodeWithTag("wizard_words_next").performClick()
         assertThat(nexts).isEqualTo(1)
+    }
+
+    @Test
+    fun theCropStagePutsItsForwardActionAtTheBottomRatherThanTheHeader() {
+        // The corner means "leave" for the whole flow: it used to mean
+        // Next on the early stages, and an author trained on it left the
+        // flow by reaching for Next (jakob 2026-09-01).
+        compose.setContent { Wizard(withPicks.copy(step = WizardStep.Crop)) }
+
+        compose.onNodeWithTag("wizard_header_action").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_crop_next").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_header_leave").assertIsDisplayed()
+    }
+
+    @Test
+    fun thePickStageAlsoCarriesItsNextAtTheBottom() {
+        compose.setContent { Wizard(withPicks) }
+
+        compose.onNodeWithTag("wizard_header_action").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_pick_next").assertIsDisplayed()
     }
 
     @Test
@@ -280,7 +302,11 @@ class ComposeWizardScreenTest {
         }
 
         // The grid still draws what was shared, and the way to share more
-        // is an offer rather than a warning.
+        // is an offer rather than a warning. The grid scrolls — the stage
+        // ends on its Next pill, so the later rows are reached rather than
+        // always on screen.
+        compose.onNodeWithTag("wizard_pick_grid")
+            .performScrollToNode(hasTestTag("wizard_grid_c"))
         compose.onNodeWithTag("wizard_grid_c").assertIsDisplayed()
         compose.onNodeWithTag("wizard_pick_permission_more").assertIsDisplayed()
     }

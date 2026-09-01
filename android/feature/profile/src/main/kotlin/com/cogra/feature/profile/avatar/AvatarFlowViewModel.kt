@@ -44,7 +44,6 @@ class AvatarFlowViewModel @Inject constructor(
     val state: StateFlow<AvatarFlowState> = _state.asStateFlow()
 
     private var upload: Job? = null
-    private var committedCrop: CropSpec? = null
 
     /**
      * The profile as it stands, held so the signed update can resend it
@@ -76,9 +75,16 @@ class AvatarFlowViewModel @Inject constructor(
 
     fun onSourceRatio(ratio: Float) = _state.update { it.copy(sourceRatio = ratio) }
 
-    /** The framing, reported by the crop stage after every composition. */
-    fun onCropCommitted(spec: CropSpec) {
-        committedCrop = spec
+    /**
+     * The framing, reported by the crop stage after every composition.
+     *
+     * It goes into the state so it outlives the stage: stepping on to
+     * the seal tears the crop composition down, and the author who
+     * steps back must find their framing rather than a reset one
+     * (jakob 2026-09-01).
+     */
+    fun onCropCommitted(spec: CropSpec) = _state.update {
+        if (it.crop == spec) it else it.copy(crop = spec)
     }
 
     fun onNext() {
@@ -109,7 +115,7 @@ class AvatarFlowViewModel @Inject constructor(
         upload = viewModelScope.launch {
             // The circle is a mask on a square: the stored bytes are the
             // 1:1 crop, and every surface draws the circle over them.
-            val spec = committedCrop ?: CropSpec(targetRatio = AVATAR_RATIO)
+            val spec = current.crop ?: CropSpec(targetRatio = AVATAR_RATIO)
             val picture = processor.process(uri, spec)
             if (picture == null) {
                 _state.update { it.copy(upload = AvatarUpload.Failed(UNREADABLE)) }
