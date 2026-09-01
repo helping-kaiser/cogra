@@ -744,7 +744,7 @@
       "x": -1580,
       "y": 0,
       "w": 1160,
-      "h": 2542,
+      "h": 2632,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -753,7 +753,7 @@
       "x": -2160,
       "y": 0,
       "w": 1740,
-      "h": 2104,
+      "h": 2134,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -771,7 +771,7 @@
       "x": -1870,
       "y": 0,
       "w": 1450,
-      "h": 1199,
+      "h": 1229,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -780,7 +780,7 @@
       "x": -1870,
       "y": 0,
       "w": 1450,
-      "h": 1189,
+      "h": 1249,
       "page": "money",
       "title": "Money & Wallet · flow map"
     },
@@ -789,7 +789,7 @@
       "x": -2160,
       "y": 0,
       "w": 1740,
-      "h": 981,
+      "h": 1011,
       "page": "media",
       "title": "Media · flow map"
     },
@@ -801,6 +801,87 @@
       "h": 326,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
+    },
+    {
+      "file": "Profile.dc.html",
+      "title": "Profile · your own",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileOther.dc.html",
+      "title": "Profile · someone else's",
+      "x": 480,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "MapProfile.dc.html",
+      "x": -2160,
+      "y": 0,
+      "w": 1740,
+      "h": 1200,
+      "page": "profile",
+      "title": "Profile · flow map"
+    },
+    {
+      "file": "ProfileStances.dc.html",
+      "title": "Profile · the stances page",
+      "x": 960,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileApplicant.dc.html",
+      "title": "Profile · applicant days",
+      "x": 1440,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileEdit.dc.html",
+      "title": "Edit profile",
+      "x": 0,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileEditSeal.dc.html",
+      "title": "Profile edit · what you sign",
+      "x": 480,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfilePosts.dc.html",
+      "title": "Profile · the posts view",
+      "x": 1920,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileComments.dc.html",
+      "title": "Profile · the comments view",
+      "x": 2400,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
     }
   ],
   "annotations": [
@@ -997,6 +1078,10 @@
     {
       "id": "media",
       "name": "Media"
+    },
+    {
+      "id": "profile",
+      "name": "Profile"
     },
     {
       "id": "patterns",

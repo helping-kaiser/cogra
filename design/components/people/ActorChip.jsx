@@ -21,7 +21,7 @@ export function MonogramAvatar({ name, size = "sm", src }) {
   const initial = (name ?? "").trim().charAt(0).toUpperCase() || "?";
   const box =
     typeof size === "number"
-      ? { height: `${size}px`, width: `${size}px`, fontSize: "var(--text-label-large)" }
+      ? { height: `${size}px`, width: `${size}px`, fontSize: size >= 56 ? "var(--text-headline-small)" : "var(--text-label-large)" }
       : size === "lg"
         ? { height: "64px", width: "64px", fontSize: "var(--text-headline-small)" }
         : size === "md"

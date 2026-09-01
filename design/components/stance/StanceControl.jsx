@@ -69,7 +69,14 @@ function parkedPadStyle(inset = 16) {
    the MASTER for it instead of copying the card — the copy is never the answer.
    `padInset` lifts the parked card clear of a bottom bar (the pad sits above the
    bar, readme §13); `padNote` is the shell's one-time coaching slot — the first
-   vouch speaks there, between the field and the landing line. */
+   vouch speaks there, between the field and the landing line.
+
+   `wide` (profile round, 2026-09-01) is the PRESENTATIONAL variant a profile
+   header wears: the same anchor stretched to the row's width in the outline
+   button's clothes, and — divergence from the card anchor, deliberate — the
+   words drawn beside the face, because here the stance IS the row's one action
+   and a lone face at full width reads as lost. Tap, hold, pad, severance: all
+   unchanged — the variant restyles the anchor and nothing else. */
 export function StanceControl({
   targetLabel = "this post",
   bundle: supplied,
@@ -80,6 +87,7 @@ export function StanceControl({
   defaultPick,
   padInset = 16,
   padNote,
+  wide = false,
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
   React.useEffect(() => {
@@ -201,11 +209,11 @@ export function StanceControl({
 
   return (
     <div
-      style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-1)" }}
+      style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-1)", width: wide ? "100%" : undefined }}
       onClick={(event) => event.stopPropagation()}
       onPointerDown={(event) => event.stopPropagation()}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", width: wide ? "100%" : undefined }}>
         <button
           type="button"
           aria-label={
@@ -221,13 +229,14 @@ export function StanceControl({
           className={BUTTON_CLASS}
           style={{
             display: "flex",
-            minHeight: "var(--touch-target-min)",
+            minHeight: wide ? "40px" : "var(--touch-target-min)",
             minWidth: "var(--touch-target-min)",
+            flex: wide ? 1 : undefined,
             alignItems: "center",
             justifyContent: "center",
             gap: "var(--space-2)",
             borderRadius: "var(--radius-full)",
-            border: 0,
+            border: wide ? "1px solid var(--border-field)" : 0,
             background: "none",
             padding: "0 12px",
             cursor: "pointer",
@@ -255,6 +264,12 @@ export function StanceControl({
           >
             {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}
           </span>
+          {wide && restingPair === null && (
+            /* The wide anchor's words — only where there is no pair to show. */
+            <span aria-hidden="true" style={{ whiteSpace: "nowrap" }}>
+              Take a stance
+            </span>
+          )}
           {restingPair !== null && (
             /* NEVER WRAPS. This is the post card's affordance row, which is one
                line by rule — a pair broken across two text lines reads as a

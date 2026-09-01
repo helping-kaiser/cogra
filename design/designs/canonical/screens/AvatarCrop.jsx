@@ -1,6 +1,9 @@
 /* The profile picture's crop (media slice): the one image a profile has —
-   circular 1:1, drag and pinch. Minimal flow by ruling; the full profile
-   screen is its own backlog item. */
+   circular 1:1, drag and pinch. Reached two ways (jakob 2026-09-01): the
+   avatar badge on one's own profile — the standalone shortcut, Next goes to
+   the picture's own seal — and Change picture on the edit screen, where Next
+   returns to the edit instead: ONE seal covers picture and fields together,
+   so nobody pays twice for one profile update. */
 export function Screen() {
   return (
     <>

@@ -6,6 +6,7 @@ import { PendingMarker, EditedMarker } from "../honesty/PendingMarker.jsx";
 import { LicenseTerms } from "../forms/LicenseChooser.jsx";
 import { StanceControl } from "../stance/StanceControl.jsx";
 import { OverflowMenu } from "./OverflowMenu.jsx";
+import { Icon, NODE_GLYPHS } from "../navigation/Icon.jsx";
 import { TopicsLine } from "./TopicsLine.jsx";
 import { MediaGallery } from "../proposed/MediaAttachment.jsx";
 
@@ -57,6 +58,9 @@ export function CommentCard({
   onEdit,
   own = false,
   targetLabel = "this comment",
+  target,
+  targetKind = "post",
+  onOpenTarget,
   actions,
   menuItems = [],
   topics = [],
@@ -81,6 +85,47 @@ export function CommentCard({
       }}
     >
       <Card>
+        {/* The comment's TARGET pointer (jakob 2026-09-01): where a comment
+            shows OUT of its thread — the profile's comments view, a search
+            result — the card leads with what it answers, one line, one tap to
+            get there. Inside the thread the sheet's post is the context, so
+            thread surfaces simply pass no target. The glyph names the
+            TARGET's kind (the semantic-atoms rule) — a post unless the
+            comment answers something else. */}
+        {target && onOpenTarget && (
+          <button
+            type="button"
+            onClick={onOpenTarget}
+            className="cg-state cg-focus"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-2)",
+              border: 0,
+              background: "none",
+              padding: 0,
+              cursor: "pointer",
+              fontFamily: "var(--font-sans)",
+              color: "var(--text-secondary)",
+              textAlign: "left",
+              maxWidth: "100%",
+              borderRadius: "var(--radius-small)",
+            }}
+          >
+            <Icon name={targetKind === "post" ? "dynamic_feed" : NODE_GLYPHS[targetKind] ?? "dynamic_feed"} size={14} style={{ flex: "none" }} />
+            <span
+              style={{
+                fontSize: "var(--text-label-small)",
+                lineHeight: "var(--text-label-small--line-height)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              On {target}
+            </span>
+          </button>
+        )}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-2)" }}>
           {author && <ActorChip handle={author.handle} displayName={author.displayName} />}
           <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", flex: "none" }}>
