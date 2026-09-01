@@ -11,8 +11,12 @@ import { Icon } from "../navigation/Icon.jsx";
      is the draft prompt). Without it, an author five stages deep was stuck
      backing out tap by tap.
 
-   The X sits between the title and the stage's trailing controls, so Next
-   keeps the right edge wherever it is the primary action. */
+   The header carries ONLY the ways out (jakob 2026-09-01): the stage's
+   forward action — Next, Sign — always lives at the bottom of the content
+   column, never up here, so the top-right corner keeps one meaning through
+   the whole flow. (It used to hold Next on early stages; an author trained
+   on that corner hit the X once Next moved down.) `action` remains for
+   passive trailing info only — a stage label, the help dot. */
 
 export function WizardHeader({
   title,
