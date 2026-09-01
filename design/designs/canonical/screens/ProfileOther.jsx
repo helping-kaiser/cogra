@@ -1,13 +1,27 @@
 /* Someone else's profile — the drill-in an author chip opens (profile round,
-   item 23). Back arrow up top, the bar still riding (a read drill-in, Q37) with
-   no slot lit — this is Ada's page, not one of the viewer's tabs. The stance on
-   the person leads the actions row; everything rarer lives in the one menu (a
-   mention is the Reference gesture toward a Profile). The figures row is one tap
-   target toward the stances page, both directions separated there. */
+   item 23). The compact shape: avatar left, name/handle/figures beside it, bio,
+   then the stance on the person stretched to the row — the one action, worn
+   wide the way a profile's primary action always is. The overflow (mention,
+   share) rides the top bar next to the title, the detail-surface idiom; the
+   bar still rides below (a read drill-in, Q37) with no slot lit — this is
+   Ada's page, not one of the viewer's tabs. */
 export function Screen() {
   return (
     <>
-      <PageHeader title="@ada" backHref="#" backLabel="Back" />
+      <PageHeader
+        title="@ada"
+        backHref="#"
+        backLabel="Back"
+        action={
+          <OverflowMenu
+            ariaLabel="More about @ada"
+            items={[
+              { label: "Mention in a new post", onSelect: () => {} },
+              { label: "Share this profile", onSelect: () => {} },
+            ]}
+          />
+        }
+      />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader
@@ -20,20 +34,9 @@ export function Screen() {
             stancesTaken={31}
             onCounts={() => {}}
             onCommit={() => {}}
-            menuItems={[{ label: "Mention in a new post", onSelect: () => {} }]}
           />
         </div>
-        <div style={{ padding: "4px 16px 12px" }}>
-          <SegmentedFilter
-            ariaLabel="What the chronicle shows"
-            value="everything"
-            options={[
-              { value: "posts", label: "Posts" },
-              { value: "comments", label: "Comments" },
-              { value: "everything", label: "Everything" },
-            ]}
-          />
-        </div>
+        <ChronicleTabs value="everything" />
         <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
           <ChronicleRow label="Published a post" time="2h" snippet="The long way home — the light does something at the third headland." />
           <ChronicleRow label="Commented" time="1d" snippet="The glovebox camera earns its keep — this is the print from 2019." />
