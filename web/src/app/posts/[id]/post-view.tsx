@@ -120,8 +120,17 @@ type ReplyThread = {
   failed: boolean;
 };
 
-/** Nesting indents up to three levels, then flattens (design.md §6). */
-const MAX_INDENT_DEPTH = 3;
+/**
+ * The thread is two levels deep on screen: a comment, and its replies
+ * indented once (design/readme.md §13, 2026-08-28, and the canonical
+ * `CommentCard`, which sets exactly this — matched by Android's
+ * `PostDetailScreen.kt` since PR #574). Anything deeper flattens into that
+ * one reply level; the @handle it answers is already part of the reply's
+ * own content, prefilled by the composer, not generated here. design.md §6
+ * still says three levels; it predates the ruling (design/backlog.md item
+ * 26 tracks that lag).
+ */
+const MAX_INDENT_DEPTH = 1;
 
 /** A comment's claims as the tag section drafts them. */
 function tagDrafts(
