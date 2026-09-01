@@ -150,14 +150,20 @@ describe("what the cropper reports back", () => {
   // infinite render loop — React fails it with "Maximum update depth exceeded".
   it("says nothing when the cropper re-reports the framing it already has", () => {
     const changes: Crop[] = [];
-    const crop = { x: 5, y: 6, zoom: 1.2, area: { x: 1, y: 2, width: 3, height: 4 } };
+    const crop = {
+      x: 5,
+      y: 6,
+      zoom: 1.2,
+      area: { x: 1, y: 2, width: 3, height: 4 },
+      areaPercent: { x: 10, y: 20, width: 30, height: 40 },
+    };
     render(<CropFrame src="blob:x" shape="tall" crop={crop} onChange={(c) => changes.push(c)} />);
 
     const props = given();
     (props.onCropChange as (p: { x: number; y: number }) => void)({ x: 5, y: 6 });
     (props.onZoomChange as (z: number) => void)(1.2);
     (props.onCropComplete as (a: unknown, b: unknown) => void)(
-      {},
+      { x: 10, y: 20, width: 30, height: 40 },
       { x: 1, y: 2, width: 3, height: 4 },
     );
 
@@ -166,7 +172,13 @@ describe("what the cropper reports back", () => {
 
   it("drops a measurement taken before there was anything to measure", () => {
     const changes: Crop[] = [];
-    const framed = { x: 0, y: 0, zoom: 1, area: { x: 1, y: 2, width: 3, height: 4 } };
+    const framed = {
+      x: 0,
+      y: 0,
+      zoom: 1,
+      area: { x: 1, y: 2, width: 3, height: 4 },
+      areaPercent: null,
+    };
     render(<CropFrame src="blob:x" shape="tall" crop={framed} onChange={(c) => changes.push(c)} />);
 
     const complete = given().onCropComplete as (a: unknown, b: unknown) => void;
@@ -220,12 +232,24 @@ describe("the invisible keyboard route", () => {
       <CropFrame
         src="blob:x"
         shape="tall"
-        crop={{ x: 30, y: 40, zoom: 2, area: { x: 1, y: 2, width: 3, height: 4 } }}
+        crop={{
+          x: 30,
+          y: 40,
+          zoom: 2,
+          area: { x: 1, y: 2, width: 3, height: 4 },
+          areaPercent: { x: 10, y: 20, width: 30, height: 40 },
+        }}
         onChange={(c) => changes.push(c)}
       />,
     );
     fireEvent.keyDown(screen.getByTestId("crop-frame"), { key: "Home" });
-    expect(changes.at(-1)).toEqual({ x: 0, y: 0, zoom: MIN_ZOOM, area: null });
+    expect(changes.at(-1)).toEqual({
+      x: 0,
+      y: 0,
+      zoom: MIN_ZOOM,
+      area: null,
+      areaPercent: null,
+    });
   });
 
   it("tells a reader the keys rather than painting a control", () => {

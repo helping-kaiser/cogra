@@ -47,10 +47,11 @@ import {
 } from "@/lib/compose/draft-store";
 import { runUpload } from "@/lib/compose/uploads";
 import { usePreviewUrls } from "@/lib/compose/previews";
-import { PickAction, PickStep } from "./pick-step";
+import { PickStep } from "./pick-step";
 import { CropStep } from "./crop-step";
 import { DetailsStep } from "./details-step";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
+import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import { PickedSheet } from "@/lib/ui2/compose/picked-sheet";
 import { SealStep, type SealSheet } from "./seal-step";
 
@@ -395,16 +396,14 @@ export function ComposeWizard({
             <HelpButton onOpen={() => setHelp(HELP_TOPICS.signedActions)} label="Signed actions" />
           ) : undefined
         }
+        // THE HEADER CARRIES ONLY THE WAYS OUT (jakob 2026-09-01). Next lived
+        // here on the early stages and moved to the bottom from Details on, so
+        // the top-right corner changed meaning mid-flow and an author reaching
+        // for Next hit the X instead. Every stage's forward action now sits at
+        // the bottom of its own content column; `action` is left for passive
+        // trailing information, which is all "Last step" is.
         action={
-          state.step === "pick" ? (
-            <PickAction onNext={() => dispatch({ type: "advance" })} disabled={!gate.ok} />
-          ) : state.step === "crop" ? (
-            <PillButton testId="wizard-next" size="sm" onClick={() => dispatch({ type: "advance" })}>
-              Next
-            </PillButton>
-          ) : state.step === "seal" ? (
-            // The seal carries no forward pill — signing happens on the surface
-            // — but the board still names where the reader has got to.
+          state.step === "seal" ? (
             <span className="text-body-small text-on-surface-variant">Last step</span>
           ) : undefined
         }
@@ -454,6 +453,7 @@ export function ComposeWizard({
           assets={state.assets}
           previews={previews}
           error={gate.ok ? null : gate.reason}
+          blocked={!gate.ok}
           onWords={(words) => dispatch({ type: "words", words })}
           onMode={(mode) => dispatch({ type: "mode", mode })}
           onPick={(files) =>
@@ -467,6 +467,7 @@ export function ComposeWizard({
           }
           onUnpick={(id) => dispatch({ type: "unpick", id })}
           onManage={() => setManaging(true)}
+          onNext={() => dispatch({ type: "advance" })}
         />
       )}
 
@@ -479,6 +480,7 @@ export function ComposeWizard({
           onShape={(shape) => dispatch({ type: "shape", shape })}
           onFocus={(index) => dispatch({ type: "focus", index })}
           onCrop={(id, crop) => dispatch({ type: "crop", id, crop })}
+          onNext={() => dispatch({ type: "advance" })}
         />
       )}
 
@@ -536,6 +538,7 @@ export function ComposeWizard({
         items={state.assets.map((asset) => ({
           id: asset.id,
           src: previews[asset.id] ?? null,
+          crop: asset.crop,
           altText: asset.altText === "" ? null : asset.altText,
           described: asset.altText.trim() !== "",
         }))}
@@ -549,6 +552,7 @@ export function ComposeWizard({
         open={describing !== null}
         onClose={() => setDescribing(null)}
         src={describing === null ? null : (previews[describing] ?? null)}
+        crop={state.assets.find((asset) => asset.id === describing)?.crop ?? null}
         value={state.assets.find((asset) => asset.id === describing)?.altText ?? ""}
         onChange={(altText) => {
           if (describing !== null) dispatch({ type: "altText", id: describing, altText });
@@ -592,16 +596,15 @@ function DraftCard({
     >
       <h2 className="m-0 text-title-medium">Your draft is here</h2>
       <div className="flex items-center gap-2">
+        {/* The restored draft's cover shows the framing it was left with, so a
+            returning author recognises the picture they framed. */}
         {cover !== undefined && (
-          <div className="size-10 flex-none overflow-hidden rounded-small">
-            {/* eslint-disable-next-line @next/next/no-img-element -- a blob: URL
-                for bytes that never left the device. */}
-            <img
-              src={previews[cover.id] ?? ""}
-              alt=""
-              className="block size-full object-cover"
-            />
-          </div>
+          <MediaThumb
+            src={previews[cover.id] ?? null}
+            crop={cover.crop}
+            size={40}
+            testId="wizard-draft-cover"
+          />
         )}
         <span className="flex flex-1 flex-col">
           <span className="text-body-medium">{summary.title}</span>

@@ -20,6 +20,7 @@
 import { BottomSheet } from "../bottom-sheet";
 import { PillButton } from "../pill-button";
 import { MediaThumb } from "./media-thumb";
+import type { Crop } from "../media/crop";
 
 const DRAG_GLYPH =
   "M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z";
@@ -30,6 +31,8 @@ export type PickedSheetItem = {
   id: string;
   src?: string | null;
   altText?: string | null;
+  /** The framing the author chose, so the sheet shows it rather than the source. */
+  crop?: Crop | null;
   described: boolean;
 };
 
@@ -86,6 +89,7 @@ export function PickedSheet({
             <MediaThumb
               src={item.src}
               altText={item.altText}
+              crop={item.crop}
               size={56}
               cover={index === 0}
               testId={`${testId}-thumb-${index}`}

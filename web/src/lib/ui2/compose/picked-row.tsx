@@ -8,11 +8,14 @@
 // two-menus pattern the system refuses elsewhere.
 
 import { MediaThumb } from "./media-thumb";
+import type { Crop } from "../media/crop";
 
 export type PickedThumb = {
   id: string;
   src?: string | null;
   altText?: string | null;
+  /** The framing the author chose, so the row shows it rather than the source. */
+  crop?: Crop | null;
   progress?: number | "indeterminate";
   failed?: boolean;
 };
@@ -43,6 +46,7 @@ export function PickedRow({
           key={item.id}
           src={item.src}
           altText={item.altText}
+          crop={item.crop}
           cover={index === 0}
           progress={item.progress}
           failed={item.failed}

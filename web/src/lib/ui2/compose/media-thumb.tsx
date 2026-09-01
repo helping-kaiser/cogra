@@ -18,6 +18,15 @@
 // The source is a device-local object URL, so this is a plain `<img>`: the
 // optimizer cannot fetch a `blob:` and `next/image` is for what the server
 // serves (web.md §Media).
+//
+// A TILE SHOWS THE FRAMING, NOT THE SOURCE (jakob, round 6: the previews
+// afterwards "should display the cropped version so that people dont think it
+// has reset"). Hand it the picture's `crop` and it draws the section the author
+// framed; hand it none — a comment's crop-less pictures, a pick nobody has
+// framed yet — and it cover-fits the whole picture as it always did.
+
+import { cropPreviewStyle } from "../media/crop-preview";
+import type { Crop } from "../media/crop";
 
 const REMOVE_GLYPH =
   "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z";
@@ -62,6 +71,7 @@ export function MediaThumb({
   width,
   height,
   fit = "cover",
+  crop,
   radius = "var(--radius-small)",
   cover = false,
   progress,
@@ -73,6 +83,8 @@ export function MediaThumb({
   src?: string | null;
   altText?: string | null;
   size?: number;
+  /** The framing to show. Omitted where a picture has none. */
+  crop?: Crop | null;
   // An uncropped tile (a reply's pictures) states both and fits the whole frame
   // inside them.
   width?: number;
@@ -89,6 +101,9 @@ export function MediaThumb({
   const w = width ?? size;
   const h = height ?? size;
   const alt = altText ?? "";
+  // A framing wins over `fit`: it already says exactly which section shows and
+  // how big it is, so there is nothing left for a fit rule to decide.
+  const framing = cropPreviewStyle(crop, { width: w, height: h });
   return (
     <span
       data-testid={testId}
@@ -103,11 +118,15 @@ export function MediaThumb({
           src={src}
           alt={alt}
           aria-hidden={alt === "" ? "true" : undefined}
-          style={{ opacity: failed ? 0.5 : 1 }}
+          data-testid={testId ? `${testId}-image` : undefined}
+          data-framed={framing === null ? undefined : "true"}
+          style={{ opacity: failed ? 0.5 : 1, ...framing }}
           className={
-            fit === "contain"
-              ? "block max-h-full max-w-full"
-              : "block size-full object-cover"
+            framing !== null
+              ? "block"
+              : fit === "contain"
+                ? "block max-h-full max-w-full"
+                : "block size-full object-cover"
           }
         />
       ) : null}
