@@ -46,6 +46,7 @@ import com.cogra.network.fetch
 import com.cogra.network.graphql.ApplicationStatusQuery
 import com.cogra.network.graphql.AuthorRecordsQuery
 import com.cogra.network.graphql.CommentRepliesQuery
+import com.cogra.network.graphql.CommentSelfMarkQuery
 import com.cogra.network.graphql.MyProfileQuery
 import com.cogra.network.graphql.PrepareProfileUpdateMutation
 import com.cogra.network.graphql.UserByHandleQuery
@@ -529,7 +530,6 @@ class ContentRepositoryImpl @Inject constructor(
                 id = id,
                 commentsFirst = commentsFirst,
                 commentsAfter = Optional.presentIfNotNull(commentsAfter),
-                repliesFirst = REPLIES_FIRST,
                 includePending = Optional.present(includePending),
             ),
         ).fetch().map { data ->
@@ -538,15 +538,8 @@ class ContentRepositoryImpl @Inject constructor(
                     post = post.postFields.toDomain(),
                     comments = Page(
                         items = post.comments.edges.map { edge ->
-                            edge.node.commentFields.toDomain().copy(
-                                replies = Page(
-                                    items = edge.node.replies.edges.map { r ->
-                                        r.node.commentFields.toDomain()
-                                    },
-                                    endCursor = edge.node.replies.pageInfo.endCursor,
-                                    hasNextPage = edge.node.replies.pageInfo.hasNextPage,
-                                ),
-                            )
+                            edge.node.commentFields.toDomain()
+                                .copy(replyCount = edge.node.replies.totalCount)
                         },
                         endCursor = post.comments.pageInfo.endCursor,
                         hasNextPage = post.comments.pageInfo.hasNextPage,
@@ -567,7 +560,6 @@ class ContentRepositoryImpl @Inject constructor(
                 id = commentId,
                 first = first,
                 after = Optional.presentIfNotNull(after),
-                repliesFirst = REPLIES_FIRST,
                 includePending = Optional.present(includePending),
             ),
         ).fetch().flatMap { data ->
@@ -576,15 +568,8 @@ class ContentRepositoryImpl @Inject constructor(
                 else -> Outcome.Success(
                     Page(
                         items = comment.replies.edges.map { edge ->
-                            edge.node.commentFields.toDomain().copy(
-                                replies = Page(
-                                    items = edge.node.replies.edges.map { r ->
-                                        r.node.commentFields.toDomain()
-                                    },
-                                    endCursor = edge.node.replies.pageInfo.endCursor,
-                                    hasNextPage = edge.node.replies.pageInfo.hasNextPage,
-                                ),
-                            )
+                            edge.node.commentFields.toDomain()
+                                .copy(replyCount = edge.node.replies.totalCount)
                         },
                         endCursor = comment.replies.pageInfo.endCursor,
                         hasNextPage = comment.replies.pageInfo.hasNextPage,
@@ -770,10 +755,6 @@ class ContentRepositoryImpl @Inject constructor(
             }
         }
 
-    private companion object {
-        /** The reply prefetch depth of every thread read — one level. */
-        const val REPLIES_FIRST = 3
-    }
 }
 
 /**
