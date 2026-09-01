@@ -9,6 +9,7 @@ import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.MediaFieldUpdate
+import com.cogra.domain.CommentForEdit
 import com.cogra.domain.CommentView
 import com.cogra.domain.HashtagView
 import com.cogra.domain.ProfileView
@@ -271,12 +272,14 @@ interface ContentRepository {
     ): Outcome<PreparedContentView>
 
     /**
-     * The author's own sensitive mark on one comment; null for an
-     * unknown id. Read when an edit opens, for the reason
-     * [postSelfMark] is: the thread read's fragment is priced per
-     * comment, and this is wanted once.
+     * Everything `CommentEdit` opens on: the comment as it stands, and
+     * the author's own mark beside it. Null for an unknown id.
+     *
+     * One read rather than the thread's card plus a mark lookup — the
+     * edit is complete-state on every axis, so it has to start from what
+     * the comment actually carries.
      */
-    suspend fun commentSelfMark(id: String): Outcome<SelfMarkView?>
+    suspend fun commentForEdit(id: String): Outcome<CommentForEdit?>
 
     /**
      * [attachments] is the gallery the edit leaves standing — complete,
