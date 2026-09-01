@@ -38,8 +38,14 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  *   the draft prompt is the return surface. Without it an author deep in the
  *   wizard was stuck backing out tap by tap.
  *
- * The X sits **between the title and the stage's trailing controls**, so the
- * Next pill keeps the right edge wherever it is the primary action.
+ * **The header carries only the ways out** (jakob 2026-09-01). The stage's
+ * forward action — Next, Sign — lives at the bottom of the content column,
+ * never here, so the top-right corner keeps one meaning through the whole
+ * flow. It used to hold Next on the early stages and give the corner to the
+ * X on the later ones, and an author trained on that corner left the flow by
+ * reaching for Next ("i have also moved the button around a bit (namely the
+ * next button) as i misslicked the 'X' multiple times"). What may still
+ * trail the X is passive: a stage note, the help dot.
  *
  * **No step numbers.** design/readme.md §13 rules them out — the paths differ
  * in length, so the title names the stage and only the seal says "Last step".
@@ -56,9 +62,6 @@ fun WizardHeader(
     backContentDescription: String? = "Back a step",
     onLeave: (() -> Unit)? = null,
     leaveContentDescription: String = "Leave — your draft is kept",
-    actionText: String? = null,
-    onAction: (() -> Unit)? = null,
-    actionEnabled: Boolean = true,
     trailingNote: String? = null,
     onHelp: (() -> Unit)? = null,
     helpContentDescription: String = "What this means",
@@ -107,8 +110,7 @@ fun WizardHeader(
         )
 
         // The X: out of the flow entirely, from any stage, with the draft
-        // kept and nothing to confirm. It precedes the trailing controls so
-        // the primary action keeps the right edge.
+        // kept and nothing to confirm. Nothing actionable follows it.
         if (onLeave != null) {
             IconButton(
                 onClick = onLeave,
@@ -142,16 +144,6 @@ fun WizardHeader(
                 testTag = testTag?.let { "${it}_help" } ?: "wizard_help",
             )
         }
-
-        if (actionText != null && onAction != null) {
-            CograButton(
-                text = actionText,
-                onClick = onAction,
-                size = ButtonSize.Compact,
-                enabled = actionEnabled,
-                testTag = testTag?.let { "${it}_action" } ?: "wizard_action",
-            )
-        }
     }
 }
 
@@ -160,34 +152,14 @@ fun WizardHeader(
 private fun WizardHeaderVariants() {
     Cogra2PreviewTheme {
         PreviewColumn(canvasWidth = true) {
-            WizardHeader(
-                title = "New post",
-                onBack = {},
-                onLeave = {},
-                actionText = "Next",
-                onAction = {},
-            )
-            WizardHeader(
-                title = "Crop",
-                onBack = {},
-                onLeave = {},
-                actionText = "Next",
-                onAction = {},
-            )
+            WizardHeader(title = "New post", onBack = {}, onLeave = {})
+            WizardHeader(title = "Crop", onBack = {}, onLeave = {})
             WizardHeader(title = "Details", onBack = {}, onLeave = {})
             WizardHeader(
                 title = "What you sign",
                 onBack = {},
                 onLeave = {},
                 trailingNote = "Last step",
-            )
-            WizardHeader(
-                title = "New post",
-                onBack = {},
-                onLeave = {},
-                actionText = "Next",
-                onAction = {},
-                actionEnabled = false,
             )
         }
     }
