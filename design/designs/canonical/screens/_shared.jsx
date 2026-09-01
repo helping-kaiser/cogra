@@ -13,6 +13,7 @@ const {
   BorrowedViewBand,
   MonogramAvatar,
   ActorChip,
+  ProfileHeader,
   EmptyState,
   LoadingState,
   Snackbar,
@@ -307,6 +308,43 @@ function SearchTriggerRow({ reading }) {
 /* The "?" — the master, defaulted to this canvas's usual label. */
 function HelpDot({ ariaLabel = "How searching works" }) {
   return <SystemHelpDot ariaLabel={ariaLabel} />;
+}
+
+/* The profile's chronicle — the author's record as quiet rows, not cards: the
+   verbs of what they did, newest first (the full card presentation waits for
+   the slice-3 feed rework). A row with somewhere to go is a button; a record
+   with no destination (a stance, a profile update) is a plain row. */
+function ChronicleRow({ label, time, snippet, link = true }) {
+  const inner = (
+    <>
+      <span style={{ display: "flex", alignItems: "baseline", gap: 8, width: "100%" }}>
+        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>{label}</span>
+        <span style={{ marginLeft: "auto", flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>{time}</span>
+      </span>
+      {snippet && (
+        <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{snippet}</span>
+      )}
+    </>
+  );
+  const style = {
+    display: "flex",
+    flexDirection: "column",
+    gap: 2,
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "10px 16px",
+    borderTop: "1px solid var(--border-hairline)",
+    fontFamily: "var(--font-sans)",
+    color: "var(--on-surface)",
+    textAlign: "left",
+  };
+  return link ? (
+    <button type="button" className="cg-state cg-focus" style={{ ...style, border: 0, borderTop: "1px solid var(--border-hairline)", background: "none", cursor: "pointer" }}>
+      {inner}
+    </button>
+  ) : (
+    <div style={style}>{inner}</div>
+  );
 }
 
 /* The post-detail column: the read surface a card opens into. */
