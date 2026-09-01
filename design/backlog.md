@@ -375,3 +375,14 @@ trap. Ruling A: **the forward action always lives at the bottom;
 the header carries only the ways out** (`← Title … X`), recorded in
 `WizardHeader.jsx`. Android (and web compose surfaces) must catch
 up to the updated boards.
+
+**Item-23 rulings (jakob 2026-09-01):** (a) *Topic destination* — a
+topic chip always leads to the topic page; the page shipped in 2.3
+but is itself undesigned, and is conceived as a subpage of search
+(reachable from search directly by tapping a tag). The values'
+reveal (relevance/confidence) is its own gesture — an expand
+affordance — never the chip tap. (b) *Applicant acting rights* — an
+applicant may stage each kind of action **once** (one post, one
+stance, one comment, …): not browse-only, and never unlimited
+staging while approval waits. **Process:** after each slice's
+design round lands, the session compacts before the next round.
