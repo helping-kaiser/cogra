@@ -66,6 +66,18 @@ for (const e of graph.edges ?? []) {
     if (o.board !== undefined && !boards.has(o.board)) fails.push(`edge ${key} points at unknown board "${o.board}"`);
     if (o.terminal !== undefined && !(graph.terminals ?? {})[o.terminal]) fails.push(`edge ${key} points at undeclared terminal "${o.terminal}"`);
     if (o.gap !== undefined) gaps.push(`${key}${o.case ? ` (${o.case})` : ""}: ${o.gap}`);
+    if (o.info !== undefined && (o.info !== true || o.terminal === undefined)) {
+      fails.push(`edge ${key}: "info": true marks a terminal outcome that only tells you something — it belongs on no other shape`);
+    }
+  }
+
+  // Advance to nothing is a lie. A control whose every outcome merely informs
+  // — the applicant's locked rows answering with a snackbar, a chip that lands
+  // where you already are — leaves the journey exactly where it was, so the
+  // path search must never walk it.
+  const reaches = (o) => o.board !== undefined || o.gap !== undefined || (o.terminal !== undefined && o.info !== true);
+  if (e.kind === "advance" && e.to.every((o) => !reaches(o))) {
+    fails.push(`edge ${key} is "advance" but every outcome only informs — an advance reaches a board, a gap, or a terminal that does something; this one is a "detour"`);
   }
 }
 
