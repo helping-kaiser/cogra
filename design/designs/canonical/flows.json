@@ -813,6 +813,7 @@
     { "from": "ProfileComments", "via": 9, "label": "comment stance", "to": [{ "terminal": "self", "case": "tap — a positive act lands" }, { "board": "VouchBackPad", "case": "press-and-hold — the pad blooms (master board)" }] },
     { "from": "ProfileComments", "via": 10, "label": "Reply", "to": [{ "board": "ReplyEntry", "case": "the thread, under its post" }] },
     { "from": "ProfileComments", "via": 11, "label": "View replies", "to": [{ "board": "ReplyEntry", "case": "the thread, under its post" }] },
+    { "from": "ProfileComments", "via": 17, "label": "the target pointer", "to": [{ "board": "ReplyEntry", "case": "what the comment answers — the post, its thread open" }] },
     { "from": "ProfileComments", "via": 12, "label": "nav · Feed", "to": [{ "board": "Feed" }] },
     { "from": "ProfileComments", "via": 13, "label": "nav · Explore", "to": [{ "board": "Explore" }] },
     { "from": "ProfileComments", "via": 14, "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
