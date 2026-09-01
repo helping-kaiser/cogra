@@ -107,6 +107,37 @@ internal fun ColumnScope.WizardBody(
     )
 }
 
+/**
+ * The band a stage's forward action sits in, under the body.
+ *
+ * **The forward action always lives at the bottom** (jakob 2026-09-01):
+ * the header used to hold Next on the early stages and hand the corner
+ * to the X on the later ones, so an author trained on that corner left
+ * the flow by reaching for Next. The band is `12px 24px 16px` on every
+ * board that draws one.
+ *
+ * It sits outside the body rather than inside it so it stays put on a
+ * stage that scrolls — a required action below the fold is not one.
+ */
+@Composable
+internal fun WizardFooter(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                start = Layout.ScreenGutter,
+                end = Layout.ScreenGutter,
+                top = Space.x3,
+                bottom = Space.x4,
+            ),
+        verticalArrangement = Arrangement.spacedBy(Space.x2),
+        content = content,
+    )
+}
+
 /** The 4dp seam the picker grid and the gallery share. */
 internal val GridSeam = 3.dp
 

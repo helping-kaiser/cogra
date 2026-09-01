@@ -22,12 +22,17 @@ import com.cogra.core.designsystem.v2.token.MediaShape
  * @param altText authored, never generated. A null value is a *decorative*
  *   asset and becomes a null content description — never a fabricated one
  *   (D20).
+ * @param framing how the author framed this picture, for a preview drawn
+ *   before the cropped bytes exist. Media that arrives already cropped —
+ *   everything from the server — keeps the default whole framing and is
+ *   drawn straight.
  */
 @Immutable
 data class MediaItem(
     val url: Any?,
     val aspectRatio: Float,
     val altText: String? = null,
+    val framing: CropFraming = CropFraming.Whole,
 )
 
 /**
