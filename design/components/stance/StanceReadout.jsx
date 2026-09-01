@@ -123,6 +123,30 @@ export function bundleReadout(pair, zeroLabel = SEVERED_LABEL) {
   return nearestAnchor(pair);
 }
 
+/* The read-only value readout (profile round, 2026-09-01): a stance RECORD's
+   face and pair drawn plainly wherever a stance is data rather than a control
+   — the stances page's rows, the chronicle's stance entries. Never
+   interactive: acting on a person means opening their profile first (jakob —
+   stancing here is more deliberate than a follow). */
+export function StanceValue({ pDirected, pInterest, showPair = true }) {
+  const pair = { pDirected, pInterest };
+  const readout = bundleReadout(pair);
+  return (
+    <span
+      role="img"
+      aria-label={`${readout.label}, ${formatStancePair(pair)}`}
+      style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+    >
+      <span aria-hidden="true" style={{ fontSize: "var(--text-title-medium)" }}>{readout.emoji}</span>
+      {showPair && (
+        <span aria-hidden="true" style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
+          {formatStancePair(pair)}
+        </span>
+      )}
+    </span>
+  );
+}
+
 /** Always signed, two decimals. The sign carries the direction, so it shows at zero. */
 export function formatDimension(value) {
   return new Intl.NumberFormat(undefined, {

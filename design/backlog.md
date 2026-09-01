@@ -315,7 +315,7 @@ follow. Added 2026-08-28 out of item 19's review.
 The canonical canvas has outgrown one flat plane (77+ boards):
 connections live only in heads, and gaps hide. Agreed with jakob
 2026-08-31, shaped as data first, pictures generated: (1) a
-checked-in `flows.json` — numbered edges `{id, from, via, to}`
+checked-in `graph.json` — numbered edges `{id, from, via, to}`
 grouped by section, every interactive affordance on a board either
 carrying an edge or an explicit dead-end marker with a reason; a
 button with neither is by definition a missing piece, greppable.
@@ -324,7 +324,7 @@ artboard per section (chips + arrows + edge numbers) plus an
 overview, never hand-drawn so never lying. (3) Pages: split the
 canvas by section (Feed · Compose & media · Ceremonies · Wallet ·
 Maps), launch view on the overview. (4) A build-time check
-cross-referencing `flows.json` against the screen list (edges to
+cross-referencing `graph.json` against the screen list (edges to
 missing boards; boards nothing reaches). 1+3 are the core; new
 boards enter the manifest from the round that lands this item.
 
@@ -346,6 +346,13 @@ surfaces, and two rulings for jakob (topic destination; applicant
 acting rights). The profile screen and the Sky stay their own items.
 Closing those gaps is item 23.
 
+**The user-flow layer's foundation landed 2026-09-01** (jakob's
+rulings): the manifest is `graph.json` — it holds the screen graph,
+not flows — and every one of its 689 edges declares a `kind`
+(`advance` / `cancel` / `back` / `nav` / `detour`, no default, the
+gate fails without one). The flow engine that path-searches the
+`advance` edges is next.
+
 ### 23 · Close the gaps — in roadmap order · *design*
 
 Jakob's directive (2026-09-01): knock out all 125 flow gaps and the
@@ -356,7 +363,7 @@ surface belongs to a slice at or before 2.5, THEN forward strictly
 in roadmap order (the Sky last, item 16 as ever). **Each round opens
 by mapping its gaps to slices against the roadmap's own text** —
 never from memory: read the slice descriptions and what each closed
-slice already shipped (flows.json's gap list is the inventory:
+slice already shipped (graph.json's gap list is the inventory:
 grep `"gap"`). Surfaces the closed slices already SHIPPED without a
 canonical design are the most overdue of all — the profile screen
 leads that list. Rounds take the rulings they need before drawing
@@ -430,3 +437,32 @@ trap. Ruling A: **the forward action always lives at the bottom;
 the header carries only the ways out** (`← Title … X`), recorded in
 `WizardHeader.jsx`. Android (and web compose surfaces) must catch
 up to the updated boards.
+
+**Item-23 rulings (jakob 2026-09-01):** (a) *Topic destination* — a
+topic chip always leads to the topic page; the page shipped in 2.3
+but is itself undesigned, and is conceived as a subpage of search
+(reachable from search directly by tapping a tag). The values'
+reveal (relevance/confidence) is its own gesture — an expand
+affordance — never the chip tap. (b) *Applicant acting rights* — an
+applicant may stage each kind of action **once** (one post, one
+stance, one comment, …): not browse-only, and never unlimited
+staging while approval waits. **Process:** after each slice's
+design round lands, the session compacts before the next round.
+
+**Item-23 round 1 — the profile screen — landed 2026-09-01.** Eight
+boards on the new Profile page (your own, someone else's, applicant
+days, the stances page, the posts and comments views, the edit flow
+and its seal), all wired: the 35 profile gaps flipped onto real
+boards, 689 edges · 132 gaps · 0 pending. Rulings the round produced,
+recorded in readme §13: the compact avatar-left header with the
+tappable figures row (Posts + both stance counts — never merged);
+the stances page shows each record's own value read-only
+(`StanceValue`); the wide stance anchor pairs with Message; chats
+ride the band on every tab root (edged to the chat-surface gap);
+the avatar's two flows (standalone badge → its own seal; via the
+edit screen → the edit's ONE seal covers everything); the chronicle
+as wallet-style containers; the comment's target pointer; the topic
+and applicant gaps renamed to carry their rulings. New overdue
+surfaces the round exposed as gaps: the settings screen, the invites
+screen, the profile menus. Next: round 2, the pattern boards
+(guest-gate, network-error, key-absent).

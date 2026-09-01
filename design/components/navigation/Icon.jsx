@@ -92,6 +92,19 @@ const PATHS = {
   send: ["M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"],
   /* The compose media surfaces' glyphs (media slice, 2026-08-31). */
   close: ["M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"],
+  /* The avatar's change badge (profile round, 2026-09-01). The official cut
+     draws its lens as a <circle>; PATHS holds paths only, so that circle is
+     carried as an exact arc path — same geometry, nothing redrawn. */
+  photo_camera: [
+    "M12 8.8a3.2 3.2 0 1 1 0 6.4 3.2 3.2 0 1 1 0-6.4z",
+    "M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z",
+  ],
+  /* The chronicle's tab glyphs (profile round, 2026-09-01): `dynamic_feed` is
+     already the posts idea, `chat_bubble` the comment's; `history` is the whole
+     record — everything, newest first. */
+  history: [
+    "M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z",
+  ],
   drag_indicator: [
     "M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z",
   ],
