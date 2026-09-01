@@ -357,11 +357,15 @@ data class CommentView(
     /** The qualifiers the minting Review record carried. */
     val license: LicenseChoice,
     /**
-     * The first page of direct replies, when the read prefetched one
-     * (the thread read carries one level; deeper levels load on
-     * expand). Null when the read did not ask.
+     * How many direct replies this comment holds, across every page —
+     * the number behind the "View n replies" line (Q49).
+     *
+     * The thread read **counts** replies rather than carrying them: a
+     * prefetched page multiplied the corpus's heaviest document for
+     * branches nobody had asked to open, and the count is what the
+     * collapsed line actually needs. Expanding one fires its own read.
      */
-    val replies: Page<CommentView>? = null,
+    val replyCount: Int = 0,
     /** This comment's current topics — the same author-owned channel as [PostView.topics]. */
     val topics: List<TopicClaimView> = emptyList(),
     /** This comment's current references — the same author-owned channel (D12). */

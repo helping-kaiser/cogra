@@ -116,6 +116,15 @@
     <string name="content_comment_edit_save">Save</string>
     <string name="content_comment_edit_cancel">Cancel</string>
     <string name="content_comment_more_replies">Show replies</string>
+    <!--
+        The collapsed branch (Q49): the thread read counts replies
+        rather than carrying them, so the line says how many are behind
+        it before a reader opens one.
+    -->
+    <plurals name="content_comment_view_replies">
+        <item quantity="one">View %d reply</item>
+        <item quantity="other">View %d replies</item>
+    </plurals>
     <string name="content_expired_title">Your post didn\'t land</string>
     <string name="content_expired_body">"%1$s" couldn\'t finish settling. Nothing was spent — your draft is saved.</string>
     <string name="content_expired_dismiss">Dismiss</string>

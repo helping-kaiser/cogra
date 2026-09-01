@@ -569,20 +569,21 @@ class PostDetailViewModelTest {
         assertThat(vm.state.value.replyingToId).isEqualTo("c1")
     }
 
+    /**
+     * Opening a branch fetches it (Q49): nothing is prefetched, so the
+     * thread starts empty and the read is what fills it.
+     */
     @Test
-    fun expandingRepliesAppendsPastThePrefetch() = runTest(dispatcher) {
+    fun expandingRepliesFetchesTheBranch() = runTest(dispatcher) {
         val vm = viewModel()
         vm.start("post-1")
         dispatcher.scheduler.advanceUntilIdle()
-        val comment = testComment("c1").copy(
-            replies = Page(listOf(testComment("r0")), "rc0", hasNextPage = true),
-        )
+        val comment = testComment("c1").copy(replyCount = 1)
         vm.onLoadMoreReplies(comment)
         dispatcher.scheduler.advanceUntilIdle()
         val thread = vm.state.value.replyThreads["c1"]
         checkNotNull(thread)
-        // Seeded from the prefetch, extended by the fetched page.
-        assertThat(thread.items.map { it.id }).containsExactly("r0", "r1").inOrder()
+        assertThat(thread.items.map { it.id }).containsExactly("r1")
         assertThat(thread.hasMore).isFalse()
     }
 
