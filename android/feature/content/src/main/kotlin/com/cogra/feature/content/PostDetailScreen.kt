@@ -51,6 +51,8 @@ import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
 import com.cogra.domain.PostView
 import com.cogra.feature.content.R
+import com.cogra.feature.content.reply.ReplyTarget
+import com.cogra.feature.content.reply.ReplyTargetKind
 import com.cogra.feature.stance.StanceControlRoute
 
 @Composable
@@ -61,12 +63,15 @@ fun PostDetailRoute(
     /** Null while the auth phase resolves; the comment/join affordances wait. */
     signedIn: Boolean?,
     onEdit: (String) -> Unit,
-    /** `ReplyEntry` 7 — the composer, this post pinned. */
-    onAddComment: () -> Unit,
-    /** `ReplyEntry` 5 — the composer, pre-targeted at that comment. */
-    onReplyTo: (CommentView) -> Unit,
+    /**
+     * The reply wizard, pinned to what it answers — the post for
+     * `ReplyEntry` 7, the comment for `ReplyEntry` 5. The target is
+     * built here rather than by the caller because this is where the
+     * thread's own words are.
+     */
+    onReply: (ReplyTarget) -> Unit,
     /** `ReplyMedia` 6 — `CommentEdit`, on an own comment. */
-    onEditComment: (CommentView) -> Unit,
+    onEditComment: (commentId: String, parentTitle: String) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     /** A referenced post opens on its own detail. */
@@ -103,9 +108,11 @@ fun PostDetailRoute(
         signedIn = signedIn,
         onRefresh = viewModel::refresh,
         onLoadMoreComments = viewModel::loadMoreComments,
-        onAddComment = onAddComment,
-        onReplyTo = onReplyTo,
-        onEditComment = onEditComment,
+        onAddComment = { state.post?.let { onReply(it.asReplyTarget()) } },
+        onReplyTo = { comment -> onReply(comment.asReplyTarget()) },
+        onEditComment = { comment ->
+            onEditComment(comment.id, state.post?.title?.value.orEmpty())
+        },
         onCommentSignedShown = viewModel::onCommentSignedShown,
         onLoadMoreReplies = viewModel::onLoadMoreReplies,
         onToggleTagValues = viewModel::onToggleTagValues,
@@ -484,6 +491,48 @@ private fun PostWithThread(
         }
     }
 }
+
+/**
+ * The post, as the composer's target card reads it (`ReplyEntry` 7).
+ *
+ * A post leads with its title; the line under it is the body, clipped,
+ * because the card gives it one line either way.
+ */
+private fun PostView.asReplyTarget(): ReplyTarget = ReplyTarget(
+    id = id,
+    kind = ReplyTargetKind.Post,
+    title = title?.value.orEmpty(),
+    snippet = content?.value.orEmpty().clipForCard(),
+    authorHandle = author?.handle.orEmpty(),
+    avatarUrl = author?.avatar?.url,
+)
+
+/**
+ * The comment, as the composer's target card reads it (`ReplyEntry` 5).
+ *
+ * A comment has no title, so its own opening words become one — the
+ * card's two lines are then the answer's subject and its context, the
+ * way a post's title and body are.
+ */
+private fun CommentView.asReplyTarget(): ReplyTarget = ReplyTarget(
+    id = id,
+    kind = ReplyTargetKind.Comment,
+    title = content.value.orEmpty().clipForCard(TARGET_TITLE_CHARS),
+    snippet = content.value.orEmpty().clipForCard(),
+    authorHandle = author?.handle.orEmpty(),
+    avatarUrl = author?.avatar?.url,
+)
+
+/**
+ * The card draws one line, and a route carries what it is given — so
+ * the words are clipped where they are read rather than where they are
+ * drawn.
+ */
+private fun String.clipForCard(limit: Int = TARGET_SNIPPET_CHARS): String =
+    if (length <= limit) this else take(limit).trimEnd() + "…"
+
+private const val TARGET_TITLE_CHARS = 48
+private const val TARGET_SNIPPET_CHARS = 120
 
 /**
  * The thread is **two levels deep on screen**: a comment, and its
