@@ -310,6 +310,59 @@ function HelpDot({ ariaLabel = "How searching works" }) {
   return <SystemHelpDot ariaLabel={ariaLabel} />;
 }
 
+/* The own-profile band cluster (profile round): the overflow and the gear on
+   the band's edge — chats arrives built into the band itself. Shared by the
+   member and applicant own-profile boards. */
+function ProfileBandIcon({ name, label }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      className="cg-state cg-focus"
+      style={{ display: "grid", placeItems: "center", height: "var(--touch-target-min)", width: "var(--touch-target-min)", border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0 }}
+    >
+      <Icon name={name} />
+    </button>
+  );
+}
+function ProfileBand({ children }) {
+  return (
+    <CograBand
+      trailing={
+        <span style={{ display: "flex", alignItems: "center" }}>
+          <ProfileBandIcon name="more_vert" label="More — share your profile" />
+          <ProfileBandIcon name="settings" label="Settings" />
+        </span>
+      }
+    >
+      {children}
+    </CograBand>
+  );
+}
+
+/* A person row on the stances page — the actor opens their profile, and the
+   row's trailing control is YOUR stance anchor toward them (the master, never
+   a copy): the same place Instagram's list puts its Follow button. A standing
+   shows its face and pair; none shows the muted waiting face. */
+function StanceRow({ name, handle, src, bundle }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 56, padding: "2px 8px 2px 16px" }}>
+      <button
+        type="button"
+        className="cg-state cg-focus"
+        style={{ flex: 1, display: "flex", alignItems: "center", gap: 12, minWidth: 0, border: 0, background: "none", padding: "6px 0", cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left", borderRadius: "var(--radius-small)" }}
+      >
+        <MonogramAvatar name={name} size={40} src={src} />
+        <span style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+          <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>{name}</span>
+          <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>@{handle}</span>
+        </span>
+      </button>
+      <StanceControl targetLabel={"@" + handle} bundle={bundle} />
+    </div>
+  );
+}
+
 /* The chronicle's tab row (profile round, 2026-09-01): full-width icon tabs,
    the way every social profile draws this row — the segmented pill was ruled
    out at three options. Icon-only cells with accessible names; the selected
@@ -359,11 +412,12 @@ function ChronicleTabs({ value = "everything" }) {
    verbs of what they did, newest first (the full card presentation waits for
    the slice-3 feed rework). A row with somewhere to go is a button; a record
    with no destination (a stance, a profile update) is a plain row. */
-function ChronicleRow({ label, time, snippet, link = true }) {
+function ChronicleRow({ label, time, snippet, link = true, marker }) {
   const inner = (
     <>
       <span style={{ display: "flex", alignItems: "baseline", gap: 8, width: "100%" }}>
         <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>{label}</span>
+        {marker}
         <span style={{ marginLeft: "auto", flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>{time}</span>
       </span>
       {snippet && (
