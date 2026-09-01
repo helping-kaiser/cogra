@@ -351,17 +351,15 @@ Closing those gaps is item 23.
 Jakob's directive (2026-09-01): knock out all 125 flow gaps and the
 missing screens **in the order the development needs them**, keyed to
 [docs/implementation/roadmap.md](../docs/implementation/roadmap.md).
-Development currently sits in slice 2.5 — so FIRST every gap that
-belongs to a slice at or before 2.5 (the profile screen is 2.1's;
-the reader's post/comment menus, topic destination, and topic picker
-are 2.3's; the standalone post detail and error/guest/network
-pattern boards are the text core's; the key-absent acting paths and
-seal-adjacent pieces are 2.5.3's), THEN forward strictly in roadmap
-order (2.6 viewer state, 2.7 search surfaces, 3 feed/ranker, the
-wallet's record views with their rail slice, items/chats/offers with
-theirs; the Sky last, item 16 as ever). Each round opens by mapping
-its gaps to a slice from flows.json's gap list (grep `"gap"`), takes
-the rulings it needs (topic destination and applicant acting rights
-block 2.3-era gaps — ask first), designs the boards, wires them so
-the gap count falls, and lands with check-flows green. The two open
-jakob rulings ride the first round.
+Development currently sits in slice 2.5 — so FIRST every gap whose
+surface belongs to a slice at or before 2.5, THEN forward strictly
+in roadmap order (the Sky last, item 16 as ever). **Each round opens
+by mapping its gaps to slices against the roadmap's own text** —
+never from memory: read the slice descriptions and what each closed
+slice already shipped (flows.json's gap list is the inventory:
+grep `"gap"`). Surfaces the closed slices already SHIPPED without a
+canonical design are the most overdue of all — the profile screen
+leads that list. Rounds take the rulings they need before drawing
+(topic destination and applicant acting rights are open and block
+early gaps — ask first), design the boards, wire them so the gap
+count falls, and land with check-flows green.
