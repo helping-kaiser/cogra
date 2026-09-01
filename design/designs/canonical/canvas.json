@@ -801,6 +801,33 @@
       "h": 326,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
+    },
+    {
+      "file": "Profile.dc.html",
+      "title": "Profile · your own",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileOther.dc.html",
+      "title": "Profile · someone else's",
+      "x": 480,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "MapProfile.dc.html",
+      "x": -1000,
+      "y": 0,
+      "w": 580,
+      "h": 274,
+      "page": "profile",
+      "title": "Profile · flow map"
     }
   ],
   "annotations": [
@@ -997,6 +1024,10 @@
     {
       "id": "media",
       "name": "Media"
+    },
+    {
+      "id": "profile",
+      "name": "Profile"
     },
     {
       "id": "patterns",
