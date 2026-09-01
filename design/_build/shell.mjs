@@ -27,7 +27,7 @@ const darkCss = tokenCss.replace(/:root/g, '[data-theme="dark"]');
 const fontTokens = `:root { --font-figtree: "Figtree"; --font-sans: var(--font-figtree), "Segoe UI", system-ui, sans-serif; --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }`;
 
 // Flow badges (backlog item 22): any element carrying data-flow="n" shows a
-// small orange number — the same number flows.json's edges reference as `via`
+// small orange number — the same number graph.json's edges reference as `via`
 // and the generated maps print on their arrows. Replaced elements (<input>)
 // cannot host ::after; a field's badge goes on its wrapper instead.
 export const flowBadgeCss = `[data-flow] { position: relative; }

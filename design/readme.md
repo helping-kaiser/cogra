@@ -1558,7 +1558,7 @@ entry first". What stands:
   Compose · Comments · Feed & Search · Money & Wallet · Media ·
   Patterns & reference. Every board and note names its page; each
   page's rows restart at y 0; the canvas opens on the Overview.
-- **`flows.json` is the flow law** (`designs/canonical/flows.json`).
+- **`graph.json` is the screen graph** (`designs/canonical/graph.json`).
   Every interactive element on a board of a **wired** page carries
   `data-flow="n"` (1..n per board, drawn as a small orange badge by
   the shell); each number has exactly one edge `{from, via, label,
@@ -1568,7 +1568,7 @@ entry first". What stands:
   owed, greppable, listed by the checker, drawn red on the maps.
   `entries` records the non-tap ways onto a screen (app open, a mail
   link, time passing); a screen on a wired page must be an entry or
-  an edge target. `kinds` marks reference boards (anatomy plates,
+  an edge target. `boardKinds` marks reference boards (anatomy plates,
   the maps themselves) that are vocabulary, not destinations;
   `scanExempt` names boards whose semantic elements are inactive in
   the drawn state (the pad board under its scrim).
@@ -1639,7 +1639,7 @@ entry first". What stands:
   `gen-maps.mjs`, `check-flows.mjs` — the canonical-canvas pipeline
   (§13, *Canvas pages and flows*): render the screens, stamp the flow
   numbers, generate the maps, gate the result. Run all four after any
-  screen, component, or flows.json edit.
+  screen, component, or graph.json edit.
 
 **`tokens/`** — `fonts.css`, `colors.css`, `typography.css`,
 `shape.css`, `spacing.css`, `motion.css`, `transitions.css`,

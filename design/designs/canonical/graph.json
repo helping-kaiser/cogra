@@ -1,5 +1,5 @@
 {
-  "$doc": "The flow manifest (backlog item 22). Every interactive element on a board of a wired page carries data-flow=\"n\" (1..n per board, badges drawn by the shell); each number has exactly one edge here, whose `to` lists every outcome: a board, a declared terminal, or an explicit gap (a design still owed — honest, greppable, reported by check-flows.mjs and drawn on the generated maps). Repeated per-post elements are tagged on the first post instance only. `entries` declares how a screen is reached other than by a tap (app open, mail link, time); a screen on a wired page must be an entry or an edge target.",
+  "$doc": "The screen graph (backlog item 22). Every interactive element on a board of a wired page carries data-flow=\"n\" (1..n per board, badges drawn by the shell); each number has exactly one edge here, whose `to` lists every outcome: a board, a declared terminal, or an explicit gap (a design still owed — honest, greppable, reported by check-flows.mjs and drawn on the generated maps). Repeated per-post elements are tagged on the first post instance only. `entries` declares how a screen is reached other than by a tap (app open, mail link, time); a screen on a wired page must be an entry or an edge target. `boardKinds` marks reference boards — vocabulary, not destinations.",
   "wired": ["entry", "money", "feed", "comments", "compose", "media", "profile", "patterns"],
   "terminals": {
     "back": "Back — returns to the previous screen",
@@ -32,7 +32,7 @@
     "ComposeExpired": "the notice card arrives when an act expires unlanded — time, not a tap",
     "ComposePickWeb": "the wizard's pick step in a browser — platform, not a tap"
   },
-  "kinds": {
+  "boardKinds": {
     "Theme": "reference",
     "Money": "reference",
     "LadderSmall": "reference",
