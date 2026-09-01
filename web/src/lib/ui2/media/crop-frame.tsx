@@ -29,6 +29,24 @@
 // guess at an affordance that is not painted. Anyone changing this file: the
 // keyboard zoom is the accessibility requirement, not a convenience, and
 // `crop-frame.test.tsx` fails if it goes.
+//
+// THE FRAME IS FULL-BLEED (jakob, round 6: "the area for cropping was to
+// small"). ComposeCrop and AvatarCrop both draw the viewport edge to edge —
+// `margin: 0 -24px` out of the 24px column, and no rounded corners, because a
+// bled frame has no corners to round. The `-mx-6` here assumes exactly that
+// column, which is what every surface holding a cropper has.
+//
+// THE FRAMING SURVIVES LEAVING THE SCREEN (jakob, round 6: "when returning to
+// the crop section ... the crop should be 'remembered'"). `crop` and `zoom` are
+// react-easy-crop's CONTROLLED props — the README's props table calls `crop`
+// required and says `{ x: 0, y: 0 }` centres the media — so the cropper shows
+// whatever it is handed, and handing it the saved framing on a remount IS the
+// re-seed. That is also why the saved `area` is not fed back through
+// `initialCroppedAreaPixels`: the same README warns that `croppedAreaPixels` is
+// rounded and "may result in a slight drifting crop/zoom" when used to restore,
+// and recommends the percentages instead. Driving the controlled props avoids
+// the round trip altogether. (react-easy-crop 6.2.3, `README.md` — the props
+// table and `initialCroppedAreaPercentages`.)
 
 import { useCallback, useEffect, useRef } from "react";
 import Cropper, { type Area, type Point } from "react-easy-crop";
@@ -106,10 +124,14 @@ export function CropFrame({
   // dropped rather than stored: overwriting a good framing with an unusable one
   // would upload a rectangle the author never chose, and a value that is never
   // equal to itself also keeps the report/re-render cycle from ever settling.
+  //
+  // The percentage half of the same report is kept beside it. It is what lets a
+  // thumbnail downstream draw this framing without decoding the picture —
+  // see `crop-preview.ts` — and it costs nothing, being already in hand.
   const onCropComplete = useCallback(
-    (_percent: Area, pixels: Area) => {
+    (percent: Area, pixels: Area) => {
       if (!usableArea(pixels)) return;
-      emit({ area: pixels });
+      emit({ area: pixels, areaPercent: usableArea(percent) ? percent : null });
     },
     [emit],
   );
@@ -128,7 +150,7 @@ export function CropFrame({
         event.preventDefault();
         // The area is dropped with the framing: the library measures a fresh
         // one the moment it re-renders centred.
-        return emit({ x: 0, y: 0, zoom: MIN_ZOOM, area: null });
+        return emit({ x: 0, y: 0, zoom: MIN_ZOOM, area: null, areaPercent: null });
       default:
         // Arrows belong to the library; swallowing them here would take the
         // keyboard route away rather than add to it.
@@ -141,13 +163,15 @@ export function CropFrame({
 
   return (
     <>
+      {/* No `w-full`: an auto width plus the negative margins is what makes the
+          frame the column's width PLUS its padding. A fixed 100% would only
+          shift the frame sideways. The avatar's frame is not itself a circle —
+          the library draws the round crop area and the scrim around it, which
+          is what AvatarCrop boards. */}
       <div
         data-testid={testId}
-        style={{
-          aspectRatio: cssRatio(SHAPE_RATIO[shape]),
-          borderRadius: round ? "var(--radius-full)" : "var(--radius-medium)",
-        }}
-        className="relative w-full overflow-hidden bg-surface-container-high"
+        style={{ aspectRatio: cssRatio(SHAPE_RATIO[shape]) }}
+        className="relative -mx-6 overflow-hidden bg-surface-container-high"
         onKeyDown={onKeyDown}
       >
         <Cropper
