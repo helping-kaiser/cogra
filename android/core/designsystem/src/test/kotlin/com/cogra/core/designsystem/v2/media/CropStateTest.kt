@@ -145,6 +145,20 @@ class CropStateTest {
     }
 
     @Test
+    fun aWindowReportedBeforeThisPicturesOwnIsPlacedIsNotRecorded() {
+        val state = CropState(centred)
+        // The filmstrip has just moved here; the picture has not landed.
+        state.beginAttach()
+
+        state.onWindowChanged(CropFraming(0f, 0f, 0.2f, 0.2f))
+
+        // That window was measured against the picture still on the
+        // shared view — the one this framing was moved away from
+        // (jakob 2026-09-01).
+        assertThat(state.framing).isEqualTo(centred)
+    }
+
+    @Test
     fun theFramingReadsBackAsWordsForAReaderWhoCannotSeeIt() {
         val state = CropState(CropFraming(0f, 0.25f, 0.5f, 0.75f))
 
