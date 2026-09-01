@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { writeConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
-import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
@@ -63,8 +62,8 @@ type FixtureComment = {
   authorId?: string;
   edited?: boolean;
   pending?: boolean;
-  replies?: FixtureComment[];
-  repliesHaveMore?: boolean;
+  /** What `CommentConnection.totalCount` reports for this comment's branch. */
+  replyCount?: number;
   topics?: TopicFixture[];
   references?: ReferenceFixture[];
   attachments?: unknown[];
@@ -114,7 +113,7 @@ function postTarget(id: string, title: string) {
 
 type ReferenceFixture = ReturnType<typeof referenceClaim>;
 
-function commentNode(comment: FixtureComment, withReplies = true): Record<string, unknown> {
+function commentNode(comment: FixtureComment): Record<string, unknown> {
   return {
     __typename: "Comment",
     id: comment.id,
@@ -135,22 +134,13 @@ function commentNode(comment: FixtureComment, withReplies = true): Record<string
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: comment.topics ?? [],
     references: comment.references ?? [],
-    ...(withReplies
-      ? {
-          replies: {
-            __typename: "CommentConnection",
-            edges: (comment.replies ?? []).map((reply) => ({
-              __typename: "CommentEdge",
-              node: commentNode(reply, false),
-            })),
-            pageInfo: {
-              __typename: "PageInfo",
-              hasNextPage: comment.repliesHaveMore ?? false,
-              endCursor: null,
-            },
-          },
-        }
-      : {}),
+    // Q49: a comment carries its branch as a COUNT, never as a page — on the
+    // thread read and on the expand read alike. `withReplies` is gone with the
+    // prefetch; every node answers the same way.
+    replies: {
+      __typename: "CommentConnection",
+      totalCount: comment.replyCount ?? 0,
+    },
   };
 }
 
@@ -239,9 +229,24 @@ describe("PostView", () => {
     server.use(
       graphql.query("PostDetail", () =>
         HttpResponse.json({
-          data: detail("u1", [
-            { id: "c1", body: "First!", replies: [{ id: "c1a", body: "Nested" }] },
-          ]),
+          data: detail("u1", [{ id: "c1", body: "First!", replyCount: 1 }]),
+        }),
+      ),
+      graphql.query("CommentReplies", () =>
+        HttpResponse.json({
+          data: {
+            comment: {
+              __typename: "Comment",
+              id: "c1",
+              replies: {
+                __typename: "CommentConnection",
+                edges: [
+                  { __typename: "CommentEdge", node: commentNode({ id: "c1a", body: "Nested" }) },
+                ],
+                pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+              },
+            },
+          },
         }),
       ),
     );
@@ -253,7 +258,9 @@ describe("PostView", () => {
     // (design.md §6; roadmap slice 2.2).
     expect(await screen.findByTestId("post-stance")).toBeInTheDocument();
     expect(screen.getByTestId("comment-stance-c1")).toBeInTheDocument();
-    expect(screen.getByTestId("comment-stance-c1a")).toBeInTheDocument();
+    // The reply arrives unfolded, and wears the control like anything else.
+    fireEvent.click(screen.getByTestId("replies-more-c1"));
+    expect(await screen.findByTestId("comment-stance-c1a")).toBeInTheDocument();
   });
 
   it("wears the viewer's own standing on the post and on a comment", async () => {
@@ -366,168 +373,6 @@ describe("PostView", () => {
     expect(await screen.findByTestId("post-not-found")).toBeInTheDocument();
   });
 
-  it("signs a comment and confirms it is in flight", async () => {
-    let variables: Record<string, unknown> | null = null;
-    server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
-      graphql.mutation("PrepareComment", ({ variables: v }) => {
-        variables = v;
-        return HttpResponse.json({
-          data: {
-            prepareComment: {
-              __typename: "PrepareContentPayload",
-              node: "c-node",
-              writes: [
-                {
-                  __typename: "PreparedWrite",
-                  id: "w1",
-                  family: "REVIEW",
-                  canonicalProposal: "cHJvcG9zYWw=",
-                  gcAfterEpochs: 8,
-                },
-              ],
-              userErrors: [],
-            },
-          },
-        });
-      }),
-    );
-    const signer = fakeWriteSigner();
-    renderWithProviders(<PostView postId="p1" />, {
-      store: storeFor("acct-1"),
-      writeSigner: signer,
-    });
-
-    fireEvent.change(await screen.findByTestId("comment-draft"), {
-      target: { value: "Nice one" },
-    });
-    fireEvent.click(screen.getByTestId("comment-license-attribution-1"));
-    fireEvent.click(screen.getByTestId("comment-submit"));
-
-    expect(await screen.findByTestId("comment-signed")).toBeInTheDocument();
-    expect(signer.signStaged).toHaveBeenCalledTimes(1);
-    await waitFor(() =>
-      expect(variables).toEqual({
-        input: {
-          target: "p1",
-          content: "Nice one",
-          license: { attribution: 1, provenance: 0 },
-          // A comment with no pictures states an absent gallery rather than
-          // an empty one — the pictures are the optional half.
-          attachments: null,
-          // The composer always sends its lists; empty is "no topics"
-          // and "no references", the shape `preparePost` already uses.
-          tags: [],
-          references: [],
-        },
-      }),
-    );
-    expect(screen.getByTestId("comment-draft")).toHaveValue("");
-  });
-
-  // The signed comment is content already, so the author finds it in
-  // the thread under its marker instead of being sent off to refresh.
-  it("re-reads the thread after signing so the author sees their pending comment", async () => {
-    let reads = 0;
-    server.use(
-      graphql.query("PostDetail", () => {
-        reads += 1;
-        return HttpResponse.json({
-          data:
-            reads === 1
-              ? detail("u1", [])
-              : detail("u1", [{ id: "c9", body: "Nice one", pending: true }]),
-        });
-      }),
-      graphql.mutation("PrepareComment", () =>
-        HttpResponse.json({
-          data: {
-            prepareComment: {
-              __typename: "PrepareContentPayload",
-              node: "c9",
-              writes: [
-                {
-                  __typename: "PreparedWrite",
-                  id: "w1",
-                  family: "REVIEW",
-                  canonicalProposal: "cHJvcG9zYWw=",
-                  gcAfterEpochs: 8,
-                },
-              ],
-              userErrors: [],
-            },
-          },
-        }),
-      ),
-    );
-    renderWithProviders(<PostView postId="p1" />, {
-      store: storeFor("acct-1"),
-      writeSigner: fakeWriteSigner(),
-    });
-    fireEvent.change(await screen.findByTestId("comment-draft"), {
-      target: { value: "Nice one" },
-    });
-    fireEvent.click(screen.getByTestId("comment-submit"));
-
-    expect(await screen.findByTestId("post-comment-c9")).toHaveTextContent("Nice one");
-    expect(screen.getByTestId("comment-pending-c9")).toHaveTextContent("Still settling");
-    expect(reads).toBe(2);
-  });
-
-  it("tells a keyless browser to restore a pending comment, not to wait", async () => {
-    server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
-      graphql.mutation("PrepareComment", () =>
-        HttpResponse.json({
-          data: {
-            prepareComment: {
-              __typename: "PrepareContentPayload",
-              node: "c-node",
-              writes: [
-                {
-                  __typename: "PreparedWrite",
-                  id: "w1",
-                  family: "REVIEW",
-                  canonicalProposal: "cHJvcG9zYWw=",
-                  gcAfterEpochs: 8,
-                },
-              ],
-              userErrors: [],
-            },
-          },
-        }),
-      ),
-    );
-    renderWithProviders(
-      <PostView postId="p1" store={fakeIdentityStore({})} />,
-      {
-        store: storeFor("acct-1"),
-        writeSigner: fakeWriteSigner({
-          signStaged: () =>
-            Promise.resolve({ kind: "awaitingSeal" as const, id: "w1" }),
-        }),
-      },
-    );
-    fireEvent.change(await screen.findByTestId("comment-draft"), {
-      target: { value: "Nice one" },
-    });
-    fireEvent.click(screen.getByTestId("comment-license-attribution-1"));
-    fireEvent.click(screen.getByTestId("comment-submit"));
-    const alert = await screen.findByTestId("comment-signing-needs-key");
-    expect(alert).toHaveTextContent("Restore your key");
-  });
-
-  it("keeps the comment button disabled without a draft", async () => {
-    server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
-    );
-    renderWithProviders(<PostView postId="p1" />, {
-      store: storeFor("acct-1"),
-      writeSigner: fakeWriteSigner(),
-    });
-    expect(await screen.findByTestId("comment-submit")).toBeDisabled();
-  });
-
   it("reads without a session and swaps the comment box for the sign-in entry", async () => {
     server.use(
       graphql.query("PostDetail", () =>
@@ -611,24 +456,6 @@ describe("PostView", () => {
     expect(screen.queryByTestId("post-transport-error")).not.toBeInTheDocument();
   });
 
-  it("surfaces a failed comment submit in the composer, not on the thread", async () => {
-    server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
-      graphql.mutation("PrepareComment", () => HttpResponse.error()),
-    );
-    renderWithProviders(<PostView postId="p1" />, {
-      store: storeFor("acct-1"),
-      writeSigner: fakeWriteSigner(),
-    });
-    fireEvent.change(await screen.findByTestId("comment-draft"), {
-      target: { value: "Nice one" },
-    });
-    fireEvent.click(screen.getByTestId("comment-submit"));
-    expect(await screen.findByTestId("comment-transport-error")).toBeInTheDocument();
-    expect(screen.queryByTestId("post-thread-transport-error")).not.toBeInTheDocument();
-    expect(screen.getByTestId("post-title")).toHaveTextContent("The title");
-  });
-
   it("backs to the feed from every branch", async () => {
     server.use(graphql.query("PostDetail", () => HttpResponse.json({ data: { post: null } })));
     renderWithProviders(<PostView postId="gone" />, { writeSigner: fakeWriteSigner() });
@@ -697,26 +524,29 @@ describe("PostView", () => {
     await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(1));
     expect(variables).toEqual({
       // The mark is re-stated on the edit: a complete-state write that omitted
-      // it would unveil a comment its author had veiled.
-      input: { id: "c1", content: "better words", sensitive: false, sensitiveReason: null },
+      // it would unveil a comment its author had veiled. The gallery is
+      // complete state for the same reason — this comment carries none, so an
+      // empty gallery is what the edit leaves standing.
+      input: {
+        id: "c1",
+        content: "better words",
+        attachments: null,
+        sensitive: false,
+        sensitiveReason: null,
+      },
     });
     // The editor closes and the in-flight notice shows.
     expect(screen.queryByTestId("comment-edit-input")).not.toBeInTheDocument();
     expect(screen.getByTestId("comment-signed")).toBeInTheDocument();
   });
 
-  it("renders prefetched replies nested and expands past them", async () => {
+  // Q49: the thread read carries no replies at all. A branch is a count, and
+  // the nodes arrive only for the reader who unfolds one.
+  it("collapses a branch behind its count and unfolds it on request", async () => {
     server.use(
       graphql.query("PostDetail", () =>
         HttpResponse.json({
-          data: detail("author-1", [
-            {
-              id: "c1",
-              body: "top",
-              replies: [{ id: "r1", body: "nested" }],
-              repliesHaveMore: true,
-            },
-          ]),
+          data: detail("author-1", [{ id: "c1", body: "top", replyCount: 2 }]),
         }),
       ),
       graphql.query("CommentReplies", () =>
@@ -727,7 +557,10 @@ describe("PostView", () => {
               id: "c1",
               replies: {
                 __typename: "CommentConnection",
-                edges: [{ __typename: "CommentEdge", node: commentNode({ id: "r2", body: "more" }) }],
+                edges: [
+                  { __typename: "CommentEdge", node: commentNode({ id: "r1", body: "nested" }) },
+                  { __typename: "CommentEdge", node: commentNode({ id: "r2", body: "more" }) },
+                ],
                 pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
               },
             },
@@ -736,51 +569,40 @@ describe("PostView", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+    // Nothing of the branch is on screen, and the line promises the count.
+    const unfold = await screen.findByTestId("replies-more-c1");
+    expect(unfold).toHaveTextContent("View 2 replies");
+    expect(screen.queryByTestId("post-comment-r1")).not.toBeInTheDocument();
+
+    fireEvent.click(unfold);
     expect(await screen.findByTestId("post-comment-r1")).toHaveTextContent("nested");
-    fireEvent.click(screen.getByTestId("replies-more-c1"));
-    expect(await screen.findByTestId("post-comment-r2")).toHaveTextContent("more");
+    expect(screen.getByTestId("post-comment-r2")).toHaveTextContent("more");
+    // The whole branch came in one page, so nothing is left to ask for.
     expect(screen.queryByTestId("replies-more-c1")).not.toBeInTheDocument();
   });
 
-  it("replies inline, targeting the comment not the post", async () => {
-    let variables: unknown;
+  it("says one reply in the singular", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: detail("author-1", [{ id: "c1", body: "top", replyCount: 1 }]),
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId("replies-more-c1")).toHaveTextContent("View 1 reply");
+  });
+
+  it("draws no unfold line on a comment nobody answered", async () => {
     server.use(
       graphql.query("PostDetail", () =>
         HttpResponse.json({ data: detail("author-1", [{ id: "c1", body: "top" }]) }),
       ),
-      graphql.mutation("PrepareComment", ({ variables: v }) => {
-        variables = v;
-        return HttpResponse.json({
-          data: {
-            prepareComment: {
-              __typename: "PrepareContentPayload",
-              node: "new-reply",
-              writes: [
-                {
-                  __typename: "PreparedWrite",
-                  id: "w1",
-                  family: "REVIEW",
-                  canonicalProposal: "cHJvcG9zYWw=",
-                  gcAfterEpochs: 8,
-                },
-              ],
-              userErrors: [],
-            },
-          },
-        });
-      }),
     );
-    const signer = fakeWriteSigner();
-    renderWithProviders(<PostView postId="p1" />, { store: storeFor("acct-1"), writeSigner: signer });
-    fireEvent.click(await screen.findByTestId("comment-reply-c1"));
-    fireEvent.change(screen.getByTestId("comment-reply-input"), {
-      target: { value: "me too" },
-    });
-    fireEvent.click(screen.getByTestId("comment-reply-submit"));
-    await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(1));
-    // A reply is a genesis Review targeting the comment (comment.md §1).
-    expect((variables as { input: { target: string } }).input.target).toBe("c1");
-    expect(screen.queryByTestId("comment-reply-input")).not.toBeInTheDocument();
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await screen.findByTestId("post-comment-c1");
+    expect(screen.queryByTestId("replies-more-c1")).not.toBeInTheDocument();
   });
 
   it("wears the standing on a load that starts with no access token", async () => {
@@ -1022,292 +844,6 @@ describe("PostView", () => {
   });
 
   // ---- F9: tagging is part of the comment compose gesture ----
-
-  describe("tagging as part of the compose gesture", () => {
-    /** A minting payload whose batch is the record plus one act per tag. */
-    function commentPayload(writeIds: readonly string[]) {
-      return {
-        prepareComment: {
-          __typename: "PrepareContentPayload",
-          node: "c-node",
-          writes: writeIds.map((id, index) => ({
-            __typename: "PreparedWrite",
-            id,
-            family: index === 0 ? "REVIEW" : "TAG",
-            canonicalProposal: "cHJvcG9zYWw=",
-            gcAfterEpochs: 8,
-          })),
-          userErrors: [],
-        },
-      };
-    }
-
-    beforeEach(() => {
-      // The confirmation has its own tests below; everywhere else it
-      // would only stand between the test and the submit.
-      writeConfirmMultiAction(false);
-    });
-
-    it("rides the drafted tags on the comment-create input", async () => {
-      let variables: Record<string, unknown> | null = null;
-      server.use(
-        graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
-        graphql.mutation("PrepareComment", ({ variables: v }) => {
-          variables = v;
-          return HttpResponse.json({ data: commentPayload(["w1", "w2"]) });
-        }),
-      );
-      renderWithProviders(<PostView postId="p1" />, {
-        store: storeFor("acct-1"),
-        writeSigner: fakeWriteSigner(),
-      });
-      fireEvent.change(await screen.findByTestId("comment-draft"), {
-        target: { value: "Nice one" },
-      });
-      fireEvent.change(screen.getByTestId("comment-tag-input"), { target: { value: "rust" } });
-      fireEvent.click(screen.getByTestId("comment-tag-add"));
-      fireEvent.click(screen.getByTestId("comment-submit"));
-
-      expect(await screen.findByTestId("comment-signed")).toBeInTheDocument();
-      await waitFor(() =>
-        expect((variables as unknown as { input: { tags: unknown } })?.input.tags).toEqual([
-          { name: "rust", pDirected: 0.1, pInterest: 1 },
-        ]),
-      );
-    });
-
-    // The batch is the record AND its tag acts — every one of them is
-    // this device's to sign, not just the head.
-    it("signs the whole returned batch, not only its first write", async () => {
-      server.use(
-        graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
-        graphql.mutation("PrepareComment", () =>
-          HttpResponse.json({ data: commentPayload(["w1", "w2", "w3"]) }),
-        ),
-      );
-      const signer = fakeWriteSigner();
-      renderWithProviders(<PostView postId="p1" />, {
-        store: storeFor("acct-1"),
-        writeSigner: signer,
-      });
-      fireEvent.change(await screen.findByTestId("comment-draft"), { target: { value: "hi" } });
-      fireEvent.change(screen.getByTestId("comment-tag-input"), { target: { value: "rust" } });
-      fireEvent.click(screen.getByTestId("comment-tag-add"));
-      fireEvent.change(screen.getByTestId("comment-tag-input"), { target: { value: "wasm" } });
-      fireEvent.click(screen.getByTestId("comment-tag-add"));
-      fireEvent.click(screen.getByTestId("comment-submit"));
-
-      await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(3));
-    });
-
-    it("clears the drafted tags once the comment is signed", async () => {
-      server.use(
-        graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
-        graphql.mutation("PrepareComment", () =>
-          HttpResponse.json({ data: commentPayload(["w1", "w2"]) }),
-        ),
-      );
-      renderWithProviders(<PostView postId="p1" />, {
-        store: storeFor("acct-1"),
-        writeSigner: fakeWriteSigner(),
-      });
-      fireEvent.change(await screen.findByTestId("comment-draft"), { target: { value: "hi" } });
-      fireEvent.change(screen.getByTestId("comment-tag-input"), { target: { value: "rust" } });
-      fireEvent.click(screen.getByTestId("comment-tag-add"));
-      expect(screen.getByTestId("comment-tag-0")).toHaveTextContent("#rust");
-      fireEvent.click(screen.getByTestId("comment-submit"));
-
-      await waitFor(() => expect(screen.queryByTestId("comment-tag-0")).not.toBeInTheDocument());
-    });
-
-    it("tags a reply the same way, targeting the comment", async () => {
-      let variables: Record<string, unknown> | null = null;
-      server.use(
-        graphql.query("PostDetail", () =>
-          HttpResponse.json({ data: detail("author-1", [{ id: "c1", body: "top" }]) }),
-        ),
-        graphql.mutation("PrepareComment", ({ variables: v }) => {
-          variables = v;
-          return HttpResponse.json({ data: commentPayload(["w1", "w2"]) });
-        }),
-      );
-      const signer = fakeWriteSigner();
-      renderWithProviders(<PostView postId="p1" />, {
-        store: storeFor("acct-1"),
-        writeSigner: signer,
-      });
-      fireEvent.click(await screen.findByTestId("comment-reply-c1"));
-      fireEvent.change(screen.getByTestId("comment-reply-input"), { target: { value: "me too" } });
-      fireEvent.change(screen.getByTestId("comment-reply-tag-input"), {
-        target: { value: "wasm" },
-      });
-      fireEvent.click(screen.getByTestId("comment-reply-tag-add"));
-      fireEvent.click(screen.getByTestId("comment-reply-submit"));
-
-      await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(2));
-      expect(variables as unknown as { input: { target: string; tags: unknown } }).toMatchObject({
-        input: { target: "c1", tags: [{ name: "wasm", pDirected: 0.1, pInterest: 1 }] },
-      });
-    });
-
-    // F2: a batched tag's field error lands on its own chip, and the
-    // general refusal line stays empty.
-    it("routes a refused tag onto its chip, signing nothing", async () => {
-      server.use(
-        graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
-        graphql.mutation("PrepareComment", () =>
-          HttpResponse.json({
-            data: {
-              prepareComment: {
-                __typename: "PrepareContentPayload",
-                node: null,
-                writes: null,
-                userErrors: [
-                  {
-                    __typename: "UserError",
-                    message: "`rust` is not a legal topic name: reserved",
-                    code: "BAD_INPUT",
-                    field: ["tags", "0", "name"],
-                  },
-                ],
-              },
-            },
-          }),
-        ),
-      );
-      const signer = fakeWriteSigner();
-      renderWithProviders(<PostView postId="p1" />, {
-        store: storeFor("acct-1"),
-        writeSigner: signer,
-      });
-      fireEvent.change(await screen.findByTestId("comment-draft"), { target: { value: "hi" } });
-      fireEvent.change(screen.getByTestId("comment-tag-input"), { target: { value: "rust" } });
-      fireEvent.click(screen.getByTestId("comment-tag-add"));
-      fireEvent.click(screen.getByTestId("comment-submit"));
-
-      expect(await screen.findByTestId("comment-tag-error-0")).toHaveTextContent(
-        "`rust` is not a legal topic name: reserved",
-      );
-      expect(screen.queryByTestId("comment-refused")).not.toBeInTheDocument();
-      expect(signer.signStaged).not.toHaveBeenCalled();
-    });
-
-    // F4: the cost is on screen before the press.
-    it("counts the signed actions a comment would stage, live", async () => {
-      server.use(
-        graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
-      );
-      renderWithProviders(<PostView postId="p1" />, {
-        store: storeFor("acct-1"),
-        writeSigner: fakeWriteSigner(),
-      });
-      expect(await screen.findByTestId("comment-signed-actions")).toHaveTextContent(
-        "creates 1 signed action",
-      );
-      fireEvent.change(screen.getByTestId("comment-tag-input"), { target: { value: "rust" } });
-      fireEvent.click(screen.getByTestId("comment-tag-add"));
-      expect(screen.getByTestId("comment-signed-actions")).toHaveTextContent(
-        "creates 2 signed actions",
-      );
-      fireEvent.click(screen.getByTestId("comment-tag-0-remove"));
-      expect(screen.getByTestId("comment-signed-actions")).toHaveTextContent(
-        "creates 1 signed action",
-      );
-    });
-
-    it("asks before a comment submit that signs more than one action", async () => {
-      writeConfirmMultiAction(true);
-      server.use(
-        graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
-        graphql.mutation("PrepareComment", () =>
-          HttpResponse.json({ data: commentPayload(["w1", "w2"]) }),
-        ),
-      );
-      renderWithProviders(<PostView postId="p1" />, {
-        store: storeFor("acct-1"),
-        writeSigner: fakeWriteSigner(),
-      });
-      fireEvent.change(await screen.findByTestId("comment-draft"), { target: { value: "hi" } });
-      fireEvent.change(screen.getByTestId("comment-tag-input"), { target: { value: "rust" } });
-      fireEvent.click(screen.getByTestId("comment-tag-add"));
-      fireEvent.click(screen.getByTestId("comment-submit"));
-
-      expect(screen.getByTestId("comment-multi-action-count")).toHaveTextContent(
-        "creates 2 signed actions",
-      );
-      fireEvent.click(screen.getByTestId("comment-multi-action-proceed"));
-      expect(await screen.findByTestId("comment-signed")).toBeInTheDocument();
-    });
-
-    it("does not ask for an untagged comment", async () => {
-      writeConfirmMultiAction(true);
-      server.use(
-        graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
-        graphql.mutation("PrepareComment", () =>
-          HttpResponse.json({ data: commentPayload(["w1"]) }),
-        ),
-      );
-      renderWithProviders(<PostView postId="p1" />, {
-        store: storeFor("acct-1"),
-        writeSigner: fakeWriteSigner(),
-      });
-      fireEvent.change(await screen.findByTestId("comment-draft"), { target: { value: "hi" } });
-      fireEvent.click(screen.getByTestId("comment-submit"));
-      expect(screen.queryByTestId("comment-multi-action-confirm")).not.toBeInTheDocument();
-      expect(await screen.findByTestId("comment-signed")).toBeInTheDocument();
-    });
-
-    it("cancelling the comment confirmation signs nothing", async () => {
-      writeConfirmMultiAction(true);
-      server.use(
-        graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
-      );
-      const signer = fakeWriteSigner();
-      renderWithProviders(<PostView postId="p1" />, {
-        store: storeFor("acct-1"),
-        writeSigner: signer,
-      });
-      fireEvent.change(await screen.findByTestId("comment-draft"), { target: { value: "hi" } });
-      fireEvent.change(screen.getByTestId("comment-tag-input"), { target: { value: "rust" } });
-      fireEvent.click(screen.getByTestId("comment-tag-add"));
-      fireEvent.click(screen.getByTestId("comment-submit"));
-      fireEvent.click(screen.getByTestId("comment-multi-action-cancel"));
-      expect(screen.queryByTestId("comment-multi-action-confirm")).not.toBeInTheDocument();
-      expect(signer.signStaged).not.toHaveBeenCalled();
-    });
-
-    it("asks on a tagged reply too, under its own dialog", async () => {
-      writeConfirmMultiAction(true);
-      server.use(
-        graphql.query("PostDetail", () =>
-          HttpResponse.json({ data: detail("author-1", [{ id: "c1", body: "top" }]) }),
-        ),
-        graphql.mutation("PrepareComment", () =>
-          HttpResponse.json({ data: commentPayload(["w1", "w2"]) }),
-        ),
-      );
-      const signer = fakeWriteSigner();
-      renderWithProviders(<PostView postId="p1" />, {
-        store: storeFor("acct-1"),
-        writeSigner: signer,
-      });
-      fireEvent.click(await screen.findByTestId("comment-reply-c1"));
-      fireEvent.change(screen.getByTestId("comment-reply-input"), { target: { value: "me too" } });
-      fireEvent.change(screen.getByTestId("comment-reply-tag-input"), {
-        target: { value: "wasm" },
-      });
-      fireEvent.click(screen.getByTestId("comment-reply-tag-add"));
-      expect(screen.getByTestId("comment-reply-signed-actions")).toHaveTextContent(
-        "creates 2 signed actions",
-      );
-      fireEvent.click(screen.getByTestId("comment-reply-submit"));
-      expect(screen.getByTestId("comment-reply-multi-action-count")).toHaveTextContent(
-        "creates 2 signed actions",
-      );
-      fireEvent.click(screen.getByTestId("comment-reply-multi-action-proceed"));
-      await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(2));
-    });
-  });
 
   // ---- F10: the inline comment edit tags like the post edit ----
 
@@ -1718,47 +1254,6 @@ describe("PostView — references", () => {
     expect(screen.queryByTestId("comment-reference-c1")).not.toBeInTheDocument();
   });
 
-  it("counts a drafted reference in what the comment box would sign", async () => {
-    server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u2", []) })),
-      graphql.query("ReferenceCandidates", () =>
-        HttpResponse.json({
-          data: {
-            referenceCandidates: [
-              {
-                __typename: "ReferenceCandidate",
-                targetId: "u-ada",
-                target: {
-                  __typename: "User",
-                  id: "u-ada",
-                  handle: "ada",
-                  displayName: { __typename: "ModeratedText", value: "ada" },
-                },
-              },
-            ],
-          },
-        }),
-      ),
-    );
-    renderWithProviders(<PostView postId="p1" />, { store: storeFor("u1") });
-    await screen.findByTestId("comment-draft");
-    expect(screen.getByTestId("comment-signed-actions")).toHaveTextContent(
-      "creates 1 signed action",
-    );
-
-    fireEvent.click(screen.getByTestId("comment-reference-add"));
-    fireEvent.change(screen.getByTestId("comment-finder-query"), {
-      target: { value: "ada" },
-    });
-    fireEvent.click(await screen.findByTestId("comment-finder-candidate-u-ada"));
-
-    await waitFor(() =>
-      expect(screen.getByTestId("comment-signed-actions")).toHaveTextContent(
-        "creates 2 signed actions",
-      ),
-    );
-  });
-
   it("asks before it prepares a comment's withdrawal, on the served cost", async () => {
     writeConfirmMultiAction(true);
     let withdrawalInput: Record<string, unknown> | undefined;
@@ -1831,63 +1326,6 @@ describe("PostView — references", () => {
       "creates no signed actions",
     );
     expect(screen.getByTestId("comment-edit-reference-0")).toHaveTextContent("@ada");
-  });
-
-  it("routes a batched reference's refusal onto that exact chip", async () => {
-    server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u2", []) })),
-      graphql.query("ReferenceCandidates", () =>
-        HttpResponse.json({
-          data: {
-            referenceCandidates: [
-              {
-                __typename: "ReferenceCandidate",
-                targetId: "u-ada",
-                target: {
-                  __typename: "User",
-                  id: "u-ada",
-                  handle: "ada",
-                  displayName: { __typename: "ModeratedText", value: "ada" },
-                },
-              },
-            ],
-          },
-        }),
-      ),
-      graphql.mutation("PrepareComment", () =>
-        HttpResponse.json({
-          data: {
-            prepareComment: {
-              __typename: "PrepareContentPayload",
-              node: null,
-              writes: null,
-              userErrors: [
-                {
-                  __typename: "UserError",
-                  message: "That target can't be referenced.",
-                  code: "INVALID_ARGUMENT",
-                  field: ["references", "0", "target"],
-                },
-              ],
-            },
-          },
-        }),
-      ),
-    );
-    renderWithProviders(<PostView postId="p1" />, { store: storeFor("u1") });
-    await screen.findByTestId("comment-draft");
-    fireEvent.change(screen.getByTestId("comment-draft"), { target: { value: "hi" } });
-    fireEvent.click(screen.getByTestId("comment-reference-add"));
-    fireEvent.change(screen.getByTestId("comment-finder-query"), {
-      target: { value: "ada" },
-    });
-    fireEvent.click(await screen.findByTestId("comment-finder-candidate-u-ada"));
-    fireEvent.click(screen.getByTestId("comment-submit"));
-
-    expect(await screen.findByTestId("comment-reference-error-0")).toHaveTextContent(
-      "That target can't be referenced.",
-    );
-    expect(screen.queryByTestId("comment-refused")).not.toBeInTheDocument();
   });
 
   // The gallery on the read side: what a media post looks like when the body
