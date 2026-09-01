@@ -1,8 +1,8 @@
 // Cross-checks graph.json against the canvas and the rendered boards
 // (backlog item 22): every interactive element on a wired page carries a
-// data-flow number, every number has exactly one edge, every edge lands on a
-// real board or a declared terminal, and every screen on a wired page has an
-// entry point. Gaps (`{"gap": "..."}` outcomes) are legal and reported, never
+// data-flow number, every number has exactly one edge, every edge declares a
+// known kind and lands on a real board or a declared terminal, and every
+// screen on a wired page has an entry point. Gaps (`{"gap": "..."}` outcomes) are legal and reported, never
 // failed — gaps are honest, lies aren't.
 //
 // Run from this directory: node check-flows.mjs   (exit 1 on any FAIL)
@@ -43,10 +43,18 @@ for (const f of readdirSync(dir)) {
   if (f.endsWith(".dc.html") && !canvas.artboards.some((a) => a.file === f)) fails.push(`${f} is not on the canvas`);
 }
 
-// Edges: structure.
+// Edges: structure. Every edge declares what its control does — the flow
+// engine path-searches over `advance` edges alone, so an undeclared or
+// unknown kind is a build failure, never a default.
+const KINDS = ["advance", "cancel", "back", "nav", "detour"];
+const census = Object.fromEntries(KINDS.map((k) => [k, 0]));
+
 const edgeByVia = new Map(); // "Board/3" -> edge
 for (const e of graph.edges ?? []) {
   const key = `${e.from}/${e.via}`;
+  if (e.kind === undefined) fails.push(`edge ${key} declares no "kind" — every edge carries one of ${KINDS.join(" / ")}`);
+  else if (!KINDS.includes(e.kind)) fails.push(`edge ${key} declares kind "${e.kind}", which is not one of ${KINDS.join(" / ")}`);
+  else census[e.kind] += 1;
   if (!boards.has(e.from)) { fails.push(`edge ${key} starts on unknown board "${e.from}"`); continue; }
   if (!Number.isInteger(e.via) || e.via < 1) fails.push(`edge ${key} has a non-positive via — data-flow numbers are 1..n per board`);
   if (edgeByVia.has(key)) fails.push(`two edges share ${key} — one element, one edge (list outcomes in "to")`);
@@ -102,6 +110,7 @@ for (const [name, info] of boards) {
 
 const wiredNames = [...wired].join(", ") || "none";
 console.log(`graph: ${(graph.edges ?? []).length} edges · wired pages: ${wiredNames} · ${gaps.length} gaps · ${infos.length} boards pending`);
+console.log(`kinds: ${KINDS.map((k) => `${k} ${census[k]}`).join(" · ")}`);
 if (gaps.length) { console.log("gaps (designs still owed):"); for (const g of gaps) console.log(`  ${g}`); }
 for (const f of fails) console.log(`FAIL ${f}`);
 console.log(`check-flows: ${fails.length ? `${fails.length} failures` : "ok"} in ${Date.now() - t0} ms`);
