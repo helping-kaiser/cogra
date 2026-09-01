@@ -181,6 +181,28 @@ query Posts($first: Int!, $after: String, $includePending: Boolean! = true) {
   }
 }
 
+# The author's own mark, read alone — what the edit form has to
+# re-state.
+#
+# A content act carries the complete content state, so an edit that
+# omits the switch unmarks the post (api-spec.md "The author's own
+# sensitive mark"). The form therefore has to know the mark it is
+# leaving standing, and `sensitiveSelfMark` is the only field that
+# says it: the statuses read the OR of the author's mark and a
+# moderator's verdict, and an edit can change just the author's half.
+#
+# Deliberately its own query rather than two more fields on
+# `PostFields`: that fragment is spread once per feed entry and again
+# per comment in the detail read, so anything added to it is priced
+# across the corpus's heaviest document. An edit opens one post, once.
+query PostSelfMark($id: UUID!) {
+  post(id: $id) {
+    id
+    sensitiveSelfMark
+    sensitiveReason
+  }
+}
+
 query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repliesFirst: Int!, $includePending: Boolean! = true) {
   post(id: $id) {
     ...PostFields

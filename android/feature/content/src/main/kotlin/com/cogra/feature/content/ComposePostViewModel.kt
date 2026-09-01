@@ -46,6 +46,18 @@ data class ComposePostUiState(
     val loadedTitle: String = "",
     val loadedDescription: String = "",
     val loadedBody: String = "",
+    /**
+     * The author's own sensitive mark this edit leaves standing, read
+     * when the form opened.
+     *
+     * An edit record carries the complete content state, so a mark the
+     * record does not re-state is a mark the record removes — carrying
+     * it through is what keeps editing a marked post from quietly
+     * unmarking it. The edit surface has no switch yet; until it does,
+     * the only correct value is the one the post already had.
+     */
+    val sensitive: Boolean = false,
+    val sensitiveReason: String? = null,
     val submitting: Boolean = false,
     val emptyBody: Boolean = false,
     /** A refusal that named no chip of its own, in the server's words (F2). */
@@ -161,6 +173,21 @@ class ComposePostViewModel @Inject constructor(
                         // stays out of the editable section entirely and
                         // its absence is never read as a removal.
                         val refs = post.references.mapNotNull { it.editableRow() }
+                        // The mark is read before the form opens, never
+                        // defaulted: an edit prepared without it unmarks
+                        // the post, so a mark this read could not confirm
+                        // is a mark no edit may be built on. A fault here
+                        // therefore fails the load, exactly as the post
+                        // read's own fault does.
+                        val mark = when (val marked = content.postSelfMark(postId)) {
+                            is Outcome.Success -> marked.value
+                            is Outcome.Refused -> return@launch _state.update {
+                                it.copy(loading = false, notFound = true)
+                            }
+                            is Outcome.Failed -> return@launch _state.update {
+                                it.copy(loading = false, transportFailed = true)
+                            }
+                        }
                         _state.update {
                             it.copy(
                                 loading = false,
@@ -170,6 +197,8 @@ class ComposePostViewModel @Inject constructor(
                                 loadedTitle = post.title.value.orEmpty(),
                                 loadedDescription = post.description.value.orEmpty(),
                                 loadedBody = post.content.value.orEmpty(),
+                                sensitive = mark?.sensitive ?: false,
+                                sensitiveReason = mark?.reason,
                                 tagSection = TagSectionState(tags = tags, loaded = tags),
                                 referenceSection = ReferenceSectionState(
                                     references = refs,
@@ -373,6 +402,11 @@ class ComposePostViewModel @Inject constructor(
                         title = s.title.ifBlank { null },
                         description = s.description.ifBlank { null },
                         content = s.body,
+                        // Carried through unchanged: the record is the
+                        // post's complete content state, so the mark the
+                        // form read is the mark the edit has to re-state.
+                        sensitive = s.sensitive,
+                        sensitiveReason = s.sensitiveReason,
                     )) {
                         is Outcome.Success -> writes += outcome.value.writes
                         is Outcome.Refused -> return@launch refuse(outcome.errors)

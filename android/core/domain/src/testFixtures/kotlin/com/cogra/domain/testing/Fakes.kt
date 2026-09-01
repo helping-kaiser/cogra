@@ -51,6 +51,7 @@ import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.SelfMarkView
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.TaggedContentKind
@@ -445,11 +446,15 @@ open class ThrowingContentRepository : ContentRepository {
         sensitive: Boolean,
         sensitiveReason: String?,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
+    override suspend fun postSelfMark(id: String): Outcome<SelfMarkView?> =
+        throw UnsupportedOperationException()
     override suspend fun preparePostEdit(
         id: String,
         title: String?,
         description: String?,
         content: String,
+        sensitive: Boolean,
+        sensitiveReason: String?,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun prepareComment(
         target: String,

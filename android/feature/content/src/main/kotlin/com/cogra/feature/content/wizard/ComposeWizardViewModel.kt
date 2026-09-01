@@ -270,15 +270,17 @@ class ComposeWizardViewModel @Inject constructor(
      * to Details and edits — rare, but silently keeping the old words would
      * be worse than the extra call.
      */
-    fun onAltTextChange(uri: String, text: String) = _state.update { state ->
-        val described = state.withAltText(uri, text)
-        val asset = described.picked.firstOrNull { it.uri == uri }
-        if (asset?.upload is AssetUpload.Done) {
-            described.withUpload(uri, AssetUpload.Idle)
-        } else {
-            described
-        }
-    }
+    /**
+     * Describing a picture never touches its upload: the description is
+     * a fact about the placement and rides `AttachmentClaim` at prepare,
+     * so the bytes already on the server are still the right bytes.
+     *
+     * This is the whole reason pictures may go up before the author has
+     * written anything — an upload invalidated by every keystroke could
+     * only ever start at the seal.
+     */
+    fun onAltTextChange(uri: String, text: String) =
+        _state.update { it.withAltText(uri, text) }
 
     fun onTagInputChange(value: String) = updateTags { it.withInput(value) }
 
@@ -379,20 +381,18 @@ class ComposeWizardViewModel @Inject constructor(
     fun onNext() {
         val current = _state.value
         val next = current.advanced() ?: return
-        // Uploads start on leaving DETAILS, not the crop stage.
-        //
-        // NAMED DEVIATION from `ComposeUploading`'s footnote ("Pictures
-        // upload while you write — signing waits for them") — no longer a
-        // forced one. A description rides `AttachmentClaim` at prepare
-        // rather than the upload, so an upload started at crop-exit drops
-        // nothing the author writes afterwards. Moving the start is a
-        // wizard change with its own boards, not part of the contract
-        // change that freed it.
+        // Uploads start on leaving CROP — `ComposeUploading`'s footnote,
+        // "Pictures upload while you write — signing waits for them".
+        // Framing is settled here and nothing later changes the bytes: a
+        // description rides `AttachmentClaim` at prepare rather than the
+        // upload, so the whole Details stage is time the pictures spend
+        // on the wire instead of time the author spends waiting at the
+        // seal.
         //
         // The waiting still shows exactly where the boards draw it:
         // `ComposeSealUploading` gates the seal on `UploadStatusLine`, and
         // stepping back to Details renders the in-flight rings.
-        if (current.step == WizardStep.Details) startUploads(cropSpecsFor(current))
+        if (current.step == WizardStep.Crop) startUploads(cropSpecsFor(current))
         _state.value = next
     }
 
