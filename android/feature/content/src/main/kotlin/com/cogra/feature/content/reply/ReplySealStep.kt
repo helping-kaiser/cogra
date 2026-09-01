@@ -56,10 +56,6 @@ internal fun ColumnScope.ReplySealStepBody(
     onOpenSheet: (ReplySealSheet) -> Unit,
     onAddTopic: () -> Unit,
     onCite: () -> Unit,
-    onSign: () -> Unit,
-    onBack: () -> Unit,
-    onRestoreKey: () -> Unit,
-    onLeave: () -> Unit,
 ) {
     Text(
         text = "${state.sealSummary}.",
@@ -90,41 +86,52 @@ internal fun ColumnScope.ReplySealStepBody(
         )
         Hairline()
     }
+}
 
-    Spacer(Modifier.weight(1f))
-
+/**
+ * The seal's committing band, below the body rather than inside it.
+ *
+ * The reply seal carries two declaring rows the post's does not, so its
+ * required controls are exactly the case `WizardBody` warns about: a
+ * stage whose controls can fall below the fold scrolls, and the action
+ * sits outside the scrolling column — otherwise a short screen hides
+ * the only way to sign. Where the stage fits, this is the board.
+ */
+@Composable
+internal fun ColumnScope.ReplySealActions(
+    state: ReplyWizardState,
+    onSign: () -> Unit,
+    onBack: () -> Unit,
+    onRestoreKey: () -> Unit,
+    onLeave: () -> Unit,
+) {
     if (state.keyAbsent) {
         ReplyKeyAbsentCard(onRestoreKey = onRestoreKey, onLeave = onLeave)
     } else {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(Space.x2),
-        ) {
-            // `ComposeSealUploading`: while this shows, the sign button is
-            // held — nothing signs until the pictures it signs exist.
-            if (state.hasPictures && !state.uploadsComplete) {
-                UploadStatusLine(
-                    done = state.uploadsDone,
-                    total = state.picked.size,
-                    modifier = Modifier.fillMaxWidth(),
-                    testTag = "reply_seal_uploading",
-                )
-            }
-            CograButton(
-                text = "Sign comment",
-                onClick = onSign,
-                enabled = state.canSign,
+        // `ComposeSealUploading`: while this shows, the sign button is
+        // held — nothing signs until the pictures it signs exist.
+        if (state.hasPictures && !state.uploadsComplete) {
+            UploadStatusLine(
+                done = state.uploadsDone,
+                total = state.picked.size,
                 modifier = Modifier.fillMaxWidth(),
-                testTag = "reply_sign",
-            )
-            CograButton(
-                text = "Back",
-                onClick = onBack,
-                kind = ButtonKind.Text,
-                modifier = Modifier.fillMaxWidth(),
-                testTag = "reply_seal_back",
+                testTag = "reply_seal_uploading",
             )
         }
+        CograButton(
+            text = "Sign comment",
+            onClick = onSign,
+            enabled = state.canSign,
+            modifier = Modifier.fillMaxWidth(),
+            testTag = "reply_sign",
+        )
+        CograButton(
+            text = "Back",
+            onClick = onBack,
+            kind = ButtonKind.Text,
+            modifier = Modifier.fillMaxWidth(),
+            testTag = "reply_seal_back",
+        )
     }
 }
 

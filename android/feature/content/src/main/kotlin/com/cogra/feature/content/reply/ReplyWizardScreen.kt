@@ -224,17 +224,24 @@ internal fun ReplyWizardScreen(
                     }
                 }
 
-                ReplyStep.Seal -> WizardBody(gap = Space.x3) {
-                    ReplySealStepBody(
-                        state = state,
-                        onOpenSheet = onOpenSheet,
-                        onAddTopic = { onOpenSheet(ReplySealSheet.Topics) },
-                        onCite = { onOpenSheet(ReplySealSheet.References) },
-                        onSign = onSign,
-                        onBack = onSealBack,
-                        onRestoreKey = onRestoreKey,
-                        onLeave = onLeave,
-                    )
+                ReplyStep.Seal -> {
+                    WizardBody(gap = Space.x3, scrollable = true, bottom = Space.x2) {
+                        ReplySealStepBody(
+                            state = state,
+                            onOpenSheet = onOpenSheet,
+                            onAddTopic = { onOpenSheet(ReplySealSheet.Topics) },
+                            onCite = { onOpenSheet(ReplySealSheet.References) },
+                        )
+                    }
+                    WizardFooter {
+                        ReplySealActions(
+                            state = state,
+                            onSign = onSign,
+                            onBack = onSealBack,
+                            onRestoreKey = onRestoreKey,
+                            onLeave = onLeave,
+                        )
+                    }
                 }
             }
 
