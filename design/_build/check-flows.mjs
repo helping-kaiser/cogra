@@ -10,6 +10,7 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { resolveAll } from "./flow-engine.mjs";
 
 const t0 = Date.now();
 const here = dirname(fileURLToPath(import.meta.url));
@@ -120,9 +121,27 @@ for (const [name, info] of boards) {
   }
 }
 
+// The flow layer. Structure above says the graph tells no lies; this says the
+// journeys the product owes still run through it.
+const flowsFile = join(dir, "flows.json");
+let flowLines = [];
+if (existsSync(flowsFile)) {
+  const declared = JSON.parse(readFileSync(flowsFile, "utf8")).flows ?? [];
+  const { results, fails: flowFails, view } = resolveAll(graph, { flows: declared });
+  fails.push(...flowFails);
+
+  const blocked = results.filter((r) => r.status === "blocked by gap");
+  flowLines.push(`flows: ${declared.length} declared · ${results.length - blocked.length} resolved · ${blocked.length} blocked by a gap`);
+  for (const r of blocked) flowLines.push(`  blocked by gap — ${r.name}: ${r.blockedBy}`);
+
+} else {
+  flowLines.push("flows: none declared");
+}
+
 const wiredNames = [...wired].join(", ") || "none";
 console.log(`graph: ${(graph.edges ?? []).length} edges · wired pages: ${wiredNames} · ${gaps.length} gaps · ${infos.length} boards pending`);
 console.log(`kinds: ${KINDS.map((k) => `${k} ${census[k]}`).join(" · ")}`);
+for (const l of flowLines) console.log(l);
 if (gaps.length) { console.log("gaps (designs still owed):"); for (const g of gaps) console.log(`  ${g}`); }
 for (const f of fails) console.log(`FAIL ${f}`);
 console.log(`check-flows: ${fails.length ? `${fails.length} failures` : "ok"} in ${Date.now() - t0} ms`);
