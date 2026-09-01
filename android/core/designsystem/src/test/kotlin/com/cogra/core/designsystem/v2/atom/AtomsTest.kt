@@ -98,69 +98,62 @@ class AtomsTest {
     }
 
     @Test
-    fun theWizardHeaderWiresBackAndItsAction() {
+    fun theWizardHeaderWiresItsTwoWaysOut() {
         var back = false
-        var action = false
+        var left = false
         compose.setContent {
             Cogra2PreviewTheme {
                 WizardHeader(
                     title = "New post",
                     onBack = { back = true },
                     backContentDescription = "Back",
-                    actionText = "Next",
-                    onAction = { action = true },
+                    onLeave = { left = true },
                     testTag = "header",
                 )
             }
         }
 
         compose.onNodeWithTag("header_back").performClick()
-        compose.onNodeWithTag("header_action").performClick()
+        compose.onNodeWithTag("header_leave").performClick()
 
         assertThat(back).isTrue()
-        assertThat(action).isTrue()
+        assertThat(left).isTrue()
     }
 
     @Test
-    fun theHeadersActionCanBeHeldClosedWhileAStepIsIncomplete() {
-        compose.setContent {
-            Cogra2PreviewTheme {
-                WizardHeader(
-                    title = "New post",
-                    onBack = {},
-                    actionText = "Next",
-                    onAction = {},
-                    actionEnabled = false,
-                    testTag = "header",
-                )
-            }
-        }
-
-        compose.onNodeWithTag("header_action").assertIsNotEnabled()
-    }
-
-    @Test
-    fun theHeadersActionSitsHardAgainstTheRightEdgeWhateverTheTitle() {
+    fun theHeaderCarriesNoForwardActionOnAnyStage() {
+        // The forward action lives at the bottom of the stage, so the
+        // top-right corner means one thing — leave — for the whole flow.
+        // It used to mean Next on the early stages, and an author trained
+        // on that corner left the flow by reaching for it
+        // (jakob 2026-09-01).
         compose.setContent {
             Cogra2PreviewTheme {
                 Column(Modifier.width(390.dp)) {
-                    WizardHeader(
-                        title = "Crop",
-                        onBack = {},
-                        actionText = "Next",
-                        onAction = {},
-                        testTag = "header",
-                    )
+                    WizardHeader(title = "Crop", onBack = {}, onLeave = {}, testTag = "header")
                 }
             }
         }
 
-        // The board hands the leftover width to a spacer, which puts the
-        // pill against the far edge of the header's content box. A short
-        // title must not pull it back toward the middle.
+        compose.onNodeWithTag("header_action").assertDoesNotExist()
+        compose.onNodeWithText("Next").assertDoesNotExist()
+    }
+
+    @Test
+    fun theLeaveControlKeepsTheCornerWhateverTheTitle() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                Column(Modifier.width(390.dp)) {
+                    WizardHeader(title = "Crop", onBack = {}, onLeave = {}, testTag = "header")
+                }
+            }
+        }
+
+        // Nothing actionable follows the X, so a short title must not pull
+        // it back toward the middle: the corner is what the author aims at.
         val header = compose.onNodeWithTag("header").getUnclippedBoundsInRoot()
-        val action = compose.onNodeWithTag("header_action").getUnclippedBoundsInRoot()
-        assertThat((header.right - action.right).value).isWithin(TOLERANCE).of(0f)
+        val leave = compose.onNodeWithTag("header_leave").getUnclippedBoundsInRoot()
+        assertThat((header.right - leave.right).value).isWithin(TOLERANCE).of(0f)
     }
 
     @Test

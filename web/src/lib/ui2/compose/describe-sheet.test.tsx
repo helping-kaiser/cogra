@@ -68,4 +68,37 @@ describe("DescribeSheet", () => {
     const preview = screen.getByTestId("describe-sheet").querySelector("img");
     expect(preview).toHaveAttribute("aria-hidden", "true");
   });
+
+  // A DESCRIPTION IS OF WHAT WILL BE SEEN, so the sheet shows the framing the
+  // author chose rather than the source it was cut from (jakob, round 6).
+  it("previews the framing, at the framing's own shape", () => {
+    open({
+      crop: {
+        x: 0,
+        y: 0,
+        zoom: 1,
+        area: { x: 0, y: 100, width: 800, height: 500 },
+        areaPercent: { x: 0, y: 10, width: 100, height: 50 },
+      },
+    });
+
+    // 180 tall at the framing's 1.6, so nothing is cropped a second time and
+    // nothing is squashed.
+    const framed = screen.getByTestId("describe-sheet-framed");
+    expect(framed.style.width).toBe("288px");
+    expect(framed.style.height).toBe("180px");
+    const preview = framed.querySelector("img")!;
+    expect(preview.style.position).toBe("absolute");
+    expect(Number(preview.style.top.replace("px", ""))).toBeCloseTo(-36, 3);
+  });
+
+  it("falls back to the whole picture where nothing has been framed", () => {
+    // A comment's picture, or a pick nobody framed — the sheet keeps the
+    // contain-fitted preview it always had.
+    open();
+    expect(screen.queryByTestId("describe-sheet-framed")).toBeNull();
+    expect(screen.getByTestId("describe-sheet").querySelector("img")!.className).toContain(
+      "max-h-full",
+    );
+  });
 });

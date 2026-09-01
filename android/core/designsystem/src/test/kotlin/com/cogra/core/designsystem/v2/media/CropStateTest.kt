@@ -145,6 +145,20 @@ class CropStateTest {
     }
 
     @Test
+    fun aWindowReportedBeforeThisPicturesOwnIsPlacedIsNotRecorded() {
+        val state = CropState(centred)
+        // The filmstrip has just moved here; the picture has not landed.
+        state.beginAttach()
+
+        state.onWindowChanged(CropFraming(0f, 0f, 0.2f, 0.2f))
+
+        // That window was measured against the picture still on the
+        // shared view — the one this framing was moved away from
+        // (jakob 2026-09-01).
+        assertThat(state.framing).isEqualTo(centred)
+    }
+
+    @Test
     fun theFramingReadsBackAsWordsForAReaderWhoCannotSeeIt() {
         val state = CropState(CropFraming(0f, 0.25f, 0.5f, 0.75f))
 
@@ -160,6 +174,68 @@ class CropStateTest {
         val state = CropState(centred)
 
         assertThat(state.framingDescription()).contains("centred")
+    }
+
+    // -- The opening window (jakob 2026-09-01: "the area for cropping
+    // was to small") --
+
+    @Test
+    fun aPictureTallerThanTheShapeOpensOnTheFullWidthOfIt() {
+        // A 2:3 portrait framed to the 4:5 post shape.
+        val window = CropWindowMath.largestWindow(targetRatio = 0.8f, pictureRatio = 2f / 3f)
+
+        // The wide axis is whole: there is no more picture to take.
+        assertThat(window.width).isWithin(TOLERANCE).of(1f)
+        assertThat(window.height).isLessThan(1f)
+        assertThat(window.width / window.height).isWithin(TOLERANCE).of(0.8f / (2f / 3f))
+    }
+
+    @Test
+    fun aPictureWiderThanTheShapeOpensOnTheFullHeightOfIt() {
+        // A 3:2 landscape framed to the same 4:5 shape.
+        val window = CropWindowMath.largestWindow(targetRatio = 0.8f, pictureRatio = 1.5f)
+
+        assertThat(window.height).isWithin(TOLERANCE).of(1f)
+        assertThat(window.width).isLessThan(1f)
+    }
+
+    @Test
+    fun aPictureAlreadyOfTheShapeOpensOnTheWholeOfIt() {
+        val window = CropWindowMath.largestWindow(targetRatio = 0.8f, pictureRatio = 0.8f)
+
+        assertThat(window.width).isWithin(TOLERANCE).of(1f)
+        assertThat(window.height).isWithin(TOLERANCE).of(1f)
+    }
+
+    @Test
+    fun theOpeningWindowIsCentredAndInsideThePicture() {
+        val window = CropWindowMath.largestWindow(targetRatio = 1f, pictureRatio = 2f)
+
+        assertThat(window.left).isAtLeast(0f)
+        assertThat(window.right).isAtMost(1f)
+        assertThat((window.left + window.right) / 2f).isWithin(TOLERANCE).of(0.5f)
+        assertThat((window.top + window.bottom) / 2f).isWithin(TOLERANCE).of(0.5f)
+    }
+
+    @Test
+    fun theOpeningWindowIsTheLargestOneTheShapeAllows() {
+        // Nothing bigger fits: growing it on either axis would leave the
+        // picture. This is the property that makes the full-bleed stage
+        // actually full — the library's own default opens inset inside it.
+        val window = CropWindowMath.largestWindow(targetRatio = 0.8f, pictureRatio = 1.5f)
+
+        val grown = CropWindowMath.zoomed(window, inward = false)
+
+        assertThat(grown.width).isWithin(TOLERANCE).of(window.width)
+        assertThat(grown.height).isWithin(TOLERANCE).of(window.height)
+    }
+
+    @Test
+    fun aPictureWithNoUsableRatioYetOpensOnTheWholeOfIt() {
+        // The ratio is unknown until the decode; nothing is cropped away
+        // on a guess.
+        assertThat(CropWindowMath.largestWindow(0.8f, 0f)).isEqualTo(CropFraming.Whole)
+        assertThat(CropWindowMath.largestWindow(0f, 1.5f)).isEqualTo(CropFraming.Whole)
     }
 
     // -- Clamping on the way in --

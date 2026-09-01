@@ -372,7 +372,9 @@ class CograNavGraphTest {
         compose.onNodeWithTag("wizard_switch_words").performClick()
         waitForTag("wizard_body")
         compose.onNodeWithTag("wizard_body").performTextInput("Something new")
-        compose.onNodeWithTag("wizard_header_action").performClick()
+        // Every stage's forward action sits at the bottom, never in the
+        // header — the corner means "leave" for the whole flow.
+        compose.onNodeWithTag("wizard_words_next").performClick()
         waitForTag("wizard_details_next")
         // The details pill is pinned below the scrolling fields, as the
         // canonical board draws it, so there is nothing to scroll to.

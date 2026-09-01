@@ -259,12 +259,26 @@ describe("the picker", () => {
       {
         type: "crop",
         id: "a1",
-        crop: { x: 12, y: -8, zoom: 2, area: { x: 0, y: 100, width: 800, height: 1000 } },
+        crop: {
+          x: 12,
+          y: -8,
+          zoom: 2,
+          area: { x: 0, y: 100, width: 800, height: 1000 },
+          areaPercent: { x: 0, y: 10, width: 100, height: 80 },
+        },
       },
       { type: "shape", shape: "wide" },
     );
     expect(framed.shape).toBe("wide");
-    expect(framed.assets[1]!.crop).toEqual({ x: 12, y: -8, zoom: 2, area: null });
+    // BOTH units of the measured rectangle go: they describe the OLD shape's
+    // framing, and a preview drawing one of them would draw the wrong section.
+    expect(framed.assets[1]!.crop).toEqual({
+      x: 12,
+      y: -8,
+      zoom: 2,
+      area: null,
+      areaPercent: null,
+    });
     expect(framed.assets[0]!.crop.area).toBeNull();
   });
 
@@ -273,7 +287,7 @@ describe("the picker", () => {
     const framed = run(
       emptyWizard(),
       picks(1),
-      { type: "crop", id: "a0", crop: { x: 1, y: 2, zoom: 2, area } },
+      { type: "crop", id: "a0", crop: { x: 1, y: 2, zoom: 2, area, areaPercent: null } },
       { type: "shape", shape: "tall" },
     );
     expect(framed.assets[0]!.crop.area).toEqual(area);
