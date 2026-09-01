@@ -131,17 +131,15 @@ function postTarget(post: PostDetail["post"], postId: string): ReplyTarget {
   };
 }
 
-function prefetchedReplies(comment: ThreadComment): {
-  items: readonly ThreadComment[];
-  endCursor: string | null;
-  hasMore: boolean;
-} {
-  if (!("replies" in comment)) return { items: [], endCursor: null, hasMore: false };
-  return {
-    items: comment.replies.edges.map((edge) => edge.node),
-    endCursor: comment.replies.pageInfo.endCursor ?? null,
-    hasMore: comment.replies.pageInfo.hasNextPage,
-  };
+/**
+ * How many replies a comment's branch holds, across every page (Q49).
+ *
+ * `totalCount` is cursor-independent and counted under the same
+ * `includePending` filter that would serve the edges, so the collapsed line
+ * promises exactly what unfolding delivers.
+ */
+function replyCount(comment: ThreadComment): number {
+  return comment.replies.totalCount;
 }
 
 export function PostView({
@@ -250,8 +248,12 @@ export function PostView({
   };
 
   const onLoadMoreReplies = async (comment: ThreadComment) => {
+    // A branch starts EMPTY now (Q49): the thread read carries counts, not
+    // pages, so the first unfold is the first read of these nodes.
     const seeded = replyThreads[comment.id] ?? {
-      ...prefetchedReplies(comment),
+      items: [],
+      endCursor: null,
+      hasMore: false,
       loading: false,
       failed: false,
     };
@@ -511,9 +513,12 @@ export function PostView({
 
   const renderComment = (comment: ThreadComment, depth: number): React.ReactNode => {
     const thread = replyThreads[comment.id];
-    const prefetch = prefetchedReplies(comment);
-    const replies = thread?.items ?? prefetch.items;
-    const repliesHaveMore = thread?.hasMore ?? prefetch.hasMore;
+    const replies = thread?.items ?? [];
+    const repliesHaveMore = thread?.hasMore ?? false;
+    // Collapsed until a reader asks: the branch is a count on the wire, and
+    // the count is all the line needs to promise.
+    const branch = replyCount(comment);
+    const unopened = thread === undefined && branch > 0;
     const isOwn = viewerId !== null && comment.author?.id === viewerId;
     const isEditing = editing?.id === comment.id;
     const edited = comment.updatedAt > comment.createdAt;
@@ -778,14 +783,29 @@ export function PostView({
             Retry
           </Button>
         )}
-        {repliesHaveMore && thread?.loading !== true && thread?.failed !== true && (
+        {/* The collapsed branch, as CommentCard draws it: a short rule and the
+            count, indented under the comment, so the thread stays scannable and
+            a reader opens only the branches they mean to read. Once it is open
+            the line becomes the ordinary "more" affordance for the next page. */}
+        {unopened && (
+          <button
+            type="button"
+            data-testid={`replies-more-${comment.id}`}
+            onClick={() => void onLoadMoreReplies(comment)}
+            className="cg-state cg-focus cg-hit ml-7 flex items-center gap-3 self-start border-0 bg-transparent py-1 pl-0 pr-2 text-label-medium text-on-surface-variant"
+          >
+            <span aria-hidden="true" className="h-px w-6 bg-outline-variant" />
+            View {branch === 1 ? "1 reply" : `${branch} replies`}
+          </button>
+        )}
+        {!unopened && repliesHaveMore && thread?.loading !== true && thread?.failed !== true && (
           <Button
             testId={`replies-more-${comment.id}`}
             variant="text"
             size="sm"
             onClick={() => void onLoadMoreReplies(comment)}
           >
-            Show replies
+            Show more replies
           </Button>
         )}
       </li>
