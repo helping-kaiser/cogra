@@ -245,16 +245,20 @@ it, where the entry stays put.
 
 Every request is priced in validation, before any resolver runs
 (roadmap.md slice 1.1): query **depth** is capped at 15 levels,
-and total **complexity** at 250 000 fields. A connection field
+and total **complexity** at 70 000 fields. A connection field
 costs its requested (or default) page size times the per-item
 cost, so a nested full-page-connections query prices
 multiplicatively; an author-owned fold list (`topics`,
 `references`) takes no page argument and costs a stated bound of
 50 rows times the per-row cost, and a **gallery** costs its
 parent's write-side cap — ten for a post, four for a comment —
-times the per-item cost. A tripped budget is a message-only
-GraphQL validation error ("Query is nested too deep." / "Query is
-too complex."), with no `extensions.code` — clients treat it as a
+times the per-item cost. A connection's `totalCount` is priced at
+zero — it is one aggregate per connection rather than one per
+edge, and it is resolved only when asked, so a comment thread that
+arrives collapsed behind its count costs the connection's flat fee
+and nothing more. A tripped budget is a message-only GraphQL
+validation error ("Query is nested too deep." / "Query is too
+complex."), with no `extensions.code` — clients treat it as a
 generic transport failure.
 
 **The fold bound is enforced, not assumed.** Fifty is the
@@ -264,30 +268,24 @@ priced for, and the budget is a bound on the server's work rather
 than a hope about it. A gallery's bound is enforced the same way,
 by the cap prepare refuses past.
 
-**The ceilings are measured, not chosen.** Both are derived from
-replaying every committed operation of both clients against the
-schema; the heaviest is the Android post-detail read at 178 347
-complexity and 12 levels, and 250 000 leaves it ~1.4× headroom.
-That headroom is now thin: the stated ratio admits 178 571, so
-the heaviest operation clears it by 224. A selection that
-multiplies across the thread — a comment author's avatar costs
-560, priced eighty times over — no longer fits, and the ceilings
-are owed a deliberate re-derivation rather than another
-selection squeezed under them
-([open-questions.md](../open-questions.md)).
-A standing test replays the whole corpus under both postures and
-fails by operation name, and re-measures it by bisection so a
-document growing *into* the headroom fails before it grows past
-the ceiling. Both postures carry the *same* ceilings: a looser dev
+**The ceilings are measured, not chosen, and re-derived downward
+as the corpus shrinks** — a ceiling admits what the clients
+actually send, never a legacy high-water mark. Both are derived
+from replaying every committed operation of both clients against
+the schema; the heaviest is the Android post-detail read at
+46 427 complexity and 9 levels, and 70 000 leaves it 1.5×
+headroom — the smallest round ten-thousand above the 1.4× floor
+the standing test enforces. A thread arrives at its comments
+collapsed behind `totalCount` rather than carrying a page of
+replies (Q49): the reader unfolds a branch with its own
+`CommentReplies` read, so a post-detail read prices its comments
+once, not its comments times a reply page. A standing test
+replays the whole corpus under both postures and fails by
+operation name, and re-measures it by bisection so a document
+growing *into* the headroom fails before it grows past the
+ceiling. Both postures carry the *same* ceilings: a looser dev
 budget stops being a preview of release, and a document refused
 only in production is the failure this rule exists to prevent.
-
-The multiplicative pricing is a demand bound on what a query may
-ask for, and the server's own work is bounded separately: a
-post-detail read may legitimately demand up to 20 comments × 4
-(itself plus three replies) × 50 standing citations, and the far
-ends of all of them are resolved in batches — one read per node
-class per page, not one per citation.
 
 **Introspection is disabled in release builds** — not secrecy
 (the repo is public; the contract travels as the checked-in
