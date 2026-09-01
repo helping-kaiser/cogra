@@ -974,10 +974,12 @@ async fn a_pending_comment_reads_in_its_thread(pool: PgPool) {
         .gql(
             None,
             r#"query($id: UUID!) { post(id: $id) {
-                 comments(first: 10) { edges { node {
+                 comments(first: 10) { totalCount edges { node {
                    id content { value } author { handle } landing { state epoch }
                  } } }
-                 settled: comments(first: 10, includePending: false) { edges { node { id } } }
+                 settled: comments(first: 10, includePending: false) {
+                   totalCount edges { node { id } }
+                 }
                } }"#,
             json!({ "id": post_id }),
         )
@@ -991,6 +993,7 @@ async fn a_pending_comment_reads_in_its_thread(pool: PgPool) {
     assert_eq!(edges[0]["node"]["author"]["handle"], "commenter");
     assert_eq!(edges[0]["node"]["landing"]["state"], "PENDING");
     assert!(edges[0]["node"]["landing"]["epoch"].is_null());
+    assert_eq!(thread["post"]["comments"]["totalCount"], 1);
     assert_eq!(
         thread["post"]["settled"]["edges"]
             .as_array()
@@ -998,6 +1001,10 @@ async fn a_pending_comment_reads_in_its_thread(pool: PgPool) {
             .len(),
         0,
         "the opt-out reaches the thread read too"
+    );
+    assert_eq!(
+        thread["post"]["settled"]["totalCount"], 0,
+        "the count answers under the same opt-out its edges did"
     );
 }
 
