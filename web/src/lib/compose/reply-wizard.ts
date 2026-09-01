@@ -141,10 +141,11 @@ export function advanceGate(state: ReplyState): Gate {
 }
 
 /**
- * Whether the seal's own button may sign. Identical to the advance gate: the
- * uploads run while the reader is on the seal, so a batch that was still
- * arriving when Next was pressed settles under the gate line rather than
- * bouncing the reader back a stage (ComposeSealUploading).
+ * Whether the seal's own button may sign. STRICTER than the advance gate, and
+ * this is where the difference lives: an attachment names an asset id, so a
+ * comment cannot be prepared while a picture is still on its way. A batch that
+ * was still arriving when Next was pressed settles under the gate line here
+ * rather than bouncing the reader back a stage (ComposeSealUploading).
  */
 export function sealGate(state: ReplyState): Gate {
   return commentGate(state.words, state.media);
