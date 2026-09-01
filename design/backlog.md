@@ -363,3 +363,15 @@ leads that list. Rounds take the rulings they need before drawing
 (topic destination and applicant acting rights are open and block
 early gaps — ask first), design the boards, wire them so the gap
 count falls, and land with check-flows green.
+
+### 24 · Wizard ergonomics catch-up in the apps · *implementation*
+
+Jakob's hand test (2026-09-01) found two wizard faults, ruled and
+fixed on the canonical boards the same day: the crop viewport was
+too small to crop in (now full-bleed — 390 wide on ComposeCrop and
+AvatarCrop), and Next lived top-right on early stages then moved to
+the bottom while the X inherited the corner — an accidental-leave
+trap. Ruling A: **the forward action always lives at the bottom;
+the header carries only the ways out** (`← Title … X`), recorded in
+`WizardHeader.jsx`. Android (and web compose surfaces) must catch
+up to the updated boards.
