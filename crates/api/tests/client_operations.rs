@@ -37,9 +37,10 @@ const TOO_DEEP: &str = "Query is nested too deep.";
 
 /// The page sizes the clients actually send, keyed by the variable name
 /// the document binds them to: `FEED_PAGE_SIZE` / `CONTENT_PAGE_SIZE`
-/// (20), `REPLIES_FIRST` (3), and an unset `limit` — the priciest of the
-/// values either client passes for it, since an absent limit charges the
-/// default page.
+/// (20) and an unset `limit` — the priciest of the values either client
+/// passes for it, since an absent limit charges the default page. A
+/// reply thread arrives as a count rather than a page (Q49), so neither
+/// corpus binds a replies page-size variable any more.
 ///
 /// Only variables a complexity expression reads need a value: the
 /// visitor resolves `first`/`last`/`limit` from the request at
@@ -50,7 +51,6 @@ fn client_variables() -> async_graphql::Variables {
     async_graphql::Variables::from_json(serde_json::json!({
         "first": 20,
         "commentsFirst": 20,
-        "repliesFirst": 3,
         "limit": null,
     }))
 }

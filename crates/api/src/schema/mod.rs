@@ -64,8 +64,8 @@ pub struct ApiContext {
 /// posture stops admitting one, and re-measures the corpus by bisection
 /// so a document growing into the headroom fails before it grows past
 /// the ceiling. The heaviest operation either client sends is the
-/// Android post-detail read at **178 347** complexity and **12** levels
-/// — 224 under the guard's 1.4×-headroom limit of 178 571; the standard
+/// Android post-detail read at **46 427** complexity and **9** levels
+/// — 3 573 under the guard's 1.4×-headroom limit of 50 000; the standard
 /// introspection query is cheap (181) but deep (13).
 #[derive(Debug, Clone, Copy)]
 pub struct QueryBudgets {
@@ -78,12 +78,14 @@ impl QueryBudgets {
     /// The production posture: introspection off — the schema is
     /// already public as the checked-in `schema.graphql`.
     ///
-    /// 250 000 clears the heaviest client operation with ~1.4×
-    /// headroom, and 15 levels clear the deepest with three to spare.
+    /// 70 000 clears the heaviest client operation (46 427) with 1.5×
+    /// headroom — the smallest round ten-thousand above the required
+    /// 1.4× (65 998) — and 15 levels clear the deepest content read (9)
+    /// with six to spare.
     pub fn release() -> Self {
         Self {
             depth: 15,
-            complexity: 250_000,
+            complexity: 70_000,
             introspection_enabled: false,
         }
     }
@@ -96,12 +98,13 @@ impl QueryBudgets {
     /// can then sail through every dev build and be refused only in
     /// production, which is exactly how the release ceiling went a
     /// whole slice without admitting the clients' own reads. Depth 15
-    /// is what introspection needs (13 `ofType` levels); its
-    /// complexity is smaller than any content read's.
+    /// is held above what the content corpus alone would need, because
+    /// introspection needs 13 `ofType` levels; its complexity is
+    /// smaller than any content read's.
     pub fn dev() -> Self {
         Self {
             depth: 15,
-            complexity: 250_000,
+            complexity: 70_000,
             introspection_enabled: true,
         }
     }
