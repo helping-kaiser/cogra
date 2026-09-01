@@ -220,7 +220,6 @@ query PostDetail(
   $id: UUID!
   $commentsFirst: Int!
   $commentsAfter: String
-  $repliesFirst: Int!
   $includePending: Boolean! = true
 ) {
   post(id: $id) {
@@ -477,128 +476,15 @@ query PostDetail(
               }
             }
           }
-          replies(first: $repliesFirst, includePending: $includePending) {
-            edges {
-              node {
-                id
-                content {
-                  value
-                  status
-                }
-                # The gallery, in the author's order, the first entry the cover. A
-                # bounded fold list rather than a connection, so it prices at its
-                # cap. `digest` is deliberately unread: checking the transitive
-                # witness is not what a render does, and the field would cost its
-                # bound on every node.
-                attachments {
-                  id
-                  url
-                  altText
-                  status
-                  options {
-                    aspectRatio
-                  }
-                }
-                # One state for the whole set: sensitivity veils the body as one.
-                attachmentsStatus
-                author {
-                  id
-                  handle
-                  displayName {
-                    value
-                  }
-                  avatar {
-                    url
-                  }
-                }
-                createdAt
-                updatedAt
-                landing {
-                  state
-                }
-                moderationStatus
-                license {
-                  attribution
-                  provenance
-                }
-                topics(includePending: $includePending) {
-                  hashtag {
-                    id
-                    name {
-                      value
-                      status
-                    }
-                  }
-                  relevance
-                  confidence
-                  pending
-                }
-                # The reference row (D12, D16): the author's own current
-                # citations only — the content-intrinsic channel, the one that
-                # needs no forward-path weight. The target is typed so a chip
-                # renders without a second read; it is null when CoGra carries
-                # no display row for what the citation names.
-                references(includePending: $includePending) {
-                  targetId
-                  relevance
-                  support
-                  withdrawalCost
-                  pending
-                  target {
-                    __typename
-                    ... on User {
-                      id
-                      handle
-                      displayName {
-                        value
-                      }
-                    }
-                    ... on Post {
-                      id
-                      title {
-                        value
-                      }
-                      content {
-                        value
-                      }
-                      author {
-                        handle
-                      }
-                    }
-                    # A referenced comment opens the post carrying it —
-                    # comment permalinks are a parked item — so the selection
-                    # walks up far enough to find one.
-                    ... on Comment {
-                      id
-                      content {
-                        value
-                      }
-                      author {
-                        handle
-                      }
-                      target {
-                        __typename
-                        ... on Post {
-                          id
-                        }
-                        ... on Comment {
-                          target {
-                            __typename
-                            ... on Post {
-                              id
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-            pageInfo {
-              hasNextPage
-              endCursor
-            }
+          # THE BRANCH ARRIVES AS A COUNT, NOT AS A PAGE (Q49). A thread read
+          # used to carry a page of replies inside every comment, which priced
+          # eighty-odd nodes to draw a line reading "View 2 replies".
+          # `first: 0` asks for no edges at all and `totalCount` is one
+          # aggregate the budget charges nothing for, so a collapsed thread
+          # costs its comments and nothing more. Unfolding a branch is its own
+          # read, made only by the reader who asked for it.
+          replies(first: 0, includePending: $includePending) {
+            totalCount
           }
         }
       }
@@ -610,13 +496,13 @@ query PostDetail(
   }
 }
 
-# The expand read: a further page of one comment's direct replies,
-# each carrying its own first reply page so nesting can continue.
+# The expand read: a further page of one comment's direct replies, each
+# carrying only the COUNT of its own branch — the same rule as the thread
+# read, one level down, so unfolding cannot re-create the cost Q49 removed.
 query CommentReplies(
   $id: UUID!
   $first: Int!
   $after: String
-  $repliesFirst: Int!
   $includePending: Boolean! = true
 ) {
   comment(id: $id) {
@@ -737,128 +623,10 @@ query CommentReplies(
               }
             }
           }
-          replies(first: $repliesFirst, includePending: $includePending) {
-            edges {
-              node {
-                id
-                content {
-                  value
-                  status
-                }
-                # The gallery, in the author's order, the first entry the cover. A
-                # bounded fold list rather than a connection, so it prices at its
-                # cap. `digest` is deliberately unread: checking the transitive
-                # witness is not what a render does, and the field would cost its
-                # bound on every node.
-                attachments {
-                  id
-                  url
-                  altText
-                  status
-                  options {
-                    aspectRatio
-                  }
-                }
-                # One state for the whole set: sensitivity veils the body as one.
-                attachmentsStatus
-                author {
-                  id
-                  handle
-                  displayName {
-                    value
-                  }
-                  avatar {
-                    url
-                  }
-                }
-                createdAt
-                updatedAt
-                landing {
-                  state
-                }
-                moderationStatus
-                license {
-                  attribution
-                  provenance
-                }
-                topics(includePending: $includePending) {
-                  hashtag {
-                    id
-                    name {
-                      value
-                      status
-                    }
-                  }
-                  relevance
-                  confidence
-                  pending
-                }
-                # The reference row (D12, D16): the author's own current
-                # citations only — the content-intrinsic channel, the one that
-                # needs no forward-path weight. The target is typed so a chip
-                # renders without a second read; it is null when CoGra carries
-                # no display row for what the citation names.
-                references(includePending: $includePending) {
-                  targetId
-                  relevance
-                  support
-                  withdrawalCost
-                  pending
-                  target {
-                    __typename
-                    ... on User {
-                      id
-                      handle
-                      displayName {
-                        value
-                      }
-                    }
-                    ... on Post {
-                      id
-                      title {
-                        value
-                      }
-                      content {
-                        value
-                      }
-                      author {
-                        handle
-                      }
-                    }
-                    # A referenced comment opens the post carrying it —
-                    # comment permalinks are a parked item — so the selection
-                    # walks up far enough to find one.
-                    ... on Comment {
-                      id
-                      content {
-                        value
-                      }
-                      author {
-                        handle
-                      }
-                      target {
-                        __typename
-                        ... on Post {
-                          id
-                        }
-                        ... on Comment {
-                          target {
-                            __typename
-                            ... on Post {
-                              id
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-            pageInfo {
-              hasNextPage
-              endCursor
-            }
+          # The same rule as the thread read, one level down: an unfolded
+          # branch carries its own children as a count, never as a page.
+          replies(first: 0, includePending: $includePending) {
+            totalCount
           }
         }
       }
