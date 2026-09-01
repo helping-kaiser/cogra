@@ -133,7 +133,7 @@ export function ReplySealStep({
       <div className="flex flex-col">
         <TermRow
           label="Toward what you answer"
-          value={<StanceValue pair={state.stance} />}
+          value={<StanceValue pair={state.stance} testId="reply-stance-value" />}
           action="Adjust"
           testId="reply-open-stance"
           onAction={() => onSheet("stance")}
@@ -243,7 +243,7 @@ export function ReplySealStep({
             <span className="text-label-small text-on-surface-variant">
               Toward &ldquo;{state.target.label}&rdquo;
             </span>
-            <StanceValue pair={stagedStance} large />
+            <StanceValue pair={stagedStance} large testId="reply-stance-staged" />
           </div>
           <StancePad
             value={stagedStance}
@@ -393,10 +393,18 @@ function TermRow({
 }
 
 /** The face carries the feel and the pair carries the fact (design.md §8.3). */
-function StanceValue({ pair, large = false }: { pair: StancePair; large?: boolean }) {
+function StanceValue({
+  pair,
+  large = false,
+  testId,
+}: {
+  pair: StancePair;
+  large?: boolean;
+  testId: string;
+}) {
   const anchor = nearestAnchor(pair);
   return (
-    <span className="inline-flex items-baseline gap-1" data-testid="reply-stance-value">
+    <span className="inline-flex items-baseline gap-1" data-testid={testId}>
       <span aria-hidden="true" className={large ? "text-headline-small" : "text-body-medium"}>
         {anchor.emoji}
       </span>
