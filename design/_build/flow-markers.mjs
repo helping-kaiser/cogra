@@ -1,6 +1,6 @@
 // Flow-number stamps for the JSX-rendered boards (backlog item 22): after a
 // screen renders, each marker locates an element in the markup and stamps
-// data-flow="n" onto its opening tag — the number flows.json's edges reference
+// data-flow="n" onto its opening tag — the number graph.json's edges reference
 // as `via`, drawn as a badge by the shell. Annotation stays a canvas concern:
 // the design-system components never carry flow ids.
 //
@@ -93,7 +93,7 @@ export const FLOW_MARKERS = {
 };
 
 // The Money & Wallet page. PageHeader/WizardHeader backs render as <a href>;
-// nav ports the shared helper (the active tab's edge is `self` in flows.json).
+// nav ports the shared helper (the active tab's edge is `self` in graph.json).
 Object.assign(FLOW_MARKERS, {
   Wallet: [
     { n: 1, find: 'aria-label="What is CGT?"', tag: "button" },
@@ -478,6 +478,133 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Back</button>", tag: "button" },
   ],
 });
+
+// The Profile page's boards (profile round, item 23). The own-profile boards
+// share the band cluster and the header anatomy; the chats marker for these
+// boards lives here (not in BAND_CHATS below) so each list reads complete.
+const ownProfile = () => [
+  { n: 1, find: 'aria-label="Chats"', tag: "button" },
+  { n: 2, find: 'aria-label="More — share your profile"', tag: "button" },
+  { n: 3, find: 'aria-label="Settings"', tag: "button" },
+  { n: 4, find: 'aria-label="Change your picture"', tag: "button" },
+  { n: 5, find: 'aria-label="Your stances, both directions"', tag: "button" },
+  { n: 6, find: ">Edit profile</button>", tag: "button" },
+  { n: 7, find: ">Invites</button>", tag: "button" },
+  { n: 8, find: 'aria-label="Posts"', tag: "button" },
+  { n: 8, find: 'aria-label="Comments"', tag: "button" },
+  { n: 8, find: 'aria-label="Everything"', tag: "button" },
+];
+Object.assign(FLOW_MARKERS, {
+  Profile: [
+    ...ownProfile(),
+    { n: 9, find: "Salt maps of the coast road — rubbings", tag: "button" },
+    { n: 9, find: "The third headland light is real", tag: "button" },
+    { n: 9, find: "Three weekends of walking the same stretch", tag: "button" },
+    ...nav(10),
+  ],
+  ProfileApplicant: [
+    ...ownProfile(),
+    { n: 9, find: "First light over the flats", tag: "button" },
+    ...nav(10),
+  ],
+  ProfileOther: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
+    { n: 3, find: 'aria-label="Stances on and by @ada"', tag: "button" },
+    { n: 4, find: 'aria-label="Take a stance on @ada"', tag: "button" },
+    { n: 4, find: ">Choose your stance</button>", tag: "button" },
+    { n: 5, find: ">Message</button>", tag: "button" },
+    { n: 6, find: 'aria-label="Posts"', tag: "button" },
+    { n: 6, find: 'aria-label="Comments"', tag: "button" },
+    { n: 6, find: 'aria-label="Everything"', tag: "button" },
+    { n: 7, find: "The long way home — the light does something", tag: "button" },
+    { n: 7, find: "The glovebox camera earns its keep", tag: "button" },
+    { n: 7, find: "Took the coast road instead of the tunnel", tag: "button" },
+    ...nav(8),
+  ],
+  ProfileStances: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: ">On them</button>", tag: "button" },
+    { n: 3, find: ">They&#x27;ve taken</button>", tag: "button" },
+    { n: 4, find: ">Tobias Lindqvist</span>", tag: "button" },
+    { n: 4, find: ">Sol Ferreira</span>", tag: "button" },
+    { n: 4, find: ">Mira Voss</span>", tag: "button" },
+    { n: 4, find: ">Juno Baptiste</span>", tag: "button" },
+    ...nav(6),
+  ],
+  ProfilePosts: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
+    { n: 3, find: 'aria-label="Stances on and by @ada"', tag: "button" },
+    { n: 4, find: 'aria-label="Take a stance on @ada"', tag: "button" },
+    { n: 4, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 5, find: ">Message</button>", tag: "button" },
+    { n: 6, find: 'aria-label="Posts"', tag: "button" },
+    { n: 6, find: 'aria-label="Comments"', tag: "button" },
+    { n: 6, find: 'aria-label="Everything"', tag: "button" },
+    { n: 7, find: '<a href="/u/', tag: "a", all: true },
+    { n: 8, find: 'aria-label="More on this post"', tag: "button", all: true },
+    { n: 9, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 10, find: ">More</button>", tag: "button", all: true },
+    { n: 11, find: '<a href="/t/', tag: "a", all: true },
+    { n: 12, find: 'aria-label="Your stance on this post', tag: "button", all: true },
+    { n: 12, find: 'aria-label="Take a stance on this post"', tag: "button", all: true },
+    { n: 13, find: ">Post Score</span>", tag: "button", all: true },
+    { n: 14, find: ">· 1 reference<", tag: "span" },
+    { n: 15, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 15, find: 'aria-label="1 comment"', tag: "button" },
+    ...nav(16),
+  ],
+  ProfileComments: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
+    { n: 3, find: 'aria-label="Stances on and by @ada"', tag: "button" },
+    { n: 4, find: 'aria-label="Take a stance on @ada"', tag: "button" },
+    { n: 5, find: ">Message</button>", tag: "button" },
+    { n: 6, find: 'aria-label="Posts"', tag: "button" },
+    { n: 6, find: 'aria-label="Comments"', tag: "button" },
+    { n: 6, find: 'aria-label="Everything"', tag: "button" },
+    { n: 7, find: '<a href="/u/', tag: "a", all: true },
+    { n: 8, find: 'aria-label="More on this comment"', tag: "button", all: true },
+    { n: 9, find: 'aria-label="Your stance on this comment', tag: "button", all: true },
+    { n: 9, find: 'aria-label="Take a stance on this comment"', tag: "button", all: true },
+    { n: 9, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 10, find: ">Reply</button>", tag: "button", all: true },
+    { n: 11, find: "View 2 replies", tag: "button" },
+    { n: 17, find: ">On “", tag: "button", all: true },
+    ...nav(12),
+  ],
+  ProfileEdit: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: ">Change picture</button>", tag: "button" },
+    { n: 3, find: 'value="Sol Ferreira"', tag: "input" },
+    { n: 4, find: "whatever the wind allows.</textarea>", tag: "textarea" },
+    { n: 5, find: 'value="solferreira.art"', tag: "input" },
+    { n: 6, find: ">Save</button>", tag: "button" },
+  ],
+  ProfileEditSeal: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave"', tag: "button" },
+    { n: 3, find: 'aria-label="Changing your profile"', tag: "button" },
+    { n: 4, find: ">Sign the change</button>", tag: "button" },
+    { n: 5, find: ">Back</button>", tag: "button" },
+  ],
+});
+
+/* The band's Chats affordance (jakob 2026-09-01): CograBand carries it on
+   every tab root, so every wired band board gets the marker in one sweep —
+   the number is each board's next free one, the edge points at the chat
+   surface's gap (guest boards: the guest gate's). */
+const BAND_CHATS = {
+  Main: 18, FeedBare: 18, ApplicantFeed: 18, ApplicantWaiting: 15,
+  VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 9,
+  Feed: 16, FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedGallery: 15,
+  Wallet: 14, WalletEmpty: 9, WalletSetup: 8, WalletKeyAbsent: 10,
+  WalletGuest: 8, WalletApplicant: 6,
+};
+for (const [board, n] of Object.entries(BAND_CHATS)) {
+  (FLOW_MARKERS[board] ??= []).push({ n, find: 'aria-label="Chats"', tag: "button" });
+}
 
 export function applyFlowMarkers(name, html) {
   const markers = FLOW_MARKERS[name];

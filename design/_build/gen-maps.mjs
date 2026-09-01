@@ -1,5 +1,5 @@
 // Generates the flow-map boards (backlog item 22): one Map<Page>.dc.html per
-// canvas page plus MapOverview.dc.html, drawn from flows.json + canvas.json —
+// canvas page plus MapOverview.dc.html, drawn from graph.json + canvas.json —
 // never by hand, so never lying. Each page's map mirrors that page's grid:
 // one card per board listing every numbered edge and its outcomes (boards,
 // terminals, GAPs), with arrows for the same-page board-to-board edges. The
@@ -16,7 +16,7 @@ const t0 = Date.now();
 const here = dirname(fileURLToPath(import.meta.url));
 const dir = resolve(here, "..", "designs/canonical");
 const canvas = JSON.parse(readFileSync(join(dir, "canvas.json"), "utf8"));
-const flows = JSON.parse(readFileSync(join(dir, "flows.json"), "utf8"));
+const graph = JSON.parse(readFileSync(join(dir, "graph.json"), "utf8"));
 
 const stem = (f) => f.replace(/\.dc\.html$/, "");
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -29,12 +29,12 @@ for (const a of canvas.artboards) {
   boardTitle.set(stem(a.file), a.title ?? stem(a.file));
 }
 const edgesFrom = new Map();
-for (const e of flows.edges) {
+for (const e of graph.edges) {
   if (!edgesFrom.has(e.from)) edgesFrom.set(e.from, []);
   edgesFrom.get(e.from).push(e);
 }
 const inbound = new Map();
-for (const e of flows.edges) for (const o of e.to) if (o.board) inbound.set(o.board, (inbound.get(o.board) ?? 0) + 1);
+for (const e of graph.edges) for (const o of e.to) if (o.board) inbound.set(o.board, (inbound.get(o.board) ?? 0) + 1);
 
 const CARD_W = 250;
 const COL_PITCH = 290;
@@ -57,16 +57,16 @@ const edgeLine = (e, pageId) => `${e.via} · ${e.label} → ${e.to.map((o) => ou
 
 function pageMap(pageId) {
   const boards = canvas.artboards.filter((a) => a.page === pageId && !/^Map[A-Z]/.test(stem(a.file)));
-  const wired = (flows.wired ?? []).includes(pageId);
+  const wired = (graph.wired ?? []).includes(pageId);
   const cards = boards.map((a) => {
     const name = stem(a.file);
     const edges = (edgesFrom.get(name) ?? []).sort((p, q) => p.via - q.via);
     const lines = edges.map((e) => edgeLine(e, pageId));
-    const entry = (flows.entries ?? {})[name];
-    const kind = (flows.kinds ?? {})[name] ?? "screen";
+    const entry = (graph.entries ?? {})[name];
+    const boardKind = (graph.boardKinds ?? {})[name] ?? "screen";
     const h =
-      34 + (entry ? 26 : 0) + (kind === "reference" ? 22 : 0) + lines.reduce((s, l) => s + lineCount(l) * 13 + 4, 0) + (lines.length ? 10 : wired ? 0 : 18) + 12;
-    return { name, title: boardTitle.get(name), col: Math.round(a.x / 480), row: Math.round(a.y / 1060), edges, lines, entry, kind, h };
+      34 + (entry ? 26 : 0) + (boardKind === "reference" ? 22 : 0) + lines.reduce((s, l) => s + lineCount(l) * 13 + 4, 0) + (lines.length ? 10 : wired ? 0 : 18) + 12;
+    return { name, title: boardTitle.get(name), col: Math.round(a.x / 480), row: Math.round(a.y / 1060), edges, lines, entry, boardKind, h };
   });
 
   const rows = Math.max(...cards.map((c) => c.row)) + 1;
@@ -101,7 +101,7 @@ function pageMap(pageId) {
     .map((c) => {
       const badges = [
         c.entry ? `<div style="margin-top:4px;font-size:9px;line-height:12px;color:var(--on-tertiary-container);background:var(--tertiary-container,var(--surface-container-highest));border-radius:4px;padding:2px 6px;">ENTRY · ${esc(c.entry)}</div>` : "",
-        c.kind === "reference" ? `<div style="margin-top:4px;font-size:9px;line-height:12px;color:var(--on-surface-variant);">reference board — vocabulary, not a destination</div>` : "",
+        c.boardKind === "reference" ? `<div style="margin-top:4px;font-size:9px;line-height:12px;color:var(--on-surface-variant);">reference board — vocabulary, not a destination</div>` : "",
       ].join("");
       const body = c.lines.length
         ? c.edges
@@ -110,7 +110,7 @@ function pageMap(pageId) {
                 `<div style="margin-top:4px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">${e.to.some((o) => o.gap !== undefined) ? `<span style="color:var(--error);font-weight:700;">${e.via}</span>` : `<span style="color:var(--primary);font-weight:700;">${e.via}</span>`} ${esc(e.label)} → ${e.to.map((o) => (o.gap !== undefined ? `<span style="color:var(--error);">${esc(outcomeText(o, pageId))}</span>` : esc(outcomeText(o, pageId)))).join('<span style="opacity:0.5;"> | </span>')}</div>`
             )
             .join("")
-        : c.kind === "reference" || wired
+        : c.boardKind === "reference" || wired
           ? ""
           : `<div style="margin-top:6px;font-size:10px;line-height:13px;color:var(--on-surface-variant);font-style:italic;">not yet wired</div>`;
       const inb = inbound.get(c.name);
@@ -122,7 +122,7 @@ ${badges}${body}</div>`;
 
   const markup = `<div style="padding:16px 20px 0 20px;">
 <div style="font-size:16px;font-weight:700;">${esc(pageName(pageId))} · flow map</div>
-<div style="margin-top:2px;font-size:10px;color:var(--on-surface-variant);">Generated from flows.json — do not edit. Numbers are the boards' orange badges; GAP marks a design still owed; ◦ is a terminal (back / self / OS); ◂ n counts inbound edges.</div>
+<div style="margin-top:2px;font-size:10px;color:var(--on-surface-variant);">Generated from graph.json — do not edit. Numbers are the boards' orange badges; GAP marks a design still owed; ◦ is a terminal (back / self / OS); ◂ n counts inbound edges.</div>
 </div>
 <div style="position:relative;flex:1;">
 <svg style="position:absolute;inset:0;" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><defs><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--primary)" opacity="0.6"/></marker></defs>
@@ -135,7 +135,7 @@ ${cardHtml}
 
 function overviewMap() {
   const cross = new Map();
-  for (const e of flows.edges)
+  for (const e of graph.edges)
     for (const o of e.to) {
       if (!o.board) continue;
       const fromPage = boardPage.get(e.from);
@@ -145,14 +145,14 @@ function overviewMap() {
       cross.set(key, (cross.get(key) ?? 0) + 1);
     }
   const gapCount = (pid) =>
-    flows.edges.filter((e) => boardPage.get(e.from) === pid).flatMap((e) => e.to).filter((o) => o.gap !== undefined).length;
+    graph.edges.filter((e) => boardPage.get(e.from) === pid).flatMap((e) => e.to).filter((o) => o.gap !== undefined).length;
 
   const pages = canvas.pages.filter((p) => p.id !== "overview");
   const cards = pages.map((p, i) => {
     const boards = canvas.artboards.filter((a) => a.page === p.id && !/^Map[A-Z]/.test(stem(a.file)));
-    const edges = flows.edges.filter((e) => boardPage.get(e.from) === p.id);
+    const edges = graph.edges.filter((e) => boardPage.get(e.from) === p.id);
     const out = [...cross.entries()].filter(([k]) => k.startsWith(`${p.id}→`)).map(([k, n]) => `→ ${pageName(k.split("→")[1])} × ${n}`);
-    const wired = (flows.wired ?? []).includes(p.id);
+    const wired = (graph.wired ?? []).includes(p.id);
     return { p, i, boards: boards.length, edges: edges.length, gaps: gapCount(p.id), out, wired };
   });
   const cardHtml = cards
@@ -168,7 +168,7 @@ ${c.out.map((l) => `<div style="margin-top:3px;font-size:10px;line-height:13px;c
     .join("\n");
   const markup = `<div style="padding:16px 20px 0 20px;">
 <div style="font-size:16px;font-weight:700;">CoGra · flow overview</div>
-<div style="margin-top:2px;font-size:10px;color:var(--on-surface-variant);">Generated from flows.json — do not edit. Each page's own map sits left of its boards; wired pages enforce completeness in the build.</div>
+<div style="margin-top:2px;font-size:10px;color:var(--on-surface-variant);">Generated from graph.json — do not edit. Each page's own map sits left of its boards; wired pages enforce completeness in the build.</div>
 </div>
 <div style="position:relative;flex:1;">${cardHtml}</div>`;
   return { markup, width: 1320, height: 80 + Math.ceil(cards.length / 4) * 210 + 20 };

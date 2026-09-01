@@ -386,8 +386,10 @@ fills is the most common way an icon set starts to look accidental.
 | `volume_up` / `volume_off` | a video's sound toggle |
 | `graph_3` | the Post Score |
 | `check` | the checkbox's mark — the system's own addition (§13's entry screens), not yet in the product's set |
+| `photo_camera` | the avatar's change badge on one's own profile — the system's own addition (profile round), not yet in the product's set |
+| `history` | the chronicle's Everything tab — the system's own addition (profile round), not yet in the product's set |
 
-**All fifteen are inlined** — path data in `Icon`, reference copies in
+**All of them are inlined** — path data in `Icon`, reference copies in
 `assets/icons/`. All but `graph_3` are the classic **filled** 24px
 variant, verbatim from `material-design-icons`, which is the exact set
 and variant the product itself inlines, so web and Android match. **The hosted-font
@@ -506,12 +508,12 @@ Called for by `design.md` §6/§9 and absent from the current product
 code, so absent here too. They are the honest gaps, not omissions to
 paper over:
 
-- **Profile header**, **Topic chip**, **Collective** actor variant.
+- **Topic chip**, **Collective** actor variant.
 - **Removed placeholder** and **Sensitive veil** (§9) — specified,
   unimplemented.
 - **Search** and **Wallet** surfaces — their bar slots exist in
   `BottomNav` (§7.1), the screens behind them do not.
-- **Bottom sheets**, and the connection count on the profile header.
+- **Bottom sheets**.
 
 ### Intentional additions
 
@@ -551,12 +553,17 @@ paper over:
   switching every kind off is allowed: the feed says what is off rather
   than the chip refusing the tap. No glyph on the trigger: there is no
   filter icon in the inlined set, and an icon could not say "newest".
-- `ProfileHeader` — §6 specifies it and the product never built it. Its two
-  counts are the design work: **"Stances on them"** and **"Stances they've
-  taken"**, because the thing being counted is what the repo calls a
-  connection and that word is banned on screen (§3) — and one merged
-  "followers" figure would describe a different product. No cover image: the
-  largest thing on a person's screen should not be decoration.
+- `ProfileHeader` — §6 specifies it, the product never built it, and the
+  profile round (2026-09-01) made it canonical: the compact avatar-left
+  shape with name and figures beside it, and the figures are the design
+  work — **Posts**, **"Stances on them"**, **"Stances they've taken"** —
+  because the thing being counted is what the repo calls a connection and
+  that word is banned on screen (§3); one merged "followers" figure would
+  describe a different product. The figures are one tap target toward the
+  stances page. On another's profile the stance wears the wide anchor with
+  Message beside it; one's own avatar wears the change badge (the
+  standalone crop-and-seal shortcut). No cover image: the largest thing on
+  a person's screen should not be decoration.
 - **Media avatars** — `MonogramAvatar` and `ActorChip` take a photo at both
   sizes. The monogram stays the designed fallback rather than a gap waiting
   for one, and a broken image falls back to it silently.
@@ -1551,20 +1558,37 @@ entry first". What stands:
   Compose · Comments · Feed & Search · Money & Wallet · Media ·
   Patterns & reference. Every board and note names its page; each
   page's rows restart at y 0; the canvas opens on the Overview.
-- **`flows.json` is the flow law** (`designs/canonical/flows.json`).
+- **`graph.json` is the screen graph** (`designs/canonical/graph.json`).
   Every interactive element on a board of a **wired** page carries
   `data-flow="n"` (1..n per board, drawn as a small orange badge by
-  the shell); each number has exactly one edge `{from, via, label,
-  to}`, and `to` lists every outcome as one of four kinds: a
+  the shell); each number has exactly one edge `{from, via, kind,
+  label, to}`, and `to` lists every outcome as one of four shapes: a
   **board**, a shared **pattern board**, a declared **terminal**
   (`back` / `self` / `os`), or an explicit **gap** — a design still
   owed, greppable, listed by the checker, drawn red on the maps.
   `entries` records the non-tap ways onto a screen (app open, a mail
   link, time passing); a screen on a wired page must be an entry or
-  an edge target. `kinds` marks reference boards (anatomy plates,
+  an edge target. `boardKinds` marks reference boards (anatomy plates,
   the maps themselves) that are vocabulary, not destinations;
   `scanExempt` names boards whose semantic elements are inactive in
   the drawn state (the pad board under its scrim).
+- **Every edge declares its `kind`** — what the control *does*, not
+  where it lands. Five, and never a default: **`advance`** is
+  forward progress toward a journey's conclusion (Next, Sign, Save,
+  a compose step, drilling into the target you came to act on);
+  **`cancel`** abandons staged work (a wizard's X, Cancel, Discard,
+  and a back arrow that leaves the flow rather than stepping one
+  stage up inside it); **`back`** returns without abandoning
+  anything (that back arrow one stage up, a sheet's dismiss, closing
+  a read drill-in); **`nav`** is a lateral hop between top-level
+  surfaces (the five nav slots, the band's chats); **`detour`**
+  opens a side surface that leaves the journey untouched (help
+  dialogs, read-only menus, the signed-actions list, a caption
+  unfolding, a gallery pager). The flow engine path-searches over
+  `advance` edges alone, which is why a seal's cancel-X can never be
+  one: a flow satisfied through an abandonment is a lie.
+  `check-flows.mjs` fails on any edge carrying no kind or an unknown
+  one, and prints the census beside the summary.
 - **Numbers are stamped by the build, never by components.** JSX
   screens get them from `_build/flow-markers.mjs` — markup anchors
   applied after render, throwing on drift — so the design system
@@ -1585,19 +1609,35 @@ entry first". What stands:
   `node bundle.mjs && node render-screens.mjs && node gen-maps.mjs
   && node check-flows.mjs`.
 - **Every page is wired** (rounds 1–6, 2026-08-31: Entry, then Money
-  & Wallet, Feed & Search, Comments, Compose, Media + Patterns —
-  573 edges over all 81 boards, no board unreached, no interactable
-  unedged). The 125 gaps are the visible to-do: the guest-gate and
-  network-error pattern boards, the reader's post and comment menus,
-  the topic picker, field/mismatch error states, the key-absent
-  acting paths, the settlement/tip/rail record views the wallet's
-  traceability promise owes, the standalone post detail, the item /
-  chat / offer surfaces, the topic-destination and applicant-rights
-  rulings, the profile screen, the Sky (item 16), and item 13's
-  Post Score drill-down. Cross-flow reuse is wired as edges into the
-  master boards (the describe sheet, the gated seal, the license /
-  sensitive sheets, the key-absent seal, the stance pad) rather than
-  duplicated boards.
+  & Wallet, Feed & Search, Comments, Compose, Media + Patterns; the
+  Profile page joined 2026-09-01 — 689 edges over all 89 boards, no
+  board unreached, no interactable unedged). The 132 gaps are the
+  visible to-do: the guest-gate and network-error pattern boards,
+  the reader's post / comment / profile menus, the topic page (ruled
+  — a search subpage) and the topic picker, field/mismatch error
+  states, the key-absent acting paths, the applicant's once-each
+  acting boards (ruled), the settlement/tip/rail record views the
+  wallet's traceability promise owes, the standalone post detail,
+  the settings and invites screens, the chat surface (its band entry
+  now on every tab root), the item / offer surfaces, the Sky
+  (item 16), and item 13's Post Score drill-down. Cross-flow reuse
+  is wired as edges into the master boards (the describe sheet, the
+  gated seal, the license / sensitive sheets, the key-absent seal,
+  the stance pad) rather than duplicated boards.
+- **The profile round (2026-09-01, item 23 round 1)** drew the
+  surface slice 2.1 shipped undesigned — eight boards: your own,
+  someone else's, applicant days, the stances page, the posts and
+  comments views, the edit flow and its seal. Its rulings: the
+  compact avatar-left header with the tappable figures row; the
+  stances page shows each record's own value (`StanceValue`,
+  read-only — acting means opening the profile); the wide stance
+  anchor pairs with Message; chats ride the band on every tab root;
+  the avatar changes two ways (the badge's standalone crop-and-seal,
+  or through the edit screen where ONE seal covers picture and
+  fields); the chronicle is wallet-style containers with act discs;
+  a comment out of its thread leads with its target pointer; an
+  applicant stages each kind of act once, and non-actionable taps
+  answer with a snackbar, never a gate screen.
 
 ## 14. Index
 
@@ -1616,7 +1656,7 @@ entry first". What stands:
   `gen-maps.mjs`, `check-flows.mjs` — the canonical-canvas pipeline
   (§13, *Canvas pages and flows*): render the screens, stamp the flow
   numbers, generate the maps, gate the result. Run all four after any
-  screen, component, or flows.json edit.
+  screen, component, or graph.json edit.
 
 **`tokens/`** — `fonts.css`, `colors.css`, `typography.css`,
 `shape.css`, `spacing.css`, `motion.css`, `transitions.css`,

@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"MediaAttachment","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/proposed/MediaViewer.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"5b1030f3b363","components/compose/DescribeSheet.jsx":"8d55844de766","components/compose/MediaThumb.jsx":"6882a1485491","components/compose/PickedRow.jsx":"a5a166cd586f","components/compose/PickedSheet.jsx":"952252dd4d23","components/compose/UploadNotice.jsx":"23a391218ac1","components/compose/WizardHeader.jsx":"5359fe98768f","components/content/CommentCard.jsx":"fb7ee820bf9d","components/content/OverflowMenu.jsx":"5a5ff330770c","components/content/PostCard.jsx":"0c4b5b373a10","components/content/ReferenceRow.jsx":"bad43ae893d4","components/content/TopicsLine.jsx":"b3bfa12c4d86","components/core/BottomSheet.jsx":"04aa46ec17d9","components/core/Button.jsx":"ff5a90231bbe","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"48c703bd16e0","components/core/HelpDot.jsx":"eabf92544b27","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c3fc1cd30267","components/forms/PasswordField.jsx":"38bf37cacbb0","components/forms/RecoveryCode.jsx":"b89705800497","components/forms/SearchBar.jsx":"2ed2d91945fc","components/forms/TextField.jsx":"97d5e4b1536d","components/honesty/PendingMarker.jsx":"28eaaf4ffa77","components/honesty/SensitiveVeil.jsx":"92e923dee41b","components/honesty/TransportError.jsx":"2f66269a8f3c","components/navigation/BorrowedViewBand.jsx":"66c07c53862e","components/navigation/BottomNav.jsx":"53a749d4ddf1","components/navigation/CograBand.jsx":"1d092a6d8618","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"8fedb2f39e19","components/navigation/Icon.jsx":"35ad4f2eb7c4","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"63d3f3e7404c","components/people/ActorChip.jsx":"460b9feb16ca","components/people/ProfileHeader.jsx":"f6159ea12140","components/proposed/ExplainableNumber.jsx":"b29af54b996a","components/proposed/MediaAttachment.jsx":"94880620d847","components/proposed/MediaViewer.jsx":"3a09af18787e","components/stance/SeveranceConfirm.jsx":"1a0dbafb9e95","components/stance/StanceAlternates.jsx":"0b50770f4aa0","components/stance/StanceCoachMark.jsx":"4d4cfdcab8db","components/stance/StanceControl.jsx":"2b4d515f933a","components/stance/StancePad.jsx":"f6eda3aa07e3","components/stance/StanceReadout.jsx":"004726c35cdd","components/stance/StanceSlider.jsx":"325286a6b95d","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"964687345182","components/wallet/LedgerRow.jsx":"96a7cfea6280","components/wallet/PayoutAddress.jsx":"d7783723d684","components/wallet/WalletBalance.jsx":"3ff65daba8d2","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"44ff990afba5","designs/core-loop/data.jsx":"1a69aa16a143"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/proposed/MediaAttachment.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"MediaAttachment","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/proposed/MediaViewer.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"5b1030f3b363","components/compose/DescribeSheet.jsx":"8d55844de766","components/compose/MediaThumb.jsx":"6882a1485491","components/compose/PickedRow.jsx":"a5a166cd586f","components/compose/PickedSheet.jsx":"952252dd4d23","components/compose/UploadNotice.jsx":"23a391218ac1","components/compose/WizardHeader.jsx":"5359fe98768f","components/content/CommentCard.jsx":"3ac3637a90af","components/content/OverflowMenu.jsx":"5a5ff330770c","components/content/PostCard.jsx":"0c4b5b373a10","components/content/ReferenceRow.jsx":"bad43ae893d4","components/content/TopicsLine.jsx":"b3bfa12c4d86","components/core/BottomSheet.jsx":"04aa46ec17d9","components/core/Button.jsx":"ff5a90231bbe","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"48c703bd16e0","components/core/HelpDot.jsx":"eabf92544b27","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c3fc1cd30267","components/forms/PasswordField.jsx":"38bf37cacbb0","components/forms/RecoveryCode.jsx":"b89705800497","components/forms/SearchBar.jsx":"2ed2d91945fc","components/forms/TextField.jsx":"97d5e4b1536d","components/honesty/PendingMarker.jsx":"28eaaf4ffa77","components/honesty/SensitiveVeil.jsx":"92e923dee41b","components/honesty/TransportError.jsx":"2f66269a8f3c","components/navigation/BorrowedViewBand.jsx":"66c07c53862e","components/navigation/BottomNav.jsx":"53a749d4ddf1","components/navigation/CograBand.jsx":"177723728533","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"8fedb2f39e19","components/navigation/Icon.jsx":"e8340e7f5f3e","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"63d3f3e7404c","components/people/ActorChip.jsx":"0870cb9a9681","components/people/ProfileHeader.jsx":"f24d0bc82d50","components/proposed/ExplainableNumber.jsx":"b29af54b996a","components/proposed/MediaAttachment.jsx":"94880620d847","components/proposed/MediaViewer.jsx":"3a09af18787e","components/stance/SeveranceConfirm.jsx":"1a0dbafb9e95","components/stance/StanceAlternates.jsx":"0b50770f4aa0","components/stance/StanceCoachMark.jsx":"4d4cfdcab8db","components/stance/StanceControl.jsx":"24e63c57ff9e","components/stance/StancePad.jsx":"f6eda3aa07e3","components/stance/StanceReadout.jsx":"c25c4719df05","components/stance/StanceSlider.jsx":"325286a6b95d","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"964687345182","components/wallet/LedgerRow.jsx":"96a7cfea6280","components/wallet/PayoutAddress.jsx":"d7783723d684","components/wallet/WalletBalance.jsx":"3ff65daba8d2","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"44ff990afba5","designs/core-loop/data.jsx":"1a69aa16a143"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/proposed/MediaAttachment.jsx"}]} */
 
 (() => {
 
@@ -664,6 +664,14 @@ const PATHS = {
   send: ["M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"],
   /* The compose media surfaces' glyphs (media slice, 2026-08-31). */
   close: ["M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"],
+  /* The avatar's change badge (profile round, 2026-09-01). The official cut
+     draws its lens as a <circle>; PATHS holds paths only, so that circle is
+     carried as an exact arc path — same geometry, nothing redrawn. */
+  photo_camera: ["M12 8.8a3.2 3.2 0 1 1 0 6.4 3.2 3.2 0 1 1 0-6.4z", "M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"],
+  /* The chronicle's tab glyphs (profile round, 2026-09-01): `dynamic_feed` is
+     already the posts idea, `chat_bubble` the comment's; `history` is the whole
+     record — everything, newest first. */
+  history: ["M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"],
   drag_indicator: ["M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"],
   lock: ["M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"],
   expand_more: ["M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"],
@@ -1489,7 +1497,7 @@ function MonogramAvatar({
   const box = typeof size === "number" ? {
     height: `${size}px`,
     width: `${size}px`,
-    fontSize: "var(--text-label-large)"
+    fontSize: size >= 56 ? "var(--text-headline-small)" : "var(--text-label-large)"
   } : size === "lg" ? {
     height: "64px",
     width: "64px",
@@ -2190,6 +2198,44 @@ function bundleReadout(pair, zeroLabel = SEVERED_LABEL) {
   return nearestAnchor(pair);
 }
 
+/* The read-only value readout (profile round, 2026-09-01): a stance RECORD's
+   face and pair drawn plainly wherever a stance is data rather than a control
+   — the stances page's rows, the chronicle's stance entries. Never
+   interactive: acting on a person means opening their profile first (jakob —
+   stancing here is more deliberate than a follow). */
+function StanceValue({
+  pDirected,
+  pInterest,
+  showPair = true
+}) {
+  const pair = {
+    pDirected,
+    pInterest
+  };
+  const readout = bundleReadout(pair);
+  return /*#__PURE__*/React.createElement("span", {
+    role: "img",
+    "aria-label": `${readout.label}, ${formatStancePair(pair)}`,
+    style: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 6
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      fontSize: "var(--text-title-medium)"
+    }
+  }, readout.emoji), showPair && /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      fontSize: "var(--text-body-small)",
+      color: "var(--text-secondary)",
+      whiteSpace: "nowrap"
+    }
+  }, formatStancePair(pair)));
+}
+
 /** Always signed, two decimals. The sign carries the direction, so it shows at zero. */
 function formatDimension(value) {
   return new Intl.NumberFormat(undefined, {
@@ -2465,6 +2511,7 @@ __ds_scope.clampDimension = clampDimension;
 __ds_scope.clampPair = clampPair;
 __ds_scope.nearestAnchor = nearestAnchor;
 __ds_scope.bundleReadout = bundleReadout;
+__ds_scope.StanceValue = StanceValue;
 __ds_scope.formatDimension = formatDimension;
 __ds_scope.formatStancePair = formatStancePair;
 __ds_scope.formatStanceWords = formatStanceWords;
@@ -3281,7 +3328,14 @@ function parkedPadStyle(inset = 16) {
    the MASTER for it instead of copying the card — the copy is never the answer.
    `padInset` lifts the parked card clear of a bottom bar (the pad sits above the
    bar, readme §13); `padNote` is the shell's one-time coaching slot — the first
-   vouch speaks there, between the field and the landing line. */
+   vouch speaks there, between the field and the landing line.
+
+   `wide` (profile round, 2026-09-01) is the PRESENTATIONAL variant a profile
+   header wears: the same anchor stretched to the row's width in the outline
+   button's clothes, and — divergence from the card anchor, deliberate — the
+   words drawn beside the face, because here the stance IS the row's one action
+   and a lone face at full width reads as lost. Tap, hold, pad, severance: all
+   unchanged — the variant restyles the anchor and nothing else. */
 function StanceControl({
   targetLabel = "this post",
   bundle: supplied,
@@ -3291,7 +3345,8 @@ function StanceControl({
   defaultOpen = false,
   defaultPick,
   padInset = 16,
-  padNote
+  padNote,
+  wide = false
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
   React.useEffect(() => {
@@ -3417,7 +3472,8 @@ function StanceControl({
       position: "relative",
       display: "flex",
       flexDirection: "column",
-      gap: "var(--space-1)"
+      gap: "var(--space-1)",
+      width: wide ? "100%" : undefined
     },
     onClick: event => event.stopPropagation(),
     onPointerDown: event => event.stopPropagation()
@@ -3425,7 +3481,8 @@ function StanceControl({
     style: {
       display: "flex",
       alignItems: "center",
-      gap: "var(--space-2)"
+      gap: "var(--space-2)",
+      width: wide ? "100%" : undefined
     }
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -3438,13 +3495,14 @@ function StanceControl({
     className: BUTTON_CLASS,
     style: {
       display: "flex",
-      minHeight: "var(--touch-target-min)",
+      minHeight: wide ? "40px" : "var(--touch-target-min)",
       minWidth: "var(--touch-target-min)",
+      flex: wide ? 1 : undefined,
       alignItems: "center",
       justifyContent: "center",
       gap: "var(--space-2)",
       borderRadius: "var(--radius-full)",
-      border: 0,
+      border: wide ? "1px solid var(--border-field)" : 0,
       background: "none",
       padding: "0 12px",
       cursor: "pointer",
@@ -3463,7 +3521,15 @@ function StanceControl({
       opacity: restingFace === null ? "var(--opacity-resting-face)" : 1,
       filter: restingFace === null ? "grayscale(1)" : "none"
     }
-  }, restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji), restingPair !== null &&
+  }, restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji), wide && restingPair === null &&
+  /*#__PURE__*/
+  /* The wide anchor's words — only where there is no pair to show. */
+  React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      whiteSpace: "nowrap"
+    }
+  }, "Take a stance"), restingPair !== null &&
   /*#__PURE__*/
   /* NEVER WRAPS. This is the post card's affordance row, which is one
      line by rule — a pair broken across two text lines reads as a
@@ -4291,7 +4357,7 @@ __ds_scope.MediaGallery = MediaGallery;
 
 // components/content/CommentCard.jsx
 try { (() => {
-const { Card, Button, ActorChip, PendingMarker, EditedMarker, LicenseTerms, StanceControl, OverflowMenu, TopicsLine, MediaGallery } = __ds_scope;
+const { Card, Button, ActorChip, PendingMarker, EditedMarker, LicenseTerms, StanceControl, OverflowMenu, Icon, NODE_GLYPHS, TopicsLine, MediaGallery } = __ds_scope;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* The comment of design.md §6 — "author, body, timestamp, media, nested replies,
    stance control", in its top-level and nested variants. Extracted from
@@ -4338,6 +4404,9 @@ function CommentCard({
   onEdit,
   own = false,
   targetLabel = "this comment",
+  target,
+  targetKind = "post",
+  onOpenTarget,
   actions,
   menuItems = [],
   topics = [],
@@ -4360,7 +4429,39 @@ function CommentCard({
       marginLeft: `${Math.min(depth, MAX_INDENT_DEPTH) * 12}px`,
       listStyle: "none"
     }
-  }, /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(Card, null, target && onOpenTarget && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onOpenTarget,
+    className: "cg-state cg-focus",
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-2)",
+      border: 0,
+      background: "none",
+      padding: 0,
+      cursor: "pointer",
+      fontFamily: "var(--font-sans)",
+      color: "var(--text-secondary)",
+      textAlign: "left",
+      maxWidth: "100%",
+      borderRadius: "var(--radius-small)"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: targetKind === "post" ? "dynamic_feed" : NODE_GLYPHS[targetKind] ?? "dynamic_feed",
+    size: 14,
+    style: {
+      flex: "none"
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap"
+    }
+  }, "On ", target)), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
@@ -6109,10 +6210,17 @@ const { Icon } = __ds_scope;
    THE RIGHT SIDE WORKS. A full-width band spent on identity alone is wasted
    space (ruled 2026-08-28), so `trailing` puts the tab's one working control —
    the feed's filter trigger — on the band's right edge. The whole band scrolls
-   away with the top region and returns with it; the control rides along. */
+   away with the top region and returns with it; the control rides along.
+
+   CHATS RIDE THE BAND (jakob 2026-09-01): messaging must be reachable from any
+   major screen, so every tab root's band carries the chats affordance built in.
+   It sits LEFT of the screen's own trailing control, so the ruled corner
+   occupants (the feed's filter trigger, the profile's gear) keep their edge.
+   `chats={false}` opts a band out where messaging cannot apply. */
 
 function CograBand({
   trailing,
+  chats = true,
   children
 }) {
   return /*#__PURE__*/React.createElement("div", {
@@ -6143,14 +6251,34 @@ function CograBand({
       lineHeight: "var(--text-title-large--line-height)",
       fontWeight: 600
     }
-  }, "cogra"), trailing && /*#__PURE__*/React.createElement("div", {
+  }, "cogra"), /*#__PURE__*/React.createElement("div", {
     style: {
       marginLeft: "auto",
       display: "flex",
       alignItems: "center",
       minWidth: 0
     }
-  }, trailing)), children);
+  }, chats && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": "Chats",
+    className: "cg-state cg-focus",
+    style: {
+      display: "grid",
+      placeItems: "center",
+      height: "var(--touch-target-min)",
+      width: "var(--touch-target-min)",
+      border: 0,
+      background: "none",
+      borderRadius: "var(--radius-full)",
+      color: "var(--text-secondary)",
+      cursor: "pointer",
+      padding: 0,
+      flex: "none"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "forum",
+    size: 22
+  })), trailing)), children);
 }
 __ds_scope.CograBand = CograBand;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/navigation/CograBand.jsx", error: String((e && e.message) || e) }); }
@@ -6659,13 +6787,21 @@ __ds_scope.FeedFilter = FeedFilter;
 
 // components/people/ProfileHeader.jsx
 try { (() => {
-const { MonogramAvatar, Button, Icon, OverflowMenu, StanceControl } = __ds_scope;
+const { MonogramAvatar, Button, Icon, StanceControl } = __ds_scope;
 /* The profile header (backlog item 5) — specified in design.md §6, never built.
 
    PEOPLE FIRST, AND A PERSON IS A TARGET. A profile is the one surface whose
    subject is a person, so the stance control on THEM leads the actions: the whole
    product is stances on things, and a person is the most consequential thing to
-   have one on.
+   have one on. On a profile it wears the wide anchor — the row's one action,
+   stretched to the row (jakob 2026-09-01, "the stance icon looks lost" at
+   anchor size). Everything rarer — mention, share — lives in the screen's
+   top-bar overflow, never down here.
+
+   THE SHAPE IS THE COMPACT ONE (jakob 2026-09-01): avatar left, the name and
+   the figures in the column beside it — the layout every social profile has
+   taught readers to parse — then bio, then the one actions row. Tight: the
+   header is a summary, not a hero.
 
    THE COUNTS ARE THE HARD PART. The thing being counted is what the repo calls a
    connection, and that word is on the banned list (readme §3) along with the rest
@@ -6673,7 +6809,14 @@ const { MonogramAvatar, Button, Icon, OverflowMenu, StanceControl } = __ds_scope
    actually place: how many people have taken a stance on this person, and how many
    this person has taken. Two figures, each labelled, each plain — never one merged
    "followers" number, because there is no following here and borrowing the word
-   would describe a different product.
+   would describe a different product. A Posts figure leads the row, and the
+   figures are one tap target leading to the stances page: both directions,
+   separated, never merged there either.
+
+   THE AVATAR CHANGES WITHOUT THE EDIT SCREEN (jakob 2026-09-01). Changing the
+   picture is frequent and mostly standalone, so one's own avatar wears a change
+   badge right here — the same signed act, the same crop-and-seal flow the edit
+   screen reaches; the edit screen keeps its row too.
 
    No cover image, no banner: the system has no imagery slot that size, and a
    decorative band would be the largest thing on a screen whose subject is a
@@ -6689,7 +6832,8 @@ function Figure({
   return /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
-      flexDirection: "column"
+      flexDirection: "column",
+      minWidth: 0
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -6700,8 +6844,10 @@ function Figure({
   }, value), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
       fontWeight: 500,
-      color: "var(--text-secondary)"
+      color: "var(--text-secondary)",
+      whiteSpace: "nowrap"
     }
   }, label));
 }
@@ -6710,6 +6856,8 @@ function ProfileHeader({
   displayName,
   avatarSrc,
   bio,
+  website,
+  posts,
   stancesOn,
   stancesTaken,
   own = false,
@@ -6717,17 +6865,31 @@ function ProfileHeader({
   taught = true,
   bundle,
   onCommit,
+  onMessage,
   onEdit,
-  onSettings,
-  menuItems = []
+  onInvites,
+  onAvatarChange,
+  onCounts,
+  showHandle = true
 }) {
   const name = displayName && displayName.trim() ? displayName : handle;
+  const hasFigures = posts !== undefined || stancesOn !== undefined || stancesTaken !== undefined;
+  const figures = /*#__PURE__*/React.createElement(React.Fragment, null, posts !== undefined && /*#__PURE__*/React.createElement(Figure, {
+    value: posts,
+    label: "Posts"
+  }), stancesOn !== undefined && /*#__PURE__*/React.createElement(Figure, {
+    value: stancesOn,
+    label: own ? "Stances on you" : "Stances on them"
+  }), stancesTaken !== undefined && /*#__PURE__*/React.createElement(Figure, {
+    value: stancesTaken,
+    label: own ? "Stances you've taken" : "Stances they've taken"
+  }));
   return /*#__PURE__*/React.createElement("header", {
     style: {
       display: "flex",
       flexDirection: "column",
-      gap: "var(--space-4)",
-      padding: "var(--space-4) 0"
+      gap: "var(--space-3)",
+      padding: "var(--space-3) 0 var(--space-1)"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -6735,47 +6897,100 @@ function ProfileHeader({
       alignItems: "center",
       gap: "var(--space-4)"
     }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      flex: "none"
+    }
   }, /*#__PURE__*/React.createElement(MonogramAvatar, {
     name: name,
-    size: "lg",
+    size: 80,
     src: avatarSrc
-  }), /*#__PURE__*/React.createElement("div", {
+  }), own && onAvatarChange && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": "Change your picture",
+    onClick: onAvatarChange,
+    className: "cg-state cg-focus",
+    style: {
+      position: "absolute",
+      right: -2,
+      bottom: -2,
+      display: "grid",
+      placeItems: "center",
+      height: 28,
+      width: 28,
+      border: "2px solid var(--surface)",
+      background: "var(--secondary-container)",
+      color: "var(--on-secondary-container)",
+      borderRadius: "var(--radius-full)",
+      cursor: "pointer",
+      padding: 0
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "photo_camera",
+    size: 16
+  }))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       flexDirection: "column",
-      minWidth: 0
+      gap: 2,
+      minWidth: 0,
+      flex: 1
     }
   }, /*#__PURE__*/React.createElement("h1", {
     style: {
       margin: 0,
-      fontSize: "var(--text-headline-small)",
-      lineHeight: "var(--text-headline-small--line-height)",
-      fontWeight: "var(--text-headline-small--font-weight)",
+      fontSize: "var(--text-title-large)",
+      lineHeight: "var(--text-title-large--line-height)",
+      fontWeight: "var(--text-title-large--font-weight)",
       overflowWrap: "anywhere"
     }
-  }, name), /*#__PURE__*/React.createElement("span", {
+  }, name), showHandle && /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: "var(--text-body-medium)",
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
       color: "var(--text-secondary)"
     }
-  }, "@", handle))), bio && /*#__PURE__*/React.createElement("p", {
+  }, "@", handle), hasFigures && (onCounts ? /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": own ? "Your stances, both directions" : "Stances on and by @" + handle,
+    onClick: onCounts,
+    className: "cg-state cg-focus",
+    style: {
+      display: "flex",
+      gap: "var(--space-5)",
+      border: 0,
+      background: "none",
+      padding: 0,
+      marginTop: 4,
+      cursor: "pointer",
+      fontFamily: "var(--font-sans)",
+      color: "var(--on-surface)",
+      textAlign: "left",
+      width: "fit-content",
+      maxWidth: "100%",
+      borderRadius: "var(--radius-small)"
+    }
+  }, figures) : /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: "var(--space-5)",
+      marginTop: 4
+    }
+  }, figures)))), bio && /*#__PURE__*/React.createElement("p", {
     style: {
       margin: 0,
       fontSize: "var(--text-body-medium)",
       lineHeight: "var(--text-body-medium--line-height)"
     }
-  }, bio), (stancesOn !== undefined || stancesTaken !== undefined) && /*#__PURE__*/React.createElement("div", {
+  }, bio), website && /*#__PURE__*/React.createElement("span", {
     style: {
-      display: "flex",
-      gap: "var(--space-6)"
+      fontSize: "var(--text-body-medium)",
+      lineHeight: "var(--text-body-medium--line-height)",
+      color: "var(--primary)",
+      overflowWrap: "anywhere"
     }
-  }, stancesOn !== undefined && /*#__PURE__*/React.createElement(Figure, {
-    value: stancesOn,
-    label: own ? "Stances on you" : "Stances on them"
-  }), stancesTaken !== undefined && /*#__PURE__*/React.createElement(Figure, {
-    value: stancesTaken,
-    label: own ? "Stances you've taken" : "Stances they've taken"
-  })), /*#__PURE__*/React.createElement("div", {
+  }, website), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
@@ -6784,40 +6999,36 @@ function ProfileHeader({
   }, own ? /*#__PURE__*/React.createElement(React.Fragment, null, onEdit && /*#__PURE__*/React.createElement(Button, {
     variant: "outline",
     size: "sm",
-    onClick: onEdit
-  }, "Edit profile"), onSettings && /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    "aria-label": "Settings",
-    onClick: onSettings,
-    className: "cg-state cg-focus",
+    onClick: onEdit,
     style: {
-      display: "grid",
-      placeItems: "center",
-      height: "var(--touch-target-min)",
-      width: "var(--touch-target-min)",
-      border: 0,
-      background: "none",
-      borderRadius: "var(--radius-full)",
-      color: "var(--text-secondary)",
-      cursor: "pointer",
-      marginLeft: "auto"
+      flex: 1
     }
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "settings"
-  }))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(StanceControl, {
+  }, "Edit profile"), onInvites && /*#__PURE__*/React.createElement(Button, {
+    variant: "outline",
+    size: "sm",
+    onClick: onInvites,
+    style: {
+      flex: 1
+    }
+  }, "Invites")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement(StanceControl, {
+    wide: true,
     targetLabel: "@" + handle,
     bundle: bundle ?? undefined,
     signedIn: signedIn,
     taught: taught,
     onCommit: onCommit
-  }), menuItems.length > 0 && /*#__PURE__*/React.createElement("div", {
+  })), onMessage && /*#__PURE__*/React.createElement(Button, {
+    variant: "outline",
+    onClick: onMessage,
     style: {
-      marginLeft: "auto"
+      flex: 1
     }
-  }, /*#__PURE__*/React.createElement(OverflowMenu, {
-    items: menuItems,
-    ariaLabel: "More about @" + handle
-  })))));
+  }, "Message"))));
 }
 __ds_scope.ProfileHeader = ProfileHeader;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/people/ProfileHeader.jsx", error: String((e && e.message) || e) }); }
@@ -7617,6 +7828,8 @@ __ds_ns.RESTING_FACE_EMOJI = __ds_scope.RESTING_FACE_EMOJI;
 __ds_ns.SR_ONLY = __ds_scope.SR_ONLY;
 
 __ds_ns.STANCE_ANCHORS = __ds_scope.STANCE_ANCHORS;
+
+__ds_ns.StanceValue = __ds_scope.StanceValue;
 
 __ds_ns.StanceReadout = __ds_scope.StanceReadout;
 
