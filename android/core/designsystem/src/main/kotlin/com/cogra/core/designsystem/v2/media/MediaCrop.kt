@@ -18,10 +18,13 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.canhub.cropper.CropImageView
 import com.cogra.core.designsystem.v2.atom.CograChip
+import com.cogra.core.designsystem.v2.atom.bleedHorizontally
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
+import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.MediaShape
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
@@ -56,13 +59,20 @@ fun MediaCrop(
     modifier: Modifier = Modifier,
     caption: String = "One shape for the whole post. Drag to move, pinch to zoom.",
     mask: CropMask = CropMask.Thirds,
+    /**
+     * The gutter the viewport escapes. Both crop boards run the picture
+     * to the screen's edges — the caption under it stays in the gutter —
+     * so the default is the gutter the stage is padded by; a caller with
+     * no padding to escape passes `0.dp`.
+     */
+    bleed: Dp = Layout.ScreenGutter,
     testTag: String? = null,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Space.x3),
     ) {
-        CropViewport(item, shape, state, mask, testTag)
+        CropViewport(item, shape, state, mask, bleed, testTag)
 
         Text(
             text = caption,
@@ -89,6 +99,7 @@ private fun CropViewport(
     shape: MediaShape,
     state: CropState,
     mask: CropMask,
+    bleed: Dp,
     testTag: String?,
 ) {
     val actions = listOf(
@@ -110,6 +121,11 @@ private fun CropViewport(
 
     Box(
         modifier = Modifier
+            // Full bleed: the crop runs to the screen's edges, which is
+            // the whole of the fix for "the area for cropping was to
+            // small" (jakob 2026-09-01) — at the 24dp gutter the stage
+            // is padded by, that is a third again of crop area.
+            .bleedHorizontally(bleed)
             .fillMaxWidth()
             // The frame the picture is *laid out* in stays the post's
             // shape, so the stage looks the way the board draws it; the
@@ -135,11 +151,12 @@ private fun CropViewport(
                     setOnCropWindowChangedListener {
                         val whole = wholeImageRect ?: return@setOnCropWindowChangedListener
                         // The first window the library reports after a
-                        // decode is its own default. Where a framing
-                        // survived a rotation, that is the moment to put
-                        // it back — and reporting the default as a change
-                        // first would have overwritten it.
-                        if (state.applyPendingRestore(this)) {
+                        // decode is its own default. That is the moment
+                        // to put back a framing that survived — or to
+                        // place this picture's opening window — and
+                        // reporting the default as a change first would
+                        // have overwritten it.
+                        if (state.applyPendingWindow(this)) {
                             return@setOnCropWindowChangedListener
                         }
                         val rect = cropRect ?: return@setOnCropWindowChangedListener

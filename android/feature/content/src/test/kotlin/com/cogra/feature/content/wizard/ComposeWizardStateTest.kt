@@ -1,9 +1,12 @@
 package com.cogra.feature.content.wizard
 
+import com.cogra.core.designsystem.v2.media.CropFraming
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
 import com.cogra.domain.compose.DraftShape
+import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.CropWindow
 import com.cogra.feature.content.TagRow
 import com.cogra.feature.content.TagSectionState
 import com.google.common.truth.Truth.assertThat
@@ -285,6 +288,55 @@ class ComposeWizardStateTest {
             .isEqualTo(BodyMode.Words)
     }
 
+    // -- The crop, which has to survive leaving the stage --
+
+    /** `a` framed to its left half; `b` never framed. */
+    private val framed = media.copy(
+        crops = mapOf("a" to CropSpec(targetRatio = 0.8f, window = CropWindow(0f, 0f, 0.5f, 1f))),
+    )
+
+    @Test
+    fun theCropSurvivesSteppingForwardOffTheStageAndBackIntoIt() {
+        // Jakob's round trip: crop, walk on, come back with the arrow.
+        val cropped = framed.copy(step = WizardStep.Crop)
+
+        val returned = cropped.advanced()!!.retreated()!!
+
+        assertThat(returned.step).isEqualTo(WizardStep.Crop)
+        assertThat(returned.crops).isEqualTo(cropped.crops)
+    }
+
+    @Test
+    fun theCropSurvivesWalkingForwardsIntoTheStageASecondTime() {
+        // The other direction he named: back to the pick stage, then
+        // forward again with Next.
+        val cropped = framed.copy(step = WizardStep.Crop)
+
+        val returned = cropped.retreated()!!.advanced()!!
+
+        assertThat(returned.step).isEqualTo(WizardStep.Crop)
+        assertThat(returned.crops).isEqualTo(cropped.crops)
+    }
+
+    @Test
+    fun everyLaterStagePreviewsThePictureAsItWasFramed() {
+        // The details row, the picked sheet and the seal all read this.
+        val pictures = framed.pickedPictures()
+
+        assertThat(pictures[0].item.framing).isEqualTo(CropFraming(0f, 0f, 0.5f, 1f))
+        // A pick nobody framed is previewed whole rather than guessed at.
+        assertThat(pictures[1].item.framing).isEqualTo(CropFraming.Whole)
+    }
+
+    @Test
+    fun droppingAPickDropsItsFramingWithIt() {
+        // Kept, it would be handed to a re-pick of the same asset as if
+        // the author had framed it this time.
+        val after = framed.removePick("a")
+
+        assertThat(after.crops).doesNotContainKey("a")
+    }
+
     // -- The header, which reads the stage rather than counting steps --
 
     @Test
@@ -296,16 +348,18 @@ class ComposeWizardStateTest {
     }
 
     @Test
-    fun theDetailsAndSealStagesCarryNoHeaderAction() {
-        assertThat(words.headerAction()).isEqualTo("Next")
-        assertThat(words.advanced()!!.headerAction()).isNull()
-        assertThat(words.copy(step = WizardStep.Seal).headerAction()).isNull()
+    fun theForwardActionIsHeldClosedUntilTheBodyIsReady() {
+        assertThat(ComposeWizardState().forwardEnabled()).isFalse()
+        assertThat(words.forwardEnabled()).isTrue()
     }
 
     @Test
-    fun theHeaderActionIsDisabledUntilTheBodyIsReady() {
-        assertThat(ComposeWizardState().headerActionEnabled()).isFalse()
-        assertThat(words.headerActionEnabled()).isTrue()
+    fun everyStageAfterTheBodyHasSomewhereToGo() {
+        // Only the body can be unready; the crop and details stages always
+        // advance, and the seal commits by signing rather than by Next.
+        assertThat(words.advanced()!!.forwardEnabled()).isTrue()
+        assertThat(media.advanced()!!.forwardEnabled()).isTrue()
+        assertThat(words.copy(step = WizardStep.Seal).forwardEnabled()).isTrue()
     }
 
     // -- The refusal path --
