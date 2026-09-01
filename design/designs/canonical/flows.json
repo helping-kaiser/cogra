@@ -30,9 +30,9 @@
     },
     {
       "name": "narrow-the-feed",
-      "description": "The band's filter trigger opens the sheet, the sheet narrows the feed, and the reader opens a thread on what survives.",
+      "description": "The band's filter trigger opens the filter sheet; the sheet applies live, and tapping out leaves the reader on the narrowed feed.",
       "start": { "board": "Feed", "via": 1 },
-      "end": { "board": "FeedNarrowed", "via": 10 }
+      "end": { "board": "FeedSheet", "via": 6, "case": "narrowed" }
     },
     {
       "name": "sign-in",

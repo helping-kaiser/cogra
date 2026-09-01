@@ -1663,11 +1663,11 @@ satisfied that way. Three layers make the answer honest.
 
 The rulings the layer rests on:
 
-- **A sheet's `Done` advances.** The explicit Done is how a sheet's
-  journey concludes, not a way back; as `back` it left the narrowed
-  feed and the staged-acts boards unreachable. The filter sheets apply
-  live and carry no Done of their own, so on those the scrim tap is
-  the same conclusion.
+- **A sheet's `Done` advances; its scrim does not.** The explicit Done
+  is how a sheet's journey concludes, not a way back. A scrim exit is
+  always `back` — the filter sheets, which apply live and carry no Done
+  of their own, are concluded by a flow declaring that scrim edge as
+  its given end rather than by walking it.
 - **An `advance` must reach something.** A control whose every outcome
   merely informs — the applicant's locked rows answering with a
   snackbar, a chip that lands where you already are — leaves the
