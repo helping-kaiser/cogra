@@ -46,6 +46,8 @@ export function Screen() {
             replyCount={2}
             onOpenReplies={() => {}}
             onReply={() => {}}
+            target="“The long way home” — @ada"
+            onOpenTarget={() => {}}
           />
           <CommentCard
             author={ADA}
@@ -54,6 +56,8 @@ export function Screen() {
             license={{ attribution: 0, provenance: 0 }}
             onOpenReplies={() => {}}
             onReply={() => {}}
+            target="“Salt maps of the coast road” — @sol"
+            onOpenTarget={() => {}}
           />
         </div>
       </div>

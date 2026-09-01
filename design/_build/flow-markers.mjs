@@ -571,6 +571,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: ">Choose your stance</button>", tag: "button", all: true },
     { n: 10, find: ">Reply</button>", tag: "button", all: true },
     { n: 11, find: "View 2 replies", tag: "button" },
+    { n: 17, find: ">On “", tag: "button", all: true },
     ...nav(12),
   ],
   ProfileEdit: [
