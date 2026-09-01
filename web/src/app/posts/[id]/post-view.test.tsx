@@ -582,6 +582,74 @@ describe("PostView", () => {
     expect(screen.queryByTestId("replies-more-c1")).not.toBeInTheDocument();
   });
 
+  // design/readme.md §13 (2026-08-28), matched by the canonical CommentCard
+  // and Android's PostDetailScreen.kt (PR #574): the thread indents ONE
+  // level on screen. A reply to a reply flattens into that same level
+  // instead of indenting further — its own @handle lead is content the
+  // composer prefilled, not something this view generates.
+  it("flattens a reply-to-a-reply to the same indent as its parent", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: detail("author-1", [{ id: "c1", body: "top", replyCount: 1 }]),
+        }),
+      ),
+      graphql.query("CommentReplies", ({ variables }) => {
+        const parentId = variables.id as string;
+        if (parentId === "c1") {
+          return HttpResponse.json({
+            data: {
+              comment: {
+                __typename: "Comment",
+                id: "c1",
+                replies: {
+                  __typename: "CommentConnection",
+                  edges: [
+                    {
+                      __typename: "CommentEdge",
+                      node: commentNode({ id: "r1", body: "@alice nested", replyCount: 1 }),
+                    },
+                  ],
+                  pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+                },
+              },
+            },
+          });
+        }
+        return HttpResponse.json({
+          data: {
+            comment: {
+              __typename: "Comment",
+              id: "r1",
+              replies: {
+                __typename: "CommentConnection",
+                edges: [
+                  {
+                    __typename: "CommentEdge",
+                    node: commentNode({ id: "r1-1", body: "@bob grandchild" }),
+                  },
+                ],
+                pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+              },
+            },
+          },
+        });
+      }),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+    fireEvent.click(await screen.findByTestId("replies-more-c1"));
+    fireEvent.click(await screen.findByTestId("replies-more-r1"));
+
+    const child = await screen.findByTestId("post-comment-r1");
+    const grandchild = await screen.findByTestId("post-comment-r1-1");
+    expect(grandchild).toHaveTextContent("@bob grandchild");
+    // Depth 1 (the child) and depth 2 (the grandchild) draw at the SAME
+    // indent — the thread never grows a third rung.
+    expect(grandchild.style.marginLeft).toBe(child.style.marginLeft);
+    expect(grandchild.style.marginLeft).toBe("12px");
+  });
+
   it("says one reply in the singular", async () => {
     server.use(
       graphql.query("PostDetail", () =>
