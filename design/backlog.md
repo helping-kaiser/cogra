@@ -315,7 +315,7 @@ follow. Added 2026-08-28 out of item 19's review.
 The canonical canvas has outgrown one flat plane (77+ boards):
 connections live only in heads, and gaps hide. Agreed with jakob
 2026-08-31, shaped as data first, pictures generated: (1) a
-checked-in `flows.json` — numbered edges `{id, from, via, to}`
+checked-in `graph.json` — numbered edges `{id, from, via, to}`
 grouped by section, every interactive affordance on a board either
 carrying an edge or an explicit dead-end marker with a reason; a
 button with neither is by definition a missing piece, greppable.
@@ -324,7 +324,7 @@ artboard per section (chips + arrows + edge numbers) plus an
 overview, never hand-drawn so never lying. (3) Pages: split the
 canvas by section (Feed · Compose & media · Ceremonies · Wallet ·
 Maps), launch view on the overview. (4) A build-time check
-cross-referencing `flows.json` against the screen list (edges to
+cross-referencing `graph.json` against the screen list (edges to
 missing boards; boards nothing reaches). 1+3 are the core; new
 boards enter the manifest from the round that lands this item.
 
@@ -346,6 +346,13 @@ surfaces, and two rulings for jakob (topic destination; applicant
 acting rights). The profile screen and the Sky stay their own items.
 Closing those gaps is item 23.
 
+**The user-flow layer's foundation landed 2026-09-01** (jakob's
+rulings): the manifest is `graph.json` — it holds the screen graph,
+not flows — and every one of its 689 edges declares a `kind`
+(`advance` / `cancel` / `back` / `nav` / `detour`, no default, the
+gate fails without one). The flow engine that path-searches the
+`advance` edges is next.
+
 ### 23 · Close the gaps — in roadmap order · *design*
 
 Jakob's directive (2026-09-01): knock out all 125 flow gaps and the
@@ -356,7 +363,7 @@ surface belongs to a slice at or before 2.5, THEN forward strictly
 in roadmap order (the Sky last, item 16 as ever). **Each round opens
 by mapping its gaps to slices against the roadmap's own text** —
 never from memory: read the slice descriptions and what each closed
-slice already shipped (flows.json's gap list is the inventory:
+slice already shipped (graph.json's gap list is the inventory:
 grep `"gap"`). Surfaces the closed slices already SHIPPED without a
 canonical design are the most overdue of all — the profile screen
 leads that list. Rounds take the rulings they need before drawing
