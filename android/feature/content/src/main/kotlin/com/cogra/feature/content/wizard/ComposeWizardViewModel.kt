@@ -494,20 +494,22 @@ class ComposeWizardViewModel @Inject constructor(
     // -- Uploads (D5: one call per asset, concurrent, retryable) --
 
     /**
-     * The framing each pick was left at. The crop step hands these over
-     * because the framing lives in the composition's own saveable state
-     * — the design system's `CropState` — and never in the ViewModel.
+     * The framing each pick was left at, as the crop stage reports it.
+     *
+     * It is kept in the state rather than beside it because the crop
+     * stage is left and re-entered: its own saveable holder dies with
+     * the composition, so the framing has to outlive it here — and the
+     * later stages' previews read the same map to draw what the author
+     * framed (jakob 2026-09-01).
      */
-    private var committedCrops: Map<String, CropSpec> = emptyMap()
-
-    fun onCropsCommitted(crops: Map<String, CropSpec>) {
-        committedCrops = crops
+    fun onCropsCommitted(crops: Map<String, CropSpec>) = _state.update { state ->
+        if (state.crops == crops) state else state.copy(crops = crops)
     }
 
     private fun cropSpecsFor(state: ComposeWizardState): Map<String, CropSpec> {
         val ratio = state.shape.ratio()
         return state.picked.associate { asset ->
-            asset.uri to (committedCrops[asset.uri] ?: CropSpec(targetRatio = ratio))
+            asset.uri to (state.crops[asset.uri] ?: CropSpec(targetRatio = ratio))
         }
     }
 
@@ -523,7 +525,7 @@ class ComposeWizardViewModel @Inject constructor(
         val state = _state.value
         val asset = state.picked.firstOrNull { it.uri == uri } ?: return
         if (asset.upload is AssetUpload.Running) return
-        upload(uri, committedCrops[uri] ?: CropSpec(state.shape.ratio()))
+        upload(uri, state.crops[uri] ?: CropSpec(state.shape.ratio()))
     }
 
     private fun upload(uri: String, crop: CropSpec) {
