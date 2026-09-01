@@ -59,6 +59,10 @@ import com.cogra.feature.content.ComposePostRoute
 import com.cogra.feature.content.wizard.ComposeWizardRoute
 import com.cogra.feature.content.FeedRoute
 import com.cogra.feature.content.PostDetailRoute
+import com.cogra.feature.content.reply.CommentEditRoute
+import com.cogra.feature.content.reply.ReplyTarget
+import com.cogra.feature.content.reply.ReplyTargetKind
+import com.cogra.feature.content.reply.ReplyWizardRoute
 import com.cogra.feature.home.KeyRestoreBannerRoute
 import com.cogra.feature.home.StatusBannersRoute
 import com.cogra.feature.invites.InvitesRoute
@@ -115,6 +119,28 @@ data class ComposePost(
 @Serializable
 data class PostDetail(val postId: String)
 
+/**
+ * The reply wizard, pinned to what it answers (graph.json `ReplyEntry`
+ * 5 and 7): [isComment] false is the post, true the comment.
+ *
+ * The card's words ride the route rather than a second read — a
+ * composer that had to fetch its own target would open empty, and the
+ * thread already holds every one of these.
+ */
+@Serializable
+data class ReplyWizard(
+    val targetId: String,
+    val isComment: Boolean,
+    val title: String,
+    val snippet: String,
+    val authorHandle: String,
+    val avatarUrl: String? = null,
+)
+
+/** `CommentEdit` on an own comment (graph.json `ReplyMedia` 6). */
+@Serializable
+data class EditComment(val commentId: String, val parentTitle: String)
+
 /** A topic by its canonical name — reachable from a chip anywhere (D20). */
 @Serializable
 data class Topic(val name: String)
@@ -161,6 +187,16 @@ private const val HANDLE_CHANGED_RESULT = "handle_changed"
 
 /** The Compose→(Feed|PostDetail) result key: a write signed, re-read. */
 private const val CONTENT_SIGNED_RESULT = "content_signed"
+
+/**
+ * The (ReplyWizard|CommentEdit)→PostDetail result key: a comment or an
+ * edit signed, so the thread re-reads and says so once.
+ *
+ * Distinct from [CONTENT_SIGNED_RESULT] because the thread answers them
+ * differently — a signed comment earns the snackbar, a returning post
+ * edit only the refetch.
+ */
+private const val COMMENT_SIGNED_RESULT = "comment_signed"
 
 /**
  * The Wizard→Feed result key: a staged act was collected before it
@@ -556,12 +592,33 @@ private fun CograNavGraphContent(
                 val signedResult by entry.savedStateHandle
                     .getStateFlow(CONTENT_SIGNED_RESULT, false)
                     .collectAsStateWithLifecycle()
+                val commentSignedResult by entry.savedStateHandle
+                    .getStateFlow(COMMENT_SIGNED_RESULT, false)
+                    .collectAsStateWithLifecycle()
                 val accountId by authState.accountId.collectAsStateWithLifecycle()
                 PostDetailRoute(
                     postId = entry.toRoute<PostDetail>().postId,
                     viewerId = accountId,
                     signedIn = signedIn,
                     onEdit = { id -> navController.navigate(ComposePost(id)) },
+                    // `ReplyEntry` 5 and 7 — the composer, pinned to
+                    // whatever the thread said it answers.
+                    onReply = { target ->
+                        navController.navigate(
+                            ReplyWizard(
+                                targetId = target.id,
+                                isComment = target.kind == ReplyTargetKind.Comment,
+                                title = target.title,
+                                snippet = target.snippet,
+                                authorHandle = target.authorHandle,
+                                avatarUrl = target.avatarUrl,
+                            ),
+                        )
+                    },
+                    // `ReplyMedia` 6 — `CommentEdit`, on an own comment.
+                    onEditComment = { commentId, parentTitle ->
+                        navController.navigate(EditComment(commentId, parentTitle))
+                    },
                     onOpenActor = { handle -> navController.navigate(Profile(handle)) },
                     onOpenTopic = { name -> navController.navigate(Topic(name)) },
                     onOpenPost = { id -> navController.navigate(PostDetail(id)) },
@@ -574,6 +631,60 @@ private fun CograNavGraphContent(
                     onRefreshSignalConsumed = {
                         entry.savedStateHandle[CONTENT_SIGNED_RESULT] = false
                     },
+                    commentSignedSignal = commentSignedResult,
+                    onCommentSignedSignalConsumed = {
+                        entry.savedStateHandle[COMMENT_SIGNED_RESULT] = false
+                    },
+                )
+            }
+            composable<ReplyWizard> { entry ->
+                val route = entry.toRoute<ReplyWizard>()
+                ReplyWizardRoute(
+                    target = ReplyTarget(
+                        id = route.targetId,
+                        kind = if (route.isComment) {
+                            ReplyTargetKind.Comment
+                        } else {
+                            ReplyTargetKind.Post
+                        },
+                        title = route.title,
+                        snippet = route.snippet,
+                        authorHandle = route.authorHandle,
+                        avatarUrl = route.avatarUrl,
+                    ),
+                    // Signed lands back on the thread it answers, which
+                    // re-reads and shows the comment settling.
+                    onSigned = {
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(COMMENT_SIGNED_RESULT, true)
+                        navController.navigateUp()
+                    },
+                    // Leaving keeps nothing: comments have no drafts
+                    // (jakob 2026-09-01).
+                    onLeave = { navController.navigateUp() },
+                    onRestoreKey = { navController.navigate(Restore) },
+                    keyBanner = {
+                        if (signedIn == true) {
+                            KeyRestoreBannerRoute(
+                                onRestoreActor = { navController.navigate(Restore) },
+                            )
+                        }
+                    },
+                )
+            }
+            composable<EditComment> { entry ->
+                val route = entry.toRoute<EditComment>()
+                CommentEditRoute(
+                    commentId = route.commentId,
+                    parentTitle = route.parentTitle,
+                    onSaved = {
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(COMMENT_SIGNED_RESULT, true)
+                        navController.navigateUp()
+                    },
+                    onLeave = { navController.navigateUp() },
                 )
             }
             composable<Topic> { entry ->
