@@ -37,6 +37,7 @@ import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import {
   commentGate,
+  COMMENT_ATTACHMENT_CAP,
   NO_COMMENT_MEDIA,
   pickInto,
   removeFrom,
@@ -121,13 +122,22 @@ export function previousStep(state: ReplyState): ReplyStep | null {
 /**
  * Whether the composer may hand over to the seal.
  *
- * The whole gate is `commentGate`, which the inline composer already used: a
- * comment needs words, carries at most four pictures, and cannot be prepared
- * while any of them is still on its way. Sharing it is the point — two copies
- * of "may this comment be signed" would be two places to fix one bug.
+ * IT DOES NOT WAIT FOR THE UPLOADS, and that is the board's own rule:
+ * ReplyPicturesWeb's Next leads to ReplySeal *or* to the gated seal
+ * (ComposeSealUploading) when bytes are still moving. Holding the reader on
+ * the composer instead would strand them in front of a button that does
+ * nothing while the pictures upload — the seal is where the waiting is shown,
+ * because the seal is where the waiting matters.
  */
 export function advanceGate(state: ReplyState): Gate {
-  return commentGate(state.words, state.media);
+  if (state.words.trim() === "") return { ok: false, reason: "A comment needs words." };
+  if (state.media.length > COMMENT_ATTACHMENT_CAP) {
+    return {
+      ok: false,
+      reason: `A comment carries at most ${COMMENT_ATTACHMENT_CAP} pictures.`,
+    };
+  }
+  return { ok: true };
 }
 
 /**

@@ -109,6 +109,14 @@ describe("the gate", () => {
     expect(advanceGate(withWords()).ok).toBe(true);
   });
 
+  // ReplyPicturesWeb's Next leads to the seal OR to the gated seal, so the
+  // waiting belongs on the seal and never on the composer.
+  it("does not hold the composer for uploads — the seal shows that wait", () => {
+    const state = reduce(withWords(), { type: "pick", assets: picked(1) });
+    expect(advanceGate(state).ok).toBe(true);
+    expect(sealGate(state).ok).toBe(false);
+  });
+
   it("holds the seal while a picture is still on its way", () => {
     const state = reduce(withWords(), { type: "pick", assets: picked(1) });
     const gate = sealGate(state);
