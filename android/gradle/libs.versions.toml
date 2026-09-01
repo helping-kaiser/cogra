@@ -28,7 +28,7 @@ activityCompose = "1.13.0"
 # bar needs. It also has to clear 1.8.0, where `LocalClipboard` (the
 # recovery-code copy) lands.
 composeBom = "2025.10.01"
-navigationCompose = "2.8.5"
+navigationCompose = "2.10.0"
 datastore = "1.1.1"
 # BiometricPrompt is the documented way to re-confirm the person before
 # revealing or replacing key material; it hosts its dialog in a
@@ -37,7 +37,7 @@ biometric = "1.1.0"
 fragment = "1.9.0"
 # The AndroidX ExifInterface, not the framework one: it reads and writes the
 # tag set on every supported API level, which the platform class does not.
-exifinterface = "1.4.1"
+exifinterface = "1.4.2"
 
 # DI
 hilt = "2.58"
@@ -59,7 +59,7 @@ apollo = "4.4.3"
 # AGP 8.13.2 ("requires Android Gradle plugin 9.1.0 or higher"). Moving up
 # is a toolchain migration — AGP 9 + Kotlin 2.4 + a new Compose BOM — not a
 # dependency bump, so it rides with that migration and Coil follows it.
-coil = "3.4.0"
+coil = "3.6.0"
 
 # Cropping. The crop step runs an established cropper rather than our own
 # geometry (jakob 2026-08-31: "i cant imagine that you cant find a nice
