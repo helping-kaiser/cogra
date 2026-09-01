@@ -203,6 +203,19 @@ query PostSelfMark($id: UUID!) {
   }
 }
 
+# The same read for a comment, and for the same reason: `CommentFields`
+# is the most multiplied fragment in the corpus, and an edit opens one
+# comment, once. It is not a nicety — `PrepareCommentEditInput` is
+# complete-state, so an edit that cannot read the standing mark cannot
+# help clearing it.
+query CommentSelfMark($id: UUID!) {
+  comment(id: $id) {
+    id
+    sensitiveSelfMark
+    sensitiveReason
+  }
+}
+
 query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repliesFirst: Int!, $includePending: Boolean! = true) {
   post(id: $id) {
     ...PostFields
