@@ -1,6 +1,7 @@
 package com.cogra.core.designsystem.v2.media
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -12,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
@@ -372,7 +374,7 @@ class MediaComponentsTest {
             Cogra2PreviewTheme {
                 Column(
                     Modifier
-                        .width(BOARD_WIDTH.dp)
+                        .testTag("stage")
                         .padding(horizontal = GUTTER.dp),
                 ) {
                     MediaCrop(
@@ -381,14 +383,28 @@ class MediaComponentsTest {
                         state = rememberCropState(),
                         testTag = "crop",
                     )
+                    Text(
+                        "One shape for the whole post.",
+                        Modifier.testTag("caption").fillMaxWidth(),
+                    )
                 }
             }
         }
 
-        // The board's 390: full bleed, not the 342 left inside the gutter.
-        // "the area for cropping was to small" is this number.
+        // The board runs the picture edge to edge — 390 of a 390 board —
+        // while the caption under it stays in the gutter. "the area for
+        // cropping was to small" is that gutter, on both sides.
+        val stage = compose.onNodeWithTag("stage").getUnclippedBoundsInRoot()
         val viewport = compose.onNodeWithTag("crop").getUnclippedBoundsInRoot()
-        assertThat(viewport.width.value).isWithin(TOLERANCE).of(BOARD_WIDTH)
+        val caption = compose.onNodeWithTag("caption").getUnclippedBoundsInRoot()
+
+        assertThat((viewport.left - stage.left).value).isWithin(TOLERANCE).of(0f)
+        assertThat((stage.right - viewport.right).value).isWithin(TOLERANCE).of(0f)
+        assertThat((caption.left - stage.left).value).isWithin(TOLERANCE).of(GUTTER)
+        // The gutter is real width won, not a shifted frame.
+        assertThat((viewport.right - viewport.left).value)
+            .isWithin(TOLERANCE)
+            .of((caption.right - caption.left).value + GUTTER * 2)
     }
 
     @Test
@@ -446,9 +462,6 @@ class MediaComponentsTest {
     }
 
     private companion object {
-        /** The canonical boards' phone width. */
-        const val BOARD_WIDTH = 390f
-
         /** `Layout.ScreenGutter`, the padding the crop escapes. */
         const val GUTTER = 24f
 
