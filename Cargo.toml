@@ -69,7 +69,7 @@ hex = { version = "0.4" }
 # built-in backend — one crypto-provider feature must be picked, and
 # `rust_crypto` signs EdDSA through the same ed25519-dalek the rest of
 # the workspace uses (`aws_lc_rs` would add a C toolchain to every build).
-argon2 = { version = "0.5" }
+argon2 = { version = "0.6" }
 jsonwebtoken = { version = "11", features = ["rust_crypto"] }
 base64 = { version = "0.23" }
 
