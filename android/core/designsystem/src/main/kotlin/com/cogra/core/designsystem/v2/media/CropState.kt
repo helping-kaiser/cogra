@@ -107,11 +107,13 @@ class CropState internal constructor(initial: CropFraming) {
      * Reported by the view whenever the reader moves the window.
      *
      * A window is this picture's to record only once this picture's own
-     * window has been placed. One view serves the whole filmstrip and
-     * goes on showing the previous bitmap until the next decode lands,
-     * so a window arriving before then was measured against a picture
-     * this state knows nothing about (jakob 2026-09-01: "the preview of
-     * image 1 visibly changes every time i move image 2 crop").
+     * window has been placed. One view serves the whole filmstrip:
+     * asking it for the next picture blanks it outright, and it comes
+     * back holding the library's own default window — so a window
+     * reported before this framing's has been placed describes a
+     * picture, or a default, that is not this framing's (jakob
+     * 2026-09-01: "the preview of image 1 visibly changes every time i
+     * move image 2 crop").
      */
     internal fun onWindowChanged(next: CropFraming) {
         if (!seeded) return
@@ -226,9 +228,8 @@ class CropState internal constructor(initial: CropFraming) {
         // The new shape opens on its own largest window, never on the
         // previous shape's. The picture this framing describes is on
         // screen only once its own window has been placed against it;
-        // before that the view still holds the picture the filmstrip
-        // came from, and the re-frame is the decode's to do against the
-        // right bitmap.
+        // before that the view is between pictures, and the re-frame is
+        // the decode's to do against the right bitmap.
         val present = seeded
         seeded = false
         if (present) reopen(view)
