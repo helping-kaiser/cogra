@@ -26,6 +26,8 @@
       --surface-container: #221f1e; --surface-container-high: #2c2928; --surface-container-highest: #373433;
       --outline: #968f8d; --outline-variant: #4b4644;
     }
+    [data-flow] { position: relative; }
+    [data-flow]::after { content: attr(data-flow); position: absolute; top: -7px; right: -7px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }
   </style>
 </helmet>
 <div class="screen" data-theme="{{theme}}" style="width: 390px; height: 844px; display: flex; flex-direction: column; background: var(--surface); color: var(--on-surface); overflow: hidden; box-sizing: border-box; position: relative;">
@@ -49,14 +51,14 @@
     <div style="display: flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 24px; min-width: 64px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Sign and publish</div>
   </div>
 
-  <div style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5);"></div>
+  <div data-flow="2" style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5);"></div>
 
   <div style="position: absolute; left: 27px; right: 27px; top: 50%; transform: translateY(-50%); border-radius: 28px; background: var(--surface-container-high); color: var(--on-surface); padding: 24px; display: flex; flex-direction: column; gap: 16px; box-sizing: border-box;">
     <h2 style="margin: 0; font-size: 24px; line-height: 32px; font-weight: 400;">Signed actions</h2>
     <p style="margin: 0; font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">Each piece of a post — the post itself, every topic, every citation — is its own signed action, written in your name. They sign together: all of them land, or none does.</p>
     <p style="margin: 0; font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">You don't pay for these — a shared community pool covers members' signings. The pool is real and finite, so each action still counts.</p>
     <div style="display: flex; justify-content: flex-end;">
-      <span style="display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 16px; min-width: 64px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Close</span>
+      <span data-flow="1" style="display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 16px; min-width: 64px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Close</span>
     </div>
   </div>
 

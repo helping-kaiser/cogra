@@ -26,6 +26,8 @@
       --surface-container: #221f1e; --surface-container-high: #2c2928; --surface-container-highest: #373433;
       --outline: #968f8d; --outline-variant: #4b4644;
     }
+    [data-flow] { position: relative; }
+    [data-flow]::after { content: attr(data-flow); position: absolute; top: -7px; right: -7px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }
   </style>
 </helmet>
 <div class="screen" data-theme="{{theme}}" style="width: 390px; height: 844px; display: flex; flex-direction: column; background: var(--surface); color: var(--on-surface); overflow: hidden; box-sizing: border-box; position: relative;">
@@ -59,10 +61,10 @@
     <div style="display: flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 24px; min-width: 64px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Sign and publish</div>
   </div>
 
-  <div style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5);"></div>
+  <div data-flow="5" style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5);"></div>
 
   <div style="position: absolute; left: 30px; right: 30px; bottom: 24px; border-radius: 28px; background: var(--surface-container-high); color: var(--on-surface); padding: 16px; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box;">
-    <span style="position: absolute; right: 16px; top: 16px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; border: 1px solid var(--outline); color: var(--on-surface-variant); font-size: 12px; line-height: 16px; font-weight: 500;">?</span>
+    <span data-flow="1" style="position: absolute; right: 16px; top: 16px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; border: 1px solid var(--outline); color: var(--on-surface-variant); font-size: 12px; line-height: 16px; font-weight: 500;">?</span>
     <div style="display: flex; flex-direction: column;">
       <span style="font-size: 11px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; color: var(--on-surface-variant);">Your pick</span>
       <span style="display: inline-flex; align-items: baseline; gap: 8px;">
@@ -72,7 +74,7 @@
       </span>
     </div>
 
-    <div style="align-self: center; position: relative; width: 260px; height: 72px; border-radius: 16px; background: var(--surface-container-highest);">
+    <div data-flow="2" style="align-self: center; position: relative; width: 260px; height: 72px; border-radius: 16px; background: var(--surface-container-highest);">
       <span style="position: absolute; left: 8px; right: 8px; top: 50%; height: 1px; background: var(--outline-variant);"></span>
       <span style="position: absolute; left: 50%; top: 8px; bottom: 8px; width: 1px; background: var(--outline-variant);"></span>
       <span style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font-size: 11px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; color: var(--on-surface-variant); background: var(--surface-container-highest); padding: 0 2px;">Against</span>
@@ -83,8 +85,8 @@
     <p style="margin: 0; font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">Your own post always reaches you in full.</p>
 
     <div style="display: flex; justify-content: flex-end; gap: 8px;">
-      <span style="display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 16px; min-width: 64px; border-radius: 9999px; color: var(--primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Cancel</span>
-      <span style="display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 16px; min-width: 64px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Set</span>
+      <span data-flow="3" style="display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 16px; min-width: 64px; border-radius: 9999px; color: var(--primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Cancel</span>
+      <span data-flow="4" style="display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 16px; min-width: 64px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Set</span>
     </div>
   </div>
 
