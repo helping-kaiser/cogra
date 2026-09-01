@@ -67,6 +67,7 @@
     { "from": "Main", "via": 15, "label": "nav · New post", "to": [{ "gap": "guest-gate pattern board (not designed)", "case": "signed out" }] },
     { "from": "Main", "via": 16, "label": "nav · Wallet", "to": [{ "board": "WalletGuest" }] },
     { "from": "Main", "via": 17, "label": "nav · Profile", "to": [{ "gap": "guest-gate pattern board (not designed)", "case": "signed out" }] },
+    { "from": "Main", "via": 18, "label": "chats", "to": [{ "gap": "guest-gate pattern board (not designed)" }] },
 
     { "from": "FeedBare", "via": 1, "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "FeedBare", "via": 2, "label": "Sign in or join", "to": [{ "board": "SignIn" }] },
@@ -85,6 +86,7 @@
     { "from": "FeedBare", "via": 15, "label": "nav · New post", "to": [{ "gap": "guest-gate pattern board (not designed)", "case": "signed out" }] },
     { "from": "FeedBare", "via": 16, "label": "nav · Wallet", "to": [{ "board": "WalletGuest" }] },
     { "from": "FeedBare", "via": 17, "label": "nav · Profile", "to": [{ "gap": "guest-gate pattern board (not designed)", "case": "signed out" }] },
+    { "from": "FeedBare", "via": 18, "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
 
     { "from": "ApplicantFeed", "via": 1, "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "ApplicantFeed", "via": 2, "label": "Resend the link", "to": [{ "terminal": "self", "case": "the verification mail goes out again" }] },
@@ -103,6 +105,7 @@
     { "from": "ApplicantFeed", "via": 15, "label": "nav · New post", "to": [{ "gap": "applicant acting rights (not ruled)", "case": "applicant days" }] },
     { "from": "ApplicantFeed", "via": 16, "label": "nav · Wallet", "to": [{ "board": "WalletApplicant" }] },
     { "from": "ApplicantFeed", "via": 17, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] },
+    { "from": "ApplicantFeed", "via": 18, "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
 
     { "from": "ApplicantWaiting", "via": 1, "label": "author chip", "to": [{ "gap": "profile screen (not designed)" }] },
     { "from": "ApplicantWaiting", "via": 2, "label": "post overflow ⋮", "to": [{ "gap": "reader's post menu — licence terms / cite (not boarded)" }] },
@@ -118,6 +121,7 @@
     { "from": "ApplicantWaiting", "via": 12, "label": "nav · New post", "to": [{ "gap": "applicant acting rights (not ruled)", "case": "applicant days" }] },
     { "from": "ApplicantWaiting", "via": 13, "label": "nav · Wallet", "to": [{ "board": "WalletApplicant" }] },
     { "from": "ApplicantWaiting", "via": 14, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] },
+    { "from": "ApplicantWaiting", "via": 15, "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
 
     { "from": "VouchBack", "via": 1, "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "VouchBack", "via": 2, "label": "Not now", "to": [{ "terminal": "self", "case": "the vouch card steps aside" }] },
@@ -136,6 +140,7 @@
     { "from": "VouchBack", "via": 15, "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "VouchBack", "via": 16, "label": "nav · Wallet", "to": [{ "board": "Wallet", "case": "funds already" }, { "board": "WalletEmpty", "case": "still zero" }] },
     { "from": "VouchBack", "via": 17, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] },
+    { "from": "VouchBack", "via": 18, "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
 
     { "from": "VouchBackPad", "via": 1, "label": "? — how stances work", "to": [{ "board": "HelpDialog" }] },
     { "from": "VouchBackPad", "via": 2, "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick" }] },
@@ -158,6 +163,7 @@
     { "from": "KeyElsewhere", "via": 14, "label": "nav · New post", "to": [{ "board": "ComposePick", "case": "composing is open — the seal will ask for the key" }] },
     { "from": "KeyElsewhere", "via": 15, "label": "nav · Wallet", "to": [{ "board": "WalletKeyAbsent" }] },
     { "from": "KeyElsewhere", "via": 16, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] },
+    { "from": "KeyElsewhere", "via": 17, "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
 
     { "from": "InviteEntry", "via": 1, "label": "back", "to": [{ "terminal": "back" }] },
     { "from": "InviteEntry", "via": 2, "label": "invite link field", "to": [{ "terminal": "self", "case": "typing" }] },
@@ -228,6 +234,7 @@
     { "from": "Wallet", "via": 11, "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "Wallet", "via": 12, "label": "nav · Wallet", "to": [{ "terminal": "self", "case": "already here" }] },
     { "from": "Wallet", "via": 13, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] },
+    { "from": "Wallet", "via": 14, "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
 
     { "from": "WalletEmpty", "via": 1, "label": "? — What is CGT?", "to": [{ "board": "HelpDialog", "case": "the What-is-CGT text" }] },
     { "from": "WalletEmpty", "via": 2, "label": "copy the address", "to": [{ "terminal": "self", "case": "the address lands on the clipboard" }] },
@@ -237,6 +244,7 @@
     { "from": "WalletEmpty", "via": 6, "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "WalletEmpty", "via": 7, "label": "nav · Wallet", "to": [{ "terminal": "self", "case": "already here" }] },
     { "from": "WalletEmpty", "via": 8, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] },
+    { "from": "WalletEmpty", "via": 9, "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
 
     { "from": "WalletSetup", "via": 1, "label": "? — Your wallet key", "to": [{ "board": "HelpDialog", "case": "the Your-wallet-key text" }] },
     { "from": "WalletSetup", "via": 2, "label": "Create and publish", "to": [{ "board": "WalletAddressSeal" }] },
@@ -245,6 +253,7 @@
     { "from": "WalletSetup", "via": 5, "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "WalletSetup", "via": 6, "label": "nav · Wallet", "to": [{ "terminal": "self", "case": "already here" }] },
     { "from": "WalletSetup", "via": 7, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] },
+    { "from": "WalletSetup", "via": 8, "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
 
     { "from": "WalletAddressSeal", "via": 1, "label": "back arrow", "to": [{ "board": "WalletSetup", "case": "one stage back" }] },
     { "from": "WalletAddressSeal", "via": 2, "label": "X — leave", "to": [{ "board": "WalletSetup", "case": "the flow left — the wallet still waits for setup" }] },
@@ -269,6 +278,7 @@
     { "from": "WalletKeyAbsent", "via": 7, "label": "nav · New post", "to": [{ "board": "ComposePick", "case": "composing is open — the seal will ask for the key" }] },
     { "from": "WalletKeyAbsent", "via": 8, "label": "nav · Wallet", "to": [{ "terminal": "self", "case": "already here" }] },
     { "from": "WalletKeyAbsent", "via": 9, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] },
+    { "from": "WalletKeyAbsent", "via": 10, "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
 
     { "from": "WalletGuest", "via": 1, "label": "Keep browsing", "to": [{ "terminal": "back", "case": "back to the feed they came from" }] },
     { "from": "WalletGuest", "via": 2, "label": "Sign in or join", "to": [{ "board": "SignIn" }] },
@@ -277,12 +287,14 @@
     { "from": "WalletGuest", "via": 5, "label": "nav · New post", "to": [{ "gap": "guest-gate pattern board (not designed)", "case": "signed out" }] },
     { "from": "WalletGuest", "via": 6, "label": "nav · Wallet", "to": [{ "terminal": "self", "case": "already here" }] },
     { "from": "WalletGuest", "via": 7, "label": "nav · Profile", "to": [{ "gap": "guest-gate pattern board (not designed)", "case": "signed out" }] },
+    { "from": "WalletGuest", "via": 8, "label": "chats", "to": [{ "gap": "guest-gate pattern board (not designed)" }] },
 
     { "from": "WalletApplicant", "via": 1, "label": "nav · Feed", "to": [{ "board": "ApplicantFeed", "case": "first steps" }, { "board": "ApplicantWaiting", "case": "everything done" }] },
     { "from": "WalletApplicant", "via": 2, "label": "nav · Explore", "to": [{ "board": "Explore" }] },
     { "from": "WalletApplicant", "via": 3, "label": "nav · New post", "to": [{ "gap": "applicant acting rights (not ruled)", "case": "applicant days" }] },
     { "from": "WalletApplicant", "via": 4, "label": "nav · Wallet", "to": [{ "terminal": "self", "case": "already here" }] },
     { "from": "WalletApplicant", "via": 5, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] },
+    { "from": "WalletApplicant", "via": 6, "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
 
     { "from": "WalletCampaign", "via": 1, "label": "back — to the wallet", "to": [{ "board": "Wallet" }] },
     { "from": "WalletCampaign", "via": 2, "label": "campaign deposit row", "to": [{ "gap": "the rail record's view (not boarded — the traceability promise)" }] },
@@ -302,6 +314,7 @@
     { "from": "Explore", "via": 6, "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "Explore", "via": 7, "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "Explore", "via": 8, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] },
+    { "from": "Explore", "via": 9, "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
 
     { "from": "ExploreSearch", "via": 1, "label": "search field", "to": [{ "terminal": "self", "case": "typing refines" }, { "board": "ExploreNone", "case": "nothing carries that name" }] },
     { "from": "ExploreSearch", "via": 2, "label": "Everything (filter trigger)", "to": [{ "board": "ExploreFilter" }] },
@@ -347,6 +360,7 @@
     { "from": "Feed", "via": 13, "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "Feed", "via": 14, "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "Feed", "via": 15, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] },
+    { "from": "Feed", "via": 16, "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
 
     { "from": "FeedSheet", "via": 1, "label": "? — How the filter works", "to": [{ "board": "HelpDialog", "case": "the filter text" }] },
     { "from": "FeedSheet", "via": 2, "label": "filter chips (kinds · forms · also show)", "to": [{ "terminal": "self", "case": "adjusts what the feed admits" }] },
@@ -370,6 +384,7 @@
     { "from": "FeedNarrowed", "via": 13, "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "FeedNarrowed", "via": 14, "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "FeedNarrowed", "via": 15, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] },
+    { "from": "FeedNarrowed", "via": 16, "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
 
     { "from": "FeedNothing", "via": 1, "label": "filter chip (Nothing · showing seen)", "to": [{ "board": "FeedSheet" }] },
     { "from": "FeedNothing", "via": 2, "label": "Show posts again", "to": [{ "board": "Feed", "case": "the default restored" }] },
@@ -378,6 +393,7 @@
     { "from": "FeedNothing", "via": 5, "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "FeedNothing", "via": 6, "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "FeedNothing", "via": 7, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] },
+    { "from": "FeedNothing", "via": 8, "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
 
     { "from": "FeedFar", "via": 1, "label": "filter chip (3 kinds · 4 changes)", "to": [{ "board": "FeedSheet" }] },
     { "from": "FeedFar", "via": 2, "label": "author chip", "to": [{ "gap": "profile screen (not designed)" }] },
@@ -394,6 +410,7 @@
     { "from": "FeedFar", "via": 13, "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "FeedFar", "via": 14, "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "FeedFar", "via": 15, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] },
+    { "from": "FeedFar", "via": 16, "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
 
     { "from": "ReplyEntry", "via": 1, "label": "comment author chips", "to": [{ "gap": "profile screen (not designed)" }] },
     { "from": "ReplyEntry", "via": 2, "label": "comment overflow ⋮", "to": [{ "gap": "the comment's menu — cite / licence terms (not boarded)" }] },
@@ -627,6 +644,7 @@
     { "from": "ComposeExpired", "via": 15, "label": "nav · New post", "to": [{ "board": "ComposeDraft", "case": "a draft is kept — the prompt first" }] },
     { "from": "ComposeExpired", "via": 16, "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "ComposeExpired", "via": 17, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] },
+    { "from": "ComposeExpired", "via": 18, "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
 
     { "from": "FeedGallery", "via": 1, "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "FeedGallery", "via": 2, "label": "author chip", "to": [{ "gap": "profile screen (not designed)" }] },
@@ -642,6 +660,7 @@
     { "from": "FeedGallery", "via": 12, "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "FeedGallery", "via": 13, "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "FeedGallery", "via": 14, "label": "nav · Profile", "to": [{ "gap": "profile screen (not designed)" }] },
+    { "from": "FeedGallery", "via": 15, "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
 
     { "from": "ComposePicked", "via": 1, "label": "drag handles", "to": [{ "terminal": "self", "case": "drag to reorder — the first is the cover" }] },
     { "from": "ComposePicked", "via": 2, "label": "Describe", "to": [{ "board": "ComposeDescribe" }] },
