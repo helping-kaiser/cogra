@@ -101,14 +101,20 @@ class PostDetailViewModelTest {
         /** The gallery the last comment edit left standing. */
         var lastEditAttachments: List<AttachmentClaim> = emptyList()
 
+        /** The self-mark the last comment edit left standing. */
+        var lastEditSensitive: Boolean? = null
+
         override suspend fun prepareCommentEdit(
             id: String,
             content: String,
             attachments: List<AttachmentClaim>,
+            sensitive: Boolean,
+            sensitiveReason: String?,
         ): Outcome<PreparedContentView> {
             if (prepareFails) return Outcome.Failed(java.io.IOException("offline"))
             editPrepared += 1
             lastEditAttachments = attachments
+            lastEditSensitive = sensitive
             return Outcome.Success(
                 PreparedContentView("node-e", listOf(sealer.stage(Family.REVIEW))),
             )
@@ -133,6 +139,12 @@ class PostDetailViewModelTest {
         /** The gallery the last comment/reply creation carried. */
         var lastCommentAttachments: List<AttachmentClaim> = emptyList()
 
+        /** The self-mark the standing comment carries, for the edit to re-state. */
+        var selfMark: SelfMarkView = SelfMarkView(sensitive = false, reason = null)
+
+        override suspend fun commentSelfMark(id: String): Outcome<SelfMarkView?> =
+            Outcome.Success(selfMark)
+
         override suspend fun prepareComment(
             target: String,
             content: String,
@@ -140,6 +152,8 @@ class PostDetailViewModelTest {
             tags: List<TagClaim>,
             references: List<ReferenceClaim>,
             attachments: List<AttachmentClaim>,
+            pDirected: Double?,
+            pInterest: Double?,
         ): Outcome<PreparedContentView> {
             replyTargets += target
             commentPrepared += 1

@@ -28,8 +28,9 @@ import com.cogra.feature.content.wizard.PickedAsset
 enum class ReplyStep { Compose, Seal }
 
 /**
- * Which drawer is open over the seal (`ComposeLicense`, `ReplyPad`).
- * One at a time: each is a drawer the author opened over the same seal.
+ * Which drawer is open over the seal (`ComposeLicense`, `ReplyPad`, and
+ * the two declaring sections). One at a time: each is a drawer the
+ * author opened over the same seal.
  *
  * **There is no `Sensitive`** — jakob 2026-09-01: `ReplySeal`'s "Mark"
  * row (graph.json `via=8`) is not built until a veiled comment has a
@@ -37,8 +38,14 @@ enum class ReplyStep { Compose, Seal }
  * effect nothing draws (design/backlog.md item 25 part 4, which names
  * this lane as the one it blocks). The wire contract keeps its
  * `sensitive` field, defaulted and untouched.
+ *
+ * [Topics] and [References] carry the sections the post wizard shows
+ * inline on its details stage. The seal draws them as rows, and
+ * `ReferencePicker` is the board behind "+ Cite something"; the topic
+ * picker `graph.json` points at is **not boarded**, so the row opens the
+ * topic entry the app already ships rather than a screen invented here.
  */
-enum class ReplySealSheet { None, License, Stance }
+enum class ReplySealSheet { None, License, Stance, Topics, References }
 
 /** Whether the reply answers the post itself or one of its comments. */
 enum class ReplyTargetKind { Post, Comment }
