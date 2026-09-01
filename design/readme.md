@@ -1561,8 +1561,8 @@ entry first". What stands:
 - **`graph.json` is the screen graph** (`designs/canonical/graph.json`).
   Every interactive element on a board of a **wired** page carries
   `data-flow="n"` (1..n per board, drawn as a small orange badge by
-  the shell); each number has exactly one edge `{from, via, label,
-  to}`, and `to` lists every outcome as one of four kinds: a
+  the shell); each number has exactly one edge `{from, via, kind,
+  label, to}`, and `to` lists every outcome as one of four shapes: a
   **board**, a shared **pattern board**, a declared **terminal**
   (`back` / `self` / `os`), or an explicit **gap** — a design still
   owed, greppable, listed by the checker, drawn red on the maps.
@@ -1572,6 +1572,23 @@ entry first". What stands:
   the maps themselves) that are vocabulary, not destinations;
   `scanExempt` names boards whose semantic elements are inactive in
   the drawn state (the pad board under its scrim).
+- **Every edge declares its `kind`** — what the control *does*, not
+  where it lands. Five, and never a default: **`advance`** is
+  forward progress toward a journey's conclusion (Next, Sign, Save,
+  a compose step, drilling into the target you came to act on);
+  **`cancel`** abandons staged work (a wizard's X, Cancel, Discard,
+  and a back arrow that leaves the flow rather than stepping one
+  stage up inside it); **`back`** returns without abandoning
+  anything (that back arrow one stage up, a sheet's dismiss, closing
+  a read drill-in); **`nav`** is a lateral hop between top-level
+  surfaces (the five nav slots, the band's chats); **`detour`**
+  opens a side surface that leaves the journey untouched (help
+  dialogs, read-only menus, the signed-actions list, a caption
+  unfolding, a gallery pager). The flow engine path-searches over
+  `advance` edges alone, which is why a seal's cancel-X can never be
+  one: a flow satisfied through an abandonment is a lie.
+  `check-flows.mjs` fails on any edge carrying no kind or an unknown
+  one, and prints the census beside the summary.
 - **Numbers are stamped by the build, never by components.** JSX
   screens get them from `_build/flow-markers.mjs` — markup anchors
   applied after render, throwing on drift — so the design system
