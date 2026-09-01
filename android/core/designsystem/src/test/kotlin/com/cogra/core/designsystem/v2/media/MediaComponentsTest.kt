@@ -1,6 +1,7 @@
 package com.cogra.core.designsystem.v2.media
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
@@ -16,6 +17,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -359,5 +361,97 @@ class MediaComponentsTest {
         }
 
         compose.onNodeWithContentDescription("3 pictures").assertIsDisplayed()
+    }
+
+    // ---- The crop stage's size, and the framing every later preview
+    // draws (jakob 2026-09-01) ------------------------------------------
+
+    @Test
+    fun theCropViewportRunsToTheEdgesRatherThanSittingInTheGutter() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                Column(
+                    Modifier
+                        .width(BOARD_WIDTH.dp)
+                        .padding(horizontal = GUTTER.dp),
+                ) {
+                    MediaCrop(
+                        item = MediaItem(null, 1f),
+                        shape = MediaShape.Tall,
+                        state = rememberCropState(),
+                        testTag = "crop",
+                    )
+                }
+            }
+        }
+
+        // The board's 390: full bleed, not the 342 left inside the gutter.
+        // "the area for cropping was to small" is this number.
+        val viewport = compose.onNodeWithTag("crop").getUnclippedBoundsInRoot()
+        assertThat(viewport.width.value).isWithin(TOLERANCE).of(BOARD_WIDTH)
+    }
+
+    @Test
+    fun aFramedPictureIsPreviewedAsTheSectionTheAuthorKept() {
+        // Given a crop rect, the thumbnail draws that section: the source
+        // rectangle handed to the bitmap is the framing in pixels, so an
+        // author who cropped does not meet the uncropped picture again on
+        // a later stage and read it as their crop having been thrown away.
+        val rect = CropTransformation.sourceRect(
+            framing = CropFraming(0.25f, 0f, 0.75f, 0.5f),
+            width = 400,
+            height = 200,
+        )
+
+        assertThat(rect.left).isEqualTo(100)
+        assertThat(rect.top).isEqualTo(0)
+        assertThat(rect.right).isEqualTo(300)
+        assertThat(rect.bottom).isEqualTo(100)
+    }
+
+    @Test
+    fun anUnframedPictureIsPreviewedWhole() {
+        val rect = CropTransformation.sourceRect(CropFraming.Whole, width = 400, height = 200)
+
+        assertThat(rect.left).isEqualTo(0)
+        assertThat(rect.top).isEqualTo(0)
+        assertThat(rect.right).isEqualTo(400)
+        assertThat(rect.bottom).isEqualTo(200)
+    }
+
+    @Test
+    fun aFramingThatRoundsAwayToNothingStillKeepsAPixel() {
+        // `Bitmap.createBitmap` throws on an empty rectangle, and rounding
+        // a fraction against a small bitmap is exactly how one is made.
+        val rect = CropTransformation.sourceRect(
+            framing = CropFraming(0.999f, 0.999f, 1f, 1f),
+            width = 10,
+            height = 10,
+        )
+
+        assertThat(rect.width()).isAtLeast(1)
+        assertThat(rect.height()).isAtLeast(1)
+        assertThat(rect.right).isAtMost(10)
+        assertThat(rect.bottom).isAtMost(10)
+    }
+
+    @Test
+    fun twoFramingsOfOnePictureAreCachedApart() {
+        // The transformed bitmap is what the preview shows; two framings
+        // sharing a cache key would show one author's crop for another's.
+        val left = CropTransformation(CropFraming(0f, 0f, 0.5f, 1f)).cacheKey
+        val right = CropTransformation(CropFraming(0.5f, 0f, 1f, 1f)).cacheKey
+
+        assertThat(left).isNotEqualTo(right)
+    }
+
+    private companion object {
+        /** The canonical boards' phone width. */
+        const val BOARD_WIDTH = 390f
+
+        /** `Layout.ScreenGutter`, the padding the crop escapes. */
+        const val GUTTER = 24f
+
+        const val TOLERANCE = 0.5f
     }
 }
