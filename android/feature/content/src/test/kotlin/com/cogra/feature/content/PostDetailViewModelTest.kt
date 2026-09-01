@@ -14,6 +14,7 @@ import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ReferenceCandidateView
 import com.cogra.domain.ReferenceClaimView
+import com.cogra.domain.SelfMarkView
 import com.cogra.domain.UserError
 import com.cogra.domain.content.LandingSignal
 import com.cogra.domain.content.NodeLanding
