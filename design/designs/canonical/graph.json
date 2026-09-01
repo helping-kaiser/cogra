@@ -334,7 +334,7 @@
     { "from": "ExploreFilter", "via": 2, "kind": "advance", "label": "kind chips", "to": [{ "terminal": "self", "case": "narrows what the search shows" }] },
     { "from": "ExploreFilter", "via": 3, "kind": "advance", "label": "Ranked / Newest", "to": [{ "terminal": "self", "case": "swaps the order" }] },
     { "from": "ExploreFilter", "via": 4, "kind": "advance", "label": "show already seen", "to": [{ "terminal": "self", "case": "the toggle flips" }] },
-    { "from": "ExploreFilter", "via": 5, "kind": "advance", "label": "scrim — tap outside", "to": [{ "board": "ExploreSearch", "case": "the sheet closes" }] },
+    { "from": "ExploreFilter", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "ExploreSearch", "case": "the sheet closes" }] },
 
     { "from": "ExploreNone", "via": 1, "kind": "advance", "label": "search field", "to": [{ "terminal": "self", "case": "typing" }, { "board": "ExploreSearch", "case": "a name something carries" }] },
     { "from": "ExploreNone", "via": 2, "kind": "advance", "label": "Everything (filter trigger)", "to": [{ "board": "ExploreFilter" }] },
@@ -367,7 +367,7 @@
     { "from": "FeedSheet", "via": 3, "kind": "advance", "label": "Ranked / Newest", "to": [{ "terminal": "self", "case": "swaps the order" }] },
     { "from": "FeedSheet", "via": 4, "kind": "advance", "label": "show already seen", "to": [{ "terminal": "self", "case": "the toggle flips" }] },
     { "from": "FeedSheet", "via": 5, "kind": "advance", "label": "Reset", "to": [{ "terminal": "self", "case": "back to the default" }] },
-    { "from": "FeedSheet", "via": 6, "kind": "advance", "label": "scrim — tap outside", "to": [{ "board": "Feed", "case": "unchanged" }, { "board": "FeedNarrowed", "case": "narrowed" }, { "board": "FeedNothing", "case": "everything off" }, { "board": "FeedFar", "case": "far from the default" }] },
+    { "from": "FeedSheet", "via": 6, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "Feed", "case": "unchanged" }, { "board": "FeedNarrowed", "case": "narrowed" }, { "board": "FeedNothing", "case": "everything off" }, { "board": "FeedFar", "case": "far from the default" }] },
 
     { "from": "FeedNarrowed", "via": 1, "kind": "advance", "label": "filter chip (deviations spelled out)", "to": [{ "board": "FeedSheet" }] },
     { "from": "FeedNarrowed", "via": 2, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },

@@ -87,18 +87,16 @@
     },
     {
       "name": "narrow-the-feed",
-      "description": "The band's filter trigger opens the sheet, the sheet narrows the feed, and the reader opens a thread on what survives.",
+      "description": "The band's filter trigger opens the filter sheet; the sheet applies live, and tapping out leaves the reader on the narrowed feed.",
       "status": "resolved",
       "steps": [
         "start · Feed · 1 «Posts (filter chip)» → FeedSheet",
-        "FeedSheet · 6 «scrim — tap outside» → FeedNarrowed — narrowed",
-        "end · FeedNarrowed · 10 «comment count» → ReplyEntry"
+        "end · FeedSheet · 6 «scrim — tap outside» → FeedNarrowed — narrowed"
       ],
       "boards": [
         "Feed",
         "FeedSheet",
-        "FeedNarrowed",
-        "ReplyEntry"
+        "FeedNarrowed"
       ]
     },
     {
@@ -213,7 +211,9 @@
       "flows": [
         "narrow-the-feed"
       ],
-      "endpoint": []
+      "endpoint": [
+        "narrow-the-feed"
+      ]
     },
     "FeedSheet": {
       "flows": [
@@ -253,11 +253,9 @@
     },
     "ReplyEntry": {
       "flows": [
-        "narrow-the-feed",
         "reply-to-a-post"
       ],
       "endpoint": [
-        "narrow-the-feed",
         "reply-to-a-post"
       ]
     },
