@@ -13,6 +13,7 @@ const {
   BorrowedViewBand,
   MonogramAvatar,
   ActorChip,
+  ProfileHeader,
   EmptyState,
   LoadingState,
   Snackbar,
@@ -61,6 +62,7 @@ const {
   WashCard,
   StancePad,
   StanceReadout,
+  StanceValue,
   SensitiveVeil,
   SensitiveScope,
   RedactedContent,
@@ -307,6 +309,167 @@ function SearchTriggerRow({ reading }) {
 /* The "?" — the master, defaulted to this canvas's usual label. */
 function HelpDot({ ariaLabel = "How searching works" }) {
   return <SystemHelpDot ariaLabel={ariaLabel} />;
+}
+
+/* The own-profile band cluster (profile round): the overflow and the gear on
+   the band's edge — chats arrives built into the band itself. Shared by the
+   member and applicant own-profile boards. */
+function ProfileBandIcon({ name, label }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      className="cg-state cg-focus"
+      style={{ display: "grid", placeItems: "center", height: "var(--touch-target-min)", width: "var(--touch-target-min)", border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0 }}
+    >
+      <Icon name={name} />
+    </button>
+  );
+}
+function ProfileBand({ children }) {
+  return (
+    <CograBand
+      trailing={
+        <span style={{ display: "flex", alignItems: "center" }}>
+          <ProfileBandIcon name="more_vert" label="More — share your profile" />
+          <ProfileBandIcon name="settings" label="Settings" />
+        </span>
+      }
+    >
+      {children}
+    </CograBand>
+  );
+}
+
+/* A person row on the stances page — the actor, and THE STANCE THE ROW IS
+   ABOUT (jakob 2026-09-01): the record's own value, face and pair, read-only.
+   Unlike a follow, a stance has sign and magnitude, so the value is the
+   row's information; acting on the person means opening their profile first
+   — the whole row does exactly that. */
+function StanceRow({ name, handle, src, pDirected, pInterest }) {
+  return (
+    <button
+      type="button"
+      className="cg-state cg-focus"
+      style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", boxSizing: "border-box", minHeight: 56, border: 0, background: "none", padding: "6px 16px", cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left" }}
+    >
+      <MonogramAvatar name={name} size={40} src={src} />
+      <span style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>{name}</span>
+        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>@{handle}</span>
+      </span>
+      <StanceValue pDirected={pDirected} pInterest={pInterest} />
+    </button>
+  );
+}
+
+/* The chronicle's tab row (profile round, 2026-09-01): full-width icon tabs,
+   the way every social profile draws this row — the segmented pill was ruled
+   out at three options. Icon-only cells with accessible names; the selected
+   tab speaks in primary AND a 2px underline. The underline is a deliberate
+   deviation from "selection is colour only": an icon's colour alone is too
+   quiet to carry which of three same-weight glyphs is on. Screen-local until
+   it settles, then it graduates to components/. */
+function ChronicleTabs({ value = "everything" }) {
+  const TABS = [
+    { id: "posts", icon: "dynamic_feed", label: "Posts" },
+    { id: "comments", icon: "chat_bubble", label: "Comments" },
+    { id: "everything", icon: "history", label: "Everything" },
+  ];
+  return (
+    <div role="group" aria-label="What the chronicle shows" style={{ display: "flex", borderBottom: "1px solid var(--border-hairline)" }}>
+      {TABS.map((tab) => {
+        const selected = tab.id === value;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            aria-pressed={selected}
+            aria-label={tab.label}
+            className="cg-state cg-focus"
+            style={{
+              flex: 1,
+              display: "grid",
+              placeItems: "center",
+              minHeight: "var(--touch-target-min)",
+              border: 0,
+              background: "none",
+              padding: 0,
+              cursor: "pointer",
+              color: selected ? "var(--primary)" : "var(--text-secondary)",
+              boxShadow: selected ? "inset 0 -2px 0 var(--primary)" : "none",
+            }}
+          >
+            <Icon name={tab.icon} size={22} />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* The profile's chronicle as CONTAINERS, the wallet history's anatomy (jakob
+   2026-09-01 — "draw inspiration from there"): each act its own card on the
+   surface-card ground, a leading 40px disc carrying the act's kind (a glyph,
+   or the stance record's own face), the verb and its snippet, the time on the
+   trailing edge, Still settling where an act pends. A card with somewhere to
+   go is a button; a record with no destination is the same card, inert. */
+function ChronicleCard({ glyph, face, label, context, snippet, time, pending = false, link = true }) {
+  const disc = (
+    <span
+      style={{ width: 40, height: 40, borderRadius: "var(--radius-full)", background: "var(--surface-container-high)", color: "var(--text-secondary)", display: "grid", placeItems: "center", flex: "none" }}
+    >
+      {face ? <StanceValue pDirected={face.pDirected} pInterest={face.pInterest} showPair={false} /> : <Icon name={glyph ?? "history"} size={20} />}
+    </span>
+  );
+  const inner = (
+    <>
+      {disc}
+      <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+        <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+          <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>{label}</span>
+          {context && <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>{context}</span>}
+        </span>
+        {snippet && (
+          <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{snippet}</span>
+        )}
+      </span>
+      <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flex: "none" }}>
+        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>{time}</span>
+        {pending && <PendingMarker />}
+      </span>
+    </>
+  );
+  const style = {
+    display: "flex",
+    alignItems: "center",
+    gap: "var(--space-3)",
+    width: "100%",
+    boxSizing: "border-box",
+    border: 0,
+    borderRadius: "var(--radius-medium)",
+    background: "var(--surface-card)",
+    padding: "var(--space-3)",
+    fontFamily: "var(--font-sans)",
+    color: "var(--on-surface)",
+    textAlign: "left",
+  };
+  return link ? (
+    <button type="button" className="cg-state cg-focus" style={{ ...style, cursor: "pointer" }}>
+      {inner}
+    </button>
+  ) : (
+    <div style={style}>{inner}</div>
+  );
+}
+
+/* The chronicle column: cards on 8px of surface, the wallet history's seam. */
+function ChronicleList({ children }) {
+  return (
+    <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "8px 16px 0" }}>
+      {children}
+    </div>
+  );
 }
 
 /* The post-detail column: the read surface a card opens into. */
