@@ -149,6 +149,51 @@ async fn an_unpriced_connection_charges_the_default_page(pool: PgPool) {
     assert_eq!(first_error(&response), "Query is too complex.");
 }
 
+/// `totalCount` is one aggregate per connection, not one per edge, but
+/// async-graphql hands a connection field a single `child_complexity` —
+/// a flat sum over the whole selection set, drawing no line between the
+/// connection's own fields and its edges. `connection_cost` multiplies
+/// that sum by the page size, so a `totalCount` carrying any weight at
+/// all would be charged once per row it does not read. Pinning both
+/// queries to the same flip point is what keeps that weight at zero: the
+/// `post` field, then the connection at its requested page times
+/// `edges { node { id } }` — three, and three only.
+///
+/// (´claim:budgets:a-connection-prices-the-requested-or-default-page´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn total_count_is_not_charged_per_edge(pool: PgPool) {
+    const NIL_ID: &str = "00000000-0000-0000-0000-000000000000";
+    let page = "edges { node { id } }";
+    let edges_only =
+        format!("{{ post(id: \"{NIL_ID}\") {{ comments(first: 100) {{ {page} }} }} }}");
+    let with_count =
+        format!("{{ post(id: \"{NIL_ID}\") {{ comments(first: 100) {{ totalCount {page} }} }} }}");
+
+    let cost = 1 + connection_cost(Some(100), None, 3);
+    let budgets = |complexity| QueryBudgets {
+        depth: 15,
+        complexity,
+        introspection_enabled: false,
+    };
+
+    let exact = schema(pool.clone(), budgets(cost));
+    for query in [&edges_only, &with_count] {
+        let response = execute(&exact, query).await;
+        assert!(
+            response.errors.is_empty(),
+            "asking for the count must not raise the price: {:?}",
+            response.errors
+        );
+    }
+
+    let under = schema(pool, budgets(cost - 1));
+    assert_eq!(
+        first_error(&execute(&under, &edges_only).await),
+        "Query is too complex.",
+        "the pinned cost has to be the real flip point"
+    );
+}
+
 /// The canonical introspection query GraphiQL and codegen tools issue —
 /// ~13 levels deep through the TypeRef ofType recursion.
 const INTROSPECTION_QUERY: &str = r#"
