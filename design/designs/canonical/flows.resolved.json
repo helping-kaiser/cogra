@@ -62,6 +62,7 @@
         "end · AvatarSeal · 4 «Sign the change» → back — signed — shown everywhere you appear"
       ],
       "boards": [
+        "Profile",
         "AvatarCrop",
         "AvatarSeal"
       ]
@@ -78,6 +79,7 @@
         "end · ProfileEditSeal · 4 «Sign the change» → back — signed — the profile updates"
       ],
       "boards": [
+        "Profile",
         "ProfileEdit",
         "AvatarCrop",
         "ProfileEditSeal"
@@ -93,6 +95,7 @@
         "end · FeedNarrowed · 10 «comment count» → ReplyEntry"
       ],
       "boards": [
+        "Feed",
         "FeedSheet",
         "FeedNarrowed",
         "ReplyEntry"
@@ -122,6 +125,7 @@
         "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
       ],
       "boards": [
+        "Feed",
         "ReplyEntry",
         "ReplyCompose",
         "ReplySeal"
@@ -147,9 +151,7 @@
         "edit-avatar-standalone",
         "edit-avatar-via-edit-screen"
       ],
-      "endpoint": [
-        "edit-avatar-standalone"
-      ]
+      "endpoint": []
     },
     "AvatarSeal": {
       "flows": [
@@ -195,11 +197,15 @@
     },
     "Feed": {
       "flows": [
+        "narrow-the-feed",
         "open-a-topic",
+        "reply-to-a-post",
         "sign-in"
       ],
       "endpoint": [
+        "narrow-the-feed",
         "open-a-topic",
+        "reply-to-a-post",
         "sign-in"
       ]
     },
@@ -213,17 +219,23 @@
       "flows": [
         "narrow-the-feed"
       ],
+      "endpoint": []
+    },
+    "Profile": {
+      "flows": [
+        "edit-avatar-standalone",
+        "edit-avatar-via-edit-screen"
+      ],
       "endpoint": [
-        "narrow-the-feed"
+        "edit-avatar-standalone",
+        "edit-avatar-via-edit-screen"
       ]
     },
     "ProfileEdit": {
       "flows": [
         "edit-avatar-via-edit-screen"
       ],
-      "endpoint": [
-        "edit-avatar-via-edit-screen"
-      ]
+      "endpoint": []
     },
     "ProfileEditSeal": {
       "flows": [
@@ -277,6 +289,11 @@
     "FeedNarrowed/3: reader's post menu — licence terms / cite (not boarded)",
     "FeedNarrowed/6: the topic page (ruled 2026-09-01 — not designed)",
     "FeedNarrowed/9: Post Score drill-down (backlog item 13)",
+    "Profile/1: the chat surface (not designed)",
+    "Profile/2: the profile's menu — mention / share (not boarded)",
+    "Profile/3: the settings screen (not designed)",
+    "Profile/7: the invites screen (not designed)",
+    "Profile/9: the post detail view (not boarded standalone — drawn only under the comments sheet)",
     "ProfileEdit/6: field-error states (not boarded)",
     "ProfileEditSeal/4: network-error pattern board (not designed)",
     "ReplyEntry/2: the comment's menu — cite / licence terms (not boarded)",

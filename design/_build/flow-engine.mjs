@@ -177,7 +177,7 @@ function resolveStart(flow, view, fails) {
     fails.push(`flow "${flow.name}": start declares neither a board nor a control`);
     return null;
   }
-  if (s.via === undefined) return { board: s.board, step: `start · ${s.board}`, used: [] };
+  if (s.via === undefined) return { board: s.board, from: [s.board], step: `start · ${s.board}`, used: [] };
 
   const edge = edgeByVia.get(`${s.board}/${s.via}`);
   if (!edge) {
@@ -192,6 +192,7 @@ function resolveStart(flow, view, fails) {
   }
   return {
     board: outcome.board,
+    from: [s.board, outcome.board], // the flow begins on the board the start edge leaves
     step: `start · ${s.board} · ${s.via} «${edge.label}» → ${outcome.board}${outcome.case ? ` — ${outcome.case}` : ""}`,
     used: [`${s.board}/${s.via}`],
   };
@@ -218,7 +219,7 @@ export function resolveFlow(flow, view) {
   // points[j] departs by points[j].pin toward points[j + 1].
   const points = [{ board: start.board }, ...(flow.waypoints ?? []), { board: end.board }];
   const steps = [start.step];
-  const boards = [start.board];
+  const boards = [...(start.from ?? [start.board])];
   const used = [...start.used];
 
   for (let j = 0; j < points.length - 1; j += 1) {
@@ -275,7 +276,7 @@ export function resolveFlow(flow, view) {
   if (o.gap !== undefined) result.blockedBy = o.gap;
   if (start.startsOn) result.startsOn = start.startsOn;
   if (start.startsUndesigned?.length) result.startsUndesigned = start.startsUndesigned;
-  return { ...result, fails: [], startBoard: start.board, finalBoard: boards[boards.length - 1], used };
+  return { ...result, fails: [], startBoard: boards[0], finalBoard: boards[boards.length - 1], used };
 }
 
 // ------------------------------------------------------------------- the run
