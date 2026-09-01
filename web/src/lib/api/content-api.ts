@@ -15,6 +15,7 @@ import {
   PrepareCommentEditDocument,
   PreparePostDocument,
   PreparePostEditDocument,
+  type CommentRepliesQuery,
   type LandingState,
   type PostDetailQuery,
   type PostsQuery,
@@ -30,8 +31,16 @@ export type PostView = PostsQuery["posts"]["edges"][number]["node"];
 
 type DetailPost = NonNullable<PostDetailQuery["post"]>;
 export type CommentView = DetailPost["comments"]["edges"][number]["node"];
-/** A nested reply — one prefetched level under each comment. */
-export type ReplyView = CommentView["replies"]["edges"][number]["node"];
+/**
+ * A reply, as the EXPAND read serves it (Q49).
+ *
+ * It is no longer derived from the thread read, because the thread read no
+ * longer carries replies: a comment arrives with its branch as a count, and
+ * the nodes only exist once a reader unfolds one.
+ */
+export type ReplyView = NonNullable<
+  CommentRepliesQuery["comment"]
+>["replies"]["edges"][number]["node"];
 
 export type Page<T> = {
   items: readonly T[];
@@ -145,9 +154,6 @@ export function sensitiveInput(sensitive: boolean | undefined, reason: string | 
 /** One page per fetch; the server default is the same number. */
 export const CONTENT_PAGE_SIZE = 20;
 
-/** The reply prefetch depth of every thread read — one level. */
-export const REPLIES_FIRST = 3;
-
 /**
  * The landed-only opt-out (api-spec.md "Pagination"). Reads serve
  * pending entries by default — they are their author's content already;
@@ -168,7 +174,7 @@ export async function fetchCommentReplies(
   commentId: string,
   after: string | null = null,
   options: ListingOptions = {},
-): Promise<Outcome<Page<CommentView>>> {
+): Promise<Outcome<Page<ReplyView>>> {
   const fetched = await fetchOutcome(() =>
     client.query({
       query: CommentRepliesDocument,
@@ -176,7 +182,6 @@ export async function fetchCommentReplies(
         id: commentId,
         first: CONTENT_PAGE_SIZE,
         after,
-        repliesFirst: REPLIES_FIRST,
         includePending: includePendingOf(options),
       },
       fetchPolicy: "network-only",
@@ -231,7 +236,6 @@ export async function fetchPostDetail(
         id,
         commentsFirst: CONTENT_PAGE_SIZE,
         commentsAfter,
-        repliesFirst: REPLIES_FIRST,
         includePending: includePendingOf(options),
       },
       fetchPolicy: "network-only",

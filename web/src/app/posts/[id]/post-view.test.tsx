@@ -63,8 +63,8 @@ type FixtureComment = {
   authorId?: string;
   edited?: boolean;
   pending?: boolean;
-  replies?: FixtureComment[];
-  repliesHaveMore?: boolean;
+  /** What `CommentConnection.totalCount` reports for this comment's branch. */
+  replyCount?: number;
   topics?: TopicFixture[];
   references?: ReferenceFixture[];
   attachments?: unknown[];
@@ -135,22 +135,13 @@ function commentNode(comment: FixtureComment, withReplies = true): Record<string
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: comment.topics ?? [],
     references: comment.references ?? [],
-    ...(withReplies
-      ? {
-          replies: {
-            __typename: "CommentConnection",
-            edges: (comment.replies ?? []).map((reply) => ({
-              __typename: "CommentEdge",
-              node: commentNode(reply, false),
-            })),
-            pageInfo: {
-              __typename: "PageInfo",
-              hasNextPage: comment.repliesHaveMore ?? false,
-              endCursor: null,
-            },
-          },
-        }
-      : {}),
+    // Q49: a comment carries its branch as a COUNT, never as a page — on the
+    // thread read and on the expand read alike. `withReplies` is gone with the
+    // prefetch; every node answers the same way.
+    replies: {
+      __typename: "CommentConnection",
+      totalCount: comment.replyCount ?? 0,
+    },
   };
 }
 
@@ -239,9 +230,24 @@ describe("PostView", () => {
     server.use(
       graphql.query("PostDetail", () =>
         HttpResponse.json({
-          data: detail("u1", [
-            { id: "c1", body: "First!", replies: [{ id: "c1a", body: "Nested" }] },
-          ]),
+          data: detail("u1", [{ id: "c1", body: "First!", replyCount: 1 }]),
+        }),
+      ),
+      graphql.query("CommentReplies", () =>
+        HttpResponse.json({
+          data: {
+            comment: {
+              __typename: "Comment",
+              id: "c1",
+              replies: {
+                __typename: "CommentConnection",
+                edges: [
+                  { __typename: "CommentEdge", node: commentNode({ id: "c1a", body: "Nested" }) },
+                ],
+                pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+              },
+            },
+          },
         }),
       ),
     );
@@ -253,7 +259,9 @@ describe("PostView", () => {
     // (design.md §6; roadmap slice 2.2).
     expect(await screen.findByTestId("post-stance")).toBeInTheDocument();
     expect(screen.getByTestId("comment-stance-c1")).toBeInTheDocument();
-    expect(screen.getByTestId("comment-stance-c1a")).toBeInTheDocument();
+    // The reply arrives unfolded, and wears the control like anything else.
+    fireEvent.click(screen.getByTestId("replies-more-c1"));
+    expect(await screen.findByTestId("comment-stance-c1a")).toBeInTheDocument();
   });
 
   it("wears the viewer's own standing on the post and on a comment", async () => {
@@ -533,18 +541,13 @@ describe("PostView", () => {
     expect(screen.getByTestId("comment-signed")).toBeInTheDocument();
   });
 
-  it("renders prefetched replies nested and expands past them", async () => {
+  // Q49: the thread read carries no replies at all. A branch is a count, and
+  // the nodes arrive only for the reader who unfolds one.
+  it("collapses a branch behind its count and unfolds it on request", async () => {
     server.use(
       graphql.query("PostDetail", () =>
         HttpResponse.json({
-          data: detail("author-1", [
-            {
-              id: "c1",
-              body: "top",
-              replies: [{ id: "r1", body: "nested" }],
-              repliesHaveMore: true,
-            },
-          ]),
+          data: detail("author-1", [{ id: "c1", body: "top", replyCount: 2 }]),
         }),
       ),
       graphql.query("CommentReplies", () =>
@@ -555,7 +558,10 @@ describe("PostView", () => {
               id: "c1",
               replies: {
                 __typename: "CommentConnection",
-                edges: [{ __typename: "CommentEdge", node: commentNode({ id: "r2", body: "more" }) }],
+                edges: [
+                  { __typename: "CommentEdge", node: commentNode({ id: "r1", body: "nested" }) },
+                  { __typename: "CommentEdge", node: commentNode({ id: "r2", body: "more" }) },
+                ],
                 pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
               },
             },
@@ -564,9 +570,39 @@ describe("PostView", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+    // Nothing of the branch is on screen, and the line promises the count.
+    const unfold = await screen.findByTestId("replies-more-c1");
+    expect(unfold).toHaveTextContent("View 2 replies");
+    expect(screen.queryByTestId("post-comment-r1")).not.toBeInTheDocument();
+
+    fireEvent.click(unfold);
     expect(await screen.findByTestId("post-comment-r1")).toHaveTextContent("nested");
-    fireEvent.click(screen.getByTestId("replies-more-c1"));
-    expect(await screen.findByTestId("post-comment-r2")).toHaveTextContent("more");
+    expect(screen.getByTestId("post-comment-r2")).toHaveTextContent("more");
+    // The whole branch came in one page, so nothing is left to ask for.
+    expect(screen.queryByTestId("replies-more-c1")).not.toBeInTheDocument();
+  });
+
+  it("says one reply in the singular", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: detail("author-1", [{ id: "c1", body: "top", replyCount: 1 }]),
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId("replies-more-c1")).toHaveTextContent("View 1 reply");
+  });
+
+  it("draws no unfold line on a comment nobody answered", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("author-1", [{ id: "c1", body: "top" }]) }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await screen.findByTestId("post-comment-c1");
     expect(screen.queryByTestId("replies-more-c1")).not.toBeInTheDocument();
   });
 
