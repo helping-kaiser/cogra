@@ -14,6 +14,7 @@
 // reader who taps "Add pictures instead" and changes their mind would otherwise
 // lose their paragraphs to a mis-tap — but only the active side is ever sent.
 
+import type { GalleryEntryDraft } from "@/lib/api/content-api";
 import type { Crop } from "@/lib/ui2/media/crop";
 import { CENTERED } from "@/lib/ui2/media/crop";
 import { POST_SHAPES, type PostShape } from "@/lib/ui2/media/aspect";
@@ -228,14 +229,20 @@ export function signedActions(state: WizardState): number {
 }
 
 /** The gallery in order, or null while any asset is still unresolved. */
-export function attachmentIds(state: WizardState): readonly string[] | null {
+export function attachmentClaims(state: WizardState): readonly GalleryEntryDraft[] | null {
   if (state.mode === "words") return null;
-  const ids: string[] = [];
+  const claims: GalleryEntryDraft[] = [];
   for (const asset of state.assets) {
     if (asset.upload.kind !== "done") return null;
-    ids.push(asset.upload.mediaId);
+    // Blank is not a description: a decorative picture carries null so a
+    // screen reader is told "no description" rather than "described as
+    // nothing".
+    claims.push({
+      mediaId: asset.upload.mediaId,
+      altText: asset.altText.trim() === "" ? null : asset.altText.trim(),
+    });
   }
-  return ids;
+  return claims;
 }
 
 /** The words half, or null on a media post — the XOR, as the input wants it. */
@@ -336,12 +343,21 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
     case "focus":
       return { ...state, focused: Math.min(Math.max(0, action.index), Math.max(0, state.assets.length - 1)) };
 
-    case "shape":
-      // The shape is the post's, so changing it re-frames every picture. The
-      // per-picture framing is kept: a reader who nudged three pictures and then
-      // tried a different shape has not asked to lose that work, and every crop
-      // stays valid because the model clamps to the unit square at any ratio.
-      return { ...state, shape: action.shape };
+    case "shape": {
+      // The shape is the post's, so changing it re-frames every picture — and
+      // re-framing happens against the ORIGINAL picture, never against the last
+      // crop. The measured area is the previous shape's rectangle, so keeping
+      // it would bake the old shape into the upload; dropping it makes the
+      // cropper measure a fresh one from the media. The position and zoom stay,
+      // so a reader who framed three pictures and then tried another shape
+      // keeps where they had put each one.
+      if (action.shape === state.shape) return state;
+      return {
+        ...state,
+        shape: action.shape,
+        assets: state.assets.map((asset) => ({ ...asset, crop: { ...asset.crop, area: null } })),
+      };
+    }
 
     case "crop":
       return withAsset(state, action.id, (asset) => ({ ...asset, crop: action.crop }));

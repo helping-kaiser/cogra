@@ -9,7 +9,7 @@ import { CENTERED } from "@/lib/ui2/media/crop";
 import { PUBLIC_DOMAIN } from "@/lib/license";
 import {
   advanceGate,
-  attachmentIds,
+  attachmentClaims,
   bodyContent,
   bodyGate,
   emptyWizard,
@@ -27,6 +27,10 @@ import {
 } from "./wizard";
 
 const bytes = (n: number) => new Blob([new Uint8Array(n) as BlobPart]);
+
+/** The gallery these ids make, undescribed — the default in these fixtures. */
+const claims = (...mediaIds: readonly string[]) =>
+  mediaIds.map((mediaId) => ({ mediaId, altText: null }));
 
 function run(state: WizardState, ...actions: readonly WizardAction[]): WizardState {
   return actions.reduce(wizardReducer, state);
@@ -159,11 +163,11 @@ describe("the body XOR", () => {
   it("sends words on a words post and a gallery on a media post, never both", () => {
     const words = run(emptyWizard(), { type: "mode", mode: "words" }, { type: "words", words: "hi" });
     expect(bodyContent(words)).toBe("hi");
-    expect(attachmentIds(words)).toBeNull();
+    expect(attachmentClaims(words)).toBeNull();
 
     const media = uploaded(run(emptyWizard(), picks(2)));
     expect(bodyContent(media)).toBeNull();
-    expect(attachmentIds(media)).toEqual(["m-a0", "m-a1"]);
+    expect(attachmentClaims(media)).toEqual(claims("m-a0", "m-a1"));
   });
 
   it("keeps the inactive side's draft, so a mis-tap loses nothing", () => {
@@ -181,7 +185,7 @@ describe("the body XOR", () => {
 
     const back = wizardReducer(both, { type: "mode", mode: "words" });
     expect(bodyContent(back)).toBe("three weekends at low tide");
-    expect(attachmentIds(back)).toBeNull();
+    expect(attachmentClaims(back)).toBeNull();
   });
 
   it("returns to the pick screen when the body changes sides", () => {
@@ -243,15 +247,36 @@ describe("the picker", () => {
     expect(run(emptyWizard(), { type: "focus", index: 3 }).focused).toBe(0);
   });
 
-  it("keeps per-picture framing when the post's shape changes", () => {
+  // Round 5: "shape-switch must allow re-framing any section at any ratio". The
+  // measured rectangle carries the OLD shape, so keeping it would bake the old
+  // shape into the upload; dropping it makes the cropper measure a fresh one
+  // against the original picture. Where the reader had put each picture — the
+  // position and the zoom — is theirs and stays.
+  it("re-frames every picture against the original when the post's shape changes", () => {
     const framed = run(
       emptyWizard(),
       picks(2),
-      { type: "crop", id: "a1", crop: { zoom: 2, x: 0.25, y: 0.75 } },
+      {
+        type: "crop",
+        id: "a1",
+        crop: { x: 12, y: -8, zoom: 2, area: { x: 0, y: 100, width: 800, height: 1000 } },
+      },
       { type: "shape", shape: "wide" },
     );
     expect(framed.shape).toBe("wide");
-    expect(framed.assets[1]!.crop).toEqual({ zoom: 2, x: 0.25, y: 0.75 });
+    expect(framed.assets[1]!.crop).toEqual({ x: 12, y: -8, zoom: 2, area: null });
+    expect(framed.assets[0]!.crop.area).toBeNull();
+  });
+
+  it("leaves the framing untouched when the shape does not actually change", () => {
+    const area = { x: 0, y: 100, width: 800, height: 1000 };
+    const framed = run(
+      emptyWizard(),
+      picks(1),
+      { type: "crop", id: "a0", crop: { x: 1, y: 2, zoom: 2, area } },
+      { type: "shape", shape: "tall" },
+    );
+    expect(framed.assets[0]!.crop.area).toEqual(area);
   });
 });
 
@@ -287,13 +312,13 @@ describe("the uploads", () => {
   it("opens the seal once every asset has an id, and closes it again on a retry", () => {
     const done = uploaded(run(emptyWizard(), picks(2)));
     expect(sealGate(done).ok).toBe(true);
-    expect(attachmentIds(done)).toEqual(["m-a0", "m-a1"]);
+    expect(attachmentClaims(done)).toEqual(claims("m-a0", "m-a1"));
 
     // A retry puts one asset back in flight; the gate must close again rather
     // than leaving a stale "ready".
     const retrying = wizardReducer(done, { type: "upload", id: "a0", upload: { kind: "uploading" } });
     expect(sealGate(retrying).ok).toBe(false);
-    expect(attachmentIds(retrying)).toBeNull();
+    expect(attachmentClaims(retrying)).toBeNull();
   });
 
   it("keeps the gallery in pick order however the uploads finish", () => {
@@ -304,7 +329,7 @@ describe("the uploads", () => {
       { type: "upload", id: "a0", upload: { kind: "done", mediaId: "first" } },
       { type: "upload", id: "a1", upload: { kind: "done", mediaId: "second" } },
     );
-    expect(attachmentIds(state)).toEqual(["first", "second", "third"]);
+    expect(attachmentClaims(state)).toEqual(claims("first", "second", "third"));
   });
 
   it("never asks the seal about uploads on a words post", () => {

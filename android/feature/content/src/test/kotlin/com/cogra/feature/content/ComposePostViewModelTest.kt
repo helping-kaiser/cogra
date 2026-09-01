@@ -11,6 +11,7 @@ import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ReferenceCandidateView
 import com.cogra.domain.ReferenceClaimView
+import com.cogra.domain.SelfMarkView
 import com.cogra.domain.TopicClaimView
 import com.cogra.domain.UserError
 import com.cogra.domain.references.ReferenceClaim
@@ -56,6 +57,13 @@ class ComposePostViewModelTest {
         var lastEdit: List<Any?> = emptyList()
         var editCalls = 0
 
+        /** The author's own mark the edited post already carries. */
+        var selfMark: SelfMarkView? = SelfMarkView(sensitive = false, reason = null)
+        var selfMarkOutcome: Outcome<SelfMarkView?>? = null
+
+        /** What the last edit re-stated: the switch, then its reason. */
+        var lastEditMark: Pair<Boolean, String?>? = null
+
         /** The topics the edited post already carries. */
         var loadedTopics: List<TopicClaimView> = emptyList()
 
@@ -93,14 +101,20 @@ class ComposePostViewModelTest {
             )
         }
 
+        override suspend fun postSelfMark(id: String): Outcome<SelfMarkView?> =
+            selfMarkOutcome ?: Outcome.Success(selfMark)
+
         override suspend fun preparePostEdit(
             id: String,
             title: String?,
             description: String?,
             content: String,
+            sensitive: Boolean,
+            sensitiveReason: String?,
         ): Outcome<PreparedContentView> {
             editCalls += 1
             lastEdit = listOf(id, title, description, content)
+            lastEditMark = sensitive to sensitiveReason
             return editOutcome ?: Outcome.Success(
                 PreparedContentView(id, listOf(sealer.stage(Family.PUBLISH))),
             )
@@ -265,6 +279,53 @@ class ComposePostViewModelTest {
         assertThat(vm.state.value.saved).isTrue()
         // A blanked title rides as null — the clear (post.md §4).
         assertThat(content.lastEdit).containsExactly("post-9", null, null, "Edited body").inOrder()
+    }
+
+    @Test
+    fun anEditKeepsTheAuthorsOwnSensitiveMarkAndItsReason() = runTest(dispatcher) {
+        content.selfMark = SelfMarkView(sensitive = true, reason = "graphic injury")
+        val vm = viewModel()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.sensitive).isTrue()
+
+        vm.onBodyChange("Edited body")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // The record is the post's complete content state, so the mark
+        // the edit does not re-state is a mark the edit removes.
+        assertThat(content.lastEditMark).isEqualTo(true to "graphic injury")
+    }
+
+    @Test
+    fun anEditOfAnUnmarkedPostStaysUnmarked() = runTest(dispatcher) {
+        content.selfMark = SelfMarkView(sensitive = false, reason = null)
+        val vm = viewModel()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onBodyChange("Edited body")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // A reason without the switch is refused on `["sensitiveReason"]`,
+        // so an unmarked post carries neither half.
+        assertThat(content.lastEditMark).isEqualTo(false to null)
+    }
+
+    @Test
+    fun anUnreadableSelfMarkFailsTheLoadRatherThanUnmarking() = runTest(dispatcher) {
+        content.selfMarkOutcome = Outcome.Failed(IOException("boom"))
+        val vm = viewModel()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // Defaulting the mark to false here would unmark on the next
+        // submit, which is the whole bug — so the load fails instead.
+        assertThat(vm.state.value.transportFailed).isTrue()
+        assertThat(vm.state.value.loading).isFalse()
     }
 
     @Test

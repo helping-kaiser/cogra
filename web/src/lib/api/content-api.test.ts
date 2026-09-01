@@ -302,10 +302,49 @@ describe("prepareComment", () => {
         target: "p1",
         content: "First!",
         license: { attribution: 0, provenance: 0.5 },
+        // A comment is words plus OPTIONAL pictures, so a wordless gallery is
+        // stated as absent rather than as an empty list.
+        attachments: null,
         tags: null,
         references: null,
       },
     });
+  });
+
+  it("carries a comment's pictures in the author's order, the first the cover", async () => {
+    let variables: { input: { attachments: unknown } } | null = null;
+    server.use(
+      graphql.mutation("PrepareComment", ({ variables: v }) => {
+        variables = v as typeof variables;
+        return HttpResponse.json({
+          data: {
+            prepareComment: {
+              __typename: "PrepareContentPayload",
+              node: "c-node",
+              writes: [],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+
+    await prepareComment(client(), {
+      target: "p1",
+      content: "Two from the sea wall.",
+      license: { attribution: 0, provenance: 0.5 },
+      attachments: [
+        { mediaId: "m-a", altText: "the sea wall at dusk" },
+        { mediaId: "m-b", altText: "  " },
+      ],
+    });
+
+    // The description travels with the placement, and blank is not a
+    // description: a picture the author left undescribed rides as null.
+    expect(variables!.input.attachments).toEqual([
+      { mediaId: "m-a", displayOrder: 0, isCover: true, altText: "the sea wall at dusk" },
+      { mediaId: "m-b", displayOrder: 1, isCover: false, altText: null },
+    ]);
   });
 
   // A comment tags at creation on the same terms as a post

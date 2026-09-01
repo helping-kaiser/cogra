@@ -7,6 +7,8 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
 import com.cogra.domain.PostView
 import com.cogra.domain.content.LandingSignal
+import com.cogra.domain.content.SensitiveMark
+import com.cogra.domain.content.SensitiveReveals
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.UserError
 import com.cogra.domain.repo.ContentRepository
@@ -56,6 +58,12 @@ data class PostDetailUiState(
     val includePending: Boolean = true,
     val notFound: Boolean = false,
     val transportFault: TransportFault? = null,
+    /**
+     * The veiled bodies this reader has chosen to look at — the post's
+     * and every comment's alike — against the marks they chose under.
+     * App-wide, so a reveal made in the feed is already made here.
+     */
+    val reveals: Map<String, SensitiveMark> = emptyMap(),
     /** The comment box. */
     val draft: String = "",
     val license: LicenseChoice = LicenseChoice.PublicDomain,
@@ -198,10 +206,20 @@ class PostDetailViewModel @Inject constructor(
     private val signer: WriteSigner,
     private val landings: LandingSignal,
     private val identity: IdentityStore,
+    private val reveals: SensitiveReveals,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(PostDetailUiState())
     val state = _state.asStateFlow()
+
+    /**
+     * A reader chose to look at a veiled body, as it stands right now.
+     *
+     * The set is app-wide, so this same choice unveils the card the
+     * reader arrived from — the reveal follows the content, not the
+     * screen (jakob 2026-08-31).
+     */
+    fun onReveal(nodeId: String, mark: SensitiveMark) = reveals.reveal(nodeId, mark)
 
     /** Debounces the finder, which runs on every keystroke (D20). */
     private var finderJob: Job? = null
@@ -209,6 +227,9 @@ class PostDetailViewModel @Inject constructor(
     private var postId: String? = null
 
     init {
+        viewModelScope.launch {
+            reveals.revealed.collect { revealed -> _state.update { it.copy(reveals = revealed) } }
+        }
         viewModelScope.launch {
             identity.confirmMultiActionSubmits.collect { on ->
                 _state.update { it.copy(confirmMultiActionSubmits = on) }

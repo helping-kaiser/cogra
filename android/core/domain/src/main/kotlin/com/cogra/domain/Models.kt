@@ -282,10 +282,15 @@ data class MediaAssetView(
  *
  * `displayOrder` and `isCover` are not free values: the contract
  * refuses an entry whose stated index contradicts its array position,
- * so the claim carries only the asset and the list's own order decides
- * the rest.
+ * so the list's own order decides both and the claim states neither.
+ *
+ * [altText] is authored here rather than at the upload because it is a
+ * fact about this placement: the same asset can read differently in two
+ * posts, and correcting a description is a new version of the post
+ * rather than a re-upload. Blank is not a description — an undescribed
+ * picture carries null.
  */
-data class AttachmentClaim(val mediaId: String)
+data class AttachmentClaim(val mediaId: String, val altText: String? = null)
 
 /**
  * A three-valued profile media field: omitted = untouched, explicit
@@ -508,6 +513,20 @@ data class Page<T>(
     /** The cursor to continue from; null when the page is empty. */
     val endCursor: String?,
     val hasNextPage: Boolean,
+)
+
+/**
+ * The author's own sensitive mark on one node, read on its own.
+ *
+ * Not part of [PostView]: the veil a reader sees is the OR of this mark
+ * and a moderator's verdict, and only this half is a thing an edit may
+ * carry (api-spec.md "Two states, and the statuses are their OR"). The
+ * edit form reads it so the record it prepares re-states it.
+ */
+data class SelfMarkView(
+    val sensitive: Boolean,
+    /** Null when unmarked, and when the mark carries no reason. */
+    val reason: String?,
 )
 
 /** A post with its first page of comments — the detail read. */

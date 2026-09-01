@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT j.comment_version_id AS \"version_id!\", j.display_order,\n                  FALSE AS \"is_cover!\",\n                  m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,\n                  m.mime_type, m.size_bytes, m.alt_text,\n                  m.options AS \"options!: serde_json::Value\",\n                  m.redaction_reason, m.redacted_at, m.created_at\n           FROM comment_attachments j\n           JOIN media_attachments m ON m.id = j.attachment_id\n           WHERE j.comment_version_id = ANY($1)\n           ORDER BY j.comment_version_id, j.display_order, m.id",
+  "query": "SELECT j.post_version_id AS \"version_id!\", j.display_order,\n                  j.is_cover, j.alt_text,\n                  m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,\n                  m.mime_type, m.size_bytes,\n                  m.options AS \"options!: serde_json::Value\",\n                  m.redaction_reason, m.redacted_at, m.created_at\n           FROM post_attachments j\n           JOIN media_attachments m ON m.id = j.attachment_id\n           WHERE j.post_version_id = ANY($1)\n           ORDER BY j.post_version_id, j.display_order, m.id",
   "describe": {
     "columns": [
       {
@@ -15,48 +15,48 @@
       },
       {
         "ordinal": 2,
-        "name": "is_cover!",
+        "name": "is_cover",
         "type_info": "Bool"
       },
       {
         "ordinal": 3,
+        "name": "alt_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
         "name": "id",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "author_id",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "digest",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "digest_algo",
         "type_info": "Text"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "storage_key",
         "type_info": "Text"
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "mime_type",
         "type_info": "Text"
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "size_bytes",
         "type_info": "Int8"
-      },
-      {
-        "ordinal": 10,
-        "name": "alt_text",
-        "type_info": "Text"
       },
       {
         "ordinal": 11,
@@ -87,14 +87,14 @@
     "nullable": [
       false,
       false,
-      null,
-      false,
-      false,
-      false,
-      false,
-      false,
       false,
       true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
       true,
       false,
       true,
@@ -102,5 +102,5 @@
       false
     ]
   },
-  "hash": "541aa8f74764a5909e4b8b3f841095807ef72b1b28690db06e517d8707a6677a"
+  "hash": "967121dc772fa8a36d13ef23db09b32b7b784d93171d52b50db171ed6235ffcb"
 }

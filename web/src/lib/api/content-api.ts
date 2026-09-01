@@ -8,6 +8,7 @@ import type { ApolloClient } from "@apollo/client";
 
 import {
   CommentRepliesDocument,
+  CommentSelfMarkDocument,
   PostDetailDocument,
   PostsDocument,
   PrepareCommentDocument,
@@ -46,8 +47,19 @@ export function isPending(node: { landing: { state: LandingState } }): boolean {
   return node.landing.state === "PENDING";
 }
 
+/**
+ * The detail read's own post.
+ *
+ * NOT `PostView`, which is the FEED query's node: the two queries select
+ * different things, and typing the detail's post as the list's hid every field
+ * only the detail asks for — `sensitiveSelfMark` among them, which the edit
+ * switch needs. The list shape stays assignable to every component that takes a
+ * `PostView`, so naming the detail's shape honestly costs those nothing.
+ */
+export type PostDetailView = NonNullable<PostDetailQuery["post"]>;
+
 export type PostDetail = {
-  post: PostView;
+  post: PostDetailView;
   comments: Page<CommentView>;
 };
 
@@ -80,17 +92,32 @@ function referenceInputs(references: readonly ReferenceDraft[] | undefined) {
 }
 
 /**
+ * One placement being authored: the asset, and what it is a picture of.
+ *
+ * The description travels here rather than with the upload because it is a
+ * fact about this placement — the same asset can read differently in two
+ * posts, and correcting a description is a new version of the post rather
+ * than a re-upload. That is what lets the composer upload at pick time.
+ */
+export type GalleryEntryDraft = {
+  mediaId: string;
+  /** Empty is not a description; an undescribed picture sends null. */
+  altText: string | null;
+};
+
+/**
  * The gallery, as the contract wants it: the list IS the order, so
  * `displayOrder` states each entry's own index and `isCover` is true on the
  * first and nowhere else. A value that disagrees with its position is refused
  * rather than quietly overridden, so both are derived here and never passed in.
  */
-export function attachmentInputs(mediaIds: readonly string[] | undefined) {
-  if (mediaIds === undefined || mediaIds.length === 0) return null;
-  return mediaIds.map((mediaId, index) => ({
-    mediaId,
+export function attachmentInputs(entries: readonly GalleryEntryDraft[] | undefined) {
+  if (entries === undefined || entries.length === 0) return null;
+  return entries.map((entry, index) => ({
+    mediaId: entry.mediaId,
     displayOrder: index,
     isCover: index === 0,
+    altText: entry.altText === null || entry.altText.trim() === "" ? null : entry.altText.trim(),
   }));
 }
 
@@ -222,6 +249,29 @@ export async function fetchPostDetail(
   });
 }
 
+/**
+ * The author's own sensitive mark on one comment — what its edit switch shows.
+ *
+ * Its own read rather than a field on the detail query: see the operation's own
+ * note. Null means the comment is gone; the caller keeps the switch where it
+ * was rather than guessing at false, because guessing false would offer to
+ * unveil something the author had veiled.
+ */
+export async function fetchCommentSelfMark(
+  client: ApolloClient,
+  id: string,
+): Promise<Outcome<boolean | null>> {
+  const fetched = await fetchOutcome(() =>
+    client.query({
+      query: CommentSelfMarkDocument,
+      variables: { id },
+      fetchPolicy: "network-only",
+    }),
+  );
+  if (fetched.kind !== "success") return fetched;
+  return success(fetched.value.comment?.sensitiveSelfMark ?? null);
+}
+
 function liftPrepared(payload: {
   node?: string | null;
   writes?: readonly Parameters<typeof stagedFromPrepared>[0][] | null;
@@ -240,8 +290,8 @@ export async function preparePost(
     license: LicenseChoice;
     tags?: readonly TagDraft[];
     references?: readonly ReferenceDraft[];
-    /** Asset ids already uploaded, in gallery order. */
-    attachments?: readonly string[];
+    /** Assets already uploaded, in gallery order, each with its description. */
+    attachments?: readonly GalleryEntryDraft[];
     /** The author's own sensitive mark. Omitted counts as false. */
     sensitive?: boolean;
     sensitiveReason?: string;
@@ -320,6 +370,8 @@ export async function prepareComment(
     license: LicenseChoice;
     tags?: readonly TagDraft[];
     references?: readonly ReferenceDraft[];
+    /** The pictures, in the author's order, each with its description. */
+    attachments?: readonly GalleryEntryDraft[];
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -331,6 +383,9 @@ export async function prepareComment(
             target: fields.target,
             content: fields.content,
             license: fields.license,
+            // A comment is words PLUS optional pictures — the words-or-media
+            // XOR is the post's rule alone (D16), so both travel together.
+            attachments: attachmentInputs(fields.attachments),
             // Tagging is part of the compose gesture on a comment as on
             // a post (api-spec.md `PrepareCommentInput.tags`, "same rules
             // as on a Post") — one batch on the minting record.

@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * One of the two profile pictures, as the form holds it.
+ * The profile picture, as the form holds it.
  *
  * The three states are the contract's three (D13) plus the one the form
  * needs while a new picture is on its way: [Held] is what the account
@@ -159,7 +159,7 @@ class ProfileEditViewModel @Inject constructor(
             val next = if (processed == null) {
                 ProfileImageState.Failed(uri, UNREADABLE)
             } else {
-                when (val outcome = media.uploadMedia(processed, altText = null)) {
+                when (val outcome = media.uploadMedia(processed)) {
                     is Outcome.Success ->
                         ProfileImageState.Uploaded(outcome.value.id, outcome.value.url)
                     is Outcome.Refused ->

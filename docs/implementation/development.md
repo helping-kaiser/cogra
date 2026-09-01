@@ -73,7 +73,6 @@ over file values.
 | `RATE_LIMIT_CONFIRM_PER_IP` | `30` | Token confirmations per IP per 15 min |
 | `RATE_LIMIT_GC_INTERVAL_SECS` | `3600` | Sweep interval of the idle throttle-row GC; the login backoff's shape (threshold 5, 1 s doubling, 15 min cap) changes in code, not env |
 | `RATE_LIMIT_UPLOAD_PER_ACCOUNT` | `60` | Media uploads per account per hour — uploading is not an act, so this is the only cost control media has |
-| `RATE_LIMIT_MEDIA_UPDATE_PER_ACCOUNT` | `240` | `updateMedia` description edits per account per hour. Its own counter: the upload budget bounds disk, and a ten-picture post spending ten uploads plus ten descriptions against it would be throttled by a limit sized to sit well above that gesture |
 | `MEDIA_S3_ENDPOINT` | `http://localhost:9000` | The media service's S3 API endpoint. `stamp-net.sh` stamps it to the machine's LAN address like `DATABASE_URL` — the API and the store can live in separate WSL distros, where cross-distro localhost is dead — while the host firewall keeps the port closed to other devices; a phone reaches media through the web origin's `/media` proxy, never the store itself |
 | `MEDIA_BUCKET` | `cogra-media` | Bucket the media objects live in; created by the `media-init` one-shot |
 | `MEDIA_ACCESS_KEY_ID` | `cogra_media` | Media store access key (also the store's root user in compose) |

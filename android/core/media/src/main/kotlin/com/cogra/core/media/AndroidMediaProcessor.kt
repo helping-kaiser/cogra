@@ -77,43 +77,58 @@ class AndroidMediaProcessor(
 /**
  * Takes the rectangle the author framed.
  *
- * The viewport shows the picture scaled to *cover* it, so the visible
- * window is the largest [CropSpec.targetRatio] rectangle that fits the
- * scaled picture, translated by the framing offset. Working in source
- * pixels rather than in viewport pixels is what lets the design system
- * hold the framing as fractions and stay ignorant of bitmaps.
+ * The crop step hands its window over as fractions of the picture, so
+ * this only has to scale them into source pixels — the geometry itself
+ * was settled on screen, by the cropper, against the picture shown
+ * whole. Where the author never framed a picture at all, the largest
+ * [CropSpec.targetRatio] rectangle is centred on it, which is what the
+ * crop step's own untouched window shows.
+ *
+ * The clamp is re-applied here rather than trusted from the caller: a
+ * rounding difference between a view's pixels and a bitmap's is exactly
+ * how an out-of-bounds rectangle gets made, and `createBitmap` throws on
+ * one.
  */
 internal fun Bitmap.cropped(crop: CropSpec): Bitmap {
-    val sourceRatio = width.toFloat() / height.toFloat()
     if (!crop.targetRatio.isFinite() || crop.targetRatio <= 0f) return this
 
-    // The cover fit: the window is bounded by whichever edge runs out
-    // first, then shrunk further by the author's zoom.
-    val scale = crop.scale.coerceAtLeast(1f)
-    val windowWidth: Float
-    val windowHeight: Float
-    if (sourceRatio > crop.targetRatio) {
-        windowHeight = height / scale
-        windowWidth = windowHeight * crop.targetRatio
+    val window = crop.window
+    val rect = if (window == null || window.isWhole) {
+        centredWindow(crop.targetRatio)
     } else {
-        windowWidth = width / scale
-        windowHeight = windowWidth / crop.targetRatio
+        floatArrayOf(
+            window.left * width,
+            window.top * height,
+            window.right * width,
+            window.bottom * height,
+        )
     }
 
-    // The offset is a fraction of the window, and it can never push the
-    // window off the picture — the same clamp `CropState` applies on
-    // screen, re-applied here so a rounding difference cannot produce
-    // an out-of-bounds rectangle.
-    val maxLeft = width - windowWidth
-    val maxTop = height - windowHeight
-    val left = ((maxLeft / 2f) - crop.offsetFractionX * windowWidth).coerceIn(0f, maxLeft.coerceAtLeast(0f))
-    val top = ((maxTop / 2f) - crop.offsetFractionY * windowHeight).coerceIn(0f, maxTop.coerceAtLeast(0f))
-
-    val w = windowWidth.toInt().coerceIn(1, width)
-    val h = windowHeight.toInt().coerceIn(1, height)
-    val x = left.toInt().coerceIn(0, width - w)
-    val y = top.toInt().coerceIn(0, height - h)
+    val x = rect[0].toInt().coerceIn(0, (width - 1).coerceAtLeast(0))
+    val y = rect[1].toInt().coerceIn(0, (height - 1).coerceAtLeast(0))
+    val w = (rect[2].toInt() - x).coerceIn(1, width - x)
+    val h = (rect[3].toInt() - y).coerceIn(1, height - y)
     if (x == 0 && y == 0 && w == width && h == height) return this
     return Bitmap.createBitmap(this, x, y, w, h)
+}
+
+/**
+ * The largest [targetRatio] rectangle the picture holds, centred — the
+ * framing a picture carries when the author left it alone.
+ */
+private fun Bitmap.centredWindow(targetRatio: Float): FloatArray {
+    val sourceRatio = width.toFloat() / height.toFloat()
+    val w: Float
+    val h: Float
+    if (sourceRatio > targetRatio) {
+        h = height.toFloat()
+        w = h * targetRatio
+    } else {
+        w = width.toFloat()
+        h = w / targetRatio
+    }
+    val left = (width - w) / 2f
+    val top = (height - h) / 2f
+    return floatArrayOf(left, top, left + w, top + h)
 }
 

@@ -40,17 +40,38 @@ data class ProcessedPicture(
  * bytes (D17), so the framing has to be baked here rather than carried
  * as parameters the server or a later render would have to honour.
  *
- * [scale] is ≥ 1 and [offsetFraction] is the framing's translation as a
- * fraction of the viewport — the same pair
- * `com.cogra.core.designsystem.v2.media.CropState` holds, in units that
- * survive the trip without the design system learning about pixels.
+ * [window] is the rectangle the author framed, in fractions of the
+ * source picture — the units the crop step's own state holds, which
+ * survive the trip without either side learning the other's pixel
+ * dimensions. It is null for a picture the author never framed, and the
+ * pipeline then centres the largest [targetRatio] window the picture
+ * allows.
  */
 data class CropSpec(
     val targetRatio: Float,
-    val scale: Float = 1f,
-    val offsetFractionX: Float = 0f,
-    val offsetFractionY: Float = 0f,
+    val window: CropWindow? = null,
 )
+
+/**
+ * A rectangle inside a picture, as fractions of that picture.
+ *
+ * Always within the unit square, never inverted — the crop step clamps
+ * on the way in, and the pipeline clamps again on the way out, because a
+ * rounding difference between a view and a bitmap is exactly how an
+ * out-of-bounds rectangle gets made.
+ */
+data class CropWindow(
+    val left: Float,
+    val top: Float,
+    val right: Float,
+    val bottom: Float,
+) {
+    val width: Float get() = right - left
+    val height: Float get() = bottom - top
+
+    /** True for a window that keeps the whole picture. */
+    val isWhole: Boolean get() = left <= 0f && top <= 0f && right >= 1f && bottom >= 1f
+}
 
 /**
  * The on-device image pipeline (D11, D17): read what the picker handed
@@ -112,12 +133,12 @@ interface DeviceImageSource {
  */
 interface MediaRepository {
     /**
-     * Uploads one processed picture. [altText] is the one
-     * layout-adjacent fact the server cannot infer, so it rides here
-     * rather than on the attach.
+     * Uploads one processed picture: bytes and nothing authored.
+     *
+     * A description is a fact about a placement, not about the asset, so
+     * it rides `AttachmentClaim` at prepare instead — which is what lets
+     * a picture upload the moment it is picked, with nothing gating on
+     * whether it has been described yet.
      */
-    suspend fun uploadMedia(
-        picture: ProcessedPicture,
-        altText: String?,
-    ): Outcome<MediaAssetView>
+    suspend fun uploadMedia(picture: ProcessedPicture): Outcome<MediaAssetView>
 }

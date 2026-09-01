@@ -40,6 +40,7 @@ import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.MediaShape
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.CropWindow
 
 /**
  * The profile-picture flow's screens: `AvatarCrop` and `AvatarSeal`.
@@ -151,9 +152,9 @@ private fun ColumnScope.CropStage(
     // framing the author never saw.
     val spec = CropSpec(
         targetRatio = 1f,
-        scale = crop.framing.scale,
-        offsetFractionX = crop.framing.offsetFractionX,
-        offsetFractionY = crop.framing.offsetFractionY,
+        window = crop.framing.let {
+            CropWindow(it.left, it.top, it.right, it.bottom)
+        },
     )
     SideEffect { onCropCommitted(spec) }
 

@@ -93,7 +93,6 @@ class ComposeWizardViewModelTest {
         /** Per-URI scripting, so one asset can fail while the rest land. */
         var failures = mutableSetOf<String>()
         var uploads = 0
-        var lastAltText: String? = null
         private var next = 0
 
         /** The URI each call is for, in order, so failures can be aimed. */
@@ -101,17 +100,15 @@ class ComposeWizardViewModelTest {
 
         override suspend fun uploadMedia(
             picture: ProcessedPicture,
-            altText: String?,
         ): Outcome<MediaAssetView> {
             uploads += 1
-            lastAltText = altText
             val uri = pending.removeFirstOrNull().orEmpty()
             if (uri in failures) {
                 return Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "too big")))
             }
             next += 1
             return Outcome.Success(
-                MediaAssetView("m$next", "https://media/m$next", altText, FieldStatus.NORMAL, 1f),
+                MediaAssetView("m$next", "https://media/m$next", null, FieldStatus.NORMAL, 1f),
             )
         }
     }
@@ -198,9 +195,103 @@ class ComposeWizardViewModelTest {
         uris.forEach { onTogglePick(it) }
         dispatcher.scheduler.advanceUntilIdle()
         onNext() // body -> crop
-        onNext() // crop -> details
-        onNext() // details -> seal, uploads start (they carry the alt text)
+        onNext() // crop -> details, uploads start
+        onNext() // details -> seal
         dispatcher.scheduler.advanceUntilIdle()
+    }
+
+    // -- When the pictures go up (`ComposeUploading`) --
+
+    /**
+     * "Pictures upload while you write" — the board's footnote, and the
+     * reason it can hold: nothing authored after the crop changes the
+     * bytes, because a description rides `AttachmentClaim` at prepare
+     * rather than the upload.
+     */
+    @Test
+    fun uploadsBeginOnLeavingTheCropStage() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Media)
+        vm.onTogglePick("a")
+        vm.onTogglePick("b")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onNext() // body -> crop
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(media.uploads).isEqualTo(0)
+
+        vm.onNext() // crop -> details
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Details)
+        // Already on the wire while the author is still writing — not
+        // waiting on the walk out of Details.
+        assertThat(media.uploads).isEqualTo(2)
+        assertThat(vm.state.value.picked.map { it.upload })
+            .containsExactly(AssetUpload.Done("m1"), AssetUpload.Done("m2"))
+    }
+
+    /**
+     * The other half of that freedom: a description authored after the
+     * upload already finished still reaches the prepare input, because
+     * it never rode the upload in the first place.
+     */
+    @Test
+    fun aDescriptionTypedAfterAnUploadFinishedStillReachesPrepare() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Media)
+        vm.onTogglePick("a")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext() // body -> crop
+        vm.onNext() // crop -> details
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // The upload is finished and done with; the describing happens
+        // strictly after it.
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m1"))
+
+        vm.onAltTextChange("a", "a salt map of the coast road")
+        vm.onNext() // details -> seal
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.lastAttachments.single().mediaId).isEqualTo("m1")
+        assertThat(content.lastAttachments.single().altText)
+            .isEqualTo("a salt map of the coast road")
+        // Still one upload: describing does not re-send the bytes.
+        assertThat(media.uploads).isEqualTo(1)
+    }
+
+    /**
+     * The invalidation that made the early start impossible: describing
+     * used to knock a finished upload back to idle, because the alt text
+     * rode the upload and a changed description made the object stale.
+     * It no longer does, so an upload survives every keystroke after it.
+     */
+    @Test
+    fun describingDoesNotInvalidateAFinishedUpload() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Media)
+        vm.onTogglePick("a")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext() // body -> crop
+        vm.onNext() // crop -> details
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onAltTextChange("a", "a salt map")
+        vm.onAltTextChange("a", "a salt map of the coast road")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m1"))
+        assertThat(media.uploads).isEqualTo(1)
+        assertThat(vm.state.value.canSign).isTrue()
     }
 
     // -- The XOR reaches the wire, not just the screen (D16) --
@@ -303,7 +394,7 @@ class ComposeWizardViewModelTest {
     }
 
     @Test
-    fun altTextRidesItsOwnUpload() = runTest(dispatcher) {
+    fun aDescriptionRidesTheAttachmentRatherThanTheUpload() = runTest(dispatcher) {
         val vm = viewModel()
         vm.start()
         dispatcher.scheduler.advanceUntilIdle()
@@ -313,14 +404,15 @@ class ComposeWizardViewModelTest {
         vm.onNext() // body -> crop
         vm.onNext() // crop -> details, where descriptions are authored
         vm.onAltTextChange("a", "A salt crust")
-        vm.onNext() // details -> seal, and only now does the upload run
+        vm.onNext() // details -> seal
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onSign()
         dispatcher.scheduler.advanceUntilIdle()
 
-        // The description has to be on the wire with its own bytes:
-        // `altText` rides `UploadMediaInput` and an asset row is immutable
-        // after upload (D3), so an upload that started earlier would have
-        // dropped it.
-        assertThat(media.lastAltText).isEqualTo("A salt crust")
+        // The description is a fact about the placement, so it travels on
+        // the claim and not with the bytes: an upload that ran before the
+        // author typed anything is still the right upload.
+        assertThat(content.lastAttachments.single().altText).isEqualTo("A salt crust")
     }
 
     // -- The author's own sensitive mark --
@@ -370,9 +462,11 @@ class ComposeWizardViewModelTest {
     fun blankAltTextRidesAsNullRatherThanAnEmptyDescription() = runTest(dispatcher) {
         val vm = viewModel()
         vm.toSealWithMedia("a")
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
         // An empty string is a value, and a decorative asset needs a
         // null description rather than a described nothing (D20).
-        assertThat(media.lastAltText).isNull()
+        assertThat(content.lastAttachments.single().altText).isNull()
     }
 
     // -- The ways out --
@@ -390,6 +484,40 @@ class ComposeWizardViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(vm.state.value.outcome).isEqualTo(WizardOutcome.Landed("node-1"))
+        assertThat(drafts.held).isNull()
+    }
+
+    /**
+     * The route consumes the outcome the instant it navigates, and the
+     * lifecycle then stops the screen — which used to write the published
+     * post straight back into the store, so the composer offered it again
+     * on the next visit (jakob 2026-08-31).
+     */
+    @Test
+    fun aLandedPostStaysGoneWhenTheOutcomeIsConsumedAndTheScreenStops() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.signWords()
+        assertThat(drafts.held).isNull()
+
+        // Exactly what `ComposeWizardScreen` does on `Landed`: consume,
+        // navigate, and take the `ON_STOP` that follows.
+        vm.onOutcomeConsumed()
+        vm.persistNow()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(drafts.held).isNull()
+    }
+
+    /** The debounced writer must not resurrect it either. */
+    @Test
+    fun aLandedPostIsNotRewrittenByThePendingDebouncedSave() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.signWords()
+
+        vm.onOutcomeConsumed()
+        // Long enough for any scheduled debounce to have fired.
+        dispatcher.scheduler.advanceUntilIdle()
+
         assertThat(drafts.held).isNull()
     }
 
@@ -606,6 +734,45 @@ class ComposeWizardViewModelTest {
 
         assertThat(vm.state.value.draftOffer).isNull()
         assertThat(drafts.held).isNull()
+    }
+
+    /**
+     * Resuming replaces what was authored, never what the device already
+     * handed over: the grid used to be wiped by the restore and never
+     * refilled, leaving the pick stage with nothing but its photos-app
+     * tile (jakob 2026-08-31).
+     */
+    @Test
+    fun resumingADraftKeepsThePickerGrid() = runTest(dispatcher) {
+        drafts.held = ComposeDraft(DraftBodyKind.Media, assets = listOf(DraftAsset("a", "")))
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onMediaPermissionGranted()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.deviceImages).isNotEmpty()
+
+        vm.onContinueDraft()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.deviceImages.map { it.uri }).containsExactly("a", "b").inOrder()
+    }
+
+    /** And it re-reads the roll, because a held draft can be days old. */
+    @Test
+    fun resumingADraftRereadsTheRoll() = runTest(dispatcher) {
+        drafts.held = ComposeDraft(DraftBodyKind.Media, assets = listOf(DraftAsset("a", "")))
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        val before = deviceImages.calls
+
+        deviceImages.offered = listOf(DeviceImage("c", 1f))
+        vm.onContinueDraft()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(deviceImages.calls).isGreaterThan(before)
+        assertThat(vm.state.value.deviceImages.map { it.uri }).containsExactly("c")
     }
 
     // -- Refusals --

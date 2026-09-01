@@ -117,7 +117,7 @@ class AvatarFlowViewModel @Inject constructor(
             }
             // A profile picture carries no description: it is not content
             // a reader reads, and the monogram is its stated fallback.
-            val next = when (val outcome = media.uploadMedia(picture, altText = null)) {
+            val next = when (val outcome = media.uploadMedia(picture)) {
                 is Outcome.Success -> AvatarUpload.Done(outcome.value.id)
                 is Outcome.Refused ->
                     AvatarUpload.Failed(outcome.errors.firstOrNull()?.message ?: REFUSED)

@@ -34,7 +34,6 @@ pub mod scope {
     pub const RESEND_EMAIL: &str = "resend_email";
     pub const CONFIRM_IP: &str = "confirm_ip";
     pub const UPLOAD_ACCOUNT: &str = "upload_account";
-    pub const MEDIA_UPDATE_ACCOUNT: &str = "media_update_account";
 }
 
 /// One fixed-window budget: at most `limit` attempts per `window_secs`.
@@ -75,12 +74,6 @@ pub struct RateLimitConfig {
     /// nothing about it and an insolvent actor can still fill the store —
     /// this is the only cost control media has.
     pub upload_account: Window,
-    /// Description edits per account. Its own counter rather than the
-    /// upload budget: that budget bounds *disk*, and a ten-picture post
-    /// that spent ten uploads plus ten descriptions against it would be
-    /// throttled by a limit sized to sit well above exactly that gesture.
-    /// Each limit measures what it is for.
-    pub media_update_account: Window,
 }
 
 impl Default for RateLimitConfig {
@@ -121,10 +114,6 @@ impl Default for RateLimitConfig {
                 limit: 60,
                 window_secs: 3600.0,
             },
-            media_update_account: Window {
-                limit: 240,
-                window_secs: 3600.0,
-            },
         }
     }
 }
@@ -146,10 +135,6 @@ impl RateLimitConfig {
             (
                 "RATE_LIMIT_UPLOAD_PER_ACCOUNT",
                 &mut cfg.upload_account.limit,
-            ),
-            (
-                "RATE_LIMIT_MEDIA_UPDATE_PER_ACCOUNT",
-                &mut cfg.media_update_account.limit,
             ),
         ] {
             if let Ok(raw) = std::env::var(var) {
@@ -180,7 +165,6 @@ impl RateLimitConfig {
             resend_email: generous,
             confirm_ip: generous,
             upload_account: generous,
-            media_update_account: generous,
         }
     }
 }

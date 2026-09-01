@@ -20,7 +20,8 @@
     "graphql": "^17.0.2",
     "next": "16.3.2",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "react-easy-crop": "6.2.3"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^7.3.0",

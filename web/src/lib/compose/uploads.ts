@@ -27,7 +27,12 @@ export type UploadStep = (next: AssetUpload) => void;
 export async function runUpload(
   client: ApolloClient,
   asset: PickedAsset,
-  ratio: number,
+  /**
+   * The post's shape. Undefined on a comment, which has no crop step at all —
+   * the encoder then keeps the picture's own shape rather than cutting it to a
+   * ratio the author was never shown.
+   */
+  ratio: number | undefined,
   step: UploadStep,
 ): Promise<void> {
   let encoded;
@@ -44,10 +49,7 @@ export async function runUpload(
   }
 
   step({ kind: "uploading" });
-  const uploaded = await uploadMedia(client, {
-    blob: encoded.blob,
-    altText: asset.altText,
-  });
+  const uploaded = await uploadMedia(client, { blob: encoded.blob });
 
   if (uploaded.kind === "success") {
     step({ kind: "done", mediaId: uploaded.value.id });
