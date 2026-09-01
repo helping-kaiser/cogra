@@ -91,6 +91,46 @@ export function withUpload(
   );
 }
 
+/**
+ * What to draw for the pictures already on the server: their served URLs.
+ * The added ones get object URLs from the preview hook instead, and the two
+ * maps are merged by the caller — one lookup, whichever kind a picture is.
+ */
+export function keptPreviews(gallery: EditGallery): Readonly<Record<string, string>> {
+  const urls: Record<string, string> = {};
+  for (const picture of gallery) {
+    if (picture.kind === "kept") urls[picture.mediaId] = picture.url;
+  }
+  return urls;
+}
+
+/**
+ * Why the edit cannot be signed yet, or null. Only the ADDED pictures can
+ * hold it up: an attachment names an asset id, and one that is still
+ * uploading has none yet.
+ */
+export function editBlocked(gallery: EditGallery): string | null {
+  const failed = uploadsFailed(gallery);
+  if (failed > 0) {
+    return failed === 1 ? "One picture didn't upload." : `${failed} pictures didn't upload.`;
+  }
+  const pending = uploadsPending(gallery);
+  if (pending > 0) {
+    return pending === 1
+      ? "One picture is still uploading."
+      : `${pending} pictures are still uploading.`;
+  }
+  return null;
+}
+
+/**
+ * Just the added pictures' assets — what the uploader and the preview hook
+ * take. The kept ones have no local bytes and nothing to upload.
+ */
+export function addedAssets(gallery: EditGallery): readonly PickedAsset[] {
+  return gallery.flatMap((picture) => (picture.kind === "added" ? [picture.asset] : []));
+}
+
 /** The pictures still on their way up — the ones the seal would wait for. */
 export function uploadsPending(gallery: EditGallery): number {
   return gallery.filter(

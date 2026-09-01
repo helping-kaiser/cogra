@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { writeConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
-import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
@@ -114,7 +113,7 @@ function postTarget(id: string, title: string) {
 
 type ReferenceFixture = ReturnType<typeof referenceClaim>;
 
-function commentNode(comment: FixtureComment, withReplies = true): Record<string, unknown> {
+function commentNode(comment: FixtureComment): Record<string, unknown> {
   return {
     __typename: "Comment",
     id: comment.id,

@@ -1,16 +1,23 @@
 "use client";
 
-// One post and its direct thread (comment.md §2), with the comment box —
-// a genesis Review signed in this browser. A signed comment is already
-// its author's content (substrate.md §6), so the thread re-reads and the
-// author finds it in place under the pending marker — only L1 finality
-// is still outstanding. Slice 2.1 closes the thread's UI gaps:
-// author chips, the creator's inline edit with the soft Edited marker
-// (design.md §9), inline replies, and the nested reply tree — one
-// prefetched level, more on demand.
+// One post and its direct thread (comment.md §2). A signed comment is already
+// its author's content (substrate.md §6), so the thread re-reads and the author
+// finds it in place under the pending marker — only L1 finality is still
+// outstanding.
+//
+// THE PAGE READS; THE WIZARDS WRITE. Both doors into the composer — Reply on a
+// comment, "Add a comment" at the foot — open the reply wizard over this
+// surface, and Edit opens the comment editor the same way. Everything a
+// half-written comment holds lives in those, so the thread keeps only what it
+// is showing: the post, a page of comments, and whichever branches a reader has
+// unfolded.
+//
+// A BRANCH IS A COUNT UNTIL SOMEONE ASKS (Q49). The read carries no replies at
+// all; `CommentConnection.totalCount` draws the "View n replies" line, and
+// unfolding one is its own request.
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import {
@@ -36,7 +43,6 @@ import {
   type ReferenceDraft,
 } from "@/lib/references/draft";
 import { ReferenceChipRow } from "@/lib/ui/reference-chip-row";
-import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
@@ -55,10 +61,29 @@ import {
   sensitiveSignature,
 } from "@/lib/ui/post-media";
 import type { ReplyTarget } from "@/lib/compose/reply-wizard";
+import {
+  addTo,
+  addedAssets,
+  editBlocked,
+  editClaims,
+  galleryChanged,
+  galleryOf,
+  keptPreviews,
+  pictureAltText,
+  pictureId,
+  removeFrom as removeFromGallery,
+  withAltText,
+  withUpload,
+  type EditGallery,
+} from "@/lib/compose/comment-edit";
+import { runUpload } from "@/lib/compose/uploads";
+import { usePreviewUrls } from "@/lib/compose/previews";
+import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
+import { HelpDialog, HELP_TOPICS } from "@/lib/ui2/help-dialog";
 import { commentTarget, ReplyWizard } from "./reply/reply-wizard-view";
-import { MultiActionConfirm, SignedActionsIndicator } from "@/lib/ui/signed-actions";
+import { CommentEditView } from "./edit/comment-edit-view";
+import { MultiActionConfirm } from "@/lib/ui/signed-actions";
 import { StanceControl } from "@/lib/ui/stance-control";
-import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { TopicChipRow, type TopicChipEntry } from "@/lib/ui/topic-chip-row";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
@@ -187,9 +212,17 @@ export function PostView({
     tags: readonly TagDraft[];
     loadedReferences: readonly ReferenceDraft[];
     references: readonly ReferenceDraft[];
+    /** The gallery as the comment carried it, and as the editor holds it now. */
+    loadedGallery: EditGallery;
+    gallery: EditGallery;
+    /** What the comment is on, for the editor's lede. */
+    targetLabel: string;
     /** Carried forward so a complete-state edit cannot unveil the comment. */
     sensitive: boolean;
   } | null>(null);
+  const [editDescribing, setEditDescribing] = useState<string | null>(null);
+  const [editActsOpen, setEditActsOpen] = useState(false);
+  const [editHelp, setEditHelp] = useState(false);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editFailed, setEditFailed] = useState(false);
   const [editRefusedMessage, setEditRefusedMessage] = useState<string | null>(null);
@@ -202,6 +235,33 @@ export function PostView({
   // price — so the edit is the one surface left that asks.
   const [confirmMultiAction, setConfirmMultiAction] = useConfirmMultiAction();
   const [confirming, setConfirming] = useState<PendingSubmit | null>(null);
+
+  // ---- the edit's own pictures --------------------------------------------
+
+  // A kept picture is already on the server, so only the ADDED ones are handed
+  // to `runUpload`; the ref guards React's double mount in development.
+  // Memoised so the preview hook and the upload effect see one stable array
+  // rather than a fresh one on every keystroke in the words field.
+  const editAdded = useMemo(
+    () => (editing === null ? [] : addedAssets(editing.gallery)),
+    [editing],
+  );
+  const editPickedPreviews = usePreviewUrls(editAdded);
+  const startedEditUploads = useRef(new Set<string>());
+
+  useEffect(() => {
+    for (const asset of editAdded) {
+      if (asset.upload.kind !== "waiting" || startedEditUploads.current.has(asset.id)) continue;
+      startedEditUploads.current.add(asset.id);
+      // No ratio: a comment's pictures keep their own shape, on an edit as on
+      // a compose.
+      void runUpload(client, asset, undefined, (upload) =>
+        setEditing((current) =>
+          current === null ? current : { ...current, gallery: withUpload(current.gallery, asset.id, upload) },
+        ),
+      );
+    }
+  }, [editAdded, client]);
 
   const refresh = useCallback(() => {
     let cancelled = false;
@@ -298,13 +358,20 @@ export function PostView({
   const editChanges = editing === null ? [] : tagChanges(editing.loadedTags, editing.tags);
   const editReferenceChanges =
     editing === null ? [] : referenceChanges(editing.loadedReferences, editing.references);
-  const editTextChanged = editing !== null && editing.draft !== editing.loadedDraft;
+  // The edit record carries the body AND the gallery, so either moving is what
+  // stages it — a comment whose only change was a removed picture still has to
+  // write one, or the removal never happens.
+  const editGalleryMoved =
+    editing !== null && galleryChanged(editing.loadedGallery, editing.gallery);
+  const editTextChanged =
+    editing !== null && (editing.draft !== editing.loadedDraft || editGalleryMoved);
   // A withdrawal is a whole counter-record batch, and the claim quotes
   // it: `withdrawalCost` comes off the raw bundle sums the clipped pair
   // has already lost, so this count is exact and every edit asks before
   // it prepares.
   const editActions =
     (editTextChanged ? 1 : 0) + editChanges.length + referenceActs(editReferenceChanges);
+  const editGateReason = editing === null ? null : editBlocked(editing.gallery);
 
   /**
    * F10: prepares EVERYTHING before signing anything — a refusal on the
@@ -329,7 +396,9 @@ export function PostView({
         prepareCommentEdit(client, {
           id: editing.id,
           content: editing.draft,
-          // Re-stated, never omitted: the edit carries the whole state.
+          // Re-stated, never omitted: the edit carries the whole state — the
+          // gallery for the same reason as the mark.
+          attachments: editClaims(editing.gallery) ?? undefined,
           sensitive: editing.sensitive,
         }),
       );
@@ -520,7 +589,6 @@ export function PostView({
     const branch = replyCount(comment);
     const unopened = thread === undefined && branch > 0;
     const isOwn = viewerId !== null && comment.author?.id === viewerId;
-    const isEditing = editing?.id === comment.id;
     const edited = comment.updatedAt > comment.createdAt;
     return (
       <li
@@ -538,82 +606,6 @@ export function PostView({
               testId={`comment-author-${comment.id}`}
             />
           )}
-          {isEditing ? (
-            <div className="flex flex-col gap-2">
-              <textarea
-                value={editing.draft}
-                onChange={(event) =>
-                  setEditing({ ...editing, draft: event.target.value })
-                }
-                rows={3}
-                aria-label="Edit comment"
-                data-testid="comment-edit-input"
-                className="rounded-extra-small border border-outline p-2"
-              />
-              {/* F10: the same section the post edit carries — current
-                  claims at their real values, each change its own act, so
-                  the tags are not fields of the edit record (D14). No
-                  batch here, so no batch cap. */}
-              <TagEntryField
-                tags={editing.tags}
-                onChange={(tags) => setEditing({ ...editing, tags })}
-                fieldErrors={editTagErrors}
-                cap={null}
-                testIdPrefix="comment-edit"
-              />
-              {/* The same section the composer carries — current
-                  references at their real values, each change its own
-                  act, so references are not fields of the edit record
-                  (D14). Removing a chip stages a WITHDRAWAL, not a
-                  deletion. No batch here, so no batch cap. */}
-              <ReferenceEntryField
-                references={editing.references}
-                onChange={(references) => setEditing({ ...editing, references })}
-                fieldErrors={editReferenceErrors}
-                cap={null}
-                testIdPrefix="comment-edit"
-              />
-              {editRefusedMessage && (
-                <p
-                  role="alert"
-                  data-testid="comment-edit-refused"
-                  className="text-body-small text-error"
-                >
-                  {editRefusedMessage}
-                </p>
-              )}
-              {editFailed && (
-                <p role="alert" data-testid="comment-edit-failed" className="text-body-small text-error">
-                  That didn&apos;t save. Try again.
-                </p>
-              )}
-              <SignedActionsIndicator
-                count={editActions}
-                testId="comment-edit-signed-actions"
-              />
-              <div className="flex gap-2">
-                <Button
-                  testId="comment-edit-save"
-                  size="sm"
-                  onClick={() => void onSubmitEdit()}
-                  disabled={
-                    editSubmitting || editing.draft.trim() === "" || editActions === 0
-                  }
-                >
-                  Save
-                </Button>
-                <Button
-                  testId="comment-edit-cancel"
-                  variant="text"
-                  size="sm"
-                  onClick={() => setEditing(null)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <>
               {/* A comment is text PLUS optional media — the XOR is the post's
                   rule alone (D16) — so both render, and both are veiled as one
                   body when the comment is marked. */}
@@ -723,6 +715,7 @@ export function PostView({
                       // it back by, so it is left out of the section —
                       // never staged, never read as a removal.
                       const loadedRefs = referenceDrafts(comment.references);
+                      const loadedGallery = galleryOf(comment.attachments);
                       setEditing({
                         id: comment.id,
                         draft: loadedDraft,
@@ -731,6 +724,9 @@ export function PostView({
                         tags: loaded,
                         loadedReferences: loadedRefs,
                         references: loadedRefs,
+                        loadedGallery,
+                        gallery: loadedGallery,
+                        targetLabel: post.title.value?.trim() || "this post",
                         // The OR is what a READER sees; the switch is the
                         // author's own mark and arrives from its own read a
                         // moment later (round 4). Starting from the OR would
@@ -760,8 +756,6 @@ export function PostView({
                   </Button>
                 )}
               </div>
-            </>
-          )}
         </Card>
         {replies.length > 0 && (
           <ul className="flex flex-col gap-3">
@@ -965,6 +959,88 @@ export function PostView({
             refresh();
           }}
         />
+      )}
+      {/* CommentEdit, over the thread for the same reasons the wizard is. */}
+      {editing !== null && (
+        <>
+          <CommentEditView
+            targetLabel={editing.targetLabel}
+            words={editing.draft}
+            gallery={editing.gallery}
+            previews={{ ...keptPreviews(editing.gallery), ...editPickedPreviews }}
+            tags={editing.tags}
+            references={editing.references}
+            tagErrors={editTagErrors}
+            referenceErrors={editReferenceErrors}
+            acts={editActions}
+            actsOpen={editActsOpen}
+            busy={editSubmitting}
+            blocked={editGateReason}
+            refusal={editRefusedMessage}
+            failed={editFailed}
+            onWords={(draft) => setEditing({ ...editing, draft })}
+            onPick={(files) =>
+              setEditing({
+                ...editing,
+                gallery: addTo(
+                  editing.gallery,
+                  files.map((file) => ({ id: crypto.randomUUID(), file })),
+                ),
+              })
+            }
+            onRemovePicture={(id) =>
+              setEditing({ ...editing, gallery: removeFromGallery(editing.gallery, id) })
+            }
+            onDescribe={setEditDescribing}
+            onTags={(tags) => setEditing({ ...editing, tags })}
+            onReferences={(references) => setEditing({ ...editing, references })}
+            onActs={setEditActsOpen}
+            onHelp={() => setEditHelp(true)}
+            onSign={() => void onSubmitEdit()}
+            onLeave={() => setEditing(null)}
+          />
+          {/* One picture at a time, keyed by id: comments have no in-sheet
+              stepping, on the editor as on the composer. */}
+          <DescribeSheet
+            open={editDescribing !== null}
+            onClose={() => setEditDescribing(null)}
+            src={
+              editDescribing === null
+                ? null
+                : ({ ...keptPreviews(editing.gallery), ...editPickedPreviews }[editDescribing] ??
+                  null)
+            }
+            crop={null}
+            value={
+              editDescribing === null
+                ? ""
+                : (editing.gallery
+                    .filter((picture) => pictureId(picture) === editDescribing)
+                    .map(pictureAltText)[0] ?? "")
+            }
+            onChange={(altText) => {
+              if (editDescribing !== null) {
+                setEditing({
+                  ...editing,
+                  gallery: withAltText(editing.gallery, editDescribing, altText),
+                });
+              }
+            }}
+            position={{
+              index: editing.gallery.findIndex(
+                (picture) => pictureId(picture) === editDescribing,
+              ),
+              total: editing.gallery.length,
+            }}
+            testId="comment-edit-describe-sheet"
+          />
+          <HelpDialog
+            open={editHelp}
+            onClose={() => setEditHelp(false)}
+            topic={HELP_TOPICS.editing}
+            testId="comment-edit-help-dialog"
+          />
+        </>
       )}
       {confirming !== null && (
         <MultiActionConfirm
