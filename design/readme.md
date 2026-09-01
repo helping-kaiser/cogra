@@ -1639,6 +1639,58 @@ entry first". What stands:
   applicant stages each kind of act once, and non-actionable taps
   answer with a snackbar, never a gate screen.
 
+### The user-flow layer — 2026-09-01
+
+Reachability is semantics-blind: a sign-and-submit board reaches the
+profile through its own cancel-X, and no avatar-edit flow may be
+satisfied that way. Three layers make the answer honest.
+
+- **Kinds prune.** The search walks `advance` arcs alone — `cancel`,
+  `back`, `nav` and `detour` edges are not paths, so an abandonment
+  can never stand in for a conclusion. The **arc**, not the edge, is
+  the unit of travel: a multi-outcome advance edge contributes one arc
+  per board outcome, which is how one `Next` carries two flows apart —
+  AvatarCrop's standalone seal and its return to the edit screen.
+- **Pins kill the residue.** A leg that resolves two ways is a hard
+  failure printing both routes; the engine never guesses which was
+  meant. The fix is a waypoint, or a `via` pin (narrowed by `case` or
+  `to`) naming the edge the flow leaves that board by.
+- **Witnesses freeze the meaning.** Every resolution is written to
+  `flows.resolved.json` and committed — reviewing that file *is* the
+  blessing. A resolution that drifts from it fails the gate, naming the
+  step that moved, until `node check-flows.mjs --rebless` re-blesses it
+  deliberately.
+
+The rulings the layer rests on:
+
+- **A sheet's `Done` advances.** The explicit Done is how a sheet's
+  journey concludes, not a way back; as `back` it left the narrowed
+  feed and the staged-acts boards unreachable. The filter sheets apply
+  live and carry no Done of their own, so on those the scrim tap is
+  the same conclusion.
+- **An `advance` must reach something.** A control whose every outcome
+  merely informs — the applicant's locked rows answering with a
+  snackbar, a chip that lands where you already are — leaves the
+  journey where it was. Those outcomes carry `"info": true` and their
+  edge is a `detour`; an all-informing `advance` fails the gate.
+- **The start is the click, not a screen.** A flow starts from a board,
+  from a given edge, or from a **control**: `{"control": "nav · New
+  post"}` expands to every edge wearing that label, and they must all
+  land on the same first board — divergence fails, `except` drops the
+  boards where the control means something else, and edges reaching
+  only a gap are reported, never failed. Start and end edges are given
+  rather than searched, so their kind does not matter; that is why the
+  bottom nav stays `nav`.
+- **Three files, three jobs.** `graph.json` is the mechanism (what
+  every control does); `flows.json` is the intent (which journeys the
+  product owes — hand-authored, one flow per block, never rewritten by
+  a script); `flows.resolved.json` is the witness (generated,
+  committed, reviewed). `check-flows.mjs` also prints the reverse
+  index — which flows transit a board and which begin or end there,
+  the answer to "how many continuations does this shared screen owe" —
+  and triages the gaps into those a declared journey walks past and
+  those off every flow.
+
 ## 14. Index
 
 **Root**
@@ -1656,7 +1708,9 @@ entry first". What stands:
   `gen-maps.mjs`, `check-flows.mjs` — the canonical-canvas pipeline
   (§13, *Canvas pages and flows*): render the screens, stamp the flow
   numbers, generate the maps, gate the result. Run all four after any
-  screen, component, or graph.json edit.
+  screen, component, or graph.json edit. `_build/flow-engine.mjs` is
+  the gate's user-flow half (§13, *The user-flow layer*): it resolves
+  `flows.json` and blesses `flows.resolved.json`.
 
 **`tokens/`** — `fonts.css`, `colors.css`, `typography.css`,
 `shape.css`, `spacing.css`, `motion.css`, `transitions.css`,
