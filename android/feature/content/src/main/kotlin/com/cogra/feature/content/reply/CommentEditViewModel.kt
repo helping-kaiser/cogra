@@ -1,0 +1,406 @@
+package com.cogra.feature.content.reply
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.cogra.core.designsystem.v2.compose.HelpTopic
+import com.cogra.domain.AttachmentClaim
+import com.cogra.domain.Outcome
+import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.UserError
+import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.MediaProcessor
+import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.repo.ContentRepository
+import com.cogra.domain.repo.ReferenceRepository
+import com.cogra.domain.repo.TopicRepository
+import com.cogra.domain.signing.NoActorKeyException
+import com.cogra.domain.signing.WriteResult
+import com.cogra.domain.signing.WriteSigner
+import com.cogra.feature.content.ReferenceCandidateRow
+import com.cogra.feature.content.ReferenceFinderState
+import com.cogra.feature.content.ReferenceSectionState
+import com.cogra.feature.content.TagSectionState
+import com.cogra.feature.content.candidateRows
+import com.cogra.feature.content.referenceFieldIndex
+import com.cogra.feature.content.tagFieldIndex
+import com.cogra.feature.content.wizard.AssetUpload
+import com.cogra.feature.content.wizard.PickedAsset
+import com.cogra.feature.content.wizard.attachmentFieldIndex
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+/**
+ * `CommentEdit`.
+ *
+ * The one thing this holds that the screen never shows is the comment's
+ * **standing sensitive mark**: `PrepareCommentEditInput` is
+ * complete-state, so an edit that does not re-state the mark clears it.
+ * The mark is read when the edit opens and sent back unchanged.
+ */
+@HiltViewModel
+class CommentEditViewModel @Inject constructor(
+    private val content: ContentRepository,
+    private val references: ReferenceRepository,
+    private val media: MediaRepository,
+    private val processor: MediaProcessor,
+    private val signer: WriteSigner,
+    private val topics: TopicRepository,
+) : ViewModel() {
+
+    private val _state = MutableStateFlow(CommentEditState())
+    val state: StateFlow<CommentEditState> = _state.asStateFlow()
+
+    private val uploads = mutableMapOf<String, Job>()
+    private var finderJob: Job? = null
+    private var started = false
+
+    /**
+     * Opens the edit on the comment as it stands — and reads the mark
+     * the edit has to leave standing.
+     *
+     * [existing] is the gallery the comment already carries. It arrives
+     * already landed, so nothing re-uploads: the edit's payload is the
+     * complete gallery, and these are the entries it keeps.
+     */
+    fun start(
+        commentId: String,
+        parentTitle: String,
+        body: String,
+        existing: List<ExistingPicture> = emptyList(),
+    ) {
+        if (started) return
+        started = true
+        val landed = existing.map {
+            PickedAsset(
+                uri = it.url,
+                sourceRatio = it.aspectRatio,
+                altText = it.altText.orEmpty(),
+                upload = AssetUpload.Done(it.mediaId),
+            )
+        }
+        _state.update {
+            it.copy(
+                commentId = commentId,
+                parentTitle = parentTitle,
+                body = body,
+                loadedBody = body,
+                picked = landed,
+                loadedAttachmentIds = existing.map { picture -> picture.mediaId },
+            )
+        }
+        viewModelScope.launch {
+            val mark = (content.commentSelfMark(commentId) as? Outcome.Success)?.value
+            _state.update {
+                it.copy(
+                    loading = false,
+                    sensitive = mark?.sensitive ?: false,
+                    sensitiveReason = mark?.reason,
+                )
+            }
+        }
+    }
+
+    fun onBodyChange(value: String) = _state.update { it.copy(body = value) }
+
+    fun onPicked(uri: String) {
+        val before = _state.value
+        if (before.picked.any { it.uri == uri } || !before.canAddPicture) return
+        _state.update { it.addPick(uri) }
+        viewModelScope.launch {
+            val ratio = processor.aspectRatio(uri)
+            if (ratio != null) _state.update { it.withSourceRatio(uri, ratio) }
+            upload(uri, ratio)
+        }
+    }
+
+    fun onRemovePickAt(index: Int) {
+        val uri = _state.value.picked.getOrNull(index)?.uri ?: return
+        uploads.remove(uri)?.cancel()
+        _state.update { it.removePick(uri) }
+    }
+
+    /** One asset, whole: a target equal to the source frames nothing away. */
+    private fun upload(uri: String, ratio: Float?) {
+        uploads.remove(uri)?.cancel()
+        _state.update { it.withUpload(uri, AssetUpload.Running) }
+        uploads[uri] = viewModelScope.launch {
+            val picture = processor.process(uri, CropSpec(targetRatio = ratio ?: 1f))
+            if (picture == null) {
+                _state.update { it.withUpload(uri, AssetUpload.Failed(UNREADABLE)) }
+                return@launch
+            }
+            when (val outcome = media.uploadMedia(picture)) {
+                is Outcome.Success -> _state.update {
+                    it.withUpload(uri, AssetUpload.Done(outcome.value.id))
+                }
+                is Outcome.Refused -> _state.update {
+                    it.withUpload(
+                        uri,
+                        AssetUpload.Failed(outcome.errors.firstOrNull()?.message ?: REFUSED),
+                    )
+                }
+                is Outcome.Failed -> _state.update { it.withUpload(uri, AssetUpload.Failed(TRANSPORT)) }
+            }
+        }
+    }
+
+    fun onDescribeFirst() = _state.update {
+        val next = it.picked.indexOfFirst { asset -> asset.altText.isBlank() }
+        it.copy(describingIndex = if (next >= 0) next else 0)
+    }
+
+    fun onAltTextChange(uri: String, text: String) = _state.update { it.withAltText(uri, text) }
+
+    fun onOpenActs() = _state.update { it.copy(actsOpen = true) }
+
+    fun onCloseSheet() = _state.update { it.closedSheets() }
+
+    fun onOpenHelp(topic: HelpTopic) = _state.update { it.copy(help = topic) }
+
+    fun onCloseHelp() = _state.update { it.copy(help = null) }
+
+    // -- Topics and citations --
+
+    fun onTagInputChange(value: String) = updateTags { it.withInput(value) }
+
+    fun onAddTag() = updateTags { it.added() }
+
+    fun onRemoveTag(name: String) = updateTags { it.removed(name) }
+
+    fun onTuneTag(name: String) = updateTags { it.tuned(name) }
+
+    fun onDoneTuningTag() = updateTags { it.tuned(null) }
+
+    fun onTagRelevanceChange(name: String, value: Double) = updateTags { it.withRelevance(name, value) }
+
+    fun onTagConfidenceChange(name: String, value: Double) = updateTags { it.withConfidence(name, value) }
+
+    private fun updateTags(block: (TagSectionState) -> TagSectionState) =
+        _state.update { it.copy(tagSection = block(it.tagSection)) }
+
+    fun onOpenFinder() = updateReferences { it.withFinder(ReferenceFinderState()) }
+
+    fun onCloseFinder() {
+        finderJob?.cancel()
+        updateReferences { it.withFinder(null) }
+    }
+
+    fun onFinderQueryChange(query: String) {
+        finderJob?.cancel()
+        updateReferences { section ->
+            section.withFinder(
+                (section.finder ?: ReferenceFinderState()).copy(
+                    query = query,
+                    searching = query.isNotBlank(),
+                    failed = false,
+                ),
+            )
+        }
+        finderJob = viewModelScope.launch {
+            delay(FINDER_DEBOUNCE_MILLIS)
+            when (val outcome = references.candidateRows(query)) {
+                is Outcome.Success -> updateReferences { section ->
+                    section.finder?.takeIf { it.query == query }?.let {
+                        section.withFinder(
+                            it.copy(candidates = outcome.value, searching = false, failed = false),
+                        )
+                    } ?: section
+                }
+                is Outcome.Refused, is Outcome.Failed -> updateReferences { section ->
+                    section.finder?.takeIf { it.query == query }?.let {
+                        section.withFinder(it.copy(searching = false, failed = true))
+                    } ?: section
+                }
+            }
+        }
+    }
+
+    fun onPickReference(row: ReferenceCandidateRow) {
+        finderJob?.cancel()
+        updateReferences { it.added(row.targetId, row.target).withFinder(null) }
+    }
+
+    fun onRemoveReference(targetId: String) = updateReferences { it.removed(targetId) }
+
+    fun onTuneReference(targetId: String) = updateReferences { it.tuned(targetId) }
+
+    fun onDoneTuningReference() = updateReferences { it.tuned(null) }
+
+    fun onReferenceRelevanceChange(targetId: String, value: Double) =
+        updateReferences { it.withRelevance(targetId, value) }
+
+    fun onReferenceSupportChange(targetId: String, value: Double) =
+        updateReferences { it.withSupport(targetId, value) }
+
+    private fun updateReferences(block: (ReferenceSectionState) -> ReferenceSectionState) =
+        _state.update { it.copy(referenceSection = block(it.referenceSection)) }
+
+    /**
+     * Signs the edit, then each topic and citation the edit newly
+     * declares — the "2 signed actions" the footer counts.
+     */
+    fun onSign() {
+        val current = _state.value
+        if (!current.canSign) return
+        _state.update {
+            it.copy(
+                submitting = true,
+                refusal = null,
+                signingFailed = false,
+                keyAbsent = false,
+                transportFailed = false,
+            )
+        }
+        viewModelScope.launch {
+            val writes = mutableListOf<PreparedWriteView>()
+
+            // The edit record only when its payload moved: an edit that
+            // changed nothing but a topic stages no Edit act (F10).
+            if (current.contentChanged) {
+                when (
+                    val outcome = content.prepareCommentEdit(
+                        id = current.commentId,
+                        content = current.body,
+                        attachments = current.picked.mapNotNull { asset ->
+                            asset.mediaId?.let {
+                                AttachmentClaim(it, asset.altText.ifBlank { null })
+                            }
+                        },
+                        // The standing mark, re-stated. The screen offers
+                        // no switch, so this is exactly what was read when
+                        // the edit opened — an edit must never unveil a
+                        // comment its author marked.
+                        sensitive = current.sensitive,
+                        sensitiveReason = current.sensitiveReason,
+                    )
+                ) {
+                    is Outcome.Success -> writes += outcome.value.writes
+                    is Outcome.Refused -> return@launch refuse(outcome.errors)
+                    is Outcome.Failed -> return@launch failTransport()
+                }
+            }
+
+            // Topics and citations are never edit fields: each change is
+            // its own priced act, staged beside the edit (post.md §3).
+            for (row in current.tagSection.adds) {
+                when (
+                    val outcome =
+                        topics.prepareTag(current.commentId, row.name, row.relevance, row.confidence)
+                ) {
+                    is Outcome.Success -> writes += outcome.value
+                    is Outcome.Refused -> return@launch refuse(outcome.errors)
+                    is Outcome.Failed -> return@launch failTransport()
+                }
+            }
+            for (name in current.tagSection.removes) {
+                when (
+                    val outcome = topics.prepareTag(current.commentId, name, pDirected = WITHDRAWN)
+                ) {
+                    is Outcome.Success -> writes += outcome.value
+                    is Outcome.Refused -> return@launch refuse(outcome.errors)
+                    is Outcome.Failed -> return@launch failTransport()
+                }
+            }
+            for (row in current.referenceSection.adds) {
+                when (
+                    val outcome = references.prepareReference(
+                        current.commentId,
+                        row.targetId,
+                        row.relevance,
+                        row.support,
+                    )
+                ) {
+                    is Outcome.Success -> writes += outcome.value
+                    is Outcome.Refused -> return@launch refuse(outcome.errors)
+                    is Outcome.Failed -> return@launch failTransport()
+                }
+            }
+            for (row in current.referenceSection.removes) {
+                when (
+                    val outcome =
+                        references.prepareReferenceWithdrawal(current.commentId, row.targetId)
+                ) {
+                    is Outcome.Success -> writes += outcome.value
+                    is Outcome.Refused -> return@launch refuse(outcome.errors)
+                    is Outcome.Failed -> return@launch failTransport()
+                }
+            }
+
+            val results = try {
+                signer.sign(writes)
+            } catch (_: NoActorKeyException) {
+                _state.update { it.copy(submitting = false, keyAbsent = true) }
+                return@launch
+            }
+
+            if (results.all { it is WriteResult.Done }) {
+                _state.update { it.copy(submitting = false, saved = true) }
+            } else {
+                _state.update { it.copy(submitting = false, signingFailed = true) }
+            }
+        }
+    }
+
+    fun onSavedConsumed() = _state.update { it.copy(saved = false) }
+
+    private fun refuse(errors: List<UserError>) = _state.update { st ->
+        var tags = st.tagSection
+        var refs = st.referenceSection
+        var picks = st.picked
+        val unplaced = mutableListOf<String>()
+        for (error in errors) {
+            val tagIndex = tagFieldIndex(error.field)
+            val referenceIndex = referenceFieldIndex(error.field)
+            val attachmentIndex = attachmentFieldIndex(error.field)
+            when {
+                tagIndex != null -> {
+                    val (next, left) = tags.withErrorAt(tagIndex, error.message)
+                    tags = next
+                    left?.let { unplaced += it }
+                }
+                referenceIndex != null -> {
+                    val (next, left) = refs.withErrorAt(referenceIndex, error.message)
+                    refs = next
+                    left?.let { unplaced += it }
+                }
+                attachmentIndex != null && attachmentIndex in picks.indices -> {
+                    picks = picks.mapIndexed { i, asset ->
+                        if (i == attachmentIndex) {
+                            asset.copy(upload = AssetUpload.Failed(error.message))
+                        } else {
+                            asset
+                        }
+                    }
+                }
+                else -> unplaced += error.message
+            }
+        }
+        st.copy(
+            submitting = false,
+            tagSection = tags,
+            referenceSection = refs,
+            picked = picks,
+            refusal = unplaced.firstOrNull(),
+        )
+    }
+
+    private fun failTransport() = _state.update { it.copy(submitting = false, transportFailed = true) }
+
+    private companion object {
+        const val FINDER_DEBOUNCE_MILLIS = 250L
+
+        /** A Tag at relevance 0 is how a topic is taken off (hashtag.md §4). */
+        const val WITHDRAWN = 0.0
+
+        const val UNREADABLE = "That file could not be read as a picture."
+        const val REFUSED = "The server would not take that picture."
+        const val TRANSPORT = "The upload could not reach the server."
+    }
+}

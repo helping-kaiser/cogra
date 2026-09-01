@@ -320,14 +320,16 @@ internal fun ReplyPadSheet(
     onChange: (Double, Double) -> Unit,
     onSet: () -> Unit,
     onCancel: () -> Unit,
-    onHelp: () -> Unit,
 ) {
     CograSheetSurface(testTag = "reply_pad_sheet") {
-        SheetTitle(
-            text = "Toward \"${target?.title.orEmpty()}\"",
-            onHelp = onHelp,
-            helpContentDescription = "How stances work",
-        )
+        // The board's `?` ("how stances work", graph.json `ReplyPad` 1)
+        // is deliberately absent: copy-voice.md carries no stances text,
+        // and the nearest topic — the post pad's "Where you stand on it"
+        // — says the opposite of what is true here ("only for-or-against
+        // is yours to set"), because a reply's pick is a stance toward
+        // someone else's content and both axes are the author's. A dot
+        // that opens wrong words is worse than no dot.
+        SheetTitle(text = "Toward \"${target?.title.orEmpty()}\"")
         Text(
             text = stancePair(pDirected, pInterest),
             style = MaterialTheme.typography.bodyMedium,
