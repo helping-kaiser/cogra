@@ -71,12 +71,19 @@ describe("the chrome around the cropper", () => {
     expect(screen.getByTestId("crop-frame").style.aspectRatio).toBe(`${POST_SHAPES.wide.ratio} / 1`);
   });
 
-  it("rounds the avatar frame and squares the post frames", () => {
+  // ComposeCrop and AvatarCrop both draw the viewport edge to edge, out of the
+  // column's own 24px padding and with no corners to round. The avatar's frame
+  // is NOT itself a circle: the library draws the round crop area and the scrim
+  // around it, which is the mask AvatarCrop boards.
+  it("bleeds the frame out of the column, with no corners and no round frame", () => {
     const { rerender } = render(<CropFrame src="blob:x" shape="avatar" onChange={() => {}} />);
-    expect(screen.getByTestId("crop-frame").style.borderRadius).toBe("var(--radius-full)");
+    const frame = () => screen.getByTestId("crop-frame");
+    expect(frame().className).toContain("-mx-6");
+    expect(frame().className).not.toContain("w-full");
+    expect(frame().style.borderRadius).toBe("");
     expect(given().cropShape).toBe("round");
     rerender(<CropFrame src="blob:x" shape="square" onChange={() => {}} />);
-    expect(screen.getByTestId("crop-frame").style.borderRadius).toBe("var(--radius-medium)");
+    expect(frame().style.borderRadius).toBe("");
     expect(given().cropShape).toBe("rect");
   });
 
@@ -131,7 +138,7 @@ describe("what the cropper reports back", () => {
     (props.onCropChange as (p: { x: number; y: number }) => void)({ x: 12, y: -4 });
     (props.onZoomChange as (z: number) => void)(1.4);
     (props.onCropComplete as (a: unknown, b: unknown) => void)(
-      {},
+      { x: 10, y: 20, width: 80, height: 100 },
       { x: 100, y: 200, width: 800, height: 1000 },
     );
 
@@ -142,7 +149,41 @@ describe("what the cropper reports back", () => {
       y: -4,
       zoom: 1.4,
       area: { x: 100, y: 200, width: 800, height: 1000 },
+      areaPercent: { x: 10, y: 20, width: 80, height: 100 },
     });
+  });
+
+  // BOTH units of the report are kept. The pixels are what the encoder bakes;
+  // the percentages are what lets a thumbnail downstream draw this framing
+  // without ever learning how many pixels wide the source is.
+  it("keeps the percentage half of the report beside the pixel half", () => {
+    const changes: Crop[] = [];
+    render(<CropFrame src="blob:x" shape="tall" crop={CENTERED} onChange={(c) => changes.push(c)} />);
+
+    (given().onCropComplete as (a: unknown, b: unknown) => void)(
+      { x: 0, y: 12.5, width: 100, height: 62.5 },
+      { x: 0, y: 100, width: 800, height: 500 },
+    );
+
+    const last = changes.at(-1)!;
+    expect(last.area).toEqual({ x: 0, y: 100, width: 800, height: 500 });
+    expect(last.areaPercent).toEqual({ x: 0, y: 12.5, width: 100, height: 62.5 });
+  });
+
+  // A percentage measured before there was anything to measure is dropped the
+  // same way the pixels are, rather than stored as a rectangle of nothing.
+  it("drops an unusable percentage without dropping the pixels", () => {
+    const changes: Crop[] = [];
+    render(<CropFrame src="blob:x" shape="tall" crop={CENTERED} onChange={(c) => changes.push(c)} />);
+
+    (given().onCropComplete as (a: unknown, b: unknown) => void)(
+      { x: 0, y: 0, width: 0, height: 0 },
+      { x: 0, y: 100, width: 800, height: 500 },
+    );
+
+    const last = changes.at(-1)!;
+    expect(last.area).toEqual({ x: 0, y: 100, width: 800, height: 500 });
+    expect(last.areaPercent).toBeNull();
   });
 
   // The cropper re-reports its position on every recompute, including the one
@@ -258,5 +299,70 @@ describe("the invisible keyboard route", () => {
     expect(description).toHaveClass("sr-only");
     expect(screen.getByTestId("cropper")).toHaveAttribute("aria-describedby", description.id);
     expect(screen.getByTestId("cropper")).toHaveAttribute("aria-label", "The picture's framing");
+  });
+});
+
+// jakob, round 6: "when returning to the crop section ... the crop should be
+// 'remembered' so the user sees his current crop and does not need to restart".
+// The wizard never stopped HOLDING the framing; what could lose it is the view,
+// by mounting a fresh cropper that ignores what it is handed.
+describe("coming back to a framing already chosen", () => {
+  const FRAMED: Crop = {
+    x: -30,
+    y: 44,
+    zoom: 1.8,
+    area: { x: 100, y: 0, width: 800, height: 1000 },
+    areaPercent: { x: 10, y: 0, width: 80, height: 100 },
+  };
+
+  it("hands the saved framing straight back to a freshly mounted cropper", () => {
+    // A remount is what leaving and re-entering the stage does.
+    const first = render(<CropFrame src="blob:x" shape="tall" crop={FRAMED} onChange={() => {}} />);
+    first.unmount();
+    render(<CropFrame src="blob:x" shape="tall" crop={FRAMED} onChange={() => {}} />);
+
+    // `crop` and `zoom` are react-easy-crop's controlled props, so the cropper
+    // shows what it is given — handing it the saved framing IS the re-seed.
+    expect(given().crop).toEqual({ x: -30, y: 44 });
+    expect(given().zoom).toBe(1.8);
+  });
+
+  it("re-seeds whichever way the reader arrives", () => {
+    // Arriving from the stage BEFORE and from the stage AFTER are the same
+    // mount as far as the frame is concerned, and both must land framed.
+    for (const _direction of ["forward", "back"]) {
+      const mounted = render(
+        <CropFrame src="blob:x" shape="tall" crop={FRAMED} onChange={() => {}} />,
+      );
+      expect(given().crop).toEqual({ x: -30, y: 44 });
+      expect(given().zoom).toBe(1.8);
+      mounted.unmount();
+    }
+  });
+
+  // The README warns that `croppedAreaPixels` is rounded and "may result in a
+  // slight drifting crop/zoom" when fed back for restoration. Driving the
+  // controlled props avoids that round trip, so neither restore prop is used.
+  it("restores by driving the controlled props, never by replaying the area", () => {
+    render(<CropFrame src="blob:x" shape="tall" crop={FRAMED} onChange={() => {}} />);
+    expect(given().initialCroppedAreaPixels).toBeUndefined();
+    expect(given().initialCroppedAreaPercentages).toBeUndefined();
+  });
+
+  it("keeps a framing the reader never touched on the way through", () => {
+    const changes: Crop[] = [];
+    render(<CropFrame src="blob:x" shape="tall" crop={FRAMED} onChange={(c) => changes.push(c)} />);
+
+    // The cropper re-reports the framing it was handed the moment it measures.
+    // That report must not count as a change, or a walk through the stage would
+    // rewrite the draft with an equal-but-new framing on every visit.
+    (given().onCropChange as (p: { x: number; y: number }) => void)({ x: -30, y: 44 });
+    (given().onZoomChange as (z: number) => void)(1.8);
+    (given().onCropComplete as (a: unknown, b: unknown) => void)(
+      FRAMED.areaPercent,
+      FRAMED.area,
+    );
+
+    expect(changes).toEqual([]);
   });
 });

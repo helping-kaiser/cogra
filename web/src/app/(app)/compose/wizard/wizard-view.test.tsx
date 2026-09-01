@@ -498,4 +498,152 @@ describe("the compose wizard", () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith("/feed"));
     expect(drafts.held()?.words).toBe("come back to me");
   });
+
+  // jakob's hand test, round 6: he reached for Next in the top-right corner on
+  // a later stage and hit the X, leaving the flow. The corner used to mean Next
+  // early and X from Details on; it now means only X, and Next is at the bottom
+  // of every stage's own content.
+  describe("the forward action, and the corner it is no longer in", () => {
+    const forward = () => screen.getByTestId("wizard-next");
+    const inHeader = () => screen.getByTestId("wizard-header").contains(forward());
+
+    it("keeps Next out of the header on the words stage", async () => {
+      render();
+      fireEvent.click(await screen.findByTestId("wizard-to-words"));
+      expect(inHeader()).toBe(false);
+    });
+
+    it("keeps Next out of the header on the pick, crop and details stages", async () => {
+      render();
+      await pick(["one.jpg"]);
+      expect(inHeader()).toBe(false);
+
+      fireEvent.click(forward());
+      expect(await screen.findByTestId("wizard-crop-frame")).toBeInTheDocument();
+      expect(inHeader()).toBe(false);
+
+      fireEvent.click(forward());
+      expect(await screen.findByTestId("wizard-title")).toBeInTheDocument();
+      expect(inHeader()).toBe(false);
+    });
+
+    it("leaves the corner holding nothing but the ways out", async () => {
+      render();
+      await pick(["one.jpg"]);
+      const header = screen.getByTestId("wizard-header");
+      // The arrow steps back, the X leaves — and nothing else is up there to
+      // be mistaken for either of them.
+      expect(header.querySelectorAll("button")).toHaveLength(2);
+      expect(screen.getByTestId("header-back")).toBeInTheDocument();
+      expect(screen.getByTestId("header-leave")).toBeInTheDocument();
+    });
+  });
+
+  // jakob, round 6: "when returning to the crop section ... the crop should be
+  // 'remembered' so the user sees his current crop and does not need to
+  // restart". The reducer never dropped the framing; what could lose it is the
+  // crop stage being unmounted and mounted again, which is what every arrival
+  // does.
+  describe("returning to the crop stage", () => {
+    it("finds the framing waiting, arriving from the stage after it", async () => {
+      render();
+      await pick(["one.jpg"]);
+      fireEvent.click(screen.getByTestId("wizard-next"));
+
+      fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "+" });
+      fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "+" });
+      expect(zoomOf()).toBeCloseTo(1.2, 6);
+
+      // On to the details, then back a step with the arrow.
+      fireEvent.click(screen.getByTestId("wizard-next"));
+      expect(await screen.findByTestId("wizard-title")).toBeInTheDocument();
+      fireEvent.click(screen.getByTestId("header-back"));
+
+      expect(await screen.findByTestId("wizard-crop-frame")).toBeInTheDocument();
+      expect(zoomOf()).toBeCloseTo(1.2, 6);
+    });
+
+    it("finds it waiting again, arriving from the stage before it", async () => {
+      render();
+      await pick(["one.jpg"]);
+      fireEvent.click(screen.getByTestId("wizard-next"));
+      fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "+" });
+      expect(zoomOf()).toBeCloseTo(1.1, 6);
+
+      // All the way back to the pick screen, then forward into crop again.
+      fireEvent.click(screen.getByTestId("header-back"));
+      expect(await screen.findByTestId("wizard-drop")).toBeInTheDocument();
+      fireEvent.click(screen.getByTestId("wizard-next"));
+
+      expect(await screen.findByTestId("wizard-crop-frame")).toBeInTheDocument();
+      expect(zoomOf()).toBeCloseTo(1.1, 6);
+    });
+
+    it("holds each picture's own framing across the round trip", async () => {
+      render();
+      await pick(["one.jpg", "two.jpg"]);
+      fireEvent.click(screen.getByTestId("wizard-next"));
+
+      fireEvent.click(screen.getByTestId("wizard-crop-pick-1"));
+      fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "+" });
+      fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "+" });
+      fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "+" });
+
+      fireEvent.click(screen.getByTestId("wizard-next"));
+      expect(await screen.findByTestId("wizard-title")).toBeInTheDocument();
+      fireEvent.click(screen.getByTestId("header-back"));
+
+      // The stage comes back on the picture it was left on, framed as it was,
+      // and the one nobody touched is still untouched.
+      expect(await screen.findByTestId("wizard-crop-frame")).toBeInTheDocument();
+      expect(zoomOf()).toBeCloseTo(1.3, 6);
+      fireEvent.click(screen.getByTestId("wizard-crop-pick-0"));
+      expect(zoomOf()).toBe(1);
+    });
+  });
+
+  // jakob, round 6: "the previews on the next pages afterwards should display
+  // the cropped version so that people dont think it has reset".
+  it("draws the framing, not the source, on the stages after the crop", async () => {
+    // The framing arrives through a restored draft: jsdom measures every
+    // element as 0x0, so the real cropper can report no rectangle here — and a
+    // restored draft is the surface where a stale-looking preview would read
+    // worst anyway.
+    server.use(uploadOk(["m1"]));
+    const framed = new File([new Uint8Array([1]) as BlobPart], "one.jpg", { type: "image/jpeg" });
+    const drafts = fakeDrafts({
+      ...emptyWizard(),
+      step: "details",
+      mode: "media",
+      assets: [
+        {
+          id: "a0",
+          file: framed,
+          altText: "",
+          upload: { kind: "waiting" },
+          crop: {
+            x: 0,
+            y: 0,
+            zoom: 1,
+            area: { x: 0, y: 100, width: 800, height: 500 },
+            areaPercent: { x: 0, y: 10, width: 100, height: 50 },
+          },
+        },
+      ],
+    });
+    render(drafts);
+
+    fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
+
+    // The details row draws the band the author framed…
+    const rowThumb = await screen.findByTestId("wizard-picked-row-thumb-0-image");
+    expect(rowThumb).toHaveAttribute("data-framed", "true");
+
+    // …and so does the Show all sheet the row opens.
+    fireEvent.click(screen.getByTestId("wizard-picked-row"));
+    expect(await screen.findByTestId("wizard-picked-sheet-thumb-0-image")).toHaveAttribute(
+      "data-framed",
+      "true",
+    );
+  });
 });
