@@ -77,20 +77,25 @@ fragment CommentFields on Comment {
     ...MediaFields
   }
   attachmentsStatus
-  # No `avatar` here, deliberately.
+  # The avatar the comment cards draw (Q49).
   #
-  # A comment's author picture is the most multiplied selection in the
-  # corpus: the thread read carries twenty comments each with three
-  # replies, so every field on a comment's author is priced eighty
-  # times over. Measured, it costs 560 of complexity — and the release
-  # ceiling's stated headroom leaves 224 to spare as it is, so this
-  # selection alone would fail the guard. The canonical `Removed` and
-  # `ComposeLanded` boards draw comment authors as monograms anyway.
+  # It was omitted while the thread read prefetched three replies inside
+  # every comment: that made the fragment eighty spreads deep in one
+  # document, and an author picture inside it cost 560 of complexity
+  # against 224 of headroom. The prefetch is gone — replies arrive
+  # collapsed behind `totalCount` and load on expand — so the fragment
+  # is spread twenty times rather than eighty, and the picture fits
+  # inside the budget it used to break. The monogram remains the
+  # designed fallback for an author who has set none, never a gap
+  # waiting for a photo.
   author {
     id
     handle
     displayName {
       value
+    }
+    avatar {
+      ...MediaFields
     }
   }
   createdAt
@@ -203,23 +208,36 @@ query PostSelfMark($id: UUID!) {
   }
 }
 
-query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repliesFirst: Int!, $includePending: Boolean! = true) {
+# The same read for a comment, and for the same reason: `CommentFields`
+# is the most multiplied fragment in the corpus, and an edit opens one
+# comment, once. It is not a nicety — `PrepareCommentEditInput` is
+# complete-state, so an edit that cannot read the standing mark cannot
+# help clearing it.
+query CommentSelfMark($id: UUID!) {
+  comment(id: $id) {
+    id
+    sensitiveSelfMark
+    sensitiveReason
+  }
+}
+
+# The thread read (Q49). Replies are **counted, not carried**: the
+# board shows them collapsed behind "View n replies", and the count is
+# `totalCount` — cursor-independent, and filtered exactly as the edges
+# would have been. Unfolding one branch fires `CommentReplies`.
+#
+# Prefetching three replies per comment made this document eighty
+# `CommentFields` spreads deep for a page nobody had asked to see. The
+# budget that bought back is what pays for the comment avatars.
+query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $includePending: Boolean! = true) {
   post(id: $id) {
     ...PostFields
     comments(first: $commentsFirst, after: $commentsAfter, includePending: $includePending) {
       edges {
         node {
           ...CommentFields
-          replies(first: $repliesFirst, includePending: $includePending) {
-            edges {
-              node {
-                ...CommentFields
-              }
-            }
-            pageInfo {
-              hasNextPage
-              endCursor
-            }
+          replies(includePending: $includePending) {
+            totalCount
           }
         }
       }
@@ -231,25 +249,23 @@ query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repl
   }
 }
 
-# The expand read: a further page of one comment's direct replies,
-# each carrying its own first reply page so nesting can continue.
-query CommentReplies($id: UUID!, $first: Int!, $after: String, $repliesFirst: Int!, $includePending: Boolean! = true) {
+# The expand read: a further page of one comment's direct replies, each
+# counting its own branch rather than carrying it.
+#
+# The thread is two levels deep on screen (readme §13) — a comment, and
+# its replies indented once — so a reply's own replies are never drawn
+# beside it; they flatten into that one level and open with the @handle
+# they answer. Counting them is what the collapsed line needs, and
+# carrying them would multiply this document for a level no board draws.
+query CommentReplies($id: UUID!, $first: Int!, $after: String, $includePending: Boolean! = true) {
   comment(id: $id) {
     id
     replies(first: $first, after: $after, includePending: $includePending) {
       edges {
         node {
           ...CommentFields
-          replies(first: $repliesFirst, includePending: $includePending) {
-            edges {
-              node {
-                ...CommentFields
-              }
-            }
-            pageInfo {
-              hasNextPage
-              endCursor
-            }
+          replies(includePending: $includePending) {
+            totalCount
           }
         }
       }

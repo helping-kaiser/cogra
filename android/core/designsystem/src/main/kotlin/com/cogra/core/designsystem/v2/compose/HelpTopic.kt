@@ -76,6 +76,24 @@ enum class HelpTopic(val title: String, val paragraphs: List<String>) {
         ),
     ),
 
+    /**
+     * The edit surfaces — the post's, and `CommentEdit`'s own help dot.
+     *
+     * Transcribed verbatim, "post" included: copy-voice.md carries one
+     * Editing text and the boards point both edit surfaces at it, so
+     * swapping the noun here would be the rephrasing this file exists
+     * not to do.
+     */
+    Editing(
+        title = "Editing",
+        paragraphs = listOf(
+            "An edit replaces the whole post; earlier versions stay public under " +
+                "\"Edited\" unless you remove them. An edit never bumps the post as new.",
+            "Topic and citation changes ride the same signing, each as its own " +
+                "signed action. The license never changes.",
+        ),
+    ),
+
     /** The post's one-axis pad. */
     WhereYouStand(
         title = "Where you stand on it",

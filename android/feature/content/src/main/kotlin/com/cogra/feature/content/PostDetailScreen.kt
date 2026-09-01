@@ -726,8 +726,17 @@ private fun CommentTagSection(
     )
 }
 
-/** Nesting indents up to three levels, then flattens (design.md §6). */
-private const val MAX_INDENT_DEPTH = 3
+/**
+ * The thread is **two levels deep on screen**: a comment, and its
+ * replies indented once (design/readme.md §13, 2026-08-28, and the
+ * canonical `CommentCard`, which sets exactly this).
+ *
+ * Anything deeper flattens into that one reply level and opens with the
+ * @handle it answers — the mention is the structure, so the column never
+ * narrows to a word. design.md §6 still says three levels; it predates
+ * the ruling (design/backlog.md item 26 tracks that lag).
+ */
+private const val MAX_INDENT_DEPTH = 1
 
 /**
  * One comment with its nested replies (design.md §6 "Comment"):
@@ -782,14 +791,15 @@ private fun CommentThread(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 comment.author?.let { author ->
-                    // No picture: the thread read does not ask for one
-                    // (see `CommentFields`), so a comment author is the
-                    // monogram — which is what the canonical boards
-                    // draw for them anyway.
+                    // The picture the boards draw on a comment card
+                    // (Q49). Null is the monogram — the designed
+                    // fallback for an author who has set none, not a gap
+                    // waiting for a photo.
                     ActorChip(
                         handle = author.handle,
                         displayName = author.displayName,
                         onOpen = { onOpenActor(author.handle) },
+                        avatarUrl = author.avatar?.url,
                         testTag = "comment_author_${comment.id}",
                     )
                 }
@@ -1009,9 +1019,12 @@ private fun CommentThread(
                 }
             }
         }
+        // Replies are counted, not carried (Q49): nothing is on screen
+        // until a reader opens the branch, and `replyCount` is what the
+        // collapsed line reads.
         val thread = state.replyThreads[comment.id]
-        val replies = thread?.items ?: comment.replies?.items.orEmpty()
-        val hasMore = thread?.hasMore ?: (comment.replies?.hasNextPage ?: false)
+        val replies = thread?.items.orEmpty()
+        val hasMore = thread?.hasMore ?: false
         replies.forEach { reply ->
             CommentThread(
                 comment = reply,
@@ -1049,6 +1062,20 @@ private fun CommentThread(
                 modifier = Modifier.testTag("replies_retry_${comment.id}"),
             ) {
                 Text(stringResource(R.string.content_retry))
+            }
+            // The collapsed branch, as `CommentCard` draws it: the count
+            // stands in for the replies until a reader asks for them.
+            replies.isEmpty() && comment.replyCount > 0 -> TextButton(
+                onClick = { onLoadMoreReplies(comment) },
+                modifier = Modifier.testTag("replies_more_${comment.id}"),
+            ) {
+                Text(
+                    pluralStringResource(
+                        R.plurals.content_comment_view_replies,
+                        comment.replyCount,
+                        comment.replyCount,
+                    ),
+                )
             }
             hasMore -> TextButton(
                 onClick = { onLoadMoreReplies(comment) },

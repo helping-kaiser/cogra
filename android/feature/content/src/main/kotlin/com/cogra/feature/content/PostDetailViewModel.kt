@@ -33,9 +33,10 @@ import kotlinx.coroutines.launch
  * shows.
  */
 data class ReplyThread(
-    val items: List<CommentView>,
-    val endCursor: String?,
-    val hasMore: Boolean,
+    /** Empty until a reader opens the branch: nothing is prefetched (Q49). */
+    val items: List<CommentView> = emptyList(),
+    val endCursor: String? = null,
+    val hasMore: Boolean = false,
     val loading: Boolean = false,
     val failed: Boolean = false,
 )
@@ -328,11 +329,9 @@ class PostDetailViewModel @Inject constructor(
     /** A further page of one comment's replies (the expand affordance). */
     fun onLoadMoreReplies(comment: CommentView) {
         val s = _state.value
-        val seeded = s.replyThreads[comment.id] ?: ReplyThread(
-            items = comment.replies?.items.orEmpty(),
-            endCursor = comment.replies?.endCursor,
-            hasMore = comment.replies?.hasNextPage ?: false,
-        )
+        // Nothing is prefetched (Q49), so the first expand starts from
+        // an empty branch and the read fills it.
+        val seeded = s.replyThreads[comment.id] ?: ReplyThread()
         if (seeded.loading) return
         _state.update {
             it.copy(replyThreads = it.replyThreads + (comment.id to seeded.copy(loading = true, failed = false)))
