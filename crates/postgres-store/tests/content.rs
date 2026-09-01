@@ -596,3 +596,73 @@ async fn a_landed_version_without_coordinates_falls_below_one_with_them(pool: Pg
         "a timestamp cannot outrank a landing position"
     );
 }
+
+/// The count beside a thread page has to answer for exactly the entries
+/// that page would serve, or a "view n replies" affordance promises
+/// replies the reader cannot reach. Both filters are pinned against the
+/// read itself rather than against a literal, so the two cannot drift
+/// apart silently.
+///
+/// A thread's count answers for exactly the entries its page would serve, under either pending filter.
+/// ´claim:content:a-thread-count-answers-for-its-page´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_thread_count_admits_what_the_thread_read_serves(pool: PgPool) {
+    let author = actor(&pool, "author").await;
+    let commenter = actor(&pool, "commenter").await;
+    let host = post(&pool, author, Some(order(1, 0)), at(0), "host").await;
+    comment(&pool, commenter, host, Some(order(1, 1)), at(10), "landed").await;
+    comment(
+        &pool,
+        commenter,
+        host,
+        Some(order(2, 0)),
+        at(20),
+        "landed too",
+    )
+    .await;
+    comment(&pool, commenter, host, None, at(30), "still in flight").await;
+
+    let served = content::comments_for_target(&pool, host, None, false, 50, true)
+        .await
+        .expect("thread");
+    let total = content::count_comments_for_target(&pool, host, true)
+        .await
+        .expect("count");
+    assert_eq!(total, 3);
+    assert_eq!(total, served.len() as i64, "the count answers for the page");
+
+    let landed = content::comments_for_target(&pool, host, None, false, 50, false)
+        .await
+        .expect("landed thread");
+    let landed_total = content::count_comments_for_target(&pool, host, false)
+        .await
+        .expect("landed count");
+    assert_eq!(
+        landed_total, 2,
+        "the unlanded entry is out of the landed-only count"
+    );
+    assert_eq!(landed_total, landed.len() as i64);
+}
+
+/// A target nobody has answered counts zero under either filter — the
+/// aggregate has no row to fall back on, so the read supplies the zero.
+///
+/// (´claim:content:a-thread-count-answers-for-its-page´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_unanswered_target_counts_zero(pool: PgPool) {
+    let author = actor(&pool, "author").await;
+    let host = post(&pool, author, Some(order(1, 0)), at(0), "nobody replied").await;
+
+    assert_eq!(
+        content::count_comments_for_target(&pool, host, true)
+            .await
+            .expect("count"),
+        0
+    );
+    assert_eq!(
+        content::count_comments_for_target(&pool, host, false)
+            .await
+            .expect("landed count"),
+        0
+    );
+}

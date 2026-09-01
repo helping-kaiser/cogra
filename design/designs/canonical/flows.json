@@ -1,0 +1,60 @@
+{
+  "$doc": "User flows — the intent layer. graph.json is the mechanism (what every control does); this file says which journeys the product owes, in words a person can check. `check-flows.mjs` resolves each one against the graph by searching `advance` edges alone and writes the result to flows.resolved.json, the committed witness. A flow declares: `name` (kebab-case) · `description` (its intent in one line) · `start` · optional `waypoints` · `end`. START is either a board (`{board}` — the journey begins on that screen), a given edge (`{board, via}` plus `case`/`to` when that edge offers several outcomes), or a CONTROL (`{control}` — the click, not the screen: it expands to every edge carrying that label, which must all land on the same first board; `except` drops boards that mean something else there, and edges that only reach a gap are reported, never failed). END is a given edge `{board, via}` (plus `case`/`to`), the concluding act — an end landing on a gap is reported as blocked, not failed. WAYPOINTS are ordered boards the journey passes through; a waypoint's `via` (with `case` or `to`) pins the edge the flow LEAVES that board by, which is how an ambiguous leg is settled — to pin the very first step, name the start board as the first waypoint. Start and end edges are given, never searched, so their kind does not matter; every leg between two points is searched, and a leg that resolves two ways is a hard failure asking for a pin. FORMATTING: one flow per block, one waypoint per line, hand-edited. Never let a script rewrite this file.",
+  "flows": [
+    {
+      "name": "publish-a-post",
+      "description": "The bottom nav's New post opens the wizard on every tab root; pictures are cropped, described, and signed into the feed.",
+      "start": { "control": "nav · New post", "except": ["ComposeExpired"] },
+      "waypoints": [
+        { "board": "ComposeCrop", "via": 3, "case": "pictures — details next" },
+        { "board": "ComposeDetails", "via": 10, "to": "ComposeSeal" }
+      ],
+      "end": { "board": "ComposeSeal", "via": 7, "case": "signed — the detail view, still settling" }
+    },
+    {
+      "name": "edit-avatar-standalone",
+      "description": "The change badge on your own profile picture goes straight to the crop and its own seal — one signature, the picture alone.",
+      "start": { "board": "Profile", "via": 4 },
+      "end": { "board": "AvatarSeal", "via": 4, "case": "signed — shown everywhere you appear" }
+    },
+    {
+      "name": "edit-avatar-via-edit-screen",
+      "description": "Changing the picture from the edit screen returns to it — one seal covers the picture and the fields together.",
+      "start": { "board": "Profile", "via": 6 },
+      "waypoints": [
+        { "board": "ProfileEdit", "via": 2 },
+        { "board": "AvatarCrop", "via": 3, "case": "come from the edit screen — the edit's one seal signs it" },
+        { "board": "ProfileEdit", "via": 6, "to": "ProfileEditSeal" }
+      ],
+      "end": { "board": "ProfileEditSeal", "via": 4, "case": "signed — the profile updates" }
+    },
+    {
+      "name": "narrow-the-feed",
+      "description": "The band's filter trigger opens the filter sheet; the sheet applies live, and tapping out leaves the reader on the narrowed feed.",
+      "start": { "board": "Feed", "via": 1 },
+      "end": { "board": "FeedSheet", "via": 6, "case": "narrowed" }
+    },
+    {
+      "name": "sign-in",
+      "description": "Email and password on the sign-in screen land a member with their key on this device in their own feed.",
+      "start": { "board": "SignIn" },
+      "end": { "board": "SignIn", "via": 6, "case": "member, key on this device" }
+    },
+    {
+      "name": "reply-to-a-post",
+      "description": "A post's comment count opens the thread sheet, Add a comment opens the composer, and the seal signs the reply back into the thread.",
+      "start": { "board": "Feed", "via": 10 },
+      "waypoints": [
+        { "board": "ReplyEntry", "via": 7 },
+        { "board": "ReplyCompose", "via": 3 }
+      ],
+      "end": { "board": "ReplySeal", "via": 9, "case": "signed — the thread, the comment settling" }
+    },
+    {
+      "name": "open-a-topic",
+      "description": "A topic chip on a post opens that topic's page — the page itself is still owed.",
+      "start": { "board": "Feed" },
+      "end": { "board": "Feed", "via": 6 }
+    }
+  ]
+}
