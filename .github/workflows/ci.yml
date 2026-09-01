@@ -49,10 +49,11 @@ jobs:
       web: ${{ steps.frontends.outputs.web }}
     steps:
       - uses: actions/checkout@v7
-      # The Rust gate. `android/**` and `web/**` are subtracted alongside docs
-      # so a frontend-only PR skips the Rust lint/test jobs; a schema.graphql
-      # change is NOT excluded, so it still trips the Rust jobs (and, below,
-      # the frontend ones) since all sides of the contract depend on it.
+      # The Rust gate. `android/**`, `web/**`, and `design/**` are subtracted
+      # alongside docs so a frontend- or design-only PR skips the Rust
+      # lint/test jobs; a schema.graphql change is NOT excluded, so it still
+      # trips the Rust jobs (and, below, the frontend ones) since all sides of
+      # the contract depend on it.
       - uses: dorny/paths-filter@v4
         id: filter
         with:
@@ -64,6 +65,7 @@ jobs:
               - '!**/*.md'
               - '!android/**'
               - '!web/**'
+              - '!design/**'
       # The frontend gates. Default (OR) quantifier: any of these paths fires
       # them. Kept in their own step because the OR semantics are incompatible
       # with the `every` quantifier the Rust gate above depends on. Both
