@@ -498,7 +498,7 @@ private fun PostWithThread(
  * A post leads with its title; the line under it is the body, clipped,
  * because the card gives it one line either way.
  */
-private fun PostView.asReplyTarget(): ReplyTarget = ReplyTarget(
+internal fun PostView.asReplyTarget(): ReplyTarget = ReplyTarget(
     id = id,
     kind = ReplyTargetKind.Post,
     title = title?.value.orEmpty(),
@@ -514,7 +514,7 @@ private fun PostView.asReplyTarget(): ReplyTarget = ReplyTarget(
  * card's two lines are then the answer's subject and its context, the
  * way a post's title and body are.
  */
-private fun CommentView.asReplyTarget(): ReplyTarget = ReplyTarget(
+internal fun CommentView.asReplyTarget(): ReplyTarget = ReplyTarget(
     id = id,
     kind = ReplyTargetKind.Comment,
     title = content.value.orEmpty().clipForCard(TARGET_TITLE_CHARS),
