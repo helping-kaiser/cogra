@@ -1,7 +1,6 @@
 package com.cogra.core.designsystem.v2.media
 
 import android.graphics.Rect
-import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -79,8 +78,7 @@ class CropState internal constructor(initial: CropFraming) {
      */
     internal var view: CropImageView? = null
 
-    /** What the attached view has already been told, so it is told once. */
-    private var loadedUrl: String? = null
+    /** The shape the attached view has already been pointed at. */
     private var framedShape: MediaShape? = null
 
     /**
@@ -105,45 +103,54 @@ class CropState internal constructor(initial: CropFraming) {
      */
     private var seeded = false
 
-    /** Reported by the view whenever the reader moves the window. */
+    /**
+     * Reported by the view whenever the reader moves the window.
+     *
+     * A window is this picture's to record only once this picture's own
+     * window has been placed. One view serves the whole filmstrip:
+     * asking it for the next picture blanks it outright, and it comes
+     * back holding the library's own default window — so a window
+     * reported before this framing's has been placed describes a
+     * picture, or a default, that is not this framing's (jakob
+     * 2026-09-01: "the preview of image 1 visibly changes every time i
+     * move image 2 crop").
+     */
     internal fun onWindowChanged(next: CropFraming) {
+        if (!seeded) return
         framing = next
     }
 
     /**
-     * Loads a picture into the view, and only when it actually changed.
+     * Arms this picture's framing for the decode that is about to run.
      *
-     * `setImageUriAsync` restarts the decode and throws the window away,
-     * so calling it on every recomposition would drop the author's
-     * framing every time anything else on the stage moved.
+     * Called when this state becomes the one the view is showing — the
+     * stage opening, or the filmstrip moving here. The window cannot be
+     * placed now: it is expressed against the picture, and the view
+     * knows nothing about the picture's dimensions until the decode
+     * finishes.
      */
-    internal fun load(view: CropImageView, url: Any?) {
-        val next = url?.toString()
-        if (next == loadedUrl) return
-        loadedUrl = next
-        // A framing carried in from a previous life is put back once the
-        // picture it describes is on screen, never before.
+    internal fun beginAttach() {
         pendingRestore = framing.takeIf { it != CropFraming.Whole }
         seeded = false
-        view.setImageUriAsync(next?.let(Uri::parse))
     }
 
     /**
-     * Places the window this state wants, once the picture is loaded —
+     * Places the window this picture wants, now that it is decoded —
      * either a framing carried in from a previous life, or this
-     * picture's opening window.
+     * picture's opening window. Returns true when it placed one.
      *
-     * Returns true when it placed one, so the caller knows the window it
-     * is looking at is one this state asked for rather than one the
-     * reader dragged — reporting it back as a change would overwrite the
-     * very framing being placed.
+     * This runs from the library's **decode-complete** callback, because
+     * that is the only moment it can. `setImageUriAsync` clears any
+     * window seeded before it, the picture's dimensions are unknown
+     * until the bitmap lands ([CropImageView.wholeImageRect] is null
+     * until then), and the library reports no window of its own once the
+     * decode finishes: its `handleCropWindowChanged` reaches an
+     * `OnSetCropWindowChangeListener` only for a settled *change*, and
+     * nothing on the decode path makes one.
      *
-     * The library reports its own default window first, which is why
-     * both jobs live here rather than at attach time: this is the first
-     * moment the picture's dimensions are known
-     * ([CropImageView.wholeImageRect] is null until the decode finishes),
-     * and `cropRect`'s setter is the documented way to place the window
-     * against the source bitmap.
+     * `cropRect`'s setter is the documented way to place a window
+     * against the source bitmap: it seeds the overlay's initial rect,
+     * which the overlay applies as soon as it knows its own bounds.
      */
     internal fun applyPendingWindow(view: CropImageView): Boolean {
         val whole = view.wholeImageRect ?: return false
@@ -156,10 +163,22 @@ class CropState internal constructor(initial: CropFraming) {
             view.cropRect = CropWindowMath.rectOf(restore, whole)
             return true
         }
+        return openWindow(view, whole)
+    }
 
+    /**
+     * The largest window the shape allows — what a picture with no
+     * framing of its own opens on.
+     *
+     * The library's own default opens inset inside the stage, which
+     * leaves the author framing inside a window smaller than the one
+     * they were given ("the area for cropping was to small", jakob
+     * 2026-09-01).
+     */
+    private fun openWindow(view: CropImageView, whole: Rect): Boolean {
         if (seeded) return false
-        seeded = true
         val shape = framedShape ?: return false
+        seeded = true
         val opening = CropWindowMath.largestWindow(
             targetRatio = shape.ratio,
             pictureRatio = whole.width().toFloat() / whole.height().toFloat(),
@@ -167,6 +186,21 @@ class CropState internal constructor(initial: CropFraming) {
         framing = opening
         view.cropRect = CropWindowMath.rectOf(opening, whole)
         return true
+    }
+
+    /**
+     * Drops whatever window the view holds and opens the picture again
+     * at the current shape.
+     *
+     * The seed is cleared first: `resetCropRect` re-initialises the
+     * overlay *from the window last seeded into it*, so resetting
+     * without clearing lands straight back on the framing being dropped.
+     */
+    private fun reopen(view: CropImageView) {
+        view.cropRect = null
+        view.resetCropRect()
+        val whole = view.wholeImageRect ?: return
+        openWindow(view, whole)
     }
 
     /**
@@ -189,12 +223,16 @@ class CropState internal constructor(initial: CropFraming) {
         // resetting there would throw away a framing that survived a
         // rotation — the one thing the saveable state exists to keep.
         if (previous == null) return
-        pendingRestore = null
-        // The new shape opens on its own largest window, placed the next
-        // time the library reports one — never on the previous shape's.
-        seeded = false
-        view.resetCropRect()
         framing = CropFraming.Whole
+        pendingRestore = null
+        // The new shape opens on its own largest window, never on the
+        // previous shape's. The picture this framing describes is on
+        // screen only once its own window has been placed against it;
+        // before that the view is between pictures, and the re-frame is
+        // the decode's to do against the right bitmap.
+        val present = seeded
+        seeded = false
+        if (present) reopen(view)
     }
 
     /**
@@ -208,7 +246,7 @@ class CropState internal constructor(initial: CropFraming) {
         framing = CropFraming.Whole
         pendingRestore = null
         seeded = false
-        view?.resetCropRect()
+        view?.let { reopen(it) }
     }
 
     /** The non-gesture equivalent design/readme.md §10 requires of a drag. */

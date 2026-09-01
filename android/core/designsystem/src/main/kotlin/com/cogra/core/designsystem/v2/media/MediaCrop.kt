@@ -1,5 +1,6 @@
 package com.cogra.core.designsystem.v2.media
 
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -119,6 +121,14 @@ private fun CropViewport(
         onDispose { state.view = null }
     }
 
+    // One view serves every picture in the post, and the filmstrip swaps
+    // the state under it. Everything tying the two together therefore
+    // lives here and is rewritten on each switch, never captured when the
+    // view was made: a listener still closed over the state it was born
+    // with wrote picture two's window into picture one's framing
+    // (jakob 2026-09-01).
+    val binding = remember { CropBinding() }
+
     Box(
         modifier = Modifier
             // Full bleed: the crop runs to the screen's edges, which is
@@ -148,23 +158,18 @@ private fun CropViewport(
                     // makes "nothing is cut off at rest" true.
                     scaleType = CropImageView.ScaleType.FIT_CENTER
                     setFixedAspectRatio(true)
-                    setOnCropWindowChangedListener {
-                        val whole = wholeImageRect ?: return@setOnCropWindowChangedListener
-                        // The first window the library reports after a
-                        // decode is its own default. That is the moment
-                        // to put back a framing that survived — or to
-                        // place this picture's opening window — and
-                        // reporting the default as a change first would
-                        // have overwritten it.
-                        if (state.applyPendingWindow(this)) {
-                            return@setOnCropWindowChangedListener
-                        }
-                        val rect = cropRect ?: return@setOnCropWindowChangedListener
-                        state.onWindowChanged(CropWindowMath.framingOf(rect, whole))
+                    // The decode is the only moment a framing can be put
+                    // back, so the library's own decode-complete callback
+                    // is what places it. Nothing the library reports
+                    // afterwards announces the window it settled on.
+                    setOnSetImageUriCompleteListener { view, uri, error ->
+                        if (error == null) binding.onDecoded(view, uri)
                     }
+                    setOnCropWindowChangedListener { binding.report(this) }
                 }
             },
             update = { view ->
+                binding.bind(state)
                 state.view = view
                 view.cropShape = when (mask) {
                     CropMask.Thirds -> CropImageView.CropShape.RECTANGLE
@@ -176,13 +181,70 @@ private fun CropViewport(
                     CropMask.Thirds -> CropImageView.Guidelines.ON
                     CropMask.Circle -> CropImageView.Guidelines.OFF
                 }
-                state.load(view, item.url)
+                binding.show(view, item.url)
                 state.frameTo(view, shape)
             },
             onRelease = { view ->
                 view.setOnCropWindowChangedListener(null)
+                view.setOnSetImageUriCompleteListener(null)
             },
         )
+    }
+}
+
+/**
+ * What the shared crop view is showing, and whose framing is listening.
+ *
+ * The view is made once and reused for every picture in the post, so
+ * *which picture is loaded* and *whose framing a moved window belongs to*
+ * are properties of the view rather than of any one [CropState]. Holding
+ * them here — rewritten on every switch instead of captured when the view
+ * was made — is what stops a callback reaching the picture that was on
+ * screen before it.
+ */
+private class CropBinding {
+
+    private var state: CropState? = null
+
+    /** The picture this view was last asked to load. */
+    private var requestedUrl: String? = null
+
+    /** Points the callbacks at the framing now being edited. */
+    fun bind(next: CropState) {
+        if (state === next) return
+        state = next
+        next.beginAttach()
+    }
+
+    /**
+     * Points the view at a picture, and only when it is not already
+     * pointed there. `setImageUriAsync` restarts the decode and throws
+     * the window away, so re-issuing it on every recomposition would drop
+     * the author's framing every time anything else on the stage moved.
+     */
+    fun show(view: CropImageView, url: Any?) {
+        val next = url?.toString()
+        if (next == requestedUrl) return
+        requestedUrl = next
+        view.setImageUriAsync(next?.let(Uri::parse))
+    }
+
+    /**
+     * Places the waiting window, once the picture it describes is the one
+     * that actually landed. A decode for a picture the filmstrip has
+     * already moved off is not this framing's to answer.
+     */
+    fun onDecoded(view: CropImageView, uri: Uri?) {
+        if (uri?.toString() != requestedUrl) return
+        state?.applyPendingWindow(view)
+    }
+
+    /** Reports a moved window to the framing currently being edited. */
+    fun report(view: CropImageView) {
+        val state = state ?: return
+        val whole = view.wholeImageRect ?: return
+        val rect = view.cropRect ?: return
+        state.onWindowChanged(CropWindowMath.framingOf(rect, whole))
     }
 }
 
