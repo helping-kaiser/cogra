@@ -7,7 +7,7 @@
 export function Screen() {
   return (
     <>
-      <WizardHeader title="Reply" action={<Button size="sm">Next</Button>} />
+      <WizardHeader title="Reply" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 56, padding: "8px 12px", borderRadius: "var(--radius-small)", background: "var(--surface-container-highest, var(--surface-container-high))" }}>
           <img src="ava1.jpg" alt="" style={{ width: 32, height: 32, borderRadius: "var(--radius-full)", objectFit: "cover", flex: "none" }} />
@@ -40,6 +40,7 @@ export function Screen() {
         <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
           Words first — pictures can join them, and they upload while you write.
         </p>
+        <Button style={{ width: "100%" }}>Next</Button>
       </div>
     </>
   );
