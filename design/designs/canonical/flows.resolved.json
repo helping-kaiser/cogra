@@ -506,6 +506,235 @@
         "ReplyMedia",
         "CommentEdit"
       ]
+    },
+    {
+      "name": "publish-words",
+      "description": "Write words instead takes the wizard's other half — no crop, no cover, the same details and the same seal signing words alone into the feed.",
+      "status": "resolved",
+      "startsOn": [
+        "ComposeLanded",
+        "Explore",
+        "ExploreNone",
+        "ExploreSearch",
+        "Feed",
+        "FeedFar",
+        "FeedGallery",
+        "FeedNarrowed",
+        "FeedNothing",
+        "KeyElsewhere",
+        "Profile",
+        "ProfileComments",
+        "ProfileOther",
+        "ProfilePosts",
+        "ProfileStances",
+        "Removed",
+        "VouchBack",
+        "Wallet",
+        "WalletEmpty",
+        "WalletKeyAbsent",
+        "WalletSetup"
+      ],
+      "startsUndesigned": [
+        "ApplicantFeed/15: applicant acts once each — boards pending (ruled 2026-09-01)",
+        "ApplicantWaiting/12: applicant acts once each — boards pending (ruled 2026-09-01)",
+        "FeedBare/15: guest-gate pattern board (not designed)",
+        "Main/15: guest-gate pattern board (not designed)",
+        "ProfileApplicant/12: applicant acts once each — boards pending (ruled 2026-09-01)",
+        "WalletApplicant/3: applicant acts once each — boards pending (ruled 2026-09-01)",
+        "WalletGuest/5: guest-gate pattern board (not designed)"
+      ],
+      "steps": [
+        "start · «nav · New post» on 21 boards → ComposePick",
+        "ComposePick · 4 «Write words instead» → ComposeWords",
+        "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
+        "ComposeDetails · 10 «Next» → ComposeSeal",
+        "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
+      ],
+      "boards": [
+        "ComposePick",
+        "ComposeWords",
+        "ComposeDetails",
+        "ComposeSeal",
+        "ComposeLanded"
+      ]
+    },
+    {
+      "name": "publish-a-video",
+      "description": "A video takes a step of its own — the cover picks the face the post wears, and details and seal follow the way pictures do.",
+      "status": "resolved",
+      "startsOn": [
+        "ComposeLanded",
+        "Explore",
+        "ExploreNone",
+        "ExploreSearch",
+        "Feed",
+        "FeedFar",
+        "FeedGallery",
+        "FeedNarrowed",
+        "FeedNothing",
+        "KeyElsewhere",
+        "Profile",
+        "ProfileComments",
+        "ProfileOther",
+        "ProfilePosts",
+        "ProfileStances",
+        "Removed",
+        "VouchBack",
+        "Wallet",
+        "WalletEmpty",
+        "WalletKeyAbsent",
+        "WalletSetup"
+      ],
+      "startsUndesigned": [
+        "ApplicantFeed/15: applicant acts once each — boards pending (ruled 2026-09-01)",
+        "ApplicantWaiting/12: applicant acts once each — boards pending (ruled 2026-09-01)",
+        "FeedBare/15: guest-gate pattern board (not designed)",
+        "Main/15: guest-gate pattern board (not designed)",
+        "ProfileApplicant/12: applicant acts once each — boards pending (ruled 2026-09-01)",
+        "WalletApplicant/3: applicant acts once each — boards pending (ruled 2026-09-01)",
+        "WalletGuest/5: guest-gate pattern board (not designed)"
+      ],
+      "steps": [
+        "start · «nav · New post» on 21 boards → ComposePick",
+        "ComposePick · 3 «Next» → ComposeCover — a video — its face",
+        "ComposeCover · 6 «Next» → ComposeDetails",
+        "ComposeDetails · 10 «Next» → ComposeSeal",
+        "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
+      ],
+      "boards": [
+        "ComposePick",
+        "ComposeCover",
+        "ComposeDetails",
+        "ComposeSeal",
+        "ComposeLanded"
+      ]
+    },
+    {
+      "name": "cite-something",
+      "description": "+ Cite something, wherever a composer offers it, opens the picker over everything citable; a result row lands the citation in the composer's references.",
+      "status": "resolved",
+      "startsOn": [
+        "CommentEdit",
+        "ComposeDetails",
+        "EditCompose",
+        "ReplySeal"
+      ],
+      "steps": [
+        "start · «+ Cite something» on 4 boards → ReferencePicker",
+        "end · ReferencePicker · 5 «result rows» → back — the pick lands in the composer's references"
+      ],
+      "boards": [
+        "ReferencePicker"
+      ]
+    },
+    {
+      "name": "set-your-own-stance-on-your-post",
+      "description": "Adjust on the seal blooms the one-axis pad — your own post always reaches you in full, so the stance is declared before signing, never assumed.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSeal · 5 «Adjust (your stance)» → ComposePad",
+        "end · ComposePad · 4 «Set» → ComposeSeal — the adjusted stance on the seal"
+      ],
+      "boards": [
+        "ComposeSeal",
+        "ComposePad"
+      ]
+    },
+    {
+      "name": "pick-a-kept-draft-back-up",
+      "description": "New post with a draft kept asks before it opens; Continue resumes that draft at details, and the same seal signs it into the feed.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeExpired · 15 «nav · New post» → ComposeDraft — a draft is kept — the prompt first",
+        "ComposeDraft · 4 «Continue» → ComposeDetails — resumes where it left — this draft at details",
+        "ComposeDetails · 10 «Next» → ComposeSeal",
+        "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
+      ],
+      "boards": [
+        "ComposeExpired",
+        "ComposeDraft",
+        "ComposeDetails",
+        "ComposeSeal",
+        "ComposeLanded"
+      ]
+    },
+    {
+      "name": "edit-your-post",
+      "description": "The own-post overflow offers Edit; the edit surface carries its changes as signed acts of their own and the post settles with them.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeLanded · 2 «post overflow ⋮» → RemoveMenu — the own-post sheet",
+        "RemoveMenu · 1 «Edit» → EditCompose",
+        "end · EditCompose · 12 «Sign the edit» → back — signed — the post, the edit settling"
+      ],
+      "boards": [
+        "ComposeLanded",
+        "RemoveMenu",
+        "EditCompose"
+      ]
+    },
+    {
+      "name": "remove-your-post",
+      "description": "Remove asks once, then leaves the mark — the post is redacted where it stood, never silently erased.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeLanded · 2 «post overflow ⋮» → RemoveMenu — the own-post sheet",
+        "RemoveMenu · 3 «Remove» → RemoveConfirm",
+        "end · RemoveConfirm · 1 «Remove» → Removed — the visible mark — never silent"
+      ],
+      "boards": [
+        "ComposeLanded",
+        "RemoveMenu",
+        "RemoveConfirm",
+        "Removed"
+      ]
+    },
+    {
+      "name": "set-the-cover-and-order",
+      "description": "Show all opens the picked batch as a list; dragging sets the order, the first picture is the cover, and Done returns wherever the sheet opened.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposePick · 5 «Show all» → ComposePicked — the Show-all sheet (drawn on the media page)",
+        "end · ComposePicked · 4 «Done» → back — the sheet closes — pick, details, or edit, wherever it opened"
+      ],
+      "boards": [
+        "ComposePick",
+        "ComposePicked"
+      ]
+    },
+    {
+      "name": "describe-your-pictures",
+      "description": "Describe the pictures, wherever pictures are staged, opens the sheet; what is written there is witnessed at signing and never gates the upload.",
+      "status": "resolved",
+      "startsOn": [
+        "CommentEdit",
+        "ComposeUploading",
+        "ReplyPictures",
+        "ReplyPicturesWeb"
+      ],
+      "steps": [
+        "start · «Describe the pictures» on 4 boards → ComposeDescribe",
+        "end · ComposeDescribe · 3 «Done» → back — the sheet closes"
+      ],
+      "boards": [
+        "ComposeDescribe"
+      ]
+    },
+    {
+      "name": "publish-while-the-uploads-run",
+      "description": "Details written while the pictures are still climbing reach the gated seal; signing waits for them, then the post lands in its detail view, still settling.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeDetails · 10 «Next» → ComposeUploading — uploads still running — details keep writing (drawn on the media page)",
+        "ComposeUploading · 11 «Next» → ComposeSealUploading — uploads still running — the gated seal",
+        "end · ComposeSealUploading · 7 «Sign and publish (disabled)» → ComposeLanded — uploads land — signing proceeds to the detail view, still settling"
+      ],
+      "boards": [
+        "ComposeDetails",
+        "ComposeUploading",
+        "ComposeSealUploading",
+        "ComposeLanded"
+      ]
     }
   ],
   "boardsOnFlows": {
@@ -544,45 +773,138 @@
       ],
       "endpoint": []
     },
+    "ComposeCover": {
+      "flows": [
+        "publish-a-video"
+      ],
+      "endpoint": []
+    },
     "ComposeCrop": {
       "flows": [
         "publish-a-post"
       ],
       "endpoint": []
     },
+    "ComposeDescribe": {
+      "flows": [
+        "describe-your-pictures"
+      ],
+      "endpoint": [
+        "describe-your-pictures"
+      ]
+    },
     "ComposeDetails": {
       "flows": [
-        "publish-a-post"
+        "pick-a-kept-draft-back-up",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-while-the-uploads-run",
+        "publish-words"
+      ],
+      "endpoint": [
+        "publish-while-the-uploads-run"
+      ]
+    },
+    "ComposeDraft": {
+      "flows": [
+        "pick-a-kept-draft-back-up"
       ],
       "endpoint": []
     },
-    "ComposeLanded": {
+    "ComposeExpired": {
       "flows": [
-        "publish-a-post"
+        "pick-a-kept-draft-back-up"
       ],
       "endpoint": [
-        "publish-a-post"
+        "pick-a-kept-draft-back-up"
       ]
+    },
+    "ComposeLanded": {
+      "flows": [
+        "edit-your-post",
+        "pick-a-kept-draft-back-up",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-while-the-uploads-run",
+        "publish-words",
+        "remove-your-post"
+      ],
+      "endpoint": [
+        "edit-your-post",
+        "pick-a-kept-draft-back-up",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-while-the-uploads-run",
+        "publish-words",
+        "remove-your-post"
+      ]
+    },
+    "ComposePad": {
+      "flows": [
+        "set-your-own-stance-on-your-post"
+      ],
+      "endpoint": []
     },
     "ComposePick": {
       "flows": [
-        "publish-a-post"
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "set-the-cover-and-order"
       ],
       "endpoint": [
-        "publish-a-post"
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "set-the-cover-and-order"
+      ]
+    },
+    "ComposePicked": {
+      "flows": [
+        "set-the-cover-and-order"
+      ],
+      "endpoint": [
+        "set-the-cover-and-order"
       ]
     },
     "ComposeSeal": {
       "flows": [
-        "publish-a-post"
+        "pick-a-kept-draft-back-up",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "set-your-own-stance-on-your-post"
       ],
-      "endpoint": []
+      "endpoint": [
+        "set-your-own-stance-on-your-post"
+      ]
     },
     "ComposeSealUploading": {
       "flows": [
+        "publish-while-the-uploads-run",
         "reply-while-the-pictures-upload"
       ],
       "endpoint": []
+    },
+    "ComposeUploading": {
+      "flows": [
+        "publish-while-the-uploads-run"
+      ],
+      "endpoint": []
+    },
+    "ComposeWords": {
+      "flows": [
+        "publish-words"
+      ],
+      "endpoint": []
+    },
+    "EditCompose": {
+      "flows": [
+        "edit-your-post"
+      ],
+      "endpoint": [
+        "edit-your-post"
+      ]
     },
     "Explore": {
       "flows": [
@@ -732,6 +1054,35 @@
       ],
       "endpoint": [
         "make-your-key"
+      ]
+    },
+    "ReferencePicker": {
+      "flows": [
+        "cite-something"
+      ],
+      "endpoint": [
+        "cite-something"
+      ]
+    },
+    "RemoveConfirm": {
+      "flows": [
+        "remove-your-post"
+      ],
+      "endpoint": []
+    },
+    "RemoveMenu": {
+      "flows": [
+        "edit-your-post",
+        "remove-your-post"
+      ],
+      "endpoint": []
+    },
+    "Removed": {
+      "flows": [
+        "remove-your-post"
+      ],
+      "endpoint": [
+        "remove-your-post"
       ]
     },
     "ReplyCompose": {
@@ -898,8 +1249,15 @@
     "CommentEdit/12: network-error pattern board (not designed)",
     "CommentEdit/9: the topic picker (not boarded)",
     "ComposeDetails/7: the topic picker (not boarded)",
+    "ComposeExpired/11: Post Score drill-down (backlog item 13)",
+    "ComposeExpired/18: the chat surface (not designed)",
+    "ComposeExpired/5: reader's post menu — licence terms / cite (not boarded)",
+    "ComposeExpired/8: the topic page (ruled 2026-09-01 — not designed)",
     "ComposeLanded/7: Post Score drill-down (backlog item 13)",
     "ComposeSeal/7: network-error pattern board (not designed)",
+    "ComposeUploading/10: the topic picker (not boarded)",
+    "EditCompose/12: network-error pattern board (not designed)",
+    "EditCompose/8: the topic picker (not boarded)",
     "Explore/2: the Sky (backlog item 16 — last on purpose)",
     "Explore/9: the chat surface (not designed)",
     "ExploreSearch/4: the post detail view (not boarded standalone — drawn only under the comments sheet)",
@@ -935,6 +1293,8 @@
     "ProfileEdit/6: field-error states (not boarded)",
     "ProfileEditSeal/4: network-error pattern board (not designed)",
     "RecoveryCode/3: code-mismatch error state (not boarded)",
+    "RemoveMenu/4: the licence-terms view (not boarded)",
+    "Removed/4: Post Score drill-down (backlog item 13)",
     "ReplyEntry/2: the comment's menu — cite / licence terms (not boarded)",
     "ReplyEntry/3: the topic page (ruled 2026-09-01 — not designed)",
     "ReplyMedia/2: the comment's menu — cite / licence terms (not boarded)",
