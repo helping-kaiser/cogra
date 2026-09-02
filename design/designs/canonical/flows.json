@@ -202,6 +202,16 @@
       "end": { "board": "ReplySeal", "via": 9, "case": "signed — the thread, the comment settling" }
     },
     {
+      "name": "reply-with-a-video",
+      "description": "A video picked for a reply puts the composer in its video state, where its face is chosen and its one description written; the same seal signs the words and the clip together into the thread.",
+      "start": { "board": "ReplyEntry", "via": 7 },
+      "waypoints": [
+        { "board": "ReplyCompose", "via": 5, "case": "a video — the composer's video state" },
+        { "board": "ReplyVideo", "via": 3, "to": "ReplySeal" }
+      ],
+      "end": { "board": "ReplySeal", "via": 9, "case": "signed — the thread, the comment settling" }
+    },
+    {
       "name": "reply-while-the-pictures-upload",
       "description": "Next pressed while the pictures are still going up reaches the gated seal; signing waits for them, then the comment settles into the thread.",
       "start": { "board": "ReplyPictures", "via": 3, "case": "uploads still running — the gated seal (master on the media page)" },
