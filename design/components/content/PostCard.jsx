@@ -74,11 +74,11 @@ export function PostCard({
   menuItems = [],
 }) {
   const detail = variant === "detail";
-  // THE AUTHOR'S SELF-MARK (readme §13): one flag veils the BODY and the
-  // DESCRIPTION while the title stays readable, and the author's own reason
-  // rides the veil under its standard line. One reveal answers for the whole
-  // card (SensitiveScope).
-  const veil = !redacted && sensitive ? { reason: sensitive.reason ?? sensitive.label } : null;
+  // THE SENSITIVE MARK (readme §13): one flag veils the BODY and the
+  // DESCRIPTION while the title stays readable, and the veil names whose mark it
+  // is — the author's warning or the platform's verdict — with the reason after
+  // it. One reveal answers for the whole card (SensitiveScope).
+  const veil = !redacted && sensitive ? { reason: sensitive.reason ?? sensitive.label, source: sensitive.source } : null;
   // REDACTION IS RECORD-GRANULAR. An illegal verdict removes the payload, so
   // every authored field goes at once — there is no redacted title beside a
   // surviving body. The card renders its skeleton instead: author, timestamp,
@@ -223,7 +223,7 @@ export function PostCard({
           }}
         >
           {veil ? (
-            <SensitiveVeil kind="media" reason={veil.reason} radius="0px">
+            <SensitiveVeil kind="media" reason={veil.reason} source={veil.source} radius="0px">
               <MediaGallery items={media} radius="0px" />
             </SensitiveVeil>
           ) : (

@@ -17,7 +17,7 @@ Everything a post grows beyond its content goes in the **affordance row**: **one
 
 **Comments have their own affordance** (`comments` count + `onOpenComments`). "Read the replies" is a different intent from "read the post", so it does not hide behind the card tap — it opens the **comments sheet** (readme §13, 2026-08-28), from the feed and the detail view alike; the detail view is just about the post. `chat_bubble` plus the count, the same glyph-plus-number shape as the score beside it; the count is spoken by the accessible name, and zero shows the glyph alone. On `detail` the card cedes its overflow dot to the page header, which owns the one menu.
 
-**`sensitive` is the author's self-mark**: it veils the body and the description while the title stays readable, with the author's own reason on the veil (`{label}`). One reveal answers for the whole card. This is per-post honesty, not redaction — nothing is removed.
+**`sensitive` veils the body and the description while the title stays readable**, and the veil names whose mark it is — `source: "author"` for the author's own warning, `"platform"` for a verdict — with `reason` after it. One reveal answers for the whole card. This is per-post honesty, not redaction — nothing is removed.
 
 **Tapping the card opens the post.** Anything in it that has its own meaning — the author chip, the overflow trigger, the affordance row — keeps it; everything else routes to the detail view.
 

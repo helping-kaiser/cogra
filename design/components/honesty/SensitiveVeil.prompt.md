@@ -12,7 +12,8 @@ Two states, two different takes: sensitive covers the body and gives it back on 
 ```
 
 - **One veil covers the body**: media, text and description together. The title and topics sit outside it and stay readable, so a reader can decide from the frame without touching the content.
-- **One tap reveals everything** — the reader decided once, and asking again per item turns one decision into five. An author's optional reason is shown on the veil.
+- **One tap reveals everything** — the reader decided once, and asking again per item turns one decision into five.
+- **The veil names its source.** "The author's warning" or "The platform's verdict" on the second line, always — the two marks read back as the same veil, so an unnamed one reads as the other. A reason, where there is one, follows on that same line after an em dash.
 - **The content stays mounted and keeps its space**, so revealing moves nothing. Text is blurred in place rather than replaced: the reader can see there *is* a sentence.
 - **No `error` colouring, no warning glyph, no red.** A neutral wash of the standard scrim and a plain chip.
 - **`radius` is authoritative and forwarded to the child**, so pass it once. A veiled tile in a flush gallery must not end up rounded beside a square neighbour — media meets the card's straight sides, never its corners.

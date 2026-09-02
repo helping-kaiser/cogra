@@ -55,7 +55,25 @@ export function SensitiveScope({ children }) {
  * Veils a body region as one — a post's gallery, its paragraphs, a comment's
  * whole body. `SensitiveScope` makes one tap answer for every veil in a post.
  */
-export function SensitiveVeil({ children, kind = "media", label = "Sensitive — tap to view", reason, revealLabel = "Show", radius }) {
+/* WHOSE MARK THIS IS (Q47). The author's own warning and the platform's verdict
+   are two independent states that read back as the same veil, so the face has to
+   say which one a reader met — a reason alone cannot, since a verdict may carry
+   one too and an author may leave theirs empty. The source line is unconditional
+   for that reason: an unnamed source would read as the other one. */
+const SOURCES = {
+  author: "The author's warning",
+  platform: "The platform's verdict",
+};
+
+export function SensitiveVeil({
+  children,
+  kind = "media",
+  label = "Sensitive — tap to view",
+  reason,
+  source = "author",
+  revealLabel = "Show",
+  radius,
+}) {
   const scope = React.useContext(RevealContext);
   const [local, setLocal] = React.useState(false);
   const revealed = scope ? scope.revealed : local;
@@ -109,6 +127,8 @@ export function SensitiveVeil({ children, kind = "media", label = "Sensitive —
     );
   }
 
+  const sourceLine = `${SOURCES[source] ?? SOURCES.author}${reason ? ` — ${reason}` : ""}`;
+
   return (
     <div style={{ position: "relative", display: "flex", minWidth: 0, overflow: "hidden", borderRadius: radius ?? 0 }}>
       {/* The content still renders and still reserves its exact space — the veil
@@ -122,7 +142,7 @@ export function SensitiveVeil({ children, kind = "media", label = "Sensitive —
       <button
         type="button"
         onClick={reveal}
-        aria-label={`${label}${reason ? ` — ${reason}` : ""}`}
+        aria-label={`${label}. ${sourceLine}`}
         className="cg-focus"
         style={{
           position: "absolute",
@@ -142,8 +162,8 @@ export function SensitiveVeil({ children, kind = "media", label = "Sensitive —
             directly on it, centred: the pattern every large product uses for
             this exact moment, so the reader has met it before. Fixed white,
             deliberately theme-independent: the wash is dark in both themes.
-            The author's reason, when there is one, is the second, smaller
-            line. */}
+            The second, smaller line names whose mark this is, and carries the
+            reason after it when there is one. */}
         <span
           style={{
             display: "flex",
@@ -158,11 +178,9 @@ export function SensitiveVeil({ children, kind = "media", label = "Sensitive —
         >
           <Icon name="visibility" size={24} />
           <span style={{ fontSize: "var(--text-label-large)", fontWeight: "var(--text-label-large--font-weight)" }}>{label}</span>
-          {reason && (
-            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", opacity: 0.85, textWrap: "pretty" }}>
-              {reason}
-            </span>
-          )}
+          <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", opacity: 0.85, textWrap: "pretty" }}>
+            {sourceLine}
+          </span>
         </span>
       </button>
     </div>
