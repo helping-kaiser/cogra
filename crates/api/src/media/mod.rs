@@ -258,13 +258,18 @@ fn gcd(a: u32, b: u32) -> u32 {
 /// and checked before any parse, so an oversized file is refused without
 /// being walked.
 ///
-/// The two paths differ in one substantive way. A still is **rewritten**:
-/// its metadata chunks are dropped and the digest is taken over what
-/// survives, so the stored bytes carry nothing identifying and a reader
-/// can recompute the committed digest from what it was served. A video
-/// is **stored as it arrived**: the server validates video and never
-/// transcodes it, so there is no rewrite for a strip to ride on, and
-/// clients are asked to publish nothing they did not mean to.
+/// Both paths strip before they digest. A still drops its metadata
+/// chunks and a video drops its metadata boxes, and in each case the
+/// digest is taken over what survives — so the stored bytes carry
+/// nothing identifying and a reader can recompute the committed digest
+/// from exactly what it was served. Neither strip re-encodes anything:
+/// the media travels through byte for byte, and a file that arrived
+/// clean is stored unchanged.
+///
+/// The video strip runs before the probe deliberately. The probe is then
+/// reading the container that will actually be stored, so a rewrite that
+/// damaged the file refuses the upload instead of publishing something
+/// that will not play.
 pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaError> {
     if webp::sniff(bytes) {
         if bytes.len() > caps.still_bytes {
@@ -291,10 +296,11 @@ pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaEr
                 limit: caps.video_bytes,
             });
         }
-        let probe = video::probe(bytes)?;
-        let digest: [u8; 32] = Sha256::digest(bytes).into();
+        let stripped = video::strip_metadata(bytes)?;
+        let probe = video::probe(&stripped)?;
+        let digest: [u8; 32] = Sha256::digest(&stripped).into();
         return Ok(ProcessedAsset {
-            bytes: bytes.to_vec(),
+            bytes: stripped,
             digest,
             width: probe.width,
             height: probe.height,
