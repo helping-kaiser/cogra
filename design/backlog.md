@@ -778,6 +778,47 @@ one contradiction to reconcile:
    converts fine). The readme's format contract needs the web
    exception recorded.
 
+**Additions from the comment-video round (feature loop,
+2026-09-02 evening; both platforms' final audits):**
+
+8. **TWO PLATFORM MISMATCHES SHIPPED — these lead the item.**
+   (a) *The post card's playback controls.* Item 31 round 2 point 2
+   says a comment's video plays "like a post's — the sound control
+   only, no play/pause and no duration pill on a reading surface";
+   android read that as binding on post cards too and stripped them
+   to sound-only, while web kept the full transport controls it
+   shipped first (reading the roadmap's "the viewer's real
+   controls" as the post-card ruling). One of them is wrong —
+   needs the ruling, then a one-line conform on the loser.
+   (b) *The back arrow's discard.* The boards route only "X —
+   leave" through DiscardConfirm; the back arrow (via 1) is a plain
+   cancel that also loses a written comment. Android made BOTH ask
+   (announced deviation); web implemented as drawn (back discards
+   silently). Rule it, fix the edge or the app.
+9. **Candidate refusal copy awaiting blessing** (in the apps now,
+   marked invented): post video cap *"That video is too big — a
+   video can be up to 100 MB."*; animated GIF *"That GIF moves, and
+   CoGra can't take a moving GIF here. A still one is fine."*; post
+   mixed-kind *"A post carries pictures or one video, not both."*;
+   comment mixed-kind *"A comment carries pictures or one video,
+   not both."* (The comment video cap line IS boarded — item 31's
+   50 MB line shipped verbatim.)
+10. **"A video is the whole body" state** — once a clip is in,
+    both composers show no add control and no explanatory line
+    (web's post pick region says "A video is the whole post";
+    nothing at comment scale). Draw or bless.
+11. **Over-cap picture count truncates silently** — an 11th
+    picture (post) or 5th (comment) just vanishes; no refusal line
+    is drawn for count, only for size/format.
+12. **CommentEdit with a clip is undrawn** — and the cover cannot
+    change after upload without re-uploading (immutable asset
+    row), so the edit surface needs deciding, not just drawing.
+13. **The describe sheet still speaks picture to a clip** — the
+    master's title and field label aren't blessed for video.
+14. **A clip's upload FAILURE on the composer is undrawn** —
+    refusals are boarded at pick; a failed send reuses the tile
+    ring + no-Retry line (both apps' interim).
+
 ### 33 · Video playback and the rest of the clip's life · *design*
 
 Filed by the feature loop 2026-09-02, from the android lane's 1:1
