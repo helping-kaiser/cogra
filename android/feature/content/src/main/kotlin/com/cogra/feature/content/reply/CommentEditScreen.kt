@@ -40,6 +40,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
+import com.cogra.core.designsystem.v2.atom.DiscardConfirm
+import com.cogra.core.designsystem.v2.atom.DiscardSubject
 import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.atom.Hairline
 import com.cogra.core.designsystem.v2.atom.HelpDialog
@@ -106,7 +108,11 @@ fun CommentEditRoute(
         onOpenHelp = viewModel::onOpenHelp,
         onCloseHelp = viewModel::onCloseHelp,
         onSign = viewModel::onSign,
-        onLeave = onLeave,
+        // The edit keeps no draft, so leaving discards — and an edit
+        // that changed something is asked before it goes.
+        onLeave = { if (viewModel.onLeaveRequested()) onLeave() },
+        onKeepWriting = viewModel::onKeepWriting,
+        onDiscard = onLeave,
         onTagInputChange = viewModel::onTagInputChange,
         onAddTag = viewModel::onAddTag,
         onRemoveTag = viewModel::onRemoveTag,
@@ -157,6 +163,8 @@ internal fun CommentEditScreen(
     onCloseHelp: () -> Unit,
     onSign: () -> Unit,
     onLeave: () -> Unit,
+    onKeepWriting: () -> Unit,
+    onDiscard: () -> Unit,
     onTagInputChange: (String) -> Unit,
     onAddTag: () -> Unit,
     onRemoveTag: (String) -> Unit,
@@ -177,6 +185,15 @@ internal fun CommentEditScreen(
 ) {
     BackHandler(onBack = onLeave)
 
+    if (state.confirmingDiscard) {
+        DiscardConfirm(
+            subject = DiscardSubject.Edit,
+            onKeepWriting = onKeepWriting,
+            onDiscard = onDiscard,
+            testTag = "comment_edit_discard_confirm",
+        )
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -189,7 +206,7 @@ internal fun CommentEditScreen(
             // Leaving discards: comments keep no drafts (jakob
             // 2026-09-01), so the master's "your draft is kept" would be
             // a promise nothing here makes.
-            leaveContentDescription = "Leave",
+            leaveContentDescription = "Leave — the edit is discarded",
             onHelp = { onOpenHelp(HelpTopic.Editing) },
             helpContentDescription = HelpTopic.Editing.title,
             testTag = "comment_edit_header",
@@ -227,7 +244,11 @@ internal fun CommentEditScreen(
                         )
                     }
                     InlineAction(
-                        text = "+ Add · ${state.picked.size} of ${CommentEditState.MAX_PICTURES}",
+                        // The same words the reply composer counts with
+                        // (`CommentEdit` 6): one add label across the
+                        // two comment surfaces, so a reader meets the
+                        // same sentence wherever they meet it.
+                        text = "+ Add pictures · ${state.picked.size} of ${CommentEditState.MAX_PICTURES}",
                         onClick = onOpenPicker,
                         enabled = state.canAddPicture,
                         testTag = "comment_edit_add",
