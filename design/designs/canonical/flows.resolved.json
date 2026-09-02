@@ -528,6 +528,23 @@
       ]
     },
     {
+      "name": "reply-with-a-video",
+      "description": "A video picked for a reply puts the composer in its video state, where its face is chosen and its one description written; the same seal signs the words and the clip together into the thread.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
+        "ReplyCompose · 5 «+ Add pictures or a video» → ReplyVideo — a video — the composer's video state",
+        "ReplyVideo · 3 «Next» → ReplySeal",
+        "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
+      ],
+      "boards": [
+        "ReplyEntry",
+        "ReplyCompose",
+        "ReplyVideo",
+        "ReplySeal"
+      ]
+    },
+    {
       "name": "reply-while-the-pictures-upload",
       "description": "Next pressed while the pictures are still going up reaches the gated seal; signing waits for them, then the comment settles into the thread.",
       "status": "resolved",
@@ -1669,6 +1686,7 @@
       "flows": [
         "reply-to-a-comment",
         "reply-to-a-post",
+        "reply-with-a-video",
         "reply-with-pictures"
       ],
       "endpoint": []
@@ -1680,6 +1698,7 @@
         "reply-to-a-comment",
         "reply-to-a-post",
         "reply-while-the-pictures-upload",
+        "reply-with-a-video",
         "reply-with-pictures",
         "search-into-a-thread"
       ],
@@ -1689,6 +1708,7 @@
         "reply-to-a-comment",
         "reply-to-a-post",
         "reply-while-the-pictures-upload",
+        "reply-with-a-video",
         "reply-with-pictures",
         "search-into-a-thread"
       ]
@@ -1726,7 +1746,14 @@
         "reply-from-the-browser",
         "reply-to-a-comment",
         "reply-to-a-post",
+        "reply-with-a-video",
         "reply-with-pictures"
+      ],
+      "endpoint": []
+    },
+    "ReplyVideo": {
+      "flows": [
+        "reply-with-a-video"
       ],
       "endpoint": []
     },
