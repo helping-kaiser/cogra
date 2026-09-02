@@ -8,7 +8,7 @@ import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
 import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.media.CropSpec
-import com.cogra.domain.media.DeviceImage
+import com.cogra.domain.media.DeviceMedia
 import com.cogra.domain.LicenseChoice
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagSectionState
@@ -123,7 +123,7 @@ data class ComposeWizardState(
     val body: String = "",
     val picked: List<PickedAsset> = emptyList(),
     /** The device's newest pictures, once a media permission allows them. */
-    val deviceImages: List<DeviceImage> = emptyList(),
+    val deviceMedia: List<DeviceMedia> = emptyList(),
     val shape: DraftShape = DraftShape.Tall,
     /** Which pick the crop step is framing, by index into [picked]. */
     val framingIndex: Int = 0,

@@ -6,10 +6,10 @@ package com.cogra.app.di
 import android.content.Context
 import com.cogra.app.BuildConfig
 import com.cogra.core.media.AndroidMediaProcessor
-import com.cogra.core.media.MediaStoreImageSource
+import com.cogra.core.media.MediaStoreMediaSource
 import com.cogra.domain.di.ApplicationScope
 import com.cogra.domain.di.WebOrigin
-import com.cogra.domain.media.DeviceImageSource
+import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.network.di.GraphqlEndpoint
 import dagger.Module
@@ -56,9 +56,9 @@ object AppModule {
     fun mediaProcessor(@ApplicationContext context: Context): MediaProcessor =
         AndroidMediaProcessor(context.contentResolver)
 
-    /** `ComposePick`'s own grid of the device's newest pictures. */
+    /** `ComposePick`'s own grid of the device's newest pictures and clips. */
     @Provides
     @Singleton
-    fun deviceImages(@ApplicationContext context: Context): DeviceImageSource =
-        MediaStoreImageSource(context.contentResolver)
+    fun deviceMedia(@ApplicationContext context: Context): DeviceMediaSource =
+        MediaStoreMediaSource(context.contentResolver)
 }

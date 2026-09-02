@@ -129,7 +129,7 @@ internal fun ColumnScope.PickStage(
         item(key = "photos_app") { PhotosAppTile(onClick = onOpenPicker) }
 
         if (permission is MediaPermission.Granted) {
-            items(state.deviceImages, key = { it.uri }) { image ->
+            items(state.deviceMedia, key = { it.uri }) { image ->
                 val order = picks.indexOf(image.uri).takeIf { it >= 0 }
                 MediaThumb(
                     item = MediaItem(image.uri, image.aspectRatio),

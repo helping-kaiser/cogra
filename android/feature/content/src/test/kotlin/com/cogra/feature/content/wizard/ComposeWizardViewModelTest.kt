@@ -16,8 +16,8 @@ import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
 import com.cogra.domain.media.CropSpec
-import com.cogra.domain.media.DeviceImage
-import com.cogra.domain.media.DeviceImageSource
+import com.cogra.domain.media.DeviceMedia
+import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.signing.WriteSigner
@@ -141,11 +141,11 @@ class ComposeWizardViewModelTest {
     }
 
     /** `ComposePick`'s grid, scripted: the wizard only ever reads it. */
-    private val deviceImages = object : DeviceImageSource {
-        var offered = listOf(DeviceImage("a", 1f), DeviceImage("b", 1.5f))
+    private val deviceMedia = object : DeviceMediaSource {
+        var offered = listOf(DeviceMedia("a", 1f), DeviceMedia("b", 1.5f))
         var calls = 0
 
-        override suspend fun newestImages(limit: Int): List<DeviceImage> {
+        override suspend fun newestMedia(limit: Int): List<DeviceMedia> {
             calls += 1
             return offered.take(limit)
         }
@@ -156,7 +156,7 @@ class ComposeWizardViewModelTest {
         references = references,
         media = media,
         processor = processor,
-        deviceImages = deviceImages,
+        deviceMedia = deviceMedia,
         drafts = drafts,
         signer = WriteSigner(sealer, identity),
     )
@@ -652,7 +652,7 @@ class ComposeWizardViewModelTest {
         vm.onMediaPermissionGranted()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.deviceImages.map { it.uri }).containsExactly("a", "b").inOrder()
+        assertThat(vm.state.value.deviceMedia.map { it.uri }).containsExactly("a", "b").inOrder()
     }
 
     @Test
@@ -750,12 +750,12 @@ class ComposeWizardViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         vm.onMediaPermissionGranted()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.deviceImages).isNotEmpty()
+        assertThat(vm.state.value.deviceMedia).isNotEmpty()
 
         vm.onContinueDraft()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.deviceImages.map { it.uri }).containsExactly("a", "b").inOrder()
+        assertThat(vm.state.value.deviceMedia.map { it.uri }).containsExactly("a", "b").inOrder()
     }
 
     /** And it re-reads the roll, because a held draft can be days old. */
@@ -765,14 +765,14 @@ class ComposeWizardViewModelTest {
         val vm = viewModel()
         vm.start()
         dispatcher.scheduler.advanceUntilIdle()
-        val before = deviceImages.calls
+        val before = deviceMedia.calls
 
-        deviceImages.offered = listOf(DeviceImage("c", 1f))
+        deviceMedia.offered = listOf(DeviceMedia("c", 1f))
         vm.onContinueDraft()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(deviceImages.calls).isGreaterThan(before)
-        assertThat(vm.state.value.deviceImages.map { it.uri }).containsExactly("c")
+        assertThat(deviceMedia.calls).isGreaterThan(before)
+        assertThat(vm.state.value.deviceMedia.map { it.uri }).containsExactly("c")
     }
 
     // -- Refusals --
