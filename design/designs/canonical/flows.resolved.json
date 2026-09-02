@@ -31,11 +31,8 @@
       "startsUndesigned": [
         "ApplicantFeed/15: applicant acts once each — boards pending (ruled 2026-09-01)",
         "ApplicantWaiting/12: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "FeedBare/15: guest-gate pattern board (not designed)",
-        "Main/15: guest-gate pattern board (not designed)",
         "ProfileApplicant/12: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "WalletApplicant/3: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "WalletGuest/5: guest-gate pattern board (not designed)"
+        "WalletApplicant/3: applicant acts once each — boards pending (ruled 2026-09-01)"
       ],
       "steps": [
         "start · «nav · New post» on 21 boards → ComposePick",
@@ -225,11 +222,12 @@
       "status": "resolved",
       "startsOn": [
         "FeedBare",
+        "GuestGate",
         "Main",
         "WalletGuest"
       ],
       "steps": [
-        "start · «Sign in or join» on 3 boards → SignIn",
+        "start · «Sign in or join» on 4 boards → SignIn",
         "SignIn · 8 «New here? Enter your invite» → InviteEntry",
         "InviteEntry · 3 «Continue» → Join — the link checks out",
         "end · Join · 6 «Create account» → ApplicantFeed — account created — applicant days begin"
@@ -240,6 +238,7 @@
         "Join",
         "ApplicantFeed",
         "FeedBare",
+        "GuestGate",
         "Main",
         "WalletGuest"
       ]
@@ -308,16 +307,18 @@
       "startsOn": [
         "ComposeKeyAbsent",
         "KeyElsewhere",
+        "PadKeyAbsent",
         "WalletKeyAbsent"
       ],
       "steps": [
-        "start · «Restore the key» on 3 boards → Restore",
+        "start · «Restore the key» on 4 boards → Restore",
         "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
       ],
       "boards": [
         "Restore",
         "ComposeKeyAbsent",
         "KeyElsewhere",
+        "PadKeyAbsent",
         "WalletKeyAbsent"
       ]
     },
@@ -388,19 +389,16 @@
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
-        "KeyElsewhere",
         "ProfilePosts",
         "Removed",
         "VouchBack"
       ],
       "startsUndesigned": [
         "ApplicantFeed/10: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "ApplicantWaiting/7: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "FeedBare/10: guest-gate pattern board (not designed)",
-        "Main/10: guest-gate pattern board (not designed)"
+        "ApplicantWaiting/7: applicant acts once each — boards pending (ruled 2026-09-01)"
       ],
       "steps": [
-        "start · «stance face» on 10 boards → VouchBackPad",
+        "start · «stance face» on 9 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -411,7 +409,6 @@
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
-        "KeyElsewhere",
         "ProfilePosts",
         "Removed",
         "VouchBack"
@@ -587,11 +584,8 @@
       "startsUndesigned": [
         "ApplicantFeed/15: applicant acts once each — boards pending (ruled 2026-09-01)",
         "ApplicantWaiting/12: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "FeedBare/15: guest-gate pattern board (not designed)",
-        "Main/15: guest-gate pattern board (not designed)",
         "ProfileApplicant/12: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "WalletApplicant/3: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "WalletGuest/5: guest-gate pattern board (not designed)"
+        "WalletApplicant/3: applicant acts once each — boards pending (ruled 2026-09-01)"
       ],
       "steps": [
         "start · «nav · New post» on 21 boards → ComposePick",
@@ -658,11 +652,8 @@
       "startsUndesigned": [
         "ApplicantFeed/15: applicant acts once each — boards pending (ruled 2026-09-01)",
         "ApplicantWaiting/12: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "FeedBare/15: guest-gate pattern board (not designed)",
-        "Main/15: guest-gate pattern board (not designed)",
         "ProfileApplicant/12: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "WalletApplicant/3: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "WalletGuest/5: guest-gate pattern board (not designed)"
+        "WalletApplicant/3: applicant acts once each — boards pending (ruled 2026-09-01)"
       ],
       "steps": [
         "start · «nav · New post» on 21 boards → ComposePick",
@@ -1462,6 +1453,12 @@
       ],
       "endpoint": []
     },
+    "GuestGate": {
+      "flows": [
+        "guest-turns-applicant"
+      ],
+      "endpoint": []
+    },
     "InviteEntry": {
       "flows": [
         "guest-turns-applicant",
@@ -1500,7 +1497,6 @@
         "reply-to-a-post",
         "restore-your-key",
         "sign-in-with-the-key-elsewhere",
-        "take-a-stance-on-a-post",
         "visit-an-author"
       ],
       "endpoint": [
@@ -1514,6 +1510,12 @@
         "open-a-posts-pictures",
         "reply-to-a-post",
         "visit-an-author"
+      ],
+      "endpoint": []
+    },
+    "PadKeyAbsent": {
+      "flows": [
+        "restore-your-key"
       ],
       "endpoint": []
     },
@@ -1876,8 +1878,6 @@
     "ApplicantWaiting/5: the topic page (ruled 2026-09-01 — not designed)",
     "ApplicantWaiting/7: applicant acts once each — boards pending (ruled 2026-09-01)",
     "ApplicantWaiting/8: Post Score drill-down (backlog item 13)",
-    "AvatarSeal/4: network-error pattern board (not designed)",
-    "CommentEdit/12: network-error pattern board (not designed)",
     "CommentEdit/9: the topic picker (not boarded)",
     "ComposeDetails/7: the topic picker (not boarded)",
     "ComposeExpired/11: Post Score drill-down (backlog item 13)",
@@ -1885,9 +1885,7 @@
     "ComposeExpired/5: reader's post menu — licence terms / cite (not boarded)",
     "ComposeExpired/8: the topic page (ruled 2026-09-01 — not designed)",
     "ComposeLanded/7: Post Score drill-down (backlog item 13)",
-    "ComposeSeal/7: network-error pattern board (not designed)",
     "ComposeUploading/10: the topic picker (not boarded)",
-    "EditCompose/12: network-error pattern board (not designed)",
     "EditCompose/8: the topic picker (not boarded)",
     "Explore/2: the Sky (backlog item 16 — last on purpose)",
     "Explore/9: the chat surface (not designed)",
@@ -1899,11 +1897,7 @@
     "Feed/3: reader's post menu — licence terms / cite (not boarded)",
     "Feed/6: the topic page (ruled 2026-09-01 — not designed)",
     "Feed/9: Post Score drill-down (backlog item 13)",
-    "FeedBare/10: guest-gate pattern board (not designed)",
     "FeedBare/11: Post Score drill-down (backlog item 13)",
-    "FeedBare/15: guest-gate pattern board (not designed)",
-    "FeedBare/17: guest-gate pattern board (not designed)",
-    "FeedBare/18: the chat surface (not designed)",
     "FeedBare/5: reader's post menu — licence terms / cite (not boarded)",
     "FeedBare/8: the topic page (ruled 2026-09-01 — not designed)",
     "FeedFar/16: the chat surface (not designed)",
@@ -1919,19 +1913,12 @@
     "FeedNarrowed/6: the topic page (ruled 2026-09-01 — not designed)",
     "FeedNarrowed/9: Post Score drill-down (backlog item 13)",
     "FeedNothing/8: the chat surface (not designed)",
-    "InviteEntry/3: network-error pattern board (not designed)",
     "Join/6: field-error states (not boarded)",
-    "Join/6: network-error pattern board (not designed)",
     "KeyElsewhere/10: Post Score drill-down (backlog item 13)",
     "KeyElsewhere/17: the chat surface (not designed)",
     "KeyElsewhere/4: reader's post menu — licence terms / cite (not boarded)",
     "KeyElsewhere/7: the topic page (ruled 2026-09-01 — not designed)",
-    "KeyElsewhere/9: key-absent acting path (not boarded)",
-    "Main/10: guest-gate pattern board (not designed)",
     "Main/11: Post Score drill-down (backlog item 13)",
-    "Main/15: guest-gate pattern board (not designed)",
-    "Main/17: guest-gate pattern board (not designed)",
-    "Main/18: guest-gate pattern board (not designed)",
     "Main/5: reader's post menu — licence terms / cite (not boarded)",
     "Main/8: the topic page (ruled 2026-09-01 — not designed)",
     "Profile/1: the chat surface (not designed)",
@@ -1948,7 +1935,6 @@
     "ProfileComments/5: the chat surface (not designed)",
     "ProfileComments/8: the comment's menu — cite / licence terms (not boarded)",
     "ProfileEdit/6: field-error states (not boarded)",
-    "ProfileEditSeal/4: network-error pattern board (not designed)",
     "ProfileOther/2: the profile's menu — mention / share (not boarded)",
     "ProfileOther/5: the chat surface (not designed)",
     "ProfileOther/7: the post detail view (not boarded standalone — drawn only under the comments sheet)",
@@ -1966,30 +1952,22 @@
     "ReplyEntry/3: the topic page (ruled 2026-09-01 — not designed)",
     "ReplyMedia/2: the comment's menu — cite / licence terms (not boarded)",
     "ReplySeal/4: the topic picker (not boarded)",
-    "ReplySeal/9: network-error pattern board (not designed)",
     "Restore/4: wrong-code error state (not boarded)",
-    "SignIn/6: network-error pattern board (not designed)",
     "SignIn/6: wrong-credentials error state (not boarded)",
     "VouchBack/11: Post Score drill-down (backlog item 13)",
     "VouchBack/18: the chat surface (not designed)",
     "VouchBack/5: reader's post menu — licence terms / cite (not boarded)",
     "VouchBack/8: the topic page (ruled 2026-09-01 — not designed)",
-    "VouchBackPad/4: key-absent signing path at the pad (not boarded)",
     "Wallet/14: the chat surface (not designed)",
     "Wallet/2: the full address card as a state of the rest wallet (ruled one-tap-away; the card itself is drawn on the zero board)",
     "Wallet/3: the settlement's public record view (not boarded — the traceability promise)",
     "Wallet/5: the paying settlement's view (not boarded — every line opens what paid it)",
     "Wallet/6: the paying settlement's view (not boarded — every line opens what paid it)",
     "Wallet/8: the tipping act's view (not boarded — every line opens what paid it)",
-    "WalletAddressSeal/5: network-error pattern board (not designed)",
     "WalletCampaign/2: the rail record's view (not boarded — the traceability promise)",
     "WalletCampaigns/2: the campaign creation flow (future item — the console stays out of the wallet)",
-    "WalletChange/5: network-error pattern board (not designed)",
     "WalletEmpty/3: the new-address input stage (not boarded)",
     "WalletEmpty/9: the chat surface (not designed)",
-    "WalletGuest/5: guest-gate pattern board (not designed)",
-    "WalletGuest/7: guest-gate pattern board (not designed)",
-    "WalletGuest/8: guest-gate pattern board (not designed)",
     "WalletKeyAbsent/10: the chat surface (not designed)",
     "WalletKeyAbsent/3: the paying settlement's view (not boarded — every line opens what paid it)",
     "WalletKeyAbsent/4: the tipping act's view (not boarded — every line opens what paid it)",
