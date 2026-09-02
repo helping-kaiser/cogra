@@ -118,9 +118,12 @@ title, at most two short paragraphs, Close. The texts, verbatim
 - **Describing pictures** (the describe sheet): A description is
   read aloud by screen readers and shown when a picture can't load —
   plain words about what's there. It travels with the picture,
-  public like the rest of the post. / Nothing is described for you:
-  a picture without a description is skipped by screen readers,
-  never guessed at.
+  public like the rest of the post. A video takes one description
+  for the whole clip; its cover takes none of its own. / Nothing is
+  described for you: a picture without a description is skipped by
+  screen readers, never guessed at.
+  *(The video sentence is an extension of blessed copy — 2026-09-02,
+  flagged for review; the rest of the dialog is unchanged.)*
 - **Your key** (key absent at the seal and at the stance pad): Signing needs your key, and
   it isn't on this browser. Nothing is signed or sent without it — the
   draft stays on this device. / Restore the key with your recovery

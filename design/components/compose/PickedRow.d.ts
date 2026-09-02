@@ -23,6 +23,11 @@ export interface DescribeCounterProps {
   described: number;
   total: number;
   onDescribe?: () => void;
+  /**
+   * What is being described — "pictures" (default) or "video". A video takes
+   * ONE description for the whole clip; its cover takes none of its own.
+   */
+  subject?: "pictures" | "video";
 }
 
 export declare function DescribeCounter(props: DescribeCounterProps): JSX.Element;

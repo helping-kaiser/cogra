@@ -793,17 +793,19 @@
       "status": "resolved",
       "startsOn": [
         "CommentEdit",
+        "ComposeDetails",
         "ComposeUploading",
         "ReplyPictures",
         "ReplyPicturesWeb"
       ],
       "steps": [
-        "start · «Describe the pictures» on 4 boards → ComposeDescribe",
+        "start · «Describe the pictures» on 5 boards → ComposeDescribe",
         "end · ComposeDescribe · 3 «Done» → back — the sheet closes"
       ],
       "boards": [
         "ComposeDescribe",
         "CommentEdit",
+        "ComposeDetails",
         "ComposeUploading",
         "ReplyPictures",
         "ReplyPicturesWeb"
@@ -1162,6 +1164,7 @@
       "flows": [
         "add-a-topic",
         "cite-something",
+        "describe-your-pictures",
         "pick-a-kept-draft-back-up",
         "publish-a-post",
         "publish-a-video",
