@@ -447,6 +447,65 @@
         "ExploreSearch",
         "ExploreFilter"
       ]
+    },
+    {
+      "name": "reply-to-a-comment",
+      "description": "Reply on a comment opens the same composer pre-targeted at it — one commenting mechanism over many targets, each target declaring its own start and end.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyEntry · 5 «Reply» → ReplyCompose — the composer, pre-targeted at that comment",
+        "ReplyCompose · 3 «Next» → ReplySeal",
+        "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
+      ],
+      "boards": [
+        "ReplyEntry",
+        "ReplyCompose",
+        "ReplySeal"
+      ]
+    },
+    {
+      "name": "reply-with-pictures",
+      "description": "Pictures added to a reply land in its tray; one seal signs the words and the pictures together into the thread.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
+        "ReplyCompose · 5 «+ Add pictures» → ReplyPictures — picks land in the tray",
+        "ReplyPictures · 3 «Next» → ReplySeal",
+        "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
+      ],
+      "boards": [
+        "ReplyEntry",
+        "ReplyCompose",
+        "ReplyPictures",
+        "ReplySeal"
+      ]
+    },
+    {
+      "name": "reply-while-the-pictures-upload",
+      "description": "Next pressed while the pictures are still going up reaches the gated seal; signing waits for them, then the comment settles into the thread.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyPictures · 3 «Next» → ComposeSealUploading — uploads still running — the gated seal (master on the media page)",
+        "end · ComposeSealUploading · 7 «Sign and publish (disabled)» → ReplyEntry — uploads land — signing proceeds to the thread, the comment settling"
+      ],
+      "boards": [
+        "ReplyPictures",
+        "ComposeSealUploading",
+        "ReplyEntry"
+      ]
+    },
+    {
+      "name": "edit-your-comment",
+      "description": "Edit on your own comment opens the edit surface; the signed edit settles back into the thread it belongs to.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyMedia · 6 «Edit (own comment)» → CommentEdit",
+        "end · CommentEdit · 12 «Sign the edit» → ReplyMedia — signed — the thread, the edit settling"
+      ],
+      "boards": [
+        "ReplyMedia",
+        "CommentEdit"
+      ]
     }
   ],
   "boardsOnFlows": {
@@ -479,6 +538,12 @@
         "edit-avatar-standalone"
       ]
     },
+    "CommentEdit": {
+      "flows": [
+        "edit-your-comment"
+      ],
+      "endpoint": []
+    },
     "ComposeCrop": {
       "flows": [
         "publish-a-post"
@@ -510,6 +575,12 @@
     "ComposeSeal": {
       "flows": [
         "publish-a-post"
+      ],
+      "endpoint": []
+    },
+    "ComposeSealUploading": {
+      "flows": [
+        "reply-while-the-pictures-upload"
       ],
       "endpoint": []
     },
@@ -665,23 +736,50 @@
     },
     "ReplyCompose": {
       "flows": [
-        "reply-to-a-post"
+        "reply-to-a-comment",
+        "reply-to-a-post",
+        "reply-with-pictures"
       ],
       "endpoint": []
     },
     "ReplyEntry": {
       "flows": [
+        "reply-to-a-comment",
         "reply-to-a-post",
+        "reply-while-the-pictures-upload",
+        "reply-with-pictures",
         "search-into-a-thread"
       ],
       "endpoint": [
+        "reply-to-a-comment",
         "reply-to-a-post",
+        "reply-while-the-pictures-upload",
+        "reply-with-pictures",
         "search-into-a-thread"
+      ]
+    },
+    "ReplyMedia": {
+      "flows": [
+        "edit-your-comment"
+      ],
+      "endpoint": [
+        "edit-your-comment"
+      ]
+    },
+    "ReplyPictures": {
+      "flows": [
+        "reply-while-the-pictures-upload",
+        "reply-with-pictures"
+      ],
+      "endpoint": [
+        "reply-while-the-pictures-upload"
       ]
     },
     "ReplySeal": {
       "flows": [
-        "reply-to-a-post"
+        "reply-to-a-comment",
+        "reply-to-a-post",
+        "reply-with-pictures"
       ],
       "endpoint": []
     },
@@ -797,6 +895,8 @@
     "ApplicantFeed/5: reader's post menu — licence terms / cite (not boarded)",
     "ApplicantFeed/8: the topic page (ruled 2026-09-01 — not designed)",
     "AvatarSeal/4: network-error pattern board (not designed)",
+    "CommentEdit/12: network-error pattern board (not designed)",
+    "CommentEdit/9: the topic picker (not boarded)",
     "ComposeDetails/7: the topic picker (not boarded)",
     "ComposeLanded/7: Post Score drill-down (backlog item 13)",
     "ComposeSeal/7: network-error pattern board (not designed)",
@@ -837,6 +937,7 @@
     "RecoveryCode/3: code-mismatch error state (not boarded)",
     "ReplyEntry/2: the comment's menu — cite / licence terms (not boarded)",
     "ReplyEntry/3: the topic page (ruled 2026-09-01 — not designed)",
+    "ReplyMedia/2: the comment's menu — cite / licence terms (not boarded)",
     "ReplySeal/4: the topic picker (not boarded)",
     "ReplySeal/9: network-error pattern board (not designed)",
     "Restore/4: wrong-code error state (not boarded)",

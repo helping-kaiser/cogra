@@ -180,6 +180,37 @@
       "description": "The results' Everything trigger opens the search filter; the sheet applies live, and tapping out leaves the reader on the narrowed results.",
       "start": { "board": "ExploreSearch", "via": 2 },
       "end": { "board": "ExploreFilter", "via": 5 }
+    },
+    {
+      "name": "reply-to-a-comment",
+      "description": "Reply on a comment opens the same composer pre-targeted at it — one commenting mechanism over many targets, each target declaring its own start and end.",
+      "start": { "board": "ReplyEntry", "via": 5, "case": "the composer, pre-targeted at that comment" },
+      "waypoints": [
+        { "board": "ReplyCompose", "via": 3 }
+      ],
+      "end": { "board": "ReplySeal", "via": 9, "case": "signed — the thread, the comment settling" }
+    },
+    {
+      "name": "reply-with-pictures",
+      "description": "Pictures added to a reply land in its tray; one seal signs the words and the pictures together into the thread.",
+      "start": { "board": "ReplyEntry", "via": 7 },
+      "waypoints": [
+        { "board": "ReplyCompose", "via": 5, "case": "picks land in the tray" },
+        { "board": "ReplyPictures", "via": 3, "to": "ReplySeal" }
+      ],
+      "end": { "board": "ReplySeal", "via": 9, "case": "signed — the thread, the comment settling" }
+    },
+    {
+      "name": "reply-while-the-pictures-upload",
+      "description": "Next pressed while the pictures are still going up reaches the gated seal; signing waits for them, then the comment settles into the thread.",
+      "start": { "board": "ReplyPictures", "via": 3, "case": "uploads still running — the gated seal (master on the media page)" },
+      "end": { "board": "ComposeSealUploading", "via": 7, "case": "uploads land — signing proceeds to the thread, the comment settling" }
+    },
+    {
+      "name": "edit-your-comment",
+      "description": "Edit on your own comment opens the edit surface; the signed edit settles back into the thread it belongs to.",
+      "start": { "board": "ReplyMedia", "via": 6 },
+      "end": { "board": "CommentEdit", "via": 12, "case": "signed — the thread, the edit settling" }
     }
   ]
 }
