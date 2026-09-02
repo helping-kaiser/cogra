@@ -371,9 +371,18 @@
       "page": "comments"
     },
     {
+      "file": "ReplyVideo.dc.html",
+      "title": "Reply · a video and its cover",
+      "x": 1440,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
       "file": "ReplyPad.dc.html",
       "title": "Reply · the pad",
-      "x": 1440,
+      "x": 2400,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -382,7 +391,7 @@
     {
       "file": "ReplySeal.dc.html",
       "title": "Reply · what you sign",
-      "x": 1920,
+      "x": 2880,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -391,7 +400,7 @@
     {
       "file": "DiscardConfirm.dc.html",
       "title": "Discard confirm · reply and edit",
-      "x": 2400,
+      "x": 3360,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -768,10 +777,10 @@
     },
     {
       "file": "MapComments.dc.html",
-      "x": -2160,
+      "x": -2740,
       "y": 0,
-      "w": 1740,
-      "h": 1244,
+      "w": 2320,
+      "h": 1270,
       "page": "comments",
       "title": "Comments · flow map"
     },
