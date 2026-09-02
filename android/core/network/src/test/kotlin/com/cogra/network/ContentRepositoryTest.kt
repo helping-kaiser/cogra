@@ -87,18 +87,39 @@ class ContentRepositoryTest {
          "references":[]}
     """.trimIndent()
 
-    /** One attachment as the contract serves it. */
+    /**
+     * One attachment as the contract serves it.
+     *
+     * [durationMs] and [coverId] are what make it a video: a clip
+     * carries a running time and names the still that covers it, and a
+     * still leaves both null.
+     */
     private fun mediaJson(
         id: String = "m1",
         altText: String? = "A salt crust",
         status: String = "NORMAL",
         aspectRatio: String? = "0.8",
+        mimeType: String = "image/webp",
+        durationMs: Int? = null,
+        coverId: String? = null,
+        coverStatus: String = "NORMAL",
     ) = """
         {"__typename":"MediaAttachment","id":"$id","url":"https://media/$id",
          "altText":${altText?.let { "\"$it\"" } ?: "null"},
          "status":"$status",
-         "options":{"__typename":"MediaOptions","aspectRatio":${aspectRatio?.let { "\"$it\"" } ?: "null"}}}
+         "mimeType":"$mimeType",
+         "options":{"__typename":"MediaOptions","aspectRatio":${aspectRatio?.let { "\"$it\"" } ?: "null"},
+                    "durationMs":${durationMs ?: "null"}},
+         "coverMedia":${coverJson(coverId, coverStatus)}}
     """.trimIndent()
+
+    private fun coverJson(id: String?, status: String) = id?.let {
+        """
+        {"__typename":"MediaAttachment","id":"$it","url":"https://media/$it",
+         "status":"$status",
+         "options":{"__typename":"MediaOptions","aspectRatio":"0.5625"}}
+        """.trimIndent()
+    } ?: "null"
 
     @Test
     fun theListingMapsPostsAndPageInfo() = runTest {
@@ -241,6 +262,83 @@ class ContentRepositoryTest {
         assertThat(post.attachments[0].altText).isEqualTo("A salt crust")
         assertThat(post.attachments[1].altText).isNull()
         assertThat(post.attachments[1].aspectRatio).isEqualTo(1.91f)
+    }
+
+    @Test
+    fun aVideoCarriesItsRunningTimeAndTheStillThatCoversIt() = runTest {
+        enqueue(
+            """{"data":{"posts":{"__typename":"PostConnection",
+               "edges":[{"__typename":"PostEdge","node":${
+                postJson(
+                    "p1",
+                    "Low tide",
+                    attachments = "[${
+                        mediaJson(
+                            "v1",
+                            mimeType = "video/mp4",
+                            aspectRatio = "0.5625",
+                            durationMs = 42_000,
+                            coverId = "c1",
+                        )
+                    }]",
+                )
+            }}],
+               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
+        )
+        val asset = (repo().posts(20, null) as Outcome.Success).value.items
+            .single().attachments.single()
+
+        assertThat(asset.isVideo).isTrue()
+        assertThat(asset.durationMs).isEqualTo(42_000)
+        assertThat(asset.cover?.id).isEqualTo("c1")
+        assertThat(asset.cover?.status).isEqualTo(FieldStatus.NORMAL)
+    }
+
+    @Test
+    fun aCoverRedactedOnItsOwnSaysSoWithoutTouchingTheVideo() = runTest {
+        enqueue(
+            """{"data":{"posts":{"__typename":"PostConnection",
+               "edges":[{"__typename":"PostEdge","node":${
+                postJson(
+                    "p1",
+                    "Low tide",
+                    attachments = "[${
+                        mediaJson(
+                            "v1",
+                            mimeType = "video/mp4",
+                            durationMs = 1_000,
+                            coverId = "c1",
+                            coverStatus = "REDACTED",
+                        )
+                    }]",
+                )
+            }}],
+               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
+        )
+        val asset = (repo().posts(20, null) as Outcome.Success).value.items
+            .single().attachments.single()
+
+        // The poster answers with its own status; the clip it covers was
+        // not removed and must not read as if it were.
+        assertThat(asset.cover?.status).isEqualTo(FieldStatus.REDACTED)
+        assertThat(asset.status).isEqualTo(FieldStatus.NORMAL)
+    }
+
+    @Test
+    fun aStillIsNotAVideo() = runTest {
+        enqueue(
+            """{"data":{"posts":{"__typename":"PostConnection",
+               "edges":[{"__typename":"PostEdge","node":${
+                postJson("p1", null, attachments = "[${mediaJson()}]")
+            }}],
+               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
+        )
+        val asset = (repo().posts(20, null) as Outcome.Success).value.items
+            .single().attachments.single()
+
+        assertThat(asset.isVideo).isFalse()
+        assertThat(asset.durationMs).isNull()
+        assertThat(asset.cover).isNull()
     }
 
     @Test

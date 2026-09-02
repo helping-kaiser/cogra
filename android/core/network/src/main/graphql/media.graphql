@@ -17,16 +17,39 @@ fragment MediaFields on MediaAttachment {
   # NORMAL, or REDACTED once the bytes are gone — what lets the client
   # draw the calm placeholder instead of a broken image (D15).
   status
-  # Reserves the tile's space before a byte loads (design.md §6).
+  # `video/mp4` or a still's type — what the gallery branches a player
+  # on rather than guessing from the URL's extension.
+  mimeType
+  # Reserves the tile's space before a byte loads (design.md §6);
+  # `durationMs` reads null on a still.
   options {
     aspectRatio
+    durationMs
+  }
+  # A video's poster — the still shown before playback and wherever
+  # autoplay does not run. Spelled out rather than spreading this
+  # fragment, which cannot recurse; one level is all there is, since a
+  # poster is an image and never carries a poster of its own. Kept
+  # narrow against the query budget: what it takes to draw the still
+  # and to honour a redaction of the cover alone.
+  coverMedia {
+    id
+    url
+    status
+    options {
+      aspectRatio
+    }
   }
 }
 
 # Bytes and nothing authored: a description rides `AttachmentInput` at
 # prepare, so a picture uploads the moment it is picked.
-mutation UploadMedia($file: Upload!) {
-  uploadMedia(input: { file: $file }) {
+#
+# `coverMediaId` names an already-uploaded still as the video's poster.
+# A still passes it null — the two-step upload sends the cover first and
+# names it on the video, because an asset row is immutable once written.
+mutation UploadMedia($file: Upload!, $coverMediaId: UUID) {
+  uploadMedia(input: { file: $file, coverMediaId: $coverMediaId }) {
     media {
       ...MediaFields
     }

@@ -107,6 +107,10 @@ dependencies {
     implementation(project(":feature:stance"))
     implementation(project(":feature:topics"))
 
+    // The shell owns Coil's singleton loader, and a video tile draws a
+    // frame of itself only if the decoder is registered on it.
+    implementation(libs.coil.video)
+
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.lifecycle.runtime.compose)

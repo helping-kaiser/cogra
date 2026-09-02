@@ -201,6 +201,27 @@ internal fun MediaFields.toDomain(): MediaAssetView = MediaAssetView(
     altText = altText,
     status = status.toDomain(),
     aspectRatio = MediaAssetView.ratioOf(options.aspectRatio),
+    mimeType = mimeType,
+    durationMs = options.durationMs,
+    cover = coverMedia?.toDomain(),
+)
+
+/**
+ * A video's poster.
+ *
+ * It carries no `altText` of its own by selection: the words that
+ * describe a video describe the frame that stands in for it, so the
+ * poster inherits the video's rather than holding a second one. It
+ * keeps its own `status` — a cover redacted alone reads REDACTED here
+ * while the video it covers still plays.
+ */
+internal fun MediaFields.CoverMedia.toDomain(): MediaAssetView = MediaAssetView(
+    id = id,
+    url = url,
+    altText = null,
+    status = status.toDomain(),
+    aspectRatio = MediaAssetView.ratioOf(options.aspectRatio),
+    mimeType = "",
 )
 
 internal fun PostFields.Title.toDomain() = ModeratedField(value, status.toDomain())

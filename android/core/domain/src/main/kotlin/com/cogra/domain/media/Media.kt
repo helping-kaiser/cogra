@@ -33,6 +33,95 @@ data class ProcessedPicture(
 }
 
 /**
+ * One video, transcoded on the device and ready to send.
+ *
+ * It is a [path] rather than a byte array because a clip is allowed a
+ * hundred megabytes (rulings 2026-09-02) and a still is allowed ten: the
+ * picture pipeline can hold its result in memory, and the video pipeline
+ * would be an out-of-memory kill if it tried. The file is the app's own
+ * cache copy, written by the transcoder and deleted once the upload has
+ * an id back.
+ *
+ * The bytes are already MP4 / H.264 + AAC, already at or below the
+ * upload resolution, and already stripped of the source container's
+ * metadata — so what the server measures is what this describes.
+ */
+data class ProcessedVideo(
+    val path: String,
+    val width: Int,
+    val height: Int,
+    val durationMs: Int,
+    val byteCount: Long,
+) {
+    val aspectRatio: Float get() = width.toFloat() / height.toFloat()
+}
+
+/**
+ * One frame lifted out of a clip, as the cover step offers it.
+ *
+ * [atMs] is what the offer is *for*: the step shows a handful of moments
+ * and the author picks one, so the frame carries the timestamp it came
+ * from rather than being an anonymous bitmap.
+ */
+data class VideoFrame(
+    val atMs: Int,
+    val picture: ProcessedPicture,
+)
+
+/**
+ * The on-device video pipeline: re-encode what the picker handed over
+ * into the one accepted stored format, and lift cover frames out of it.
+ *
+ * Clients compress to industry-standard resolution as the norm (rulings
+ * 2026-09-02), which is what keeps a hundred-megabyte upload unlikely
+ * rather than routine. Like [MediaProcessor] it is an interface in the
+ * domain so the wizard's state machine tests without a codec anywhere
+ * near them.
+ */
+interface VideoProcessor {
+    /**
+     * Transcodes the clip at [uri] to MP4 / H.264 + AAC, scaled down to
+     * the upload resolution and stripped of container metadata.
+     *
+     * [onProgress] reports 0..100 as the transcode runs — a clip is long
+     * enough that a spinner with no number reads as a hang. Null when
+     * the bytes are not a video the device can read at all.
+     */
+    suspend fun transcode(uri: String, onProgress: (Int) -> Unit): ProcessedVideo?
+
+    /**
+     * The cover frames offered for [uri], oldest first.
+     *
+     * Each comes back already shaped like any other still — WebP,
+     * downscaled, stripped — because a chosen frame is uploaded as its
+     * own asset and has to be exactly what a picture upload is.
+     */
+    suspend fun coverFrames(uri: String, count: Int): List<VideoFrame>
+
+    /**
+     * What the clip's header says, without decoding it.
+     *
+     * Null for anything that is not a readable video — which is how the
+     * pick step tells a clip from a picture when the choice came from
+     * the system picker rather than from the grid, where the store
+     * already said.
+     */
+    suspend fun info(uri: String): VideoInfo?
+}
+
+/**
+ * A clip's header, as the pick and cover steps need it.
+ *
+ * [aspectRatio] is the *displayed* shape — a quarter-turned recording
+ * reports its stored dimensions, and this is after that swap — because
+ * everything reading it is deciding what shape to draw.
+ */
+data class VideoInfo(
+    val durationMs: Int,
+    val aspectRatio: Float,
+)
+
+/**
  * What a crop asks the pipeline for: the shape the whole post takes,
  * and this picture's framing inside it.
  *
@@ -95,22 +184,40 @@ interface MediaProcessor {
      * anything is processed. Null when it does not decode.
      */
     suspend fun aspectRatio(uri: String): Float?
+
+    /**
+     * What the picked file weighs, from the store's own record of it.
+     *
+     * The pick step names a cap only by refusing a file that broke it
+     * (`ComposePickedErrors`), and this is what it weighs the file
+     * against. Null where the store will not say, which is never a
+     * refusal — an unmeasurable file is let through and judged by the
+     * server instead.
+     */
+    suspend fun sizeBytes(uri: String): Long?
 }
 
 /**
- * One picture already on the device, as the picker grid draws it.
+ * One item already on the device, as the picker grid draws it.
  *
  * [aspectRatio] rides along because the grid reads every tile's shape at
  * once and the store already knows it — asking the decoder per tile is
  * how a scroll drops frames.
+ *
+ * [durationMs] is what makes a tile a video: the board marks those with
+ * a running time and a play glyph, and the pick rule reads the same
+ * field to enforce one video *or* up to ten pictures.
  */
-data class DeviceImage(
+data class DeviceMedia(
     val uri: String,
     val aspectRatio: Float,
-)
+    val durationMs: Int? = null,
+) {
+    val isVideo: Boolean get() = durationMs != null
+}
 
 /**
- * The newest pictures on the device, for `ComposePick`'s own grid.
+ * The newest media on the device, for `ComposePick`'s own grid.
  *
  * The canonical board draws the reader's photos inside the app with
  * selection badges, which is a different affordance from handing the
@@ -119,9 +226,9 @@ data class DeviceImage(
  * Reading it needs a media permission, so the grid is always behind one
  * — see the pick step for the request and its partial-access branch.
  */
-interface DeviceImageSource {
-    /** The [limit] most recently added pictures, newest first. */
-    suspend fun newestImages(limit: Int): List<DeviceImage>
+interface DeviceMediaSource {
+    /** The [limit] most recently added items, newest first. */
+    suspend fun newestMedia(limit: Int): List<DeviceMedia>
 }
 
 /**
@@ -141,4 +248,18 @@ interface MediaRepository {
      * whether it has been described yet.
      */
     suspend fun uploadMedia(picture: ProcessedPicture): Outcome<MediaAssetView>
+
+    /**
+     * Uploads one transcoded clip, naming the still that covers it.
+     *
+     * The cover goes first and as its own asset, because an asset row is
+     * immutable once written: the poster is part of what the video *is*,
+     * so it is stated when the video is created rather than attached
+     * afterwards. [coverMediaId] is therefore the id a prior
+     * [uploadMedia] returned, never a URI and never bytes.
+     */
+    suspend fun uploadVideo(
+        video: ProcessedVideo,
+        coverMediaId: String,
+    ): Outcome<MediaAssetView>
 }

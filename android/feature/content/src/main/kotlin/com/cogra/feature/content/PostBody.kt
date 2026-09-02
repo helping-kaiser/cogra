@@ -183,9 +183,32 @@ private fun Gallery(
     }
 }
 
-/** The design-system view of one attachment. */
-internal fun MediaAssetView.toItem(): MediaItem =
-    MediaItem(url = url, aspectRatio = aspectRatio, altText = altText)
+/**
+ * The design-system view of one attachment.
+ *
+ * A clip hands over two URLs: the component draws the poster and plays
+ * the video, and it is the *cover's* URL that becomes `url` because
+ * that is the still the frame shows before a first frame exists.
+ *
+ * **A cover redacted on its own leaves the video playing.** The cover
+ * answers with its own status, so a removed poster means the frame
+ * reserves its space and waits for the first frame rather than drawing
+ * bytes that are gone — the video itself was not removed, and pretending
+ * otherwise would erase something nobody erased.
+ */
+internal fun MediaAssetView.toItem(): MediaItem {
+    if (!isVideo) {
+        return MediaItem(url = url, aspectRatio = aspectRatio, altText = altText)
+    }
+    val poster = cover?.takeIf { !it.status.hidden() }
+    return MediaItem(
+        url = poster?.url,
+        aspectRatio = aspectRatio,
+        altText = altText,
+        videoUrl = url,
+        durationMs = durationMs,
+    )
+}
 
 /**
  * Whether the whole body is gone.

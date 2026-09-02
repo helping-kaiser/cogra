@@ -33,6 +33,10 @@ import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.ProcessedPicture
+import com.cogra.domain.media.ProcessedVideo
+import com.cogra.domain.media.VideoFrame
+import com.cogra.domain.media.VideoInfo
+import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.HashtagView
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
@@ -509,6 +513,11 @@ open class ThrowingMediaRepository : MediaRepository {
     override suspend fun uploadMedia(
         picture: ProcessedPicture,
     ): Outcome<MediaAssetView> = throw UnsupportedOperationException()
+
+    override suspend fun uploadVideo(
+        video: ProcessedVideo,
+        coverMediaId: String,
+    ): Outcome<MediaAssetView> = throw UnsupportedOperationException()
 }
 
 /** Media-processor base: the pipeline throws until a test scripts it. */
@@ -517,6 +526,21 @@ open class ThrowingMediaProcessor : MediaProcessor {
         throw UnsupportedOperationException()
 
     override suspend fun aspectRatio(uri: String): Float? = throw UnsupportedOperationException()
+
+    override suspend fun sizeBytes(uri: String): Long? = null
+}
+
+/** Video-pipeline base: every call throws until a test scripts it. */
+open class ThrowingVideoProcessor : VideoProcessor {
+    override suspend fun transcode(
+        uri: String,
+        onProgress: (Int) -> Unit,
+    ): ProcessedVideo? = throw UnsupportedOperationException()
+
+    override suspend fun coverFrames(uri: String, count: Int): List<VideoFrame> =
+        throw UnsupportedOperationException()
+
+    override suspend fun info(uri: String): VideoInfo? = throw UnsupportedOperationException()
 }
 
 /** Topic-repository base: every call throws until overridden. */

@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.provider.OpenableColumns
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.ProcessedPicture
@@ -42,6 +43,30 @@ class AndroidMediaProcessor(
             decoded.recycle()
             ProcessedPicture(processed.bytes, processed.width, processed.height)
         }
+
+    /**
+     * The file's own length, from the provider rather than by reading
+     * it: the pick step weighs a file it has not decoded, and reading a
+     * hundred megabytes to find out how big it is defeats the point.
+     *
+     * `OpenableColumns.SIZE` is what a content provider publishes for
+     * exactly this
+     * (developer.android.com/training/secure-file-sharing/retrieve-info),
+     * and a provider may leave it null — which is not a refusal.
+     */
+    override suspend fun sizeBytes(uri: String): Long? = withContext(Dispatchers.IO) {
+        runCatching {
+            resolver.query(Uri.parse(uri), arrayOf(OpenableColumns.SIZE), null, null, null)
+                ?.use { row ->
+                    val column = row.getColumnIndex(OpenableColumns.SIZE)
+                    if (column >= 0 && row.moveToFirst() && !row.isNull(column)) {
+                        row.getLong(column)
+                    } else {
+                        null
+                    }
+                }
+        }.getOrNull()
+    }
 
     override suspend fun aspectRatio(uri: String): Float? = withContext(Dispatchers.IO) {
         val source = readBytes(uri) ?: return@withContext null
