@@ -442,6 +442,7 @@
     { "from": "CommentEdit", "via": 10, "kind": "advance", "label": "+ Cite something", "to": [{ "board": "ReferencePicker" }] },
     { "from": "CommentEdit", "via": 11, "kind": "detour", "label": "This creates 2 signed actions", "to": [{ "board": "CommentEditActs" }] },
     { "from": "CommentEdit", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "board": "ReplyMedia", "case": "signed — the thread, the edit settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "gap": "network-error pattern board (not designed)", "case": "offline" }] },
+    { "from": "CommentEdit", "via": 13, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
 
     { "from": "CommentEditActs", "via": 1, "kind": "advance", "label": "Done", "to": [{ "board": "CommentEdit", "case": "the sheet closes" }] },
     { "from": "CommentEditActs", "via": 2, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "CommentEdit", "case": "the sheet closes" }] },
@@ -578,6 +579,7 @@
     { "from": "EditCompose", "via": 10, "kind": "advance", "label": "+ Cite something", "to": [{ "board": "ReferencePicker" }] },
     { "from": "EditCompose", "via": 11, "kind": "detour", "label": "This creates 3 signed actions", "to": [{ "board": "EditActs" }] },
     { "from": "EditCompose", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "terminal": "back", "case": "signed — the post, the edit settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "gap": "network-error pattern board (not designed)", "case": "offline" }] },
+    { "from": "EditCompose", "via": 13, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
 
     { "from": "EditActs", "via": 1, "kind": "advance", "label": "Done", "to": [{ "board": "EditCompose", "case": "the sheet closes" }] },
     { "from": "EditActs", "via": 2, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "EditCompose", "case": "the sheet closes" }] },
