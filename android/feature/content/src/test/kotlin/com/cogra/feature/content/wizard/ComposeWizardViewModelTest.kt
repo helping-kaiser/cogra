@@ -153,12 +153,17 @@ class ComposeWizardViewModelTest {
         /** Nothing decodes as a picture — the refused-format case. */
         var unreadable = false
 
+        /** What the store says a picked file weighs; null = it will not say. */
+        var size: Long? = 1_024
+
         override suspend fun process(uri: String, crop: CropSpec): ProcessedPicture? {
             media.pending.addLast(uri)
             return if (uri in undecodable) null else ProcessedPicture(ByteArray(4), 100, 125)
         }
 
         override suspend fun aspectRatio(uri: String): Float? = if (unreadable) null else 0.8f
+
+        override suspend fun sizeBytes(uri: String): Long? = size
     }
 
     private val drafts = object : ComposeDraftStore {
@@ -195,6 +200,9 @@ class ComposeWizardViewModelTest {
      */
     private val video = object : ThrowingVideoProcessor() {
         var untranscodable = false
+
+        /** What the re-encode produced — the weight the cap judges. */
+        var outputBytes = 1_024L
         val calls = mutableListOf<String>()
 
         override suspend fun transcode(
@@ -206,7 +214,7 @@ class ComposeWizardViewModelTest {
             return if (untranscodable) {
                 null
             } else {
-                ProcessedVideo("/tmp/$uri.mp4", 1080, 1920, 42_000, 1_024)
+                ProcessedVideo("/tmp/$uri.mp4", 1080, 1920, 42_000, outputBytes)
             }
         }
 
@@ -1035,6 +1043,64 @@ class ComposeWizardViewModelTest {
         // Its only way out is removing the notice.
         vm.onDismissRefusal(0)
         assertThat(vm.state.value.refused).isEmpty()
+    }
+
+    @Test
+    fun aPictureOverItsCapIsRefusedWithTheCapItBroke() = runTest(dispatcher) {
+        processor.size = ComposeWizardViewModel.MAX_PICTURE_BYTES + 1
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onTogglePick("huge.jpg")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.picked).isEmpty()
+        val refused = vm.state.value.refused.single()
+        assertThat(refused.message).isEqualTo(ComposeWizardViewModel.PICTURE_TOO_BIG)
+        // It is a readable picture, so the row can preview it.
+        assertThat(refused.uri).isEqualTo("huge.jpg")
+    }
+
+    @Test
+    fun aFileTheStoreWillNotWeighIsLetThrough() = runTest(dispatcher) {
+        processor.size = null
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onTogglePick("unmeasured.jpg")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // An unmeasurable file is judged by the server, not refused here.
+        assertThat(vm.state.value.refused).isEmpty()
+        assertThat(vm.state.value.picked.map { it.uri }).containsExactly("unmeasured.jpg")
+    }
+
+    @Test
+    fun aClipIsWeighedAfterItsTranscodeRatherThanBefore() = runTest(dispatcher) {
+        video.outputBytes = ComposeWizardViewModel.MAX_VIDEO_BYTES + 1
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+
+        // The cover went up; the clip did not, because what would have
+        // been sent is over the cap.
+        assertThat(media.order).containsExactly("still")
+        val upload = vm.state.value.picked.single().upload
+        assertThat((upload as AssetUpload.Failed).message)
+            .isEqualTo(ComposeWizardViewModel.VIDEO_TOO_BIG)
+    }
+
+    @Test
+    fun aBigRecordingThatCompressesSmallIsAccepted() = runTest(dispatcher) {
+        // The whole point of re-encoding: weighing the original would
+        // refuse a post the ruling means to allow.
+        processor.size = 400L * 1024 * 1024
+        video.outputBytes = 20L * 1024 * 1024
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+
+        assertThat(vm.state.value.refused).isEmpty()
+        assertThat(media.order).containsExactly("still", "video").inOrder()
+        assertThat(vm.state.value.uploadsComplete).isTrue()
     }
 
     @Test

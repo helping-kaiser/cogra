@@ -526,6 +526,8 @@ open class ThrowingMediaProcessor : MediaProcessor {
         throw UnsupportedOperationException()
 
     override suspend fun aspectRatio(uri: String): Float? = throw UnsupportedOperationException()
+
+    override suspend fun sizeBytes(uri: String): Long? = null
 }
 
 /** Video-pipeline base: every call throws until a test scripts it. */

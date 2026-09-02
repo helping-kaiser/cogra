@@ -240,6 +240,19 @@ class ComposeWizardViewModel @Inject constructor(
                 }
                 return@launch
             }
+            // A picture is weighed as it stands. The pipeline downscales
+            // and re-encodes it, so the cap could in principle be judged
+            // on the result instead — but the board weighs the file the
+            // author offered, and a cap nobody can predict is worse than
+            // one they can. A clip is weighed *after* its transcode
+            // instead: see `startVideoUpload`.
+            val size = if (clip == null) processor.sizeBytes(uri) else null
+            if (size != null && size > MAX_PICTURE_BYTES) {
+                _state.update {
+                    it.copy(refused = it.refused + RefusedPick(uri = uri, message = PICTURE_TOO_BIG))
+                }
+                return@launch
+            }
             val before = _state.value.picked.size
             _state.update {
                 it.togglePick(
@@ -684,6 +697,15 @@ class ComposeWizardViewModel @Inject constructor(
                 _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UNREADABLE_VIDEO)) }
                 return@launch
             }
+            // The cap is judged on what would be sent, not on what was
+            // picked: the whole point of re-encoding is that a large
+            // recording usually becomes a small upload, and weighing the
+            // original would refuse posts the ruling means to allow.
+            if (processed.byteCount > MAX_VIDEO_BYTES) {
+                _state.update { it.withUpload(clip.uri, AssetUpload.Failed(VIDEO_TOO_BIG)) }
+                runCatching { File(processed.path).delete() }
+                return@launch
+            }
 
             _state.update { it.withUpload(clip.uri, AssetUpload.Running) }
             when (val outcome = media.uploadVideo(processed, coverId)) {
@@ -962,8 +984,24 @@ class ComposeWizardViewModel @Inject constructor(
         const val REFUSED = "The server would not take that picture."
         const val TRANSPORT = "The upload could not reach the server."
 
-        /** `ComposePickedErrors`' own words for a format nothing here reads. */
+        // The refusal copy is blessed, verbatim, in
+        // design/guidelines/copy-voice.md "Refused files". Each line
+        // names the cap it broke, because that is the only place a cap
+        // is named — nothing announces the limits in advance.
+        //
+        // **Screens say MB; the caps are MiB.** The enforced limit is
+        // the binary one, so the number on screen under-promises and can
+        // never turn a file the product would have accepted into a
+        // refusal.
         const val UNREADABLE_FILE = "That file isn't a picture or a video CoGra can read."
+        const val PICTURE_TOO_BIG = "That picture is too big — a picture can be up to 10 MB."
+        const val VIDEO_TOO_BIG = "That video is too big — a post's video can be up to 100 MB."
+
+        /** A still's cap: ten per post, ten mebibytes each (D9). */
+        const val MAX_PICTURE_BYTES = 10L * 1024 * 1024
+
+        /** A clip's cap: the same hundred megabytes a full gallery costs. */
+        const val MAX_VIDEO_BYTES = 100L * 1024 * 1024
 
         const val UNREADABLE_VIDEO = "That file could not be read as a video."
         const val REFUSED_VIDEO = "The server would not take that video."

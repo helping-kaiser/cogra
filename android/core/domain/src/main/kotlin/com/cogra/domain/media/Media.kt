@@ -184,6 +184,17 @@ interface MediaProcessor {
      * anything is processed. Null when it does not decode.
      */
     suspend fun aspectRatio(uri: String): Float?
+
+    /**
+     * What the picked file weighs, from the store's own record of it.
+     *
+     * The pick step names a cap only by refusing a file that broke it
+     * (`ComposePickedErrors`), and this is what it weighs the file
+     * against. Null where the store will not say, which is never a
+     * refusal — an unmeasurable file is let through and judged by the
+     * server instead.
+     */
+    suspend fun sizeBytes(uri: String): Long?
 }
 
 /**
