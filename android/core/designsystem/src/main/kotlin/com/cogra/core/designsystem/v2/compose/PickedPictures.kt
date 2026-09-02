@@ -113,6 +113,19 @@ fun PickedRow(
 }
 
 /**
+ * What the counter is counting.
+ *
+ * A clip takes **one** description for the whole thing (jakob
+ * 2026-09-02), so the row reads "Describe the video · 0 of 1 described"
+ * — the same counter, reading the video instead. Its cover takes none of
+ * its own: the cover is the video's face, not a second picture.
+ */
+enum class DescribeSubject(val label: String) {
+    Pictures("Describe the pictures"),
+    Video("Describe the video"),
+}
+
+/**
  * "Describe the pictures · 1 of 3 described" — the details step's entry
  * into per-picture descriptions, with the quiet count beside it.
  *
@@ -126,6 +139,7 @@ fun DescribeCounter(
     total: Int,
     onDescribe: () -> Unit,
     modifier: Modifier = Modifier,
+    subject: DescribeSubject = DescribeSubject.Pictures,
     testTag: String? = null,
 ) {
     Row(
@@ -134,7 +148,7 @@ fun DescribeCounter(
         horizontalArrangement = Arrangement.spacedBy(Space.x1),
     ) {
         Text(
-            text = "Describe the pictures",
+            text = subject.label,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier

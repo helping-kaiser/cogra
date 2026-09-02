@@ -6,16 +6,21 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.cogra.core.designsystem.v2.compose.HelpTopic
+import com.cogra.domain.media.ProcessedPicture
+import com.cogra.domain.media.VideoFrame
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.PickedAsset
+import com.cogra.feature.content.wizard.RefusedPick
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * The reply wizard's screens, bound to test tags rather than to display
@@ -28,6 +33,13 @@ import org.robolectric.RobolectricTestRunner
  * holds in the state machine can still reach no pixel.
  */
 @RunWith(RobolectricTestRunner::class)
+// The composer does not scroll — it is drawn to fit a phone, and the
+// canvas draws it at 390 × 844. Robolectric's default sandbox screen is
+// smaller than any phone the app ships to, so the video state's frame,
+// cover row and pill would fall off a screen no reader has. `qualifiers`
+// is Robolectric's own way to say which device the test stands on
+// (robolectric.org/device-configuration).
+@Config(qualifiers = "w411dp-h891dp")
 class ReplyWizardScreenTest {
 
     @get:Rule
@@ -36,6 +48,11 @@ class ReplyWizardScreenTest {
     private var nexts = 0
     private var backs = 0
     private var leaves = 0
+    private var coverFrames = mutableListOf<Int>()
+    private var coverPickers = 0
+    private var dismissedRefusals = mutableListOf<Int>()
+    private var keeps = 0
+    private var discards = 0
     private var signs = 0
     private var sealBacks = 0
     private var pickerOpens = 0
@@ -55,6 +72,11 @@ class ReplyWizardScreenTest {
             onRemovePickAt = { removals += it },
             onDescribePictures = { describes += 1 },
             onAltTextChange = { _, _ -> },
+            onPickCoverFrame = { coverFrames += it },
+            onOpenCoverPicker = { coverPickers += 1 },
+            onDismissRefusal = { dismissedRefusals += it },
+            onKeepWriting = { keeps += 1 },
+            onDiscard = { discards += 1 },
             onNext = { nexts += 1 },
             onBack = { backs += 1 },
             onLeave = { leaves += 1 },
@@ -347,9 +369,130 @@ class ReplyWizardScreenTest {
         compose.onNodeWithTag("reply_problem").assertIsDisplayed()
     }
 
+    // -- The video state (`ReplyVideo`) --
+
+    @Test
+    fun aClipDrawsItsFrameItsOneDescriptionAndItsFace() {
+        compose.setContent { Wizard(composerWithClip()) }
+
+        compose.onNodeWithTag("reply_clip").assertIsDisplayed()
+        compose.onNodeWithTag("reply_describe_counter").assertIsDisplayed()
+        repeat(3) {
+            compose.onNodeWithTag("reply_cover_frame_$it").assertIsDisplayed()
+        }
+        compose.onNodeWithTag("reply_cover_picture").assertIsDisplayed()
+    }
+
+    @Test
+    fun aClipCarriesNoAddControlAtAll() {
+        // Pictures or a video, never both — an add button that could
+        // only refuse is worse than no button.
+        compose.setContent { Wizard(composerWithClip()) }
+        compose.onNodeWithTag("reply_add_pictures").assertDoesNotExist()
+    }
+
+    @Test
+    fun theAddLabelCountsPicturesAndOffersBothWhenEmpty() {
+        compose.setContent { Wizard(composerWithWords()) }
+        compose.onNodeWithText("+ Add pictures or a video").assertIsDisplayed()
+    }
+
+    @Test
+    fun tappingACoverFrameChoosesIt() {
+        compose.setContent { Wizard(composerWithClip()) }
+        compose.onNodeWithTag("reply_cover_frame_2").performClick()
+        assertThat(coverFrames).containsExactly(2)
+    }
+
+    @Test
+    fun theCoverPictureTileHandsTheChoiceToTheDevice() {
+        compose.setContent { Wizard(composerWithClip()) }
+        compose.onNodeWithTag("reply_cover_picture").performClick()
+        assertThat(coverPickers).isEqualTo(1)
+    }
+
+    // -- Files the composer would not take (`ReplyMediaErrors`) --
+
+    @Test
+    fun aRefusedFileIsListedWhereItWasOfferedWithNoRetry() {
+        val state = composerWithWords().copy(
+            refused = listOf(RefusedPick(null, "That file isn't a picture or a video CoGra can read.")),
+        )
+        compose.setContent { Wizard(state) }
+
+        compose.onNodeWithTag("reply_refused_0").assertIsDisplayed()
+        compose.onNodeWithTag("reply_refused_thumb_0").assertIsDisplayed()
+        compose.onNodeWithText("Retry", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("Remove it", substring = true).assertIsDisplayed()
+        // Nothing was attached, so the composer is still words-only and
+        // Next still reaches the seal.
+        compose.onNodeWithTag("reply_next").assertIsEnabled()
+    }
+
+    /**
+     * Each refused file gets its own line and its own tile — both kinds
+     * can be refused on the same screen, and the list says so file by
+     * file rather than collapsing into one notice.
+     *
+     * The removal itself is pinned in `ReplyWizardStateTest`: "Remove
+     * it" is a link span inside an annotated string, which the suite
+     * does not reach positionally anywhere in this repo.
+     */
+    @Test
+    fun everyRefusedFileGetsItsOwnLine() {
+        val state = composerWithWords().copy(
+            refused = listOf(
+                RefusedPick(URI_CLIP, "That video is too big — a comment's video can be up to 50 MB."),
+                RefusedPick(null, "That file isn't a picture or a video CoGra can read."),
+            ),
+        )
+        compose.setContent { Wizard(state) }
+
+        compose.onNodeWithTag("reply_refused_0").assertIsDisplayed()
+        compose.onNodeWithTag("reply_refused_1").assertIsDisplayed()
+        compose.onNodeWithTag("reply_refused_thumb_1").assertIsDisplayed()
+        // The comment cap, in the words copy-voice blesses for it.
+        compose.onNodeWithText("up to 50 MB", substring = true).assertIsDisplayed()
+    }
+
+    // -- Leaving (`DiscardConfirm`) --
+
+    @Test
+    fun aNonEmptyComposerIsAskedBeforeItIsDiscarded() {
+        compose.setContent { Wizard(composerWithWords().copy(confirmingDiscard = true)) }
+
+        compose.onNodeWithTag("reply_discard_confirm").assertIsDisplayed()
+        compose.onNodeWithText("Discard this reply?").assertIsDisplayed()
+        compose.onNodeWithText("Nothing is kept.").assertIsDisplayed()
+    }
+
+    @Test
+    fun keepWritingClosesTheDialogAndDiscardEndsTheReply() {
+        compose.setContent { Wizard(composerWithWords().copy(confirmingDiscard = true)) }
+
+        compose.onNodeWithTag("reply_discard_confirm_keep").performClick()
+        assertThat(keeps).isEqualTo(1)
+
+        compose.onNodeWithTag("reply_discard_confirm_discard").performClick()
+        assertThat(discards).isEqualTo(1)
+    }
+
+    @Test
+    fun anUnaskedComposerDrawsNoDialog() {
+        compose.setContent { Wizard(composerWithWords()) }
+        compose.onNodeWithTag("reply_discard_confirm").assertDoesNotExist()
+    }
+
     private fun composerWithWords() = ReplyWizardState(
         target = POST_TARGET,
         body = "The third headland light is real.",
+    )
+
+    private fun composerWithClip() = composerWithWords().copy(
+        picked = listOf(PickedAsset(URI_CLIP, sourceRatio = 1f, durationMs = 18_000)),
+        coverFrames = List(3) {
+            VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 108, 108))
+        },
     )
 
     private fun composerWithPicture() = composerWithWords().copy(
@@ -360,6 +503,7 @@ class ReplyWizardScreenTest {
 
     private companion object {
         const val URI_A = "content://pick/a"
+        const val URI_CLIP = "content://pick/clip"
 
         val POST_TARGET = ReplyTarget(
             id = "post-1",

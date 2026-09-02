@@ -10,6 +10,9 @@ import com.cogra.domain.UserError
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.media.ProcessedVideo
+import com.cogra.domain.media.VideoInfo
+import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.signing.NoActorKeyException
@@ -23,7 +26,10 @@ import com.cogra.feature.content.candidateRows
 import com.cogra.feature.content.referenceFieldIndex
 import com.cogra.feature.content.tagFieldIndex
 import com.cogra.feature.content.wizard.AssetUpload
+import com.cogra.feature.content.wizard.CoverChoice
+import com.cogra.feature.content.wizard.RefusedPick
 import com.cogra.feature.content.wizard.attachmentFieldIndex
+import java.io.File
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Job
@@ -51,6 +57,7 @@ class ReplyWizardViewModel @Inject constructor(
     private val references: ReferenceRepository,
     private val media: MediaRepository,
     private val processor: MediaProcessor,
+    private val video: VideoProcessor,
     private val signer: WriteSigner,
 ) : ViewModel() {
 
@@ -58,6 +65,15 @@ class ReplyWizardViewModel @Inject constructor(
     val state: StateFlow<ReplyWizardState> = _state.asStateFlow()
 
     private val uploads = mutableMapOf<String, Job>()
+
+    /**
+     * The re-encoded clip waiting to be sent, once there is one.
+     *
+     * It is held here rather than in the state because it is a file on
+     * disk, not something a screen reads: the state says how far the
+     * transcode got, and this is what the upload then sends.
+     */
+    private var transcoded: ProcessedVideo? = null
     private var finderJob: Job? = null
     private var started = false
 
@@ -78,13 +94,102 @@ class ReplyWizardViewModel @Inject constructor(
      * uploaded whole.
      */
     fun onPicked(uri: String) {
-        val before = _state.value
-        if (before.picked.any { it.uri == uri } || !before.canAddPicture) return
-        _state.update { it.addPick(uri) }
+        if (_state.value.picked.any { it.uri == uri }) return
         viewModelScope.launch {
+            // What kind of file this is decides everything after it, and
+            // the platform picker hands over a bare URI — so it is asked
+            // before anything is added. A header read, not a decode.
+            val clip = video.info(uri)
+            if (clip != null) {
+                acceptClip(uri, clip)
+                return@launch
+            }
+            if (!refusePicture(uri)) return@launch
+            if (!_state.value.canAddPicture) return@launch
+            _state.update { it.addPick(uri) }
             val ratio = processor.aspectRatio(uri)
             if (ratio != null) _state.update { it.withSourceRatio(uri, ratio) }
             upload(uri, ratio)
+        }
+    }
+
+    /**
+     * Weighs a picture and reads it, refusing it where it was offered.
+     *
+     * Answers whether the file may join the composer. A refusal is drawn
+     * on the composer that asked for it (`ReplyMediaErrors`) rather than
+     * in a dialog or a snackbar — errors sit on the surface they
+     * happened on.
+     */
+    private suspend fun refusePicture(uri: String): Boolean {
+        if (processor.aspectRatio(uri) == null) {
+            _state.update { it.copy(refused = it.refused + RefusedPick(null, UNREADABLE_FILE)) }
+            return false
+        }
+        val size = processor.sizeBytes(uri)
+        if (size != null && size > MAX_PICTURE_BYTES) {
+            _state.update { it.copy(refused = it.refused + RefusedPick(uri, PICTURE_TOO_BIG)) }
+            return false
+        }
+        return true
+    }
+
+    /**
+     * A clip becomes the whole body, and its face is offered at once.
+     *
+     * The frames are lifted here rather than on entering a stage,
+     * because there is no stage: the comment composer is one screen and
+     * the cover row is inlined on it.
+     */
+    private fun acceptClip(uri: String, clip: VideoInfo) {
+        _state.update {
+            it.addPick(uri, sourceRatio = clip.aspectRatio, durationMs = clip.durationMs)
+        }
+        viewModelScope.launch {
+            val frames = video.coverFrames(uri, COVER_FRAME_COUNT)
+            _state.update { if (it.video?.uri == uri) it.copy(coverFrames = frames) else it }
+        }
+        transcode(uri)
+    }
+
+    /**
+     * Re-encodes the clip as soon as it is picked, and stops there.
+     *
+     * **The transcode starts at pick; the upload waits for `Next`.** The
+     * cover has to be uploaded before the clip that names it — an asset
+     * row is immutable once written — and the cover is still being
+     * chosen on this very screen. Sending the clip early would mean
+     * re-sending fifty megabytes the moment the author tapped a
+     * different frame. The slow half runs while they write, which is
+     * what makes the gated seal (`ComposeSealUploading`) brief rather
+     * than the whole wait.
+     */
+    private fun transcode(uri: String) {
+        transcoded = null
+        uploads.remove(uri)?.cancel()
+        uploads[uri] = viewModelScope.launch {
+            _state.update { it.withUpload(uri, AssetUpload.Transcoding(0)) }
+            val processed = video.transcode(uri) { percent ->
+                _state.update { it.withUpload(uri, AssetUpload.Transcoding(percent)) }
+            }
+            if (processed == null) {
+                _state.update { it.removePick(uri).copy(refused = it.refused + RefusedPick(uri, UNREADABLE_FILE)) }
+                return@launch
+            }
+            // The cap is judged on what would be sent. Re-encoding is
+            // precisely what usually brings a long recording under it,
+            // so weighing the original would refuse comments the caps
+            // mean to allow. The backend only refuses at prepare, which
+            // is far too late to be told.
+            if (processed.byteCount > MAX_VIDEO_BYTES) {
+                runCatching { File(processed.path).delete() }
+                _state.update {
+                    it.removePick(uri).copy(refused = it.refused + RefusedPick(uri, VIDEO_TOO_BIG))
+                }
+                return@launch
+            }
+            transcoded = processed
+            _state.update { it.withUpload(uri, AssetUpload.Idle) }
         }
     }
 
@@ -142,7 +247,107 @@ class ReplyWizardViewModel @Inject constructor(
 
     // -- Stage movement --
 
-    fun onNext() = _state.update { it.advanced() ?: it }
+    fun onNext() {
+        val current = _state.value
+        val next = current.advanced() ?: return
+        // The clip goes up on the way to the seal, cover first — which
+        // is why the seal can be the gated one (`ComposeSealUploading`).
+        if (current.isVideoComment) startVideoUpload()
+        _state.value = next
+    }
+
+    /**
+     * The clip's whole journey to the server: its face first, then the
+     * bytes that name it.
+     *
+     * An asset row is immutable once written, so a video states its
+     * poster when it is created rather than gaining one afterwards.
+     * Sending the cover first also fails fast — a refused cover is
+     * learned at once rather than after fifty megabytes.
+     */
+    private fun startVideoUpload() {
+        val clip = _state.value.video ?: return
+        val processed = transcoded ?: return
+        if (clip.upload is AssetUpload.Done && _state.value.coverMediaId != null) return
+        uploads.remove(clip.uri)?.cancel()
+        uploads[clip.uri] = viewModelScope.launch {
+            _state.update { it.withUpload(clip.uri, AssetUpload.Running) }
+            val coverId = _state.value.coverMediaId ?: uploadCover() ?: return@launch
+            _state.update { it.copy(coverMediaId = coverId) }
+
+            when (val outcome = media.uploadVideo(processed, coverId)) {
+                is Outcome.Success -> {
+                    _state.update { it.withUpload(clip.uri, AssetUpload.Done(outcome.value.id)) }
+                    runCatching { File(processed.path).delete() }
+                    transcoded = null
+                }
+                is Outcome.Refused -> _state.update {
+                    it.withUpload(
+                        clip.uri,
+                        AssetUpload.Failed(outcome.errors.firstOrNull()?.message ?: REFUSED_VIDEO),
+                    )
+                }
+                is Outcome.Failed -> _state.update {
+                    it.withUpload(clip.uri, AssetUpload.Failed(TRANSPORT))
+                }
+            }
+        }
+    }
+
+    /**
+     * Uploads whatever the author chose as the face, as its own still.
+     *
+     * A frame arrives already processed — the pipeline shaped it exactly
+     * as it shapes a picked picture. A chosen picture is processed here,
+     * framed to the clip's own shape: a poster that is not the video's
+     * shape would letterbox the thing it stands in for.
+     */
+    private suspend fun uploadCover(): String? {
+        val state = _state.value
+        val clip = state.video ?: return null
+        val picture = when (val choice = state.coverChoice) {
+            is CoverChoice.Frame -> state.coverFrames.getOrNull(choice.index)?.picture
+            is CoverChoice.Picture -> processor.process(
+                choice.uri,
+                CropSpec(targetRatio = clip.sourceRatio ?: 1f),
+            )
+        }
+        if (picture == null) {
+            _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UNREADABLE_COVER)) }
+            return null
+        }
+        return when (val outcome = media.uploadMedia(picture)) {
+            is Outcome.Success -> outcome.value.id
+            is Outcome.Refused -> {
+                _state.update {
+                    it.withUpload(
+                        clip.uri,
+                        AssetUpload.Failed(outcome.errors.firstOrNull()?.message ?: REFUSED_COVER),
+                    )
+                }
+                null
+            }
+            is Outcome.Failed -> {
+                _state.update { it.withUpload(clip.uri, AssetUpload.Failed(TRANSPORT)) }
+                null
+            }
+        }
+    }
+
+    // -- The clip's face, inline on the composer (`ReplyVideo`) --
+
+    fun onPickCoverFrame(index: Int) =
+        _state.update { it.copy(coverChoice = CoverChoice.Frame(index), coverMediaId = null) }
+
+    /**
+     * A cover of the author's own. The id is dropped with the choice: a
+     * cover already uploaded is bytes this clip is no longer covered by.
+     */
+    fun onPickCoverPicture(uri: String) =
+        _state.update { it.copy(coverChoice = CoverChoice.Picture(uri), coverMediaId = null) }
+
+    /** Clears one refusal (`ReplyMediaErrors`, "Remove it"). */
+    fun onDismissRefusal(index: Int) = _state.update { it.dismissedRefusal(index) }
 
     /** False where there is no stage left to step back to — the caller leaves. */
     fun onBack(): Boolean {
@@ -310,11 +515,35 @@ class ReplyWizardViewModel @Inject constructor(
      * The author left. The comment is discarded — comments keep no
      * drafts, so there is nothing here but the signal to go.
      */
+    /**
+     * The way out the author asked for, which is not always the way out
+     * they get.
+     *
+     * The reply composer keeps no draft, so leaving it discards — and a
+     * non-empty composer is asked first (`DiscardConfirm`,
+     * design/readme.md §13). An empty one leaves at once: a confirm with
+     * nothing to lose is noise.
+     */
+    fun onLeaveRequested() {
+        if (_state.value.outcome != null) return
+        if (_state.value.hasSomethingToLose) {
+            _state.update { it.copy(confirmingDiscard = true) }
+        } else {
+            onLeave()
+        }
+    }
+
+    /** "Keep writing" — the dialog closes over the stage it covered. */
+    fun onKeepWriting() = _state.update { it.copy(confirmingDiscard = false) }
+
     fun onLeave() {
         if (_state.value.outcome != null) return
         uploads.values.forEach { it.cancel() }
         uploads.clear()
-        _state.update { it.copy(outcome = ReplyOutcome.Left) }
+        // The transcode's cache copy goes with the reply it was for.
+        transcoded?.let { runCatching { File(it.path).delete() } }
+        transcoded = null
+        _state.update { it.copy(confirmingDiscard = false, outcome = ReplyOutcome.Left) }
     }
 
     fun onOutcomeConsumed() = _state.update { it.copy(outcome = null) }
@@ -368,11 +597,42 @@ class ReplyWizardViewModel @Inject constructor(
 
     private fun failTransport() = _state.update { it.copy(submitting = false, transportFailed = true) }
 
-    private companion object {
+    // Internal rather than private so the suite can assert against the
+    // words themselves instead of re-typing them.
+    internal companion object {
         const val FINDER_DEBOUNCE_MILLIS = 250L
 
         const val UNREADABLE = "That file could not be read as a picture."
         const val REFUSED = "The server would not take that picture."
         const val TRANSPORT = "The upload could not reach the server."
+
+        const val REFUSED_VIDEO = "The server would not take that video."
+        const val UNREADABLE_COVER = "That picture could not be read as a cover."
+        const val REFUSED_COVER = "The server would not take that cover."
+
+        // Blessed verbatim in design/guidelines/copy-voice.md "Refused
+        // files". Each line names the cap it broke, because that is the
+        // only place a cap is named — nothing announces the limits in
+        // advance. **Screens say MB; the caps are MiB**, so the number
+        // shown under-promises and can never turn a file the product
+        // would have accepted into a refusal.
+        const val UNREADABLE_FILE = "That file isn't a picture or a video CoGra can read."
+        const val PICTURE_TOO_BIG = "That picture is too big — a picture can be up to 10 MB."
+        const val VIDEO_TOO_BIG = "That video is too big — a comment's video can be up to 50 MB."
+
+        /** A comment picture's cap: four per comment, ten mebibytes each. */
+        const val MAX_PICTURE_BYTES = 10L * 1024 * 1024
+
+        /**
+         * A comment clip's cap — half a post's.
+         *
+         * Checked here, before a byte leaves: the backend only refuses
+         * at prepare, and being told after the upload that the upload
+         * was pointless is the worst version of this.
+         */
+        const val MAX_VIDEO_BYTES = 50L * 1024 * 1024
+
+        /** How many frames the inline cover row offers — the board draws three. */
+        const val COVER_FRAME_COUNT = 3
     }
 }
