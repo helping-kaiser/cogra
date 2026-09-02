@@ -272,6 +272,15 @@
       "page": "patterns"
     },
     {
+      "file": "GuestGate.dc.html",
+      "title": "Guest gate · the ask",
+      "x": 480,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
       "file": "ComposeWords.dc.html",
       "title": "Compose · words body",
       "x": 0,
@@ -804,9 +813,9 @@
     },
     {
       "file": "MapPatterns.dc.html",
-      "x": -980,
+      "x": -1000,
       "y": 0,
-      "w": 560,
+      "w": 580,
       "h": 326,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
