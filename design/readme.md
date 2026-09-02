@@ -484,7 +484,7 @@ which is what makes a guess expensive.
 | `MediaAttachment` / `MediaGallery` | reserved aspect ratio before load; authored, never generated alt text; `surfaceContainerHigh` at the 12px rung; one lead tile plus two squares plus `+n`; the 4:5 cap bounding the tile rather than the picture; a height cap budgeted against worst-case card chrome so a whole post fits above the bottom bar; autoplay muted with one global sticky mute | **the sensitive blur treatment** — radius, overlay, reveal stickiness, and how 0–10 maps to blur-or-not |
 | `MediaViewer` | media opens full-size from the detail view, never cropped, backed out of rather than navigated away from; real video controls here, sound only in a tile | — |
 | `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the only figure the product has is the Post Score and its explanation is four screens deep | — |
-| `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and topics outside, one tap revealing everything, content kept mounted so revealing moves nothing; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | whether a reveal survives leaving and returning to the post |
+| `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and topics outside, naming whose mark it is, one tap revealing everything, content kept mounted so revealing moves nothing — a comment's body replaced by one compact block instead; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | whether a reveal survives leaving and returning to the post; where a words-only post names its source, having no wash to carry the line |
 
 The **five-slot bottom bar** is not in this group: `design.md` §6 already
 fixes the slots and their order, so `BottomNav` simply accepts
@@ -676,8 +676,9 @@ Nothing vanishes silently, and none of these use `error` colouring.
   single veil, the title and topics outside it and readable, so a
   reader can decide from the frame without touching the content. One
   tap reveals everything — the reader decided once, and asking again
-  per item turns one decision into five. An author's optional reason is
-  shown on the veil. The content stays mounted under the veil and keeps
+  per item turns one decision into five. **The veil names its source** —
+  the author's warning or the platform's verdict — with the reason, where
+  there is one, after it. The content stays mounted under the veil and keeps
   its exact space, so revealing moves nothing on screen — which is also
   why text is blurred in place rather than replaced. No `error`
   colouring, no warning glyph: a neutral wash of the standard scrim and
@@ -1717,6 +1718,29 @@ The rulings the layer rests on:
   the answer to "how many continuations does this shared screen owe" —
   and triages the gaps into those a declared journey walks past and
   those off every flow.
+
+### The veil's source, and the veiled comment — 2026-09-02
+
+- **The veil names its source** (Q47). The author's own warning and the
+  platform's verdict are two independent states that read back as the
+  same veil, so the face says which one — always, since an unnamed
+  source reads as the other. The second, smaller line carries it —
+  *The author's warning* or *The platform's verdict* — and the reason,
+  where there is one, follows after an em dash. A reason alone cannot
+  do this work: a verdict may carry one too, and an author may leave
+  theirs empty. Until slice 8 every live veil is an author mark. A
+  words-only post has no wash to carry the line — that piece is open.
+- **A comment veils COMPACT.** Its whole body — the words and the
+  pictures with them, as one — is *replaced* by a single comment-scale
+  block wearing the veil's own wash, glyph, words and source line. A
+  comment is two lines tall with its pictures inset beneath them, so
+  covering it in place would wash the words and the pictures
+  separately. What stays readable is the frame: the author, the
+  timestamp, the topics and the stance still open — the comment's
+  answer to a post's title staying outside the veil, so choosing to
+  look is informed. The block's type is the theme's rather than the
+  media face's fixed white, which is legible only because that wash
+  lies over a picture.
 
 ## 14. Index
 
