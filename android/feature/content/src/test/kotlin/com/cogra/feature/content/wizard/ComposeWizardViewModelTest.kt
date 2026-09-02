@@ -1013,6 +1013,30 @@ class ComposeWizardViewModelTest {
     }
 
     @Test
+    fun aRestoredDraftRemembersThatItsPickWasAClip() = runTest(dispatcher) {
+        // A draft stores a URI and its words, never what kind of thing
+        // the URI is — so the kind is re-read, or the clip comes back as
+        // a one-picture gallery bound for a crop stage it never had.
+        drafts.held = ComposeDraft(
+            bodyKind = DraftBodyKind.Media,
+            body = "",
+            title = "",
+            description = "",
+            assets = listOf(DraftAsset("clip-1", "")),
+            shape = com.cogra.domain.compose.DraftShape.Tall,
+        )
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onContinueDraft()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.isVideoPost).isTrue()
+        assertThat(vm.state.value.hasCoverStep).isTrue()
+        assertThat(vm.state.value.hasCropStep).isFalse()
+    }
+
+    @Test
     fun theClipIsTheWholeGalleryItAttaches() = runTest(dispatcher) {
         val vm = viewModel()
         vm.toDetailsWithVideo()

@@ -139,6 +139,7 @@ class ComposeWizardViewModel @Inject constructor(
         // A restored media draft re-reads every asset's shape: the crop
         // preview needs it, and the URIs may no longer resolve.
         _state.value.picked.forEach { readSourceRatio(it.uri) }
+        restoreClipKind()
         // A draft can be days old and the library has moved on since;
         // one query is cheaper than showing a stale roll.
         refreshDeviceMedia()
@@ -305,6 +306,33 @@ class ComposeWizardViewModel @Inject constructor(
     private fun refreshDeviceMedia() {
         viewModelScope.launch {
             _state.update { it.copy(deviceMedia = deviceMedia.newestMedia(DEVICE_MEDIA_PAGE)) }
+        }
+    }
+
+    /**
+     * Re-reads whether a restored single pick is a clip.
+     *
+     * A held draft stores a URI and its words, not what kind of thing
+     * the URI is — so a restored video would otherwise come back as a
+     * one-picture gallery and be sent to the crop stage it never had.
+     * Only a lone pick can be a clip, which is the same rule the toggle
+     * enforces, so nothing else needs asking.
+     */
+    private fun restoreClipKind() {
+        val only = _state.value.picked.singleOrNull() ?: return
+        viewModelScope.launch {
+            val clip = video.info(only.uri) ?: return@launch
+            _state.update { state ->
+                state.copy(
+                    picked = state.picked.map {
+                        if (it.uri == only.uri) {
+                            it.copy(durationMs = clip.durationMs, sourceRatio = clip.aspectRatio)
+                        } else {
+                            it
+                        }
+                    },
+                )
+            }
         }
     }
 
@@ -892,7 +920,10 @@ class ComposeWizardViewModel @Inject constructor(
 
     private fun failTransport() = _state.update { it.copy(submitting = false, transportFailed = true) }
 
-    private companion object {
+    // Internal rather than private so the suite can assert against the
+    // words themselves instead of re-typing them: a copy change should
+    // move the test with it, not break it.
+    internal companion object {
         const val FINDER_DEBOUNCE_MILLIS = 250L
 
         /** Long enough that a typed word is one write, short enough to be a save. */
