@@ -1042,6 +1042,28 @@ mod galleries {
         id
     }
 
+    /// A video asset row. The bytes are irrelevant here — the byte
+    /// pipeline has its own tests — and what the gallery rules read is
+    /// the mime the sniff settled on.
+    async fn video_asset(pool: &PgPool, author: Uuid, fill: u8) -> Uuid {
+        let id = Uuid::new_v4();
+        media_store::insert(
+            pool,
+            id,
+            author,
+            &[fill; 32],
+            "sha256",
+            &format!("{id}.mp4"),
+            "video/mp4",
+            4096,
+            &serde_json::json!({ "v": 1, "aspect_ratio": "4:5", "duration_ms": 2500 }),
+            None,
+        )
+        .await
+        .expect("asset row");
+        id
+    }
+
     /// The gallery as a client states it, each entry described. The
     /// description is authored here rather than on the asset, which is
     /// the whole point: the same asset can read differently in two
@@ -1539,6 +1561,52 @@ mod galleries {
         let (path, message) = gallery_refusal(e);
         assert_eq!(path, vec!["attachments".to_string()]);
         assert!(message.contains("at most 4"), "{message}");
+    }
+
+    /// The video composition rule: a body is ten pictures or one video,
+    /// and the video brings its cover on the asset rather than as a
+    /// second attachment — so a video sharing a gallery with anything is
+    /// refused, and a video alone is the whole body.
+    ///
+    /// A body is pictures or one video: a video sharing a gallery with another asset is refused, and a video alone lands.
+    /// ´claim:content:a-video-is-the-whole-body´
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn a_video_may_not_share_a_body_with_pictures(pool: PgPool) {
+        let rig = Rig::new(pool).await;
+        let (actor, key) = rig.funded_actor("alice").await;
+
+        let video = video_asset(&rig.pool, actor, 1).await;
+        let picture = asset(&rig.pool, actor, 2).await;
+
+        let e = refused(
+            content::prepare_post(
+                &rig.pool,
+                &rig.boundary,
+                GC,
+                actor,
+                media_post(placements(&[video, picture])),
+            )
+            .await,
+        );
+        let (path, message) = gallery_refusal(e);
+        assert_eq!(path, vec!["attachments", "0", "mediaId"]);
+        assert!(message.contains("one video"), "{message}");
+
+        let alone = content::prepare_post(
+            &rig.pool,
+            &rig.boundary,
+            GC,
+            actor,
+            media_post(placements(&[video])),
+        )
+        .await
+        .expect("a video is a body on its own");
+        rig.land(&alone, &key).await;
+        assert_eq!(
+            rendered(&rig.pool, alone.node).await,
+            vec![video],
+            "the video is the gallery; its cover rides the asset"
+        );
     }
 
     /// The body's exclusive-or, refused from both sides — words beside a

@@ -103,6 +103,13 @@ object_store = { version = "0.14", default-features = false, features = ["aws"] 
 # the one that is stored, are off.
 image = { version = "0.25", default-features = false, features = ["webp"] }
 
+# The metadata probe over uploaded video. Reads the container's boxes to
+# prove the tracks are the codecs the policy admits and to read the
+# duration off them — `Mp4Reader::read_header` walks the header alone and
+# decodes no samples, which is the whole of what is wanted here: the
+# server validates video and never transcodes it.
+mp4 = { version = "0.14" }
+
 # The key-backup blob reference (auth.md "Blob format (v1)") — used only
 # by common's golden-vector export. Pinned to the 0.10-generation
 # RustCrypto stack to stay on the workspace's sha2/digest line.

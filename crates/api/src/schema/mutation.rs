@@ -691,6 +691,15 @@ struct PrepareProfileUpdateInput {
 #[derive(InputObject)]
 struct UploadMediaInput {
     file: Upload,
+    /// The video's poster — an asset this account already uploaded,
+    /// either a frame the client pulled out of the clip or a picture the
+    /// author chose instead. Only a video takes one, and it must be an
+    /// image rather than another video.
+    ///
+    /// It is named here because an asset row is immutable once written:
+    /// the cover is part of what the video *is*, so it is stated when
+    /// the video is created rather than attached to it afterwards.
+    cover_media_id: Option<Uuid>,
 }
 
 /// The asset, or the refusal that explains what was wrong with the file.
@@ -1995,13 +2004,13 @@ impl Mutation {
         let config = ctx.data::<MediaConfig>()?;
         let blobs = ctx.data::<Arc<dyn BlobStore>>()?;
         let value = input.file.value(ctx)?;
-        let max_upload_bytes = config.max_upload_bytes;
+        let caps = config.caps();
 
         let processed = tokio::task::spawn_blocking(move || {
             use std::io::Read;
             let mut bytes = Vec::new();
             value.into_read().read_to_end(&mut bytes)?;
-            std::io::Result::Ok(media::process(&bytes, max_upload_bytes))
+            std::io::Result::Ok(media::process(&bytes, caps))
         })
         .await??;
 
@@ -2016,7 +2025,23 @@ impl Mutation {
             }
         };
 
-        let row = media::store_asset(pool, blobs.as_ref(), v.user_id, asset).await?;
+        let cover =
+            match media::plan_cover(pool, v.user_id, !asset.is_still(), input.cover_media_id).await
+            {
+                Ok(cover) => cover,
+                Err(media::GalleryPlanError::BadInput(e)) => {
+                    return Ok(UploadMediaPayload::refused(UserError::at(
+                        ErrorCode::BadInput,
+                        e.message,
+                        e.path,
+                    )));
+                }
+                Err(media::GalleryPlanError::Internal(e)) => {
+                    return Err(async_graphql::Error::new(e));
+                }
+            };
+
+        let row = media::store_asset(pool, blobs.as_ref(), v.user_id, asset, cover).await?;
         Ok(UploadMediaPayload {
             media: Some(MediaAttachmentType::asset(row)),
             user_errors: vec![],
