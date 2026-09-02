@@ -334,7 +334,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'aria-label="Remove this picture"', tag: "button" },
     { n: 6, find: ">Describe the pictures</button>", tag: "button" },
     { n: 7, find: "+ Add pictures · 2 of 4", tag: "button" },
-    { n: 8, find: "…or drop them here.", tag: "span" },
+    { n: 8, find: "…or drop pictures or a video here.", tag: "span" },
   ],
 });
 

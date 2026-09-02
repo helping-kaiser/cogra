@@ -12,6 +12,11 @@
    stage of its own. Its markup is screen-local because the frame strip is one
    picture framed three ways, which no component draws.
 
+   WEB TAKES THIS BOARD 1:1 (jakob 2026-09-02): the file dialog and the
+   composer's drop-anywhere path play the picker's part, and nothing else about
+   the state differs, so no web board is drawn — the avatar flow's blessing,
+   again.
+
    A VIDEO TAKES ONE DESCRIPTION for the whole clip (jakob 2026-09-02) — the
    same counter row a comment's pictures wear, reading the video instead. The
    cover takes none of its own: it is the video's face, not a second picture. */

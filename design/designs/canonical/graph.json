@@ -485,7 +485,7 @@
     { "from": "ReplyPicturesWeb", "via": 5, "kind": "advance", "label": "remove picture ×", "to": [{ "terminal": "self", "case": "the picture leaves the tray" }] },
     { "from": "ReplyPicturesWeb", "via": 6, "kind": "advance", "label": "Describe the pictures", "to": [{ "board": "ComposeDescribe", "case": "the describe sheet (master on the media page)" }] },
     { "from": "ReplyPicturesWeb", "via": 7, "kind": "advance", "label": "+ Add pictures · 2 of 4", "to": [{ "terminal": "os", "case": "the browser's file dialog" }] },
-    { "from": "ReplyPicturesWeb", "via": 8, "kind": "advance", "label": "…or drop them here", "to": [{ "terminal": "self", "case": "dropped files land in the tray" }] },
+    { "from": "ReplyPicturesWeb", "via": 8, "kind": "advance", "label": "…or drop pictures or a video here", "to": [{ "terminal": "self", "case": "dropped pictures land in the tray" }, { "board": "ReplyVideo", "case": "a dropped video — the composer's video state, web taking it 1:1" }] },
 
     { "from": "ReplyPad", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
     { "from": "ReplyPad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick" }] },
