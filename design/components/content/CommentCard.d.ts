@@ -11,7 +11,8 @@ export interface CommentCardProps {
    * The comment's pictures — below the words, inset at the card's medium rung
    * (an attachment, not the body). Never cropped; multiples render in the same
    * pager as a post's gallery, in a fixed square frame each whole frame fits
-   * inside. At most four per comment (authoring-side cap).
+   * inside. The authoring-side cap is four pictures, or one video with its
+   * cover — the same grammar a post's body carries, at comment scale.
    */
   media?: readonly import("../proposed/MediaAttachment").MediaAttachmentProps[];
   license?: License;
