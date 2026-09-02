@@ -362,6 +362,18 @@
       "description": "The reference count, wherever a post is drawn, opens the topics-and-references sheet; a reference row opens what was cited — that node's own surface is still owed.",
       "start": { "control": "reference count" },
       "end": { "board": "RefsSheet", "via": 2 }
+    },
+    {
+      "name": "search-and-open-a-post",
+      "description": "Typing in Explore brings results as they are typed; a post result opens that post — its standalone detail view is still owed.",
+      "start": { "board": "Explore", "via": 1, "case": "typing — results as you type" },
+      "end": { "board": "ExploreSearch", "via": 4 }
+    },
+    {
+      "name": "add-a-topic",
+      "description": "Add a topic on the details step opens the picker over every topic a post can carry — the picker itself is still owed.",
+      "start": { "board": "ComposeDetails" },
+      "end": { "board": "ComposeDetails", "via": 7 }
     }
   ]
 }
