@@ -114,16 +114,31 @@
     },
     {
       "name": "reply-to-a-post",
-      "description": "A post's comment count opens the thread sheet, Add a comment opens the composer, and the seal signs the reply back into the thread.",
+      "description": "The comment count, wherever a post is drawn, opens the thread sheet; Add a comment opens the composer, and the seal signs the reply back into the thread.",
       "status": "resolved",
+      "startsOn": [
+        "ApplicantFeed",
+        "ApplicantWaiting",
+        "ComposeExpired",
+        "ComposeLanded",
+        "Feed",
+        "FeedBare",
+        "FeedFar",
+        "FeedGallery",
+        "FeedNarrowed",
+        "KeyElsewhere",
+        "Main",
+        "ProfilePosts",
+        "Removed",
+        "VouchBack"
+      ],
       "steps": [
-        "start · Feed · 10 «comment count» → ReplyEntry",
+        "start · «comment count» on 14 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
       ],
       "boards": [
-        "Feed",
         "ReplyEntry",
         "ReplyCompose",
         "ReplySeal"
@@ -321,6 +336,176 @@
         "WalletCampaigns",
         "WalletCampaign"
       ]
+    },
+    {
+      "name": "take-a-stance-on-a-post",
+      "description": "Press and hold the stance face, wherever a post is drawn, and the pad blooms; the signed stance lands back where it was taken.",
+      "status": "resolved",
+      "startsOn": [
+        "ComposeExpired",
+        "ComposeLanded",
+        "Feed",
+        "FeedFar",
+        "FeedGallery",
+        "FeedNarrowed",
+        "KeyElsewhere",
+        "ProfilePosts",
+        "Removed",
+        "VouchBack"
+      ],
+      "startsUndesigned": [
+        "ApplicantFeed/10: applicant acts once each — boards pending (ruled 2026-09-01)",
+        "ApplicantWaiting/7: applicant acts once each — boards pending (ruled 2026-09-01)",
+        "FeedBare/10: guest-gate pattern board (not designed)",
+        "Main/10: guest-gate pattern board (not designed)"
+      ],
+      "steps": [
+        "start · «stance face» on 10 boards → VouchBackPad",
+        "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
+      ],
+      "boards": [
+        "VouchBackPad"
+      ]
+    },
+    {
+      "name": "close-the-filter-unchanged",
+      "description": "The filter sheet opened and shut with nothing touched leaves the feed exactly as it was.",
+      "status": "resolved",
+      "steps": [
+        "start · Feed · 1 «Posts (filter chip)» → FeedSheet",
+        "end · FeedSheet · 6 «scrim — tap outside» → Feed — unchanged"
+      ],
+      "boards": [
+        "Feed",
+        "FeedSheet"
+      ]
+    },
+    {
+      "name": "filter-the-feed-to-nothing",
+      "description": "Every kind switched off leaves a feed with nothing left to show — the empty state carrying its own way back.",
+      "status": "resolved",
+      "steps": [
+        "start · Feed · 1 «Posts (filter chip)» → FeedSheet",
+        "end · FeedSheet · 6 «scrim — tap outside» → FeedNothing — everything off"
+      ],
+      "boards": [
+        "Feed",
+        "FeedSheet",
+        "FeedNothing"
+      ]
+    },
+    {
+      "name": "filter-the-feed-far-from-the-default",
+      "description": "A filter pushed far enough from the default that the trigger counts the changes instead of naming them.",
+      "status": "resolved",
+      "steps": [
+        "start · Feed · 1 «Posts (filter chip)» → FeedSheet",
+        "end · FeedSheet · 6 «scrim — tap outside» → FeedFar — far from the default"
+      ],
+      "boards": [
+        "Feed",
+        "FeedSheet",
+        "FeedFar"
+      ]
+    },
+    {
+      "name": "undo-the-narrowing",
+      "description": "A feed filtered until nothing shows offers Show posts again — the one control that puts the default back.",
+      "status": "resolved",
+      "steps": [
+        "start · FeedNothing",
+        "end · FeedNothing · 2 «Show posts again» → Feed — the default restored"
+      ],
+      "boards": [
+        "FeedNothing",
+        "Feed"
+      ]
+    },
+    {
+      "name": "search-into-a-thread",
+      "description": "Typing in Explore brings results as they are typed; a comment result opens the thread that comment sits in.",
+      "status": "resolved",
+      "steps": [
+        "start · Explore · 1 «search field» → ExploreSearch — typing — results as you type",
+        "end · ExploreSearch · 6 «comment result row» → ReplyEntry — the comment in its thread"
+      ],
+      "boards": [
+        "Explore",
+        "ExploreSearch",
+        "ReplyEntry"
+      ]
+    },
+    {
+      "name": "narrow-a-search",
+      "description": "The results' Everything trigger opens the search filter; the sheet applies live, and tapping out leaves the reader on the narrowed results.",
+      "status": "resolved",
+      "steps": [
+        "start · ExploreSearch · 2 «Everything (filter trigger)» → ExploreFilter",
+        "end · ExploreFilter · 5 «scrim — tap outside» → ExploreSearch — the sheet closes"
+      ],
+      "boards": [
+        "ExploreSearch",
+        "ExploreFilter"
+      ]
+    },
+    {
+      "name": "reply-to-a-comment",
+      "description": "Reply on a comment opens the same composer pre-targeted at it — one commenting mechanism over many targets, each target declaring its own start and end.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyEntry · 5 «Reply» → ReplyCompose — the composer, pre-targeted at that comment",
+        "ReplyCompose · 3 «Next» → ReplySeal",
+        "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
+      ],
+      "boards": [
+        "ReplyEntry",
+        "ReplyCompose",
+        "ReplySeal"
+      ]
+    },
+    {
+      "name": "reply-with-pictures",
+      "description": "Pictures added to a reply land in its tray; one seal signs the words and the pictures together into the thread.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
+        "ReplyCompose · 5 «+ Add pictures» → ReplyPictures — picks land in the tray",
+        "ReplyPictures · 3 «Next» → ReplySeal",
+        "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
+      ],
+      "boards": [
+        "ReplyEntry",
+        "ReplyCompose",
+        "ReplyPictures",
+        "ReplySeal"
+      ]
+    },
+    {
+      "name": "reply-while-the-pictures-upload",
+      "description": "Next pressed while the pictures are still going up reaches the gated seal; signing waits for them, then the comment settles into the thread.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyPictures · 3 «Next» → ComposeSealUploading — uploads still running — the gated seal (master on the media page)",
+        "end · ComposeSealUploading · 7 «Sign and publish (disabled)» → ReplyEntry — uploads land — signing proceeds to the thread, the comment settling"
+      ],
+      "boards": [
+        "ReplyPictures",
+        "ComposeSealUploading",
+        "ReplyEntry"
+      ]
+    },
+    {
+      "name": "edit-your-comment",
+      "description": "Edit on your own comment opens the edit surface; the signed edit settles back into the thread it belongs to.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyMedia · 6 «Edit (own comment)» → CommentEdit",
+        "end · CommentEdit · 12 «Sign the edit» → ReplyMedia — signed — the thread, the edit settling"
+      ],
+      "boards": [
+        "ReplyMedia",
+        "CommentEdit"
+      ]
     }
   ],
   "boardsOnFlows": {
@@ -352,6 +537,12 @@
       "endpoint": [
         "edit-avatar-standalone"
       ]
+    },
+    "CommentEdit": {
+      "flows": [
+        "edit-your-comment"
+      ],
+      "endpoint": []
     },
     "ComposeCrop": {
       "flows": [
@@ -387,22 +578,65 @@
       ],
       "endpoint": []
     },
+    "ComposeSealUploading": {
+      "flows": [
+        "reply-while-the-pictures-upload"
+      ],
+      "endpoint": []
+    },
+    "Explore": {
+      "flows": [
+        "search-into-a-thread"
+      ],
+      "endpoint": [
+        "search-into-a-thread"
+      ]
+    },
+    "ExploreFilter": {
+      "flows": [
+        "narrow-a-search"
+      ],
+      "endpoint": []
+    },
+    "ExploreSearch": {
+      "flows": [
+        "narrow-a-search",
+        "search-into-a-thread"
+      ],
+      "endpoint": [
+        "narrow-a-search"
+      ]
+    },
     "Feed": {
       "flows": [
+        "close-the-filter-unchanged",
+        "filter-the-feed-far-from-the-default",
+        "filter-the-feed-to-nothing",
         "narrow-the-feed",
         "open-a-topic",
-        "reply-to-a-post",
         "sign-in",
+        "undo-the-narrowing",
         "verify-the-email-as-a-member",
         "vouch-back-for-your-inviter"
       ],
       "endpoint": [
+        "close-the-filter-unchanged",
+        "filter-the-feed-far-from-the-default",
+        "filter-the-feed-to-nothing",
         "narrow-the-feed",
         "open-a-topic",
-        "reply-to-a-post",
         "sign-in",
+        "undo-the-narrowing",
         "verify-the-email-as-a-member",
         "vouch-back-for-your-inviter"
+      ]
+    },
+    "FeedFar": {
+      "flows": [
+        "filter-the-feed-far-from-the-default"
+      ],
+      "endpoint": [
+        "filter-the-feed-far-from-the-default"
       ]
     },
     "FeedNarrowed": {
@@ -413,8 +647,21 @@
         "narrow-the-feed"
       ]
     },
+    "FeedNothing": {
+      "flows": [
+        "filter-the-feed-to-nothing",
+        "undo-the-narrowing"
+      ],
+      "endpoint": [
+        "filter-the-feed-to-nothing",
+        "undo-the-narrowing"
+      ]
+    },
     "FeedSheet": {
       "flows": [
+        "close-the-filter-unchanged",
+        "filter-the-feed-far-from-the-default",
+        "filter-the-feed-to-nothing",
         "narrow-the-feed"
       ],
       "endpoint": []
@@ -489,21 +736,50 @@
     },
     "ReplyCompose": {
       "flows": [
-        "reply-to-a-post"
+        "reply-to-a-comment",
+        "reply-to-a-post",
+        "reply-with-pictures"
       ],
       "endpoint": []
     },
     "ReplyEntry": {
       "flows": [
-        "reply-to-a-post"
+        "reply-to-a-comment",
+        "reply-to-a-post",
+        "reply-while-the-pictures-upload",
+        "reply-with-pictures",
+        "search-into-a-thread"
       ],
       "endpoint": [
-        "reply-to-a-post"
+        "reply-to-a-comment",
+        "reply-to-a-post",
+        "reply-while-the-pictures-upload",
+        "reply-with-pictures",
+        "search-into-a-thread"
+      ]
+    },
+    "ReplyMedia": {
+      "flows": [
+        "edit-your-comment"
+      ],
+      "endpoint": [
+        "edit-your-comment"
+      ]
+    },
+    "ReplyPictures": {
+      "flows": [
+        "reply-while-the-pictures-upload",
+        "reply-with-pictures"
+      ],
+      "endpoint": [
+        "reply-while-the-pictures-upload"
       ]
     },
     "ReplySeal": {
       "flows": [
-        "reply-to-a-post"
+        "reply-to-a-comment",
+        "reply-to-a-post",
+        "reply-with-pictures"
       ],
       "endpoint": []
     },
@@ -547,9 +823,12 @@
     },
     "VouchBackPad": {
       "flows": [
+        "take-a-stance-on-a-post",
         "vouch-back-for-your-inviter"
       ],
-      "endpoint": []
+      "endpoint": [
+        "take-a-stance-on-a-post"
+      ]
     },
     "Wallet": {
       "flows": [
@@ -616,17 +895,30 @@
     "ApplicantFeed/5: reader's post menu — licence terms / cite (not boarded)",
     "ApplicantFeed/8: the topic page (ruled 2026-09-01 — not designed)",
     "AvatarSeal/4: network-error pattern board (not designed)",
+    "CommentEdit/12: network-error pattern board (not designed)",
+    "CommentEdit/9: the topic picker (not boarded)",
     "ComposeDetails/7: the topic picker (not boarded)",
     "ComposeLanded/7: Post Score drill-down (backlog item 13)",
     "ComposeSeal/7: network-error pattern board (not designed)",
+    "Explore/2: the Sky (backlog item 16 — last on purpose)",
+    "Explore/9: the chat surface (not designed)",
+    "ExploreSearch/4: the post detail view (not boarded standalone — drawn only under the comments sheet)",
+    "ExploreSearch/5: the item's surface (not designed)",
+    "ExploreSearch/7: the chat surface (not designed)",
+    "ExploreSearch/8: the offer's surface (not designed)",
     "Feed/16: the chat surface (not designed)",
     "Feed/3: reader's post menu — licence terms / cite (not boarded)",
     "Feed/6: the topic page (ruled 2026-09-01 — not designed)",
     "Feed/9: Post Score drill-down (backlog item 13)",
+    "FeedFar/16: the chat surface (not designed)",
+    "FeedFar/3: reader's post menu — licence terms / cite (not boarded)",
+    "FeedFar/6: the topic page (ruled 2026-09-01 — not designed)",
+    "FeedFar/9: Post Score drill-down (backlog item 13)",
     "FeedNarrowed/16: the chat surface (not designed)",
     "FeedNarrowed/3: reader's post menu — licence terms / cite (not boarded)",
     "FeedNarrowed/6: the topic page (ruled 2026-09-01 — not designed)",
     "FeedNarrowed/9: Post Score drill-down (backlog item 13)",
+    "FeedNothing/8: the chat surface (not designed)",
     "InviteEntry/3: network-error pattern board (not designed)",
     "Join/6: field-error states (not boarded)",
     "Join/6: network-error pattern board (not designed)",
@@ -645,6 +937,7 @@
     "RecoveryCode/3: code-mismatch error state (not boarded)",
     "ReplyEntry/2: the comment's menu — cite / licence terms (not boarded)",
     "ReplyEntry/3: the topic page (ruled 2026-09-01 — not designed)",
+    "ReplyMedia/2: the comment's menu — cite / licence terms (not boarded)",
     "ReplySeal/4: the topic picker (not boarded)",
     "ReplySeal/9: network-error pattern board (not designed)",
     "Restore/4: wrong-code error state (not boarded)",

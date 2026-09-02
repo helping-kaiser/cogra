@@ -431,7 +431,7 @@
     { "from": "ReplyMedia", "via": 8, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — back to where it was opened" }] },
 
     { "from": "CommentEdit", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "ReplyMedia", "case": "one stage back — the thread" }] },
-    { "from": "CommentEdit", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "ReplyMedia", "case": "the thread — draft kept" }] },
+    { "from": "CommentEdit", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "ReplyMedia", "case": "the thread — the edit discarded" }] },
     { "from": "CommentEdit", "via": 3, "kind": "detour", "label": "? — Editing", "to": [{ "board": "HelpDialog", "case": "the Editing text" }] },
     { "from": "CommentEdit", "via": 4, "kind": "advance", "label": "Words", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "CommentEdit", "via": 5, "kind": "advance", "label": "remove picture ×", "to": [{ "terminal": "self", "case": "the picture leaves the batch" }] },
@@ -447,13 +447,13 @@
     { "from": "CommentEditActs", "via": 2, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "CommentEdit", "case": "the sheet closes" }] },
 
     { "from": "ReplyCompose", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "ReplyEntry", "case": "one stage back — the thread" }] },
-    { "from": "ReplyCompose", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "ReplyEntry", "case": "the thread — draft kept" }] },
+    { "from": "ReplyCompose", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "ReplyEntry", "case": "the thread — the reply discarded" }] },
     { "from": "ReplyCompose", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ReplySeal" }] },
     { "from": "ReplyCompose", "via": 4, "kind": "advance", "label": "the words", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "ReplyCompose", "via": 5, "kind": "advance", "label": "+ Add pictures", "to": [{ "terminal": "os", "case": "the platform's own picker — comments have no pick stage" }, { "board": "ReplyPictures", "case": "picks land in the tray" }] },
 
     { "from": "ReplyPictures", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "ReplyEntry", "case": "one stage back — the thread" }] },
-    { "from": "ReplyPictures", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "ReplyEntry", "case": "the thread — draft kept" }] },
+    { "from": "ReplyPictures", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "ReplyEntry", "case": "the thread — the reply discarded" }] },
     { "from": "ReplyPictures", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ReplySeal" }, { "board": "ComposeSealUploading", "case": "uploads still running — the gated seal (master on the media page)" }] },
     { "from": "ReplyPictures", "via": 4, "kind": "advance", "label": "the words", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "ReplyPictures", "via": 5, "kind": "advance", "label": "remove picture ×", "to": [{ "terminal": "self", "case": "the picture leaves the tray" }] },
@@ -461,7 +461,7 @@
     { "from": "ReplyPictures", "via": 7, "kind": "advance", "label": "+ Add pictures · 2 of 4", "to": [{ "terminal": "os", "case": "the platform's own picker" }] },
 
     { "from": "ReplyPicturesWeb", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "ReplyEntry", "case": "one stage back — the thread" }] },
-    { "from": "ReplyPicturesWeb", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "ReplyEntry", "case": "the thread — draft kept" }] },
+    { "from": "ReplyPicturesWeb", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "ReplyEntry", "case": "the thread — the reply discarded" }] },
     { "from": "ReplyPicturesWeb", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ReplySeal" }, { "board": "ComposeSealUploading", "case": "uploads still running — the gated seal (master on the media page)" }] },
     { "from": "ReplyPicturesWeb", "via": 4, "kind": "advance", "label": "the words", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "ReplyPicturesWeb", "via": 5, "kind": "advance", "label": "remove picture ×", "to": [{ "terminal": "self", "case": "the picture leaves the tray" }] },
@@ -476,7 +476,7 @@
     { "from": "ReplyPad", "via": 5, "kind": "cancel", "label": "scrim — press outside", "to": [{ "board": "ReplySeal", "case": "stages nothing" }] },
 
     { "from": "ReplySeal", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words" }, { "board": "ReplyPictures", "case": "…or the pictures state" }] },
-    { "from": "ReplySeal", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "ReplyEntry", "case": "leaves the flow — draft kept" }] },
+    { "from": "ReplySeal", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "ReplyEntry", "case": "leaves the flow — the reply discarded" }] },
     { "from": "ReplySeal", "via": 3, "kind": "detour", "label": "? — Signed actions", "to": [{ "board": "HelpDialog", "case": "the Signed-actions text" }] },
     { "from": "ReplySeal", "via": 4, "kind": "advance", "label": "+ Add a topic", "to": [{ "gap": "the topic picker (not boarded)" }] },
     { "from": "ReplySeal", "via": 5, "kind": "advance", "label": "+ Cite something", "to": [{ "board": "ReferencePicker" }] },
