@@ -214,17 +214,13 @@ function MediaBody({
   const holdsVideo = first !== undefined && kindOf(first) === "video";
   const full = assets.length >= POST_ATTACHMENT_CAP;
 
-  // Pictures and video both pass; everything else is dropped here rather than
-  // travelling to a check that would only say the same thing later. The
-  // composition rule — pictures OR one video — is the wizard's, not the
-  // picker's, because it is a rule about the draft rather than about a file.
+  // EVERYTHING PICKED IS HANDED OVER, including files that are obviously
+  // neither a picture nor a video. Filtering here is what made a dropped PDF
+  // vanish without a word; the screening is the only thing that can say why a
+  // file did not get in, so it has to see them all.
   const take = (list: FileList | null) => {
     if (list === null) return;
-    onPick(
-      Array.from(list).filter(
-        (file) => file.type.startsWith("image/") || file.type.startsWith("video/"),
-      ),
-    );
+    onPick(Array.from(list));
   };
 
   return (
