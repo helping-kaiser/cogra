@@ -1046,6 +1046,12 @@ mod galleries {
     /// pipeline has its own tests — and what the gallery rules read is
     /// the mime the sniff settled on.
     async fn video_asset(pool: &PgPool, author: Uuid, fill: u8) -> Uuid {
+        sized_video_asset(pool, author, fill, 4096).await
+    }
+
+    /// A video asset of a stated size — what the per-parent byte cap
+    /// reads, and the only thing about the bytes that matters here.
+    async fn sized_video_asset(pool: &PgPool, author: Uuid, fill: u8, size: i64) -> Uuid {
         let id = Uuid::new_v4();
         media_store::insert(
             pool,
@@ -1055,7 +1061,7 @@ mod galleries {
             "sha256",
             &format!("{id}.mp4"),
             "video/mp4",
-            4096,
+            size,
             &serde_json::json!({ "v": 1, "aspect_ratio": "4:5", "duration_ms": 2500 }),
             None,
         )
@@ -1607,6 +1613,85 @@ mod galleries {
             vec![video],
             "the video is the gallery; its cover rides the asset"
         );
+    }
+
+    /// A comment carries a video the way a post does, at half the byte
+    /// budget — and the cap is applied here rather than at the upload,
+    /// which is the only moment that knows which parent the asset is
+    /// headed for.
+    ///
+    /// A comment carries one video at half a post's byte budget, the cap being applied where the parent is finally known.
+    /// ´claim:content:a-comment-carries-a-video-at-half-the-budget´
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn a_comments_video_is_capped_at_half_a_posts(pool: PgPool) {
+        let rig = Rig::new(pool).await;
+        let (actor, key) = rig.funded_actor("alice").await;
+        let post = rig.post(actor, &key, "Parent", "Words").await;
+
+        let mib = 1024 * 1024;
+        let under = sized_video_asset(&rig.pool, actor, 1, 49 * mib).await;
+        let over = sized_video_asset(&rig.pool, actor, 2, 51 * mib).await;
+
+        let comment = |asset: Uuid| CommentDraft {
+            target: post,
+            content: "Look at this".into(),
+            license: license(),
+            p_directed: None,
+            p_interest: None,
+            tags: vec![],
+            references: vec![],
+            attachments: placements(&[asset]),
+            sensitive: Default::default(),
+        };
+
+        let landed = content::prepare_comment(&rig.pool, &rig.boundary, GC, actor, comment(under))
+            .await
+            .expect("a comment carries a video under its cap");
+        rig.land(&landed, &key).await;
+
+        let e = refused(
+            content::prepare_comment(&rig.pool, &rig.boundary, GC, actor, comment(over)).await,
+        );
+        let (path, message) = gallery_refusal(e);
+        assert_eq!(path, vec!["attachments", "0", "mediaId"]);
+        assert!(message.contains("larger than"), "{message}");
+
+        let on_a_post = content::prepare_post(
+            &rig.pool,
+            &rig.boundary,
+            GC,
+            actor,
+            media_post(placements(&[over])),
+        )
+        .await
+        .expect("the same video is under a post's own cap");
+        rig.land(&on_a_post, &key).await;
+    }
+
+    /// A video past even a post's cap is refused, so the widest limit
+    /// the upload admits is still a limit at the attachment.
+    ///
+    /// A video larger than a post's own cap is refused at the attachment.
+    /// ´claim:content:a-posts-video-cap-is-enforced-too´
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn a_video_past_a_posts_cap_is_refused(pool: PgPool) {
+        let rig = Rig::new(pool).await;
+        let (actor, _key) = rig.funded_actor("alice").await;
+        let huge = sized_video_asset(&rig.pool, actor, 3, 101 * 1024 * 1024).await;
+
+        let e = refused(
+            content::prepare_post(
+                &rig.pool,
+                &rig.boundary,
+                GC,
+                actor,
+                media_post(placements(&[huge])),
+            )
+            .await,
+        );
+        let (path, message) = gallery_refusal(e);
+        assert_eq!(path, vec!["attachments", "0", "mediaId"]);
+        assert!(message.contains("larger than"), "{message}");
     }
 
     /// The body's exclusive-or, refused from both sides — words beside a
