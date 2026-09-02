@@ -290,6 +290,15 @@
       "page": "patterns"
     },
     {
+      "file": "PadKeyAbsent.dc.html",
+      "title": "Key absent · acting",
+      "x": 1440,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
       "file": "ComposeWords.dc.html",
       "title": "Compose · words body",
       "x": 0,
@@ -822,10 +831,10 @@
     },
     {
       "file": "MapPatterns.dc.html",
-      "x": -1290,
+      "x": -1580,
       "y": 0,
-      "w": 870,
-      "h": 326,
+      "w": 1160,
+      "h": 343,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
     },

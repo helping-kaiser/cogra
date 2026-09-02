@@ -142,7 +142,7 @@
     {
       "name": "take-a-stance-on-a-post",
       "description": "Press and hold the stance face, wherever a post is drawn, and the pad blooms; the signed stance lands back where it was taken.",
-      "start": { "control": "stance face", "except": ["Main", "FeedBare"] },
+      "start": { "control": "stance face", "except": ["Main", "FeedBare", "KeyElsewhere"] },
       "end": { "board": "VouchBackPad", "via": 4, "case": "signed — the stance lands, back where the pad bloomed" }
     },
     {

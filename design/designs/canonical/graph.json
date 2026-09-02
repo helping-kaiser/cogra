@@ -145,7 +145,7 @@
     { "from": "VouchBackPad", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog" }] },
     { "from": "VouchBackPad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick" }] },
     { "from": "VouchBackPad", "via": 3, "kind": "cancel", "label": "Cancel", "to": [{ "board": "VouchBack", "case": "nothing staged" }] },
-    { "from": "VouchBackPad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "Feed", "case": "the vouch-back — signed, the way opens" }, { "terminal": "back", "case": "signed — the stance lands, back where the pad bloomed" }, { "gap": "key-absent signing path at the pad (not boarded)", "case": "key elsewhere" }] },
+    { "from": "VouchBackPad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "Feed", "case": "the vouch-back — signed, the way opens" }, { "terminal": "back", "case": "signed — the stance lands, back where the pad bloomed" }, { "board": "PadKeyAbsent", "case": "key elsewhere" }] },
 
     { "from": "KeyElsewhere", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "KeyElsewhere", "via": 2, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }] },
@@ -155,7 +155,7 @@
     { "from": "KeyElsewhere", "via": 6, "kind": "detour", "label": "More (caption)", "to": [{ "terminal": "self", "case": "the caption unfolds" }] },
     { "from": "KeyElsewhere", "via": 7, "kind": "advance", "label": "topic chip", "to": [{ "gap": "the topic page (ruled 2026-09-01 — not designed)" }] },
     { "from": "KeyElsewhere", "via": 8, "kind": "advance", "label": "reference count", "to": [{ "board": "RefsSheet" }] },
-    { "from": "KeyElsewhere", "via": 9, "kind": "advance", "label": "stance face", "to": [{ "board": "VouchBackPad", "case": "press-and-hold — the pad blooms (master board)" }, { "gap": "key-absent acting path (not boarded)", "case": "tap to act with the key elsewhere" }] },
+    { "from": "KeyElsewhere", "via": 9, "kind": "advance", "label": "stance face", "to": [{ "board": "VouchBackPad", "case": "press-and-hold — the pad blooms (master board)" }, { "board": "PadKeyAbsent", "case": "tap to act with the key elsewhere" }] },
     { "from": "KeyElsewhere", "via": 10, "kind": "detour", "label": "Post Score", "to": [{ "gap": "Post Score drill-down (backlog item 13)" }] },
     { "from": "KeyElsewhere", "via": 11, "kind": "advance", "label": "comment count", "to": [{ "board": "ReplyEntry" }] },
     { "from": "KeyElsewhere", "via": 12, "kind": "nav", "label": "nav · Feed", "to": [{ "terminal": "self", "case": "already here" }] },
@@ -723,6 +723,10 @@
     { "from": "GuestGate", "via": 2, "kind": "advance", "label": "Sign in or join", "to": [{ "board": "SignIn" }] },
 
     { "from": "NetworkError", "via": 1, "kind": "advance", "label": "Retry", "to": [{ "board": "ComposeLanded", "case": "reaches this time — the exemplar's signed landing" }, { "terminal": "self", "case": "still offline — the fault stays in place", "info": true }] },
+
+    { "from": "PadKeyAbsent", "via": 1, "kind": "detour", "label": "? — Your key", "to": [{ "board": "HelpDialog", "case": "the Your-key text" }] },
+    { "from": "PadKeyAbsent", "via": 2, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }] },
+    { "from": "PadKeyAbsent", "via": 3, "kind": "cancel", "label": "Keep it pending, restore later", "to": [{ "terminal": "back", "case": "leaves — the stance waits on the key" }] },
 
     { "from": "HelpDialog", "via": 1, "kind": "back", "label": "Close", "to": [{ "terminal": "back", "case": "the dialog closes — back to the screen that asked" }] },
     { "from": "HelpDialog", "via": 2, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the dialog closes" }] },
