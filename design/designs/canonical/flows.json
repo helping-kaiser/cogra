@@ -55,6 +55,89 @@
       "description": "A topic chip on a post opens that topic's page — the page itself is still owed.",
       "start": { "board": "Feed" },
       "end": { "board": "Feed", "via": 6 }
+    },
+    {
+      "name": "sign-in-with-the-key-elsewhere",
+      "description": "The same sign-in on a device the key is not on — reading runs, and anything signed waits until the key is restored.",
+      "start": { "board": "SignIn" },
+      "end": { "board": "SignIn", "via": 6, "case": "member, key not here" }
+    },
+    {
+      "name": "join-with-an-invite",
+      "description": "An invite link checks out at the door, then handle, email and password make the account and the applicant days begin.",
+      "start": { "board": "InviteEntry" },
+      "waypoints": [
+        { "board": "InviteEntry", "via": 3, "case": "the link checks out" }
+      ],
+      "end": { "board": "Join", "via": 6, "case": "account created — applicant days begin" }
+    },
+    {
+      "name": "guest-turns-applicant",
+      "description": "Sign in or join, offered on every guest screen, runs out to the invite and through Create account into the applicant days.",
+      "start": { "control": "Sign in or join" },
+      "waypoints": [
+        { "board": "SignIn", "via": 8 },
+        { "board": "InviteEntry", "via": 3, "case": "the link checks out" }
+      ],
+      "end": { "board": "Join", "via": 6, "case": "account created — applicant days begin" }
+    },
+    {
+      "name": "verify-the-email",
+      "description": "Back to CoGra in the verification mail returns an applicant to the feed their application still runs in.",
+      "start": { "board": "Verified" },
+      "end": { "board": "Verified", "via": 1, "case": "application still running" }
+    },
+    {
+      "name": "verify-the-email-as-a-member",
+      "description": "The same mail opened once the application has been approved lands a full member in their own feed.",
+      "start": { "board": "Verified" },
+      "end": { "board": "Verified", "via": 1, "case": "already a member" }
+    },
+    {
+      "name": "make-your-key",
+      "description": "Create my key runs the ceremony — the recovery code shown, written down, confirmed — and hands the applicant back where it began.",
+      "start": { "board": "ApplicantFeed", "via": 3 },
+      "waypoints": [
+        { "board": "KeyCeremony", "via": 2 },
+        { "board": "KeyConfirm", "via": 2 }
+      ],
+      "end": { "board": "RecoveryCode", "via": 3, "case": "code confirmed — returns where the ceremony began" }
+    },
+    {
+      "name": "vouch-back-for-your-inviter",
+      "description": "Vouch back on the approval landing opens the stance pad; the signed stance ends the borrowed view and the member's own feed opens.",
+      "start": { "board": "VouchBack", "via": 3 },
+      "end": { "board": "VouchBackPad", "via": 4, "case": "the vouch-back — signed, the way opens" }
+    },
+    {
+      "name": "restore-your-key",
+      "description": "Restore the key, wherever the key-absent screens offer it, takes the recovery code and returns to whatever was waiting on it.",
+      "start": { "control": "Restore the key", "except": ["Restore"] },
+      "end": { "board": "Restore", "via": 4, "case": "key restored — returns where restore began" }
+    },
+    {
+      "name": "publish-your-payout-address",
+      "description": "The wallet's first open makes the key and signs the payout address onto the record — the wallet then stands at zero, address published.",
+      "start": { "board": "WalletSetup" },
+      "end": { "board": "WalletAddressSeal", "via": 5, "case": "published — the zero wallet, address on record" }
+    },
+    {
+      "name": "change-your-payout-address",
+      "description": "Change on the wallet takes a new address to its own seal; the signed change puts it on record, newest wins.",
+      "start": { "board": "WalletEmpty", "via": 3, "case": "then the seal" },
+      "end": { "board": "WalletChange", "via": 5, "case": "signed — the new address on record, newest wins" }
+    },
+    {
+      "name": "trace-a-payout-to-what-paid-it",
+      "description": "A settling payout row opens the settlement that paid it — the settlement's own view is still owed.",
+      "start": { "board": "Wallet" },
+      "end": { "board": "Wallet", "via": 5 }
+    },
+    {
+      "name": "see-a-campaigns-money",
+      "description": "The wallet's Campaigns door lists what you run and what you took part in; a row opens that campaign's money view.",
+      "start": { "board": "Wallet", "via": 4 },
+      "end": { "board": "WalletCampaigns", "via": 5 }
     }
   ]
 }
