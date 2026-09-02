@@ -23,7 +23,7 @@ import { TAG_BATCH_CAP } from "@/lib/topics/normalize";
 import { REFERENCE_BATCH_CAP } from "@/lib/references/normalize";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
-import type { PickedAsset } from "@/lib/compose/wizard";
+import { kindOf, type PickedAsset } from "@/lib/compose/wizard";
 
 export function DetailsStep({
   mode,
@@ -159,6 +159,8 @@ function BodyStrip({
 }) {
   const failed = assets.filter((asset) => asset.upload.kind === "failed");
   const described = assets.filter((asset) => asset.altText.trim() !== "").length;
+  const first = assets[0];
+  const isVideo = first !== undefined && kindOf(first) === "video";
 
   return (
     <div className="flex flex-col gap-2">
@@ -172,7 +174,11 @@ function BodyStrip({
           ...thumbState(asset),
         }))}
         caption={
-          assets.length === 1 ? "1 picture — the body" : `${assets.length} pictures — the body`
+          isVideo
+            ? "1 video — the body"
+            : assets.length === 1
+              ? "1 picture — the body"
+              : `${assets.length} pictures — the body`
         }
         onManage={onManage}
         testId="wizard-picked-row"
@@ -206,6 +212,7 @@ function BodyStrip({
       <DescribeCounter
         described={described}
         total={assets.length}
+        subject={isVideo ? "the video" : "the pictures"}
         onDescribe={onDescribe}
         testId="wizard-describe-counter"
       />

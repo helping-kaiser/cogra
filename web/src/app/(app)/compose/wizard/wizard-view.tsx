@@ -41,7 +41,8 @@ import {
   type WizardAction,
   type WizardState,
 } from "@/lib/compose/wizard";
-import { captureFrames, checkVideo, isVideoFile, probeVideo } from "@/lib/ui2/media/video";
+import { captureFrames, probeVideo } from "@/lib/ui2/media/video";
+import { screenPick, type PickRefusal } from "@/lib/compose/pick";
 import {
   composeDraftStore,
   draftIsWorthKeeping,
@@ -70,6 +71,7 @@ function pathIndex(field: readonly string[] | null, head: string): number | null
 const NO_ASSETS: readonly PickedAsset[] = [];
 const NO_FRAMES: readonly Blob[] = [];
 const NO_URLS: readonly string[] = [];
+const NO_REFUSALS: readonly PickRefusal[] = [];
 
 /** The faces one clip offers, and the URLs drawn from them. */
 type Captured = {
@@ -86,8 +88,6 @@ const HEADINGS: Record<WizardState["step"], string> = {
   seal: "What you sign",
 };
 
-/** A post carries pictures or one video — the composition ruling, in the reader's words. */
-const MIXED_BODY = "A post carries pictures or one video, not both.";
 
 export function ComposeWizard({
   store = identityStore,
@@ -154,10 +154,10 @@ export function ComposeWizard({
   const framePreviews = mine?.urls ?? NO_URLS;
   const capturing = videoFile !== null && captured?.file !== videoFile;
   useRevokeOnChange(framePreviews);
-  // A pick the composition rule or the format check turned away. It is not part
-  // of the draft — nothing was added — so it is view state and clears on the
-  // next pick.
-  const [pickError, setPickError] = useState<string | null>(null);
+  // The files that did not get in. Not part of the draft — a refused file never
+  // joined the batch — so this is view state, and it PERSISTS until the author
+  // dismisses each line rather than clearing on the next pick.
+  const [refusals, setRefusals] = useState<readonly PickRefusal[]>(NO_REFUSALS);
   const cover = state.cover;
 
   // The badge's number, read off the clip as soon as it is picked rather than
@@ -229,44 +229,26 @@ export function ComposeWizard({
   };
 
   /**
-   * What a pick may become. The composition rule is enforced BEFORE anything
-   * enters the draft, so a mixed pick costs nothing and says why — a video
-   * dropped onto nine framed pictures must never quietly replace them.
+   * What a pick becomes: the screening decides, and both halves of its answer
+   * are used — what was accepted joins the draft, what was refused joins the
+   * list of lines the author can read and dismiss. Nothing already picked is
+   * ever replaced.
    */
   const takeFiles = async (files: readonly File[]) => {
-    setPickError(null);
-    const videos = files.filter(isVideoFile);
-    const pictures = files.filter((file) => !isVideoFile(file));
-
-    if (videos.length > 0) {
-      if (pictures.length > 0 || state.assets.length > 0) {
-        setPickError(MIXED_BODY);
-        return;
-      }
-      const picked = videos[0]!;
-      const check = await checkVideo(picked);
-      if (!check.ok) {
-        setPickError(check.reason);
-        return;
-      }
-      dispatch({
-        type: "pick",
-        assets: [{ id: `${Date.now()}-0-${picked.name}`, file: picked, kind: "video" }],
-      });
-      return;
+    const outcome = await screenPick(files, {
+      hasVideo: isVideoPost(state),
+      count: state.assets.length,
+    });
+    if (outcome.refusals.length > 0) {
+      setRefusals((current) => [...current, ...outcome.refusals]);
     }
-
-    if (pictures.length === 0) return;
-    if (isVideoPost(state)) {
-      setPickError(MIXED_BODY);
-      return;
-    }
+    if (outcome.accepted.length === 0) return;
     dispatch({
       type: "pick",
-      assets: pictures.map((file, index) => ({
+      assets: outcome.accepted.map((file, index) => ({
         id: `${Date.now()}-${index}-${file.name}`,
         file,
-        kind: "picture" as const,
+        kind: outcome.kind,
       })),
     });
   };
@@ -635,15 +617,18 @@ export function ComposeWizard({
           words={state.words}
           assets={state.assets}
           previews={previews}
-          // A refused pick outranks the empty-body gate: the author just did
-          // something, and "pick at least one picture" would answer a question
-          // they did not ask.
-          error={pickError ?? (gate.ok ? null : gate.reason)}
+          refusals={refusals}
+          // The refusals carry their own words now, so this is only the
+          // empty-body gate again.
+          error={gate.ok ? null : gate.reason}
           blocked={!gate.ok}
           onWords={(words) => dispatch({ type: "words", words })}
           onMode={(mode) => dispatch({ type: "mode", mode })}
           onPick={(files) => void takeFiles(files)}
           onUnpick={(id) => dispatch({ type: "unpick", id })}
+          onDismissRefusal={(id) =>
+            setRefusals((current) => current.filter((refusal) => refusal.id !== id))
+          }
           onManage={() => setManaging(true)}
           onNext={() => dispatch({ type: "advance" })}
         />
