@@ -429,12 +429,30 @@ class ReplyWizardScreenTest {
         compose.onNodeWithTag("reply_next").assertIsEnabled()
     }
 
+    /**
+     * Each refused file gets its own line and its own tile — both kinds
+     * can be refused on the same screen, and the list says so file by
+     * file rather than collapsing into one notice.
+     *
+     * The removal itself is pinned in `ReplyWizardStateTest`: "Remove
+     * it" is a link span inside an annotated string, which the suite
+     * does not reach positionally anywhere in this repo.
+     */
     @Test
-    fun removingARefusalAsksTheComposerToForgetIt() {
-        val state = composerWithWords().copy(refused = listOf(RefusedPick(null, "Nope.")))
+    fun everyRefusedFileGetsItsOwnLine() {
+        val state = composerWithWords().copy(
+            refused = listOf(
+                RefusedPick(URI_CLIP, "That video is too big — a comment's video can be up to 50 MB."),
+                RefusedPick(null, "That file isn't a picture or a video CoGra can read."),
+            ),
+        )
         compose.setContent { Wizard(state) }
-        compose.onNodeWithText("Remove it", substring = true).performClick()
-        assertThat(dismissedRefusals).containsExactly(0)
+
+        compose.onNodeWithTag("reply_refused_0").assertIsDisplayed()
+        compose.onNodeWithTag("reply_refused_1").assertIsDisplayed()
+        compose.onNodeWithTag("reply_refused_thumb_1").assertIsDisplayed()
+        // The comment cap, in the words copy-voice blesses for it.
+        compose.onNodeWithText("up to 50 MB", substring = true).assertIsDisplayed()
     }
 
     // -- Leaving (`DiscardConfirm`) --
