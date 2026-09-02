@@ -4,7 +4,7 @@
 // a batch that expires, a browser with no key, and the draft that outlives all
 // of it.
 
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -133,6 +133,10 @@ async function pick(names: string[]) {
   // a real change event carries it.
   Object.defineProperty(input, "files", { value: files, configurable: true });
   fireEvent.change(input);
+  // The screening reads each file's bytes — the container sniff, the animated
+  // GIF check — before anything joins the draft, so the pick lands a microtask
+  // after the change event rather than during it.
+  await act(async () => {});
 }
 
 function render(drafts = fakeDrafts(), keyed = true) {
