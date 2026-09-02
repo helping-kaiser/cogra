@@ -142,6 +142,7 @@ fun ComposeWizardRoute(
                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
             )
         },
+        onDismissRefusal = viewModel::onDismissRefusal,
         onTitleChange = viewModel::onTitleChange,
         onDescriptionChange = viewModel::onDescriptionChange,
         onAltTextChange = viewModel::onAltTextChange,
@@ -211,6 +212,7 @@ internal fun ComposeWizardScreen(
     onCropsChanged: (Map<String, CropSpec>) -> Unit,
     onPickCoverFrame: (Int) -> Unit,
     onOpenCoverPicker: () -> Unit,
+    onDismissRefusal: (Int) -> Unit,
     onTitleChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
     onAltTextChange: (String, String) -> Unit,
@@ -314,6 +316,7 @@ internal fun ComposeWizardScreen(
                     onOpenPicker = onOpenPicker,
                     onTogglePick = onTogglePick,
                     onManagePictures = onManagePictures,
+                    onDismissRefusal = onDismissRefusal,
                     onNext = onNext,
                 )
 
@@ -524,6 +527,7 @@ private fun ColumnScope.BodyStage(
     onOpenPicker: () -> Unit,
     onTogglePick: (String) -> Unit,
     onManagePictures: () -> Unit,
+    onDismissRefusal: (Int) -> Unit,
     onNext: () -> Unit,
 ) {
     when (state.mode) {
@@ -575,6 +579,7 @@ private fun ColumnScope.BodyStage(
                 onOpenPicker = onOpenPicker,
                 onTogglePick = onTogglePick,
                 onShowAll = onManagePictures,
+                onDismissRefusal = onDismissRefusal,
             )
             // `ComposePick` and `ComposePicked` both close on the pill in
             // its own band under the grid — the grid runs to its own
