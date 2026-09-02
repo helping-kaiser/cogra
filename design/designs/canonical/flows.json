@@ -327,6 +327,26 @@
       "description": "Message on someone's profile opens the conversation with them — the chat surface is still owed.",
       "start": { "board": "ProfileOther" },
       "end": { "board": "ProfileOther", "via": 5 }
+    },
+    {
+      "name": "publish-from-the-browser",
+      "description": "A browser draws its own pick step — files dropped on the page, no device tray — and the wizard rejoins at the crop, ending on the same seal as the native one.",
+      "start": { "board": "ComposePickWeb" },
+      "waypoints": [
+        { "board": "ComposePickWeb", "via": 3, "to": "ComposeCrop" },
+        { "board": "ComposeCrop", "via": 3, "case": "pictures — details next" },
+        { "board": "ComposeDetails", "via": 10, "to": "ComposeSeal" }
+      ],
+      "end": { "board": "ComposeSeal", "via": 7, "case": "signed — the detail view, still settling" }
+    },
+    {
+      "name": "reply-from-the-browser",
+      "description": "In a browser the reply's pictures are dropped anywhere on the page; the tray, the words and the seal are the native ones, and one signature lands the comment in its thread.",
+      "start": { "board": "ReplyPicturesWeb" },
+      "waypoints": [
+        { "board": "ReplyPicturesWeb", "via": 3, "to": "ReplySeal" }
+      ],
+      "end": { "board": "ReplySeal", "via": 9, "case": "signed — the thread, the comment settling" }
     }
   ]
 }
