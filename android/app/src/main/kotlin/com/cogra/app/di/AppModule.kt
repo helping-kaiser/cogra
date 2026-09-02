@@ -6,11 +6,13 @@ package com.cogra.app.di
 import android.content.Context
 import com.cogra.app.BuildConfig
 import com.cogra.core.media.AndroidMediaProcessor
+import com.cogra.core.media.AndroidVideoProcessor
 import com.cogra.core.media.MediaStoreMediaSource
 import com.cogra.domain.di.ApplicationScope
 import com.cogra.domain.di.WebOrigin
 import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.MediaProcessor
+import com.cogra.domain.media.VideoProcessor
 import com.cogra.network.di.GraphqlEndpoint
 import dagger.Module
 import dagger.Provides
@@ -55,6 +57,16 @@ object AppModule {
     @Singleton
     fun mediaProcessor(@ApplicationContext context: Context): MediaProcessor =
         AndroidMediaProcessor(context.contentResolver)
+
+    /**
+     * The video half of the pipeline. It takes the application context
+     * rather than a resolver: Transformer reaches the platform codecs
+     * through it, not only the content it is pointed at.
+     */
+    @Provides
+    @Singleton
+    fun videoProcessor(@ApplicationContext context: Context): VideoProcessor =
+        AndroidVideoProcessor(context)
 
     /** `ComposePick`'s own grid of the device's newest pictures and clips. */
     @Provides
