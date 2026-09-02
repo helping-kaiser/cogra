@@ -2435,6 +2435,17 @@ and Collectives arrive with slice 5, so the uploader is the viewer.
 """
 input UploadMediaInput {
 	file: Upload!
+	"""
+	The video's poster — an asset this account already uploaded,
+	either a frame the client pulled out of the clip or a picture the
+	author chose instead. Only a video takes one, and it must be an
+	image rather than another video.
+	
+	It is named here because an asset row is immutable once written:
+	the cover is part of what the video *is*, so it is stated when
+	the video is created rather than attached to it afterwards.
+	"""
+	coverMediaId: UUID
 }
 
 """

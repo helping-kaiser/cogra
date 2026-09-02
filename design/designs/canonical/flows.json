@@ -4,7 +4,7 @@
     {
       "name": "publish-a-post",
       "description": "The bottom nav's New post opens the wizard on every tab root; pictures are cropped, described, and signed into the feed.",
-      "start": { "control": "nav · New post", "except": ["ComposeExpired"] },
+      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "WalletGuest"] },
       "waypoints": [
         { "board": "ComposePick", "via": 3, "case": "pictures — the crop" },
         { "board": "ComposeCrop", "via": 3, "case": "pictures — details next" },
@@ -143,7 +143,7 @@
     {
       "name": "take-a-stance-on-a-post",
       "description": "Press and hold the stance face, wherever a post is drawn, and the pad blooms; the signed stance lands back where it was taken.",
-      "start": { "control": "stance face" },
+      "start": { "control": "stance face", "except": ["Main", "FeedBare", "KeyElsewhere"] },
       "end": { "board": "VouchBackPad", "via": 4, "case": "signed — the stance lands, back where the pad bloomed" }
     },
     {
@@ -216,7 +216,7 @@
     {
       "name": "publish-words",
       "description": "Write words instead takes the wizard's other half — no crop, no cover, the same details and the same seal signing words alone into the feed.",
-      "start": { "control": "nav · New post", "except": ["ComposeExpired"] },
+      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "WalletGuest"] },
       "waypoints": [
         { "board": "ComposePick", "via": 4 },
         { "board": "ComposeWords", "via": 3 },
@@ -227,7 +227,7 @@
     {
       "name": "publish-a-video",
       "description": "A video takes a step of its own — the cover picks the face the post wears, and details and seal follow the way pictures do.",
-      "start": { "control": "nav · New post", "except": ["ComposeExpired"] },
+      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "WalletGuest"] },
       "waypoints": [
         { "board": "ComposePick", "via": 3, "case": "a video — its face" },
         { "board": "ComposeCover", "via": 6 },

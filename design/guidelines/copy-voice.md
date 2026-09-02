@@ -121,7 +121,7 @@ title, at most two short paragraphs, Close. The texts, verbatim
   public like the rest of the post. / Nothing is described for you:
   a picture without a description is skipped by screen readers,
   never guessed at.
-- **Your key** (key absent at the seal): Signing needs your key, and
+- **Your key** (key absent at the seal and at the stance pad): Signing needs your key, and
   it isn't on this browser. Nothing is signed or sent without it — the
   draft stays on this device. / Restore the key with your recovery
   code to finish. Restoring here is the only way to complete this

@@ -135,9 +135,14 @@ impl Rig {
     /// the document with a null where the file goes, a `map` part
     /// naming that path, and the binary part itself.
     async fn upload(&self, token: &str, file: &[u8]) -> Value {
+        self.upload_with_cover(token, file, None).await
+    }
+
+    /// The same upload naming a poster, which only a video may do.
+    async fn upload_with_cover(&self, token: &str, file: &[u8], cover: Option<Uuid>) -> Value {
         let operations = json!({
             "query": UPLOAD_MEDIA,
-            "variables": { "input": { "file": null }},
+            "variables": { "input": { "file": null, "coverMediaId": cover }},
         })
         .to_string();
 
@@ -485,4 +490,172 @@ async fn a_covered_asset_keeps_the_poster_it_names(pool: PgPool) {
         .expect("reads")
         .expect("the poster row");
     assert_eq!(uncovered.cover_media_id, None, "a poster carries no poster");
+}
+
+/// A real MP4 carrying one H.264 track and one sample of the given
+/// length, written with the same library the probe reads it with.
+fn h264_movie(sample_ms: u32) -> Vec<u8> {
+    let config = mp4::Mp4Config {
+        major_brand: "isom".parse().expect("a brand"),
+        minor_version: 512,
+        compatible_brands: vec![
+            "isom".parse().expect("a brand"),
+            "mp41".parse().expect("a brand"),
+        ],
+        timescale: 1000,
+    };
+    let mut writer = mp4::Mp4Writer::write_start(std::io::Cursor::new(Vec::new()), &config)
+        .expect("the writer starts");
+    writer
+        .add_track(&mp4::TrackConfig {
+            track_type: mp4::TrackType::Video,
+            timescale: 1000,
+            language: "und".into(),
+            media_conf: mp4::MediaConfig::AvcConfig(mp4::AvcConfig {
+                width: 1080,
+                height: 1350,
+                seq_param_set: vec![0x67, 0x42, 0x00, 0x1E, 0x00],
+                pic_param_set: vec![0x68, 0xCE, 0x3C, 0x80],
+            }),
+        })
+        .expect("a track");
+    writer
+        .write_sample(
+            1,
+            &mp4::Mp4Sample {
+                start_time: 0,
+                duration: sample_ms,
+                rendering_offset: 0,
+                is_sync: true,
+                bytes: bytes::Bytes::from_static(&[0, 0, 0, 1]),
+            },
+        )
+        .expect("a sample");
+    writer.write_end().expect("the writer finishes");
+    writer.into_writer().into_inner()
+}
+
+/// The field path a refusal names, so a test asserts where the client
+/// will actually read the message.
+fn refused_at(payload: &Value) -> Vec<String> {
+    payload["userErrors"]
+        .as_array()
+        .and_then(|errors| errors.first())
+        .and_then(|error| error["field"].as_array())
+        .map(|path| {
+            path.iter()
+                .filter_map(|part| part.as_str().map(str::to_string))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// A video goes through the same upload a picture does, and comes back
+/// as itself: stored under its own extension, typed as MP4, carrying the
+/// duration the container states and pointing at the poster the client
+/// named.
+///
+/// A video uploads through the same path a picture does, keeping its own type, its probed duration and the poster it was given.
+/// ´claim:media:a-video-uploads-with-its-duration-and-poster´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_video_uploads_with_its_duration_and_poster(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let cover = rig.upload(&token, &photo_with_location()).await;
+    let cover_id = cover["media"]["id"].as_str().expect("the cover id");
+
+    let uploaded = rig
+        .upload_with_cover(
+            &token,
+            &h264_movie(2_500),
+            Some(Uuid::parse_str(cover_id).expect("a uuid")),
+        )
+        .await;
+    assert_eq!(
+        uploaded["userErrors"].as_array().map(Vec::len),
+        Some(0),
+        "a valid video is accepted: {uploaded}"
+    );
+    assert_eq!(uploaded["media"]["mimeType"], "video/mp4");
+    assert_eq!(uploaded["media"]["options"]["durationMs"], 2_500);
+    assert_eq!(uploaded["media"]["coverMedia"]["id"], cover_id);
+    assert!(
+        uploaded["media"]["url"]
+            .as_str()
+            .is_some_and(|url| url.ends_with(".mp4")),
+        "the key follows the format the bytes turned out to be"
+    );
+
+    let key = format!("{}.mp4", uploaded["media"]["id"].as_str().expect("id"));
+    assert!(rig.blobs.exists(&key).await.expect("head"));
+}
+
+/// The four ways a named poster is wrong, each refused against the field
+/// that carried it rather than accepted into a row.
+///
+/// A poster must be a still this account uploaded and still holds, and only a video may name one.
+/// ´claim:media:a-poster-must-be-the-uploaders-own-still´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_cover_outside_the_rules_is_refused(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_member("author", "author@example.com").await;
+    rig.seed_member("stranger", "stranger@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let other = rig.log_in("stranger@example.com").await;
+
+    let mine = rig.upload(&token, &photo_with_location()).await;
+    let my_still = Uuid::parse_str(mine["media"]["id"].as_str().expect("id")).expect("a uuid");
+
+    let theirs = rig.upload(&other, &photo_with_location()).await;
+    let their_still = Uuid::parse_str(theirs["media"]["id"].as_str().expect("id")).expect("a uuid");
+
+    let cross = rig
+        .upload_with_cover(&token, &h264_movie(1_000), Some(their_still))
+        .await;
+    assert_eq!(
+        refused_at(&cross),
+        vec!["coverMediaId"],
+        "a cover is never someone else's asset: {cross}"
+    );
+
+    let bare_video = rig.upload(&token, &h264_movie(1_000)).await;
+    let a_video = Uuid::parse_str(bare_video["media"]["id"].as_str().expect("id")).expect("a uuid");
+    let video_cover = rig
+        .upload_with_cover(&token, &h264_movie(1_000), Some(a_video))
+        .await;
+    assert_eq!(
+        refused_at(&video_cover),
+        vec!["coverMediaId"],
+        "a video cannot stand in as a poster: {video_cover}"
+    );
+
+    let still_with_cover = rig
+        .upload_with_cover(&token, &photo_with_location(), Some(my_still))
+        .await;
+    assert_eq!(
+        refused_at(&still_with_cover),
+        vec!["coverMediaId"],
+        "only a video takes a cover: {still_with_cover}"
+    );
+
+    let missing = rig
+        .upload_with_cover(&token, &h264_movie(1_000), Some(Uuid::new_v4()))
+        .await;
+    assert_eq!(refused_at(&missing), vec!["coverMediaId"]);
+
+    sqlx::query("UPDATE media_attachments SET redacted_at = now() WHERE id = $1")
+        .bind(my_still)
+        .execute(&rig.pool)
+        .await
+        .expect("redact");
+    let removed = rig
+        .upload_with_cover(&token, &h264_movie(1_000), Some(my_still))
+        .await;
+    assert_eq!(
+        refused_at(&removed),
+        vec!["coverMediaId"],
+        "bytes that are gone cannot be a poster: {removed}"
+    );
 }
