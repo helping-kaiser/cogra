@@ -3024,6 +3024,12 @@ input PrepareProfileUpdateInput {
  duration) are derived server-side."
 input UploadMediaInput {
   file: Upload!
+  "The video's poster — an asset this account already uploaded, either
+   a frame the client pulled out of the clip or a picture the author
+   chose instead. Only a video takes one, and it must be an image this
+   account uploaded and still holds. Named here because an asset row is
+   immutable once written: the cover is part of what the video is."
+  coverMediaId: UUID
 }
 type UploadMediaPayload { media: MediaAttachment! }
 
@@ -3143,13 +3149,41 @@ economic one — a gallery of ten photos and a bare text post cost
 their author exactly the same single act, and the seal screen
 says so.
 
-- **One stored format: WebP.** Sniffed from the bytes, never
-  trusted from the declared content type, and refused if it does
-  not decode — a file that does not decode is not an image
-  whatever its header says. Clients re-encode on device, so no
-  other container reaches the server.
-- **10 MiB per asset**, refused at the transport with a
-  field-level error on `["file"]`.
+- **Two stored formats: WebP and MP4.** Both sniffed from the
+  bytes, never trusted from the declared content type. A still is
+  refused if it does not decode — a file that does not decode is
+  not an image whatever its header says — and a video is refused
+  unless its tracks are **H.264 video and AAC audio**, the pair
+  the readers are promised. The server **validates and never
+  transcodes**: clients re-encode on device, so the bytes that
+  arrive are the bytes that are stored.
+- **Animation is a still.** An animated WebP is accepted as the
+  picture it is, and **GIF converts on the device** — one image
+  format reaches the server, and an encoder never has to live in
+  the upload path to make that true.
+- **10 MiB per picture, 100 MiB per video.** The video cap is
+  parity with the body rather than with one picture: a post is ten
+  pictures or one video, so ten stills at their cap and one video
+  at its own are the same hundred megabytes. A video post reaches
+  110 MiB with its cover, which is accepted for the friendlier
+  round number. Both are refused with a field-level error on
+  `["file"]`; the transport's own ceiling is twice the larger,
+  because which cap applies is a fact about bytes it has not
+  sniffed yet.
+- **No duration cap.** A long, low-bitrate video is a legitimate
+  thing to publish, and the byte cap already bounds what the store
+  holds and what a reader downloads. `durationMs` is probed off
+  the container and reported as a fact about the asset, never
+  enforced as a limit on it.
+- **A body is pictures or one video.** A video is the whole body,
+  its poster riding the asset rather than a second gallery entry,
+  and an attachment list mixing the two is refused at
+  `["attachments", "<i>", "mediaId"]`.
+- **A poster is the uploader's own still.** `coverMediaId` names
+  an asset this account uploaded and still holds; a cover that is
+  another account's, a video, removed, or absent is refused at
+  `["coverMediaId"]`, as is a cover named on something that is not
+  a video.
 - **Ten attachments per post, four per comment**, checked whole
   before a single act is staged, each refusal naming the offender
   at `["attachments", "<i>", "mediaId"]`. The caps are what make
@@ -3163,11 +3197,15 @@ says so.
   gallery gesture, well below a script. An upload precedes any
   prepare, so θ gates nothing here and this limit is the only
   thing that does.
-- **Metadata is stripped**, client-side and again server-side
-  before the digest is computed. A phone photo carries GPS
-  coordinates and a device serial, and reads are public and
+- **A picture's metadata is stripped**, client-side and again
+  server-side before the digest is computed. A phone photo carries
+  GPS coordinates and a device serial, and reads are public and
   unauthenticated, so publishing one untouched would publish where
-  its author lives.
+  its author lives. A video is stored as it arrived — validation
+  is not a rewrite, so there is no server-side strip for one to
+  ride on, and the same metadata rides a phone's video. Closing
+  that gap is
+  [open-questions.md Q52](../open-questions.md).
 
 **Media serving.** Bytes are served by the **media origin**, not
 by the API: the store is its own service, so `MediaAttachment.url`
