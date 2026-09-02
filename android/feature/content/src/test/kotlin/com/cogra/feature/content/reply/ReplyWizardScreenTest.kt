@@ -20,6 +20,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * The reply wizard's screens, bound to test tags rather than to display
@@ -32,6 +33,13 @@ import org.robolectric.RobolectricTestRunner
  * holds in the state machine can still reach no pixel.
  */
 @RunWith(RobolectricTestRunner::class)
+// The composer does not scroll — it is drawn to fit a phone, and the
+// canvas draws it at 390 × 844. Robolectric's default sandbox screen is
+// smaller than any phone the app ships to, so the video state's frame,
+// cover row and pill would fall off a screen no reader has. `qualifiers`
+// is Robolectric's own way to say which device the test stands on
+// (robolectric.org/device-configuration).
+@Config(qualifiers = "w411dp-h891dp")
 class ReplyWizardScreenTest {
 
     @get:Rule
@@ -202,8 +210,8 @@ class ReplyWizardScreenTest {
 
         compose.onNodeWithTag("reply_seal_acts").assertIsDisplayed()
         compose.onNodeWithTag("reply_seal_total").assertExists()
-        compose.onNodeWithTag("reply_seal_stance").assertIsDisplayed()
-        compose.onNodeWithTag("reply_seal_license").assertIsDisplayed()
+        compose.onNodeWithTag("reply_seal_stance").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("reply_seal_license").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag("wizard_seal_sensitive").assertDoesNotExist()
         compose.onNodeWithTag("reply_seal_sensitive").assertDoesNotExist()
     }
@@ -213,7 +221,7 @@ class ReplyWizardScreenTest {
     fun adjustOpensThePad() {
         compose.setContent { Wizard(sealWithWords()) }
 
-        compose.onNodeWithTag("reply_seal_stance_action").performClick()
+        compose.onNodeWithTag("reply_seal_stance_action").performScrollTo().performClick()
 
         assertThat(sheets).containsExactly(ReplySealSheet.Stance)
     }
@@ -223,7 +231,7 @@ class ReplyWizardScreenTest {
     fun changeOpensTheLicenseSheet() {
         compose.setContent { Wizard(sealWithWords()) }
 
-        compose.onNodeWithTag("reply_seal_license_action").performClick()
+        compose.onNodeWithTag("reply_seal_license_action").performScrollTo().performClick()
 
         assertThat(sheets).containsExactly(ReplySealSheet.License)
     }
