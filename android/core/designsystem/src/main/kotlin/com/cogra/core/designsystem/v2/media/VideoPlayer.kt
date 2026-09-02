@@ -273,7 +273,7 @@ private fun OverlayBadge(modifier: Modifier = Modifier, content: @Composable Box
     )
 }
 
-/** `m:ss`, or `h:mm:ss` past the hour — there is no duration cap. */
+/** Minutes and seconds, growing an hours field past the hour. */
 fun formatRunningTime(ms: Int): String {
     val total = (ms / 1000).coerceAtLeast(0)
     val hours = total / 3600

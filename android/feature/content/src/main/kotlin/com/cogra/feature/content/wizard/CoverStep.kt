@@ -228,11 +228,11 @@ private fun ComposeWizardState.coverModel(): Any? = when (val choice = coverChoi
 }
 
 /**
- * `m:ss`, the way the boards write it ("0:42").
+ * Minutes and seconds, the way the boards write it ("0:42").
  *
- * An hour-long clip reads `h:mm:ss` rather than a three-digit minute
- * count: there is no duration cap (rulings 2026-09-02), so long clips
- * are a case rather than an impossibility.
+ * An hour-long clip grows an hours field rather than reading as a
+ * three-digit minute count: there is no duration cap (rulings
+ * 2026-09-02), so long clips are a case rather than an impossibility.
  */
 internal fun formatDuration(ms: Int): String {
     val total = (ms / 1000).coerceAtLeast(0)
