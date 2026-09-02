@@ -15,8 +15,12 @@ export declare function SensitiveScope(props: { children?: React.ReactNode }): J
 
 export interface SensitiveVeilProps {
   children?: React.ReactNode;
-  /** "media" covers a tile; "text" blurs a line of type in place. */
-  kind?: "media" | "text";
+  /**
+   * "media" covers a tile; "text" blurs a line of type in place; "compact"
+   * REPLACES a comment-scale body — words and pictures as one short block,
+   * because a comment is too short to cover in place twice over.
+   */
+  kind?: "media" | "text" | "compact";
   /** The standard line on the wash. Default "Sensitive — tap to view". */
   label?: string;
   /** The reason behind the mark, appended to the source line after an em dash. */

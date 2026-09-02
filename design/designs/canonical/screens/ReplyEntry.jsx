@@ -2,7 +2,8 @@
    sheet over the post — near full height, a sliver of the post left above it —
    with replies collapsed behind counts, deeper answers flattened to @handles,
    and the entry row pinned at its foot. The detail view behind is just the
-   post. */
+   post. The last comment carries a sensitive mark: the whole body veils as one
+   comment-scale block, the frame around it still readable. */
 export function Screen() {
   return (
     <>
@@ -56,10 +57,18 @@ export function Screen() {
               },
             ]}
           />
+          {/* The veiled comment: the whole body — the words and the two
+              pictures with them — under one comment-scale block, while the
+              author, the timestamp and the stance stay readable. */}
           <CommentCard
             author={MIRA}
-            content="Saving this for the weekend walk."
+            content="The gulls had been at it before the tide came back. Two frames, both grim."
             timestamp="10m"
+            media={[
+              { src: "comment-shingle.jpg", ratio: "4 / 3", fit: "contain", alt: "A stretch of shingle at low tide." },
+              { src: "comment-gulls.jpg", ratio: "1 / 1", fit: "contain", alt: "Gulls on the tideline." },
+            ]}
+            sensitive={{ reason: "A dead seabird in the second frame." }}
             onReply={() => {}}
             license={{ attribution: 0, provenance: 0 }}
             menuItems={CITE_MENU}
