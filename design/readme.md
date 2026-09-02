@@ -1779,6 +1779,10 @@ file that is too big or in a format nothing here reads.
   the implementations copy, authoring-side like every other cap:
   **a picture 10 MiB** (10 per post, 4 per comment), **a video
   100 MiB in a post and 50 MiB in a comment**, **a cover 10 MiB**.
+  **The caps are enforced in MiB and written MB on screen** — 50 MiB
+  is 52.4 MB, so the number a reader sees under-promises and can never
+  refuse a file the product would have taken. Writing MiB would be
+  exact and unreadable.
 - **Entry is unchanged.** "+ Add" opens the platform's own picker;
   picking a video puts the composer in its video state (*Reply · a
   video and its cover*), and the pictures path is untouched. There is

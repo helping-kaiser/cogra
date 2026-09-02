@@ -36,7 +36,7 @@ export function Screen() {
           <RefusedFile
             src="comment-camera.jpg"
             video
-            message="That video is too big — a comment's video can be up to 50 MiB."
+            message="That video is too big — a comment's video can be up to 50 MB."
           />
           <RefusedFile message="That file isn't a picture or a video CoGra can read." />
         </div>
