@@ -1676,8 +1676,11 @@ The rulings the layer rests on:
   journey where it was. Those outcomes carry `"info": true` and their
   edge is a `detour`; an all-informing `advance` fails the gate.
 - **A read journey concludes on arrival.** Not every flow signs
-  something; reaching what was sought is an ending in itself. An end
-  may land on a `self` terminal where the act completes in place.
+  something; reaching what was sought is an ending in itself. Such a
+  flow declares no `end` at all and concludes on the board its last
+  point lands on — the start's landing when it names no waypoints, the
+  last waypoint's board when it does — and its witness reads
+  `end · arrival at <Board>`.
 - **A stance concludes where it was taken.** The pad is reached from
   posts, comments and profiles alike, so its signed outcome returns
   wherever it bloomed. The applicant's vouch-back is the one exception
@@ -1685,9 +1688,9 @@ The rulings the layer rests on:
 - **The start is the click, not a screen.** A flow starts from a board,
   from a given edge, or from a **control**: `{"control": "nav · New
   post"}` expands to every edge wearing that label, and they must all
-  land on the same first board — divergence fails, `except` drops the
-  boards where the control means something else, and edges reaching
-  only a gap are reported, never failed. Start and end edges are given
+  land on the same first board — divergence fails, and `except` drops
+  the boards where the control means something else. Start and end
+  edges are given
   rather than searched, so their kind does not matter; that is why the
   bottom nav stays `nav`. A control the reader meets on board after
   board — the comment count, the stance face — is declared that way
@@ -1700,7 +1703,11 @@ The rulings the layer rests on:
 - **A blocked flow is a claim on design still owed.** A journey whose
   end lands on a gap is declared anyway and reported as blocked, never
   quietly dropped: it names both the design the product owes and the
-  journey waiting on it.
+  journey waiting on it. A gap on the *start* side is the opposite —
+  a hard failure, because a journey that can begin from no existing
+  screen is an authoring error, not a claim. A control start survives
+  origins that reach only gaps, listing them as `startsUndesigned`,
+  but not all of them reaching only gaps.
 - **Three files, three jobs.** `graph.json` is the mechanism (what
   every control does); `flows.json` is the intent (which journeys the
   product owes — hand-authored, one flow per block, never rewritten by
