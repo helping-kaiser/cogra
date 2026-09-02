@@ -49,7 +49,27 @@
         "ComposeCrop",
         "ComposeDetails",
         "ComposeSeal",
-        "ComposeLanded"
+        "ComposeLanded",
+        "Explore",
+        "ExploreNone",
+        "ExploreSearch",
+        "Feed",
+        "FeedFar",
+        "FeedGallery",
+        "FeedNarrowed",
+        "FeedNothing",
+        "KeyElsewhere",
+        "Profile",
+        "ProfileComments",
+        "ProfileOther",
+        "ProfilePosts",
+        "ProfileStances",
+        "Removed",
+        "VouchBack",
+        "Wallet",
+        "WalletEmpty",
+        "WalletKeyAbsent",
+        "WalletSetup"
       ]
     },
     {
@@ -141,7 +161,21 @@
       "boards": [
         "ReplyEntry",
         "ReplyCompose",
-        "ReplySeal"
+        "ReplySeal",
+        "ApplicantFeed",
+        "ApplicantWaiting",
+        "ComposeExpired",
+        "ComposeLanded",
+        "Feed",
+        "FeedBare",
+        "FeedFar",
+        "FeedGallery",
+        "FeedNarrowed",
+        "KeyElsewhere",
+        "Main",
+        "ProfilePosts",
+        "Removed",
+        "VouchBack"
       ]
     },
     {
@@ -204,7 +238,10 @@
         "SignIn",
         "InviteEntry",
         "Join",
-        "ApplicantFeed"
+        "ApplicantFeed",
+        "FeedBare",
+        "Main",
+        "WalletGuest"
       ]
     },
     {
@@ -278,7 +315,10 @@
         "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
       ],
       "boards": [
-        "Restore"
+        "Restore",
+        "ComposeKeyAbsent",
+        "KeyElsewhere",
+        "WalletKeyAbsent"
       ]
     },
     {
@@ -364,7 +404,17 @@
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
-        "VouchBackPad"
+        "VouchBackPad",
+        "ComposeExpired",
+        "ComposeLanded",
+        "Feed",
+        "FeedFar",
+        "FeedGallery",
+        "FeedNarrowed",
+        "KeyElsewhere",
+        "ProfilePosts",
+        "Removed",
+        "VouchBack"
       ]
     },
     {
@@ -555,7 +605,27 @@
         "ComposeWords",
         "ComposeDetails",
         "ComposeSeal",
-        "ComposeLanded"
+        "ComposeLanded",
+        "Explore",
+        "ExploreNone",
+        "ExploreSearch",
+        "Feed",
+        "FeedFar",
+        "FeedGallery",
+        "FeedNarrowed",
+        "FeedNothing",
+        "KeyElsewhere",
+        "Profile",
+        "ProfileComments",
+        "ProfileOther",
+        "ProfilePosts",
+        "ProfileStances",
+        "Removed",
+        "VouchBack",
+        "Wallet",
+        "WalletEmpty",
+        "WalletKeyAbsent",
+        "WalletSetup"
       ]
     },
     {
@@ -606,7 +676,27 @@
         "ComposeCover",
         "ComposeDetails",
         "ComposeSeal",
-        "ComposeLanded"
+        "ComposeLanded",
+        "Explore",
+        "ExploreNone",
+        "ExploreSearch",
+        "Feed",
+        "FeedFar",
+        "FeedGallery",
+        "FeedNarrowed",
+        "FeedNothing",
+        "KeyElsewhere",
+        "Profile",
+        "ProfileComments",
+        "ProfileOther",
+        "ProfilePosts",
+        "ProfileStances",
+        "Removed",
+        "VouchBack",
+        "Wallet",
+        "WalletEmpty",
+        "WalletKeyAbsent",
+        "WalletSetup"
       ]
     },
     {
@@ -624,7 +714,11 @@
         "end · ReferencePicker · 5 «result rows» → back — the pick lands in the composer's references"
       ],
       "boards": [
-        "ReferencePicker"
+        "ReferencePicker",
+        "CommentEdit",
+        "ComposeDetails",
+        "EditCompose",
+        "ReplySeal"
       ]
     },
     {
@@ -717,7 +811,11 @@
         "end · ComposeDescribe · 3 «Done» → back — the sheet closes"
       ],
       "boards": [
-        "ComposeDescribe"
+        "ComposeDescribe",
+        "CommentEdit",
+        "ComposeUploading",
+        "ReplyPictures",
+        "ReplyPicturesWeb"
       ]
     },
     {
@@ -738,7 +836,7 @@
     },
     {
       "name": "see-who-stands-with-someone",
-      "description": "The figures row, on any profile, opens the stance lists; reading who has taken a stance on them is the whole journey.",
+      "description": "The figures row, on any profile, opens the stance lists; reading who stands with them is the whole journey.",
       "status": "resolved",
       "startsOn": [
         "Profile",
@@ -749,10 +847,15 @@
       ],
       "steps": [
         "start · «the figures row» on 5 boards → ProfileStances",
-        "end · ProfileStances · 2 «On them» → self — the inbound direction"
+        "end · arrival at ProfileStances"
       ],
       "boards": [
-        "ProfileStances"
+        "ProfileStances",
+        "Profile",
+        "ProfileApplicant",
+        "ProfileComments",
+        "ProfileOther",
+        "ProfilePosts"
       ]
     },
     {
@@ -798,7 +901,10 @@
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
-        "VouchBackPad"
+        "VouchBackPad",
+        "ProfileComments",
+        "ProfileOther",
+        "ProfilePosts"
       ]
     },
     {
@@ -869,15 +975,28 @@
       ],
       "steps": [
         "start · «author chip» on 13 boards → ProfileOther",
-        "end · ProfileOther · 6 «chronicle tabs» → self — Everything — the chronicle, this board"
+        "end · arrival at ProfileOther"
       ],
       "boards": [
-        "ProfileOther"
+        "ProfileOther",
+        "ApplicantFeed",
+        "ApplicantWaiting",
+        "ComposeExpired",
+        "ComposeLanded",
+        "Feed",
+        "FeedBare",
+        "FeedFar",
+        "FeedGallery",
+        "FeedNarrowed",
+        "KeyElsewhere",
+        "Main",
+        "Removed",
+        "VouchBack"
       ]
     },
     {
       "name": "open-a-posts-pictures",
-      "description": "Post media, wherever a post is drawn, opens the gallery full-bleed; paging the frames is the journey.",
+      "description": "Post media, wherever a post is drawn, opens the gallery full-bleed; the frames are what the reader came for.",
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
@@ -894,10 +1013,21 @@
       ],
       "steps": [
         "start · «post media» on 11 boards → FeedGallery",
-        "end · FeedGallery · 4 «the gallery pager» → self — swipes between the frames — the dots read position"
+        "end · arrival at FeedGallery"
       ],
       "boards": [
-        "FeedGallery"
+        "FeedGallery",
+        "ApplicantFeed",
+        "ApplicantWaiting",
+        "ComposeExpired",
+        "Feed",
+        "FeedBare",
+        "FeedFar",
+        "FeedNarrowed",
+        "KeyElsewhere",
+        "Main",
+        "ProfilePosts",
+        "VouchBack"
       ]
     },
     {
@@ -923,17 +1053,59 @@
         "end · RefsSheet · 2 «reference rows» → gap: the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)"
       ],
       "boards": [
-        "RefsSheet"
+        "RefsSheet",
+        "ApplicantFeed",
+        "ApplicantWaiting",
+        "ComposeExpired",
+        "Feed",
+        "FeedBare",
+        "FeedFar",
+        "FeedNarrowed",
+        "KeyElsewhere",
+        "Main",
+        "ProfilePosts",
+        "VouchBack"
+      ]
+    },
+    {
+      "name": "search-and-open-a-post",
+      "description": "Typing in Explore brings results as they are typed; a post result opens that post — its standalone detail view is still owed.",
+      "status": "blocked by gap",
+      "blockedBy": "the post detail view (not boarded standalone — drawn only under the comments sheet)",
+      "steps": [
+        "start · Explore · 1 «search field» → ExploreSearch — typing — results as you type",
+        "end · ExploreSearch · 4 «post result rows» → gap: the post detail view (not boarded standalone — drawn only under the comments sheet)"
+      ],
+      "boards": [
+        "Explore",
+        "ExploreSearch"
+      ]
+    },
+    {
+      "name": "add-a-topic",
+      "description": "Add a topic on the details step opens the picker over every topic a post can carry — the picker itself is still owed.",
+      "status": "blocked by gap",
+      "blockedBy": "the topic picker (not boarded)",
+      "steps": [
+        "start · ComposeDetails",
+        "end · ComposeDetails · 7 «Add a topic» → gap: the topic picker (not boarded)"
+      ],
+      "boards": [
+        "ComposeDetails"
       ]
     }
   ],
   "boardsOnFlows": {
     "ApplicantFeed": {
       "flows": [
+        "follow-a-citation",
         "guest-turns-applicant",
         "join-with-an-invite",
         "make-your-key",
-        "verify-the-email"
+        "open-a-posts-pictures",
+        "reply-to-a-post",
+        "verify-the-email",
+        "visit-an-author"
       ],
       "endpoint": [
         "guest-turns-applicant",
@@ -941,6 +1113,15 @@
         "make-your-key",
         "verify-the-email"
       ]
+    },
+    "ApplicantWaiting": {
+      "flows": [
+        "follow-a-citation",
+        "open-a-posts-pictures",
+        "reply-to-a-post",
+        "visit-an-author"
+      ],
+      "endpoint": []
     },
     "AvatarCrop": {
       "flows": [
@@ -959,6 +1140,8 @@
     },
     "CommentEdit": {
       "flows": [
+        "cite-something",
+        "describe-your-pictures",
         "edit-your-comment"
       ],
       "endpoint": []
@@ -986,6 +1169,8 @@
     },
     "ComposeDetails": {
       "flows": [
+        "add-a-topic",
+        "cite-something",
         "pick-a-kept-draft-back-up",
         "publish-a-post",
         "publish-a-video",
@@ -994,6 +1179,7 @@
         "publish-words"
       ],
       "endpoint": [
+        "add-a-topic",
         "publish-while-the-uploads-run"
       ]
     },
@@ -1005,11 +1191,22 @@
     },
     "ComposeExpired": {
       "flows": [
-        "pick-a-kept-draft-back-up"
+        "follow-a-citation",
+        "open-a-posts-pictures",
+        "pick-a-kept-draft-back-up",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "visit-an-author"
       ],
       "endpoint": [
         "pick-a-kept-draft-back-up"
       ]
+    },
+    "ComposeKeyAbsent": {
+      "flows": [
+        "restore-your-key"
+      ],
+      "endpoint": []
     },
     "ComposeLanded": {
       "flows": [
@@ -1020,7 +1217,10 @@
         "publish-from-the-browser",
         "publish-while-the-uploads-run",
         "publish-words",
-        "remove-your-post"
+        "remove-your-post",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "visit-an-author"
       ],
       "endpoint": [
         "edit-your-post",
@@ -1091,6 +1291,7 @@
     },
     "ComposeUploading": {
       "flows": [
+        "describe-your-pictures",
         "publish-while-the-uploads-run"
       ],
       "endpoint": []
@@ -1103,6 +1304,7 @@
     },
     "EditCompose": {
       "flows": [
+        "cite-something",
         "edit-your-post"
       ],
       "endpoint": [
@@ -1111,9 +1313,14 @@
     },
     "Explore": {
       "flows": [
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "search-and-open-a-post",
         "search-into-a-thread"
       ],
       "endpoint": [
+        "search-and-open-a-post",
         "search-into-a-thread"
       ]
     },
@@ -1123,13 +1330,26 @@
       ],
       "endpoint": []
     },
+    "ExploreNone": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words"
+      ],
+      "endpoint": []
+    },
     "ExploreSearch": {
       "flows": [
         "narrow-a-search",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "search-and-open-a-post",
         "search-into-a-thread"
       ],
       "endpoint": [
-        "narrow-a-search"
+        "narrow-a-search",
+        "search-and-open-a-post"
       ]
     },
     "Feed": {
@@ -1137,11 +1357,19 @@
         "close-the-filter-unchanged",
         "filter-the-feed-far-from-the-default",
         "filter-the-feed-to-nothing",
+        "follow-a-citation",
         "narrow-the-feed",
+        "open-a-posts-pictures",
         "open-a-topic",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
         "sign-in",
+        "take-a-stance-on-a-post",
         "undo-the-narrowing",
         "verify-the-email-as-a-member",
+        "visit-an-author",
         "vouch-back-for-your-inviter"
       ],
       "endpoint": [
@@ -1156,9 +1384,27 @@
         "vouch-back-for-your-inviter"
       ]
     },
+    "FeedBare": {
+      "flows": [
+        "follow-a-citation",
+        "guest-turns-applicant",
+        "open-a-posts-pictures",
+        "reply-to-a-post",
+        "visit-an-author"
+      ],
+      "endpoint": []
+    },
     "FeedFar": {
       "flows": [
-        "filter-the-feed-far-from-the-default"
+        "filter-the-feed-far-from-the-default",
+        "follow-a-citation",
+        "open-a-posts-pictures",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "visit-an-author"
       ],
       "endpoint": [
         "filter-the-feed-far-from-the-default"
@@ -1166,7 +1412,13 @@
     },
     "FeedGallery": {
       "flows": [
-        "open-a-posts-pictures"
+        "open-a-posts-pictures",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "visit-an-author"
       ],
       "endpoint": [
         "open-a-posts-pictures"
@@ -1174,7 +1426,15 @@
     },
     "FeedNarrowed": {
       "flows": [
-        "narrow-the-feed"
+        "follow-a-citation",
+        "narrow-the-feed",
+        "open-a-posts-pictures",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "visit-an-author"
       ],
       "endpoint": [
         "narrow-the-feed"
@@ -1183,6 +1443,9 @@
     "FeedNothing": {
       "flows": [
         "filter-the-feed-to-nothing",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
         "undo-the-narrowing"
       ],
       "endpoint": [
@@ -1229,17 +1492,40 @@
     },
     "KeyElsewhere": {
       "flows": [
-        "sign-in-with-the-key-elsewhere"
+        "follow-a-citation",
+        "open-a-posts-pictures",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "restore-your-key",
+        "sign-in-with-the-key-elsewhere",
+        "take-a-stance-on-a-post",
+        "visit-an-author"
       ],
       "endpoint": [
         "sign-in-with-the-key-elsewhere"
       ]
+    },
+    "Main": {
+      "flows": [
+        "follow-a-citation",
+        "guest-turns-applicant",
+        "open-a-posts-pictures",
+        "reply-to-a-post",
+        "visit-an-author"
+      ],
+      "endpoint": []
     },
     "Profile": {
       "flows": [
         "edit-avatar-standalone",
         "edit-avatar-via-edit-screen",
-        "edit-your-profile"
+        "edit-your-profile",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "see-who-stands-with-someone"
       ],
       "endpoint": [
         "edit-avatar-standalone",
@@ -1247,9 +1533,20 @@
         "edit-your-profile"
       ]
     },
+    "ProfileApplicant": {
+      "flows": [
+        "see-who-stands-with-someone"
+      ],
+      "endpoint": []
+    },
     "ProfileComments": {
       "flows": [
-        "find-the-thread-a-comment-answers"
+        "find-the-thread-a-comment-answers",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "see-who-stands-with-someone",
+        "take-a-stance-on-a-person"
       ],
       "endpoint": []
     },
@@ -1274,6 +1571,11 @@
       "flows": [
         "find-the-thread-a-comment-answers",
         "message-someone",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "see-who-stands-with-someone",
+        "take-a-stance-on-a-person",
         "visit-an-author"
       ],
       "endpoint": [
@@ -1282,8 +1584,25 @@
         "visit-an-author"
       ]
     },
+    "ProfilePosts": {
+      "flows": [
+        "follow-a-citation",
+        "open-a-posts-pictures",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "see-who-stands-with-someone",
+        "take-a-stance-on-a-person",
+        "take-a-stance-on-a-post"
+      ],
+      "endpoint": []
+    },
     "ProfileStances": {
       "flows": [
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
         "see-who-stands-with-someone"
       ],
       "endpoint": [
@@ -1329,7 +1648,13 @@
     },
     "Removed": {
       "flows": [
-        "remove-your-post"
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "remove-your-post",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "visit-an-author"
       ],
       "endpoint": [
         "remove-your-post"
@@ -1373,6 +1698,7 @@
     },
     "ReplyPictures": {
       "flows": [
+        "describe-your-pictures",
         "reply-while-the-pictures-upload",
         "reply-with-pictures"
       ],
@@ -1382,6 +1708,7 @@
     },
     "ReplyPicturesWeb": {
       "flows": [
+        "describe-your-pictures",
         "reply-from-the-browser"
       ],
       "endpoint": [
@@ -1390,6 +1717,7 @@
     },
     "ReplySeal": {
       "flows": [
+        "cite-something",
         "reply-from-the-browser",
         "reply-to-a-comment",
         "reply-to-a-post",
@@ -1429,6 +1757,14 @@
     },
     "VouchBack": {
       "flows": [
+        "follow-a-citation",
+        "open-a-posts-pictures",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "visit-an-author",
         "vouch-back-for-your-inviter"
       ],
       "endpoint": [
@@ -1449,6 +1785,9 @@
     "Wallet": {
       "flows": [
         "change-your-payout-address",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
         "see-a-campaigns-money",
         "trace-a-payout-to-what-paid-it"
       ],
@@ -1487,6 +1826,9 @@
     "WalletEmpty": {
       "flows": [
         "change-your-payout-address",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
         "publish-your-payout-address"
       ],
       "endpoint": [
@@ -1494,8 +1836,26 @@
         "publish-your-payout-address"
       ]
     },
+    "WalletGuest": {
+      "flows": [
+        "guest-turns-applicant"
+      ],
+      "endpoint": []
+    },
+    "WalletKeyAbsent": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "restore-your-key"
+      ],
+      "endpoint": []
+    },
     "WalletSetup": {
       "flows": [
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
         "publish-your-payout-address"
       ],
       "endpoint": [
@@ -1510,6 +1870,12 @@
     "ApplicantFeed/18: the chat surface (not designed)",
     "ApplicantFeed/5: reader's post menu — licence terms / cite (not boarded)",
     "ApplicantFeed/8: the topic page (ruled 2026-09-01 — not designed)",
+    "ApplicantWaiting/12: applicant acts once each — boards pending (ruled 2026-09-01)",
+    "ApplicantWaiting/15: the chat surface (not designed)",
+    "ApplicantWaiting/2: reader's post menu — licence terms / cite (not boarded)",
+    "ApplicantWaiting/5: the topic page (ruled 2026-09-01 — not designed)",
+    "ApplicantWaiting/7: applicant acts once each — boards pending (ruled 2026-09-01)",
+    "ApplicantWaiting/8: Post Score drill-down (backlog item 13)",
     "AvatarSeal/4: network-error pattern board (not designed)",
     "CommentEdit/12: network-error pattern board (not designed)",
     "CommentEdit/9: the topic picker (not boarded)",
@@ -1533,6 +1899,13 @@
     "Feed/3: reader's post menu — licence terms / cite (not boarded)",
     "Feed/6: the topic page (ruled 2026-09-01 — not designed)",
     "Feed/9: Post Score drill-down (backlog item 13)",
+    "FeedBare/10: guest-gate pattern board (not designed)",
+    "FeedBare/11: Post Score drill-down (backlog item 13)",
+    "FeedBare/15: guest-gate pattern board (not designed)",
+    "FeedBare/17: guest-gate pattern board (not designed)",
+    "FeedBare/18: the chat surface (not designed)",
+    "FeedBare/5: reader's post menu — licence terms / cite (not boarded)",
+    "FeedBare/8: the topic page (ruled 2026-09-01 — not designed)",
     "FeedFar/16: the chat surface (not designed)",
     "FeedFar/3: reader's post menu — licence terms / cite (not boarded)",
     "FeedFar/6: the topic page (ruled 2026-09-01 — not designed)",
@@ -1554,11 +1927,23 @@
     "KeyElsewhere/4: reader's post menu — licence terms / cite (not boarded)",
     "KeyElsewhere/7: the topic page (ruled 2026-09-01 — not designed)",
     "KeyElsewhere/9: key-absent acting path (not boarded)",
+    "Main/10: guest-gate pattern board (not designed)",
+    "Main/11: Post Score drill-down (backlog item 13)",
+    "Main/15: guest-gate pattern board (not designed)",
+    "Main/17: guest-gate pattern board (not designed)",
+    "Main/18: guest-gate pattern board (not designed)",
+    "Main/5: reader's post menu — licence terms / cite (not boarded)",
+    "Main/8: the topic page (ruled 2026-09-01 — not designed)",
     "Profile/1: the chat surface (not designed)",
     "Profile/2: the profile's menu — mention / share (not boarded)",
     "Profile/3: the settings screen (not designed)",
     "Profile/7: the invites screen (not designed)",
     "Profile/9: the post detail view (not boarded standalone — drawn only under the comments sheet)",
+    "ProfileApplicant/12: applicant acts once each — boards pending (ruled 2026-09-01)",
+    "ProfileApplicant/1: the chat surface (not designed)",
+    "ProfileApplicant/2: the profile's menu — mention / share (not boarded)",
+    "ProfileApplicant/3: the settings screen (not designed)",
+    "ProfileApplicant/9: the post detail view (not boarded standalone — drawn only under the comments sheet)",
     "ProfileComments/2: the profile's menu — mention / share (not boarded)",
     "ProfileComments/5: the chat surface (not designed)",
     "ProfileComments/8: the comment's menu — cite / licence terms (not boarded)",
@@ -1567,6 +1952,11 @@
     "ProfileOther/2: the profile's menu — mention / share (not boarded)",
     "ProfileOther/5: the chat surface (not designed)",
     "ProfileOther/7: the post detail view (not boarded standalone — drawn only under the comments sheet)",
+    "ProfilePosts/11: the topic page (ruled 2026-09-01 — not designed)",
+    "ProfilePosts/13: Post Score drill-down (backlog item 13)",
+    "ProfilePosts/2: the profile's menu — mention / share (not boarded)",
+    "ProfilePosts/5: the chat surface (not designed)",
+    "ProfilePosts/8: reader's post menu — licence terms / cite (not boarded)",
     "RecoveryCode/3: code-mismatch error state (not boarded)",
     "RefsSheet/1: the topic page (ruled 2026-09-01 — not designed)",
     "RefsSheet/2: the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)",
@@ -1597,6 +1987,12 @@
     "WalletChange/5: network-error pattern board (not designed)",
     "WalletEmpty/3: the new-address input stage (not boarded)",
     "WalletEmpty/9: the chat surface (not designed)",
+    "WalletGuest/5: guest-gate pattern board (not designed)",
+    "WalletGuest/7: guest-gate pattern board (not designed)",
+    "WalletGuest/8: guest-gate pattern board (not designed)",
+    "WalletKeyAbsent/10: the chat surface (not designed)",
+    "WalletKeyAbsent/3: the paying settlement's view (not boarded — every line opens what paid it)",
+    "WalletKeyAbsent/4: the tipping act's view (not boarded — every line opens what paid it)",
     "WalletSetup/8: the chat surface (not designed)"
   ]
 }
