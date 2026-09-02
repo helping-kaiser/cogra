@@ -63,6 +63,7 @@ reqwest            = { workspace = true }
 sha1               = { workspace = true }
 object_store       = { workspace = true }
 image              = { workspace = true }
+mp4                = { workspace = true }
 
 [dev-dependencies]
 tower          = { version = "0.5", features = ["util"] }
