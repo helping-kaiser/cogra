@@ -607,6 +607,10 @@ pub fn public_url(base_url: &str, storage_key: &str) -> String {
 /// which is what lets a picture upload the moment it is picked
 /// (data-model.md "Media attachments").
 ///
+/// The row names no poster. A still is covered by nothing, and nothing
+/// this path accepts is a video yet; the column is stated here rather
+/// than set later because an asset row is immutable once written.
+///
 /// A retried upload of the same picture by the same author resolves to
 /// the row that already exists — the object written on this attempt is
 /// then an orphan, and it is deleted here rather than left for the
@@ -636,10 +640,6 @@ pub async fn store_asset(
         webp::MIME,
         size_bytes,
         &options,
-        // No poster: a still is not covered by anything, and the upload
-        // path accepts nothing else yet. The column is stated at insert
-        // rather than set later because an asset row is immutable once
-        // written.
         None,
     )
     .await?;
