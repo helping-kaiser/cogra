@@ -292,6 +292,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 10, find: "+ Cite something", tag: "button" },
     { n: 11, find: "This creates 2 signed actions", tag: "div" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
+    { n: 13, find: ">Mark</button>", tag: "button" },
   ],
   CommentEditActs: [
     { n: 1, find: ">Done</button>", tag: "button" },

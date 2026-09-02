@@ -49,12 +49,19 @@ export function Screen() {
           <Button variant="text" size="sm" selfStart>+ Cite something</Button>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 44, borderTop: "1px solid var(--border-hairline)", borderBottom: "1px solid var(--border-hairline)" }}>
-          <span style={{ flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>License</span>
-          <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>Public domain</span>
-          <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
-            <Icon name="lock" size={16} />
-          </span>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 44, borderTop: "1px solid var(--border-hairline)" }}>
+            <span style={{ flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>License</span>
+            <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>Public domain</span>
+            <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
+              <Icon name="lock" size={16} />
+            </span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 44, borderTop: "1px solid var(--border-hairline)", borderBottom: "1px solid var(--border-hairline)" }}>
+            <span style={{ flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>Sensitive</span>
+            <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>Not marked</span>
+            <Button variant="text" size="sm">Mark</Button>
+          </div>
         </div>
 
         <div style={{ flex: 1 }} />
