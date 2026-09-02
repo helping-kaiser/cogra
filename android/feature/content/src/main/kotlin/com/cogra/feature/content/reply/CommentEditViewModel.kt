@@ -187,6 +187,25 @@ class CommentEditViewModel @Inject constructor(
 
     fun onCloseSheet() = _state.update { it.closedSheets() }
 
+    /**
+     * The way out the author asked for.
+     *
+     * The comment edit keeps no draft, so leaving it discards — and an
+     * edit that changed something is asked first (`DiscardConfirm`,
+     * design/readme.md §13). One opened and closed untouched leaves at
+     * once: a confirm with nothing to lose is noise.
+     *
+     * Answers whether the caller may leave now.
+     */
+    fun onLeaveRequested(): Boolean {
+        if (!_state.value.hasSomethingToLose) return true
+        _state.update { it.copy(confirmingDiscard = true) }
+        return false
+    }
+
+    /** "Keep writing" — the dialog closes over the edit it covered. */
+    fun onKeepWriting() = _state.update { it.copy(confirmingDiscard = false) }
+
     fun onOpenHelp(topic: HelpTopic) = _state.update { it.copy(help = topic) }
 
     fun onCloseHelp() = _state.update { it.copy(help = null) }
