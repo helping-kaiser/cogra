@@ -18,6 +18,10 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -127,6 +131,10 @@ private fun GalleryFrame(
     maxHeight: Dp,
     shape: Shape,
 ) {
+    // How much of this frame the reader can see. Autoplay follows it,
+    // so a clip starts when it arrives and stops when it leaves —
+    // "autoplay muted on visibility" (roadmap slice 2.5.2).
+    var visible by remember { mutableFloatStateOf(0f) }
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -135,16 +143,47 @@ private fun GalleryFrame(
             // than cropping further, so obeying the cap never re-crops.
             .heightIn(min = MediaFrame.MinHeight, max = maxHeight)
             .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .then(
+                if (item.isVideo) {
+                    Modifier.onVisibilityChanged { visible = it }
+                } else {
+                    Modifier
+                },
+            ),
     ) {
-        AsyncImage(
-            model = item.imageModel(),
-            contentDescription = null,
-            contentScale = fit,
-            modifier = Modifier.fillMaxSize(),
-        )
+        val videoUrl = item.videoUrl
+        if (videoUrl != null) {
+            VideoPlayer(
+                url = videoUrl,
+                // The poster is the cover asset: what the author chose
+                // as the clip's face on `ComposeCover`.
+                posterUrl = item.imageModel(),
+                autoplay = visible >= AUTOPLAY_VISIBLE_FRACTION,
+                durationMs = item.durationMs,
+                contentDescription = item.altText,
+                modifier = Modifier.fillMaxSize(),
+                testTag = "gallery_video",
+            )
+        } else {
+            AsyncImage(
+                model = item.imageModel(),
+                contentDescription = null,
+                contentScale = fit,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
     }
 }
+
+/**
+ * How much of a frame has to be showing before it starts itself.
+ *
+ * High rather than a bare majority: two clips can be on screen at once
+ * on a tall display, and the mute is shared — so the bar for "the reader
+ * is looking at this one" has to be more than half a card.
+ */
+private const val AUTOPLAY_VISIBLE_FRACTION = 0.7f
 
 /**
  * The pager's position, below the media and never over it.
