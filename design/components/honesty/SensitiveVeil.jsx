@@ -2,16 +2,15 @@ import React from "react";
 import { Icon } from "../navigation/Icon.jsx";
 
 /* design.md §9's two content states. They share only their register — soft, a
-   statement of fact, never `error` colouring. Their GRANULARITY is opposite, and
-   the docs are unambiguous about why.
+   statement of fact, never `error` colouring. WHAT THEY TAKE is opposite, and
+   the docs are unambiguous about why: one covers the body and gives it back on a
+   tap, the other takes the whole record for good.
 
-   SENSITIVE IS PER FIELD. `FieldModerationStatus` exists per field precisely so
-   that a title, a description, a text body, and EACH media attachment can carry
-   the flag alone (a gallery cannot wrap generically, so it carries a sibling
-   `attachmentsStatus`). "Per-field granularity exists for SENSITIVE only" — so
-   one image in a gallery is veiled while its four neighbours read normally, and a
-   title is veiled while its description does not. Blanketing a post here would
-   throw away the one thing the data model went out of its way to keep.
+   SENSITIVE COVERS THE BODY, AS ONE. Media, words and description veil together;
+   the title and topics stay outside it and readable, so choosing to look is
+   informed. A gallery veils whole, never one picture of it — the set carries one
+   state. Veiling a field at a time would ask the reader the same question five
+   times over, and what it left showing would describe what it covers.
 
    REDACTED IS THE WHOLE RECORD. An `illegal` verdict removes the payload of the
    record carrying the content: "granularity is the record, whole — the binding
@@ -53,11 +52,33 @@ export function SensitiveScope({ children }) {
   return <RevealContext.Provider value={value}>{children}</RevealContext.Provider>;
 }
 
+/* WHOSE MARK THIS IS (Q47). The author's own warning and the platform's verdict
+   are two independent states that read back as the same veil, so the face has to
+   say which one a reader met — a reason alone cannot, since a verdict may carry
+   one too and an author may leave theirs empty. The source line is unconditional
+   for that reason: an unnamed source would read as the other one. */
+const SOURCES = {
+  author: "The author's warning",
+  platform: "The platform's verdict",
+};
+
+/* The wash every veil face wears: the standard covering scrim at half strength,
+   never an `error` colour. One expression, so the faces cannot drift apart. */
+const WASH = "color-mix(in oklab, var(--scrim-dialog) 55%, transparent)";
+
 /**
- * Veils ONE field or ONE attachment — a title, a description, a body, a single
- * tile. Never a whole post.
+ * Veils a body region as one — a post's gallery, its paragraphs, a comment's
+ * whole body. `SensitiveScope` makes one tap answer for every veil in a post.
  */
-export function SensitiveVeil({ children, kind = "media", label = "Sensitive — tap to view", reason, revealLabel = "Show", radius }) {
+export function SensitiveVeil({
+  children,
+  kind = "media",
+  label = "Sensitive — tap to view",
+  reason,
+  source = "author",
+  revealLabel = "Show",
+  radius,
+}) {
   const scope = React.useContext(RevealContext);
   const [local, setLocal] = React.useState(false);
   const revealed = scope ? scope.revealed : local;
@@ -78,6 +99,53 @@ export function SensitiveVeil({ children, kind = "media", label = "Sensitive —
   };
 
   if (revealed) return veiled;
+
+  const sourceLine = `${SOURCES[source] ?? SOURCES.author}${reason ? ` — ${reason}` : ""}`;
+
+  if (kind === "compact") {
+    /* THE COMMENT-SCALE FACE. A comment is words first and its pictures join
+       them, so its body is short and its pictures are an inset attachment —
+       covering that in place would put a wash the height of two lines over one
+       thing and a second wash over the other. The whole body is replaced by ONE
+       block instead: words and pictures together, at the scale of the card it
+       sits in. What stays outside it is the comment's answer to the title
+       staying readable on a post — the author, the timestamp, and the stance a
+       reader can still take, so choosing to look is informed.
+
+       The wash is the veil's own, but the type is the THEME's rather than the
+       media face's fixed white: that white is legible because the wash lies over
+       a picture, and here it lies over the card, which is light in the light
+       theme. */
+    return (
+      <button
+        type="button"
+        onClick={reveal}
+        aria-label={`${label}. ${sourceLine}`}
+        className="cg-state cg-focus"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          gap: "var(--space-1)",
+          width: "100%",
+          border: 0,
+          borderRadius: "var(--radius-medium)",
+          background: WASH,
+          padding: "var(--space-3)",
+          cursor: "pointer",
+          fontFamily: "var(--font-sans)",
+          color: "var(--text-body)",
+          textAlign: "left",
+        }}
+      >
+        <span style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+          <Icon name="visibility" size={18} />
+          <span style={{ fontSize: "var(--text-label-medium)", fontWeight: "var(--text-label-medium--font-weight)" }}>{label}</span>
+        </span>
+        <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", textWrap: "pretty" }}>{sourceLine}</span>
+      </button>
+    );
+  }
 
   if (kind === "text") {
     /* Text is blurred IN PLACE rather than replaced, so the line keeps its own
@@ -124,7 +192,7 @@ export function SensitiveVeil({ children, kind = "media", label = "Sensitive —
       <button
         type="button"
         onClick={reveal}
-        aria-label={`${label}${reason ? ` — ${reason}` : ""}`}
+        aria-label={`${label}. ${sourceLine}`}
         className="cg-focus"
         style={{
           position: "absolute",
@@ -134,7 +202,7 @@ export function SensitiveVeil({ children, kind = "media", label = "Sensitive —
           border: 0,
           /* A neutral wash, not a warning. The scrim is the same one every
              covering surface in this system uses, at half strength. */
-          background: "color-mix(in oklab, var(--scrim-dialog) 55%, transparent)",
+          background: WASH,
           borderRadius: radius ?? 0,
           cursor: "pointer",
           padding: 0,
@@ -144,8 +212,8 @@ export function SensitiveVeil({ children, kind = "media", label = "Sensitive —
             directly on it, centred: the pattern every large product uses for
             this exact moment, so the reader has met it before. Fixed white,
             deliberately theme-independent: the wash is dark in both themes.
-            The author's reason, when there is one, is the second, smaller
-            line. */}
+            The second, smaller line names whose mark this is, and carries the
+            reason after it when there is one. */}
         <span
           style={{
             display: "flex",
@@ -160,11 +228,9 @@ export function SensitiveVeil({ children, kind = "media", label = "Sensitive —
         >
           <Icon name="visibility" size={24} />
           <span style={{ fontSize: "var(--text-label-large)", fontWeight: "var(--text-label-large--font-weight)" }}>{label}</span>
-          {reason && (
-            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", opacity: 0.85, textWrap: "pretty" }}>
-              {reason}
-            </span>
-          )}
+          <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", opacity: 0.85, textWrap: "pretty" }}>
+            {sourceLine}
+          </span>
         </span>
       </button>
     </div>

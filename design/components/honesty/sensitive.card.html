@@ -26,31 +26,24 @@ function Demo(){return (
 <div className="grid">
   <div className="col">
     <span className="hd">Sensitive — the whole body, as one</span>
-    <span className="lbl">Two of three tiles veiled, one untouched — tap either and the whole post reveals</span>
+    <span className="lbl">Pictures and words under one veil, the title outside it — tap either and the whole post reveals</span>
     <Card>
       <SensitiveScope>
         <ActorChip {...mira}/>
+        <h3 style={{margin:0}} className="text-title-medium">Three from the walk</h3>
         <div style={{margin:"0 calc(-1 * var(--card-padding))"}}>
-          <div style={{display:"flex",flexDirection:"column",gap:"2px"}}>
-            <SensitiveVeil radius="0px"><MediaAttachment src={P+"07-portrait-2x3.jpg"} ratio="tall" maxHeight="200px"/></SensitiveVeil>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"2px"}}>
-              <MediaAttachment src={P+"01-landscape-4x3.jpg"} ratio="square" fit="cover" radius="0px" maxHeight="130px"/>
-              <SensitiveVeil radius="0px"><MediaAttachment src={P+"10-square-1x1.jpg"} ratio="square" fit="cover" maxHeight="130px"/></SensitiveVeil>
-            </div>
-          </div>
+          <SensitiveVeil radius="0px" reason="One rubbing includes a dead seabird."><MediaAttachment src={P+"07-portrait-2x3.jpg"} ratio="tall" maxHeight="200px"/></SensitiveVeil>
         </div>
-        <p style={{margin:0}} className="text-body-medium">Three from the walk. <SensitiveVeil kind="text">Two of them are grim.</SensitiveVeil></p>
+        <p style={{margin:0}} className="text-body-medium"><SensitiveVeil kind="text">Two of them are grim.</SensitiveVeil></p>
       </SensitiveScope>
     </Card>
-    <span className="lbl">The title veiled, the description not</span>
-    <Card>
-      <ActorChip {...rey}/>
-      <SensitiveScope>
-        <h3 style={{margin:0}} className="text-title-medium"><SensitiveVeil kind="text">What they found in the yard</SensitiveVeil></h3>
-        <p style={{margin:0}} className="text-body-medium">The council came out the same afternoon and it was over by five.</p>
-      </SensitiveScope>
-    </Card>
-    <span className="lbl">A text post's body — the field that carries it</span>
+    <span className="lbl">The platform's verdict — the same face, the other source named</span>
+    <PostCard author={rey} timestamp="5d" score="1.20" comments={9} menuItems={menu}
+      title="What they found in the yard"
+      content="The council came out the same afternoon and it was over by five."
+      media={[{src:P+"10-square-1x1.jpg",ratio:"wide",fit:"cover"}]}
+      sensitive={{source:"platform",reason:"Graphic injury."}}/>
+    <span className="lbl">A text post — the body blurs in place, so revealing moves nothing</span>
     <Card>
       <ActorChip {...jun}/>
       <SensitiveScope>
@@ -73,7 +66,8 @@ function Demo(){return (
   </div>
   <div className="open">
     <p><b>The two states differ in what they take, and that is the whole design.</b> Reading them as one family is the mistake this card exists to prevent.</p>
-    <p><b>Sensitive veils the whole body as one.</b> Media, text and description sit under a single veil; the title and topics stay outside it and readable, so a reader can decide from the frame without touching the content. An author's optional reason is shown on the veil.</p>
+    <p><b>Sensitive veils the whole body as one.</b> Media, text and description sit under a single veil; the title and topics stay outside it and readable, so a reader can decide from the frame without touching the content. A gallery veils whole, never one picture of it.</p>
+    <p><b>The veil names its source.</b> The author's own warning and the platform's verdict are two independent states that read back as the same veil, so the face says which one this is — always, since an unnamed source would read as the other. The reason, where there is one, follows it on the same line.</p>
     <p><b>One tap reveals everything.</b> The reader answered the question once; asking again per item turns one decision into five.</p>
     <p><b>Revealing moves nothing.</b> Content stays mounted under the veil and keeps its exact space. That is also why text is blurred in place rather than replaced: the reader can see there <i>is</i> a sentence, only not read it.</p>
     <p><b>Redaction is record-granular.</b> An illegal verdict removes the <i>payload</i> of the record — "the binding content commitment forbids partial rewrite, so there is no per-field redaction". One illegal attachment takes everything authored with it: no title, no body, no description, no media, and no licence. There is no redacted title beside a surviving body, and no redaction inside a sentence. Anything that offers field-level redaction is lying about the substrate.</p>
@@ -82,7 +76,7 @@ function Demo(){return (
     <p><b>A redacted node is not feed material.</b> It is reached by direct link, by structure still pointing at it, or by a reader whose filter admits it. Whoever is looking arrived on purpose — so the placeholder says what happened and stops.</p>
     <p><b>Neither state uses <code>error</code> colouring.</b> A neutral scrim wash and a <code>visibility</code> chip for sensitive; the same reserved surface an unloaded media tile uses for redacted, because both are a space <i>kept</i>. No red, no triangle. These are facts about content, not alarms.</p>
     <p><b>The reader's severity level is not read.</b> The stored 0–10 is for a future where someone accepts one category and refuses another. Today the product asks only "show sensitive content or not", so a veil either exists or does not.</p>
-    <p><b>Still open:</b> whether a reveal survives leaving and returning to a post, and whether a redacted node's comments read any differently from a live post's.</p>
+    <p><b>Still open:</b> whether a reveal survives leaving and returning to a post, where a text-only post names its source (it has no wash to carry the line), and whether a redacted node's comments read any differently from a live post's.</p>
   </div>
 </div>)}
 ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);

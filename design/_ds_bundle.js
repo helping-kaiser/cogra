@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"MediaAttachment","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/proposed/MediaViewer.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"5b1030f3b363","components/compose/DescribeSheet.jsx":"8d55844de766","components/compose/MediaThumb.jsx":"6882a1485491","components/compose/PickedRow.jsx":"a5a166cd586f","components/compose/PickedSheet.jsx":"952252dd4d23","components/compose/UploadNotice.jsx":"23a391218ac1","components/compose/WizardHeader.jsx":"53ce0aad9241","components/content/CommentCard.jsx":"3ac3637a90af","components/content/OverflowMenu.jsx":"5a5ff330770c","components/content/PostCard.jsx":"0c4b5b373a10","components/content/ReferenceRow.jsx":"bad43ae893d4","components/content/TopicsLine.jsx":"b3bfa12c4d86","components/core/BottomSheet.jsx":"04aa46ec17d9","components/core/Button.jsx":"ff5a90231bbe","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"48c703bd16e0","components/core/HelpDot.jsx":"eabf92544b27","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c3fc1cd30267","components/forms/PasswordField.jsx":"38bf37cacbb0","components/forms/RecoveryCode.jsx":"b89705800497","components/forms/SearchBar.jsx":"2ed2d91945fc","components/forms/TextField.jsx":"97d5e4b1536d","components/honesty/PendingMarker.jsx":"28eaaf4ffa77","components/honesty/SensitiveVeil.jsx":"92e923dee41b","components/honesty/TransportError.jsx":"2f66269a8f3c","components/navigation/BorrowedViewBand.jsx":"66c07c53862e","components/navigation/BottomNav.jsx":"53a749d4ddf1","components/navigation/CograBand.jsx":"177723728533","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"8fedb2f39e19","components/navigation/Icon.jsx":"e8340e7f5f3e","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"63d3f3e7404c","components/people/ActorChip.jsx":"0870cb9a9681","components/people/ProfileHeader.jsx":"f24d0bc82d50","components/proposed/ExplainableNumber.jsx":"b29af54b996a","components/proposed/MediaAttachment.jsx":"94880620d847","components/proposed/MediaViewer.jsx":"3a09af18787e","components/stance/SeveranceConfirm.jsx":"1a0dbafb9e95","components/stance/StanceAlternates.jsx":"0b50770f4aa0","components/stance/StanceCoachMark.jsx":"4d4cfdcab8db","components/stance/StanceControl.jsx":"24e63c57ff9e","components/stance/StancePad.jsx":"f6eda3aa07e3","components/stance/StanceReadout.jsx":"3c01d2740d9a","components/stance/StanceSlider.jsx":"325286a6b95d","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"964687345182","components/wallet/LedgerRow.jsx":"96a7cfea6280","components/wallet/PayoutAddress.jsx":"d7783723d684","components/wallet/WalletBalance.jsx":"3ff65daba8d2","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"44ff990afba5","designs/core-loop/data.jsx":"1a69aa16a143"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/proposed/MediaAttachment.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"MediaAttachment","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/proposed/MediaViewer.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"5b1030f3b363","components/compose/DescribeSheet.jsx":"8d55844de766","components/compose/MediaThumb.jsx":"6882a1485491","components/compose/PickedRow.jsx":"a5a166cd586f","components/compose/PickedSheet.jsx":"952252dd4d23","components/compose/UploadNotice.jsx":"23a391218ac1","components/compose/WizardHeader.jsx":"53ce0aad9241","components/content/CommentCard.jsx":"02450199bad2","components/content/OverflowMenu.jsx":"5a5ff330770c","components/content/PostCard.jsx":"1f00e082725b","components/content/ReferenceRow.jsx":"bad43ae893d4","components/content/TopicsLine.jsx":"b3bfa12c4d86","components/core/BottomSheet.jsx":"04aa46ec17d9","components/core/Button.jsx":"ff5a90231bbe","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"48c703bd16e0","components/core/HelpDot.jsx":"eabf92544b27","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c3fc1cd30267","components/forms/PasswordField.jsx":"38bf37cacbb0","components/forms/RecoveryCode.jsx":"b89705800497","components/forms/SearchBar.jsx":"2ed2d91945fc","components/forms/TextField.jsx":"97d5e4b1536d","components/honesty/PendingMarker.jsx":"28eaaf4ffa77","components/honesty/SensitiveVeil.jsx":"73819cc142d6","components/honesty/TransportError.jsx":"2f66269a8f3c","components/navigation/BorrowedViewBand.jsx":"66c07c53862e","components/navigation/BottomNav.jsx":"53a749d4ddf1","components/navigation/CograBand.jsx":"177723728533","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"8fedb2f39e19","components/navigation/Icon.jsx":"e8340e7f5f3e","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"63d3f3e7404c","components/people/ActorChip.jsx":"0870cb9a9681","components/people/ProfileHeader.jsx":"f24d0bc82d50","components/proposed/ExplainableNumber.jsx":"b29af54b996a","components/proposed/MediaAttachment.jsx":"94880620d847","components/proposed/MediaViewer.jsx":"3a09af18787e","components/stance/SeveranceConfirm.jsx":"1a0dbafb9e95","components/stance/StanceAlternates.jsx":"0b50770f4aa0","components/stance/StanceCoachMark.jsx":"4d4cfdcab8db","components/stance/StanceControl.jsx":"24e63c57ff9e","components/stance/StancePad.jsx":"f6eda3aa07e3","components/stance/StanceReadout.jsx":"3c01d2740d9a","components/stance/StanceSlider.jsx":"325286a6b95d","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"964687345182","components/wallet/LedgerRow.jsx":"96a7cfea6280","components/wallet/PayoutAddress.jsx":"d7783723d684","components/wallet/WalletBalance.jsx":"3ff65daba8d2","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"44ff990afba5","designs/core-loop/data.jsx":"1a69aa16a143"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/proposed/MediaAttachment.jsx"}]} */
 
 (() => {
 
@@ -4360,9 +4360,340 @@ __ds_scope.MediaAttachment = MediaAttachment;
 __ds_scope.MediaGallery = MediaGallery;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/proposed/MediaAttachment.jsx", error: String((e && e.message) || e) }); }
 
+// components/honesty/SensitiveVeil.jsx
+try { (() => {
+const { Icon } = __ds_scope;
+/* design.md §9's two content states. They share only their register — soft, a
+   statement of fact, never `error` colouring. WHAT THEY TAKE is opposite, and
+   the docs are unambiguous about why: one covers the body and gives it back on a
+   tap, the other takes the whole record for good.
+
+   SENSITIVE COVERS THE BODY, AS ONE. Media, words and description veil together;
+   the title and topics stay outside it and readable, so choosing to look is
+   informed. A gallery veils whole, never one picture of it — the set carries one
+   state. Veiling a field at a time would ask the reader the same question five
+   times over, and what it left showing would describe what it covers.
+
+   REDACTED IS THE WHOLE RECORD. An `illegal` verdict removes the payload of the
+   record carrying the content: "granularity is the record, whole — the binding
+   content commitment forbids partial rewrite, so there is no per-field
+   redaction." One illegal attachment and the payload is gone, which means every
+   authored field goes with it. There is no such thing as a redacted title beside
+   a surviving body, and no such thing as a redaction inside a sentence.
+
+   So `RedactedContent` replaces a node's ENTIRE content region, and it is the
+   only shape it has. What remains is the skeleton: the structural record, its
+   witness, and everything it does on L1 — author, timestamp, thread position,
+   standing, the stance you can still take on it. That is not a courtesy, it is
+   the invariant: no record ever leaves the graph, and every redaction leaves a
+   visible mark, so that no reader is left wondering whether something was quietly
+   deleted.
+
+   WHO SEES IT. A redacted node is not feed material. It is reached by direct
+   link, by following structure that still points at it, or by a reader whose
+   filter admits it. The design follows from that: someone here arrived on
+   purpose, so the placeholder owes them what happened and nothing more.
+
+   REVEAL IS PER POST, for sensitive content only. Tapping to reveal one veiled
+   image reveals every veiled thing in that post: the reader answered the question
+   once, and asking again per item turns one decision into five. `SensitiveScope`
+   is what makes that true; a veil with no scope governs only itself, the safe
+   default for a lone tile.
+
+   NOT THE READER'S SETTINGS. The 0–10 severity level is stored, but the product
+   today asks only "show sensitive content or not" — the range is for a future
+   where a reader accepts one category and refuses another. Nothing here reads a
+   level; a veil either exists or does not. */
+
+const RevealContext = React.createContext(null);
+
+/** Wrap a post so one reveal answers for all of its sensitive content. */
+function SensitiveScope({
+  children
+}) {
+  const [revealed, setRevealed] = React.useState(false);
+  const value = React.useMemo(() => ({
+    revealed,
+    reveal: () => setRevealed(true)
+  }), [revealed]);
+  return /*#__PURE__*/React.createElement(RevealContext.Provider, {
+    value: value
+  }, children);
+}
+
+/* WHOSE MARK THIS IS (Q47). The author's own warning and the platform's verdict
+   are two independent states that read back as the same veil, so the face has to
+   say which one a reader met — a reason alone cannot, since a verdict may carry
+   one too and an author may leave theirs empty. The source line is unconditional
+   for that reason: an unnamed source would read as the other one. */
+const SOURCES = {
+  author: "The author's warning",
+  platform: "The platform's verdict"
+};
+
+/* The wash every veil face wears: the standard covering scrim at half strength,
+   never an `error` colour. One expression, so the faces cannot drift apart. */
+const WASH = "color-mix(in oklab, var(--scrim-dialog) 55%, transparent)";
+
+/**
+ * Veils a body region as one — a post's gallery, its paragraphs, a comment's
+ * whole body. `SensitiveScope` makes one tap answer for every veil in a post.
+ */
+function SensitiveVeil({
+  children,
+  kind = "media",
+  label = "Sensitive — tap to view",
+  reason,
+  source = "author",
+  revealLabel = "Show",
+  radius
+}) {
+  const scope = React.useContext(RevealContext);
+  const [local, setLocal] = React.useState(false);
+  const revealed = scope ? scope.revealed : local;
+  /* THE VEIL'S RADIUS IS AUTHORITATIVE, and it has to reach the child. The scrim
+     sits on top of the content, so styling only the scrim leaves the tile
+     underneath at its own default — which in a flush gallery means one rounded
+     tile beside a square one, and it breaks the full-bleed rule that media meets
+     the card's straight sides and never its corners. Forwarding it here fixes
+     every caller instead of asking each one to pass the value twice. */
+  const veiled = radius !== undefined && React.isValidElement(children) ? React.cloneElement(children, {
+    radius
+  }) : children;
+  const reveal = event => {
+    // The veil is a decision, not a route: it must not also open the post it
+    // sits in.
+    event.preventDefault();
+    event.stopPropagation();
+    if (scope) scope.reveal();else setLocal(true);
+  };
+  if (revealed) return veiled;
+  const sourceLine = `${SOURCES[source] ?? SOURCES.author}${reason ? ` — ${reason}` : ""}`;
+  if (kind === "compact") {
+    /* THE COMMENT-SCALE FACE. A comment is words first and its pictures join
+       them, so its body is short and its pictures are an inset attachment —
+       covering that in place would put a wash the height of two lines over one
+       thing and a second wash over the other. The whole body is replaced by ONE
+       block instead: words and pictures together, at the scale of the card it
+       sits in. What stays outside it is the comment's answer to the title
+       staying readable on a post — the author, the timestamp, and the stance a
+       reader can still take, so choosing to look is informed.
+        The wash is the veil's own, but the type is the THEME's rather than the
+       media face's fixed white: that white is legible because the wash lies over
+       a picture, and here it lies over the card, which is light in the light
+       theme. */
+    return /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: reveal,
+      "aria-label": `${label}. ${sourceLine}`,
+      className: "cg-state cg-focus",
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        gap: "var(--space-1)",
+        width: "100%",
+        border: 0,
+        borderRadius: "var(--radius-medium)",
+        background: WASH,
+        padding: "var(--space-3)",
+        cursor: "pointer",
+        fontFamily: "var(--font-sans)",
+        color: "var(--text-body)",
+        textAlign: "left"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-2)"
+      }
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "visibility",
+      size: 18
+    }), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: "var(--text-label-medium)",
+        fontWeight: "var(--text-label-medium--font-weight)"
+      }
+    }, label)), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: "var(--text-body-small)",
+        lineHeight: "var(--text-body-small--line-height)",
+        textWrap: "pretty"
+      }
+    }, sourceLine));
+  }
+  if (kind === "text") {
+    /* Text is blurred IN PLACE rather than replaced, so the line keeps its own
+       height and nothing below it moves when the reader reveals it. The shape of
+       the sentence stays visible, which is honest: the reader can see there is a
+       sentence, only not read it. */
+    return /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "inline-flex",
+        alignItems: "baseline",
+        gap: "var(--space-2)",
+        maxWidth: "100%"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true",
+      style: {
+        filter: "blur(6px)",
+        userSelect: "none",
+        opacity: 0.75,
+        minWidth: 0
+      }
+    }, children), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: reveal,
+      className: "cg-state cg-focus cg-hit",
+      style: {
+        flex: "none",
+        border: 0,
+        background: "none",
+        padding: 0,
+        cursor: "pointer",
+        fontFamily: "var(--font-sans)",
+        fontSize: "var(--text-label-small)",
+        color: "var(--text-secondary)",
+        textDecoration: "underline"
+      }
+    }, revealLabel));
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      display: "flex",
+      minWidth: 0,
+      overflow: "hidden",
+      borderRadius: radius ?? 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    "aria-hidden": "true",
+    style: {
+      filter: "blur(24px)",
+      transform: "scale(1.06)",
+      flex: 1,
+      minWidth: 0,
+      overflow: "hidden"
+    }
+  }, veiled), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: reveal,
+    "aria-label": `${label}. ${sourceLine}`,
+    className: "cg-focus",
+    style: {
+      position: "absolute",
+      inset: 0,
+      display: "grid",
+      placeItems: "center",
+      border: 0,
+      /* A neutral wash, not a warning. The scrim is the same one every
+         covering surface in this system uses, at half strength. */
+      background: WASH,
+      borderRadius: radius ?? 0,
+      cursor: "pointer",
+      padding: 0
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: "var(--space-2)",
+      padding: "0 var(--space-6)",
+      color: "#fff",
+      fontFamily: "var(--font-sans)",
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "visibility",
+    size: 24
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-large)",
+      fontWeight: "var(--text-label-large--font-weight)"
+    }
+  }, label), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
+      opacity: 0.85,
+      textWrap: "pretty"
+    }
+  }, sourceLine))));
+}
+const REASONS = {
+  /* Removed for cause, by a passing proposal. Says what happened in the reader's
+     words — "found illegal" is the verdict, not an accusation of the author, and
+     the vote is what makes it a public fact rather than a moderator's opinion. */
+  illegal: {
+    line: "Removed under the platform's rules",
+    detail: "A passed proposal removed it. The decision is public."
+  },
+  /* Removed by choice (erasure §1). The docs are explicit that this must read
+     differently from removed-for-cause — collapsing the two would let a
+     moderation verdict hide behind an author's own decision, or the reverse.
+     Both texts are the decided marks of guidelines/copy-voice.md. */
+  author: {
+    line: "Removed by its author",
+    detail: "The post's place in the thread, and every response, remain."
+  }
+};
+
+/**
+ * Replaces a node's ENTIRE content region: title, body, description, media, all
+ * at once. There is no field-level or inline cut, because redaction is
+ * record-granular — one illegal attachment takes the whole payload with it.
+ *
+ * What is left around it is the skeleton, and the skeleton is the point: the
+ * author, the timestamp, the thread position, the standing, the stance a reader
+ * can still take. No record leaves the graph, and no removal is silent.
+ */
+function RedactedContent({
+  reason = "illegal",
+  when,
+  note
+}) {
+  const copy = REASONS[reason] ?? REASONS.illegal;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--space-1)",
+      borderRadius: "var(--radius-medium)",
+      /* The same reserved surface an unloaded media tile uses, and the same
+         reason: this is a space kept, not a space lost. */
+      background: "var(--surface-container-high)",
+      padding: "var(--space-4)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-body-medium)",
+      color: "var(--text-body)"
+    }
+  }, copy.line), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-body-small)",
+      color: "var(--text-secondary)",
+      textWrap: "pretty"
+    }
+  }, note ?? copy.detail), when && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-small)",
+      color: "var(--text-secondary)"
+    }
+  }, when));
+}
+__ds_scope.SensitiveScope = SensitiveScope;
+__ds_scope.SensitiveVeil = SensitiveVeil;
+__ds_scope.RedactedContent = RedactedContent;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/honesty/SensitiveVeil.jsx", error: String((e && e.message) || e) }); }
+
 // components/content/CommentCard.jsx
 try { (() => {
-const { Card, Button, ActorChip, PendingMarker, EditedMarker, LicenseTerms, StanceControl, OverflowMenu, Icon, NODE_GLYPHS, TopicsLine, MediaGallery } = __ds_scope;
+const { Card, Button, ActorChip, PendingMarker, EditedMarker, LicenseTerms, StanceControl, OverflowMenu, Icon, NODE_GLYPHS, TopicsLine, MediaGallery, SensitiveVeil } = __ds_scope;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* The comment of design.md §6 — "author, body, timestamp, media, nested replies,
    stance control", in its top-level and nested variants. Extracted from
@@ -4398,6 +4729,7 @@ function CommentCard({
   pending = false,
   edited = false,
   bundle,
+  sensitive,
   depth = 0,
   replies = [],
   replyCount = 0,
@@ -4426,6 +4758,21 @@ function CommentCard({
     label: showLicense ? "Hide licence" : "Licence terms",
     onSelect: () => setShowLicense(shown => !shown)
   }, ...menuItems] : menuItems;
+  /* THE VEIL TAKES THE WHOLE BODY, words and pictures as one block. A comment
+     has no title to leave outside it, so what carries the informed choice is
+     the frame the card already wears — the author, the timestamp, the topics,
+     and the stance the reader can still take. */
+  const body = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: "var(--text-body-medium)",
+      lineHeight: "var(--text-body-medium--line-height)"
+    }
+  }, withMentions(content)), Array.isArray(media) && media.length > 0 && /*#__PURE__*/React.createElement(MediaGallery, {
+    items: media,
+    ratio: media.length > 1 ? "square" : undefined,
+    maxHeight: "220px"
+  }));
   return /*#__PURE__*/React.createElement("li", {
     style: {
       display: "flex",
@@ -4491,17 +4838,11 @@ function CommentCard({
   }, timestamp), /*#__PURE__*/React.createElement(OverflowMenu, {
     items: items,
     ariaLabel: "More on this comment"
-  }))), /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: 0,
-      fontSize: "var(--text-body-medium)",
-      lineHeight: "var(--text-body-medium--line-height)"
-    }
-  }, withMentions(content)), Array.isArray(media) && media.length > 0 && /*#__PURE__*/React.createElement(MediaGallery, {
-    items: media,
-    ratio: media.length > 1 ? "square" : undefined,
-    maxHeight: "220px"
-  }), /*#__PURE__*/React.createElement(TopicsLine, {
+  }))), sensitive ? /*#__PURE__*/React.createElement(SensitiveVeil, {
+    kind: "compact",
+    reason: sensitive.reason,
+    source: sensitive.source
+  }, body) : body, /*#__PURE__*/React.createElement(TopicsLine, {
     topics: topics,
     references: references,
     onOpenReferences: onOpenReferences
@@ -4810,267 +5151,6 @@ function MediaViewer({
 __ds_scope.MediaViewer = MediaViewer;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/proposed/MediaViewer.jsx", error: String((e && e.message) || e) }); }
 
-// components/honesty/SensitiveVeil.jsx
-try { (() => {
-const { Icon } = __ds_scope;
-/* design.md §9's two content states. They share only their register — soft, a
-   statement of fact, never `error` colouring. Their GRANULARITY is opposite, and
-   the docs are unambiguous about why.
-
-   SENSITIVE IS PER FIELD. `FieldModerationStatus` exists per field precisely so
-   that a title, a description, a text body, and EACH media attachment can carry
-   the flag alone (a gallery cannot wrap generically, so it carries a sibling
-   `attachmentsStatus`). "Per-field granularity exists for SENSITIVE only" — so
-   one image in a gallery is veiled while its four neighbours read normally, and a
-   title is veiled while its description does not. Blanketing a post here would
-   throw away the one thing the data model went out of its way to keep.
-
-   REDACTED IS THE WHOLE RECORD. An `illegal` verdict removes the payload of the
-   record carrying the content: "granularity is the record, whole — the binding
-   content commitment forbids partial rewrite, so there is no per-field
-   redaction." One illegal attachment and the payload is gone, which means every
-   authored field goes with it. There is no such thing as a redacted title beside
-   a surviving body, and no such thing as a redaction inside a sentence.
-
-   So `RedactedContent` replaces a node's ENTIRE content region, and it is the
-   only shape it has. What remains is the skeleton: the structural record, its
-   witness, and everything it does on L1 — author, timestamp, thread position,
-   standing, the stance you can still take on it. That is not a courtesy, it is
-   the invariant: no record ever leaves the graph, and every redaction leaves a
-   visible mark, so that no reader is left wondering whether something was quietly
-   deleted.
-
-   WHO SEES IT. A redacted node is not feed material. It is reached by direct
-   link, by following structure that still points at it, or by a reader whose
-   filter admits it. The design follows from that: someone here arrived on
-   purpose, so the placeholder owes them what happened and nothing more.
-
-   REVEAL IS PER POST, for sensitive content only. Tapping to reveal one veiled
-   image reveals every veiled thing in that post: the reader answered the question
-   once, and asking again per item turns one decision into five. `SensitiveScope`
-   is what makes that true; a veil with no scope governs only itself, the safe
-   default for a lone tile.
-
-   NOT THE READER'S SETTINGS. The 0–10 severity level is stored, but the product
-   today asks only "show sensitive content or not" — the range is for a future
-   where a reader accepts one category and refuses another. Nothing here reads a
-   level; a veil either exists or does not. */
-
-const RevealContext = React.createContext(null);
-
-/** Wrap a post so one reveal answers for all of its sensitive content. */
-function SensitiveScope({
-  children
-}) {
-  const [revealed, setRevealed] = React.useState(false);
-  const value = React.useMemo(() => ({
-    revealed,
-    reveal: () => setRevealed(true)
-  }), [revealed]);
-  return /*#__PURE__*/React.createElement(RevealContext.Provider, {
-    value: value
-  }, children);
-}
-
-/**
- * Veils ONE field or ONE attachment — a title, a description, a body, a single
- * tile. Never a whole post.
- */
-function SensitiveVeil({
-  children,
-  kind = "media",
-  label = "Sensitive — tap to view",
-  reason,
-  revealLabel = "Show",
-  radius
-}) {
-  const scope = React.useContext(RevealContext);
-  const [local, setLocal] = React.useState(false);
-  const revealed = scope ? scope.revealed : local;
-  /* THE VEIL'S RADIUS IS AUTHORITATIVE, and it has to reach the child. The scrim
-     sits on top of the content, so styling only the scrim leaves the tile
-     underneath at its own default — which in a flush gallery means one rounded
-     tile beside a square one, and it breaks the full-bleed rule that media meets
-     the card's straight sides and never its corners. Forwarding it here fixes
-     every caller instead of asking each one to pass the value twice. */
-  const veiled = radius !== undefined && React.isValidElement(children) ? React.cloneElement(children, {
-    radius
-  }) : children;
-  const reveal = event => {
-    // The veil is a decision, not a route: it must not also open the post it
-    // sits in.
-    event.preventDefault();
-    event.stopPropagation();
-    if (scope) scope.reveal();else setLocal(true);
-  };
-  if (revealed) return veiled;
-  if (kind === "text") {
-    /* Text is blurred IN PLACE rather than replaced, so the line keeps its own
-       height and nothing below it moves when the reader reveals it. The shape of
-       the sentence stays visible, which is honest: the reader can see there is a
-       sentence, only not read it. */
-    return /*#__PURE__*/React.createElement("span", {
-      style: {
-        display: "inline-flex",
-        alignItems: "baseline",
-        gap: "var(--space-2)",
-        maxWidth: "100%"
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      "aria-hidden": "true",
-      style: {
-        filter: "blur(6px)",
-        userSelect: "none",
-        opacity: 0.75,
-        minWidth: 0
-      }
-    }, children), /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      onClick: reveal,
-      className: "cg-state cg-focus cg-hit",
-      style: {
-        flex: "none",
-        border: 0,
-        background: "none",
-        padding: 0,
-        cursor: "pointer",
-        fontFamily: "var(--font-sans)",
-        fontSize: "var(--text-label-small)",
-        color: "var(--text-secondary)",
-        textDecoration: "underline"
-      }
-    }, revealLabel));
-  }
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: "relative",
-      display: "flex",
-      minWidth: 0,
-      overflow: "hidden",
-      borderRadius: radius ?? 0
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    "aria-hidden": "true",
-    style: {
-      filter: "blur(24px)",
-      transform: "scale(1.06)",
-      flex: 1,
-      minWidth: 0,
-      overflow: "hidden"
-    }
-  }, veiled), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: reveal,
-    "aria-label": `${label}${reason ? ` — ${reason}` : ""}`,
-    className: "cg-focus",
-    style: {
-      position: "absolute",
-      inset: 0,
-      display: "grid",
-      placeItems: "center",
-      border: 0,
-      /* A neutral wash, not a warning. The scrim is the same one every
-         covering surface in this system uses, at half strength. */
-      background: "color-mix(in oklab, var(--scrim-dialog) 55%, transparent)",
-      borderRadius: radius ?? 0,
-      cursor: "pointer",
-      padding: 0
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      gap: "var(--space-2)",
-      padding: "0 var(--space-6)",
-      color: "#fff",
-      fontFamily: "var(--font-sans)",
-      textAlign: "center"
-    }
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "visibility",
-    size: 24
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-label-large)",
-      fontWeight: "var(--text-label-large--font-weight)"
-    }
-  }, label), reason && /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-body-small)",
-      lineHeight: "var(--text-body-small--line-height)",
-      opacity: 0.85,
-      textWrap: "pretty"
-    }
-  }, reason))));
-}
-const REASONS = {
-  /* Removed for cause, by a passing proposal. Says what happened in the reader's
-     words — "found illegal" is the verdict, not an accusation of the author, and
-     the vote is what makes it a public fact rather than a moderator's opinion. */
-  illegal: {
-    line: "Removed under the platform's rules",
-    detail: "A passed proposal removed it. The decision is public."
-  },
-  /* Removed by choice (erasure §1). The docs are explicit that this must read
-     differently from removed-for-cause — collapsing the two would let a
-     moderation verdict hide behind an author's own decision, or the reverse.
-     Both texts are the decided marks of guidelines/copy-voice.md. */
-  author: {
-    line: "Removed by its author",
-    detail: "The post's place in the thread, and every response, remain."
-  }
-};
-
-/**
- * Replaces a node's ENTIRE content region: title, body, description, media, all
- * at once. There is no field-level or inline cut, because redaction is
- * record-granular — one illegal attachment takes the whole payload with it.
- *
- * What is left around it is the skeleton, and the skeleton is the point: the
- * author, the timestamp, the thread position, the standing, the stance a reader
- * can still take. No record leaves the graph, and no removal is silent.
- */
-function RedactedContent({
-  reason = "illegal",
-  when,
-  note
-}) {
-  const copy = REASONS[reason] ?? REASONS.illegal;
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "var(--space-1)",
-      borderRadius: "var(--radius-medium)",
-      /* The same reserved surface an unloaded media tile uses, and the same
-         reason: this is a space kept, not a space lost. */
-      background: "var(--surface-container-high)",
-      padding: "var(--space-4)"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-body-medium)",
-      color: "var(--text-body)"
-    }
-  }, copy.line), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-body-small)",
-      color: "var(--text-secondary)",
-      textWrap: "pretty"
-    }
-  }, note ?? copy.detail), when && /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-label-small)",
-      color: "var(--text-secondary)"
-    }
-  }, when));
-}
-__ds_scope.SensitiveScope = SensitiveScope;
-__ds_scope.SensitiveVeil = SensitiveVeil;
-__ds_scope.RedactedContent = RedactedContent;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/honesty/SensitiveVeil.jsx", error: String((e && e.message) || e) }); }
-
 // components/content/PostCard.jsx
 try { (() => {
 const { Card, ActorChip, PendingMarker, EditedMarker, LicenseTerms, StanceControl, ExplainableNumber, MediaGallery, MediaViewer, RedactedContent, SensitiveScope, SensitiveVeil, OverflowMenu, Icon, TopicsLine } = __ds_scope;
@@ -5135,12 +5215,13 @@ function PostCard({
   menuItems = []
 }) {
   const detail = variant === "detail";
-  // THE AUTHOR'S SELF-MARK (readme §13): one flag veils the BODY and the
-  // DESCRIPTION while the title stays readable, and the author's own reason
-  // rides the veil under its standard line. One reveal answers for the whole
-  // card (SensitiveScope).
+  // THE SENSITIVE MARK (readme §13): one flag veils the BODY and the
+  // DESCRIPTION while the title stays readable, and the veil names whose mark it
+  // is — the author's warning or the platform's verdict — with the reason after
+  // it. One reveal answers for the whole card (SensitiveScope).
   const veil = !redacted && sensitive ? {
-    reason: sensitive.reason ?? sensitive.label
+    reason: sensitive.reason ?? sensitive.label,
+    source: sensitive.source
   } : null;
   // REDACTION IS RECORD-GRANULAR. An illegal verdict removes the payload, so
   // every authored field goes at once — there is no redacted title beside a
@@ -5291,6 +5372,7 @@ function PostCard({
   }, veil ? /*#__PURE__*/React.createElement(SensitiveVeil, {
     kind: "media",
     reason: veil.reason,
+    source: veil.source,
     radius: "0px"
   }, /*#__PURE__*/React.createElement(MediaGallery, {
     items: media,
