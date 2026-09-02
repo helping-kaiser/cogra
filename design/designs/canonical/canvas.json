@@ -272,6 +272,33 @@
       "page": "patterns"
     },
     {
+      "file": "GuestGate.dc.html",
+      "title": "Guest gate · the ask",
+      "x": 480,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "NetworkError.dc.html",
+      "title": "Network error · the fault in place",
+      "x": 960,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "PadKeyAbsent.dc.html",
+      "title": "Key absent · acting",
+      "x": 1440,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
       "file": "ComposeWords.dc.html",
       "title": "Compose · words body",
       "x": 0,
@@ -318,7 +345,7 @@
     },
     {
       "file": "ReplyMedia.dc.html",
-      "title": "Comments · pictures & own comment",
+      "title": "Comments · a video, pictures & own comment",
       "x": 480,
       "y": 0,
       "w": 390,
@@ -371,9 +398,27 @@
       "page": "comments"
     },
     {
+      "file": "ReplyVideo.dc.html",
+      "title": "Reply · a video and its cover",
+      "x": 1440,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
+      "file": "ReplyMediaErrors.dc.html",
+      "title": "Reply · files refused",
+      "x": 1920,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
       "file": "ReplyPad.dc.html",
       "title": "Reply · the pad",
-      "x": 1440,
+      "x": 2400,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -382,7 +427,7 @@
     {
       "file": "ReplySeal.dc.html",
       "title": "Reply · what you sign",
-      "x": 1920,
+      "x": 2880,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -391,7 +436,7 @@
     {
       "file": "DiscardConfirm.dc.html",
       "title": "Discard confirm · reply and edit",
-      "x": 2400,
+      "x": 3360,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -632,6 +677,15 @@
       "page": "media"
     },
     {
+      "file": "ComposePickedErrors.dc.html",
+      "title": "Pick · files refused",
+      "x": 2880,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
       "file": "AvatarCrop.dc.html",
       "title": "Profile picture · crop",
       "x": 0,
@@ -753,7 +807,7 @@
       "x": -1580,
       "y": 0,
       "w": 1160,
-      "h": 2632,
+      "h": 2645,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -762,16 +816,16 @@
       "x": -2160,
       "y": 0,
       "w": 1740,
-      "h": 2151,
+      "h": 2207,
       "page": "compose",
       "title": "Compose · flow map"
     },
     {
       "file": "MapComments.dc.html",
-      "x": -2160,
+      "x": -2740,
       "y": 0,
-      "w": 1740,
-      "h": 1244,
+      "w": 2320,
+      "h": 1296,
       "page": "comments",
       "title": "Comments · flow map"
     },
@@ -795,19 +849,19 @@
     },
     {
       "file": "MapMedia.dc.html",
-      "x": -2160,
+      "x": -2450,
       "y": 0,
-      "w": 1740,
-      "h": 1011,
+      "w": 2030,
+      "h": 1024,
       "page": "media",
       "title": "Media · flow map"
     },
     {
       "file": "MapPatterns.dc.html",
-      "x": -980,
+      "x": -1580,
       "y": 0,
-      "w": 560,
-      "h": 326,
+      "w": 1160,
+      "h": 343,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
     },
@@ -834,7 +888,7 @@
       "x": -2160,
       "y": 0,
       "w": 1740,
-      "h": 1200,
+      "h": 1213,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -971,7 +1025,7 @@
       "x": -340,
       "y": 0,
       "w": 290,
-      "text": "COMMENTS · The thread\n\nThe thread lives in a BOTTOM SHEET over the post (ruled 2026-08-28), near full height with a sliver of the post above; replies collapse behind counts, deeper answers flatten to @handles at one indent, the entry row is pinned at the sheet's foot. Comment media is words-first (media slice, 2026-08-31): pictures sit below the words, inset at the card's medium rung, never cropped — a single picture at its own ratio, multiples in the pager on a fixed square frame, four max. The viewer's OWN comment wears Edit and — once edited — the same Edited marker posts wear. EDITING A COMMENT is the post's one-screen-one-batch at comment scale (words, pictures + the describe counter, topics, citations; license locked); its acts footer ('This creates n signed actions') opens the ACTS SHEET — the EditActs pattern rendered with ActsCard: the sheet title carries the count, the card the rows and the all-or-nothing note. Boards: the thread · pictures & own comment · Edit comment · Edit comment's acts.",
+      "text": "COMMENTS · The thread\n\nThe thread lives in a BOTTOM SHEET over the post (ruled 2026-08-28), near full height with a sliver of the post above; replies collapse behind counts, deeper answers flatten to @handles at one indent, the entry row is pinned at the sheet's foot. Comment media is words-first (media slice, 2026-08-31): pictures sit below the words, inset at the card's medium rung, never cropped — a single picture at its own ratio, multiples in the pager on a fixed square frame, four max. The viewer's OWN comment wears Edit and — once edited — the same Edited marker posts wear. EDITING A COMMENT is the post's one-screen-one-batch at comment scale (words, pictures + the describe counter, topics, citations; license locked); its acts footer ('This creates n signed actions') opens the ACTS SHEET — the EditActs pattern rendered with ActsCard: the sheet title carries the count, the card the rows and the all-or-nothing note. A COMMENT'S VIDEO PLAYS LIKE A POST'S (jakob 2026-09-02): muted autoplay while it is on screen, in the pager's square frame, wearing the one control a video ever wears — sound, on the sticky global decision every video shares. No play/pause and no duration pill on a reading surface: presence on screen is the policy at both scales. Boards: the thread · a video, pictures & own comment · Edit comment · Edit comment's acts.",
       "page": "comments"
     },
     {
@@ -987,7 +1041,7 @@
       "x": -340,
       "y": 0,
       "w": 640,
-      "text": "THE ? CONTENTS — each ? opens a plain dialog (see 'The ? dialog' board): title, at most two short paragraphs, Close. The copy, verbatim:\n\nSEAL (post + reply) · 'Signed actions': Each piece of a post — the post itself, every topic, every citation — is its own signed action, written in your name. They sign together: all of them land, or none does. / You don't pay for these — a shared community pool covers members' signings. The pool is real and finite, so each action still counts.\n\nLICENSE SHEET · 'The license': Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it. / The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.\n\nSENSITIVE SHEET · 'Marking as sensitive': The mark veils the pictures and the description until a reader chooses to look. The title stays readable, so choosing is informed. / Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.\n\nKEY ABSENT · 'Your key': Signing needs your key, and it isn't on this browser. Nothing is signed or sent without it — the draft stays on this device. / Restore the key with your recovery code to finish. Restoring here is the only way to complete this write.\n\nPOST PAD · 'Where you stand on it': Publishing also signs where you stand on your own post — for or against, from a gentle +0.10 by default. / Your own post always reaches you in full, so only for-or-against is yours to set. Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.\n\nREPLY PAD · 'Toward what you answer': Replying also signs where you stand on the post you answer — for or against, and how much of it reaches you. It starts at a gentle +0.10 / +0.10 and rides the same signature as your reply. / Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nEDIT · 'Editing': An edit replaces the whole post; earlier versions stay public under 'Edited' unless you remove them. An edit never bumps the post as new. / Topic and citation changes ride the same signing, each as its own signed action. The license never changes.\n\nCITE · 'Citing': A citation is its own signed action and carries where you stand on what you cite. You can cite anything on CoGra — start with @handle or #topic to reach comments, messages, and offers. / Comments and chat messages can also be cited from themselves — open one and choose 'Cite in a new post'.\n\nSEARCH · 'Searching' (the Explore tab and the citing picker): Search reads names and titles, never bodies. Start with @handle to search one person's work — including their comments and offers, found through what they point at. Start with #topic to search inside a topic. / Results put what's closest to you first — the numbers are your view, no one else's. Below the line, what's still beyond your reach, newest first. Your searches stay on this device.\n\nFILTER SHEET · 'The filter' (the feed's and search's sheets): What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen stays out unless you ask for it back. Every change applies as you tap; nothing here is signed or shared. / It lasts until you change it, on this device only. Your default lives in settings.\n\nDESCRIBE SHEET · 'Describing pictures': A description is read aloud by screen readers and shown when a picture can't load — plain words about what's there. It travels with the picture, public like the rest of the post. / Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.\n\nPROFILE-PICTURE SEAL · 'Changing your picture': Your profile is a public record, and changes to it are signed actions in your name — the picture changes the moment yours lands. / The community pool covers the signing, like your posts. The record that you changed it stays, like every signed action.\n\nWALLET BALANCE · 'What is CGT?': CGT is CoGra's own money. Advertisers fund campaigns with it, and it pays the people whose posts and stances carried real reach — the small coin always means CGT. / It's yours the moment it lands: earnings are paid straight to you, held by your key, never by CoGra. Every amount can be traced to what paid it, and the ≈ value reads the public CGT–L-BTC market — it moves with the market and is never a promise.\n\nWALLET SET-UP · 'Your wallet key': Your wallet gets its own key — created on this device, never held by CoGra, restored by the same recovery code as your signing key. One code, both keys. / Publishing your payout address is a signed action. The address is public, payouts and tips land there, and every change to it stays on your public record.",
+      "text": "THE ? CONTENTS — each ? opens a plain dialog (see 'The ? dialog' board): title, at most two short paragraphs, Close. The copy, verbatim:\n\nSEAL (post + reply) · 'Signed actions': Each piece of a post — the post itself, every topic, every citation — is its own signed action, written in your name. They sign together: all of them land, or none does. / You don't pay for these — a shared community pool covers members' signings. The pool is real and finite, so each action still counts.\n\nLICENSE SHEET · 'The license': Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it. / The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.\n\nSENSITIVE SHEET · 'Marking as sensitive': The mark veils the pictures and the description until a reader chooses to look. The title stays readable, so choosing is informed. / Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.\n\nKEY ABSENT · 'Your key' (the seal and the stance pad): Signing needs your key, and it isn't on this browser. Nothing is signed or sent without it — the draft stays on this device. / Restore the key with your recovery code to finish. Restoring here is the only way to complete this write.\n\nPOST PAD · 'Where you stand on it': Publishing also signs where you stand on your own post — for or against, from a gentle +0.10 by default. / Your own post always reaches you in full, so only for-or-against is yours to set. Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.\n\nREPLY PAD · 'Toward what you answer': Replying also signs where you stand on the post you answer — for or against, and how much of it reaches you. It starts at a gentle +0.10 / +0.10 and rides the same signature as your reply. / Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nEDIT · 'Editing': An edit replaces the whole post; earlier versions stay public under 'Edited' unless you remove them. An edit never bumps the post as new. / Topic and citation changes ride the same signing, each as its own signed action. The license never changes.\n\nCITE · 'Citing': A citation is its own signed action and carries where you stand on what you cite. You can cite anything on CoGra — start with @handle or #topic to reach comments, messages, and offers. / Comments and chat messages can also be cited from themselves — open one and choose 'Cite in a new post'.\n\nSEARCH · 'Searching' (the Explore tab and the citing picker): Search reads names and titles, never bodies. Start with @handle to search one person's work — including their comments and offers, found through what they point at. Start with #topic to search inside a topic. / Results put what's closest to you first — the numbers are your view, no one else's. Below the line, what's still beyond your reach, newest first. Your searches stay on this device.\n\nFILTER SHEET · 'The filter' (the feed's and search's sheets): What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen stays out unless you ask for it back. Every change applies as you tap; nothing here is signed or shared. / It lasts until you change it, on this device only. Your default lives in settings.\n\nDESCRIBE SHEET · 'Describing pictures': A description is read aloud by screen readers and shown when a picture can't load — plain words about what's there. It travels with the picture, public like the rest of the post. / Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.\n\nPROFILE-PICTURE SEAL · 'Changing your picture': Your profile is a public record, and changes to it are signed actions in your name — the picture changes the moment yours lands. / The community pool covers the signing, like your posts. The record that you changed it stays, like every signed action.\n\nWALLET BALANCE · 'What is CGT?': CGT is CoGra's own money. Advertisers fund campaigns with it, and it pays the people whose posts and stances carried real reach — the small coin always means CGT. / It's yours the moment it lands: earnings are paid straight to you, held by your key, never by CoGra. Every amount can be traced to what paid it, and the ≈ value reads the public CGT–L-BTC market — it moves with the market and is never a promise.\n\nWALLET SET-UP · 'Your wallet key': Your wallet gets its own key — created on this device, never held by CoGra, restored by the same recovery code as your signing key. One code, both keys. / Publishing your payout address is a signed action. The address is public, payouts and tips land there, and every change to it stays on your public record.",
       "page": "patterns"
     },
     {
@@ -1035,7 +1089,7 @@
       "x": -340,
       "y": 0,
       "w": 290,
-      "text": "THE MEDIA SLICE (jakob 2026-08-31, for the product's media rebuild). The GALLERY IS A PAGER: every picture shares the post's one crop shape, swiped whole, dots only — never a '1/n' pill. Caps: 10 pictures or 1 video (+ its cover) per post; 4 pictures per comment. UPLOAD STARTS AFTER THE CROP — the crop happens on the device, only the cropped export is ever uploaded (the original can hold what the author never meant to share); comment pictures never crop, so they upload at pick. Progress rides the thumbnails as rings; a failed picture is marked on its tile with Retry · Remove beside it; the SEAL gates — signing waits for the pictures. DESCRIPTIONS (alt text) are authored, optional, never invented: entered per picture from the details step ('Describe the pictures · n of m described') and from the picked tray's Show all sheet — the per-picture manager (reorder, first = cover, remove, describe). Comment media is words-first: inset at the card's medium rung, capped at comment scale, same pager. Comment edit mirrors the post's one-screen-one-batch, license locked. Profile: ONE image — the avatar (no cover, per the ProfileHeader ruling); changing it is a SIGNED ACT with its own seal. Sensitive veils the WHOLE gallery, never one picture. Round 2 (jakob, same day): the details row carries NO Crop/Edit links ('none') — the row itself opens Show all; crop is one Back away — and the slice ships componentized (components/compose/: MediaThumb, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, UploadStatusLine, UploadErrorLine, ActsCard), every board here rendered from the design system. Round 3 (implementation session's findings, same day): WEB has no device-gallery API, so 'Pick · the web variant' replaces the grid with the file picker + drop target — the rest of the step identical. The seal drift is healed in the component: ActsCard's note subline ('they land together, or none does') rides every MULTI-act seal's total; a single-act seal omits it. On the key-absent seal the ONE '?' belongs to the key notice (the 'Your key' dialog), not the header — one ? per screen, the key story outranks the seal story there. Off-role type values conformed to the pinned M3 roles (badge to label-small, writing bodies to 16/24, draft buttons to true padding) — M3 stays the default; no sub-roles added. Round 4 (jakob): THE WIZARD'S WAYS OUT — the header arrow steps ONE STAGE BACK, never out of the flow (Details reaches crop with it; the platform back gesture matches); the X leaves the whole flow from ANY stage, draft kept, NO confirmation (the draft prompt is the return surface); the seal's Back pill is the same one-stage step, labeled. WizardHeader is the master; every composer-flow stage wears the X, between the title and the trailing controls. The em-dash rule stands (asides keep their em dashes, per copy-voice). Round 5 (implementation session's findings, jakob's rulings 2026-08-31): COMMENTS HAVE NO PICK STAGE — '+ Add' opens the platform's own picker (Android's photo-picker sheet; the browser's file dialog on web), never the post wizard's grid; the one web addition is the drop path — files dropped anywhere on the composer are accepted, the quiet hint beside Add says so ('Reply · pictures on the web'). ALT TEXT IS DETACHED FROM THE UPLOAD (product ruling, recorded in api-spec/data-model): the upload moves bytes only; a description is witnessed in the act's manifest and rides the prepare input per placement — so comment pictures upload at pick, descriptions land at sign, NOTHING GATES on the other, and there is no alt-text-vs-upload race. The describe entry is the same counter line everywhere the composer shows picked pictures — the reply composer already wore it; Edit comment now does too. THE EDIT'S ACTS FOOTER OPENS A SHEET: 'This creates n signed actions' opens the M3 modal bottom sheet (the EditActs pattern — 'Edit comment · the acts' renders it with ActsCard; the sheet title carries the count, the card the rows and the all-or-nothing note). The sheet is the peek-from-a-composer pattern; ceremony screens keep the inline ActsCard — two patterns, one component. EditActs' pre-component note wording conformed to the ActsCard standard.",
+      "text": "THE MEDIA SLICE (jakob 2026-08-31, for the product's media rebuild). The GALLERY IS A PAGER: every picture shares the post's one crop shape, swiped whole, dots only — never a '1/n' pill. Caps: 10 pictures or 1 video (+ its cover) per post; 4 pictures per comment. UPLOAD STARTS AFTER THE CROP — the crop happens on the device, only the cropped export is ever uploaded (the original can hold what the author never meant to share); comment pictures never crop, so they upload at pick. Progress rides the thumbnails as rings; a failed picture is marked on its tile with Retry · Remove beside it; the SEAL gates — signing waits for the pictures. DESCRIPTIONS (alt text) are authored, optional, never invented: entered per picture from the details step ('Describe the pictures · n of m described') and from the picked tray's Show all sheet — the per-picture manager (reorder, first = cover, remove, describe). Comment media is words-first: inset at the card's medium rung, capped at comment scale, same pager. Comment edit mirrors the post's one-screen-one-batch, license locked. Profile: ONE image — the avatar (no cover, per the ProfileHeader ruling); changing it is a SIGNED ACT with its own seal. Sensitive veils the WHOLE gallery, never one picture. Round 2 (jakob, same day): the details row carries NO Crop/Edit links ('none') — the row itself opens Show all; crop is one Back away — and the slice ships componentized (components/compose/: MediaThumb, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, UploadStatusLine, UploadErrorLine, ActsCard), every board here rendered from the design system. Round 3 (implementation session's findings, same day): WEB has no device-gallery API, so 'Pick · the web variant' replaces the grid with the file picker + drop target — the rest of the step identical. The seal drift is healed in the component: ActsCard's note subline ('they land together, or none does') rides every MULTI-act seal's total; a single-act seal omits it. On the key-absent seal the ONE '?' belongs to the key notice (the 'Your key' dialog), not the header — one ? per screen, the key story outranks the seal story there. Off-role type values conformed to the pinned M3 roles (badge to label-small, writing bodies to 16/24, draft buttons to true padding) — M3 stays the default; no sub-roles added. Round 4 (jakob): THE WIZARD'S WAYS OUT — the header arrow steps ONE STAGE BACK, never out of the flow (Details reaches crop with it; the platform back gesture matches); the X leaves the whole flow from ANY stage, draft kept, NO confirmation (the draft prompt is the return surface); the seal's Back pill is the same one-stage step, labeled. WizardHeader is the master; every composer-flow stage wears the X, between the title and the trailing controls. The em-dash rule stands (asides keep their em dashes, per copy-voice). Round 5 (implementation session's findings, jakob's rulings 2026-08-31): COMMENTS HAVE NO PICK STAGE — '+ Add' opens the platform's own picker (Android's photo-picker sheet; the browser's file dialog on web), never the post wizard's grid; the one web addition is the drop path — files dropped anywhere on the composer are accepted, the quiet hint beside Add says so ('Reply · pictures on the web'). ALT TEXT IS DETACHED FROM THE UPLOAD (product ruling, recorded in api-spec/data-model): the upload moves bytes only; a description is witnessed in the act's manifest and rides the prepare input per placement — so comment pictures upload at pick, descriptions land at sign, NOTHING GATES on the other, and there is no alt-text-vs-upload race. The describe entry is the same counter line everywhere the composer shows picked pictures — the reply composer already wore it; Edit comment now does too. THE EDIT'S ACTS FOOTER OPENS A SHEET: 'This creates n signed actions' opens the M3 modal bottom sheet (the EditActs pattern — 'Edit comment · the acts' renders it with ActsCard; the sheet title carries the count, the card the rows and the all-or-nothing note). The sheet is the peek-from-a-composer pattern; ceremony screens keep the inline ActsCard — two patterns, one component. EditActs' pre-component note wording conformed to the ActsCard standard. Round 6 (jakob 2026-09-02 — comment video and the media error states): a comment carries four pictures OR one video with its cover, the post's grammar at comment caps, and the BYTE CAPS are product constants — a picture 10 MiB (10 per post, 4 per comment), a video 100 MiB in a post and 50 MiB in a comment, a cover 10 MiB. A FILE THE SURFACE REFUSES is refused where it was offered — 'Pick · files refused' here, 'Reply · files refused' on the Comments page — a line in the media row naming the cap it broke, never a dialog or snackbar, with Remove it as the only way out: a retry cannot shrink a file or fix its format. Caps are named ONLY in those lines, never in advance. MediaThumb grew the composer's video anatomy (play disc, duration) — authoring-side only, since a reading surface never draws play.",
       "page": "media"
     },
     {
@@ -1051,7 +1105,7 @@
       "x": -340,
       "y": 1060,
       "w": 290,
-      "text": "COMMENTS · The reply composer\n\nThe comment box in the thread is an ENTRY, not a composer: tapping it opens the same full-focus flow, pre-targeted, parent pinned. Two steps — words, then the seal. A comment is TEXT PLUS OPTIONAL MEDIA (comment.md; text required) — deliberately asymmetric to the post's words-XOR-media body, because an answer is words first; '+ Add pictures' rides the writing step, and COMMENTS HAVE NO PICK STAGE (ruled 2026-08-31): it opens the platform's own picker — Android's photo-picker sheet, the browser's file dialog on web — never the post wizard's grid; the web board adds the drop-anywhere path. Comment pictures never crop, so they upload at pick; descriptions ride the signed act (detached from the upload — no race, nothing gates) and are entered from the describe counter. The reply's stance on its parent (+0.10 / +0.10 default) is DISCLOSED on the seal and adjustable on the full two-axis pad: 'Replying also signs where you stand on the post it answers.' Topics and citations can join a comment from its seal, each row raising the count. Boards: write (words) · pictures attached · pictures on the web · the pad · what you sign.",
+      "text": "COMMENTS · The reply composer\n\nThe comment box in the thread is an ENTRY, not a composer: tapping it opens the same full-focus flow, pre-targeted, parent pinned. Two steps — words, then the seal. A comment is TEXT PLUS OPTIONAL MEDIA (comment.md; text required) — deliberately asymmetric to the post's words-XOR-media body, because an answer is words first; '+ Add pictures' rides the writing step, and COMMENTS HAVE NO PICK STAGE (ruled 2026-08-31): it opens the platform's own picker — Android's photo-picker sheet, the browser's file dialog on web — never the post wizard's grid; the web board adds the drop-anywhere path. Comment pictures never crop, so they upload at pick; descriptions ride the signed act (detached from the upload — no race, nothing gates) and are entered from the describe counter. The reply's stance on its parent (+0.10 / +0.10 default) is DISCLOSED on the seal and adjustable on the full two-axis pad: 'Replying also signs where you stand on the post it answers.' Topics and citations can join a comment from its seal, each row raising the count. COMMENT VIDEO (jakob 2026-09-02): a comment's media grammar is the post's at comment caps — four pictures OR one video with its cover, never both kinds. Entry is unchanged (the platform picker; a video pick lands in the video state), there is still no pick stage and no crop, and the cover row is ComposeCover's inlined at comment scale, because the comment composer is one screen and has no stage to give it. Caps as facts: a picture 10 MiB (10 per post, 4 per comment), a video 100 MiB in a post and 50 MiB in a comment, a cover 10 MiB. A FILE THE SURFACE REFUSES — over its cap, or a format nothing here reads — is refused WHERE IT WAS OFFERED, a line in the composer's media row: never a dialog, never a snackbar. The line names the cap it broke, and that is the only place a cap is named. Its one way out is Remove it — never Retry, which cannot make a file smaller or a format readable. Round 2 (jakob, same day): A VIDEO TAKES ONE DESCRIPTION for the whole clip and its cover takes none — the counter reads 'Describe the video · 0 of 1 described' and opens the same describe sheet. THE ADD LABEL FOLLOWS THE STATE: empty reads '+ Add pictures or a video', with pictures '+ Add pictures · n of 4' (the video is out — the grammar is exclusive), with a video no add control at all. WEB TAKES THE VIDEO BOARD 1:1 (file dialog + the drop path; no web board, the avatar blessing's form) and the drop hint grows to 'pictures or a video'. SCREENS WRITE MB while the caps are enforced in MiB — 50 MiB is 52.4 MB, so the readable number under-promises and never refuses a file the product would take. Boards: write (words) · pictures attached · pictures on the web · a video and its cover · files refused · the pad · what you sign.",
       "page": "comments"
     }
   ],

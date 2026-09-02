@@ -6,6 +6,7 @@ Use `MediaThumb` for every authoring-side picture tile — the pick tray, the de
 <MediaThumb src={c} failed />                   {/* didn't upload — dimmed + badge; words in UploadErrorLine */}
 <MediaThumb src={d} onRemove={remove} />        {/* the X, top-right */}
 <MediaThumb src={e} width={70} height={88} fit="contain" />  {/* uncropped (comments) — whole frame */}
+<MediaThumb src={f} video duration="0:18" width={220} height={220} />  {/* a video and its cover */}
 ```
 
 What holds:
@@ -13,4 +14,5 @@ What holds:
 - **Upload starts after the crop.** The crop happens on the device and only the cropped export is ever uploaded — the original can hold what the author never meant to share. Comment pictures never crop, so they upload at pick. The `progress` ring is that story on the tile.
 - **A failed tile dims and wears the badge; its words live beside the row** (`UploadErrorLine` — "One picture didn't upload. Retry · Remove it"). Never cram retry into 48px.
 - The remove X hides on a failed tile — the line owns that tile's ways out.
+- **`video` draws the composer's video preview** — the play disc on the frame, the duration on the trailing corner (the pill needs an 80px tile). This is authoring-side only: a reading surface never draws play/pause, where presence on screen is the policy (`MediaAttachment`).
 - Default is a 48px square at the small (8px) rung; the Show all sheet uses 56.
