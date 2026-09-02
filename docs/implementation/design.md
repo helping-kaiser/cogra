@@ -763,8 +763,9 @@ again.
 **At rest the target shows the standing.** A viewer with a
 bundle toward the thing sees its face and folded pair on the
 resting target itself; a viewer without one sees a **muted,
-translucent face** — the same control at rest, visibly waiting
-to be given a value — never a bare word. The affordance keeps
+translucent 🫥** — the dotted-line face, the same control at
+rest, visibly waiting to be given a value — never a bare word.
+The affordance keeps
 an accessible label either way. The bundle is already loaded
 by the read that rendered the surface (§8.2) — showing it
 costs nothing and is the difference between a control and a
@@ -803,6 +804,14 @@ neighbour ("🙂 Nice") is a lie. It gets its own readout: **🤷**
 with the severed/no-standing wording, on every surface that
 shows a standing. The anchor table reads picks and non-zero
 bundles only.
+
+**The resting face is 🫥**, muted (§8.3) — the dotted-line face,
+"nothing here yet". It sits outside the table for the same
+reason the zero bundle does: an unauthored target must not read
+as a standing the viewer already holds. It is not 🤷 — never
+authored and netted to zero are different states, and the
+clients tell them apart. Like the table, it is a value both
+clients read.
 
 | `p_d` | `p_i` | Readout | Label |
 |---:|---:|:---:|---|

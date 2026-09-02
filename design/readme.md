@@ -168,7 +168,7 @@ before it is signed, and anything half-finished says who acts next.
 - `Just looking? Browse the feed →`
 
 **Emoji: yes, in exactly one place.** The twenty-anchor stance readout
-(§8) plus 🤷 for a zero standing and 😐 for a control at rest. These are
+(§8) plus 🤷 for a zero standing and 🫥 for a control at rest. These are
 *system* emoji rendering a value, not decoration. Emoji never appear in
 headings, buttons, marketing copy, or empty states. The single arrow in
 `Browse the feed →` is the only other glyph used as punctuation.
@@ -612,7 +612,7 @@ Every interaction authors two independent continuous values in `[−1, +1]`
 four quadrants are legitimate.
 
 - **At rest** the target shows the standing: the face and the exact
-  pair. A viewer with no standing sees a **muted, translucent 😐** —
+  pair. A viewer with no standing sees a **muted, translucent 🫥** —
   never a bare word.
 - **A plain tap** commits a modest positive `(+0.1, +0.1)`. The **first
   tap ever teaches and stages nothing** — it opens the coach mark, whose

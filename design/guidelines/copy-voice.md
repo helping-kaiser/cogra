@@ -59,7 +59,7 @@ landing`). Em dashes carry asides; `…` marks work in progress.
 ## Emoji
 
 Used in exactly one place: the stance readout (twenty anchors, plus 🤷 for
-a zero standing and 😐 for a control at rest). These are system emoji
+a zero standing and 🫥 for a control at rest). These are system emoji
 rendering a value, not decoration. **Never** in headings, buttons,
 marketing copy, empty states, or documentation of features. The `→` in
 `Just looking? Browse the feed →` is the only other glyph used as
