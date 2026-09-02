@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.cogra.core.designsystem.v2.compose.HelpTopic
@@ -34,6 +35,8 @@ class CommentEditTest {
 
     private var signs = 0
     private var leaves = 0
+    private var keeps = 0
+    private var discards = 0
     private var actsOpens = 0
     private var pickerOpens = 0
     private var describes = 0
@@ -49,6 +52,8 @@ class CommentEditTest {
             onRemovePickAt = { removals += it },
             onDescribePictures = { describes += 1 },
             onAltTextChange = { _, _ -> },
+            onKeepWriting = { keeps += 1 },
+            onDiscard = { discards += 1 },
             onOpenActs = { actsOpens += 1 },
             onCloseSheet = {},
             onOpenHelp = { helps += it },
@@ -286,6 +291,43 @@ class CommentEditTest {
 
         assertThat(marked.sensitive).isTrue()
         assertThat(marked.sensitiveReason).isEqualTo("Coast road at night")
+    }
+
+    // -- Leaving (`DiscardConfirm`) --
+
+    @Test
+    fun aChangedEditIsAskedBeforeItIsDiscarded() {
+        compose.setContent { Edit(edited().copy(confirmingDiscard = true)) }
+
+        compose.onNodeWithTag("comment_edit_discard_confirm").assertIsDisplayed()
+        // The one shared dialog, asking the edit's own question.
+        compose.onNodeWithText("Discard this edit?").assertIsDisplayed()
+        compose.onNodeWithText("Nothing is kept.").assertIsDisplayed()
+    }
+
+    @Test
+    fun keepWritingClosesTheDialogAndDiscardEndsTheEdit() {
+        compose.setContent { Edit(edited().copy(confirmingDiscard = true)) }
+
+        compose.onNodeWithTag("comment_edit_discard_confirm_keep").performClick()
+        assertThat(keeps).isEqualTo(1)
+
+        compose.onNodeWithTag("comment_edit_discard_confirm_discard").performClick()
+        assertThat(discards).isEqualTo(1)
+    }
+
+    @Test
+    fun anEditThatWouldSignNothingHasNothingToLose() {
+        // An edit opened and closed untouched leaves at once — a confirm
+        // with nothing to lose is noise.
+        assertThat(untouched().hasSomethingToLose).isFalse()
+        assertThat(edited().hasSomethingToLose).isTrue()
+    }
+
+    @Test
+    fun theAddLabelMatchesTheReplyComposers() {
+        compose.setContent { Edit(untouched()) }
+        compose.onNodeWithText("+ Add pictures · 0 of 4").assertIsDisplayed()
     }
 
     private fun untouched() = CommentEditState(
