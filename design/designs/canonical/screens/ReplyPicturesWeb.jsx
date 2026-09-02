@@ -38,7 +38,7 @@ export function Screen() {
         <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
           <Button variant="text" size="sm">+ Add pictures · 2 of 4</Button>
           <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-            …or drop them here.
+            …or drop pictures or a video here.
           </span>
         </div>
 
