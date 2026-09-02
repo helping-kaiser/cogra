@@ -72,8 +72,11 @@ export function CoverStep({
         <span className="text-label-large">Cover</span>
         <div className="flex gap-2">
           {framePreviews.map((src, index) => (
+            // Keyed by position: the offers are a fixed list of three taken
+            // from one clip, and the position IS the identity — two frames of
+            // an unchanging shot can produce identical bytes.
             <FrameTile
-              key={src}
+              key={index}
               src={src}
               index={index}
               selected={cover?.frame === index}
