@@ -1548,10 +1548,9 @@ next to brands like Instagram):
   leaves at once. Each X's label says which of the two it does. The
   seal's own Back pill is the same one-stage step, labeled.
   `WizardHeader` is the master — every composer-flow stage wears it
-  (post wizard, reply, edits, the profile picture); the X sits
-  between the title and the stage's trailing controls so Next keeps
-  the right edge. The em-dash rule stands unchanged (jakob, same
-  round): em dashes carry asides, everywhere copy-voice says so.
+  (post wizard, reply, edits, the profile picture). The em-dash rule
+  stands unchanged (jakob, same round): em dashes carry asides,
+  everywhere copy-voice says so.
 - **The slice ships componentized** (`components/compose/`):
   `MediaThumb` (the authoring tile and its upload states), `PickedRow`
   + `DescribeCounter`, `PickedSheet` (Show all), `DescribeSheet`,
