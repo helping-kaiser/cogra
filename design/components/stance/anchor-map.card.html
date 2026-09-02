@@ -1,0 +1,122 @@
+<!-- @dsCard group="Components" viewport="1100x720" name="Stance anchor map" subtitle="Where the twenty anchors sit — a positions reference for implementers. Never drawn in the product." -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+body{margin:0;padding:16px;background:var(--surface);color:var(--on-surface)}
+.grid{display:flex;gap:28px;align-items:flex-start}
+.col{display:flex;flex-direction:column;gap:10px}
+.lbl{font-size:var(--text-label-small);letter-spacing:var(--text-label-small--letter-spacing);font-weight:var(--text-label-small--font-weight);color:var(--text-secondary)}
+.note{max-width:34rem;margin:0;font-size:var(--text-body-small);line-height:var(--text-body-small--line-height);color:var(--text-secondary)}
+/* The faces overflow the drawn square at the extremes — an anchor at (±0.9, ±0.9)
+   really does sit in the corner — so the field keeps a margin to spill into. */
+.bleed{padding:26px}
+.field{position:relative;border-radius:var(--radius-large);background:var(--surface-field);overflow:visible}
+.hair{position:absolute;background:var(--border-hairline)}
+.axes{position:absolute;inset:8px;font-size:var(--text-label-small);color:var(--text-secondary)}
+.axes span{position:absolute;background:var(--surface-field);padding:0 2px}
+/* The mark's FACE centre is the anchor's coordinate; the number hangs below it. */
+.mark{position:absolute;transform:translateX(-50%);margin-top:-11px;display:flex;flex-direction:column;align-items:center;line-height:1}
+.face{font-size:20px;height:22px;line-height:22px;opacity:var(--opacity-resting-face);filter:grayscale(1)}
+.num{font-size:9px;letter-spacing:0.2px;color:var(--text-secondary);white-space:nowrap}
+.strip{position:relative;height:72px;border-radius:var(--radius-large);background:var(--surface-field)}
+/* A tick states the exact value; it sits in the strip's lower band, clear of the axis
+   words the product field draws across the centre line, and directly above its mark. */
+.tick{position:absolute;top:48px;height:16px;width:1px;background:var(--text-secondary);opacity:0.5}
+.rail{position:relative;height:40px}
+.rmark{position:absolute;top:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;line-height:1}
+</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const NS = window.CoGraDesignSystem_9084ba;
+const { STANCE_ANCHORS, DIRECTED_POLES, INTEREST_POLES } = NS;
+
+const FIELD = 560;
+const STRIP = 400;
+/* The pad's own mapping: the drawn field IS the value space, so the corners are
+   (±1, ±1) and a coordinate is a plain percentage of it. */
+const xOf = (pDirected) => 50 + pDirected * 50;
+const yOf = (pInterest) => 50 - pInterest * 50;
+const fmt = (v) => new Intl.NumberFormat(undefined, { signDisplay: "always", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+const anchorOf = (emoji) => STANCE_ANCHORS.find((a) => a.emoji === emoji);
+/* Pure valence: the six the one-axis strip can reach, ruled by jakob. */
+const VALENCE_SIX = ["😠", "🙁", "😕", "🙂", "😊", "😍"].map(anchorOf);
+
+function Map2D() {
+  return (
+    <div className="bleed">
+      <div className="field" style={{ width: FIELD, height: FIELD }}>
+        <div className="hair" style={{ left: 0, top: "50%", width: "100%", height: 1 }} />
+        <div className="hair" style={{ left: "50%", top: 0, width: 1, height: "100%" }} />
+        <div className="axes">
+          <span style={{ left: 0, top: "50%", transform: "translateY(-50%)" }}>{DIRECTED_POLES[0]}</span>
+          <span style={{ right: 0, top: "50%", transform: "translateY(-50%)" }}>{DIRECTED_POLES[1]}</span>
+          <span style={{ left: "50%", top: 0, transform: "translateX(-50%)" }}>{INTEREST_POLES[1]}</span>
+          <span style={{ left: "50%", bottom: 0, transform: "translateX(-50%)" }}>{INTEREST_POLES[0]}</span>
+        </div>
+        {STANCE_ANCHORS.map((a) => (
+          <div key={a.emoji} className="mark" style={{ left: `${xOf(a.pDirected)}%`, top: `${yOf(a.pInterest)}%` }} title={a.label}>
+            <span className="face">{a.emoji}</span>
+            <span className="num">{`${fmt(a.pDirected)} / ${fmt(a.pInterest)}`}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Map1D() {
+  return (
+    <div>
+      <div className="strip" style={{ width: STRIP }}>
+        <div className="hair" style={{ left: 8, right: 8, top: "50%", height: 1 }} />
+        <div className="hair" style={{ left: "50%", top: 8, bottom: 8, width: 1 }} />
+        <div className="axes">
+          <span style={{ left: 0, top: "50%", transform: "translateY(-50%)" }}>{DIRECTED_POLES[0]}</span>
+          <span style={{ right: 0, top: "50%", transform: "translateY(-50%)" }}>{DIRECTED_POLES[1]}</span>
+        </div>
+        {VALENCE_SIX.map((a) => (
+          <div key={a.emoji} className="tick" style={{ left: `${xOf(a.pDirected)}%` }} />
+        ))}
+      </div>
+      <div className="rail" style={{ width: STRIP }}>
+        {VALENCE_SIX.map((a) => (
+          <div key={a.emoji} className="rmark" style={{ left: `${xOf(a.pDirected)}%` }} title={a.label}>
+            <span className="face">{a.emoji}</span>
+            <span className="num">{fmt(a.pDirected)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Demo() {
+  return (
+    <div className="grid">
+      <div className="col">
+        <span className="lbl">The two-axis field — all twenty anchors</span>
+        <Map2D />
+      </div>
+      <div className="col">
+        <span className="lbl">The one-axis strip — the six pure-valence anchors</span>
+        <Map1D />
+        <p className="note">
+          A reference for implementers, not a surface. The product field draws its four axis
+          words and nothing else; these faces are never rendered on a pad. The anchors' words
+          stay accessibility-only, so each mark carries its exact pair instead.
+        </p>
+        <p className="note">
+          Every position is the anchor's own coordinate under the pad's mapping — the drawn
+          field IS the value space, so a mark's place on the square is its value. The table
+          itself lives in <code>StanceReadout.jsx</code>, which this card reads.
+        </p>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+</script></body></html>
