@@ -6,6 +6,7 @@
       "description": "The bottom nav's New post opens the wizard on every tab root; pictures are cropped, described, and signed into the feed.",
       "start": { "control": "nav · New post", "except": ["ComposeExpired"] },
       "waypoints": [
+        { "board": "ComposePick", "via": 3, "case": "pictures — the crop" },
         { "board": "ComposeCrop", "via": 3, "case": "pictures — details next" },
         { "board": "ComposeDetails", "via": 10, "to": "ComposeSeal" }
       ],

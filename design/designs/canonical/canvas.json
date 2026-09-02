@@ -380,6 +380,15 @@
       "page": "comments"
     },
     {
+      "file": "ReplyMediaErrors.dc.html",
+      "title": "Reply · files refused",
+      "x": 1920,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
       "file": "ReplyPad.dc.html",
       "title": "Reply · the pad",
       "x": 2400,
@@ -641,6 +650,15 @@
       "page": "media"
     },
     {
+      "file": "ComposePickedErrors.dc.html",
+      "title": "Pick · files refused",
+      "x": 2880,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
       "file": "AvatarCrop.dc.html",
       "title": "Profile picture · crop",
       "x": 0,
@@ -771,7 +789,7 @@
       "x": -2160,
       "y": 0,
       "w": 1740,
-      "h": 2151,
+      "h": 2160,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -804,9 +822,9 @@
     },
     {
       "file": "MapMedia.dc.html",
-      "x": -2160,
+      "x": -2450,
       "y": 0,
-      "w": 1740,
+      "w": 2030,
       "h": 1011,
       "page": "media",
       "title": "Media · flow map"

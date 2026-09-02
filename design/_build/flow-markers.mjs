@@ -316,6 +316,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: 'class="cg-cover-frame"', tag: "div", all: true },
     { n: 7, find: 'class="cg-cover-own"', tag: "div" },
   ],
+  ReplyMediaErrors: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: "let me find something shorter.", tag: "p" },
+    { n: 5, find: ">Remove it</button>", tag: "button", all: true },
+    { n: 6, find: "+ Add pictures</button>", tag: "button" },
+  ],
   ReplyPicturesWeb: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
@@ -434,6 +442,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="Remove', tag: "button", all: true },
     { n: 4, find: ">Done</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  ComposePickedErrors: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: ">Write words instead</button>", tag: "button" },
+    { n: 5, find: ">Show all</span>", tag: "span" },
+    { n: 6, find: 'aria-label="Remove this picture"', tag: "button", all: true },
+    { n: 7, find: ">Remove it</button>", tag: "button", all: true },
   ],
   ComposeDescribe: [
     { n: 1, find: 'aria-label="Describing pictures"', tag: "button" },

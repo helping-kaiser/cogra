@@ -451,7 +451,7 @@
     { "from": "ReplyCompose", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
     { "from": "ReplyCompose", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ReplySeal" }] },
     { "from": "ReplyCompose", "via": 4, "kind": "advance", "label": "the words", "to": [{ "terminal": "self", "case": "typing" }] },
-    { "from": "ReplyCompose", "via": 5, "kind": "advance", "label": "+ Add pictures", "to": [{ "terminal": "os", "case": "the platform's own picker — comments have no pick stage" }, { "board": "ReplyPictures", "case": "picks land in the tray" }, { "board": "ReplyVideo", "case": "a video — the composer's video state" }] },
+    { "from": "ReplyCompose", "via": 5, "kind": "advance", "label": "+ Add pictures", "to": [{ "terminal": "os", "case": "the platform's own picker — comments have no pick stage" }, { "board": "ReplyPictures", "case": "picks land in the tray" }, { "board": "ReplyVideo", "case": "a video — the composer's video state" }, { "board": "ReplyMediaErrors", "case": "over its cap, or a format nothing here reads — the composer says why" }] },
 
     { "from": "ReplyPictures", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "ReplyEntry", "case": "one stage back — the thread" }] },
     { "from": "ReplyPictures", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
@@ -468,6 +468,13 @@
     { "from": "ReplyVideo", "via": 5, "kind": "advance", "label": "remove video ×", "to": [{ "board": "ReplyCompose", "case": "the video leaves — the composer is words again" }] },
     { "from": "ReplyVideo", "via": 6, "kind": "advance", "label": "cover frame options", "to": [{ "terminal": "self", "case": "picks the face" }] },
     { "from": "ReplyVideo", "via": 7, "kind": "advance", "label": "A picture (cover tile)", "to": [{ "terminal": "os", "case": "the platform's own picker — a cover of your own" }] },
+
+    { "from": "ReplyMediaErrors", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "ReplyEntry", "case": "one stage back — the thread" }] },
+    { "from": "ReplyMediaErrors", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
+    { "from": "ReplyMediaErrors", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ReplySeal", "case": "the words alone — nothing was attached" }] },
+    { "from": "ReplyMediaErrors", "via": 4, "kind": "advance", "label": "the words", "to": [{ "terminal": "self", "case": "typing" }] },
+    { "from": "ReplyMediaErrors", "via": 5, "kind": "advance", "label": "Remove it (a refused file)", "to": [{ "terminal": "self", "case": "the refusal leaves the composer — the file never joined it" }] },
+    { "from": "ReplyMediaErrors", "via": 6, "kind": "advance", "label": "+ Add pictures", "to": [{ "terminal": "os", "case": "the platform's own picker" }, { "board": "ReplyPictures", "case": "picks land in the tray" }, { "board": "ReplyVideo", "case": "a video — the composer's video state" }, { "terminal": "self", "case": "refused again — another line joins the list" }] },
 
     { "from": "ReplyPicturesWeb", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "ReplyEntry", "case": "one stage back — the thread" }] },
     { "from": "ReplyPicturesWeb", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
@@ -506,7 +513,7 @@
     { "from": "ComposePick", "via": 6, "kind": "advance", "label": "tray thumbnails", "to": [{ "terminal": "self", "case": "drag to reorder — the first is the cover" }] },
     { "from": "ComposePick", "via": 7, "kind": "advance", "label": "tray remove ×", "to": [{ "terminal": "self", "case": "the picture leaves the tray" }] },
     { "from": "ComposePick", "via": 8, "kind": "advance", "label": "Your photos app", "to": [{ "terminal": "os", "case": "the device's own photos app — picks land in the tray" }] },
-    { "from": "ComposePick", "via": 9, "kind": "advance", "label": "grid tiles", "to": [{ "terminal": "self", "case": "toggles the pick — one video or up to ten pictures" }] },
+    { "from": "ComposePick", "via": 9, "kind": "advance", "label": "grid tiles", "to": [{ "terminal": "self", "case": "toggles the pick — one video or up to ten pictures" }, { "board": "ComposePickedErrors", "case": "over its cap, or a format nothing here reads — the step says why" }] },
 
     { "from": "ComposeCrop", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposePick" }] },
     { "from": "ComposeCrop", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },
@@ -674,6 +681,14 @@
     { "from": "FeedGallery", "via": 13, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "FeedGallery", "via": 14, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "FeedGallery", "via": 15, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+
+    { "from": "ComposePickedErrors", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "terminal": "back", "case": "the first stage — leaves toward where compose began, draft kept" }] },
+    { "from": "ComposePickedErrors", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept, no confirmation" }] },
+    { "from": "ComposePickedErrors", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ComposeCrop", "case": "what was accepted goes on — the crop" }] },
+    { "from": "ComposePickedErrors", "via": 4, "kind": "advance", "label": "Write words instead", "to": [{ "board": "ComposeWords" }] },
+    { "from": "ComposePickedErrors", "via": 5, "kind": "advance", "label": "Show all", "to": [{ "board": "ComposePicked", "case": "the accepted batch — a refused file was never in it" }] },
+    { "from": "ComposePickedErrors", "via": 6, "kind": "advance", "label": "tray remove ×", "to": [{ "terminal": "self", "case": "the picture leaves the tray" }] },
+    { "from": "ComposePickedErrors", "via": 7, "kind": "advance", "label": "Remove it (a refused file)", "to": [{ "terminal": "self", "case": "the refusal leaves the list — the file never joined the batch" }] },
 
     { "from": "ComposePicked", "via": 1, "kind": "advance", "label": "drag handles", "to": [{ "terminal": "self", "case": "drag to reorder — the first is the cover" }] },
     { "from": "ComposePicked", "via": 2, "kind": "advance", "label": "Describe", "to": [{ "board": "ComposeDescribe" }] },
