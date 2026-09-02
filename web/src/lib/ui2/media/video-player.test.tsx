@@ -114,6 +114,51 @@ describe("the poster", () => {
   });
 });
 
+// A COMMENT IS SOMETHING YOU READ PAST, not a player you operate (item 31,
+// round 2, drawn by ReplyMedia). The clip wears one control — the sound — and
+// the transport bar and duration pill are gone. What must NOT be lost with them
+// is the muted autoplay or the shared decision the sound carries.
+describe("the reading surface", () => {
+  it("wears one control, and it is the sound", () => {
+    const video = player({ surface: "reading" });
+    expect(video).not.toHaveAttribute("controls");
+    expect(screen.getByTestId("video-player-sound")).toHaveAttribute(
+      "aria-label",
+      "Turn sound on",
+    );
+  });
+
+  it("shows no duration, which is authoring-side information", () => {
+    player({ surface: "reading", durationMs: 18_000 });
+    expect(screen.queryByTestId("video-player-duration")).toBeNull();
+  });
+
+  it("still autoplays muted when it comes into view", () => {
+    // Losing the transport bar must not cost the clip its autoplay.
+    const video = player({ surface: "reading" });
+    expect(video.muted).toBe(true);
+    act(() => intersect(true));
+    expect(video.paused).toBe(false);
+  });
+
+  it("carries the sticky decision every video shares", () => {
+    render(
+      <>
+        <VideoPlayer src={CLIP} surface="reading" testId="thread" />
+        <VideoPlayer src={CLIP} testId="feed" />
+      </>,
+    );
+    // Pressing the comment's sound control changes the sound everywhere, which
+    // is the whole point of one global mute.
+    act(() => {
+      screen.getByTestId("thread-sound").click();
+    });
+    expect(isMuted()).toBe(false);
+    expect((screen.getByTestId("feed") as HTMLVideoElement).muted).toBe(false);
+    expect(screen.getByTestId("thread-sound")).toHaveAttribute("aria-label", "Turn sound off");
+  });
+});
+
 describe("the tile", () => {
   it("renders a player for a video and an image for a picture", () => {
     render(
