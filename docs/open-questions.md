@@ -25,9 +25,8 @@ within a phase, order is flexible.
 |:---:|:---:|:---:|---|
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
 | 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
-| 2a. Stance control (slice 2.2, both clients) | 1 | **Q42** | The resting face an unauthored stance target wears. Cheap to answer and worth answering soon: the two clients are shipping the control now, and a face is a shared contract exactly as §8.4's anchor table is. |
-| 2b. Profile surface (with slice 2.2) | 3 | **Q35, Q36, Q41** | The profile header's connection count (which fold counts as a connection — answerable now that every passive class rides one stance control), the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without all three. |
-| 2c. Video ingest (slice 2.5.2) | 1 | **Q51** | The video ingest policy — accepted containers and codecs, per-type size and duration caps, animated WebP and GIF, and how a poster reaches the upload. Blocking: the poster key and its read path are built, and nothing else in the video half can be until this is answered. |
+| 2a. Profile surface (with slice 2.2) | 3 | **Q35, Q36, Q41** | The profile header's connection count (which fold counts as a connection — answerable now that every passive class rides one stance control), the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without all three. |
+| 2b. Video ingest (slice 2.5.2) | 1 | **Q51** | The video ingest policy — accepted containers and codecs, per-type size and duration caps, animated WebP and GIF, and how a poster reaches the upload. Blocking: the poster key and its read path are built, and nothing else in the video half can be until this is answered. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
@@ -37,6 +36,7 @@ questions are closed.
 
 **Resolved:**
 
+- Q42 — ruled 2026-09-02: **the resting face is 🫥** — the dotted-line face reads as "nothing here yet", which is exactly what an unauthored target is. It stays outside §8.4's anchor table, so an empty control cannot read as a standing the viewer already holds, and it stays distinct from 🤷, which means severed or netted to zero; the muted, translucent treatment is unchanged. Carriers: [design.md §8.3](implementation/design.md#8-the-stance-control) (the resting target) and §8.4 (beside the zero-bundle carve-out) — a named value both clients read, exactly as the anchor table is.
 - Q47 — ruled 2026-09-01: **the veil names its source** — an author's mark reads as the author's own warning, a moderation verdict as the platform's, rather than leaving the reason's presence as the only (weak) signal. The reader-facing design comes first (design backlog item 25); carriers at implementation time: [moderation.md "Two independent states"](instances/moderation.md#two-independent-states-and-the-veil-is-their-or) (the "optional reason is what tells a reader" sentence is superseded by the named source) and [api-spec.md](implementation/api-spec.md). Until moderation verdicts get storage (slice 8), every veil is an author mark, so the copy can ship ahead of the second state.
 - Q48 — ratified 2026-09-01 as built: keys 11 (avatar), 13/14 (self-mark + reason) stand, key 12 stays retired; the 0-or-1-entry slot stays the profile-picture shape (absent leaves, `[]` clears, `[asset]` sets); the self-mark stays **witnessed payload**, not L2 display state — the author's warning belongs on the record with the body it describes, which is also what a rebuilt mirror restores, while moderation stays L2. See [data-model.md "The payload envelope"](implementation/data-model.md#the-payload-envelope).
 - Q50 — ruled 2026-09-01: the landing state **is** the detail view of the fresh post (the canonical `ComposeLanded` board carries the pager, the sheets, the comment entry), and leaving it goes back to the feed — exactly the wiring `design/designs/canonical/flows.json` records and what both clients already do.
@@ -167,48 +167,6 @@ signed" to "what SOME holder of this key signed", so it is a
 deliberate design change, not an implementation shortcut. The
 whole interim handshake is stand-in-scoped (Q30); decide only if
 the wait proves painful before the substrate swap.
-
----
-
-## Q42 — The resting face an unauthored stance target wears
-
-**Where it shows up:**
-[design.md §8.3](implementation/design.md#8-the-stance-control)
-(the resting target), §8.4 (the anchor table)
-**Status:** open (Android ships 😐; web has to match whatever is
-decided); queued for a design session as design backlog item 27
-
-### Context
-
-§8.3 settles that a viewer with no bundle sees "a **muted,
-translucent face** … never a bare word", and §8.4 settles the
-zero bundle's readout as 🤷. Neither names the emoji for the
-third state — the target nobody has authored anything toward.
-
-The constraints are real and narrow it a long way. It cannot come
-from the anchor table, or an empty control would read as a
-standing the viewer already holds. It cannot be 🤷, which now
-means "severed, or netted to zero" — a state the ViewModel
-deliberately tells apart from "never authored"
-(`standingRecords`). And §8.4 fixes the vocabulary as system
-emoji rather than drawn faces.
-
-Android ships 😐 at M3's 0.38 disabled-content opacity: a face
-outside the table, carrying no valence, muted so it reads as
-waiting rather than as an answer.
-
-### The question
-
-Is 😐 the resting face? The table in §8.4 is the contract because
-both clients read it, and this face is the same kind of thing —
-so whatever is decided belongs in §8.3 as a named value rather
-than in two apps' source.
-
-Jakob's lean (2026-08-25, hand test): **🫥** — the dotted-line
-face reads as "nothing here yet" better than 😐's neutrality.
-Caveat that defers the call: 🫥 renders very differently across
-platforms (the WhatsApp glyph is not the system one), so the
-choice wants a cross-device look first. 😐 stays until then.
 
 ---
 
