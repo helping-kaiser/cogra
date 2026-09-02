@@ -7,7 +7,7 @@
 // the cover screen, that the offers appear with the first one taken, and that
 // the composition rule is enforced where an author can see it.
 
-import { fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
@@ -88,6 +88,9 @@ async function pickFiles(files: readonly File[]) {
   const input = await screen.findByTestId("wizard-file-input");
   Object.defineProperty(input, "files", { value: files, configurable: true });
   fireEvent.change(input);
+  // The screening reads bytes before anything joins the draft, so the pick
+  // lands a microtask after the change event.
+  await act(async () => {});
 }
 
 const aVideo = () => new File([mp4Bytes() as BlobPart], "clip.mp4", { type: "video/mp4" });
