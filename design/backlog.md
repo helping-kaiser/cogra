@@ -709,22 +709,34 @@ file smaller or a format readable. `publish-a-post` gained a pinning
 waypoint: the refusal board's own Next reaches the crop, so the first
 leg needed the step it means.
 
-Open, each a ruling this round did not make:
+**Round 2 — the six open pieces, all ruled (jakob 2026-09-02):**
 
-1. **Does a video take a description?** The post's video path carries
-   no describe counter, so the comment's carries none either. Alt text
-   for a video is a different thing from alt text for a picture, and
-   nothing rules it.
-2. **The thread's comment video.** `CommentCard` hands its media to
-   the gallery, which already knows `kind: "video"` with its cover, so
-   nothing is missing mechanically — but whether a comment's video
-   autoplays in the thread the way a post's does is undecided, and no
-   board draws one.
-3. **"+ Add pictures" now under-describes** the control: the picker it
-   opens also takes a video. `CommentEdit` already says "+ Add · 1 of
-   4". Changing the reply composer's label is a copy ruling.
-4. **A web video board.** *Reply · pictures on the web* exists for the
-   drop path; whether the video state needs the same is undrawn.
-5. **MiB or MB on screen** (copy-voice, *Refused files*).
-6. **No `reply-with-a-video` flow is declared** beside
-   `reply-with-pictures`; the boards and edges are there for one.
+1. **A video takes one description; its cover takes none.**
+   `DescribeCounter` grew `subject`, so the row reads *Describe the
+   video · 0 of 1 described* and opens the same describe sheet. The
+   post wizard's details step gained the describe entry the media
+   slice already gave it in words — `describe-your-pictures` now
+   starts on five boards, which is what the witness reblessed.
+2. **A comment's video plays like a post's** — muted autoplay in the
+   square pager, the sound control only, no play/pause and no
+   duration pill on a reading surface. *Comments · a video, pictures
+   & own comment* draws it.
+3. **The add label follows the state**: empty *+ Add pictures or a
+   video*; with pictures *+ Add pictures · n of 4*; with a video, no
+   add control. `CommentEdit`'s *+ Add · 1 of 4* conformed.
+4. **Web takes ReplyVideo 1:1** — file dialog plus the drop path, no
+   web board, the avatar blessing's form. The web drop hint reads
+   *…or drop pictures or a video here.*
+5. **Screens write MB, the caps are MiB** — 50 MiB is 52.4 MB, so the
+   readable number under-promises and never refuses a file the
+   product would take.
+6. **`reply-with-a-video` is declared** beside `reply-with-pictures`
+   and blessed into the witness.
+
+The format contract the refusal states implement lives in
+api-spec.md and is summarized in the readme block: WebP + MP4
+(H.264/AAC) sniffed from bytes, GIF converted on the device (so the
+picker never refuses one), an animated WebP a still, and a frame
+cover extracted on the device and uploaded as the account's own
+picture. api-spec.md carries the comment grammar and the 50 MiB
+comment cap as of this round.
