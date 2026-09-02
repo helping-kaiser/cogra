@@ -59,6 +59,7 @@ class ComposeWizardScreenTest {
     private var sealBacks = 0
     private var coverFrames = mutableListOf<Int>()
     private var coverPickers = 0
+    private var dismissedRefusals = mutableListOf<Int>()
 
     @Composable
     private fun Wizard(
@@ -81,6 +82,7 @@ class ComposeWizardScreenTest {
             onCropsChanged = {},
             onPickCoverFrame = { coverFrames += it },
             onOpenCoverPicker = { coverPickers += 1 },
+            onDismissRefusal = { dismissedRefusals += it },
             onTitleChange = {},
             onDescriptionChange = {},
             onAltTextChange = { _, _ -> },
@@ -573,6 +575,47 @@ class ComposeWizardScreenTest {
         compose.setContent { Wizard(onCover) }
         compose.onNodeWithText("Video only").assertIsDisplayed()
         compose.onNodeWithText("The video's face").assertIsDisplayed()
+    }
+
+    // -- Files the step would not take (`ComposePickedErrors`) --
+
+    @Test
+    fun aRefusedFileIsListedUnderTheTrayWithItsOwnWords() {
+        val state = withPicks.copy(
+            refused = listOf(
+                RefusedPick(null, "That file isn't a picture or a video CoGra can read."),
+            ),
+        )
+        compose.setContent { Wizard(state) }
+
+        compose.onNodeWithTag("wizard_refused_0").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_refused_thumb_0").assertIsDisplayed()
+        // The accepted batch is untouched — a refused file never joined it.
+        compose.onNodeWithTag("wizard_picked_count").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_pick_next").assertIsEnabled()
+    }
+
+    @Test
+    fun aRefusalOffersNoRetryBecauseRetryingCannotHelp() {
+        val state = withPicks.copy(refused = listOf(RefusedPick(null, "Too big.")))
+        compose.setContent { Wizard(state) }
+
+        compose.onNodeWithText("Retry", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("Remove it", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun theStepStaysUsableWithNothingPickedButSomethingRefused() {
+        val state = ComposeWizardState(
+            mode = BodyMode.Media,
+            refused = listOf(RefusedPick(null, "Nope.")),
+        )
+        compose.setContent { Wizard(state) }
+
+        compose.onNodeWithTag("wizard_refused_0").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_pick_grid").assertIsDisplayed()
+        // Nothing accepted yet, so there is nowhere to go on to.
+        compose.onNodeWithTag("wizard_pick_next").assertIsNotEnabled()
     }
 
     @Test

@@ -150,12 +150,15 @@ class ComposeWizardViewModelTest {
     private val processor = object : ThrowingMediaProcessor() {
         var undecodable = mutableSetOf<String>()
 
+        /** Nothing decodes as a picture — the refused-format case. */
+        var unreadable = false
+
         override suspend fun process(uri: String, crop: CropSpec): ProcessedPicture? {
             media.pending.addLast(uri)
             return if (uri in undecodable) null else ProcessedPicture(ByteArray(4), 100, 125)
         }
 
-        override suspend fun aspectRatio(uri: String): Float = 0.8f
+        override suspend fun aspectRatio(uri: String): Float? = if (unreadable) null else 0.8f
     }
 
     private val drafts = object : ComposeDraftStore {
@@ -1010,6 +1013,40 @@ class ComposeWizardViewModelTest {
             .isEqualTo(CoverChoice.Picture("my-own.jpg"))
         // The uploaded cover is no longer the one the author means.
         assertThat(vm.state.value.coverMediaId).isNull()
+    }
+
+    @Test
+    fun aFileTheStepCannotReadIsRefusedWhereItWasOffered() = runTest(dispatcher) {
+        processor.unreadable = true
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        // Not from the grid and neither a readable picture nor a clip.
+        vm.onTogglePick("mystery.bin")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // It never joined the batch, so the tray is untouched.
+        assertThat(vm.state.value.picked).isEmpty()
+        val refused = vm.state.value.refused.single()
+        assertThat(refused.message).isEqualTo(ComposeWizardViewModel.UNREADABLE_FILE)
+        // Nothing to preview: the tile is empty on purpose.
+        assertThat(refused.uri).isNull()
+
+        // Its only way out is removing the notice.
+        vm.onDismissRefusal(0)
+        assertThat(vm.state.value.refused).isEmpty()
+    }
+
+    @Test
+    fun aReadablePictureIsNeverRefused() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onTogglePick("a")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.refused).isEmpty()
+        assertThat(vm.state.value.picked.map { it.uri }).containsExactly("a")
     }
 
     @Test

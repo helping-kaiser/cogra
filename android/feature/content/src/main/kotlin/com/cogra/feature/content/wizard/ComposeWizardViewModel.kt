@@ -229,6 +229,17 @@ class ComposeWizardViewModel @Inject constructor(
             } else {
                 video.info(uri)
             }
+            // A file the step cannot read is refused where it was
+            // offered rather than accepted and failed later
+            // (`ComposePickedErrors`). The grid's own rows came out of
+            // `MediaStore` and are readable by construction; this is the
+            // system picker's path, and the dropped-in file's.
+            if (clip == null && known == null && processor.aspectRatio(uri) == null) {
+                _state.update {
+                    it.copy(refused = it.refused + RefusedPick(uri = null, message = UNREADABLE_FILE))
+                }
+                return@launch
+            }
             val before = _state.value.picked.size
             _state.update {
                 it.togglePick(
@@ -247,6 +258,21 @@ class ComposeWizardViewModel @Inject constructor(
                 after <= before -> cancelUploadsExcept(uri)
                 else -> Unit
             }
+        }
+    }
+
+    /**
+     * Clears one refusal (`ComposePickedErrors`, "Remove it").
+     *
+     * The only way out the board gives it: the file never joined the
+     * batch, so there is nothing to retry and nothing to remove from the
+     * post — only the notice itself to dismiss.
+     */
+    fun onDismissRefusal(index: Int) = _state.update {
+        if (index !in it.refused.indices) {
+            it
+        } else {
+            it.copy(refused = it.refused.filterIndexed { at, _ -> at != index })
         }
     }
 
@@ -935,6 +961,9 @@ class ComposeWizardViewModel @Inject constructor(
         const val UNREADABLE = "That file could not be read as a picture."
         const val REFUSED = "The server would not take that picture."
         const val TRANSPORT = "The upload could not reach the server."
+
+        /** `ComposePickedErrors`' own words for a format nothing here reads. */
+        const val UNREADABLE_FILE = "That file isn't a picture or a video CoGra can read."
 
         const val UNREADABLE_VIDEO = "That file could not be read as a video."
         const val REFUSED_VIDEO = "The server would not take that video."

@@ -103,6 +103,25 @@ data class PickedAsset(
 }
 
 /**
+ * A file the pick step would not take (`ComposePickedErrors`).
+ *
+ * It is not a [PickedAsset]: a refused file never joined the batch, so
+ * it cannot appear in the tray or in the Show-all sheet, and the accepted
+ * picks carry on to the next stage without it. The refusal is drawn where
+ * the file was offered, and its only way out is removing it — retrying
+ * cannot make a file smaller or a format readable.
+ *
+ * [uri] is null for a file nothing here can read: there is no preview to
+ * draw, so the tile is deliberately empty.
+ */
+data class RefusedPick(
+    val uri: String?,
+    val message: String,
+    /** Draws the clip marker on the refused tile. */
+    val isVideo: Boolean = false,
+)
+
+/**
  * Which sheet is open over the seal (`ComposeLicense`, `ComposePad`,
  * `ComposeSensitive`). One at a time: each is a drawer the reader opened
  * over the same screen.
@@ -156,6 +175,13 @@ data class ComposeWizardState(
     val picked: List<PickedAsset> = emptyList(),
     /** The device's newest pictures, once a media permission allows them. */
     val deviceMedia: List<DeviceMedia> = emptyList(),
+
+    /**
+     * Files the step would not take, listed under the tray
+     * (`ComposePickedErrors`). What was accepted goes on regardless —
+     * `Next` never waits on a refusal being cleared.
+     */
+    val refused: List<RefusedPick> = emptyList(),
     val shape: DraftShape = DraftShape.Tall,
     /** Which pick the crop step is framing, by index into [picked]. */
     val framingIndex: Int = 0,
