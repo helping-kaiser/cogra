@@ -26,6 +26,11 @@ import com.cogra.core.designsystem.v2.token.MediaShape
  *   before the cropped bytes exist. Media that arrives already cropped —
  *   everything from the server — keeps the default whole framing and is
  *   drawn straight.
+ * @param videoUrl set when this item **plays**. [url] is then its poster
+ *   — the still shown before the first frame and wherever autoplay does
+ *   not run — which is why the two are separate fields rather than one
+ *   that changes meaning.
+ * @param durationMs the clip's running time, for the badge over it.
  */
 @Immutable
 data class MediaItem(
@@ -33,7 +38,11 @@ data class MediaItem(
     val aspectRatio: Float,
     val altText: String? = null,
     val framing: CropFraming = CropFraming.Whole,
-)
+    val videoUrl: String? = null,
+    val durationMs: Int? = null,
+) {
+    val isVideo: Boolean get() = videoUrl != null
+}
 
 /**
  * Whether a body was removed by its author or under the platform's rules.

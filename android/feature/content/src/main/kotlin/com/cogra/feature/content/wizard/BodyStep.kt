@@ -38,6 +38,7 @@ import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.atom.Hairline
 import com.cogra.core.designsystem.v2.atom.InlineAction
+import com.cogra.core.designsystem.v2.compose.UploadErrorLine
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.MediaThumb
 import com.cogra.core.designsystem.v2.media.ThumbBadge
@@ -104,11 +105,14 @@ internal fun ColumnScope.PickStage(
     onOpenPicker: () -> Unit,
     onTogglePick: (String) -> Unit,
     onShowAll: () -> Unit,
+    onDismissRefusal: (Int) -> Unit,
 ) {
     if (state.picked.isNotEmpty()) {
         PickedTray(state = state, onShowAll = onShowAll)
         Hairline()
     }
+
+    RefusedFiles(refused = state.refused, onDismiss = onDismissRefusal)
 
     val picks = state.picked.map { it.uri }
     LazyVerticalGrid(
@@ -129,22 +133,27 @@ internal fun ColumnScope.PickStage(
         item(key = "photos_app") { PhotosAppTile(onClick = onOpenPicker) }
 
         if (permission is MediaPermission.Granted) {
-            items(state.deviceImages, key = { it.uri }) { image ->
-                val order = picks.indexOf(image.uri).takeIf { it >= 0 }
+            items(state.deviceMedia, key = { it.uri }) { item ->
+                val order = picks.indexOf(item.uri).takeIf { it >= 0 }
+                val noun = if (item.isVideo) "video" else "picture"
                 MediaThumb(
-                    item = MediaItem(image.uri, image.aspectRatio),
+                    item = MediaItem(item.uri, item.aspectRatio),
                     size = null,
                     corner = 0.dp,
                     // A filled numbered disc for a pick, an empty ring for
                     // the rest — the board's whole selection language.
                     badge = ThumbBadge.Order(order?.plus(1)),
-                    onClick = { onTogglePick(image.uri) },
+                    // A clip says how long it is, under a play glyph, at
+                    // the opposite corner — `ComposePick`'s video tile.
+                    duration = item.durationMs?.let { formatDuration(it) },
+                    onClick = { onTogglePick(item.uri) },
                     contentDescription = if (order == null) {
-                        "A picture. Activate to pick it."
+                        "A $noun. Activate to pick it."
                     } else {
-                        "Picture ${order + 1}, picked. Activate to remove it."
+                        "${noun.replaceFirstChar { it.uppercase() }} ${order + 1}, " +
+                            "picked. Activate to remove it."
                     },
-                    testTag = "wizard_grid_${image.uri}",
+                    testTag = "wizard_grid_${item.uri}",
                 )
             }
         }
@@ -228,6 +237,46 @@ private fun PickedTray(
  * one. It opens the system photo picker, which needs no permission at
  * all, so it is also the way through when the grid's own is refused.
  */
+/**
+ * The files the step would not take (`ComposePickedErrors`).
+ *
+ * Each is a failed tile beside its own words, drawn where the file was
+ * offered — never in a dialog and never in a snackbar. There is no
+ * Retry: asking again cannot make a file smaller or a format readable,
+ * so removing the notice is the only way out. A file nothing can read
+ * has no preview, so its tile is empty on purpose.
+ */
+@Composable
+private fun RefusedFiles(refused: List<RefusedPick>, onDismiss: (Int) -> Unit) {
+    if (refused.isEmpty()) return
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = Space.x6, end = Space.x6, top = Space.x4),
+        verticalArrangement = Arrangement.spacedBy(Space.x3),
+    ) {
+        refused.forEachIndexed { index, file ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Space.x2),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                MediaThumb(
+                    item = MediaItem(file.uri, 1f),
+                    badge = ThumbBadge.Failed,
+                    contentDescription = "A refused file",
+                    testTag = "wizard_refused_thumb_$index",
+                )
+                UploadErrorLine(
+                    message = file.message,
+                    onRemove = { onDismiss(index) },
+                    modifier = Modifier.weight(1f),
+                    testTag = "wizard_refused_$index",
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun PhotosAppTile(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val outline = MaterialTheme.colorScheme.outline
