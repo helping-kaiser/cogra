@@ -1046,12 +1046,19 @@ card form everywhere; only license and sensitive present as sheets.
 **Key absent is restore-first.** Nothing is staged server-side and
 nothing is signed; the draft stays on the device, and the state
 wears `tertiary` — a waiting state, never `error`. Leaving mid-write
-keeps one local draft per target, on-device only; the draft is the
-safety, so there is no discard confirm. Signing exits to the post's
-own detail view wearing *Still settling*, with the snackbar
-"Signed — it's in the thread now, still settling." An act that
-expires unlanded gets a calm notice card in the shell: content left
-every reader's view, nothing was spent, the draft is saved.
+keeps one local draft per target, on-device only, on the surfaces
+that keep drafts — the post wizard, the post edit, the profile
+picture; there the draft is the safety, so nothing asks on the way
+out. The reply wizard and the comment edit keep no draft: leaving
+them discards, so a non-empty composer is asked first — one shared
+dialog (the *DiscardConfirm* board) reading "Discard this reply?"
+or, from an edit, "Discard this edit?", body "Nothing is kept.",
+*Keep writing* beside a filled *Discard*. An empty composer leaves
+at once — a confirm with nothing to lose is noise. Signing exits to
+the post's own detail view wearing *Still settling*, with the
+snackbar "Signed — it's in the thread now, still settling." An act
+that expires unlanded gets a calm notice card in the shell: content
+left every reader's view, nothing was spent, the draft is saved.
 
 **A comment is text plus optional media** (deliberately asymmetric
 to the post's XOR — an answer is words first), entered through the
@@ -1061,10 +1068,14 @@ one-act seal that discloses the stance on the parent. **An edit is
 one screen and one batch**: the content edit plus topic and citation
 changes ride together, the cost line reads the live total, and
 tapping it opens the breakdown sheet. The license row shows
-read-only with a lock. **Remove** is the erasure path: own-post
-sheet → a think-twice dialog whose safe action is filled → the
-visible mark. "Removed by its author" and "Removed under the
-platform's rules" must never read alike.
+read-only with a lock; the Sensitive row beside it does not. The
+license is fixed by contract the moment it is signed, while the mark
+is the author's ongoing judgment about their own words — so both
+edit surfaces, the post's and the comment's, carry the seal's
+Sensitive row and open the same sensitive sheet. **Remove** is the
+erasure path: own-post sheet → a think-twice dialog whose safe
+action is filled → the visible mark. "Removed by its author" and
+"Removed under the platform's rules" must never read alike.
 
 **Citing** gets an explorer (posts by title, people by name/handle,
 items by name, proposals by title, chats by name, campaigns by
@@ -1528,15 +1539,18 @@ next to brands like Instagram):
 - **The wizard has two ways out, fixed** (jakob, round 4): **the
   header arrow steps ONE STAGE BACK**, never out of the flow — Details
   reaches crop with it, the platform back gesture does the same — and
-  **the X leaves the whole flow from any stage, draft kept, with no
-  confirmation** (nothing is lost: every leave keeps the draft, and
-  the draft prompt is the return surface). The seal's own Back pill is
-  the same one-stage step, labeled. `WizardHeader` is the master —
-  every composer-flow stage wears it (post wizard, reply, edits, the
-  profile picture); the X sits between the title and the stage's
-  trailing controls so Next keeps the right edge. The em-dash rule
-  stands unchanged (jakob, same round): em dashes carry asides,
-  everywhere copy-voice says so.
+  **the X leaves the whole flow from any stage**. Where a draft is
+  kept — the post wizard, the post edit, the profile picture — the
+  leave keeps it and nothing asks, the draft prompt being the return
+  surface; the reply wizard and the comment edit keep no draft, so a
+  non-empty leave is guarded by the discard confirm and an empty one
+  leaves at once. Each X's label says which of the two it does. The
+  seal's own Back pill is the same one-stage step, labeled.
+  `WizardHeader` is the master — every composer-flow stage wears it
+  (post wizard, reply, edits, the profile picture); the X sits
+  between the title and the stage's trailing controls so Next keeps
+  the right edge. The em-dash rule stands unchanged (jakob, same
+  round): em dashes carry asides, everywhere copy-voice says so.
 - **The slice ships componentized** (`components/compose/`):
   `MediaThumb` (the authoring tile and its upload states), `PickedRow`
   + `DescribeCounter`, `PickedSheet` (Show all), `DescribeSheet`,
@@ -1610,7 +1624,7 @@ entry first". What stands:
   && node check-flows.mjs`.
 - **Every page is wired** (rounds 1–6, 2026-08-31: Entry, then Money
   & Wallet, Feed & Search, Comments, Compose, Media + Patterns; the
-  Profile page joined 2026-09-01 — 689 edges over all 89 boards, no
+  Profile page joined 2026-09-01 — 693 edges over all 90 boards, no
   board unreached, no interactable unedged). The 132 gaps are the
   visible to-do: the guest-gate and network-error pattern boards,
   the reader's post / comment / profile menus, the topic page (ruled

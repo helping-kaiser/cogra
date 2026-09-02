@@ -6,9 +6,13 @@ import { Icon } from "../navigation/Icon.jsx";
 
    · The ARROW steps ONE STAGE BACK — never out of the flow. Details reaches
      crop with it; the system back gesture does the same.
-   · The X LEAVES the whole flow from any stage, draft kept, NO confirmation —
-     nothing is lost, because every leave keeps the draft (the return surface
-     is the draft prompt). Without it, an author five stages deep was stuck
+   · The X LEAVES the whole flow from any stage. Where a draft is kept — the
+     post wizard, the post edit, the profile picture — the leave keeps it and
+     nothing asks, because nothing is lost (the return surface is the draft
+     prompt). The reply wizard and the comment edit keep no draft, so leaving
+     them discards: a non-empty composer asks first, through the discard
+     confirm; an empty one leaves silently. `leaveLabel` says which of the
+     two this X does. Without it, an author five stages deep was stuck
      backing out tap by tap.
 
    The header carries ONLY the ways out (jakob 2026-09-01): the stage's
