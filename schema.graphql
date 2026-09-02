@@ -779,10 +779,11 @@ type MediaAttachment {
 	before playback, and the frame that stands in wherever autoplay
 	does not run.
 	
-	Null unless the asset names one, which today is never: nothing the
-	upload path accepts is a video yet. It is a distinct question from
-	the gallery's `isCover`, which asks which attachment *leads* a
-	multi-asset post rather than what covers a single one.
+	Null unless the asset names one — only a video's upload can pass
+	`coverMediaId`, naming a still the same author already holds. It is
+	a distinct question from the gallery's `isCover`, which asks which
+	attachment *leads* a multi-asset post rather than what covers a
+	single one.
 	
 	The poster answers with its own `status`, so a removed cover reads
 	REDACTED here exactly as it would anywhere else — the mark travels
@@ -799,7 +800,9 @@ type MediaAttachment {
 """
 Layout hints the frontend reads to reserve space before load, so a
 gallery never jumps as its pictures arrive. Derived by the server from
-the bytes, never supplied — `durationMs` reads null until video lands.
+the bytes, never supplied — `durationMs` reads a video's length, an
+animated still's when its frames state one, and null on a single-frame
+picture.
 """
 type MediaOptions {
 	aspectRatio: String

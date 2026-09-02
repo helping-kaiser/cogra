@@ -13,16 +13,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import {
-  checkVideo,
-  formatBytes,
-  formatDuration,
-  isVideoFile,
-  looksLikeMp4,
-  MAX_VIDEO_BYTES,
-  sniffMp4,
-  VIDEO_TYPE,
-} from "./video";
+import { formatDuration, isVideoFile, looksLikeMp4, sniffMp4, VIDEO_TYPE } from "./video";
 
 /** An `ftyp` header: size, "ftyp", major brand, then compatible brands. */
 function ftyp(major: string, compatible: readonly string[] = []): Uint8Array<ArrayBuffer> {
@@ -42,9 +33,7 @@ function ftyp(major: string, compatible: readonly string[] = []): Uint8Array<Arr
 }
 
 describe("the pinned contract", () => {
-  it("holds the server's numbers, so a silent edit fails here", () => {
-    // `DEFAULT_MAX_VIDEO_UPLOAD_BYTES` — ten stills at 10 MiB, or one video.
-    expect(MAX_VIDEO_BYTES).toBe(100 * 1024 * 1024);
+  it("names the one stored moving format", () => {
     expect(VIDEO_TYPE).toBe("video/mp4");
   });
 });
@@ -110,35 +99,6 @@ describe("isVideoFile", () => {
   });
 });
 
-describe("checkVideo", () => {
-  it("takes an MP4 inside the cap", async () => {
-    const file = new Blob([ftyp("isom")], { type: "video/mp4" });
-    await expect(checkVideo(file)).resolves.toEqual({ ok: true });
-  });
-
-  it("refuses a container that is not MP4, in the reader's words", async () => {
-    const file = new Blob([ftyp("qt  ")], { type: "video/quicktime" });
-    const check = await checkVideo(file);
-    expect(check.ok).toBe(false);
-    expect(check.ok === false && check.reason).toBe("Only MP4 video is accepted.");
-  });
-
-  it("refuses an oversize file before reading a single header byte", async () => {
-    // Size is checked first because it costs nothing and is the likelier
-    // refusal; a two-gigabyte export should not be read to be rejected.
-    const file = {
-      size: MAX_VIDEO_BYTES + 1,
-      type: "video/mp4",
-      slice: () => {
-        throw new Error("the header must not be read for an oversize file");
-      },
-    } as unknown as Blob;
-    const check = await checkVideo(file);
-    expect(check.ok).toBe(false);
-    expect(check.ok === false && check.reason).toContain("100 MB");
-  });
-});
-
 describe("formatDuration", () => {
   it("draws the badge the cover board draws", () => {
     expect(formatDuration(42_000)).toBe("0:42");
@@ -157,11 +117,5 @@ describe("formatDuration", () => {
     expect(formatDuration(Number.POSITIVE_INFINITY)).toBe("0:00");
     expect(formatDuration(Number.NaN)).toBe("0:00");
     expect(formatDuration(-1)).toBe("0:00");
-  });
-});
-
-describe("formatBytes", () => {
-  it("states the cap in the unit the cap is written in", () => {
-    expect(formatBytes(MAX_VIDEO_BYTES)).toBe("100 MB");
   });
 });

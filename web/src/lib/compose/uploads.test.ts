@@ -1,11 +1,20 @@
 // @vitest-environment jsdom
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ApolloClient } from "@apollo/client";
 import { CENTERED } from "@/lib/ui2/media/crop";
 import { runUpload, runVideoUpload, waitingAssets } from "./uploads";
 import type { AssetUpload, CoverAsset, PickedAsset } from "./wizard";
+
+// The remux is mocked: it is covered on its own in `strip-video.test.ts`, and
+// Node cannot run a real one. What matters here is that the upload path calls
+// it and sends ITS bytes rather than the picked ones.
+const STRIPPED = new Blob([new Uint8Array(new ArrayBuffer(12)) as BlobPart], {
+  type: "video/mp4",
+});
+const stripVideoMetadata = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/ui2/media/strip-video", () => ({ stripVideoMetadata }));
 
 const asset: PickedAsset = {
   id: "a0",
@@ -28,6 +37,11 @@ function clientAnswering(data: unknown): ApolloClient {
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+});
+
+beforeEach(() => {
+  stripVideoMetadata.mockReset();
+  stripVideoMetadata.mockResolvedValue({ blob: STRIPPED, tookMs: 12 });
 });
 
 /** A canvas that encodes to fixed bytes, so the encode is not what is under test. */
@@ -234,19 +248,40 @@ describe("runVideoUpload", () => {
     expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
   });
 
-  it("sends the clip's own bytes, named for what they are", async () => {
+  it("sends the STRIPPED bytes, not the ones that were picked", async () => {
     encodable();
     const client = clientAnsweringInTurn("media-cover", "media-video");
 
     await runVideoUpload(client, clip, cover, steps().step, steps().step);
 
-    // Pass-through: the still path re-encodes every picture, and there is no
-    // browser equivalent for video, so what was picked is what is sent.
+    expect(stripVideoMetadata).toHaveBeenCalledWith(clip.file);
     const sent = (client.mutate as ReturnType<typeof vi.fn>).mock.calls[1]![0].variables.input
       .file as File;
     expect(sent.type).toBe("video/mp4");
     expect(sent.name).toBe("upload.mp4");
-    expect(sent.size).toBe(clip.file.size);
+    // The remuxed bytes, which is what makes the strip real rather than
+    // decorative — uploading the picked file would carry its GPS tag along.
+    expect(sent.size).toBe(STRIPPED.size);
+  });
+
+  it("refuses rather than uploading a video it could not strip", async () => {
+    encodable();
+    stripVideoMetadata.mockRejectedValueOnce(new Error("nope"));
+    const client = clientAnsweringInTurn("media-cover", "media-video");
+    const video = steps();
+
+    await runVideoUpload(client, clip, cover, video.step, steps().step);
+
+    // Falling back to the picked bytes would upload the file with its metadata
+    // intact — the exact outcome the strip exists to prevent. And it is not
+    // retryable: a second attempt cannot make the container readable.
+    expect(video.seen.at(-1)).toEqual({
+      kind: "failed",
+      message: "This browser couldn't prepare that video.",
+      retryable: false,
+    });
+    // The cover went up; the video never did.
+    expect((client.mutate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1);
   });
 
   it("fails the video when the cover fails, because the video cannot exist without it", async () => {
