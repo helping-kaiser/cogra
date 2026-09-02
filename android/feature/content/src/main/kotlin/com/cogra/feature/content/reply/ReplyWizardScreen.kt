@@ -25,6 +25,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
+import com.cogra.core.designsystem.v2.atom.DiscardConfirm
+import com.cogra.core.designsystem.v2.atom.DiscardSubject
 import com.cogra.core.designsystem.v2.atom.HelpDialog
 import com.cogra.core.designsystem.v2.atom.SheetTitle
 import com.cogra.core.designsystem.v2.atom.WizardHeader
@@ -81,18 +83,43 @@ fun ReplyWizardRoute(
         ActivityResultContracts.PickMultipleVisualMedia(ReplyWizardState.MAX_PICTURES),
     ) { uris -> uris.forEach { viewModel.onPicked(it.toString()) } }
 
+    // The clip's own face, when the author wants one of their own. A
+    // cover is a still by contract, so the launcher says so rather than
+    // filtering a video out afterwards.
+    val coverPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia(),
+    ) { uri -> uri?.let { viewModel.onPickCoverPicture(it.toString()) } }
+
     ReplyWizardScreen(
         state = state,
         onBodyChange = viewModel::onBodyChange,
         onOpenPicker = {
-            picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            // Pictures **and** video: "+ Add pictures or a video". Which
+            // kind was chosen is the composer's question, not the
+            // picker's — a system picker cannot say "four of these or
+            // one of those".
+            picker.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo),
+            )
         },
         onRemovePickAt = viewModel::onRemovePickAt,
         onDescribePictures = viewModel::onDescribeFirst,
         onAltTextChange = viewModel::onAltTextChange,
+        onPickCoverFrame = viewModel::onPickCoverFrame,
+        onOpenCoverPicker = {
+            coverPicker.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+            )
+        },
+        onDismissRefusal = viewModel::onDismissRefusal,
+        onKeepWriting = viewModel::onKeepWriting,
+        onDiscard = viewModel::onLeave,
         onNext = viewModel::onNext,
-        onBack = { if (!viewModel.onBack()) viewModel.onLeave() },
-        onLeave = viewModel::onLeave,
+        // Back and X are the same departure by two routes, so both ask
+        // the same question: the composer keeps no draft, and a
+        // non-empty one is asked before it is lost.
+        onBack = { if (!viewModel.onBack()) viewModel.onLeaveRequested() },
+        onLeave = viewModel::onLeaveRequested,
         onSealBack = viewModel::onSealBack,
         onOpenSheet = viewModel::onOpenSheet,
         onCloseSheet = viewModel::onCloseSheet,
@@ -139,6 +166,11 @@ internal fun ReplyWizardScreen(
     onRemovePickAt: (Int) -> Unit,
     onDescribePictures: () -> Unit,
     onAltTextChange: (String, String) -> Unit,
+    onPickCoverFrame: (Int) -> Unit,
+    onOpenCoverPicker: () -> Unit,
+    onDismissRefusal: (Int) -> Unit,
+    onKeepWriting: () -> Unit,
+    onDiscard: () -> Unit,
     onNext: () -> Unit,
     onBack: () -> Unit,
     onLeave: () -> Unit,
@@ -173,8 +205,18 @@ internal fun ReplyWizardScreen(
     // Back is the header's arrow and the system gesture alike, and both
     // step back one stage. From the composer there is no earlier stage,
     // so back leaves — and leaving discards, because comments keep no
-    // drafts (jakob 2026-09-01).
+    // drafts (jakob 2026-09-01), which is why a non-empty composer is
+    // asked before it goes.
     BackHandler(onBack = onBack)
+
+    if (state.confirmingDiscard) {
+        DiscardConfirm(
+            subject = DiscardSubject.Reply,
+            onKeepWriting = onKeepWriting,
+            onDiscard = onDiscard,
+            testTag = "reply_discard_confirm",
+        )
+    }
 
     Column(
         modifier = modifier
@@ -186,9 +228,9 @@ internal fun ReplyWizardScreen(
             onBack = onBack,
             // The X leaves from any stage. The post wizard's default
             // wording promises a kept draft; a comment has none, so the
-            // label says only what the control does.
+            // label says what will happen to what is written.
             onLeave = onLeave,
-            leaveContentDescription = "Leave",
+            leaveContentDescription = "Leave — the reply is discarded",
             trailingNote = if (state.step == ReplyStep.Seal) "Last step" else null,
             onHelp = if (state.step == ReplyStep.Seal && !state.keyAbsent) {
                 { onOpenHelp(HelpTopic.SignedActions) }
@@ -211,6 +253,9 @@ internal fun ReplyWizardScreen(
                             onOpenPicker = onOpenPicker,
                             onRemovePickAt = onRemovePickAt,
                             onDescribePictures = onDescribePictures,
+                            onPickCoverFrame = onPickCoverFrame,
+                            onPickCoverPicture = onOpenCoverPicker,
+                            onDismissRefusal = onDismissRefusal,
                         )
                     }
                     WizardFooter {
