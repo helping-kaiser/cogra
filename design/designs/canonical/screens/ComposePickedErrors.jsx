@@ -39,7 +39,7 @@ export function Screen() {
       <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "16px 24px 0" }}>
         <RefusedFile
           src="gallery-honey.jpg"
-          message="That picture is too big — a picture can be up to 10 MiB."
+          message="That picture is too big — a picture can be up to 10 MB."
         />
         <RefusedFile message="That file isn't a picture or a video CoGra can read." />
       </div>
