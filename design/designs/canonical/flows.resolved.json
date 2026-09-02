@@ -516,7 +516,7 @@
       "status": "resolved",
       "steps": [
         "start · ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
-        "ReplyCompose · 5 «+ Add pictures» → ReplyPictures — picks land in the tray",
+        "ReplyCompose · 5 «+ Add pictures or a video» → ReplyPictures — picks land in the tray",
         "ReplyPictures · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
       ],

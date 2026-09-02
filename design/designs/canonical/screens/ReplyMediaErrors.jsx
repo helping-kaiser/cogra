@@ -41,7 +41,7 @@ export function Screen() {
           <RefusedFile message="That file isn't a picture or a video CoGra can read." />
         </div>
 
-        <Button variant="text" size="sm" selfStart>+ Add pictures</Button>
+        <Button variant="text" size="sm" selfStart>+ Add pictures or a video</Button>
 
         <div style={{ flex: 1 }} />
 

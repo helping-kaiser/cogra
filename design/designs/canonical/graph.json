@@ -436,7 +436,7 @@
     { "from": "CommentEdit", "via": 3, "kind": "detour", "label": "? — Editing", "to": [{ "board": "HelpDialog", "case": "the Editing text" }] },
     { "from": "CommentEdit", "via": 4, "kind": "advance", "label": "Words", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "CommentEdit", "via": 5, "kind": "advance", "label": "remove picture ×", "to": [{ "terminal": "self", "case": "the picture leaves the batch" }] },
-    { "from": "CommentEdit", "via": 6, "kind": "advance", "label": "+ Add · 1 of 4", "to": [{ "terminal": "os", "case": "the platform's own picker — comments have no pick stage" }] },
+    { "from": "CommentEdit", "via": 6, "kind": "advance", "label": "+ Add pictures · 1 of 4", "to": [{ "terminal": "os", "case": "the platform's own picker — comments have no pick stage" }] },
     { "from": "CommentEdit", "via": 7, "kind": "advance", "label": "Describe the pictures", "to": [{ "board": "ComposeDescribe", "case": "the describe sheet (master on the media page)" }] },
     { "from": "CommentEdit", "via": 8, "kind": "advance", "label": "topic chip ×", "to": [{ "terminal": "self", "case": "the topic leaves the edit" }] },
     { "from": "CommentEdit", "via": 9, "kind": "advance", "label": "Add a topic", "to": [{ "gap": "the topic picker (not boarded)" }] },
@@ -452,7 +452,7 @@
     { "from": "ReplyCompose", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
     { "from": "ReplyCompose", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ReplySeal" }] },
     { "from": "ReplyCompose", "via": 4, "kind": "advance", "label": "the words", "to": [{ "terminal": "self", "case": "typing" }] },
-    { "from": "ReplyCompose", "via": 5, "kind": "advance", "label": "+ Add pictures", "to": [{ "terminal": "os", "case": "the platform's own picker — comments have no pick stage" }, { "board": "ReplyPictures", "case": "picks land in the tray" }, { "board": "ReplyVideo", "case": "a video — the composer's video state" }, { "board": "ReplyMediaErrors", "case": "over its cap, or a format nothing here reads — the composer says why" }] },
+    { "from": "ReplyCompose", "via": 5, "kind": "advance", "label": "+ Add pictures or a video", "to": [{ "terminal": "os", "case": "the platform's own picker — comments have no pick stage" }, { "board": "ReplyPictures", "case": "picks land in the tray" }, { "board": "ReplyVideo", "case": "a video — the composer's video state" }, { "board": "ReplyMediaErrors", "case": "over its cap, or a format nothing here reads — the composer says why" }] },
 
     { "from": "ReplyPictures", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "ReplyEntry", "case": "one stage back — the thread" }] },
     { "from": "ReplyPictures", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
@@ -476,7 +476,7 @@
     { "from": "ReplyMediaErrors", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ReplySeal", "case": "the words alone — nothing was attached" }] },
     { "from": "ReplyMediaErrors", "via": 4, "kind": "advance", "label": "the words", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "ReplyMediaErrors", "via": 5, "kind": "advance", "label": "Remove it (a refused file)", "to": [{ "terminal": "self", "case": "the refusal leaves the composer — the file never joined it" }] },
-    { "from": "ReplyMediaErrors", "via": 6, "kind": "advance", "label": "+ Add pictures", "to": [{ "terminal": "os", "case": "the platform's own picker" }, { "board": "ReplyPictures", "case": "picks land in the tray" }, { "board": "ReplyVideo", "case": "a video — the composer's video state" }, { "terminal": "self", "case": "refused again — another line joins the list" }] },
+    { "from": "ReplyMediaErrors", "via": 6, "kind": "advance", "label": "+ Add pictures or a video", "to": [{ "terminal": "os", "case": "the platform's own picker" }, { "board": "ReplyPictures", "case": "picks land in the tray" }, { "board": "ReplyVideo", "case": "a video — the composer's video state" }, { "terminal": "self", "case": "refused again — another line joins the list" }] },
 
     { "from": "ReplyPicturesWeb", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "ReplyEntry", "case": "one stage back — the thread" }] },
     { "from": "ReplyPicturesWeb", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },

@@ -28,7 +28,7 @@ export function Screen() {
           <FieldLabel>Pictures</FieldLabel>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" onRemove={() => {}} />
-            <Button variant="text" size="sm">+ Add · 1 of 4</Button>
+            <Button variant="text" size="sm">+ Add pictures · 1 of 4</Button>
           </div>
           <DescribeCounter described={1} total={1} onDescribe={() => {}} />
         </div>
