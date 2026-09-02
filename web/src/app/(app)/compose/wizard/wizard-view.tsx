@@ -31,7 +31,9 @@ import {
   advanceGate,
   attachmentClaims,
   bodyContent,
+  COVER_FROM_PICTURE,
   emptyWizard,
+  isVideoPost,
   sealGate,
   shapeRatio,
   wizardReducer,
@@ -39,16 +41,18 @@ import {
   type WizardAction,
   type WizardState,
 } from "@/lib/compose/wizard";
+import { captureFrames, checkVideo, isVideoFile, probeVideo } from "@/lib/ui2/media/video";
 import {
   composeDraftStore,
   draftIsWorthKeeping,
   draftSummary,
   type ComposeDraftStore,
 } from "@/lib/compose/draft-store";
-import { runUpload } from "@/lib/compose/uploads";
-import { usePreviewUrls } from "@/lib/compose/previews";
+import { runUpload, runVideoUpload } from "@/lib/compose/uploads";
+import { useBlobUrl, useBlobUrls, usePreviewUrls } from "@/lib/compose/previews";
 import { PickStep } from "./pick-step";
 import { CropStep } from "./crop-step";
+import { CoverStep } from "./cover-step";
 import { DetailsStep } from "./details-step";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
@@ -68,9 +72,13 @@ const NO_ASSETS: readonly PickedAsset[] = [];
 const HEADINGS: Record<WizardState["step"], string> = {
   pick: "New post",
   crop: "Crop",
+  cover: "The video's face",
   details: "Details",
   seal: "What you sign",
 };
+
+/** A post carries pictures or one video — the composition ruling, in the reader's words. */
+const MIXED_BODY = "A post carries pictures or one video, not both.";
 
 export function ComposeWizard({
   store = identityStore,
@@ -113,6 +121,145 @@ export function ComposeWizard({
   // The offered draft's own cover, which the card draws before the draft has
   // been adopted and its assets are still nobody's.
   const offeredPreviews = usePreviewUrls(offered?.assets ?? NO_ASSETS);
+
+  // Which assets have been handed to an upload runner already. A ref rather
+  // than state because it must not re-run the effect that writes it — and
+  // because React mounts effects twice in development, which without this would
+  // upload every picture twice. Declared here because choosing a cover clears
+  // entries from it, and that happens above the upload effect.
+  const started = useRef(new Set<string>());
+
+  // ---- the video, its length, and the faces it offers -----------------------
+
+  const video = isVideoPost(state) ? state.assets[0] : undefined;
+  const videoFile = video?.file ?? null;
+  const [durationMs, setDurationMs] = useState(0);
+  const [frames, setFrames] = useState<readonly Blob[]>([]);
+  const [capturing, setCapturing] = useState(false);
+  // A pick the composition rule or the format check turned away. It is not part
+  // of the draft — nothing was added — so it is view state and clears on the
+  // next pick.
+  const [pickError, setPickError] = useState<string | null>(null);
+  const framePreviews = useBlobUrls(frames);
+  const coverPreview = useBlobUrl(state.cover?.file ?? null);
+  const cover = state.cover;
+
+  // The badge's number, read off the clip as soon as it is picked rather than
+  // waiting for the cover screen — the details row shows it too.
+  useEffect(() => {
+    if (videoFile === null) {
+      setDurationMs(0);
+      return;
+    }
+    let cancelled = false;
+    void probeVideo(videoFile)
+      .then((probe) => {
+        if (!cancelled) setDurationMs(probe.durationMs);
+      })
+      // A clip whose header states no duration still uploads; only the badge
+      // is poorer for it, and the server writes the authoritative number.
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [videoFile]);
+
+  // A different clip offers different faces.
+  useEffect(() => {
+    setFrames([]);
+  }, [videoFile]);
+
+  // THE FRAMES ARE TAKEN WHEN THE SCREEN IS REACHED, not at pick: a decode of
+  // the whole clip is the most expensive thing this flow does, and an author
+  // who picked a video and then changed their mind should never pay for it.
+  useEffect(() => {
+    if (videoFile === null || state.step !== "cover" || frames.length > 0) return;
+    let cancelled = false;
+    setCapturing(true);
+    void captureFrames(videoFile)
+      .then((taken) => {
+        if (!cancelled) setFrames(taken);
+      })
+      .catch(() => {
+        // No frames is a state the screen draws: "A picture" still works, and
+        // the gate keeps the author from leaving without a cover.
+        if (!cancelled) setFrames([]);
+      })
+      .finally(() => {
+        if (!cancelled) setCapturing(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [videoFile, state.step, frames.length]);
+
+  // The board opens with the first offer selected, so the author's only job is
+  // to change it if they want to.
+  useEffect(() => {
+    const first = frames[0];
+    if (videoFile === null || cover !== null || first === undefined) return;
+    dispatch({
+      type: "cover",
+      cover: { id: `cover-${Date.now()}`, file: first, frame: 0, upload: { kind: "waiting" } },
+    });
+  }, [frames, cover, videoFile, dispatch]);
+
+  const chooseCover = (file: Blob, frame: number) => {
+    // A new face is a new upload: the old one may already be on the server, and
+    // it is attached to nothing, so the sweeper takes it (D5).
+    if (cover !== null) started.current.delete(cover.id);
+    dispatch({
+      type: "cover",
+      cover: { id: `cover-${Date.now()}`, file, frame, upload: { kind: "waiting" } },
+    });
+    if (video !== undefined) {
+      started.current.delete(video.id);
+      dispatch({ type: "upload", id: video.id, upload: { kind: "waiting" } });
+    }
+  };
+
+  /**
+   * What a pick may become. The composition rule is enforced BEFORE anything
+   * enters the draft, so a mixed pick costs nothing and says why — a video
+   * dropped onto nine framed pictures must never quietly replace them.
+   */
+  const takeFiles = async (files: readonly File[]) => {
+    setPickError(null);
+    const videos = files.filter(isVideoFile);
+    const pictures = files.filter((file) => !isVideoFile(file));
+
+    if (videos.length > 0) {
+      if (pictures.length > 0 || state.assets.length > 0) {
+        setPickError(MIXED_BODY);
+        return;
+      }
+      const picked = videos[0]!;
+      const check = await checkVideo(picked);
+      if (!check.ok) {
+        setPickError(check.reason);
+        return;
+      }
+      dispatch({
+        type: "pick",
+        assets: [{ id: `${Date.now()}-0-${picked.name}`, file: picked, kind: "video" }],
+      });
+      return;
+    }
+
+    if (pictures.length === 0) return;
+    if (isVideoPost(state)) {
+      setPickError(MIXED_BODY);
+      return;
+    }
+    dispatch({
+      type: "pick",
+      assets: pictures.map((file, index) => ({
+        id: `${Date.now()}-${index}-${file.name}`,
+        file,
+        kind: "picture" as const,
+      })),
+    });
+  };
 
   // The Reference affordance: a detail surface sends the author here with the
   // node it wants cited, and the chip arrives prefilled. It resolves through
@@ -206,11 +353,6 @@ export function ComposeWizard({
 
   // ---- the uploads ---------------------------------------------------------
 
-  // Which assets have been handed to `runUpload` already. A ref rather than
-  // state because it must not re-run the effect that writes it — and because
-  // React mounts effects twice in development, which without this would upload
-  // every picture twice.
-  const started = useRef(new Set<string>());
   const ratio = shapeRatio(state);
   // The crop is fixed once the reader leaves the crop screen, so that is when
   // the bytes can be encoded — earlier and every nudge would invalidate an
@@ -219,6 +361,26 @@ export function ComposeWizard({
 
   useEffect(() => {
     if (!uploading) return;
+
+    // A VIDEO IS ONE SEQUENCE, NOT TWO RACES. The cover must exist as an asset
+    // before the video can name it, so the pair goes through a single runner
+    // and neither is started independently.
+    if (video !== undefined) {
+      if (cover === null || video.upload.kind !== "waiting" || started.current.has(video.id)) {
+        return;
+      }
+      started.current.add(video.id);
+      started.current.add(cover.id);
+      void runVideoUpload(
+        client,
+        video,
+        cover,
+        (upload) => dispatch({ type: "upload", id: video.id, upload }),
+        (upload) => dispatch({ type: "coverUpload", upload }),
+      );
+      return;
+    }
+
     for (const asset of state.assets) {
       if (asset.upload.kind !== "waiting" || started.current.has(asset.id)) continue;
       started.current.add(asset.id);
@@ -226,10 +388,17 @@ export function ComposeWizard({
         dispatch({ type: "upload", id: asset.id, upload }),
       );
     }
-  }, [uploading, state.assets, ratio, client, dispatch]);
+  }, [uploading, state.assets, video, cover, ratio, client, dispatch]);
 
   const retry = (id: string) => {
     started.current.delete(id);
+    // The video's retry takes its cover with it: the two go up as one sequence,
+    // and a cover left "failed" would hold the seal shut behind a video that
+    // just succeeded.
+    if (video !== undefined && id === video.id && cover !== null) {
+      started.current.delete(cover.id);
+      dispatch({ type: "coverUpload", upload: { kind: "waiting" } });
+    }
     dispatch({ type: "upload", id, upload: { kind: "waiting" } });
   };
 
@@ -245,6 +414,10 @@ export function ComposeWizard({
     setState((current) => ({
       ...current,
       assets: current.assets.map((asset) => ({ ...asset, upload: { kind: "waiting" } })),
+      // The cover goes back with them: stepping off details on a video post
+      // lands on the cover screen, and the face is what may be about to change.
+      cover:
+        current.cover === null ? null : { ...current.cover, upload: { kind: "waiting" as const } },
     }));
   };
 
@@ -452,19 +625,14 @@ export function ComposeWizard({
           words={state.words}
           assets={state.assets}
           previews={previews}
-          error={gate.ok ? null : gate.reason}
+          // A refused pick outranks the empty-body gate: the author just did
+          // something, and "pick at least one picture" would answer a question
+          // they did not ask.
+          error={pickError ?? (gate.ok ? null : gate.reason)}
           blocked={!gate.ok}
           onWords={(words) => dispatch({ type: "words", words })}
           onMode={(mode) => dispatch({ type: "mode", mode })}
-          onPick={(files) =>
-            dispatch({
-              type: "pick",
-              assets: files.map((file, index) => ({
-                id: `${Date.now()}-${index}-${file.name}`,
-                file,
-              })),
-            })
-          }
+          onPick={(files) => void takeFiles(files)}
           onUnpick={(id) => dispatch({ type: "unpick", id })}
           onManage={() => setManaging(true)}
           onNext={() => dispatch({ type: "advance" })}
@@ -480,6 +648,25 @@ export function ComposeWizard({
           onShape={(shape) => dispatch({ type: "shape", shape })}
           onFocus={(index) => dispatch({ type: "focus", index })}
           onCrop={(id, crop) => dispatch({ type: "crop", id, crop })}
+          onNext={() => dispatch({ type: "advance" })}
+        />
+      )}
+
+      {state.step === "cover" && (
+        <CoverStep
+          videoUrl={video === undefined ? null : (previews[video.id] ?? null)}
+          durationMs={durationMs}
+          framePreviews={framePreviews}
+          cover={cover}
+          coverPreview={coverPreview}
+          capturing={capturing}
+          error={gate.ok ? null : gate.reason}
+          blocked={!gate.ok}
+          onPickFrame={(index) => {
+            const frame = frames[index];
+            if (frame) chooseCover(frame, index);
+          }}
+          onPickPicture={(file) => chooseCover(file, COVER_FROM_PICTURE)}
           onNext={() => dispatch({ type: "advance" })}
         />
       )}

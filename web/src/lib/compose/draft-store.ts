@@ -10,7 +10,7 @@
 // ONE DRAFT, not a list. The wizard offers "Continue" or "Discard" over a single
 // saved draft; a drafts inbox is a surface nobody has designed.
 
-import type { PickedAsset, WizardState } from "./wizard";
+import { kindOf, type CoverAsset, type PickedAsset, type WizardState } from "./wizard";
 
 const DB_NAME = "cogra.compose";
 const DB_VERSION = 1;
@@ -60,9 +60,14 @@ function run<T>(mode: IDBTransactionMode, act: (store: IDBObjectStore) => IDBReq
  * exactly the draft the expiry notice must not promise.
  */
 type StoredAsset = Omit<PickedAsset, "file"> & { bytes: ArrayBuffer; fileType: string };
+/** The video's face travels the same way, and for the same reason. */
+type StoredCover = Omit<CoverAsset, "file"> & { bytes: ArrayBuffer; fileType: string };
 type StoredDraft = {
   savedAt: string;
-  state: Omit<WizardState, "assets"> & { assets: readonly StoredAsset[] };
+  state: Omit<WizardState, "assets" | "cover"> & {
+    assets: readonly StoredAsset[];
+    cover: StoredCover | null;
+  };
 };
 
 /**
@@ -103,10 +108,18 @@ export const composeDraftStore: ComposeDraftStore = {
         fileType: file.type,
       })),
     );
+    const cover: StoredCover | null =
+      state.cover === null
+        ? null
+        : {
+            ...state.cover,
+            bytes: await state.cover.file.arrayBuffer(),
+            fileType: state.cover.file.type,
+          };
     if (startedIn !== generation) return;
     const draft: StoredDraft = {
       savedAt: new Date().toISOString(),
-      state: { ...state, assets },
+      state: { ...state, assets, cover },
     };
     await run("readwrite", (store) => store.put(draft, KEY));
   },
@@ -114,7 +127,7 @@ export const composeDraftStore: ComposeDraftStore = {
   async load() {
     const draft = await run<StoredDraft | undefined>("readonly", (store) => store.get(KEY));
     if (draft === undefined) return null;
-    const { assets, ...rest } = draft.state;
+    const { assets, cover, ...rest } = draft.state;
     return {
       ...rest,
       assets: assets.map(({ bytes, fileType, ...asset }) => ({
@@ -122,6 +135,16 @@ export const composeDraftStore: ComposeDraftStore = {
         file: new Blob([bytes], { type: fileType }),
         upload: afterReload(asset.upload),
       })),
+      // A draft written before video carries no cover field at all, so the
+      // nullish fallback is what keeps an old draft loadable.
+      cover:
+        cover == null
+          ? null
+          : {
+              ...cover,
+              file: new Blob([cover.bytes], { type: cover.fileType }),
+              upload: afterReload(cover.upload),
+            },
     };
   },
 
@@ -140,12 +163,15 @@ export function draftSummary(state: WizardState): { title: string; detail: strin
         ? state.words.trim().split("\n")[0]!
         : "Untitled";
   const count = state.assets.length;
+  const first = state.assets[0];
   const detail =
     state.mode === "words"
       ? "Words — kept on this device"
-      : count === 1
-        ? "1 picture — kept on this device"
-        : `${count} pictures — kept on this device`;
+      : first !== undefined && kindOf(first) === "video"
+        ? "1 video — kept on this device"
+        : count === 1
+          ? "1 picture — kept on this device"
+          : `${count} pictures — kept on this device`;
   return { title, detail };
 }
 

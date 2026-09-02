@@ -10,7 +10,7 @@ import type { ApolloClient } from "@apollo/client";
 
 import { uploadMedia } from "@/lib/api/media-api";
 import { encodeForUpload } from "@/lib/ui2/media/encode-image";
-import type { AssetUpload, PickedAsset } from "./wizard";
+import type { AssetUpload, CoverAsset, PickedAsset } from "./wizard";
 
 export type UploadStep = (next: AssetUpload) => void;
 
@@ -72,4 +72,76 @@ export async function runUpload(
 /** Which assets an effect should start right now. */
 export function waitingAssets(assets: readonly PickedAsset[]): readonly PickedAsset[] {
   return assets.filter((asset) => asset.upload.kind === "waiting");
+}
+
+/**
+ * A video and its cover, in the one order the contract allows.
+ *
+ * THE COVER GOES FIRST because the video names it: `coverMediaId` is part of
+ * `uploadMedia`'s input, and an asset row is immutable once written, so there
+ * is no second call that could attach a poster afterwards. That makes this the
+ * one upload in the app that is a SEQUENCE rather than one of ten independent
+ * ones — and it is why a cover that fails fails the video too, said in those
+ * words rather than leaving a video stuck at "uploading" with no explanation.
+ *
+ * THE CLIP'S BYTES GO UP AS THEY WERE PICKED. The still path re-encodes every
+ * picture (which is also what strips its metadata), and there is no equivalent
+ * for video: the browser platform has no MP4 muxer and no metadata-box writer,
+ * so re-encoding or stripping in the browser means taking on a third-party
+ * dependency. That is a decision for jakob rather than for this function —
+ * reported, not made. What the client does do is refuse, before the upload,
+ * anything the server would refuse afterwards (`checkVideo`), and the server
+ * re-validates and re-strips regardless.
+ */
+export async function runVideoUpload(
+  client: ApolloClient,
+  video: PickedAsset,
+  cover: CoverAsset,
+  onVideo: UploadStep,
+  onCover: UploadStep,
+): Promise<void> {
+  let encoded;
+  try {
+    onCover({ kind: "encoding" });
+    // No ratio: a cover is not cropped to the post's shape — it is the clip's
+    // own frame, or a picture the author chose, and either keeps its shape.
+    encoded = await encodeForUpload(cover.file);
+  } catch {
+    onCover({ kind: "failed", message: "This browser couldn't read that cover.", retryable: false });
+    onVideo({ kind: "failed", message: "The cover didn't upload.", retryable: true });
+    return;
+  }
+
+  onCover({ kind: "uploading" });
+  const poster = await uploadMedia(client, { blob: encoded.blob });
+  if (poster.kind !== "success") {
+    const message =
+      poster.kind === "refused"
+        ? (poster.errors[0]?.message ?? "The server refused that cover.")
+        : "Couldn't reach the server.";
+    onCover({ kind: "failed", message, retryable: true });
+    onVideo({ kind: "failed", message: "The cover didn't upload.", retryable: true });
+    return;
+  }
+  onCover({ kind: "done", mediaId: poster.value.id });
+
+  onVideo({ kind: "uploading" });
+  const uploaded = await uploadMedia(client, {
+    blob: video.file,
+    coverMediaId: poster.value.id,
+  });
+
+  if (uploaded.kind === "success") {
+    onVideo({ kind: "done", mediaId: uploaded.value.id });
+    return;
+  }
+  if (uploaded.kind === "refused") {
+    onVideo({
+      kind: "failed",
+      message: uploaded.errors[0]?.message ?? "The server refused that video.",
+      retryable: true,
+    });
+    return;
+  }
+  onVideo({ kind: "failed", message: "Couldn't reach the server.", retryable: true });
 }

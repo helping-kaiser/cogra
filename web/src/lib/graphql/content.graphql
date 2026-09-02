@@ -102,8 +102,23 @@ query Posts($first: Int!, $after: String, $includePending: Boolean! = true) {
           url
           altText
           status
+          # What the asset IS. A video renders a player rather than an
+          # image, and only the contract can say which this is.
+          mimeType
           options {
             aspectRatio
+            durationMs
+          }
+          # A video's poster: the still shown before playback and wherever
+          # autoplay does not run. It answers with its own `status`, so a
+          # removed cover reads REDACTED here like anywhere else.
+          coverMedia {
+            id
+            url
+            status
+            options {
+              aspectRatio
+            }
           }
         }
         # One state for the whole set: sensitivity veils the body as one.
@@ -246,8 +261,18 @@ query PostDetail(
       url
       altText
       status
+      mimeType
       options {
         aspectRatio
+        durationMs
+      }
+      coverMedia {
+        id
+        url
+        status
+        options {
+          aspectRatio
+        }
       }
     }
     # One state for the whole set: sensitivity veils the body as one.
@@ -378,8 +403,18 @@ query PostDetail(
             url
             altText
             status
+            mimeType
             options {
               aspectRatio
+              durationMs
+            }
+            coverMedia {
+              id
+              url
+              status
+              options {
+                aspectRatio
+              }
             }
           }
           # One state for the whole set: sensitivity veils the body as one.
@@ -525,8 +560,18 @@ query CommentReplies(
             url
             altText
             status
+            mimeType
             options {
               aspectRatio
+              durationMs
+            }
+            coverMedia {
+              id
+              url
+              status
+              options {
+                aspectRatio
+              }
             }
           }
           # One state for the whole set: sensitivity veils the body as one.
