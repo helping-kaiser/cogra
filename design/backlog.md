@@ -382,12 +382,14 @@ count falls, and land with check-flows green.
 Filed by the feature loop 2026-09-01 (jakob: designs shipped later,
 bundled). Three small pieces the 2.5.1 close needs:
 
-1. **The veil names its source** (Q47, ruled 2026-09-01): a reader
-   should see whether the *author* warned them or the platform did —
-   design the veil's wording/treatment for both marks (today the
-   author's optional reason is the only, weak, signal). Until slice 8
-   every live veil is an author mark. Touches the veil face settled in
-   item 10.
+1. **The veil names its source** (Q47) — **built 2026-09-02**. The
+   veil's second line reads *The author's warning* or *The platform's
+   verdict*, always, with the reason after it: the two marks read back
+   as the same veil, so an unnamed source reads as the other.
+   `SensitiveVeil` takes `source`, `PostCard` and `CommentCard` carry
+   it, and the *Sensitive & removed* card draws both. Until slice 8
+   every live veil is an author mark. Open: where a words-only post
+   names its source, having no wash to carry the line.
 2. **EditCompose and CommentEdit have no sensitive Mark row** — but
    ComposeSeal and ReplySeal both carry one, and the edit contract is
    complete-state (an edit that omits the mark unmarks), so today an
@@ -401,13 +403,13 @@ bundled). Three small pieces the 2.5.1 close needs:
    web adopts AvatarCrop/AvatarSeal 1:1 (crop and seal don't differ
    by platform — Web variants exist only where files arrive
    differently). Either bless that or draw the web variant.
-4. **A sensitive-marked comment has no veiled state** (added
-   2026-09-01): ReplySeal's Mark row lets a comment author self-mark
-   and the contract carries it, but no board draws a veiled comment
-   inside the comments sheet — the post veil's face doesn't obviously
-   fit a comment-scale card. Blocks the reply-wizard lanes from
-   implementing ReplySeal 1:1 (the Mark row without the veiled
-   result), so this part leads the bundle.
+4. **A sensitive-marked comment veils compact** — **built
+   2026-09-02**. The whole body, words and pictures as one, is
+   replaced by a single comment-scale block wearing the veil's wash,
+   glyph, words and source line; the author, timestamp, topics and
+   stance stay readable. `CommentCard` takes `sensitive`,
+   `SensitiveVeil` grew `kind="compact"`, and *Comments · the thread*
+   draws it. The reply-wizard lanes can implement ReplySeal 1:1.
 5. **An accidental-leave guard for the reply wizard?** Comments keep
    no drafts, so leaving the reply wizard or a comment edit discards.
    The five X-leave edges — ReplyCompose, ReplyPictures(-Web),
