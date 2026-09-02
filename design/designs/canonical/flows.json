@@ -347,6 +347,24 @@
         { "board": "ReplyPicturesWeb", "via": 3, "to": "ReplySeal" }
       ],
       "end": { "board": "ReplySeal", "via": 9, "case": "signed — the thread, the comment settling" }
+    },
+    {
+      "name": "visit-an-author",
+      "description": "The author chip, wherever a post is drawn, opens that person's profile; their chronicle is what the reader came for.",
+      "start": { "control": "author chip" },
+      "end": { "board": "ProfileOther", "via": 6, "case": "Everything — the chronicle, this board" }
+    },
+    {
+      "name": "open-a-posts-pictures",
+      "description": "Post media, wherever a post is drawn, opens the gallery full-bleed; paging the frames is the journey.",
+      "start": { "control": "post media" },
+      "end": { "board": "FeedGallery", "via": 4 }
+    },
+    {
+      "name": "follow-a-citation",
+      "description": "The reference count, wherever a post is drawn, opens the topics-and-references sheet; a reference row opens what was cited — that node's own surface is still owed.",
+      "start": { "control": "reference count" },
+      "end": { "board": "RefsSheet", "via": 2 }
     }
   ]
 }
