@@ -481,7 +481,7 @@ which is what makes a guess expensive.
 
 | Piece | Decided, so built | Open, so absent |
 |---|---|---|
-| `MediaAttachment` / `MediaGallery` | reserved aspect ratio before load; authored, never generated alt text; `surfaceContainerHigh` at the 12px rung; one lead tile plus two squares plus `+n`; the 4:5 cap bounding the tile rather than the picture; a height cap budgeted against worst-case card chrome so a whole post fits above the bottom bar; autoplay muted with one global sticky mute | **the sensitive blur treatment** — radius, overlay, reveal stickiness, and how 0–10 maps to blur-or-not |
+| `MediaAttachment` / `MediaGallery` | reserved aspect ratio before load; authored, never generated alt text; `surfaceContainerHigh` at the 12px rung; the gallery as a pager at the post's one crop shape, dots only; the 4:5 cap bounding the tile rather than the picture; a height cap budgeted against worst-case card chrome so a whole post fits above the bottom bar; autoplay muted with one global sticky mute | **the sensitive blur treatment** — radius, overlay, reveal stickiness, and how 0–10 maps to blur-or-not |
 | `MediaViewer` | media opens full-size from the detail view, never cropped, backed out of rather than navigated away from; real video controls here, sound only in a tile | — |
 | `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the only figure the product has is the Post Score and its explanation is four screens deep | — |
 | `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and topics outside, one tap revealing everything, content kept mounted so revealing moves nothing; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | whether a reveal survives leaving and returning to the post |
@@ -885,9 +885,7 @@ of a scrollable feed — so the tile stops at 4:5, and a taller frame is
 **fitted whole inside it** with the reserved surface showing at the
 sides. The layout never decides the author's crop. The bars stay plain
 `surfaceContainerHigh`, never a blurred enlargement of the photo: that
-invents image where there is none. The one exception is a gallery's
-secondary squares, which crop because they are an index into the set
-rather than the media itself.
+invents image where there is none.
 
 **Tapping media in the detail view opens it full-size** (`MediaViewer`) —
 contain, as large as the screen allows, backed out of with `arrow_back`,
