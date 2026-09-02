@@ -19,31 +19,20 @@ import type { PickedAsset } from "./wizard";
  * its bytes, and choosing a different frame replaces the blob, which is exactly
  * when the old URL should be revoked.
  */
-export function useBlobUrl(blob: Blob | null): string | null {
-  const [url, setUrl] = useState<string | null>(null);
+/**
+ * Revoke a set of URLs when the set is replaced, and on unmount.
+ *
+ * The URLs themselves are minted where their bytes are produced — in the
+ * callback that captured the frames — rather than in an effect that would have
+ * to write them into state and re-render for it. This is only the release half,
+ * which is the half an effect is genuinely for.
+ */
+export function useRevokeOnChange(urls: readonly string[]): void {
   useEffect(() => {
-    if (blob === null) {
-      setUrl(null);
-      return;
-    }
-    const made = URL.createObjectURL(blob);
-    setUrl(made);
-    return () => URL.revokeObjectURL(made);
-  }, [blob]);
-  return url;
-}
-
-/** The same, for a list that is replaced wholesale rather than edited. */
-export function useBlobUrls(blobs: readonly Blob[]): readonly string[] {
-  const [urls, setUrls] = useState<readonly string[]>([]);
-  useEffect(() => {
-    const made = blobs.map((blob) => URL.createObjectURL(blob));
-    setUrls(made);
     return () => {
-      for (const one of made) URL.revokeObjectURL(one);
+      for (const url of urls) URL.revokeObjectURL(url);
     };
-  }, [blobs]);
-  return urls;
+  }, [urls]);
 }
 
 export function usePreviewUrls(assets: readonly PickedAsset[]): Readonly<Record<string, string>> {

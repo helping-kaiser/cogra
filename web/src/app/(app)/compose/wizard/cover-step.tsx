@@ -31,7 +31,6 @@ export function CoverStep({
   durationMs,
   framePreviews,
   cover,
-  coverPreview,
   capturing,
   blocked,
   error,
@@ -45,7 +44,6 @@ export function CoverStep({
   /** Object URLs for the offered frames, in the order they were taken. */
   framePreviews: readonly string[];
   cover: CoverAsset | null;
-  coverPreview: string | null;
   capturing: boolean;
   blocked: boolean;
   error: string | null;
@@ -59,10 +57,12 @@ export function CoverStep({
 
   return (
     <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 pb-4 pt-2">
+      {/* NO POSTER HERE, deliberately: the element shows its own first frame,
+          and which face is chosen is said by the outlined tile below rather
+          than by a still laid over the clip the author is previewing. */}
       <Preview
         ref={video}
         url={videoUrl}
-        poster={coverPreview}
         durationMs={durationMs}
         playing={playing}
         onPlaying={setPlaying}
@@ -153,14 +153,12 @@ export function CoverStep({
 function Preview({
   ref,
   url,
-  poster,
   durationMs,
   playing,
   onPlaying,
 }: {
   ref: React.RefObject<HTMLVideoElement | null>;
   url: string | null;
-  poster: string | null;
   durationMs: number;
   playing: boolean;
   onPlaying: (next: boolean) => void;
@@ -175,7 +173,6 @@ function Preview({
         <video
           ref={ref}
           src={url}
-          poster={poster ?? undefined}
           controls={playing}
           playsInline
           data-testid="wizard-cover-preview"
