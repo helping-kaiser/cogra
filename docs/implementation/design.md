@@ -813,11 +813,10 @@ bundle toward the thing sees its face and folded pair on the
 resting target itself; a viewer without one sees a **muted,
 translucent 🫥** — the dotted-line face, the same control at
 rest, visibly waiting to be given a value — never a bare word.
-The affordance keeps
-an accessible label either way. The bundle is already loaded
-by the read that rendered the surface (§8.2) — showing it
-costs nothing and is the difference between a control and a
-mystery button.
+The affordance keeps an accessible label either way. The bundle
+is already loaded by the read that rendered the surface (§8.2) —
+showing it costs nothing and is the difference between a control
+and a mystery button.
 
 ### 8.4 The emoji readout
 
