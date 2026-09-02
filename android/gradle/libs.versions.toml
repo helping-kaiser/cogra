@@ -37,7 +37,7 @@ biometric = "1.1.0"
 fragment = "1.9.0"
 # The AndroidX ExifInterface, not the framework one: it reads and writes the
 # tag set on every supported API level, which the platform class does not.
-exifinterface = "1.4.1"
+exifinterface = "1.4.2"
 
 # DI
 hilt = "2.58"
