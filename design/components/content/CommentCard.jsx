@@ -9,6 +9,7 @@ import { OverflowMenu } from "./OverflowMenu.jsx";
 import { Icon, NODE_GLYPHS } from "../navigation/Icon.jsx";
 import { TopicsLine } from "./TopicsLine.jsx";
 import { MediaGallery } from "../proposed/MediaAttachment.jsx";
+import { SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
 
 /* The comment of design.md §6 — "author, body, timestamp, media, nested replies,
    stance control", in its top-level and nested variants. Extracted from
@@ -47,6 +48,7 @@ export function CommentCard({
   pending = false,
   edited = false,
   bundle,
+  sensitive,
   depth = 0,
   replies = [],
   replyCount = 0,
@@ -74,6 +76,24 @@ export function CommentCard({
   const items = license
     ? [{ label: showLicense ? "Hide licence" : "Licence terms", onSelect: () => setShowLicense((shown) => !shown) }, ...menuItems]
     : menuItems;
+  /* THE VEIL TAKES THE WHOLE BODY, words and pictures as one block. A comment
+     has no title to leave outside it, so what carries the informed choice is
+     the frame the card already wears — the author, the timestamp, the topics,
+     and the stance the reader can still take. */
+  const body = (
+    <>
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{withMentions(content)}</p>
+      {/* A comment is words first and its pictures join them (readme §13) —
+          below the words, INSET at the card's medium rung rather than
+          full-bleed, and capped at a comment-scale height: the media joins the
+          words, it must not turn the comment into a post. Comment pictures
+          never crop (jakob 2026-08-31), so multiples share a fixed square frame
+          and each whole frame fits inside it; at most four ride one comment. */}
+      {Array.isArray(media) && media.length > 0 && (
+        <MediaGallery items={media} ratio={media.length > 1 ? "square" : undefined} maxHeight="220px" />
+      )}
+    </>
+  );
   return (
     <li
       style={{
@@ -133,16 +153,12 @@ export function CommentCard({
             <OverflowMenu items={items} ariaLabel="More on this comment" />
           </div>
         </div>
-        <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{withMentions(content)}</p>
-        {/* A comment is words first and its pictures join them (readme §13) —
-            below the words, INSET at the card's medium rung rather than
-            full-bleed, and capped at a comment-scale height: the media joins
-            the words, it must not turn the comment into a post. Comment
-            pictures never crop (jakob 2026-08-31), so multiples share a fixed
-            square frame and each whole frame fits inside it; at most four ride
-            one comment. */}
-        {Array.isArray(media) && media.length > 0 && (
-          <MediaGallery items={media} ratio={media.length > 1 ? "square" : undefined} maxHeight="220px" />
+        {sensitive ? (
+          <SensitiveVeil kind="compact" reason={sensitive.reason} source={sensitive.source}>
+            {body}
+          </SensitiveVeil>
+        ) : (
+          body
         )}
         {/* The same topics-and-citations line a post wears, one line, clipped —
             a comment is content like any other and signs the same acts. */}
