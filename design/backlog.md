@@ -377,6 +377,30 @@ leads that list. Rounds take the rulings they need before drawing
 early gaps — ask first), design the boards, wire them so the gap
 count falls, and land with check-flows green.
 
+**Round 2 — the pattern boards (2026-09-02).** Three masters, hand
+authored on the Patterns page: *Guest gate · the ask* (the JoinPrompt
+over the read, Keep browsing first and text, the affirmative filled),
+*Network error · the fault in place* (no scrim; the fault takes the
+place of the control that asked, paired with Retry, the seal readable
+underneath), and *Key absent · acting* (tertiary notice replacing the
+pad's Set, restore first, the one ? on the key). 24 gaps closed —
+10 guest-gate, 11 offline, 2 key-absent, plus FeedBare's `chats`,
+which gated like Main's and WalletGuest's rather than opening the
+chat surface. Census 132 → 108 gaps, 693 → 699 edges, 99 → 102
+artboards, 17 → 12 journey-stopping. Guest origins (Main, FeedBare,
+WalletGuest) left the `nav · New post` and `stance face` selector
+starts, and KeyElsewhere left the stance-face one: a control start
+must mean one thing everywhere, and those taps now start a gate.
+
+Still owed on this item: the applicant's once-each acting boards
+(deliberately left in the census), the input-error states
+(field-error, wrong-credentials, wrong-code, code-mismatch — separate
+designs, untouched by the network board), the reader's post / comment
+/ profile menus, the topic page and picker, the chat surface, the
+standalone post detail, the settlement/tip/rail record views, the
+settings and invites screens, the item / offer surfaces, the Sky
+(item 16), and item 13's Post Score drill-down.
+
 ### 25 · Media-slice close-out designs · *design*
 
 Filed by the feature loop 2026-09-01 (jakob: designs shipped later,

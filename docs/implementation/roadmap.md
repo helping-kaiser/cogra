@@ -378,10 +378,10 @@ the start — and delivery splits by content kind.
   video ([data-model.md](data-model.md)); container and codec
   validation; per-type size caps; `durationMs` reading a value.
 - The wizard's cover step, and animated WebP and GIF.
-- What the upload path accepts — formats, caps, animation, and how
-  a poster reaches it — is
-  [open-questions.md Q51](../open-questions.md), which the ingest
-  half of this slice waits on.
+- The upload accepts **MP4 / H.264 + AAC** at 100 MiB and animated
+  WebP at the picture's own cap, validated and never transcoded;
+  GIF converts on the device. A video is the whole body and its
+  poster rides the asset, named on the upload.
 - Autoplay muted on visibility with one global sticky mute, and
   the viewer's real controls — settled design, unbuilt.
 - **Hand test:** post a video from the phone; watch it autoplay
