@@ -1667,12 +1667,21 @@ The rulings the layer rests on:
   is how a sheet's journey concludes, not a way back. A scrim exit is
   always `back` — the filter sheets, which apply live and carry no Done
   of their own, are concluded by a flow declaring that scrim edge as
-  its given end rather than by walking it.
+  its given end rather than by walking it. A sheet's journey ends
+  there: the signing that may follow is the publishing flow's
+  conclusion, never the sheet's.
 - **An `advance` must reach something.** A control whose every outcome
   merely informs — the applicant's locked rows answering with a
   snackbar, a chip that lands where you already are — leaves the
   journey where it was. Those outcomes carry `"info": true` and their
   edge is a `detour`; an all-informing `advance` fails the gate.
+- **A read journey concludes on arrival.** Not every flow signs
+  something; reaching what was sought is an ending in itself. An end
+  may land on a `self` terminal where the act completes in place.
+- **A stance concludes where it was taken.** The pad is reached from
+  posts, comments and profiles alike, so its signed outcome returns
+  wherever it bloomed. The applicant's vouch-back is the one exception
+  — that one opens the way into the member's own feed.
 - **The start is the click, not a screen.** A flow starts from a board,
   from a given edge, or from a **control**: `{"control": "nav · New
   post"}` expands to every edge wearing that label, and they must all
@@ -1680,7 +1689,18 @@ The rulings the layer rests on:
   boards where the control means something else, and edges reaching
   only a gap are reported, never failed. Start and end edges are given
   rather than searched, so their kind does not matter; that is why the
-  bottom nav stays `nav`.
+  bottom nav stays `nav`. A control the reader meets on board after
+  board — the comment count, the stance face — is declared that way
+  rather than pinned to one of them, so the flow claims every place it
+  is offered and the census grows as boards are drawn.
+- **Web wizards get their own flows.** Where a browser draws its own
+  board for a stage, the journey is declared twice, native and web, so
+  a divergence between the two stays visible instead of hiding inside
+  one flow that walks whichever board the search reached.
+- **A blocked flow is a claim on design still owed.** A journey whose
+  end lands on a gap is declared anyway and reported as blocked, never
+  quietly dropped: it names both the design the product owes and the
+  journey waiting on it.
 - **Three files, three jobs.** `graph.json` is the mechanism (what
   every control does); `flows.json` is the intent (which journeys the
   product owes — hand-authored, one flow per block, never rewritten by
