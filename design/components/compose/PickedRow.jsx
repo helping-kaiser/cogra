@@ -56,8 +56,13 @@ export function PickedRow({ items = [], caption, onManage, manageLabel = "Manage
 /* "Describe the pictures · 1 of 3 described" — the details step's entry into
    per-picture descriptions, with the quiet count beside it. Alt text is
    authored, optional, never invented; a described set is a choice made
-   visible, not a chore bar. */
-export function DescribeCounter({ described, total, onDescribe }) {
+   visible, not a chore bar.
+
+   A VIDEO TAKES ONE DESCRIPTION for the whole clip (jakob 2026-09-02), so the
+   row reads "Describe the video · 0 of 1 described" — same anatomy, `subject`
+   naming what is being described. The cover takes none of its own: it is the
+   video's face, not a second picture. */
+export function DescribeCounter({ described, total, onDescribe, subject = "pictures" }) {
   return (
     <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px" }}>
       <button
@@ -77,7 +82,7 @@ export function DescribeCounter({ described, total, onDescribe }) {
           color: "var(--primary)",
         }}
       >
-        Describe the pictures
+        Describe the {subject}
       </button>{" "}
       <span style={{ color: "var(--text-secondary)" }}>
         · {described} of {total} described

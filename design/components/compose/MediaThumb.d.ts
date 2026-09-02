@@ -21,6 +21,13 @@ export interface MediaThumbProps {
   progress?: number;
   /** Dims the picture and wears the error badge; the words live in `UploadErrorLine`. */
   failed?: boolean;
+  /**
+   * The composer's video preview: the play disc on the frame, `duration` on
+   * the trailing corner (the pill needs an 80px tile; the disc scales with
+   * the tile). Authoring-side only — a reading surface never draws play.
+   */
+  video?: boolean;
+  duration?: string;
   /** Renders the X, top-right. Hidden on a failed tile (its ways out are in the line). */
   onRemove?: () => void;
   removeLabel?: string;

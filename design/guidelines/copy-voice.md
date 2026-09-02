@@ -118,10 +118,13 @@ title, at most two short paragraphs, Close. The texts, verbatim
 - **Describing pictures** (the describe sheet): A description is
   read aloud by screen readers and shown when a picture can't load —
   plain words about what's there. It travels with the picture,
-  public like the rest of the post. / Nothing is described for you:
-  a picture without a description is skipped by screen readers,
-  never guessed at.
-- **Your key** (key absent at the seal): Signing needs your key, and
+  public like the rest of the post. A video takes one description
+  for the whole clip; its cover takes none of its own. / Nothing is
+  described for you: a picture without a description is skipped by
+  screen readers, never guessed at.
+  *(The video sentence is an extension of blessed copy — 2026-09-02,
+  flagged for review; the rest of the dialog is unchanged.)*
+- **Your key** (key absent at the seal and at the stance pad): Signing needs your key, and
   it isn't on this browser. Nothing is signed or sent without it — the
   draft stays on this device. / Restore the key with your recovery
   code to finish. Restoring here is the only way to complete this
@@ -181,6 +184,24 @@ title, at most two short paragraphs, Close. The texts, verbatim
   unless you ask for it back. Every change applies as you tap;
   nothing here is signed or shared. / It lasts until you change it,
   on this device only. Your default lives in settings.
+
+## Refused files
+
+Drawn on *Reply · files refused* and *Pick · files refused*
+(readme §13, *Comment video and the media error states*). Each line
+names the cap it broke, because that is the only place a cap is named —
+nothing announces the limits in advance. One line per surface, one way
+out (*Remove it*; never *Retry* — retrying cannot change the answer):
+
+- `That video is too big — a comment's video can be up to 50 MB.`
+- `That video is too big — a post's video can be up to 100 MB.`
+- `That picture is too big — a picture can be up to 10 MB.`
+- `That file isn't a picture or a video CoGra can read.`
+
+**Screens say MB; the caps are MiB.** The limit enforced is the binary
+one — 50 MiB is 52.4 MB — so the number on screen under-promises and
+can never turn a file the product would have accepted into a refusal.
+The reverse, writing MiB, would be exact and unreadable.
 
 Two removal marks, never interchangeable: `Removed by its author` —
 "The words and pictures are gone. The post's place in the thread, and
