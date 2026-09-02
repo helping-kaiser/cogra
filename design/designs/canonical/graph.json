@@ -167,7 +167,7 @@
 
     { "from": "InviteEntry", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back" }] },
     { "from": "InviteEntry", "via": 2, "kind": "advance", "label": "invite link field", "to": [{ "terminal": "self", "case": "typing" }] },
-    { "from": "InviteEntry", "via": 3, "kind": "advance", "label": "Continue", "to": [{ "board": "Join", "case": "the link checks out" }, { "board": "JoinInvalid", "case": "unusable link" }, { "gap": "network-error pattern board (not designed)", "case": "offline" }] },
+    { "from": "InviteEntry", "via": 3, "kind": "advance", "label": "Continue", "to": [{ "board": "Join", "case": "the link checks out" }, { "board": "JoinInvalid", "case": "unusable link" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "InviteEntry", "via": 4, "kind": "advance", "label": "Already have an account? Sign in", "to": [{ "board": "SignIn" }] },
     { "from": "InviteEntry", "via": 5, "kind": "cancel", "label": "Just looking? Browse the feed", "to": [{ "board": "Main", "case": "an inviter's link seen — their borrowed view" }, { "board": "FeedBare", "case": "no usable link — the bare view" }] },
 
@@ -176,7 +176,7 @@
     { "from": "Join", "via": 3, "kind": "advance", "label": "Email field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "Join", "via": 4, "kind": "advance", "label": "Password field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "Join", "via": 5, "kind": "advance", "label": "reveal password", "to": [{ "terminal": "self", "case": "the password shows" }] },
-    { "from": "Join", "via": 6, "kind": "advance", "label": "Create account", "to": [{ "board": "ApplicantFeed", "case": "account created — applicant days begin" }, { "gap": "field-error states (not boarded)", "case": "handle taken / invalid input" }, { "gap": "network-error pattern board (not designed)", "case": "offline" }] },
+    { "from": "Join", "via": 6, "kind": "advance", "label": "Create account", "to": [{ "board": "ApplicantFeed", "case": "account created — applicant days begin" }, { "gap": "field-error states (not boarded)", "case": "handle taken / invalid input" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "Join", "via": 7, "kind": "advance", "label": "Already have an account? Sign in", "to": [{ "board": "SignIn" }] },
 
     { "from": "JoinInvalid", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back" }] },
@@ -206,7 +206,7 @@
     { "from": "SignIn", "via": 3, "kind": "advance", "label": "Password field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "SignIn", "via": 4, "kind": "advance", "label": "reveal password", "to": [{ "terminal": "self", "case": "the password shows" }] },
     { "from": "SignIn", "via": 5, "kind": "advance", "label": "Don't remember this account here", "to": [{ "terminal": "self", "case": "the checkbox flips" }] },
-    { "from": "SignIn", "via": 6, "kind": "advance", "label": "Sign in", "to": [{ "board": "Feed", "case": "member, key on this device" }, { "board": "KeyElsewhere", "case": "member, key not here" }, { "board": "ApplicantFeed", "case": "applicant" }, { "gap": "wrong-credentials error state (not boarded)", "case": "bad email or password" }, { "gap": "network-error pattern board (not designed)", "case": "offline" }] },
+    { "from": "SignIn", "via": 6, "kind": "advance", "label": "Sign in", "to": [{ "board": "Feed", "case": "member, key on this device" }, { "board": "KeyElsewhere", "case": "member, key not here" }, { "board": "ApplicantFeed", "case": "applicant" }, { "gap": "wrong-credentials error state (not boarded)", "case": "bad email or password" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "SignIn", "via": 7, "kind": "advance", "label": "Forgot password?", "to": [{ "board": "Reset" }] },
     { "from": "SignIn", "via": 8, "kind": "advance", "label": "New here? Enter your invite", "to": [{ "board": "InviteEntry" }] },
     { "from": "SignIn", "via": 9, "kind": "cancel", "label": "Just looking? Browse the feed", "to": [{ "board": "FeedBare" }] },
@@ -259,14 +259,14 @@
     { "from": "WalletAddressSeal", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "WalletSetup", "case": "the flow left — the wallet still waits for setup" }] },
     { "from": "WalletAddressSeal", "via": 3, "kind": "detour", "label": "? — Signed actions", "to": [{ "board": "HelpDialog", "case": "the Signed-actions text" }] },
     { "from": "WalletAddressSeal", "via": 4, "kind": "advance", "label": "copy the address", "to": [{ "terminal": "self", "case": "the address lands on the clipboard" }] },
-    { "from": "WalletAddressSeal", "via": 5, "kind": "advance", "label": "Sign and publish", "to": [{ "board": "WalletEmpty", "case": "published — the zero wallet, address on record" }, { "gap": "network-error pattern board (not designed)", "case": "offline" }] },
+    { "from": "WalletAddressSeal", "via": 5, "kind": "advance", "label": "Sign and publish", "to": [{ "board": "WalletEmpty", "case": "published — the zero wallet, address on record" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "WalletAddressSeal", "via": 6, "kind": "back", "label": "Back", "to": [{ "board": "WalletSetup", "case": "one stage back" }] },
 
     { "from": "WalletChange", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "one stage back — where Change was tapped" }] },
     { "from": "WalletChange", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow, draft kept" }] },
     { "from": "WalletChange", "via": 3, "kind": "detour", "label": "? — Signed actions", "to": [{ "board": "HelpDialog", "case": "the Signed-actions text" }] },
     { "from": "WalletChange", "via": 4, "kind": "advance", "label": "copy the new address", "to": [{ "terminal": "self", "case": "the address lands on the clipboard" }] },
-    { "from": "WalletChange", "via": 5, "kind": "advance", "label": "Sign the change", "to": [{ "board": "Wallet", "case": "signed — the new address on record, newest wins" }, { "gap": "network-error pattern board (not designed)", "case": "offline" }] },
+    { "from": "WalletChange", "via": 5, "kind": "advance", "label": "Sign the change", "to": [{ "board": "Wallet", "case": "signed — the new address on record, newest wins" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "WalletChange", "via": 6, "kind": "back", "label": "Back", "to": [{ "terminal": "back", "case": "one stage back — where Change was tapped" }] },
 
     { "from": "WalletKeyAbsent", "via": 1, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }] },
@@ -441,7 +441,7 @@
     { "from": "CommentEdit", "via": 9, "kind": "advance", "label": "Add a topic", "to": [{ "gap": "the topic picker (not boarded)" }] },
     { "from": "CommentEdit", "via": 10, "kind": "advance", "label": "+ Cite something", "to": [{ "board": "ReferencePicker" }] },
     { "from": "CommentEdit", "via": 11, "kind": "detour", "label": "This creates 2 signed actions", "to": [{ "board": "CommentEditActs" }] },
-    { "from": "CommentEdit", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "board": "ReplyMedia", "case": "signed — the thread, the edit settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "gap": "network-error pattern board (not designed)", "case": "offline" }] },
+    { "from": "CommentEdit", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "board": "ReplyMedia", "case": "signed — the thread, the edit settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "CommentEdit", "via": 13, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
 
     { "from": "CommentEditActs", "via": 1, "kind": "advance", "label": "Done", "to": [{ "board": "CommentEdit", "case": "the sheet closes" }] },
@@ -484,7 +484,7 @@
     { "from": "ReplySeal", "via": 6, "kind": "advance", "label": "Adjust (the stance)", "to": [{ "board": "ReplyPad" }] },
     { "from": "ReplySeal", "via": 7, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense", "case": "the license sheet (master on the compose page)" }] },
     { "from": "ReplySeal", "via": 8, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
-    { "from": "ReplySeal", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplyEntry", "case": "signed — the thread, the comment settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "gap": "network-error pattern board (not designed)", "case": "offline" }] },
+    { "from": "ReplySeal", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplyEntry", "case": "signed — the thread, the comment settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "ReplySeal", "via": 10, "kind": "back", "label": "Back", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words" }, { "board": "ReplyPictures", "case": "…or the pictures state" }] },
 
     { "from": "DiscardConfirm", "via": 1, "kind": "back", "label": "Keep writing", "to": [{ "terminal": "back", "case": "the dialog closes — back to the stage it covered" }] },
@@ -531,7 +531,7 @@
     { "from": "ComposeSeal", "via": 4, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense" }] },
     { "from": "ComposeSeal", "via": 5, "kind": "advance", "label": "Adjust (your stance)", "to": [{ "board": "ComposePad" }] },
     { "from": "ComposeSeal", "via": 6, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
-    { "from": "ComposeSeal", "via": 7, "kind": "advance", "label": "Sign and publish", "to": [{ "board": "ComposeLanded", "case": "signed — the detail view, still settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere" }, { "gap": "network-error pattern board (not designed)", "case": "offline" }] },
+    { "from": "ComposeSeal", "via": 7, "kind": "advance", "label": "Sign and publish", "to": [{ "board": "ComposeLanded", "case": "signed — the detail view, still settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "ComposeSeal", "via": 8, "kind": "back", "label": "Back", "to": [{ "board": "ComposeDetails", "case": "one stage back" }] },
 
     { "from": "ComposeLicense", "via": 1, "kind": "detour", "label": "? — License", "to": [{ "board": "HelpDialog", "case": "the License text" }] },
@@ -581,7 +581,7 @@
     { "from": "EditCompose", "via": 9, "kind": "advance", "label": "reference remove ×", "to": [{ "terminal": "self", "case": "the citation withdraws — a signed act in the batch" }] },
     { "from": "EditCompose", "via": 10, "kind": "advance", "label": "+ Cite something", "to": [{ "board": "ReferencePicker" }] },
     { "from": "EditCompose", "via": 11, "kind": "detour", "label": "This creates 3 signed actions", "to": [{ "board": "EditActs" }] },
-    { "from": "EditCompose", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "terminal": "back", "case": "signed — the post, the edit settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "gap": "network-error pattern board (not designed)", "case": "offline" }] },
+    { "from": "EditCompose", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "terminal": "back", "case": "signed — the post, the edit settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "EditCompose", "via": 13, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
 
     { "from": "EditActs", "via": 1, "kind": "advance", "label": "Done", "to": [{ "board": "EditCompose", "case": "the sheet closes" }] },
@@ -716,11 +716,13 @@
     { "from": "AvatarSeal", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "AvatarCrop", "case": "one stage back" }] },
     { "from": "AvatarSeal", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow" }] },
     { "from": "AvatarSeal", "via": 3, "kind": "detour", "label": "? — Changing your picture", "to": [{ "board": "HelpDialog", "case": "the Changing-your-picture text" }] },
-    { "from": "AvatarSeal", "via": 4, "kind": "advance", "label": "Sign the change", "to": [{ "terminal": "back", "case": "signed — shown everywhere you appear" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "gap": "network-error pattern board (not designed)", "case": "offline" }] },
+    { "from": "AvatarSeal", "via": 4, "kind": "advance", "label": "Sign the change", "to": [{ "terminal": "back", "case": "signed — shown everywhere you appear" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "AvatarSeal", "via": 5, "kind": "back", "label": "Back", "to": [{ "board": "AvatarCrop", "case": "one stage back" }] },
 
     { "from": "GuestGate", "via": 1, "kind": "back", "label": "Keep browsing", "to": [{ "terminal": "back", "case": "the ask closes — the read stays where it was" }] },
     { "from": "GuestGate", "via": 2, "kind": "advance", "label": "Sign in or join", "to": [{ "board": "SignIn" }] },
+
+    { "from": "NetworkError", "via": 1, "kind": "advance", "label": "Retry", "to": [{ "board": "ComposeLanded", "case": "reaches this time — the exemplar's signed landing" }, { "terminal": "self", "case": "still offline — the fault stays in place", "info": true }] },
 
     { "from": "HelpDialog", "via": 1, "kind": "back", "label": "Close", "to": [{ "terminal": "back", "case": "the dialog closes — back to the screen that asked" }] },
     { "from": "HelpDialog", "via": 2, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the dialog closes" }] },
@@ -772,7 +774,7 @@
     { "from": "ProfileEditSeal", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ProfileEdit", "case": "one stage back" }] },
     { "from": "ProfileEditSeal", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves — nothing signed" }] },
     { "from": "ProfileEditSeal", "via": 3, "kind": "detour", "label": "? — Changing your profile", "to": [{ "board": "HelpDialog", "case": "the Changing-your-profile text — panel still owed on the help board" }] },
-    { "from": "ProfileEditSeal", "via": 4, "kind": "advance", "label": "Sign the change", "to": [{ "terminal": "back", "case": "signed — the profile updates" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "gap": "network-error pattern board (not designed)", "case": "offline" }] },
+    { "from": "ProfileEditSeal", "via": 4, "kind": "advance", "label": "Sign the change", "to": [{ "terminal": "back", "case": "signed — the profile updates" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "ProfileEditSeal", "via": 5, "kind": "back", "label": "Back", "to": [{ "board": "ProfileEdit", "case": "one stage back" }] },
 
     { "from": "ProfileApplicant", "via": 1, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
