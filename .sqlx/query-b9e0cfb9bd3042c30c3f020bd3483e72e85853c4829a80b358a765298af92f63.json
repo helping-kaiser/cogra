@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT id, author_id, digest, digest_algo, storage_key,\n               mime_type, size_bytes,\n               options AS \"options!: serde_json::Value\",\n               redaction_reason, redacted_at, created_at\n        FROM media_attachments\n        WHERE id = $1\n        ",
+  "query": "\n        SELECT id, author_id, digest, digest_algo, storage_key,\n               mime_type, size_bytes,\n               options AS \"options!: serde_json::Value\",\n               cover_media_id,\n               redaction_reason, redacted_at, created_at\n        FROM media_attachments\n        WHERE id = ANY($1)\n        ",
   "describe": {
     "columns": [
       {
@@ -45,23 +45,28 @@
       },
       {
         "ordinal": 8,
+        "name": "cover_media_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 9,
         "name": "redaction_reason",
         "type_info": "Text"
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "redacted_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "created_at",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "UuidArray"
       ]
     },
     "nullable": [
@@ -75,8 +80,9 @@
       false,
       true,
       true,
+      true,
       false
     ]
   },
-  "hash": "dfc1a5de90aabca71b5204cee006f9f0b3318242d0581c1b881bc36670f51985"
+  "hash": "b9e0cfb9bd3042c30c3f020bd3483e72e85853c4829a80b358a765298af92f63"
 }
