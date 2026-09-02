@@ -114,16 +114,31 @@
     },
     {
       "name": "reply-to-a-post",
-      "description": "A post's comment count opens the thread sheet, Add a comment opens the composer, and the seal signs the reply back into the thread.",
+      "description": "The comment count, wherever a post is drawn, opens the thread sheet; Add a comment opens the composer, and the seal signs the reply back into the thread.",
       "status": "resolved",
+      "startsOn": [
+        "ApplicantFeed",
+        "ApplicantWaiting",
+        "ComposeExpired",
+        "ComposeLanded",
+        "Feed",
+        "FeedBare",
+        "FeedFar",
+        "FeedGallery",
+        "FeedNarrowed",
+        "KeyElsewhere",
+        "Main",
+        "ProfilePosts",
+        "Removed",
+        "VouchBack"
+      ],
       "steps": [
-        "start · Feed · 10 «comment count» → ReplyEntry",
+        "start · «comment count» on 14 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
       ],
       "boards": [
-        "Feed",
         "ReplyEntry",
         "ReplyCompose",
         "ReplySeal"
@@ -391,7 +406,6 @@
       "flows": [
         "narrow-the-feed",
         "open-a-topic",
-        "reply-to-a-post",
         "sign-in",
         "verify-the-email-as-a-member",
         "vouch-back-for-your-inviter"
@@ -399,7 +413,6 @@
       "endpoint": [
         "narrow-the-feed",
         "open-a-topic",
-        "reply-to-a-post",
         "sign-in",
         "verify-the-email-as-a-member",
         "vouch-back-for-your-inviter"

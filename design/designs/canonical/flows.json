@@ -42,8 +42,8 @@
     },
     {
       "name": "reply-to-a-post",
-      "description": "A post's comment count opens the thread sheet, Add a comment opens the composer, and the seal signs the reply back into the thread.",
-      "start": { "board": "Feed", "via": 10 },
+      "description": "The comment count, wherever a post is drawn, opens the thread sheet; Add a comment opens the composer, and the seal signs the reply back into the thread.",
+      "start": { "control": "comment count" },
       "waypoints": [
         { "board": "ReplyEntry", "via": 7 },
         { "board": "ReplyCompose", "via": 3 }
