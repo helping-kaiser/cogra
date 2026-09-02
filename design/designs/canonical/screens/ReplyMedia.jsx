@@ -1,8 +1,14 @@
-/* Comments carrying pictures, and the author's own comment (media slice,
+/* Comments carrying media, and the author's own comment (media slice,
    2026-08-31): a single picture shows whole at its own ratio (comment pictures
    never crop), multiples share the fixed square pager, and the viewer's own
    comment wears Edit and — once edited — the Edited marker. The sheet is the
-   comments sheet of readme §13, unchanged. */
+   comments sheet of readme §13, unchanged.
+
+   A COMMENT'S VIDEO PLAYS LIKE A POST'S (jakob 2026-09-02): muted autoplay
+   while it is on screen, in the comment pager's square frame, wearing the one
+   control a video ever wears — sound, on the global sticky decision every
+   video shares. No play/pause and no duration pill: presence on screen is the
+   policy on a reading surface, exactly as on a post's card. */
 export function Screen() {
   return (
     <>
@@ -17,10 +23,17 @@ export function Screen() {
         <ul style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 12, margin: 0, padding: "0 16px", listStyle: "none" }}>
           <CommentCard
             author={TOBIAS}
-            content="The glovebox camera earns its keep — this is the print from 2019 that almost catches it."
+            content="Eighteen seconds of the same headland, if the light comes through at all."
             timestamp="1h"
             media={[
-              { src: "comment-camera.jpg", ratio: "tall", fit: "contain", alt: "A person holding a film camera up to the light." },
+              {
+                kind: "video",
+                src: "comment-clip.mp4",
+                poster: "comment-camera.jpg",
+                ratio: "square",
+                fit: "contain",
+                alt: "A film camera panning across the headland at low light.",
+              },
             ]}
             bundle={mkBundle(0.1, 0.1)}
             onReply={() => {}}
