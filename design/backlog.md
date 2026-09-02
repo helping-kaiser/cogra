@@ -495,3 +495,19 @@ Two lists come out of it worth having on their own: the flows that
 resolve, frozen as witnesses and thereafter defended against silent
 rerouting, and the gaps that sit on one — which sharpens item 23's
 ordering by naming the journeys each gap actually stops.
+
+**Batch 1 landed 2026-09-02 — entry and money.** Twelve flows join
+the seeds: `sign-in-with-the-key-elsewhere`, `join-with-an-invite`,
+`guest-turns-applicant`, `verify-the-email`,
+`verify-the-email-as-a-member`, `make-your-key`,
+`vouch-back-for-your-inviter` and `restore-your-key` on entry;
+`publish-your-payout-address`, `change-your-payout-address`,
+`trace-a-payout-to-what-paid-it` and `see-a-campaigns-money` on
+money. Nineteen declared, seventeen resolved, two blocked on
+purpose — the topic page and the paying settlement's view. The round
+also restructured the master stance pad on jakob's ruling: the pad
+is reached from posts, comments and profiles, so `VouchBackPad/4`
+now signs to the `back` terminal and leaves you where you were,
+while the applicant's vouch-back keeps its own case into `Feed`.
+Still to author: compose, comments, feed, search, media, profile
+and patterns.
