@@ -688,3 +688,55 @@ line, with the standing above it and the landing below — each of the
 three labelled above its own value so the eye can compare them without
 reading. Neither app draws the label. Catch both up, and keep the
 spoken line naming the anchor and both axes.
+
+### 31 · Comment video and the media error states · *design + system* · **built**
+
+Filed by the feature loop 2026-09-02 (jakob: a comment should carry a
+video and a cover like a post, and both scales need error states for
+too-big files and unknown formats). Extends item 21's territory.
+Rulings in readme §13 *Comment video and the media error states*.
+Built: a comment's grammar is the post's at comment caps — four
+pictures OR one video with its cover, the byte caps recorded as
+product constants (picture 10 MiB, video 100 MiB in a post and 50 MiB
+in a comment, cover 10 MiB); *Reply · a video and its cover* (the
+platform picker's video case, `ComposeCover`'s cover row inlined at
+comment scale, the pager's square frame); *Reply · files refused* and
+*Pick · files refused* (the refusal drawn where the file was offered,
+the cap named only there); `MediaThumb` grew the composer's video
+anatomy (play disc, duration — authoring-side only) and
+`UploadErrorLine` grew the no-Retry form, since retrying cannot make a
+file smaller or a format readable. `publish-a-post` gained a pinning
+waypoint: the refusal board's own Next reaches the crop, so the first
+leg needed the step it means.
+
+**Round 2 — the six open pieces, all ruled (jakob 2026-09-02):**
+
+1. **A video takes one description; its cover takes none.**
+   `DescribeCounter` grew `subject`, so the row reads *Describe the
+   video · 0 of 1 described* and opens the same describe sheet. The
+   post wizard's details step gained the describe entry the media
+   slice already gave it in words — `describe-your-pictures` now
+   starts on five boards, which is what the witness reblessed.
+2. **A comment's video plays like a post's** — muted autoplay in the
+   square pager, the sound control only, no play/pause and no
+   duration pill on a reading surface. *Comments · a video, pictures
+   & own comment* draws it.
+3. **The add label follows the state**: empty *+ Add pictures or a
+   video*; with pictures *+ Add pictures · n of 4*; with a video, no
+   add control. `CommentEdit`'s *+ Add · 1 of 4* conformed.
+4. **Web takes ReplyVideo 1:1** — file dialog plus the drop path, no
+   web board, the avatar blessing's form. The web drop hint reads
+   *…or drop pictures or a video here.*
+5. **Screens write MB, the caps are MiB** — 50 MiB is 52.4 MB, so the
+   readable number under-promises and never refuses a file the
+   product would take.
+6. **`reply-with-a-video` is declared** beside `reply-with-pictures`
+   and blessed into the witness.
+
+The format contract the refusal states implement lives in
+api-spec.md and is summarized in the readme block: WebP + MP4
+(H.264/AAC) sniffed from bytes, GIF converted on the device (so the
+picker never refuses one), an animated WebP a still, and a frame
+cover extracted on the device and uploaded as the account's own
+picture. api-spec.md carries the comment grammar and the 50 MiB
+comment cap as of this round.

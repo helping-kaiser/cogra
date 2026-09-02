@@ -3139,9 +3139,11 @@ and it was checked first and rejected: Apollo Kotlin 4.4.3 marks
 `@oneOf` experimental and enforces it only at runtime, so the
 typing the feature exists to buy is exactly what it does not
 deliver on one of the two codegen paths. On the read side,
-`Post.content.value` is null on a media post. A comment is
-unaffected — words plus optional media, deliberately asymmetric,
-because an answer is words first.
+`Post.content.value` is null on a media post. A comment keeps
+the asymmetry — words plus optional media, because an answer is
+words first — but its media obeys the same XOR the post's body
+does: up to four pictures, or one video with its cover, never
+both kinds.
 
 **Upload and gallery limits.** Uploading mints no record and costs
 no θ, so every control on it is an L2 policy limit rather than an
@@ -3192,10 +3194,11 @@ says so.
   another account's, a video, removed, or absent is refused at
   `["coverMediaId"]`, as is a cover named on something that is not
   a video.
-- **Ten attachments per post, four per comment**, checked whole
-  before a single act is staged, each refusal naming the offender
-  at `["attachments", "<i>", "mediaId"]`. The caps are what make
-  the gallery a bounded fold list rather than a connection.
+- **Ten pictures per post, four per comment — or, at either
+  scale, one video with its cover**, checked whole before a single
+  act is staged, each refusal naming the offender at
+  `["attachments", "<i>", "mediaId"]`. The caps are what make the
+  gallery a bounded fold list rather than a connection.
 - **1000 characters per description**, refused at
   `["attachments", "<i>", "altText"]`. It multiplies with the
   count cap and the product is what has to fit inside `M_payload`,

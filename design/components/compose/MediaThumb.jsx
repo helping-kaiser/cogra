@@ -16,6 +16,11 @@ import { Icon } from "../navigation/Icon.jsx";
      Retry · Remove affordances live beside the row (`UploadErrorLine`), not
      crammed into 48px.
    · `onRemove` — the X, top-right, its target grown by cg-hit.
+   · `video` — the composer's video preview: the play disc on a scrim and the
+     duration on the trailing corner, the anatomy `ComposeCover` drew for the
+     post's video (the disc and pill only appear where the tile is big enough
+     to carry them). AUTHORING-SIDE ONLY: a reading surface never draws
+     play/pause — there, presence on screen is the policy.
 
    Uncropped tiles (a reply's pictures) pass `width`/`height` and
    `fit="contain"` so the whole frame shows inside the tile. */
@@ -52,11 +57,16 @@ export function MediaThumb({
   cover = false,
   progress,
   failed = false,
+  video = false,
+  duration,
   onRemove,
   removeLabel = "Remove this picture",
 }) {
   const w = width ?? size;
   const h = height ?? size;
+  const edge = Math.min(w, h);
+  const disc = Math.max(20, Math.min(56, Math.round(edge * 0.26)));
+  const playable = video && !failed && typeof progress !== "number";
   return (
     <div
       style={{
@@ -83,6 +93,44 @@ export function MediaThumb({
               : { width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: failed ? 0.5 : 1 }
           }
         />
+      )}
+      {playable && (
+        <span
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -50%)",
+            width: `${disc}px`,
+            height: `${disc}px`,
+            borderRadius: "var(--radius-full)",
+            background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
+            color: "var(--on-surface-snackbar, #ffffff)",
+            display: "grid",
+            placeItems: "center",
+          }}
+        >
+          <Icon name="play_arrow" size={Math.round(disc * 0.57)} />
+        </span>
+      )}
+      {video && duration && edge >= 80 && (
+        <span
+          style={{
+            position: "absolute",
+            right: "6px",
+            bottom: "6px",
+            padding: "0 6px",
+            borderRadius: "var(--radius-small)",
+            background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
+            color: "var(--on-surface-snackbar, #ffffff)",
+            fontSize: "var(--text-label-small)",
+            lineHeight: "var(--text-label-small--line-height)",
+            fontWeight: "var(--text-label-small--font-weight)",
+            letterSpacing: "0.5px",
+          }}
+        >
+          {duration}
+        </span>
       )}
       {cover && (
         <span

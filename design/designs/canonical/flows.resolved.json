@@ -516,7 +516,7 @@
       "status": "resolved",
       "steps": [
         "start · ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
-        "ReplyCompose · 5 «+ Add pictures» → ReplyPictures — picks land in the tray",
+        "ReplyCompose · 5 «+ Add pictures or a video» → ReplyPictures — picks land in the tray",
         "ReplyPictures · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
       ],
@@ -524,6 +524,23 @@
         "ReplyEntry",
         "ReplyCompose",
         "ReplyPictures",
+        "ReplySeal"
+      ]
+    },
+    {
+      "name": "reply-with-a-video",
+      "description": "A video picked for a reply puts the composer in its video state, where its face is chosen and its one description written; the same seal signs the words and the clip together into the thread.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
+        "ReplyCompose · 5 «+ Add pictures or a video» → ReplyVideo — a video — the composer's video state",
+        "ReplyVideo · 3 «Next» → ReplySeal",
+        "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
+      ],
+      "boards": [
+        "ReplyEntry",
+        "ReplyCompose",
+        "ReplyVideo",
         "ReplySeal"
       ]
     },
@@ -793,17 +810,19 @@
       "status": "resolved",
       "startsOn": [
         "CommentEdit",
+        "ComposeDetails",
         "ComposeUploading",
         "ReplyPictures",
         "ReplyPicturesWeb"
       ],
       "steps": [
-        "start · «Describe the pictures» on 4 boards → ComposeDescribe",
+        "start · «Describe the pictures» on 5 boards → ComposeDescribe",
         "end · ComposeDescribe · 3 «Done» → back — the sheet closes"
       ],
       "boards": [
         "ComposeDescribe",
         "CommentEdit",
+        "ComposeDetails",
         "ComposeUploading",
         "ReplyPictures",
         "ReplyPicturesWeb"
@@ -1162,6 +1181,7 @@
       "flows": [
         "add-a-topic",
         "cite-something",
+        "describe-your-pictures",
         "pick-a-kept-draft-back-up",
         "publish-a-post",
         "publish-a-video",
@@ -1666,6 +1686,7 @@
       "flows": [
         "reply-to-a-comment",
         "reply-to-a-post",
+        "reply-with-a-video",
         "reply-with-pictures"
       ],
       "endpoint": []
@@ -1677,6 +1698,7 @@
         "reply-to-a-comment",
         "reply-to-a-post",
         "reply-while-the-pictures-upload",
+        "reply-with-a-video",
         "reply-with-pictures",
         "search-into-a-thread"
       ],
@@ -1686,6 +1708,7 @@
         "reply-to-a-comment",
         "reply-to-a-post",
         "reply-while-the-pictures-upload",
+        "reply-with-a-video",
         "reply-with-pictures",
         "search-into-a-thread"
       ]
@@ -1723,7 +1746,14 @@
         "reply-from-the-browser",
         "reply-to-a-comment",
         "reply-to-a-post",
+        "reply-with-a-video",
         "reply-with-pictures"
+      ],
+      "endpoint": []
+    },
+    "ReplyVideo": {
+      "flows": [
+        "reply-with-a-video"
       ],
       "endpoint": []
     },
