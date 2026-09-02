@@ -143,7 +143,12 @@ function resolveStart(flow, view, fails) {
     for (const e of matches) {
       const boards = (e.to ?? []).filter((o) => o.board !== undefined);
       if (boards.length === 0) {
-        undesigned.push({ board: e.from, via: e.via, text: (e.to ?? []).map((o) => o.gap ?? o.terminal).join(" · ") });
+        // An origin whose every outcome is a terminal stops no journey — the
+        // act completes in place, and nothing is owed. Only a gap leaves the
+        // continuation undesigned.
+        if ((e.to ?? []).some((o) => o.gap !== undefined)) {
+          undesigned.push({ board: e.from, via: e.via, text: (e.to ?? []).map((o) => o.gap ?? o.terminal).join(" · ") });
+        }
         continue;
       }
       for (const o of boards) {
