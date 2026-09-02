@@ -509,5 +509,23 @@ also restructured the master stance pad on jakob's ruling: the pad
 is reached from posts, comments and profiles, so `VouchBackPad/4`
 now signs to the `back` terminal and leaves you where you were,
 while the applicant's vouch-back keeps its own case into `Feed`.
-Still to author: compose, comments, feed, search, media, profile
-and patterns.
+
+**Batch 2 landed 2026-09-02 — feed, search and comments.** Eleven
+flows join: `take-a-stance-on-a-post`, `close-the-filter-unchanged`,
+`filter-the-feed-to-nothing`, `filter-the-feed-far-from-the-default`,
+`undo-the-narrowing`, `search-into-a-thread` and `narrow-a-search` on
+feed and search; `reply-to-a-comment`, `reply-with-pictures`,
+`reply-while-the-pictures-upload` and `edit-your-comment` on
+comments. Thirty declared, twenty-eight resolved, the same two
+blocked. `reply-to-a-post` was promoted to a control start —
+«comment count» is repeated on fourteen boards and means one thing on
+every one of them — and `take-a-stance-on-a-post` starts the same way
+from «stance face», whose four guest and applicant origins reach only
+gaps and are reported as the census waiting to grow. All four
+outcomes of `FeedSheet/6` are now frozen by one flow each. Coverage
+moved with them: 73 of 132 gaps now sit on a declared journey's
+boards, up from 59. The reply-wizard leave edges were re-annotated to
+the discard in the same round (the media-slice close-out item's part
+5; its accidental-leave guard is still an open ruling). Still to
+author: compose, media, profile and patterns, and the web wizards'
+parallel flows.
