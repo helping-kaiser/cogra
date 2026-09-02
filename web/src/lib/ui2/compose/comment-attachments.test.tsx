@@ -32,10 +32,12 @@ function show(overrides: Partial<Parameters<typeof CommentAttachments>[0]> = {})
 describe("the comment picture row", () => {
   // ReplyPictures: the counter lives INSIDE the Add label, in the house
   // "n of m" form — there is no slash counter anywhere in this flow.
-  it("counts the pictures inside the Add label", () => {
+  it("offers both kinds while the composer is empty", () => {
+    // The label follows the state (item 31, round 2): with nothing picked both
+    // are still possible, so the label must not name only one of them.
     show();
     expect(screen.getByTestId("comment-add-media")).toHaveTextContent(
-      "+ Add pictures · 0 of 4",
+      "+ Add pictures or a video",
     );
   });
 
@@ -49,7 +51,7 @@ describe("the comment picture row", () => {
   // ReplyPicturesWeb's single addition over ReplyPictures.
   it("says the composer takes a drop, and draws no target for it", () => {
     show();
-    expect(screen.getByText("…or drop them here.")).toBeInTheDocument();
+    expect(screen.getByText("…or drop pictures or a video here.")).toBeInTheDocument();
   });
 
   it("stops offering more once the comment is full", () => {
@@ -57,15 +59,20 @@ describe("the comment picture row", () => {
     expect(screen.getByTestId("comment-media-input")).toBeDisabled();
   });
 
-  it("hands the picked files up, keeping only pictures", () => {
+  it("hands EVERY picked file up, including ones it cannot use", () => {
+    // Filtering here is what made a dropped PDF vanish without a word; the
+    // screening above is the only thing that can say why a file did not get in.
     const props = show();
     const input = screen.getByTestId("comment-media-input");
-    Object.defineProperty(input, "files", {
-      value: [file("a.jpg"), new File([new Uint8Array([1]) as BlobPart], "n.pdf", { type: "application/pdf" })],
-      configurable: true,
+    const pdf = new File([new Uint8Array([1]) as BlobPart], "n.pdf", {
+      type: "application/pdf",
     });
+    Object.defineProperty(input, "files", { value: [file("a.jpg"), pdf], configurable: true });
     fireEvent.change(input);
-    expect(props.onPick).toHaveBeenCalledWith([expect.objectContaining({ name: "a.jpg" })]);
+    expect(props.onPick).toHaveBeenCalledWith([
+      expect.objectContaining({ name: "a.jpg" }),
+      expect.objectContaining({ name: "n.pdf" }),
+    ]);
   });
 
   it("draws a turning ring while a picture is moving, never a made-up number", () => {

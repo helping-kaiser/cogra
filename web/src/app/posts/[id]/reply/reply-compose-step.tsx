@@ -21,7 +21,8 @@ import {
   CommentAttachments,
   commentDropHandlers,
 } from "@/lib/ui2/compose/comment-attachments";
-import type { ReplyState, ReplyTarget } from "@/lib/compose/reply-wizard";
+import { isVideoReply, type ReplyState, type ReplyTarget } from "@/lib/compose/reply-wizard";
+import type { PickRefusal } from "@/lib/compose/pick";
 
 /** What the reply answers, pinned above the words so it stays in sight. */
 export function ReplyTargetChip({ target }: { target: ReplyTarget }) {
@@ -44,23 +45,38 @@ export function ReplyTargetChip({ target }: { target: ReplyTarget }) {
 export function ReplyComposeStep({
   state,
   previews,
+  framePreviews,
+  capturing,
+  durationMs,
+  refusals,
   onWords,
   onPick,
   onRemove,
   onRetry,
   onDescribe,
+  onPickFrame,
+  onPickCover,
+  onDismissRefusal,
   onNext,
 }: {
   state: ReplyState;
   previews: Readonly<Record<string, string>>;
+  framePreviews: readonly string[];
+  capturing: boolean;
+  durationMs: number;
+  refusals: readonly PickRefusal[];
   onWords: (words: string) => void;
   onPick: (files: readonly File[]) => void;
   onRemove: (id: string) => void;
   onRetry: (id: string) => void;
   onDescribe: () => void;
+  onPickFrame: (index: number) => void;
+  onPickCover: (file: File) => void;
+  onDismissRefusal: (id: string) => void;
   onNext: () => void;
 }) {
-  const hasPictures = state.media.length > 0;
+  const video = isVideoReply(state);
+  const hasPictures = !video && state.media.length > 0;
 
   return (
     <div
@@ -86,19 +102,32 @@ export function ReplyComposeStep({
       <CommentAttachments
         media={state.media}
         previews={previews}
+        cover={state.cover}
+        framePreviews={framePreviews}
+        capturing={capturing}
+        durationMs={durationMs}
+        refusals={refusals}
         onPick={onPick}
         onRemove={onRemove}
         onRetry={onRetry}
         onDescribe={onDescribe}
+        onPickFrame={onPickFrame}
+        onPickCover={onPickCover}
+        onDismissRefusal={onDismissRefusal}
         testIdPrefix="reply"
       />
 
       <div className="flex-1" />
 
+      {/* The foot line names what CAN still join, so it changes with the body:
+          a video says so in the singular, and once one is in there is nothing
+          more to add. */}
       <p className="m-0 text-body-small text-on-surface-variant">
-        {hasPictures
-          ? "Words first — pictures can join them, and they upload while you write."
-          : "Words first — pictures can join them."}
+        {video
+          ? "Words first — a video can join them, and it uploads while you write."
+          : hasPictures
+            ? "Words first — pictures can join them, and they upload while you write."
+            : "Words first — pictures can join them."}
       </p>
 
       <PillButton testId="reply-next" full onClick={onNext}>

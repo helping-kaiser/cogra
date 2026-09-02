@@ -20,7 +20,7 @@
 import Image from "next/image";
 
 import { cssRatio, fitFor, tileRatio } from "./aspect";
-import { VideoPlayer } from "./video-player";
+import { VideoPlayer, type PlayerSurface } from "./video-player";
 
 /** Whether the asset is the moving kind, read off the contract's own field. */
 export function isVideoAsset(mimeType?: string | null): boolean {
@@ -40,6 +40,8 @@ export type MediaTileProps = {
   durationMs?: number | null;
   /** A feed pauses what scrolls away; a lightbox plays what the reader opened. */
   autoplay?: boolean;
+  /** `reading` gives a comment's clip the sound control and nothing else. */
+  surface?: PlayerSurface;
   // Authored, optional, and never invented. A tile with none is decorative:
   // `alt=""` is the documented correct value for an image that adds no
   // information, and it is a better answer than a machine-guessed description.
@@ -68,6 +70,7 @@ export function MediaTile({
   poster,
   durationMs,
   autoplay = true,
+  surface = "full",
   altText,
   sourceRatio,
   label = "Media",
@@ -92,15 +95,30 @@ export function MediaTile({
   // because a control surface inside a button steals every press the reader
   // aims at the scrubber.
   if (isVideoAsset(mimeType) && src) {
-    return (
+    const player = (
       <VideoPlayer
         src={src}
         poster={poster}
         altText={altText}
         durationMs={durationMs}
         autoplay={autoplay}
+        surface={surface}
         testId={testId}
       />
+    );
+    // A COMMENT'S CLIP KEEPS THE FRAME, a post's does not. ReplyMedia draws the
+    // thread's video in the same square the pictures use — one shape for every
+    // comment attachment, so a thread does not change rhythm when a clip lands
+    // in it. A post's video runs at its own shape under the card's width.
+    if (surface !== "reading") return player;
+    return (
+      <span
+        data-testid={testId ? `${testId}-frame` : undefined}
+        style={{ aspectRatio: cssRatio(reserved), maxHeight, borderRadius: radius }}
+        className="relative block w-full min-h-0 overflow-hidden bg-surface-container-high"
+      >
+        {player}
+      </span>
     );
   }
 

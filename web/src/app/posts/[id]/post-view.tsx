@@ -57,6 +57,7 @@ import {
   BodyRegion,
   PostMedia,
   bodyIsSensitive,
+  commentHasVideo,
   hasMedia,
   sensitiveSignature,
 } from "@/lib/ui/post-media";
@@ -636,8 +637,17 @@ export function PostView({
                     node={comment}
                     bleed="none"
                     radius="var(--radius-medium)"
-                    ratio={comment.attachments.length > 1 ? 1 : undefined}
+                    // A VIDEO TAKES THE SQUARE TOO (ReplyMedia). The pager's
+                    // one frame is what keeps a thread's rhythm steady, and a
+                    // clip that set its own height would break it exactly where
+                    // the reader is scrolling past.
+                    ratio={
+                      comment.attachments.length > 1 || commentHasVideo(comment) ? 1 : undefined
+                    }
                     maxHeight="220px"
+                    // One control, the sound; no transport bar and no duration
+                    // pill on a surface meant for reading.
+                    surface="reading"
                     testId={`comment-media-${comment.id}`}
                   />
                 )}
