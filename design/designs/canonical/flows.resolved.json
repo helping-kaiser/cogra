@@ -738,7 +738,7 @@
     },
     {
       "name": "see-who-stands-with-someone",
-      "description": "The figures row, on any profile, opens the stance lists; reading who has taken a stance on them is the whole journey.",
+      "description": "The figures row, on any profile, opens the stance lists; reading who stands with them is the whole journey.",
       "status": "resolved",
       "startsOn": [
         "Profile",
@@ -749,7 +749,7 @@
       ],
       "steps": [
         "start · «the figures row» on 5 boards → ProfileStances",
-        "end · ProfileStances · 2 «On them» → self — the inbound direction"
+        "end · arrival at ProfileStances"
       ],
       "boards": [
         "ProfileStances"
@@ -869,7 +869,7 @@
       ],
       "steps": [
         "start · «author chip» on 13 boards → ProfileOther",
-        "end · ProfileOther · 6 «chronicle tabs» → self — Everything — the chronicle, this board"
+        "end · arrival at ProfileOther"
       ],
       "boards": [
         "ProfileOther"
@@ -877,7 +877,7 @@
     },
     {
       "name": "open-a-posts-pictures",
-      "description": "Post media, wherever a post is drawn, opens the gallery full-bleed; paging the frames is the journey.",
+      "description": "Post media, wherever a post is drawn, opens the gallery full-bleed; the frames are what the reader came for.",
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
@@ -894,7 +894,7 @@
       ],
       "steps": [
         "start · «post media» on 11 boards → FeedGallery",
-        "end · FeedGallery · 4 «the gallery pager» → self — swipes between the frames — the dots read position"
+        "end · arrival at FeedGallery"
       ],
       "boards": [
         "FeedGallery"

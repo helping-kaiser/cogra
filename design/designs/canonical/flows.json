@@ -297,9 +297,8 @@
     },
     {
       "name": "see-who-stands-with-someone",
-      "description": "The figures row, on any profile, opens the stance lists; reading who has taken a stance on them is the whole journey.",
-      "start": { "control": "the figures row" },
-      "end": { "board": "ProfileStances", "via": 2 }
+      "description": "The figures row, on any profile, opens the stance lists; reading who stands with them is the whole journey.",
+      "start": { "control": "the figures row" }
     },
     {
       "name": "find-the-thread-a-comment-answers",
@@ -351,14 +350,12 @@
     {
       "name": "visit-an-author",
       "description": "The author chip, wherever a post is drawn, opens that person's profile; their chronicle is what the reader came for.",
-      "start": { "control": "author chip" },
-      "end": { "board": "ProfileOther", "via": 6, "case": "Everything — the chronicle, this board" }
+      "start": { "control": "author chip" }
     },
     {
       "name": "open-a-posts-pictures",
-      "description": "Post media, wherever a post is drawn, opens the gallery full-bleed; paging the frames is the journey.",
-      "start": { "control": "post media" },
-      "end": { "board": "FeedGallery", "via": 4 }
+      "description": "Post media, wherever a post is drawn, opens the gallery full-bleed; the frames are what the reader came for.",
+      "start": { "control": "post media" }
     },
     {
       "name": "follow-a-citation",
