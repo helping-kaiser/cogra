@@ -112,7 +112,7 @@ export function resolveLeg(arcsFrom, from, to, pin) {
 
 // ------------------------------------------------------------ outcome picking
 
-function pickOutcome(edge, sel, what) {
+export function pickOutcome(edge, sel, what) {
   const wanted = (edge.to ?? []).filter(
     (o) => (sel.case === undefined || o.case === sel.case) && (sel.to === undefined || o.board === sel.to),
   );
@@ -139,11 +139,11 @@ function resolveStart(flow, view, fails) {
       return null;
     }
     const lands = new Map(); // board -> boards carrying the control
-    const undesigned = [];
+    const undesigned = []; // { board, via, text } — origins the control never designs
     for (const e of matches) {
       const boards = (e.to ?? []).filter((o) => o.board !== undefined);
       if (boards.length === 0) {
-        undesigned.push(`${e.from}/${e.via}: ${(e.to ?? []).map((o) => o.gap ?? o.terminal).join(" · ")}`);
+        undesigned.push({ board: e.from, via: e.via, text: (e.to ?? []).map((o) => o.gap ?? o.terminal).join(" · ") });
         continue;
       }
       for (const o of boards) {
@@ -168,7 +168,8 @@ function resolveStart(flow, view, fails) {
       board,
       step: `start · «${s.control}» on ${from.length} board${from.length === 1 ? "" : "s"} → ${board}`,
       startsOn: [...from].sort(),
-      startsUndesigned: undesigned.sort(),
+      startsUndesigned: undesigned.map((u) => `${u.board}/${u.via}: ${u.text}`).sort(),
+      startsUndesignedAt: undesigned,
       used: matches.map((e) => `${e.from}/${e.via}`),
     };
   }
@@ -276,6 +277,9 @@ export function resolveFlow(flow, view) {
   if (o.gap !== undefined) result.blockedBy = o.gap;
   if (start.startsOn) result.startsOn = start.startsOn;
   if (start.startsUndesigned?.length) result.startsUndesigned = start.startsUndesigned;
+  // Not blessed into the witness — the gap census reads it instead of parsing
+  // the strings above back apart.
+  if (start.startsUndesignedAt?.length) result.startsUndesignedAt = start.startsUndesignedAt;
   return { ...result, fails: [], startBoard: boards[0], finalBoard: boards[boards.length - 1], used };
 }
 
