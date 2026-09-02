@@ -3175,9 +3175,17 @@ says so.
   holds and what a reader downloads. `durationMs` is probed off
   the container and reported as a fact about the asset, never
   enforced as a limit on it.
-- **A body is pictures or one video.** A video is the whole body,
-  its poster riding the asset rather than a second gallery entry,
-  and an attachment list mixing the two is refused at
+- **A body is pictures or one video**, on a comment as on a post. A
+  video is the whole body, its poster riding the asset rather than a
+  second gallery entry, and an attachment list mixing the two is
+  refused at `["attachments", "<i>", "mediaId"]`.
+- **A comment's video is capped at 50 MiB**, half a post's, the same
+  asymmetry its four pictures against a post's ten already carries;
+  the cover rides the still cap either way. The cap is checked when
+  the attachment is planned rather than at the upload, because an
+  asset is uploaded before it is attached and nothing at that moment
+  knows which parent it is headed for — so the upload admits the
+  widest limit and the parent narrows it, refusing at
   `["attachments", "<i>", "mediaId"]`.
 - **A poster is the uploader's own still.** `coverMediaId` names
   an asset this account uploaded and still holds; a cover that is
@@ -3197,15 +3205,20 @@ says so.
   gallery gesture, well below a script. An upload precedes any
   prepare, so θ gates nothing here and this limit is the only
   thing that does.
-- **A picture's metadata is stripped**, client-side and again
-  server-side before the digest is computed. A phone photo carries
-  GPS coordinates and a device serial, and reads are public and
-  unauthenticated, so publishing one untouched would publish where
-  its author lives. A video is stored as it arrived — validation
-  is not a rewrite, so there is no server-side strip for one to
-  ride on, and the same metadata rides a phone's video. Closing
-  that gap is
-  [open-questions.md Q52](../open-questions.md).
+- **Metadata is stripped on the device, and checked here.** A phone
+  photo carries GPS coordinates and a device serial, and a phone's
+  video carries the same; reads are public and unauthenticated, so
+  publishing one untouched would publish where its author lives.
+  Clients strip before uploading and the server looks again rather
+  than trusting that it happened: a picture's `EXIF` and `XMP `
+  chunks and a video's `udta`, `meta` and `uuid` boxes are removed
+  before the digest is computed, so the digest describes bytes that
+  carry nothing identifying. A file that arrives clean is stored
+  exactly as it arrived; one whose strip was faulty is **repaired
+  rather than refused** — the author did nothing wrong. Neither
+  repair re-encodes anything: media is copied through byte for
+  byte, and a video's chunk offsets are corrected for what was
+  removed ahead of them.
 
 **Media serving.** Bytes are served by the **media origin**, not
 by the API: the store is its own service, so `MediaAttachment.url`
