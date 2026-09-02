@@ -65,14 +65,24 @@ export function PickedRow({
  * Alt text is authored, optional, and never invented; a described set is a
  * choice made visible, not a chore bar.
  */
+/**
+ * The describe entry, counting what has been described.
+ *
+ * THE SUBJECT FOLLOWS THE BODY (design/backlog.md item 31, round 2 point 1): a
+ * video takes ONE description and the row reads "Describe the video · 0 of 1
+ * described". Its COVER takes none — a poster is the video's face, not a second
+ * attachment a reader could be told about, so it never enters this count.
+ */
 export function DescribeCounter({
   described,
   total,
+  subject = "the pictures",
   onDescribe,
   testId = "describe-counter",
 }: {
   described: number;
   total: number;
+  subject?: string;
   onDescribe: () => void;
   testId?: string;
 }) {
@@ -84,7 +94,7 @@ export function DescribeCounter({
         onClick={onDescribe}
         className="cg-state cg-focus cursor-pointer border-0 bg-transparent p-0 text-label-small text-primary"
       >
-        Describe the pictures
+        Describe {subject}
       </button>{" "}
       <span className="text-on-surface-variant">
         · {described} of {total} described

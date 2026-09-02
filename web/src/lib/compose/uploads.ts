@@ -10,6 +10,7 @@ import type { ApolloClient } from "@apollo/client";
 
 import { uploadMedia } from "@/lib/api/media-api";
 import { encodeForUpload } from "@/lib/ui2/media/encode-image";
+import { stripVideoMetadata } from "@/lib/ui2/media/strip-video";
 import type { AssetUpload, CoverAsset, PickedAsset } from "./wizard";
 
 export type UploadStep = (next: AssetUpload) => void;
@@ -84,14 +85,17 @@ export function waitingAssets(assets: readonly PickedAsset[]): readonly PickedAs
  * ones — and it is why a cover that fails fails the video too, said in those
  * words rather than leaving a video stuck at "uploading" with no explanation.
  *
- * THE CLIP'S BYTES GO UP AS THEY WERE PICKED. The still path re-encodes every
- * picture (which is also what strips its metadata), and there is no equivalent
- * for video: the browser platform has no MP4 muxer and no metadata-box writer,
- * so re-encoding or stripping in the browser means taking on a third-party
- * dependency. That is a decision for jakob rather than for this function —
- * reported, not made. What the client does do is refuse, before the upload,
- * anything the server would refuse afterwards (`checkVideo`), and the server
- * re-validates and re-strips regardless.
+ * THE CLIP IS STRIPPED BEFORE IT GOES, on the device, exactly as a picture is.
+ * The still path re-encodes through a canvas and the metadata cannot survive;
+ * a video is remuxed instead — its encoded packets copied into a fresh
+ * container with no metadata boxes — so the quality is untouched and the tags
+ * are gone. The server checks and re-strips regardless; this is the first line,
+ * not the only one.
+ *
+ * A FAILED STRIP FAILS THE UPLOAD. Falling back to the picked bytes would
+ * upload the file with its GPS tag intact, which is the outcome the strip
+ * exists to prevent — so it is reported as a refusal instead, and it is not
+ * retryable, because a second attempt cannot make the container readable.
  */
 export async function runVideoUpload(
   client: ApolloClient,
@@ -125,9 +129,25 @@ export async function runVideoUpload(
   }
   onCover({ kind: "done", mediaId: poster.value.id });
 
+  // The strip is reported as `encoding`: it is the same stage in the same
+  // story — bytes being made ready — and inventing a fourth state for it would
+  // put a word on screen that means nothing to the person reading it.
+  onVideo({ kind: "encoding" });
+  let stripped;
+  try {
+    stripped = await stripVideoMetadata(video.file);
+  } catch {
+    onVideo({
+      kind: "failed",
+      message: "This browser couldn't prepare that video.",
+      retryable: false,
+    });
+    return;
+  }
+
   onVideo({ kind: "uploading" });
   const uploaded = await uploadMedia(client, {
-    blob: video.file,
+    blob: stripped.blob,
     coverMediaId: poster.value.id,
   });
 
