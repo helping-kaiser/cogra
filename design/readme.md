@@ -1629,12 +1629,11 @@ entry first". What stands:
   && node check-flows.mjs`.
 - **Every page is wired** (rounds 1–6, 2026-08-31: Entry, then Money
   & Wallet, Feed & Search, Comments, Compose, Media + Patterns; the
-  Profile page joined 2026-09-01 — 693 edges over all 90 boards, no
-  board unreached, no interactable unedged). The 132 gaps are the
-  visible to-do: the guest-gate and network-error pattern boards,
-  the reader's post / comment / profile menus, the topic page (ruled
-  — a search subpage) and the topic picker, field/mismatch error
-  states, the key-absent acting paths, the applicant's once-each
+  Profile page joined 2026-09-01 — 699 edges over all 93 boards, no
+  board unreached, no interactable unedged). The 108 gaps are the
+  visible to-do: the reader's post / comment / profile menus, the
+  topic page (ruled — a search subpage) and the topic picker,
+  field/mismatch error states, the applicant's once-each
   acting boards (ruled), the settlement/tip/rail record views the
   wallet's traceability promise owes, the standalone post detail,
   the settings and invites screens, the chat surface (its band entry
@@ -1642,7 +1641,8 @@ entry first". What stands:
   (item 16), and item 13's Post Score drill-down. Cross-flow reuse
   is wired as edges into the master boards (the describe sheet, the
   gated seal, the license / sensitive sheets, the key-absent seal,
-  the stance pad) rather than duplicated boards.
+  the stance pad, and the three pattern boards — the guest gate, the
+  network error, key-absent acting) rather than duplicated boards.
 - **The topic picker's interim entry** (jakob 2026-09-02): until the
   picker board exists, the apps' entry is the existing topic field,
   opened as a sheet from the seal. The gap and the blocked
@@ -1764,6 +1764,43 @@ The rulings the layer rests on:
   look is informed. The block's type is the theme's rather than the
   media face's fixed white, which is legible only because that wash
   lies over a picture.
+
+### The pattern boards — 2026-09-02
+
+Three surfaces the whole product kept pointing at, drawn once and
+wired as masters (item 23 round 2). Each closes a family of gaps
+that no single page owned.
+
+- **The guest gate asks, it never bounces.** A guest's tap on an act
+  answers with the JoinPrompt dialog over the read they were in the
+  middle of — nothing behind it is destroyed, and the read is still
+  there when the dialog goes. The affirmative is filled because
+  joining is the one committing action on that surface; `Keep
+  browsing` stays a text button and stays first, so nobody is nudged
+  into signing by thumb position. Every guest-gate gap on Main,
+  FeedBare and WalletGuest resolves here. FeedBare's `chats` joins
+  them: a guest has no chats, so it gates like Main's and
+  WalletGuest's rather than opening the chat surface.
+- **The network fault sits where the fetch was requested.** No scrim,
+  no dialog — the seal stays readable underneath and the fault takes
+  the place of the control that asked, always paired with `Retry`.
+  The seal is the exemplar; all eleven offline outcomes across entry,
+  wallet, compose, comments and profile resolve to this one board.
+  With `SigningPending` it is one of the only two surfaces in the
+  product where error colour appears beside body copy.
+- **Key-absent acting wears tertiary, never error.** Nothing is
+  staged server-side and nothing is signed, so the state is a notice,
+  not a failure. The notice card replaces the `Set` affordance the
+  way it replaces the seal's commit control, and restore comes first.
+  The one `?` on the surface belongs to the key notice, not the pad.
+- **Guest origins are excepted from the act-starting flows.** A
+  control-selector start must mean one thing everywhere, and a
+  guest's tap on `New post` or the stance face now starts the gate
+  rather than the journey — so Main, FeedBare and WalletGuest leave
+  those selectors. KeyElsewhere leaves the stance-face selector for
+  the same reason: its face diverges, the pad on press-and-hold and
+  the key gate on a tap. The applicant gaps stay in the census; their
+  boards are still owed.
 
 ## 14. Index
 
