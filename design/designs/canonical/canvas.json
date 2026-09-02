@@ -389,6 +389,15 @@
       "page": "comments"
     },
     {
+      "file": "DiscardConfirm.dc.html",
+      "title": "Discard confirm · reply and edit",
+      "x": 2400,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
       "file": "EditCompose.dc.html",
       "title": "Edit post",
       "x": 0,
@@ -753,16 +762,16 @@
       "x": -2160,
       "y": 0,
       "w": 1740,
-      "h": 2134,
+      "h": 2151,
       "page": "compose",
       "title": "Compose · flow map"
     },
     {
       "file": "MapComments.dc.html",
-      "x": -1870,
+      "x": -2160,
       "y": 0,
-      "w": 1450,
-      "h": 1162,
+      "w": 1740,
+      "h": 1244,
       "page": "comments",
       "title": "Comments · flow map"
     },
