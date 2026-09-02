@@ -777,3 +777,35 @@ one contradiction to reconcile:
    animated-WebP encoder exists on the web platform (a still GIF
    converts fine). The readme's format contract needs the web
    exception recorded.
+
+### 33 · Video playback and the rest of the clip's life · *design*
+
+Filed by the feature loop 2026-09-02, from the android lane's 1:1
+audit against the item-31 boards. What the video slice built to
+rulings-without-boards, and what has no answer at all yet:
+
+1. **Feed/detail playback chrome.** The roadmap calls playback
+   settled (muted autoplay on visibility, one global sticky mute,
+   real controls) but no board draws the controls, scrubber, or tap
+   targets. Both apps built from existing media tokens — bless or
+   draw.
+2. **When two clips are visible, which plays?** Undrawn; android
+   gates autoplay at 70% per-frame visibility. A rule wants stating.
+3. **What the author sees when a GIF is picked.** Neither platform
+   can encode animated WebP with a documented API (android:
+   Bitmap.compress is single-frame, the NDK decoder reads one frame,
+   Transformer takes one frame; web: no encoder exists), so the
+   readme's "GIF converted on the device" cannot ship as written —
+   the author-facing surface for a picked animated GIF needs design
+   (the candidate: refuse with words on both platforms, extending
+   the ruled web behavior).
+4. **Video in the media viewer / fullscreen.** 2.5.2 says "the
+   viewer's real controls"; 2.5.3 lists "the media viewer" — the
+   slices contradict on ownership. Both apps ship inline controls
+   only.
+5. **Describing a video.** copy-voice says one description for the
+   whole clip and none for its cover, but DescribeSheet is drawn
+   picture-shaped (counter, per-picture entry). The video shape of
+   the sheet is undrawn.
+6. **EditCompose with a video body** — no board draws editing a
+   post whose body is a clip.
