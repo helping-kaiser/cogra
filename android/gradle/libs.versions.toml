@@ -61,6 +61,20 @@ apollo = "4.4.3"
 # dependency bump, so it rides with that migration and Coil follows it.
 coil = "3.4.0"
 
+# Video. Media3 is Android's own media stack — the player, the
+# transcoder, and the Compose bindings are one library at one version,
+# and Android documents no other supported way to do either job
+# (developer.android.com/media/media3). `media3-transformer` re-encodes
+# a picked clip to the one accepted stored format; `media3-exoplayer`
+# plays it back; `media3-ui-compose` carries the state holders the
+# player surface binds to. All Media3 modules must be the same version
+# (developer.android.com/media/media3/transformer/getting-started).
+#
+# 1.11.0 is the current stable (2026-08-05). Its `minSdk` is 23, under
+# our 26. Unlike Coil it states no AGP floor above ours — it is an
+# AndroidX library built against the same toolchain line we are on.
+media3 = "1.11.0"
+
 # Cropping. The crop step runs an established cropper rather than our own
 # geometry (jakob 2026-08-31: "i cant imagine that you cant find a nice
 # opensource cropping that we can use here"), picked by the same D20
@@ -165,6 +179,13 @@ android-image-cropper = { group = "com.vanniktech", name = "android-image-croppe
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 coil-test = { group = "io.coil-kt.coil3", name = "coil-test", version.ref = "coil" }
+
+# Video (Media3)
+media3-common = { group = "androidx.media3", name = "media3-common", version.ref = "media3" }
+media3-effect = { group = "androidx.media3", name = "media3-effect", version.ref = "media3" }
+media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
+media3-transformer = { group = "androidx.media3", name = "media3-transformer", version.ref = "media3" }
+media3-ui-compose = { group = "androidx.media3", name = "media3-ui-compose", version.ref = "media3" }
 
 # Crypto
 tink-android = { group = "com.google.crypto.tink", name = "tink-android", version.ref = "tink" }
