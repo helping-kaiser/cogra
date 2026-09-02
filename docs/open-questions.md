@@ -26,6 +26,7 @@ within a phase, order is flexible.
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
 | 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
 | 2a. Profile surface (with slice 2.2) | 3 | **Q35, Q36, Q41** | The profile header's connection count (which fold counts as a connection — answerable now that every passive class rides one stance control), the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without all three. |
+| 2b. Video ingest (slice 2.5.2) | 1 | **Q51** | The video ingest policy — accepted containers and codecs, per-type size and duration caps, animated WebP and GIF, and how a poster reaches the upload. Blocking: the poster key and its read path are built, and nothing else in the video half can be until this is answered. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
@@ -259,6 +260,71 @@ traversed nodes serve the landed version — or is the membership
 guarantee the chronicle's whole contract, with settled reading
 left to the content listings? Decide when a real reader wants the
 settled graph through a profile.
+
+---
+
+## Q51 — The video ingest policy: formats, caps, animation, and how a poster arrives
+
+**Where it shows up:** [roadmap.md slice 2.5.2](implementation/roadmap.md),
+[api-spec.md "Upload and gallery limits"](implementation/api-spec.md),
+[data-model.md "media_attachments.options shape"](implementation/data-model.md#media_attachmentsoptions-shape)
+**Status:** open — blocks the video half of slice 2.5.2
+
+The poster foreign key, its redaction coupling, and the
+`coverMedia` read path are built. What is not decided is what the
+upload path may *accept*, and the shipped still-image pipeline
+settles none of it: the media rulings fixed **one stored format,
+WebP**, a **flat 10 MiB** cap for every asset, and a refusal of
+animation whose own comment defers "the size cap, the feed's
+playback rules, and the poster frame it needs" to this slice.
+`durationMs` reads whatever the ingest writes, so it stays null
+until the below is answered — the contract needs no change, only
+a value.
+
+### The question, in four parts
+
+1. **Containers and codecs.** Which video containers and codecs
+   are accepted? The still path's shape suggests one stored
+   format, and the obvious analog is **MP4/H.264+AAC** — the
+   widest device-encoder and browser-decoder overlap — with
+   clients re-encoding on device as they already do for WebP.
+   The alternative is accepting a small set (adding WebM/VP9 or
+   AV1) and storing what arrives, which costs a validation
+   matrix and a client-support question for every reader.
+2. **Per-type size caps.** The roadmap asks for per-type caps and
+   names no numbers. A cap is not free-standing: it multiplies
+   with the gallery caps and, unlike a picture, one video is the
+   whole body (design: ten pictures **or** one video). A duration
+   cap is the sibling question — a byte cap alone admits a long,
+   heavily compressed clip.
+3. **Animated stills.** The roadmap lists "animated WebP and
+   GIF". Accepting animated WebP is a lifting of the existing
+   refusal and needs a cap and a duration probe. GIF is the
+   harder half: "one stored format" implies transcoding to
+   animated WebP, but the server has no encoder (the `image`
+   crate is compiled decode-only for WebP) and the still path's
+   own posture is that clients re-encode so no other container
+   reaches the server. Either GIF converts on device, or the
+   server grows a transcoder — a dependency decision, not a
+   detail.
+4. **How a poster arrives.** The column is stated at insert
+   because the row is immutable, so the poster must be named
+   when the video is uploaded. Nothing in the contract carries
+   it: `UploadMediaInput` is `file` alone. The wizard has a
+   cover step, which says the author picks the frame, but not
+   whether the client uploads that frame as its own asset and
+   names it, or the server extracts one. The first fits the
+   existing "clients crop and encode, the server verifies"
+   posture and needs an input field; the second needs a decoder
+   the server does not have.
+
+**Recommendation.** Answer 1, 2 and 4 together as one policy —
+MP4/H.264+AAC, a stated byte cap and duration cap, and a
+client-uploaded poster named on the upload input — because each
+one alone leaves the other two unimplementable. Take 3
+separately: animated WebP is a small lift once 2 exists, and GIF
+is worth resolving as "clients convert" unless a reason to hold
+bytes the server cannot re-encode turns up.
 
 ---
 

@@ -378,6 +378,10 @@ the start — and delivery splits by content kind.
   video ([data-model.md](data-model.md)); container and codec
   validation; per-type size caps; `durationMs` reading a value.
 - The wizard's cover step, and animated WebP and GIF.
+- What the upload path accepts — formats, caps, animation, and how
+  a poster reaches it — is
+  [open-questions.md Q51](../open-questions.md), which the ingest
+  half of this slice waits on.
 - Autoplay muted on visibility with one global sticky mute, and
   the viewer's real controls — settled design, unbuilt.
 - **Hand test:** post a video from the phone; watch it autoplay
