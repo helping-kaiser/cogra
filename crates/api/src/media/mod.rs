@@ -35,6 +35,7 @@
 //! no size — renditions stay addable later without a contract change.
 
 pub mod blob;
+pub mod video;
 pub mod webp;
 
 use std::sync::Arc;
@@ -63,15 +64,15 @@ pub const MAX_PIXEL_DIMENSION: u32 = 4096;
 /// with it.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum MediaError {
-    #[error("only WebP images are accepted")]
-    NotWebp,
-    #[error("the image file is malformed ({0})")]
+    #[error("only WebP images and MP4 video are accepted")]
+    Unsupported,
+    #[error("the file is malformed ({0})")]
     Malformed(&'static str),
-    #[error("the file does not decode as an image")]
+    #[error("the file does not decode")]
     Undecodable,
-    #[error("animated images are not accepted yet")]
-    Animated,
-    #[error("the image is larger than {limit} bytes")]
+    #[error("{0}")]
+    Codec(&'static str),
+    #[error("the file is larger than {limit} bytes")]
     TooLarge { limit: usize },
 }
 
@@ -84,15 +85,28 @@ pub struct MediaConfig {
     /// store, so a CDN can sit in front of it without the contract
     /// changing shape.
     pub base_url: String,
-    /// The per-asset byte cap. Enforced at the multipart transport before
-    /// a byte reaches a resolver, and re-checked here so the two cannot
-    /// drift apart silently.
+    /// The per-asset byte cap for a still. Enforced at the multipart
+    /// transport before a byte reaches a resolver, and re-checked here so
+    /// the two cannot drift apart silently.
     pub max_upload_bytes: usize,
+    /// The per-asset byte cap for video, ten times the still's.
+    ///
+    /// The parity is with the *body* rather than with one picture: a post
+    /// carries ten pictures or one video, so ten stills at their cap and
+    /// one video at this one are the same hundred megabytes. A video post
+    /// can reach 110 MiB with its cover, which is accepted for the
+    /// friendlier round number.
+    ///
+    /// There is deliberately **no duration cap** beside it. A long, low
+    /// bitrate video is a legitimate thing to publish, and the byte cap
+    /// already bounds what the store holds and what a reader downloads.
+    pub max_video_upload_bytes: usize,
     pub orphan_reaper_interval_secs: u64,
     pub orphan_max_age_secs: f64,
 }
 
 const DEFAULT_MAX_UPLOAD_BYTES: usize = 10 * 1024 * 1024;
+const DEFAULT_MAX_VIDEO_UPLOAD_BYTES: usize = 100 * 1024 * 1024;
 const DEFAULT_ORPHAN_REAPER_INTERVAL_SECS: u64 = 600;
 const DEFAULT_ORPHAN_MAX_AGE_SECS: f64 = 86_400.0;
 
@@ -124,6 +138,7 @@ impl Default for MediaConfig {
             },
             base_url: "http://localhost:3000/media".into(),
             max_upload_bytes: DEFAULT_MAX_UPLOAD_BYTES,
+            max_video_upload_bytes: DEFAULT_MAX_VIDEO_UPLOAD_BYTES,
             orphan_reaper_interval_secs: DEFAULT_ORPHAN_REAPER_INTERVAL_SECS,
             orphan_max_age_secs: DEFAULT_ORPHAN_MAX_AGE_SECS,
         }
@@ -147,6 +162,10 @@ impl MediaConfig {
                 .trim_end_matches('/')
                 .to_string(),
             max_upload_bytes: env_parsed("MEDIA_MAX_UPLOAD_BYTES", base.max_upload_bytes)?,
+            max_video_upload_bytes: env_parsed(
+                "MEDIA_MAX_VIDEO_UPLOAD_BYTES",
+                base.max_video_upload_bytes,
+            )?,
             orphan_reaper_interval_secs: env_parsed(
                 "MEDIA_ORPHAN_REAPER_INTERVAL_SECS",
                 base.orphan_reaper_interval_secs,
@@ -163,9 +182,32 @@ impl MediaConfig {
     /// transport and is refused by the resolver with a readable error
     /// naming `file`, and only a wildly oversized body is cut at the
     /// connection, where a status code is the only answer available.
+    ///
+    /// It is twice the *larger* cap because the transport reads a body
+    /// before anything has sniffed it: which cap applies is a fact about
+    /// bytes the transport has not seen yet, so the ceiling has to admit
+    /// the widest one and let the resolver refuse by type.
     pub fn transport_limit_bytes(&self) -> usize {
-        self.max_upload_bytes.saturating_mul(2)
+        self.max_upload_bytes
+            .max(self.max_video_upload_bytes)
+            .saturating_mul(2)
     }
+
+    /// The caps as the byte pipeline takes them.
+    pub fn caps(&self) -> UploadCaps {
+        UploadCaps {
+            still_bytes: self.max_upload_bytes,
+            video_bytes: self.max_video_upload_bytes,
+        }
+    }
+}
+
+/// The per-type byte caps, carried together because the pipeline picks
+/// between them only after it has sniffed what it is holding.
+#[derive(Debug, Clone, Copy)]
+pub struct UploadCaps {
+    pub still_bytes: usize,
+    pub video_bytes: usize,
 }
 
 /// The bytes as they will be stored, and what was learned proving it.
@@ -175,6 +217,21 @@ pub struct ProcessedAsset {
     pub digest: [u8; 32],
     pub width: u32,
     pub height: u32,
+    /// What the bytes turned out to be, decided by sniffing them rather
+    /// than by anything the client declared.
+    pub mime: &'static str,
+    /// Milliseconds of playback, where the format carries a duration —
+    /// video always, an animated still when its frames state one. Null on
+    /// a single-frame picture, which is what `durationMs` reads.
+    pub duration_ms: Option<u64>,
+}
+
+impl ProcessedAsset {
+    /// Whether this asset can stand as another's poster. A cover is the
+    /// still a reader sees before playback, so a video cannot be one.
+    pub fn is_still(&self) -> bool {
+        self.mime == webp::MIME
+    }
 }
 
 impl ProcessedAsset {
@@ -194,24 +251,59 @@ fn gcd(a: u32, b: u32) -> u32 {
 /// Sniff, strip, probe, digest — the whole byte pipeline, with no I/O in
 /// it. Synchronous and CPU-bound by nature (a decode is a decode), so
 /// callers run it off the async runtime.
-pub fn process(bytes: &[u8], max_upload_bytes: usize) -> Result<ProcessedAsset, MediaError> {
-    if bytes.len() > max_upload_bytes {
-        return Err(MediaError::TooLarge {
-            limit: max_upload_bytes,
+///
+/// **The sniff picks the path, and the path picks the cap.** Which limit
+/// applies is a fact about the bytes, not about anything the client
+/// said, so the format is decided first and the size checked second —
+/// and checked before any parse, so an oversized file is refused without
+/// being walked.
+///
+/// The two paths differ in one substantive way. A still is **rewritten**:
+/// its metadata chunks are dropped and the digest is taken over what
+/// survives, so the stored bytes carry nothing identifying and a reader
+/// can recompute the committed digest from what it was served. A video
+/// is **stored as it arrived**: the server validates video and never
+/// transcodes it, so there is no rewrite for a strip to ride on, and
+/// clients are asked to publish nothing they did not mean to.
+pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaError> {
+    if webp::sniff(bytes) {
+        if bytes.len() > caps.still_bytes {
+            return Err(MediaError::TooLarge {
+                limit: caps.still_bytes,
+            });
+        }
+        let stripped = webp::strip_metadata(bytes)?;
+        let probe = webp::probe(&stripped)?;
+        let digest: [u8; 32] = Sha256::digest(&stripped).into();
+        return Ok(ProcessedAsset {
+            bytes: stripped,
+            digest,
+            width: probe.width,
+            height: probe.height,
+            mime: webp::MIME,
+            duration_ms: probe.duration_ms,
         });
     }
-    if !webp::sniff(bytes) {
-        return Err(MediaError::NotWebp);
+
+    if video::sniff(bytes) {
+        if bytes.len() > caps.video_bytes {
+            return Err(MediaError::TooLarge {
+                limit: caps.video_bytes,
+            });
+        }
+        let probe = video::probe(bytes)?;
+        let digest: [u8; 32] = Sha256::digest(bytes).into();
+        return Ok(ProcessedAsset {
+            bytes: bytes.to_vec(),
+            digest,
+            width: probe.width,
+            height: probe.height,
+            mime: video::MIME,
+            duration_ms: Some(probe.duration_ms),
+        });
     }
-    let stripped = webp::strip_metadata(bytes)?;
-    let probe = webp::probe(&stripped)?;
-    let digest: [u8; 32] = Sha256::digest(&stripped).into();
-    Ok(ProcessedAsset {
-        bytes: stripped,
-        digest,
-        width: probe.width,
-        height: probe.height,
-    })
+
+    Err(MediaError::Unsupported)
 }
 
 /// Assets one post's gallery may carry.
@@ -438,12 +530,73 @@ pub async fn plan_gallery(
             )
             .into());
         }
+        if asset.mime_type == video::MIME && drafts.len() > 1 {
+            return Err(GalleryError::at(
+                gallery_path(i, "mediaId"),
+                "a body is pictures or one video, never both",
+            )
+            .into());
+        }
         manifest.push(manifest_entry(asset, alts[i].clone())?);
     }
     Ok(PlannedGallery {
         attachment_ids: ids,
         manifest,
     })
+}
+
+/// Checks the poster named on an upload, before any bytes are stored.
+///
+/// The cover arrives as an ordinary uploaded asset and is named here —
+/// either a frame the client pulled out of the video or a picture the
+/// author chose instead, which the server cannot tell apart and has no
+/// reason to. There is no server-side frame extraction: that would be a
+/// decoder in the upload path, and the upload path decodes nothing it
+/// does not have to.
+///
+/// Four ways to get it wrong, each refused against the field that
+/// carried it:
+///
+/// 1. **A cover on something that is not a video.** A still is not
+///    covered by anything, so naming one is a mistake worth reporting
+///    rather than a value worth ignoring.
+/// 2. **An asset that is not there.**
+/// 3. **Someone else's asset.** The same anti-hijack rule a gallery runs
+///    (data-model.md "Why parents point at attachments"): a cover must be
+///    an asset this author uploaded, so a poster can never point into
+///    another account's media.
+/// 4. **A video, or a removed asset.** A poster is the still a reader
+///    sees before playback — a video cannot stand in for one, and bytes
+///    that are gone cannot either.
+pub async fn plan_cover(
+    pool: &PgPool,
+    author: Uuid,
+    uploaded_is_video: bool,
+    cover: Option<Uuid>,
+) -> Result<Option<Uuid>, GalleryPlanError> {
+    let Some(id) = cover else {
+        return Ok(None);
+    };
+    let path = vec!["coverMediaId".to_string()];
+    if !uploaded_is_video {
+        return Err(GalleryError::at(path, "only a video takes a cover").into());
+    }
+    let rows = store::assets_by_ids(pool, std::slice::from_ref(&id))
+        .await
+        .map_err(|e| GalleryPlanError::Internal(e.to_string()))?;
+    let Some(asset) = rows.first() else {
+        return Err(GalleryError::at(path, "no such asset").into());
+    };
+    if asset.author_id != author {
+        return Err(GalleryError::at(path, "a cover must be an asset you uploaded").into());
+    }
+    if asset.redacted_at.is_some() {
+        return Err(GalleryError::at(path, "this asset has been removed").into());
+    }
+    if asset.mime_type != webp::MIME {
+        return Err(GalleryError::at(path, "a cover must be an image, not a video").into());
+    }
+    Ok(Some(id))
 }
 
 /// The description as the manifest will carry it: trimmed, length-checked,
@@ -592,8 +745,12 @@ pub async fn resolve_manifest(
 /// The object key for an asset id. Server-generated end to end: nothing
 /// a client sent reaches it, so a traversal or a collision with someone
 /// else's object is unrepresentable rather than defended against.
-pub fn storage_key(id: Uuid) -> String {
-    format!("{id}.webp")
+///
+/// The extension follows the sniffed format rather than any name the
+/// upload carried, so a key describes what the store actually holds.
+pub fn storage_key(id: Uuid, mime: &str) -> String {
+    let extension = if mime == video::MIME { "mp4" } else { "webp" };
+    format!("{id}.{extension}")
 }
 
 /// The absolute URL a reader fetches the bytes from.
@@ -607,9 +764,9 @@ pub fn public_url(base_url: &str, storage_key: &str) -> String {
 /// which is what lets a picture upload the moment it is picked
 /// (data-model.md "Media attachments").
 ///
-/// The row names no poster. A still is covered by nothing, and nothing
-/// this path accepts is a video yet; the column is stated here rather
-/// than set later because an asset row is immutable once written.
+/// The poster is stated here rather than set later because an asset row
+/// is immutable once written: the only honest moment to name what covers
+/// an asset is the moment it is created.
 ///
 /// A retried upload of the same picture by the same author resolves to
 /// the row that already exists — the object written on this attempt is
@@ -622,13 +779,19 @@ pub async fn store_asset(
     blobs: &dyn BlobStore,
     author: Uuid,
     asset: ProcessedAsset,
+    cover_media_id: Option<Uuid>,
 ) -> anyhow::Result<store::MediaAttachment> {
     let id = Uuid::new_v4();
-    let key = storage_key(id);
+    let key = storage_key(id, asset.mime);
     let size_bytes = i64::try_from(asset.bytes.len())?;
-    let options = serde_json::json!({ "v": 1, "aspect_ratio": asset.aspect_ratio() });
+    let mut options = serde_json::json!({ "v": 1, "aspect_ratio": asset.aspect_ratio() });
+    if let Some(duration_ms) = asset.duration_ms
+        && let Some(map) = options.as_object_mut()
+    {
+        map.insert("duration_ms".into(), duration_ms.into());
+    }
 
-    blobs.put(&key, asset.bytes, webp::MIME).await?;
+    blobs.put(&key, asset.bytes, asset.mime).await?;
 
     let row = store::insert(
         pool,
@@ -637,10 +800,10 @@ pub async fn store_asset(
         &asset.digest,
         "sha256",
         &key,
-        webp::MIME,
+        asset.mime,
         size_bytes,
         &options,
-        None,
+        cover_media_id,
     )
     .await?;
 
@@ -701,12 +864,21 @@ mod tests {
         out
     }
 
+    fn caps() -> UploadCaps {
+        UploadCaps {
+            still_bytes: DEFAULT_MAX_UPLOAD_BYTES,
+            video_bytes: DEFAULT_MAX_VIDEO_UPLOAD_BYTES,
+        }
+    }
+
     fn ratio(width: u32, height: u32) -> String {
         ProcessedAsset {
             bytes: Vec::new(),
             digest: [0; 32],
             width,
             height,
+            mime: webp::MIME,
+            duration_ms: None,
         }
         .aspect_ratio()
     }
@@ -731,7 +903,7 @@ mod tests {
     /// ´claim:media:processing-digests-what-it-stores´
     #[test]
     fn processing_accepts_a_real_image_and_digests_what_it_stores() {
-        let processed = process(&one_pixel(), DEFAULT_MAX_UPLOAD_BYTES).expect("a valid image");
+        let processed = process(&one_pixel(), caps()).expect("a valid image");
         assert_eq!(processed.width, 1);
         assert_eq!(processed.height, 1);
         let recomputed: [u8; 32] = Sha256::digest(&processed.bytes).into();
@@ -760,8 +932,8 @@ mod tests {
         with_exif.extend_from_slice(&8u32.to_le_bytes());
         with_exif.extend_from_slice(b"52.5200N");
 
-        let bare = process(&clean, DEFAULT_MAX_UPLOAD_BYTES).expect("a valid image");
-        let stripped = process(&with_exif, DEFAULT_MAX_UPLOAD_BYTES).expect("a valid image");
+        let bare = process(&clean, caps()).expect("a valid image");
+        let stripped = process(&with_exif, caps()).expect("a valid image");
         assert_eq!(bare.digest, stripped.digest, "the same picture, one digest");
         assert_eq!(bare.bytes, stripped.bytes);
         assert_ne!(
@@ -776,12 +948,39 @@ mod tests {
     #[test]
     fn processing_refuses_what_the_policy_excludes() {
         assert_eq!(
-            process(b"GIF89a and the rest", DEFAULT_MAX_UPLOAD_BYTES),
-            Err(MediaError::NotWebp)
+            process(b"GIF89a and the rest", caps()),
+            Err(MediaError::Unsupported),
+            "GIF converts on the device; it never reaches the server"
         );
         assert_eq!(
-            process(&one_pixel(), 4),
+            process(
+                &one_pixel(),
+                UploadCaps {
+                    still_bytes: 4,
+                    video_bytes: DEFAULT_MAX_VIDEO_UPLOAD_BYTES,
+                }
+            ),
             Err(MediaError::TooLarge { limit: 4 })
+        );
+    }
+
+    /// A still is capped where a still is capped, whatever room the video cap leaves beside it.
+    /// ´claim:media:each-type-is-capped-on-its-own´
+    #[test]
+    fn a_still_is_not_admitted_by_the_video_cap() {
+        let over = UploadCaps {
+            still_bytes: 4,
+            video_bytes: DEFAULT_MAX_VIDEO_UPLOAD_BYTES,
+        };
+        assert_eq!(
+            process(&one_pixel(), over),
+            Err(MediaError::TooLarge { limit: 4 }),
+            "the wider video cap is not a still's to borrow"
+        );
+        assert_eq!(
+            DEFAULT_MAX_VIDEO_UPLOAD_BYTES,
+            10 * DEFAULT_MAX_UPLOAD_BYTES,
+            "one video is capped where ten pictures are"
         );
     }
 
@@ -795,8 +994,8 @@ mod tests {
         let mut png = Vec::from(b"\x89PNG\r\n\x1a\n".as_slice());
         png.extend_from_slice(&[0; 64]);
         assert_eq!(
-            process(&png, DEFAULT_MAX_UPLOAD_BYTES),
-            Err(MediaError::NotWebp)
+            process(&png, caps()),
+            Err(MediaError::Unsupported)
         );
     }
 
@@ -805,8 +1004,13 @@ mod tests {
     #[test]
     fn the_storage_key_and_url_are_derived_from_the_id_alone() {
         let id = Uuid::from_bytes([3; 16]);
-        let key = storage_key(id);
+        let key = storage_key(id, webp::MIME);
         assert_eq!(key, format!("{id}.webp"));
+        assert_eq!(
+            storage_key(id, video::MIME),
+            format!("{id}.mp4"),
+            "the extension follows the sniffed format"
+        );
         assert_eq!(
             public_url("https://media.example/bucket/", &key),
             format!("https://media.example/bucket/{id}.webp")

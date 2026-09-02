@@ -40,24 +40,29 @@ const WEBP: &[u8; 4] = b"WEBP";
 const CHUNK_VP8X: &[u8; 4] = b"VP8X";
 const CHUNK_EXIF: &[u8; 4] = b"EXIF";
 const CHUNK_XMP: &[u8; 4] = b"XMP ";
-const CHUNK_ANIM: &[u8; 4] = b"ANIM";
+const CHUNK_ANMF: &[u8; 4] = b"ANMF";
 
-/// The `VP8X` flag byte's animation, EXIF, and XMP bits. The container
-/// specification draws the byte MSB-first as `Rsv Rsv I L E X A R`, so
-/// ICC is 0x20, alpha 0x10, EXIF 0x08, XMP 0x04, animation 0x02.
+/// The `VP8X` flag byte's EXIF and XMP bits. The container specification
+/// draws the byte MSB-first as `Rsv Rsv I L E X A R`, so ICC is 0x20,
+/// alpha 0x10, EXIF 0x08, XMP 0x04, animation 0x02. Only the two that
+/// advertise dropped chunks are cleared; the animation bit describes
+/// pixel data that stays.
 const FLAG_EXIF: u8 = 0x08;
 const FLAG_XMP: u8 = 0x04;
-const FLAG_ANIMATION: u8 = 0x02;
 
 const HEADER_LEN: usize = 12;
 const CHUNK_HEADER_LEN: usize = 8;
 
-/// What the decode probe learned. Only the dimensions survive it — the
-/// pixels are decoded to prove they decode, then dropped.
+/// What the decode probe learned. Only the dimensions and the animation's
+/// length survive it — the pixels are decoded to prove they decode, then
+/// dropped.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Probe {
     pub width: u32,
     pub height: u32,
+    /// The animation's length in milliseconds, summed from its frames.
+    /// Null on a single-frame picture, which has no duration to state.
+    pub duration_ms: Option<u64>,
 }
 
 /// Whether the bytes are a WebP container, read from the bytes alone.
@@ -88,7 +93,7 @@ struct Chunk<'a> {
 /// image's content type.
 fn chunks(bytes: &[u8]) -> Result<Vec<Chunk<'_>>, MediaError> {
     if !sniff(bytes) {
-        return Err(MediaError::NotWebp);
+        return Err(MediaError::Unsupported);
     }
     let declared = le_u32(bytes, 4).ok_or(MediaError::Malformed("truncated RIFF header"))?;
     let end = declared
@@ -130,24 +135,14 @@ fn chunks(bytes: &[u8]) -> Result<Vec<Chunk<'_>>, MediaError> {
 
 /// Rewrites the container without its metadata chunks.
 ///
-/// Animated images are refused here rather than stripped: an animation is
-/// video wearing an image's content type, and the size cap, the feed's
-/// playback rules, and the poster frame it needs are all the video
-/// slice's, not this one's.
+/// An animation is rewritten exactly as a single frame is: the animation
+/// chunks are pixel data and travel through untouched, and only the
+/// chunks that identify the author are dropped. GIF never reaches this
+/// function — it is not a WebP container, so the sniff refuses it, and
+/// clients convert to animated WebP on device rather than the server
+/// growing an encoder to do it for them.
 pub fn strip_metadata(bytes: &[u8]) -> Result<Vec<u8>, MediaError> {
     let chunks = chunks(bytes)?;
-
-    let animated = chunks.iter().any(|chunk| {
-        &chunk.fourcc == CHUNK_ANIM
-            || (&chunk.fourcc == CHUNK_VP8X
-                && chunk
-                    .payload
-                    .first()
-                    .is_some_and(|f| f & FLAG_ANIMATION != 0))
-    });
-    if animated {
-        return Err(MediaError::Animated);
-    }
 
     let mut out = Vec::with_capacity(bytes.len());
     out.extend_from_slice(RIFF);
@@ -193,7 +188,40 @@ pub fn strip_metadata(bytes: &[u8]) -> Result<Vec<u8>, MediaError> {
 /// At the 4096-pixel cap the worst case is a square RGBA canvas of
 /// 4096 × 4096 × 4 = 64 MiB, so 96 MiB leaves the decoder scratch space
 /// without leaving room for a bomb.
+/// The animation's length, summed over its frames.
+///
+/// Each `ANMF` chunk states its own frame duration — a 24-bit
+/// little-endian millisecond count at offset 12 of the payload, after the
+/// frame's x, y, width and height (the WebP Container Specification,
+/// "Animation"). The total is their sum, which is what a reader sees one
+/// loop take.
+///
+/// `None` when the file carries no frame chunks at all, which is the
+/// single-frame case: a still has no duration to state, and `durationMs`
+/// reads null for it.
+fn animation_duration_ms(chunks: &[Chunk<'_>]) -> Option<u64> {
+    let mut frames = chunks
+        .iter()
+        .filter(|chunk| &chunk.fourcc == CHUNK_ANMF)
+        .peekable();
+    frames.peek()?;
+    Some(
+        frames
+            .map(|frame| {
+                frame
+                    .payload
+                    .get(12..15)
+                    .map(|raw| {
+                        u64::from(raw[0]) | u64::from(raw[1]) << 8 | u64::from(raw[2]) << 16
+                    })
+                    .unwrap_or(0)
+            })
+            .sum(),
+    )
+}
+
 pub fn probe(bytes: &[u8]) -> Result<Probe, MediaError> {
+    let duration_ms = animation_duration_ms(&chunks(bytes)?);
     let mut reader = ImageReader::with_format(Cursor::new(bytes), ImageFormat::WebP);
     let mut limits = Limits::no_limits();
     limits.max_image_width = Some(MAX_PIXEL_DIMENSION);
@@ -206,7 +234,11 @@ pub fn probe(bytes: &[u8]) -> Result<Probe, MediaError> {
     if width == 0 || height == 0 {
         return Err(MediaError::Undecodable);
     }
-    Ok(Probe { width, height })
+    Ok(Probe {
+        width,
+        height,
+        duration_ms,
+    })
 }
 
 #[cfg(test)]
@@ -343,7 +375,7 @@ mod tests {
     /// ´claim:media:a-malformed-container-is-refused´
     #[test]
     fn a_malformed_container_is_refused_not_repaired() {
-        assert_eq!(strip_metadata(b"not an image"), Err(MediaError::NotWebp));
+        assert_eq!(strip_metadata(b"not an image"), Err(MediaError::Unsupported));
 
         let mut truncated = one_pixel_vp8l();
         truncated.truncate(HEADER_LEN + 4);
@@ -368,14 +400,67 @@ mod tests {
         ));
     }
 
-    /// An animated image is refused, the accepted form being a single still frame.
-    /// ´claim:media:an-animated-image-is-refused´
-    #[test]
-    fn an_animated_image_is_refused() {
-        let vp8x = vec![FLAG_ANIMATION, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const FLAG_ANIMATION: u8 = 0x02;
+
+    /// A three-frame animation at the durations given, built to the
+    /// container specification's `ANMF` layout: x, y, width-minus-one and
+    /// height-minus-one as 24-bit little-endian triples, then the frame
+    /// duration, then a flag byte, then the frame's own image chunk.
+    fn animation(frame_durations: &[u32]) -> Vec<u8> {
+        let mut vp8x = vec![FLAG_ANIMATION, 0, 0, 0];
+        vp8x.extend_from_slice(&[0, 0, 0]);
+        vp8x.extend_from_slice(&[0, 0, 0]);
         let mut body = chunk(CHUNK_VP8X, &vp8x);
-        body.extend_from_slice(&chunk(CHUNK_ANIM, &[0, 0, 0, 0, 0, 0]));
-        assert_eq!(strip_metadata(&container(&body)), Err(MediaError::Animated));
+        body.extend_from_slice(&chunk(b"ANIM", &[0, 0, 0, 0, 0, 0]));
+        for duration in frame_durations {
+            let mut frame = Vec::new();
+            for triple in [0u32, 0, 0, 0, *duration] {
+                frame.extend_from_slice(&triple.to_le_bytes()[..3]);
+            }
+            frame.push(0);
+            frame.extend_from_slice(&chunk(
+                b"VP8L",
+                &[0x2F, 0x00, 0x00, 0x00, 0x00, 0x88, 0x88, 0x08],
+            ));
+            body.extend_from_slice(&chunk(CHUNK_ANMF, &frame));
+        }
+        container(&body)
+    }
+
+    /// An animation is carried through the strip rather than refused, its frame chunks being pixel data like any other.
+    /// ´claim:media:an-animation-is-carried-not-refused´
+    #[test]
+    fn an_animation_survives_the_strip() {
+        let stripped = strip_metadata(&animation(&[40, 40, 40])).expect("a valid container");
+        let parsed = chunks(&stripped).expect("the rewrite is a valid container");
+        let kept: Vec<&[u8; 4]> = parsed.iter().map(|chunk| &chunk.fourcc).collect();
+        assert_eq!(kept, vec![CHUNK_VP8X, b"ANIM", CHUNK_ANMF, CHUNK_ANMF, CHUNK_ANMF]);
+        let flags = parsed
+            .first()
+            .and_then(|vp8x| vp8x.payload.first().copied())
+            .expect("the flag byte");
+        assert_eq!(
+            flags & FLAG_ANIMATION,
+            FLAG_ANIMATION,
+            "the animation bit describes pixels that stayed"
+        );
+    }
+
+    /// An animation's duration is the sum of its frames' own durations, and a single frame states none at all.
+    /// ´claim:media:an-animations-duration-is-its-frames´
+    #[test]
+    fn an_animations_duration_is_the_sum_of_its_frames() {
+        let animated = animation(&[40, 60, 100]);
+        let parsed = chunks(&animated).expect("a valid container");
+        assert_eq!(animation_duration_ms(&parsed), Some(200));
+
+        let single = one_pixel_vp8l();
+        let still = chunks(&single).expect("a valid container");
+        assert_eq!(
+            animation_duration_ms(&still),
+            None,
+            "a still has no duration to state"
+        );
     }
 
     /// Probing a real image reports the pixel dimensions it decodes to.
@@ -386,7 +471,8 @@ mod tests {
             probe(&one_pixel_vp8l()),
             Ok(Probe {
                 width: 1,
-                height: 1
+                height: 1,
+                duration_ms: None,
             })
         );
     }
