@@ -7,6 +7,7 @@ import com.cogra.feature.content.TagRow
 import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.PickedAsset
+import com.cogra.feature.content.wizard.RefusedPick
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -326,6 +327,95 @@ class ReplyWizardStateTest {
         val state = composerWithWords().addPick(URI_A).withSourceRatio(URI_A, 1.5f)
 
         assertThat(state.picked.single().sourceRatio).isEqualTo(1.5f)
+    }
+
+    // -- Pictures or a video, never both --
+
+    @Test
+    fun aClipReplacesTheTrayAndTheTrayReplacesTheClip() {
+        val withPictures = composerWithWords()
+            .addPick("a", 1f)
+            .addPick("b", 1f)
+        assertThat(withPictures.picked).hasSize(2)
+
+        val withClip = withPictures.addPick("clip", 1f, durationMs = 18_000)
+        assertThat(withClip.picked.map { it.uri }).containsExactly("clip")
+        assertThat(withClip.isVideoComment).isTrue()
+        assertThat(withClip.hasPictures).isFalse()
+
+        val backToPictures = withClip.addPick("c", 1f)
+        assertThat(backToPictures.picked.map { it.uri }).containsExactly("c")
+        assertThat(backToPictures.isVideoComment).isFalse()
+    }
+
+    @Test
+    fun theAddLabelSaysWhatMayStillJoin() {
+        assertThat(composerWithWords().addLabel).isEqualTo("+ Add pictures or a video")
+        assertThat(composerWithWords().addPick("a", 1f).addLabel)
+            .isEqualTo("+ Add pictures · 1 of 4")
+        // A clip carries no add control at all.
+        assertThat(composerWithWords().addPick("clip", 1f, durationMs = 1).addLabel).isNull()
+    }
+
+    @Test
+    fun removingTheClipReturnsTheComposerToWords() {
+        val withClip = composerWithWords()
+            .addPick("clip", 1f, durationMs = 18_000)
+            .copy(coverMediaId = "cover-1")
+
+        val without = withClip.removePick("clip")
+        assertThat(without.picked).isEmpty()
+        assertThat(without.isVideoComment).isFalse()
+        // The face goes with the clip it was lifted from.
+        assertThat(without.coverMediaId).isNull()
+    }
+
+    @Test
+    fun aClipIsNotCompleteUntilItsCoverHasLanded() {
+        val uploaded = composerWithWords()
+            .addPick("clip", 1f, durationMs = 18_000)
+            .withUpload("clip", AssetUpload.Done("v1"))
+
+        assertThat(uploaded.uploadsComplete).isFalse()
+        assertThat(uploaded.copy(coverMediaId = "cover-1").uploadsComplete).isTrue()
+    }
+
+    @Test
+    fun aTranscodeCountsAsStillOnItsWay() {
+        val transcoding = composerWithWords()
+            .addPick("clip", 1f, durationMs = 18_000)
+            .withUpload("clip", AssetUpload.Transcoding(40))
+
+        assertThat(transcoding.uploadsRunning).isTrue()
+    }
+
+    // -- Leaving --
+
+    @Test
+    fun onlyANonEmptyComposerHasSomethingToLose() {
+        assertThat(ReplyWizardState(target = POST_TARGET).hasSomethingToLose).isFalse()
+        assertThat(composerWithWords().hasSomethingToLose).isTrue()
+        assertThat(
+            ReplyWizardState(target = POST_TARGET).addPick("a", 1f).hasSomethingToLose,
+        ).isTrue()
+    }
+
+    @Test
+    fun aRefusedFileIsNotSomethingToLose() {
+        // It never joined the composer, so there is nothing to ask about.
+        val onlyRefusals = ReplyWizardState(target = POST_TARGET)
+            .copy(refused = listOf(RefusedPick(null, "Nope.")))
+        assertThat(onlyRefusals.hasSomethingToLose).isFalse()
+    }
+
+    @Test
+    fun aRefusalLeavesOnRequestAndTheRestStay() {
+        val two = ReplyWizardState(target = POST_TARGET).copy(
+            refused = listOf(RefusedPick(null, "One."), RefusedPick(null, "Two.")),
+        )
+        assertThat(two.dismissedRefusal(0).refused.map { it.message }).containsExactly("Two.")
+        // An index nothing is at changes nothing.
+        assertThat(two.dismissedRefusal(9).refused).hasSize(2)
     }
 
     private fun composerWithWords() = ReplyWizardState(

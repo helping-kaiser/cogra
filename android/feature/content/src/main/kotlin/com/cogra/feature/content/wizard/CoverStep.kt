@@ -1,19 +1,15 @@
 package com.cogra.feature.content.wizard
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -25,12 +21,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.cogra.core.designsystem.v2.media.MediaItem
-import com.cogra.core.designsystem.v2.media.MediaThumb
+import com.cogra.core.designsystem.v2.media.CoverPick
+import com.cogra.core.designsystem.v2.media.CoverRow
 import com.cogra.core.designsystem.v2.token.MediaOverlay
 import com.cogra.core.designsystem.v2.token.Space
 
@@ -63,41 +58,17 @@ internal fun CoverStepBody(
             durationMs = clip.durationMs ?: 0,
         )
 
-        Column(verticalArrangement = Arrangement.spacedBy(Space.x2)) {
-            Text(
-                text = "Cover",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(Space.x2)) {
-                state.coverFrames.forEachIndexed { index, frame ->
-                    val chosen = state.coverChoice == CoverChoice.Frame(index)
-                    MediaThumb(
-                        // The frame's own bytes: it has been processed
-                        // already, so the tile draws exactly what would
-                        // be uploaded rather than a preview of it.
-                        item = MediaItem(frame.picture.bytes, frame.picture.aspectRatio),
-                        size = COVER_TILE,
-                        selected = chosen,
-                        dimmed = !chosen,
-                        onClick = { onPickFrame(index) },
-                        contentDescription = "Frame ${index + 1}",
-                        testTag = "wizard_cover_frame_$index",
-                    )
-                }
-                CoverPictureTile(
-                    chosen = state.coverChoice is CoverChoice.Picture,
-                    model = (state.coverChoice as? CoverChoice.Picture)?.uri,
-                    onClick = onPickPicture,
-                )
-            }
-            Text(
-                text = "A frame, or a picture of your own.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.testTag("wizard_cover_note"),
-            )
-        }
+        CoverRow(
+            // The frame's own bytes: it has been processed already, so
+            // the tile draws exactly what would be uploaded rather than
+            // a preview of it.
+            frames = state.coverFrames.map { it.picture.bytes },
+            picked = state.coverChoice.toPick(),
+            onPickFrame = onPickFrame,
+            onPickOwnPicture = onPickPicture,
+            ownPicture = (state.coverChoice as? CoverChoice.Picture)?.uri,
+            testTagPrefix = "wizard_cover",
+        )
     }
 }
 
@@ -165,66 +136,23 @@ private fun DurationBadge(label: String, modifier: Modifier = Modifier) {
     )
 }
 
-/**
- * The dashed tile that hands the choice to the device's own picker.
- *
- * Once a picture has been chosen it draws that picture, so the row shows
- * what was picked rather than making the author remember — but it keeps
- * the same slot and the same tap.
- */
-@Composable
-private fun CoverPictureTile(
-    chosen: Boolean,
-    model: Any?,
-    onClick: () -> Unit,
-) {
-    if (model != null) {
-        MediaThumb(
-            item = MediaItem(model, 1f),
-            size = COVER_TILE,
-            selected = chosen,
-            dimmed = !chosen,
-            onClick = onClick,
-            contentDescription = "Your own cover picture",
-            testTag = "wizard_cover_picture",
-        )
-        return
-    }
-    Column(
-        modifier = Modifier
-            .size(COVER_TILE)
-            .clip(RoundedCornerShape(Space.x2))
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outline,
-                shape = RoundedCornerShape(Space.x2),
-            )
-            .clickable(role = Role.Button, onClick = onClick)
-            .semantics { contentDescription = "A cover picture of your own" }
-            .testTag("wizard_cover_picture"),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Image,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(20.dp),
-        )
-        Text(
-            text = "A picture",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-    // The tap target is the tile; the row's own click handler is what
-    // opens the picker.
-}
 
 /** What the preview draws: the chosen frame's bytes, or the chosen picture. */
 private fun ComposeWizardState.coverModel(): Any? = when (val choice = coverChoice) {
     is CoverChoice.Frame -> coverFrames.getOrNull(choice.index)?.picture?.bytes
     is CoverChoice.Picture -> choice.uri
+}
+
+/**
+ * The wizard's own answer, as the shared row reads it.
+ *
+ * [CoverChoice] carries the picked picture's URI because the composer
+ * has to upload it; the row only has to draw it, so the two shapes stay
+ * separate and this is the seam between them.
+ */
+internal fun CoverChoice.toPick(): CoverPick = when (this) {
+    is CoverChoice.Frame -> CoverPick.Frame(index)
+    is CoverChoice.Picture -> CoverPick.OwnPicture
 }
 
 /**
@@ -247,6 +175,5 @@ internal fun formatDuration(ms: Int): String {
 }
 
 private val COVER_PREVIEW_HEIGHT = 342.dp
-private val COVER_TILE = 76.dp
 private val PLAY_DIAMETER = 56.dp
 private val PLAY_GLYPH = 32.dp
