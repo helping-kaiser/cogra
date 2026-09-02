@@ -181,4 +181,103 @@ mod tests {
         ));
         assert!(matches!(probe(b""), Err(MediaError::Malformed(_))));
     }
+
+    /// A real MP4, written with the same library that reads it, carrying
+    /// one track of the given media configuration and one sample of the
+    /// given length. Building the fixture through the writer is what
+    /// makes it a container the reader genuinely accepts rather than a
+    /// hand-laid guess at one.
+    fn movie(media: mp4::MediaConfig, sample_ms: u32) -> Vec<u8> {
+        let config = mp4::Mp4Config {
+            major_brand: "isom".parse().expect("a brand"),
+            minor_version: 512,
+            compatible_brands: vec![
+                "isom".parse().expect("a brand"),
+                "iso2".parse().expect("a brand"),
+                "avc1".parse().expect("a brand"),
+                "mp41".parse().expect("a brand"),
+            ],
+            timescale: 1000,
+        };
+        let mut writer = mp4::Mp4Writer::write_start(Cursor::new(Vec::new()), &config)
+            .expect("the writer starts");
+        writer
+            .add_track(&mp4::TrackConfig {
+                track_type: match &media {
+                    mp4::MediaConfig::AacConfig(_) => TrackType::Audio,
+                    _ => TrackType::Video,
+                },
+                timescale: 1000,
+                language: "und".into(),
+                media_conf: media,
+            })
+            .expect("a track");
+        writer
+            .write_sample(
+                1,
+                &mp4::Mp4Sample {
+                    start_time: 0,
+                    duration: sample_ms,
+                    rendering_offset: 0,
+                    is_sync: true,
+                    bytes: bytes::Bytes::from_static(&[0, 0, 0, 1]),
+                },
+            )
+            .expect("a sample");
+        writer.write_end().expect("the writer finishes");
+        writer.into_writer().into_inner()
+    }
+
+    fn h264(width: u16, height: u16) -> mp4::MediaConfig {
+        mp4::MediaConfig::AvcConfig(mp4::AvcConfig {
+            width,
+            height,
+            seq_param_set: vec![0x67, 0x42, 0x00, 0x1E, 0x00],
+            pic_param_set: vec![0x68, 0xCE, 0x3C, 0x80],
+        })
+    }
+
+    /// An H.264 video is admitted and reports the size and the duration the container states.
+    /// ´claim:media:an-h264-movie-is-admitted-with-its-duration´
+    #[test]
+    fn an_h264_movie_is_admitted_and_timed() {
+        let probed = probe(&movie(h264(1920, 1080), 2_500)).expect("an H.264 movie");
+        assert_eq!(probed.width, 1920);
+        assert_eq!(probed.height, 1080);
+        assert_eq!(
+            probed.duration_ms, 2_500,
+            "the duration is read, never capped"
+        );
+    }
+
+    /// A container carrying any codec but H.264 video and AAC audio is refused, whatever its brand promised.
+    /// ´claim:media:only-h264-and-aac-are-admitted´
+    #[test]
+    fn a_codec_outside_the_policy_is_refused() {
+        let hevc = movie(
+            mp4::MediaConfig::HevcConfig(mp4::HevcConfig {
+                width: 1920,
+                height: 1080,
+            }),
+            1_000,
+        );
+        assert!(
+            matches!(probe(&hevc), Err(MediaError::Codec(_))),
+            "H.265 is not the stored format"
+        );
+
+        let audio_only = movie(
+            mp4::MediaConfig::AacConfig(mp4::AacConfig {
+                bitrate: 128_000,
+                profile: mp4::AudioObjectType::AacLowComplexity,
+                freq_index: mp4::SampleFreqIndex::Freq48000,
+                chan_conf: mp4::ChannelConfig::Stereo,
+            }),
+            1_000,
+        );
+        assert!(
+            matches!(probe(&audio_only), Err(MediaError::Codec(_))),
+            "sound alone is not a video"
+        );
+    }
 }
