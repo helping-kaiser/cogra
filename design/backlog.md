@@ -357,7 +357,7 @@ the search walks `advance` arcs alone, an ambiguous leg is a hard
 failure asking for a pin, a gap-ending flow is reported rather than
 failed, and drift from the blessed witness fails until `--rebless`.
 Readme §13 *The user-flow layer* records the shape. Seven seed flows
-are declared; authoring the full set is item 25.
+are declared; authoring the full set is item 28.
 
 ### 23 · Close the gaps — in roadmap order · *design*
 
@@ -481,7 +481,7 @@ surfaces the round exposed as gaps: the settings screen, the invites
 screen, the profile menus. Next: round 2, the pattern boards
 (guest-gate, network-error, key-absent).
 
-### 25 · Author the full user-flow set · *design*
+### 28 · Author the full user-flow set · *design* · **round closed**
 
 Item 22's engine is seeded with seven flows chosen to exercise every
 mechanism — the control-selector start and its convergence check, the
@@ -583,11 +583,34 @@ seen. Coverage: 94 of 132 gaps now sit on a declared journey's
 boards, up from 82; the journey-stopping census moves from thirteen
 to fifteen, the two new blocked ends.
 
+**Close-out landed 2026-09-02 — the round is closed.** Jakob ruled the
+round's findings through as recommended, and four of them changed the
+engine. A flow may now omit `end` and conclude on ARRIVAL at the board
+its last point lands on, so the three read journeys stop borrowing a
+reading act to end on — `see-who-stands-with-someone`, `visit-an-author`
+and `open-a-posts-pictures` each drop a self-terminal end, one of which
+was a `detour` edge doing duty as a conclusion. A control start's origin
+boards now count among the flow's boards, which is what the shared-board
+index and the gap triage were missing: coverage jumps from 94 of 132
+gaps on a declared journey's boards to 130, leaving just two off every
+flow, and the shared-board index grows from 28 boards to 49. The
+journey-stopping census now ignores a control origin whose every outcome
+is a terminal — it stops no journey, the act completing in place — which
+changes no count today, all eleven such origins carrying gaps. The
+`$doc` also stopped overpromising: a gap on an END resolves blocked, an
+honest claim on design owed, but a gap on a START fails, since a journey
+that can begin from no existing screen is an authoring error. Two flows
+came off the bench, both blocked on purpose: `search-and-open-a-post`
+(the standalone post detail) and `add-a-topic` (the topic picker, whose
+«Add a topic» is offered on four boards but reaches only that gap from
+every one of them, so a control start would fail rather than block).
+Fifty-two declared, forty-six resolved, six blocked, the census at
+seventeen.
+
 An optional tail remains, worth authoring only if a later round wants
 the bench exhausted: `retry-an-unusable-invite`,
 `recover-a-forgotten-password`, `make-a-key-without-a-backup`,
-`search-and-open-a-post` (blocked — the standalone post detail),
-`search-finds-nothing-then-something`, `add-a-topic` (blocked — the
-topic picker), `change-the-license-before-signing`,
-`mark-your-post-sensitive`, and `check-what-the-edit-signs`, which
-first needs a ruling on whether a detour may start a flow.
+`search-finds-nothing-then-something`,
+`change-the-license-before-signing`, `mark-your-post-sensitive`, and
+`check-what-the-edit-signs`, which first needs a ruling on whether a
+detour may start a flow.
