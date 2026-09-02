@@ -609,8 +609,7 @@ async fn a_cover_outside_the_rules_is_refused(pool: PgPool) {
     let my_still = Uuid::parse_str(mine["media"]["id"].as_str().expect("id")).expect("a uuid");
 
     let theirs = rig.upload(&other, &photo_with_location()).await;
-    let their_still =
-        Uuid::parse_str(theirs["media"]["id"].as_str().expect("id")).expect("a uuid");
+    let their_still = Uuid::parse_str(theirs["media"]["id"].as_str().expect("id")).expect("a uuid");
 
     let cross = rig
         .upload_with_cover(&token, &h264_movie(1_000), Some(their_still))

@@ -908,7 +908,11 @@ mod tests {
     fn an_animated_webp_is_accepted_and_timed() {
         let processed = process(&animated_two_frames(), caps()).expect("an animation is accepted");
         assert_eq!(processed.mime, webp::MIME);
-        assert_eq!(processed.duration_ms, Some(100), "40 ms and 60 ms of frames");
+        assert_eq!(
+            processed.duration_ms,
+            Some(100),
+            "40 ms and 60 ms of frames"
+        );
 
         let still = process(&one_pixel(), caps()).expect("a still is accepted");
         assert_eq!(still.duration_ms, None, "a single frame has no duration");
@@ -1043,10 +1047,7 @@ mod tests {
     fn a_renamed_file_is_still_refused() {
         let mut png = Vec::from(b"\x89PNG\r\n\x1a\n".as_slice());
         png.extend_from_slice(&[0; 64]);
-        assert_eq!(
-            process(&png, caps()),
-            Err(MediaError::Unsupported)
-        );
+        assert_eq!(process(&png, caps()), Err(MediaError::Unsupported));
     }
 
     /// An asset's storage key and public URL derive from its identifier alone, so nothing about the upload leaks into either.
