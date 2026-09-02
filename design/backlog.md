@@ -628,3 +628,39 @@ the bench exhausted: `retry-an-unusable-invite`,
 `change-the-license-before-signing`, `mark-your-post-sensitive`, and
 `check-what-the-edit-signs`, which first needs a ruling on whether a
 detour may start a flow.
+
+### 29 · design.md is removed in favour of the design directory · *system*
+
+Jakob's direction 2026-09-02: this folder is the design home, and
+`docs/implementation/design.md` is a second copy of the same rules that
+has to be kept in step by hand — item 26 was one such catch-up, and the
+next drift is already accruing. Audit the file section by section,
+carry anything load-bearing that `readme.md` does not already say into
+it, then delete the file and point `docs/README.md` (its index entry
+under implementation) at `design/` as the design home.
+
+The referrers are the work, not the delete. `docs/open-questions.md`
+cites it seven times, and roughly a hundred and fifty source files
+across `android/`, `web/` and `design/components/` carry `design.md
+§8.3`-style citations in their comments — the design system's own
+components among them. Decide once what those become (a `design/readme.md`
+section reference, or nothing) and sweep them in one pass; a dangling
+citation is worse than the duplicate doc it replaces.
+
+### 30 · The app pads lag the boards' pick readout · *implementation*
+
+Both apps still draw the anchor's WORDS beside its face on the open
+pad — Android stacks face, words and pair centred
+(`StancePad.kt`'s `StanceReadout`); web renders `🙂 Nice` on one line
+with the pair beneath (`stance-readout.tsx`'s `StanceStanding`). The
+design system dropped the words from the drawing on purpose — face,
+words and pair are three encodings of one value, two too many — and
+moved them to the screen-reader line, where they still protect the
+readers §10 exists for (`StanceReadout.jsx`'s recorded divergence).
+
+The boards spec the block as a labelled readout above the field:
+*Your pick* in `label-small`, then the face and the exact pair on one
+line, with the standing above it and the landing below — each of the
+three labelled above its own value so the eye can compare them without
+reading. Neither app draws the label. Catch both up, and keep the
+spoken line naming the anchor and both axes.

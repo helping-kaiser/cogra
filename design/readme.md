@@ -635,6 +635,12 @@ four quadrants are legitimate.
   anchors by Euclidean distance — dense in the for-it-and-want-it
   quadrant, sparse at the extremes. `(0, 0)` never speaks through the
   table: it gets 🤷.
+- **Where the anchors sit is recorded on the anchor-map card**
+  (`components/stance/anchor-map.card.html`) — the twenty on the
+  two-axis field and the six pure-valence ones on the strip, each at its
+  own coordinate. It is a reference for implementers: the product field
+  draws its four axis words and nothing else, and the anchors' words
+  stay accessibility-only.
 - Paired sliders and direct entry are the alternate *and* accessible
   path; choosing one replaces the pad everywhere.
 
