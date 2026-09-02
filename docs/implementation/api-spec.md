@@ -3139,9 +3139,11 @@ and it was checked first and rejected: Apollo Kotlin 4.4.3 marks
 `@oneOf` experimental and enforces it only at runtime, so the
 typing the feature exists to buy is exactly what it does not
 deliver on one of the two codegen paths. On the read side,
-`Post.content.value` is null on a media post. A comment is
-unaffected — words plus optional media, deliberately asymmetric,
-because an answer is words first.
+`Post.content.value` is null on a media post. A comment keeps
+the asymmetry — words plus optional media, because an answer is
+words first — but its media obeys the same XOR the post's body
+does: up to four pictures, or one video with its cover, never
+both kinds.
 
 **Upload and gallery limits.** Uploading mints no record and costs
 no θ, so every control on it is an L2 policy limit rather than an
@@ -3175,19 +3177,28 @@ says so.
   holds and what a reader downloads. `durationMs` is probed off
   the container and reported as a fact about the asset, never
   enforced as a limit on it.
-- **A body is pictures or one video.** A video is the whole body,
-  its poster riding the asset rather than a second gallery entry,
-  and an attachment list mixing the two is refused at
+- **A body is pictures or one video**, on a comment as on a post. A
+  video is the whole body, its poster riding the asset rather than a
+  second gallery entry, and an attachment list mixing the two is
+  refused at `["attachments", "<i>", "mediaId"]`.
+- **A comment's video is capped at 50 MiB**, half a post's, the same
+  asymmetry its four pictures against a post's ten already carries;
+  the cover rides the still cap either way. The cap is checked when
+  the attachment is planned rather than at the upload, because an
+  asset is uploaded before it is attached and nothing at that moment
+  knows which parent it is headed for — so the upload admits the
+  widest limit and the parent narrows it, refusing at
   `["attachments", "<i>", "mediaId"]`.
 - **A poster is the uploader's own still.** `coverMediaId` names
   an asset this account uploaded and still holds; a cover that is
   another account's, a video, removed, or absent is refused at
   `["coverMediaId"]`, as is a cover named on something that is not
   a video.
-- **Ten attachments per post, four per comment**, checked whole
-  before a single act is staged, each refusal naming the offender
-  at `["attachments", "<i>", "mediaId"]`. The caps are what make
-  the gallery a bounded fold list rather than a connection.
+- **Ten pictures per post, four per comment — or, at either
+  scale, one video with its cover**, checked whole before a single
+  act is staged, each refusal naming the offender at
+  `["attachments", "<i>", "mediaId"]`. The caps are what make the
+  gallery a bounded fold list rather than a connection.
 - **1000 characters per description**, refused at
   `["attachments", "<i>", "altText"]`. It multiplies with the
   count cap and the product is what has to fit inside `M_payload`,
@@ -3197,15 +3208,20 @@ says so.
   gallery gesture, well below a script. An upload precedes any
   prepare, so θ gates nothing here and this limit is the only
   thing that does.
-- **A picture's metadata is stripped**, client-side and again
-  server-side before the digest is computed. A phone photo carries
-  GPS coordinates and a device serial, and reads are public and
-  unauthenticated, so publishing one untouched would publish where
-  its author lives. A video is stored as it arrived — validation
-  is not a rewrite, so there is no server-side strip for one to
-  ride on, and the same metadata rides a phone's video. Closing
-  that gap is
-  [open-questions.md Q52](../open-questions.md).
+- **Metadata is stripped on the device, and checked here.** A phone
+  photo carries GPS coordinates and a device serial, and a phone's
+  video carries the same; reads are public and unauthenticated, so
+  publishing one untouched would publish where its author lives.
+  Clients strip before uploading and the server looks again rather
+  than trusting that it happened: a picture's `EXIF` and `XMP `
+  chunks and a video's `udta`, `meta` and `uuid` boxes are removed
+  before the digest is computed, so the digest describes bytes that
+  carry nothing identifying. A file that arrives clean is stored
+  exactly as it arrived; one whose strip was faulty is **repaired
+  rather than refused** — the author did nothing wrong. Neither
+  repair re-encodes anything: media is copied through byte for
+  byte, and a video's chunk offsets are corrected for what was
+  removed ahead of them.
 
 **Media serving.** Bytes are served by the **media origin**, not
 by the API: the store is its own service, so `MediaAttachment.url`

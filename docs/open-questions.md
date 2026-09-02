@@ -26,7 +26,6 @@ within a phase, order is flexible.
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
 | 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
 | 2a. Profile surface (with slice 2.2) | 3 | **Q35, Q36, Q41** | The profile header's connection count (which fold counts as a connection — answerable now that every passive class rides one stance control), the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without all three. |
-| 2c. Video privacy (with slice 2.5.2) | 1 | **Q52** | Whether a video's metadata is stripped server-side, and by what. The picture path strips because it rewrites; validation is not a rewrite, so a video is stored as it arrived and carries whatever the phone wrote into it. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
@@ -36,6 +35,7 @@ questions are closed.
 
 **Resolved:**
 
+- Q52 — ruled 2026-09-02: "Q52 do the strip", refined the same day to the posture the picture path already carries — "oh of course the metadata strip should be done in device first (just like with images) and the backend mearly checks and re-strips if the strip was faulty". So the **box-level strip** ships as the *repair* half of check-then-repair, not as the primary path: clients strip on the device, the server looks again, a file carrying nothing is stored byte for byte, and one whose strip was faulty is repaired rather than refused. The strip removes `udta`, `meta` and `uuid` wherever they sit (ISO/IEC 14496-12; QuickTime's `©xyz` location atom rides in `udta`), copies media through untouched, and corrects every `stco`/`co64` chunk offset by the bytes removed ahead of it — those offsets being absolute from the start of the file, a strip that left them alone would leave a file that parses and plays garbage. Carrier: [api-spec.md "Upload and gallery limits"](implementation/api-spec.md). The same round ruled that **comments carry video** — "comments videos but with a limit of 50mib (+10mib cover)" — at half a post's byte budget, applied where the parent is known rather than at the upload.
 - Q51 — ruled 2026-09-02, all four parts. **One accepted moving format: MP4 / H.264 + AAC** ("yes mp4 as recommended"), the WebP posture extended to video — clients re-encode on device and the server validates rather than transcodes. **A video post is one video plus its cover.** **The video cap is 100 MiB** and there is **no duration cap**: "i dont really see a need for a time cap.. if someone genuinly want to upload ultra low res video that is 10h long than he can do so", with the byte cap set at parity with the picture body ("as we have 1 post max 10 images with 10MiB = 100MiB i guess the video should be allowed 100MiB"), the 110 MiB worst case with a cover accepted because "100MiB is just more userfriendly than 90MiB", and frontends expected to compress to industry-standard resolution as the norm. **Animated stills convert client-side** — animated WebP is accepted as the picture it is, GIF converts on the device, and the server never grows an encoder. **The cover is uploaded by the frontend as its own asset** and named on the video's upload: "the media (cover) is uploaded by the user (the frontend). it is either a frame from the video or a chose image" — no server-side frame extraction. Carriers: [api-spec.md "Upload and gallery limits"](implementation/api-spec.md) and `UploadMediaInput.coverMediaId`, with the poster's foreign key in [data-model.md](implementation/data-model.md). Server-side stripping of a video's own metadata is not settled by these rulings and is carried forward as Q52.
 - Q42 — ruled 2026-09-02: **the resting face is 🫥** — the dotted-line face reads as "nothing here yet", which is exactly what an unauthored target is. It stays outside §8.4's anchor table, so an empty control cannot read as a standing the viewer already holds, and it stays distinct from 🤷, which means severed or netted to zero; the muted, translucent treatment is unchanged. Carriers: [design.md §8.3](implementation/design.md#8-the-stance-control) (the resting target) and §8.4 (beside the zero-bundle carve-out) — a named value both clients read, exactly as the anchor table is.
 - Q47 — ruled 2026-09-01: **the veil names its source** — an author's mark reads as the author's own warning, a moderation verdict as the platform's, rather than leaving the reason's presence as the only (weak) signal. The reader-facing design comes first (design backlog item 25); carriers at implementation time: [moderation.md "Two independent states"](instances/moderation.md#two-independent-states-and-the-veil-is-their-or) (the "optional reason is what tells a reader" sentence is superseded by the named source) and [api-spec.md](implementation/api-spec.md). Until moderation verdicts get storage (slice 8), every veil is an author mark, so the copy can ship ahead of the second state.
@@ -261,56 +261,6 @@ traversed nodes serve the landed version — or is the membership
 guarantee the chronicle's whole contract, with settled reading
 left to the content listings? Decide when a real reader wants the
 settled graph through a profile.
-
----
-
-## Q52 — A video's own metadata: stripped server-side, or trusted to the client
-
-**Where it shows up:** [api-spec.md "Upload and gallery limits"](implementation/api-spec.md)
-**Status:** open — video ships accepting what it is given
-
-A picture's metadata is stripped twice: on the device, and again
-by the server before the digest is taken. The server can do that
-because the still path **rewrites** the container — it drops the
-`EXIF` and `XMP ` chunks, copies the pixel chunks through, and
-digests what survives.
-
-Video has no such rewrite. Q51 settled that the server validates
-and never transcodes, which is what keeps an encoder out of the
-upload path — but it means an MP4 is stored exactly as it
-arrived, and a phone writes location and device identifiers into
-`moov/udta` the same way it writes them into a photo. Reads are
-public and unauthenticated, so the exposure is the one the
-picture strip exists to prevent, on files that are larger and
-more revealing.
-
-### The question
-
-Three ways to close it, and they are not equally cheap:
-
-1. **A box-level strip.** Rewrite the container without `udta`
-   and the other metadata boxes, copying `mdat` through
-   untouched. This is the exact analog of the WebP strip — not a
-   transcode, no re-encode, no quality loss — but MP4 keeps
-   sample offsets in `stco`/`co64` that point into `mdat` by
-   absolute file position, so dropping a box before it means
-   rewriting those tables. Doable and well-specified; more
-   surgery than the WebP strip by some margin.
-2. **Refuse what carries metadata.** Cheap and honest, and it
-   makes the client's obligation enforceable rather than hoped
-   for — at the cost of refusing files a phone produces by
-   default, which is a poor experience for the author who did
-   nothing wrong.
-3. **Trust the client.** What ships today. The device is asked to
-   strip and nothing verifies it, which is the posture the
-   picture path explicitly rejected for being a hope rather than
-   a check.
-
-**Recommendation.** Option 1, sequenced as its own bite rather
-than held against the video slice: the exposure is real and the
-strip is the same idea the still path already carries, but the
-offset-table rewrite is enough work to want its own tests. Until
-then the doc says plainly what is stored.
 
 ---
 
