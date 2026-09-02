@@ -22,25 +22,41 @@ export type MediaAsset = NonNullable<UploadMediaMutation["uploadMedia"]["media"]
  * itself be personal data ("IMG_20260828_ourhouse.jpg"), and nothing downstream
  * reads it — the storage key is server-generated (D2).
  */
-export function uploadFilename(): string {
-  return `upload.${OUTPUT_TYPE.split("/")[1]}`;
+export function uploadFilename(type: string = OUTPUT_TYPE): string {
+  // The subtype is the extension for both formats this app sends — `webp` and
+  // `mp4` — so one derivation covers them and an unknown type still produces a
+  // name rather than `upload.undefined`.
+  return `upload.${type.split("/")[1] ?? "bin"}`;
 }
 
 /**
  * Bytes, and nothing the author typed. The description rides the prepare
  * input's `AttachmentInput` instead, so a picture uploads the moment it is
  * picked and neither half waits on the other.
+ *
+ * `coverMediaId` is the ONE exception, and only a video carries it. The cover
+ * is part of what the video is rather than something attached to it afterwards
+ * — an asset row is immutable once written — so it is named on the call that
+ * creates the video, which is why the composer uploads the poster first and
+ * this second.
  */
 export async function uploadMedia(
   client: ApolloClient,
-  asset: { blob: Blob },
+  asset: { blob: Blob; coverMediaId?: string },
 ): Promise<Outcome<MediaAsset>> {
-  const file = new File([asset.blob], uploadFilename(), { type: asset.blob.type });
+  const file = new File([asset.blob], uploadFilename(asset.blob.type), {
+    type: asset.blob.type,
+  });
   return payloadOutcome(
     () =>
       client.mutate({
         mutation: UploadMediaDocument,
-        variables: { input: { file } },
+        variables: {
+          input:
+            asset.coverMediaId === undefined
+              ? { file }
+              : { file, coverMediaId: asset.coverMediaId },
+        },
       }),
     (data) => data.uploadMedia.userErrors,
     (data) => data.uploadMedia.media,

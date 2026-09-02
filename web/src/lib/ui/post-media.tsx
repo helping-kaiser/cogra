@@ -37,7 +37,13 @@ type Attachment = {
   url: string;
   altText?: string | null;
   status: string;
-  options: { aspectRatio?: string | null };
+  mimeType?: string | null;
+  options: { aspectRatio?: string | null; durationMs?: number | null };
+  coverMedia?: {
+    url: string;
+    status: string;
+    options?: { aspectRatio?: string | null } | null;
+  } | null;
 };
 
 type Bearer = {
@@ -66,6 +72,22 @@ export function removalReason(node: Bearer): RemovalReason {
   return node.moderationStatus === "ILLEGAL" ? "platform" : "author";
 }
 
+/**
+ * A video's poster, or null.
+ *
+ * A REDACTED COVER IS NOT A POSTER. The cover answers with its own `status`, so
+ * a removed still says so here exactly as it would anywhere else — and the
+ * honest rendering is no poster at all: the player's reserved surface shows
+ * until the first frame decodes, and the video itself, which was not removed,
+ * plays untouched. Standing a "Removed" card over a working video would report
+ * the wrong thing removed.
+ */
+export function posterFor(attachment: Attachment): string | null {
+  const cover = attachment.coverMedia;
+  if (!cover || cover.status === "REDACTED") return null;
+  return cover.url;
+}
+
 export function galleryItems(node: Bearer): readonly GalleryItem[] {
   return node.attachments.map((attachment) => {
     const ratio = parseAspectRatio(attachment.options.aspectRatio);
@@ -76,6 +98,9 @@ export function galleryItems(node: Bearer): readonly GalleryItem[] {
       // inventing a description would be worse than saying nothing.
       altText: attachment.altText ?? null,
       sourceRatio: ratio,
+      mimeType: attachment.mimeType ?? null,
+      poster: posterFor(attachment),
+      durationMs: attachment.options.durationMs ?? null,
     };
   });
 }
