@@ -382,12 +382,14 @@ count falls, and land with check-flows green.
 Filed by the feature loop 2026-09-01 (jakob: designs shipped later,
 bundled). Three small pieces the 2.5.1 close needs:
 
-1. **The veil names its source** (Q47, ruled 2026-09-01): a reader
-   should see whether the *author* warned them or the platform did —
-   design the veil's wording/treatment for both marks (today the
-   author's optional reason is the only, weak, signal). Until slice 8
-   every live veil is an author mark. Touches the veil face settled in
-   item 10.
+1. **The veil names its source** (Q47) — **built 2026-09-02**. The
+   veil's second line reads *The author's warning* or *The platform's
+   verdict*, always, with the reason after it: the two marks read back
+   as the same veil, so an unnamed source reads as the other.
+   `SensitiveVeil` takes `source`, `PostCard` and `CommentCard` carry
+   it, and the *Sensitive & removed* card draws both. Until slice 8
+   every live veil is an author mark. Open: where a words-only post
+   names its source, having no wash to carry the line.
 2. **The sensitive mark rides on both edit surfaces** — ruled and
    drawn 2026-09-02 (readme §13 *The compose flow*): EditCompose and
    CommentEdit each carry the seal's Sensitive row, opening the same
@@ -400,13 +402,13 @@ bundled). Three small pieces the 2.5.1 close needs:
    AvatarCrop/AvatarSeal 1:1, the file dialog playing the system
    picker's part. Crop and seal don't differ by platform, so no web
    board is drawn.
-4. **A sensitive-marked comment has no veiled state** (added
-   2026-09-01): ReplySeal's Mark row lets a comment author self-mark
-   and the contract carries it, but no board draws a veiled comment
-   inside the comments sheet — the post veil's face doesn't obviously
-   fit a comment-scale card. Blocks the reply-wizard lanes from
-   implementing ReplySeal 1:1 (the Mark row without the veiled
-   result), so this part leads the bundle.
+4. **A sensitive-marked comment veils compact** — **built
+   2026-09-02**. The whole body, words and pictures as one, is
+   replaced by a single comment-scale block wearing the veil's wash,
+   glyph, words and source line; the author, timestamp, topics and
+   stance stay readable. `CommentCard` takes `sensitive`,
+   `SensitiveVeil` grew `kind="compact"`, and *Comments · the thread*
+   draws it. The reply-wizard lanes can implement ReplySeal 1:1.
 5. **The leave is guarded only when something would be lost** —
    ruled and drawn 2026-09-02 (readme §13 *The compose flow*):
    comments keep no drafts, so leaving the reply wizard or a comment
@@ -626,3 +628,39 @@ the bench exhausted: `retry-an-unusable-invite`,
 `change-the-license-before-signing`, `mark-your-post-sensitive`, and
 `check-what-the-edit-signs`, which first needs a ruling on whether a
 detour may start a flow.
+
+### 29 · design.md is removed in favour of the design directory · *system*
+
+Jakob's direction 2026-09-02: this folder is the design home, and
+`docs/implementation/design.md` is a second copy of the same rules that
+has to be kept in step by hand — item 26 was one such catch-up, and the
+next drift is already accruing. Audit the file section by section,
+carry anything load-bearing that `readme.md` does not already say into
+it, then delete the file and point `docs/README.md` (its index entry
+under implementation) at `design/` as the design home.
+
+The referrers are the work, not the delete. `docs/open-questions.md`
+cites it seven times, and roughly a hundred and fifty source files
+across `android/`, `web/` and `design/components/` carry `design.md
+§8.3`-style citations in their comments — the design system's own
+components among them. Decide once what those become (a `design/readme.md`
+section reference, or nothing) and sweep them in one pass; a dangling
+citation is worse than the duplicate doc it replaces.
+
+### 30 · The app pads lag the boards' pick readout · *implementation*
+
+Both apps still draw the anchor's WORDS beside its face on the open
+pad — Android stacks face, words and pair centred
+(`StancePad.kt`'s `StanceReadout`); web renders `🙂 Nice` on one line
+with the pair beneath (`stance-readout.tsx`'s `StanceStanding`). The
+design system dropped the words from the drawing on purpose — face,
+words and pair are three encodings of one value, two too many — and
+moved them to the screen-reader line, where they still protect the
+readers §10 exists for (`StanceReadout.jsx`'s recorded divergence).
+
+The boards spec the block as a labelled readout above the field:
+*Your pick* in `label-small`, then the face and the exact pair on one
+line, with the standing above it and the landing below — each of the
+three labelled above its own value so the eye can compare them without
+reading. Neither app draws the label. Catch both up, and keep the
+spoken line naming the anchor and both axes.
