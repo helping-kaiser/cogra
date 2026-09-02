@@ -278,6 +278,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Edit</button>", tag: "button" },
     { n: 7, find: "Add a comment</label>", tag: "label" },
     { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 9, find: 'aria-label="Turn sound on"', tag: "button" },
   ],
   CommentEdit: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
