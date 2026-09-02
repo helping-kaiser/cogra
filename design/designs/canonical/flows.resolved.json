@@ -735,6 +735,196 @@
         "ComposeSealUploading",
         "ComposeLanded"
       ]
+    },
+    {
+      "name": "see-who-stands-with-someone",
+      "description": "The figures row, on any profile, opens the stance lists; reading who has taken a stance on them is the whole journey.",
+      "status": "resolved",
+      "startsOn": [
+        "Profile",
+        "ProfileApplicant",
+        "ProfileComments",
+        "ProfileOther",
+        "ProfilePosts"
+      ],
+      "steps": [
+        "start · «the figures row» on 5 boards → ProfileStances",
+        "end · ProfileStances · 2 «On them» → self — the inbound direction"
+      ],
+      "boards": [
+        "ProfileStances"
+      ]
+    },
+    {
+      "name": "find-the-thread-a-comment-answers",
+      "description": "A chronicle's Comments tab draws each comment with what it answers; the target pointer opens that post, its thread already open.",
+      "status": "resolved",
+      "steps": [
+        "start · ProfileOther · 6 «chronicle tabs» → ProfileComments — Comments — the cards (master)",
+        "end · ProfileComments · 17 «the target pointer» → ReplyEntry — what the comment answers — the post, its thread open"
+      ],
+      "boards": [
+        "ProfileOther",
+        "ProfileComments",
+        "ReplyEntry"
+      ]
+    },
+    {
+      "name": "edit-your-profile",
+      "description": "Edit profile opens the fields — name, bio, website — and one seal signs them; the picture has flows of its own.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 6 «Edit profile» → ProfileEdit",
+        "ProfileEdit · 6 «Save» → ProfileEditSeal",
+        "end · ProfileEditSeal · 4 «Sign the change» → back — signed — the profile updates"
+      ],
+      "boards": [
+        "Profile",
+        "ProfileEdit",
+        "ProfileEditSeal"
+      ]
+    },
+    {
+      "name": "take-a-stance-on-a-person",
+      "description": "Press and hold the stance anchor on a profile and the same pad blooms; the stance concludes where it was taken.",
+      "status": "resolved",
+      "startsOn": [
+        "ProfileComments",
+        "ProfileOther",
+        "ProfilePosts"
+      ],
+      "steps": [
+        "start · «the stance anchor» on 3 boards → VouchBackPad",
+        "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
+      ],
+      "boards": [
+        "VouchBackPad"
+      ]
+    },
+    {
+      "name": "message-someone",
+      "description": "Message on someone's profile opens the conversation with them — the chat surface is still owed.",
+      "status": "blocked by gap",
+      "blockedBy": "the chat surface (not designed)",
+      "steps": [
+        "start · ProfileOther",
+        "end · ProfileOther · 5 «Message» → gap: the chat surface (not designed)"
+      ],
+      "boards": [
+        "ProfileOther"
+      ]
+    },
+    {
+      "name": "publish-from-the-browser",
+      "description": "A browser draws its own pick step — files dropped on the page, no device tray — and the wizard rejoins at the crop, ending on the same seal as the native one.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposePickWeb",
+        "ComposePickWeb · 3 «Next» → ComposeCrop — pictures — the crop",
+        "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
+        "ComposeDetails · 10 «Next» → ComposeSeal",
+        "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
+      ],
+      "boards": [
+        "ComposePickWeb",
+        "ComposeCrop",
+        "ComposeDetails",
+        "ComposeSeal",
+        "ComposeLanded"
+      ]
+    },
+    {
+      "name": "reply-from-the-browser",
+      "description": "In a browser the reply's pictures are dropped anywhere on the page; the tray, the words and the seal are the native ones, and one signature lands the comment in its thread.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyPicturesWeb",
+        "ReplyPicturesWeb · 3 «Next» → ReplySeal",
+        "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
+      ],
+      "boards": [
+        "ReplyPicturesWeb",
+        "ReplySeal",
+        "ReplyEntry"
+      ]
+    },
+    {
+      "name": "visit-an-author",
+      "description": "The author chip, wherever a post is drawn, opens that person's profile; their chronicle is what the reader came for.",
+      "status": "resolved",
+      "startsOn": [
+        "ApplicantFeed",
+        "ApplicantWaiting",
+        "ComposeExpired",
+        "ComposeLanded",
+        "Feed",
+        "FeedBare",
+        "FeedFar",
+        "FeedGallery",
+        "FeedNarrowed",
+        "KeyElsewhere",
+        "Main",
+        "Removed",
+        "VouchBack"
+      ],
+      "steps": [
+        "start · «author chip» on 13 boards → ProfileOther",
+        "end · ProfileOther · 6 «chronicle tabs» → self — Everything — the chronicle, this board"
+      ],
+      "boards": [
+        "ProfileOther"
+      ]
+    },
+    {
+      "name": "open-a-posts-pictures",
+      "description": "Post media, wherever a post is drawn, opens the gallery full-bleed; paging the frames is the journey.",
+      "status": "resolved",
+      "startsOn": [
+        "ApplicantFeed",
+        "ApplicantWaiting",
+        "ComposeExpired",
+        "Feed",
+        "FeedBare",
+        "FeedFar",
+        "FeedNarrowed",
+        "KeyElsewhere",
+        "Main",
+        "ProfilePosts",
+        "VouchBack"
+      ],
+      "steps": [
+        "start · «post media» on 11 boards → FeedGallery",
+        "end · FeedGallery · 4 «the gallery pager» → self — swipes between the frames — the dots read position"
+      ],
+      "boards": [
+        "FeedGallery"
+      ]
+    },
+    {
+      "name": "follow-a-citation",
+      "description": "The reference count, wherever a post is drawn, opens the topics-and-references sheet; a reference row opens what was cited — that node's own surface is still owed.",
+      "status": "blocked by gap",
+      "blockedBy": "the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)",
+      "startsOn": [
+        "ApplicantFeed",
+        "ApplicantWaiting",
+        "ComposeExpired",
+        "Feed",
+        "FeedBare",
+        "FeedFar",
+        "FeedNarrowed",
+        "KeyElsewhere",
+        "Main",
+        "ProfilePosts",
+        "VouchBack"
+      ],
+      "steps": [
+        "start · «reference count» on 11 boards → RefsSheet",
+        "end · RefsSheet · 2 «reference rows» → gap: the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)"
+      ],
+      "boards": [
+        "RefsSheet"
+      ]
     }
   ],
   "boardsOnFlows": {
@@ -781,7 +971,8 @@
     },
     "ComposeCrop": {
       "flows": [
-        "publish-a-post"
+        "publish-a-post",
+        "publish-from-the-browser"
       ],
       "endpoint": []
     },
@@ -798,6 +989,7 @@
         "pick-a-kept-draft-back-up",
         "publish-a-post",
         "publish-a-video",
+        "publish-from-the-browser",
         "publish-while-the-uploads-run",
         "publish-words"
       ],
@@ -825,6 +1017,7 @@
         "pick-a-kept-draft-back-up",
         "publish-a-post",
         "publish-a-video",
+        "publish-from-the-browser",
         "publish-while-the-uploads-run",
         "publish-words",
         "remove-your-post"
@@ -834,6 +1027,7 @@
         "pick-a-kept-draft-back-up",
         "publish-a-post",
         "publish-a-video",
+        "publish-from-the-browser",
         "publish-while-the-uploads-run",
         "publish-words",
         "remove-your-post"
@@ -859,6 +1053,14 @@
         "set-the-cover-and-order"
       ]
     },
+    "ComposePickWeb": {
+      "flows": [
+        "publish-from-the-browser"
+      ],
+      "endpoint": [
+        "publish-from-the-browser"
+      ]
+    },
     "ComposePicked": {
       "flows": [
         "set-the-cover-and-order"
@@ -872,6 +1074,7 @@
         "pick-a-kept-draft-back-up",
         "publish-a-post",
         "publish-a-video",
+        "publish-from-the-browser",
         "publish-words",
         "set-your-own-stance-on-your-post"
       ],
@@ -961,6 +1164,14 @@
         "filter-the-feed-far-from-the-default"
       ]
     },
+    "FeedGallery": {
+      "flows": [
+        "open-a-posts-pictures"
+      ],
+      "endpoint": [
+        "open-a-posts-pictures"
+      ]
+    },
     "FeedNarrowed": {
       "flows": [
         "narrow-the-feed"
@@ -1027,25 +1238,56 @@
     "Profile": {
       "flows": [
         "edit-avatar-standalone",
-        "edit-avatar-via-edit-screen"
+        "edit-avatar-via-edit-screen",
+        "edit-your-profile"
       ],
       "endpoint": [
         "edit-avatar-standalone",
-        "edit-avatar-via-edit-screen"
+        "edit-avatar-via-edit-screen",
+        "edit-your-profile"
       ]
+    },
+    "ProfileComments": {
+      "flows": [
+        "find-the-thread-a-comment-answers"
+      ],
+      "endpoint": []
     },
     "ProfileEdit": {
       "flows": [
-        "edit-avatar-via-edit-screen"
+        "edit-avatar-via-edit-screen",
+        "edit-your-profile"
       ],
       "endpoint": []
     },
     "ProfileEditSeal": {
       "flows": [
-        "edit-avatar-via-edit-screen"
+        "edit-avatar-via-edit-screen",
+        "edit-your-profile"
       ],
       "endpoint": [
-        "edit-avatar-via-edit-screen"
+        "edit-avatar-via-edit-screen",
+        "edit-your-profile"
+      ]
+    },
+    "ProfileOther": {
+      "flows": [
+        "find-the-thread-a-comment-answers",
+        "message-someone",
+        "visit-an-author"
+      ],
+      "endpoint": [
+        "find-the-thread-a-comment-answers",
+        "message-someone",
+        "visit-an-author"
+      ]
+    },
+    "ProfileStances": {
+      "flows": [
+        "see-who-stands-with-someone"
+      ],
+      "endpoint": [
+        "see-who-stands-with-someone"
       ]
     },
     "RecoveryCode": {
@@ -1062,6 +1304,14 @@
       ],
       "endpoint": [
         "cite-something"
+      ]
+    },
+    "RefsSheet": {
+      "flows": [
+        "follow-a-citation"
+      ],
+      "endpoint": [
+        "follow-a-citation"
       ]
     },
     "RemoveConfirm": {
@@ -1095,6 +1345,8 @@
     },
     "ReplyEntry": {
       "flows": [
+        "find-the-thread-a-comment-answers",
+        "reply-from-the-browser",
         "reply-to-a-comment",
         "reply-to-a-post",
         "reply-while-the-pictures-upload",
@@ -1102,6 +1354,8 @@
         "search-into-a-thread"
       ],
       "endpoint": [
+        "find-the-thread-a-comment-answers",
+        "reply-from-the-browser",
         "reply-to-a-comment",
         "reply-to-a-post",
         "reply-while-the-pictures-upload",
@@ -1126,8 +1380,17 @@
         "reply-while-the-pictures-upload"
       ]
     },
+    "ReplyPicturesWeb": {
+      "flows": [
+        "reply-from-the-browser"
+      ],
+      "endpoint": [
+        "reply-from-the-browser"
+      ]
+    },
     "ReplySeal": {
       "flows": [
+        "reply-from-the-browser",
         "reply-to-a-comment",
         "reply-to-a-post",
         "reply-with-pictures"
@@ -1174,10 +1437,12 @@
     },
     "VouchBackPad": {
       "flows": [
+        "take-a-stance-on-a-person",
         "take-a-stance-on-a-post",
         "vouch-back-for-your-inviter"
       ],
       "endpoint": [
+        "take-a-stance-on-a-person",
         "take-a-stance-on-a-post"
       ]
     },
@@ -1272,6 +1537,10 @@
     "FeedFar/3: reader's post menu — licence terms / cite (not boarded)",
     "FeedFar/6: the topic page (ruled 2026-09-01 — not designed)",
     "FeedFar/9: Post Score drill-down (backlog item 13)",
+    "FeedGallery/15: the chat surface (not designed)",
+    "FeedGallery/3: reader's post menu — licence terms / cite (not boarded)",
+    "FeedGallery/6: the topic page (ruled 2026-09-01 — not designed)",
+    "FeedGallery/8: Post Score drill-down (backlog item 13)",
     "FeedNarrowed/16: the chat surface (not designed)",
     "FeedNarrowed/3: reader's post menu — licence terms / cite (not boarded)",
     "FeedNarrowed/6: the topic page (ruled 2026-09-01 — not designed)",
@@ -1290,9 +1559,17 @@
     "Profile/3: the settings screen (not designed)",
     "Profile/7: the invites screen (not designed)",
     "Profile/9: the post detail view (not boarded standalone — drawn only under the comments sheet)",
+    "ProfileComments/2: the profile's menu — mention / share (not boarded)",
+    "ProfileComments/5: the chat surface (not designed)",
+    "ProfileComments/8: the comment's menu — cite / licence terms (not boarded)",
     "ProfileEdit/6: field-error states (not boarded)",
     "ProfileEditSeal/4: network-error pattern board (not designed)",
+    "ProfileOther/2: the profile's menu — mention / share (not boarded)",
+    "ProfileOther/5: the chat surface (not designed)",
+    "ProfileOther/7: the post detail view (not boarded standalone — drawn only under the comments sheet)",
     "RecoveryCode/3: code-mismatch error state (not boarded)",
+    "RefsSheet/1: the topic page (ruled 2026-09-01 — not designed)",
+    "RefsSheet/2: the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)",
     "RemoveMenu/4: the licence-terms view (not boarded)",
     "Removed/4: Post Score drill-down (backlog item 13)",
     "ReplyEntry/2: the comment's menu — cite / licence terms (not boarded)",
