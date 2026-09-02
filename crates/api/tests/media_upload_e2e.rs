@@ -30,7 +30,7 @@ const BOUNDARY: &str = "cogra-test-boundary";
 
 const UPLOAD_MEDIA: &str = r#"mutation($input: UploadMediaInput!) {
   uploadMedia(input: $input) {
-    media { id url digest digestAlgo mimeType sizeBytes altText options { aspectRatio durationMs } }
+    media { id url digest digestAlgo mimeType sizeBytes altText options { aspectRatio durationMs } coverMedia { id } }
     userErrors { code message field }
   }
 }"#;
@@ -390,4 +390,99 @@ async fn an_unattached_asset_is_swept_with_its_object(pool: PgPool) {
         .await
         .expect("count");
     assert_eq!(rows, 0);
+}
+
+/// An asset row placed directly, so a fixture can state a poster link the
+/// upload path has no way to express yet: nothing it accepts is a video,
+/// and the row is immutable once written, so the link can only be stated
+/// at the insert.
+async fn insert_asset(pool: &PgPool, author: Uuid, fill: u8, cover: Option<Uuid>) -> Uuid {
+    let id = Uuid::new_v4();
+    postgres_store::media::insert(
+        pool,
+        id,
+        author,
+        &[fill; 32],
+        "sha256",
+        &format!("{id}.webp"),
+        "image/webp",
+        1024,
+        &json!({ "v": 1, "aspect_ratio": "4:5" }),
+        cover,
+    )
+    .await
+    .expect("asset row");
+    id
+}
+
+/// A poster hangs off its video rather than off any parent, so the sweep
+/// is the one cascade that could delete it out from under a live clip. It
+/// has to see the asset-to-asset reference the same way it sees a
+/// junction row.
+///
+/// A poster is referenced by its video rather than by a parent, so the orphan sweep leaves it standing for as long as the video does.
+/// ´claim:media:a-poster-outlives-its-video´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_poster_is_not_swept_out_from_under_its_video(pool: PgPool) {
+    let rig = Rig::new(pool);
+    let author = rig.seed_member("author", "author@example.com").await;
+
+    let poster = insert_asset(&rig.pool, author, 1, None).await;
+    let video = insert_asset(&rig.pool, author, 2, Some(poster)).await;
+
+    let swept = postgres_store::media::sweep_orphans(&rig.pool, 0.0)
+        .await
+        .expect("sweep");
+    assert_eq!(
+        swept.iter().map(|a| a.id).collect::<Vec<_>>(),
+        vec![video],
+        "the video is unreferenced, but its poster is spoken for"
+    );
+
+    let swept = postgres_store::media::sweep_orphans(&rig.pool, 0.0)
+        .await
+        .expect("sweep");
+    assert_eq!(
+        swept.iter().map(|a| a.id).collect::<Vec<_>>(),
+        vec![poster],
+        "with the video gone the poster is an orphan like any other"
+    );
+}
+
+/// The poster link read back through the contract and through the row: a
+/// still names no cover, and a covered asset keeps the one it was written
+/// with.
+///
+/// An asset serves the poster it names, and null when it names none.
+/// ´claim:media:an-asset-serves-the-poster-it-names´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_covered_asset_keeps_the_poster_it_names(pool: PgPool) {
+    let rig = Rig::new(pool);
+    let author = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let poster = insert_asset(&rig.pool, author, 1, None).await;
+    let video = insert_asset(&rig.pool, author, 2, Some(poster)).await;
+
+    let uploaded = rig.upload(&token, &photo_with_location()).await;
+    assert!(
+        uploaded["media"]["coverMedia"].is_null(),
+        "a still names no poster"
+    );
+
+    let loaded = postgres_store::media::by_id(&rig.pool, video)
+        .await
+        .expect("reads")
+        .expect("the video row");
+    assert_eq!(
+        loaded.cover_media_id,
+        Some(poster),
+        "the link survives the round trip through the row"
+    );
+
+    let uncovered = postgres_store::media::by_id(&rig.pool, poster)
+        .await
+        .expect("reads")
+        .expect("the poster row");
+    assert_eq!(uncovered.cover_media_id, None, "a poster carries no poster");
 }

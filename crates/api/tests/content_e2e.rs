@@ -717,6 +717,7 @@ async fn one_asset_reads_differently_in_two_posts(pool: PgPool) {
         "image/webp",
         1024,
         &json!({ "v": 1, "aspect_ratio": "1:1" }),
+        None,
     )
     .await
     .expect("asset row");

@@ -31,8 +31,8 @@ use l1_standin::StandIn;
 use crate::auth::Viewer;
 use crate::l1::StandInBoundary;
 use crate::loaders::{
-    ActorByAddressLoader, CommentByNodeLoader, CommentGalleryLoader, PostByNodeLoader,
-    PostGalleryLoader,
+    ActorByAddressLoader, CommentByNodeLoader, CommentGalleryLoader, MediaByIdLoader,
+    PostByNodeLoader, PostGalleryLoader,
 };
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 
@@ -2983,6 +2983,32 @@ impl MediaAttachmentType {
                 .and_then(|v| v.as_i64())
                 .and_then(|n| i32::try_from(n).ok()),
         }
+    }
+
+    /// The poster this asset is covered by — the still a video shows
+    /// before playback, and the frame that stands in wherever autoplay
+    /// does not run.
+    ///
+    /// Null unless the asset names one, which today is never: nothing the
+    /// upload path accepts is a video yet. It is a distinct question from
+    /// the gallery's `isCover`, which asks which attachment *leads* a
+    /// multi-asset post rather than what covers a single one.
+    ///
+    /// The poster answers with its own `status`, so a removed cover reads
+    /// REDACTED here exactly as it would anywhere else — the mark travels
+    /// on the asset rather than being restated by whatever points at it.
+    async fn cover_media(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<MediaAttachmentType>> {
+        let Some(id) = self.asset.cover_media_id else {
+            return Ok(None);
+        };
+        Ok(ctx
+            .data::<DataLoader<MediaByIdLoader>>()?
+            .load_one(id)
+            .await?
+            .map(MediaAttachmentType::asset))
     }
 
     /// The account that uploaded the asset.

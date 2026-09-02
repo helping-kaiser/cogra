@@ -37,6 +37,15 @@ pub struct MediaAttachment {
     pub mime_type: String,
     pub size_bytes: Option<i64>,
     pub options: serde_json::Value,
+    /// The poster this asset is covered by — an asset pointing at another
+    /// asset, which is what lets a video's poster be redacted with it and
+    /// what makes the link visible to the removal cascade. Null on
+    /// everything that is not a covered video.
+    ///
+    /// Distinct from the junction's `is_cover`, which answers which
+    /// attachment leads a multi-asset parent (data-model.md
+    /// "media_attachments.options shape").
+    pub cover_media_id: Option<Uuid>,
     pub redaction_reason: Option<String>,
     pub redacted_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
@@ -63,6 +72,12 @@ pub struct SweptAsset {
 /// Uniqueness is on `(author_id, digest)`, never on the digest alone: two
 /// authors uploading identical bytes get two rows and two objects, so
 /// removing one author's asset can never break the other's render.
+///
+/// The poster rides the insert rather than a later update because an asset
+/// row is immutable after upload — there is no update surface for one
+/// (data-model.md "Why parents point at attachments"), so the only honest
+/// moment to state which asset covers this one is the moment it is
+/// written.
 #[allow(clippy::too_many_arguments)]
 pub async fn insert(
     pool: &PgPool,
@@ -74,19 +89,21 @@ pub async fn insert(
     mime_type: &str,
     size_bytes: i64,
     options: &serde_json::Value,
+    cover_media_id: Option<Uuid>,
 ) -> Result<MediaAttachment, sqlx::Error> {
     sqlx::query_as!(
         MediaAttachment,
         r#"
         INSERT INTO media_attachments
             (id, author_id, digest, digest_algo, storage_key,
-             mime_type, size_bytes, options)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+             mime_type, size_bytes, options, cover_media_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         ON CONFLICT (author_id, digest)
             DO UPDATE SET author_id = media_attachments.author_id
         RETURNING id, author_id, digest, digest_algo, storage_key,
                   mime_type, size_bytes,
                   options AS "options!: serde_json::Value",
+                  cover_media_id,
                   redaction_reason, redacted_at, created_at
         "#,
         id,
@@ -97,6 +114,7 @@ pub async fn insert(
         mime_type,
         size_bytes,
         options,
+        cover_media_id,
     )
     .fetch_one(pool)
     .await
@@ -222,6 +240,7 @@ struct GalleryRow {
     size_bytes: Option<i64>,
     alt_text: Option<String>,
     options: serde_json::Value,
+    cover_media_id: Option<Uuid>,
     redaction_reason: Option<String>,
     redacted_at: Option<DateTime<Utc>>,
     created_at: DateTime<Utc>,
@@ -240,6 +259,7 @@ fn gallery_entry(row: GalleryRow) -> (i64, GalleryEntry) {
                 mime_type: row.mime_type,
                 size_bytes: row.size_bytes,
                 options: row.options,
+                cover_media_id: row.cover_media_id,
                 redaction_reason: row.redaction_reason,
                 redacted_at: row.redacted_at,
                 created_at: row.created_at,
@@ -268,6 +288,7 @@ pub async fn post_galleries(
                   m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,
                   m.mime_type, m.size_bytes,
                   m.options AS "options!: serde_json::Value",
+                  m.cover_media_id,
                   m.redaction_reason, m.redacted_at, m.created_at
            FROM post_attachments j
            JOIN media_attachments m ON m.id = j.attachment_id
@@ -293,6 +314,7 @@ pub async fn comment_galleries(
                   m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,
                   m.mime_type, m.size_bytes,
                   m.options AS "options!: serde_json::Value",
+                  m.cover_media_id,
                   m.redaction_reason, m.redacted_at, m.created_at
            FROM comment_attachments j
            JOIN media_attachments m ON m.id = j.attachment_id
@@ -325,6 +347,7 @@ pub async fn assets_by_digests(
         SELECT id, author_id, digest, digest_algo, storage_key,
                mime_type, size_bytes,
                options AS "options!: serde_json::Value",
+               cover_media_id,
                redaction_reason, redacted_at, created_at
         FROM media_attachments
         WHERE author_id = $1 AND digest = ANY($2)
@@ -348,6 +371,7 @@ pub async fn assets_by_ids(
         SELECT id, author_id, digest, digest_algo, storage_key,
                mime_type, size_bytes,
                options AS "options!: serde_json::Value",
+               cover_media_id,
                redaction_reason, redacted_at, created_at
         FROM media_attachments
         WHERE id = ANY($1)
@@ -366,6 +390,7 @@ pub async fn by_id(pool: &PgPool, id: Uuid) -> Result<Option<MediaAttachment>, s
         SELECT id, author_id, digest, digest_algo, storage_key,
                mime_type, size_bytes,
                options AS "options!: serde_json::Value",
+               cover_media_id,
                redaction_reason, redacted_at, created_at
         FROM media_attachments
         WHERE id = $1
@@ -384,11 +409,19 @@ pub async fn by_id(pool: &PgPool, id: Uuid) -> Result<Option<MediaAttachment>, s
 /// epoch-denominated GC, and an asset is not a staged write.
 ///
 /// **The join is the seam.** "Orphaned" means no reference from any of
-/// the four content junctions and none from the two profile columns and
-/// the chat image column. Every one of those references is checked here,
-/// in one query, deliberately: a reference this list misses is an asset
-/// deleted out from under a live parent, so the list must be extended in
-/// the same change that adds a way to reference an asset.
+/// the four content junctions, none from the profile and chat image
+/// columns, and none from another asset that names this one as its
+/// poster. Every one of those references is checked here, in one query,
+/// deliberately: a reference this list misses is an asset deleted out
+/// from under a live parent, so the list must be extended in the same
+/// change that adds a way to reference an asset.
+///
+/// The self-reference is the one an asset's own row carries. A poster is
+/// referenced by its video rather than by any parent, so without that
+/// probe the sweep would collect every poster the moment it aged past the
+/// window and leave its video pointing at a row that no longer exists —
+/// the exact failure the paragraph above is a standing instruction
+/// against.
 ///
 /// Two consequences of the junctions being keyed on the version row
 /// rather than the entity, both of which this query gets right by
@@ -426,6 +459,8 @@ pub async fn sweep_orphans(
           AND NOT EXISTS (
                 SELECT 1 FROM actor_profile_versions p WHERE p.avatar_id = m.id)
           AND NOT EXISTS (SELECT 1 FROM chat_versions c WHERE c.image_id = m.id)
+          AND NOT EXISTS (
+                SELECT 1 FROM media_attachments v WHERE v.cover_media_id = m.id)
         RETURNING id, storage_key
         "#,
         max_age_secs,
