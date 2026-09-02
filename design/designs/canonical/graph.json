@@ -691,7 +691,7 @@
     { "from": "ComposeSealUploading", "via": 4, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense" }] },
     { "from": "ComposeSealUploading", "via": 5, "kind": "advance", "label": "Adjust (your stance)", "to": [{ "board": "ComposePad" }] },
     { "from": "ComposeSealUploading", "via": 6, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
-    { "from": "ComposeSealUploading", "via": 7, "kind": "advance", "label": "Sign and publish (disabled)", "to": [{ "terminal": "self", "case": "disabled — signing waits for the pictures" }, { "board": "ComposeLanded", "case": "uploads land — signing proceeds" }] },
+    { "from": "ComposeSealUploading", "via": 7, "kind": "advance", "label": "Sign and publish (disabled)", "to": [{ "terminal": "self", "case": "disabled — signing waits for the pictures" }, { "board": "ComposeLanded", "case": "uploads land — signing proceeds to the detail view, still settling" }, { "board": "ReplyEntry", "case": "uploads land — signing proceeds to the thread, the comment settling" }] },
     { "from": "ComposeSealUploading", "via": 8, "kind": "back", "label": "Back", "to": [{ "board": "ComposeUploading", "case": "one stage back" }] },
 
     { "from": "ComposePickWeb", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "terminal": "back", "case": "the first stage — leaves toward where compose began, draft kept" }] },
