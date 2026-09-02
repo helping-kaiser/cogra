@@ -286,7 +286,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
     { n: 4, find: 'rows="3"', tag: "textarea" },
     { n: 5, find: 'aria-label="Remove this picture"', tag: "button" },
-    { n: 6, find: "+ Add · 1 of 4", tag: "button" },
+    { n: 6, find: "+ Add pictures · 1 of 4", tag: "button" },
     { n: 7, find: ">Describe the pictures</button>", tag: "button" },
     { n: 8, find: "#glovebox", tag: "span" },
     { n: 9, find: ">Add a topic</button>", tag: "button" },
@@ -324,7 +324,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: "let me find something shorter.", tag: "p" },
     { n: 5, find: ">Remove it</button>", tag: "button", all: true },
-    { n: 6, find: "+ Add pictures</button>", tag: "button" },
+    { n: 6, find: "+ Add pictures or a video</button>", tag: "button" },
   ],
   ReplyPicturesWeb: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
