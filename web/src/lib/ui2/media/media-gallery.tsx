@@ -25,7 +25,10 @@ import { useEffect, useRef, useState } from "react";
 import { tileRatio } from "./aspect";
 import { MediaTile, type MediaTileProps } from "./media-tile";
 
-export type GalleryItem = Pick<MediaTileProps, "src" | "altText" | "sourceRatio" | "label">;
+export type GalleryItem = Pick<
+  MediaTileProps,
+  "src" | "altText" | "sourceRatio" | "label" | "mimeType" | "poster" | "durationMs"
+>;
 
 // Two ratios agree when they round to the same hundredth: the server states the
 // shape in lowest terms off the bytes, so "4:5" and a 1080×1350 export are the

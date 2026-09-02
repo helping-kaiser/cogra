@@ -5,7 +5,13 @@ import "fake-indexeddb/auto";
 import { cleanup } from "@testing-library/react";
 import { afterEach } from "vitest";
 
+import { installMediaEnvironment } from "./media-env";
+
 afterEach(cleanup);
+
+// jsdom implements neither IntersectionObserver nor media playback, and the
+// video surface is built on both.
+installMediaEnvironment();
 
 // jsdom implements no Pointer Events (jsdom#2527), which the stance pad
 // is built on — they are the platform's own unification of mouse, touch,

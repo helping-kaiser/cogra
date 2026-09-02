@@ -4,8 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ApolloClient } from "@apollo/client";
 import { CENTERED } from "@/lib/ui2/media/crop";
-import { runUpload, waitingAssets } from "./uploads";
-import type { AssetUpload, PickedAsset } from "./wizard";
+import { runUpload, runVideoUpload, waitingAssets } from "./uploads";
+import type { AssetUpload, CoverAsset, PickedAsset } from "./wizard";
 
 const asset: PickedAsset = {
   id: "a0",
@@ -182,6 +182,111 @@ describe("runUpload", () => {
       }),
     );
     await expect(runUpload(clientAnswering({}), asset, 1, () => {})).resolves.toBeUndefined();
+  });
+});
+
+// THE ORDER IS THE CONTRACT. A video names its cover on its own upload and an
+// asset row is immutable once written, so there is no call that could attach a
+// poster afterwards — the cover has to be a real asset before the video is
+// created, and these assert exactly that.
+describe("runVideoUpload", () => {
+  const clip: PickedAsset = {
+    ...asset,
+    id: "v0",
+    file: new Blob([new Uint8Array([0, 0, 0, 24]) as BlobPart], { type: "video/mp4" }),
+    kind: "video",
+  };
+  const cover: CoverAsset = {
+    id: "c0",
+    file: new Blob([new Uint8Array([2]) as BlobPart], { type: "image/png" }),
+    frame: 0,
+    upload: { kind: "waiting" },
+  };
+
+  /** Answers the cover call and the video call with different ids, in order. */
+  function clientAnsweringInTurn(...ids: readonly string[]): ApolloClient {
+    let call = 0;
+    return {
+      mutate: vi.fn(async () => ({
+        data: { uploadMedia: { media: { id: ids[call++] }, userErrors: [] } },
+      })),
+    } as unknown as ApolloClient;
+  }
+
+  it("uploads the cover first and names it on the video", async () => {
+    encodable();
+    const client = clientAnsweringInTurn("media-cover", "media-video");
+    const video = steps();
+    const poster = steps();
+
+    await runVideoUpload(client, clip, cover, video.step, poster.step);
+
+    const calls = (client.mutate as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls).toHaveLength(2);
+    // The cover goes up as bytes alone…
+    expect(calls[0]![0].variables.input).toEqual({ file: expect.any(File) });
+    // …and the video names it.
+    expect(calls[1]![0].variables.input).toEqual({
+      file: expect.any(File),
+      coverMediaId: "media-cover",
+    });
+    expect(poster.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-cover" });
+    expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
+  });
+
+  it("sends the clip's own bytes, named for what they are", async () => {
+    encodable();
+    const client = clientAnsweringInTurn("media-cover", "media-video");
+
+    await runVideoUpload(client, clip, cover, steps().step, steps().step);
+
+    // Pass-through: the still path re-encodes every picture, and there is no
+    // browser equivalent for video, so what was picked is what is sent.
+    const sent = (client.mutate as ReturnType<typeof vi.fn>).mock.calls[1]![0].variables.input
+      .file as File;
+    expect(sent.type).toBe("video/mp4");
+    expect(sent.name).toBe("upload.mp4");
+    expect(sent.size).toBe(clip.file.size);
+  });
+
+  it("fails the video when the cover fails, because the video cannot exist without it", async () => {
+    encodable();
+    const client = clientAnswering({
+      uploadMedia: {
+        media: null,
+        userErrors: [{ message: "the file is larger than 10485760 bytes", code: "BAD_INPUT", field: ["file"] }],
+      },
+    });
+    const video = steps();
+    const poster = steps();
+
+    await runVideoUpload(client, clip, cover, video.step, poster.step);
+
+    // The server's own words on the cover…
+    expect(poster.seen.at(-1)).toEqual({
+      kind: "failed",
+      message: "the file is larger than 10485760 bytes",
+      retryable: true,
+    });
+    // …and a video that never went up at all.
+    expect(video.seen.at(-1)).toEqual({
+      kind: "failed",
+      message: "The cover didn't upload.",
+      retryable: true,
+    });
+    expect((client.mutate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1);
+  });
+
+  it("never rejects, whatever fails", async () => {
+    vi.stubGlobal(
+      "createImageBitmap",
+      vi.fn(async () => {
+        throw new Error("boom");
+      }),
+    );
+    await expect(
+      runVideoUpload(clientAnswering({}), clip, cover, () => {}, () => {}),
+    ).resolves.toBeUndefined();
   });
 });
 

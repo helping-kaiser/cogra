@@ -22,8 +22,13 @@ import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import type { PickedAsset } from "@/lib/compose/wizard";
 import { POST_ATTACHMENT_CAP } from "@/lib/compose/wizard";
 
-/** What the picker accepts. The encoder re-writes everything to WebP anyway. */
-const ACCEPT = "image/*";
+/**
+ * What the picker accepts. Pictures are re-written to WebP by the encoder
+ * whatever they arrive as, so `image/*` is honest there; video is named by its
+ * one accepted type, because MP4 is the only container the server stores and
+ * offering the dialog a wider net would only move the refusal later.
+ */
+const ACCEPT = "image/*,video/mp4";
 
 export function PickStep({
   mode,
@@ -192,9 +197,17 @@ function MediaBody({
   const [over, setOver] = useState(false);
   const full = assets.length >= POST_ATTACHMENT_CAP;
 
+  // Pictures and video both pass; everything else is dropped here rather than
+  // travelling to a check that would only say the same thing later. The
+  // composition rule — pictures OR one video — is the wizard's, not the
+  // picker's, because it is a rule about the draft rather than about a file.
   const take = (list: FileList | null) => {
     if (list === null) return;
-    onPick(Array.from(list).filter((file) => file.type.startsWith("image/")));
+    onPick(
+      Array.from(list).filter(
+        (file) => file.type.startsWith("image/") || file.type.startsWith("video/"),
+      ),
+    );
   };
 
   return (
