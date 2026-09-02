@@ -466,8 +466,9 @@
     { "from": "ReplyVideo", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ReplySeal" }, { "board": "ComposeSealUploading", "case": "the video is still going up — the gated seal (master on the media page)" }] },
     { "from": "ReplyVideo", "via": 4, "kind": "advance", "label": "the words", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "ReplyVideo", "via": 5, "kind": "advance", "label": "remove video ×", "to": [{ "board": "ReplyCompose", "case": "the video leaves — the composer is words again" }] },
-    { "from": "ReplyVideo", "via": 6, "kind": "advance", "label": "cover frame options", "to": [{ "terminal": "self", "case": "picks the face" }] },
-    { "from": "ReplyVideo", "via": 7, "kind": "advance", "label": "A picture (cover tile)", "to": [{ "terminal": "os", "case": "the platform's own picker — a cover of your own" }] },
+    { "from": "ReplyVideo", "via": 6, "kind": "advance", "label": "Describe the video", "to": [{ "board": "ComposeDescribe", "case": "the describe sheet (master on the media page) — one description for the clip" }] },
+    { "from": "ReplyVideo", "via": 7, "kind": "advance", "label": "cover frame options", "to": [{ "terminal": "self", "case": "picks the face" }] },
+    { "from": "ReplyVideo", "via": 8, "kind": "advance", "label": "A picture (cover tile)", "to": [{ "terminal": "os", "case": "the platform's own picker — a cover of your own" }] },
 
     { "from": "ReplyMediaErrors", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "ReplyEntry", "case": "one stage back — the thread" }] },
     { "from": "ReplyMediaErrors", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
@@ -539,6 +540,7 @@
     { "from": "ComposeDetails", "via": 8, "kind": "advance", "label": "reference remove ×", "to": [{ "terminal": "self", "case": "the citation leaves" }] },
     { "from": "ComposeDetails", "via": 9, "kind": "advance", "label": "+ Cite something", "to": [{ "board": "ReferencePicker" }] },
     { "from": "ComposeDetails", "via": 10, "kind": "advance", "label": "Next", "to": [{ "board": "ComposeSeal" }, { "board": "ComposeUploading", "case": "uploads still running — details keep writing (drawn on the media page)" }] },
+    { "from": "ComposeDetails", "via": 11, "kind": "advance", "label": "Describe the pictures", "to": [{ "board": "ComposeDescribe", "case": "the describe sheet — a video path reads \"Describe the video\", one for the clip" }] },
 
     { "from": "ComposeSeal", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposeDetails", "case": "one stage back" }] },
     { "from": "ComposeSeal", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },

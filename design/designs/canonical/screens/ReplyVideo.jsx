@@ -12,9 +12,9 @@
    stage of its own. Its markup is screen-local because the frame strip is one
    picture framed three ways, which no component draws.
 
-   No describe counter: the post's video path carries none either (the post's
-   Details step shows one only for pictures), and whether a video takes a
-   description is not ruled. */
+   A VIDEO TAKES ONE DESCRIPTION for the whole clip (jakob 2026-09-02) — the
+   same counter row a comment's pictures wear, reading the video instead. The
+   cover takes none of its own: it is the video's face, not a second picture. */
 
 function CoverRow() {
   const tile =
@@ -81,6 +81,8 @@ export function Screen() {
           onRemove={() => {}}
           removeLabel="Remove this video"
         />
+
+        <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} />
 
         <CoverRow />
 
