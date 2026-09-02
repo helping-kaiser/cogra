@@ -545,22 +545,26 @@ class ComposeWizardScreenTest {
     fun theCoverStageOffersEveryFrameAndAPictureOfYourOwn() {
         compose.setContent { Wizard(onCover) }
         compose.onNodeWithTag("wizard_cover_preview").assertIsDisplayed()
-        repeat(3) { compose.onNodeWithTag("wizard_cover_frame_$it").assertIsDisplayed() }
-        compose.onNodeWithTag("wizard_cover_picture").assertIsDisplayed()
+        // The preview is 342dp tall, so the tile row sits below the fold
+        // on a test viewport and the stage scrolls to reach it.
+        repeat(3) {
+            compose.onNodeWithTag("wizard_cover_frame_$it").performScrollTo().assertIsDisplayed()
+        }
+        compose.onNodeWithTag("wizard_cover_picture").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag("wizard_cover_next").assertIsDisplayed()
     }
 
     @Test
     fun tappingAFrameChoosesIt() {
         compose.setContent { Wizard(onCover) }
-        compose.onNodeWithTag("wizard_cover_frame_2").performClick()
+        compose.onNodeWithTag("wizard_cover_frame_2").performScrollTo().performClick()
         assertThat(coverFrames).containsExactly(2)
     }
 
     @Test
     fun thePictureTileHandsTheChoiceToTheDevice() {
         compose.setContent { Wizard(onCover) }
-        compose.onNodeWithTag("wizard_cover_picture").performClick()
+        compose.onNodeWithTag("wizard_cover_picture").performScrollTo().performClick()
         assertThat(coverPickers).isEqualTo(1)
     }
 
