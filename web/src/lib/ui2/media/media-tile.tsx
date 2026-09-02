@@ -20,9 +20,26 @@
 import Image from "next/image";
 
 import { cssRatio, fitFor, tileRatio } from "./aspect";
+import { VideoPlayer } from "./video-player";
+
+/** Whether the asset is the moving kind, read off the contract's own field. */
+export function isVideoAsset(mimeType?: string | null): boolean {
+  return typeof mimeType === "string" && mimeType.startsWith("video/");
+}
 
 export type MediaTileProps = {
   src?: string | null;
+  /** What the asset IS. Absent on every surface that has no video to draw. */
+  mimeType?: string | null;
+  /**
+   * The video's face. Null where the asset names none — and null where the
+   * cover was REDACTED, because a removed still is not a still to show: the
+   * tile's own reserved surface stands in, and the video below it is untouched.
+   */
+  poster?: string | null;
+  durationMs?: number | null;
+  /** A feed pauses what scrolls away; a lightbox plays what the reader opened. */
+  autoplay?: boolean;
   // Authored, optional, and never invented. A tile with none is decorative:
   // `alt=""` is the documented correct value for an image that adds no
   // information, and it is a better answer than a machine-guessed description.
@@ -47,6 +64,10 @@ export type MediaTileProps = {
 
 export function MediaTile({
   src,
+  mimeType,
+  poster,
+  durationMs,
+  autoplay = true,
   altText,
   sourceRatio,
   label = "Media",
@@ -64,6 +85,24 @@ export function MediaTile({
   const reserved = ratio ?? tileRatio(sourceRatio);
   const objectFit = fit ?? fitFor(sourceRatio);
   const alt = altText ?? "";
+
+  // A VIDEO IS NOT A TILE WITH A PLAY BUTTON. It carries its own controls and
+  // its own aspect, so it is rendered whole rather than fitted into the frame
+  // an image reserves — and it is never wrapped in the `onOpen` button below,
+  // because a control surface inside a button steals every press the reader
+  // aims at the scrubber.
+  if (isVideoAsset(mimeType) && src) {
+    return (
+      <VideoPlayer
+        src={src}
+        poster={poster}
+        altText={altText}
+        durationMs={durationMs}
+        autoplay={autoplay}
+        testId={testId}
+      />
+    );
+  }
 
   const frame = (
     <span
