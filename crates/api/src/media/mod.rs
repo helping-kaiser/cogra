@@ -636,6 +636,11 @@ pub async fn store_asset(
         webp::MIME,
         size_bytes,
         &options,
+        // No poster: a still is not covered by anything, and the upload
+        // path accepts nothing else yet. The column is stated at insert
+        // rather than set later because an asset row is immutable once
+        // written.
+        None,
     )
     .await?;
 

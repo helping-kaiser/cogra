@@ -372,6 +372,7 @@ mod pictures {
             "image/webp",
             1024,
             &serde_json::json!({ "v": 1, "aspect_ratio": "1:1" }),
+            None,
         )
         .await
         .expect("asset row");
