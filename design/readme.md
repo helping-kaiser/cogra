@@ -1676,8 +1676,11 @@ The rulings the layer rests on:
   journey where it was. Those outcomes carry `"info": true` and their
   edge is a `detour`; an all-informing `advance` fails the gate.
 - **A read journey concludes on arrival.** Not every flow signs
-  something; reaching what was sought is an ending in itself. An end
-  may land on a `self` terminal where the act completes in place.
+  something; reaching what was sought is an ending in itself. Such a
+  flow declares no `end` at all and concludes on the board its last
+  point lands on — the start's landing when it names no waypoints, the
+  last waypoint's board when it does — and its witness reads
+  `end · arrival at <Board>`.
 - **A stance concludes where it was taken.** The pad is reached from
   posts, comments and profiles alike, so its signed outcome returns
   wherever it bloomed. The applicant's vouch-back is the one exception
