@@ -1337,8 +1337,10 @@ media and comment editing.
   the ratio vocabulary across media components is the crop ruling's
   (`tall` 4:5 · `square` 1:1 · `wide` 1.91:1 — 16:9 is gone).
 - **Caps.** A post carries at most **ten pictures, or one video**
-  (with its cover); a comment at most **four pictures**. The caps
-  are authoring-side; the components render what they are given.
+  (with its cover); a comment at most **four pictures, or one video**
+  (with its cover). The caps are authoring-side; the components render
+  what they are given. Byte caps and the refusal states are below,
+  *Comment video and the media error states*.
 - **Upload starts after the crop.** The crop happens on the device
   and **only the cropped export is ever uploaded** — the original
   frame can hold what the author never meant to share. Comment
@@ -1764,6 +1766,55 @@ The rulings the layer rests on:
   look is informed. The block's type is the theme's rather than the
   media face's fixed white, which is legible only because that wash
   lies over a picture.
+
+### Comment video and the media error states — 2026-09-02
+
+Filed by the implementation loop (jakob's words): a comment should be
+able to carry a video and its cover, and both scales need states for a
+file that is too big or in a format nothing here reads.
+
+- **A comment's media grammar is the post's at comment caps**: up to
+  four pictures, **or** one video with its cover — never both kinds,
+  the same XOR a post's body carries. The caps are product constants
+  the implementations copy, authoring-side like every other cap:
+  **a picture 10 MiB** (10 per post, 4 per comment), **a video
+  100 MiB in a post and 50 MiB in a comment**, **a cover 10 MiB**.
+- **Entry is unchanged.** "+ Add" opens the platform's own picker;
+  picking a video puts the composer in its video state (*Reply · a
+  video and its cover*), and the pictures path is untouched. There is
+  still no pick stage and no crop, so the video uploads at pick like a
+  comment's pictures do.
+- **The cover is the post's, inlined.** `ComposeCover`'s row — the
+  frame strip, the tile that takes a picture of your own, *A frame, or
+  a picture of your own.* — sits under the video at comment scale
+  rather than in a stage of its own: the comment composer is one
+  screen, and a wizard stage is exactly what comments do not have. The
+  video itself shows in the comment pager's fixed square frame, whole
+  inside it, so a comment never turns into a post.
+- **A refused file is refused where it was offered** — a line in the
+  composer's media row, never a dialog and never a snackbar (a
+  snackbar confirms what happened; errors sit on the surface they
+  happened on). Two boards draw it, *Reply · files refused* and *Pick ·
+  files refused*. The error names the cap it broke, and that is the
+  ONLY place a cap is named: nothing announces the limits in advance.
+- **The ways out follow the failure.** An upload that lost the network
+  offers Retry · Remove it. A refused file offers only *Remove it* —
+  retrying cannot make a file smaller or a format readable, and
+  `UploadErrorLine` drops the link rather than dangling one that would
+  fail identically twice. `MediaThumb` grew the composer's video
+  anatomy with it: the play disc and the duration, authoring-side only
+  — a reading surface still never draws play.
+
+Open, and not decided here: whether a video takes a description (the
+post's video path carries no describe counter either, so the comment's
+does not); how the thread draws a comment's video — `CommentCard` hands
+its media to the same gallery, which already knows a video, but nothing
+rules whether a comment's video autoplays the way a post's does; whether
+the composer's "+ Add pictures" should read "+ Add" now that the picker
+also takes a video; whether the web reply needs its own video board the
+way it needs its own pictures one; and whether the caps read **MiB** or
+**MB** on screen. The four refusal lines are new copy, listed in
+[guidelines/copy-voice.md](guidelines/copy-voice.md).
 
 ## 14. Index
 

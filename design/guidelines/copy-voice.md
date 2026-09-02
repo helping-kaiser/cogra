@@ -182,6 +182,22 @@ title, at most two short paragraphs, Close. The texts, verbatim
   nothing here is signed or shared. / It lasts until you change it,
   on this device only. Your default lives in settings.
 
+## Refused files — NEW COPY, awaiting review
+
+Drawn on *Reply · files refused* and *Pick · files refused*
+(readme §13, *Comment video and the media error states*). Each line
+names the cap it broke, because that is the only place a cap is named —
+nothing announces the limits in advance. One line per surface, one way
+out (*Remove it*; never *Retry* — retrying cannot change the answer):
+
+- `That video is too big — a comment's video can be up to 50 MiB.`
+- `That video is too big — a post's video can be up to 100 MiB.`
+- `That picture is too big — a picture can be up to 10 MiB.`
+- `That file isn't a picture or a video CoGra can read.`
+
+Open with them: whether the caps read **MiB** or **MB** on screen. MiB
+is what the caps actually are; MB is what a phone usually says.
+
 Two removal marks, never interchangeable: `Removed by its author` —
 "The words and pictures are gone. The post's place in the thread, and
 every response, remain." — and `Removed under the platform's rules` —
