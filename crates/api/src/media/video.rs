@@ -290,7 +290,8 @@ fn write_header(item: &BoxRef, size: usize, out: &mut Vec<u8>) -> Result<(), Med
         out.extend_from_slice(&(size as u64).to_be_bytes());
         return Ok(());
     }
-    let size = u32::try_from(size).map_err(|_| MediaError::Malformed("box larger than a header"))?;
+    let size =
+        u32::try_from(size).map_err(|_| MediaError::Malformed("box larger than a header"))?;
     out.extend_from_slice(&size.to_be_bytes());
     out.extend_from_slice(&item.fourcc);
     Ok(())
@@ -319,7 +320,9 @@ fn write_chunk_offsets(
     ) as usize;
     let entries = body + 8;
     if entries + count * width > item.start + item.len {
-        return Err(MediaError::Malformed("a chunk offset table overruns its box"));
+        return Err(MediaError::Malformed(
+            "a chunk offset table overruns its box",
+        ));
     }
 
     for index in 0..count {
@@ -608,7 +611,10 @@ mod tests {
     /// correct before the strip and must stay correct after it.
     fn located_movie(with_metadata: bool) -> (Vec<u8>, Vec<u32>) {
         let udta = boxed(b"udta", &boxed(b"\xA9xyz", b"+52.5200+013.4050/"));
-        let stbl_without = boxed(CHUNK_OFFSET_32, &[0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0]);
+        let stbl_without = boxed(
+            CHUNK_OFFSET_32,
+            &[0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0],
+        );
         let mut moov_body = Vec::new();
         if with_metadata {
             moov_body.extend_from_slice(&udta);
@@ -675,9 +681,7 @@ mod tests {
             "the user-data box is gone"
         );
         assert!(
-            !stripped
-                .windows(18)
-                .any(|w| w == b"+52.5200+013.4050/"),
+            !stripped.windows(18).any(|w| w == b"+52.5200+013.4050/"),
             "and the coordinates with it"
         );
         assert!(!carries_metadata(&stripped), "the repair is complete");
