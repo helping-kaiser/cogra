@@ -281,7 +281,7 @@ Object.assign(FLOW_MARKERS, {
   ],
   CommentEdit: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 2, find: 'aria-label="Leave — the edit is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
     { n: 4, find: 'rows="3"', tag: "textarea" },
     { n: 5, find: 'aria-label="Remove this picture"', tag: "button" },
@@ -300,7 +300,7 @@ Object.assign(FLOW_MARKERS, {
   ],
   ReplyPictures: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: "almost catches it.", tag: "p" },
     { n: 5, find: 'aria-label="Remove this picture"', tag: "button" },
@@ -309,7 +309,7 @@ Object.assign(FLOW_MARKERS, {
   ],
   ReplyPicturesWeb: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: "almost catches it.", tag: "p" },
     { n: 5, find: 'aria-label="Remove this picture"', tag: "button" },
