@@ -78,11 +78,31 @@ import {
   MP4,
   Mp4OutputFormat,
   Output,
+  type AudioCodec,
   type InputAudioTrack,
   type InputVideoTrack,
+  type MediaCodec,
+  type VideoCodec,
 } from "mediabunny";
 
 import { VIDEO_TYPE } from "./video";
+
+/**
+ * A track's codec, narrowed to the kind its packet source accepts.
+ *
+ * `getCodec` is typed across every media kind the library knows, while a video
+ * source takes only video codecs. The narrowing is safe because it is applied
+ * behind `isVideoTrack`/`isAudioTrack` — a video track cannot report an audio
+ * codec — and the muxer refuses anything the output format does not support, so
+ * a codec that slipped through would fail loudly rather than be written.
+ */
+function asVideoCodec(codec: MediaCodec): VideoCodec {
+  return codec as VideoCodec;
+}
+
+function asAudioCodec(codec: MediaCodec): AudioCodec {
+  return codec as AudioCodec;
+}
 
 export type StripResult = {
   readonly blob: Blob;
@@ -133,14 +153,17 @@ export async function stripVideoMetadata(file: Blob): Promise<StripResult> {
       const codec = await track.getCodec();
       if (codec === null) throw new Error("this video declares a codec we cannot read");
 
-      if (track.type === "video") {
-        const source = new EncodedVideoPacketSource(codec);
+      // The library's own guards rather than a string compare: they narrow the
+      // track type, which is what lets the codec reach a source that only
+      // accepts codecs of its own kind.
+      if (track.isVideoTrack()) {
+        const source = new EncodedVideoPacketSource(asVideoCodec(codec));
         // The rotation rides as container metadata, exactly as it arrived —
         // dropping it would stand a phone's portrait clip on its side.
         output.addVideoTrack(source, { rotation: track.rotation });
         pumps.push(() => copyPackets(track, source, shift));
-      } else if (track.type === "audio") {
-        const source = new EncodedAudioPacketSource(codec);
+      } else if (track.isAudioTrack()) {
+        const source = new EncodedAudioPacketSource(asAudioCodec(codec));
         output.addAudioTrack(source);
         pumps.push(() => copyPackets(track, source, shift));
       } else {

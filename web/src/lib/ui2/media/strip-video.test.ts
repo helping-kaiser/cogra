@@ -37,6 +37,8 @@ function track(type: string, codec: string | null, firstTimestamp: number, packe
   return {
     type,
     rotation: 90,
+    isVideoTrack: () => type === "video",
+    isAudioTrack: () => type === "audio",
     getCodec: async () => codec,
     getFirstTimestamp: async () => firstTimestamp,
     getDecoderConfig: async () => ({ codec: `${codec}-config` }),
