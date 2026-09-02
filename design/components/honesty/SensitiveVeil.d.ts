@@ -19,8 +19,14 @@ export interface SensitiveVeilProps {
   kind?: "media" | "text";
   /** The standard line on the wash. Default "Sensitive — tap to view". */
   label?: string;
-  /** The author's own reason, the smaller second line under the label. */
+  /** The reason behind the mark, appended to the source line after an em dash. */
   reason?: string;
+  /**
+   * Whose mark this is — the author's own warning or the platform's verdict.
+   * Named unconditionally on the smaller second line: the two states read back
+   * as the same veil, so an unnamed source would read as the other one.
+   */
+  source?: "author" | "platform";
   revealLabel?: string;
   /**
    * The veiled tile's radius. Authoritative: it styles the scrim AND is forwarded
