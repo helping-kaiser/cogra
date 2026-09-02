@@ -1,6 +1,7 @@
 /**
  * design.md §9's two content states. Same register — a statement of fact, never
- * `error` colouring — and opposite granularity.
+ * `error` colouring — and opposite reach: one covers the body and gives it back
+ * on a tap, the other takes the whole record for good.
  *
  * SENSITIVE covers the BODY as one: media, words and description veil together,
  * the title and topics stay outside it and readable, and a gallery veils whole
