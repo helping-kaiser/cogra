@@ -408,14 +408,14 @@ bundled). Three small pieces the 2.5.1 close needs:
    fit a comment-scale card. Blocks the reply-wizard lanes from
    implementing ReplySeal 1:1 (the Mark row without the veiled
    result), so this part leads the bundle.
-5. **The reply-flow leave edges still say "draft kept"** (added
-   2026-09-01, after the second-batch ruling): jakob ruled comments
-   keep no drafts — leaving the reply wizard or a comment edit
-   discards. The X-leave edges on ReplyCompose, ReplyPictures(-Web),
-   ReplySeal, and CommentEdit in graph.json still annotate "draft
-   kept"; they predate the ruling. Re-annotate to the discard, and
-   decide whether an accidental-leave guard (a discard confirm)
-   is wanted — the apps ship a silent leave-discards until then.
+5. **An accidental-leave guard for the reply wizard?** Comments keep
+   no drafts, so leaving the reply wizard or a comment edit discards.
+   The five X-leave edges — ReplyCompose, ReplyPictures(-Web),
+   ReplySeal and CommentEdit — annotate that discard as of
+   2026-09-02; they had carried "draft kept" from before the ruling.
+   What is still owed is the ruling on whether a discard confirm
+   guards the leave — the apps ship a silent leave-discards until
+   then.
 
 ### 27 · The resting face an unauthored stance target wears (Q42) · *design*
 
