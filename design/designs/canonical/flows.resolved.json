@@ -1066,6 +1066,33 @@
         "ProfilePosts",
         "VouchBack"
       ]
+    },
+    {
+      "name": "search-and-open-a-post",
+      "description": "Typing in Explore brings results as they are typed; a post result opens that post — its standalone detail view is still owed.",
+      "status": "blocked by gap",
+      "blockedBy": "the post detail view (not boarded standalone — drawn only under the comments sheet)",
+      "steps": [
+        "start · Explore · 1 «search field» → ExploreSearch — typing — results as you type",
+        "end · ExploreSearch · 4 «post result rows» → gap: the post detail view (not boarded standalone — drawn only under the comments sheet)"
+      ],
+      "boards": [
+        "Explore",
+        "ExploreSearch"
+      ]
+    },
+    {
+      "name": "add-a-topic",
+      "description": "Add a topic on the details step opens the picker over every topic a post can carry — the picker itself is still owed.",
+      "status": "blocked by gap",
+      "blockedBy": "the topic picker (not boarded)",
+      "steps": [
+        "start · ComposeDetails",
+        "end · ComposeDetails · 7 «Add a topic» → gap: the topic picker (not boarded)"
+      ],
+      "boards": [
+        "ComposeDetails"
+      ]
     }
   ],
   "boardsOnFlows": {
@@ -1142,6 +1169,7 @@
     },
     "ComposeDetails": {
       "flows": [
+        "add-a-topic",
         "cite-something",
         "pick-a-kept-draft-back-up",
         "publish-a-post",
@@ -1151,6 +1179,7 @@
         "publish-words"
       ],
       "endpoint": [
+        "add-a-topic",
         "publish-while-the-uploads-run"
       ]
     },
@@ -1287,9 +1316,11 @@
         "publish-a-post",
         "publish-a-video",
         "publish-words",
+        "search-and-open-a-post",
         "search-into-a-thread"
       ],
       "endpoint": [
+        "search-and-open-a-post",
         "search-into-a-thread"
       ]
     },
@@ -1313,10 +1344,12 @@
         "publish-a-post",
         "publish-a-video",
         "publish-words",
+        "search-and-open-a-post",
         "search-into-a-thread"
       ],
       "endpoint": [
-        "narrow-a-search"
+        "narrow-a-search",
+        "search-and-open-a-post"
       ]
     },
     "Feed": {
