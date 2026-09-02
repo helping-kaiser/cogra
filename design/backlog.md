@@ -398,11 +398,10 @@ bundled). Three small pieces the 2.5.1 close needs:
    that omits the mark unmarks). The license row keeps its lock
    beside it: the license is fixed by contract at signing, while the
    mark is the author's ongoing judgment.
-3. **The web avatar flow**: no `AvatarCropWeb` board exists and web
-   still uses an inline form field. Feature loop's recommendation:
-   web adopts AvatarCrop/AvatarSeal 1:1 (crop and seal don't differ
-   by platform — Web variants exist only where files arrive
-   differently). Either bless that or draw the web variant.
+3. **The web avatar flow** — **blessed 2026-09-02**: web takes
+   AvatarCrop/AvatarSeal 1:1, the file dialog playing the system
+   picker's part. Crop and seal don't differ by platform, so no web
+   board is drawn.
 4. **A sensitive-marked comment veils compact** — **built
    2026-09-02**. The whole body, words and pictures as one, is
    replaced by a single comment-scale block wearing the veil's wash,
@@ -421,17 +420,20 @@ bundled). Three small pieces the 2.5.1 close needs:
    label names the cost. Android and web ship the silent
    leave-discards until they catch up.
 
-### 27 · The resting face an unauthored stance target wears (Q42) · *design*
+### 27 · The resting face an unauthored stance target wears (Q42) · *design* · **built**
 
 Filed by the feature loop 2026-09-01 (jakob: to the design session).
 The one open piece of the stance control: the face a target wears
-when the viewer has authored no stance on it. Android ships 😐 as a
-placeholder; web has to match whatever is decided — a shared
-contract exactly as §8.4's anchor table is. The full context is
-[docs/open-questions.md Q42](../docs/open-questions.md); the ruling
-lands there and in design.md §8.3/§8.4.
+when the viewer has authored no stance on it — a shared contract
+exactly as §8.4's anchor table is. **Ruled 2026-09-02: 🫥**, the
+dotted-line face that says "nothing here yet". It stays outside the
+anchor table so an empty control can't read as a standing already
+held, stays apart from 🤷 (severed or netted to zero), and keeps the
+muted, translucent treatment. Q42 closed; carried into design.md
+§8.3/§8.4, this folder's prose, and `StanceReadout`. Both apps
+follow.
 
-### 26 · design.md lags the media slice · *system*
+### 26 · design.md lags the media slice · *system* · **built**
 
 Filed by the feature loop 2026-09-01. `docs/implementation/design.md`
 (the design-system doc in the product docs) has absorbed none of the
@@ -443,6 +445,14 @@ invented, never on crop), the full-bleed crop + bottom-forward-action
 wizard rulings (item 24), the sensitive veil's settled face, and the
 covers-are-for-videos / gallery-cover vocabulary. Port the rules;
 board-level detail stays in readme §13.
+
+**Ported 2026-09-02** into §6's inventory and §9: the gallery pager
+and the caps, crop-then-upload with only the cropped export leaving
+the device, the seal's gate, the describe rules, comment media and
+its one-level nesting, the profile's one image and its own seal, the
+acts sheet, the wizard's ways-out header with the forward action at
+the bottom, and the veil as one state rather than a reader-tuned
+scale.
 
 ### 24 · Wizard ergonomics catch-up in the apps · *implementation*
 
