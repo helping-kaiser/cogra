@@ -17,6 +17,8 @@ import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
 import com.cogra.domain.media.DeviceMedia
+import com.cogra.domain.media.ProcessedPicture
+import com.cogra.domain.media.VideoFrame
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -55,6 +57,8 @@ class ComposeWizardScreenTest {
     private var moves = mutableListOf<Pair<Int, Int>>()
     private var removals = mutableListOf<Int>()
     private var sealBacks = 0
+    private var coverFrames = mutableListOf<Int>()
+    private var coverPickers = 0
 
     @Composable
     private fun Wizard(
@@ -75,6 +79,8 @@ class ComposeWizardScreenTest {
             onShapeChange = {},
             onFrameAsset = {},
             onCropsChanged = {},
+            onPickCoverFrame = { coverFrames += it },
+            onOpenCoverPicker = { coverPickers += 1 },
             onTitleChange = {},
             onDescriptionChange = {},
             onAltTextChange = { _, _ -> },
@@ -522,5 +528,54 @@ class ComposeWizardScreenTest {
         compose.setContent { Wizard(state) }
         compose.onNodeWithTag("wizard_problem").assertIsDisplayed()
         compose.onNodeWithText("no balance").assertIsDisplayed()
+    }
+
+    // -- The cover stage (`ComposeCover`) --
+
+    private val onCover = ComposeWizardState(
+        mode = BodyMode.Media,
+        step = WizardStep.Cover,
+        picked = listOf(PickedAsset("clip", 0.5625f, durationMs = 42_000)),
+        coverFrames = List(3) {
+            VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 108, 192))
+        },
+    )
+
+    @Test
+    fun theCoverStageOffersEveryFrameAndAPictureOfYourOwn() {
+        compose.setContent { Wizard(onCover) }
+        compose.onNodeWithTag("wizard_cover_preview").assertIsDisplayed()
+        repeat(3) { compose.onNodeWithTag("wizard_cover_frame_$it").assertIsDisplayed() }
+        compose.onNodeWithTag("wizard_cover_picture").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_cover_next").assertIsDisplayed()
+    }
+
+    @Test
+    fun tappingAFrameChoosesIt() {
+        compose.setContent { Wizard(onCover) }
+        compose.onNodeWithTag("wizard_cover_frame_2").performClick()
+        assertThat(coverFrames).containsExactly(2)
+    }
+
+    @Test
+    fun thePictureTileHandsTheChoiceToTheDevice() {
+        compose.setContent { Wizard(onCover) }
+        compose.onNodeWithTag("wizard_cover_picture").performClick()
+        assertThat(coverPickers).isEqualTo(1)
+    }
+
+    @Test
+    fun theCoverStageSaysItIsForVideoOnly() {
+        compose.setContent { Wizard(onCover) }
+        compose.onNodeWithText("Video only").assertIsDisplayed()
+        compose.onNodeWithText("The video's face").assertIsDisplayed()
+    }
+
+    @Test
+    fun theRunningTimeIsWrittenTheWayTheBoardWritesIt() {
+        assertThat(formatDuration(42_000)).isEqualTo("0:42")
+        assertThat(formatDuration(95_000)).isEqualTo("1:35")
+        // No duration cap, so an hour is a case rather than an accident.
+        assertThat(formatDuration(3_725_000)).isEqualTo("1:02:05")
     }
 }

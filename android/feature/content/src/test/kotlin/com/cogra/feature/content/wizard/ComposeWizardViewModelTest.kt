@@ -19,6 +19,9 @@ import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMedia
 import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.ProcessedPicture
+import com.cogra.domain.media.ProcessedVideo
+import com.cogra.domain.media.VideoFrame
+import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
@@ -26,6 +29,7 @@ import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingMediaProcessor
 import com.cogra.domain.testing.ThrowingMediaRepository
+import com.cogra.domain.testing.ThrowingVideoProcessor
 import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.topics.TagClaim
 import com.google.common.truth.Truth.assertThat
@@ -107,8 +111,38 @@ class ComposeWizardViewModelTest {
                 return Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "too big")))
             }
             next += 1
+            order += "still"
             return Outcome.Success(
                 MediaAssetView("m$next", "https://media/m$next", null, FieldStatus.NORMAL, 1f),
+            )
+        }
+
+        /** Every upload in the order it was made — stills and clips alike. */
+        val order = mutableListOf<String>()
+
+        /** The cover id the clip named, so the pairing can be asserted. */
+        var namedCover: String? = null
+        var videoRefused = false
+
+        override suspend fun uploadVideo(
+            video: ProcessedVideo,
+            coverMediaId: String,
+        ): Outcome<MediaAssetView> {
+            order += "video"
+            namedCover = coverMediaId
+            if (videoRefused) {
+                return Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "not H.264")))
+            }
+            return Outcome.Success(
+                MediaAssetView(
+                    "v1",
+                    "https://media/v1",
+                    null,
+                    FieldStatus.NORMAL,
+                    0.5625f,
+                    mimeType = "video/mp4",
+                    durationMs = 42_000,
+                ),
             )
         }
     }
@@ -151,11 +185,41 @@ class ComposeWizardViewModelTest {
         }
     }
 
+    /**
+     * The video pipeline, scripted. It records the order it was asked in
+     * so the two-step upload's *sequence* — cover first, then the clip
+     * that names it — is assertable rather than merely its outcome.
+     */
+    private val video = object : ThrowingVideoProcessor() {
+        var untranscodable = false
+        val calls = mutableListOf<String>()
+
+        override suspend fun transcode(
+            uri: String,
+            onProgress: (Int) -> Unit,
+        ): ProcessedVideo? {
+            calls += "transcode"
+            onProgress(50)
+            return if (untranscodable) {
+                null
+            } else {
+                ProcessedVideo("/tmp/$uri.mp4", 1080, 1920, 42_000, 1_024)
+            }
+        }
+
+        override suspend fun coverFrames(uri: String, count: Int): List<VideoFrame> =
+            List(count) { VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 100, 125)) }
+
+        override suspend fun info(uri: String): VideoInfo? =
+            if (uri.startsWith("clip")) VideoInfo(42_000, 0.5625f) else null
+    }
+
     private fun viewModel() = ComposeWizardViewModel(
         content = content,
         references = references,
         media = media,
         processor = processor,
+        video = video,
         deviceMedia = deviceMedia,
         drafts = drafts,
         signer = WriteSigner(sealer, identity),
@@ -857,5 +921,108 @@ class ComposeWizardViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(content.lastAttachments.map { it.mediaId }).containsExactly("m2")
+    }
+
+    // -- The video path --
+
+    /** Picks a clip and walks the wizard to the far side of the cover stage. */
+    private fun ComposeWizardViewModel.toDetailsWithVideo() {
+        start()
+        dispatcher.scheduler.advanceUntilIdle()
+        onTogglePick("clip-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        onNext() // body -> cover
+        dispatcher.scheduler.advanceUntilIdle()
+        onNext() // cover -> details, which is where the upload starts
+        dispatcher.scheduler.advanceUntilIdle()
+    }
+
+    @Test
+    fun theCoverGoesUpBeforeTheClipThatNamesIt() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+
+        // The order is the contract's: an asset row is immutable once
+        // written, so the clip cannot gain a poster afterwards.
+        assertThat(media.order).containsExactly("still", "video").inOrder()
+        assertThat(media.namedCover).isEqualTo(vm.state.value.coverMediaId)
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+    }
+
+    @Test
+    fun enteringTheCoverStageLiftsTheFramesOutOfTheClip() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onTogglePick("clip-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        // Nothing is decoded while the clip is merely picked.
+        assertThat(vm.state.value.coverFrames).isEmpty()
+
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Cover)
+        assertThat(vm.state.value.coverFrames)
+            .hasSize(ComposeWizardViewModel.COVER_FRAME_COUNT)
+    }
+
+    @Test
+    fun theTranscodeReportsItsProgressBeforeTheClipIsSent() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+        // The pipeline was asked to re-encode rather than the original
+        // bytes being sent as they were.
+        assertThat(video.calls).contains("transcode")
+    }
+
+    @Test
+    fun aClipThatWillNotTranscodeNeverReachesTheWire() = runTest(dispatcher) {
+        video.untranscodable = true
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+
+        assertThat(media.order).containsExactly("still")
+        val upload = vm.state.value.picked.single().upload
+        assertThat(upload).isInstanceOf(AssetUpload.Failed::class.java)
+        assertThat((upload as AssetUpload.Failed).message)
+            .isEqualTo(ComposeWizardViewModel.UNREADABLE_VIDEO)
+        assertThat(vm.state.value.uploadsComplete).isFalse()
+    }
+
+    @Test
+    fun aRefusedClipCarriesTheServersOwnWords() = runTest(dispatcher) {
+        media.videoRefused = true
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+
+        val upload = vm.state.value.picked.single().upload
+        assertThat((upload as AssetUpload.Failed).message).isEqualTo("not H.264")
+    }
+
+    @Test
+    fun aChosenCoverPictureReplacesTheFrameAndDropsTheOldId() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+        assertThat(vm.state.value.coverMediaId).isNotNull()
+
+        vm.onPickCoverPicture("my-own.jpg")
+        assertThat(vm.state.value.coverChoice)
+            .isEqualTo(CoverChoice.Picture("my-own.jpg"))
+        // The uploaded cover is no longer the one the author means.
+        assertThat(vm.state.value.coverMediaId).isNull()
+    }
+
+    @Test
+    fun theClipIsTheWholeGalleryItAttaches() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+        vm.onNext() // details -> seal
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // One attachment, and it is the video — the cover rides the
+        // asset row rather than the gallery.
+        assertThat(content.lastAttachments.map { it.mediaId }).containsExactly("v1")
     }
 }

@@ -267,7 +267,19 @@ data class ComposeWizardState(
     /** Uploads still in flight, for `UploadStatusLine`'s "n of m". */
     val uploadsDone: Int get() = uploadedIds.size
 
-    val uploadsRunning: Boolean get() = picked.any { it.upload is AssetUpload.Running }
+    /**
+     * Anything still on its way. A transcode counts: it is the clip's
+     * own leg of the same journey, and a stage that called it idle would
+     * let the seal look reachable while the encoder is still working.
+     */
+    val uploadsRunning: Boolean
+        get() = picked.any {
+            it.upload is AssetUpload.Running || it.upload is AssetUpload.Transcoding
+        }
+
+    /** How far the clip's re-encode has got, when one is running. */
+    val transcodingPercent: Int?
+        get() = picked.firstNotNullOfOrNull { (it.upload as? AssetUpload.Transcoding)?.percent }
 
     val uploadsFailed: Boolean get() = picked.any { it.upload is AssetUpload.Failed }
 
@@ -420,7 +432,8 @@ fun ComposeWizardState.pickedPictures(): List<PickedPicture> = picked.map { asse
             crops[asset.uri].toFraming(),
         ),
         described = asset.altText.isNotBlank(),
-        uploading = asset.upload is AssetUpload.Running,
+        uploading = asset.upload is AssetUpload.Running ||
+            asset.upload is AssetUpload.Transcoding,
         failed = asset.upload is AssetUpload.Failed,
     )
 }
