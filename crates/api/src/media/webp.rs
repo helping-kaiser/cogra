@@ -211,9 +211,7 @@ fn animation_duration_ms(chunks: &[Chunk<'_>]) -> Option<u64> {
                 frame
                     .payload
                     .get(12..15)
-                    .map(|raw| {
-                        u64::from(raw[0]) | u64::from(raw[1]) << 8 | u64::from(raw[2]) << 16
-                    })
+                    .map(|raw| u64::from(raw[0]) | u64::from(raw[1]) << 8 | u64::from(raw[2]) << 16)
                     .unwrap_or(0)
             })
             .sum(),
@@ -375,7 +373,10 @@ mod tests {
     /// ´claim:media:a-malformed-container-is-refused´
     #[test]
     fn a_malformed_container_is_refused_not_repaired() {
-        assert_eq!(strip_metadata(b"not an image"), Err(MediaError::Unsupported));
+        assert_eq!(
+            strip_metadata(b"not an image"),
+            Err(MediaError::Unsupported)
+        );
 
         let mut truncated = one_pixel_vp8l();
         truncated.truncate(HEADER_LEN + 4);
@@ -434,7 +435,10 @@ mod tests {
         let stripped = strip_metadata(&animation(&[40, 40, 40])).expect("a valid container");
         let parsed = chunks(&stripped).expect("the rewrite is a valid container");
         let kept: Vec<&[u8; 4]> = parsed.iter().map(|chunk| &chunk.fourcc).collect();
-        assert_eq!(kept, vec![CHUNK_VP8X, b"ANIM", CHUNK_ANMF, CHUNK_ANMF, CHUNK_ANMF]);
+        assert_eq!(
+            kept,
+            vec![CHUNK_VP8X, b"ANIM", CHUNK_ANMF, CHUNK_ANMF, CHUNK_ANMF]
+        );
         let flags = parsed
             .first()
             .and_then(|vp8x| vp8x.payload.first().copied())

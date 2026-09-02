@@ -79,8 +79,10 @@ pub fn sniff(bytes: &[u8]) -> bool {
     bytes
         .get(8..end)
         .unwrap_or_default()
-        .chunks_exact(4)
-        .any(|brand| BRANDS.iter().any(|known| known.as_slice() == brand))
+        .as_chunks::<4>()
+        .0
+        .iter()
+        .any(|brand| BRANDS.contains(&brand))
 }
 
 /// The refusal gate for video: the container's tracks must be the codecs
