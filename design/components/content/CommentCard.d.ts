@@ -19,6 +19,13 @@ export interface CommentCardProps {
   edited?: boolean;
   bundle?: StanceBundle | null;
   /**
+   * The sensitive mark. The WHOLE body veils as one comment-scale block —
+   * words and pictures together — while the author, timestamp, topics and
+   * stance control stay readable. The block names its `source` (the author's
+   * warning or the platform's verdict) and carries `reason` after it.
+   */
+  sensitive?: { reason?: string; source?: "author" | "platform" };
+  /**
    * Indents 12px once. The thread is two levels deep on screen (readme §13):
    * deeper answers flatten into the reply level and open with the @handle they
    * answer — mentions render in `primary`.
