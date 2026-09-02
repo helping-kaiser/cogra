@@ -281,6 +281,15 @@
       "page": "patterns"
     },
     {
+      "file": "NetworkError.dc.html",
+      "title": "Network error · the fault in place",
+      "x": 960,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
       "file": "ComposeWords.dc.html",
       "title": "Compose · words body",
       "x": 0,
@@ -762,7 +771,7 @@
       "x": -1580,
       "y": 0,
       "w": 1160,
-      "h": 2632,
+      "h": 2645,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -771,7 +780,7 @@
       "x": -2160,
       "y": 0,
       "w": 1740,
-      "h": 2151,
+      "h": 2164,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -780,7 +789,7 @@
       "x": -2160,
       "y": 0,
       "w": 1740,
-      "h": 1244,
+      "h": 1270,
       "page": "comments",
       "title": "Comments · flow map"
     },
@@ -807,15 +816,15 @@
       "x": -2160,
       "y": 0,
       "w": 1740,
-      "h": 1011,
+      "h": 1024,
       "page": "media",
       "title": "Media · flow map"
     },
     {
       "file": "MapPatterns.dc.html",
-      "x": -1000,
+      "x": -1290,
       "y": 0,
-      "w": 580,
+      "w": 870,
       "h": 326,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
@@ -843,7 +852,7 @@
       "x": -2160,
       "y": 0,
       "w": 1740,
-      "h": 1200,
+      "h": 1213,
       "page": "profile",
       "title": "Profile · flow map"
     },
