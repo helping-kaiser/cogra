@@ -52,8 +52,9 @@ export const SEVERED_LABEL = "Severed";
 export const NO_STANDING_LABEL = "No stance yet";
 /** What a bundle standing at exactly (0, 0) reads as. */
 export const ZERO_BUNDLE_EMOJI = "🤷";
-/** The face an unauthored target wears at rest — deliberately outside the table. */
-export const RESTING_FACE_EMOJI = "😐";
+/** The face an unauthored target wears at rest — the dotted-line face, deliberately
+    outside the table so an empty control cannot read as a standing already held. */
+export const RESTING_FACE_EMOJI = "🫥";
 
 /** Visually hidden, still read aloud — where the anchors' words now live. */
 export const SR_ONLY = {

@@ -168,7 +168,7 @@ before it is signed, and anything half-finished says who acts next.
 - `Just looking? Browse the feed →`
 
 **Emoji: yes, in exactly one place.** The twenty-anchor stance readout
-(§8) plus 🤷 for a zero standing and 😐 for a control at rest. These are
+(§8) plus 🤷 for a zero standing and 🫥 for a control at rest. These are
 *system* emoji rendering a value, not decoration. Emoji never appear in
 headings, buttons, marketing copy, or empty states. The single arrow in
 `Browse the feed →` is the only other glyph used as punctuation.
@@ -481,7 +481,7 @@ which is what makes a guess expensive.
 
 | Piece | Decided, so built | Open, so absent |
 |---|---|---|
-| `MediaAttachment` / `MediaGallery` | reserved aspect ratio before load; authored, never generated alt text; `surfaceContainerHigh` at the 12px rung; one lead tile plus two squares plus `+n`; the 4:5 cap bounding the tile rather than the picture; a height cap budgeted against worst-case card chrome so a whole post fits above the bottom bar; autoplay muted with one global sticky mute | **the sensitive blur treatment** — radius, overlay, reveal stickiness, and how 0–10 maps to blur-or-not |
+| `MediaAttachment` / `MediaGallery` | reserved aspect ratio before load; authored, never generated alt text; `surfaceContainerHigh` at the 12px rung; the gallery as a pager at the post's one crop shape, dots only; the 4:5 cap bounding the tile rather than the picture; a height cap budgeted against worst-case card chrome so a whole post fits above the bottom bar; autoplay muted with one global sticky mute | **the sensitive blur treatment** — radius, overlay, reveal stickiness, and how 0–10 maps to blur-or-not |
 | `MediaViewer` | media opens full-size from the detail view, never cropped, backed out of rather than navigated away from; real video controls here, sound only in a tile | — |
 | `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the only figure the product has is the Post Score and its explanation is four screens deep | — |
 | `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and topics outside, one tap revealing everything, content kept mounted so revealing moves nothing; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | whether a reveal survives leaving and returning to the post |
@@ -612,7 +612,7 @@ Every interaction authors two independent continuous values in `[−1, +1]`
 four quadrants are legitimate.
 
 - **At rest** the target shows the standing: the face and the exact
-  pair. A viewer with no standing sees a **muted, translucent 😐** —
+  pair. A viewer with no standing sees a **muted, translucent 🫥** —
   never a bare word.
 - **A plain tap** commits a modest positive `(+0.1, +0.1)`. The **first
   tap ever teaches and stages nothing** — it opens the coach mark, whose
@@ -885,9 +885,7 @@ of a scrollable feed — so the tile stops at 4:5, and a taller frame is
 **fitted whole inside it** with the reserved surface showing at the
 sides. The layout never decides the author's crop. The bars stay plain
 `surfaceContainerHigh`, never a blurred enlargement of the photo: that
-invents image where there is none. The one exception is a gallery's
-secondary squares, which crop because they are an index into the set
-rather than the media itself.
+invents image where there is none.
 
 **Tapping media in the detail view opens it full-size** (`MediaViewer`) —
 contain, as large as the screen allows, backed out of with `arrow_back`,
@@ -1363,7 +1361,8 @@ media and comment editing.
   1:1 crop → **its own seal**, because every profile change is a
   signed act ("Sign the change"; "?" *Changing your picture* in
   copy-voice.md). The full profile screen stays its own backlog
-  item.
+  item. **Web takes the crop and its seal 1:1** (jakob 2026-09-02),
+  the file dialog playing the system picker's part — no web board.
 - **Sensitive veils the whole gallery**, never one picture of it —
   the open question in `MediaAttachment` closed.
 
@@ -1638,6 +1637,11 @@ entry first". What stands:
   is wired as edges into the master boards (the describe sheet, the
   gated seal, the license / sensitive sheets, the key-absent seal,
   the stance pad) rather than duplicated boards.
+- **The topic picker's interim entry** (jakob 2026-09-02): until the
+  picker board exists, the apps' entry is the existing topic field,
+  opened as a sheet from the seal. The gap and the blocked
+  `add-a-topic` flow stand — the interim is what the apps ship, not
+  the design owed.
 - **The profile round (2026-09-01, item 23 round 1)** drew the
   surface slice 2.1 shipped undesigned — eight boards: your own,
   someone else's, applicant days, the stances page, the posts and
