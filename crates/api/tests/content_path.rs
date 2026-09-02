@@ -1035,6 +1035,7 @@ mod galleries {
             "image/webp",
             1024,
             &serde_json::json!({ "v": 1, "aspect_ratio": "4:5" }),
+            None,
         )
         .await
         .expect("asset row");

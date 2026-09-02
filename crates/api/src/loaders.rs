@@ -39,8 +39,9 @@ use std::sync::Arc;
 use async_graphql::dataloader::{DataLoader, Loader};
 use postgres_store::auth::ActorIdentity;
 use postgres_store::content::{Comment, Post};
-use postgres_store::media::GalleryEntry;
+use postgres_store::media::{GalleryEntry, MediaAttachment};
 use postgres_store::{PgPool, auth as store, content as content_store, media as media_store};
+use uuid::Uuid;
 
 /// A batch read's failure, shared out to every key that was waiting on
 /// it. `Loader::Error` must be `Clone`, and neither store error is, so
@@ -156,6 +157,33 @@ impl Loader<i64> for CommentGalleryLoader {
     }
 }
 
+/// Assets by their own id — the poster an asset names as its cover.
+///
+/// A poster hangs off the asset rather than off the page's node, so a
+/// gallery resolves one per covered asset and a feed page multiplies that
+/// by every post on it. Same N+1 as the galleries above, one level
+/// further in.
+///
+/// An id with no row is absent from the map, which the resolver reads as
+/// "no poster" — the same answer a null column gives, and the right one
+/// either way: a cover that is gone is a video without one, never a read
+/// that fails.
+pub struct MediaByIdLoader(PgPool);
+
+impl Loader<Uuid> for MediaByIdLoader {
+    type Value = MediaAttachment;
+    type Error = LoadError;
+
+    async fn load(&self, keys: &[Uuid]) -> Result<HashMap<Uuid, MediaAttachment>, LoadError> {
+        Ok(media_store::assets_by_ids(&self.0, keys)
+            .await
+            .map_err(LoadError::from_display)?
+            .into_iter()
+            .map(|asset| (asset.id, asset))
+            .collect())
+    }
+}
+
 /// Groups a flat gallery read back into one list per version, preserving
 /// the query's own ordering — which is gallery order.
 ///
@@ -179,6 +207,7 @@ pub struct NodeLoaders {
     pub actors: DataLoader<ActorByAddressLoader>,
     pub post_galleries: DataLoader<PostGalleryLoader>,
     pub comment_galleries: DataLoader<CommentGalleryLoader>,
+    pub media: DataLoader<MediaByIdLoader>,
 }
 
 impl NodeLoaders {
@@ -188,7 +217,8 @@ impl NodeLoaders {
             comments: DataLoader::new(CommentByNodeLoader(pool.clone()), tokio::spawn),
             actors: DataLoader::new(ActorByAddressLoader(pool.clone()), tokio::spawn),
             post_galleries: DataLoader::new(PostGalleryLoader(pool.clone()), tokio::spawn),
-            comment_galleries: DataLoader::new(CommentGalleryLoader(pool), tokio::spawn),
+            comment_galleries: DataLoader::new(CommentGalleryLoader(pool.clone()), tokio::spawn),
+            media: DataLoader::new(MediaByIdLoader(pool), tokio::spawn),
         }
     }
 }

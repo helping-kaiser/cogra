@@ -869,6 +869,13 @@ type MediaAttachment {
   status: FieldModerationStatus!
   "Layout hints the frontend reads to reserve space before load."
   options: MediaOptions!
+  "The poster this asset is covered by — the still a video shows before
+   playback and wherever autoplay does not run. Null unless the asset
+   names one. A different question from the gallery's `isCover`, which
+   selects the attachment that leads a multi-asset post; this one says
+   what covers a single asset, and it is a real foreign key so the
+   poster is redacted with its video (data-model.md)."
+  coverMedia: MediaAttachment
   "The account that uploaded the asset."
   author: User
   createdAt: DateTime!
