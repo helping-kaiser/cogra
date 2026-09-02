@@ -211,6 +211,89 @@
       "description": "Edit on your own comment opens the edit surface; the signed edit settles back into the thread it belongs to.",
       "start": { "board": "ReplyMedia", "via": 6 },
       "end": { "board": "CommentEdit", "via": 12, "case": "signed — the thread, the edit settling" }
+    },
+    {
+      "name": "publish-words",
+      "description": "Write words instead takes the wizard's other half — no crop, no cover, the same details and the same seal signing words alone into the feed.",
+      "start": { "control": "nav · New post", "except": ["ComposeExpired"] },
+      "waypoints": [
+        { "board": "ComposePick", "via": 4 },
+        { "board": "ComposeWords", "via": 3 },
+        { "board": "ComposeDetails", "via": 10, "to": "ComposeSeal" }
+      ],
+      "end": { "board": "ComposeSeal", "via": 7, "case": "signed — the detail view, still settling" }
+    },
+    {
+      "name": "publish-a-video",
+      "description": "A video takes a step of its own — the cover picks the face the post wears, and details and seal follow the way pictures do.",
+      "start": { "control": "nav · New post", "except": ["ComposeExpired"] },
+      "waypoints": [
+        { "board": "ComposePick", "via": 3, "case": "a video — its face" },
+        { "board": "ComposeCover", "via": 6 },
+        { "board": "ComposeDetails", "via": 10, "to": "ComposeSeal" }
+      ],
+      "end": { "board": "ComposeSeal", "via": 7, "case": "signed — the detail view, still settling" }
+    },
+    {
+      "name": "cite-something",
+      "description": "+ Cite something, wherever a composer offers it, opens the picker over everything citable; a result row lands the citation in the composer's references.",
+      "start": { "control": "+ Cite something" },
+      "end": { "board": "ReferencePicker", "via": 5 }
+    },
+    {
+      "name": "set-your-own-stance-on-your-post",
+      "description": "Adjust on the seal blooms the one-axis pad — your own post always reaches you in full, so the stance is declared before signing, never assumed.",
+      "start": { "board": "ComposeSeal", "via": 5 },
+      "end": { "board": "ComposePad", "via": 4 }
+    },
+    {
+      "name": "pick-a-kept-draft-back-up",
+      "description": "New post with a draft kept asks before it opens; Continue resumes that draft at details, and the same seal signs it into the feed.",
+      "start": { "board": "ComposeExpired", "via": 15 },
+      "waypoints": [
+        { "board": "ComposeDraft", "via": 4 },
+        { "board": "ComposeDetails", "via": 10, "to": "ComposeSeal" }
+      ],
+      "end": { "board": "ComposeSeal", "via": 7, "case": "signed — the detail view, still settling" }
+    },
+    {
+      "name": "edit-your-post",
+      "description": "The own-post overflow offers Edit; the edit surface carries its changes as signed acts of their own and the post settles with them.",
+      "start": { "board": "ComposeLanded", "via": 2 },
+      "waypoints": [
+        { "board": "RemoveMenu", "via": 1 }
+      ],
+      "end": { "board": "EditCompose", "via": 12, "case": "signed — the post, the edit settling" }
+    },
+    {
+      "name": "remove-your-post",
+      "description": "Remove asks once, then leaves the mark — the post is redacted where it stood, never silently erased.",
+      "start": { "board": "ComposeLanded", "via": 2 },
+      "waypoints": [
+        { "board": "RemoveMenu", "via": 3 }
+      ],
+      "end": { "board": "RemoveConfirm", "via": 1 }
+    },
+    {
+      "name": "set-the-cover-and-order",
+      "description": "Show all opens the picked batch as a list; dragging sets the order, the first picture is the cover, and Done returns wherever the sheet opened.",
+      "start": { "board": "ComposePick", "via": 5 },
+      "end": { "board": "ComposePicked", "via": 4 }
+    },
+    {
+      "name": "describe-your-pictures",
+      "description": "Describe the pictures, wherever pictures are staged, opens the sheet; what is written there is witnessed at signing and never gates the upload.",
+      "start": { "control": "Describe the pictures" },
+      "end": { "board": "ComposeDescribe", "via": 3 }
+    },
+    {
+      "name": "publish-while-the-uploads-run",
+      "description": "Details written while the pictures are still climbing reach the gated seal; signing waits for them, then the post lands in its detail view, still settling.",
+      "start": { "board": "ComposeDetails", "via": 10, "to": "ComposeUploading" },
+      "waypoints": [
+        { "board": "ComposeUploading", "via": 11, "case": "uploads still running — the gated seal" }
+      ],
+      "end": { "board": "ComposeSealUploading", "via": 7, "case": "uploads land — signing proceeds to the detail view, still settling" }
     }
   ]
 }

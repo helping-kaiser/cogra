@@ -526,6 +526,28 @@ outcomes of `FeedSheet/6` are now frozen by one flow each. Coverage
 moved with them: 73 of 132 gaps now sit on a declared journey's
 boards, up from 59. The reply-wizard leave edges were re-annotated to
 the discard in the same round (the media-slice close-out item's part
-5; its accidental-leave guard is still an open ruling). Still to
-author: compose, media, profile and patterns, and the web wizards'
-parallel flows.
+5; its accidental-leave guard is still an open ruling).
+
+**Batch 3 landed 2026-09-02 — compose and media.** Ten flows join:
+`publish-words`, `publish-a-video`, `cite-something`,
+`set-your-own-stance-on-your-post`, `pick-a-kept-draft-back-up`,
+`edit-your-post` and `remove-your-post` on compose;
+`set-the-cover-and-order`, `describe-your-pictures` and
+`publish-while-the-uploads-run` on media. Forty declared, thirty-eight
+resolved, the same two blocked. The three body shapes now each have
+their own flow, and `ComposeDetails/10` is frozen both ways — pinned
+to `ComposeSeal` by the three publishing flows and to
+`ComposeUploading` by the one that publishes against the gated seal.
+Two more control starts join the census: «+ Cite something» over four
+composers and «Describe the pictures» over four picture surfaces, both
+converging with no origin left undesigned and neither needing an
+`except` — `ComposePicked/2` reads «Describe», a different label, so
+it stays out. `pick-a-kept-draft-back-up` gives the edge the publish
+seed sets aside its own home: `ComposeExpired/15` is the one place the
+nav's New post meets a kept draft first. Four journeys conclude on the
+`back` terminal, which only a declared end may do. Coverage moved
+again: 82 of 132 gaps now sit on a declared journey's boards, up from
+73; the journey-stopping census held at thirteen, since the new
+New-post flows repeat the seed's seven undesigned origins rather than
+adding any. Still to author: profile and patterns, and the web
+wizards' parallel flows.
