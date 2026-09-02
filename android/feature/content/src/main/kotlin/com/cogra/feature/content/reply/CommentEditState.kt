@@ -47,6 +47,9 @@ data class CommentEditState(
 
     /** The acts sheet (`CommentEditActs`), open. */
     val actsOpen: Boolean = false,
+
+    /** The leave the author has been asked to confirm (`DiscardConfirm`). */
+    val confirmingDiscard: Boolean = false,
     val describingIndex: Int? = null,
     val help: HelpTopic? = null,
 
@@ -71,6 +74,20 @@ data class CommentEditState(
     val describedCount: Int get() = picked.count { it.altText.isNotBlank() }
 
     val canAddPicture: Boolean get() = picked.size < ReplyWizardState.MAX_PICTURES
+
+    /**
+     * Whether leaving would lose something, and so has to ask first.
+     *
+     * An edit keeps no draft either, but "something to lose" here means
+     * something *changed*: an edit opened and closed untouched has lost
+     * nothing, and asking about it would be the noise the rule warns
+     * against (design/readme.md §13).
+     *
+     * It is the act count that answers, not the words alone: a topic or
+     * a citation moved is its own act and would be lost with the rest,
+     * and an edit that would sign nothing has nothing to lose.
+     */
+    val hasSomethingToLose: Boolean get() = signedActionCount > 0
 
     val anySheetOpen: Boolean get() = actsOpen || describingIndex != null
 

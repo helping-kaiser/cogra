@@ -108,13 +108,21 @@ fun Modifier.onVisibilityChanged(onChange: (Float) -> Unit): Modifier =
  * decoder warms up. Autoplay follows visibility, muted, and the mute
  * control is the shared one — tapping it here answers for every clip.
  *
+ * **A reading surface wears sound and nothing else** (`ReplyMedia`,
+ * 2026-09-02): "no play/pause and no duration pill: presence on screen
+ * is the policy on a reading surface, exactly as on a post's card". A
+ * feed card, a post detail and a comment are all reading surfaces; the
+ * composer is not, which is where the running time is shown instead.
+ *
  * @param url the clip.
  * @param posterUrl the still that stands in before the first frame, and
  *   wherever autoplay does not run.
  * @param autoplay whether this surface is allowed to start itself —
  *   the caller's own visibility answer, so a list can decide that only
  *   one card at a time plays.
- * @param durationMs the running time the badge shows; null hides it.
+ * @param durationMs the running time, drawn only where [controls] asks
+ *   for it. Null hides it everywhere.
+ * @param controls which controls this surface wears.
  */
 @OptIn(UnstableApi::class)
 @Composable
@@ -124,6 +132,7 @@ fun VideoPlayer(
     autoplay: Boolean,
     modifier: Modifier = Modifier,
     durationMs: Int? = null,
+    controls: VideoControls = VideoControls.SoundOnly,
     contentDescription: String? = null,
     testTag: String? = null,
 ) {
@@ -180,28 +189,42 @@ fun VideoPlayer(
             )
         }
 
-        PlayPauseButton(
-            playing = playing,
-            onToggle = { if (playing) player.pause() else player.play() },
-            modifier = Modifier.align(Alignment.Center),
-        )
+        if (controls == VideoControls.Full) {
+            PlayPauseButton(
+                playing = playing,
+                onToggle = { if (playing) player.pause() else player.play() },
+                modifier = Modifier.align(Alignment.Center),
+            )
+        }
 
         Row(
             modifier = Modifier.align(Alignment.BottomEnd).padding(Space.x2),
         ) {
-            durationMs?.let {
-                OverlayBadge(modifier = Modifier.testTag("video_duration")) {
-                    Text(
-                        text = formatRunningTime(it),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MediaOverlay.BadgeInk,
-                    )
+            if (controls == VideoControls.Full) {
+                durationMs?.let {
+                    OverlayBadge(modifier = Modifier.testTag("video_duration")) {
+                        Text(
+                            text = formatRunningTime(it),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MediaOverlay.BadgeInk,
+                        )
+                    }
                 }
             }
             MuteButton(muted = muted)
         }
     }
 }
+
+/**
+ * What a surface lets a reader do to a clip.
+ *
+ * [SoundOnly] is the reading surfaces' answer and the default: presence
+ * on screen decides whether a clip plays, so a play button would be a
+ * second, contradictory answer to a question already settled. Sound is
+ * the one decision left, and it is shared.
+ */
+enum class VideoControls { SoundOnly, Full }
 
 @Composable
 private fun PlayPauseButton(
