@@ -66,5 +66,8 @@ image              = { workspace = true }
 mp4                = { workspace = true }
 
 [dev-dependencies]
+# Fixture-only: Mp4Sample carries its payload as a Bytes, so building a
+# real MP4 to test the probe against needs the type it is defined over.
+bytes          = { version = "1" }
 tower          = { version = "0.5", features = ["util"] }
 http-body-util = { version = "0.1" }

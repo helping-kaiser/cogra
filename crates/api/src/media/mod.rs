@@ -864,6 +864,56 @@ mod tests {
         out
     }
 
+    /// A two-frame animation, built to the container specification's
+    /// layout the way the webp module's own fixtures are.
+    fn animated_two_frames() -> Vec<u8> {
+        fn chunk(fourcc: &[u8; 4], payload: &[u8]) -> Vec<u8> {
+            let mut out = Vec::new();
+            out.extend_from_slice(fourcc);
+            out.extend_from_slice(&(payload.len() as u32).to_le_bytes());
+            out.extend_from_slice(payload);
+            if payload.len() % 2 == 1 {
+                out.push(0);
+            }
+            out
+        }
+        let mut vp8x = vec![0x02, 0, 0, 0];
+        vp8x.extend_from_slice(&[0, 0, 0]);
+        vp8x.extend_from_slice(&[0, 0, 0]);
+        let mut body = chunk(b"VP8X", &vp8x);
+        body.extend_from_slice(&chunk(b"ANIM", &[0, 0, 0, 0, 0, 0]));
+        for duration in [40u32, 60] {
+            let mut frame = Vec::new();
+            for triple in [0u32, 0, 0, 0, duration] {
+                frame.extend_from_slice(&triple.to_le_bytes()[..3]);
+            }
+            frame.push(0);
+            frame.extend_from_slice(&chunk(
+                b"VP8L",
+                &[0x2F, 0x00, 0x00, 0x00, 0x00, 0x88, 0x88, 0x08],
+            ));
+            body.extend_from_slice(&chunk(b"ANMF", &frame));
+        }
+        let mut out = Vec::new();
+        out.extend_from_slice(b"RIFF");
+        out.extend_from_slice(&((4 + body.len()) as u32).to_le_bytes());
+        out.extend_from_slice(b"WEBP");
+        out.extend_from_slice(&body);
+        out
+    }
+
+    /// An animated WebP is accepted and carries the duration its frames state, while a still carries none.
+    /// ´claim:media:an-animated-still-is-accepted-with-its-duration´
+    #[test]
+    fn an_animated_webp_is_accepted_and_timed() {
+        let processed = process(&animated_two_frames(), caps()).expect("an animation is accepted");
+        assert_eq!(processed.mime, webp::MIME);
+        assert_eq!(processed.duration_ms, Some(100), "40 ms and 60 ms of frames");
+
+        let still = process(&one_pixel(), caps()).expect("a still is accepted");
+        assert_eq!(still.duration_ms, None, "a single frame has no duration");
+    }
+
     fn caps() -> UploadCaps {
         UploadCaps {
             still_bytes: DEFAULT_MAX_UPLOAD_BYTES,
