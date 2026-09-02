@@ -664,3 +664,43 @@ line, with the standing above it and the landing below — each of the
 three labelled above its own value so the eye can compare them without
 reading. Neither app draws the label. Catch both up, and keep the
 spoken line naming the anchor and both axes.
+
+### 31 · Comment video and the media error states · *design + system* · **built**
+
+Filed by the feature loop 2026-09-02 (jakob: a comment should carry a
+video and a cover like a post, and both scales need error states for
+too-big files and unknown formats). Extends item 21's territory.
+Rulings in readme §13 *Comment video and the media error states*.
+Built: a comment's grammar is the post's at comment caps — four
+pictures OR one video with its cover, the byte caps recorded as
+product constants (picture 10 MiB, video 100 MiB in a post and 50 MiB
+in a comment, cover 10 MiB); *Reply · a video and its cover* (the
+platform picker's video case, `ComposeCover`'s cover row inlined at
+comment scale, the pager's square frame); *Reply · files refused* and
+*Pick · files refused* (the refusal drawn where the file was offered,
+the cap named only there); `MediaThumb` grew the composer's video
+anatomy (play disc, duration — authoring-side only) and
+`UploadErrorLine` grew the no-Retry form, since retrying cannot make a
+file smaller or a format readable. `publish-a-post` gained a pinning
+waypoint: the refusal board's own Next reaches the crop, so the first
+leg needed the step it means.
+
+Open, each a ruling this round did not make:
+
+1. **Does a video take a description?** The post's video path carries
+   no describe counter, so the comment's carries none either. Alt text
+   for a video is a different thing from alt text for a picture, and
+   nothing rules it.
+2. **The thread's comment video.** `CommentCard` hands its media to
+   the gallery, which already knows `kind: "video"` with its cover, so
+   nothing is missing mechanically — but whether a comment's video
+   autoplays in the thread the way a post's does is undecided, and no
+   board draws one.
+3. **"+ Add pictures" now under-describes** the control: the picker it
+   opens also takes a video. `CommentEdit` already says "+ Add · 1 of
+   4". Changing the reply composer's label is a copy ruling.
+4. **A web video board.** *Reply · pictures on the web* exists for the
+   drop path; whether the video state needs the same is undrawn.
+5. **MiB or MB on screen** (copy-voice, *Refused files*).
+6. **No `reply-with-a-video` flow is declared** beside
+   `reply-with-pictures`; the boards and edges are there for one.
