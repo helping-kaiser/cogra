@@ -7,13 +7,21 @@
 
 import { describe, expect, it } from "vitest";
 
-import { PICTURE_MAX_BYTES, POST_VIDEO_MAX_BYTES, megabytes } from "@/lib/ui2/media/caps";
+import {
+  COMMENT_VIDEO_MAX_BYTES,
+  PICTURE_MAX_BYTES,
+  POST_VIDEO_MAX_BYTES,
+  megabytes,
+} from "@/lib/ui2/media/caps";
 import {
   ANIMATED_GIF,
+  COMMENT_SCALE,
   MIXED_BODY,
+  POST_SCALE,
   screenPick,
   TOO_BIG_PICTURE,
-  TOO_BIG_VIDEO,
+  TOO_BIG_VIDEO_COMMENT,
+  TOO_BIG_VIDEO_POST,
   UNREADABLE,
 } from "./pick";
 
@@ -123,8 +131,8 @@ describe("screenPick", () => {
 
   it("refuses a video over the cap", async () => {
     const outcome = await screenPick([mp4(POST_VIDEO_MAX_BYTES + 1)], EMPTY);
-    expect(outcome.refusals[0]!.reason).toBe(TOO_BIG_VIDEO);
-    expect(TOO_BIG_VIDEO).toContain("100 MB");
+    expect(outcome.refusals[0]!.reason).toBe(TOO_BIG_VIDEO_POST);
+    expect(TOO_BIG_VIDEO_POST).toContain("100 MB");
   });
 
   it("takes one video and reports the batch as the moving kind", async () => {
@@ -153,5 +161,50 @@ describe("screenPick", () => {
     const outcome = await screenPick([mp4(), mp4(), mp4()], EMPTY);
     expect(outcome.accepted).toHaveLength(1);
     expect(outcome.refusals.map((r) => r.reason)).toEqual([MIXED_BODY, MIXED_BODY]);
+  });
+});
+
+// A COMMENT IS THE POST'S GRAMMAR AT HALF THE BYTE BUDGET, so the screening is
+// the same code with two values changed. These assert that the comment scale
+// actually reaches it — a post's 100 MB allowed through a comment would be the
+// server's refusal instead of the composer's.
+describe("screenPick at comment scale", () => {
+  it("speaks ReplyMediaErrors' own sentence about a comment's cap", () => {
+    // Drawn verbatim on the board, cap and all.
+    expect(TOO_BIG_VIDEO_COMMENT).toBe(
+      "That video is too big — a comment's video can be up to 50 MB.",
+    );
+    expect(COMMENT_VIDEO_MAX_BYTES).toBe(50 * 1024 * 1024);
+  });
+
+  it("refuses at 50 MiB what a post would have taken", async () => {
+    const between = mp4(60 * 1024 * 1024);
+    const asComment = await screenPick([between], EMPTY, COMMENT_SCALE);
+    expect(asComment.accepted).toHaveLength(0);
+    expect(asComment.refusals[0]!.reason).toBe(TOO_BIG_VIDEO_COMMENT);
+
+    // The same file is fine on a post, which is what makes the scale real.
+    const asPost = await screenPick([between], EMPTY, POST_SCALE);
+    expect(asPost.accepted).toHaveLength(1);
+  });
+
+  it("takes a comment video inside the cap", async () => {
+    const outcome = await screenPick([mp4(40 * 1024 * 1024)], EMPTY, COMMENT_SCALE);
+    expect(outcome.accepted).toHaveLength(1);
+    expect(outcome.kind).toBe("video");
+  });
+
+  it("says 'a comment' when the kinds would mix", async () => {
+    const outcome = await screenPick([mp4()], { hasVideo: false, count: 2 }, COMMENT_SCALE);
+    expect(outcome.refusals[0]!.reason).toBe("A comment carries pictures or one video, not both.");
+  });
+
+  it("keeps the picture cap and the unreadable line unchanged", async () => {
+    const outcome = await screenPick(
+      [picture("big.jpg", PICTURE_MAX_BYTES + 1), file("x.txt", "text/plain", new Uint8Array(new ArrayBuffer(2)))],
+      EMPTY,
+      COMMENT_SCALE,
+    );
+    expect(outcome.refusals.map((r) => r.reason)).toEqual([TOO_BIG_PICTURE, UNREADABLE]);
   });
 });
