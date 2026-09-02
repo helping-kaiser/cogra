@@ -35,6 +35,7 @@ import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
 import com.cogra.domain.media.VideoFrame
+import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.HashtagView
 import com.cogra.domain.InviteCheck
@@ -537,7 +538,7 @@ open class ThrowingVideoProcessor : VideoProcessor {
     override suspend fun coverFrames(uri: String, count: Int): List<VideoFrame> =
         throw UnsupportedOperationException()
 
-    override suspend fun durationMs(uri: String): Int? = throw UnsupportedOperationException()
+    override suspend fun info(uri: String): VideoInfo? = throw UnsupportedOperationException()
 }
 
 /** Topic-repository base: every call throws until overridden. */

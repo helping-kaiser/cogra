@@ -98,9 +98,28 @@ interface VideoProcessor {
      */
     suspend fun coverFrames(uri: String, count: Int): List<VideoFrame>
 
-    /** The clip's own length, read from its header. Null when unreadable. */
-    suspend fun durationMs(uri: String): Int?
+    /**
+     * What the clip's header says, without decoding it.
+     *
+     * Null for anything that is not a readable video — which is how the
+     * pick step tells a clip from a picture when the choice came from
+     * the system picker rather than from the grid, where the store
+     * already said.
+     */
+    suspend fun info(uri: String): VideoInfo?
 }
+
+/**
+ * A clip's header, as the pick and cover steps need it.
+ *
+ * [aspectRatio] is the *displayed* shape — a quarter-turned recording
+ * reports its stored dimensions, and this is after that swap — because
+ * everything reading it is deciding what shape to draw.
+ */
+data class VideoInfo(
+    val durationMs: Int,
+    val aspectRatio: Float,
+)
 
 /**
  * What a crop asks the pipeline for: the shape the whole post takes,

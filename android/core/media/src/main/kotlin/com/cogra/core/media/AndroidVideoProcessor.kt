@@ -18,6 +18,7 @@ import androidx.media3.transformer.Transformer
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
 import com.cogra.domain.media.VideoFrame
+import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
 import java.io.File
 import kotlin.coroutines.resume
@@ -221,8 +222,8 @@ class AndroidVideoProcessor(
             }.orEmpty()
         }
 
-    override suspend fun durationMs(uri: String): Int? = withContext(Dispatchers.IO) {
-        probe(uri)?.durationMs
+    override suspend fun info(uri: String): VideoInfo? = withContext(Dispatchers.IO) {
+        probe(uri)?.let { VideoInfo(it.durationMs, it.width.toFloat() / it.height.toFloat()) }
     }
 
     /** What the header says, before anything is decoded. */
