@@ -1352,7 +1352,8 @@ media and comment editing.
   1:1 crop → **its own seal**, because every profile change is a
   signed act ("Sign the change"; "?" *Changing your picture* in
   copy-voice.md). The full profile screen stays its own backlog
-  item.
+  item. **Web takes the crop and its seal 1:1** (jakob 2026-09-02),
+  the file dialog playing the system picker's part — no web board.
 - **Sensitive veils the whole gallery**, never one picture of it —
   the open question in `MediaAttachment` closed.
 
@@ -1624,6 +1625,11 @@ entry first". What stands:
   is wired as edges into the master boards (the describe sheet, the
   gated seal, the license / sensitive sheets, the key-absent seal,
   the stance pad) rather than duplicated boards.
+- **The topic picker's interim entry** (jakob 2026-09-02): until the
+  picker board exists, the apps' entry is the existing topic field,
+  opened as a sheet from the seal. The gap and the blocked
+  `add-a-topic` flow stand — the interim is what the apps ship, not
+  the design owed.
 - **The profile round (2026-09-01, item 23 round 1)** drew the
   surface slice 2.1 shipped undesigned — eight boards: your own,
   someone else's, applicant days, the stances page, the posts and
