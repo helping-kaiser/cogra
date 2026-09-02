@@ -294,6 +294,77 @@
         { "board": "ComposeUploading", "via": 11, "case": "uploads still running — the gated seal" }
       ],
       "end": { "board": "ComposeSealUploading", "via": 7, "case": "uploads land — signing proceeds to the detail view, still settling" }
+    },
+    {
+      "name": "see-who-stands-with-someone",
+      "description": "The figures row, on any profile, opens the stance lists; reading who has taken a stance on them is the whole journey.",
+      "start": { "control": "the figures row" },
+      "end": { "board": "ProfileStances", "via": 2 }
+    },
+    {
+      "name": "find-the-thread-a-comment-answers",
+      "description": "A chronicle's Comments tab draws each comment with what it answers; the target pointer opens that post, its thread already open.",
+      "start": { "board": "ProfileOther", "via": 6, "case": "Comments — the cards (master)" },
+      "end": { "board": "ProfileComments", "via": 17 }
+    },
+    {
+      "name": "edit-your-profile",
+      "description": "Edit profile opens the fields — name, bio, website — and one seal signs them; the picture has flows of its own.",
+      "start": { "board": "Profile", "via": 6 },
+      "waypoints": [
+        { "board": "ProfileEdit", "via": 6, "to": "ProfileEditSeal" }
+      ],
+      "end": { "board": "ProfileEditSeal", "via": 4, "case": "signed — the profile updates" }
+    },
+    {
+      "name": "take-a-stance-on-a-person",
+      "description": "Press and hold the stance anchor on a profile and the same pad blooms; the stance concludes where it was taken.",
+      "start": { "control": "the stance anchor" },
+      "end": { "board": "VouchBackPad", "via": 4, "case": "signed — the stance lands, back where the pad bloomed" }
+    },
+    {
+      "name": "message-someone",
+      "description": "Message on someone's profile opens the conversation with them — the chat surface is still owed.",
+      "start": { "board": "ProfileOther" },
+      "end": { "board": "ProfileOther", "via": 5 }
+    },
+    {
+      "name": "publish-from-the-browser",
+      "description": "A browser draws its own pick step — files dropped on the page, no device tray — and the wizard rejoins at the crop, ending on the same seal as the native one.",
+      "start": { "board": "ComposePickWeb" },
+      "waypoints": [
+        { "board": "ComposePickWeb", "via": 3, "to": "ComposeCrop" },
+        { "board": "ComposeCrop", "via": 3, "case": "pictures — details next" },
+        { "board": "ComposeDetails", "via": 10, "to": "ComposeSeal" }
+      ],
+      "end": { "board": "ComposeSeal", "via": 7, "case": "signed — the detail view, still settling" }
+    },
+    {
+      "name": "reply-from-the-browser",
+      "description": "In a browser the reply's pictures are dropped anywhere on the page; the tray, the words and the seal are the native ones, and one signature lands the comment in its thread.",
+      "start": { "board": "ReplyPicturesWeb" },
+      "waypoints": [
+        { "board": "ReplyPicturesWeb", "via": 3, "to": "ReplySeal" }
+      ],
+      "end": { "board": "ReplySeal", "via": 9, "case": "signed — the thread, the comment settling" }
+    },
+    {
+      "name": "visit-an-author",
+      "description": "The author chip, wherever a post is drawn, opens that person's profile; their chronicle is what the reader came for.",
+      "start": { "control": "author chip" },
+      "end": { "board": "ProfileOther", "via": 6, "case": "Everything — the chronicle, this board" }
+    },
+    {
+      "name": "open-a-posts-pictures",
+      "description": "Post media, wherever a post is drawn, opens the gallery full-bleed; paging the frames is the journey.",
+      "start": { "control": "post media" },
+      "end": { "board": "FeedGallery", "via": 4 }
+    },
+    {
+      "name": "follow-a-citation",
+      "description": "The reference count, wherever a post is drawn, opens the topics-and-references sheet; a reference row opens what was cited — that node's own surface is still owed.",
+      "start": { "control": "reference count" },
+      "end": { "board": "RefsSheet", "via": 2 }
     }
   ]
 }
