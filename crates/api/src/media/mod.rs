@@ -258,13 +258,18 @@ fn gcd(a: u32, b: u32) -> u32 {
 /// and checked before any parse, so an oversized file is refused without
 /// being walked.
 ///
-/// The two paths differ in one substantive way. A still is **rewritten**:
-/// its metadata chunks are dropped and the digest is taken over what
-/// survives, so the stored bytes carry nothing identifying and a reader
-/// can recompute the committed digest from what it was served. A video
-/// is **stored as it arrived**: the server validates video and never
-/// transcodes it, so there is no rewrite for a strip to ride on, and
-/// clients are asked to publish nothing they did not mean to.
+/// Both paths strip before they digest. A still drops its metadata
+/// chunks and a video drops its metadata boxes, and in each case the
+/// digest is taken over what survives — so the stored bytes carry
+/// nothing identifying and a reader can recompute the committed digest
+/// from exactly what it was served. Neither strip re-encodes anything:
+/// the media travels through byte for byte, and a file that arrived
+/// clean is stored unchanged.
+///
+/// The video strip runs before the probe deliberately. The probe is then
+/// reading the container that will actually be stored, so a rewrite that
+/// damaged the file refuses the upload instead of publishing something
+/// that will not play.
 pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaError> {
     if webp::sniff(bytes) {
         if bytes.len() > caps.still_bytes {
@@ -291,10 +296,11 @@ pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaEr
                 limit: caps.video_bytes,
             });
         }
-        let probe = video::probe(bytes)?;
-        let digest: [u8; 32] = Sha256::digest(bytes).into();
+        let stripped = video::strip_metadata(bytes)?;
+        let probe = video::probe(&stripped)?;
+        let digest: [u8; 32] = Sha256::digest(&stripped).into();
         return Ok(ProcessedAsset {
-            bytes: bytes.to_vec(),
+            bytes: stripped,
             digest,
             width: probe.width,
             height: probe.height,
@@ -337,8 +343,27 @@ pub const MAX_COMMENT_ATTACHMENTS: usize = 4;
 /// arithmetic — it is not headroom either one owns alone.
 pub const MAX_ALT_TEXT_CHARS: usize = 1000;
 
+/// The largest video a post will carry — the upload cap restated as a
+/// composition rule.
+///
+/// The upload cannot enforce a parent's limit, because an asset is
+/// uploaded before it is attached and nothing at that moment knows which
+/// parent it is headed for. So the widest limit is the one the upload
+/// admits, and the parent applies its own when the context is finally
+/// known.
+pub const MAX_POST_VIDEO_BYTES: i64 = 100 * 1024 * 1024;
+
+/// The largest video a comment will carry — half a post's.
+///
+/// A comment is an answer, and its media is a supporting clip rather
+/// than a body: the picture caps are already asymmetric for the same
+/// reason (four against ten), and the video budget follows them down.
+/// The cover rides the still cap either way.
+pub const MAX_COMMENT_VIDEO_BYTES: i64 = 50 * 1024 * 1024;
+
 /// Which parent a gallery is being planned for. The two differ in how
-/// many assets they take and in whether a cover means anything.
+/// many assets they take, in how large a video they carry, and in
+/// whether a cover means anything.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GalleryKind {
     Post,
@@ -350,6 +375,14 @@ impl GalleryKind {
         match self {
             Self::Post => MAX_POST_ATTACHMENTS,
             Self::Comment => MAX_COMMENT_ATTACHMENTS,
+        }
+    }
+
+    /// The byte cap this parent puts on a video.
+    fn video_bytes(self) -> i64 {
+        match self {
+            Self::Post => MAX_POST_VIDEO_BYTES,
+            Self::Comment => MAX_COMMENT_VIDEO_BYTES,
         }
     }
 
@@ -449,6 +482,16 @@ fn gallery_path(index: usize, field: &str) -> Vec<String> {
 ///    path can grant: sharing someone else's picture is a link to their
 ///    post, never a reference to their asset.
 ///
+/// 5. **The body's shape.** A body is pictures or one video, so a video
+///    sharing a gallery with anything else is refused — its cover rides
+///    the asset rather than a second entry, which is what lets "ten
+///    pictures or one video" stay one counting rule. The video's byte
+///    cap is the parent's own, and this is the first moment it can be
+///    applied: an asset is uploaded before it is attached, so the upload
+///    admits the widest limit and the parent narrows it here. A comment
+///    carries half a post's video for the same reason it carries four
+///    pictures rather than ten.
+///
 /// The ownership comparison is written against the author rather than
 /// against "the viewer" even though this slice has no `actAs` and the two
 /// are always the same actor — so the Collectives slice adds a parameter
@@ -530,12 +573,22 @@ pub async fn plan_gallery(
             )
             .into());
         }
-        if asset.mime_type == video::MIME && drafts.len() > 1 {
-            return Err(GalleryError::at(
-                gallery_path(i, "mediaId"),
-                "a body is pictures or one video, never both",
-            )
-            .into());
+        if asset.mime_type == video::MIME {
+            if drafts.len() > 1 {
+                return Err(GalleryError::at(
+                    gallery_path(i, "mediaId"),
+                    "a body is pictures or one video, never both",
+                )
+                .into());
+            }
+            let cap = kind.video_bytes();
+            if asset.size_bytes.is_some_and(|size| size > cap) {
+                return Err(GalleryError::at(
+                    gallery_path(i, "mediaId"),
+                    format!("the video is larger than the {cap} bytes this carries"),
+                )
+                .into());
+            }
         }
         manifest.push(manifest_entry(asset, alts[i].clone())?);
     }
