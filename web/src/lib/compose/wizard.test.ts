@@ -43,6 +43,18 @@ function picks(count: number): WizardAction {
   };
 }
 
+function picksVideo(id = "v0"): WizardAction {
+  return { type: "pick", assets: [{ id, file: bytes(64), kind: "video" }] };
+}
+
+/** A settled face, so a video draft can be walked past the cover gate. */
+function chosen(frame = 0): WizardAction {
+  return {
+    type: "cover",
+    cover: { id: "c0", file: bytes(4), frame, upload: { kind: "waiting" } },
+  };
+}
+
 function uploaded(state: WizardState): WizardState {
   return state.assets.reduce(
     (acc, asset) =>
@@ -57,8 +69,15 @@ function uploaded(state: WizardState): WizardState {
 
 describe("the step sequence", () => {
   it("skips the crop screen for a words post", () => {
-    expect(stepsFor("words")).toEqual(["pick", "details", "seal"]);
-    expect(stepsFor("media")).toEqual(["pick", "crop", "details", "seal"]);
+    expect(stepsFor({ ...emptyWizard(), mode: "words" })).toEqual(["pick", "details", "seal"]);
+    expect(stepsFor(emptyWizard())).toEqual(["pick", "crop", "details", "seal"]);
+  });
+
+  it("swaps the crop screen for the cover screen on a video post", () => {
+    // The graph branches Next at the pick screen — "pictures — the crop"
+    // against "a video — its face" — and the crop board draws no video at all.
+    const video = run(emptyWizard(), picksVideo());
+    expect(stepsFor(video)).toEqual(["pick", "cover", "details", "seal"]);
   });
 
   it("walks forwards only through gates that open", () => {
@@ -423,5 +442,95 @@ describe("the details and the sheets", () => {
     });
     expect(state.assets[0]!.altText).toBe("");
     expect(state.assets[1]!.altText).toBe("paper against the salt crust");
+  });
+});
+
+// A VIDEO POST IS A DIFFERENT BODY, not a picture post with one big picture:
+// it takes one asset, skips the crop, carries a cover that is not an
+// attachment, and reaches the server as two sequenced uploads. Each of those is
+// a rule about the draft, so each is asserted here.
+describe("a video post", () => {
+  it("takes the body whole and skips the crop", () => {
+    const state = run(emptyWizard(), picksVideo(), { type: "advance" });
+    expect(state.assets).toHaveLength(1);
+    expect(state.step).toBe("cover");
+  });
+
+  it("refuses to mix the kinds rather than replacing what is already picked", () => {
+    // The outcome worth refusing over: three framed pictures silently thrown
+    // away because a video landed on the drop zone.
+    const pictures = run(emptyWizard(), picks(3));
+    const after = run(pictures, picksVideo());
+    expect(after.assets).toHaveLength(3);
+    expect(after.assets.every((asset) => asset.kind !== "video")).toBe(true);
+
+    const video = run(emptyWizard(), picksVideo());
+    expect(run(video, picks(2)).assets).toHaveLength(1);
+  });
+
+  it("takes one video however many arrive at once", () => {
+    const two = run(emptyWizard(), {
+      type: "pick",
+      assets: [
+        { id: "v0", file: bytes(8), kind: "video" },
+        { id: "v1", file: bytes(8), kind: "video" },
+      ],
+    });
+    expect(two.assets).toHaveLength(1);
+    expect(two.assets[0]!.id).toBe("v0");
+  });
+
+  it("holds the cover screen shut until a face is chosen", () => {
+    const state = run(emptyWizard(), picksVideo(), { type: "advance" });
+    expect(advanceGate(state).ok).toBe(false);
+    expect(advanceGate(run(state, chosen())).ok).toBe(true);
+  });
+
+  it("counts the cover among the uploads the seal waits for", () => {
+    // The cover is no attachment, but the video cannot be created without it,
+    // so a seal that ignored it would sign a post whose body is not there.
+    const ready = run(emptyWizard(), picksVideo(), chosen(), {
+      type: "upload",
+      id: "v0",
+      upload: { kind: "done", mediaId: "m-v0" },
+    });
+    expect(uploadsPending(ready)).toBe(1);
+    const gate = sealGate(ready);
+    expect(gate.ok === false && gate.reason).toBe("The video is still uploading.");
+
+    const done = run(ready, { type: "coverUpload", upload: { kind: "done", mediaId: "m-c0" } });
+    expect(uploadsPending(done)).toBe(0);
+    expect(sealGate(done).ok).toBe(true);
+  });
+
+  it("reports a failed cover as the video failing, because it is", () => {
+    const failed = run(emptyWizard(), picksVideo(), chosen(), {
+      type: "coverUpload",
+      upload: { kind: "failed", message: "nope", retryable: true },
+    });
+    expect(uploadsFailed(failed)).toBe(1);
+    const gate = sealGate(failed);
+    expect(gate.ok === false && gate.reason).toBe("The video didn't upload.");
+  });
+
+  it("attaches the video alone — the cover reaches the reader through it", () => {
+    const done = run(emptyWizard(), picksVideo(), chosen(), {
+      type: "upload",
+      id: "v0",
+      upload: { kind: "done", mediaId: "m-v0" },
+    });
+    expect(attachmentClaims(done)).toEqual(claims("m-v0"));
+  });
+
+  it("takes the face with the clip when the clip is removed", () => {
+    const state = run(emptyWizard(), picksVideo(), chosen(), { type: "unpick", id: "v0" });
+    expect(state.assets).toHaveLength(0);
+    expect(state.cover).toBeNull();
+  });
+
+  it("reads a pre-video draft as pictures rather than crashing on a missing kind", () => {
+    // Drafts written before this shipped carry no `kind` at all.
+    const legacy = run(emptyWizard(), picks(2));
+    expect(stepsFor(legacy)).toEqual(["pick", "crop", "details", "seal"]);
   });
 });

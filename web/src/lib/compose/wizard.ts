@@ -28,7 +28,14 @@ export const POST_ATTACHMENT_CAP = 10;
 
 export type BodyMode = "words" | "media";
 
-export type Step = "pick" | "crop" | "details" | "seal";
+/**
+ * What a picked file is. The two kinds compose differently — ten pictures OR
+ * one video and its cover, never both — so the distinction has to be in the
+ * model rather than read off a MIME type at every call site.
+ */
+export type MediaKind = "picture" | "video";
+
+export type Step = "pick" | "crop" | "cover" | "details" | "seal";
 
 /**
  * One asset's journey to the server. `encoding` and `uploading` are separate
@@ -52,7 +59,37 @@ export type PickedAsset = {
   /** What a blind reader reads. It rides the upload, so it is entered before it. */
   readonly altText: string;
   readonly upload: AssetUpload;
+  /** Absent on drafts written before video; read through `kindOf`, never raw. */
+  readonly kind?: MediaKind;
 };
+
+/** What a picked asset is, defaulting a pre-video draft to the only kind it could hold. */
+export function kindOf(asset: PickedAsset): MediaKind {
+  return asset.kind ?? "picture";
+}
+
+/**
+ * The video's poster — its own asset, uploaded BEFORE the video that names it.
+ *
+ * It is not an attachment: the post's gallery carries the video alone, and the
+ * cover reaches the reader through the video's own `coverMedia`. That is why it
+ * sits beside `assets` rather than in it — a cover in the gallery would publish
+ * a second picture nobody attached.
+ */
+export type CoverAsset = {
+  readonly id: string;
+  readonly file: Blob;
+  /**
+   * Which offer it came from: an index into the frames pulled off the clip, or
+   * -1 for a picture of the author's own. The index is what re-selects the
+   * right tile when the screen is reopened or a draft is restored.
+   */
+  readonly frame: number;
+  readonly upload: AssetUpload;
+};
+
+/** A picture of the author's own rather than a frame out of the clip. */
+export const COVER_FROM_PICTURE = -1;
 
 // THE SENSITIVE SELF-MARK IS NOT HERE, and its absence is deliberate.
 // ComposeSensitive draws it and D19 puts it in the wizard's scope, but the
@@ -68,6 +105,11 @@ export type WizardState = {
   readonly mode: BodyMode;
   readonly words: string;
   readonly assets: readonly PickedAsset[];
+  /**
+   * The video's face. Null on a picture post, and on a video whose cover the
+   * author has not settled yet — the cover screen fills it the moment it can.
+   */
+  readonly cover: CoverAsset | null;
   /** One shape for the whole post; the framing inside it is per picture. */
   readonly shape: PostShape;
   /** Which asset the crop screen is working on. */
@@ -101,6 +143,7 @@ export function emptyWizard(): WizardState {
     mode: "media",
     words: "",
     assets: [],
+    cover: null,
     shape: "tall",
     focused: 0,
     title: "",
@@ -117,26 +160,43 @@ export function emptyWizard(): WizardState {
 // ---------------------------------------------------------------- the steps
 
 const WORD_STEPS: readonly Step[] = ["pick", "details", "seal"];
-const MEDIA_STEPS: readonly Step[] = ["pick", "crop", "details", "seal"];
+const PICTURE_STEPS: readonly Step[] = ["pick", "crop", "details", "seal"];
+const VIDEO_STEPS: readonly Step[] = ["pick", "cover", "details", "seal"];
 
-/** The crop screen exists only where there is something to crop. */
-export function stepsFor(mode: BodyMode): readonly Step[] {
-  return mode === "words" ? WORD_STEPS : MEDIA_STEPS;
+/** Whether the body is the moving kind — one video, and the cover it carries. */
+export function isVideoPost(state: WizardState): boolean {
+  const first = state.assets[0];
+  return state.mode === "media" && first !== undefined && kindOf(first) === "video";
+}
+
+/**
+ * The screens this draft actually has.
+ *
+ * A VIDEO SKIPS THE CROP AND TAKES THE COVER INSTEAD, which is what the graph
+ * draws: ComposePick's Next branches "pictures — the crop" against "a video —
+ * its face", and the crop board draws no video at all. The two screens are
+ * alternatives rather than a sequence, so a video post is the same four stages
+ * deep as a picture post and Back never lands on a screen that has nothing to
+ * show.
+ */
+export function stepsFor(state: WizardState): readonly Step[] {
+  if (state.mode === "words") return WORD_STEPS;
+  return isVideoPost(state) ? VIDEO_STEPS : PICTURE_STEPS;
 }
 
 export function stepIndex(state: WizardState): number {
-  return Math.max(0, stepsFor(state.mode).indexOf(state.step));
+  return Math.max(0, stepsFor(state).indexOf(state.step));
 }
 
 /** Null at the end of the sequence — the seal advances by signing, not by stepping. */
 export function nextStep(state: WizardState): Step | null {
-  const steps = stepsFor(state.mode);
+  const steps = stepsFor(state);
   return steps[stepIndex(state) + 1] ?? null;
 }
 
 /** Null on the first screen, where "back" leaves the wizard entirely. */
 export function previousStep(state: WizardState): Step | null {
-  const steps = stepsFor(state.mode);
+  const steps = stepsFor(state);
   const index = stepIndex(state);
   return index > 0 ? (steps[index - 1] ?? null) : null;
 }
@@ -166,14 +226,28 @@ export function bodyGate(state: WizardState): Gate {
   return ALLOWED;
 }
 
+/** The cover screen's own gate: a video may not leave it faceless. */
+export function coverGate(state: WizardState): Gate {
+  if (!isVideoPost(state)) return ALLOWED;
+  return state.cover === null
+    ? { ok: false, reason: "Choose a frame, or a picture of your own." }
+    : ALLOWED;
+}
+
+/** Every upload this draft is waiting on — the cover counts, though it is no attachment. */
+function allUploads(state: WizardState): readonly AssetUpload[] {
+  const uploads = state.assets.map((asset) => asset.upload);
+  return state.cover === null ? uploads : [...uploads, state.cover.upload];
+}
+
 export function uploadsPending(state: WizardState): number {
-  return state.assets.filter(
-    (asset) => asset.upload.kind === "waiting" || asset.upload.kind === "encoding" || asset.upload.kind === "uploading",
+  return allUploads(state).filter(
+    (upload) => upload.kind === "waiting" || upload.kind === "encoding" || upload.kind === "uploading",
   ).length;
 }
 
 export function uploadsFailed(state: WizardState): number {
-  return state.assets.filter((asset) => asset.upload.kind === "failed").length;
+  return allUploads(state).filter((upload) => upload.kind === "failed").length;
 }
 
 /**
@@ -185,18 +259,32 @@ export function sealGate(state: WizardState): Gate {
   const body = bodyGate(state);
   if (!body.ok) return body;
   if (state.mode === "words") return ALLOWED;
+  const cover = coverGate(state);
+  if (!cover.ok) return cover;
+  // A video post's two uploads are the clip and its cover, so the count is
+  // never the plural "pictures" a gallery would report — it says "video"
+  // whichever of the two is still moving, because both are the one body.
+  const video = isVideoPost(state);
   const failed = uploadsFailed(state);
   if (failed > 0) {
     return {
       ok: false,
-      reason: failed === 1 ? "One picture didn't upload." : `${failed} pictures didn't upload.`,
+      reason: video
+        ? "The video didn't upload."
+        : failed === 1
+          ? "One picture didn't upload."
+          : `${failed} pictures didn't upload.`,
     };
   }
   const pending = uploadsPending(state);
   if (pending > 0) {
     return {
       ok: false,
-      reason: pending === 1 ? "One picture is still uploading." : `${pending} pictures are still uploading.`,
+      reason: video
+        ? "The video is still uploading."
+        : pending === 1
+          ? "One picture is still uploading."
+          : `${pending} pictures are still uploading.`,
     };
   }
   return ALLOWED;
@@ -207,6 +295,10 @@ export function advanceGate(state: WizardState): Gate {
   switch (state.step) {
     case "pick":
       return bodyGate(state);
+    // A frame is selected the moment the clip is read, so this only ever
+    // speaks when no frame could be taken and no picture was chosen.
+    case "cover":
+      return coverGate(state);
     // Every picture has a crop from the moment it is picked, and the details
     // are all optional, so neither screen can be incomplete.
     case "crop":
@@ -259,8 +351,10 @@ export function shapeRatio(state: WizardState): number {
 export type WizardAction =
   | { type: "mode"; mode: BodyMode }
   | { type: "words"; words: string }
-  | { type: "pick"; assets: readonly { id: string; file: Blob }[] }
+  | { type: "pick"; assets: readonly { id: string; file: Blob; kind?: MediaKind }[] }
   | { type: "unpick"; id: string }
+  | { type: "cover"; cover: CoverAsset | null }
+  | { type: "coverUpload"; upload: AssetUpload }
   | { type: "reorder"; from: number; to: number }
   | { type: "focus"; index: number }
   | { type: "shape"; shape: PostShape }
@@ -299,24 +393,73 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       return { ...state, words: action.words };
 
     case "pick": {
+      // TEN PICTURES OR ONE VIDEO, NEVER BOTH — the composition ruling, enforced
+      // here so no path can assemble a body the contract refuses. A pick that
+      // would mix the kinds is DROPPED rather than allowed to replace what is
+      // already there: silently throwing away nine framed pictures because a
+      // video landed on the drop zone is the one outcome worth refusing over.
+      // The screen says why; this only makes it impossible.
+      const holdsVideo = isVideoPost(state);
+      const wants = action.assets.filter((picked) => (picked.kind ?? "picture") === "video");
+      const pictures = action.assets.filter((picked) => (picked.kind ?? "picture") !== "video");
+
+      if (holdsVideo) return state;
+      if (wants.length > 0) {
+        // A video takes the body whole, so it may only arrive into an empty one
+        // — and only one of them, however many were dropped at once.
+        if (state.assets.length > 0) return state;
+        const picked = wants[0]!;
+        return {
+          ...state,
+          assets: [
+            {
+              id: picked.id,
+              file: picked.file,
+              crop: CENTERED,
+              altText: "",
+              upload: { kind: "waiting" } as AssetUpload,
+              kind: "video" as MediaKind,
+            },
+          ],
+          cover: null,
+        };
+      }
+
       // The cap is enforced on the way in rather than on the way out: telling a
       // reader at the seal that their eleventh picture was too many wastes the
       // upload and the wait.
       const room = POST_ATTACHMENT_CAP - state.assets.length;
-      const added = action.assets.slice(0, Math.max(0, room)).map((picked) => ({
+      const added = pictures.slice(0, Math.max(0, room)).map((picked) => ({
         id: picked.id,
         file: picked.file,
         crop: CENTERED,
         altText: "",
         upload: { kind: "waiting" } as AssetUpload,
+        kind: "picture" as MediaKind,
       }));
       return { ...state, assets: [...state.assets, ...added] };
     }
 
     case "unpick": {
       const assets = state.assets.filter((asset) => asset.id !== action.id);
-      return { ...state, assets, focused: Math.min(state.focused, Math.max(0, assets.length - 1)) };
+      return {
+        ...state,
+        assets,
+        // The cover belongs to the clip, so removing the clip takes its face
+        // with it — a poster left behind would be uploaded for a video that is
+        // no longer in the post.
+        cover: assets.length === 0 ? null : state.cover,
+        focused: Math.min(state.focused, Math.max(0, assets.length - 1)),
+      };
     }
+
+    case "cover":
+      return { ...state, cover: action.cover };
+
+    case "coverUpload":
+      return state.cover === null
+        ? state
+        : { ...state, cover: { ...state.cover, upload: action.upload } };
 
     case "reorder": {
       // ORDER IS THE COVER: the first picture leads the post, so moving one is
@@ -404,7 +547,7 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       // Only backwards, and only to a step this mode has: a jump may never skip
       // a gate. Switching sides is what still uses it — the shortcut links the
       // details step once carried are gone (jakob 2026-08-31, "none").
-      return stepsFor(state.mode).includes(action.step) ? { ...state, step: action.step } : state;
+      return stepsFor(state).includes(action.step) ? { ...state, step: action.step } : state;
 
     case "advance": {
       if (!advanceGate(state).ok) return state;

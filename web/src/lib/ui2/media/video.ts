@@ -212,11 +212,13 @@ export const FRAME_POINTS = [0.1, 0.5, 0.9] as const;
  * fires once the seek has completed and the new frame is available
  * (https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/seeked_event).
  *
- * THE CANVAS IS NOT TAINTED. A blob: URL minted from a File the reader picked
- * is same-origin, so `toBlob` is allowed to read the pixels back; the
- * cross-origin rules that break frame capture for remote video do not apply on
- * this path
- * (https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image).
+ * TAINTING. MDN documents a canvas as tainted by CROSS-ORIGIN data drawn
+ * without CORS approval, after which `toBlob` throws `SecurityError`
+ * (https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image). It
+ * does not state the converse for `blob:` URLs, so this code does not rely on
+ * the reasoning that a locally picked file cannot taint: `frameAt` returns null
+ * when the read fails, and a cover simply cannot be offered from frames on a
+ * browser where it does. The "A picture" tile is the route that always works.
  *
  * Frames come back as raw canvas blobs. They go through the ordinary image
  * encoder afterwards, so the cover that is uploaded is downscaled, re-encoded
@@ -258,30 +260,62 @@ export async function captureFrames(
   }
 }
 
-async function frameAt(video: HTMLVideoElement, time: number): Promise<Blob | null> {
-  await new Promise<void>((resolve) => {
+/**
+ * WAITING FOR THE FRAME, not merely for the seek.
+ *
+ * `seeked` says the seek finished; it does NOT promise the new frame has
+ * reached the compositor, and drawing on that event alone is how frame capture
+ * comes back one frame stale or blank. `requestVideoFrameCallback` is defined
+ * to run when a new frame is *sent to the compositor*, which is exactly the
+ * moment `drawImage` has something correct to copy
+ * (https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement/requestVideoFrameCallback
+ * — Baseline since October 2024, and a WICG proposal rather than a W3C
+ * standard, so it is used where present and `seeked` remains the fallback).
+ */
+function seekTo(video: HTMLVideoElement, time: number): Promise<void> {
+  return new Promise<void>((resolve) => {
     // A seek to where the head already is fires no event, so the wait would
     // hang; resolving immediately is correct because the frame is already there.
     if (Math.abs(video.currentTime - time) < 0.001) {
       resolve();
       return;
     }
-    video.addEventListener("seeked", () => resolve(), { once: true });
+    const rvfc = video.requestVideoFrameCallback?.bind(video);
+    video.addEventListener(
+      "seeked",
+      () => {
+        if (rvfc) rvfc(() => resolve());
+        else resolve();
+      },
+      { once: true },
+    );
     video.currentTime = time;
   });
+}
+
+async function frameAt(video: HTMLVideoElement, time: number): Promise<Blob | null> {
+  await seekTo(video, time);
   const width = video.videoWidth;
   const height = video.videoHeight;
+  // Zero until the decoder has something: `videoWidth` reads 0 while
+  // `readyState` is HAVE_NOTHING, and a zero-sized canvas cannot be drawn.
   if (width === 0 || height === 0) return null;
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
   const context = canvas.getContext("2d");
   if (!context) return null;
-  context.drawImage(video, 0, 0, width, height);
-  return new Promise<Blob | null>((resolve) => {
-    // PNG, not WebP: this blob is an intermediate that `encodeForUpload`
-    // immediately re-encodes, so a lossy step here would be a generation of
-    // quality thrown away for nothing.
-    canvas.toBlob((blob) => resolve(blob), "image/png");
-  });
+  try {
+    context.drawImage(video, 0, 0, width, height);
+    return await new Promise<Blob | null>((resolve) => {
+      // PNG, not WebP: this blob is an intermediate that `encodeForUpload`
+      // immediately re-encodes, so a lossy step here would be a generation of
+      // quality thrown away for nothing.
+      canvas.toBlob((blob) => resolve(blob), "image/png");
+    });
+  } catch {
+    // A tainted canvas throws SecurityError on read. No frames then — the
+    // cover screen still offers "A picture", which needs no decoder at all.
+    return null;
+  }
 }

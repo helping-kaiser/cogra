@@ -25,10 +25,10 @@ import {
 } from "./video";
 
 /** An `ftyp` header: size, "ftyp", major brand, then compatible brands. */
-function ftyp(major: string, compatible: readonly string[] = []): Uint8Array {
+function ftyp(major: string, compatible: readonly string[] = []): Uint8Array<ArrayBuffer> {
   const brands = [major, ...compatible];
   const size = 8 + brands.length * 4;
-  const bytes = new Uint8Array(size + 32);
+  const bytes = new Uint8Array(new ArrayBuffer(size + 32));
   bytes[0] = (size >> 24) & 0xff;
   bytes[1] = (size >> 16) & 0xff;
   bytes[2] = (size >> 8) & 0xff;
