@@ -294,6 +294,39 @@
         { "board": "ComposeUploading", "via": 11, "case": "uploads still running — the gated seal" }
       ],
       "end": { "board": "ComposeSealUploading", "via": 7, "case": "uploads land — signing proceeds to the detail view, still settling" }
+    },
+    {
+      "name": "see-who-stands-with-someone",
+      "description": "The figures row, on any profile, opens the stance lists; reading who has taken a stance on them is the whole journey.",
+      "start": { "control": "the figures row" },
+      "end": { "board": "ProfileStances", "via": 2 }
+    },
+    {
+      "name": "find-the-thread-a-comment-answers",
+      "description": "A chronicle's Comments tab draws each comment with what it answers; the target pointer opens that post, its thread already open.",
+      "start": { "board": "ProfileOther", "via": 6, "case": "Comments — the cards (master)" },
+      "end": { "board": "ProfileComments", "via": 17 }
+    },
+    {
+      "name": "edit-your-profile",
+      "description": "Edit profile opens the fields — name, bio, website — and one seal signs them; the picture has flows of its own.",
+      "start": { "board": "Profile", "via": 6 },
+      "waypoints": [
+        { "board": "ProfileEdit", "via": 6, "to": "ProfileEditSeal" }
+      ],
+      "end": { "board": "ProfileEditSeal", "via": 4, "case": "signed — the profile updates" }
+    },
+    {
+      "name": "take-a-stance-on-a-person",
+      "description": "Press and hold the stance anchor on a profile and the same pad blooms; the stance concludes where it was taken.",
+      "start": { "control": "the stance anchor" },
+      "end": { "board": "VouchBackPad", "via": 4, "case": "signed — the stance lands, back where the pad bloomed" }
+    },
+    {
+      "name": "message-someone",
+      "description": "Message on someone's profile opens the conversation with them — the chat surface is still owed.",
+      "start": { "board": "ProfileOther" },
+      "end": { "board": "ProfileOther", "via": 5 }
     }
   ]
 }
