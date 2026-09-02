@@ -42,8 +42,8 @@
     },
     {
       "name": "reply-to-a-post",
-      "description": "A post's comment count opens the thread sheet, Add a comment opens the composer, and the seal signs the reply back into the thread.",
-      "start": { "board": "Feed", "via": 10 },
+      "description": "The comment count, wherever a post is drawn, opens the thread sheet; Add a comment opens the composer, and the seal signs the reply back into the thread.",
+      "start": { "control": "comment count" },
       "waypoints": [
         { "board": "ReplyEntry", "via": 7 },
         { "board": "ReplyCompose", "via": 3 }
@@ -138,6 +138,79 @@
       "description": "The wallet's Campaigns door lists what you run and what you took part in; a row opens that campaign's money view.",
       "start": { "board": "Wallet", "via": 4 },
       "end": { "board": "WalletCampaigns", "via": 5 }
+    },
+    {
+      "name": "take-a-stance-on-a-post",
+      "description": "Press and hold the stance face, wherever a post is drawn, and the pad blooms; the signed stance lands back where it was taken.",
+      "start": { "control": "stance face" },
+      "end": { "board": "VouchBackPad", "via": 4, "case": "signed — the stance lands, back where the pad bloomed" }
+    },
+    {
+      "name": "close-the-filter-unchanged",
+      "description": "The filter sheet opened and shut with nothing touched leaves the feed exactly as it was.",
+      "start": { "board": "Feed", "via": 1 },
+      "end": { "board": "FeedSheet", "via": 6, "case": "unchanged" }
+    },
+    {
+      "name": "filter-the-feed-to-nothing",
+      "description": "Every kind switched off leaves a feed with nothing left to show — the empty state carrying its own way back.",
+      "start": { "board": "Feed", "via": 1 },
+      "end": { "board": "FeedSheet", "via": 6, "case": "everything off" }
+    },
+    {
+      "name": "filter-the-feed-far-from-the-default",
+      "description": "A filter pushed far enough from the default that the trigger counts the changes instead of naming them.",
+      "start": { "board": "Feed", "via": 1 },
+      "end": { "board": "FeedSheet", "via": 6, "case": "far from the default" }
+    },
+    {
+      "name": "undo-the-narrowing",
+      "description": "A feed filtered until nothing shows offers Show posts again — the one control that puts the default back.",
+      "start": { "board": "FeedNothing" },
+      "end": { "board": "FeedNothing", "via": 2 }
+    },
+    {
+      "name": "search-into-a-thread",
+      "description": "Typing in Explore brings results as they are typed; a comment result opens the thread that comment sits in.",
+      "start": { "board": "Explore", "via": 1, "case": "typing — results as you type" },
+      "end": { "board": "ExploreSearch", "via": 6, "case": "the comment in its thread" }
+    },
+    {
+      "name": "narrow-a-search",
+      "description": "The results' Everything trigger opens the search filter; the sheet applies live, and tapping out leaves the reader on the narrowed results.",
+      "start": { "board": "ExploreSearch", "via": 2 },
+      "end": { "board": "ExploreFilter", "via": 5 }
+    },
+    {
+      "name": "reply-to-a-comment",
+      "description": "Reply on a comment opens the same composer pre-targeted at it — one commenting mechanism over many targets, each target declaring its own start and end.",
+      "start": { "board": "ReplyEntry", "via": 5, "case": "the composer, pre-targeted at that comment" },
+      "waypoints": [
+        { "board": "ReplyCompose", "via": 3 }
+      ],
+      "end": { "board": "ReplySeal", "via": 9, "case": "signed — the thread, the comment settling" }
+    },
+    {
+      "name": "reply-with-pictures",
+      "description": "Pictures added to a reply land in its tray; one seal signs the words and the pictures together into the thread.",
+      "start": { "board": "ReplyEntry", "via": 7 },
+      "waypoints": [
+        { "board": "ReplyCompose", "via": 5, "case": "picks land in the tray" },
+        { "board": "ReplyPictures", "via": 3, "to": "ReplySeal" }
+      ],
+      "end": { "board": "ReplySeal", "via": 9, "case": "signed — the thread, the comment settling" }
+    },
+    {
+      "name": "reply-while-the-pictures-upload",
+      "description": "Next pressed while the pictures are still going up reaches the gated seal; signing waits for them, then the comment settles into the thread.",
+      "start": { "board": "ReplyPictures", "via": 3, "case": "uploads still running — the gated seal (master on the media page)" },
+      "end": { "board": "ComposeSealUploading", "via": 7, "case": "uploads land — signing proceeds to the thread, the comment settling" }
+    },
+    {
+      "name": "edit-your-comment",
+      "description": "Edit on your own comment opens the edit surface; the signed edit settles back into the thread it belongs to.",
+      "start": { "board": "ReplyMedia", "via": 6 },
+      "end": { "board": "CommentEdit", "via": 12, "case": "signed — the thread, the edit settling" }
     }
   ]
 }
