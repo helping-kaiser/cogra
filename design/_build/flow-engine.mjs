@@ -205,20 +205,28 @@ export function resolveFlow(flow, view) {
   const start = resolveStart(flow, view, fails);
   if (!start) return { name: flow.name, status: "failed", fails };
 
+  // A flow may omit `end`: it concludes on arrival at the board its last point
+  // lands on. A reading journey has no signing act to name — reaching what was
+  // sought is the ending.
+  const arrival = flow.end === undefined;
   const end = flow.end ?? {};
-  const endEdge = edgeByVia.get(`${end.board}/${end.via}`);
-  if (!endEdge) {
-    fails.push(`flow "${flow.name}": end edge ${end.board}/${end.via} is not in the graph`);
-    return { name: flow.name, status: "failed", fails };
-  }
-  const picked = pickOutcome(endEdge, end, `flow "${flow.name}": the end`);
-  if (picked.error) {
-    fails.push(picked.error);
-    return { name: flow.name, status: "failed", fails };
+  let endEdge = null;
+  let picked = null;
+  if (!arrival) {
+    endEdge = edgeByVia.get(`${end.board}/${end.via}`);
+    if (!endEdge) {
+      fails.push(`flow "${flow.name}": end edge ${end.board}/${end.via} is not in the graph`);
+      return { name: flow.name, status: "failed", fails };
+    }
+    picked = pickOutcome(endEdge, end, `flow "${flow.name}": the end`);
+    if (picked.error) {
+      fails.push(picked.error);
+      return { name: flow.name, status: "failed", fails };
+    }
   }
 
   // points[j] departs by points[j].pin toward points[j + 1].
-  const points = [{ board: start.board }, ...(flow.waypoints ?? []), { board: end.board }];
+  const points = [{ board: start.board }, ...(flow.waypoints ?? []), ...(arrival ? [] : [{ board: end.board }])];
   const steps = [start.step];
   const boards = [...(start.from ?? [start.board])];
   const used = [...start.used];
@@ -261,20 +269,24 @@ export function resolveFlow(flow, view) {
 
   if (fails.length) return { name: flow.name, status: "failed", fails };
 
-  const o = picked.outcome;
-  const landing = o.board !== undefined ? o.board : o.gap !== undefined ? `gap: ${o.gap}` : `${o.terminal}`;
-  steps.push(`end · ${end.board} · ${end.via} «${endEdge.label}» → ${landing}${o.case ? ` — ${o.case}` : ""}`);
-  used.push(`${end.board}/${end.via}`);
-  if (o.board !== undefined) boards.push(o.board);
+  const o = arrival ? null : picked.outcome;
+  if (arrival) {
+    steps.push(`end · arrival at ${boards[boards.length - 1]}`);
+  } else {
+    const landing = o.board !== undefined ? o.board : o.gap !== undefined ? `gap: ${o.gap}` : `${o.terminal}`;
+    steps.push(`end · ${end.board} · ${end.via} «${endEdge.label}» → ${landing}${o.case ? ` — ${o.case}` : ""}`);
+    used.push(`${end.board}/${end.via}`);
+    if (o.board !== undefined) boards.push(o.board);
+  }
 
   const result = {
     name: flow.name,
     description: flow.description,
-    status: o.gap !== undefined ? "blocked by gap" : "resolved",
+    status: o?.gap !== undefined ? "blocked by gap" : "resolved",
     steps,
     boards: [...new Set(boards)],
   };
-  if (o.gap !== undefined) result.blockedBy = o.gap;
+  if (o?.gap !== undefined) result.blockedBy = o.gap;
   if (start.startsOn) result.startsOn = start.startsOn;
   if (start.startsUndesigned?.length) result.startsUndesigned = start.startsUndesigned;
   // Not blessed into the witness — the gap census reads it instead of parsing
