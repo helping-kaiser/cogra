@@ -25,17 +25,14 @@
 // the common mistake (a `.mkv`, a `.mov`); a codec the server refuses comes
 // back as the server's own words, which is exactly how every other refusal on
 // this surface already reads.
+//
+// THE CAPS AND THE REFUSAL WORDING ARE NOT HERE. They belong to the pick
+// screening (`lib/compose/pick.ts`), which is where a batch is judged file by
+// file and where the board's own sentences live. This module answers questions
+// about one file's bytes; it decides nothing.
 
 /** The one accepted moving format, matching the server's `video::MIME`. */
 export const VIDEO_TYPE = "video/mp4";
-
-/**
- * The per-asset byte cap for video, mirroring the server's
- * `DEFAULT_MAX_VIDEO_UPLOAD_BYTES`. Ten stills at their 10 MiB cap and one
- * video at this one are the same hundred megabytes — the parity is with the
- * post's BODY, not with one picture.
- */
-export const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 
 /**
  * The `ftyp` brands an MP4 may announce — the server's `BRANDS`, verbatim.
@@ -84,35 +81,6 @@ export async function looksLikeMp4(file: Blob): Promise<boolean> {
 /** A picked file the composer should treat as the moving kind rather than a still. */
 export function isVideoFile(file: Blob): boolean {
   return file.type.startsWith("video/");
-}
-
-export type VideoRefusal = { readonly ok: false; readonly reason: string };
-export type VideoAccepted = { readonly ok: true };
-export type VideoCheck = VideoAccepted | VideoRefusal;
-
-/**
- * The pre-upload gate, in the order a reader can act on.
- *
- * Size first: it is the refusal that costs nothing to check and the one most
- * likely to bite, and telling someone their two-gigabyte export is too large
- * before reading its header is faster and no less true.
- */
-export async function checkVideo(file: Blob): Promise<VideoCheck> {
-  if (file.size > MAX_VIDEO_BYTES) {
-    return {
-      ok: false,
-      reason: `That video is larger than ${formatBytes(MAX_VIDEO_BYTES)}.`,
-    };
-  }
-  if (!(await looksLikeMp4(file))) {
-    return { ok: false, reason: "Only MP4 video is accepted." };
-  }
-  return { ok: true };
-}
-
-/** Whole mebibytes, which is the only granularity the cap is ever stated in. */
-export function formatBytes(bytes: number): string {
-  return `${Math.round(bytes / (1024 * 1024))} MB`;
 }
 
 /**
