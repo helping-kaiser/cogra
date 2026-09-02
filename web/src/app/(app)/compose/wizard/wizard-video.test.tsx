@@ -149,7 +149,7 @@ describe("picking a video", () => {
     await pickFiles([aPicture()]);
     await pickFiles([aVideo()]);
 
-    expect(await screen.findByTestId("wizard-body-error")).toHaveTextContent(
+    expect(await screen.findByTestId("wizard-refusals")).toHaveTextContent(
       "A post carries pictures or one video, not both.",
     );
     // And nothing was taken away from the author in the process: the tray is
@@ -159,11 +159,55 @@ describe("picking a video", () => {
 
   it("refuses a container the server would refuse, before it is uploaded", async () => {
     render();
-    const notMp4 = new File([new Uint8Array(32) as BlobPart], "clip.mkv", { type: "video/x-matroska" });
+    const notMp4 = new File([new Uint8Array(32) as BlobPart], "clip.mkv", {
+      type: "video/x-matroska",
+    });
     await pickFiles([notMp4]);
 
-    expect(await screen.findByTestId("wizard-body-error")).toHaveTextContent(
-      "Only MP4 video is accepted.",
+    expect(await screen.findByTestId("wizard-refusals")).toHaveTextContent(
+      "That file isn't a picture or a video CoGra can read.",
     );
+  });
+
+  it("keeps the refusals until they are dismissed one by one", async () => {
+    // The ComposePickedErrors shape: the lines persist beside the accepted
+    // batch, each with its own way out, rather than fading like a banner.
+    render();
+    await pickFiles([
+      new File([new Uint8Array(4) as BlobPart], "notes.txt", { type: "text/plain" }),
+      new File([new Uint8Array(4) as BlobPart], "readme.md", { type: "text/markdown" }),
+    ]);
+
+    const list = await screen.findByTestId("wizard-refusals");
+    expect(list.querySelectorAll("li")).toHaveLength(2);
+
+    // A second pick does not wipe the first refusal away.
+    await pickFiles([aPicture()]);
+    expect(screen.getByTestId("wizard-refusals").querySelectorAll("li")).toHaveLength(2);
+
+    fireEvent.click(screen.getAllByText("Remove it")[0]!);
+    expect(screen.getByTestId("wizard-refusals").querySelectorAll("li")).toHaveLength(1);
+  });
+
+  it("offers no way to add once a video is the body", async () => {
+    render();
+    await pickFiles([aVideo()]);
+
+    // A video takes the body whole, so an add control could only be refused.
+    expect(await screen.findByTestId("wizard-video-body")).toBeInTheDocument();
+    expect(screen.queryByTestId("wizard-open-picker")).toBeNull();
+  });
+
+  it("asks for one description of the video, and none of its cover", async () => {
+    render();
+    await pickFiles([aVideo()]);
+    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(await screen.findByTestId("wizard-cover-frame-0"));
+    fireEvent.click(screen.getByTestId("wizard-next"));
+
+    const counter = await screen.findByTestId("wizard-describe-counter");
+    expect(counter).toHaveTextContent("Describe the video");
+    // One, not two: the cover is the video's face, never a second attachment.
+    expect(counter.parentElement).toHaveTextContent("0 of 1 described");
   });
 });
