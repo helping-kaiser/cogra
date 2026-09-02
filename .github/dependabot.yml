@@ -35,6 +35,10 @@ updates:
         versions: [">=0.13"]
       - dependency-name: aes-gcm
         versions: [">=0.11"]
+      # argon2 0.6 rides the same generation: it moves to password-hash
+      # 0.6 / blake2 0.11 (digest 0.11) and rewrites the hashing API.
+      - dependency-name: argon2
+        versions: [">=0.6"]
       # rand 0.10 and ed25519-dalek 3 are an interlocked pair (both land
       # on the rand_core 0.10 line; rand 0.9+ drops the OsRng/RngCore
       # paths the workspace uses) — one coordinated bump, queued in the
@@ -93,6 +97,14 @@ updates:
       # bumps — part of the same coordinated move.
       - dependency-name: "androidx.compose:compose-bom"
         versions: ["[2025,)"]
+      # Navigation 2.10 and Coil 3.5 are built for Compose 1.11+ /
+      # Kotlin 2.4 and refuse to resolve under AGP 8.13 ("requires
+      # Android Gradle plugin 9.1.0 or higher", compileSdk 37) — same
+      # gated migration (Coil rationale: gradle/libs.versions.toml).
+      - dependency-name: "androidx.navigation:*"
+        versions: ["[2.10,)"]
+      - dependency-name: "io.coil-kt.coil3:*"
+        versions: ["[3.5,)"]
       # Apollo Kotlin 5 is a breaking client migration (codegen +
       # runtime together) — queued in the audit fix plan.
       - dependency-name: "com.apollographql.apollo*"
