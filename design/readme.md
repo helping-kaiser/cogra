@@ -1783,11 +1783,15 @@ file that is too big or in a format nothing here reads.
   is 52.4 MB, so the number a reader sees under-promises and can never
   refuse a file the product would have taken. Writing MiB would be
   exact and unreadable.
-- **Entry is unchanged.** "+ Add" opens the platform's own picker;
-  picking a video puts the composer in its video state (*Reply · a
-  video and its cover*), and the pictures path is untouched. There is
-  still no pick stage and no crop, so the video uploads at pick like a
-  comment's pictures do.
+- **Entry is unchanged; its label follows the state.** The picker is
+  still the platform's own, and picking a video puts the composer in
+  its video state (*Reply · a video and its cover*). The control says
+  what it will take: an empty composer reads **"+ Add pictures or a
+  video"**, one holding pictures reads **"+ Add pictures · n of 4"**
+  (the video is out — the grammar is exclusive), and one holding a
+  video carries **no add control at all**, the cover row standing
+  alone. There is still no pick stage and no crop, so the video
+  uploads at pick like a comment's pictures do.
 - **The cover is the post's, inlined.** `ComposeCover`'s row — the
   frame strip, the tile that takes a picture of your own, *A frame, or
   a picture of your own.* — sits under the video at comment scale
@@ -1809,15 +1813,40 @@ file that is too big or in a format nothing here reads.
   anatomy with it: the play disc and the duration, authoring-side only
   — a reading surface still never draws play.
 
-Open, and not decided here: whether a video takes a description (the
-post's video path carries no describe counter either, so the comment's
-does not); how the thread draws a comment's video — `CommentCard` hands
-its media to the same gallery, which already knows a video, but nothing
-rules whether a comment's video autoplays the way a post's does; whether
-the composer's "+ Add pictures" should read "+ Add" now that the picker
-also takes a video; whether the web reply needs its own video board the
-way it needs its own pictures one; and whether the caps read **MiB** or
-**MB** on screen. The four refusal lines are new copy, listed in
+- **A video takes ONE description, its cover none.** A clip is one
+  thing to describe, so the counter reads *Describe the video · 0 of 1
+  described* and opens the same describe sheet a picture opens; the
+  cover is the video's face, not a second picture, and asking for a
+  description of it would ask twice about one thing. The row rides
+  wherever media is staged — the reply composer's video state, and the
+  post wizard's details step, which now carries the describe entry its
+  own ruling always gave it.
+- **A comment's video plays like a post's.** Muted autoplay while it
+  is on screen, in the comment pager's square frame, wearing the one
+  control a video ever wears: sound, on the sticky global decision
+  every video shares. No play/pause and no duration pill on a reading
+  surface — presence on screen is the policy, at both scales. *Comments
+  · a video, pictures & own comment* draws it.
+- **Web takes the video state 1:1** — the file dialog and the
+  composer's drop-anywhere path play the picker's part, and nothing
+  else differs, so no web board is drawn (the web avatar flow's
+  blessing again). The web board's drop hint grows to *…or drop
+  pictures or a video here.*
+
+**What the implementations must match** (from
+[api-spec.md](../docs/implementation/api-spec.md), so no lane
+re-invents the refusal states): the stored formats are **WebP and
+MP4** (H.264 video, AAC audio), both **sniffed from the bytes**, never
+trusted from a declared type. **GIF converts on the device**, so the
+picker never refuses a GIF; an **animated WebP is a still**. The
+unknown-format refusal therefore fires only for a file that is neither
+a decodable image nor an H.264/AAC MP4 *after* any device-side
+conversion. A frame chosen as a cover is **extracted on the device and
+uploaded as the account's own picture** — the cover is always an asset
+the author holds.
+
+The four refusal lines, and the video sentence added to the
+*Describing pictures* dialog, are new copy — listed in
 [guidelines/copy-voice.md](guidelines/copy-voice.md).
 
 ### The pattern boards — 2026-09-02
