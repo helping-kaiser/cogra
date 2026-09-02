@@ -429,6 +429,7 @@
     { "from": "ReplyMedia", "via": 6, "kind": "advance", "label": "Edit (own comment)", "to": [{ "board": "CommentEdit" }] },
     { "from": "ReplyMedia", "via": 7, "kind": "advance", "label": "Add a comment", "to": [{ "board": "ReplyCompose", "case": "the full-focus composer, parent pinned" }] },
     { "from": "ReplyMedia", "via": 8, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — back to where it was opened" }] },
+    { "from": "ReplyMedia", "via": 9, "kind": "advance", "label": "video sound", "to": [{ "terminal": "self", "case": "the one control a video wears — the sticky decision every video shares" }] },
 
     { "from": "CommentEdit", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "ReplyMedia", "case": "one stage back — the thread" }] },
     { "from": "CommentEdit", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyMedia", "case": "empty — leaves at once" }] },
