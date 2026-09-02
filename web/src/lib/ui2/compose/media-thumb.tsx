@@ -27,6 +27,7 @@
 
 import { cropPreviewStyle } from "../media/crop-preview";
 import type { Crop } from "../media/crop";
+import { formatDuration } from "../media/video";
 
 const REMOVE_GLYPH =
   "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z";
@@ -76,6 +77,7 @@ export function MediaThumb({
   cover = false,
   progress,
   failed = false,
+  durationMs,
   onRemove,
   removeLabel = "Remove this picture",
   testId,
@@ -83,6 +85,16 @@ export function MediaThumb({
   src?: string | null;
   altText?: string | null;
   size?: number;
+  /**
+   * The clip's length, which turns this into the composer's video tile: a play
+   * disc and the duration over the poster frame.
+   *
+   * AUTHORING-SIDE ONLY (design/backlog.md item 31, round 2). A reading surface
+   * shows neither — a comment's video in the thread wears one control, the
+   * sound, and no duration pill at all. Here the author is choosing a clip and
+   * its length is part of what they are choosing.
+   */
+  durationMs?: number | null;
   /** The framing to show. Omitted where a picture has none. */
   crop?: Crop | null;
   // An uncropped tile (a reply's pictures) states both and fits the whole frame
@@ -134,6 +146,28 @@ export function MediaThumb({
         <span className="absolute bottom-[3px] left-[3px] rounded-full bg-scrim/55 px-[5px] text-label-small text-white">
           Cover
         </span>
+      ) : null}
+      {/* The composer's video anatomy: a play disc over the poster and the
+          clip's length in the corner. Neither is a control — the tile is a
+          thumbnail, and the disc says "this one moves" rather than offering to
+          play it here. */}
+      {typeof durationMs === "number" && !failed ? (
+        <>
+          <span
+            aria-hidden="true"
+            className="absolute left-1/2 top-1/2 grid size-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-scrim/55 text-white"
+          >
+            <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </span>
+          <span
+            data-testid={testId ? `${testId}-duration` : undefined}
+            className="absolute bottom-[3px] right-[3px] rounded-extra-small bg-scrim/55 px-[5px] text-label-small text-white"
+          >
+            {formatDuration(durationMs)}
+          </span>
+        </>
       ) : null}
       {progress !== undefined && !failed ? (
         <span

@@ -35,11 +35,15 @@ import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
-import { runUpload } from "@/lib/compose/uploads";
-import { usePreviewUrls } from "@/lib/compose/previews";
+import { runUpload, runVideoUpload } from "@/lib/compose/uploads";
+import { usePreviewUrls, useRevokeOnChange } from "@/lib/compose/previews";
 import { commentAttachmentClaims } from "@/lib/compose/comment-media";
+import { COMMENT_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
+import { captureFrames, probeVideo } from "@/lib/ui2/media/video";
 import {
   emptyReply,
+  isVideoReply,
+  replyHasContent,
   replyReducer,
   sealGate,
   type ReplyAction,
@@ -50,12 +54,29 @@ import type { StancePair } from "@/lib/stance/model";
 import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
+import { DiscardConfirm } from "@/lib/ui2/compose/discard-confirm";
+import { COVER_FROM_PICTURE } from "@/lib/compose/wizard";
 import { TransportError } from "@/lib/ui/transport-error";
 import { ReplyComposeStep } from "./reply-compose-step";
 import { ReplySealStep, type ReplySheet } from "./reply-seal-step";
 
-/** The leave label the no-drafts ruling requires — it must not promise a draft. */
+/**
+ * The leave label. Nothing is kept — there are no comment drafts — and the
+ * confirm is what stands between the author and that fact when they have
+ * written something.
+ */
 export const LEAVE_LABEL = "Leave — this comment is discarded";
+
+const NO_FRAMES: readonly Blob[] = [];
+const NO_URLS: readonly string[] = [];
+const NO_REFUSALS: readonly PickRefusal[] = [];
+
+/** The faces one clip offers, and the URLs drawn from them. */
+type Captured = {
+  file: Blob;
+  frames: readonly Blob[];
+  urls: readonly string[];
+};
 
 function pathIndex(field: readonly string[] | null, head: string): number | null {
   if (field === null || field.length < 2 || field[0] !== head) return null;
@@ -107,7 +128,26 @@ export function ReplyWizard({
   // picked: "they upload while you write". The ref guards React's double mount
   // in development, which would otherwise upload every picture twice.
   const started = useRef(new Set<string>());
+  const video = isVideoReply(state) ? state.media[0] : undefined;
+  const videoFile = video?.file ?? null;
+  const cover = state.cover;
+
   useEffect(() => {
+    // A VIDEO IS ONE SEQUENCE, NOT TWO RACES: the cover must exist as an asset
+    // before the video can name it, so the pair goes through a single runner.
+    if (video !== undefined) {
+      if (cover === null || video.upload.kind !== "waiting" || started.current.has(video.id)) return;
+      started.current.add(video.id);
+      started.current.add(cover.id);
+      void runVideoUpload(
+        client,
+        video,
+        cover,
+        (upload) => dispatch({ type: "upload", id: video.id, upload }),
+        (upload) => dispatch({ type: "coverUpload", upload }),
+      );
+      return;
+    }
     for (const asset of state.media) {
       if (asset.upload.kind !== "waiting" || started.current.has(asset.id)) continue;
       started.current.add(asset.id);
@@ -116,17 +156,127 @@ export function ReplyWizard({
         dispatch({ type: "upload", id: asset.id, upload }),
       );
     }
-  }, [state.media, client, dispatch]);
+  }, [state.media, video, cover, client, dispatch]);
 
-  const pick = (files: readonly File[]) => {
+  // ---- the clip's length, and the faces it offers ---------------------------
+
+  const [probed, setProbed] = useState<{ file: Blob; durationMs: number } | null>(null);
+  const [captured, setCaptured] = useState<Captured | null>(null);
+  const mine = captured !== null && captured.file === videoFile ? captured : null;
+  const durationMs = probed !== null && probed.file === videoFile ? probed.durationMs : 0;
+  const framePreviews = mine?.urls ?? NO_URLS;
+  const capturing = videoFile !== null && captured?.file !== videoFile;
+  useRevokeOnChange(framePreviews);
+
+  useEffect(() => {
+    if (videoFile === null) return;
+    let cancelled = false;
+    void probeVideo(videoFile)
+      .then((probe) => {
+        if (!cancelled) setProbed({ file: videoFile, durationMs: probe.durationMs });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [videoFile]);
+
+  // THE FRAMES ARE TAKEN AS SOON AS THE CLIP LANDS, unlike the post's, which
+  // waits for its cover screen. A comment has no stage to wait for: the cover
+  // row is in the composer the author is already standing on, so the offers
+  // have to be there when they look down.
+  useEffect(() => {
+    if (videoFile === null || captured?.file === videoFile) return;
+    let cancelled = false;
+    void captureFrames(videoFile)
+      .then((taken) => {
+        if (cancelled) return;
+        setCaptured({
+          file: videoFile,
+          frames: taken,
+          urls: taken.map((frame) => URL.createObjectURL(frame)),
+        });
+        const first = taken[0];
+        if (first !== undefined) {
+          dispatch({
+            type: "coverIfUnset",
+            cover: { id: crypto.randomUUID(), file: first, frame: 0, upload: { kind: "waiting" } },
+          });
+        }
+      })
+      .catch(() => {
+        // No frames is a state the row draws: "A picture" still works, and the
+        // gate keeps the author from signing without a cover.
+        if (!cancelled) setCaptured({ file: videoFile, frames: NO_FRAMES, urls: NO_URLS });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [videoFile, captured, dispatch]);
+
+  const chooseCover = (file: Blob, frame: number) => {
+    // A new face is a new upload: the old one may already be on the server, and
+    // it is attached to nothing, so the sweeper takes it.
+    if (cover !== null) started.current.delete(cover.id);
+    dispatch({
+      type: "cover",
+      cover: { id: crypto.randomUUID(), file, frame, upload: { kind: "waiting" } },
+    });
+    if (video !== undefined) {
+      started.current.delete(video.id);
+      dispatch({ type: "upload", id: video.id, upload: { kind: "waiting" } });
+    }
+  };
+
+  const [refusals, setRefusals] = useState<readonly PickRefusal[]>(NO_REFUSALS);
+
+  // ---- leaving --------------------------------------------------------------
+
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false);
+
+  /**
+   * The X, and the arrow from the first stage.
+   *
+   * "Something written — the confirm; empty — leaves at once." An empty
+   * composer must not ask: a confirmation over nothing is what trains an author
+   * to dismiss the dialog unread, which is precisely how it fails on the day it
+   * has something to protect.
+   */
+  const leave = () => {
+    if (replyHasContent(state)) {
+      setConfirmingDiscard(true);
+      return;
+    }
+    onLeave();
+  };
+
+  const pick = async (files: readonly File[]) => {
+    const outcome = await screenPick(
+      files,
+      { hasVideo: isVideoReply(state), count: state.media.length },
+      COMMENT_SCALE,
+    );
+    if (outcome.refusals.length > 0) {
+      setRefusals((current) => [...current, ...outcome.refusals]);
+    }
+    if (outcome.accepted.length === 0) return;
     dispatch({
       type: "pick",
-      assets: files.map((file) => ({ id: crypto.randomUUID(), file })),
+      assets: outcome.accepted.map((file) => ({
+        id: crypto.randomUUID(),
+        file,
+        kind: outcome.kind,
+      })),
     });
   };
 
   const retry = (id: string) => {
     started.current.delete(id);
+    // The video's retry takes its cover with it: the two go up as one sequence.
+    if (video !== undefined && id === video.id && cover !== null) {
+      started.current.delete(cover.id);
+      dispatch({ type: "coverUpload", upload: { kind: "waiting" } });
+    }
     dispatch({ type: "upload", id, upload: { kind: "waiting" } });
   };
 
@@ -223,8 +373,18 @@ export function ReplyWizard({
       <HeaderBar
         title={title}
         backLabel={state.step === "compose" ? "Back to the thread" : "Back a step"}
-        onBack={() => (state.step === "compose" ? onLeave() : dispatch({ type: "back" }))}
-        onLeave={onLeave}
+        // The arrow is ONE STAGE BACK, and from the first stage that is the
+        // thread — which discards the comment just as the X does.
+        //
+        // IT ASKS NOTHING, because the boards do not: every reply board carries
+        // the confirm on its "X — leave" edge (via 2) and none carries it on
+        // the back arrow (via 1), which is drawn as a plain cancel to
+        // ReplyEntry. Followed as drawn rather than made symmetric here — but
+        // the asymmetry means the arrow can still lose a written comment
+        // silently, which is the exact thing the confirm exists to prevent, so
+        // it is reported rather than quietly patched.
+        onBack={() => (state.step === "compose" ? leave() : dispatch({ type: "back" }))}
+        onLeave={leave}
         leaveLabel={LEAVE_LABEL}
         action={
           state.step === "seal" ? (
@@ -251,11 +411,23 @@ export function ReplyWizard({
         <ReplyComposeStep
           state={state}
           previews={previews}
+          framePreviews={framePreviews}
+          capturing={capturing}
+          durationMs={durationMs}
+          refusals={refusals}
           onWords={(words) => dispatch({ type: "words", words })}
-          onPick={pick}
+          onPick={(files) => void pick(files)}
           onRemove={(id) => dispatch({ type: "unpick", id })}
           onRetry={retry}
           onDescribe={() => setDescribing(state.media[0]?.id ?? null)}
+          onPickFrame={(index) => {
+            const frame = mine?.frames[index];
+            if (frame) chooseCover(frame, index);
+          }}
+          onPickCover={(file) => chooseCover(file, COVER_FROM_PICTURE)}
+          onDismissRefusal={(id) =>
+            setRefusals((current) => current.filter((refusal) => refusal.id !== id))
+          }
           onNext={() => dispatch({ type: "advance" })}
         />
       ) : (
@@ -313,6 +485,16 @@ export function ReplyWizard({
         onClose={() => setHelp(null)}
         topic={help ?? HELP_TOPICS.signedActions}
         testId="reply-help-dialog"
+      />
+
+      <DiscardConfirm
+        open={confirmingDiscard}
+        onKeepWriting={() => setConfirmingDiscard(false)}
+        onDiscard={() => {
+          setConfirmingDiscard(false);
+          onLeave();
+        }}
+        testId="reply-discard-confirm"
       />
     </div>
   );

@@ -28,7 +28,7 @@ import {
   tileRatio,
 } from "@/lib/ui2/media/aspect";
 import { BodyVeil } from "@/lib/ui2/media/body-veil";
-import { MediaGallery, type GalleryItem } from "@/lib/ui2/media/media-gallery";
+import { MediaGallery, type GalleryItem, type PlayerSurface } from "@/lib/ui2/media/media-gallery";
 import { RemovedPlaceholder, type RemovalReason } from "@/lib/ui2/media/removed-placeholder";
 import { isRevealed, rememberReveal, sensitiveSignature } from "@/lib/ui2/media/reveal";
 
@@ -82,6 +82,13 @@ export function removalReason(node: Bearer): RemovalReason {
  * plays untouched. Standing a "Removed" card over a working video would report
  * the wrong thing removed.
  */
+/** Whether a node's gallery is the moving kind — one clip rather than pictures. */
+export function commentHasVideo(node: Bearer): boolean {
+  return node.attachments.some((attachment) =>
+    (attachment.mimeType ?? "").startsWith("video/"),
+  );
+}
+
 export function posterFor(attachment: Attachment): string | null {
   const cover = attachment.coverMedia;
   if (!cover || cover.status === "REDACTED") return null;
@@ -131,9 +138,12 @@ export function PostMedia({
   ratio,
   maxHeight,
   preloadLead = false,
+  surface = "full",
   onOpen,
 }: {
   node: Bearer;
+  /** `reading` is the comment's form — one sound control, no transport bar. */
+  surface?: PlayerSurface;
   testId?: string;
   bleed?: Bleed;
   // A comment's pictures are an attachment rather than a body, so they keep the
@@ -161,6 +171,7 @@ export function PostMedia({
           ratio={ratio}
           maxHeight={maxHeight}
           preloadLead={preloadLead}
+          surface={surface}
           onOpen={onOpen}
         />
       )}
