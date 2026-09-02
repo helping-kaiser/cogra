@@ -479,6 +479,12 @@ CREATE TABLE media_attachments (
     mime_type        TEXT         NOT NULL,
     size_bytes       BIGINT,
     options          JSONB        NOT NULL DEFAULT '{}'::jsonb,
+    -- The video poster: an asset pointing at another asset, so a poster
+    -- is redacted with its video and the removal cascade can see the
+    -- link. Stated at the insert because the row is immutable after it,
+    -- and never the row itself.
+    cover_media_id   UUID         REFERENCES media_attachments(id)
+        CHECK (cover_media_id IS NULL OR cover_media_id <> id),
     -- The tombstone shape every version table uses: redaction removes
     -- the bytes and leaves the mark (primitive/layers.md §5).
     redaction_reason TEXT,
@@ -1415,12 +1421,18 @@ to evolve.
 `duration_ms` reads null while the stored format is a still
 image; it carries a value when video lands.
 
-**Arrives with video:** a per-asset cover (the video poster) is a
-`cover_media_id` foreign key to `media_attachments` — an asset
-pointing at another asset, so the poster is redacted with its
-video and the removal cascade can see it. The junction-side
-`is_cover` is a different concern: it selects which attachment
-leads a multi-asset parent.
+A per-asset cover (the video poster) is a `cover_media_id` foreign
+key to `media_attachments` — an asset pointing at another asset,
+so the poster is redacted with its video and the removal cascade
+can see it. It is stated at the insert, the asset row being
+immutable once written, and a row may not name itself. The
+junction-side `is_cover` is a different concern: it selects which
+attachment leads a multi-asset parent.
+
+The orphan sweep counts that link as a reference like any other,
+so a poster survives as long as the video naming it — without
+that probe the sweep would collect the cover of a clip that is
+still there.
 
 ### User-scoped FKs are defense-in-depth, not deletion mechanics
 

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT j.post_version_id AS \"version_id!\", j.display_order,\n                  j.is_cover, j.alt_text,\n                  m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,\n                  m.mime_type, m.size_bytes,\n                  m.options AS \"options!: serde_json::Value\",\n                  m.redaction_reason, m.redacted_at, m.created_at\n           FROM post_attachments j\n           JOIN media_attachments m ON m.id = j.attachment_id\n           WHERE j.post_version_id = ANY($1)\n           ORDER BY j.post_version_id, j.display_order, m.id",
+  "query": "SELECT j.comment_version_id AS \"version_id!\", j.display_order,\n                  FALSE AS \"is_cover!\", j.alt_text,\n                  m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,\n                  m.mime_type, m.size_bytes,\n                  m.options AS \"options!: serde_json::Value\",\n                  m.cover_media_id,\n                  m.redaction_reason, m.redacted_at, m.created_at\n           FROM comment_attachments j\n           JOIN media_attachments m ON m.id = j.attachment_id\n           WHERE j.comment_version_id = ANY($1)\n           ORDER BY j.comment_version_id, j.display_order, m.id",
   "describe": {
     "columns": [
       {
@@ -15,7 +15,7 @@
       },
       {
         "ordinal": 2,
-        "name": "is_cover",
+        "name": "is_cover!",
         "type_info": "Bool"
       },
       {
@@ -65,16 +65,21 @@
       },
       {
         "ordinal": 12,
+        "name": "cover_media_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 13,
         "name": "redaction_reason",
         "type_info": "Text"
       },
       {
-        "ordinal": 13,
+        "ordinal": 14,
         "name": "redacted_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 14,
+        "ordinal": 15,
         "name": "created_at",
         "type_info": "Timestamptz"
       }
@@ -87,7 +92,7 @@
     "nullable": [
       false,
       false,
-      false,
+      null,
       true,
       false,
       false,
@@ -97,10 +102,11 @@
       false,
       true,
       false,
+      true,
       true,
       true,
       false
     ]
   },
-  "hash": "967121dc772fa8a36d13ef23db09b32b7b784d93171d52b50db171ed6235ffcb"
+  "hash": "9b768b9ce5407463be48c273cce798f957ec3d4fa011ea851af3c97226982bf9"
 }
