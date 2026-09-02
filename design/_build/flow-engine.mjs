@@ -279,12 +279,15 @@ export function resolveFlow(flow, view) {
     if (o.board !== undefined) boards.push(o.board);
   }
 
+  // A control start is offered on many boards and the journey can begin on any
+  // of them, so every origin counts among the boards the flow touches — which
+  // is what puts them in the shared-board index and the gap triage.
   const result = {
     name: flow.name,
     description: flow.description,
     status: o?.gap !== undefined ? "blocked by gap" : "resolved",
     steps,
-    boards: [...new Set(boards)],
+    boards: [...new Set([...boards, ...(start.startsOn ?? [])])],
   };
   if (o?.gap !== undefined) result.blockedBy = o.gap;
   if (start.startsOn) result.startsOn = start.startsOn;
