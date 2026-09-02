@@ -381,7 +381,11 @@ the start — and delivery splits by content kind.
 - The upload accepts **MP4 / H.264 + AAC** at 100 MiB and animated
   WebP at the picture's own cap, validated and never transcoded;
   GIF converts on the device. A video is the whole body and its
-  poster rides the asset, named on the upload.
+  poster rides the asset, named on the upload. A comment carries
+  one too, at half the byte budget.
+- Metadata is stripped on the device and **checked again here**,
+  for video as for pictures: a clean file is stored untouched, a
+  faulty strip is repaired.
 - Autoplay muted on visibility with one global sticky mute, and
   the viewer's real controls — settled design, unbuilt.
 - **Hand test:** post a video from the phone; watch it autoplay
