@@ -16,7 +16,9 @@ import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
-import com.cogra.domain.media.DeviceImage
+import com.cogra.domain.media.DeviceMedia
+import com.cogra.domain.media.ProcessedPicture
+import com.cogra.domain.media.VideoFrame
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -55,6 +57,9 @@ class ComposeWizardScreenTest {
     private var moves = mutableListOf<Pair<Int, Int>>()
     private var removals = mutableListOf<Int>()
     private var sealBacks = 0
+    private var coverFrames = mutableListOf<Int>()
+    private var coverPickers = 0
+    private var dismissedRefusals = mutableListOf<Int>()
 
     @Composable
     private fun Wizard(
@@ -75,6 +80,9 @@ class ComposeWizardScreenTest {
             onShapeChange = {},
             onFrameAsset = {},
             onCropsChanged = {},
+            onPickCoverFrame = { coverFrames += it },
+            onOpenCoverPicker = { coverPickers += 1 },
+            onDismissRefusal = { dismissedRefusals += it },
             onTitleChange = {},
             onDescriptionChange = {},
             onAltTextChange = { _, _ -> },
@@ -123,7 +131,7 @@ class ComposeWizardScreenTest {
     private val withPicks = ComposeWizardState(
         mode = BodyMode.Media,
         picked = listOf(PickedAsset("a", 1f), PickedAsset("b", 1f)),
-        deviceImages = listOf(DeviceImage("a", 1f), DeviceImage("b", 1f), DeviceImage("c", 1f)),
+        deviceMedia = listOf(DeviceMedia("a", 1f), DeviceMedia("b", 1f), DeviceMedia("c", 1f)),
     )
 
     private val words = ComposeWizardState(mode = BodyMode.Words)
@@ -522,5 +530,99 @@ class ComposeWizardScreenTest {
         compose.setContent { Wizard(state) }
         compose.onNodeWithTag("wizard_problem").assertIsDisplayed()
         compose.onNodeWithText("no balance").assertIsDisplayed()
+    }
+
+    // -- The cover stage (`ComposeCover`) --
+
+    private val onCover = ComposeWizardState(
+        mode = BodyMode.Media,
+        step = WizardStep.Cover,
+        picked = listOf(PickedAsset("clip", 0.5625f, durationMs = 42_000)),
+        coverFrames = List(3) {
+            VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 108, 192))
+        },
+    )
+
+    @Test
+    fun theCoverStageOffersEveryFrameAndAPictureOfYourOwn() {
+        compose.setContent { Wizard(onCover) }
+        compose.onNodeWithTag("wizard_cover_preview").assertIsDisplayed()
+        // The preview is 342dp tall, so the tile row sits below the fold
+        // on a test viewport and the stage scrolls to reach it.
+        repeat(3) {
+            compose.onNodeWithTag("wizard_cover_frame_$it").performScrollTo().assertIsDisplayed()
+        }
+        compose.onNodeWithTag("wizard_cover_picture").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("wizard_cover_next").assertIsDisplayed()
+    }
+
+    @Test
+    fun tappingAFrameChoosesIt() {
+        compose.setContent { Wizard(onCover) }
+        compose.onNodeWithTag("wizard_cover_frame_2").performScrollTo().performClick()
+        assertThat(coverFrames).containsExactly(2)
+    }
+
+    @Test
+    fun thePictureTileHandsTheChoiceToTheDevice() {
+        compose.setContent { Wizard(onCover) }
+        compose.onNodeWithTag("wizard_cover_picture").performScrollTo().performClick()
+        assertThat(coverPickers).isEqualTo(1)
+    }
+
+    @Test
+    fun theCoverStageSaysItIsForVideoOnly() {
+        compose.setContent { Wizard(onCover) }
+        compose.onNodeWithText("Video only").assertIsDisplayed()
+        compose.onNodeWithText("The video's face").assertIsDisplayed()
+    }
+
+    // -- Files the step would not take (`ComposePickedErrors`) --
+
+    @Test
+    fun aRefusedFileIsListedUnderTheTrayWithItsOwnWords() {
+        val state = withPicks.copy(
+            refused = listOf(
+                RefusedPick(null, "That file isn't a picture or a video CoGra can read."),
+            ),
+        )
+        compose.setContent { Wizard(state) }
+
+        compose.onNodeWithTag("wizard_refused_0").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_refused_thumb_0").assertIsDisplayed()
+        // The accepted batch is untouched — a refused file never joined it.
+        compose.onNodeWithTag("wizard_picked_count").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_pick_next").assertIsEnabled()
+    }
+
+    @Test
+    fun aRefusalOffersNoRetryBecauseRetryingCannotHelp() {
+        val state = withPicks.copy(refused = listOf(RefusedPick(null, "Too big.")))
+        compose.setContent { Wizard(state) }
+
+        compose.onNodeWithText("Retry", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("Remove it", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun theStepStaysUsableWithNothingPickedButSomethingRefused() {
+        val state = ComposeWizardState(
+            mode = BodyMode.Media,
+            refused = listOf(RefusedPick(null, "Nope.")),
+        )
+        compose.setContent { Wizard(state) }
+
+        compose.onNodeWithTag("wizard_refused_0").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_pick_grid").assertIsDisplayed()
+        // Nothing accepted yet, so there is nowhere to go on to.
+        compose.onNodeWithTag("wizard_pick_next").assertIsNotEnabled()
+    }
+
+    @Test
+    fun theRunningTimeIsWrittenTheWayTheBoardWritesIt() {
+        assertThat(formatDuration(42_000)).isEqualTo("0:42")
+        assertThat(formatDuration(95_000)).isEqualTo("1:35")
+        // No duration cap, so an hour is a case rather than an accident.
+        assertThat(formatDuration(3_725_000)).isEqualTo("1:02:05")
     }
 }

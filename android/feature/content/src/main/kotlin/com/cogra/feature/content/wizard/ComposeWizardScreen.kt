@@ -106,6 +106,14 @@ fun ComposeWizardRoute(
         ActivityResultContracts.PickMultipleVisualMedia(ComposeWizardState.MAX_POST_ASSETS),
     ) { uris -> uris.forEach { viewModel.onTogglePick(it.toString()) } }
 
+    // `ComposeCover`'s "A picture" tile: one picture, images only. A
+    // cover is a still by contract — "it must be an image rather than
+    // another video" — so this launcher says so rather than filtering a
+    // video out after the fact.
+    val coverPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia(),
+    ) { uri -> uri?.let { viewModel.onPickCoverPicture(it.toString()) } }
+
     // The in-app grid's permission, which the pick stage draws around
     // the grid rather than in front of it.
     val permission = rememberMediaPermission(onGranted = viewModel::onMediaPermissionGranted)
@@ -116,14 +124,25 @@ fun ComposeWizardRoute(
         onBodyChange = viewModel::onBodyChange,
         onModeChange = viewModel::onModeChange,
         onOpenPicker = {
+            // Pictures *and* video: "Pick one picture, several, or one
+            // video" (`ComposePick`). The one-video-or-ten-pictures rule
+            // is the toggle's, not the picker's — the system picker has
+            // no way to express it.
             picker.launch(
-                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo),
             )
         },
         onTogglePick = viewModel::onTogglePick,
         onShapeChange = viewModel::onShapeChange,
         onFrameAsset = viewModel::onFrameAsset,
         onCropsChanged = viewModel::onCropsCommitted,
+        onPickCoverFrame = viewModel::onPickCoverFrame,
+        onOpenCoverPicker = {
+            coverPicker.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+            )
+        },
+        onDismissRefusal = viewModel::onDismissRefusal,
         onTitleChange = viewModel::onTitleChange,
         onDescriptionChange = viewModel::onDescriptionChange,
         onAltTextChange = viewModel::onAltTextChange,
@@ -191,6 +210,9 @@ internal fun ComposeWizardScreen(
     onShapeChange: (DraftShape) -> Unit,
     onFrameAsset: (Int) -> Unit,
     onCropsChanged: (Map<String, CropSpec>) -> Unit,
+    onPickCoverFrame: (Int) -> Unit,
+    onOpenCoverPicker: () -> Unit,
+    onDismissRefusal: (Int) -> Unit,
     onTitleChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
     onAltTextChange: (String, String) -> Unit,
@@ -252,7 +274,13 @@ internal fun ComposeWizardScreen(
             onBack = onBack,
             // The X leaves from any stage, draft kept, nothing to confirm.
             onLeave = onLeave,
-            trailingNote = if (state.step == WizardStep.Seal) "Last step" else null,
+            // `ComposeSeal` says "Last step"; `ComposeCover` says
+            // "Video only" — each board's own trailing note.
+            trailingNote = when (state.step) {
+                WizardStep.Seal -> "Last step"
+                WizardStep.Cover -> "Video only"
+                else -> null
+            },
             // The seal's one `?`. On the key-absent seal it belongs to the
             // key notice instead — the key story outranks the seal story
             // there, and a screen carries only one (design/readme.md §13).
@@ -288,6 +316,7 @@ internal fun ComposeWizardScreen(
                     onOpenPicker = onOpenPicker,
                     onTogglePick = onTogglePick,
                     onManagePictures = onManagePictures,
+                    onDismissRefusal = onDismissRefusal,
                     onNext = onNext,
                 )
 
@@ -312,6 +341,26 @@ internal fun ComposeWizardScreen(
                             onClick = onNext,
                             modifier = Modifier.fillMaxWidth(),
                             testTag = "wizard_crop_next",
+                        )
+                    }
+                }
+
+                WizardStep.Cover -> {
+                    WizardBody(scrollable = true, bottom = 0.dp) {
+                        CoverStepBody(
+                            state = state,
+                            onPickFrame = onPickCoverFrame,
+                            onPickPicture = onOpenCoverPicker,
+                        )
+                    }
+                    // `ComposeCover` ends on the pill, below the body for
+                    // the same reason the crop stage does.
+                    WizardFooter {
+                        CograButton(
+                            text = "Next",
+                            onClick = onNext,
+                            modifier = Modifier.fillMaxWidth(),
+                            testTag = "wizard_cover_next",
                         )
                     }
                 }
@@ -478,6 +527,7 @@ private fun ColumnScope.BodyStage(
     onOpenPicker: () -> Unit,
     onTogglePick: (String) -> Unit,
     onManagePictures: () -> Unit,
+    onDismissRefusal: (Int) -> Unit,
     onNext: () -> Unit,
 ) {
     when (state.mode) {
@@ -529,6 +579,7 @@ private fun ColumnScope.BodyStage(
                 onOpenPicker = onOpenPicker,
                 onTogglePick = onTogglePick,
                 onShowAll = onManagePictures,
+                onDismissRefusal = onDismissRefusal,
             )
             // `ComposePick` and `ComposePicked` both close on the pill in
             // its own band under the grid — the grid runs to its own
@@ -552,6 +603,7 @@ private const val DIMMED = 0.55f
 internal fun ComposeWizardState.headerTitle(): String = when (step) {
     WizardStep.Body -> "New post"
     WizardStep.Crop -> "Crop"
+    WizardStep.Cover -> "The video's face"
     WizardStep.Details -> "Details"
     WizardStep.Seal -> "What you sign"
 }

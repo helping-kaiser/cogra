@@ -11,8 +11,10 @@ import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.media.CropSpec
-import com.cogra.domain.media.DeviceImageSource
+import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.MediaProcessor
+import com.cogra.domain.media.VideoInfo
+import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
@@ -29,6 +31,7 @@ import com.cogra.feature.content.candidateRows
 import com.cogra.feature.content.referenceFieldIndex
 import com.cogra.feature.content.tagFieldIndex
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -65,7 +68,8 @@ class ComposeWizardViewModel @Inject constructor(
     private val references: ReferenceRepository,
     private val media: MediaRepository,
     private val processor: MediaProcessor,
-    private val deviceImages: DeviceImageSource,
+    private val video: VideoProcessor,
+    private val deviceMedia: DeviceMediaSource,
     private val drafts: ComposeDraftStore,
     private val signer: WriteSigner,
 ) : ViewModel() {
@@ -130,14 +134,15 @@ class ComposeWizardViewModel @Inject constructor(
         // permission effect fires on a *change* of permission, and
         // answering the offer changes none, so a wiped grid was never
         // refilled and the stage kept only its photos-app tile.
-        _state.value = ComposeWizardState.from(held).copy(deviceImages = current.deviceImages)
+        _state.value = ComposeWizardState.from(held).copy(deviceMedia = current.deviceMedia)
         armed = true
         // A restored media draft re-reads every asset's shape: the crop
         // preview needs it, and the URIs may no longer resolve.
         _state.value.picked.forEach { readSourceRatio(it.uri) }
+        restoreClipKind()
         // A draft can be days old and the library has moved on since;
         // one query is cheaper than showing a stale roll.
-        refreshDeviceImages()
+        refreshDeviceMedia()
     }
 
     fun onDiscardDraft() {
@@ -204,18 +209,121 @@ class ComposeWizardViewModel @Inject constructor(
      * already knowing every shape.
      */
     fun onTogglePick(uri: String) {
-        val before = _state.value.picked.size
-        _state.update { it.togglePick(uri) }
-        val after = _state.value.picked.size
-        when {
-            after > before -> readSourceRatio(uri)
+        val current = _state.value
+        // A removal needs nothing read: it is the pick already in hand.
+        if (current.picked.any { it.uri == uri }) {
+            _state.update { it.togglePick(uri) }
             // A pick removed after its upload started: cancel the work
             // rather than leave an orphan the sweeper has to collect.
-            after < before -> uploads.remove(uri)?.cancel()
-            // Neither: the cap refused it, and the screen says so.
-            else -> Unit
+            uploads.remove(uri)?.cancel()
+            return
+        }
+        viewModelScope.launch {
+            // The grid already knows, because `MediaStore` said which
+            // collection the row came from. The system picker hands over
+            // a bare URI, so that one is asked — a header read, not a
+            // decode.
+            val known = current.deviceMedia.firstOrNull { it.uri == uri }
+            val clip = if (known != null) {
+                known.takeIf { it.isVideo }?.let { VideoInfo(it.durationMs ?: 0, it.aspectRatio) }
+            } else {
+                video.info(uri)
+            }
+            // A file the step cannot read is refused where it was
+            // offered rather than accepted and failed later
+            // (`ComposePickedErrors`). The grid's own rows came out of
+            // `MediaStore` and are readable by construction; this is the
+            // system picker's path, and the dropped-in file's.
+            if (clip == null && known == null && processor.aspectRatio(uri) == null) {
+                _state.update {
+                    it.copy(refused = it.refused + RefusedPick(uri = null, message = UNREADABLE_FILE))
+                }
+                return@launch
+            }
+            // A picture is weighed as it stands. The pipeline downscales
+            // and re-encodes it, so the cap could in principle be judged
+            // on the result instead — but the board weighs the file the
+            // author offered, and a cap nobody can predict is worse than
+            // one they can. A clip is weighed *after* its transcode
+            // instead: see `startVideoUpload`.
+            val size = if (clip == null) processor.sizeBytes(uri) else null
+            if (size != null && size > MAX_PICTURE_BYTES) {
+                _state.update {
+                    it.copy(refused = it.refused + RefusedPick(uri = uri, message = PICTURE_TOO_BIG))
+                }
+                return@launch
+            }
+            val before = _state.value.picked.size
+            _state.update {
+                it.togglePick(
+                    uri = uri,
+                    sourceRatio = clip?.aspectRatio ?: known?.aspectRatio,
+                    durationMs = clip?.durationMs,
+                )
+            }
+            val after = _state.value.picked.size
+            when {
+                // A picture's own ratio is read from its header for the
+                // crop preview; a clip already stated its shape above.
+                after > before && clip == null -> readSourceRatio(uri)
+                // Replaced rather than added: whatever the previous body
+                // was uploading is no longer part of this post.
+                after <= before -> cancelUploadsExcept(uri)
+                else -> Unit
+            }
         }
     }
+
+    /**
+     * Clears one refusal (`ComposePickedErrors`, "Remove it").
+     *
+     * The only way out the board gives it: the file never joined the
+     * batch, so there is nothing to retry and nothing to remove from the
+     * post — only the notice itself to dismiss.
+     */
+    fun onDismissRefusal(index: Int) = _state.update {
+        if (index !in it.refused.indices) {
+            it
+        } else {
+            it.copy(refused = it.refused.filterIndexed { at, _ -> at != index })
+        }
+    }
+
+    /** Drops every upload job but the one asset still in the body. */
+    private fun cancelUploadsExcept(uri: String) {
+        uploads.keys.filterNot { it == uri }.forEach { uploads.remove(it)?.cancel() }
+    }
+
+    // -- The video's face (`ComposeCover`) --
+
+    /**
+     * Lifts the offered frames out of the clip.
+     *
+     * Called on entering the stage rather than at pick time: extracting
+     * frames costs a decode per frame, and an author who picked a clip
+     * and then changed their mind should not have paid for it.
+     */
+    private fun loadCoverFrames() {
+        val clip = _state.value.video ?: return
+        if (_state.value.coverFrames.isNotEmpty()) return
+        viewModelScope.launch {
+            val frames = video.coverFrames(clip.uri, COVER_FRAME_COUNT)
+            _state.update { it.copy(coverFrames = frames) }
+        }
+    }
+
+    fun onPickCoverFrame(index: Int) =
+        _state.update { it.copy(coverChoice = CoverChoice.Frame(index), coverMediaId = null) }
+
+    /**
+     * A cover of the author's own, from the device's picker.
+     *
+     * The id is dropped with the choice: a cover already uploaded is
+     * bytes on the server that this video is no longer covered by, and
+     * the next upload names the new one.
+     */
+    fun onPickCoverPicture(uri: String) =
+        _state.update { it.copy(coverChoice = CoverChoice.Picture(uri), coverMediaId = null) }
 
     fun onFrameAsset(index: Int) = _state.update {
         it.copy(framingIndex = index.coerceIn(0, (it.picked.size - 1).coerceAtLeast(0)))
@@ -226,7 +334,7 @@ class ComposeWizardViewModel @Inject constructor(
      * granted — including a re-grant, since a partial grant may have
      * gained pictures since the last look.
      */
-    fun onMediaPermissionGranted() = refreshDeviceImages()
+    fun onMediaPermissionGranted() = refreshDeviceMedia()
 
     /**
      * Re-reads the roll into the grid.
@@ -234,9 +342,36 @@ class ComposeWizardViewModel @Inject constructor(
      * Safe to call without a permission: the source answers an empty list
      * rather than throwing, so a caller never has to ask first.
      */
-    private fun refreshDeviceImages() {
+    private fun refreshDeviceMedia() {
         viewModelScope.launch {
-            _state.update { it.copy(deviceImages = deviceImages.newestImages(DEVICE_IMAGE_PAGE)) }
+            _state.update { it.copy(deviceMedia = deviceMedia.newestMedia(DEVICE_MEDIA_PAGE)) }
+        }
+    }
+
+    /**
+     * Re-reads whether a restored single pick is a clip.
+     *
+     * A held draft stores a URI and its words, not what kind of thing
+     * the URI is — so a restored video would otherwise come back as a
+     * one-picture gallery and be sent to the crop stage it never had.
+     * Only a lone pick can be a clip, which is the same rule the toggle
+     * enforces, so nothing else needs asking.
+     */
+    private fun restoreClipKind() {
+        val only = _state.value.picked.singleOrNull() ?: return
+        viewModelScope.launch {
+            val clip = video.info(only.uri) ?: return@launch
+            _state.update { state ->
+                state.copy(
+                    picked = state.picked.map {
+                        if (it.uri == only.uri) {
+                            it.copy(durationMs = clip.durationMs, sourceRatio = clip.aspectRatio)
+                        } else {
+                            it
+                        }
+                    },
+                )
+            }
         }
     }
 
@@ -393,7 +528,13 @@ class ComposeWizardViewModel @Inject constructor(
         // `ComposeSealUploading` gates the seal on `UploadStatusLine`, and
         // stepping back to Details renders the in-flight rings.
         if (current.step == WizardStep.Crop) startUploads(cropSpecsFor(current))
+        // The video path spends the same stage on the wire, one stage
+        // later: its face is settled on the cover step, and the cover is
+        // what the clip's own upload has to name.
+        if (current.step == WizardStep.Cover) startVideoUpload()
         _state.value = next
+        // Entering the cover stage is what pays for the frames.
+        if (next.step == WizardStep.Cover) loadCoverFrames()
     }
 
     /**
@@ -524,8 +665,108 @@ class ComposeWizardViewModel @Inject constructor(
     fun onRetryUpload(uri: String) {
         val state = _state.value
         val asset = state.picked.firstOrNull { it.uri == uri } ?: return
-        if (asset.upload is AssetUpload.Running) return
+        if (asset.upload is AssetUpload.Running || asset.upload is AssetUpload.Transcoding) return
+        if (asset.isVideo) {
+            startVideoUpload()
+            return
+        }
         upload(uri, state.crops[uri] ?: CropSpec(state.shape.ratio()))
+    }
+
+    /**
+     * The clip's whole journey: its face first, then the bytes.
+     *
+     * The order is the contract's. An asset row is immutable once
+     * written, so a video names its cover when it is created rather than
+     * gaining one afterwards — which means the cover must already have
+     * an id. Uploading it first also fails fast: a refused cover is
+     * learned in a second, instead of after a minute of transcoding.
+     */
+    private fun startVideoUpload() {
+        val clip = _state.value.video ?: return
+        uploads.remove(clip.uri)?.cancel()
+        uploads[clip.uri] = viewModelScope.launch {
+            val coverId = _state.value.coverMediaId ?: uploadCover() ?: return@launch
+            _state.update { it.copy(coverMediaId = coverId) }
+
+            _state.update { it.withUpload(clip.uri, AssetUpload.Transcoding(0)) }
+            val processed = video.transcode(clip.uri) { percent ->
+                _state.update { it.withUpload(clip.uri, AssetUpload.Transcoding(percent)) }
+            }
+            if (processed == null) {
+                _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UNREADABLE_VIDEO)) }
+                return@launch
+            }
+            // The cap is judged on what would be sent, not on what was
+            // picked: the whole point of re-encoding is that a large
+            // recording usually becomes a small upload, and weighing the
+            // original would refuse posts the ruling means to allow.
+            if (processed.byteCount > MAX_VIDEO_BYTES) {
+                _state.update { it.withUpload(clip.uri, AssetUpload.Failed(VIDEO_TOO_BIG)) }
+                runCatching { File(processed.path).delete() }
+                return@launch
+            }
+
+            _state.update { it.withUpload(clip.uri, AssetUpload.Running) }
+            when (val outcome = media.uploadVideo(processed, coverId)) {
+                is Outcome.Success -> _state.update {
+                    it.withUpload(clip.uri, AssetUpload.Done(outcome.value.id))
+                }
+                is Outcome.Refused -> _state.update {
+                    it.withUpload(
+                        clip.uri,
+                        AssetUpload.Failed(outcome.errors.firstOrNull()?.message ?: REFUSED_VIDEO),
+                    )
+                }
+                is Outcome.Failed -> _state.update {
+                    it.withUpload(clip.uri, AssetUpload.Failed(TRANSPORT))
+                }
+            }
+            // The transcode's cache copy has served its purpose either
+            // way: the bytes are on the server, or the attempt failed
+            // and a retry re-encodes from the original.
+            runCatching { File(processed.path).delete() }
+        }
+    }
+
+    /**
+     * Uploads whatever the author chose as the face, as its own still.
+     *
+     * A frame arrives already processed — the pipeline shaped it exactly
+     * as it shapes a picked picture. A chosen picture is processed here,
+     * framed to the clip's own shape: a poster that is not the video's
+     * shape would letterbox the thing it stands in for.
+     */
+    private suspend fun uploadCover(): String? {
+        val state = _state.value
+        val clip = state.video ?: return null
+        val picture = when (val choice = state.coverChoice) {
+            is CoverChoice.Frame -> state.coverFrames.getOrNull(choice.index)?.picture
+            is CoverChoice.Picture -> processor.process(
+                choice.uri,
+                CropSpec(targetRatio = clip.sourceRatio ?: 1f),
+            )
+        }
+        if (picture == null) {
+            _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UNREADABLE_COVER)) }
+            return null
+        }
+        return when (val outcome = media.uploadMedia(picture)) {
+            is Outcome.Success -> outcome.value.id
+            is Outcome.Refused -> {
+                _state.update {
+                    it.withUpload(
+                        clip.uri,
+                        AssetUpload.Failed(outcome.errors.firstOrNull()?.message ?: REFUSED_COVER),
+                    )
+                }
+                null
+            }
+            is Outcome.Failed -> {
+                _state.update { it.withUpload(clip.uri, AssetUpload.Failed(TRANSPORT)) }
+                null
+            }
+        }
     }
 
     private fun upload(uri: String, crop: CropSpec) {
@@ -727,18 +968,48 @@ class ComposeWizardViewModel @Inject constructor(
 
     private fun failTransport() = _state.update { it.copy(submitting = false, transportFailed = true) }
 
-    private companion object {
+    // Internal rather than private so the suite can assert against the
+    // words themselves instead of re-typing them: a copy change should
+    // move the test with it, not break it.
+    internal companion object {
         const val FINDER_DEBOUNCE_MILLIS = 250L
 
         /** Long enough that a typed word is one write, short enough to be a save. */
         const val DRAFT_SAVE_DEBOUNCE_MILLIS = 400L
 
         /** How much of the camera roll the grid offers before the picker. */
-        const val DEVICE_IMAGE_PAGE = 300
+        const val DEVICE_MEDIA_PAGE = 300
 
         const val UNREADABLE = "That file could not be read as a picture."
         const val REFUSED = "The server would not take that picture."
         const val TRANSPORT = "The upload could not reach the server."
+
+        // The refusal copy is blessed, verbatim, in
+        // design/guidelines/copy-voice.md "Refused files". Each line
+        // names the cap it broke, because that is the only place a cap
+        // is named — nothing announces the limits in advance.
+        //
+        // **Screens say MB; the caps are MiB.** The enforced limit is
+        // the binary one, so the number on screen under-promises and can
+        // never turn a file the product would have accepted into a
+        // refusal.
+        const val UNREADABLE_FILE = "That file isn't a picture or a video CoGra can read."
+        const val PICTURE_TOO_BIG = "That picture is too big — a picture can be up to 10 MB."
+        const val VIDEO_TOO_BIG = "That video is too big — a post's video can be up to 100 MB."
+
+        /** A still's cap: ten per post, ten mebibytes each (D9). */
+        const val MAX_PICTURE_BYTES = 10L * 1024 * 1024
+
+        /** A clip's cap: the same hundred megabytes a full gallery costs. */
+        const val MAX_VIDEO_BYTES = 100L * 1024 * 1024
+
+        const val UNREADABLE_VIDEO = "That file could not be read as a video."
+        const val REFUSED_VIDEO = "The server would not take that video."
+        const val UNREADABLE_COVER = "That picture could not be read as a cover."
+        const val REFUSED_COVER = "The server would not take that cover."
+
+        /** How many frames `ComposeCover` offers — the board draws three. */
+        const val COVER_FRAME_COUNT = 3
     }
 }
 

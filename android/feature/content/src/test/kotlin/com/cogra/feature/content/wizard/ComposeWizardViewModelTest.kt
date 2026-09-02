@@ -16,9 +16,12 @@ import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
 import com.cogra.domain.media.CropSpec
-import com.cogra.domain.media.DeviceImage
-import com.cogra.domain.media.DeviceImageSource
+import com.cogra.domain.media.DeviceMedia
+import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.ProcessedPicture
+import com.cogra.domain.media.ProcessedVideo
+import com.cogra.domain.media.VideoFrame
+import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
@@ -26,6 +29,7 @@ import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingMediaProcessor
 import com.cogra.domain.testing.ThrowingMediaRepository
+import com.cogra.domain.testing.ThrowingVideoProcessor
 import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.topics.TagClaim
 import com.google.common.truth.Truth.assertThat
@@ -107,8 +111,38 @@ class ComposeWizardViewModelTest {
                 return Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "too big")))
             }
             next += 1
+            order += "still"
             return Outcome.Success(
                 MediaAssetView("m$next", "https://media/m$next", null, FieldStatus.NORMAL, 1f),
+            )
+        }
+
+        /** Every upload in the order it was made — stills and clips alike. */
+        val order = mutableListOf<String>()
+
+        /** The cover id the clip named, so the pairing can be asserted. */
+        var namedCover: String? = null
+        var videoRefused = false
+
+        override suspend fun uploadVideo(
+            video: ProcessedVideo,
+            coverMediaId: String,
+        ): Outcome<MediaAssetView> {
+            order += "video"
+            namedCover = coverMediaId
+            if (videoRefused) {
+                return Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "not H.264")))
+            }
+            return Outcome.Success(
+                MediaAssetView(
+                    "v1",
+                    "https://media/v1",
+                    null,
+                    FieldStatus.NORMAL,
+                    0.5625f,
+                    mimeType = "video/mp4",
+                    durationMs = 42_000,
+                ),
             )
         }
     }
@@ -116,12 +150,20 @@ class ComposeWizardViewModelTest {
     private val processor = object : ThrowingMediaProcessor() {
         var undecodable = mutableSetOf<String>()
 
+        /** Nothing decodes as a picture — the refused-format case. */
+        var unreadable = false
+
+        /** What the store says a picked file weighs; null = it will not say. */
+        var size: Long? = 1_024
+
         override suspend fun process(uri: String, crop: CropSpec): ProcessedPicture? {
             media.pending.addLast(uri)
             return if (uri in undecodable) null else ProcessedPicture(ByteArray(4), 100, 125)
         }
 
-        override suspend fun aspectRatio(uri: String): Float = 0.8f
+        override suspend fun aspectRatio(uri: String): Float? = if (unreadable) null else 0.8f
+
+        override suspend fun sizeBytes(uri: String): Long? = size
     }
 
     private val drafts = object : ComposeDraftStore {
@@ -141,14 +183,46 @@ class ComposeWizardViewModelTest {
     }
 
     /** `ComposePick`'s grid, scripted: the wizard only ever reads it. */
-    private val deviceImages = object : DeviceImageSource {
-        var offered = listOf(DeviceImage("a", 1f), DeviceImage("b", 1.5f))
+    private val deviceMedia = object : DeviceMediaSource {
+        var offered = listOf(DeviceMedia("a", 1f), DeviceMedia("b", 1.5f))
         var calls = 0
 
-        override suspend fun newestImages(limit: Int): List<DeviceImage> {
+        override suspend fun newestMedia(limit: Int): List<DeviceMedia> {
             calls += 1
             return offered.take(limit)
         }
+    }
+
+    /**
+     * The video pipeline, scripted. It records the order it was asked in
+     * so the two-step upload's *sequence* — cover first, then the clip
+     * that names it — is assertable rather than merely its outcome.
+     */
+    private val video = object : ThrowingVideoProcessor() {
+        var untranscodable = false
+
+        /** What the re-encode produced — the weight the cap judges. */
+        var outputBytes = 1_024L
+        val calls = mutableListOf<String>()
+
+        override suspend fun transcode(
+            uri: String,
+            onProgress: (Int) -> Unit,
+        ): ProcessedVideo? {
+            calls += "transcode"
+            onProgress(50)
+            return if (untranscodable) {
+                null
+            } else {
+                ProcessedVideo("/tmp/$uri.mp4", 1080, 1920, 42_000, outputBytes)
+            }
+        }
+
+        override suspend fun coverFrames(uri: String, count: Int): List<VideoFrame> =
+            List(count) { VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 100, 125)) }
+
+        override suspend fun info(uri: String): VideoInfo? =
+            if (uri.startsWith("clip")) VideoInfo(42_000, 0.5625f) else null
     }
 
     private fun viewModel() = ComposeWizardViewModel(
@@ -156,7 +230,8 @@ class ComposeWizardViewModelTest {
         references = references,
         media = media,
         processor = processor,
-        deviceImages = deviceImages,
+        video = video,
+        deviceMedia = deviceMedia,
         drafts = drafts,
         signer = WriteSigner(sealer, identity),
     )
@@ -652,7 +727,7 @@ class ComposeWizardViewModelTest {
         vm.onMediaPermissionGranted()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.deviceImages.map { it.uri }).containsExactly("a", "b").inOrder()
+        assertThat(vm.state.value.deviceMedia.map { it.uri }).containsExactly("a", "b").inOrder()
     }
 
     @Test
@@ -750,12 +825,12 @@ class ComposeWizardViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         vm.onMediaPermissionGranted()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.deviceImages).isNotEmpty()
+        assertThat(vm.state.value.deviceMedia).isNotEmpty()
 
         vm.onContinueDraft()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.deviceImages.map { it.uri }).containsExactly("a", "b").inOrder()
+        assertThat(vm.state.value.deviceMedia.map { it.uri }).containsExactly("a", "b").inOrder()
     }
 
     /** And it re-reads the roll, because a held draft can be days old. */
@@ -765,14 +840,14 @@ class ComposeWizardViewModelTest {
         val vm = viewModel()
         vm.start()
         dispatcher.scheduler.advanceUntilIdle()
-        val before = deviceImages.calls
+        val before = deviceMedia.calls
 
-        deviceImages.offered = listOf(DeviceImage("c", 1f))
+        deviceMedia.offered = listOf(DeviceMedia("c", 1f))
         vm.onContinueDraft()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(deviceImages.calls).isGreaterThan(before)
-        assertThat(vm.state.value.deviceImages.map { it.uri }).containsExactly("c")
+        assertThat(deviceMedia.calls).isGreaterThan(before)
+        assertThat(vm.state.value.deviceMedia.map { it.uri }).containsExactly("c")
     }
 
     // -- Refusals --
@@ -857,5 +932,224 @@ class ComposeWizardViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(content.lastAttachments.map { it.mediaId }).containsExactly("m2")
+    }
+
+    // -- The video path --
+
+    /** Picks a clip and walks the wizard to the far side of the cover stage. */
+    private fun ComposeWizardViewModel.toDetailsWithVideo() {
+        start()
+        dispatcher.scheduler.advanceUntilIdle()
+        onTogglePick("clip-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        onNext() // body -> cover
+        dispatcher.scheduler.advanceUntilIdle()
+        onNext() // cover -> details, which is where the upload starts
+        dispatcher.scheduler.advanceUntilIdle()
+    }
+
+    @Test
+    fun theCoverGoesUpBeforeTheClipThatNamesIt() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+
+        // The order is the contract's: an asset row is immutable once
+        // written, so the clip cannot gain a poster afterwards.
+        assertThat(media.order).containsExactly("still", "video").inOrder()
+        assertThat(media.namedCover).isEqualTo(vm.state.value.coverMediaId)
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+    }
+
+    @Test
+    fun enteringTheCoverStageLiftsTheFramesOutOfTheClip() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onTogglePick("clip-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        // Nothing is decoded while the clip is merely picked.
+        assertThat(vm.state.value.coverFrames).isEmpty()
+
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Cover)
+        assertThat(vm.state.value.coverFrames)
+            .hasSize(ComposeWizardViewModel.COVER_FRAME_COUNT)
+    }
+
+    @Test
+    fun theTranscodeReportsItsProgressBeforeTheClipIsSent() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+        // The pipeline was asked to re-encode rather than the original
+        // bytes being sent as they were.
+        assertThat(video.calls).contains("transcode")
+    }
+
+    @Test
+    fun aClipThatWillNotTranscodeNeverReachesTheWire() = runTest(dispatcher) {
+        video.untranscodable = true
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+
+        assertThat(media.order).containsExactly("still")
+        val upload = vm.state.value.picked.single().upload
+        assertThat(upload).isInstanceOf(AssetUpload.Failed::class.java)
+        assertThat((upload as AssetUpload.Failed).message)
+            .isEqualTo(ComposeWizardViewModel.UNREADABLE_VIDEO)
+        assertThat(vm.state.value.uploadsComplete).isFalse()
+    }
+
+    @Test
+    fun aRefusedClipCarriesTheServersOwnWords() = runTest(dispatcher) {
+        media.videoRefused = true
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+
+        val upload = vm.state.value.picked.single().upload
+        assertThat((upload as AssetUpload.Failed).message).isEqualTo("not H.264")
+    }
+
+    @Test
+    fun aChosenCoverPictureReplacesTheFrameAndDropsTheOldId() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+        assertThat(vm.state.value.coverMediaId).isNotNull()
+
+        vm.onPickCoverPicture("my-own.jpg")
+        assertThat(vm.state.value.coverChoice)
+            .isEqualTo(CoverChoice.Picture("my-own.jpg"))
+        // The uploaded cover is no longer the one the author means.
+        assertThat(vm.state.value.coverMediaId).isNull()
+    }
+
+    @Test
+    fun aFileTheStepCannotReadIsRefusedWhereItWasOffered() = runTest(dispatcher) {
+        processor.unreadable = true
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        // Not from the grid and neither a readable picture nor a clip.
+        vm.onTogglePick("mystery.bin")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // It never joined the batch, so the tray is untouched.
+        assertThat(vm.state.value.picked).isEmpty()
+        val refused = vm.state.value.refused.single()
+        assertThat(refused.message).isEqualTo(ComposeWizardViewModel.UNREADABLE_FILE)
+        // Nothing to preview: the tile is empty on purpose.
+        assertThat(refused.uri).isNull()
+
+        // Its only way out is removing the notice.
+        vm.onDismissRefusal(0)
+        assertThat(vm.state.value.refused).isEmpty()
+    }
+
+    @Test
+    fun aPictureOverItsCapIsRefusedWithTheCapItBroke() = runTest(dispatcher) {
+        processor.size = ComposeWizardViewModel.MAX_PICTURE_BYTES + 1
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onTogglePick("huge.jpg")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.picked).isEmpty()
+        val refused = vm.state.value.refused.single()
+        assertThat(refused.message).isEqualTo(ComposeWizardViewModel.PICTURE_TOO_BIG)
+        // It is a readable picture, so the row can preview it.
+        assertThat(refused.uri).isEqualTo("huge.jpg")
+    }
+
+    @Test
+    fun aFileTheStoreWillNotWeighIsLetThrough() = runTest(dispatcher) {
+        processor.size = null
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onTogglePick("unmeasured.jpg")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // An unmeasurable file is judged by the server, not refused here.
+        assertThat(vm.state.value.refused).isEmpty()
+        assertThat(vm.state.value.picked.map { it.uri }).containsExactly("unmeasured.jpg")
+    }
+
+    @Test
+    fun aClipIsWeighedAfterItsTranscodeRatherThanBefore() = runTest(dispatcher) {
+        video.outputBytes = ComposeWizardViewModel.MAX_VIDEO_BYTES + 1
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+
+        // The cover went up; the clip did not, because what would have
+        // been sent is over the cap.
+        assertThat(media.order).containsExactly("still")
+        val upload = vm.state.value.picked.single().upload
+        assertThat((upload as AssetUpload.Failed).message)
+            .isEqualTo(ComposeWizardViewModel.VIDEO_TOO_BIG)
+    }
+
+    @Test
+    fun aBigRecordingThatCompressesSmallIsAccepted() = runTest(dispatcher) {
+        // The whole point of re-encoding: weighing the original would
+        // refuse a post the ruling means to allow.
+        processor.size = 400L * 1024 * 1024
+        video.outputBytes = 20L * 1024 * 1024
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+
+        assertThat(vm.state.value.refused).isEmpty()
+        assertThat(media.order).containsExactly("still", "video").inOrder()
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+    }
+
+    @Test
+    fun aReadablePictureIsNeverRefused() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onTogglePick("a")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.refused).isEmpty()
+        assertThat(vm.state.value.picked.map { it.uri }).containsExactly("a")
+    }
+
+    @Test
+    fun aRestoredDraftRemembersThatItsPickWasAClip() = runTest(dispatcher) {
+        // A draft stores a URI and its words, never what kind of thing
+        // the URI is — so the kind is re-read, or the clip comes back as
+        // a one-picture gallery bound for a crop stage it never had.
+        drafts.held = ComposeDraft(
+            bodyKind = DraftBodyKind.Media,
+            body = "",
+            title = "",
+            description = "",
+            assets = listOf(DraftAsset("clip-1", "")),
+            shape = com.cogra.domain.compose.DraftShape.Tall,
+        )
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onContinueDraft()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.isVideoPost).isTrue()
+        assertThat(vm.state.value.hasCoverStep).isTrue()
+        assertThat(vm.state.value.hasCropStep).isFalse()
+    }
+
+    @Test
+    fun theClipIsTheWholeGalleryItAttaches() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+        vm.onNext() // details -> seal
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // One attachment, and it is the video — the cover rides the
+        // asset row rather than the gallery.
+        assertThat(content.lastAttachments.map { it.mediaId }).containsExactly("v1")
     }
 }

@@ -27,6 +27,10 @@ class ComposeWizardStateTest {
         mode = BodyMode.Media,
         picked = listOf(PickedAsset("a"), PickedAsset("b")),
     )
+    private val video = ComposeWizardState(
+        mode = BodyMode.Media,
+        picked = listOf(PickedAsset("clip", durationMs = 42_000)),
+    )
 
     // -- The two path lengths --
 
@@ -379,5 +383,75 @@ class ComposeWizardStateTest {
         // A named refusal wins: it is the server's own words.
         assertThat(words.copy(refusal = "too many", transportFailed = true).problem())
             .isEqualTo("too many")
+    }
+
+    // -- The video path (`ComposeCover`) --
+
+    @Test
+    fun aVideoTakesTheCoverStageInsteadOfTheCrop() {
+        assertThat(video.hasCoverStep).isTrue()
+        assertThat(video.hasCropStep).isFalse()
+        val next = video.advanced()
+        assertThat(next?.step).isEqualTo(WizardStep.Cover)
+        assertThat(next?.advanced()?.step).isEqualTo(WizardStep.Details)
+    }
+
+    @Test
+    fun theCoverStageStepsBackToThePick() {
+        val cover = video.copy(step = WizardStep.Cover)
+        assertThat(cover.retreated()?.step).isEqualTo(WizardStep.Body)
+        // …and details returns to the cover rather than to the crop a
+        // video never passed through.
+        assertThat(video.copy(step = WizardStep.Details).retreated()?.step)
+            .isEqualTo(WizardStep.Cover)
+    }
+
+    @Test
+    fun aClipReplacesAGalleryAndAGalleryReplacesAClip() {
+        val gallery = media.togglePick("clip", durationMs = 4_000)
+        assertThat(gallery.picked.map { it.uri }).containsExactly("clip")
+        assertThat(gallery.isVideoPost).isTrue()
+
+        val backToPictures = gallery.togglePick("c")
+        assertThat(backToPictures.picked.map { it.uri }).containsExactly("c")
+        assertThat(backToPictures.isVideoPost).isFalse()
+    }
+
+    @Test
+    fun asecondClipReplacesTheFirstRatherThanJoiningIt() {
+        val second = video.togglePick("other", durationMs = 9_000)
+        assertThat(second.picked.map { it.uri }).containsExactly("other")
+    }
+
+    @Test
+    fun changingTheBodyForgetsThePreviousClipsFace() {
+        val faced = video.copy(
+            coverChoice = CoverChoice.Frame(2),
+            coverMediaId = "cover-1",
+        )
+        val swapped = faced.togglePick("other", durationMs = 1_000)
+        assertThat(swapped.coverMediaId).isNull()
+        assertThat(swapped.coverChoice).isEqualTo(CoverChoice.Frame(0))
+    }
+
+    @Test
+    fun aVideoIsNotCompleteUntilItsCoverHasLanded() {
+        val uploaded = video.withUpload("clip", AssetUpload.Done("video-1"))
+        // The clip has an id and the cover does not: signing would send a
+        // video naming a poster that is not there.
+        assertThat(uploaded.uploadsComplete).isFalse()
+        assertThat(uploaded.copy(coverMediaId = "cover-1").uploadsComplete).isTrue()
+    }
+
+    @Test
+    fun theSealCallsAVideoAVideo() {
+        assertThat(video.copy(title = "Low tide").sealSummary).isEqualTo("Low tide — video")
+        // A gallery still counts pictures.
+        assertThat(media.copy(title = "Low tide").sealSummary).isEqualTo("Low tide — 2 pictures")
+    }
+
+    @Test
+    fun theFirstFrameIsTheFaceUntilTheAuthorSaysOtherwise() {
+        assertThat(ComposeWizardState().coverChoice).isEqualTo(CoverChoice.Frame(0))
     }
 }
