@@ -430,10 +430,18 @@ behaviour and matching names:
   timestamp), optional title, optional description, body,
   media gallery, stance control. Variants: text-only,
   single-image, gallery, with and without title.
-- **Comment** — author, body, timestamp, media, nested
-  replies, stance control. Variants: top-level, nested.
+- **Comment** — author, body, timestamp, media, replies, stance
+  control. Variants: top-level, nested. **Replies nest one
+  level**: a reply to a reply flattens into that level and opens
+  with the `@handle` it answers — the mention is the structure.
+  Comment media is words-first — pictures sit below the words,
+  inset, capped at comment scale so a comment never becomes a
+  post, and never cropped: a single picture shows whole at its
+  own ratio, multiples share the square pager.
 - **Profile header** — avatar, name, handle, bio, link,
-  connection count, and a primary action.
+  connection count, and a primary action. The profile carries
+  **one image, the avatar**; there is no cover. Changing it is a
+  signed act with its own seal — pick, circular 1:1 crop, sign.
 - **Actor chip / row** — compact person-or-group reference. A
   Collective looks like a person but reads as a shared
   identity.
@@ -454,27 +462,67 @@ behaviour and matching names:
   section opens, bound to `referenceCandidates`. Its visual
   design is pending; the structure it binds to is fixed, so the
   look changes without the clients rebinding.
-- **Media attachment** — aspect-ratio-reserved tile with
-  optional alt text; gallery layout for multiples. Space is
-  reserved before load so content never jumps. Portrait caps at
-  4:5 and a taller frame is fitted whole inside it, plain surface
-  showing at the sides — the layout never decides the author's
-  crop. A gallery's secondary squares are the one thing that
-  crops, because they are an index into the set rather than the
-  picture itself.
+- **Media attachment** — aspect-ratio-reserved tile with an
+  optional description. Space is reserved before load so content
+  never jumps. Portrait caps at 4:5 and a taller frame is fitted
+  whole inside it, plain surface showing at the sides — the
+  layout never decides the author's crop. **The gallery is a
+  pager**: every picture in a post shares the post's one crop
+  shape, so the card shows one frame at that shape, swiped, each
+  picture whole exactly as the author shaped it — dots below,
+  dots only, never a count pill. A post carries at most **ten
+  pictures, or one video** with its cover; a comment at most
+  **four**. The cover step belongs to video; a gallery's cover is
+  its first picture, set by order.
 - **Media viewer** — the full-size view a tap opens from the
   detail surface: contained, as large as the screen allows,
   dismissed with back, Escape, or the backdrop, and the route
   never changes. In the feed the same tap opens the post.
-- **Picker and crop step** — the compose wizard's body-first
+- **Picker, crop, and upload** — the compose wizard's body-first
   pick: a picked tray over a newest-first device grid, the first
-  pick the cover. The crop offers one shape for the whole post —
-  4:5, 1:1, or 1.91:1 — with framing chosen per picture and a
-  complete non-drag route through discrete move and zoom
-  controls.
+  pick the cover; on web the grid is a file button and a drop
+  target, because a browser has no device gallery. The crop
+  offers one shape for the whole post — 4:5, 1:1, or 1.91:1 —
+  with framing chosen per picture and a complete non-drag route
+  through discrete move and zoom controls. **Upload starts after
+  the crop, and only the cropped export ever leaves the device**:
+  the original frame can hold what the author never meant to
+  share. Progress rides the picked thumbnails, a failed picture
+  offers retry or removal, and **the seal gates on it** — signing
+  waits until the pictures it signs exist. The tray's Show all
+  sheet is the per-picture manager: reorder, remove, describe.
+  Comments have no pick stage — Add opens the platform's own
+  picker (the photo sheet on Android, the file dialog on web,
+  which also takes a drop anywhere on the composer) — and comment
+  pictures never crop, so they upload at pick.
+- **Descriptions** — a picture's description is authored,
+  optional, and **never invented**: a picture the author left
+  undescribed is skipped by screen readers rather than guessed
+  at. The entry is the describe counter, shown wherever a
+  composer holds picked pictures, never on the crop step.
+  Description and upload are detached — the upload moves bytes,
+  the description rides the signature — so neither waits on the
+  other.
+- **Acts card** — what a signing lands: one row per kind of act
+  with its cost, the sum, and, on every multi-act seal, the note
+  that they land together or none does. A ceremony screen carries
+  it inline; a composer peeks at it through a bottom sheet, which
+  is what an edit's "This creates n signed actions" footer opens.
+- **Wizard chrome** — every composer-flow stage wears the same
+  header, and the header carries only the ways out: `← Title … X`.
+  The arrow steps one stage back, never out of the flow; the X
+  leaves the whole flow from any stage. **The forward action
+  always lives at the bottom** — a Next that moves between
+  corners as the stages change is an accidental-leave trap. The
+  crop viewport is full-bleed: cropping needs the picture at the
+  width the screen allows.
 - **Body veil** — the sensitive state. The body blurs as one
   region: media, text, and description together, with the title
-  outside it. Tap reveals.
+  and topics outside it and readable, so a reader can decide from
+  the frame. One tap reveals everything, the whole gallery
+  included — never one picture of it — and the content stays
+  mounted underneath, keeping its exact space, so revealing moves
+  nothing on screen.
 - **Empty, loading, and error states** for every list surface.
   Designed, not blank.
 - **Scaffolding** — top app bars, bottom navigation, bottom
@@ -763,12 +811,12 @@ again.
 **At rest the target shows the standing.** A viewer with a
 bundle toward the thing sees its face and folded pair on the
 resting target itself; a viewer without one sees a **muted,
-translucent face** — the same control at rest, visibly waiting
-to be given a value — never a bare word. The affordance keeps
-an accessible label either way. The bundle is already loaded
-by the read that rendered the surface (§8.2) — showing it
-costs nothing and is the difference between a control and a
-mystery button.
+translucent 🫥** — the dotted-line face, the same control at
+rest, visibly waiting to be given a value — never a bare word.
+The affordance keeps an accessible label either way. The bundle
+is already loaded by the read that rendered the surface (§8.2) —
+showing it costs nothing and is the difference between a control
+and a mystery button.
 
 ### 8.4 The emoji readout
 
@@ -803,6 +851,14 @@ neighbour ("🙂 Nice") is a lie. It gets its own readout: **🤷**
 with the severed/no-standing wording, on every surface that
 shows a standing. The anchor table reads picks and non-zero
 bundles only.
+
+**The resting face is 🫥**, muted (§8.3) — the dotted-line face,
+"nothing here yet". It sits outside the table for the same
+reason the zero bundle does: an unauthored target must not read
+as a standing the viewer already holds. It is not 🤷 — never
+authored and netted to zero are different states, and the
+clients tell them apart. Like the table, it is a value both
+clients read.
 
 | `p_d` | `p_i` | Readout | Label |
 |---:|---:|:---:|---|
@@ -892,8 +948,10 @@ carry that without alarming anyone.
 - **Removed** — a calm placeholder in place of the content,
   never a silent gap. It reads as a statement of fact, not a
   warning.
-- **Sensitive** — a gentle blur with tap to reveal, tuned by
-  the reader's own preference. Warm wording.
+- **Sensitive** — a neutral wash over the body with tap to
+  reveal, warm wording, no warning glyph. A veil either exists
+  or it does not: it is one state, never a scale the reader
+  tunes.
 - **Pending** — content authored but not yet L1-final. It shows
   in full to every reader, not just its author, with a quiet
   marker saying it is still settling
