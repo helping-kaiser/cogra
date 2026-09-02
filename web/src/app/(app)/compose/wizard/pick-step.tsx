@@ -19,8 +19,10 @@ import { useId, useRef, useState } from "react";
 
 import { PillButton, TextAction } from "@/lib/ui2/pill-button";
 import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
+import { UploadErrorLine } from "@/lib/ui2/compose/upload-notice";
+import type { PickRefusal } from "@/lib/compose/pick";
 import type { PickedAsset } from "@/lib/compose/wizard";
-import { POST_ATTACHMENT_CAP } from "@/lib/compose/wizard";
+import { kindOf, POST_ATTACHMENT_CAP } from "@/lib/compose/wizard";
 
 /**
  * What the picker accepts. Pictures are re-written to WebP by the encoder
@@ -35,12 +37,14 @@ export function PickStep({
   words,
   assets,
   previews,
+  refusals,
   error,
   blocked,
   onWords,
   onMode,
   onPick,
   onUnpick,
+  onDismissRefusal,
   onManage,
   onNext,
 }: {
@@ -48,12 +52,14 @@ export function PickStep({
   words: string;
   assets: readonly PickedAsset[];
   previews: Readonly<Record<string, string>>;
+  refusals: readonly PickRefusal[];
   error: string | null;
   blocked: boolean;
   onWords: (next: string) => void;
   onMode: (next: "words" | "media") => void;
   onPick: (files: readonly File[]) => void;
   onUnpick: (id: string) => void;
+  onDismissRefusal: (id: string) => void;
   onManage: () => void;
   onNext: () => void;
 }) {
@@ -70,11 +76,13 @@ export function PickStep({
     <MediaBody
       assets={assets}
       previews={previews}
+      refusals={refusals}
       error={error}
       blocked={blocked}
       onMode={onMode}
       onPick={onPick}
       onUnpick={onUnpick}
+      onDismissRefusal={onDismissRefusal}
       onManage={onManage}
       onNext={onNext}
     />
@@ -175,39 +183,44 @@ function WordsBody({
 function MediaBody({
   assets,
   previews,
+  refusals,
   error,
   blocked,
   onMode,
   onPick,
   onUnpick,
+  onDismissRefusal,
   onManage,
   onNext,
 }: {
   assets: readonly PickedAsset[];
   previews: Readonly<Record<string, string>>;
+  refusals: readonly PickRefusal[];
   error: string | null;
   blocked: boolean;
   onMode: (next: "words" | "media") => void;
   onPick: (files: readonly File[]) => void;
   onUnpick: (id: string) => void;
+  onDismissRefusal: (id: string) => void;
   onManage: () => void;
   onNext: () => void;
 }) {
   const input = useRef<HTMLInputElement | null>(null);
   const [over, setOver] = useState(false);
+  const first = assets[0];
+  // WITH A VIDEO THERE IS NO ADD CONTROL (design/backlog.md item 31, round 2
+  // point 3). The body is full in a way a count cannot express: a video takes
+  // it whole, so an "add" affordance beside one could only ever be refused.
+  const holdsVideo = first !== undefined && kindOf(first) === "video";
   const full = assets.length >= POST_ATTACHMENT_CAP;
 
-  // Pictures and video both pass; everything else is dropped here rather than
-  // travelling to a check that would only say the same thing later. The
-  // composition rule — pictures OR one video — is the wizard's, not the
-  // picker's, because it is a rule about the draft rather than about a file.
+  // EVERYTHING PICKED IS HANDED OVER, including files that are obviously
+  // neither a picture nor a video. Filtering here is what made a dropped PDF
+  // vanish without a word; the screening is the only thing that can say why a
+  // file did not get in, so it has to see them all.
   const take = (list: FileList | null) => {
     if (list === null) return;
-    onPick(
-      Array.from(list).filter(
-        (file) => file.type.startsWith("image/") || file.type.startsWith("video/"),
-      ),
-    );
+    onPick(Array.from(list));
   };
 
   return (
@@ -291,26 +304,60 @@ function MediaBody({
             over ? "border-primary bg-surface-container" : "border-outline"
           }`}
         >
-          <span className="flex size-12 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant">
-            <svg viewBox="0 0 24 24" width={24} height={24} fill="currentColor" aria-hidden="true">
-              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-            </svg>
-          </span>
-          <PillButton
-            testId="wizard-open-picker"
-            variant="outlined"
-            disabled={full}
-            onClick={() => input.current?.click()}
-          >
-            {full ? `${POST_ATTACHMENT_CAP} is the most` : "Choose from your files"}
-          </PillButton>
-          <span className="text-label-small text-on-surface-variant">…or drop them here.</span>
+          {holdsVideo ? (
+            <span
+              data-testid="wizard-video-body"
+              className="text-label-small text-on-surface-variant"
+            >
+              A video is the whole post.
+            </span>
+          ) : (
+            <>
+              <span className="flex size-12 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant">
+                <svg viewBox="0 0 24 24" width={24} height={24} fill="currentColor" aria-hidden="true">
+                  <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                </svg>
+              </span>
+              <PillButton
+                testId="wizard-open-picker"
+                variant="outlined"
+                disabled={full}
+                onClick={() => input.current?.click()}
+              >
+                {full ? `${POST_ATTACHMENT_CAP} is the most` : "Choose from your files"}
+              </PillButton>
+              <span className="text-label-small text-on-surface-variant">…or drop them here.</span>
+            </>
+          )}
           {error && (
             <p role="alert" data-testid="wizard-body-error" className="m-0 text-body-medium text-error">
               {error}
             </p>
           )}
         </div>
+
+        {/* THE REFUSALS, one line each, each with its own way out — and the
+            tray above went on holding everything that was accepted. They stay
+            until dismissed: a file refused mid-batch is easy to miss, and a
+            banner that faded would leave an author wondering where their
+            picture went. No Retry: retrying cannot make a file smaller or a
+            format readable. */}
+        {refusals.length > 0 && (
+          <ul
+            data-testid="wizard-refusals"
+            className="m-0 mt-3 flex list-none flex-col gap-1 p-0"
+          >
+            {refusals.map((refusal) => (
+              <li key={refusal.id}>
+                <UploadErrorLine
+                  message={refusal.reason}
+                  onRemove={() => onDismissRefusal(refusal.id)}
+                  testId={`wizard-refusal-${refusal.id}`}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
         {/* ComposePickWeb puts it below the drop region, 16px down. */}
         <NextAction disabled={blocked} onNext={onNext} className="pt-4" />
       </div>
