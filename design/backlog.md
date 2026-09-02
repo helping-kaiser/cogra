@@ -549,5 +549,45 @@ nav's New post meets a kept draft first. Four journeys conclude on the
 again: 82 of 132 gaps now sit on a declared journey's boards, up from
 73; the journey-stopping census held at thirteen, since the new
 New-post flows repeat the seed's seven undesigned origins rather than
-adding any. Still to author: profile and patterns, and the web
-wizards' parallel flows.
+adding any.
+
+**Batch 4 landed 2026-09-02 — profile, the web wizards, the reader
+sweeps. The round's authoring is complete.** Ten flows join:
+`see-who-stands-with-someone`, `find-the-thread-a-comment-answers`,
+`edit-your-profile`, `take-a-stance-on-a-person` and `message-someone`
+on profile; `publish-from-the-browser` and `reply-from-the-browser` as
+the web parallels; `visit-an-author`, `open-a-posts-pictures` and
+`follow-a-citation` completing the five repeated reader controls.
+Fifty declared, forty-six resolved, four blocked — the two standing
+ones joined by the chat surface and the cited node's own surface.
+Three read journeys conclude on arrival, and the schema has no shape
+for an end that *is* the arrival: a flow must name an end edge, so
+each ends on the reading act its arrival board offers in place — «On
+them» on the stance lists, the chronicle tab already showing, the
+gallery pager. «Message» could not become a control start at all —
+all three of its origins reach only the chat-surface gap, and a
+control start whose every edge is undesigned fails outright rather
+than blocking, so `message-someone` starts from the board and
+declares the gap edge as its end, which is what makes it an honest
+blocked claim instead of a failure. Five control starts join the
+census — «the figures row» over five profiles, «the stance anchor»
+over three, «author chip» over thirteen post surfaces, «post media»
+over eleven and «reference count» over eleven — all converging, none
+needing an `except`. Both web boards are declared entries, so both
+flows start from the board; `ComposePickWeb` rejoins the native
+wizard at the crop, not at details, and needed a pin the native
+publish flow does not: from the web pick the search also runs out
+through «Write words instead» into `ComposePick` and back to the
+crop, a detour the native flow's own start board blocks as already
+seen. Coverage: 94 of 132 gaps now sit on a declared journey's
+boards, up from 82; the journey-stopping census moves from thirteen
+to fifteen, the two new blocked ends.
+
+An optional tail remains, worth authoring only if a later round wants
+the bench exhausted: `retry-an-unusable-invite`,
+`recover-a-forgotten-password`, `make-a-key-without-a-backup`,
+`search-and-open-a-post` (blocked — the standalone post detail),
+`search-finds-nothing-then-something`, `add-a-topic` (blocked — the
+topic picker), `change-the-license-before-signing`,
+`mark-your-post-sensitive`, and `check-what-the-edit-signs`, which
+first needs a ruling on whether a detour may start a flow.
