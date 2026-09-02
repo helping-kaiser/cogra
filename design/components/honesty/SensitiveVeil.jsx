@@ -5,13 +5,11 @@ import { Icon } from "../navigation/Icon.jsx";
    statement of fact, never `error` colouring. Their GRANULARITY is opposite, and
    the docs are unambiguous about why.
 
-   SENSITIVE IS PER FIELD. `FieldModerationStatus` exists per field precisely so
-   that a title, a description, a text body, and EACH media attachment can carry
-   the flag alone (a gallery cannot wrap generically, so it carries a sibling
-   `attachmentsStatus`). "Per-field granularity exists for SENSITIVE only" — so
-   one image in a gallery is veiled while its four neighbours read normally, and a
-   title is veiled while its description does not. Blanketing a post here would
-   throw away the one thing the data model went out of its way to keep.
+   SENSITIVE COVERS THE BODY, AS ONE. Media, words and description veil together;
+   the title and topics stay outside it and readable, so choosing to look is
+   informed. A gallery veils whole, never one picture of it — the set carries one
+   state. Veiling a field at a time would ask the reader the same question five
+   times over, and what it left showing would describe what it covers.
 
    REDACTED IS THE WHOLE RECORD. An `illegal` verdict removes the payload of the
    record carrying the content: "granularity is the record, whole — the binding
@@ -54,8 +52,8 @@ export function SensitiveScope({ children }) {
 }
 
 /**
- * Veils ONE field or ONE attachment — a title, a description, a body, a single
- * tile. Never a whole post.
+ * Veils a body region as one — a post's gallery, its paragraphs, a comment's
+ * whole body. `SensitiveScope` makes one tap answer for every veil in a post.
  */
 export function SensitiveVeil({ children, kind = "media", label = "Sensitive — tap to view", reason, revealLabel = "Show", radius }) {
   const scope = React.useContext(RevealContext);

@@ -115,10 +115,9 @@ witnessed in the payload; a verdict lives in the moderation
 system's own state. One side writing cannot overwrite the other
 by construction rather than by care.
 
-Both marks read back as the same `SENSITIVE` status on the same
-fields — the author's optional reason is what tells a reader
-which one they are looking at. An **edit switch reads the
-author's own mark alone**
+Both marks read back as the same `SENSITIVE` status, and the
+veil names which of the two a reader is looking at. An **edit
+switch reads the author's own mark alone**
 (`Post.sensitiveSelfMark` / `Comment.sensitiveSelfMark`), never
 the veil: a switch bound to the OR would show a moderated post as
 self-marked and then claim to unmark something the author cannot

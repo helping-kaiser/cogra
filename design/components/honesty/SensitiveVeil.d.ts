@@ -2,11 +2,10 @@
  * design.md §9's two content states. Same register — a statement of fact, never
  * `error` colouring — and opposite granularity.
  *
- * SENSITIVE is per FIELD: a title, a description, a body, and each media
- * attachment can be veiled alone (`FieldModerationStatus` exists per field for
- * exactly this, and "per-field granularity exists for SENSITIVE only"). Reveal,
- * however, is per POST — wrap it in `SensitiveScope` and one tap answers for
- * everything inside.
+ * SENSITIVE covers the BODY as one: media, words and description veil together,
+ * the title and topics stay outside it and readable, and a gallery veils whole
+ * rather than one picture of it. Reveal is per POST — wrap it in
+ * `SensitiveScope` and one tap answers for everything inside.
  *
  * REDACTED is the whole RECORD: an illegal verdict removes the payload, so every
  * authored field goes together. `RedactedContent` therefore replaces a node's
