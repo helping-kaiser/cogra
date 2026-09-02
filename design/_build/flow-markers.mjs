@@ -307,6 +307,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Describe the pictures</button>", tag: "button" },
     { n: 7, find: "+ Add pictures · 2 of 4", tag: "button" },
   ],
+  ReplyVideo: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: "if the light comes through at all.", tag: "p" },
+    { n: 5, find: 'aria-label="Remove this video"', tag: "button" },
+    { n: 6, find: 'class="cg-cover-frame"', tag: "div", all: true },
+    { n: 7, find: 'class="cg-cover-own"', tag: "div" },
+  ],
   ReplyPicturesWeb: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
