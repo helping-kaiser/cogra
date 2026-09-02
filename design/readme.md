@@ -1337,8 +1337,10 @@ media and comment editing.
   the ratio vocabulary across media components is the crop ruling's
   (`tall` 4:5 · `square` 1:1 · `wide` 1.91:1 — 16:9 is gone).
 - **Caps.** A post carries at most **ten pictures, or one video**
-  (with its cover); a comment at most **four pictures**. The caps
-  are authoring-side; the components render what they are given.
+  (with its cover); a comment at most **four pictures, or one video**
+  (with its cover). The caps are authoring-side; the components render
+  what they are given. Byte caps and the refusal states are below,
+  *Comment video and the media error states*.
 - **Upload starts after the crop.** The crop happens on the device
   and **only the cropped export is ever uploaded** — the original
   frame can hold what the author never meant to share. Comment
@@ -1764,6 +1766,88 @@ The rulings the layer rests on:
   look is informed. The block's type is the theme's rather than the
   media face's fixed white, which is legible only because that wash
   lies over a picture.
+
+### Comment video and the media error states — 2026-09-02
+
+Filed by the implementation loop (jakob's words): a comment should be
+able to carry a video and its cover, and both scales need states for a
+file that is too big or in a format nothing here reads.
+
+- **A comment's media grammar is the post's at comment caps**: up to
+  four pictures, **or** one video with its cover — never both kinds,
+  the same XOR a post's body carries. The caps are product constants
+  the implementations copy, authoring-side like every other cap:
+  **a picture 10 MiB** (10 per post, 4 per comment), **a video
+  100 MiB in a post and 50 MiB in a comment**, **a cover 10 MiB**.
+  **The caps are enforced in MiB and written MB on screen** — 50 MiB
+  is 52.4 MB, so the number a reader sees under-promises and can never
+  refuse a file the product would have taken. Writing MiB would be
+  exact and unreadable.
+- **Entry is unchanged; its label follows the state.** The picker is
+  still the platform's own, and picking a video puts the composer in
+  its video state (*Reply · a video and its cover*). The control says
+  what it will take: an empty composer reads **"+ Add pictures or a
+  video"**, one holding pictures reads **"+ Add pictures · n of 4"**
+  (the video is out — the grammar is exclusive), and one holding a
+  video carries **no add control at all**, the cover row standing
+  alone. There is still no pick stage and no crop, so the video
+  uploads at pick like a comment's pictures do.
+- **The cover is the post's, inlined.** `ComposeCover`'s row — the
+  frame strip, the tile that takes a picture of your own, *A frame, or
+  a picture of your own.* — sits under the video at comment scale
+  rather than in a stage of its own: the comment composer is one
+  screen, and a wizard stage is exactly what comments do not have. The
+  video itself shows in the comment pager's fixed square frame, whole
+  inside it, so a comment never turns into a post.
+- **A refused file is refused where it was offered** — a line in the
+  composer's media row, never a dialog and never a snackbar (a
+  snackbar confirms what happened; errors sit on the surface they
+  happened on). Two boards draw it, *Reply · files refused* and *Pick ·
+  files refused*. The error names the cap it broke, and that is the
+  ONLY place a cap is named: nothing announces the limits in advance.
+- **The ways out follow the failure.** An upload that lost the network
+  offers Retry · Remove it. A refused file offers only *Remove it* —
+  retrying cannot make a file smaller or a format readable, and
+  `UploadErrorLine` drops the link rather than dangling one that would
+  fail identically twice. `MediaThumb` grew the composer's video
+  anatomy with it: the play disc and the duration, authoring-side only
+  — a reading surface still never draws play.
+
+- **A video takes ONE description, its cover none.** A clip is one
+  thing to describe, so the counter reads *Describe the video · 0 of 1
+  described* and opens the same describe sheet a picture opens; the
+  cover is the video's face, not a second picture, and asking for a
+  description of it would ask twice about one thing. The row rides
+  wherever media is staged — the reply composer's video state, and the
+  post wizard's details step, which now carries the describe entry its
+  own ruling always gave it.
+- **A comment's video plays like a post's.** Muted autoplay while it
+  is on screen, in the comment pager's square frame, wearing the one
+  control a video ever wears: sound, on the sticky global decision
+  every video shares. No play/pause and no duration pill on a reading
+  surface — presence on screen is the policy, at both scales. *Comments
+  · a video, pictures & own comment* draws it.
+- **Web takes the video state 1:1** — the file dialog and the
+  composer's drop-anywhere path play the picker's part, and nothing
+  else differs, so no web board is drawn (the web avatar flow's
+  blessing again). The web board's drop hint grows to *…or drop
+  pictures or a video here.*
+
+**What the implementations must match** (from
+[api-spec.md](../docs/implementation/api-spec.md), so no lane
+re-invents the refusal states): the stored formats are **WebP and
+MP4** (H.264 video, AAC audio), both **sniffed from the bytes**, never
+trusted from a declared type. **GIF converts on the device**, so the
+picker never refuses a GIF; an **animated WebP is a still**. The
+unknown-format refusal therefore fires only for a file that is neither
+a decodable image nor an H.264/AAC MP4 *after* any device-side
+conversion. A frame chosen as a cover is **extracted on the device and
+uploaded as the account's own picture** — the cover is always an asset
+the author holds.
+
+The four refusal lines, and the video sentence added to the
+*Describing pictures* dialog, are new copy — listed in
+[guidelines/copy-voice.md](guidelines/copy-voice.md).
 
 ### The pattern boards — 2026-09-02
 
