@@ -37,14 +37,26 @@ query HashtagDetail($name: String!, $includePending: Boolean! = true) {
             value
             status
           }
-          # The same card renders here, so it reads the same gallery.
+          # The same card renders here, so it reads the same gallery — the
+          # video fields included, or the card would be handed a post whose
+          # attachments cannot say whether they move.
           attachments {
             id
             url
             altText
             status
+            mimeType
             options {
               aspectRatio
+              durationMs
+            }
+            coverMedia {
+              id
+              url
+              status
+              options {
+                aspectRatio
+              }
             }
           }
           attachmentsStatus
