@@ -24,11 +24,14 @@ import { useEffect, useRef, useState } from "react";
 
 import { tileRatio } from "./aspect";
 import { MediaTile, type MediaTileProps } from "./media-tile";
+import type { PlayerSurface } from "./video-player";
 
 export type GalleryItem = Pick<
   MediaTileProps,
   "src" | "altText" | "sourceRatio" | "label" | "mimeType" | "poster" | "durationMs"
 >;
+
+export type { PlayerSurface } from "./video-player";
 
 // Two ratios agree when they round to the same hundredth: the server states the
 // shape in lowest terms off the bytes, so "4:5" and a 1080×1350 export are the
@@ -58,10 +61,13 @@ export function MediaGallery({
   radius = "var(--radius-medium)",
   maxHeight,
   preloadLead = false,
+  surface = "full",
   testId = "media-gallery",
   onOpen,
 }: {
   items: readonly GalleryItem[];
+  /** `reading` is the comment's form — the sound control and nothing else. */
+  surface?: PlayerSurface;
   // The one frame every picture renders at. Omitted, the first picture's shape
   // sets it — which is exactly right for a post, where the whole set shares one.
   ratio?: number;
@@ -114,9 +120,11 @@ export function MediaGallery({
     return (
       <MediaTile
         {...items[0]}
+        ratio={ratio}
         radius={radius}
         maxHeight={maxHeight}
         preload={preloadLead}
+        surface={surface}
         testId={`${testId}-lead`}
         onOpen={onOpen ? () => onOpen(0) : undefined}
       />
@@ -169,6 +177,7 @@ export function MediaGallery({
               radius={radius}
               maxHeight={maxHeight}
               preload={index === 0 && preloadLead}
+              surface={surface}
               testId={`${testId}-page-${index}`}
               onOpen={onOpen ? () => onOpen(index) : undefined}
             />

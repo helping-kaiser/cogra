@@ -24,10 +24,21 @@
 
 import { useEffect, useState } from "react";
 
-import { COMMENT_ATTACHMENT_CAP, type CommentMedia } from "@/lib/compose/comment-media";
+import {
+  COMMENT_ATTACHMENT_CAP,
+  isVideoComment,
+  type CommentMedia,
+} from "@/lib/compose/comment-media";
+import type { PickRefusal } from "@/lib/compose/pick";
+import type { CoverAsset } from "@/lib/compose/wizard";
 import { PillButton } from "../pill-button";
+import { CoverRow } from "./cover-row";
 import { MediaThumb } from "./media-thumb";
 import { DescribeCounter } from "./picked-row";
+import { UploadErrorLine } from "./upload-notice";
+
+const NO_URLS: readonly string[] = [];
+const NO_REFUSALS: readonly PickRefusal[] = [];
 
 /** The board's tile height; the width follows each picture's own ratio. */
 const THUMB_HEIGHT = 88;
@@ -69,15 +80,29 @@ function usePreviewRatios(previews: Readonly<Record<string, string>>) {
 export function CommentAttachments({
   media,
   previews,
+  cover = null,
+  framePreviews = NO_URLS,
+  capturing = false,
+  durationMs = 0,
+  refusals = NO_REFUSALS,
   onPick,
   onRemove,
   onRetry,
   onDescribe,
+  onPickFrame,
+  onPickCover,
+  onDismissRefusal,
   testIdPrefix = "comment",
 }: {
   media: CommentMedia;
   /** Asset id → object URL for the bytes on this device. */
   previews: Readonly<Record<string, string>>;
+  /** ReplyVideo's cover row. Null until a face is settled. */
+  cover?: CoverAsset | null;
+  framePreviews?: readonly string[];
+  capturing?: boolean;
+  durationMs?: number;
+  refusals?: readonly PickRefusal[];
   onPick: (files: readonly File[]) => void;
   onRemove: (id: string) => void;
   onRetry: (id: string) => void;
@@ -87,16 +112,111 @@ export function CommentAttachments({
    * drawn only where pressing it does something.
    */
   onDescribe?: () => void;
+  onPickFrame?: (index: number) => void;
+  onPickCover?: (file: File) => void;
+  onDismissRefusal?: (id: string) => void;
   testIdPrefix?: string;
 }) {
   const ratios = usePreviewRatios(previews);
+  const video = isVideoComment(media);
+  const clip = video ? media[0] : undefined;
   const full = media.length >= COMMENT_ATTACHMENT_CAP;
   const failed = media.filter((asset) => asset.upload.kind === "failed");
 
+  // EVERYTHING PICKED IS HANDED OVER, unknown types included: filtering here is
+  // what made a dropped PDF vanish without a word, and the screening is the
+  // only thing that can say why a file did not get in.
   const take = (files: FileList | null) => {
     if (files === null || files.length === 0) return;
-    onPick([...files].filter((file) => file.type.startsWith("image/")));
+    onPick([...files]);
   };
+
+  // ReplyVideo: the clip, its one description, and its face. The add control is
+  // gone entirely — a video takes the body whole, so an "add" beside one could
+  // only ever be refused.
+  if (video && clip !== undefined) {
+    const upload = clip.upload;
+    return (
+      <div className="flex flex-col gap-3">
+        <ul className="m-0 flex list-none flex-wrap items-start gap-2 p-0">
+          <li className="flex-none">
+            <MediaThumb
+              src={framePreviews[cover?.frame ?? 0] ?? null}
+              altText={clip.altText}
+              width={thumbWidth(undefined)}
+              height={THUMB_HEIGHT}
+              fit="contain"
+              durationMs={durationMs}
+              progress={
+                upload.kind === "encoding" || upload.kind === "uploading" || upload.kind === "waiting"
+                  ? "indeterminate"
+                  : undefined
+              }
+              failed={upload.kind === "failed"}
+              onRemove={() => onRemove(clip.id)}
+              removeLabel="Remove this video"
+              testId={`${testIdPrefix}-media-${clip.id}`}
+            />
+          </li>
+        </ul>
+
+        {upload.kind === "failed" && (
+          <p
+            role="alert"
+            data-testid={`${testIdPrefix}-media-error-${clip.id}`}
+            className="m-0 flex flex-wrap items-center gap-2 text-label-small text-error"
+          >
+            {upload.message}
+            {upload.retryable && (
+              <PillButton
+                variant="text"
+                testId={`${testIdPrefix}-media-retry-${clip.id}`}
+                onClick={() => onRetry(clip.id)}
+              >
+                Retry
+              </PillButton>
+            )}
+            <PillButton
+              variant="text"
+              testId={`${testIdPrefix}-media-drop-${clip.id}`}
+              onClick={() => onRemove(clip.id)}
+            >
+              Remove
+            </PillButton>
+          </p>
+        )}
+
+        {/* ONE description for the clip. Its cover takes none — a poster is the
+            video's face, not a second attachment a reader could be told about. */}
+        {onDescribe && (
+          <DescribeCounter
+            described={clip.altText.trim() === "" ? 0 : 1}
+            total={1}
+            subject="the video"
+            onDescribe={onDescribe}
+            testId={`${testIdPrefix}-describe-counter`}
+          />
+        )}
+
+        {onPickFrame && onPickCover && (
+          <CoverRow
+            framePreviews={framePreviews}
+            cover={cover}
+            capturing={capturing}
+            onPickFrame={onPickFrame}
+            onPickPicture={onPickCover}
+            testIdPrefix={testIdPrefix}
+          />
+        )}
+
+        <Refusals
+          refusals={refusals}
+          onDismiss={onDismissRefusal}
+          testIdPrefix={testIdPrefix}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -179,7 +299,7 @@ export function CommentAttachments({
               screen at comment scale. */}
           <input
             type="file"
-            accept="image/*"
+            accept="image/*,video/mp4"
             multiple
             disabled={full}
             data-testid={`${testIdPrefix}-media-input`}
@@ -190,13 +310,60 @@ export function CommentAttachments({
             }}
             className="sr-only"
           />
-          + Add pictures · {media.length} of {COMMENT_ATTACHMENT_CAP}
+          {/* THE LABEL FOLLOWS THE STATE (design/backlog.md item 31, round 2
+              point 3): an empty composer offers both kinds, because both are
+              still possible; once pictures are in, the count is the useful
+              thing and a video is no longer on offer. */}
+          {media.length === 0
+            ? "+ Add pictures or a video"
+            : `+ Add pictures · ${media.length} of ${COMMENT_ATTACHMENT_CAP}`}
         </label>
         {/* ReplyPicturesWeb's one addition. The target is the whole composer,
             drawn nowhere; this line is what says so. */}
-        <span className="text-label-small text-on-surface-variant">…or drop them here.</span>
+        <span className="text-label-small text-on-surface-variant">
+          …or drop pictures or a video here.
+        </span>
       </div>
+
+      <Refusals refusals={refusals} onDismiss={onDismissRefusal} testIdPrefix={testIdPrefix} />
     </div>
+  );
+}
+
+/**
+ * The files that did not get in — ReplyMediaErrors, at comment scale.
+ *
+ * One line per file, each carrying its own way out, sitting beside a composer
+ * that went on accepting everything else. They PERSIST until dismissed: a file
+ * refused mid-batch is easy to miss, and a banner that faded would leave an
+ * author wondering where their picture went. No Retry — retrying cannot make a
+ * file smaller or a format readable.
+ */
+function Refusals({
+  refusals,
+  onDismiss,
+  testIdPrefix,
+}: {
+  refusals: readonly PickRefusal[];
+  onDismiss?: (id: string) => void;
+  testIdPrefix: string;
+}) {
+  if (refusals.length === 0 || !onDismiss) return null;
+  return (
+    <ul
+      data-testid={`${testIdPrefix}-refusals`}
+      className="m-0 flex list-none flex-col gap-1 p-0"
+    >
+      {refusals.map((refusal) => (
+        <li key={refusal.id}>
+          <UploadErrorLine
+            message={refusal.reason}
+            onRemove={() => onDismiss(refusal.id)}
+            testId={`${testIdPrefix}-refusal-${refusal.id}`}
+          />
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -216,7 +383,10 @@ export function commentDropHandlers(onPick: (files: readonly File[]) => void) {
     },
     onDrop: (event: React.DragEvent) => {
       event.preventDefault();
-      const files = [...event.dataTransfer.files].filter((file) => file.type.startsWith("image/"));
+      // Unfiltered: a dropped video routes to the composer's video state, and
+      // anything the screening refuses gets a line saying why rather than
+      // disappearing.
+      const files = [...event.dataTransfer.files];
       if (files.length > 0) onPick(files);
     },
   };

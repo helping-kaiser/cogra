@@ -203,7 +203,7 @@ describe("the reply wizard", () => {
       // The input IS the affordance: there is no grid, and no stage between.
       expect(await screen.findByTestId("reply-media-input")).toHaveAttribute("type", "file");
       expect(screen.getByTestId("reply-add-media")).toHaveTextContent(
-        "+ Add pictures · 0 of 4",
+        "+ Add pictures or a video",
       );
     });
 
@@ -231,7 +231,9 @@ describe("the reply wizard", () => {
 
     it("says the composer takes a drop, which is the web board's one addition", () => {
       draw();
-      expect(screen.getByTestId("reply-compose")).toHaveTextContent("…or drop them here.");
+      expect(screen.getByTestId("reply-compose")).toHaveTextContent(
+        "…or drop pictures or a video here.",
+      );
     });
 
     it("offers the describe counter once there is something to describe", async () => {
@@ -509,11 +511,34 @@ describe("the reply wizard", () => {
       );
     });
 
-    it("leaves the flow from the seal, in one press", async () => {
+    it("asks before discarding from the seal, where words certainly exist", async () => {
+      // Every reply leave edge routes through DiscardConfirm when something is
+      // written — the seal is reached only with words, so it always asks.
       const { onLeave } = draw();
       await toSeal();
       fireEvent.click(screen.getByTestId("header-leave"));
+      expect(onLeave).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByTestId("reply-discard-confirm-discard"));
       expect(onLeave).toHaveBeenCalled();
+    });
+
+    it("leaves an empty composer at once, asking nothing", () => {
+      // "empty — leaves at once". A confirmation over nothing is what trains an
+      // author to dismiss the dialog unread.
+      const { onLeave } = draw();
+      fireEvent.click(screen.getByTestId("header-leave"));
+      expect(onLeave).toHaveBeenCalled();
+    });
+
+    it("keeps writing when the confirm is declined, losing nothing", () => {
+      const { onLeave } = draw();
+      write("half a thought");
+      fireEvent.click(screen.getByTestId("header-leave"));
+
+      fireEvent.click(screen.getByTestId("reply-discard-confirm-keep"));
+      expect(onLeave).not.toHaveBeenCalled();
+      expect(screen.getByTestId("reply-words")).toHaveValue("half a thought");
     });
 
     it("takes the arrow on the first stage back to the thread, not out of the app", () => {
@@ -522,12 +547,14 @@ describe("the reply wizard", () => {
       expect(onLeave).toHaveBeenCalled();
     });
 
-    it("keeps nothing: a fresh wizard opens empty", async () => {
+    it("keeps nothing once discarded: a fresh wizard opens empty", async () => {
       const { onLeave } = draw();
       write("half a thought");
       fireEvent.click(screen.getByTestId("header-leave"));
+      fireEvent.click(screen.getByTestId("reply-discard-confirm-discard"));
       expect(onLeave).toHaveBeenCalled();
-      // Nothing persisted it, so the next open starts from nothing.
+      // Nothing persisted it, so the next open starts from nothing — which is
+      // exactly why the confirm has to be asked before this point.
       draw();
       await waitFor(() => expect(screen.getAllByTestId("reply-words")[1]).toHaveValue(""));
     });

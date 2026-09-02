@@ -23,6 +23,15 @@ export const PICTURE_MAX_BYTES = 10 * 1024 * 1024;
 export const POST_VIDEO_MAX_BYTES = 100 * 1024 * 1024;
 
 /**
+ * One video in a comment — half the post's budget.
+ *
+ * The shape mirrors the post at half the bytes: a comment carries four pictures
+ * or one video, where a post carries ten or one. Its cover rides the ordinary
+ * still cap on top, exactly as a post's does.
+ */
+export const COMMENT_VIDEO_MAX_BYTES = 50 * 1024 * 1024;
+
+/**
  * The readable figure for a cap, as screens write it.
  *
  * The mebibyte count is rendered with an MB label rather than converted — that

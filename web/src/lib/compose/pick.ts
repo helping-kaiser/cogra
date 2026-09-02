@@ -19,7 +19,12 @@
 // able to state directly.
 
 import { isAnimatedGif } from "@/lib/ui2/media/gif";
-import { PICTURE_MAX_BYTES, POST_VIDEO_MAX_BYTES, megabytes } from "@/lib/ui2/media/caps";
+import {
+  COMMENT_VIDEO_MAX_BYTES,
+  PICTURE_MAX_BYTES,
+  POST_VIDEO_MAX_BYTES,
+  megabytes,
+} from "@/lib/ui2/media/caps";
 import { looksLikeMp4 } from "@/lib/ui2/media/video";
 import type { MediaKind } from "./wizard";
 
@@ -45,13 +50,46 @@ export type PickOutcome = {
 export const TOO_BIG_PICTURE = `That picture is too big — a picture can be up to ${megabytes(PICTURE_MAX_BYTES)}.`;
 export const UNREADABLE = "That file isn't a picture or a video CoGra can read.";
 
+/**
+ * The comment's video refusal, drawn verbatim by ReplyMediaErrors — the cap is
+ * named only in the refusal, so a reader is told the limit at the moment it
+ * matters rather than warned in advance about a file they may never pick.
+ */
+export const TOO_BIG_VIDEO_COMMENT = `That video is too big — a comment's video can be up to ${megabytes(COMMENT_VIDEO_MAX_BYTES)}.`;
+
 // Undrawn, written to the board's pattern. Reported rather than presented as
-// board-backed: the board draws the picture case and the unknown-format case,
-// and these three are the cases the web path has that it does not draw.
-export const TOO_BIG_VIDEO = `That video is too big — a video can be up to ${megabytes(POST_VIDEO_MAX_BYTES)}.`;
+// board-backed: ComposePickedErrors draws the picture case and the
+// unknown-format case, and these are the cases the post path has beyond them.
+export const TOO_BIG_VIDEO_POST = `That video is too big — a video can be up to ${megabytes(POST_VIDEO_MAX_BYTES)}.`;
 export const ANIMATED_GIF =
   "That GIF moves, and CoGra can't take a moving GIF here. A still one is fine.";
 export const MIXED_BODY = "A post carries pictures or one video, not both.";
+export const MIXED_BODY_COMMENT = "A comment carries pictures or one video, not both.";
+
+/**
+ * What a surface's video costs and what it says when a file exceeds it.
+ *
+ * A comment is the post's grammar at half the byte budget, so the two differ in
+ * exactly these two values and nothing else — which is why they are a parameter
+ * rather than a second copy of the screening.
+ */
+export type PickScale = {
+  readonly videoMaxBytes: number;
+  readonly tooBigVideo: string;
+  readonly mixedBody: string;
+};
+
+export const POST_SCALE: PickScale = {
+  videoMaxBytes: POST_VIDEO_MAX_BYTES,
+  tooBigVideo: TOO_BIG_VIDEO_POST,
+  mixedBody: MIXED_BODY,
+};
+
+export const COMMENT_SCALE: PickScale = {
+  videoMaxBytes: COMMENT_VIDEO_MAX_BYTES,
+  tooBigVideo: TOO_BIG_VIDEO_COMMENT,
+  mixedBody: MIXED_BODY_COMMENT,
+};
 
 function isVideoType(file: File): boolean {
   return file.type.startsWith("video/");
@@ -72,6 +110,7 @@ function isPictureType(file: File): boolean {
 export async function screenPick(
   files: readonly File[],
   held: { readonly hasVideo: boolean; readonly count: number },
+  scale: PickScale = POST_SCALE,
 ): Promise<PickOutcome> {
   const refusals: PickRefusal[] = [];
   const pictures: File[] = [];
@@ -91,8 +130,8 @@ export async function screenPick(
         refuse(file, UNREADABLE);
         continue;
       }
-      if (file.size > POST_VIDEO_MAX_BYTES) {
-        refuse(file, TOO_BIG_VIDEO);
+      if (file.size > scale.videoMaxBytes) {
+        refuse(file, scale.tooBigVideo);
         continue;
       }
       videos.push(file);
@@ -122,18 +161,18 @@ export async function screenPick(
 
   // A video takes the body whole, so the kinds cannot share a batch or a draft.
   if (held.hasVideo) {
-    for (const file of [...videos, ...pictures]) refuse(file, MIXED_BODY);
+    for (const file of [...videos, ...pictures]) refuse(file, scale.mixedBody);
     return { accepted: [], kind: "picture", refusals };
   }
 
   if (videos.length > 0) {
     if (held.count > 0 || pictures.length > 0) {
-      for (const file of [...videos, ...pictures]) refuse(file, MIXED_BODY);
+      for (const file of [...videos, ...pictures]) refuse(file, scale.mixedBody);
       return { accepted: [], kind: "picture", refusals };
     }
     // One video, however many were offered at once. The rest are refused for
     // the same reason a second one cannot join: the body holds one.
-    for (const extra of videos.slice(1)) refuse(extra, MIXED_BODY);
+    for (const extra of videos.slice(1)) refuse(extra, scale.mixedBody);
     return { accepted: videos.slice(0, 1), kind: "video", refusals };
   }
 
