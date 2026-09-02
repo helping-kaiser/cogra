@@ -59,7 +59,7 @@ landing`). Em dashes carry asides; `…` marks work in progress.
 ## Emoji
 
 Used in exactly one place: the stance readout (twenty anchors, plus 🤷 for
-a zero standing and 😐 for a control at rest). These are system emoji
+a zero standing and 🫥 for a control at rest). These are system emoji
 rendering a value, not decoration. **Never** in headings, buttons,
 marketing copy, empty states, or documentation of features. The `→` in
 `Just looking? Browse the feed →` is the only other glyph used as
@@ -136,6 +136,10 @@ title, at most two short paragraphs, Close. The texts, verbatim
   how much of it reaches you. It starts at a gentle +0.10 / +0.10 and
   rides the same signature as your reply. / Nothing is signed until
   Set. Swap the input in settings if you prefer sliders or numbers.
+- **Your first stance** (the vouch-back pad): Vouching back signs where
+  you stand on the person who vouched you in — your first stance, and
+  your feed grows from it. / The pad is how you shape what reaches you —
+  for or against, and how much. Nothing is signed until Set.
 - **Editing**: An edit replaces the whole post; earlier versions stay
   public under "Edited" unless you remove them. An edit never bumps
   the post as new. / Topic and citation changes ride the same signing,
