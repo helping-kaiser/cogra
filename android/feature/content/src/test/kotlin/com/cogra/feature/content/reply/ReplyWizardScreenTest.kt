@@ -202,8 +202,8 @@ class ReplyWizardScreenTest {
 
         compose.onNodeWithTag("reply_seal_acts").assertIsDisplayed()
         compose.onNodeWithTag("reply_seal_total").assertExists()
-        compose.onNodeWithTag("reply_seal_stance").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithTag("reply_seal_license").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("reply_seal_stance").assertIsDisplayed()
+        compose.onNodeWithTag("reply_seal_license").assertIsDisplayed()
         compose.onNodeWithTag("wizard_seal_sensitive").assertDoesNotExist()
         compose.onNodeWithTag("reply_seal_sensitive").assertDoesNotExist()
     }
@@ -213,7 +213,7 @@ class ReplyWizardScreenTest {
     fun adjustOpensThePad() {
         compose.setContent { Wizard(sealWithWords()) }
 
-        compose.onNodeWithTag("reply_seal_stance_action").performScrollTo().performClick()
+        compose.onNodeWithTag("reply_seal_stance_action").performClick()
 
         assertThat(sheets).containsExactly(ReplySealSheet.Stance)
     }
@@ -223,7 +223,7 @@ class ReplyWizardScreenTest {
     fun changeOpensTheLicenseSheet() {
         compose.setContent { Wizard(sealWithWords()) }
 
-        compose.onNodeWithTag("reply_seal_license_action").performScrollTo().performClick()
+        compose.onNodeWithTag("reply_seal_license_action").performClick()
 
         assertThat(sheets).containsExactly(ReplySealSheet.License)
     }
@@ -368,11 +368,11 @@ class ReplyWizardScreenTest {
         compose.setContent { Wizard(composerWithClip()) }
 
         compose.onNodeWithTag("reply_clip").assertIsDisplayed()
-        compose.onNodeWithTag("reply_describe_counter").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("reply_describe_counter").assertIsDisplayed()
         repeat(3) {
-            compose.onNodeWithTag("reply_cover_frame_$it").performScrollTo().assertIsDisplayed()
+            compose.onNodeWithTag("reply_cover_frame_$it").assertIsDisplayed()
         }
-        compose.onNodeWithTag("reply_cover_picture").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("reply_cover_picture").assertIsDisplayed()
     }
 
     @Test
@@ -392,14 +392,14 @@ class ReplyWizardScreenTest {
     @Test
     fun tappingACoverFrameChoosesIt() {
         compose.setContent { Wizard(composerWithClip()) }
-        compose.onNodeWithTag("reply_cover_frame_2").performScrollTo().performClick()
+        compose.onNodeWithTag("reply_cover_frame_2").performClick()
         assertThat(coverFrames).containsExactly(2)
     }
 
     @Test
     fun theCoverPictureTileHandsTheChoiceToTheDevice() {
         compose.setContent { Wizard(composerWithClip()) }
-        compose.onNodeWithTag("reply_cover_picture").performScrollTo().performClick()
+        compose.onNodeWithTag("reply_cover_picture").performClick()
         assertThat(coverPickers).isEqualTo(1)
     }
 
@@ -412,7 +412,7 @@ class ReplyWizardScreenTest {
         )
         compose.setContent { Wizard(state) }
 
-        compose.onNodeWithTag("reply_refused_0").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("reply_refused_0").assertIsDisplayed()
         compose.onNodeWithTag("reply_refused_thumb_0").assertIsDisplayed()
         compose.onNodeWithText("Retry", substring = true).assertDoesNotExist()
         compose.onNodeWithText("Remove it", substring = true).assertIsDisplayed()

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -68,15 +69,21 @@ internal fun ColumnScope.ReplyComposeStepBody(
 ) {
     state.target?.let { TargetCard(it) }
 
+    // Where the slack goes. The words fill the screen while they are the
+    // only thing on it; once a clip or a refusal is below them the board
+    // gives the words their natural height and puts a spacer under the
+    // media instead — otherwise a 220dp frame, its cover row and the
+    // pill would be pushed off a composer that does not scroll.
+    val wordsFill = !state.isVideoComment && state.refused.isEmpty()
     CograTextField(
         value = state.body,
         onValueChange = onBodyChange,
         label = "Your reply",
         singleLine = false,
-        fillHeight = true,
+        fillHeight = wordsFill,
         modifier = Modifier
             .fillMaxWidth()
-            .weight(1f),
+            .then(if (wordsFill) Modifier.weight(1f) else Modifier),
         testTag = "reply_body",
     )
 
@@ -120,6 +127,10 @@ internal fun ColumnScope.ReplyComposeStepBody(
             testTag = "reply_add_pictures",
         )
     }
+
+    // The board's own `flex: 1` — the gap that pushes the hint and the
+    // pill to the bottom once the words have stopped doing it.
+    if (!wordsFill) Spacer(Modifier.weight(1f))
 
     Text(
         // The media half of the sentence only becomes true once
