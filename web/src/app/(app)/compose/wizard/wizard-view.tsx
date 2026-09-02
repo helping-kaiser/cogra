@@ -49,7 +49,7 @@ import {
   type ComposeDraftStore,
 } from "@/lib/compose/draft-store";
 import { runUpload, runVideoUpload } from "@/lib/compose/uploads";
-import { useBlobUrl, useBlobUrls, usePreviewUrls } from "@/lib/compose/previews";
+import { usePreviewUrls, useRevokeOnChange } from "@/lib/compose/previews";
 import { PickStep } from "./pick-step";
 import { CropStep } from "./crop-step";
 import { CoverStep } from "./cover-step";
@@ -68,6 +68,15 @@ function pathIndex(field: readonly string[] | null, head: string): number | null
 
 /** A stable empty list, so the preview effect does not re-run on every render. */
 const NO_ASSETS: readonly PickedAsset[] = [];
+const NO_FRAMES: readonly Blob[] = [];
+const NO_URLS: readonly string[] = [];
+
+/** The faces one clip offers, and the URLs drawn from them. */
+type Captured = {
+  file: Blob;
+  frames: readonly Blob[];
+  urls: readonly string[];
+};
 
 const HEADINGS: Record<WizardState["step"], string> = {
   pick: "New post",
@@ -133,28 +142,32 @@ export function ComposeWizard({
 
   const video = isVideoPost(state) ? state.assets[0] : undefined;
   const videoFile = video?.file ?? null;
-  const [durationMs, setDurationMs] = useState(0);
-  const [frames, setFrames] = useState<readonly Blob[]>([]);
-  const [capturing, setCapturing] = useState(false);
+  // Both of these are keyed BY THE CLIP THEY DESCRIBE rather than reset when it
+  // changes: a result that belongs to a file the draft no longer holds is
+  // simply not read, which is the same outcome as clearing it without the
+  // cascading render that clearing from an effect would cost.
+  const [probed, setProbed] = useState<{ file: Blob; durationMs: number } | null>(null);
+  const [captured, setCaptured] = useState<Captured | null>(null);
+  const mine = captured !== null && captured.file === videoFile ? captured : null;
+  const durationMs = probed !== null && probed.file === videoFile ? probed.durationMs : 0;
+  const frames = mine?.frames ?? NO_FRAMES;
+  const framePreviews = mine?.urls ?? NO_URLS;
+  const capturing = videoFile !== null && captured?.file !== videoFile;
+  useRevokeOnChange(framePreviews);
   // A pick the composition rule or the format check turned away. It is not part
   // of the draft — nothing was added — so it is view state and clears on the
   // next pick.
   const [pickError, setPickError] = useState<string | null>(null);
-  const framePreviews = useBlobUrls(frames);
-  const coverPreview = useBlobUrl(state.cover?.file ?? null);
   const cover = state.cover;
 
   // The badge's number, read off the clip as soon as it is picked rather than
   // waiting for the cover screen — the details row shows it too.
   useEffect(() => {
-    if (videoFile === null) {
-      setDurationMs(0);
-      return;
-    }
+    if (videoFile === null) return;
     let cancelled = false;
     void probeVideo(videoFile)
       .then((probe) => {
-        if (!cancelled) setDurationMs(probe.durationMs);
+        if (!cancelled) setProbed({ file: videoFile, durationMs: probe.durationMs });
       })
       // A clip whose header states no duration still uploads; only the badge
       // is poorer for it, and the server writes the authoritative number.
@@ -164,45 +177,42 @@ export function ComposeWizard({
     };
   }, [videoFile]);
 
-  // A different clip offers different faces.
-  useEffect(() => {
-    setFrames([]);
-  }, [videoFile]);
-
   // THE FRAMES ARE TAKEN WHEN THE SCREEN IS REACHED, not at pick: a decode of
   // the whole clip is the most expensive thing this flow does, and an author
   // who picked a video and then changed their mind should never pay for it.
   useEffect(() => {
-    if (videoFile === null || state.step !== "cover" || frames.length > 0) return;
+    if (videoFile === null || state.step !== "cover" || captured?.file === videoFile) return;
     let cancelled = false;
-    setCapturing(true);
     void captureFrames(videoFile)
       .then((taken) => {
-        if (!cancelled) setFrames(taken);
+        if (cancelled) return;
+        // The URLs are minted here, beside the bytes that need them, so no
+        // effect has to write them into state afterwards.
+        setCaptured({
+          file: videoFile,
+          frames: taken,
+          urls: taken.map((frame) => URL.createObjectURL(frame)),
+        });
+        // The board opens with the first offer selected, so the author's only
+        // job is to change it. `coverIfUnset` is what keeps that default from
+        // overwriting a face a restored draft already carries.
+        const first = taken[0];
+        if (first !== undefined) {
+          dispatch({
+            type: "coverIfUnset",
+            cover: { id: `cover-${Date.now()}`, file: first, frame: 0, upload: { kind: "waiting" } },
+          });
+        }
       })
       .catch(() => {
         // No frames is a state the screen draws: "A picture" still works, and
         // the gate keeps the author from leaving without a cover.
-        if (!cancelled) setFrames([]);
-      })
-      .finally(() => {
-        if (!cancelled) setCapturing(false);
+        if (!cancelled) setCaptured({ file: videoFile, frames: NO_FRAMES, urls: NO_URLS });
       });
     return () => {
       cancelled = true;
     };
-  }, [videoFile, state.step, frames.length]);
-
-  // The board opens with the first offer selected, so the author's only job is
-  // to change it if they want to.
-  useEffect(() => {
-    const first = frames[0];
-    if (videoFile === null || cover !== null || first === undefined) return;
-    dispatch({
-      type: "cover",
-      cover: { id: `cover-${Date.now()}`, file: first, frame: 0, upload: { kind: "waiting" } },
-    });
-  }, [frames, cover, videoFile, dispatch]);
+  }, [videoFile, state.step, captured, dispatch]);
 
   const chooseCover = (file: Blob, frame: number) => {
     // A new face is a new upload: the old one may already be on the server, and
@@ -658,7 +668,6 @@ export function ComposeWizard({
           durationMs={durationMs}
           framePreviews={framePreviews}
           cover={cover}
-          coverPreview={coverPreview}
           capturing={capturing}
           error={gate.ok ? null : gate.reason}
           blocked={!gate.ok}

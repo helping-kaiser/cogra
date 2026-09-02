@@ -116,11 +116,12 @@ export function formatBytes(bytes: number): string {
 }
 
 /**
- * `0:42`, `1:05:03` — the duration badge the cover board draws.
+ * The duration badge the cover board draws — minutes and seconds, and hours
+ * ahead of them when the clip has any.
  *
- * Hours appear only when there are any: a ten-second clip reading `0:00:10`
- * would be a padded number pretending to be precision, and there is no duration
- * cap, so the hour case is real and has to be drawn rather than clamped.
+ * A ten-second clip must not read as a zero-padded hour: that is a padded
+ * number pretending to be precision. There is no duration cap, so the hour case
+ * is real and has to be drawn rather than clamped away.
  */
 export function formatDuration(ms: number): string {
   if (!Number.isFinite(ms) || ms < 0) return "0:00";

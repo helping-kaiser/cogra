@@ -354,6 +354,8 @@ export type WizardAction =
   | { type: "pick"; assets: readonly { id: string; file: Blob; kind?: MediaKind }[] }
   | { type: "unpick"; id: string }
   | { type: "cover"; cover: CoverAsset | null }
+  /** The opening default: the first offer, but never over a choice already made. */
+  | { type: "coverIfUnset"; cover: CoverAsset }
   | { type: "coverUpload"; upload: AssetUpload }
   | { type: "reorder"; from: number; to: number }
   | { type: "focus"; index: number }
@@ -455,6 +457,12 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
 
     case "cover":
       return { ...state, cover: action.cover };
+
+    case "coverIfUnset":
+      // A restored draft arrives with its face already chosen, and the frames
+      // are re-captured behind it — without this guard the first offer would
+      // quietly overwrite what the author picked last time.
+      return state.cover === null ? { ...state, cover: action.cover } : state;
 
     case "coverUpload":
       return state.cover === null
