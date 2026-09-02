@@ -153,7 +153,11 @@ private fun GalleryFrame(
             ),
     ) {
         val videoUrl = item.videoUrl
-        if (videoUrl != null) {
+        // A player off screen is still a hardware codec held open, and a
+        // device has only a handful. A frame nobody can see draws its
+        // poster instead and holds nothing — which is also what the
+        // poster is *for*, so the card looks the same either way.
+        if (videoUrl != null && visible > 0f) {
             VideoPlayer(
                 url = videoUrl,
                 // The poster is the cover asset: what the author chose
@@ -168,6 +172,8 @@ private fun GalleryFrame(
         } else {
             AsyncImage(
                 model = item.imageModel(),
+                // The gallery announces itself as one node; a second
+                // description here would be read out twice.
                 contentDescription = null,
                 contentScale = fit,
                 modifier = Modifier.fillMaxSize(),
