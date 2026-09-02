@@ -38,6 +38,7 @@ import type { ReferenceDraft } from "@/lib/references/draft";
 import {
   commentGate,
   COMMENT_ATTACHMENT_CAP,
+  isVideoComment,
   NO_COMMENT_MEDIA,
   pickInto,
   removeFrom,
@@ -45,7 +46,7 @@ import {
   type CommentMedia,
   type Gate,
 } from "./comment-media";
-import type { AssetUpload } from "./wizard";
+import type { AssetUpload, CoverAsset, MediaKind } from "./wizard";
 
 export type ReplyStep = "compose" | "seal";
 
@@ -75,6 +76,13 @@ export type ReplyState = {
   readonly target: ReplyTarget;
   readonly words: string;
   readonly media: CommentMedia;
+  /**
+   * The video's face — ReplyVideo's cover row. Null on a pictures comment, and
+   * on a video whose cover has not been settled yet. It is NOT an attachment:
+   * the gallery carries the clip alone and the cover reaches the reader through
+   * the video's own `coverMedia`, which is also why it takes no description.
+   */
+  readonly cover: CoverAsset | null;
   readonly tags: readonly TagDraft[];
   readonly references: readonly ReferenceDraft[];
   readonly license: License;
@@ -91,6 +99,7 @@ export function emptyReply(target: ReplyTarget): ReplyState {
     target,
     words: "",
     media: NO_COMMENT_MEDIA,
+    cover: null,
     tags: [],
     references: [],
     license: PUBLIC_DOMAIN,
@@ -148,7 +157,29 @@ export function advanceGate(state: ReplyState): Gate {
  * rather than bouncing the reader back a stage (ComposeSealUploading).
  */
 export function sealGate(state: ReplyState): Gate {
-  return commentGate(state.words, state.media);
+  return commentGate(state.words, state.media, state.cover);
+}
+
+/** Whether the composer is standing in ReplyVideo rather than ReplyPicturesWeb. */
+export function isVideoReply(state: ReplyState): boolean {
+  return isVideoComment(state.media);
+}
+
+/**
+ * Whether anything would be lost by leaving.
+ *
+ * The leave edges route through DiscardConfirm only when something is written —
+ * "empty — leaves at once" — so this is the question the X asks before it opens
+ * a dialog. Everything an author put in counts, not just the words: a picked
+ * clip is work too.
+ */
+export function replyHasContent(state: ReplyState): boolean {
+  return (
+    state.words.trim() !== "" ||
+    state.media.length > 0 ||
+    state.tags.length > 0 ||
+    state.references.length > 0
+  );
 }
 
 // ------------------------------------------------------------- the outputs
@@ -180,8 +211,11 @@ export function replyActLabel(target: ReplyTarget): string {
 
 export type ReplyAction =
   | { type: "words"; words: string }
-  | { type: "pick"; assets: readonly { id: string; file: Blob }[] }
+  | { type: "pick"; assets: readonly { id: string; file: Blob; kind?: MediaKind }[] }
   | { type: "unpick"; id: string }
+  | { type: "cover"; cover: CoverAsset | null }
+  | { type: "coverIfUnset"; cover: CoverAsset }
+  | { type: "coverUpload"; upload: AssetUpload }
   | { type: "altText"; id: string; altText: string }
   | { type: "upload"; id: string; upload: AssetUpload }
   | { type: "tags"; tags: readonly TagDraft[] }
@@ -201,8 +235,26 @@ export function replyReducer(state: ReplyState, action: ReplyAction): ReplyState
       // refused after it uploaded wastes the upload and the wait.
       return { ...state, media: pickInto(state.media, action.assets) };
 
-    case "unpick":
-      return { ...state, media: removeFrom(state.media, action.id) };
+    case "unpick": {
+      const media = removeFrom(state.media, action.id);
+      // ReplyVideo's remove-× leads back to ReplyCompose — "the video leaves,
+      // the composer is words again" — so the face goes with the clip. A cover
+      // left behind would upload for a video no longer in the comment.
+      return { ...state, media, cover: media.length === 0 ? null : state.cover };
+    }
+
+    case "cover":
+      return { ...state, cover: action.cover };
+
+    case "coverIfUnset":
+      // The first offered frame is the opening default, but never over a face
+      // the author already chose.
+      return state.cover === null ? { ...state, cover: action.cover } : state;
+
+    case "coverUpload":
+      return state.cover === null
+        ? state
+        : { ...state, cover: { ...state.cover, upload: action.upload } };
 
     case "altText":
       return {
