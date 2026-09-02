@@ -97,7 +97,7 @@ const aPicture = () =>
 function render() {
   return renderWithProviders(
     <ComposeWizard store={fakeIdentityStore({ keyOnDevice: true })} drafts={fakeDrafts()} />,
-    { tokens: signedInStore(), signer: fakeWriteSigner() },
+    { store: signedInStore(), writeSigner: fakeWriteSigner() },
   );
 }
 
