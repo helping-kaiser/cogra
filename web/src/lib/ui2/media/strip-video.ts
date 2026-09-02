@@ -31,11 +31,25 @@
 // (https://mediabunny.dev/guide/converting-media-files). The only opt-out is
 // `forceTranscode`, which we never set.
 //
-// HOW THE TAGS GO. `tags: {}` on the conversion — the documented way to "remove
-// all metadata" (same page, Metadata tags section). With it the `udta` builder
-// emits nothing at all, so the output carries no `udta`, no `meta` and no
-// `ilst` box rather than empty ones. That is where a phone writes its GPS
-// coordinates and its device identity.
+// HOW THE TAGS GO: BY NEVER BEING WRITTEN. This copies the encoded packets into
+// a brand-new `Output` and adds only the tracks themselves, so the metadata
+// boxes are not stripped so much as never created — there is no code path by
+// which a `udta`, `meta` or `ilst` box could reach the file, because nothing
+// reads the input's tags at all. That is the same argument the picture encoder
+// rests on, and it is stronger than deleting boxes after the fact.
+//
+// WHY NOT `Conversion` WITH `tags: {}`, which is the library's own one-liner
+// for this: because it does not actually copy. Its fast path requires the
+// track's first timestamp to be at or after the conversion's start, and an AAC
+// track written by any ordinary encoder begins at a NEGATIVE timestamp — the
+// 1024-sample priming delay, measured at -23.2 ms on a plain ffmpeg AAC track.
+// That trips its `needsTrimming` condition, so the audio takes the
+// decode-and-re-encode branch: the author's sound would be re-compressed for a
+// container-level change, and on a browser with no AAC *encoder* the track
+// would be discarded outright. Copying the packets by hand is what makes "never
+// re-encode" true rather than aspirational — and it is what the fast path of
+// `Conversion` does internally anyway, so this is the same operation without
+// the condition that disqualifies it.
 //
 // `formats: [MP4]` rather than `ALL_FORMATS` is deliberate: the docs note "The
 // `formats` parameter enables tree-shaking"
@@ -44,16 +58,12 @@
 // pick screening has already guaranteed by sniffing the container from the
 // bytes.
 //
-// WHAT THIS DOES NOT REMOVE, stated because a security claim must be honest and
-// neither point is documented by the library — both were read from its source:
-//
-//  · A per-TRACK name (`trak/udta/name`) is carried across by the conversion,
-//    which copies each track's name and language. Phones put their identity in
-//    `moov/udta/meta/ilst`, which `tags: {}` does remove, so this is a narrow
-//    hole rather than the common case.
-//  · The output's `mvhd`/`tkhd` creation time is set to the moment of the
-//    remux. The original RECORDING date is therefore destroyed, which is the
-//    one that matters; the upload time is stamped in its place.
+// WHAT THIS DOES NOT REMOVE, stated because a security claim must be honest.
+// The output's `mvhd`/`tkhd` creation time is set to the moment of the remux by
+// the muxer, with no option to override it — so the original RECORDING date is
+// destroyed, which is the one that matters, and the upload time is stamped in
+// its place. Track names and languages are never copied by this code, so they
+// do not survive either.
 //
 // The server re-checks and re-strips regardless. This is the first line, not
 // the only one.
@@ -61,11 +71,15 @@
 import {
   BlobSource,
   BufferTarget,
-  Conversion,
+  EncodedAudioPacketSource,
+  EncodedPacketSink,
+  EncodedVideoPacketSource,
   Input,
   MP4,
   Mp4OutputFormat,
   Output,
+  type InputAudioTrack,
+  type InputVideoTrack,
 } from "mediabunny";
 
 import { VIDEO_TYPE } from "./video";
@@ -97,19 +111,54 @@ export async function stripVideoMetadata(file: Blob): Promise<StripResult> {
   });
 
   try {
-    const conversion = await Conversion.init({ input, output, tags: {} });
+    const tracks = await input.getTracks();
+    // Every track is carried or the file is refused. Dropping one silently is
+    // how a clip arrives on the server without its sound.
+    const pumps: (() => Promise<void>)[] = [];
 
-    // A DISCARDED TRACK IS NOT AN ERROR to this library — it simply does not
-    // arrive in the output. Left unchecked, a clip whose audio the conversion
-    // could not carry would upload silently without its sound, which is worse
-    // than refusing it. Both the validity flag and the discard list are read.
-    if (!conversion.isValid || conversion.discardedTracks.length > 0) {
-      const why = conversion.discardedTracks.map((track) => track.reason).join(", ");
-      throw new Error(why === "" ? "this video cannot be prepared" : why);
+    // THE WHOLE FILE SHIFTS, OR NOTHING DOES. An AAC track begins at a negative
+    // timestamp — the encoder's priming samples, about -23 ms — and the muxer
+    // refuses a negative timestamp outright. The fix is not to clamp that one
+    // track to zero: that would move the sound 23 ms later than the picture and
+    // leave the file quietly out of sync. Instead every track is shifted by the
+    // same amount, so the relative timing between them is exactly preserved and
+    // the file simply starts a hair later than it did.
+    let earliest = 0;
+    for (const track of tracks) {
+      earliest = Math.min(earliest, await track.getFirstTimestamp());
+    }
+    const shift = earliest < 0 ? -earliest : 0;
+
+    for (const track of tracks) {
+      const codec = await track.getCodec();
+      if (codec === null) throw new Error("this video declares a codec we cannot read");
+
+      if (track.type === "video") {
+        const source = new EncodedVideoPacketSource(codec);
+        // The rotation rides as container metadata, exactly as it arrived —
+        // dropping it would stand a phone's portrait clip on its side.
+        output.addVideoTrack(source, { rotation: track.rotation });
+        pumps.push(() => copyPackets(track, source, shift));
+      } else if (track.type === "audio") {
+        const source = new EncodedAudioPacketSource(codec);
+        output.addAudioTrack(source);
+        pumps.push(() => copyPackets(track, source, shift));
+      } else {
+        // A subtitle or data track. Refused rather than dropped, so nothing
+        // leaves this function quietly smaller than it arrived.
+        throw new Error(`this video carries a ${track.type} track we cannot copy`);
+      }
     }
 
-    // `execute` finalizes the output itself, so the buffer is there afterwards.
-    await conversion.execute();
+    if (pumps.length === 0) throw new Error("this file carries no media tracks");
+
+    await output.start();
+    // The tracks are pumped together rather than one after the other: the muxer
+    // interleaves by timestamp and applies backpressure per track, so draining
+    // one to the end first would hold the whole file in memory.
+    await Promise.all(pumps.map((pump) => pump()));
+    await output.finalize();
+
     const buffer = output.target.buffer;
     if (buffer === null) throw new Error("the remux produced no bytes");
 
@@ -120,4 +169,33 @@ export async function stripVideoMetadata(file: Blob): Promise<StripResult> {
   } finally {
     input.dispose();
   }
+}
+
+/**
+ * Move one track's encoded packets across, untouched.
+ *
+ * The decoder config rides the first `add` — it is what the output track's
+ * sample description is written from, and without it the file would describe
+ * bytes no player could set up a decoder for. The packet PAYLOADS are never
+ * touched; only the timestamp moves, by the one shift the whole file shares.
+ */
+async function copyPackets(
+  track: InputVideoTrack | InputAudioTrack,
+  source: EncodedVideoPacketSource | EncodedAudioPacketSource,
+  shift: number,
+): Promise<void> {
+  const sink = new EncodedPacketSink(track);
+  const meta = { decoderConfig: (await track.getDecoderConfig()) ?? undefined };
+  let first = true;
+  for await (const packet of sink.packets()) {
+    const moved = shift === 0 ? packet : packet.clone({ timestamp: packet.timestamp + shift });
+    // Awaited per packet: the promise resolves when the writer is ready for
+    // more, which is the library's documented backpressure signal.
+    await (source as EncodedVideoPacketSource).add(
+      moved,
+      first ? (meta as never) : undefined,
+    );
+    first = false;
+  }
+  source.close();
 }
