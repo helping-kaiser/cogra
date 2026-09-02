@@ -9,20 +9,39 @@ import com.cogra.domain.compose.DraftBodyKind
 import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMedia
+import com.cogra.domain.media.VideoFrame
 import com.cogra.domain.LicenseChoice
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagSectionState
 
 /**
  * The wizard's stages, in the order the canonical boards draw them:
- * `ComposeWords`/`ComposePick` → `ComposeCrop` → `ComposeDetails` →
- * `ComposeSeal` (design/readme.md §13).
+ * `ComposeWords`/`ComposePick` → `ComposeCrop` **or** `ComposeCover` →
+ * `ComposeDetails` → `ComposeSeal` (design/readme.md §13).
  *
- * [Crop] is on the media path only. The two paths differ in length,
- * which is exactly why the boards carry no step counter — the header
- * names the stage instead.
+ * [Crop] and [Cover] are both on the media path and are exclusive: a
+ * picture body is cropped, a video body gets a face. The paths differ in
+ * length, which is exactly why the boards carry no step counter — the
+ * header names the stage instead.
  */
-enum class WizardStep { Body, Crop, Details, Seal }
+enum class WizardStep { Body, Crop, Cover, Details, Seal }
+
+/**
+ * What covers a video (`ComposeCover`).
+ *
+ * The board offers frames lifted out of the clip and one dashed tile
+ * that opens the device's own picker, and the ruling says the same in
+ * words: the cover is "either a frame from the video or a chose image"
+ * (jakob 2026-09-02). Either way it is uploaded as its own still and
+ * named on the video's own upload.
+ */
+sealed interface CoverChoice {
+    /** One of the offered frames, by index into the offered list. */
+    data class Frame(val index: Int) : CoverChoice
+
+    /** A picture of the author's own, by picker URI. */
+    data class Picture(val uri: String) : CoverChoice
+}
 
 /**
  * Which half of the body is being authored.
@@ -39,6 +58,15 @@ enum class BodyMode { Words, Media }
 sealed interface AssetUpload {
     /** Picked, not yet sent — the state a fresh pick and a retry share. */
     data object Idle : AssetUpload
+
+    /**
+     * A clip is being re-encoded before it can be sent.
+     *
+     * It carries a percentage because a transcode is long enough that a
+     * spinner alone reads as a hang — a picture's own processing is
+     * milliseconds and never needs one.
+     */
+    data class Transcoding(val percent: Int) : AssetUpload
 
     data object Running : AssetUpload
 
@@ -66,8 +94,12 @@ data class PickedAsset(
     val sourceRatio: Float? = null,
     val altText: String = "",
     val upload: AssetUpload = AssetUpload.Idle,
+    /** The clip's length; null on a picture, which is what tells them apart. */
+    val durationMs: Int? = null,
 ) {
     val mediaId: String? get() = (upload as? AssetUpload.Done)?.mediaId
+
+    val isVideo: Boolean get() = durationMs != null
 }
 
 /**
@@ -141,6 +173,28 @@ data class ComposeWizardState(
      * what they read.
      */
     val crops: Map<String, CropSpec> = emptyMap(),
+
+    // -- The video's face (`ComposeCover`) --
+
+    /**
+     * The frames offered as covers, oldest first, once they have been
+     * lifted out of the clip. Empty until then — the board draws the
+     * tiles from this, so an empty list is the loading state.
+     */
+    val coverFrames: List<VideoFrame> = emptyList(),
+
+    /**
+     * Which cover the author settled on.
+     *
+     * The board draws the first frame pre-selected, so the default is a
+     * choice already made rather than a nullable one the author has to
+     * confirm — a video always has a face, and `Next` never waits on
+     * this.
+     */
+    val coverChoice: CoverChoice = CoverChoice.Frame(0),
+
+    /** The cover's asset id once it has been uploaded on its own. */
+    val coverMediaId: String? = null,
 
     // -- Details --
     val title: String = "",
@@ -217,8 +271,18 @@ data class ComposeWizardState(
 
     val uploadsFailed: Boolean get() = picked.any { it.upload is AssetUpload.Failed }
 
-    /** Every pick has an id: the gallery can be attached as it stands. */
-    val uploadsComplete: Boolean get() = picked.isNotEmpty() && uploadedIds.size == picked.size
+    /**
+     * Every pick has an id: the gallery can be attached as it stands.
+     *
+     * A video is not complete until its cover has landed too. The cover
+     * is not an attachment — it rides the video's own asset row — but
+     * the video cannot be uploaded at all until the cover has an id to
+     * name, so an incomplete cover is an incomplete body.
+     */
+    val uploadsComplete: Boolean
+        get() = picked.isNotEmpty() &&
+            uploadedIds.size == picked.size &&
+            (!isVideoPost || coverMediaId != null)
 
     /**
      * The body carries something publishable. The XOR is read here
@@ -231,8 +295,29 @@ data class ComposeWizardState(
             BodyMode.Media -> picked.size in 1..MAX_POST_ASSETS
         }
 
-    /** Whether the media path's crop stage stands between body and details. */
-    val hasCropStep: Boolean get() = mode == BodyMode.Media
+    /**
+     * Whether the body is one clip.
+     *
+     * A video is the whole body — "one video plus a cover" (jakob
+     * 2026-09-02) — so this reads the single pick rather than asking
+     * whether *any* pick is a video: the toggle rule below is what makes
+     * a mixed body unreachable, and this stays a question about the body
+     * rather than a search through it.
+     */
+    val isVideoPost: Boolean get() = picked.singleOrNull()?.isVideo == true
+
+    /**
+     * Whether the media path's crop stage stands between body and
+     * details. A video is not cropped — it takes the cover stage
+     * instead, and the two are exclusive.
+     */
+    val hasCropStep: Boolean get() = mode == BodyMode.Media && !isVideoPost
+
+    /** Whether the video path's cover stage stands before details. */
+    val hasCoverStep: Boolean get() = mode == BodyMode.Media && isVideoPost
+
+    /** The clip this post is, when it is one. */
+    val video: PickedAsset? get() = picked.singleOrNull()?.takeIf { it.isVideo }
 
     /**
      * What this submit stages, counted the way the batch is priced —
@@ -256,9 +341,10 @@ data class ComposeWizardState(
                     BodyMode.Media -> ""
                 }
             }
-            val bodyNote = when (mode) {
-                BodyMode.Words -> "words"
-                BodyMode.Media -> pictureCount(picked.size)
+            val bodyNote = when {
+                mode == BodyMode.Words -> "words"
+                isVideoPost -> "video"
+                else -> pictureCount(picked.size)
             }
             return if (name.isBlank()) bodyNote else "$name — $bodyNote"
         }
@@ -354,9 +440,12 @@ fun ComposeWizardState.advanced(): ComposeWizardState? = when (step) {
     WizardStep.Body -> when {
         !bodyReady -> null
         hasCropStep -> copy(step = WizardStep.Crop, framingIndex = 0)
+        // `ComposePick` → `ComposeCover` for "a video — its face".
+        hasCoverStep -> copy(step = WizardStep.Cover)
         else -> copy(step = WizardStep.Details)
     }
     WizardStep.Crop -> copy(step = WizardStep.Details)
+    WizardStep.Cover -> copy(step = WizardStep.Details)
     WizardStep.Details -> copy(step = WizardStep.Seal)
     // The seal advances by signing, never by `Next`.
     WizardStep.Seal -> null
@@ -376,8 +465,15 @@ fun ComposeWizardState.retreated(): ComposeWizardState? = when {
     anySheetOpen -> closedSheets()
     step == WizardStep.Body -> null
     step == WizardStep.Crop -> copy(step = WizardStep.Body)
-    step == WizardStep.Details ->
-        if (hasCropStep) copy(step = WizardStep.Crop) else copy(step = WizardStep.Body)
+    // The cover stage is reached from the pick, so back returns there.
+    // The board's own back arrow is drawn against `ComposeCrop`, which
+    // a video never passes through — see the PR body's scope note.
+    step == WizardStep.Cover -> copy(step = WizardStep.Body)
+    step == WizardStep.Details -> when {
+        hasCropStep -> copy(step = WizardStep.Crop)
+        hasCoverStep -> copy(step = WizardStep.Cover)
+        else -> copy(step = WizardStep.Body)
+    }
     else -> copy(step = WizardStep.Details)
 }
 
@@ -405,11 +501,36 @@ fun ComposeWizardState.withMode(next: BodyMode): ComposeWizardState =
  * A pick past the cap is refused rather than dropped silently: the
  * caller surfaces it.
  */
-fun ComposeWizardState.togglePick(uri: String, sourceRatio: Float? = null): ComposeWizardState {
+fun ComposeWizardState.togglePick(
+    uri: String,
+    sourceRatio: Float? = null,
+    durationMs: Int? = null,
+): ComposeWizardState {
     if (picked.any { it.uri == uri }) return removePick(uri)
+    val picking = PickedAsset(uri, sourceRatio, durationMs = durationMs)
+    // "One video or up to ten pictures" (`ComposePick`, tile toggle). A
+    // clip replaces whatever was picked rather than being refused beside
+    // it: the grid tile the author just tapped is the one they meant,
+    // and a body is a video *or* a gallery, never a mixture (D16, and
+    // the ruling's "one video plus a cover").
+    if (picking.isVideo) return copy(picked = listOf(picking)).clearedCover()
+    if (isVideoPost) return copy(picked = listOf(picking)).clearedCover()
     if (picked.size >= ComposeWizardState.MAX_POST_ASSETS) return this
-    return copy(picked = picked + PickedAsset(uri, sourceRatio))
+    return copy(picked = picked + picking)
 }
+
+/**
+ * Forgets a previous clip's face.
+ *
+ * Frames belong to the clip they were lifted from, and an id belongs to
+ * bytes already on the server — carrying either across a change of body
+ * would cover one video with another's face.
+ */
+fun ComposeWizardState.clearedCover(): ComposeWizardState = copy(
+    coverFrames = emptyList(),
+    coverChoice = CoverChoice.Frame(0),
+    coverMediaId = null,
+)
 
 /** Drops a pick from the tray without touching the rest of the order. */
 fun ComposeWizardState.removePick(uri: String): ComposeWizardState = copy(
