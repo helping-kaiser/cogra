@@ -51,10 +51,6 @@ export function SensitiveScope({ children }) {
   return <RevealContext.Provider value={value}>{children}</RevealContext.Provider>;
 }
 
-/**
- * Veils a body region as one — a post's gallery, its paragraphs, a comment's
- * whole body. `SensitiveScope` makes one tap answer for every veil in a post.
- */
 /* WHOSE MARK THIS IS (Q47). The author's own warning and the platform's verdict
    are two independent states that read back as the same veil, so the face has to
    say which one a reader met — a reason alone cannot, since a verdict may carry
@@ -65,6 +61,14 @@ const SOURCES = {
   platform: "The platform's verdict",
 };
 
+/* The wash every veil face wears: the standard covering scrim at half strength,
+   never an `error` colour. One expression, so the faces cannot drift apart. */
+const WASH = "color-mix(in oklab, var(--scrim-dialog) 55%, transparent)";
+
+/**
+ * Veils a body region as one — a post's gallery, its paragraphs, a comment's
+ * whole body. `SensitiveScope` makes one tap answer for every veil in a post.
+ */
 export function SensitiveVeil({
   children,
   kind = "media",
@@ -94,6 +98,53 @@ export function SensitiveVeil({
   };
 
   if (revealed) return veiled;
+
+  const sourceLine = `${SOURCES[source] ?? SOURCES.author}${reason ? ` — ${reason}` : ""}`;
+
+  if (kind === "compact") {
+    /* THE COMMENT-SCALE FACE. A comment is words first and its pictures join
+       them, so its body is short and its pictures are an inset attachment —
+       covering that in place would put a wash the height of two lines over one
+       thing and a second wash over the other. The whole body is replaced by ONE
+       block instead: words and pictures together, at the scale of the card it
+       sits in. What stays outside it is the comment's answer to the title
+       staying readable on a post — the author, the timestamp, and the stance a
+       reader can still take, so choosing to look is informed.
+
+       The wash is the veil's own, but the type is the THEME's rather than the
+       media face's fixed white: that white is legible because the wash lies over
+       a picture, and here it lies over the card, which is light in the light
+       theme. */
+    return (
+      <button
+        type="button"
+        onClick={reveal}
+        aria-label={`${label}. ${sourceLine}`}
+        className="cg-state cg-focus"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          gap: "var(--space-1)",
+          width: "100%",
+          border: 0,
+          borderRadius: "var(--radius-medium)",
+          background: WASH,
+          padding: "var(--space-3)",
+          cursor: "pointer",
+          fontFamily: "var(--font-sans)",
+          color: "var(--text-body)",
+          textAlign: "left",
+        }}
+      >
+        <span style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+          <Icon name="visibility" size={18} />
+          <span style={{ fontSize: "var(--text-label-medium)", fontWeight: "var(--text-label-medium--font-weight)" }}>{label}</span>
+        </span>
+        <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", textWrap: "pretty" }}>{sourceLine}</span>
+      </button>
+    );
+  }
 
   if (kind === "text") {
     /* Text is blurred IN PLACE rather than replaced, so the line keeps its own
@@ -127,8 +178,6 @@ export function SensitiveVeil({
     );
   }
 
-  const sourceLine = `${SOURCES[source] ?? SOURCES.author}${reason ? ` — ${reason}` : ""}`;
-
   return (
     <div style={{ position: "relative", display: "flex", minWidth: 0, overflow: "hidden", borderRadius: radius ?? 0 }}>
       {/* The content still renders and still reserves its exact space — the veil
@@ -152,7 +201,7 @@ export function SensitiveVeil({
           border: 0,
           /* A neutral wash, not a warning. The scrim is the same one every
              covering surface in this system uses, at half strength. */
-          background: "color-mix(in oklab, var(--scrim-dialog) 55%, transparent)",
+          background: WASH,
           borderRadius: radius ?? 0,
           cursor: "pointer",
           padding: 0,
