@@ -388,14 +388,14 @@ bundled). Three small pieces the 2.5.1 close needs:
    author's optional reason is the only, weak, signal). Until slice 8
    every live veil is an author mark. Touches the veil face settled in
    item 10.
-2. **EditCompose and CommentEdit have no sensitive Mark row** — but
-   ComposeSeal and ReplySeal both carry one, and the edit contract is
-   complete-state (an edit that omits the mark unmarks), so today an
-   author can never change or clear their mark after publishing and
-   no other surface could. Feature loop's recommendation: mirror
-   ComposeSeal's row on both edit surfaces. Alternatively rule that
-   edits can't touch marks and design the unmark surface that
-   implies.
+2. **The sensitive mark rides on both edit surfaces** — ruled and
+   drawn 2026-09-02 (readme §13 *The compose flow*): EditCompose and
+   CommentEdit each carry the seal's Sensitive row, opening the same
+   `ComposeSensitive` sheet, so an author can change or clear a mark
+   after publishing (the edit contract is complete-state — an edit
+   that omits the mark unmarks). The license row keeps its lock
+   beside it: the license is fixed by contract at signing, while the
+   mark is the author's ongoing judgment.
 3. **The web avatar flow** — **blessed 2026-09-02**: web takes
    AvatarCrop/AvatarSeal 1:1, the file dialog playing the system
    picker's part. Crop and seal don't differ by platform, so no web
@@ -407,14 +407,16 @@ bundled). Three small pieces the 2.5.1 close needs:
    fit a comment-scale card. Blocks the reply-wizard lanes from
    implementing ReplySeal 1:1 (the Mark row without the veiled
    result), so this part leads the bundle.
-5. **An accidental-leave guard for the reply wizard?** Comments keep
-   no drafts, so leaving the reply wizard or a comment edit discards.
-   The five X-leave edges — ReplyCompose, ReplyPictures(-Web),
-   ReplySeal and CommentEdit — annotate that discard as of
-   2026-09-02; they had carried "draft kept" from before the ruling.
-   What is still owed is the ruling on whether a discard confirm
-   guards the leave — the apps ship a silent leave-discards until
-   then.
+5. **The leave is guarded only when something would be lost** —
+   ruled and drawn 2026-09-02 (readme §13 *The compose flow*):
+   comments keep no drafts, so leaving the reply wizard or a comment
+   edit discards. A non-empty composer — words typed, pictures
+   picked, a changed edit — meets the `DiscardConfirm` board; an
+   empty one leaves at once, a confirm with nothing to lose being
+   noise. The five X-leave edges (ReplyCompose, ReplyPictures(-Web),
+   ReplySeal, CommentEdit) each carry both outcomes, and every X's
+   label names the cost. Android and web ship the silent
+   leave-discards until they catch up.
 
 ### 27 · The resting face an unauthored stance target wears (Q42) · *design* · **built**
 
