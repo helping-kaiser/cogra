@@ -92,6 +92,10 @@ const PATHS = {
   send: ["M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"],
   /* The compose media surfaces' glyphs (media slice, 2026-08-31). */
   close: ["M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"],
+  /* Authoring-side only: a composer's video preview says it is a video and can
+     be played. A READING surface never draws play/pause — presence on screen
+     is the policy there (MediaAttachment). */
+  play_arrow: ["M8 5v14l11-7z"],
   /* The avatar's change badge (profile round, 2026-09-01). The official cut
      draws its lens as a <circle>; PATHS holds paths only, so that circle is
      carried as an exact arc path — same geometry, nothing redrawn. */
