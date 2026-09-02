@@ -104,6 +104,8 @@ sealed interface ThumbBadge {
  *   uploaded), so this is the picture's own story on its own tile.
  * @param progress how far that upload has got, where the transport can say.
  *   Null with [uploading] set draws the indeterminate ring.
+ * @param duration a clip's running time, drawn at the opposite corner
+ *   from [badge] so a video tile can be both picked and timed.
  */
 @Composable
 fun MediaThumb(
@@ -121,6 +123,7 @@ fun MediaThumb(
     fit: ContentScale = ContentScale.Crop,
     uploading: Boolean = false,
     progress: Float? = null,
+    duration: String? = null,
     testTag: String? = null,
 ) {
     val shape = RoundedCornerShape(corner)
@@ -179,6 +182,11 @@ fun MediaThumb(
             ThumbBadge.Failed -> FailedBadge()
             null -> Unit
         }
+        // A clip's running time rides *beside* whatever the tile already
+        // says about itself: `ComposePick` draws a video tile with the
+        // selection ring at one corner and the time at the other, so the
+        // two are not alternatives.
+        duration?.let { DurationBadge(it) }
     }
 }
 

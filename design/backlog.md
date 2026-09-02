@@ -740,3 +740,72 @@ picker never refuses one), an animated WebP a still, and a frame
 cover extracted on the device and uploaded as the account's own
 picture. api-spec.md carries the comment grammar and the 50 MiB
 comment cap as of this round.
+
+### 32 · Video compose — what the boards still leave undrawn · *design*
+
+Filed by the feature loop 2026-09-02, from the web lane's 1:1 audit
+against the item-31 boards (post-#596 state). Six small pieces, plus
+one contradiction to reconcile:
+
+1. **The web pick path has no refusal route.** `ComposePick` edge 9
+   reaches `ComposePickedErrors`; `ComposePickWeb` edges 7/8 (drop
+   region, file dialog) reach nothing on refusal. Either declare the
+   1:1 (as item 31 round 2 did for ReplyVideo on web) or draw the
+   web variant.
+2. **No mixed-kind refusal copy.** Nothing anywhere words the
+   "pictures or one video, never both" refusal; the web app's line
+   is invented. The refusal boards carry only too-big and
+   unreadable-format lines.
+3. **No video-cap refusal line on the post pick refusal board.**
+   `ComposePickedErrors`' size line is picture-worded ("That picture
+   is too big — a picture can be up to 10 MB."); the 100 MiB post
+   video case has no drawn words.
+4. **`ComposeCover`'s back edge is still picture-first** (via 1 →
+   ComposeCrop) while both pick boards branch video *around* the
+   crop. The apps follow the step list (Cover → Pick); the edge
+   should say what the apps do, or rule otherwise.
+5. **Frame-sample positions are undrawn.** The cover step offers
+   three frames; nothing says where they come from. Web ships
+   10% / 50% / 90% (avoiding fade-in black at t=0) — bless or rule.
+6. **The cover preview's playing state is undrawn.** The board draws
+   only rest; web shows the element's native controls once playing
+   (announced deviation — a preview you cannot pause is worse).
+7. **Contradiction to reconcile:** the readme block above says GIF
+   "never refuses" because the device converts — true on Android,
+   but the ruled web behavior (jakob 2026-09-02, after #596) is that
+   an ANIMATED GIF refuses in the browser with words: no
+   animated-WebP encoder exists on the web platform (a still GIF
+   converts fine). The readme's format contract needs the web
+   exception recorded.
+
+### 33 · Video playback and the rest of the clip's life · *design*
+
+Filed by the feature loop 2026-09-02, from the android lane's 1:1
+audit against the item-31 boards. What the video slice built to
+rulings-without-boards, and what has no answer at all yet:
+
+1. **Feed/detail playback chrome.** The roadmap calls playback
+   settled (muted autoplay on visibility, one global sticky mute,
+   real controls) but no board draws the controls, scrubber, or tap
+   targets. Both apps built from existing media tokens — bless or
+   draw.
+2. **When two clips are visible, which plays?** Undrawn; android
+   gates autoplay at 70% per-frame visibility. A rule wants stating.
+3. **What the author sees when a GIF is picked.** Neither platform
+   can encode animated WebP with a documented API (android:
+   Bitmap.compress is single-frame, the NDK decoder reads one frame,
+   Transformer takes one frame; web: no encoder exists), so the
+   readme's "GIF converted on the device" cannot ship as written —
+   the author-facing surface for a picked animated GIF needs design
+   (the candidate: refuse with words on both platforms, extending
+   the ruled web behavior).
+4. **Video in the media viewer / fullscreen.** 2.5.2 says "the
+   viewer's real controls"; 2.5.3 lists "the media viewer" — the
+   slices contradict on ownership. Both apps ship inline controls
+   only.
+5. **Describing a video.** copy-voice says one description for the
+   whole clip and none for its cover, but DescribeSheet is drawn
+   picture-shaped (counter, per-picture entry). The video shape of
+   the sheet is undrawn.
+6. **EditCompose with a video body** — no board draws editing a
+   post whose body is a clip.

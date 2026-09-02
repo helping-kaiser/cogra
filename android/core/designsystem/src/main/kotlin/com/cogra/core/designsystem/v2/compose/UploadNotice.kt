@@ -84,12 +84,17 @@ fun UploadStatusLine(
  * fact, and Retry / Remove it are ordinary primary actions. The failed tile
  * itself wears [com.cogra.core.designsystem.v2.media.ThumbBadge.Failed];
  * tile and line always appear together, because retry does not fit in 48dp.
+ *
+ * [onRetry] is null where retrying is not a way out. A file the step
+ * refused when it was offered — too big, or a format nothing here reads
+ * — cannot be made smaller or readable by asking again, so
+ * `ComposePickedErrors` draws only Remove it.
  */
 @Composable
 fun UploadErrorLine(
-    onRetry: () -> Unit,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
+    onRetry: (() -> Unit)? = null,
     message: String = "One picture didn't upload.",
     testTag: String? = null,
 ) {
@@ -99,8 +104,10 @@ fun UploadErrorLine(
     val text = buildAnnotatedString {
         withStyle(SpanStyle(color = MaterialTheme.colorScheme.error)) { append(message) }
         append(" ")
-        withLink(LinkAnnotation.Clickable("retry", linkStyles) { onRetry() }) { append("Retry") }
-        withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) { append(" · ") }
+        if (onRetry != null) {
+            withLink(LinkAnnotation.Clickable("retry", linkStyles) { onRetry() }) { append("Retry") }
+            withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) { append(" · ") }
+        }
         withLink(LinkAnnotation.Clickable("remove", linkStyles) { onRemove() }) { append("Remove it") }
     }
     Text(

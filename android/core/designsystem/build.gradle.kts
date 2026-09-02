@@ -37,6 +37,15 @@ dependencies {
     // picture on screen, the draggable window, the ratio switch — is the
     // library's rather than ours.
     implementation(libs.android.image.cropper)
+    // api: the player surface exposes Media3's `Player` on its own
+    // signature, so a feature hosting one needs the artifact on its
+    // compile path too. `media3-ui-compose` is Android's own Compose
+    // binding — the state holders a player UI reads, rather than a
+    // `PlayerView` wrapped in an `AndroidView`
+    // (developer.android.com/media/media3/ui/compose).
+    api(libs.media3.exoplayer)
+    api(libs.media3.common)
+    implementation(libs.media3.ui.compose)
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
     // The key gate: BiometricPrompt needs the hosting FragmentActivity,
