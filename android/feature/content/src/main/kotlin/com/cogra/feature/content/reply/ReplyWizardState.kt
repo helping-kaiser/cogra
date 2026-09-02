@@ -4,11 +4,14 @@ import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.core.designsystem.v2.compose.PickedPicture
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.media.VideoFrame
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.wizard.AssetUpload
+import com.cogra.feature.content.wizard.CoverChoice
 import com.cogra.feature.content.wizard.PickedAsset
+import com.cogra.feature.content.wizard.RefusedPick
 
 /**
  * The reply wizard's stages, in the order the canonical boards draw
@@ -112,6 +115,29 @@ data class ReplyWizardState(
     val body: String = "",
     val picked: List<PickedAsset> = emptyList(),
 
+    // -- The clip's face, when the body is a clip (`ReplyVideo`) --
+
+    /**
+     * The frames offered as covers, once they have been lifted out of
+     * the clip. The comment composer is one screen, so the face is
+     * picked here rather than in a stage of its own — which is why these
+     * are loaded when the clip is picked rather than on entering a
+     * stage.
+     */
+    val coverFrames: List<VideoFrame> = emptyList(),
+    val coverChoice: CoverChoice = CoverChoice.Frame(0),
+    val coverMediaId: String? = null,
+
+    /**
+     * Files the composer would not take (`ReplyMediaErrors`). Nothing
+     * was attached, so the composer is still whatever it was — the
+     * refusal sits beside it rather than replacing it.
+     */
+    val refused: List<RefusedPick> = emptyList(),
+
+    /** The leave the author has been asked to confirm (`DiscardConfirm`). */
+    val confirmingDiscard: Boolean = false,
+
     // -- The seal --
     val tagSection: TagSectionState = TagSectionState(),
     val referenceSection: ReferenceSectionState = ReferenceSectionState(),
@@ -138,8 +164,21 @@ data class ReplyWizardState(
     val transportFailed: Boolean = false,
     val outcome: ReplyOutcome? = null,
 ) {
+    /**
+     * Whether the body is one clip (`ReplyVideo`).
+     *
+     * A comment carries up to four pictures **or** one video and its
+     * cover, never both kinds — the post's grammar at comment caps. The
+     * pick rule below is what makes a mixture unreachable, so this stays
+     * a question about the body rather than a search through it.
+     */
+    val isVideoComment: Boolean get() = picked.singleOrNull()?.isVideo == true
+
+    /** The clip this comment is, when it is one. */
+    val video: PickedAsset? get() = picked.singleOrNull()?.takeIf { it.isVideo }
+
     /** Whether the composer draws its pictures state (`ReplyPictures`). */
-    val hasPictures: Boolean get() = picked.isNotEmpty()
+    val hasPictures: Boolean get() = picked.isNotEmpty() && !isVideoComment
 
     /** Every pick that has an id on the server. */
     val uploadedIds: List<String> get() = picked.mapNotNull { it.mediaId }
@@ -147,22 +186,60 @@ data class ReplyWizardState(
     /** Uploads landed, for `UploadStatusLine`'s "n of m". */
     val uploadsDone: Int get() = uploadedIds.size
 
-    val uploadsRunning: Boolean get() = picked.any { it.upload is AssetUpload.Running }
+    /**
+     * Anything still on its way. A transcode counts: it is the clip's
+     * own leg of the same journey, and a composer that called it idle
+     * would let the seal look reachable while the encoder is working.
+     */
+    val uploadsRunning: Boolean
+        get() = picked.any {
+            it.upload is AssetUpload.Running || it.upload is AssetUpload.Transcoding
+        }
 
     val uploadsFailed: Boolean get() = picked.any { it.upload is AssetUpload.Failed }
 
-    /** Every pick has an id: the gallery can be attached as it stands. */
-    val uploadsComplete: Boolean get() = uploadedIds.size == picked.size
+    /**
+     * Every pick has an id: the gallery can be attached as it stands.
+     *
+     * A clip is not complete until its cover has landed too — the cover
+     * is not an attachment, but the clip cannot be uploaded at all until
+     * there is a cover id for it to name.
+     */
+    val uploadsComplete: Boolean
+        get() = uploadedIds.size == picked.size &&
+            (!isVideoComment || coverMediaId != null)
 
     /** Any drawer open over the current stage. */
     val anySheetOpen: Boolean
         get() = sheet != ReplySealSheet.None || describingIndex != null
 
-    /** How many picks carry a description — `DescribeCounter`'s count. */
+    /**
+     * How many picks carry a description — `DescribeCounter`'s count.
+     *
+     * A clip counts as one: it takes **one** description for the whole
+     * thing (jakob 2026-09-02), and its cover takes none of its own —
+     * the cover is the video's face, not a second picture.
+     */
     val describedCount: Int get() = picked.count { it.altText.isNotBlank() }
 
+    /**
+     * What the add control says, or null where the composer carries
+     * none at all.
+     *
+     * The three states are the boards': an empty composer offers both
+     * kinds, a tray of pictures counts them, and a clip **removes the
+     * control** — a comment is pictures or a video, and an add button
+     * that could only refuse is worse than no button.
+     */
+    val addLabel: String?
+        get() = when {
+            isVideoComment -> null
+            picked.isEmpty() -> "+ Add pictures or a video"
+            else -> "+ Add pictures · ${picked.size} of $MAX_PICTURES"
+        }
+
     /** Whether another picture may be picked (`+ Add pictures · n of 4`). */
-    val canAddPicture: Boolean get() = picked.size < MAX_PICTURES
+    val canAddPicture: Boolean get() = !isVideoComment && picked.size < MAX_PICTURES
 
     /**
      * A comment is words **plus** optional pictures, deliberately
@@ -201,6 +278,20 @@ data class ReplyWizardState(
     val canSign: Boolean
         get() = !submitting && !keyAbsent && bodyReady && uploadsComplete
 
+    /**
+     * Whether leaving would lose something, and so has to ask first.
+     *
+     * The reply composer keeps no draft: "leaving them discards, so a
+     * non-empty composer is asked first… An empty composer leaves at
+     * once — a confirm with nothing to lose is noise"
+     * (design/readme.md §13).
+     *
+     * A refused file is **not** content: it never joined the composer,
+     * so a composer carrying only refusals has nothing to lose and
+     * leaves without a question.
+     */
+    val hasSomethingToLose: Boolean get() = body.isNotBlank() || picked.isNotEmpty()
+
     companion object {
         /**
          * api-spec.md `PrepareCommentInput`: at most four per comment
@@ -229,10 +320,24 @@ fun ReplyWizardState.pickedPictures(): List<PickedPicture> = picked.map { asset 
             asset.altText.ifBlank { null },
         ),
         described = asset.altText.isNotBlank(),
-        uploading = asset.upload is AssetUpload.Running,
+        uploading = asset.upload is AssetUpload.Running ||
+            asset.upload is AssetUpload.Transcoding,
         failed = asset.upload is AssetUpload.Failed,
     )
 }
+
+/**
+ * Forgets a previous clip's face.
+ *
+ * Frames belong to the clip they were lifted from, and an id belongs to
+ * bytes already on the server — carrying either across a change of body
+ * would cover one video with another's face.
+ */
+fun ReplyWizardState.clearedCover(): ReplyWizardState = copy(
+    coverFrames = emptyList(),
+    coverChoice = CoverChoice.Frame(0),
+    coverMediaId = null,
+)
 
 // ---------------------------------------------------------------------
 // Transitions. Pure functions on the state, so every branch of the
@@ -277,18 +382,43 @@ fun ReplyWizardState.closedSheets(): ReplyWizardState =
  * second pick of the same asset is ignored: the contract refuses a
  * gallery carrying one twice.
  */
-fun ReplyWizardState.addPick(uri: String, sourceRatio: Float? = null): ReplyWizardState {
+fun ReplyWizardState.addPick(
+    uri: String,
+    sourceRatio: Float? = null,
+    durationMs: Int? = null,
+): ReplyWizardState {
     if (picked.any { it.uri == uri }) return this
+    val picking = PickedAsset(uri, sourceRatio, durationMs = durationMs)
+    // Pictures **or** one video, never both kinds — the post's grammar
+    // at comment caps. A clip is the whole body, so it replaces whatever
+    // was there rather than being refused beside it: the file the author
+    // just chose is the one they meant.
+    if (picking.isVideo) return copy(picked = listOf(picking)).clearedCover()
+    if (isVideoComment) return copy(picked = listOf(picking)).clearedCover()
     if (!canAddPicture) return this
-    return copy(picked = picked + PickedAsset(uri, sourceRatio))
+    return copy(picked = picked + picking)
 }
 
-/** Drops a pick from the tray without touching the rest of the order. */
+/**
+ * Drops a pick from the tray without touching the rest of the order.
+ *
+ * Removing the clip returns the composer to words (`ReplyVideo` 5, "the
+ * video leaves — the composer is words again"), which is what dropping
+ * its face along with it means.
+ */
 fun ReplyWizardState.removePick(uri: String): ReplyWizardState = copy(
     picked = picked.filterNot { it.uri == uri },
     // A sheet describing the removed picture has nothing left to describe.
     describingIndex = null,
-)
+).let { if (it.picked.isEmpty()) it.clearedCover() else it }
+
+/** Clears one refusal (`ReplyMediaErrors`, "Remove it"). */
+fun ReplyWizardState.dismissedRefusal(index: Int): ReplyWizardState =
+    if (index !in refused.indices) {
+        this
+    } else {
+        copy(refused = refused.filterIndexed { at, _ -> at != index })
+    }
 
 /** Records one asset's upload state without disturbing the others (D5). */
 fun ReplyWizardState.withUpload(uri: String, upload: AssetUpload): ReplyWizardState =
