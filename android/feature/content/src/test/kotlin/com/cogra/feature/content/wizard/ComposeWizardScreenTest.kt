@@ -16,7 +16,7 @@ import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
-import com.cogra.domain.media.DeviceImage
+import com.cogra.domain.media.DeviceMedia
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -123,7 +123,7 @@ class ComposeWizardScreenTest {
     private val withPicks = ComposeWizardState(
         mode = BodyMode.Media,
         picked = listOf(PickedAsset("a", 1f), PickedAsset("b", 1f)),
-        deviceImages = listOf(DeviceImage("a", 1f), DeviceImage("b", 1f), DeviceImage("c", 1f)),
+        deviceMedia = listOf(DeviceMedia("a", 1f), DeviceMedia("b", 1f), DeviceMedia("c", 1f)),
     )
 
     private val words = ComposeWizardState(mode = BodyMode.Words)

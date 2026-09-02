@@ -258,6 +258,14 @@ data class Landing(
  *
  * [altText] is authored, never generated: a null one is a decorative
  * asset and must stay a null content description (D20).
+ *
+ * [mimeType] is what a gallery branches a player on. The server states
+ * it from the bytes it validated, so it is read rather than inferred
+ * from the URL — a URL is a store path, not a contract.
+ *
+ * [cover] is a video's poster and null on a still. It answers with its
+ * own [status], so a cover redacted on its own reads REDACTED here
+ * while the video it covers still plays.
  */
 data class MediaAssetView(
     val id: String,
@@ -266,7 +274,22 @@ data class MediaAssetView(
     /** NORMAL, or REDACTED once the bytes are gone (D15). */
     val status: FieldStatus,
     val aspectRatio: Float,
+    val mimeType: String = "",
+    /** The clip's length, null on a still (D11 — derived, never sent). */
+    val durationMs: Int? = null,
+    val cover: MediaAssetView? = null,
 ) {
+    /**
+     * Whether this asset plays rather than being drawn once.
+     *
+     * The one accepted moving format is MP4 (rulings 2026-09-02), but
+     * the test is the type's family rather than that one value: a
+     * second container would arrive as a server change, and a client
+     * that hard-codes `video/mp4` would silently draw it as a broken
+     * still instead of refusing it loudly.
+     */
+    val isVideo: Boolean get() = mimeType.startsWith("video/")
+
     companion object {
         /** What an absent or unparsable `options.aspectRatio` reads as. */
         const val FALLBACK_RATIO = 1f

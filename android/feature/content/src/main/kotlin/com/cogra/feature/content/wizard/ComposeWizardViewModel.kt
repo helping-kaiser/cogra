@@ -11,7 +11,7 @@ import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.media.CropSpec
-import com.cogra.domain.media.DeviceImageSource
+import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.ContentRepository
@@ -65,7 +65,7 @@ class ComposeWizardViewModel @Inject constructor(
     private val references: ReferenceRepository,
     private val media: MediaRepository,
     private val processor: MediaProcessor,
-    private val deviceImages: DeviceImageSource,
+    private val deviceMedia: DeviceMediaSource,
     private val drafts: ComposeDraftStore,
     private val signer: WriteSigner,
 ) : ViewModel() {
@@ -130,14 +130,14 @@ class ComposeWizardViewModel @Inject constructor(
         // permission effect fires on a *change* of permission, and
         // answering the offer changes none, so a wiped grid was never
         // refilled and the stage kept only its photos-app tile.
-        _state.value = ComposeWizardState.from(held).copy(deviceImages = current.deviceImages)
+        _state.value = ComposeWizardState.from(held).copy(deviceMedia = current.deviceMedia)
         armed = true
         // A restored media draft re-reads every asset's shape: the crop
         // preview needs it, and the URIs may no longer resolve.
         _state.value.picked.forEach { readSourceRatio(it.uri) }
         // A draft can be days old and the library has moved on since;
         // one query is cheaper than showing a stale roll.
-        refreshDeviceImages()
+        refreshDeviceMedia()
     }
 
     fun onDiscardDraft() {
@@ -226,7 +226,7 @@ class ComposeWizardViewModel @Inject constructor(
      * granted — including a re-grant, since a partial grant may have
      * gained pictures since the last look.
      */
-    fun onMediaPermissionGranted() = refreshDeviceImages()
+    fun onMediaPermissionGranted() = refreshDeviceMedia()
 
     /**
      * Re-reads the roll into the grid.
@@ -234,9 +234,9 @@ class ComposeWizardViewModel @Inject constructor(
      * Safe to call without a permission: the source answers an empty list
      * rather than throwing, so a caller never has to ask first.
      */
-    private fun refreshDeviceImages() {
+    private fun refreshDeviceMedia() {
         viewModelScope.launch {
-            _state.update { it.copy(deviceImages = deviceImages.newestImages(DEVICE_IMAGE_PAGE)) }
+            _state.update { it.copy(deviceMedia = deviceMedia.newestMedia(DEVICE_MEDIA_PAGE)) }
         }
     }
 
@@ -734,7 +734,7 @@ class ComposeWizardViewModel @Inject constructor(
         const val DRAFT_SAVE_DEBOUNCE_MILLIS = 400L
 
         /** How much of the camera roll the grid offers before the picker. */
-        const val DEVICE_IMAGE_PAGE = 300
+        const val DEVICE_MEDIA_PAGE = 300
 
         const val UNREADABLE = "That file could not be read as a picture."
         const val REFUSED = "The server would not take that picture."
