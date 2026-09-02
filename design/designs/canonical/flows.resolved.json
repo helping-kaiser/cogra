@@ -141,9 +141,203 @@
       "boards": [
         "Feed"
       ]
+    },
+    {
+      "name": "sign-in-with-the-key-elsewhere",
+      "description": "The same sign-in on a device the key is not on — reading runs, and anything signed waits until the key is restored.",
+      "status": "resolved",
+      "steps": [
+        "start · SignIn",
+        "end · SignIn · 6 «Sign in» → KeyElsewhere — member, key not here"
+      ],
+      "boards": [
+        "SignIn",
+        "KeyElsewhere"
+      ]
+    },
+    {
+      "name": "join-with-an-invite",
+      "description": "An invite link checks out at the door, then handle, email and password make the account and the applicant days begin.",
+      "status": "resolved",
+      "steps": [
+        "start · InviteEntry",
+        "InviteEntry · 3 «Continue» → Join — the link checks out",
+        "end · Join · 6 «Create account» → ApplicantFeed — account created — applicant days begin"
+      ],
+      "boards": [
+        "InviteEntry",
+        "Join",
+        "ApplicantFeed"
+      ]
+    },
+    {
+      "name": "guest-turns-applicant",
+      "description": "Sign in or join, offered on every guest screen, runs out to the invite and through Create account into the applicant days.",
+      "status": "resolved",
+      "startsOn": [
+        "FeedBare",
+        "Main",
+        "WalletGuest"
+      ],
+      "steps": [
+        "start · «Sign in or join» on 3 boards → SignIn",
+        "SignIn · 8 «New here? Enter your invite» → InviteEntry",
+        "InviteEntry · 3 «Continue» → Join — the link checks out",
+        "end · Join · 6 «Create account» → ApplicantFeed — account created — applicant days begin"
+      ],
+      "boards": [
+        "SignIn",
+        "InviteEntry",
+        "Join",
+        "ApplicantFeed"
+      ]
+    },
+    {
+      "name": "verify-the-email",
+      "description": "Back to CoGra in the verification mail returns an applicant to the feed their application still runs in.",
+      "status": "resolved",
+      "steps": [
+        "start · Verified",
+        "end · Verified · 1 «Back to CoGra» → ApplicantFeed — application still running"
+      ],
+      "boards": [
+        "Verified",
+        "ApplicantFeed"
+      ]
+    },
+    {
+      "name": "verify-the-email-as-a-member",
+      "description": "The same mail opened once the application has been approved lands a full member in their own feed.",
+      "status": "resolved",
+      "steps": [
+        "start · Verified",
+        "end · Verified · 1 «Back to CoGra» → Feed — already a member"
+      ],
+      "boards": [
+        "Verified",
+        "Feed"
+      ]
+    },
+    {
+      "name": "make-your-key",
+      "description": "Create my key runs the ceremony — the recovery code shown, written down, confirmed — and hands the applicant back where it began.",
+      "status": "resolved",
+      "steps": [
+        "start · ApplicantFeed · 3 «Create my key» → KeyCeremony",
+        "KeyCeremony · 2 «Create my recovery code» → KeyConfirm",
+        "KeyConfirm · 2 «Show my code» → RecoveryCode",
+        "end · RecoveryCode · 3 «I've written it down» → back — code confirmed — returns where the ceremony began"
+      ],
+      "boards": [
+        "ApplicantFeed",
+        "KeyCeremony",
+        "KeyConfirm",
+        "RecoveryCode"
+      ]
+    },
+    {
+      "name": "vouch-back-for-your-inviter",
+      "description": "Vouch back on the approval landing opens the stance pad; the signed stance ends the borrowed view and the member's own feed opens.",
+      "status": "resolved",
+      "steps": [
+        "start · VouchBack · 3 «Vouch back» → VouchBackPad",
+        "end · VouchBackPad · 4 «Set» → Feed — the vouch-back — signed, the way opens"
+      ],
+      "boards": [
+        "VouchBack",
+        "VouchBackPad",
+        "Feed"
+      ]
+    },
+    {
+      "name": "restore-your-key",
+      "description": "Restore the key, wherever the key-absent screens offer it, takes the recovery code and returns to whatever was waiting on it.",
+      "status": "resolved",
+      "startsOn": [
+        "ComposeKeyAbsent",
+        "KeyElsewhere",
+        "WalletKeyAbsent"
+      ],
+      "steps": [
+        "start · «Restore the key» on 3 boards → Restore",
+        "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
+      ],
+      "boards": [
+        "Restore"
+      ]
+    },
+    {
+      "name": "publish-your-payout-address",
+      "description": "The wallet's first open makes the key and signs the payout address onto the record — the wallet then stands at zero, address published.",
+      "status": "resolved",
+      "steps": [
+        "start · WalletSetup",
+        "WalletSetup · 2 «Create and publish» → WalletAddressSeal",
+        "end · WalletAddressSeal · 5 «Sign and publish» → WalletEmpty — published — the zero wallet, address on record"
+      ],
+      "boards": [
+        "WalletSetup",
+        "WalletAddressSeal",
+        "WalletEmpty"
+      ]
+    },
+    {
+      "name": "change-your-payout-address",
+      "description": "Change on the wallet takes a new address to its own seal; the signed change puts it on record, newest wins.",
+      "status": "resolved",
+      "steps": [
+        "start · WalletEmpty · 3 «Change» → WalletChange — then the seal",
+        "end · WalletChange · 5 «Sign the change» → Wallet — signed — the new address on record, newest wins"
+      ],
+      "boards": [
+        "WalletEmpty",
+        "WalletChange",
+        "Wallet"
+      ]
+    },
+    {
+      "name": "trace-a-payout-to-what-paid-it",
+      "description": "A settling payout row opens the settlement that paid it — the settlement's own view is still owed.",
+      "status": "blocked by gap",
+      "blockedBy": "the paying settlement's view (not boarded — every line opens what paid it)",
+      "steps": [
+        "start · Wallet",
+        "end · Wallet · 5 «payout · settling row» → gap: the paying settlement's view (not boarded — every line opens what paid it)"
+      ],
+      "boards": [
+        "Wallet"
+      ]
+    },
+    {
+      "name": "see-a-campaigns-money",
+      "description": "The wallet's Campaigns door lists what you run and what you took part in; a row opens that campaign's money view.",
+      "status": "resolved",
+      "steps": [
+        "start · Wallet · 4 «Campaigns door» → WalletCampaigns",
+        "end · WalletCampaigns · 5 «open campaign row» → WalletCampaign"
+      ],
+      "boards": [
+        "Wallet",
+        "WalletCampaigns",
+        "WalletCampaign"
+      ]
     }
   ],
   "boardsOnFlows": {
+    "ApplicantFeed": {
+      "flows": [
+        "guest-turns-applicant",
+        "join-with-an-invite",
+        "make-your-key",
+        "verify-the-email"
+      ],
+      "endpoint": [
+        "guest-turns-applicant",
+        "join-with-an-invite",
+        "make-your-key",
+        "verify-the-email"
+      ]
+    },
     "AvatarCrop": {
       "flows": [
         "edit-avatar-standalone",
@@ -198,13 +392,17 @@
         "narrow-the-feed",
         "open-a-topic",
         "reply-to-a-post",
-        "sign-in"
+        "sign-in",
+        "verify-the-email-as-a-member",
+        "vouch-back-for-your-inviter"
       ],
       "endpoint": [
         "narrow-the-feed",
         "open-a-topic",
         "reply-to-a-post",
-        "sign-in"
+        "sign-in",
+        "verify-the-email-as-a-member",
+        "vouch-back-for-your-inviter"
       ]
     },
     "FeedNarrowed": {
@@ -220,6 +418,42 @@
         "narrow-the-feed"
       ],
       "endpoint": []
+    },
+    "InviteEntry": {
+      "flows": [
+        "guest-turns-applicant",
+        "join-with-an-invite"
+      ],
+      "endpoint": [
+        "join-with-an-invite"
+      ]
+    },
+    "Join": {
+      "flows": [
+        "guest-turns-applicant",
+        "join-with-an-invite"
+      ],
+      "endpoint": []
+    },
+    "KeyCeremony": {
+      "flows": [
+        "make-your-key"
+      ],
+      "endpoint": []
+    },
+    "KeyConfirm": {
+      "flows": [
+        "make-your-key"
+      ],
+      "endpoint": []
+    },
+    "KeyElsewhere": {
+      "flows": [
+        "sign-in-with-the-key-elsewhere"
+      ],
+      "endpoint": [
+        "sign-in-with-the-key-elsewhere"
+      ]
     },
     "Profile": {
       "flows": [
@@ -245,6 +479,14 @@
         "edit-avatar-via-edit-screen"
       ]
     },
+    "RecoveryCode": {
+      "flows": [
+        "make-your-key"
+      ],
+      "endpoint": [
+        "make-your-key"
+      ]
+    },
     "ReplyCompose": {
       "flows": [
         "reply-to-a-post"
@@ -265,16 +507,114 @@
       ],
       "endpoint": []
     },
-    "SignIn": {
+    "Restore": {
       "flows": [
-        "sign-in"
+        "restore-your-key"
       ],
       "endpoint": [
-        "sign-in"
+        "restore-your-key"
+      ]
+    },
+    "SignIn": {
+      "flows": [
+        "guest-turns-applicant",
+        "sign-in",
+        "sign-in-with-the-key-elsewhere"
+      ],
+      "endpoint": [
+        "guest-turns-applicant",
+        "sign-in",
+        "sign-in-with-the-key-elsewhere"
+      ]
+    },
+    "Verified": {
+      "flows": [
+        "verify-the-email",
+        "verify-the-email-as-a-member"
+      ],
+      "endpoint": [
+        "verify-the-email",
+        "verify-the-email-as-a-member"
+      ]
+    },
+    "VouchBack": {
+      "flows": [
+        "vouch-back-for-your-inviter"
+      ],
+      "endpoint": [
+        "vouch-back-for-your-inviter"
+      ]
+    },
+    "VouchBackPad": {
+      "flows": [
+        "vouch-back-for-your-inviter"
+      ],
+      "endpoint": []
+    },
+    "Wallet": {
+      "flows": [
+        "change-your-payout-address",
+        "see-a-campaigns-money",
+        "trace-a-payout-to-what-paid-it"
+      ],
+      "endpoint": [
+        "change-your-payout-address",
+        "see-a-campaigns-money",
+        "trace-a-payout-to-what-paid-it"
+      ]
+    },
+    "WalletAddressSeal": {
+      "flows": [
+        "publish-your-payout-address"
+      ],
+      "endpoint": []
+    },
+    "WalletCampaign": {
+      "flows": [
+        "see-a-campaigns-money"
+      ],
+      "endpoint": [
+        "see-a-campaigns-money"
+      ]
+    },
+    "WalletCampaigns": {
+      "flows": [
+        "see-a-campaigns-money"
+      ],
+      "endpoint": []
+    },
+    "WalletChange": {
+      "flows": [
+        "change-your-payout-address"
+      ],
+      "endpoint": []
+    },
+    "WalletEmpty": {
+      "flows": [
+        "change-your-payout-address",
+        "publish-your-payout-address"
+      ],
+      "endpoint": [
+        "change-your-payout-address",
+        "publish-your-payout-address"
+      ]
+    },
+    "WalletSetup": {
+      "flows": [
+        "publish-your-payout-address"
+      ],
+      "endpoint": [
+        "publish-your-payout-address"
       ]
     }
   },
   "gapsOnFlows": [
+    "ApplicantFeed/10: applicant acts once each — boards pending (ruled 2026-09-01)",
+    "ApplicantFeed/11: Post Score drill-down (backlog item 13)",
+    "ApplicantFeed/15: applicant acts once each — boards pending (ruled 2026-09-01)",
+    "ApplicantFeed/18: the chat surface (not designed)",
+    "ApplicantFeed/5: reader's post menu — licence terms / cite (not boarded)",
+    "ApplicantFeed/8: the topic page (ruled 2026-09-01 — not designed)",
     "AvatarSeal/4: network-error pattern board (not designed)",
     "ComposeDetails/7: the topic picker (not boarded)",
     "ComposeLanded/7: Post Score drill-down (backlog item 13)",
@@ -287,6 +627,14 @@
     "FeedNarrowed/3: reader's post menu — licence terms / cite (not boarded)",
     "FeedNarrowed/6: the topic page (ruled 2026-09-01 — not designed)",
     "FeedNarrowed/9: Post Score drill-down (backlog item 13)",
+    "InviteEntry/3: network-error pattern board (not designed)",
+    "Join/6: field-error states (not boarded)",
+    "Join/6: network-error pattern board (not designed)",
+    "KeyElsewhere/10: Post Score drill-down (backlog item 13)",
+    "KeyElsewhere/17: the chat surface (not designed)",
+    "KeyElsewhere/4: reader's post menu — licence terms / cite (not boarded)",
+    "KeyElsewhere/7: the topic page (ruled 2026-09-01 — not designed)",
+    "KeyElsewhere/9: key-absent acting path (not boarded)",
     "Profile/1: the chat surface (not designed)",
     "Profile/2: the profile's menu — mention / share (not boarded)",
     "Profile/3: the settings screen (not designed)",
@@ -294,11 +642,31 @@
     "Profile/9: the post detail view (not boarded standalone — drawn only under the comments sheet)",
     "ProfileEdit/6: field-error states (not boarded)",
     "ProfileEditSeal/4: network-error pattern board (not designed)",
+    "RecoveryCode/3: code-mismatch error state (not boarded)",
     "ReplyEntry/2: the comment's menu — cite / licence terms (not boarded)",
     "ReplyEntry/3: the topic page (ruled 2026-09-01 — not designed)",
     "ReplySeal/4: the topic picker (not boarded)",
     "ReplySeal/9: network-error pattern board (not designed)",
+    "Restore/4: wrong-code error state (not boarded)",
     "SignIn/6: network-error pattern board (not designed)",
-    "SignIn/6: wrong-credentials error state (not boarded)"
+    "SignIn/6: wrong-credentials error state (not boarded)",
+    "VouchBack/11: Post Score drill-down (backlog item 13)",
+    "VouchBack/18: the chat surface (not designed)",
+    "VouchBack/5: reader's post menu — licence terms / cite (not boarded)",
+    "VouchBack/8: the topic page (ruled 2026-09-01 — not designed)",
+    "VouchBackPad/4: key-absent signing path at the pad (not boarded)",
+    "Wallet/14: the chat surface (not designed)",
+    "Wallet/2: the full address card as a state of the rest wallet (ruled one-tap-away; the card itself is drawn on the zero board)",
+    "Wallet/3: the settlement's public record view (not boarded — the traceability promise)",
+    "Wallet/5: the paying settlement's view (not boarded — every line opens what paid it)",
+    "Wallet/6: the paying settlement's view (not boarded — every line opens what paid it)",
+    "Wallet/8: the tipping act's view (not boarded — every line opens what paid it)",
+    "WalletAddressSeal/5: network-error pattern board (not designed)",
+    "WalletCampaign/2: the rail record's view (not boarded — the traceability promise)",
+    "WalletCampaigns/2: the campaign creation flow (future item — the console stays out of the wallet)",
+    "WalletChange/5: network-error pattern board (not designed)",
+    "WalletEmpty/3: the new-address input stage (not boarded)",
+    "WalletEmpty/9: the chat surface (not designed)",
+    "WalletSetup/8: the chat surface (not designed)"
   ]
 }
