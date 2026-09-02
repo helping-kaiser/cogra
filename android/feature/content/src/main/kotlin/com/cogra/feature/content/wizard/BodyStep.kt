@@ -129,22 +129,27 @@ internal fun ColumnScope.PickStage(
         item(key = "photos_app") { PhotosAppTile(onClick = onOpenPicker) }
 
         if (permission is MediaPermission.Granted) {
-            items(state.deviceMedia, key = { it.uri }) { image ->
-                val order = picks.indexOf(image.uri).takeIf { it >= 0 }
+            items(state.deviceMedia, key = { it.uri }) { item ->
+                val order = picks.indexOf(item.uri).takeIf { it >= 0 }
+                val noun = if (item.isVideo) "video" else "picture"
                 MediaThumb(
-                    item = MediaItem(image.uri, image.aspectRatio),
+                    item = MediaItem(item.uri, item.aspectRatio),
                     size = null,
                     corner = 0.dp,
                     // A filled numbered disc for a pick, an empty ring for
                     // the rest — the board's whole selection language.
                     badge = ThumbBadge.Order(order?.plus(1)),
-                    onClick = { onTogglePick(image.uri) },
+                    // A clip says how long it is, under a play glyph, at
+                    // the opposite corner — `ComposePick`'s video tile.
+                    duration = item.durationMs?.let { formatDuration(it) },
+                    onClick = { onTogglePick(item.uri) },
                     contentDescription = if (order == null) {
-                        "A picture. Activate to pick it."
+                        "A $noun. Activate to pick it."
                     } else {
-                        "Picture ${order + 1}, picked. Activate to remove it."
+                        "${noun.replaceFirstChar { it.uppercase() }} ${order + 1}, " +
+                            "picked. Activate to remove it."
                     },
-                    testTag = "wizard_grid_${image.uri}",
+                    testTag = "wizard_grid_${item.uri}",
                 )
             }
         }
