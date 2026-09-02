@@ -1418,8 +1418,10 @@ Validation lives in the service layer that writes the row. A
 Postgres-side CHECK was rejected as too rigid for a field expected
 to evolve.
 
-`duration_ms` reads null while the stored format is a still
-image; it carries a value when video lands.
+`duration_ms` is written at ingest from the bytes themselves —
+the movie duration an MP4's header states, or the sum of an
+animated WebP's frame durations. A single-frame picture has none
+to state, so it reads null.
 
 A per-asset cover (the video poster) is a `cover_media_id` foreign
 key to `media_attachments` — an asset pointing at another asset,
