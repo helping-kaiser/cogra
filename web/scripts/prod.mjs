@@ -48,6 +48,29 @@ export const DEFAULT_UPSTREAM_PORT = 3001;
 export const UPSTREAM_READY_TIMEOUT_MS = 120_000;
 
 /**
+ * How long one request may take to arrive in full.
+ *
+ * NODE CUTS A SLOW UPLOAD AT FIVE MINUTES by default: `requestTimeout` is
+ * 300000 ms and it measures the WHOLE request, body included, so a large upload
+ * on a slow link is destroyed halfway up with nothing said about why. That is a
+ * second ceiling under Next's own proxy timeout, and the lower of the two is
+ * the one that decides — so this front has to be at least as patient as the
+ * router behind it or raising the router's would change nothing.
+ *
+ * It matches `UPLOAD_PROXY_TIMEOUT_MS` in `next.config.ts` — 100 MiB, the
+ * largest body the contract admits, at roughly 1 Mbit/s. `media-proxy.test.ts`
+ * pins the two together so neither can be raised alone.
+ */
+export const REQUEST_TIMEOUT_MS = 900_000;
+
+/**
+ * How long the HEADERS may take. Left at Node's own minute: headers arrive in
+ * one burst at the start of a request, so a slow body is not what this bounds,
+ * and shortening the window an idle connection can hold is worth keeping.
+ */
+export const HEADERS_TIMEOUT_MS = 60_000;
+
+/**
  * The TLS pair from the stamped directory, or null where the machine
  * never stamped one. Null is a refusal rather than a fallback: the whole
  * point of this path is an https origin the phone already trusts, and a
@@ -78,6 +101,42 @@ export function forwardedHeaders(headers, { host, remoteAddress }) {
     "x-forwarded-proto": "https",
     "x-forwarded-for": remoteAddress ?? "",
   };
+}
+
+/** The API origin, derived the same way every other consumer derives it. */
+export function apiOriginFromEnv(env = process.env) {
+  return new URL(env.GRAPHQL_URL ?? "http://localhost:8080/graphql").origin;
+}
+
+/**
+ * Whether a request goes DIRECTLY to the API rather than through `next
+ * start`.
+ *
+ * MEASURED 2026-09-03: a raw POST to `next start` answers in about a
+ * second up to 10 MiB, but at 20 MiB and 40 MiB it never gets past
+ * `HTTP/1.1 100 Continue` — nothing for 90+ seconds — and a real GraphQL
+ * multipart upload of 20 MiB through it hangs the same way. The identical
+ * bodies sent straight to the API answer in a fraction of a second (a 20
+ * MiB multipart POST: 0.17 s). The API is not the bottleneck; Next's own
+ * rewrite proxy is, and Next's self-hosting guide already says to put a
+ * reverse proxy in front of `next start` rather than route production
+ * traffic through it unassisted — this proxy, already in the request
+ * path, is that reverse proxy, so it takes back exactly the two routes
+ * `next.config.ts`'s rewrites cannot carry at size and forwards them
+ * itself with the same streaming `pipe()` every other request already
+ * gets. The rewrites stay in `next.config.ts` too: they are what `next
+ * dev` runs behind (this proxy only fronts `next start`), and they remain
+ * a correct fallback for anything that reaches `next start` directly.
+ *
+ * Path-only, independent of method or query string, so it can be pinned
+ * with a table of paths rather than constructed requests.
+ */
+export function isDirectApiPath(pathname) {
+  return (
+    pathname === "/graphql" ||
+    pathname === "/media/uploads" ||
+    pathname.startsWith("/media/uploads/")
+  );
 }
 
 /** How long to leave between connection attempts while waiting. */
@@ -131,13 +190,27 @@ export function waitForPort(port, host, { timeoutMs = UPSTREAM_READY_TIMEOUT_MS 
  * The TLS front. Bodies are piped in both directions and never buffered:
  * the App Router streams its responses, and a proxy that collected them
  * first would turn every streamed page into a wait for the last byte.
+ *
+ * `/graphql` and `/media/uploads/*` skip `next start` entirely and go
+ * straight to the API — see `isDirectApiPath`. Everything else still goes
+ * to `next start`, which serves it directly (`next dev` has no front of
+ * its own, only pages, and pages are not the large-body case this exists
+ * for).
  */
-export function createProxy(credentials, { upstreamPort, upstreamHost }) {
-  return createHttpsServer(credentials, (req, res) => {
+export function createProxy(credentials, { upstreamPort, upstreamHost, apiOrigin }) {
+  const api = new URL(apiOrigin);
+  const apiPort = api.port || (api.protocol === "https:" ? 443 : 80);
+
+  const server = createHttpsServer(credentials, (req, res) => {
+    const { pathname } = new URL(req.url, "http://placeholder");
+    const target = isDirectApiPath(pathname)
+      ? { host: api.hostname, port: apiPort }
+      : { host: upstreamHost, port: upstreamPort };
+
     const upstream = httpRequest(
       {
-        host: upstreamHost,
-        port: upstreamPort,
+        host: target.host,
+        port: target.port,
         method: req.method,
         path: req.url,
         headers: forwardedHeaders(req.headers, {
@@ -156,6 +229,12 @@ export function createProxy(credentials, { upstreamPort, upstreamHost }) {
     });
     req.pipe(upstream);
   });
+
+  // Set after construction rather than through the options object: these are
+  // properties of the server, and assigning them is what Node documents.
+  server.requestTimeout = REQUEST_TIMEOUT_MS;
+  server.headersTimeout = HEADERS_TIMEOUT_MS;
+  return server;
 }
 
 function main() {
@@ -181,7 +260,11 @@ function main() {
     { stdio: "inherit", cwd: webRoot },
   );
 
-  const proxy = createProxy(credentials, { upstreamPort, upstreamHost });
+  const proxy = createProxy(credentials, {
+    upstreamPort,
+    upstreamHost,
+    apiOrigin: apiOriginFromEnv(),
+  });
 
   const shutdown = () => {
     proxy.close();
