@@ -18,6 +18,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -153,11 +154,28 @@ private fun GalleryFrame(
             ),
     ) {
         val videoUrl = item.videoUrl
+        // Symptom (b) is about this number on the way back: the clip
+        // should resume if it is in the viewport and must not start if
+        // it is far out of it, and the log has to show which side of
+        // the line the frame landed on and when.
+        if (videoUrl != null) {
+            val traced = remember(videoUrl) { VideoTrace.clip(videoUrl) }
+            LaunchedEffect(visible, traced) {
+                VideoTrace.autoplay(traced, visible, visible >= AUTOPLAY_VISIBLE_FRACTION)
+            }
+        }
         // A player off screen is still a hardware codec held open, and a
         // device has only a handful. A frame nobody can see draws its
         // poster instead and holds nothing — which is also what the
         // poster is *for*, so the card looks the same either way.
-        if (videoUrl != null && visible > 0f) {
+        //
+        // **The bar is the autoplay bar, not a sliver.** There is one
+        // stage and the surface entering it last is the one that shows,
+        // so a card the reader is not looking at must not enter it at
+        // all: a card showing 8% of itself was taking the decoder off
+        // the card showing all of itself, which left the card being
+        // read wearing its cover for as long as it sat there.
+        if (videoUrl != null && visible >= AUTOPLAY_VISIBLE_FRACTION) {
             VideoPlayer(
                 url = videoUrl,
                 // The poster is the cover asset: what the author chose
@@ -169,6 +187,10 @@ private fun GalleryFrame(
                 // every picture beside it is — and so the poster and
                 // the video are the same rectangle.
                 contentScale = fit,
+                // The clip's own shape, known before composition — so
+                // the surface is measured once instead of measured and
+                // then re-measured when the decoder reports in.
+                videoAspectRatio = item.aspectRatio,
                 contentDescription = item.altText,
                 modifier = Modifier.fillMaxSize(),
                 testTag = "gallery_video",

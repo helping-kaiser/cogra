@@ -6,7 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -41,7 +44,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.compose.PlayerSurface
-import androidx.media3.ui.compose.modifiers.resizeWithContentScale
 import androidx.media3.ui.compose.state.rememberPresentationState
 import coil3.compose.AsyncImage
 import com.cogra.core.designsystem.v2.token.MediaOverlay
@@ -126,6 +128,11 @@ fun Modifier.onVisibilityChanged(onChange: (Float) -> Unit): Modifier =
  *   scale the poster is drawn at**: the poster and the video stand in
  *   for each other, and two different scales make every swap between
  *   them a visible change of shape.
+ * @param videoAspectRatio the clip's own shape, as the server derived
+ *   it from the stored bytes. **Known before composition**, which is the
+ *   point: sizing the surface from it means the surface is measured once
+ *   rather than measured, then re-measured when the decoder reports in.
+ *   Null falls back to filling the frame.
  */
 @OptIn(UnstableApi::class)
 @Composable
@@ -137,6 +144,7 @@ fun VideoPlayer(
     durationMs: Int? = null,
     controls: VideoControls = VideoControls.SoundOnly,
     contentScale: ContentScale = ContentScale.Crop,
+    videoAspectRatio: Float? = null,
     contentDescription: String? = null,
     testTag: String? = null,
 ) {
@@ -153,12 +161,20 @@ fun VideoPlayer(
     // Claiming the stage is a side effect, so it happens after the
     // composition that asked for it rather than inside it — the surface
     // entering last is the one that ends up showing.
+    val traced = remember(url) { VideoTrace.clip(url) }
+
     DisposableEffect(url, token) {
         VideoStage.claim(context, url, token)
+        VideoStage.holding?.player?.let {
+            VideoTrace.handover(traced, "claimed", it.currentPosition, it.isPlaying)
+        }
         onDispose {
             // The player outlives this surface — surrendering is what
             // hands it on, and releasing it here is what used to make
             // the next screen start over.
+            VideoStage.holding?.player?.let {
+                VideoTrace.handover(traced, "surrender", it.currentPosition, it.isPlaying)
+            }
             VideoStage.surrender(token)
         }
     }
@@ -168,10 +184,32 @@ fun VideoPlayer(
     // reference would go on talking to a released instance.
     val player = VideoStage.playerFor(token, url)
 
+    // Whether the clip this surface is for is the one on stage — asked
+    // separately from owning it, because during a navigation both
+    // surfaces are composed and only the arriving one holds the token.
+    // The leaving one then has no player while its own clip is playing
+    // one composable over, and that is not a reason to draw a cover.
+    val clipOnStage = VideoStage.holding?.url == url
+
     DisposableEffect(player) {
         val listener = object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 playing = isPlaying
+            }
+
+            override fun onRenderedFirstFrame() {
+                // The end of every flash, whatever caused it — and the
+                // fact the stage remembers, so the next surface this
+                // clip lands on does not put the cover back.
+                //
+                // Media3 calls this again on every loop of a card clip
+                // (`REPEAT_MODE_ONE` is a period transition, and each
+                // period renders its own first frame), so the trace asks
+                // the stage rather than the player: a line here means a
+                // clip genuinely arrived, not that a four-second loop
+                // came round again.
+                if (!VideoStage.hasRendered) VideoTrace.firstFrame(traced)
+                VideoStage.rendered()
             }
         }
         player?.addListener(listener)
@@ -195,40 +233,86 @@ fun VideoPlayer(
     // to a second surface looks like from the state holder's side.
     val presentation = rememberPresentationState(player, keepContentOnReset = true)
 
-    // **A video surface does not keep its own shape.** `PlayerSurface`
-    // is a bare `SurfaceView`: the decoder's output is painted across
-    // whatever area the view is given, so `fillMaxSize` stretches a
-    // 9:16 clip into a 4:5 frame. Media3 puts the shape-keeping in a
-    // modifier — `ContentFrame` is nothing but a `PlayerSurface` under
-    // `resizeWithContentScale(contentScale, videoSizeDp)` — and this is
-    // that modifier, given the same scale the poster is drawn at, so
-    // the two occupy exactly the same rectangle.
+    // **Geometry from what is already known, never from what arrives.**
+    //
+    // A bare `SurfaceView` paints the decoder's output across whatever
+    // area it is given, so the surface does have to be sized. The
+    // previous attempt sized it with
+    // `resizeWithContentScale(contentScale, videoSizeDp)` — and
+    // `videoSizeDp` is filled in from an effect, so the surface measured
+    // at full parent size and then re-measured when the value landed.
+    // That is a relayout at exactly the moment a frame is arriving, and
+    // it is the shape of what jakob describes as the container sizing
+    // for the cover and then resizing for the video.
+    //
+    // [videoAspectRatio] is the server's own derivation from the stored
+    // bytes, known before anything is composed. The design now
+    // guarantees the cover shares it — "the cover shares the clip's
+    // ratio and crops identically" (design/readme.md) — so one value
+    // sizes both and neither waits for the other.
+    //
+    // `videoSizeDp` is still read, but only to say so in the trace: the
+    // device log has to show whether it arrives before or after the
+    // surface is measured, which is what tells us the relayout is gone.
     val videoSize = presentation.videoSizeDp
 
+    // Whether this arrives before or after the surface is measured is
+    // the whole of androidx/media#3238, and it decides whether the
+    // geometry below changes under a frame that is already landing.
+    LaunchedEffect(videoSize, traced) {
+        VideoTrace.videoSize(traced, videoSize?.width, videoSize?.height)
+    }
+
     Box(
-        modifier = modifier.then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+        modifier = modifier
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
+            // The box the frame actually measured. If this changes
+            // between the cover and the video, jakob's relayout is real
+            // and the log says so in two lines.
+            .onSizeChanged { VideoTrace.surface(traced, "measured", it.width, it.height) },
         contentAlignment = Alignment.Center,
     ) {
         // A surface without the stage binds nothing: two surfaces
         // setting the same player's video output is the fight that
         // reads as a flicker.
-        PlayerSurface(
-            player = player,
-            modifier = Modifier.resizeWithContentScale(contentScale, videoSize),
-        )
+        // Sized once, from a number known before composition. A clip
+        // taller than its frame overflows it and is clipped by the box —
+        // a centre-crop, which is what "letterboxing exists nowhere in
+        // the product" asks for. A clip the frame's own shape fills it
+        // exactly and nothing is cut.
+        // And a surface with no player is not composed at all. A
+        // `SurfaceView` keeps the last frame it was handed until it is
+        // detached, so a host that has just lost the token goes on
+        // showing that frozen frame — at its own geometry, over the
+        // crossfade, beside the arriving host drawing the live one. Two
+        // pictures of the same clip, one stale: the nested box.
+        if (player != null) {
+            PlayerSurface(
+                player = player,
+                modifier = if (videoAspectRatio != null) {
+                    Modifier.fillMaxWidth().aspectRatio(videoAspectRatio)
+                } else {
+                    Modifier.fillMaxSize()
+                },
+            )
+        }
 
-        // The poster covers the surface until a frame exists to show —
-        // which is also the state a clip that never autoplays, or one
-        // whose stage another clip has taken, stays in.
-        //
-        // **And until the surface knows how big the video is.**
-        // `videoSizeDp` starts null and is filled in from an effect, so
-        // the composition right after a player moves to a new surface
-        // measures at full parent size while a frame is already landing
-        // on it — androidx/media#3238, whose reported symptom is
-        // exactly a first frame at the wrong size. The poster stays over
-        // that one frame rather than letting it show.
-        if (posterCovers(presentation.coverSurface, player != null, videoSize != null)) {
+        // The poster covers the surface until a frame of this clip
+        // exists to show — which is also the state a clip that never
+        // autoplays, or one whose stage another clip has taken, stays
+        // in. A surface merely mid-handover draws nothing at all: the
+        // arriving surface is showing the very same clip through the
+        // crossfade, and a cover on top of that is the flash.
+        val reason = posterReason(
+            coverSurface = presentation.coverSurface,
+            hasPlayer = player != null,
+            alreadyRendered = VideoStage.hasRendered,
+            clipOnStage = clipOnStage,
+        )
+        LaunchedEffect(reason, traced) {
+            VideoTrace.poster(traced, shown = reason != null, reason = reason ?: "surface ready")
+        }
+        if (reason != null) {
             AsyncImage(
                 model = posterUrl,
                 contentDescription = contentDescription,
@@ -277,27 +361,58 @@ enum class VideoControls { SoundOnly, Full }
 /**
  * Whether the poster stands in front of the surface.
  *
- * Three reasons, and the third is the one that was missing.
- *
- * [coverSurface] is Media3's own answer — no frame has been rendered
- * yet, so there is nothing behind the poster to show. [hasPlayer] is
- * ours: a surface whose clip another has taken off the stage has no
- * player to draw at all.
- *
- * [videoSizeKnown] is the guard against a documented race.
- * `PresentationState.videoSizeDp` starts null and is filled in from an
- * effect, so the composition immediately after a player moves onto a new
- * surface still measures at full parent size — and a frame can land on
- * that surface before the size arrives, which is exactly the
- * wrong-sized first frame reported as androidx/media#3238. Holding the
- * poster over that one frame costs nothing and is the difference
- * between a clean hand-over and a visible jump.
+ * [coverSurface] is Media3's own answer about this surface — no frame
+ * has been rendered on it yet, so there is nothing behind the poster to
+ * show. [hasPlayer] and [clipOnStage] are the stage's two halves: which
+ * surface may bind the player, and which clip the player holds.
+ * [alreadyRendered] is the stage's memory of having drawn this clip at
+ * all.
  */
 internal fun posterCovers(
     coverSurface: Boolean,
     hasPlayer: Boolean,
-    videoSizeKnown: Boolean,
-): Boolean = coverSurface || !hasPlayer || !videoSizeKnown
+    alreadyRendered: Boolean,
+    clipOnStage: Boolean,
+): Boolean = posterReason(coverSurface, hasPlayer, alreadyRendered, clipOnStage) != null
+
+/**
+ * *Why* the poster is in front, or null when it is not.
+ *
+ * **A cover is a stand-in for a frame that does not exist yet.** Once
+ * this clip has rendered one, it has a face of its own and the cover has
+ * no job — which is the rule the detail was breaking: opening it made a
+ * new surface, whose freshly remembered `PresentationState` starts with
+ * `coverSurface` true, and the cover came back over a clip that had been
+ * playing a moment before. [alreadyRendered] belongs to the stage rather
+ * than the surface precisely because it has to outlive the surface.
+ *
+ * **Losing the token is not losing the clip.** A navigation composes
+ * both screens at once and the arriving surface takes the token, so the
+ * leaving one reads no player for the length of the crossfade — while
+ * the clip it is for is playing one composable over. Drawing the cover
+ * there put the hand-picked still on top of a clip in motion, in both
+ * directions; drawing nothing lets the arriving surface show through.
+ * So the question is asked in the order the reader experiences it: is
+ * this clip on stage at all, has it ever drawn a frame, and only then
+ * whose surface holds it.
+ *
+ * The reason is what the device log carries, and it names which of the
+ * causes is in play. A third is not in this function at all — a
+ * `SurfaceView` destroyed and recreated shows its own black window,
+ * which no poster rule would explain — so naming these lets the log
+ * rule them in or out, and their absence points at that one.
+ */
+internal fun posterReason(
+    coverSurface: Boolean,
+    hasPlayer: Boolean,
+    alreadyRendered: Boolean,
+    clipOnStage: Boolean,
+): String? = when {
+    !clipOnStage -> "no clip on stage"
+    alreadyRendered -> null
+    !hasPlayer || coverSurface -> "no frame rendered yet"
+    else -> null
+}
 
 @Composable
 private fun PlayPauseButton(
