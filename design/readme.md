@@ -2259,13 +2259,34 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   difference. A typed @handle is not the other half of this: it is
   coloured text and nothing more, while the mention that binds is the
   structured reference.
-- **Both rows open the composer with the reference already staged.**
-  Citations are declared at creation, structured inputs only, so there
-  is no attaching one to a post that landed — the row starts a new
-  post pointing at the old one. `ComposeCited` draws it: the composer
-  fresh, nothing written, the citation already in the references
-  block, which is the honest picture of that moment — the reference is
-  the given, the words are what is missing.
+- **An outbound cite can only open the post wizard, at its start.**
+  Every other creatable thing is **pointed by construction** — a
+  comment exists on its parent, a chat message goes into its chat, a
+  proposal targets the node it would change — so none of them can be
+  born from a cite row on some unrelated object. The post is the only
+  untargeted creation, which leaves exactly one destination and no
+  choice worth offering. So the row opens the wizard's ordinary first
+  stage, the reference riding along unseen, and the details stage
+  arrives with it staged. `ComposeCited` is that arrival: nothing
+  written, the citation already in the references block, which is the
+  honest picture of the moment — the reference is the given, the words
+  are what is missing.
+- **Reached through the wizard, so it wears the wizard's header.** The
+  arrow steps one stage back to the words and the X leaves with the
+  draft kept, exactly as the ordinary details stage does. A board
+  nothing teleports to needs no exit of its own.
+- **Citations are declared at creation**, structured inputs only, so
+  there is no attaching one to a post that landed — the row starts a
+  new post pointing at the old one.
+- **Referencing from any other kind lives inside that kind's own
+  wizard.** The reply seal already carries Add a topic and Cite
+  something side by side: with only two stages, the seal *is* where a
+  comment's topics and references are named. `ReplyCited` draws that
+  surface once a citation is staged — the reference joining the acts
+  card rather than sitting beside it, because a staged reference is an
+  act and the total has to count it. Like `PostLicense`, it is a
+  declared **entry**: the picker hands its pick back to the composer
+  it was opened from, so no tap reaches this state.
 - **Only what exists gets a row.** The post and comment menus hold
   License terms and Cite in a new post; another's profile holds Mention
   in a new post and Share this profile. Report, hide and bookmark are
@@ -2287,13 +2308,16 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   in `LicenseChooser` — assigned once, spelled by the cards that mount
   their own menu and by the detail headers that carry it for them.
 - **Two flows**: `cite-a-post` and `mention-someone`, each starting at
-  its menu row's control and ending on arrival at the composer with the
-  reference staged. There is no check-a-license flow — a reveal in
-  place is not a journey.
-- **The gate**: 103 → 81 gaps and 897 → 928 edges. The twenty-four
-  closed, and two reopened as fresh instances of surfaces already owed
-  — the topic picker on the new composer board, the score drill-down on
-  the new detail state.
+  its menu row's control and walking the wizard — pick, words, then
+  arrival at the details stage with the reference staged. The words
+  path's `Next` carries the second outcome that says so, which is what
+  lets the search reach that board honestly instead of teleporting to
+  it. There is no check-a-license flow — a reveal in place is not a
+  journey.
+- **The gate**: 103 → 82 gaps and 897 → 938 edges. The twenty-four
+  closed, and three reopened as fresh instances of surfaces already
+  owed — the topic picker on the new composer board and again on the
+  reply's cited seal, the score drill-down on the new detail state.
 
 ## 14. Index
 

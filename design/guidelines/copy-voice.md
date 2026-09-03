@@ -369,3 +369,14 @@ in fact owe. These address the reuser instead. One per axis value:
 **A staged reference's remove control** takes the referenced thing's
 own name as its accessible name — "Remove The long way home — @ada" —
 because a row of citations wants each × to say which one it drops.
+
+**The reply seal's reference row**, where a comment's citation shows up
+among the acts one signature commits:
+
+- `Reference` — the act row's label, singular, naming the edge staged
+  rather than the block it sits in. The count beside it reads
+  `1 action`, because that is what it is.
+- `+ Cite something` — the affordance row, the same words the post
+  wizard's details stage uses. It drops the gloss listing what can be
+  cited: the staged row above it now shows a citation, and an example
+  beats a list.

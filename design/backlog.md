@@ -419,7 +419,9 @@ Two follow-ups the round surfaces, still open:
 - **NetworkError, ComposeSeal and ReplySeal still owe their
   componentize-first pass** — hand-coded boards the componentize
   principle (above) applies to but hasn't reached yet; each needs its
-  own round before any further alteration.
+  own round before any further alteration. `ReplyCited` draws the same
+  seal over the real masters, so ReplySeal's pass has its target
+  already drawn: reconcile the two and the hand-coded copy retires.
 
 **Round 4 — the applicant once-each acts (2026-09-03).** The stance
 face and New post starts on `ApplicantFeed`, `ApplicantWaiting`,
@@ -432,18 +434,25 @@ control-selector flows except these applicant origins alongside the
 guest ones, since staged is not landed. 6 gaps closed. Readme
 §13 *The applicant once-each round* records the shape.
 
-**Round 5 — the menus (2026-09-03).** Five boards: `ReaderPostMenu`,
+**Round 5 — the menus (2026-09-03).** Six boards: `ReaderPostMenu`,
 `CommentMenu` and `ProfileMenu` (one master per menu, not one per
-surface), `PostLicense` (the terms unfolded on the card) and
-`ComposeCited` (the composer opened with a reference already staged).
-24 gaps closed — 15 post-menu, 5 profile, 3 comment, 1 license-terms
-view — and the own profile's ⋮ became the share control itself. 103 →
-81 gaps, 897 → 928 edges, 56/51/5 → 58/53/5 flows. Readme §13 *The
-menus round* records jakob's rulings.
+surface), `PostLicense` (the terms unfolded on the card),
+`ComposeCited` (the post wizard's details stage arrived at with a
+reference staged) and `ReplyCited` (the same moment on the reply's
+seal). 24 gaps closed — 15 post-menu, 5 profile, 3 comment, 1
+license-terms view — and the own profile's ⋮ became the share control
+itself. 103 → 82 gaps, 897 → 938 edges, 56/51/5 → 58/53/5 flows.
+Readme §13 *The menus round* records jakob's rulings.
 
-The two gaps the round reopened are fresh instances of surfaces
-already owed, not new debts: `ComposeCited/5` wants the topic picker
-and `PostLicense/7` the score drill-down.
+The three gaps the round reopened are fresh instances of surfaces
+already owed, not new debts: `ComposeCited/5` and `ReplyCited/4` want
+the topic picker, `PostLicense/7` the score drill-down.
+
+**The cite entry point gets a revisit trigger.** Citing opens the post
+wizard because the post is the only untargeted creation — offers point
+at items, campaigns at anchors. If the item round finds the item to be
+a second untargeted, reference-carrying creation, that ruling reopens
+and the cite row needs a way to say which is meant.
 
 Rows the round deliberately did NOT draw — each a menu function whose
 slice has not been built, and a menu row for a function nothing

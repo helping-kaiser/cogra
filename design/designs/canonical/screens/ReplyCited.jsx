@@ -68,7 +68,7 @@ export function Screen() {
             { label: "Comment", value: "Reply to @ada's post", count: "1 action" },
             { label: "Reference", value: "Tide tables and the third headland — @juno", count: "1 action" },
             { label: "", value: <AddRow>+ Add a topic</AddRow>, count: "1 more action" },
-            { label: "", value: <AddRow>+ Cite something — a post, a person, a comment, an item</AddRow>, count: "1 more action" },
+            { label: "", value: <AddRow>+ Cite something</AddRow>, count: "1 more action" },
           ]}
           total="2 signed actions"
           note="they land together, or none does"
