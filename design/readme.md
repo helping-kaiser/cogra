@@ -1616,7 +1616,10 @@ entry first". What stands:
   applied after render, throwing on drift — so the design system
   never carries canvas metadata; hand boards carry the attributes
   directly. Repeated per-post controls wear the same number on every
-  instance: one edge covers them.
+  instance: one edge covers them. **The badge sits inside the
+  element's corner**, not hanging past it: outside, anything that
+  clips its overflow eats it, and 470 of 1091 badges were drawing
+  cut or invisible — the gate verifies the attribute, not the paint.
 - **The maps are generated** (`_build/gen-maps.mjs`): one flow-map
   board per page (cards mirroring the page grid, every edge as a
   numbered line, arrows for same-page jumps, `⤴ page` for cross-page
@@ -2051,10 +2054,13 @@ item 33, jakob's rulings the same day).
   the reference count and the reader's ⋮ are not on the rail — they
   belong to the detail view the score opens. Sound obeys the global
   sticky decision; the caption sits along the bottom. The rail is
-  **white and shadowed at 28px**, and the unset stance face wears an
-  outlined disc: over photography a token colour is not a quiet control
-  but an invisible one, and the muting the card's anchor does with
-  translucency the stream's does with the disc instead.
+  **white and shadowed at 28px**, and the unset stance is a **line
+  face** in that same weight — `sentiment_neutral`, no disc and no
+  ring, because a plate around one control in a column of five reads
+  as chrome. Over photography a token colour is not a quiet control
+  but an invisible one, so the state that the card says with
+  translucency the stream says with the empty face instead. A stance
+  already taken still shows its own face, at the same size.
 - **The bottom bar stays on the stream.** It is a way of reading the
   feed, not a place outside the app, so the way to every other tab
   stays where it always is — as Instagram, TikTok and YouTube all keep
@@ -2095,7 +2101,10 @@ item 33, jakob's rulings the same day).
   on black with nothing behind it**: a viewer you can still read a card
   through is not full screen. Nothing is cut there —
   it is the surface every crop in the product is measured against — a
-  picture pinch-zooms and the gallery's swipe carries over, and a clip
+  picture pinch-zooms and **the gallery's swipe and its dots** carry
+  over, dots only, no arrows and no "n of m" (the pager ruling holds
+  here too: arrows would be a second vocabulary for a gesture the
+  reader already has). And a clip
   whose shape is not the device's keeps its shape and takes the ground
   beside it rather than being cropped to the edges. **No acts** on the
   viewer, and **the description is not shown**: alt text is read aloud

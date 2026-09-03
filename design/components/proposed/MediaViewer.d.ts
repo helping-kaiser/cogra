@@ -7,7 +7,8 @@
  * than navigated away from — an X, a swipe down, Escape, and the backdrop all
  * close it, and the route never changes.
  *
- * A picture pinch-zooms and the gallery's swipe carries over; a video takes the
+ * A picture pinch-zooms and the gallery's swipe and dots carry over — dots only,
+ * no arrows and no "n of m", the count riding their accessible name; a video takes the
  * full transport, and rotating the device fills the screen with it. No acts, and
  * the description is not shown — alt text is for the people who cannot see the
  * frame, not a caption the author never wrote.
