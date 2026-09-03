@@ -397,9 +397,17 @@ Still owed on this item: the applicant's once-each acting boards
 (field-error, wrong-credentials, wrong-code, code-mismatch — separate
 designs, untouched by the network board), the reader's post / comment
 / profile menus, the topic page and picker, the chat surface, the
-standalone post detail, the settlement/tip/rail record views, the
-settings and invites screens, the item / offer surfaces, the Sky
-(item 16), and item 13's Post Score drill-down.
+settlement/tip/rail record views, the settings and invites screens,
+the item / offer surfaces, the Sky (item 16), and item 13's Post Score
+drill-down.
+
+**The chat surface arrives owing the action row a decision** (jakob
+2026-09-03): sending a post *into a chat* is the next contender for a
+slot on it — Instagram's send arrow — and it likely ranks above sharing
+out of the network entirely. It is ranked against what is already
+reachable there before it earns a slot, per the action-row priority
+rule (readme §13, the reel round); it is deliberately undrawn until the
+chats round.
 
 ### 25 · Media-slice close-out designs · *design*
 
@@ -863,7 +871,7 @@ blessed refusal wording; both refuse an animated GIF with words;
 both give a failed clip upload Retry. The cover-pointer move is a
 schema change both apps and the backend follow.
 
-### 33 · Video playback and the rest of the clip's life · *design* · **round B built**, two questions open
+### 33 · Video playback and the rest of the clip's life · *design* · **round B built**
 
 Filed by the feature loop 2026-09-02, from the android lane's 1:1
 audit against the item-31 boards. What the video slice built to
@@ -940,22 +948,24 @@ the canvas had owed since it was wired — `search-and-open-a-post` is no
 longer blocked, and the chronicle rows and every post's media now land
 on a board.
 
-**Still open here:**
+**Review round 1 (jakob, same day)** closed the two questions the round
+had left open and fixed what the canvas showed:
 
-- **Share on a feed card.** Share is drawn on the stream's rail and on
-  the post detail (one tap, the platform's own sheet, no count of
-  ours). Whether the **card's** affordance row grows one is
-  deliberately undecided: that row is one line by rule and already at
-  its width, and share is the affordance a card can most afford to
-  make one tap further away. The apps ship no share control at all
-  until this is answered.
-- **Whether "letterboxing exists nowhere" reaches pictures.** The
-  ruling was made about clips. A comment's uncropped pictures are
-  still *fitted* inside their square frame with the reserved surface
-  showing at the sides (readme §7.1, `MediaAttachment`) — the standing
-  rule that the cap bounds the tile, not the picture. The two readings
-  do not contradict each other for a clip, which crops; for a picture
-  they do, and only jakob can say which wins.
+- **Share is on the feed card too**, and the action row now has a
+  stated order: stance, score, comment, share — the order of
+  importance, and the queue by which the row gives way. On a phone too
+  narrow for all four, share moves into the ⋮ menu first; a new action
+  is ranked against what is already reachable before it earns a slot.
+- **Letterboxing exists nowhere, pictures included.** A comment's
+  uncropped pictures display-crop to their square frame, centred, the
+  way its clip already does; the whole frame is one tap away in the
+  viewer. Display only — nothing about the no-crop-at-upload ruling
+  changes, and the bytes stay the author's own.
+- **The score element keeps its double meaning** — the drill-down from
+  a card, the detail door from the stream's rail — and is not renamed.
+- The **viewer boards were broken on the canvas** and are rebuilt: see
+  the round's PR for the root cause (a flex-sized stage with a
+  percentage max-height that never resolved).
 
 ### 34 · The change-history surface · *design*
 

@@ -482,8 +482,8 @@ which is what makes a guess expensive.
 | Piece | Decided, so built | Open, so absent |
 |---|---|---|
 | `MediaAttachment` / `MediaGallery` / `MediaDisc` | reserved aspect ratio before load; authored, never generated alt text; `surfaceContainerHigh` at the 12px rung; the gallery as a pager at the post's one crop shape, dots only; the 4:5 cap bounding the tile rather than the picture; a clip keeping its own ratio clamped to tall and never letterboxed; a height cap budgeted against worst-case card chrome so a whole post fits above the bottom bar; autoplay muted with one global sticky mute; the cover at rest, and the play disc a suppressed-autoplay card wears | — |
-| `MediaViewer` | media opens full-size from the detail view, never cropped, dismissed with the X, a swipe down or the backdrop; pinch-zoom on a picture and the gallery's swipe kept; the full transport on a clip, and rotation filling the screen; no acts, and no description | — |
-| `VideoTransport` / `SeekLine` | the ladder above the card's sound disc: play/pause and a real timeline where the clip is the thing, uniform for every clip; a hairline drag-to-seek in the stream; the chrome auto-hiding and a tap revealing it | — |
+| `MediaViewer` | the whole surface on black with nothing behind it, its stage positioned rather than flex-sized so the frame is bounded by the screen; never cropped, dismissed with the X, a swipe down or the backdrop; pinch-zoom on a picture and the gallery's swipe kept; the full transport on a clip, and rotation filling the screen; no acts, and no description | — |
+| `VideoTransport` / `SeekLine` | the ladder above the card's sound disc, at the platform player's anatomy: a big centred play/pause flanked by the skips, the bar inset from the bottom edge with elapsed, total and the fullscreen toggle — nothing in the system gesture zone, where a control is a swipe that closes the app. Uniform for every clip; a hairline drag-to-seek in the stream; the chrome auto-hiding and a tap revealing it | — |
 | `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the only figure the product has is the Post Score and its explanation is four screens deep | — |
 | `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and topics outside, naming whose mark it is, one tap revealing everything, content kept mounted so revealing moves nothing — a comment's body replaced by one compact block instead; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | whether a reveal survives leaving and returning to the post; where a words-only post names its source, having no wash to carry the line |
 
@@ -1997,9 +1997,13 @@ item 33, jakob's rulings the same day).
   the product**: a clip fills the frame it is given, and the full 9:16
   frame lives on the stream and in the viewer. The
   post-fits-the-screen cap still bounds the tile as it bounds every
-  tile; under it a picture is fitted and a clip is cropped, because a
-  clip may not letterbox. **Square is the comment scale's shape**, and
-  a comment's clip fills it the same way.
+  tile, and under it the tile is **filled, never fitted**. **Square is
+  the comment scale's shape**, and a comment's pictures and clips alike
+  fill it: an uncropped picture display-crops to its frame, centred,
+  because bars beside a picture spend a card's scarcest resource on
+  nothing and the whole frame is one tap away in the viewer. The crop
+  is display-only — a comment's picture still travels uncropped, and
+  what the author uploaded is what the record holds.
 - **The control ladder** — a deliberate revision of the conform
   round's sound-only-on-every-reading-surface rule. A **feed card**
   carries the sound disc alone. A **detail view** carries play/pause
@@ -2007,10 +2011,19 @@ item 33, jakob's rulings the same day).
   the chrome auto-hides with a tap on the video revealing it. The
   **fullscreen viewer** carries the same full transport, and
   rotate-to-landscape. The **stream** carries sound and a thin
-  drag-to-seek line on the bottom edge, never the full transport. The
-  ladder is **uniform for every clip**: no length threshold decides
-  whether a reader gets controls, because a reader who learns a
-  control on one clip has to find it on the next.
+  drag-to-seek line, never the full transport. The ladder is **uniform
+  for every clip**: no length threshold decides whether a reader gets
+  controls, because a reader who learns a control on one clip has to
+  find it on the next.
+- **The transport's anatomy is the platform player's** — a big centred
+  play/pause flanked by the skips, and a bar along the bottom carrying
+  elapsed, the timeline, total, sound and the fullscreen toggle. A
+  transport is the one place in this product where inventing a layout
+  costs the reader something, so it is Android's, not ours.
+  **Nothing sits on the bottom edge**: the system gesture zone lives
+  in that strip, so a control there is not a control but a swipe that
+  closes the app. The bar is inset from it, and the stream's seek line
+  rides above the bottom bar rather than under it.
 - **The stream carries portrait clips only** — clips taller than they
   are wide. Square and landscape clips keep the ordinary grammar, a
   tap to their post. **It is the default feed narrowed to them**: the
@@ -2037,17 +2050,37 @@ item 33, jakob's rulings the same day).
   and all, and the count opens **the same comments sheet**. Topics,
   the reference count and the reader's ⋮ are not on the rail — they
   belong to the detail view the score opens. Sound obeys the global
-  sticky decision; the caption sits along the bottom.
+  sticky decision; the caption sits along the bottom. The rail is
+  **white and shadowed at 28px**, and the unset stance face wears an
+  outlined disc: over photography a token colour is not a quiet control
+  but an invisible one, and the muting the card's anchor does with
+  translucency the stream's does with the disc instead.
+- **The bottom bar stays on the stream.** It is a way of reading the
+  feed, not a place outside the app, so the way to every other tab
+  stays where it always is — as Instagram, TikTok and YouTube all keep
+  theirs. The seek line sits directly above it.
 - **Guest and key-absent gate on the stream exactly as they do in the
   feed** — the join prompt over the paused clip, the key notice per
   the pattern boards. The same edges into the same masters; the stream
   has no guest board of its own.
 - **Share is new, and it is one tap to the platform's own sheet.**
-  Drawn on the rail and on the detail view; no menu of ours, because a
-  share menu here would be a worse copy of the one the reader's apps
-  already live in. **No count** — a share tally would be a public
-  number the graph does not record. Whether a **feed card** grows one
-  is open.
+  Drawn on the rail, on the detail view **and on the feed card**; no
+  menu of ours, because a share menu here would be a worse copy of the
+  one the reader's apps already live in. **No count** — a share tally
+  would be a public number the graph does not record.
+- **The action row's order is its order of importance**: stance,
+  score, comment, then share. That order is also the *queue*: on a
+  phone too narrow to hold all four, **share is the first to move into
+  the ⋮ menu**, and the row gives way from its end. An action added
+  later is ranked against the ones already directly reachable before it
+  earns a slot — never appended by default, because a row that grows by
+  arrival order stops meaning anything.
+- **The score element means two things, and that is allowed.** On a
+  card it opens the score's drill-down; on the stream's rail it is the
+  detail door, and the drill-down is reached from the detail view it
+  opens. One element, one glyph, one number — what it opens is a fact
+  about the surface, not about the element, and renaming it on one
+  surface would cost more than the overload does.
 - **The cover at rest, and the card that never starts.** The cover
   holds until playback first starts and never returns. Where the
   device suppresses autoplay — reduced motion, data saver — the card
@@ -2057,7 +2090,10 @@ item 33, jakob's rulings the same day).
   to be a clip; the tap plays it there, in the feed. Quoted targets
   and history rows wear the cover as a thumbnail.
 - **The viewer is reached by the second tap**: media in a card opens
-  the post, media in the post opens the frame. Nothing is cut there —
+  the post, media in the post opens the frame — or the transport's own
+  fullscreen toggle, which is the same door. It is **the whole surface
+  on black with nothing behind it**: a viewer you can still read a card
+  through is not full screen. Nothing is cut there —
   it is the surface every crop in the product is measured against — a
   picture pinch-zooms and the gallery's swipe carries over, and a clip
   whose shape is not the device's keeps its shape and takes the ground

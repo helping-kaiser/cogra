@@ -793,6 +793,19 @@ for (const [board, n] of Object.entries(BAND_CHATS)) {
   (FLOW_MARKERS[board] ??= []).push({ n, find: 'aria-label="Chats"', tag: "button" });
 }
 
+/* SHARE JOINED THE ACTION ROW (jakob, review round 1), so every board drawing a
+   post card grew one control. Like the band's chats, it is stamped in one sweep
+   at each board's next free number — one edge each, all of them handing off to
+   the platform's own sheet. */
+const CARD_SHARE = {
+  Main: 19, FeedBare: 19, ApplicantFeed: 19, ApplicantWaiting: 16, VouchBack: 19,
+  KeyElsewhere: 18, Feed: 17, FeedNarrowed: 17, FeedFar: 17, FeedGallery: 16,
+  FeedCover: 18, ComposeExpired: 19, ComposeLanded: 14, Removed: 11, ProfilePosts: 21,
+};
+for (const [board, n] of Object.entries(CARD_SHARE)) {
+  (FLOW_MARKERS[board] ??= []).push({ n, find: 'aria-label="Share this post"', tag: "button", all: true });
+}
+
 export function applyFlowMarkers(name, html) {
   const markers = FLOW_MARKERS[name];
   if (!markers) return html;

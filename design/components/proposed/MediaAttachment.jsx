@@ -28,13 +28,13 @@ import { VideoTransport } from "./VideoControls.jsx";
      step. `tall` is also the CAP: uncropped media (a comment's pictures never
      crop — jakob 2026-08-31) is not shown taller than 4:5; a 9:16 tile eats a
      phone screen whole, which is the opposite of a scrollable feed.
-   · THE FRAME IS SHOWN WHOLE (2026-08-26; without exception since 2026-08-31).
-     The cap bounds the TILE, not the picture: a taller frame is fitted inside it
-     and the reserved surface shows at the sides, rather than the frame being cut.
-     Nothing about the author's crop is decided by the layout. The bars are plain
-     surfaceContainerHigh — the same reserved region the tile already is — and
-     never a blurred enlargement of the photo itself, which invents image where
-     there is none and is exactly the attention device §1 rules out.
+   · NOTHING IS LETTERBOXED (jakob 2026-09-03). A tile is filled, never fitted:
+     an uncropped picture — a comment's, which never crops on the way up —
+     DISPLAY-CROPS to the frame it is given, centred, exactly as a clip does.
+     Bars beside a picture spend a card's scarcest resource on nothing, and the
+     whole frame is one tap away in the viewer, which is the surface that exists
+     to lose nothing. The crop is display-only: the bytes stored are still the
+     author's own, uncropped.
    · VIDEO AUTOPLAYS, MUTED, and the mute decision is GLOBAL AND STICKY. Unmute
      one video and the next one down is already unmuted; mute it again and they
      all go quiet. Tapping every clip to start it is friction with no upside, and
@@ -152,7 +152,7 @@ export function MediaAttachment({
   kind = "image",
   label = "Media",
   radius = "var(--radius-medium)",
-  fit = "contain",
+  fit = "cover",
   maxHeight = "var(--media-max-height)",
   controls = "sound",
   resting = false,

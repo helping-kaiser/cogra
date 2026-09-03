@@ -24,7 +24,7 @@ export function Screen() {
       <DetailHeader items={READER_POST_MENU} />
       <PinnedClip item={media[0]} elapsed="0:14" duration="0:41" progress={0.34} />
       <DetailColumn>
-        <PostCard {...post} variant="detail" actions={<ShareButton />} />
+        <PostCard {...post} variant="detail" />
       </DetailColumn>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>
