@@ -296,3 +296,31 @@ one line per kind, same shape:
 
 - "Your post is staged — it lands with you."
 - "Your stance is staged — it lands with you."
+
+## Awaiting blessing — the input-error round
+
+The lines the five errored entry/profile boards carry, drawn and up
+for review in the same pass. Two are drawn on a surface; two are
+copy-only this round, named for the field-error state they will wear
+once the client validates locally.
+
+**Drawn** — a board renders these verbatim:
+
+- `That handle is taken.` — Join's Handle field, the server's answer.
+- `A password is at least 12 characters.` — Join's Password field, a
+  local format failure.
+- "That email and password don't match." — SignIn's form-level fault
+  line. This one already appears above as a register example; it
+  graduates onto a surface this round.
+- `That code doesn't check out.` — Restore's recovery-code field.
+- `That doesn't match the code above.` — the key ceremony's confirm
+  field, on RecoveryCodeMismatch.
+- `A display name can't be empty.` — ProfileEdit's Display name field.
+
+**Copy-only** — named, not yet drawn on a board (no client-side format
+validation exists yet to trigger them):
+
+- "A handle is 3–30 characters: a–z, 0–9, _." — Join's Handle field,
+  a local format failure.
+- `That doesn't look like an email address.` — Join's Email field, a
+  local format failure.
