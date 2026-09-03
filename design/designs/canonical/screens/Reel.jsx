@@ -9,11 +9,18 @@
    The clip runs at its native 9:16, edge to edge — this is the surface the
    card's 4:5 clamp exists against. Swiping moves to the next clip.
 
+   THE BOTTOM BAR STAYS (jakob, review round 1 — Instagram, TikTok and YouTube
+   all keep theirs on a stream, and so does this): the stream is a way of reading
+   the feed, not a place outside the app, so the way to every other tab stays
+   where it always is. The seek line sits DIRECTLY ABOVE THE BAR — never on the
+   screen's own edge, where Android's system gesture zone would take the drag
+   and close the app instead.
+
    THE CHROME: the way back top-left and the sound disc top-right, both on the
-   media disc's surface because they sit on photography; the rail down the right;
-   the caption along the bottom; and the seek line on the very bottom edge — the
-   stream's whole transport, drag to move inside the clip. No play/pause: a clip
-   in a stream plays, and stopping it is what the detail view is for. */
+   media disc's surface because they sit on photography; the rail down the right,
+   white and shadowed so it survives a bright frame; the caption above the bar.
+   No play/pause: a clip in a stream plays, and stopping it is what the detail
+   view is for. */
 export function Screen() {
   return (
     <div data-theme="dark" style={{ position: "absolute", inset: 0, background: "#000", overflow: "hidden" }}>
@@ -43,8 +50,12 @@ export function Screen() {
         content="Stood there long enough that the midges found me. Worth it for the last ten seconds, when the far shore goes the colour of the water."
       />
 
-      <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, zIndex: 3 }}>
+      <div style={{ position: "absolute", left: 0, right: 0, bottom: BAND_HEIGHT + 4, zIndex: 3 }}>
         <SeekLine progress={0.34} elapsed="0:14" duration="0:41" />
+      </div>
+
+      <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, zIndex: 4 }}>
+        <BottomNav active="feed" slots={ALL_SLOTS} inline />
       </div>
     </div>
   );

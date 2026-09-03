@@ -558,10 +558,15 @@ const MIRA_CLIP_POST = {
   menuItems: CITE_MENU,
 };
 
+/* The bottom bar's height — what the stream's own chrome has to clear. */
+const BAND_HEIGHT = 64;
+
 /* A rail control: a glyph over the clip, with its count under it where there is
-   one. The shadow is what makes a bare glyph survive photography — the same
-   problem the sound disc solves with a surface, answered differently because a
-   column of five discs would be a wall of chrome down the frame. */
+   one. WHITE AND SHADOWED, at 28px (jakob, review round 1): a token colour on
+   photography is not a quiet control but an invisible one, and the shadow is
+   what makes a bare glyph survive a bright frame — the same problem the sound
+   disc solves with a surface, answered differently because a column of five
+   discs would be a wall of chrome down the frame. */
 function RailButton({ label, glyph, count, onClick }) {
   return (
     <button
@@ -583,10 +588,11 @@ function RailButton({ label, glyph, count, onClick }) {
         fontFamily: "var(--font-sans)",
         fontSize: "var(--text-label-small)",
         lineHeight: "var(--text-label-small--line-height)",
-        color: "var(--on-surface)",
+        fontWeight: "var(--text-label-small--font-weight)",
+        color: "#fff",
       }}
     >
-      <Icon name={glyph} size={26} />
+      <Icon name={glyph} size={28} />
       {count !== undefined && <span aria-hidden="true">{count}</span>}
     </button>
   );
@@ -605,11 +611,11 @@ function ReelRail({ score = "7.40", comments = 2 }) {
       style={{
         position: "absolute",
         right: 4,
-        bottom: 104,
+        bottom: BAND_HEIGHT + 96,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: 14,
+        gap: 16,
         zIndex: 3,
         filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.55))",
       }}
@@ -619,14 +625,16 @@ function ReelRail({ score = "7.40", comments = 2 }) {
       </a>
       {/* The same control the card wears, and the same pad it blooms — over the
           paused clip, seal and all. No bundle: the ordinary case is a post the
-          reader has taken no stance on, and the muted face is that state. */}
-      <StanceControl targetLabel="this post" padInset={16} />
+          reader has taken no stance on, and over media that unset state wears
+          the outlined disc, because a translucent grey face on a photograph is
+          a control nobody can find. */}
+      <StanceControl targetLabel="this post" padInset={BAND_HEIGHT + 16} overMedia />
       <RailButton label="2 comments" glyph="chat_bubble" count={comments} />
       <RailButton label="Share this post" glyph="share" />
       {/* THE DETAIL DOOR — the exact element a feed card wears, so the way into
           the post is a thing the reader has already met, and the number that
           says this stream is their own ranked feed rides it. */}
-      <ExplainableNumber glyph="graph" label="Post Score" value={score} onOpenDetail={() => {}} />
+      <ExplainableNumber glyph="graph" label="Post Score" value={score} onOpenDetail={() => {}} overMedia />
     </div>
   );
 }
@@ -640,7 +648,7 @@ function ReelCaption({ handle, title, content }) {
         position: "absolute",
         left: 16,
         right: 76,
-        bottom: 20,
+        bottom: BAND_HEIGHT + 22,
         zIndex: 3,
         display: "flex",
         flexDirection: "column",

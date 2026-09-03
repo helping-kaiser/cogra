@@ -19,9 +19,7 @@
     "ComposePicked": "the Show-all sheet covers the pick — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "ComposeDescribe": "the describe sheet covers the details — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "ComposeDescribeVideo": "the describe sheet covers the reply's video state — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
-    "ComposePickVideo": "a clip owns the body — the gallery grid and the photos-app tile are inert in this state, and the tray's × is the way back to a step that takes picks",
-    "ViewerPicture": "the fullscreen viewer covers the post — everything beneath the scrim is inactive in this state; only the viewer (and its backdrop) is live",
-    "ViewerVideo": "the fullscreen viewer covers the post — everything beneath the scrim is inactive in this state; only the viewer (and its backdrop) is live"
+    "ComposePickVideo": "a clip owns the body — the gallery grid and the photos-app tile are inert in this state, and the tray's × is the way back to a step that takes picks"
   },
   "entries": {
     "Main": "arrival through an invite link — the inviter's borrowed view",
@@ -773,7 +771,12 @@
     { "from": "Reel", "via": 7, "kind": "advance", "label": "Post Score", "to": [{ "board": "PostDetailVideo", "case": "the detail door — the clip squishes to the top, the post rises beneath" }] },
     { "from": "Reel", "via": 8, "kind": "detour", "label": "More (caption)", "to": [{ "terminal": "self", "case": "the caption unfolds" }] },
     { "from": "Reel", "via": 9, "kind": "advance", "label": "the clip", "to": [{ "terminal": "self", "case": "swipe — the next clip in the same ranked feed" }] },
-    { "from": "Reel", "via": 10, "kind": "advance", "label": "seek line", "to": [{ "terminal": "self", "case": "drag — the clip moves under the finger" }] },
+    { "from": "Reel", "via": 10, "kind": "advance", "label": "seek line", "to": [{ "terminal": "self", "case": "drag — the clip moves under the finger, above the bar and clear of the gesture zone" }] },
+    { "from": "Reel", "via": 11, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed", "case": "out of the stream, back to the feed it narrowed" }] },
+    { "from": "Reel", "via": 12, "kind": "nav", "label": "nav · Explore", "to": [{ "board": "Explore" }] },
+    { "from": "Reel", "via": 13, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
+    { "from": "Reel", "via": 14, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
+    { "from": "Reel", "via": 15, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
 
     { "from": "PostDetail", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back" }] },
     { "from": "PostDetail", "via": 2, "kind": "detour", "label": "post overflow ⋮", "to": [{ "gap": "reader's post menu — licence terms / cite (not boarded)" }] },
@@ -807,6 +810,8 @@
     { "from": "PostDetailVideo", "via": 15, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "PostDetailVideo", "via": 16, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "PostDetailVideo", "via": 17, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+    { "from": "PostDetailVideo", "via": 18, "kind": "advance", "label": "skip ten seconds", "to": [{ "terminal": "self", "case": "back or forward, the clip stays where it is drawn" }] },
+    { "from": "PostDetailVideo", "via": 19, "kind": "advance", "label": "full screen", "to": [{ "board": "ViewerVideo", "case": "the transport's own way into the viewer — the clip tap is the other" }] },
 
     { "from": "ViewerPicture", "via": 1, "kind": "back", "label": "close the viewer (X)", "to": [{ "terminal": "back", "case": "the X, or a swipe down" }] },
     { "from": "ViewerPicture", "via": 2, "kind": "detour", "label": "the viewer's pager", "to": [{ "terminal": "self", "case": "swipes between the frames — the same set the card pages" }] },
@@ -817,12 +822,14 @@
     { "from": "ViewerVideo", "via": 3, "kind": "advance", "label": "seek line", "to": [{ "terminal": "self", "case": "tap or drag — the clip moves under the finger" }] },
     { "from": "ViewerVideo", "via": 4, "kind": "advance", "label": "video sound", "to": [{ "terminal": "self", "case": "the sticky decision every video shares" }] },
     { "from": "ViewerVideo", "via": 5, "kind": "back", "label": "backdrop", "to": [{ "terminal": "back", "case": "a tap outside the frame closes it" }] },
+    { "from": "ViewerVideo", "via": 6, "kind": "advance", "label": "skip ten seconds", "to": [{ "terminal": "self", "case": "back or forward, the clip stays where it is drawn" }] },
 
     { "from": "ViewerLandscape", "via": 1, "kind": "back", "label": "close the viewer (X)", "to": [{ "terminal": "back", "case": "the X, or a swipe down" }] },
     { "from": "ViewerLandscape", "via": 2, "kind": "advance", "label": "play/pause", "to": [{ "terminal": "self", "case": "the clip stops and starts where it is" }] },
     { "from": "ViewerLandscape", "via": 3, "kind": "advance", "label": "seek line", "to": [{ "terminal": "self", "case": "tap or drag — the clip moves under the finger" }] },
     { "from": "ViewerLandscape", "via": 4, "kind": "advance", "label": "video sound", "to": [{ "terminal": "self", "case": "the sticky decision every video shares" }] },
     { "from": "ViewerLandscape", "via": 5, "kind": "back", "label": "backdrop", "to": [{ "terminal": "back", "case": "a tap outside the frame closes it" }] },
+    { "from": "ViewerLandscape", "via": 6, "kind": "advance", "label": "skip ten seconds", "to": [{ "terminal": "self", "case": "back or forward, the clip stays where it is drawn" }] },
 
     { "from": "ComposePickedErrors", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "terminal": "back", "case": "the first stage — leaves toward where compose began, draft kept" }] },
     { "from": "ComposePickedErrors", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept, no confirmation" }] },

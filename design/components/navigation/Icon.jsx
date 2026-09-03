@@ -99,6 +99,13 @@ const PATHS = {
      suppressed-autoplay card wears, where the device has already said no. */
   play_arrow: ["M8 5v14l11-7z"],
   pause: ["M6 19h4V5H6v14zm8-14v14h4V5h-4z"],
+  /* The transport's flanking skips, and the toggle that hands the clip the
+     whole screen. Material ships `replay_10`/`forward_10` with the numerals
+     drawn as separate glyph paths; the plain double-triangles carry the same
+     meaning at this size without three-part path data that no one can check. */
+  fast_rewind: ["M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"],
+  fast_forward: ["M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"],
+  fullscreen: ["M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"],
   /* Handing a post to the OS share sheet (reel round, 2026-09-03). */
   share: [
     "M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z",

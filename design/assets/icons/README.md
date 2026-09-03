@@ -22,6 +22,8 @@ fill="none"/>` rect is stripped, per the product's own convention.
 | volume-up.svg / volume-off.svg | volume_up, volume_off | a video's sound toggle |
 | play-arrow.svg / pause.svg | play_arrow, pause | the video transport; the play disc on a suppressed-autoplay card |
 | share.svg | share | handing a post to the OS share sheet |
+| fast-rewind.svg / fast-forward.svg | fast_rewind, fast_forward | the transport's skips, flanking play/pause |
+| fullscreen.svg | fullscreen | the transport's hand-off to the fullscreen viewer |
 | close.svg | close | the composer's leave control; the viewer's dismiss |
 | drag-indicator.svg | drag_indicator | the picked tray's reorder handle |
 | lock.svg | lock | a locked field (the edit's licence) |

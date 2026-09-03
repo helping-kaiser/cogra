@@ -9,9 +9,19 @@ import { useGlobalMute } from "./MediaAttachment.jsx";
    reel round).
 
    THE RULES THIS ENCODES:
-   · The frame is never cut here. `contain`, centred, as large as the viewport
+   · IT IS THE WHOLE SURFACE, on BLACK, with nothing behind it. Not a scrim over
+     the post: a viewer you can still read a card through is not full screen, and
+     the ground has to be black so the frame's own edges are the only edges.
+   · The frame is never cut here. `contain`, centred, as large as the surface
      allows — a viewer that crops is not a viewer. This is the surface the feed
      card's 4:5 clamp exists against: whatever a card crops, the viewer restores.
+   · THE STAGE IS POSITIONED, NEVER FLEX-SIZED. The media fills an absolutely
+     inset box and is fitted inside it, so containment never depends on the
+     frame's own proportions. Sizing it with `flex: 1` and a percentage
+     `max-height` is what broke this component's first cut: the percentage
+     resolved against an indefinite height, a wide frame took its intrinsic size,
+     and everything after it — the transport above all — was pushed outside the
+     screen entirely.
    · It is a place you back out of: an X, a swipe DOWN, Escape, and the backdrop
      all close it, and it never changes the underlying route. The X rather than
      a back arrow, because the reader is dismissing a layer, not walking a step
@@ -80,6 +90,11 @@ export function MediaViewer({
       }}
       className="cg-state cg-focus"
       style={{
+        position: "absolute",
+        top: "50%",
+        transform: "translateY(-50%)",
+        [direction < 0 ? "left" : "right"]: "4px",
+        zIndex: 3,
         width: "var(--touch-target-min)",
         height: "var(--touch-target-min)",
         display: "grid",
@@ -87,15 +102,34 @@ export function MediaViewer({
         border: "none",
         background: "transparent",
         borderRadius: "var(--radius-full)",
-        color: "var(--inverse-on-surface)",
+        color: "#fff",
+        filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))",
         cursor: "pointer",
         padding: 0,
-        flex: "none",
       }}
     >
       <Icon name="arrow_back" style={direction < 0 ? undefined : { transform: "scaleX(-1)" }} />
     </button>
   );
+
+  const media =
+    item.kind === "video" ? (
+      <video
+        src={item.src}
+        poster={item.poster}
+        autoPlay
+        playsInline
+        aria-label={item.alt}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }}
+      />
+    ) : (
+      <img
+        src={item.src}
+        alt={item.alt ?? ""}
+        aria-hidden={item.alt ? undefined : "true"}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }}
+      />
+    );
 
   return (
     <div
@@ -104,15 +138,50 @@ export function MediaViewer({
       aria-label="Media"
       onClick={onClose}
       style={{
-        position: "fixed",
+        position: "absolute",
         inset: 0,
         zIndex: 60,
-        background: "var(--scrim-dialog)",
-        display: "flex",
-        flexDirection: "column",
+        background: "#000",
+        overflow: "hidden",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", padding: "8px", flex: "none" }}>
+      {/* THE STAGE. Absolutely inset, the frame fitted inside it — so what is
+          drawn is bounded by the screen whatever shape the frame is. The
+          click-stop keeps a tap ON the media from closing what was just opened. */}
+      <div onClick={(event) => event.stopPropagation()} style={{ position: "absolute", inset: 0 }}>
+        {media}
+        {/* The transport is the product's own, not the browser's default set:
+            one control vocabulary across the detail view, the stream and here,
+            rather than three players that each look like their platform. No
+            fullscreen toggle — this IS the fullscreen. */}
+        {item.kind === "video" && (
+          <VideoTransport
+            playing={playing}
+            elapsed={elapsed}
+            duration={duration}
+            progress={progress}
+            muted={muted}
+            fullscreen={false}
+            onToggleMute={() => setMuted(!muted)}
+          />
+        )}
+      </div>
+      {count > 1 && arrow(-1)}
+      {count > 1 && arrow(1)}
+      {/* The way out, and where in a set the reader is. Top-left, over the
+          frame: the chrome belongs to the surface, not to the picture. */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-2)",
+          padding: "8px",
+          zIndex: 3,
+        }}
+      >
         <button
           type="button"
           aria-label="Close"
@@ -126,7 +195,8 @@ export function MediaViewer({
             border: "none",
             background: "transparent",
             borderRadius: "var(--radius-full)",
-            color: "var(--inverse-on-surface)",
+            color: "#fff",
+            filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))",
             cursor: "pointer",
             padding: 0,
           }}
@@ -134,51 +204,16 @@ export function MediaViewer({
           <Icon name="close" />
         </button>
         {count > 1 && (
-          <span style={{ fontSize: "var(--text-label-large)", color: "var(--inverse-on-surface)" }}>
+          <span
+            style={{
+              fontSize: "var(--text-label-large)",
+              color: "#fff",
+              filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))",
+            }}
+          >
             {current + 1} of {count}
           </span>
         )}
-      </div>
-      {/* The frame, whole. The click-stop keeps a tap ON the media from closing
-          the thing the reader just opened. */}
-      <div
-        onClick={(event) => event.stopPropagation()}
-        style={{ flex: 1, minHeight: 0, display: "flex", alignItems: "center", gap: "var(--space-1)", padding: "0 4px 16px" }}
-      >
-        {count > 1 && arrow(-1)}
-        {item.kind === "video" ? (
-          /* The transport is the product's own, not the browser's default set:
-             one control vocabulary across the detail view, the stream and here,
-             rather than three players that each look like their platform. */
-          <div style={{ flex: 1, minWidth: 0, position: "relative", display: "flex", alignItems: "center" }}>
-            <video
-              src={item.src}
-              poster={item.poster}
-              autoPlay
-              playsInline
-              aria-label={item.alt}
-              style={{ flex: 1, minWidth: 0, maxHeight: "100%", objectFit: "contain" }}
-            />
-            <div style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
-              <VideoTransport
-                playing={playing}
-                elapsed={elapsed}
-                duration={duration}
-                progress={progress}
-                muted={muted}
-                onToggleMute={() => setMuted(!muted)}
-              />
-            </div>
-          </div>
-        ) : (
-          <img
-            src={item.src}
-            alt={item.alt ?? ""}
-            aria-hidden={item.alt ? undefined : "true"}
-            style={{ flex: 1, minWidth: 0, maxHeight: "100%", objectFit: "contain" }}
-          />
-        )}
-        {count > 1 && arrow(1)}
       </div>
     </div>
   );

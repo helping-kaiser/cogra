@@ -52,6 +52,22 @@ import {
 
 export const LONG_PRESS_MS = 500;
 
+/* THE ANCHOR ON A MEDIA SURFACE (jakob, review round 1). On the stream the
+   control sits on whatever the clip happens to be showing, where the card's
+   quiet anchor disappears — the unset face worst of all. So over media it wears
+   a disc: a dark translucent fill and a white ring, at the touch target's own
+   size, with the face at full strength inside it. The gesture, the pad and the
+   ceremony are unchanged; this restyles the anchor and nothing else. */
+const OVER_MEDIA_ANCHOR = {
+  width: "var(--touch-target-min)",
+  height: "var(--touch-target-min)",
+  padding: 0,
+  border: "2px solid rgba(255,255,255,0.92)",
+  background: "rgba(0,0,0,0.35)",
+  color: "#fff",
+  filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.55))",
+};
+
 const EMPTY_BUNDLE = { current: ORIGIN, rawSum: ORIGIN, records: 0, severed: false, severance: { records: 0 } };
 
 function parkedPadStyle(inset = 16) {
@@ -88,6 +104,7 @@ export function StanceControl({
   padInset = 16,
   padNote,
   wide = false,
+  overMedia = false,
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
   React.useEffect(() => {
@@ -237,6 +254,7 @@ export function StanceControl({
             gap: "var(--space-2)",
             borderRadius: "var(--radius-full)",
             border: wide ? "1px solid var(--border-field)" : 0,
+            ...(overMedia ? OVER_MEDIA_ANCHOR : null),
             background: "none",
             padding: "0 12px",
             cursor: "pointer",
@@ -258,7 +276,12 @@ export function StanceControl({
             aria-hidden="true"
             style={{
               fontSize: "var(--text-title-large)",
-              opacity: restingFace === null ? "var(--opacity-resting-face)" : 1,
+              // OVER MEDIA THE MUTING IS THE DISC'S JOB, NOT THE FACE'S. A
+              // translucent grey emoji on photography is not a quiet control, it
+              // is an invisible one — so the face keeps its greyscale (still
+              // "outside the table", still not a standing) and gives up the
+              // translucency that the outlined disc now carries instead.
+              opacity: restingFace === null && !overMedia ? "var(--opacity-resting-face)" : 1,
               filter: restingFace === null ? "grayscale(1)" : "none",
             }}
           >
