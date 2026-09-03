@@ -38,10 +38,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.collectAsState
-import androidx.media3.common.MediaItem as Media3Item
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.PlayerSurface
 import androidx.media3.ui.compose.state.rememberPresentationState
 import coil3.compose.AsyncImage
@@ -140,19 +138,29 @@ fun VideoPlayer(
     val muted by VideoSound.muted.collectAsState()
     var playing by remember { mutableStateOf(false) }
 
-    // One player per surface, released with it. An ExoPlayer holds a
-    // codec, and a codec not released is a codec another card cannot
-    // have.
-    val player = remember(url) {
-        ExoPlayer.Builder(context).build().apply {
-            setMediaItem(Media3Item.fromUri(url))
-            // A feed clip loops: it is a moment rather than a
-            // programme, and the alternative is a card that goes still
-            // and dead while the reader is still looking at it.
-            repeatMode = Player.REPEAT_MODE_ONE
-            prepare()
+    // The player is borrowed rather than built: the same clip on the
+    // feed card and on the post detail is the same instance, so opening
+    // the detail continues from where the feed had it instead of
+    // starting a second decoder at zero. See [VideoStage].
+    val token = remember(url) { Any() }
+
+    // Claiming the stage is a side effect, so it happens after the
+    // composition that asked for it rather than inside it — the surface
+    // entering last is the one that ends up showing.
+    DisposableEffect(url, token) {
+        VideoStage.claim(context, url, token)
+        onDispose {
+            // The player outlives this surface — surrendering is what
+            // hands it on, and releasing it here is what used to make
+            // the next screen start over.
+            VideoStage.surrender(token)
         }
     }
+
+    // Read from the stage rather than held: a second clip taking the
+    // stage releases this one's player, and a surface holding its own
+    // reference would go on talking to a released instance.
+    val player = VideoStage.playerFor(token, url)
 
     DisposableEffect(player) {
         val listener = object : Player.Listener {
@@ -160,27 +168,37 @@ fun VideoPlayer(
                 playing = isPlaying
             }
         }
-        player.addListener(listener)
+        player?.addListener(listener)
         onDispose {
-            player.removeListener(listener)
-            player.release()
+            player?.removeListener(listener)
+            playing = false
         }
     }
 
     // Autoplay and the shared mute are both *state*, applied to the
     // player rather than commanded at it: that way the player agrees
-    // with what the reader last said, however it got here.
-    LaunchedEffect(autoplay) { player.playWhenReady = autoplay }
-    LaunchedEffect(muted) { player.volume = if (muted) 0f else 1f }
+    // with what the reader last said, however it got here. Only the
+    // surface actually showing the clip drives it — a screen on its way
+    // out must not pause what its replacement just started.
+    LaunchedEffect(autoplay, player) { player?.playWhenReady = autoplay }
+    LaunchedEffect(muted, player) { player?.volume = if (muted) 0f else 1f }
 
-    val presentation = rememberPresentationState(player)
+    // `keepContentOnReset` is the documented lever against the flash:
+    // it keeps the frame already on screen visible when the player or
+    // its tracks change, which is exactly what re-attaching one player
+    // to a second surface looks like from the state holder's side.
+    val presentation = rememberPresentationState(player, keepContentOnReset = true)
 
     Box(modifier = modifier.then(if (testTag != null) Modifier.testTag(testTag) else Modifier)) {
+        // A surface without the stage binds nothing: two surfaces
+        // setting the same player's video output is the fight that
+        // reads as a flicker.
         PlayerSurface(player = player, modifier = Modifier.fillMaxSize())
 
         // The poster covers the surface until a frame exists to show —
-        // which is also the state a clip that never autoplays stays in.
-        if (presentation.coverSurface) {
+        // which is also the state a clip that never autoplays, or one
+        // whose stage another clip has taken, stays in.
+        if (presentation.coverSurface || player == null) {
             AsyncImage(
                 model = posterUrl,
                 contentDescription = contentDescription,
@@ -189,7 +207,7 @@ fun VideoPlayer(
             )
         }
 
-        if (controls == VideoControls.Full) {
+        if (controls == VideoControls.Full && player != null) {
             PlayPauseButton(
                 playing = playing,
                 onToggle = { if (playing) player.pause() else player.play() },
