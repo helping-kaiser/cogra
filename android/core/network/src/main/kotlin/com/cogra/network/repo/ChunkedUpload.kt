@@ -4,23 +4,19 @@
 
 package com.cogra.network.repo
 
-import com.cogra.domain.Outcome
 import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.UploadRetry
 import com.cogra.domain.store.TokenStore
 import java.io.File
 import java.io.IOException
 import java.io.RandomAccessFile
+import java.net.HttpURLConnection
+import java.net.URI
 import kotlin.random.Random
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import okhttp3.HttpUrl
-import okhttp3.HttpUrl.Companion.toHttpUrl
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 
 /**
  * Sends one file's parts, retrying each on its own.
@@ -32,13 +28,24 @@ import okhttp3.RequestBody.Companion.toRequestBody
  * "re-sending a part replaces it" — so a blip costs one part and the
  * upload carries on without the author being told anything happened.
  *
+ * **On `HttpURLConnection` rather than OkHttp.** Apollo speaks GraphQL
+ * over its own engine and exposes no call factory, so this would have
+ * meant a second HTTP client on the app's classpath — and OkHttp 5's
+ * Android artifact requires `compileSdk 37`, which AGP 8.13.2 cannot
+ * compile against (the same wall the catalog already records for Coil).
+ * The platform's own client is what Android documents for a plain
+ * request, and a raw PUT of a byte array under one header is exactly
+ * the case it covers. The retry schedule is ours either way.
+ *
  * Failure surfaces only when a part has spent its whole retry budget.
  */
 class PartUploader(
-    private val http: OkHttpClient,
     private val tokens: TokenStore,
     private val endpoint: String,
     private val random: Random = Random.Default,
+    // Injected so the suites drive the backoff on a virtual clock
+    // instead of waiting out the real one.
+    private val io: CoroutineDispatcher = Dispatchers.IO,
 ) {
 
     /**
@@ -60,7 +67,7 @@ class PartUploader(
         partSizeBytes: Int,
         partCount: Int,
         onProgress: (UploadProgress) -> Unit,
-    ): String? = withContext(Dispatchers.IO) {
+    ): String? = withContext(io) {
         onProgress(UploadProgress(uploadId, sentParts = 0, partCount = partCount))
         RandomAccessFile(file, "r").use { source ->
             for (partNumber in 1..partCount) {
@@ -96,8 +103,7 @@ class PartUploader(
             val wait = UploadRetry.delayMs(attempt, random.nextDouble())
             if (wait > 0) delay(wait)
 
-            val outcome = attemptPart(uploadId, partNumber, bytes)
-            when (outcome) {
+            when (attemptPart(uploadId, partNumber, bytes)) {
                 PartResult.Sent -> return null
                 PartResult.Refused -> return REFUSED
                 PartResult.Transient ->
@@ -109,35 +115,41 @@ class PartUploader(
 
     private enum class PartResult { Sent, Refused, Transient }
 
-    private suspend fun attemptPart(
-        uploadId: String,
-        partNumber: Int,
-        bytes: ByteArray,
-    ): PartResult {
-        val access = tokens.current()?.accessToken
-        val request = Request.Builder()
-            .url(partUrl(uploadId, partNumber))
-            .put(bytes.toRequestBody(OCTET_STREAM))
-            .apply { access?.let { header("Authorization", "Bearer $it") } }
-            .build()
+    private fun attemptPart(uploadId: String, partNumber: Int, bytes: ByteArray): PartResult {
+        val access = runCatching { kotlinx.coroutines.runBlocking { tokens.current() } }
+            .getOrNull()
+            ?.accessToken
+        val connection = runCatching {
+            URI(partUrl(uploadId, partNumber)).toURL().openConnection() as HttpURLConnection
+        }.getOrElse { return PartResult.Transient }
+
         return try {
-            http.newCall(request).execute().use { response ->
-                when {
-                    response.isSuccessful -> PartResult.Sent
-                    // A stale access token is worth one more try: the
-                    // Apollo side refreshes it around the calls that
-                    // bracket this one, so the next attempt carries a
-                    // fresh header without this loop knowing how.
-                    response.code == UNAUTHORIZED -> PartResult.Transient
-                    // Anything else in the 4xx range is an answer about
-                    // the request, and repeating it changes nothing.
-                    response.code < SERVER_ERROR -> PartResult.Refused
-                    else -> PartResult.Transient
-                }
+            connection.requestMethod = "PUT"
+            connection.doOutput = true
+            connection.connectTimeout = CONNECT_TIMEOUT_MS
+            connection.readTimeout = READ_TIMEOUT_MS
+            connection.setFixedLengthStreamingMode(bytes.size)
+            access?.let { connection.setRequestProperty("Authorization", "Bearer $it") }
+            connection.setRequestProperty("Content-Type", OCTET_STREAM)
+            connection.outputStream.use { it.write(bytes) }
+
+            when (val code = connection.responseCode) {
+                in 200..299 -> PartResult.Sent
+                // A stale access token is worth one more try: the
+                // Apollo side refreshes it around the calls that
+                // bracket this one, so the next attempt carries a
+                // fresh header without this loop knowing how.
+                UNAUTHORIZED -> PartResult.Transient
+                // Anything else below 500 is an answer about the
+                // request, and repeating it changes nothing.
+                in 400..499 -> PartResult.Refused
+                else -> if (code >= SERVER_ERROR) PartResult.Transient else PartResult.Refused
             }
         } catch (_: IOException) {
             // The case this class exists for: the connection went away.
             PartResult.Transient
+        } finally {
+            connection.disconnect()
         }
     }
 
@@ -148,17 +160,24 @@ class PartUploader(
      * separately: the part route is served by the same Axum app, so a
      * second setting could only ever disagree with the first.
      */
-    private fun partUrl(uploadId: String, partNumber: Int): HttpUrl =
-        endpoint.toHttpUrl().newBuilder()
-            .encodedPath("/media/uploads/$uploadId/parts/$partNumber")
-            .query(null)
-            .build()
+    private fun partUrl(uploadId: String, partNumber: Int): String {
+        val origin = URI(endpoint).let { "${it.scheme}://${it.authority}" }
+        return "$origin/media/uploads/$uploadId/parts/$partNumber"
+    }
 
     private companion object {
-        val OCTET_STREAM = "application/octet-stream".toMediaType()
+        const val OCTET_STREAM = "application/octet-stream"
 
         const val UNAUTHORIZED = 401
         const val SERVER_ERROR = 500
+
+        /**
+         * A part is up to eight mebibytes, which on a poor connection
+         * is minutes of writing — a short timeout would call a working
+         * upload dead and spend a retry on it.
+         */
+        const val CONNECT_TIMEOUT_MS = 30_000
+        const val READ_TIMEOUT_MS = 60_000
 
         const val TRANSPORT = "The upload could not reach the server."
         const val REFUSED = "The server would not take that video."

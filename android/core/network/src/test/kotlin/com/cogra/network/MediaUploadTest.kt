@@ -10,13 +10,15 @@ import com.cogra.network.auth.BearerInterceptor
 import com.cogra.network.auth.SessionRefresher
 import com.cogra.network.repo.MediaRepositoryImpl
 import com.cogra.network.repo.PartUploader
+import com.cogra.domain.identity.EndLocalSession
+import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import kotlin.random.Random
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -119,17 +121,22 @@ class MediaUploadTest {
     """.trimIndent()
 
     /** A clip of [bytes] bytes on disk, and the repository that sends it. */
-    private fun repositoryFor(bytes: Int): Pair<MediaRepositoryImpl, ProcessedVideo> {
+    private fun TestScope.repositoryFor(bytes: Int): Pair<MediaRepositoryImpl, ProcessedVideo> {
         val file = temp.newFile("clip.mp4")
         file.writeBytes(ByteArray(bytes) { it.toByte() })
         val uploader = PartUploader(
-            http = OkHttpClient(),
             tokens = tokens,
             endpoint = server.url("/graphql").toString(),
             // Pinned so the schedule is the policy's, not chance's.
             random = Random(1),
+            // The backoff runs on the suite's virtual clock, so a part
+            // that drops twice costs no real seconds.
+            io = UnconfinedTestDispatcher(testScheduler),
         )
-        val guard = AuthGuard(tokens, SessionRefresher(tokens, { }, { client }))
+        val guard = AuthGuard(
+            tokens,
+            SessionRefresher(tokens, EndLocalSession(FakeIdentityStore(), tokens)) { client },
+        )
         return MediaRepositoryImpl(client, guard, uploader) to
             ProcessedVideo(file.path, 1080, 1920, 1_000, bytes.toLong())
     }

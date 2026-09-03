@@ -44,9 +44,6 @@ apollo {
 dependencies {
     api(project(":core:domain"))
     implementation(libs.apollo.runtime)
-    // The resumable upload's parts are raw PUTs rather than GraphQL, so
-    // this module calls OkHttp directly instead of riding Apollo's.
-    implementation(libs.okhttp)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.tink.android)
     implementation(libs.kotlinx.serialization.json)
