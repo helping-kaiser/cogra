@@ -261,7 +261,7 @@ DO, the way the sound toggle already does:
 
 - `Play` · `Pause`
 - `Seek` — the timeline's name; its value is spoken as
-  `0:14 of 0:41`, the two times the bar already shows.
+  "0:14 of 0:41", the two times the bar already shows.
 - `Play this video` — the suppressed-autoplay card's disc. Longer than
   the transport's `Play` on purpose: it is the only one that appears
   beside a still frame, where "play" alone would not say what of.
