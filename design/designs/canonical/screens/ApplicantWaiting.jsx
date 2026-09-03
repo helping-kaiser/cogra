@@ -10,6 +10,7 @@ export function Screen() {
         <PostCard {...ADA_POST} signedIn={false} />
         <PostCard {...TOBIAS_POST} signedIn={false} />
       </FeedList>
+      <Snackbar message="Your post is staged — it lands with you." />
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>
   );
