@@ -78,6 +78,8 @@ const {
   ReelCaption,
   PinnedClip,
   LICENSE_MENU_LABEL,
+  LICENSE_MENU_LABEL_SHOWN,
+  NodeMark,
 } = components;
 
 /* A standing of one gentle record — the vouch-back default made a bundle. */
@@ -242,6 +244,9 @@ const OWN_POST_MENU = [
   LICENSE_ROW,
 ];
 const READER_POST_MENU = [LICENSE_ROW, CITE_ROW];
+/* The same menu once the terms are unfolded: the row that revealed them is the
+   row that folds them away, so it changes its words rather than its place. */
+const READER_POST_MENU_SHOWN = [{ label: LICENSE_MENU_LABEL_SHOWN, onSelect: () => {} }, CITE_ROW];
 /* Another's profile: no license (a profile declares none) and no citing — the
    word for referencing a person is mentioning (readme §13, the menus round). */
 const PROFILE_MENU = [
@@ -357,9 +362,15 @@ function HelpDot({ ariaLabel = "How searching works" }) {
   return <SystemHelpDot ariaLabel={ariaLabel} />;
 }
 
-/* The own-profile band cluster (profile round): the overflow and the gear on
-   the band's edge — chats arrives built into the band itself. Shared by the
-   member and applicant own-profile boards. */
+/* The own-profile band cluster (profile round): the share control and the gear
+   on the band's edge — chats arrives built into the band itself. Shared by the
+   member and applicant own-profile boards.
+
+   YOUR OWN PROFILE HAS NO MENU (readme §13, the menus round). Another person's
+   holds two rows; on your own, mentioning yourself is not a thing anyone does,
+   and share is what is left. A ⋮ that opens a sheet holding one row is a tap
+   spent on nothing — so the band wears the share glyph the action rows already
+   use, and one tap hands the profile to the platform's own sheet. */
 function ProfileBandIcon({ name, label }) {
   return (
     <button
@@ -377,7 +388,7 @@ function ProfileBand({ children }) {
     <CograBand
       trailing={
         <span style={{ display: "flex", alignItems: "center" }}>
-          <ProfileBandIcon name="more_vert" label="More — share your profile" />
+          <ProfileBandIcon name="share" label="Share your profile" />
           <ProfileBandIcon name="settings" label="Settings" />
         </span>
       }
@@ -541,6 +552,181 @@ function DetailColumn({ children }) {
     <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 12, padding: "0 0 8px 0" }}>
       {children}
     </div>
+  );
+}
+
+/* ── The thread, and the post it hangs under (readme §13, the menus round) ──
+   Both were ReplyEntry's alone until the comment's overflow menu needed the
+   same thread with a second sheet over it. A body on a second screen stops
+   being screen-local — so the sheet and the detail beneath it moved here whole,
+   and the two boards differ only by what is stacked on top. */
+
+function ThreadDetail({ menuItems = READER_POST_MENU }) {
+  return (
+    <>
+      <DetailHeader items={menuItems} />
+      <DetailColumn>
+        <PostCard {...ADA_POST} variant="detail" />
+      </DetailColumn>
+      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+    </>
+  );
+}
+
+/* A REFERENCE ALREADY STAGED IN A COMPOSER (readme §13, the menus round). The
+   composer's own row for a citation the author has committed to: the kind's
+   mark from the one glyph assignment, what it points at, the pair signed on the
+   act, and the × that takes it back out. The mark is `NodeMark`, so a person
+   arrives as a circle and everything else as its tile — the menus round's whole
+   point is that citing a post and mentioning a person stage the same fact, and
+   a row that drew them differently would deny it. */
+function StagedReference({ kind = "post", name, sub, src, value }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 48, padding: "8px 12px", borderRadius: "var(--radius-small)", background: "var(--surface-container-highest)", boxSizing: "border-box" }}>
+      <NodeMark kind={kind} name={name} src={src} />
+      <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+        <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
+        {sub && <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{sub}</span>}
+      </span>
+      {value && (
+        <span style={{ flex: "none", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{value}</span>
+      )}
+      <button
+        type="button"
+        aria-label={`Remove ${name}`}
+        className="cg-state cg-focus"
+        style={{ flex: "none", display: "grid", placeItems: "center", height: 32, width: 32, border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0 }}
+      >
+        <Icon name="close" size={18} />
+      </button>
+    </div>
+  );
+}
+
+/* A composer field's label — the wizard stages' own caption weight. */
+function ComposeFieldLabel({ children, note }) {
+  return (
+    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+      <span style={{ flex: 1, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>{children}</span>
+      {note && <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>{note}</span>}
+    </div>
+  );
+}
+
+/* Someone else's profile, whole — shared the moment its own overflow menu
+   needed the same page with a sheet over it (readme §13, the menus round). */
+function ProfileOtherBody() {
+  return (
+    <>
+      <PageHeader
+        title="@ada"
+        backHref="#"
+        backLabel="Back"
+        action={<OverflowMenu ariaLabel="More about @ada" items={PROFILE_MENU} />}
+      />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ padding: "0 16px" }}>
+          <ProfileHeader
+            handle="ada"
+            displayName="Ada Okonkwo"
+            avatarSrc="ava1.jpg"
+            bio="A dozen tries at the third headland light and counting."
+            posts={12}
+            stancesOn={48}
+            stancesTaken={31}
+            onCounts={() => {}}
+            onCommit={() => {}}
+            onMessage={() => {}}
+            showHandle={false}
+          />
+        </div>
+        <ChronicleTabs value="everything" />
+        <ChronicleList>
+          <ChronicleCard glyph="dynamic_feed" label="Published a post" time="2h" snippet="The long way home — the light does something at the third headland." />
+          <ChronicleCard glyph="chat_bubble" label="Commented" time="1d" snippet="The glovebox camera earns its keep — this is the print from 2019." />
+          <ChronicleCard face={{ pDirected: 0.6, pInterest: 0.3 }} label="Took a stance" context="on @tobias" time="2d" link={false} />
+          <ChronicleCard glyph="dynamic_feed" label="Published a post" time="5d" snippet="Took the coast road instead of the tunnel. Four hours longer, worth every minute." />
+          <ChronicleCard glyph="person" label="Updated their profile" time="1w" link={false} />
+        </ChronicleList>
+      </div>
+      <BottomNav active={null} slots={ALL_SLOTS} inline />
+    </>
+  );
+}
+
+function CommentsThreadSheet() {
+  return (
+    <BottomSheet open ariaLabel="Comments" height="calc(100% - 72px)">
+      <SheetTitle>Comments</SheetTitle>
+      <ul style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 12, margin: 0, padding: "0 16px", listStyle: "none" }}>
+        <CommentCard
+          author={TOBIAS}
+          content="That stretch after the second bend is the reason I keep a camera in the glovebox."
+          timestamp="1h"
+          bundle={mkBundle(0.1, 0.1)}
+          onReply={() => {}}
+          replyCount={2}
+          onOpenReplies={() => {}}
+          topics={["glovebox", "coastroad"]}
+          references={1}
+          license={{ attribution: 0, provenance: 0 }}
+          menuItems={CITE_MENU}
+        />
+        {/* The veiled comment sits SECOND, where the frame still shows it
+            whole: the thread is taller than the sheet, and a state drawn
+            below the fold is a state nobody can check. The whole body — the
+            words and the two pictures with them — is under one
+            comment-scale block, while the author, the timestamp and the
+            stance stay readable. */}
+        <CommentCard
+          author={MIRA}
+          content="The gulls had been at it before the tide came back. Two frames, both grim."
+          timestamp="10m"
+          media={[
+            { src: "comment-shingle.jpg", ratio: "4 / 3", fit: "cover", alt: "A stretch of shingle at low tide." },
+            { src: "comment-gulls.jpg", ratio: "1 / 1", fit: "cover", alt: "Gulls on the tideline." },
+          ]}
+          sensitive={{ reason: "A dead seabird in the second frame." }}
+          onReply={() => {}}
+          license={{ attribution: 0, provenance: 0 }}
+          menuItems={CITE_MENU}
+        />
+        <CommentCard
+          author={SOL}
+          content="Which headland is the third one, counting from the ferry landing?"
+          timestamp="45m"
+          onReply={() => {}}
+          license={{ attribution: 0, provenance: 0 }}
+          menuItems={CITE_MENU}
+          replies={[
+            {
+              id: "r1",
+              author: ADA,
+              content: "The one past the pines — the road dips right before it.",
+              timestamp: "40m",
+              onReply: () => {},
+              license: { attribution: 0, provenance: 0 },
+              menuItems: CITE_MENU,
+            },
+            {
+              id: "r2",
+              author: TOBIAS,
+              content: "@ada That dip floods at spring tide, mind the sign.",
+              timestamp: "22m",
+              onReply: () => {},
+              license: { attribution: 0, provenance: 0 },
+              menuItems: CITE_MENU,
+            },
+          ]}
+        />
+      </ul>
+      <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 0", borderTop: "1px solid var(--border-hairline)" }}>
+        <MonogramAvatar name="Sol Ferreira" />
+        <div style={{ flex: 1 }}>
+          <TextField label="Add a comment" value="" />
+        </div>
+      </div>
+    </BottomSheet>
   );
 }
 
