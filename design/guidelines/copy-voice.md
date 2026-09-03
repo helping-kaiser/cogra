@@ -124,6 +124,10 @@ title, at most two short paragraphs, Close. The texts, verbatim
   screen readers, never guessed at.
   *(The video sentence is an extension of blessed copy — 2026-09-02,
   flagged for review; the rest of the dialog is unchanged.)*
+  The sheet and the describe row both carry the reason permanently,
+  under the title and under the row: **`Read aloud to people who
+  can't see it.`** — the "?" is for the reader who wants the rest,
+  not for the one who needs to know why the field is there.
 - **Your key** (key absent at the seal and at the stance pad): Signing needs your key, and
   it isn't on this browser. Nothing is signed or sent without it — the
   draft stays on this device. / Restore the key with your recovery
@@ -197,11 +201,47 @@ out (*Remove it*; never *Retry* — retrying cannot change the answer):
 - `That video is too big — a post's video can be up to 100 MB.`
 - `That picture is too big — a picture can be up to 10 MB.`
 - `That file isn't a picture or a video CoGra can read.`
+- `A post carries pictures or one video, not both.`
+- `A comment carries pictures or one video, not both.`
+- `That GIF moves, and CoGra can't take a moving GIF here. A still one
+  is fine.`
 
 **Screens say MB; the caps are MiB.** The limit enforced is the binary
 one — 50 MiB is 52.4 MB — so the number on screen under-promises and
 can never turn a file the product would have accepted into a refusal.
 The reverse, writing MiB, would be exact and unreadable.
+
+**A file is judged on its own before it is judged against the body.**
+Size and format answer first, the grammar second — so a video too big
+for a post is refused by its cap, and a video the product would have
+taken is refused by the mixed-kind line. One file, one line, the
+nearest reason.
+
+## Awaiting blessing — the video conform round
+
+Drawn, and up for review in the same pass. Kept apart from the blessed
+lines above until then.
+
+**Count refusals** — an eleventh picture in a post, a fifth in a
+comment; the refusal row the count case never had:
+
+- `That's more than a post carries — up to ten pictures.`
+- `That's more than a comment carries — up to four pictures.`
+
+**A video is the whole body** — the quiet line where the add control
+used to be, once a clip is staged:
+
+- `A video is the whole post. Its cover comes next.`
+- `A video is the whole comment. Give it a cover below.`
+
+**A clip that didn't upload** — a fault, not a refusal, so it keeps
+Retry (`UploadErrorLine` with both ways out):
+
+- `That video didn't upload.`
+
+  The transport voice would write it *That didn't upload. Try again.*;
+  the line is drawn short because Retry stands beside it and the pair
+  would say "try again" twice.
 
 Two removal marks, never interchangeable: `Removed by its author` —
 "The words and pictures are gone. The post's place in the thread, and
