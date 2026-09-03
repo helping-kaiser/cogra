@@ -61,32 +61,43 @@ export function PickedRow({ items = [], caption, onManage, manageLabel = "Manage
    A VIDEO TAKES ONE DESCRIPTION for the whole clip (jakob 2026-09-02), so the
    row reads "Describe the video · 0 of 1 described" — same anatomy, `subject`
    naming what is being described. The cover takes none of its own: it is the
-   video's face, not a second picture. */
+   video's face, not a second picture.
+
+   THE REASON RIDES UNDER THE ROW (jakob 2026-09-03), permanently: an optional
+   field with no stated purpose reads as a chore, and the one thing that makes
+   it worth writing — someone is listening to it — was behind a "?" nobody
+   opens. Same words as the sheet's own sub-line, so the row and the sheet it
+   opens say one thing. */
 export function DescribeCounter({ described, total, onDescribe, subject = "pictures" }) {
   return (
-    <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px" }}>
-      <button
-        type="button"
-        onClick={onDescribe}
-        className="cg-state cg-focus cg-hit"
-        style={{
-          border: 0,
-          background: "none",
-          padding: 0,
-          cursor: "pointer",
-          fontFamily: "var(--font-sans)",
-          fontSize: "inherit",
-          lineHeight: "inherit",
-          fontWeight: "var(--text-label-small--font-weight)",
-          letterSpacing: "0.5px",
-          color: "var(--primary)",
-        }}
-      >
-        Describe the {subject}
-      </button>{" "}
-      <span style={{ color: "var(--text-secondary)" }}>
-        · {described} of {total} described
-      </span>
-    </p>
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
+      <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px" }}>
+        <button
+          type="button"
+          onClick={onDescribe}
+          className="cg-state cg-focus cg-hit"
+          style={{
+            border: 0,
+            background: "none",
+            padding: 0,
+            cursor: "pointer",
+            fontFamily: "var(--font-sans)",
+            fontSize: "inherit",
+            lineHeight: "inherit",
+            fontWeight: "var(--text-label-small--font-weight)",
+            letterSpacing: "0.5px",
+            color: "var(--primary)",
+          }}
+        >
+          Describe the {subject}
+        </button>{" "}
+        <span style={{ color: "var(--text-secondary)" }}>
+          · {described} of {total} described
+        </span>
+      </p>
+      <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
+        Read aloud to people who can&apos;t see it.
+      </p>
+    </div>
   );
 }
