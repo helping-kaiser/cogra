@@ -3,6 +3,7 @@ package com.cogra.feature.content.reply
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -492,11 +493,13 @@ class ReplyWizardScreenTest {
         compose.setContent { Wizard(failedClip()) }
 
         // A refusal drops Retry; a fault keeps it — the file was fine
-        // and the network wasn't.
-        compose.onNodeWithTag("reply_clip_failed").assertIsDisplayed()
-        compose.onNodeWithText("That video didn't upload.", substring = true).assertIsDisplayed()
-        compose.onNodeWithText("Retry", substring = true).assertIsDisplayed()
-        compose.onNodeWithText("Remove it", substring = true).assertIsDisplayed()
+        // and the network wasn't. The line carries both ways out, which
+        // is why the tile's own × is gone.
+        compose.onNodeWithTag("reply_clip_failed")
+            .assertIsDisplayed()
+            .assertTextContains("That video didn't upload.", substring = true)
+            .assertTextContains("Retry", substring = true)
+            .assertTextContains("Remove it", substring = true)
     }
 
     @Test

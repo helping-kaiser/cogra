@@ -137,8 +137,12 @@ class MediaUploadTest {
             tokens,
             SessionRefresher(tokens, EndLocalSession(FakeIdentityStore(), tokens)) { client },
         )
-        return MediaRepositoryImpl(client, guard, uploader) to
-            ProcessedVideo(file.path, 1080, 1920, 1_000, bytes.toLong())
+        val repo = MediaRepositoryImpl(client, guard, uploader).apply {
+            // Within reach of a test-sized file: eight mebibytes of
+            // bytes per case would be the slowest thing in the build.
+            resumableThresholdBytes = PART_SIZE.toLong()
+        }
+        return repo to ProcessedVideo(file.path, 1080, 1920, 1_000, bytes.toLong())
     }
 
     @Test
@@ -215,7 +219,7 @@ class MediaUploadTest {
         tokens.save(AuthTokens("access", "refresh", "acct"))
         // Under the threshold, where resumability buys a round trip and
         // nothing else.
-        val (repo, clip) = repositoryFor(1_024)
+        val (repo, clip) = repositoryFor(PART_SIZE - 1)
 
         val outcome = repo.uploadVideo(clip, COVER)
 
