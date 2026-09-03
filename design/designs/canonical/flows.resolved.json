@@ -1216,17 +1216,21 @@
     },
     {
       "name": "cite-a-post",
-      "description": "The reader's overflow — on a post or on a comment, the same two rows — opens a new post that already points at what it was opened from. A citation is declared at creation, so the journey ends where the reference is already staged.",
+      "description": "The reader's overflow — on a post or on a comment, the same two rows — opens the post wizard fresh, the thing cited riding along unseen. The journey ends at the details stage, where the reference is finally on screen.",
       "status": "resolved",
       "startsOn": [
         "CommentMenu",
         "ReaderPostMenu"
       ],
       "steps": [
-        "start · «Cite in a new post» on 2 boards → ComposeCited",
+        "start · «Cite in a new post» on 2 boards → ComposePick",
+        "ComposePick · 4 «Write words instead» → ComposeWords",
+        "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
       ],
       "boards": [
+        "ComposePick",
+        "ComposeWords",
         "ComposeCited",
         "CommentMenu",
         "ReaderPostMenu"
@@ -1234,16 +1238,20 @@
     },
     {
       "name": "mention-someone",
-      "description": "Mention in a new post on another's profile stages exactly what citing stages — a Reference edge. The word records only that the far end is a person.",
+      "description": "Mention in a new post on another's profile stages exactly what citing stages — a Reference edge. The word records only that the far end is a person, and the wizard it opens is the same one.",
       "status": "resolved",
       "startsOn": [
         "ProfileMenu"
       ],
       "steps": [
-        "start · «Mention in a new post» on 1 board → ComposeCited",
+        "start · «Mention in a new post» on 1 board → ComposePick",
+        "ComposePick · 4 «Write words instead» → ComposeWords",
+        "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
       ],
       "boards": [
+        "ComposePick",
+        "ComposeWords",
         "ComposeCited",
         "ProfileMenu"
       ]
@@ -1422,12 +1430,16 @@
     },
     "ComposePick": {
       "flows": [
+        "cite-a-post",
+        "mention-someone",
         "publish-a-post",
         "publish-a-video",
         "publish-words",
         "set-the-cover-and-order"
       ],
       "endpoint": [
+        "cite-a-post",
+        "mention-someone",
         "publish-a-post",
         "publish-a-video",
         "publish-words",
@@ -1479,6 +1491,8 @@
     },
     "ComposeWords": {
       "flows": [
+        "cite-a-post",
+        "mention-someone",
         "publish-words"
       ],
       "endpoint": []

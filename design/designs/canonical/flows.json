@@ -229,7 +229,7 @@
       "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "WalletGuest", "ApplicantFeed", "ApplicantWaiting", "WalletApplicant", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 4 },
-        { "board": "ComposeWords", "via": 3 },
+        { "board": "ComposeWords", "via": 3, "to": "ComposeDetails" },
         { "board": "ComposeDetails", "via": 10, "to": "ComposeSeal" }
       ],
       "end": { "board": "ComposeSeal", "via": 7, "case": "signed — the detail view, still settling" }
@@ -403,13 +403,21 @@
     },
     {
       "name": "cite-a-post",
-      "description": "The reader's overflow — on a post or on a comment, the same two rows — opens a new post that already points at what it was opened from. A citation is declared at creation, so the journey ends where the reference is already staged.",
-      "start": { "control": "Cite in a new post" }
+      "description": "The reader's overflow — on a post or on a comment, the same two rows — opens the post wizard fresh, the thing cited riding along unseen. The journey ends at the details stage, where the reference is finally on screen.",
+      "start": { "control": "Cite in a new post" },
+      "waypoints": [
+        { "board": "ComposePick", "via": 4 },
+        { "board": "ComposeCited" }
+      ]
     },
     {
       "name": "mention-someone",
-      "description": "Mention in a new post on another's profile stages exactly what citing stages — a Reference edge. The word records only that the far end is a person.",
-      "start": { "control": "Mention in a new post" }
+      "description": "Mention in a new post on another's profile stages exactly what citing stages — a Reference edge. The word records only that the far end is a person, and the wizard it opens is the same one.",
+      "start": { "control": "Mention in a new post" },
+      "waypoints": [
+        { "board": "ComposePick", "via": 4 },
+        { "board": "ComposeCited" }
+      ]
     }
   ]
 }
