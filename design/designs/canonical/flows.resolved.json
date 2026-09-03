@@ -24,6 +24,7 @@
         "ProfileOther",
         "ProfilePosts",
         "ProfileStances",
+        "Reel",
         "Removed",
         "VouchBack",
         "Wallet",
@@ -38,7 +39,7 @@
         "WalletApplicant/3: applicant acts once each — boards pending (ruled 2026-09-01)"
       ],
       "steps": [
-        "start · «nav · New post» on 24 boards → ComposePick",
+        "start · «nav · New post» on 25 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -67,6 +68,7 @@
         "ProfileOther",
         "ProfilePosts",
         "ProfileStances",
+        "Reel",
         "Removed",
         "VouchBack",
         "Wallet",
@@ -616,6 +618,7 @@
         "ProfileOther",
         "ProfilePosts",
         "ProfileStances",
+        "Reel",
         "Removed",
         "VouchBack",
         "Wallet",
@@ -630,7 +633,7 @@
         "WalletApplicant/3: applicant acts once each — boards pending (ruled 2026-09-01)"
       ],
       "steps": [
-        "start · «nav · New post» on 24 boards → ComposePick",
+        "start · «nav · New post» on 25 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -659,6 +662,7 @@
         "ProfileOther",
         "ProfilePosts",
         "ProfileStances",
+        "Reel",
         "Removed",
         "VouchBack",
         "Wallet",
@@ -690,6 +694,7 @@
         "ProfileOther",
         "ProfilePosts",
         "ProfileStances",
+        "Reel",
         "Removed",
         "VouchBack",
         "Wallet",
@@ -704,7 +709,7 @@
         "WalletApplicant/3: applicant acts once each — boards pending (ruled 2026-09-01)"
       ],
       "steps": [
-        "start · «nav · New post» on 24 boards → ComposePick",
+        "start · «nav · New post» on 25 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a video — its face",
         "ComposeCover · 6 «Next» → ComposeDetails",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -733,6 +738,7 @@
         "ProfileOther",
         "ProfilePosts",
         "ProfileStances",
+        "Reel",
         "Removed",
         "VouchBack",
         "Wallet",
@@ -1810,6 +1816,9 @@
     },
     "Reel": {
       "flows": [
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
         "reel-to-detail",
         "reply-to-a-post",
         "take-a-stance-on-a-post",

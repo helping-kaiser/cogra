@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"MediaDisc","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/proposed/MediaViewer.jsx"},{"name":"VideoTransport","sourcePath":"components/proposed/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/proposed/VideoControls.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"5b1030f3b363","components/compose/DescribeSheet.jsx":"bcc91f82beee","components/compose/MediaThumb.jsx":"36b454665a85","components/compose/PickedRow.jsx":"6bb23e6042dc","components/compose/PickedSheet.jsx":"952252dd4d23","components/compose/UploadNotice.jsx":"d178689c7d88","components/compose/WizardHeader.jsx":"53ce0aad9241","components/content/CommentCard.jsx":"02450199bad2","components/content/OverflowMenu.jsx":"5a5ff330770c","components/content/PostCard.jsx":"1f00e082725b","components/content/ReferenceRow.jsx":"bad43ae893d4","components/content/ShareButton.jsx":"8612d42b43b3","components/content/TopicsLine.jsx":"b3bfa12c4d86","components/core/BottomSheet.jsx":"04aa46ec17d9","components/core/Button.jsx":"ff5a90231bbe","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"48c703bd16e0","components/core/HelpDot.jsx":"eabf92544b27","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c3fc1cd30267","components/forms/PasswordField.jsx":"38bf37cacbb0","components/forms/RecoveryCode.jsx":"b89705800497","components/forms/SearchBar.jsx":"2ed2d91945fc","components/forms/TextField.jsx":"97d5e4b1536d","components/honesty/PendingMarker.jsx":"28eaaf4ffa77","components/honesty/SensitiveVeil.jsx":"73819cc142d6","components/honesty/TransportError.jsx":"2f66269a8f3c","components/navigation/BorrowedViewBand.jsx":"66c07c53862e","components/navigation/BottomNav.jsx":"53a749d4ddf1","components/navigation/CograBand.jsx":"177723728533","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"8fedb2f39e19","components/navigation/Icon.jsx":"7e24e5b170d9","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"63d3f3e7404c","components/people/ActorChip.jsx":"0870cb9a9681","components/people/ProfileHeader.jsx":"f24d0bc82d50","components/proposed/ExplainableNumber.jsx":"b29af54b996a","components/proposed/MediaAttachment.jsx":"96c11a7677d5","components/proposed/MediaViewer.jsx":"fc19d874aeb8","components/proposed/VideoControls.jsx":"7c06a9ca12e4","components/stance/SeveranceConfirm.jsx":"1a0dbafb9e95","components/stance/StanceAlternates.jsx":"0b50770f4aa0","components/stance/StanceCoachMark.jsx":"4d4cfdcab8db","components/stance/StanceControl.jsx":"24e63c57ff9e","components/stance/StancePad.jsx":"f6eda3aa07e3","components/stance/StanceReadout.jsx":"3c01d2740d9a","components/stance/StanceSlider.jsx":"325286a6b95d","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"964687345182","components/wallet/LedgerRow.jsx":"96a7cfea6280","components/wallet/PayoutAddress.jsx":"d7783723d684","components/wallet/WalletBalance.jsx":"3ff65daba8d2","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"44ff990afba5","designs/core-loop/data.jsx":"1a69aa16a143"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/proposed/MediaAttachment.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"MediaDisc","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/proposed/MediaViewer.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/proposed/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/proposed/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/proposed/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/proposed/VideoControls.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"5b1030f3b363","components/compose/DescribeSheet.jsx":"bcc91f82beee","components/compose/MediaThumb.jsx":"36b454665a85","components/compose/PickedRow.jsx":"6bb23e6042dc","components/compose/PickedSheet.jsx":"952252dd4d23","components/compose/UploadNotice.jsx":"d178689c7d88","components/compose/WizardHeader.jsx":"53ce0aad9241","components/content/CommentCard.jsx":"02450199bad2","components/content/OverflowMenu.jsx":"5a5ff330770c","components/content/PostCard.jsx":"1f00e082725b","components/content/ReferenceRow.jsx":"bad43ae893d4","components/content/ShareButton.jsx":"8612d42b43b3","components/content/TopicsLine.jsx":"b3bfa12c4d86","components/core/BottomSheet.jsx":"04aa46ec17d9","components/core/Button.jsx":"ff5a90231bbe","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"48c703bd16e0","components/core/HelpDot.jsx":"eabf92544b27","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c3fc1cd30267","components/forms/PasswordField.jsx":"38bf37cacbb0","components/forms/RecoveryCode.jsx":"b89705800497","components/forms/SearchBar.jsx":"2ed2d91945fc","components/forms/TextField.jsx":"97d5e4b1536d","components/honesty/PendingMarker.jsx":"28eaaf4ffa77","components/honesty/SensitiveVeil.jsx":"73819cc142d6","components/honesty/TransportError.jsx":"2f66269a8f3c","components/navigation/BorrowedViewBand.jsx":"66c07c53862e","components/navigation/BottomNav.jsx":"53a749d4ddf1","components/navigation/CograBand.jsx":"177723728533","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"8fedb2f39e19","components/navigation/Icon.jsx":"8d9210b4a969","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"63d3f3e7404c","components/people/ActorChip.jsx":"0870cb9a9681","components/people/ProfileHeader.jsx":"f24d0bc82d50","components/proposed/ExplainableNumber.jsx":"9a4a12a0d268","components/proposed/MediaAttachment.jsx":"634301ebf932","components/proposed/MediaViewer.jsx":"93133531be6a","components/proposed/VideoControls.jsx":"bf80af8840a2","components/stance/SeveranceConfirm.jsx":"1a0dbafb9e95","components/stance/StanceAlternates.jsx":"0b50770f4aa0","components/stance/StanceCoachMark.jsx":"4d4cfdcab8db","components/stance/StanceControl.jsx":"54cd40b15ff8","components/stance/StancePad.jsx":"f6eda3aa07e3","components/stance/StanceReadout.jsx":"3c01d2740d9a","components/stance/StanceSlider.jsx":"325286a6b95d","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"964687345182","components/wallet/LedgerRow.jsx":"96a7cfea6280","components/wallet/PayoutAddress.jsx":"d7783723d684","components/wallet/WalletBalance.jsx":"3ff65daba8d2","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"44ff990afba5","designs/core-loop/data.jsx":"1a69aa16a143"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/proposed/MediaAttachment.jsx"}]} */
 
 (() => {
 
@@ -574,6 +574,13 @@ const PATHS = {
      suppressed-autoplay card wears, where the device has already said no. */
   play_arrow: ["M8 5v14l11-7z"],
   pause: ["M6 19h4V5H6v14zm8-14v14h4V5h-4z"],
+  /* The transport's flanking skips, and the toggle that hands the clip the
+     whole screen. Material ships `replay_10`/`forward_10` with the numerals
+     drawn as separate glyph paths; the plain double-triangles carry the same
+     meaning at this size without three-part path data that no one can check. */
+  fast_rewind: ["M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"],
+  fast_forward: ["M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"],
+  fullscreen: ["M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"],
   /* Handing a post to the OS share sheet (reel round, 2026-09-03). */
   share: ["M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"],
   /* The avatar's change badge (profile round, 2026-09-01). The official cut
@@ -3429,6 +3436,22 @@ const { buttonStyle, BUTTON_CLASS, Snackbar, JoinPrompt, StancePad, StanceAltern
    asks the backend for the authoritative projection before signing. */
 
 const LONG_PRESS_MS = 500;
+
+/* THE ANCHOR ON A MEDIA SURFACE (jakob, review round 1). On the stream the
+   control sits on whatever the clip happens to be showing, where the card's
+   quiet anchor disappears — the unset face worst of all. So over media it wears
+   a disc: a dark translucent fill and a white ring, at the touch target's own
+   size, with the face at full strength inside it. The gesture, the pad and the
+   ceremony are unchanged; this restyles the anchor and nothing else. */
+const OVER_MEDIA_ANCHOR = {
+  width: "var(--touch-target-min)",
+  height: "var(--touch-target-min)",
+  padding: 0,
+  border: "2px solid rgba(255,255,255,0.92)",
+  background: "rgba(0,0,0,0.35)",
+  color: "#fff",
+  filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.55))"
+};
 const EMPTY_BUNDLE = {
   current: ORIGIN,
   rawSum: ORIGIN,
@@ -3471,7 +3494,8 @@ function StanceControl({
   defaultPick,
   padInset = 16,
   padNote,
-  wide = false
+  wide = false,
+  overMedia = false
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
   React.useEffect(() => {
@@ -3628,6 +3652,7 @@ function StanceControl({
       gap: "var(--space-2)",
       borderRadius: "var(--radius-full)",
       border: wide ? "1px solid var(--border-field)" : 0,
+      ...(overMedia ? OVER_MEDIA_ANCHOR : null),
       background: "none",
       padding: "0 12px",
       cursor: "pointer",
@@ -3643,7 +3668,12 @@ function StanceControl({
     "aria-hidden": "true",
     style: {
       fontSize: "var(--text-title-large)",
-      opacity: restingFace === null ? "var(--opacity-resting-face)" : 1,
+      // OVER MEDIA THE MUTING IS THE DISC'S JOB, NOT THE FACE'S. A
+      // translucent grey emoji on photography is not a quiet control, it
+      // is an invisible one — so the face keeps its greyscale (still
+      // "outside the table", still not a standing) and gives up the
+      // translucency that the outlined disc now carries instead.
+      opacity: restingFace === null && !overMedia ? "var(--opacity-resting-face)" : 1,
       filter: restingFace === null ? "grayscale(1)" : "none"
     }
   }, restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji), wide && restingPair === null &&
@@ -4211,16 +4241,31 @@ __ds_scope.TopicsLine = TopicsLine;
 try { (() => {
 const { Icon } = __ds_scope;
 /* PROPOSED — the two rungs of the control ladder above the feed card's sound
-   disc (readme §13, the reel round, jakob 2026-09-03).
+   disc (readme §13, the reel round; the anatomy revised in review round 1).
 
    THE LADDER. A feed card carries sound and nothing else: presence on screen is
    the policy there, and a card is a place you are passing through. Where the
    clip IS the thing — the detail view, the fullscreen viewer — the reader is
-   watching deliberately, and deliberate watching wants a way to stop and a way
-   to move: `VideoTransport`, play/pause plus a real timeline that takes a tap
-   anywhere on it or a drag along it. In the stream a full transport would be
-   chrome over the one thing the reader came for, so it thins to `SeekLine` at
-   the screen's bottom edge — the same gesture, no glyphs.
+   watching deliberately, and deliberate watching wants a way to stop, a way to
+   step, and a way to move: `VideoTransport`. In the stream a full transport
+   would be chrome over the one thing the reader came for, so it thins to
+   `SeekLine`, the same gesture with no glyphs.
+
+   THE ANATOMY IS ANDROID'S VIDEO PLAYER (jakob, review round 1 — "YouTube's
+   android player is pretty close to perfect"), because a transport is the one
+   place in this product where inventing a layout costs the reader something:
+
+   · The BIG CENTRED PLAY/PAUSE, flanked by skip-back and skip-forward. Centred,
+     because the thumb that reaches for it is not aiming at a corner, and it is
+     the control the reader wants most often.
+   · The BAR ALONG THE BOTTOM, INSET FROM THE EDGE: elapsed · the timeline ·
+     total, with the fullscreen toggle at its right end.
+   · NOTHING TOUCHES THE BOTTOM EDGE. Android's system gesture zone lives in the
+     last strip of the screen, so a control there is not a control — it is a
+     swipe that closes the app. This is why the bar is inset and why the stream's
+     seek line rides above the bottom bar rather than under it.
+   · The way out — the back arrow or the X — sits TOP-LEFT, outside this
+     component: it belongs to the surface, not the player.
 
    UNIFORM FOR EVERY CLIP. The transport does not appear for long videos and
    hide for short ones: a reader who learns a control on one clip must find it
@@ -4230,31 +4275,30 @@ const { Icon } = __ds_scope;
    on the boards is the revealed state, because a board of the hidden state is a
    board of a video.
 
-   No fullscreen button, no settings gear, no speed menu: the viewer is reached
-   by tapping the clip, and everything else a player usually grows is chrome the
-   product has no use for. */
+   No settings gear, no speed menu, no cast: everything else a player usually
+   grows is chrome this product has no use for. */
 
-const BAR = {
-  display: "flex",
-  alignItems: "center",
-  gap: "var(--space-2)",
-  padding: "10px 12px",
-  /* The gradient, not a bar: chrome over photography needs its own contrast, and
-     a hard-edged strip would cut the frame in two. */
-  background: "linear-gradient(to top, rgba(0,0,0,0.62), rgba(0,0,0,0))",
-  color: "#fff"
-};
+/* The inset that keeps the bar clear of the system gesture zone. */
+const GESTURE_ZONE = 16;
 const TIME = {
   fontFamily: "var(--font-sans)",
   fontSize: "var(--text-label-small)",
   lineHeight: "var(--text-label-small--line-height)",
   fontVariantNumeric: "tabular-nums",
+  color: "#fff",
   flex: "none"
 };
+
+/* Chrome over photography needs its own contrast. Glyphs take a shadow rather
+   than a plate each: five plates down a frame is a wall of chrome. */
+const OVER_MEDIA = "drop-shadow(0 1px 3px rgba(0,0,0,0.6))";
 function TransportButton({
   label,
   glyph,
-  onClick
+  size = 22,
+  box = 32,
+  onClick,
+  style
 }) {
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -4267,19 +4311,21 @@ function TransportButton({
     style: {
       display: "grid",
       placeItems: "center",
-      width: "32px",
-      height: "32px",
+      width: `${box}px`,
+      height: `${box}px`,
       flex: "none",
       border: "none",
       background: "transparent",
       borderRadius: "var(--radius-full)",
-      color: "inherit",
+      color: "#fff",
       padding: 0,
-      cursor: "pointer"
+      cursor: "pointer",
+      filter: OVER_MEDIA,
+      ...style
     }
   }, /*#__PURE__*/React.createElement(Icon, {
     name: glyph,
-    size: 22
+    size: size
   }));
 }
 
@@ -4317,18 +4363,18 @@ function Timeline({
       position: "absolute",
       left: 0,
       right: 0,
-      height: thin ? "3px" : "4px",
+      height: "3px",
       borderRadius: "var(--radius-full)",
-      background: thin ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.35)"
+      background: "rgba(255,255,255,0.32)"
     }
   }), /*#__PURE__*/React.createElement("span", {
     style: {
       position: "absolute",
       left: 0,
       width: `${at * 100}%`,
-      height: thin ? "3px" : "4px",
+      height: "3px",
       borderRadius: "var(--radius-full)",
-      background: "#fff"
+      background: "var(--primary)"
     }
   }), !thin && /*#__PURE__*/React.createElement("span", {
     style: {
@@ -4338,27 +4384,91 @@ function Timeline({
       height: "12px",
       marginLeft: "-6px",
       borderRadius: "var(--radius-full)",
-      background: "#fff"
+      background: "var(--primary)"
     }
   }));
 }
+
+/* The whole player's chrome, laid over the media it controls: absolutely inset,
+   so it is bounded by the frame and never by the page. */
 function VideoTransport({
   playing = true,
   elapsed = "0:00",
   duration = "0:00",
   progress = 0,
   muted = true,
+  fullscreen = true,
   onTogglePlay,
-  onToggleMute
+  onToggleMute,
+  onFullscreen,
+  onSkip,
+  inset = GESTURE_ZONE
 }) {
   return /*#__PURE__*/React.createElement("div", {
-    style: BAR
+    style: {
+      position: "absolute",
+      inset: 0,
+      zIndex: 2
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    "aria-hidden": "true",
+    style: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: "45%",
+      background: "linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0))",
+      pointerEvents: "none"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      top: "50%",
+      transform: "translateY(-50%)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "var(--space-6)"
+    }
   }, /*#__PURE__*/React.createElement(TransportButton, {
+    label: "Back ten seconds",
+    glyph: "fast_rewind",
+    size: 26,
+    box: 44,
+    onClick: onSkip
+  }), /*#__PURE__*/React.createElement(TransportButton, {
     label: playing ? "Pause" : "Play",
     glyph: playing ? "pause" : "play_arrow",
-    onClick: onTogglePlay
-  }), /*#__PURE__*/React.createElement("span", {
-    style: TIME
+    size: 34,
+    box: 64,
+    onClick: onTogglePlay,
+    style: {
+      background: "rgba(0,0,0,0.35)"
+    }
+  }), /*#__PURE__*/React.createElement(TransportButton, {
+    label: "Forward ten seconds",
+    glyph: "fast_forward",
+    size: 26,
+    box: 44,
+    onClick: onSkip
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      left: "12px",
+      right: "12px",
+      bottom: `${inset}px`,
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-2)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...TIME,
+      filter: OVER_MEDIA
+    }
   }, elapsed), /*#__PURE__*/React.createElement(Timeline, {
     progress: progress,
     elapsed: elapsed,
@@ -4366,35 +4476,42 @@ function VideoTransport({
   }), /*#__PURE__*/React.createElement("span", {
     style: {
       ...TIME,
-      opacity: 0.8
+      opacity: 0.85,
+      filter: OVER_MEDIA
     }
   }, duration), /*#__PURE__*/React.createElement(TransportButton, {
     label: muted ? "Turn sound on" : "Turn sound off",
     glyph: muted ? "volume_off" : "volume_up",
+    size: 20,
+    box: 28,
     onClick: onToggleMute
-  }));
+  }), fullscreen && /*#__PURE__*/React.createElement(TransportButton, {
+    label: "Full screen",
+    glyph: "fullscreen",
+    size: 20,
+    box: 28,
+    onClick: onFullscreen
+  })));
 }
 
-/* THE STREAM'S RUNG: a hairline at the very bottom edge of the screen, dragged
-   to seek. It says where the clip is without spending any of the frame, and it
-   is the only transport the stream has — a play/pause there would answer a
-   question nobody scrolling a stream is asking. */
+/* THE STREAM'S RUNG: a hairline dragged to seek, and the only transport the
+   stream has — a play/pause there would answer a question nobody scrolling a
+   stream is asking. It sits ABOVE the bottom bar, never on the screen's own
+   edge, where Android's gesture zone would swallow it. */
 function SeekLine({
   progress = 0,
   elapsed,
   duration
 }) {
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "0 0 0 0"
-    }
-  }, /*#__PURE__*/React.createElement(Timeline, {
+  return /*#__PURE__*/React.createElement(Timeline, {
     progress: progress,
     elapsed: elapsed,
     duration: duration,
     thin: true
-  }));
+  });
 }
+__ds_scope.GESTURE_ZONE = GESTURE_ZONE;
+__ds_scope.Timeline = Timeline;
 __ds_scope.VideoTransport = VideoTransport;
 __ds_scope.SeekLine = SeekLine;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/proposed/VideoControls.jsx", error: String((e && e.message) || e) }); }
@@ -4651,21 +4768,14 @@ function MediaAttachment({
     label: "Play this video",
     glyph: "play_arrow",
     onClick: () => {}
-  }), video && controls === "transport" && /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: "absolute",
-      left: 0,
-      right: 0,
-      bottom: 0
-    }
-  }, /*#__PURE__*/React.createElement(VideoTransport, {
+  }), video && controls === "transport" && /*#__PURE__*/React.createElement(VideoTransport, {
     playing: playing,
     elapsed: elapsed,
     duration: duration,
     progress: progress,
     muted: muted,
     onToggleMute: () => setMuted(!muted)
-  })));
+  }));
 }
 
 /* THE GALLERY IS A PAGER (jakob 2026-08-31). Every picture in a post shares the
@@ -5342,12 +5452,16 @@ const SR_ONLY = {
    never a trend arrow. Growth-dashboard framing is the failure mode §1 names by
    anti-goal. */
 
+/* OVER MEDIA (jakob, review round 1): on the stream this figure sits on the
+   clip, where onSurfaceVariant on photography is not quiet but unreadable. It
+   goes white with a shadow — the register is unchanged, the contrast is not. */
 function ExplainableNumber({
   label,
   value,
   unit,
   glyph,
-  onOpenDetail
+  onOpenDetail,
+  overMedia = false
 }) {
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -5367,8 +5481,11 @@ function ExplainableNumber({
       cursor: "pointer",
       fontFamily: "var(--font-sans)",
       fontSize: "var(--text-body-small)",
-      color: "var(--text-secondary)",
-      textAlign: "left"
+      color: overMedia ? "#fff" : "var(--text-secondary)",
+      textAlign: "left",
+      ...(overMedia ? {
+        filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))"
+      } : null)
     }
   }, glyph ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
     name: glyph,
@@ -5377,7 +5494,7 @@ function ExplainableNumber({
     style: SR_ONLY
   }, label)) : /*#__PURE__*/React.createElement("span", null, label), /*#__PURE__*/React.createElement("span", {
     style: {
-      color: "var(--on-surface)",
+      color: overMedia ? "#fff" : "var(--on-surface)",
       fontWeight: 500
     }
   }, value, unit ? /*#__PURE__*/React.createElement("span", {
@@ -5399,9 +5516,19 @@ const { Icon, VideoTransport, useGlobalMute } = __ds_scope;
    reel round).
 
    THE RULES THIS ENCODES:
-   · The frame is never cut here. `contain`, centred, as large as the viewport
+   · IT IS THE WHOLE SURFACE, on BLACK, with nothing behind it. Not a scrim over
+     the post: a viewer you can still read a card through is not full screen, and
+     the ground has to be black so the frame's own edges are the only edges.
+   · The frame is never cut here. `contain`, centred, as large as the surface
      allows — a viewer that crops is not a viewer. This is the surface the feed
      card's 4:5 clamp exists against: whatever a card crops, the viewer restores.
+   · THE STAGE IS POSITIONED, NEVER FLEX-SIZED. The media fills an absolutely
+     inset box and is fitted inside it, so containment never depends on the
+     frame's own proportions. Sizing it with `flex: 1` and a percentage
+     `max-height` is what broke this component's first cut: the percentage
+     resolved against an indefinite height, a wide frame took its intrinsic size,
+     and everything after it — the transport above all — was pushed outside the
+     screen entirely.
    · It is a place you back out of: an X, a swipe DOWN, Escape, and the backdrop
      all close it, and it never changes the underlying route. The X rather than
      a back arrow, because the reader is dismissing a layer, not walking a step
@@ -5461,6 +5588,11 @@ function MediaViewer({
     },
     className: "cg-state cg-focus",
     style: {
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+      [direction < 0 ? "left" : "right"]: "4px",
+      zIndex: 3,
       width: "var(--touch-target-min)",
       height: "var(--touch-target-min)",
       display: "grid",
@@ -5468,10 +5600,10 @@ function MediaViewer({
       border: "none",
       background: "transparent",
       borderRadius: "var(--radius-full)",
-      color: "var(--inverse-on-surface)",
+      color: "#fff",
+      filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))",
       cursor: "pointer",
-      padding: 0,
-      flex: "none"
+      padding: 0
     }
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "arrow_back",
@@ -5479,26 +5611,67 @@ function MediaViewer({
       transform: "scaleX(-1)"
     }
   }));
+  const media = item.kind === "video" ? /*#__PURE__*/React.createElement("video", {
+    src: item.src,
+    poster: item.poster,
+    autoPlay: true,
+    playsInline: true,
+    "aria-label": item.alt,
+    style: {
+      position: "absolute",
+      inset: 0,
+      width: "100%",
+      height: "100%",
+      objectFit: "contain"
+    }
+  }) : /*#__PURE__*/React.createElement("img", {
+    src: item.src,
+    alt: item.alt ?? "",
+    "aria-hidden": item.alt ? undefined : "true",
+    style: {
+      position: "absolute",
+      inset: 0,
+      width: "100%",
+      height: "100%",
+      objectFit: "contain"
+    }
+  });
   return /*#__PURE__*/React.createElement("div", {
     role: "dialog",
     "aria-modal": "true",
     "aria-label": "Media",
     onClick: onClose,
     style: {
-      position: "fixed",
+      position: "absolute",
       inset: 0,
       zIndex: 60,
-      background: "var(--scrim-dialog)",
-      display: "flex",
-      flexDirection: "column"
+      background: "#000",
+      overflow: "hidden"
     }
   }, /*#__PURE__*/React.createElement("div", {
+    onClick: event => event.stopPropagation(),
     style: {
+      position: "absolute",
+      inset: 0
+    }
+  }, media, item.kind === "video" && /*#__PURE__*/React.createElement(VideoTransport, {
+    playing: playing,
+    elapsed: elapsed,
+    duration: duration,
+    progress: progress,
+    muted: muted,
+    fullscreen: false,
+    onToggleMute: () => setMuted(!muted)
+  })), count > 1 && arrow(-1), count > 1 && arrow(1), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      top: 0,
+      left: 0,
       display: "flex",
       alignItems: "center",
       gap: "var(--space-2)",
       padding: "8px",
-      flex: "none"
+      zIndex: 3
     }
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -5513,7 +5686,8 @@ function MediaViewer({
       border: "none",
       background: "transparent",
       borderRadius: "var(--radius-full)",
-      color: "var(--inverse-on-surface)",
+      color: "#fff",
+      filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))",
       cursor: "pointer",
       padding: 0
     }
@@ -5522,68 +5696,10 @@ function MediaViewer({
   })), count > 1 && /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: "var(--text-label-large)",
-      color: "var(--inverse-on-surface)"
+      color: "#fff",
+      filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))"
     }
-  }, current + 1, " of ", count)), /*#__PURE__*/React.createElement("div", {
-    onClick: event => event.stopPropagation(),
-    style: {
-      flex: 1,
-      minHeight: 0,
-      display: "flex",
-      alignItems: "center",
-      gap: "var(--space-1)",
-      padding: "0 4px 16px"
-    }
-  }, count > 1 && arrow(-1), item.kind === "video" ?
-  /*#__PURE__*/
-  /* The transport is the product's own, not the browser's default set:
-     one control vocabulary across the detail view, the stream and here,
-     rather than three players that each look like their platform. */
-  React.createElement("div", {
-    style: {
-      flex: 1,
-      minWidth: 0,
-      position: "relative",
-      display: "flex",
-      alignItems: "center"
-    }
-  }, /*#__PURE__*/React.createElement("video", {
-    src: item.src,
-    poster: item.poster,
-    autoPlay: true,
-    playsInline: true,
-    "aria-label": item.alt,
-    style: {
-      flex: 1,
-      minWidth: 0,
-      maxHeight: "100%",
-      objectFit: "contain"
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: "absolute",
-      left: 0,
-      right: 0,
-      bottom: 0
-    }
-  }, /*#__PURE__*/React.createElement(VideoTransport, {
-    playing: playing,
-    elapsed: elapsed,
-    duration: duration,
-    progress: progress,
-    muted: muted,
-    onToggleMute: () => setMuted(!muted)
-  }))) : /*#__PURE__*/React.createElement("img", {
-    src: item.src,
-    alt: item.alt ?? "",
-    "aria-hidden": item.alt ? undefined : "true",
-    style: {
-      flex: 1,
-      minWidth: 0,
-      maxHeight: "100%",
-      objectFit: "contain"
-    }
-  }), count > 1 && arrow(1)));
+  }, current + 1, " of ", count)));
 }
 __ds_scope.MediaViewer = MediaViewer;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/proposed/MediaViewer.jsx", error: String((e && e.message) || e) }); }
@@ -8349,6 +8465,10 @@ __ds_ns.MediaAttachment = __ds_scope.MediaAttachment;
 __ds_ns.MediaGallery = __ds_scope.MediaGallery;
 
 __ds_ns.MediaViewer = __ds_scope.MediaViewer;
+
+__ds_ns.GESTURE_ZONE = __ds_scope.GESTURE_ZONE;
+
+__ds_ns.Timeline = __ds_scope.Timeline;
 
 __ds_ns.VideoTransport = __ds_scope.VideoTransport;
 

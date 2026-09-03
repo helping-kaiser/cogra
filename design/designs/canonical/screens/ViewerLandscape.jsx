@@ -8,8 +8,10 @@
    strips of black. That is the opposite of a card, where a clip fills its frame
    and never letterboxes: a card is a layout, and this is the frame itself.
 
-   The chrome is the same chrome: the X, and the full transport. Nothing is added
-   for landscape and nothing is taken away. */
+   The chrome is the same chrome — the X, the centred transport, the bar inset
+   from the bottom edge. Nothing is added for landscape and nothing taken away,
+   and the bar's inset matters more here than anywhere: a rotated phone puts its
+   gesture zone along a long edge the thumb rests on. */
 export const FRAME = { width: 844, height: 390 };
 
 const CLIP_CANOE = {
@@ -21,9 +23,5 @@ const CLIP_CANOE = {
 };
 
 export function Screen() {
-  return (
-    <div data-theme="dark" style={{ position: "absolute", inset: 0, background: "#000" }}>
-      <MediaViewer items={[CLIP_CANOE]} index={0} onClose={() => {}} elapsed="0:26" duration="1:12" progress={0.36} />
-    </div>
-  );
+  return <MediaViewer items={[CLIP_CANOE]} index={0} onClose={() => {}} elapsed="0:26" duration="1:12" progress={0.36} />;
 }

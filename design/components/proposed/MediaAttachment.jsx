@@ -264,16 +264,14 @@ export function MediaAttachment({
           control moves into it, because a disc beside a bar would be two pieces
           of chrome for one clip. */}
       {video && controls === "transport" && (
-        <div style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
-          <VideoTransport
-            playing={playing}
-            elapsed={elapsed}
-            duration={duration}
-            progress={progress}
-            muted={muted}
-            onToggleMute={() => setMuted(!muted)}
-          />
-        </div>
+        <VideoTransport
+          playing={playing}
+          elapsed={elapsed}
+          duration={duration}
+          progress={progress}
+          muted={muted}
+          onToggleMute={() => setMuted(!muted)}
+        />
       )}
     </div>
   );
