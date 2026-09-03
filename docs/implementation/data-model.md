@@ -177,9 +177,15 @@ version it belongs to.
 A manifest entry is a nested integer-keyed map: key 0 the
 **digest** of the bytes (32-byte bstr, SHA-256), key 1 the
 **mime** they are to be read as (tstr), key 2 the **alt text**
-describing them (tstr, omitted when there is none). That is what
-a reader needs to render honestly — which bytes, what type, what
-the picture is of. Alt text is witnessed alongside the body
+describing them (tstr, omitted when there is none), key 3 the
+**cover digest** for a video (32-byte bstr, omitted on a still and
+on a video shown without a poster). That is what a reader needs to
+render honestly — which bytes, what type, what the picture is of,
+and which still stands in for a clip that is not playing. The cover
+is witnessed because it is the face the post wears at rest: an
+author signs the face as they sign the body, and an edit that
+changes it is a new version saying so. Alt text is witnessed
+alongside the body
 because it is what a blind reader *reads*; everything a server
 measured — aspect ratio, size, duration — stays out, so the
 author signs nothing they did not author. Gallery order is the
@@ -479,12 +485,6 @@ CREATE TABLE media_attachments (
     mime_type        TEXT         NOT NULL,
     size_bytes       BIGINT,
     options          JSONB        NOT NULL DEFAULT '{}'::jsonb,
-    -- The video poster: an asset pointing at another asset, so a poster
-    -- is redacted with its video and the removal cascade can see the
-    -- link. Stated at the insert because the row is immutable after it,
-    -- and never the row itself.
-    cover_media_id   UUID         REFERENCES media_attachments(id)
-        CHECK (cover_media_id IS NULL OR cover_media_id <> id),
     -- The tombstone shape every version table uses: redaction removes
     -- the bytes and leaves the mark (primitive/layers.md §5).
     redaction_reason TEXT,
@@ -898,11 +898,13 @@ gallery rows and renders as it stood.
 
 ```sql
 -- Junction: post versions → attachments (ordered, optionally a cover,
--- each entry carrying its witnessed description). display_order,
--- is_cover, and alt_text are parent-version facts about the
--- relationship, not properties of the asset — each caches what the
--- version's manifest witnessed (array position; per-asset map key 2),
--- which is why the same asset can read differently in two parents.
+-- each entry carrying its witnessed description and, for a video, the
+-- poster it is covered by). display_order, is_cover, alt_text and
+-- cover_media_id are parent-version facts about the relationship, not
+-- properties of the asset — each caches what the version's manifest
+-- witnessed (array position; per-asset map keys 2 and 3), which is why
+-- the same asset can read differently in two parents and why an edit
+-- can change a cover without touching an immutable clip row.
 CREATE TABLE post_attachments (
     post_version_id BIGINT   NOT NULL
         REFERENCES post_versions(version_id) ON DELETE CASCADE,
@@ -910,16 +912,21 @@ CREATE TABLE post_attachments (
     display_order   SMALLINT NOT NULL DEFAULT 0,
     is_cover        BOOLEAN  NOT NULL DEFAULT FALSE,
     alt_text        TEXT,
+    cover_media_id  UUID     REFERENCES media_attachments(id)
+        CHECK (cover_media_id IS NULL OR cover_media_id <> attachment_id),
     PRIMARY KEY (post_version_id, attachment_id)
 );
 
--- Junction: comment versions → attachments (ordered, described).
+-- Junction: comment versions → attachments (ordered, described, a
+-- video carrying its poster).
 CREATE TABLE comment_attachments (
     comment_version_id BIGINT   NOT NULL
         REFERENCES comment_versions(version_id) ON DELETE CASCADE,
     attachment_id      UUID     NOT NULL REFERENCES media_attachments(id),
     display_order      SMALLINT NOT NULL DEFAULT 0,
     alt_text           TEXT,
+    cover_media_id     UUID     REFERENCES media_attachments(id)
+        CHECK (cover_media_id IS NULL OR cover_media_id <> attachment_id),
     PRIMARY KEY (comment_version_id, attachment_id)
 );
 
@@ -1423,18 +1430,20 @@ the movie duration an MP4's header states, or the sum of an
 animated WebP's frame durations. A single-frame picture has none
 to state, so it reads null.
 
-A per-asset cover (the video poster) is a `cover_media_id` foreign
-key to `media_attachments` — an asset pointing at another asset,
-so the poster is redacted with its video and the removal cascade
-can see it. It is stated at the insert, the asset row being
-immutable once written, and a row may not name itself. The
-junction-side `is_cover` is a different concern: it selects which
-attachment leads a multi-asset parent.
+A video's cover (the poster) is a `cover_media_id` foreign key to
+`media_attachments` on the **junction row**, beside `alt_text` — a
+parent-version fact about the placement, not a property of the
+asset, which is why an edit can name a different cover without
+touching a clip whose row is immutable once written. An entry may
+not name itself as its own poster. The poster is redacted with its
+video and the removal cascade can see the link. The junction-side
+`is_cover` is a different concern: it selects which attachment leads
+a multi-asset parent.
 
-The orphan sweep counts that link as a reference like any other,
-so a poster survives as long as the video naming it — without
-that probe the sweep would collect the cover of a clip that is
-still there.
+The orphan sweep counts that link as a reference like any other, so
+a poster survives as long as a version naming it — without that
+probe the sweep would collect the cover of a clip that is still
+there.
 
 ### User-scoped FKs are defense-in-depth, not deletion mechanics
 

@@ -1837,10 +1837,12 @@ file that is too big or in a format nothing here reads.
 [api-spec.md](../docs/implementation/api-spec.md), so no lane
 re-invents the refusal states): the stored formats are **WebP and
 MP4** (H.264 video, AAC audio), both **sniffed from the bytes**, never
-trusted from a declared type. **GIF converts on the device**, so the
-picker never refuses a GIF; an **animated WebP is a still**. The
-unknown-format refusal therefore fires only for a file that is neither
-a decodable image nor an H.264/AAC MP4 *after* any device-side
+trusted from a declared type. **A still GIF converts on the device; an
+animated one is refused with words**, on both platforms — neither has
+a documented way to encode animated WebP, and a silent conversion to
+one frame would drop the thing the author picked. An **animated WebP
+is a still**. The unknown-format refusal fires for a file that is
+neither a decodable image nor an H.264/AAC MP4 *after* any device-side
 conversion. A frame chosen as a cover is **extracted on the device and
 uploaded as the account's own picture** — the cover is always an asset
 the author holds.
@@ -1885,6 +1887,102 @@ that no single page owned.
   the same reason: its face diverges, the pad on press-and-hold and
   the key gate on a tap. The applicant gaps stay in the census; their
   boards are still owed.
+
+### The video conform round — 2026-09-03
+
+Everything the video slice built to a ruling without a board, plus the
+two mismatches the apps shipped against each other (backlog item 32,
+and the parts of item 33 that could be settled without drawing a feed).
+
+- **Playback stands as drawn.** A video on any reading surface wears
+  the sound control and nothing else — no play/pause, no duration
+  pill, at both scales. Presence on screen is the policy, and a card
+  is a place you are passing through. The real controls belong to the
+  fullscreen viewer, which the roadmap now owns; web strips the
+  transport controls it shipped inline.
+- **The back arrow gates like the X.** Any leave of a non-empty
+  comment asks through DiscardConfirm; an empty one leaves at once.
+  Two ways out of one screen that lose the same writing cannot behave
+  differently — the arrow being "one stage back" is a fact about
+  navigation, not a licence to discard silently. Post composers keep
+  their plain leave: a post draft is kept, so nothing is at stake
+  there.
+- **A file is judged on its own before it is judged against the
+  body.** Size and format answer first, the grammar second. So a clip
+  over the post cap is refused by its cap, and a clip the product
+  would have taken is refused by the mixed-kind line — one file, one
+  line, the nearest reason. The order is what lets every refusal the
+  step can utter stand honestly on one board.
+- **The refusal vocabulary is complete at both scales.** The post's
+  video cap joins the comment's; **mixed kinds** get words at last
+  ("A post carries pictures or one video, not both.", and the comment
+  twin); **count overflow stops truncating in silence** — an eleventh
+  picture in a post, a fifth in a comment, refuses like anything else.
+  Both refusal boards now stage a **full tray**, because a full tray
+  is what makes the count and mixed-kind rows true beside the others.
+- **Staged content wins a mixed selection.** With something already in
+  the body, the newcomer of the other kind is the one refused. From a
+  fresh mixed batch with nothing staged, **the pictures are kept** and
+  the video refuses: pictures are the plural case and the kind a batch
+  usually means, and keeping the several over the one loses less.
+- **A video is the whole body, and the surface says so.** Once a clip
+  is staged the add control is gone — the grid stops taking picks at
+  post scale, the "+ Add" disappears at comment scale — and a quiet
+  line takes its place: *A video is the whole post. Its cover comes
+  next.* / *A video is the whole comment. Give it a cover below.* An
+  absent control explains nothing on its own. Web takes the post
+  state 1:1 (the drop region and the file dialog play the grid's
+  part), which is the same blessing that puts web's refusals on
+  `ComposePickedErrors` rather than a web board of their own.
+- **Four cover frames: 1s, 10%, 50%, 90%**, deduped on a clip short
+  enough that two land on the same frame — offering one picture twice
+  is a choice that isn't one. 1s clears the fade-in black that t=0 so
+  often is.
+- **A frame needs no crop; a gallery picture does.** An extracted
+  frame already carries the clip's shape. A picture of your own can
+  disagree with it, so it goes through a crop **locked to the video's
+  display shape** at the scale it will be seen — the clip's own ratio
+  in a post, the comment pager's square in a comment — and comes back
+  to the row that asked. There are no shape chips: choosing a shape
+  there would let the cover disagree with the thing it is the face
+  of. `ComposeCover`'s back arrow reaches the pick, not the crop; the
+  video path never crosses it.
+- **The cover changes at edit; the clip never does.** A new cover is a
+  new picture the author uploads and the attachment points at from the
+  edit's own signing — a layer on the attachment, never an alteration
+  of the video ([api-spec.md](../docs/implementation/api-spec.md)).
+  **Frames are not re-offered**, because extraction needs a source
+  file the device may no longer hold, so the gallery is the one way
+  in. The clip's only move is to leave whole: swapping it would make
+  the edit a different post wearing the old one's history.
+- **A failed upload is not a refused file.** A refusal is an answer
+  and retrying cannot change it; a failed upload is a fault and gets
+  **Retry beside Remove**, like every other transport fault in the
+  product. Both apps ship the refusal's no-Retry form for a clip that
+  didn't send, which tells the author the file was wrong when it
+  wasn't.
+- **The describe sheet has two shapes.** *Describe the video* takes
+  one entry for the whole clip and never offers the cover a field of
+  its own. Both shapes — and the describe row that opens them — carry
+  the reason permanently under the title: *Read aloud to people who
+  can't see it.* Someone deciding whether to write a description needs
+  to know who is listening at the moment of deciding, not behind a "?"
+  they will not open.
+- **The cover is the clip's face wherever the clip isn't running.**
+  First paint before autoplay; every still representation (a quoted
+  target, a history row); and any context where autoplay is
+  suppressed — reduced motion, data saver. In the feed the cover holds
+  until playback first starts and **never returns**: a clip that stops
+  being the playing one freezes on the frame it reached, because
+  snapping back to the cover would erase what the reader just watched.
+  **One clip plays at a time, at 70% visibility or more** — android's
+  gate, blessed.
+- **Vertical video exists, and its feed frame is next round's
+  question.** 9:16 reel-style and 16:9 horizontal clips are both real;
+  **square is the comment scale's shape only**, so a post card
+  squaring everything is a bug. How the two ratios sit in a card is
+  the lead question of the next round (backlog item 33) and is
+  deliberately undrawn here.
 
 ## 14. Index
 

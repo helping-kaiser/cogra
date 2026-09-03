@@ -869,12 +869,15 @@ type MediaAttachment {
   status: FieldModerationStatus!
   "Layout hints the frontend reads to reserve space before load."
   options: MediaOptions!
-  "The poster this asset is covered by — the still a video shows before
-   playback and wherever autoplay does not run. Null unless the asset
-   names one. A different question from the gallery's `isCover`, which
-   selects the attachment that leads a multi-asset post; this one says
-   what covers a single asset, and it is a real foreign key so the
-   poster is redacted with its video (data-model.md)."
+  "The poster this placement is covered by — the still a video shows
+   before playback and wherever autoplay does not run. Resolved from
+   the referencing version's junction row, like `altText`, so an edit
+   can name a different cover without touching the video. Null unless
+   the placement names one, and outside a placement. A different
+   question from the gallery's `isCover`, which selects the attachment
+   that leads a multi-asset post; this one says what covers a single
+   asset, and it is a real foreign key so the poster is redacted with
+   its video (data-model.md)."
   coverMedia: MediaAttachment
   "The account that uploaded the asset."
   author: User
@@ -2781,6 +2784,13 @@ input AttachmentInput {
    parents, and correcting it is a new version of the parent,
    never a re-upload."
   altText: String
+  "The video's poster — an asset this author uploaded, either a frame
+   the client cut out of the clip or a picture chosen instead. Only a
+   video placement takes one. Authored here for the same reason
+   altText is: it is a fact about this placement, so changing the
+   cover is a new version of the parent rather than a re-upload of
+   the clip."
+  coverMediaId: UUID
 }
 
 "A topic declaration — one Tag record toward the canonical Type
@@ -3021,15 +3031,11 @@ input PrepareProfileUpdateInput {
  the prepare inputs' AttachmentInput, so a picture can upload the
  moment it is picked and be described any time before signing —
  nothing gates on the other. Layout hints (aspect ratio,
- duration) are derived server-side."
+ duration) are derived server-side. A video's cover is not named
+ here: like a description, it is a fact about a placement, authored
+ on AttachmentInput at prepare."
 input UploadMediaInput {
   file: Upload!
-  "The video's poster — an asset this account already uploaded, either
-   a frame the client pulled out of the clip or a picture the author
-   chose instead. Only a video takes one, and it must be an image this
-   account uploaded and still holds. Named here because an asset row is
-   immutable once written: the cover is part of what the video is."
-  coverMediaId: UUID
 }
 type UploadMediaPayload { media: MediaAttachment! }
 
@@ -3081,6 +3087,23 @@ formation error naming only a byte count. Outside a placement
 `altText` reads null: a fresh upload has nothing to describe yet,
 and `PrepareProfileUpdateInput` authors no description for an
 avatar.
+
+**A video and its cover are two contents.** The cover is a picture
+asset in its own right — uploaded by the client like any other, held
+by the account that uploaded it, and never produced server-side. The
+video does not contain it; a placement points at it, exactly as a
+placement carries the description it was witnessed with.
+
+That is what makes a cover **changeable at an edit**. The author
+uploads a new picture and the edit's `AttachmentInput` names it, so
+the attachment's cover pointer swaps when the edit is signed — a new
+layer over the same clip, witnessed with the rest of the new version,
+with the superseded version keeping the cover it landed with. The
+video entity is never altered: its bytes, digest and asset row are
+what they were, and a landed record still says what it said. Removing
+the clip removes the placement, cover pointer and all; swapping the
+clip itself is not an edit but a different body, and the wizard
+offers it as removal rather than exchange.
 
 **The author's own sensitive mark.** `sensitive` is the seal's
 switch and `sensitiveReason` the line the sheet offers; both ride
@@ -3160,9 +3183,16 @@ says so.
   transcodes**: clients re-encode on device, so the bytes that
   arrive are the bytes that are stored.
 - **Animation is a still.** An animated WebP is accepted as the
-  picture it is, and **GIF converts on the device** — one image
-  format reaches the server, and an encoder never has to live in
-  the upload path to make that true.
+  picture it is, and **a still GIF converts on the device** — one
+  image format reaches the server, and an encoder never has to live
+  in the upload path to make that true. **An animated GIF is refused
+  on the device, with words.** Neither client platform has a
+  documented way to encode animated WebP, so converting one would
+  silently keep a single frame and drop what the author picked;
+  refusing says so instead. Nothing about this reaches the server —
+  an animated GIF never becomes an upload — but the refusal is part
+  of the format contract the clients implement, so it is stated
+  here with the rest of it.
 - **10 MiB per picture, 100 MiB per video.** The video cap is
   parity with the body rather than with one picture: a post is ten
   pictures or one video, so ten stills at their cap and one video
@@ -3178,9 +3208,9 @@ says so.
   the container and reported as a fact about the asset, never
   enforced as a limit on it.
 - **A body is pictures or one video**, on a comment as on a post. A
-  video is the whole body, its poster riding the asset rather than a
-  second gallery entry, and an attachment list mixing the two is
-  refused at `["attachments", "<i>", "mediaId"]`.
+  video is the whole body, its poster riding the placement rather
+  than a second gallery entry, and an attachment list mixing the two
+  is refused at `["attachments", "<i>", "mediaId"]`.
 - **A comment's video is capped at 50 MiB**, half a post's, the same
   asymmetry its four pictures against a post's ten already carries;
   the cover rides the still cap either way. The cap is checked when
@@ -3192,8 +3222,8 @@ says so.
 - **A poster is the uploader's own still.** `coverMediaId` names
   an asset this account uploaded and still holds; a cover that is
   another account's, a video, removed, or absent is refused at
-  `["coverMediaId"]`, as is a cover named on something that is not
-  a video.
+  `["attachments", "<i>", "coverMediaId"]`, as is a cover named on
+  an attachment that is not a video.
 - **Ten pictures per post, four per comment — or, at either
   scale, one video with its cover**, checked whole before a single
   act is staged, each refusal naming the offender at

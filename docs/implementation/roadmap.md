@@ -373,21 +373,26 @@ the start — and delivery splits by content kind.
 
 ### Slice 2.5.2 — Video
 
-- Video through the same service: the per-asset poster as a real
-  foreign key on the asset row, so a poster is redacted with its
-  video ([data-model.md](data-model.md)); container and codec
-  validation; per-type size caps; `durationMs` reading a value.
+- Video through the same service: the poster as a real foreign key
+  on the attachment's junction row, so a poster is redacted with its
+  video and an edit can name a different one
+  ([data-model.md](data-model.md)); container and codec validation;
+  per-type size caps; `durationMs` reading a value.
 - The wizard's cover step, and animated WebP and GIF.
 - The upload accepts **MP4 / H.264 + AAC** at 100 MiB and animated
-  WebP at the picture's own cap, validated and never transcoded;
-  GIF converts on the device. A video is the whole body and its
-  poster rides the asset, named on the upload. A comment carries
-  one too, at half the byte budget.
+  WebP at the picture's own cap, validated and never transcoded; a
+  still GIF converts on the device and an animated one is refused
+  there. A video is the whole body and its poster rides the
+  placement, named at prepare. A comment carries one too, at half
+  the byte budget.
 - Metadata is stripped on the device and **checked again here**,
   for video as for pictures: a clean file is stored untouched, a
   faulty strip is repaired.
-- Autoplay muted on visibility with one global sticky mute, and
-  the viewer's real controls — settled design, unbuilt.
+- **Inline playback is sound-only**: autoplay muted on visibility
+  with one global sticky mute, one clip playing at a time at 70%
+  visibility or more, no play/pause and no duration pill on a
+  reading surface. Transport controls belong to the fullscreen
+  viewer (2.5.3), not to a card someone is scrolling past.
 - **Hand test:** post a video from the phone; watch it autoplay
   muted in the web feed and take sound on tap.
 - **Surfaces:** backend, API, Android, web.
@@ -402,8 +407,16 @@ from the media path and carrying their own doc write-back:
   contract does not yet carry.
 - **Edit as one batch**: an edit carrying its topic and citation
   acts together.
-- Media in the **comment composer**, the **media viewer**, and
-  the full feed-card redesign pass.
+- Media in the **comment composer**, and the full feed-card
+  redesign pass.
+- **The fullscreen media viewer**, reached by tapping media on the
+  post detail. Pictures pinch-zoom; a video plays with **real
+  transport controls** — the scrubber, play/pause, the elapsed
+  time — and the phone rotates to landscape for it. The viewer
+  **owns** those controls: inline surfaces stay sound-only, so
+  there is one place in the product where a reader is watching
+  rather than passing through, and one place the controls have to
+  work.
 - **Surfaces:** backend, API, Android, web.
 
 ### Slice 2.6 — Private viewer state
@@ -465,6 +478,13 @@ from the media path and carrying their own doc write-back:
   controls toward the same node — the references they authored
   toward that Profile — and tells them, so the author can close
   those through the citation withdrawal that owns them.
+- **The reel view** — a vertical clip opens fullscreen and swipes
+  through to the next one. The stream is **the default feed
+  narrowed to clips**: the same slice, the same graph ranking, one
+  kind admitted. There is no second algorithm and no separate
+  ranker, because a feed a reader did not choose the shape of is
+  exactly what this product refuses — and the no-AI-in-ranking rule
+  has no exception for a surface that is fun.
 - **Unhide topic follow** — the follow/unfollow control, backend-
   accepted since 2.3 (`prepareStance` toward the Hashtag) but
   hidden from the client until the topic feed exists to receive it.
@@ -630,6 +650,15 @@ On the roadmap but outside the slice order; each names its gate.
   ([open-questions.md Q25](../open-questions.md),
   [miner-api.md](miner-api.md)); revisit when someone actually wants
   to operate a paid miner.
+- **Change histories on every versioned thing** — posts, comments,
+  stances, profiles and chat messages all keep their versions, and
+  the reader can see them: a history surface reached from the
+  thing's own three-dot menu, showing what changed and when. It
+  reads rows that already exist and mints no records, so it is a
+  read surface over the version tables rather than a slice of its
+  own. Gate: each kind joins as its versions ship — posts and
+  comments from slice 2, profiles from 2.1, stances from 2.2, chat
+  messages at slice 5.
 - **Walk-the-graph frontend** — a visual graph-exploration client;
   parked product idea. Neighborhood queries over the record mirror
   suffice until it earns its build.

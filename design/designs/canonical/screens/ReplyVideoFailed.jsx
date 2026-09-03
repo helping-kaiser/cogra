@@ -1,36 +1,24 @@
-/* The reply composer's VIDEO state (comment video round, 2026-09-02): a
-   comment carries up to four pictures OR one video and its cover, never both
-   kinds — the post's grammar at comment caps. Entry is unchanged: "+ Add"
-   opens the platform's own picker and a video pick lands here, so there is no
-   pick stage and no crop; the video uploads at pick like a comment's
-   pictures do.
+/* The clip that didn't upload (video conform round, 2026-09-03).
 
-   The frame is the comment pager's fixed square at comment scale (220px), the
-   whole frame fitted inside it — a comment never turns into a post. The cover
-   row is ComposeCover's ("The video's face") scaled down and inlined: the
-   comment composer is one screen, so the face is picked here rather than in a
-   stage of its own. Its markup is screen-local because the frame strip is one
-   picture framed three ways, which no component draws.
+   A FAILED UPLOAD IS NOT A REFUSED FILE. A refusal is an answer — the file is
+   too big, or nothing here reads it — and retrying cannot change it, so the
+   refusal row drops Retry and offers only Remove it. A failed upload is a
+   fault: the file was fine and the network wasn't. Faults get Retry, the way
+   every other transport fault in the product does, and `UploadErrorLine`
+   already carries both ways out. Shipping a clip failure with the refusal's
+   no-Retry form told the author the file was wrong when it wasn't.
 
-   WEB TAKES THIS BOARD 1:1 (jakob 2026-09-02): the file dialog and the
-   composer's drop-anywhere path play the picker's part, and nothing else about
-   the state differs, so no web board is drawn — the avatar flow's blessing,
-   again.
+   The tile wears MediaThumb's failed badge and dims; the words and the ways
+   out sit beside the row rather than inside 220px of preview. The × is gone
+   from the tile — Remove it is in the line, so the two removals never sit two
+   pixels apart meaning the same thing. The footer's "it uploads while you
+   write" is gone with the upload it described: the error line is the state
+   now, and a second sentence about uploading would contradict it.
 
-   A VIDEO TAKES ONE DESCRIPTION for the whole clip (jakob 2026-09-02) — the
-   same counter row a comment's pictures wear, reading the video instead. The
-   cover takes none of its own: it is the video's face, not a second picture.
-
-   THE ADD CONTROL IS GONE AND A LINE SAYS WHY (jakob 2026-09-03): "A video is
-   the whole comment. Give it a cover below." An absent control explains
-   nothing on its own, and the reader who came to add a second thing deserves
-   the reason plus what to do next, in the space the control left.
-
-   FOUR FRAMES, NOT THREE (jakob 2026-09-03): 1s, 10%, 50%, 90% of the clip.
-   1s clears the fade-in black that t=0 so often is, and the three ratios
-   spread the rest. On a clip short enough that two samples land on the same
-   frame they collapse and fewer tiles show — offering the same picture twice
-   is a choice that isn't one. */
+   THE COVER ROW STAYS. Frames are cut from the file on the device, so they
+   exist whether or not the bytes ever reached CoGra; the cover is a separate
+   upload of a separate asset. Choosing one while the clip retries is not
+   wasted work. */
 
 function CoverRow() {
   const tile =
@@ -69,7 +57,7 @@ export function Screen() {
   return (
     <>
       <WizardHeader title="Reply" leaveLabel="Leave — the reply is discarded" />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "8px 24px 24px", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 56, padding: "8px 12px", borderRadius: "var(--radius-small)", background: "var(--surface-container-highest, var(--surface-container-high))" }}>
           <img src="ava1.jpg" alt="" style={{ width: 32, height: 32, borderRadius: "var(--radius-full)", objectFit: "cover", flex: "none" }} />
           <span style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
@@ -90,18 +78,14 @@ export function Screen() {
         <MediaThumb
           src="comment-camera.jpg"
           alt="A person holding a film camera up to the light."
-          width={220}
-          height={220}
+          width={200}
+          height={200}
           fit="contain"
           video
-          duration="0:18"
-          onRemove={() => {}}
-          removeLabel="Remove this video"
+          failed
         />
 
-        <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          A video is the whole comment. Give it a cover below.
-        </p>
+        <UploadErrorLine message="That video didn't upload." onRetry={() => {}} onRemove={() => {}} />
 
         <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} />
 
@@ -109,9 +93,6 @@ export function Screen() {
 
         <div style={{ flex: 1 }} />
 
-        <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          Words first — a video can join them, and it uploads while you write.
-        </p>
         <Button style={{ width: "100%" }}>Next</Button>
       </div>
     </>
