@@ -400,6 +400,16 @@
       "description": "Add a topic on the details step opens the picker over every topic a post can carry — the picker itself is still owed.",
       "start": { "board": "ComposeDetails" },
       "end": { "board": "ComposeDetails", "via": 7 }
+    },
+    {
+      "name": "cite-a-post",
+      "description": "The reader's overflow — on a post or on a comment, the same two rows — opens a new post that already points at what it was opened from. A citation is declared at creation, so the journey ends where the reference is already staged.",
+      "start": { "control": "Cite in a new post" }
+    },
+    {
+      "name": "mention-someone",
+      "description": "Mention in a new post on another's profile stages exactly what citing stages — a Reference edge. The word records only that the far end is a person.",
+      "start": { "control": "Mention in a new post" }
     }
   ]
 }
