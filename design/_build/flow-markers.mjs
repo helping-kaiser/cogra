@@ -776,6 +776,23 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+// The entry round's boards, componentized off the real masters (input-errors
+// bite 1, 2026-09-03): PasswordField and Checkbox bring their own real
+// <input>/<button> elements the hand markup only drew as shapes, so every
+// field and toggle carries its own number now, matched by `id` where the
+// field starts empty (no distinguishing value text to key off).
+Object.assign(FLOW_MARKERS, {
+  Join: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="handle"', tag: "input" },
+    { n: 3, find: 'id="email"', tag: "input" },
+    { n: 4, find: 'id="password"', tag: "input" },
+    { n: 5, find: 'aria-label="Show password"', tag: "button" },
+    { n: 6, find: ">Create account</button>", tag: "button" },
+    { n: 7, find: ">Already have an account? Sign in</button>", tag: "button" },
+  ],
+});
+
 /* The band's Chats affordance (jakob 2026-09-01): CograBand carries it on
    every tab root, so every wired band board gets the marker in one sweep —
    the number is each board's next free one, the edge points at the chat
