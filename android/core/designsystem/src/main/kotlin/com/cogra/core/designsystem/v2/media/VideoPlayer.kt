@@ -201,7 +201,14 @@ fun VideoPlayer(
                 // The end of every flash, whatever caused it — and the
                 // fact the stage remembers, so the next surface this
                 // clip lands on does not put the cover back.
-                VideoTrace.firstFrame(traced)
+                //
+                // Media3 calls this again on every loop of a card clip
+                // (`REPEAT_MODE_ONE` is a period transition, and each
+                // period renders its own first frame), so the trace asks
+                // the stage rather than the player: a line here means a
+                // clip genuinely arrived, not that a four-second loop
+                // came round again.
+                if (!VideoStage.hasRendered) VideoTrace.firstFrame(traced)
                 VideoStage.rendered()
             }
         }
