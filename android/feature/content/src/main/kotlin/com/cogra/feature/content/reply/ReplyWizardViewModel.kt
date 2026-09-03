@@ -169,7 +169,7 @@ class ReplyWizardViewModel @Inject constructor(
         uploads.remove(uri)?.cancel()
         uploads[uri] = viewModelScope.launch {
             _state.update { it.withUpload(uri, AssetUpload.Transcoding(0)) }
-            val processed = video.transcode(uri) { percent ->
+            val processed = video.transcode(uri, MAX_VIDEO_BYTES) { percent ->
                 _state.update { it.withUpload(uri, AssetUpload.Transcoding(percent)) }
             }
             if (processed == null) {

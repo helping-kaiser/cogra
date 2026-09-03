@@ -205,11 +205,16 @@ class ComposeWizardViewModelTest {
         var outputBytes = 1_024L
         val calls = mutableListOf<String>()
 
+        /** The cap the pipeline was told to encode for. */
+        var capAskedFor: Long? = null
+
         override suspend fun transcode(
             uri: String,
+            capBytes: Long,
             onProgress: (Int) -> Unit,
         ): ProcessedVideo? {
             calls += "transcode"
+            capAskedFor = capBytes
             onProgress(50)
             return if (untranscodable) {
                 null
@@ -984,6 +989,15 @@ class ComposeWizardViewModelTest {
         // The pipeline was asked to re-encode rather than the original
         // bytes being sent as they were.
         assertThat(video.calls).contains("transcode")
+    }
+
+    @Test
+    fun theEncoderIsToldWhichCapItIsEncodingFor() = runTest(dispatcher) {
+        // The rate is chosen against the destination, so a long clip is
+        // encoded smaller rather than encoded generously and refused.
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+        assertThat(video.capAskedFor).isEqualTo(ComposeWizardViewModel.MAX_VIDEO_BYTES)
     }
 
     @Test

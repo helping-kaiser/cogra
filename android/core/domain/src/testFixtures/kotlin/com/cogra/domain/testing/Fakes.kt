@@ -534,6 +534,7 @@ open class ThrowingMediaProcessor : MediaProcessor {
 open class ThrowingVideoProcessor : VideoProcessor {
     override suspend fun transcode(
         uri: String,
+        capBytes: Long,
         onProgress: (Int) -> Unit,
     ): ProcessedVideo? = throw UnsupportedOperationException()
 
