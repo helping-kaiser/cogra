@@ -393,13 +393,35 @@ starts, and KeyElsewhere left the stance-face one: a control start
 must mean one thing everywhere, and those taps now start a gate.
 
 Still owed on this item: the applicant's once-each acting boards
-(deliberately left in the census), the input-error states
-(field-error, wrong-credentials, wrong-code, code-mismatch — separate
-designs, untouched by the network board), the reader's post / comment
+(deliberately left in the census), the reader's post / comment
 / profile menus, the topic page and picker, the chat surface, the
 settlement/tip/rail record views, the settings and invites screens,
 the item / offer surfaces, the Sky (item 16), and item 13's Post Score
 drill-down.
+
+**Round 3 — the input-error boards (2026-09-03).** Five boards, one
+per surface: `JoinErrors`, `SignInError`, `RestoreError`,
+`RecoveryCodeMismatch`, `ProfileEditError` — the field-error,
+wrong-credentials, wrong-code and code-mismatch gaps, closed. Each
+copies its parent screen and changes only the errored parts;
+`TextField`/`PasswordField` grew an `error` prop (M3's text-field
+error state) the round before this one, and `RecoveryCode` grew an
+`error` pass-through this round to reach its own confirm field. 114 →
+109 gaps, 867 → 897 edges, 56/51/5 flows unchanged. Readme §13 *The
+input-error round* records jakob's six rulings.
+
+Two follow-ups the round surfaces, still open:
+
+- **aria-describedby wiring for field errors** — an open a11y question
+  from the `TextField`/`PasswordField` error-state round: the error
+  text renders beside the field but isn't yet wired to the input via
+  `aria-describedby`, and the supporting-line span isn't marked
+  `role="alert"`. Needs a ruling on whether every field error should
+  announce, or only the ones a screen reader wouldn't otherwise catch.
+- **NetworkError, ComposeSeal and ReplySeal still owe their
+  componentize-first pass** — hand-coded boards the componentize
+  principle (above) applies to but hasn't reached yet; each needs its
+  own round before any further alteration.
 
 **The chat surface arrives owing the action row a decision** (jakob
 2026-09-03): sending a post *into a chat* is the next contender for a
