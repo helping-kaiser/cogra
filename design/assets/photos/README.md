@@ -26,4 +26,9 @@ not illustration, no grain filter, no duotone.
 
 **Portrait caps at 4:5.** The 3:4, 2:3, and 9:16 files are here to be
 cropped: `MediaAttachment` never renders taller than 4:5. Use
-`08-portrait-9x16.jpg` when you need to prove the crop holds.
+`08-portrait-9x16.jpg` when you need to prove the crop holds — a
+picture is fitted inside the cap, a clip centre-crops to it, and the
+9:16 frame is whole again only on the stream and in the viewer, where
+downsampled copies of this file and of `03-landscape-16x9.jpg` stand in
+for the clips (`designs/canonical/img/clip-lakeside.jpg`,
+`clip-canoe.jpg`).

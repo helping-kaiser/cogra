@@ -249,6 +249,37 @@ and the way back to it from an edit:
 - `The cover takes the video's shape.`
 - `Change the cover`
 
+## Awaiting blessing — the reel round
+
+The words the stream, the video transport and the viewer put in front
+of a reader. Almost all of them are **accessible names**: these controls
+are glyphs, so what is written here is what a screen reader says, and it
+is the only wording they have.
+
+**The transport**, one control one verb — each says what the tap will
+DO, the way the sound toggle already does:
+
+- `Play` · `Pause`
+- `Seek` — the timeline's name; its value is spoken as
+  "0:14 of 0:41", the two times the bar already shows.
+- `Play this video` — the suppressed-autoplay card's disc. Longer than
+  the transport's `Play` on purpose: it is the only one that appears
+  beside a still frame, where "play" alone would not say what of.
+
+**The stream and the viewer**:
+
+- `Back to the feed` — the stream's way out. Not "Close": the reader is
+  going back to the feed the stream narrowed, not shutting a layer.
+- `Close` — the viewer's X, which IS shutting a layer.
+- `Share this post` — the share control everywhere it appears. The
+  completed name, never a bare "Share": a glyph with one word beside it
+  in the accessibility tree tells a listener the verb but not the
+  object.
+
+No screen here earns a "?". The stream is the feed the reader already
+knows, and the viewer is one picture with a way out — a dialog
+explaining either would be explaining the obvious.
+
 Two removal marks, never interchangeable: `Removed by its author` —
 "The words and pictures are gone. The post's place in the thread, and
 every response, remain." — and `Removed under the platform's rules` —

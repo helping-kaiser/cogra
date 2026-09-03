@@ -5,10 +5,11 @@ import { PendingMarker, EditedMarker } from "../honesty/PendingMarker.jsx";
 import { LicenseTerms } from "../forms/LicenseChooser.jsx";
 import { StanceControl } from "../stance/StanceControl.jsx";
 import { ExplainableNumber } from "../proposed/ExplainableNumber.jsx";
-import { MediaGallery } from "../proposed/MediaAttachment.jsx";
-import { MediaViewer } from "../proposed/MediaViewer.jsx";
+import { MediaGallery } from "../media/MediaAttachment.jsx";
+import { MediaViewer } from "../media/MediaViewer.jsx";
 import { RedactedContent, SensitiveScope, SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
 import { OverflowMenu } from "./OverflowMenu.jsx";
+import { ShareButton } from "./ShareButton.jsx";
 import { Icon } from "../navigation/Icon.jsx";
 import { TopicsLine } from "./TopicsLine.jsx";
 
@@ -63,6 +64,8 @@ export function PostCard({
   onOpenScore,
   comments,
   onOpenComments,
+  showShare = true,
+  onShare,
   onOpenReferences,
   media,
   actions,
@@ -298,6 +301,13 @@ export function PostCard({
               {comments > 0 && <span aria-hidden="true">{comments}</span>}
             </button>
           )}
+          {/* SHARE CLOSES THE ROW. The order here is the order of importance —
+              stance, score, comment, share — and it is also the queue: on a
+              phone too narrow to hold all four, share is the first to move into
+              the ⋮ menu, and the row gives way from its end. Anything added
+              later is ranked against what is already reachable before it earns a
+              slot; a row that grows by arrival order stops meaning anything. */}
+          {showShare && <ShareButton targetLabel={targetLabel} onShare={onShare} />}
           {actions}
         </div>
       )}

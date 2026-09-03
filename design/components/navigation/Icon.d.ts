@@ -38,6 +38,15 @@ export interface IconProps {
     | "chevron_right"
     | "arrow_outward"
     | "content_copy"
+    | "play_arrow"
+    | "pause"
+    | "fast_rewind"
+    | "fast_forward"
+    | "fullscreen"
+    | "share"
+    | "sentiment_neutral"
+    | "photo_camera"
+    | "history"
     | "graph"
     | "mark";
   size?: number;
