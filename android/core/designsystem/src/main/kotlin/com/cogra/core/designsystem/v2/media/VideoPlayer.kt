@@ -41,6 +41,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.compose.PlayerSurface
+import androidx.media3.ui.compose.modifiers.resizeWithContentScale
 import androidx.media3.ui.compose.state.rememberPresentationState
 import coil3.compose.AsyncImage
 import com.cogra.core.designsystem.v2.token.MediaOverlay
@@ -121,6 +122,10 @@ fun Modifier.onVisibilityChanged(onChange: (Float) -> Unit): Modifier =
  * @param durationMs the running time, drawn only where [controls] asks
  *   for it. Null hides it everywhere.
  * @param controls which controls this surface wears.
+ * @param contentScale how the clip fills its frame. **It has to be the
+ *   scale the poster is drawn at**: the poster and the video stand in
+ *   for each other, and two different scales make every swap between
+ *   them a visible change of shape.
  */
 @OptIn(UnstableApi::class)
 @Composable
@@ -131,6 +136,7 @@ fun VideoPlayer(
     modifier: Modifier = Modifier,
     durationMs: Int? = null,
     controls: VideoControls = VideoControls.SoundOnly,
+    contentScale: ContentScale = ContentScale.Crop,
     contentDescription: String? = null,
     testTag: String? = null,
 ) {
@@ -189,20 +195,44 @@ fun VideoPlayer(
     // to a second surface looks like from the state holder's side.
     val presentation = rememberPresentationState(player, keepContentOnReset = true)
 
-    Box(modifier = modifier.then(if (testTag != null) Modifier.testTag(testTag) else Modifier)) {
+    // **A video surface does not keep its own shape.** `PlayerSurface`
+    // is a bare `SurfaceView`: the decoder's output is painted across
+    // whatever area the view is given, so `fillMaxSize` stretches a
+    // 9:16 clip into a 4:5 frame. Media3 puts the shape-keeping in a
+    // modifier — `ContentFrame` is nothing but a `PlayerSurface` under
+    // `resizeWithContentScale(contentScale, videoSizeDp)` — and this is
+    // that modifier, given the same scale the poster is drawn at, so
+    // the two occupy exactly the same rectangle.
+    val videoSize = presentation.videoSizeDp
+
+    Box(
+        modifier = modifier.then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+        contentAlignment = Alignment.Center,
+    ) {
         // A surface without the stage binds nothing: two surfaces
         // setting the same player's video output is the fight that
         // reads as a flicker.
-        PlayerSurface(player = player, modifier = Modifier.fillMaxSize())
+        PlayerSurface(
+            player = player,
+            modifier = Modifier.resizeWithContentScale(contentScale, videoSize),
+        )
 
         // The poster covers the surface until a frame exists to show —
         // which is also the state a clip that never autoplays, or one
         // whose stage another clip has taken, stays in.
-        if (presentation.coverSurface || player == null) {
+        //
+        // **And until the surface knows how big the video is.**
+        // `videoSizeDp` starts null and is filled in from an effect, so
+        // the composition right after a player moves to a new surface
+        // measures at full parent size while a frame is already landing
+        // on it — androidx/media#3238, whose reported symptom is
+        // exactly a first frame at the wrong size. The poster stays over
+        // that one frame rather than letting it show.
+        if (posterCovers(presentation.coverSurface, player != null, videoSize != null)) {
             AsyncImage(
                 model = posterUrl,
                 contentDescription = contentDescription,
-                contentScale = ContentScale.Crop,
+                contentScale = contentScale,
                 modifier = Modifier.fillMaxSize(),
             )
         }
@@ -243,6 +273,31 @@ fun VideoPlayer(
  * the one decision left, and it is shared.
  */
 enum class VideoControls { SoundOnly, Full }
+
+/**
+ * Whether the poster stands in front of the surface.
+ *
+ * Three reasons, and the third is the one that was missing.
+ *
+ * [coverSurface] is Media3's own answer — no frame has been rendered
+ * yet, so there is nothing behind the poster to show. [hasPlayer] is
+ * ours: a surface whose clip another has taken off the stage has no
+ * player to draw at all.
+ *
+ * [videoSizeKnown] is the guard against a documented race.
+ * `PresentationState.videoSizeDp` starts null and is filled in from an
+ * effect, so the composition immediately after a player moves onto a new
+ * surface still measures at full parent size — and a frame can land on
+ * that surface before the size arrives, which is exactly the
+ * wrong-sized first frame reported as androidx/media#3238. Holding the
+ * poster over that one frame costs nothing and is the difference
+ * between a clean hand-over and a visible jump.
+ */
+internal fun posterCovers(
+    coverSurface: Boolean,
+    hasPlayer: Boolean,
+    videoSizeKnown: Boolean,
+): Boolean = coverSurface || !hasPlayer || !videoSizeKnown
 
 @Composable
 private fun PlayPauseButton(
