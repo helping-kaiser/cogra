@@ -1,5 +1,6 @@
 import React from "react";
 import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
+import { Icon } from "../navigation/Icon.jsx";
 import { Snackbar } from "../core/Snackbar.jsx";
 import { JoinPrompt } from "../core/JoinPrompt.jsx";
 import { StancePad } from "./StancePad.jsx";
@@ -52,6 +53,30 @@ import {
 
 export const LONG_PRESS_MS = 500;
 
+/* THE ANCHOR ON A MEDIA SURFACE (jakob, review rounds 1 and 2). On the stream
+   the control sits on whatever the clip happens to be showing, where the card's
+   quiet anchor disappears — the unset face worst of all. It becomes a GLYPH IN
+   THE RAIL'S FAMILY: `sentiment_neutral`, the same line weight and 28px optical
+   size as the comment bubble beside it, white with the same soft shadow. No
+   disc and no ring — a plate around one control in a column of five reads as
+   chrome, and the first cut of it was exactly the clonky thing that made the
+   rail stop looking like one set. A stance that HAS been taken still shows its
+   own face at the same size, because that face is the readout.
+
+   The gesture, the pad, the ceremony and the muting rule are unchanged; this
+   restyles the anchor on one kind of surface and nothing else. */
+const OVER_MEDIA_ANCHOR = {
+  width: "56px",
+  height: "44px",
+  minWidth: "56px",
+  minHeight: "44px",
+  padding: 0,
+  border: 0,
+  background: "none",
+  color: "#fff",
+  filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.55))",
+};
+
 const EMPTY_BUNDLE = { current: ORIGIN, rawSum: ORIGIN, records: 0, severed: false, severance: { records: 0 } };
 
 function parkedPadStyle(inset = 16) {
@@ -88,6 +113,7 @@ export function StanceControl({
   padInset = 16,
   padNote,
   wide = false,
+  overMedia = false,
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
   React.useEffect(() => {
@@ -213,7 +239,11 @@ export function StanceControl({
       onClick={(event) => event.stopPropagation()}
       onPointerDown={(event) => event.stopPropagation()}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", width: wide ? "100%" : undefined }}>
+      {/* OVER MEDIA THE ROW SPENDS NO GAP: the skip-link beside the anchor is a
+          hairline the eye never sees, but its gap pushes the anchor off the
+          rail's axis — and a glyph a few pixels left of the column reads as an
+          accident, which is what it was. */}
+      <div style={{ display: "flex", alignItems: "center", gap: overMedia ? 0 : "var(--space-2)", width: wide ? "100%" : undefined }}>
         <button
           type="button"
           aria-label={
@@ -247,6 +277,7 @@ export function StanceControl({
             fontSize: "var(--text-label-large)",
             fontWeight: "var(--text-label-large--font-weight)",
             color: "var(--primary)",
+            ...(overMedia ? OVER_MEDIA_ANCHOR : null),
           }}
         >
           {/* Never a bare word (§8.3): a viewer with no bundle gets a face
@@ -254,16 +285,25 @@ export function StanceControl({
               waiting to be given a value, and never the shrug a zero standing
               owns (§8.4). The anchor's words are not drawn beside it; they ride
               the button's accessible name above. */}
-          <span
-            aria-hidden="true"
-            style={{
-              fontSize: "var(--text-title-large)",
-              opacity: restingFace === null ? "var(--opacity-resting-face)" : 1,
-              filter: restingFace === null ? "grayscale(1)" : "none",
-            }}
-          >
-            {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}
-          </span>
+          {overMedia && restingFace === null ? (
+            /* OVER MEDIA THE UNSET STATE IS A LINE FACE, not a muted emoji: on
+               photography "quiet" and "invisible" are the same thing, and the
+               glyph says "no standing yet" by being the empty face rather than
+               by being faint. */
+            <Icon name="sentiment_neutral" size={28} />
+          ) : (
+            <span
+              aria-hidden="true"
+              style={{
+                fontSize: overMedia ? "26px" : "var(--text-title-large)",
+                lineHeight: 1,
+                opacity: restingFace === null ? "var(--opacity-resting-face)" : 1,
+                filter: restingFace === null ? "grayscale(1)" : "none",
+              }}
+            >
+              {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}
+            </span>
+          )}
           {wide && restingPair === null && (
             /* The wide anchor's words — only where there is no pair to show. */
             <span aria-hidden="true" style={{ whiteSpace: "nowrap" }}>

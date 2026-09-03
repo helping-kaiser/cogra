@@ -11,16 +11,20 @@
         "ExploreNone",
         "ExploreSearch",
         "Feed",
+        "FeedCover",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
         "FeedNothing",
         "KeyElsewhere",
+        "PostDetail",
+        "PostDetailVideo",
         "Profile",
         "ProfileComments",
         "ProfileOther",
         "ProfilePosts",
         "ProfileStances",
+        "Reel",
         "Removed",
         "VouchBack",
         "Wallet",
@@ -35,7 +39,7 @@
         "WalletApplicant/3: applicant acts once each — boards pending (ruled 2026-09-01)"
       ],
       "steps": [
-        "start · «nav · New post» on 21 boards → ComposePick",
+        "start · «nav · New post» on 25 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -51,16 +55,20 @@
         "ExploreNone",
         "ExploreSearch",
         "Feed",
+        "FeedCover",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
         "FeedNothing",
         "KeyElsewhere",
+        "PostDetail",
+        "PostDetailVideo",
         "Profile",
         "ProfileComments",
         "ProfileOther",
         "ProfilePosts",
         "ProfileStances",
+        "Reel",
         "Removed",
         "VouchBack",
         "Wallet",
@@ -140,17 +148,21 @@
         "ComposeLanded",
         "Feed",
         "FeedBare",
+        "FeedCover",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
         "KeyElsewhere",
         "Main",
+        "PostDetail",
+        "PostDetailVideo",
         "ProfilePosts",
+        "Reel",
         "Removed",
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 14 boards → ReplyEntry",
+        "start · «comment count» on 18 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
@@ -165,12 +177,16 @@
         "ComposeLanded",
         "Feed",
         "FeedBare",
+        "FeedCover",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
         "KeyElsewhere",
         "Main",
+        "PostDetail",
+        "PostDetailVideo",
         "ProfilePosts",
+        "Reel",
         "Removed",
         "VouchBack"
       ]
@@ -386,10 +402,14 @@
         "ComposeExpired",
         "ComposeLanded",
         "Feed",
+        "FeedCover",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
+        "PostDetail",
+        "PostDetailVideo",
         "ProfilePosts",
+        "Reel",
         "Removed",
         "VouchBack"
       ],
@@ -398,7 +418,7 @@
         "ApplicantWaiting/7: applicant acts once each — boards pending (ruled 2026-09-01)"
       ],
       "steps": [
-        "start · «stance face» on 9 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 13 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -406,10 +426,14 @@
         "ComposeExpired",
         "ComposeLanded",
         "Feed",
+        "FeedCover",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
+        "PostDetail",
+        "PostDetailVideo",
         "ProfilePosts",
+        "Reel",
         "Removed",
         "VouchBack"
       ]
@@ -581,16 +605,20 @@
         "ExploreNone",
         "ExploreSearch",
         "Feed",
+        "FeedCover",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
         "FeedNothing",
         "KeyElsewhere",
+        "PostDetail",
+        "PostDetailVideo",
         "Profile",
         "ProfileComments",
         "ProfileOther",
         "ProfilePosts",
         "ProfileStances",
+        "Reel",
         "Removed",
         "VouchBack",
         "Wallet",
@@ -605,7 +633,7 @@
         "WalletApplicant/3: applicant acts once each — boards pending (ruled 2026-09-01)"
       ],
       "steps": [
-        "start · «nav · New post» on 21 boards → ComposePick",
+        "start · «nav · New post» on 25 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -621,16 +649,20 @@
         "ExploreNone",
         "ExploreSearch",
         "Feed",
+        "FeedCover",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
         "FeedNothing",
         "KeyElsewhere",
+        "PostDetail",
+        "PostDetailVideo",
         "Profile",
         "ProfileComments",
         "ProfileOther",
         "ProfilePosts",
         "ProfileStances",
+        "Reel",
         "Removed",
         "VouchBack",
         "Wallet",
@@ -649,16 +681,20 @@
         "ExploreNone",
         "ExploreSearch",
         "Feed",
+        "FeedCover",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
         "FeedNothing",
         "KeyElsewhere",
+        "PostDetail",
+        "PostDetailVideo",
         "Profile",
         "ProfileComments",
         "ProfileOther",
         "ProfilePosts",
         "ProfileStances",
+        "Reel",
         "Removed",
         "VouchBack",
         "Wallet",
@@ -673,7 +709,7 @@
         "WalletApplicant/3: applicant acts once each — boards pending (ruled 2026-09-01)"
       ],
       "steps": [
-        "start · «nav · New post» on 21 boards → ComposePick",
+        "start · «nav · New post» on 25 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a video — its face",
         "ComposeCover · 6 «Next» → ComposeDetails",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -689,16 +725,20 @@
         "ExploreNone",
         "ExploreSearch",
         "Feed",
+        "FeedCover",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
         "FeedNothing",
         "KeyElsewhere",
+        "PostDetail",
+        "PostDetailVideo",
         "Profile",
         "ProfileComments",
         "ProfileOther",
         "ProfilePosts",
         "ProfileStances",
+        "Reel",
         "Removed",
         "VouchBack",
         "Wallet",
@@ -979,16 +1019,20 @@
         "ComposeLanded",
         "Feed",
         "FeedBare",
+        "FeedCover",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
         "KeyElsewhere",
         "Main",
+        "PostDetail",
+        "PostDetailVideo",
+        "Reel",
         "Removed",
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 13 boards → ProfileOther",
+        "start · «author chip» on 17 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
@@ -999,18 +1043,22 @@
         "ComposeLanded",
         "Feed",
         "FeedBare",
+        "FeedCover",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
         "KeyElsewhere",
         "Main",
+        "PostDetail",
+        "PostDetailVideo",
+        "Reel",
         "Removed",
         "VouchBack"
       ]
     },
     {
       "name": "open-a-posts-pictures",
-      "description": "Post media, wherever a post is drawn, opens the gallery full-bleed; the frames are what the reader came for.",
+      "description": "Post media, wherever a post is drawn, opens the post itself — a reader scrolling is choosing between posts, and the post is where the frames are whole.",
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
@@ -1018,6 +1066,7 @@
         "ComposeExpired",
         "Feed",
         "FeedBare",
+        "FeedCover",
         "FeedFar",
         "FeedNarrowed",
         "KeyElsewhere",
@@ -1026,22 +1075,87 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» on 11 boards → FeedGallery",
-        "end · arrival at FeedGallery"
+        "start · «post media» — pictures — the post opens on 12 boards → PostDetail",
+        "end · arrival at PostDetail"
       ],
       "boards": [
-        "FeedGallery",
+        "PostDetail",
         "ApplicantFeed",
         "ApplicantWaiting",
         "ComposeExpired",
         "Feed",
         "FeedBare",
+        "FeedCover",
         "FeedFar",
         "FeedNarrowed",
         "KeyElsewhere",
         "Main",
         "ProfilePosts",
         "VouchBack"
+      ]
+    },
+    {
+      "name": "watch-the-stream",
+      "description": "A portrait clip's tap, wherever a post is drawn, opens the stream — the reader's own ranked feed narrowed to clips taller than they are wide, swiped onward from there.",
+      "status": "resolved",
+      "startsOn": [
+        "ApplicantFeed",
+        "ApplicantWaiting",
+        "ComposeExpired",
+        "Feed",
+        "FeedBare",
+        "FeedCover",
+        "FeedFar",
+        "FeedNarrowed",
+        "KeyElsewhere",
+        "Main",
+        "ProfilePosts",
+        "VouchBack"
+      ],
+      "steps": [
+        "start · «post media» — a portrait clip — the stream opens on 12 boards → Reel",
+        "end · arrival at Reel"
+      ],
+      "boards": [
+        "Reel",
+        "ApplicantFeed",
+        "ApplicantWaiting",
+        "ComposeExpired",
+        "Feed",
+        "FeedBare",
+        "FeedCover",
+        "FeedFar",
+        "FeedNarrowed",
+        "KeyElsewhere",
+        "Main",
+        "ProfilePosts",
+        "VouchBack"
+      ]
+    },
+    {
+      "name": "reel-to-detail",
+      "description": "The score element on the stream's rail is the detail door: the clip squishes to the top of the screen, still playing, and the post rises beneath it — tapping the pinned clip expands it back into the stream, the reader's place held.",
+      "status": "resolved",
+      "steps": [
+        "start · Reel · 7 «Post Score» → PostDetailVideo — the detail door — the clip squishes to the top, the post rises beneath",
+        "end · arrival at PostDetailVideo"
+      ],
+      "boards": [
+        "Reel",
+        "PostDetailVideo"
+      ]
+    },
+    {
+      "name": "open-the-viewer",
+      "description": "Media tapped again from the post's own view opens the fullscreen viewer — the frame whole, which is what every crop in the product is measured against.",
+      "status": "resolved",
+      "steps": [
+        "start · PostDetail · 4 «detail media» → ViewerPicture — the frame, whole and full-screen",
+        "end · arrival at ViewerPicture"
+      ],
+      "boards": [
+        "PostDetail",
+        "ViewerPicture"
       ]
     },
     {
@@ -1083,16 +1197,16 @@
     },
     {
       "name": "search-and-open-a-post",
-      "description": "Typing in Explore brings results as they are typed; a post result opens that post — its standalone detail view is still owed.",
-      "status": "blocked by gap",
-      "blockedBy": "the post detail view (not boarded standalone — drawn only under the comments sheet)",
+      "description": "Typing in Explore brings results as they are typed; a post result opens that post's own detail view.",
+      "status": "resolved",
       "steps": [
         "start · Explore · 1 «search field» → ExploreSearch — typing — results as you type",
-        "end · ExploreSearch · 4 «post result rows» → gap: the post detail view (not boarded standalone — drawn only under the comments sheet)"
+        "end · ExploreSearch · 4 «post result rows» → PostDetail"
       ],
       "boards": [
         "Explore",
-        "ExploreSearch"
+        "ExploreSearch",
+        "PostDetail"
       ]
     },
     {
@@ -1119,7 +1233,8 @@
         "open-a-posts-pictures",
         "reply-to-a-post",
         "verify-the-email",
-        "visit-an-author"
+        "visit-an-author",
+        "watch-the-stream"
       ],
       "endpoint": [
         "guest-turns-applicant",
@@ -1133,7 +1248,8 @@
         "follow-a-citation",
         "open-a-posts-pictures",
         "reply-to-a-post",
-        "visit-an-author"
+        "visit-an-author",
+        "watch-the-stream"
       ],
       "endpoint": []
     },
@@ -1217,7 +1333,8 @@
         "pick-a-kept-draft-back-up",
         "reply-to-a-post",
         "take-a-stance-on-a-post",
-        "visit-an-author"
+        "visit-an-author",
+        "watch-the-stream"
       ],
       "endpoint": [
         "pick-a-kept-draft-back-up"
@@ -1369,8 +1486,7 @@
         "search-into-a-thread"
       ],
       "endpoint": [
-        "narrow-a-search",
-        "search-and-open-a-post"
+        "narrow-a-search"
       ]
     },
     "Feed": {
@@ -1391,7 +1507,8 @@
         "undo-the-narrowing",
         "verify-the-email-as-a-member",
         "visit-an-author",
-        "vouch-back-for-your-inviter"
+        "vouch-back-for-your-inviter",
+        "watch-the-stream"
       ],
       "endpoint": [
         "close-the-filter-unchanged",
@@ -1411,7 +1528,21 @@
         "guest-turns-applicant",
         "open-a-posts-pictures",
         "reply-to-a-post",
-        "visit-an-author"
+        "visit-an-author",
+        "watch-the-stream"
+      ],
+      "endpoint": []
+    },
+    "FeedCover": {
+      "flows": [
+        "open-a-posts-pictures",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "visit-an-author",
+        "watch-the-stream"
       ],
       "endpoint": []
     },
@@ -1425,7 +1556,8 @@
         "publish-words",
         "reply-to-a-post",
         "take-a-stance-on-a-post",
-        "visit-an-author"
+        "visit-an-author",
+        "watch-the-stream"
       ],
       "endpoint": [
         "filter-the-feed-far-from-the-default"
@@ -1433,7 +1565,6 @@
     },
     "FeedGallery": {
       "flows": [
-        "open-a-posts-pictures",
         "publish-a-post",
         "publish-a-video",
         "publish-words",
@@ -1441,9 +1572,7 @@
         "take-a-stance-on-a-post",
         "visit-an-author"
       ],
-      "endpoint": [
-        "open-a-posts-pictures"
-      ]
+      "endpoint": []
     },
     "FeedNarrowed": {
       "flows": [
@@ -1455,7 +1584,8 @@
         "publish-words",
         "reply-to-a-post",
         "take-a-stance-on-a-post",
-        "visit-an-author"
+        "visit-an-author",
+        "watch-the-stream"
       ],
       "endpoint": [
         "narrow-the-feed"
@@ -1527,7 +1657,8 @@
         "reply-to-a-post",
         "restore-your-key",
         "sign-in-with-the-key-elsewhere",
-        "visit-an-author"
+        "visit-an-author",
+        "watch-the-stream"
       ],
       "endpoint": [
         "sign-in-with-the-key-elsewhere"
@@ -1539,7 +1670,8 @@
         "guest-turns-applicant",
         "open-a-posts-pictures",
         "reply-to-a-post",
-        "visit-an-author"
+        "visit-an-author",
+        "watch-the-stream"
       ],
       "endpoint": []
     },
@@ -1548,6 +1680,38 @@
         "restore-your-key"
       ],
       "endpoint": []
+    },
+    "PostDetail": {
+      "flows": [
+        "open-a-posts-pictures",
+        "open-the-viewer",
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "search-and-open-a-post",
+        "take-a-stance-on-a-post",
+        "visit-an-author"
+      ],
+      "endpoint": [
+        "open-a-posts-pictures",
+        "open-the-viewer",
+        "search-and-open-a-post"
+      ]
+    },
+    "PostDetailVideo": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "reel-to-detail",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "visit-an-author"
+      ],
+      "endpoint": [
+        "reel-to-detail"
+      ]
     },
     "Profile": {
       "flows": [
@@ -1626,7 +1790,8 @@
         "reply-to-a-post",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person",
-        "take-a-stance-on-a-post"
+        "take-a-stance-on-a-post",
+        "watch-the-stream"
       ],
       "endpoint": []
     },
@@ -1647,6 +1812,22 @@
       ],
       "endpoint": [
         "make-your-key"
+      ]
+    },
+    "Reel": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "reel-to-detail",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "visit-an-author",
+        "watch-the-stream"
+      ],
+      "endpoint": [
+        "reel-to-detail",
+        "watch-the-stream"
       ]
     },
     "ReferencePicker": {
@@ -1803,6 +1984,14 @@
         "verify-the-email-as-a-member"
       ]
     },
+    "ViewerPicture": {
+      "flows": [
+        "open-the-viewer"
+      ],
+      "endpoint": [
+        "open-the-viewer"
+      ]
+    },
     "VouchBack": {
       "flows": [
         "follow-a-citation",
@@ -1813,7 +2002,8 @@
         "reply-to-a-post",
         "take-a-stance-on-a-post",
         "visit-an-author",
-        "vouch-back-for-your-inviter"
+        "vouch-back-for-your-inviter",
+        "watch-the-stream"
       ],
       "endpoint": [
         "vouch-back-for-your-inviter"
@@ -1936,7 +2126,6 @@
     "EditCompose/8: the topic picker (not boarded)",
     "Explore/2: the Sky (backlog item 16 — last on purpose)",
     "Explore/9: the chat surface (not designed)",
-    "ExploreSearch/4: the post detail view (not boarded standalone — drawn only under the comments sheet)",
     "ExploreSearch/5: the item's surface (not designed)",
     "ExploreSearch/7: the chat surface (not designed)",
     "ExploreSearch/8: the offer's surface (not designed)",
@@ -1947,6 +2136,10 @@
     "FeedBare/11: Post Score drill-down (backlog item 13)",
     "FeedBare/5: reader's post menu — licence terms / cite (not boarded)",
     "FeedBare/8: the topic page (ruled 2026-09-01 — not designed)",
+    "FeedCover/17: the chat surface (not designed)",
+    "FeedCover/3: reader's post menu — licence terms / cite (not boarded)",
+    "FeedCover/6: the topic page (ruled 2026-09-01 — not designed)",
+    "FeedCover/8: Post Score drill-down (backlog item 13)",
     "FeedFar/16: the chat surface (not designed)",
     "FeedFar/3: reader's post menu — licence terms / cite (not boarded)",
     "FeedFar/6: the topic page (ruled 2026-09-01 — not designed)",
@@ -1968,23 +2161,24 @@
     "Main/11: Post Score drill-down (backlog item 13)",
     "Main/5: reader's post menu — licence terms / cite (not boarded)",
     "Main/8: the topic page (ruled 2026-09-01 — not designed)",
+    "PostDetail/2: reader's post menu — licence terms / cite (not boarded)",
+    "PostDetail/7: Post Score drill-down (backlog item 13)",
+    "PostDetailVideo/10: Post Score drill-down (backlog item 13)",
+    "PostDetailVideo/2: reader's post menu — licence terms / cite (not boarded)",
     "Profile/1: the chat surface (not designed)",
     "Profile/2: the profile's menu — mention / share (not boarded)",
     "Profile/3: the settings screen (not designed)",
     "Profile/7: the invites screen (not designed)",
-    "Profile/9: the post detail view (not boarded standalone — drawn only under the comments sheet)",
     "ProfileApplicant/12: applicant acts once each — boards pending (ruled 2026-09-01)",
     "ProfileApplicant/1: the chat surface (not designed)",
     "ProfileApplicant/2: the profile's menu — mention / share (not boarded)",
     "ProfileApplicant/3: the settings screen (not designed)",
-    "ProfileApplicant/9: the post detail view (not boarded standalone — drawn only under the comments sheet)",
     "ProfileComments/2: the profile's menu — mention / share (not boarded)",
     "ProfileComments/5: the chat surface (not designed)",
     "ProfileComments/8: the comment's menu — cite / licence terms (not boarded)",
     "ProfileEdit/6: field-error states (not boarded)",
     "ProfileOther/2: the profile's menu — mention / share (not boarded)",
     "ProfileOther/5: the chat surface (not designed)",
-    "ProfileOther/7: the post detail view (not boarded standalone — drawn only under the comments sheet)",
     "ProfilePosts/11: the topic page (ruled 2026-09-01 — not designed)",
     "ProfilePosts/13: Post Score drill-down (backlog item 13)",
     "ProfilePosts/2: the profile's menu — mention / share (not boarded)",

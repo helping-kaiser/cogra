@@ -31,7 +31,10 @@ const SR_ONLY = {
    never a trend arrow. Growth-dashboard framing is the failure mode §1 names by
    anti-goal. */
 
-export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail }) {
+/* OVER MEDIA (jakob, review round 1): on the stream this figure sits on the
+   clip, where onSurfaceVariant on photography is not quiet but unreadable. It
+   goes white with a shadow — the register is unchanged, the contrast is not. */
+export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, overMedia = false }) {
   return (
     <button
       type="button"
@@ -51,8 +54,9 @@ export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail }) {
         cursor: "pointer",
         fontFamily: "var(--font-sans)",
         fontSize: "var(--text-body-small)",
-        color: "var(--text-secondary)",
+        color: overMedia ? "#fff" : "var(--text-secondary)",
         textAlign: "left",
+        ...(overMedia ? { filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))" } : null),
       }}
     >
       {/* A GLYPH, NOT AN EMOJI. The product's only emoji vocabulary is the stance
@@ -72,7 +76,7 @@ export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail }) {
           is failure only — a score below zero is a fact about reach, not a fault,
           and colouring it red would editorialise it the way §2.4 forbids for a
           negative stance. */}
-      <span style={{ color: "var(--on-surface)", fontWeight: 500 }}>
+      <span style={{ color: overMedia ? "#fff" : "var(--on-surface)", fontWeight: 500 }}>
         {value}
         {unit ? <span style={{ color: "var(--text-secondary)", fontWeight: 400 }}>{unit}</span> : null}
       </span>
