@@ -816,6 +816,56 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+/* The five errored boards (input-errors bite 3, 2026-09-03): each copies its
+   parent's control anatomy exactly, so its markers reuse the parent's
+   `find` patterns 1:1 — the error props change styling and a supporting
+   line, never the elements a reader can tap. ProfileEditError is the one
+   exception: Display name's value goes empty to match "can't be empty",
+   so its marker keys off that empty attribute instead of the master's
+   sample name. */
+Object.assign(FLOW_MARKERS, {
+  JoinErrors: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="handle"', tag: "input" },
+    { n: 3, find: 'id="email"', tag: "input" },
+    { n: 4, find: 'id="password"', tag: "input" },
+    { n: 5, find: 'aria-label="Show password"', tag: "button" },
+    { n: 6, find: ">Create account</button>", tag: "button" },
+    { n: 7, find: ">Already have an account? Sign in</button>", tag: "button" },
+  ],
+  SignInError: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="signin-email"', tag: "input" },
+    { n: 3, find: 'id="signin-password"', tag: "input" },
+    { n: 4, find: 'aria-label="Show password"', tag: "button" },
+    { n: 5, find: "Don&#x27;t remember this account on this device", tag: "input" },
+    { n: 6, find: ">Sign in</button>", tag: "button" },
+    { n: 7, find: ">Forgot password?</button>", tag: "button" },
+    { n: 8, find: ">New here? Enter your invite</button>", tag: "button" },
+    { n: 9, find: ">Just looking? Browse the feed", tag: "button" },
+    { n: 10, find: ">On Android? Download the app (APK)</button>", tag: "button" },
+  ],
+  RestoreError: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="recovery-code"', tag: "input" },
+    { n: 3, find: "Don&#x27;t remember this account on this device", tag: "input" },
+    { n: 4, find: ">Restore the key</button>", tag: "button" },
+  ],
+  RecoveryCodeMismatch: [
+    { n: 1, find: ">Copy</button>", tag: "button" },
+    { n: 2, find: 'type="text"', tag: "input" },
+    { n: 3, find: ">I&#x27;ve written it down</button>", tag: "button" },
+  ],
+  ProfileEditError: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: ">Change picture</button>", tag: "button" },
+    { n: 3, find: 'value=""', tag: "input" },
+    { n: 4, find: "whatever the wind allows.</textarea>", tag: "textarea" },
+    { n: 5, find: 'value="solferreira.art"', tag: "input" },
+    { n: 6, find: ">Save</button>", tag: "button" },
+  ],
+});
+
 /* The band's Chats affordance (jakob 2026-09-01): CograBand carries it on
    every tab root, so every wired band board gets the marker in one sweep —
    the number is each board's next free one, the edge points at the chat
