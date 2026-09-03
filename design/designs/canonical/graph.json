@@ -218,7 +218,11 @@
 
     { "from": "RecoveryCode", "via": 1, "kind": "advance", "label": "Copy", "to": [{ "terminal": "self", "case": "the code lands on the clipboard" }] },
     { "from": "RecoveryCode", "via": 2, "kind": "advance", "label": "confirm field", "to": [{ "terminal": "self", "case": "typing" }] },
-    { "from": "RecoveryCode", "via": 3, "kind": "advance", "label": "I've written it down", "to": [{ "terminal": "back", "case": "code confirmed — returns where the ceremony began" }, { "gap": "code-mismatch error state (not boarded)", "case": "typed code doesn't match" }] },
+    { "from": "RecoveryCode", "via": 3, "kind": "advance", "label": "I've written it down", "to": [{ "terminal": "back", "case": "code confirmed — returns where the ceremony began" }, { "board": "RecoveryCodeMismatch", "case": "typed code doesn't match" }] },
+
+    { "from": "RecoveryCodeMismatch", "via": 1, "kind": "advance", "label": "Copy", "to": [{ "terminal": "self", "case": "the code lands on the clipboard" }] },
+    { "from": "RecoveryCodeMismatch", "via": 2, "kind": "advance", "label": "confirm field", "to": [{ "terminal": "self", "case": "typing" }] },
+    { "from": "RecoveryCodeMismatch", "via": 3, "kind": "advance", "label": "I've written it down", "to": [{ "terminal": "back", "case": "code confirmed — returns where the ceremony began" }, { "terminal": "self", "case": "still failing — the line updates in place" }] },
 
     { "from": "KeyDecline", "via": 1, "kind": "cancel", "label": "I accept the risk", "to": [{ "terminal": "back", "case": "key without backup — returns where the ceremony began" }] },
     { "from": "KeyDecline", "via": 2, "kind": "back", "label": "Go back", "to": [{ "board": "KeyCeremony" }] },
