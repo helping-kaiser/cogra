@@ -34,6 +34,7 @@ import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
+import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.VideoFrame
 import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
@@ -517,7 +518,15 @@ open class ThrowingMediaRepository : MediaRepository {
     override suspend fun uploadVideo(
         video: ProcessedVideo,
         coverMediaId: String,
+        onProgress: (UploadProgress) -> Unit,
     ): Outcome<MediaAssetView> = throw UnsupportedOperationException()
+
+    /** Recorded rather than thrown: aborting is fire-and-forget. */
+    val abortedUploads = mutableListOf<String>()
+
+    override suspend fun abortUpload(uploadId: String) {
+        abortedUploads += uploadId
+    }
 }
 
 /** Media-processor base: the pipeline throws until a test scripts it. */

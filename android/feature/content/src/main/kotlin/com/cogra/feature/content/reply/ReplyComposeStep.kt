@@ -34,6 +34,8 @@ import com.cogra.core.designsystem.v2.media.ThumbBadge
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.CoverChoice
+import com.cogra.feature.content.wizard.inFlight
+import com.cogra.feature.content.wizard.percentOrNull
 import com.cogra.feature.content.wizard.PickedAsset
 import com.cogra.feature.content.wizard.RefusedPick
 import com.cogra.feature.content.wizard.formatDuration
@@ -66,6 +68,7 @@ internal fun ColumnScope.ReplyComposeStepBody(
     onPickCoverFrame: (Int) -> Unit,
     onPickCoverPicture: () -> Unit,
     onDismissRefusal: (Int) -> Unit,
+    onRetryUpload: (String) -> Unit,
 ) {
     state.target?.let { TargetCard(it) }
 
@@ -106,6 +109,7 @@ internal fun ColumnScope.ReplyComposeStepBody(
             clip = clip,
             state = state,
             onRemove = { onRemovePickAt(0) },
+            onRetry = { onRetryUpload(clip.uri) },
             onDescribe = onDescribePictures,
             onPickCoverFrame = onPickCoverFrame,
             onPickCoverPicture = onPickCoverPicture,
@@ -131,6 +135,11 @@ internal fun ColumnScope.ReplyComposeStepBody(
     // The board's own `flex: 1` — the gap that pushes the hint and the
     // pill to the bottom once the words have stopped doing it.
     if (!wordsFill) Spacer(Modifier.weight(1f))
+
+    // The footer goes with the upload it described: on a failed clip the
+    // error line is the state, and a second sentence promising the
+    // upload is happening would contradict it.
+    if (state.video?.upload is AssetUpload.Failed) return
 
     Text(
         // The media half of the sentence only becomes true once
@@ -164,29 +173,55 @@ private fun ReplyClip(
     clip: PickedAsset,
     state: ReplyWizardState,
     onRemove: () -> Unit,
+    onRetry: () -> Unit,
     onDescribe: () -> Unit,
     onPickCoverFrame: (Int) -> Unit,
     onPickCoverPicture: () -> Unit,
 ) {
+    // **A failed upload is not a refused file** (`ReplyVideoFailed`). A
+    // refusal is an answer and retrying cannot change it; a fault means
+    // the file was fine and the network wasn't, so it gets Retry the way
+    // every other transport fault does. The tile then loses its × —
+    // Remove it lives in the error line, and the two removals must never
+    // sit two pixels apart meaning the same thing.
+    val failure = (clip.upload as? AssetUpload.Failed)?.message
     MediaThumb(
         item = MediaItem(clip.uri, clip.sourceRatio ?: 1f, clip.altText.ifBlank { null }),
-        width = CLIP_FRAME,
-        height = CLIP_FRAME,
+        width = if (failure != null) CLIP_FRAME_FAILED else CLIP_FRAME,
+        height = if (failure != null) CLIP_FRAME_FAILED else CLIP_FRAME,
         // Fitted whole rather than cropped: a comment's media never
         // crops, and a clip is no exception.
         fit = ContentScale.Fit,
-        badge = ThumbBadge.Remove(onRemove),
+        badge = if (failure != null) ThumbBadge.Failed else ThumbBadge.Remove(onRemove),
         // The composer names the running time; the reading surfaces do
-        // not — there, presence on screen is the whole policy.
-        duration = clip.durationMs?.let { formatDuration(it) },
-        uploading = clip.upload is AssetUpload.Running ||
-            clip.upload is AssetUpload.Transcoding,
-        progress = (clip.upload as? AssetUpload.Transcoding)?.let { it.percent / 100f },
+        // not — there, presence on screen is the whole policy. A failed
+        // clip drops it too: the error line is the state now.
+        duration = clip.durationMs
+            ?.takeIf { failure == null }
+            ?.let { formatDuration(it) },
+        uploading = clip.upload.inFlight,
+        // Re-encoding and sending both count up, so the ring keeps
+        // moving across the whole journey rather than resetting between
+        // its two halves — and a part being retried behind the scenes
+        // reads as a pause rather than as a failure.
+        progress = clip.upload.percentOrNull?.let { it / 100f },
         contentDescription = "The video on this reply",
         testTag = "reply_clip",
     )
+    // The fault's words and both ways out, beside the row rather than
+    // inside 200dp of preview — retry does not fit in a tile.
+    failure?.let { message ->
+        UploadErrorLine(
+            message = message,
+            onRetry = onRetry,
+            onRemove = onRemove,
+            testTag = "reply_clip_failed",
+        )
+    }
     // One description for the whole clip; its cover takes none of its
     // own, being the video's face rather than a second picture.
+    // **It stays through a failure**: the frames were cut on the device,
+    // so describing and choosing a face are not waiting on the bytes.
     DescribeCounter(
         described = state.describedCount,
         total = 1,
@@ -243,6 +278,9 @@ private fun RefusedFiles(refused: List<RefusedPick>, onDismiss: (Int) -> Unit) {
 
 /** The comment pager's square, at comment scale (`ReplyVideo`). */
 private val CLIP_FRAME = 220.dp
+
+/** `ReplyVideoFailed` draws the frame a little smaller. */
+private val CLIP_FRAME_FAILED = 200.dp
 
 /**
  * What the reply answers, pinned above the words.

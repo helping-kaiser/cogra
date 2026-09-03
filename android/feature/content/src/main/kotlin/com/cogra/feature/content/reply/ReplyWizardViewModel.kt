@@ -11,6 +11,7 @@ import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.ProcessedVideo
+import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.repo.ContentRepository
@@ -74,6 +75,14 @@ class ReplyWizardViewModel @Inject constructor(
      * transcode got, and this is what the upload then sends.
      */
     private var transcoded: ProcessedVideo? = null
+
+    /**
+     * The resumable session the clip is going up on, once there is one.
+     *
+     * Held so a discarded reply can give it back: until an upload is
+     * completed or aborted the store keeps every part it was handed.
+     */
+    private var uploadSession: String? = null
     private var finderJob: Job? = null
     private var started = false
 
@@ -275,7 +284,11 @@ class ReplyWizardViewModel @Inject constructor(
             val coverId = _state.value.coverMediaId ?: uploadCover() ?: return@launch
             _state.update { it.copy(coverMediaId = coverId) }
 
-            when (val outcome = media.uploadVideo(processed, coverId)) {
+            val sending = { progress: UploadProgress ->
+                uploadSession = progress.uploadId
+                _state.update { it.withUpload(clip.uri, AssetUpload.Sending(progress.percent)) }
+            }
+            when (val outcome = media.uploadVideo(processed, coverId, sending)) {
                 is Outcome.Success -> {
                     _state.update { it.withUpload(clip.uri, AssetUpload.Done(outcome.value.id)) }
                     runCatching { File(processed.path).delete() }
@@ -543,6 +556,13 @@ class ReplyWizardViewModel @Inject constructor(
         // The transcode's cache copy goes with the reply it was for.
         transcoded?.let { runCatching { File(it.path).delete() } }
         transcoded = null
+        // And so do the parts already on the server: a discarded reply
+        // is not coming back for them, and the store would otherwise
+        // hold them for a day.
+        uploadSession?.let { session ->
+            uploadSession = null
+            viewModelScope.launch { media.abortUpload(session) }
+        }
         _state.update { it.copy(confirmingDiscard = false, outcome = ReplyOutcome.Left) }
     }
 
@@ -632,7 +652,7 @@ class ReplyWizardViewModel @Inject constructor(
          */
         const val MAX_VIDEO_BYTES = 50L * 1024 * 1024
 
-        /** How many frames the inline cover row offers — the board draws three. */
-        const val COVER_FRAME_COUNT = 3
+        /** How many frames the inline cover row offers — the board draws four. */
+        const val COVER_FRAME_COUNT = 4
     }
 }
