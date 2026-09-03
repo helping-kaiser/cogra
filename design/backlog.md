@@ -863,17 +863,16 @@ blessed refusal wording; both refuse an animated GIF with words;
 both give a failed clip upload Retry. The cover-pointer move is a
 schema change both apps and the backend follow.
 
-### 33 · Video playback and the rest of the clip's life · *design*
+### 33 · Video playback and the rest of the clip's life · *design* · **round B built**, two questions open
 
 Filed by the feature loop 2026-09-02, from the android lane's 1:1
 audit against the item-31 boards. What the video slice built to
 rulings-without-boards, and what has no answer at all yet:
 
-1. **Feed/detail playback chrome.** The roadmap calls playback
-   settled (muted autoplay on visibility, one global sticky mute,
-   real controls) but no board draws the controls, scrubber, or tap
-   targets. Both apps built from existing media tokens — bless or
-   draw.
+1. ~~**Feed/detail playback chrome.**~~ Closed by round B: the
+   **control ladder** is drawn — a card's sound disc, the detail
+   view's play/pause and timeline, the viewer's full transport, the
+   stream's seek line.
 2. **When two clips are visible, which plays?** Undrawn; android
    gates autoplay at 70% per-frame visibility. A rule wants stating.
 3. **What the author sees when a GIF is picked.** Neither platform
@@ -913,24 +912,50 @@ rulings-without-boards, and what has no answer at all yet:
   in a feed card is deliberately undrawn and is this item's lead
   question.
 
-**Round B — the questions this item now holds:**
+**Round B — what it settled (jakob 2026-09-03, all four questions
+ruled in session; drawn the same day, readme §13, *The reel round*):**
 
-1. **The in-feed display vocabulary for a clip's own shape.** What
-   a 9:16 clip does inside a post card that a 16:9 one does not —
-   how tall a vertical clip is allowed to stand, whether it is
-   letterboxed, cropped to a card shape with the full frame in the
-   viewer, or given a card of its own height. The lead question.
-2. **The cover's display semantics, drawn.** Ruled in prose (readme
-   §13): cover until playback first starts, never reverting after;
-   the still representation in quoted targets, history rows, and
-   reduced-motion / data-saver contexts. No board draws the
-   suppressed-autoplay card.
-3. **The fullscreen viewer's own surfaces** — the controls, the
-   rotate-to-landscape frame, pinch-zoom on a picture. Ruled as
-   scope in the roadmap; undrawn.
-4. **The reel view's surfaces** — the swipe-through, and how a
-   reader learns the stream is their own feed narrowed rather than
-   a second algorithm. Ruled as scope in the roadmap; undrawn.
+1. ~~**The in-feed display vocabulary for a clip's own shape.**~~ A
+   clip keeps its **native ratio clamped to tall**: 16:9 and 1:1
+   display true, anything taller than 4:5 centre-crops to it, the
+   cover crops identically, and **letterboxing exists nowhere**.
+2. ~~**The cover's display semantics, drawn.**~~ *Feed · the cover at
+   rest* draws both frames — the cover before first play, and the
+   **suppressed-autoplay card** wearing a play disc where the sound
+   disc sits, the one card in the product that draws play. Quoted
+   targets and history rows wear the cover as a thumbnail (prose).
+3. ~~**The fullscreen viewer's own surfaces.**~~ Three boards —
+   *Viewer · a picture*, *· a video*, *· rotated* — with the full
+   transport, pinch-zoom, the gallery's swipe, dismissal by X, swipe
+   down or backdrop, no acts, and no description shown.
+4. ~~**The reel view's surfaces.**~~ *Reel · the stream*: portrait
+   clips only, **the default feed mechanically narrowed**, no second
+   algorithm and no header saying so — the score on the rail is what
+   says it. The rail is author · stance · comments · share · score,
+   and the score is the **detail door** that squishes the clip to the
+   top of *Post · a video, the clip pinned*.
+
+Round B also drew **the standalone post detail** (both bodies), which
+the canvas had owed since it was wired — `search-and-open-a-post` is no
+longer blocked, and the chronicle rows and every post's media now land
+on a board.
+
+**Still open here:**
+
+- **Share on a feed card.** Share is drawn on the stream's rail and on
+  the post detail (one tap, the platform's own sheet, no count of
+  ours). Whether the **card's** affordance row grows one is
+  deliberately undecided: that row is one line by rule and already at
+  its width, and share is the affordance a card can most afford to
+  make one tap further away. The apps ship no share control at all
+  until this is answered.
+- **Whether "letterboxing exists nowhere" reaches pictures.** The
+  ruling was made about clips. A comment's uncropped pictures are
+  still *fitted* inside their square frame with the reserved surface
+  showing at the sides (readme §7.1, `MediaAttachment`) — the standing
+  rule that the cap bounds the tile, not the picture. The two readings
+  do not contradict each other for a clip, which crops; for a picture
+  they do, and only jakob can say which wins.
 
 ### 34 · The change-history surface · *design*
 
