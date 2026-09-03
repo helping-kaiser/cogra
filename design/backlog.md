@@ -741,7 +741,7 @@ cover extracted on the device and uploaded as the account's own
 picture. api-spec.md carries the comment grammar and the 50 MiB
 comment cap as of this round.
 
-### 32 · Video compose — what the boards still leave undrawn · *design*
+### 32 · Video compose — what the boards still leave undrawn · *design* · **built**
 
 Filed by the feature loop 2026-09-02, from the web lane's 1:1 audit
 against the item-31 boards (post-#596 state). Six small pieces, plus
@@ -819,6 +819,50 @@ one contradiction to reconcile:
     refusals are boarded at pick; a failed send reuses the tile
     ring + no-Retry line (both apps' interim).
 
+**The video conform round — all fourteen ruled and built (jakob
+2026-09-03).** Rulings in readme §13, *The video conform round*;
+the drawn work below.
+
+Ruled: playback stands as drawn (sound only on every reading
+surface, both scales); the back arrow gates like the X on a
+non-empty comment; the post video cap, the mixed-kind lines and
+the moving-GIF line are blessed copy; count overflow becomes a
+refusal instead of silent truncation; staged content wins a mixed
+selection, and a fresh mixed batch keeps the pictures; the clip is
+the whole body and a line says so where the add control was; four
+cover frames at 1s / 10% / 50% / 90%, deduped; a frame needs no
+crop and a gallery picture does; the cover is changeable at edit
+through the gallery alone; a failed upload keeps Retry; the
+describe sheet gets the clip's shape and both shapes carry the
+reason permanently; the cover is the clip's face wherever the clip
+isn't running, and never returns once playback has started.
+
+Built: six boards — *Pick · a video is the whole post*, *Cover · a
+picture of your own* (the locked crop, AvatarCrop's construction),
+*Describe the video*, *Edit post · a video body*, *Reply · the clip
+didn't upload*, *Edit comment · a clip*. Both refusal boards grew
+the full vocabulary on a full tray, which is what makes the count
+and mixed-kind rows honest. `DescribeSheet` grew its `video` shape
+and both it and `DescribeCounter` grew the permanent sub-line.
+`ComposeCover`'s back arrow reaches the pick; `ComposePickWeb`'s
+drop region and file dialog reach the refusals 1:1, and web takes
+the whole-body state 1:1 as well.
+
+Doc write-back: api-spec.md carries the two-contents contract (the
+cover is its own asset, named on `AttachmentInput`, its pointer
+swapping at edit-sign as a layer on the attachment, never an
+alteration of the video) and the corrected GIF words;
+data-model.md moves `cover_media_id` to the junction rows and adds
+the manifest's cover digest (per-asset map key 3); roadmap.md gains
+the fullscreen viewer, the reel view and change histories, and
+2.5.2's inline-controls line is corrected.
+
+**Left for the apps** (conform, not design): web strips its in-card
+transport controls; web adds the back-arrow gate; both adopt the
+blessed refusal wording; both refuse an animated GIF with words;
+both give a failed clip upload Retry. The cover-pointer move is a
+schema change both apps and the backend follow.
+
 ### 33 · Video playback and the rest of the clip's life · *design*
 
 Filed by the feature loop 2026-09-02, from the android lane's 1:1
@@ -844,9 +888,82 @@ rulings-without-boards, and what has no answer at all yet:
    viewer's real controls"; 2.5.3 lists "the media viewer" — the
    slices contradict on ownership. Both apps ship inline controls
    only.
-5. **Describing a video.** copy-voice says one description for the
-   whole clip and none for its cover, but DescribeSheet is drawn
-   picture-shaped (counter, per-picture entry). The video shape of
-   the sheet is undrawn.
-6. **EditCompose with a video body** — no board draws editing a
-   post whose body is a clip.
+5. **Describing a video.** ~~The video shape of the sheet is
+   undrawn.~~ Closed by the video conform round (item 32):
+   `DescribeSheet` has the clip's shape and *Describe the video*
+   draws it.
+6. **EditCompose with a video body** — ~~no board draws editing a
+   post whose body is a clip.~~ Closed by the video conform round:
+   *Edit post · a video body*.
+
+**What the video conform round settled here (jakob 2026-09-03):**
+
+- **Point 2 is ruled** — one clip plays at a time, at **70%
+  per-frame visibility or more**. Android's gate, blessed.
+- **Point 3 is ruled** — an **animated GIF is refused with words**
+  on both platforms; a still GIF still converts. The readme's
+  format contract is corrected; the line is blessed copy.
+- **Point 4 is ruled** — the **fullscreen viewer owns the real
+  controls**, inline surfaces stay sound-only, and the roadmap now
+  says so at 2.5.2 and 2.5.3 rather than contradicting itself.
+- **Point 1 stays open, and leads round B.** The chrome question is
+  really a shape question: **9:16 reel-style and 16:9 horizontal
+  clips both exist, and square is the COMMENT scale's shape only** —
+  a post card squaring everything is a bug. How the two ratios sit
+  in a feed card is deliberately undrawn and is this item's lead
+  question.
+
+**Round B — the questions this item now holds:**
+
+1. **The in-feed display vocabulary for a clip's own shape.** What
+   a 9:16 clip does inside a post card that a 16:9 one does not —
+   how tall a vertical clip is allowed to stand, whether it is
+   letterboxed, cropped to a card shape with the full frame in the
+   viewer, or given a card of its own height. The lead question.
+2. **The cover's display semantics, drawn.** Ruled in prose (readme
+   §13): cover until playback first starts, never reverting after;
+   the still representation in quoted targets, history rows, and
+   reduced-motion / data-saver contexts. No board draws the
+   suppressed-autoplay card.
+3. **The fullscreen viewer's own surfaces** — the controls, the
+   rotate-to-landscape frame, pinch-zoom on a picture. Ruled as
+   scope in the roadmap; undrawn.
+4. **The reel view's surfaces** — the swipe-through, and how a
+   reader learns the stream is their own feed narrowed rather than
+   a second algorithm. Ruled as scope in the roadmap; undrawn.
+
+### 34 · The change-history surface · *design*
+
+Filed by the video conform round 2026-09-03, from jakob's ruling
+that **everything versioned shows its change history to the user**,
+reachable from the thing's own three-dot menu. The roadmap carries
+the scope (Staged workstreams, *Change histories on every versioned
+thing*); the surfaces are undrawn.
+
+Every versioned kind is in scope — posts, comments, stances,
+profiles, chat messages — and the product already keeps the rows: an
+edit replaces the whole content and earlier versions stay public
+under *Edited* unless removed (the "Editing" dialog,
+[guidelines/copy-voice.md](guidelines/copy-voice.md)). What has
+never been drawn is where a reader *goes* to see them.
+
+The questions:
+
+1. **One surface or one per kind?** A post's history and a stance's
+   history are different shapes — a body that changed against a pair
+   of numbers that moved. Whether that is one screen with a row
+   vocabulary or a family of screens is the lead question.
+2. **What a version row shows.** The date, and what else — a diff, a
+   summary, the whole earlier version, the acts that rode the edit?
+   The acts sheet (`EditActs` / `CommentEditActs`) already words what
+   an edit signs, and a history row is that after the fact.
+3. **Where the removed versions sit.** An author may remove earlier
+   versions, and a redaction leaves a visible mark rather than
+   erasing silently. The history is the surface where that mark is
+   most visible, so its removed state is part of the design, not an
+   edge case.
+4. **The menu entry's words**, and whether a thing with exactly one
+   version shows the entry at all.
+5. **The stance case.** A stance's history is a record of where
+   someone stood over time — the most sensitive of the five to draw,
+   and the one most likely to want a shape of its own.
