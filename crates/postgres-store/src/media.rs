@@ -526,10 +526,7 @@ pub async fn record_upload_part(
 
 /// The session's parts in assembly order — the order a completion has to
 /// quote them in, since the store concatenates by ascending part number.
-pub async fn upload_parts(
-    pool: &PgPool,
-    session_id: Uuid,
-) -> Result<Vec<UploadPart>, sqlx::Error> {
+pub async fn upload_parts(pool: &PgPool, session_id: Uuid) -> Result<Vec<UploadPart>, sqlx::Error> {
     sqlx::query_as!(
         UploadPart,
         r#"

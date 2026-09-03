@@ -284,7 +284,10 @@ pub async fn receive_part(
     if bytes.len() as u64 != expected {
         return Err(refuse(
             "part",
-            format!("part {part_number} is {expected} bytes, got {}", bytes.len()),
+            format!(
+                "part {part_number} is {expected} bytes, got {}",
+                bytes.len()
+            ),
         ));
     }
 
@@ -493,7 +496,10 @@ pub async fn sweep_expired(pool: &PgPool, blobs: &Arc<dyn BlobStore>) {
     if expired.is_empty() {
         return;
     }
-    tracing::debug!(rows = expired.len(), "media sweeper collected upload sessions");
+    tracing::debug!(
+        rows = expired.len(),
+        "media sweeper collected upload sessions"
+    );
 
     for session in expired {
         if session.unfinished {
