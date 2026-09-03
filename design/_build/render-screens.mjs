@@ -67,7 +67,9 @@ function Raw({ html, tag = "div", style }) {
 // (extra `renderVals` entries, one code string like `keyTitle: this.props
 // .wording === "app" ? "…" : "…"`); its markup then carries `{{name}}` holes
 // the canvas substitutes live — how a generated board keeps a tweak chip
-// beyond the theme.
+// beyond the theme. It may also export FRAME ({ width, height }) where the
+// state it draws is not a portrait phone — the rotated viewer, and nothing
+// else so far; the canvas entry carries the same size.
 import { shell } from "./shell.mjs";
 import { applyFlowMarkers } from "./flow-markers.mjs";
 
@@ -94,11 +96,11 @@ for (const file of readdirSync(screensDir).sort()) {
     "React",
     "components",
     "Raw",
-    `${compiled}\nif (typeof Screen !== "function") throw new Error("no Screen export");\nreturn { Screen, PROPS: typeof PROPS === "undefined" ? null : PROPS, VALS: typeof VALS === "undefined" ? null : VALS };`
+    `${compiled}\nif (typeof Screen !== "function") throw new Error("no Screen export");\nreturn { Screen, PROPS: typeof PROPS === "undefined" ? null : PROPS, VALS: typeof VALS === "undefined" ? null : VALS, FRAME: typeof FRAME === "undefined" ? null : FRAME };`
   );
-  const { Screen, PROPS, VALS } = factory(React, ns, Raw);
+  const { Screen, PROPS, VALS, FRAME } = factory(React, ns, Raw);
   const markup = applyFlowMarkers(name, renderToStaticMarkup(React.createElement(Screen)));
-  writeFileSync(join(outDir, `${name}.dc.html`), shell(markup, PROPS, VALS));
+  writeFileSync(join(outDir, `${name}.dc.html`), shell(markup, PROPS, VALS, FRAME ?? undefined));
   count += 1;
   console.log(`rendered ${name}.dc.html`);
 }
