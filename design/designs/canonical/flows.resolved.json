@@ -32,12 +32,6 @@
         "WalletKeyAbsent",
         "WalletSetup"
       ],
-      "startsUndesigned": [
-        "ApplicantFeed/15: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "ApplicantWaiting/12: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "ProfileApplicant/12: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "WalletApplicant/3: applicant acts once each — boards pending (ruled 2026-09-01)"
-      ],
       "steps": [
         "start · «nav · New post» on 25 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
@@ -413,10 +407,6 @@
         "Removed",
         "VouchBack"
       ],
-      "startsUndesigned": [
-        "ApplicantFeed/10: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "ApplicantWaiting/7: applicant acts once each — boards pending (ruled 2026-09-01)"
-      ],
       "steps": [
         "start · «stance face» — to VouchBackPad on 13 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
@@ -626,12 +616,6 @@
         "WalletKeyAbsent",
         "WalletSetup"
       ],
-      "startsUndesigned": [
-        "ApplicantFeed/15: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "ApplicantWaiting/12: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "ProfileApplicant/12: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "WalletApplicant/3: applicant acts once each — boards pending (ruled 2026-09-01)"
-      ],
       "steps": [
         "start · «nav · New post» on 25 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
@@ -701,12 +685,6 @@
         "WalletEmpty",
         "WalletKeyAbsent",
         "WalletSetup"
-      ],
-      "startsUndesigned": [
-        "ApplicantFeed/15: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "ApplicantWaiting/12: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "ProfileApplicant/12: applicant acts once each — boards pending (ruled 2026-09-01)",
-        "WalletApplicant/3: applicant acts once each — boards pending (ruled 2026-09-01)"
       ],
       "steps": [
         "start · «nav · New post» on 25 boards → ComposePick",
@@ -2102,17 +2080,13 @@
     }
   },
   "gapsOnFlows": [
-    "ApplicantFeed/10: applicant acts once each — boards pending (ruled 2026-09-01)",
     "ApplicantFeed/11: Post Score drill-down (backlog item 13)",
-    "ApplicantFeed/15: applicant acts once each — boards pending (ruled 2026-09-01)",
     "ApplicantFeed/18: the chat surface (not designed)",
     "ApplicantFeed/5: reader's post menu — licence terms / cite (not boarded)",
     "ApplicantFeed/8: the topic page (ruled 2026-09-01 — not designed)",
-    "ApplicantWaiting/12: applicant acts once each — boards pending (ruled 2026-09-01)",
     "ApplicantWaiting/15: the chat surface (not designed)",
     "ApplicantWaiting/2: reader's post menu — licence terms / cite (not boarded)",
     "ApplicantWaiting/5: the topic page (ruled 2026-09-01 — not designed)",
-    "ApplicantWaiting/7: applicant acts once each — boards pending (ruled 2026-09-01)",
     "ApplicantWaiting/8: Post Score drill-down (backlog item 13)",
     "CommentEdit/9: the topic picker (not boarded)",
     "CommentEditVideo/9: the topic picker (not boarded)",
@@ -2169,7 +2143,6 @@
     "Profile/2: the profile's menu — mention / share (not boarded)",
     "Profile/3: the settings screen (not designed)",
     "Profile/7: the invites screen (not designed)",
-    "ProfileApplicant/12: applicant acts once each — boards pending (ruled 2026-09-01)",
     "ProfileApplicant/1: the chat surface (not designed)",
     "ProfileApplicant/2: the profile's menu — mention / share (not boarded)",
     "ProfileApplicant/3: the settings screen (not designed)",
