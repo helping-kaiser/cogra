@@ -193,7 +193,7 @@ data class ReplyWizardState(
      */
     val uploadsRunning: Boolean
         get() = picked.any {
-            it.upload is AssetUpload.Running || it.upload is AssetUpload.Transcoding
+            it.upload.inFlight
         }
 
     val uploadsFailed: Boolean get() = picked.any { it.upload is AssetUpload.Failed }
@@ -320,8 +320,7 @@ fun ReplyWizardState.pickedPictures(): List<PickedPicture> = picked.map { asset 
             asset.altText.ifBlank { null },
         ),
         described = asset.altText.isNotBlank(),
-        uploading = asset.upload is AssetUpload.Running ||
-            asset.upload is AssetUpload.Transcoding,
+        uploading = asset.upload.inFlight,
         failed = asset.upload is AssetUpload.Failed,
     )
 }

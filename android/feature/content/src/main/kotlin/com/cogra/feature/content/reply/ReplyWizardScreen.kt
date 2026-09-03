@@ -112,6 +112,7 @@ fun ReplyWizardRoute(
             )
         },
         onDismissRefusal = viewModel::onDismissRefusal,
+        onRetryUpload = viewModel::onRetryUpload,
         onKeepWriting = viewModel::onKeepWriting,
         onDiscard = viewModel::onLeave,
         onNext = viewModel::onNext,
@@ -169,6 +170,7 @@ internal fun ReplyWizardScreen(
     onPickCoverFrame: (Int) -> Unit,
     onOpenCoverPicker: () -> Unit,
     onDismissRefusal: (Int) -> Unit,
+    onRetryUpload: (String) -> Unit,
     onKeepWriting: () -> Unit,
     onDiscard: () -> Unit,
     onNext: () -> Unit,
@@ -256,6 +258,7 @@ internal fun ReplyWizardScreen(
                             onPickCoverFrame = onPickCoverFrame,
                             onPickCoverPicture = onOpenCoverPicker,
                             onDismissRefusal = onDismissRefusal,
+                            onRetryUpload = onRetryUpload,
                         )
                     }
                     WizardFooter {
