@@ -2133,6 +2133,42 @@ item 33, jakob's rulings the same day).
   the chronicle rows and every post's media had been opening into a gap
   now lands on a board.
 
+### The applicant once-each round — 2026-09-03
+
+Closes the six gaps the pattern-boards round deliberately left open
+(item 23): the applicant's stance face and New post starts, wired per
+the ruling that an applicant stages each kind of act once (2026-09-01).
+
+- **The first tap opens the real surface, and the act stages.** A
+  tap on the stance face still opens the pad, a press-and-hold on it
+  still blooms the master board, and New post still opens the wizard —
+  the once-each rule governs the *second* tap, not the first, so
+  nothing about reaching the real surfaces changed.
+- **An exhausted kind answers in place.** Once an applicant has staged
+  a post or a stance, the same control's next tap no longer opens
+  anything — it answers where it was pressed, "Your post is staged —
+  it lands with you." or the stance's equivalent. These are **self
+  outcomes marked info-true**, per the user-flow layer's rule that an
+  all-informing `advance` fails the gate: here it does not, because
+  the *first*-tap outcomes still advance to a real board, and only the
+  once-staged branch merely informs.
+- **The snackbar is drawn once, on the existing board.** Per the
+  Invites precedent on `ProfileApplicant.jsx`, the answer is a
+  `Snackbar` on `ApplicantWaiting` — no new board for an outcome that
+  is a sentence, not a surface. It is informational, not an error, so
+  the Snackbar charter's never-for-errors rule is untouched: nothing
+  went wrong, the act is simply already staged.
+- **Applicant origins join the guest except lists.** The New-post and
+  stance-face control-selector flows already excepted the guest
+  origins (`Main`, `FeedBare`, `WalletGuest`, `KeyElsewhere`) because a
+  control start must mean one thing everywhere; the applicant boards
+  now join them, because staged is not landed — a flow that expects
+  New post to end in a signed post cannot walk through a tap that only
+  restages what is already staged.
+- **The gate**: 114 → 108 gaps, 867 edges unchanged (the six rows were
+  already numbered; only their `to` arrays filled in), 56 declared · 51
+  resolved · 5 blocked by a gap unchanged.
+
 ## 14. Index
 
 **Root**
