@@ -67,16 +67,27 @@ pub fn connect_info_app_with_standin(
 ) -> (axum::Router, StandIn) {
     let (ctx, auth) = api_context(pool, mailer, rate_limits);
     let standin = ctx.funding.clone();
+    let uploads = upload_routing(&ctx);
     let app = api::app(
         api::schema::build(ctx),
         auth,
         ClientIpSource::ConnectInfo,
-        &MediaConfig::default(),
+        uploads,
     )
     .layer(axum::Extension(axum::extract::ConnectInfo(
         std::net::SocketAddr::from(([127, 0, 0, 1], 9999)),
     )));
     (app, standin)
+}
+
+/// The part route's state, taken off the context the schema is about to
+/// consume.
+pub fn upload_routing(ctx: &api::schema::ApiContext) -> api::UploadRouting {
+    api::UploadRouting {
+        pool: ctx.pool.clone(),
+        blobs: ctx.blobs.clone(),
+        media: ctx.media.clone(),
+    }
 }
 
 /// The router deriving the client IP from `X-Real-Ip`, for suites where
@@ -88,11 +99,12 @@ pub fn x_real_ip_app(
     rate_limits: RateLimitConfig,
 ) -> axum::Router {
     let (ctx, auth) = api_context(pool, mailer, rate_limits);
+    let uploads = upload_routing(&ctx);
     api::app(
         api::schema::build(ctx),
         auth,
         ClientIpSource::XRealIp,
-        &MediaConfig::default(),
+        uploads,
     )
 }
 

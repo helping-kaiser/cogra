@@ -401,6 +401,237 @@ pub async fn by_id(pool: &PgPool, id: Uuid) -> Result<Option<MediaAttachment>, s
     .await
 }
 
+/// An upload in progress: what the server must remember to finish it
+/// after the connection that started it is gone.
+#[derive(Debug, Clone)]
+pub struct UploadSession {
+    pub id: Uuid,
+    pub author_id: Uuid,
+    pub storage_key: String,
+    pub upload_id: String,
+    pub declared_bytes: i64,
+    pub part_size_bytes: i32,
+    pub part_count: i32,
+    /// The asset a finished session produced, and the reason a retried
+    /// completion is cheap: set, it is the answer; null, the upload is
+    /// still open.
+    pub media_id: Option<Uuid>,
+    pub expires_at: DateTime<Utc>,
+}
+
+/// One part the store has acknowledged.
+#[derive(Debug, Clone)]
+pub struct UploadPart {
+    pub part_number: i32,
+    pub content_id: String,
+    pub size_bytes: i32,
+}
+
+/// Opens a session. The row is written after the store's multipart
+/// upload exists, so `upload_id` always names something real.
+#[allow(clippy::too_many_arguments)]
+pub async fn open_upload_session(
+    pool: &PgPool,
+    id: Uuid,
+    author_id: Uuid,
+    storage_key: &str,
+    upload_id: &str,
+    declared_bytes: i64,
+    part_size_bytes: i32,
+    part_count: i32,
+    ttl_secs: f64,
+) -> Result<UploadSession, sqlx::Error> {
+    sqlx::query_as!(
+        UploadSession,
+        r#"
+        INSERT INTO media_upload_sessions
+            (id, author_id, storage_key, upload_id, declared_bytes,
+             part_size_bytes, part_count, expires_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, now() + make_interval(secs => $8))
+        RETURNING id, author_id, storage_key, upload_id, declared_bytes,
+                  part_size_bytes, part_count, media_id, expires_at
+        "#,
+        id,
+        author_id,
+        storage_key,
+        upload_id,
+        declared_bytes,
+        part_size_bytes,
+        part_count,
+        ttl_secs,
+    )
+    .fetch_one(pool)
+    .await
+}
+
+/// The session, if it is this author's and has not expired.
+///
+/// Expiry is applied in the query rather than compared by the caller so
+/// that a session the sweeper has not reached yet still behaves as gone.
+/// Otherwise the window between expiry and the next sweep would be a
+/// window in which an upload the server has promised to collect still
+/// accepts parts.
+pub async fn upload_session(
+    pool: &PgPool,
+    id: Uuid,
+    author_id: Uuid,
+) -> Result<Option<UploadSession>, sqlx::Error> {
+    sqlx::query_as!(
+        UploadSession,
+        r#"
+        SELECT id, author_id, storage_key, upload_id, declared_bytes,
+               part_size_bytes, part_count, media_id, expires_at
+        FROM media_upload_sessions
+        WHERE id = $1 AND author_id = $2 AND expires_at > now()
+        "#,
+        id,
+        author_id,
+    )
+    .fetch_optional(pool)
+    .await
+}
+
+/// Records a part, replacing any earlier attempt at the same number.
+///
+/// The upsert is the idempotency this whole path is built on: the store
+/// overwrites a re-sent part's bytes, and this overwrites the identifier
+/// that names them, so the two never disagree about which attempt is
+/// current.
+pub async fn record_upload_part(
+    pool: &PgPool,
+    session_id: Uuid,
+    part_number: i32,
+    content_id: &str,
+    size_bytes: i32,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        r#"
+        INSERT INTO media_upload_parts
+            (session_id, part_number, content_id, size_bytes)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (session_id, part_number)
+            DO UPDATE SET content_id  = EXCLUDED.content_id,
+                          size_bytes  = EXCLUDED.size_bytes,
+                          uploaded_at = now()
+        "#,
+        session_id,
+        part_number,
+        content_id,
+        size_bytes,
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// The session's parts in assembly order — the order a completion has to
+/// quote them in, since the store concatenates by ascending part number.
+pub async fn upload_parts(pool: &PgPool, session_id: Uuid) -> Result<Vec<UploadPart>, sqlx::Error> {
+    sqlx::query_as!(
+        UploadPart,
+        r#"
+        SELECT part_number, content_id, size_bytes
+        FROM media_upload_parts
+        WHERE session_id = $1
+        ORDER BY part_number
+        "#,
+        session_id,
+    )
+    .fetch_all(pool)
+    .await
+}
+
+/// Marks the session as having produced this asset.
+///
+/// This is the commit point of a completion: from here a retry is
+/// answered out of the row instead of re-assembling anything.
+pub async fn finish_upload_session(
+    pool: &PgPool,
+    id: Uuid,
+    media_id: Uuid,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        "UPDATE media_upload_sessions SET media_id = $2 WHERE id = $1",
+        id,
+        media_id,
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// Drops a session and its parts.
+///
+/// **The store is released first here, and the row dropped after** —
+/// the opposite of the asset sweep's order, deliberately. That sweep
+/// writes rows first because a row pointing at nothing is a render that
+/// can never succeed, while an unreferenced object is merely garbage. A
+/// session row renders nothing, so the asymmetry that justifies the
+/// order does not exist; what matters instead is that the row is the
+/// only handle anything has on the store-side upload. Drop it while the
+/// upload still lives and its parts become unreachable — billed and
+/// collectable by nothing this server runs. Kept until the abort
+/// succeeds, a failed abort simply leaves the row for the next sweep to
+/// retry, and the cleanup converges.
+pub async fn close_upload_session(pool: &PgPool, id: Uuid) -> Result<(), sqlx::Error> {
+    sqlx::query!("DELETE FROM media_upload_sessions WHERE id = $1", id)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+/// A session the sweep is about to collect, and what the store still
+/// holds for it.
+#[derive(Debug, Clone)]
+pub struct ExpiredUpload {
+    pub id: Uuid,
+    pub storage_key: String,
+    pub upload_id: String,
+    /// Whether the session ever produced an asset. A finished session has
+    /// nothing left in the store; an unfinished one is still holding
+    /// parts that only an abort releases.
+    pub unfinished: bool,
+}
+
+/// Sessions past their expiry, oldest first.
+///
+/// Read rather than deleted, because the caller has store-side work to do
+/// per row and the row is the only handle on it — see
+/// [`close_upload_session`] for why that inverts the asset sweep's order.
+///
+/// An upload nobody finished is worse than an orphaned object: until it
+/// is aborted the store keeps every part, bills for them, and serves them
+/// to no one. So this is not the asset sweep's optional sibling — it is
+/// the only thing that ever releases those parts.
+///
+/// Finished sessions are collected on the same pass. They are kept until
+/// expiry on purpose: while the row lives, a client that lost the
+/// completion's reply is handed the asset back instead of a refusal, and
+/// that window is exactly what makes a blip during completion survivable.
+///
+/// The limit bounds one tick's work. A backlog is drained over several
+/// ticks rather than in one long transaction, so a sweep that falls
+/// behind never becomes a sweep that blocks.
+pub async fn expired_upload_sessions(
+    pool: &PgPool,
+    limit: i64,
+) -> Result<Vec<ExpiredUpload>, sqlx::Error> {
+    sqlx::query_as!(
+        ExpiredUpload,
+        r#"
+        SELECT id, storage_key, upload_id,
+               (media_id IS NULL) AS "unfinished!"
+        FROM media_upload_sessions
+        WHERE expires_at <= now()
+        ORDER BY expires_at
+        LIMIT $1
+        "#,
+        limit,
+    )
+    .fetch_all(pool)
+    .await
+}
+
 /// Collects assets nobody kept.
 ///
 /// An upload precedes the write that references it, so a compose the
@@ -410,11 +641,19 @@ pub async fn by_id(pool: &PgPool, id: Uuid) -> Result<Option<MediaAttachment>, s
 ///
 /// **The join is the seam.** "Orphaned" means no reference from any of
 /// the four content junctions, none from the profile and chat image
-/// columns, and none from another asset that names this one as its
-/// poster. Every one of those references is checked here, in one query,
-/// deliberately: a reference this list misses is an asset deleted out
-/// from under a live parent, so the list must be extended in the same
-/// change that adds a way to reference an asset.
+/// columns, none from another asset that names this one as its poster,
+/// and none from the upload session that produced it. Every one of those
+/// references is checked here, in one query, deliberately: a reference
+/// this list misses is an asset deleted out from under a live parent, so
+/// the list must be extended in the same change that adds a way to
+/// reference an asset.
+///
+/// The session probe is the newest of them and the least obvious. A
+/// finished session holds its asset's id so a retried completion can be
+/// answered without re-assembling anything; without this probe an asset
+/// nobody attached would age out while its session still pointed at it,
+/// and the foreign key would refuse the delete — failing not that row but
+/// the whole sweep, so nothing would ever be collected again.
 ///
 /// The self-reference is the one an asset's own row carries. A poster is
 /// referenced by its video rather than by any parent, so without that
@@ -461,6 +700,8 @@ pub async fn sweep_orphans(
           AND NOT EXISTS (SELECT 1 FROM chat_versions c WHERE c.image_id = m.id)
           AND NOT EXISTS (
                 SELECT 1 FROM media_attachments v WHERE v.cover_media_id = m.id)
+          AND NOT EXISTS (
+                SELECT 1 FROM media_upload_sessions s WHERE s.media_id = m.id)
         RETURNING id, storage_key
         "#,
         max_age_secs,
