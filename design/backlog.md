@@ -392,9 +392,8 @@ WalletGuest) left the `nav · New post` and `stance face` selector
 starts, and KeyElsewhere left the stance-face one: a control start
 must mean one thing everywhere, and those taps now start a gate.
 
-Still owed on this item: the applicant's once-each acting boards
-(deliberately left in the census), the reader's post / comment
-/ profile menus, the topic page and picker, the chat surface, the
+Still owed on this item: the reader's post / comment / profile
+menus, the topic page and picker, the chat surface, the
 settlement/tip/rail record views, the settings and invites screens,
 the item / offer surfaces, the Sky (item 16), and item 13's Post Score
 drill-down.
@@ -422,6 +421,17 @@ Two follow-ups the round surfaces, still open:
   componentize-first pass** — hand-coded boards the componentize
   principle (above) applies to but hasn't reached yet; each needs its
   own round before any further alteration.
+
+**Round 4 — the applicant once-each acts (2026-09-03).** The stance
+face and New post starts on `ApplicantFeed`, `ApplicantWaiting`,
+`WalletApplicant` and `ProfileApplicant` wired per the 2026-09-01
+ruling: first tap opens the real surface (`VouchBackPad`, `ComposePick`)
+and the act stages; the exhausted kind answers in place with an
+info-true snackbar on `ApplicantWaiting`, drawn per the Invites
+precedent — no new board. The New-post and stance-face
+control-selector flows except these applicant origins alongside the
+guest ones, since staged is not landed. 6 gaps closed. Readme
+§13 *The applicant once-each round* records the shape.
 
 **The chat surface arrives owing the action row a decision** (jakob
 2026-09-03): sending a post *into a chat* is the next contender for a
