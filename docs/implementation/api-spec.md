@@ -4,6 +4,11 @@ The API is a single GraphQL endpoint served by Axum +
 async-graphql.
 
 - **Endpoint**: `POST /graphql`
+- **Upload part**: `PUT /media/uploads/{uploadId}/parts/{partNumber}`
+  — one part of a resumable upload, the bytes as the raw body. The
+  only route carrying anything but GraphQL, and only because a
+  multipart envelope per chunk is overhead on the one exchange that
+  is pure bytes (see "Resuming a large upload").
 - **GraphQL IDE**: `GET /playground` (dev mode only)
 - **Health check**: `GET /health`
 
@@ -3252,6 +3257,115 @@ says so.
   repair re-encodes anything: media is copied through byte for
   byte, and a video's chunk offsets are corrected for what was
   removed ahead of them.
+
+**Resuming a large upload.** `uploadMedia` sends a file in one
+request, so one dropped connection costs the whole file — at the
+video cap, a hundred megabytes lost to a server that was
+unreachable for a second. A file above one part size is uploaded
+in pieces instead, through the mechanism the object store already
+speaks: S3 multipart upload, whose own guidance is to use it
+"over a spotty network… to increase resiliency against network
+errors by avoiding upload restarts", retrying only the interrupted
+parts rather than the object.
+
+- **Three steps.** `beginMediaUpload` opens a session and returns
+  the cut the server dictated; each part rides its own
+  `PUT /media/uploads/{uploadId}/parts/{partNumber}` carrying the
+  raw bytes and the ordinary `Authorization: Bearer` header;
+  `completeMediaUpload` assembles them and returns
+  `UploadMediaPayload` — the very payload `uploadMedia` returns,
+  so a client reads one answer shape for both paths.
+- **The server dictates the cut**, because getting it wrong is
+  only discovered at assembly: every part but the last must clear
+  the 5 MiB floor S3 puts under a non-final part, so a client that
+  guessed smaller would upload a whole file and have the
+  completion refuse it. `partSizeBytes` is 8 MiB by default
+  (`MEDIA_UPLOAD_PART_SIZE_BYTES`); every part but the last is
+  **exactly** that, the last is what remains, and a part of any
+  other size is refused. Parts are numbered from 1, S3's own
+  convention.
+- **Re-sending a part replaces it.** A part number names a
+  position, not an attempt — so a client that never heard back
+  about a part simply sends it again, and neither the store's bytes
+  nor the server's part list can end up describing two attempts.
+  Parts may be sent in any order and concurrently.
+- **Completion is idempotent.** The blip can land on the
+  completion too, so the session remembers the asset it produced
+  and a second call is answered with that same asset rather than a
+  refusal or a second object.
+- **Caps are checked twice, and the declared size is not
+  evidence.** `declaredBytes` and `kind` buy an early refusal at
+  `["declaredBytes"]` and fix the part arithmetic; what the file
+  *is* is decided by sniffing the assembled bytes, and the cap it
+  answers to follows from that. A still declared as a video is
+  refused at completion by the still cap, so under-declaring buys
+  no allowance.
+- **One session costs one upload's rate limit**, consumed at
+  `beginMediaUpload` and not per part — charging per part would
+  price a large file out of an hourly budget sized for whole
+  pictures.
+- **A session expires after 24 hours**
+  (`MEDIA_UPLOAD_SESSION_TTL_SECS`), the window an unreferenced
+  asset already gets, and the sweep then aborts it and releases its
+  parts. `abortMediaUpload` does the same at once, which a
+  cancelled compose should call: until an upload is completed or
+  aborted the store holds every part it was given and serves them
+  to nobody.
+- **Refusals report on `uploadId`.** The message is the one a
+  single-shot upload gives on `["file"]`, but these inputs have no
+  `file` field to name; a missing session, an expired one, and one
+  belonging to another account are deliberately one `NOT_FOUND`
+  answer, so a session id nobody owns reveals nothing. The part
+  route answers in the same vocabulary over plain HTTP —
+  `{ "code", "message", "field" }` with `400`, `401`, `403`, `404`
+  and `500` carrying it.
+
+Clients should switch at one part size: below 8 MiB a single-shot
+`uploadMedia` is one round trip and resumability buys nothing,
+while every video and any still near its cap belongs on this path.
+
+```graphql
+"Open a resumable upload. The same pure L2 operation uploadMedia
+ is — no record, no θ — cut into pieces so a dropped connection
+ costs one piece rather than the file."
+input BeginMediaUploadInput {
+  "How many bytes the client is about to send. It fixes the cut
+   and buys an early refusal; it is never evidence about the
+   bytes, and a part that does not match the cut is refused."
+  declaredBytes: Int!
+  "Which cap the early refusal uses. The sniff at completion
+   decides what the file actually is."
+  kind: MediaUploadKind!
+}
+enum MediaUploadKind { STILL VIDEO }
+type MediaUploadSession {
+  id: UUID!
+  partSizeBytes: Int!
+  partCount: Int!
+  expiresAt: DateTime!
+}
+type BeginMediaUploadPayload { upload: MediaUploadSession! }
+
+"Assemble a resumable upload into an asset. Safe to retry: a
+ client whose connection dropped waiting for this reply calls it
+ again and is handed the same asset."
+input CompleteMediaUploadInput {
+  uploadId: UUID!
+  "The video's poster, on the same terms uploadMedia states."
+  coverMediaId: UUID
+}
+
+"Give up on an upload and release its parts now rather than at
+ expiry."
+input AbortMediaUploadInput { uploadId: UUID! }
+type AbortMediaUploadPayload { aborted: Boolean! }
+
+extend type Mutation {
+  beginMediaUpload(input: BeginMediaUploadInput!): BeginMediaUploadPayload!
+  completeMediaUpload(input: CompleteMediaUploadInput!): UploadMediaPayload!
+  abortMediaUpload(input: AbortMediaUploadInput!): AbortMediaUploadPayload!
+}
+```
 
 **Media serving.** Bytes are served by the **media origin**, not
 by the API: the store is its own service, so `MediaAttachment.url`

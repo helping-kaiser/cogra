@@ -33,7 +33,7 @@ use crate::auth::{self, AuthConfig, RefreshError, Viewer};
 use crate::breach::BreachCorpus;
 use crate::l1::StandInBoundary;
 use crate::mailer::{Mail, Mailer, WebOrigin};
-use crate::media::{self, BlobStore, MediaConfig};
+use crate::media::{self, BlobStore, MediaConfig, resumable};
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 use crate::profile::ProfileError;
 use crate::ratelimit::{self, RateLimitConfig, RequestIp, Window, scope};
@@ -715,6 +715,103 @@ impl UploadMediaPayload {
             media: None,
             user_errors: vec![error],
         }
+    }
+}
+
+/// What a client is about to send, so an upload that could never be
+/// accepted is refused before it costs anyone a megabyte.
+///
+/// It is never evidence about the bytes. The sniff at completion decides
+/// what the file is and which cap it answers to — this only picks the cap
+/// the early refusal uses.
+#[derive(async_graphql::Enum, Copy, Clone, Eq, PartialEq)]
+enum MediaUploadKind {
+    Still,
+    Video,
+}
+
+impl From<MediaUploadKind> for resumable::DeclaredKind {
+    fn from(kind: MediaUploadKind) -> Self {
+        match kind {
+            MediaUploadKind::Still => Self::Still,
+            MediaUploadKind::Video => Self::Video,
+        }
+    }
+}
+
+/// Opens a resumable upload for a file too large to risk in one request.
+#[derive(InputObject)]
+struct BeginMediaUploadInput {
+    /// How many bytes the client is about to send. It fixes the cut the
+    /// server dictates below and buys an early refusal; it proves
+    /// nothing, and a part that does not match the cut is refused.
+    declared_bytes: i32,
+    kind: MediaUploadKind,
+}
+
+/// The cut the server dictated, and how long the client has to send it.
+#[derive(SimpleObject)]
+struct MediaUploadSession {
+    /// Names the session on every part request and at completion.
+    id: Uuid,
+    /// How large each part must be — every part but the last exactly,
+    /// the last one whatever remains. The server dictates it because
+    /// getting it wrong is only discovered at assembly.
+    part_size_bytes: i32,
+    part_count: i32,
+    /// After this the server collects the upload and its parts. A client
+    /// that has not finished by then starts over.
+    expires_at: DateTime<Utc>,
+}
+
+#[derive(SimpleObject)]
+struct BeginMediaUploadPayload {
+    upload: Option<MediaUploadSession>,
+    user_errors: Vec<UserError>,
+}
+
+/// Assembles a resumable upload into an asset.
+#[derive(InputObject)]
+struct CompleteMediaUploadInput {
+    upload_id: Uuid,
+    /// The video's poster, on the same terms `uploadMedia` states: an
+    /// asset this account already uploaded, named as the asset is created
+    /// because an asset row is immutable once written.
+    cover_media_id: Option<Uuid>,
+}
+
+/// Gives up on an upload and releases its parts.
+#[derive(InputObject)]
+struct AbortMediaUploadInput {
+    upload_id: Uuid,
+}
+
+#[derive(SimpleObject)]
+struct AbortMediaUploadPayload {
+    aborted: bool,
+    user_errors: Vec<UserError>,
+}
+
+/// A session refusal as a field error.
+///
+/// Refused bytes report on `uploadId` rather than on `file`: the message
+/// is the one a single-shot upload would give, but the input has no
+/// `file` field to hang it on, and a path that names nothing in the
+/// input is worse than one that names the upload it was about.
+fn session_refusal(e: resumable::SessionError) -> UserError {
+    match e {
+        resumable::SessionError::NotFound => UserError::at(
+            ErrorCode::NotFound,
+            "no such upload session",
+            vec!["uploadId".into()],
+        ),
+        resumable::SessionError::BadInput(e) => {
+            UserError::at(ErrorCode::BadInput, e.message, e.path)
+        }
+        resumable::SessionError::Refused(e) => {
+            UserError::at(ErrorCode::BadInput, e.to_string(), vec!["uploadId".into()])
+        }
+        resumable::SessionError::Internal(e) => internal(e),
     }
 }
 
@@ -2046,6 +2143,126 @@ impl Mutation {
             media: Some(MediaAttachmentType::asset(row)),
             user_errors: vec![],
         })
+    }
+
+    /// Opens a resumable upload.
+    ///
+    /// The same pure L2 operation `uploadMedia` is — no record, no θ —
+    /// cut into pieces so that a connection that drops costs one piece
+    /// rather than the whole file. A client that has bytes to spare
+    /// keeps using `uploadMedia`; this exists for the file where a
+    /// moment's unreachable server would otherwise mean starting over.
+    ///
+    /// The rate limit is consumed here and only here. One session is one
+    /// upload, so it costs what one `uploadMedia` costs; charging per
+    /// part instead would price a large file out of an hourly budget
+    /// sized for whole pictures.
+    async fn begin_media_upload(
+        &self,
+        ctx: &Context<'_>,
+        input: BeginMediaUploadInput,
+    ) -> async_graphql::Result<BeginMediaUploadPayload> {
+        let v = member_viewer(ctx).await?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        guard_window(
+            ctx,
+            scope::UPLOAD_ACCOUNT,
+            &v.user_id.to_string(),
+            limits.upload_account,
+        )
+        .await?;
+
+        let pool = ctx.data::<PgPool>()?;
+        let config = ctx.data::<MediaConfig>()?;
+        let blobs = ctx.data::<Arc<dyn BlobStore>>()?;
+
+        match media::resumable::begin(
+            pool,
+            blobs.as_ref(),
+            config,
+            v.user_id,
+            i64::from(input.declared_bytes),
+            input.kind.into(),
+        )
+        .await
+        {
+            Ok(plan) => Ok(BeginMediaUploadPayload {
+                upload: Some(MediaUploadSession {
+                    id: plan.session_id,
+                    part_size_bytes: i32::try_from(plan.part_size_bytes).unwrap_or(i32::MAX),
+                    part_count: i32::try_from(plan.part_count).unwrap_or(i32::MAX),
+                    expires_at: plan.expires_at,
+                }),
+                user_errors: vec![],
+            }),
+            Err(e) => Ok(BeginMediaUploadPayload {
+                upload: None,
+                user_errors: vec![session_refusal(e)],
+            }),
+        }
+    }
+
+    /// Assembles a resumable upload and returns the asset it made.
+    ///
+    /// The payload is `uploadMedia`'s, deliberately: the two paths differ
+    /// in how bytes arrive and in nothing else, so a client that can read
+    /// one answer can read the other without learning a second shape.
+    ///
+    /// Safe to retry. A client whose connection dropped waiting for this
+    /// reply calls it again and is handed the same asset, because the
+    /// session remembers what it produced.
+    async fn complete_media_upload(
+        &self,
+        ctx: &Context<'_>,
+        input: CompleteMediaUploadInput,
+    ) -> async_graphql::Result<UploadMediaPayload> {
+        let v = member_viewer(ctx).await?;
+        let pool = ctx.data::<PgPool>()?;
+        let config = ctx.data::<MediaConfig>()?;
+        let blobs = ctx.data::<Arc<dyn BlobStore>>()?;
+
+        match media::resumable::complete(
+            pool,
+            blobs.as_ref(),
+            config,
+            v.user_id,
+            input.upload_id,
+            input.cover_media_id,
+        )
+        .await
+        {
+            Ok(row) => Ok(UploadMediaPayload {
+                media: Some(MediaAttachmentType::asset(row)),
+                user_errors: vec![],
+            }),
+            Err(e) => Ok(UploadMediaPayload::refused(session_refusal(e))),
+        }
+    }
+
+    /// Gives up on a resumable upload.
+    ///
+    /// Offered so a cancelled compose releases the store's parts now
+    /// rather than at expiry: until an upload is completed or aborted the
+    /// store holds every part it was given and serves them to nobody.
+    async fn abort_media_upload(
+        &self,
+        ctx: &Context<'_>,
+        input: AbortMediaUploadInput,
+    ) -> async_graphql::Result<AbortMediaUploadPayload> {
+        let v = member_viewer(ctx).await?;
+        let pool = ctx.data::<PgPool>()?;
+        let blobs = ctx.data::<Arc<dyn BlobStore>>()?;
+
+        match media::resumable::abort(pool, blobs.as_ref(), v.user_id, input.upload_id).await {
+            Ok(()) => Ok(AbortMediaUploadPayload {
+                aborted: true,
+                user_errors: vec![],
+            }),
+            Err(e) => Ok(AbortMediaUploadPayload {
+                aborted: false,
+                user_errors: vec![session_refusal(e)],
+            }),
+        }
     }
 
     /// Prepares a new Post: one genesis Publish through the ordinary

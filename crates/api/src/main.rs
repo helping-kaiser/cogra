@@ -153,6 +153,11 @@ async fn main() -> anyhow::Result<()> {
     ));
 
     let auth = auth_config()?;
+    let uploads = api::UploadRouting {
+        pool: pool.clone(),
+        blobs: blobs.clone(),
+        media: media.clone(),
+    };
     let schema = api::schema::build(ApiContext {
         pool,
         boundary,
@@ -179,10 +184,12 @@ async fn main() -> anyhow::Result<()> {
     let listener = tokio::net::TcpListener::bind(&addr)
         .await
         .with_context(|| format!("binding {addr}"))?;
-    tracing::info!("listening on http://{addr} — /graphql, /health, /playground (dev)");
+    tracing::info!(
+        "listening on http://{addr} — /graphql, /media/uploads, /health, /playground (dev)"
+    );
     axum::serve(
         listener,
-        api::app(schema, auth, ip_source, &media)
+        api::app(schema, auth, ip_source, uploads)
             .into_make_service_with_connect_info::<std::net::SocketAddr>(),
     )
     .await?;

@@ -35,6 +35,7 @@
 //! no size — renditions stay addable later without a contract change.
 
 pub mod blob;
+pub mod resumable;
 pub mod video;
 pub mod webp;
 
@@ -103,12 +104,46 @@ pub struct MediaConfig {
     pub max_video_upload_bytes: usize,
     pub orphan_reaper_interval_secs: u64,
     pub orphan_max_age_secs: f64,
+    /// How large a piece a resumable upload is cut into.
+    ///
+    /// The server dictates this rather than the client proposing it,
+    /// because getting it wrong is only discovered at assembly: S3
+    /// requires every part but the last to clear
+    /// [`MIN_MULTIPART_PART_BYTES`], so a client that guessed smaller
+    /// would upload an entire file and have the completion refuse it.
+    ///
+    /// It is also the knob that decides what a blip costs. A dropped
+    /// connection loses at most the part in flight, so a smaller part
+    /// means a cheaper retry and more round trips — which is the trade
+    /// S3's own guidance names when it recommends smaller parts over a
+    /// spotty network.
+    pub upload_part_size_bytes: usize,
+    /// How long an unfinished upload may sit before the sweep collects
+    /// it and releases its parts.
+    pub upload_session_ttl_secs: f64,
 }
 
 const DEFAULT_MAX_UPLOAD_BYTES: usize = 10 * 1024 * 1024;
 const DEFAULT_MAX_VIDEO_UPLOAD_BYTES: usize = 100 * 1024 * 1024;
 const DEFAULT_ORPHAN_REAPER_INTERVAL_SECS: u64 = 600;
 const DEFAULT_ORPHAN_MAX_AGE_SECS: f64 = 86_400.0;
+
+/// The smallest a non-final part may be, fixed by S3 and inherited by
+/// every store that speaks it. Configuration is checked against this
+/// rather than trusted, because a part size below it produces an upload
+/// that accepts every part and then refuses to assemble.
+pub const MIN_MULTIPART_PART_BYTES: usize = 5 * 1024 * 1024;
+
+const DEFAULT_UPLOAD_PART_SIZE_BYTES: usize = 8 * 1024 * 1024;
+
+/// A day, the same window an unreferenced asset gets.
+///
+/// The two are one policy said twice: an upload nobody finished and an
+/// asset nobody attached are both the residue of a compose that was
+/// abandoned, and there is no reason for them to age out on different
+/// clocks. S3's own guidance is to abort incomplete uploads on a
+/// lifecycle rule; this is that rule, run by the server that opened them.
+const DEFAULT_UPLOAD_SESSION_TTL_SECS: f64 = 86_400.0;
 
 fn env_or(var: &str, fallback: &str) -> String {
     std::env::var(var).unwrap_or_else(|_| fallback.to_string())
@@ -141,6 +176,8 @@ impl Default for MediaConfig {
             max_video_upload_bytes: DEFAULT_MAX_VIDEO_UPLOAD_BYTES,
             orphan_reaper_interval_secs: DEFAULT_ORPHAN_REAPER_INTERVAL_SECS,
             orphan_max_age_secs: DEFAULT_ORPHAN_MAX_AGE_SECS,
+            upload_part_size_bytes: DEFAULT_UPLOAD_PART_SIZE_BYTES,
+            upload_session_ttl_secs: DEFAULT_UPLOAD_SESSION_TTL_SECS,
         }
     }
 }
@@ -171,6 +208,20 @@ impl MediaConfig {
                 base.orphan_reaper_interval_secs,
             )?,
             orphan_max_age_secs: env_parsed("MEDIA_ORPHAN_MAX_AGE_SECS", base.orphan_max_age_secs)?,
+            upload_part_size_bytes: {
+                let size = env_parsed("MEDIA_UPLOAD_PART_SIZE_BYTES", base.upload_part_size_bytes)?;
+                if size < MIN_MULTIPART_PART_BYTES {
+                    anyhow::bail!(
+                        "MEDIA_UPLOAD_PART_SIZE_BYTES must be at least {MIN_MULTIPART_PART_BYTES} \
+                         bytes, the floor S3 puts under every part but the last"
+                    );
+                }
+                size
+            },
+            upload_session_ttl_secs: env_parsed(
+                "MEDIA_UPLOAD_SESSION_TTL_SECS",
+                base.upload_session_ttl_secs,
+            )?,
         })
     }
 
@@ -876,6 +927,13 @@ pub async fn store_asset(
 /// ordering is chosen to prefer. An object whose delete fails is simply
 /// not retried: it is unreferenced, it costs storage and nothing else,
 /// and a retry queue for it would be more machinery than the problem.
+///
+/// The abandoned-upload sweep rides the same tick. The two collect the
+/// two halves of one abandoned compose — the asset nobody attached and
+/// the upload nobody finished — and splitting them across two loops
+/// would be a second interval to configure for no gain. It runs first
+/// because a session it finishes collecting can leave an asset behind
+/// for the orphan sweep to see on this very pass.
 pub async fn orphan_reaper_loop(
     pool: PgPool,
     blobs: Arc<dyn BlobStore>,
@@ -886,6 +944,7 @@ pub async fn orphan_reaper_loop(
     ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
     loop {
         ticker.tick().await;
+        resumable::sweep_expired(&pool, &blobs).await;
         match store::sweep_orphans(&pool, max_age_secs).await {
             Ok(swept) if swept.is_empty() => {}
             Ok(swept) => {

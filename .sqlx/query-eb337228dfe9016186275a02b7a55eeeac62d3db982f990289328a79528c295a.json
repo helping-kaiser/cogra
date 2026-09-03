@@ -1,0 +1,71 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT id, author_id, storage_key, upload_id, declared_bytes,\n               part_size_bytes, part_count, media_id, expires_at\n        FROM media_upload_sessions\n        WHERE id = $1 AND author_id = $2 AND expires_at > now()\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "author_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "storage_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "upload_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "declared_bytes",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "part_size_bytes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "part_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "media_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 8,
+        "name": "expires_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "eb337228dfe9016186275a02b7a55eeeac62d3db982f990289328a79528c295a"
+}
