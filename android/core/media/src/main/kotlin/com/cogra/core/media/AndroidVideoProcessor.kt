@@ -7,7 +7,9 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.container.Mp4OrientationData
 import androidx.media3.effect.Presentation
+import androidx.media3.transformer.AudioEncoderSettings
 import androidx.media3.transformer.Composition
+import androidx.media3.transformer.DefaultEncoderFactory
 import androidx.media3.transformer.EditedMediaItem
 import androidx.media3.transformer.Effects
 import androidx.media3.transformer.ExportException
@@ -15,8 +17,10 @@ import androidx.media3.transformer.ExportResult
 import androidx.media3.transformer.InAppMp4Muxer
 import androidx.media3.transformer.ProgressHolder
 import androidx.media3.transformer.Transformer
+import androidx.media3.transformer.VideoEncoderSettings
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
+import com.cogra.domain.media.VideoBitrate
 import com.cogra.domain.media.VideoFrame
 import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
@@ -56,12 +60,13 @@ class AndroidVideoProcessor(
 
     override suspend fun transcode(
         uri: String,
+        capBytes: Long,
         onProgress: (Int) -> Unit,
     ): ProcessedVideo? {
         val probe = probe(uri) ?: return null
         val output = File(context.cacheDir, "upload-${System.nanoTime()}.mp4")
 
-        val exported = runCatching { export(uri, probe, output, onProgress) }
+        val exported = runCatching { export(uri, probe, output, capBytes, onProgress) }
             .getOrElse {
                 output.delete()
                 return null
@@ -97,12 +102,32 @@ class AndroidVideoProcessor(
         uri: String,
         probe: Probe,
         output: File,
+        capBytes: Long,
         onProgress: (Int) -> Unit,
     ): Boolean = withContext(Dispatchers.Main) {
         suspendCancellableCoroutine { cont ->
             val transformer = Transformer.Builder(context)
                 .setVideoMimeType(MimeTypes.VIDEO_H264)
                 .setAudioMimeType(MimeTypes.AUDIO_AAC)
+                // The rate is stated rather than left to the encoder.
+                // Unset, Media3 falls back to the Kush Gauge — about
+                // 8.7 Mbps at 1080p30 — which is twice industry
+                // standard and turns a six-minute clip into four
+                // hundred megabytes.
+                .setEncoderFactory(
+                    DefaultEncoderFactory.Builder(context)
+                        .setRequestedVideoEncoderSettings(
+                            VideoEncoderSettings.Builder()
+                                .setBitrate(VideoBitrate.forClip(probe.durationMs, capBytes))
+                                .build(),
+                        )
+                        .setRequestedAudioEncoderSettings(
+                            AudioEncoderSettings.Builder()
+                                .setBitrate(VideoBitrate.AUDIO_BPS)
+                                .build(),
+                        )
+                        .build(),
+                )
                 // Where the metadata strip happens. Transformer copies
                 // the input format's metadata entries into the muxer, so
                 // a transcode alone carries the source container's boxes
