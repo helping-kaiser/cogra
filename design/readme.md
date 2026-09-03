@@ -2284,7 +2284,10 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   comment's topics and references are named. `ReplyCited` draws that
   surface once a citation is staged — the reference joining the acts
   card rather than sitting beside it, because a staged reference is an
-  act and the total has to count it. Like `PostLicense`, it is a
+  act and the total has to count it. Staged topics and references are
+  unstageable everywhere: the reply's staged rows carry the same
+  remove the post's details rows do, and ReplySeal's componentize pass
+  inherits it. Like `PostLicense`, it is a
   declared **entry**: the picker hands its pick back to the composer
   it was opened from, so no tap reaches this state.
 - **Only what exists gets a row.** The post and comment menus hold

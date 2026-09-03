@@ -66,7 +66,23 @@ export function Screen() {
         <ActsCard
           rows={[
             { label: "Comment", value: "Reply to @ada's post", count: "1 action" },
-            { label: "Reference", value: "Tide tables and the third headland — @juno", count: "1 action" },
+            {
+              label: "Reference",
+              value: (
+                <span style={{ display: "flex", alignItems: "center", gap: 4, minWidth: 0 }}>
+                  <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Tide tables and the third headland — @juno</span>
+                  <button
+                    type="button"
+                    aria-label="Remove Tide tables and the third headland"
+                    className="cg-state cg-focus"
+                    style={{ flex: "none", display: "grid", placeItems: "center", height: 32, width: 32, border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0 }}
+                  >
+                    <Icon name="close" size={18} />
+                  </button>
+                </span>
+              ),
+              count: "1 action",
+            },
             { label: "", value: <AddRow>+ Add a topic</AddRow>, count: "1 more action" },
             { label: "", value: <AddRow>+ Cite something</AddRow>, count: "1 more action" },
           ]}
