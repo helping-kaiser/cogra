@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO media_upload_parts\n            (session_id, part_number, content_id, size_bytes)\n        VALUES ($1, $2, $3, $4)\n        ON CONFLICT (session_id, part_number)\n            DO UPDATE SET content_id  = EXCLUDED.content_id,\n                          size_bytes  = EXCLUDED.size_bytes,\n                          uploaded_at = now()\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7d1b61163388c19f80580cd21fd52e7423e57dc3c2d4f5983ca55d944e68e470"
+}
