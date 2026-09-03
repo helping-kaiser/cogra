@@ -184,6 +184,13 @@ fun VideoPlayer(
     // reference would go on talking to a released instance.
     val player = VideoStage.playerFor(token, url)
 
+    // Whether the clip this surface is for is the one on stage — asked
+    // separately from owning it, because during a navigation both
+    // surfaces are composed and only the arriving one holds the token.
+    // The leaving one then has no player while its own clip is playing
+    // one composable over, and that is not a reason to draw a cover.
+    val clipOnStage = VideoStage.holding?.url == url
+
     DisposableEffect(player) {
         val listener = object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -275,24 +282,17 @@ fun VideoPlayer(
             },
         )
 
-        // The poster covers the surface until a frame exists to show —
-        // which is also the state a clip that never autoplays, or one
-        // whose stage another clip has taken, stays in.
-        //
-        // **And until the surface knows how big the video is.**
-        // `videoSizeDp` starts null and is filled in from an effect, so
-        // the composition right after a player moves to a new surface
-        // measures at full parent size while a frame is already landing
-        // on it — androidx/media#3238, whose reported symptom is
-        // exactly a first frame at the wrong size. The poster stays over
-        // that one frame rather than letting it show.
-        // Which of the three reasons is in play is the question the
-        // device has to answer: "the cover flashed" has three candidate
-        // causes and they do not share a fix.
+        // The poster covers the surface until a frame of this clip
+        // exists to show — which is also the state a clip that never
+        // autoplays, or one whose stage another clip has taken, stays
+        // in. A surface merely mid-handover draws nothing at all: the
+        // arriving surface is showing the very same clip through the
+        // crossfade, and a cover on top of that is the flash.
         val reason = posterReason(
             coverSurface = presentation.coverSurface,
             hasPlayer = player != null,
             alreadyRendered = VideoStage.hasRendered,
+            clipOnStage = clipOnStage,
         )
         LaunchedEffect(reason, traced) {
             VideoTrace.poster(traced, shown = reason != null, reason = reason ?: "surface ready")
@@ -346,27 +346,19 @@ enum class VideoControls { SoundOnly, Full }
 /**
  * Whether the poster stands in front of the surface.
  *
- * Three reasons, and the third is the one that was missing.
- *
- * [coverSurface] is Media3's own answer — no frame has been rendered
- * yet, so there is nothing behind the poster to show. [hasPlayer] is
- * ours: a surface whose clip another has taken off the stage has no
- * player to draw at all.
- *
- * [videoSizeKnown] is the guard against a documented race.
- * `PresentationState.videoSizeDp` starts null and is filled in from an
- * effect, so the composition immediately after a player moves onto a new
- * surface still measures at full parent size — and a frame can land on
- * that surface before the size arrives, which is exactly the
- * wrong-sized first frame reported as androidx/media#3238. Holding the
- * poster over that one frame costs nothing and is the difference
- * between a clean hand-over and a visible jump.
+ * [coverSurface] is Media3's own answer about this surface — no frame
+ * has been rendered on it yet, so there is nothing behind the poster to
+ * show. [hasPlayer] and [clipOnStage] are the stage's two halves: which
+ * surface may bind the player, and which clip the player holds.
+ * [alreadyRendered] is the stage's memory of having drawn this clip at
+ * all.
  */
 internal fun posterCovers(
     coverSurface: Boolean,
     hasPlayer: Boolean,
     alreadyRendered: Boolean,
-): Boolean = posterReason(coverSurface, hasPlayer, alreadyRendered) != null
+    clipOnStage: Boolean,
+): Boolean = posterReason(coverSurface, hasPlayer, alreadyRendered, clipOnStage) != null
 
 /**
  * *Why* the poster is in front, or null when it is not.
@@ -379,20 +371,31 @@ internal fun posterCovers(
  * playing a moment before. [alreadyRendered] belongs to the stage rather
  * than the surface precisely because it has to outlive the surface.
  *
- * The reason is what the device log carries. "The cover flashed" has two
- * candidate causes here and a third that is not in this function at all
- * — a `SurfaceView` being destroyed and recreated shows its own black
- * window, which no poster rule would explain. Naming the two lets the
- * log rule them in or out, and their absence points at the third.
+ * **Losing the token is not losing the clip.** A navigation composes
+ * both screens at once and the arriving surface takes the token, so the
+ * leaving one reads no player for the length of the crossfade — while
+ * the clip it is for is playing one composable over. Drawing the cover
+ * there put the hand-picked still on top of a clip in motion, in both
+ * directions; drawing nothing lets the arriving surface show through.
+ * So the question is asked in the order the reader experiences it: is
+ * this clip on stage at all, has it ever drawn a frame, and only then
+ * whose surface holds it.
+ *
+ * The reason is what the device log carries, and it names which of the
+ * causes is in play. A third is not in this function at all — a
+ * `SurfaceView` destroyed and recreated shows its own black window,
+ * which no poster rule would explain — so naming these lets the log
+ * rule them in or out, and their absence points at that one.
  */
 internal fun posterReason(
     coverSurface: Boolean,
     hasPlayer: Boolean,
     alreadyRendered: Boolean,
+    clipOnStage: Boolean,
 ): String? = when {
-    !hasPlayer -> "no player — another clip holds the stage"
+    !clipOnStage -> "no clip on stage"
     alreadyRendered -> null
-    coverSurface -> "no frame rendered yet"
+    !hasPlayer || coverSurface -> "no frame rendered yet"
     else -> null
 }
 
