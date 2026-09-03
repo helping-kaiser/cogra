@@ -190,8 +190,16 @@
     { "from": "Join", "via": 3, "kind": "advance", "label": "Email field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "Join", "via": 4, "kind": "advance", "label": "Password field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "Join", "via": 5, "kind": "advance", "label": "reveal password", "to": [{ "terminal": "self", "case": "the password shows" }] },
-    { "from": "Join", "via": 6, "kind": "advance", "label": "Create account", "to": [{ "board": "ApplicantFeed", "case": "account created — applicant days begin" }, { "gap": "field-error states (not boarded)", "case": "handle taken / invalid input" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "Join", "via": 6, "kind": "advance", "label": "Create account", "to": [{ "board": "ApplicantFeed", "case": "account created — applicant days begin" }, { "board": "JoinErrors", "case": "handle taken / invalid input" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "Join", "via": 7, "kind": "advance", "label": "Already have an account? Sign in", "to": [{ "board": "SignIn" }] },
+
+    { "from": "JoinErrors", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "InviteEntry" }] },
+    { "from": "JoinErrors", "via": 2, "kind": "advance", "label": "Handle field", "to": [{ "terminal": "self", "case": "typing" }] },
+    { "from": "JoinErrors", "via": 3, "kind": "advance", "label": "Email field", "to": [{ "terminal": "self", "case": "typing" }] },
+    { "from": "JoinErrors", "via": 4, "kind": "advance", "label": "Password field", "to": [{ "terminal": "self", "case": "typing" }] },
+    { "from": "JoinErrors", "via": 5, "kind": "advance", "label": "reveal password", "to": [{ "terminal": "self", "case": "the password shows" }] },
+    { "from": "JoinErrors", "via": 6, "kind": "advance", "label": "Create account", "to": [{ "board": "ApplicantFeed", "case": "account created — applicant days begin" }, { "terminal": "self", "case": "still failing — the line updates in place" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "JoinErrors", "via": 7, "kind": "advance", "label": "Already have an account? Sign in", "to": [{ "board": "SignIn" }] },
 
     { "from": "JoinInvalid", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back" }] },
     { "from": "JoinInvalid", "via": 2, "kind": "advance", "label": "invite link field", "to": [{ "terminal": "self", "case": "typing" }] },
