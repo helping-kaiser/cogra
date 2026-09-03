@@ -803,6 +803,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: ">Just looking? Browse the feed", tag: "button" },
     { n: 10, find: ">On Android? Download the app (APK)</button>", tag: "button" },
   ],
+  Restore: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="recovery-code"', tag: "input" },
+    { n: 3, find: "Don&#x27;t remember this account on this device", tag: "input" },
+    { n: 4, find: ">Restore the key</button>", tag: "button" },
+  ],
 });
 
 /* The band's Chats affordance (jakob 2026-09-01): CograBand carries it on
