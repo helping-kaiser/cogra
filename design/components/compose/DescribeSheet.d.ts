@@ -16,6 +16,12 @@ export interface DescribeSheetProps {
   onChange?: (value: string) => void;
   onDone?: () => void;
   inline?: boolean;
+  /**
+   * The clip's shape: "Describe the video", one entry for the whole clip, the
+   * preview wearing the play disc. The cover is never offered — it is the
+   * video's face, not a second picture.
+   */
+  video?: boolean;
 }
 
 export declare function DescribeSheet(props: DescribeSheetProps): JSX.Element;
