@@ -690,7 +690,7 @@ class ComposeWizardViewModel @Inject constructor(
             _state.update { it.copy(coverMediaId = coverId) }
 
             _state.update { it.withUpload(clip.uri, AssetUpload.Transcoding(0)) }
-            val processed = video.transcode(clip.uri) { percent ->
+            val processed = video.transcode(clip.uri, MAX_VIDEO_BYTES) { percent ->
                 _state.update { it.withUpload(clip.uri, AssetUpload.Transcoding(percent)) }
             }
             if (processed == null) {

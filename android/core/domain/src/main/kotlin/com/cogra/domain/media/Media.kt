@@ -83,11 +83,20 @@ interface VideoProcessor {
      * Transcodes the clip at [uri] to MP4 / H.264 + AAC, scaled down to
      * the upload resolution and stripped of container metadata.
      *
+     * [capBytes] is where it is going — a post's cap or a comment's.
+     * The bitrate is chosen against it (see [VideoBitrate]), so a long
+     * clip is encoded smaller rather than encoded generously and then
+     * refused for being too big.
+     *
      * [onProgress] reports 0..100 as the transcode runs — a clip is long
      * enough that a spinner with no number reads as a hang. Null when
      * the bytes are not a video the device can read at all.
      */
-    suspend fun transcode(uri: String, onProgress: (Int) -> Unit): ProcessedVideo?
+    suspend fun transcode(
+        uri: String,
+        capBytes: Long,
+        onProgress: (Int) -> Unit,
+    ): ProcessedVideo?
 
     /**
      * The cover frames offered for [uri], oldest first.
