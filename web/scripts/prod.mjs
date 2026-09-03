@@ -58,7 +58,7 @@ export const UPSTREAM_READY_TIMEOUT_MS = 120_000;
  * router behind it or raising the router's would change nothing.
  *
  * It matches `UPLOAD_PROXY_TIMEOUT_MS` in `next.config.ts` — 100 MiB, the
- * largest body the contract admits, at roughly 1 Mbit/s. `prod-timeouts.test.ts`
+ * largest body the contract admits, at roughly 1 Mbit/s. `media-proxy.test.ts`
  * pins the two together so neither can be raised alone.
  */
 export const REQUEST_TIMEOUT_MS = 900_000;
