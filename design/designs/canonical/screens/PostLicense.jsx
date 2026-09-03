@@ -10,15 +10,23 @@
    reads Hide license, in the same position it always had.
 
    The terms themselves are the master's own inset — the caption naming what
-   unfolded, then one row per axis, the two readings aligned. This post is
-   public domain, the pair a reader meets most, so the name of that pair rides
-   the caption line while the rows still spell what it means. */
+   unfolded, then one row per axis, the two readings aligned. The post carrying
+   them declares credit on every use and no record of use, so the block shows
+   what it is for: two axes that genuinely differ, read as a pair. The
+   both-axes-zero case is the one a reader has a word for, and that word rides
+   the caption line when it comes up.
+
+   The board takes the post with ONE wide picture rather than the gallery's
+   four tall ones. A reveal has to be drawn where there is room to read it, and
+   the gallery post is the tallest body in the fixture set — unfolded on that
+   card, the terms push the topics line and the whole affordance row past the
+   fold, and a state nobody can see is a state nobody can check. */
 export function Screen() {
   return (
     <>
       <DetailHeader items={READER_POST_MENU_SHOWN} />
       <DetailColumn>
-        <PostCard {...MIRA_GALLERY_POST} variant="detail" defaultShowLicense />
+        <PostCard {...ADA_POST} variant="detail" defaultShowLicense />
       </DetailColumn>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>
