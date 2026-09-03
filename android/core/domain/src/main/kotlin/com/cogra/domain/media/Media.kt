@@ -241,6 +241,37 @@ interface DeviceMediaSource {
 }
 
 /**
+ * How far a resumable upload has got.
+ *
+ * [uploadId] rides along because it is the only way out: a composer
+ * that is discarded mid-upload has to name the session to abort it, and
+ * the id is the server's to give rather than the client's to invent. It
+ * arrives with the first tick, before any part has landed.
+ *
+ * A single-shot upload reports nothing — there are no parts to count,
+ * and it is over before a progress bar would have moved.
+ */
+data class UploadProgress(
+    val uploadId: String,
+    val sentParts: Int,
+    val partCount: Int,
+) {
+    /** 0..100, for the ring the composer already draws. */
+    val percent: Int
+        get() = if (partCount <= 0) 0 else (sentParts * 100) / partCount
+}
+
+/**
+ * When a file stops going in one request and starts going in parts.
+ *
+ * One part size, which is the server's default: "below 8 MiB a
+ * single-shot `uploadMedia` is one round trip and resumability buys
+ * nothing, while every video and any still near its cap belongs on this
+ * path" (api-spec.md, "Resuming a large upload").
+ */
+const val RESUMABLE_THRESHOLD_BYTES = 8L * 1024 * 1024
+
+/**
  * The upload verb (api-spec.md `uploadMedia`; D5).
  *
  * One asset per call, by design: a ten-picture post is ten calls the
@@ -270,5 +301,15 @@ interface MediaRepository {
     suspend fun uploadVideo(
         video: ProcessedVideo,
         coverMediaId: String,
+        onProgress: (UploadProgress) -> Unit = {},
     ): Outcome<MediaAssetView>
+
+    /**
+     * Gives up a resumable upload's parts now rather than at expiry.
+     *
+     * Fire-and-forget by design: a composer being discarded is not
+     * waiting to hear whether the store let go, and a failure here
+     * costs a day of held parts rather than anything the author sees.
+     */
+    suspend fun abortUpload(uploadId: String)
 }

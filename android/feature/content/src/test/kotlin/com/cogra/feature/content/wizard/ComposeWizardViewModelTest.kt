@@ -20,6 +20,7 @@ import com.cogra.domain.media.DeviceMedia
 import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
+import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.VideoFrame
 import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.references.ReferenceClaim
@@ -127,9 +128,13 @@ class ComposeWizardViewModelTest {
         override suspend fun uploadVideo(
             video: ProcessedVideo,
             coverMediaId: String,
+            onProgress: (UploadProgress) -> Unit,
         ): Outcome<MediaAssetView> {
             order += "video"
             namedCover = coverMediaId
+            // One tick, so the composer learns the session it would
+            // have to abort if the author walked away.
+            onProgress(UploadProgress(uploadId = "session-1", sentParts = 1, partCount = 2))
             if (videoRefused) {
                 return Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "not H.264")))
             }
@@ -1151,6 +1156,33 @@ class ComposeWizardViewModelTest {
         assertThat(vm.state.value.isVideoPost).isTrue()
         assertThat(vm.state.value.hasCoverStep).isTrue()
         assertThat(vm.state.value.hasCropStep).isFalse()
+    }
+
+    @Test
+    fun leavingGivesTheHalfSentUploadBack() = runTest(dispatcher) {
+        // Nothing can ask the server what a half-sent upload already
+        // received, so returning to the draft starts a fresh session
+        // either way — and the store would otherwise hold the parts for
+        // a day.
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+
+        vm.onLeave()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.abortedUploads).containsExactly("session-1")
+    }
+
+    @Test
+    fun anUploadThatNeverStartedHasNothingToGiveBack() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onLeave()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.abortedUploads).isEmpty()
     }
 
     @Test

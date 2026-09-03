@@ -13,6 +13,7 @@ import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.MediaProcessor
+import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.media.MediaRepository
@@ -79,6 +80,16 @@ class ComposeWizardViewModel @Inject constructor(
 
     /** One job per picked asset, so a retry cancels only its own. */
     private val uploads = mutableMapOf<String, Job>()
+
+    /**
+     * The resumable session a clip is going up on, once there is one.
+     *
+     * Held so it can be given back: until an upload is completed or
+     * aborted the store keeps every part it was handed, for a day. The
+     * id is the server's, so it only exists from the first progress
+     * tick onwards.
+     */
+    private var uploadSession: String? = null
 
     private var finderJob: Job? = null
     private var started = false
@@ -665,7 +676,7 @@ class ComposeWizardViewModel @Inject constructor(
     fun onRetryUpload(uri: String) {
         val state = _state.value
         val asset = state.picked.firstOrNull { it.uri == uri } ?: return
-        if (asset.upload is AssetUpload.Running || asset.upload is AssetUpload.Transcoding) return
+        if (asset.upload.inFlight) return
         if (asset.isVideo) {
             startVideoUpload()
             return
@@ -708,7 +719,11 @@ class ComposeWizardViewModel @Inject constructor(
             }
 
             _state.update { it.withUpload(clip.uri, AssetUpload.Running) }
-            when (val outcome = media.uploadVideo(processed, coverId)) {
+            val sending = { progress: UploadProgress ->
+                uploadSession = progress.uploadId
+                _state.update { it.withUpload(clip.uri, AssetUpload.Sending(progress.percent)) }
+            }
+            when (val outcome = media.uploadVideo(processed, coverId, sending)) {
                 is Outcome.Success -> _state.update {
                     it.withUpload(clip.uri, AssetUpload.Done(outcome.value.id))
                 }
@@ -907,7 +922,19 @@ class ComposeWizardViewModel @Inject constructor(
             val draft = current.toDraft()
             if (draft.isEmpty) drafts.clear() else drafts.save(draft)
         }
+        // The draft is kept but the session is not: nothing can ask the
+        // server what a half-sent upload already received, so returning
+        // to this draft starts a fresh one either way. Handing the parts
+        // back now saves the store a day of holding them.
+        releaseSession()
         _state.update { it.copy(outcome = WizardOutcome.DraftKept) }
+    }
+
+    /** Gives back a half-finished upload's parts, if there are any. */
+    private fun releaseSession() {
+        val session = uploadSession ?: return
+        uploadSession = null
+        viewModelScope.launch { media.abortUpload(session) }
     }
 
     fun onOutcomeConsumed() = _state.update { it.copy(outcome = null) }
@@ -1008,8 +1035,8 @@ class ComposeWizardViewModel @Inject constructor(
         const val UNREADABLE_COVER = "That picture could not be read as a cover."
         const val REFUSED_COVER = "The server would not take that cover."
 
-        /** How many frames `ComposeCover` offers — the board draws three. */
-        const val COVER_FRAME_COUNT = 3
+        /** How many frames `ComposeCover` offers — the board draws four. */
+        const val COVER_FRAME_COUNT = 4
     }
 }
 
