@@ -1,4 +1,16 @@
 """
+Gives up on an upload and releases its parts.
+"""
+input AbortMediaUploadInput {
+	uploadId: UUID!
+}
+
+type AbortMediaUploadPayload {
+	aborted: Boolean!
+	userErrors: [UserError!]!
+}
+
+"""
 A user account's service state (auth.md "Account states"): it gates
 acting through CoGra, never reading, and is distinct from the
 mutual-pair membership of invitations.md §2. GUEST is reserved — no
@@ -202,6 +214,24 @@ type AuthSession {
 	user: User
 }
 
+"""
+Opens a resumable upload for a file too large to risk in one request.
+"""
+input BeginMediaUploadInput {
+	"""
+	How many bytes the client is about to send. It fixes the cut the
+	server dictates below and buys an early refusal; it proves
+	nothing, and a part that does not match the cut is refused.
+	"""
+	declaredBytes: Int!
+	kind: MediaUploadKind!
+}
+
+type BeginMediaUploadPayload {
+	upload: MediaUploadSession
+	userErrors: [UserError!]!
+}
+
 input ChangeHandleInput {
 	handle: String!
 }
@@ -334,6 +364,19 @@ type is Reviewable on the substrate; the variants grow with the
 slices that carry them — slice 2 offers Posts and Comments.
 """
 union CommentTarget = Post | Comment
+
+"""
+Assembles a resumable upload into an asset.
+"""
+input CompleteMediaUploadInput {
+	uploadId: UUID!
+	"""
+	The video's poster, on the same terms `uploadMedia` states: an
+	asset this account already uploaded, named as the asset is created
+	because an asset row is immutable once written.
+	"""
+	coverMediaId: UUID
+}
 
 input ConfirmEmailChangeInput {
 	"""
@@ -810,6 +853,41 @@ type MediaOptions {
 }
 
 """
+What a client is about to send, so an upload that could never be
+accepted is refused before it costs anyone a megabyte.
+
+It is never evidence about the bytes. The sniff at completion decides
+what the file is and which cap it answers to — this only picks the cap
+the early refusal uses.
+"""
+enum MediaUploadKind {
+	STILL
+	VIDEO
+}
+
+"""
+The cut the server dictated, and how long the client has to send it.
+"""
+type MediaUploadSession {
+	"""
+	Names the session on every part request and at completion.
+	"""
+	id: UUID!
+	"""
+	How large each part must be — every part but the last exactly,
+	the last one whatever remains. The server dictates it because
+	getting it wrong is only discovered at assembly.
+	"""
+	partSizeBytes: Int!
+	partCount: Int!
+	"""
+	After this the server collects the upload and its parts. A client
+	that has not finished by then starts over.
+	"""
+	expiresAt: DateTime!
+}
+
+"""
 Text carrying its own moderation status. `value` is null when the
 field is redacted, or unset where the field is optional — `status`
 disambiguates; empty is a value, null never is.
@@ -1034,6 +1112,41 @@ type Mutation {
 	behind it.
 	"""
 	uploadMedia(input: UploadMediaInput!): UploadMediaPayload!
+	"""
+	Opens a resumable upload.
+	
+	The same pure L2 operation `uploadMedia` is — no record, no θ —
+	cut into pieces so that a connection that drops costs one piece
+	rather than the whole file. A client that has bytes to spare
+	keeps using `uploadMedia`; this exists for the file where a
+	moment's unreachable server would otherwise mean starting over.
+	
+	The rate limit is consumed here and only here. One session is one
+	upload, so it costs what one `uploadMedia` costs; charging per
+	part instead would price a large file out of an hourly budget
+	sized for whole pictures.
+	"""
+	beginMediaUpload(input: BeginMediaUploadInput!): BeginMediaUploadPayload!
+	"""
+	Assembles a resumable upload and returns the asset it made.
+	
+	The payload is `uploadMedia`'s, deliberately: the two paths differ
+	in how bytes arrive and in nothing else, so a client that can read
+	one answer can read the other without learning a second shape.
+	
+	Safe to retry. A client whose connection dropped waiting for this
+	reply calls it again and is handed the same asset, because the
+	session remembers what it produced.
+	"""
+	completeMediaUpload(input: CompleteMediaUploadInput!): UploadMediaPayload!
+	"""
+	Gives up on a resumable upload.
+	
+	Offered so a cancelled compose releases the store's parts now
+	rather than at expiry: until an upload is completed or aborted the
+	store holds every part it was given and serves them to nobody.
+	"""
+	abortMediaUpload(input: AbortMediaUploadInput!): AbortMediaUploadPayload!
 	"""
 	Prepares a new Post: one genesis Publish through the ordinary
 	write path — the returned write pre-signs, seals, and approves

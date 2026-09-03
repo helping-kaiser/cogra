@@ -209,8 +209,7 @@ impl MediaConfig {
             )?,
             orphan_max_age_secs: env_parsed("MEDIA_ORPHAN_MAX_AGE_SECS", base.orphan_max_age_secs)?,
             upload_part_size_bytes: {
-                let size =
-                    env_parsed("MEDIA_UPLOAD_PART_SIZE_BYTES", base.upload_part_size_bytes)?;
+                let size = env_parsed("MEDIA_UPLOAD_PART_SIZE_BYTES", base.upload_part_size_bytes)?;
                 if size < MIN_MULTIPART_PART_BYTES {
                     anyhow::bail!(
                         "MEDIA_UPLOAD_PART_SIZE_BYTES must be at least {MIN_MULTIPART_PART_BYTES} \
