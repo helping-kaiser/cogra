@@ -49,6 +49,15 @@ class MediaRepositoryImpl @Inject constructor(
     private val parts: PartUploader,
 ) : MediaRepository {
 
+    /**
+     * Where a file stops going in one request.
+     *
+     * A field rather than the constant inline so the suites can put the
+     * boundary within reach of a test-sized file — eight mebibytes of
+     * bytes per case would be the slowest thing in the build.
+     */
+    internal var resumableThresholdBytes: Long = RESUMABLE_THRESHOLD_BYTES
+
     override suspend fun uploadMedia(
         picture: ProcessedPicture,
     ): Outcome<MediaAssetView> = guard.run {
@@ -94,7 +103,7 @@ class MediaRepositoryImpl @Inject constructor(
         onProgress: (UploadProgress) -> Unit,
     ): Outcome<MediaAssetView> {
         val file = File(video.path)
-        if (video.byteCount < RESUMABLE_THRESHOLD_BYTES) {
+        if (video.byteCount < resumableThresholdBytes) {
             return sendWhole(file, video.byteCount, coverMediaId)
         }
         return sendInParts(file, video.byteCount, coverMediaId, onProgress)
