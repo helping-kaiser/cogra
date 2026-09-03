@@ -1,13 +1,18 @@
-/* THE COMPOSER, OPENED ABOUT SOMETHING (readme §13, the menus round). Where
-   Cite in a new post and Mention in a new post both land: the composer fresh,
-   nothing written yet, and the reference already in the references block.
+/* THE DETAILS STAGE, ARRIVED AT WITH A REFERENCE STAGED (readme §13, the menus
+   round). Where a cite that began at a menu row surfaces: the wizard walked
+   from its pick stage with the reference riding along unseen, and this is the
+   step that finally shows it. Nothing else is written yet, which is the honest
+   picture of that moment — the citation is the given, the words are what is
+   missing.
+
+   THE WIZARD'S OWN HEADER, because the wizard is how this is reached: the arrow
+   steps one stage back to the words, the X leaves the flow with the draft kept.
+   Nothing teleports here, so nothing needs an exit of its own.
 
    CITATIONS ARE DECLARED AT CREATION, structured inputs only (roadmap.md) —
    there is no attaching one to a post that already landed. So the menu row does
-   not mark the post it was opened from; it starts a new one that points at it,
-   and the staging is what the reader sees first. Everything else on this stage
-   is still empty, which is the honest picture: the citation is the given, the
-   words are what is missing.
+   not mark the post it was opened from; it opens a new post that will point at
+   it.
 
    ONE ROW, EITHER WORD. A cite stages a post, a mention stages a person, and
    the block cannot tell them apart because there is nothing to tell apart — a

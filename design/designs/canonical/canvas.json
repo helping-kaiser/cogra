@@ -488,9 +488,18 @@
       "page": "comments"
     },
     {
+      "file": "ReplyCited.dc.html",
+      "title": "Reply · what you sign, a reference staged",
+      "x": 3360,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
       "file": "DiscardConfirm.dc.html",
       "title": "Discard confirm · reply and edit",
-      "x": 3360,
+      "x": 3840,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -499,7 +508,7 @@
     {
       "file": "ReplyVideoFailed.dc.html",
       "title": "Reply · the clip didn't upload",
-      "x": 3840,
+      "x": 4320,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -508,7 +517,7 @@
     {
       "file": "CommentEditVideo.dc.html",
       "title": "Edit comment · a clip",
-      "x": 4320,
+      "x": 4800,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -1011,9 +1020,9 @@
     },
     {
       "file": "MapComments.dc.html",
-      "x": -3320,
+      "x": -3610,
       "y": 0,
-      "w": 2900,
+      "w": 3190,
       "h": 1490,
       "page": "comments",
       "title": "Comments · flow map"

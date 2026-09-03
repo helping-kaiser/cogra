@@ -580,6 +580,18 @@ Object.assign(FLOW_MARKERS, {
     { n: 10, find: ">Add a topic</button>", tag: "button" },
     { n: 11, find: ">Next</button>", tag: "button" },
   ],
+  ReplyCited: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
+    { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
+    { n: 4, find: "+ Add a topic", tag: "button" },
+    { n: 5, find: "+ Cite something", tag: "button" },
+    { n: 6, find: ">Adjust</button>", tag: "button" },
+    { n: 7, find: ">Change</button>", tag: "button" },
+    { n: 8, find: ">Mark</button>", tag: "button" },
+    { n: 9, find: ">Sign comment</button>", tag: "button" },
+    { n: 10, find: ">Back</button>", tag: "button" },
+  ],
   ComposeSealUploading: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },

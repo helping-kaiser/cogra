@@ -745,10 +745,11 @@
         "ComposeCited",
         "ComposeDetails",
         "EditCompose",
+        "ReplyCited",
         "ReplySeal"
       ],
       "steps": [
-        "start · «+ Cite something» on 6 boards → ReferencePicker",
+        "start · «+ Cite something» on 7 boards → ReferencePicker",
         "end · ReferencePicker · 5 «result rows» → back — the pick lands in the composer's references"
       ],
       "boards": [
@@ -758,6 +759,7 @@
         "ComposeCited",
         "ComposeDetails",
         "EditCompose",
+        "ReplyCited",
         "ReplySeal"
       ]
     },
@@ -1953,6 +1955,12 @@
         "remove-your-post"
       ]
     },
+    "ReplyCited": {
+      "flows": [
+        "cite-something"
+      ],
+      "endpoint": []
+    },
     "ReplyCompose": {
       "flows": [
         "reply-to-a-comment",
@@ -2242,6 +2250,7 @@
     "RefsSheet/1: the topic page (ruled 2026-09-01 — not designed)",
     "RefsSheet/2: the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)",
     "Removed/4: Post Score drill-down (backlog item 13)",
+    "ReplyCited/4: the topic picker (not boarded)",
     "ReplyEntry/3: the topic page (ruled 2026-09-01 — not designed)",
     "ReplySeal/4: the topic picker (not boarded)",
     "VouchBack/11: Post Score drill-down (backlog item 13)",
