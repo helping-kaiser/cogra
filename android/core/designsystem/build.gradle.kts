@@ -10,6 +10,10 @@ android {
 
     buildFeatures {
         compose = true
+        // For `BuildConfig.DEBUG` alone: the video surface's trace is
+        // gated on it so R8 folds the whole thing out of release, where
+        // a constant `false` leaves neither the calls nor their strings.
+        buildConfig = true
     }
 
     testOptions {
