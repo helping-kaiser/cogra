@@ -51,21 +51,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Qualifier
 import javax.inject.Singleton
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.toJavaDuration
-import okhttp3.OkHttpClient
-
-/**
- * How long a part may take.
- *
- * A part is up to eight mebibytes, which on a poor connection is
- * minutes of writing — the defaults would call a working upload dead
- * and spend a retry on it.
- */
-private val PART_CONNECT_TIMEOUT = 30.seconds.toJavaDuration()
-private val PART_WRITE_TIMEOUT = 5.minutes.toJavaDuration()
-private val PART_READ_TIMEOUT = 60.seconds.toJavaDuration()
 
 /** The GraphQL endpoint URL — provided by the app module (build config). */
 @Qualifier
@@ -85,33 +70,18 @@ internal object NetworkProvidesModule {
             .build()
 
     /**
-     * The client the resumable upload's part requests ride.
+     * The resumable upload's part sender.
      *
-     * Its own instance rather than Apollo's, which is not reachable:
-     * Apollo builds an engine internally and exposes no call factory.
-     * The timeouts are the ones a part needs — eight mebibytes over a
-     * slow link is minutes of writing, and the default ten seconds
-     * would call a working upload dead.
+     * It takes the GraphQL endpoint because the part route is served by
+     * the same app — a second origin setting could only ever disagree
+     * with the first.
      */
     @Provides
     @Singleton
-    fun uploadHttpClient(): OkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(PART_CONNECT_TIMEOUT)
-        .writeTimeout(PART_WRITE_TIMEOUT)
-        .readTimeout(PART_READ_TIMEOUT)
-        // Off, deliberately: retries are this app's to schedule, with
-        // the backoff and jitter a part upload wants, and OkHttp's own
-        // silent replay would spend attempts without the backoff.
-        .retryOnConnectionFailure(false)
-        .build()
-
-    @Provides
-    @Singleton
     fun partUploader(
-        http: OkHttpClient,
         tokens: TokenStore,
         @GraphqlEndpoint endpoint: String,
-    ): PartUploader = PartUploader(http, tokens, endpoint)
+    ): PartUploader = PartUploader(tokens, endpoint)
 
     @Provides
     @Singleton
