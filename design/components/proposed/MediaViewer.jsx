@@ -1,26 +1,49 @@
 import React from "react";
 import { Icon } from "../navigation/Icon.jsx";
+import { VideoTransport } from "./VideoControls.jsx";
+import { useGlobalMute } from "./MediaAttachment.jsx";
 
 /* PROPOSED — the full-media view. Settled 2026-08-26: media in a post is shown
    WHOLE, and tapping it in the detail view opens it "covering as much of the
-   screen as possible".
+   screen as possible". Its own surfaces were ruled 2026-09-03 (readme §13, the
+   reel round).
 
-   THE TWO RULES THIS ENCODES:
+   THE RULES THIS ENCODES:
    · The frame is never cut here. `contain`, centred, as large as the viewport
-     allows — a viewer that crops is not a viewer.
-   · It is a place you back out of, not a screen you navigate to: `arrow_back`
-     top-left, Escape, and the backdrop all close it, and it never changes the
-     underlying route. The reader came to look at one thing and expects to land
-     back exactly where they were.
-
-   Nothing else is drawn. No zoom, no share, no counter chrome beyond the plain
-   `n of m` — a viewer that grows a toolbar is a viewer nobody trusts to close.
+     allows — a viewer that crops is not a viewer. This is the surface the feed
+     card's 4:5 clamp exists against: whatever a card crops, the viewer restores.
+   · It is a place you back out of: an X, a swipe DOWN, Escape, and the backdrop
+     all close it, and it never changes the underlying route. The X rather than
+     a back arrow, because the reader is dismissing a layer, not walking a step
+     of a journey — and the swipe is the gesture every full-screen media layer
+     is dismissed with.
+   · A PICTURE PINCH-ZOOMS, and the gallery's swipe carries over: the set is
+     paged here exactly as it is in the card.
+   · A VIDEO TAKES THE FULL TRANSPORT (`VideoTransport`) — play/pause and a real
+     timeline — and ROTATING THE DEVICE fills the screen with it. Rotation is
+     the device's own gesture, so there is no rotate control to draw.
+   · NO ACTS. No stance, no comments, no share: acting on a post happens where
+     the post is, and a viewer that grows a toolbar is a viewer nobody trusts to
+     close.
+   · THE DESCRIPTION IS NOT SHOWN. Alt text is written for the people who cannot
+     see the frame, and printing it under the picture turns a description into a
+     caption the author never wrote.
 
    The scrim is the dialog scrim, so the viewer belongs to the same family as
    every other thing that covers the screen in this system. */
 
-export function MediaViewer({ items = [], index = 0, onClose, onIndexChange }) {
+export function MediaViewer({
+  items = [],
+  index = 0,
+  onClose,
+  onIndexChange,
+  playing = true,
+  elapsed = "0:00",
+  duration = "0:00",
+  progress = 0,
+}) {
   const [current, setCurrent] = React.useState(index);
+  const [muted, setMuted] = useGlobalMute();
   const count = items.length;
   const item = items[Math.min(current, Math.max(count - 1, 0))];
 
@@ -108,7 +131,7 @@ export function MediaViewer({ items = [], index = 0, onClose, onIndexChange }) {
             padding: 0,
           }}
         >
-          <Icon name="arrow_back" />
+          <Icon name="close" />
         </button>
         {count > 1 && (
           <span style={{ fontSize: "var(--text-label-large)", color: "var(--inverse-on-surface)" }}>
@@ -124,15 +147,29 @@ export function MediaViewer({ items = [], index = 0, onClose, onIndexChange }) {
       >
         {count > 1 && arrow(-1)}
         {item.kind === "video" ? (
-          <video
-            src={item.src}
-            poster={item.poster}
-            controls
-            autoPlay
-            playsInline
-            aria-label={item.alt}
-            style={{ flex: 1, minWidth: 0, maxHeight: "100%", objectFit: "contain" }}
-          />
+          /* The transport is the product's own, not the browser's default set:
+             one control vocabulary across the detail view, the stream and here,
+             rather than three players that each look like their platform. */
+          <div style={{ flex: 1, minWidth: 0, position: "relative", display: "flex", alignItems: "center" }}>
+            <video
+              src={item.src}
+              poster={item.poster}
+              autoPlay
+              playsInline
+              aria-label={item.alt}
+              style={{ flex: 1, minWidth: 0, maxHeight: "100%", objectFit: "contain" }}
+            />
+            <div style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
+              <VideoTransport
+                playing={playing}
+                elapsed={elapsed}
+                duration={duration}
+                progress={progress}
+                muted={muted}
+                onToggleMute={() => setMuted(!muted)}
+              />
+            </div>
+          </div>
         ) : (
           <img
             src={item.src}

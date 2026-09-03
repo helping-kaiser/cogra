@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"MediaAttachment","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/proposed/MediaViewer.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"5b1030f3b363","components/compose/DescribeSheet.jsx":"bcc91f82beee","components/compose/MediaThumb.jsx":"36b454665a85","components/compose/PickedRow.jsx":"6bb23e6042dc","components/compose/PickedSheet.jsx":"952252dd4d23","components/compose/UploadNotice.jsx":"d178689c7d88","components/compose/WizardHeader.jsx":"53ce0aad9241","components/content/CommentCard.jsx":"02450199bad2","components/content/OverflowMenu.jsx":"5a5ff330770c","components/content/PostCard.jsx":"1f00e082725b","components/content/ReferenceRow.jsx":"bad43ae893d4","components/content/TopicsLine.jsx":"b3bfa12c4d86","components/core/BottomSheet.jsx":"04aa46ec17d9","components/core/Button.jsx":"ff5a90231bbe","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"48c703bd16e0","components/core/HelpDot.jsx":"eabf92544b27","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c3fc1cd30267","components/forms/PasswordField.jsx":"38bf37cacbb0","components/forms/RecoveryCode.jsx":"b89705800497","components/forms/SearchBar.jsx":"2ed2d91945fc","components/forms/TextField.jsx":"97d5e4b1536d","components/honesty/PendingMarker.jsx":"28eaaf4ffa77","components/honesty/SensitiveVeil.jsx":"73819cc142d6","components/honesty/TransportError.jsx":"2f66269a8f3c","components/navigation/BorrowedViewBand.jsx":"66c07c53862e","components/navigation/BottomNav.jsx":"53a749d4ddf1","components/navigation/CograBand.jsx":"177723728533","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"8fedb2f39e19","components/navigation/Icon.jsx":"e89966d7ed7b","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"63d3f3e7404c","components/people/ActorChip.jsx":"0870cb9a9681","components/people/ProfileHeader.jsx":"f24d0bc82d50","components/proposed/ExplainableNumber.jsx":"b29af54b996a","components/proposed/MediaAttachment.jsx":"94880620d847","components/proposed/MediaViewer.jsx":"3a09af18787e","components/stance/SeveranceConfirm.jsx":"1a0dbafb9e95","components/stance/StanceAlternates.jsx":"0b50770f4aa0","components/stance/StanceCoachMark.jsx":"4d4cfdcab8db","components/stance/StanceControl.jsx":"24e63c57ff9e","components/stance/StancePad.jsx":"f6eda3aa07e3","components/stance/StanceReadout.jsx":"3c01d2740d9a","components/stance/StanceSlider.jsx":"325286a6b95d","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"964687345182","components/wallet/LedgerRow.jsx":"96a7cfea6280","components/wallet/PayoutAddress.jsx":"d7783723d684","components/wallet/WalletBalance.jsx":"3ff65daba8d2","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"44ff990afba5","designs/core-loop/data.jsx":"1a69aa16a143"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/proposed/MediaAttachment.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"MediaDisc","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/proposed/MediaViewer.jsx"},{"name":"VideoTransport","sourcePath":"components/proposed/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/proposed/VideoControls.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"5b1030f3b363","components/compose/DescribeSheet.jsx":"bcc91f82beee","components/compose/MediaThumb.jsx":"36b454665a85","components/compose/PickedRow.jsx":"6bb23e6042dc","components/compose/PickedSheet.jsx":"952252dd4d23","components/compose/UploadNotice.jsx":"d178689c7d88","components/compose/WizardHeader.jsx":"53ce0aad9241","components/content/CommentCard.jsx":"02450199bad2","components/content/OverflowMenu.jsx":"5a5ff330770c","components/content/PostCard.jsx":"1f00e082725b","components/content/ReferenceRow.jsx":"bad43ae893d4","components/content/ShareButton.jsx":"8612d42b43b3","components/content/TopicsLine.jsx":"b3bfa12c4d86","components/core/BottomSheet.jsx":"04aa46ec17d9","components/core/Button.jsx":"ff5a90231bbe","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"48c703bd16e0","components/core/HelpDot.jsx":"eabf92544b27","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c3fc1cd30267","components/forms/PasswordField.jsx":"38bf37cacbb0","components/forms/RecoveryCode.jsx":"b89705800497","components/forms/SearchBar.jsx":"2ed2d91945fc","components/forms/TextField.jsx":"97d5e4b1536d","components/honesty/PendingMarker.jsx":"28eaaf4ffa77","components/honesty/SensitiveVeil.jsx":"73819cc142d6","components/honesty/TransportError.jsx":"2f66269a8f3c","components/navigation/BorrowedViewBand.jsx":"66c07c53862e","components/navigation/BottomNav.jsx":"53a749d4ddf1","components/navigation/CograBand.jsx":"177723728533","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"8fedb2f39e19","components/navigation/Icon.jsx":"7e24e5b170d9","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"63d3f3e7404c","components/people/ActorChip.jsx":"0870cb9a9681","components/people/ProfileHeader.jsx":"f24d0bc82d50","components/proposed/ExplainableNumber.jsx":"b29af54b996a","components/proposed/MediaAttachment.jsx":"96c11a7677d5","components/proposed/MediaViewer.jsx":"fc19d874aeb8","components/proposed/VideoControls.jsx":"7c06a9ca12e4","components/stance/SeveranceConfirm.jsx":"1a0dbafb9e95","components/stance/StanceAlternates.jsx":"0b50770f4aa0","components/stance/StanceCoachMark.jsx":"4d4cfdcab8db","components/stance/StanceControl.jsx":"24e63c57ff9e","components/stance/StancePad.jsx":"f6eda3aa07e3","components/stance/StanceReadout.jsx":"3c01d2740d9a","components/stance/StanceSlider.jsx":"325286a6b95d","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"964687345182","components/wallet/LedgerRow.jsx":"96a7cfea6280","components/wallet/PayoutAddress.jsx":"d7783723d684","components/wallet/WalletBalance.jsx":"3ff65daba8d2","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"44ff990afba5","designs/core-loop/data.jsx":"1a69aa16a143"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/proposed/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/proposed/MediaAttachment.jsx"}]} */
 
 (() => {
 
@@ -567,10 +567,15 @@ const PATHS = {
   send: ["M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"],
   /* The compose media surfaces' glyphs (media slice, 2026-08-31). */
   close: ["M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"],
-  /* Authoring-side only: a composer's video preview says it is a video and can
-     be played. A READING surface never draws play/pause — presence on screen
-     is the policy there (MediaAttachment). */
+  /* The transport pair. Where a clip is the thing the reader came for — the
+     detail view, the fullscreen viewer — it carries play/pause and a timeline
+     (readme §13, the control ladder). A FEED CARD still draws neither: presence
+     on screen is the policy there, and the one exception is the play disc a
+     suppressed-autoplay card wears, where the device has already said no. */
   play_arrow: ["M8 5v14l11-7z"],
+  pause: ["M6 19h4V5H6v14zm8-14v14h4V5h-4z"],
+  /* Handing a post to the OS share sheet (reel round, 2026-09-03). */
+  share: ["M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"],
   /* The avatar's change badge (profile round, 2026-09-01). The official cut
      draws its lens as a <circle>; PATHS holds paths only, so that circle is
      carried as an exact arc path — same geometry, nothing redrawn. */
@@ -4202,9 +4207,201 @@ function TopicsLine({
 __ds_scope.TopicsLine = TopicsLine;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/TopicsLine.jsx", error: String((e && e.message) || e) }); }
 
-// components/proposed/MediaAttachment.jsx
+// components/proposed/VideoControls.jsx
 try { (() => {
 const { Icon } = __ds_scope;
+/* PROPOSED — the two rungs of the control ladder above the feed card's sound
+   disc (readme §13, the reel round, jakob 2026-09-03).
+
+   THE LADDER. A feed card carries sound and nothing else: presence on screen is
+   the policy there, and a card is a place you are passing through. Where the
+   clip IS the thing — the detail view, the fullscreen viewer — the reader is
+   watching deliberately, and deliberate watching wants a way to stop and a way
+   to move: `VideoTransport`, play/pause plus a real timeline that takes a tap
+   anywhere on it or a drag along it. In the stream a full transport would be
+   chrome over the one thing the reader came for, so it thins to `SeekLine` at
+   the screen's bottom edge — the same gesture, no glyphs.
+
+   UNIFORM FOR EVERY CLIP. The transport does not appear for long videos and
+   hide for short ones: a reader who learns a control on one clip must find it
+   on the next, and a rule with a threshold in it is a rule nobody can predict.
+
+   THE CHROME AUTO-HIDES, and a tap on the video brings it back. What is drawn
+   on the boards is the revealed state, because a board of the hidden state is a
+   board of a video.
+
+   No fullscreen button, no settings gear, no speed menu: the viewer is reached
+   by tapping the clip, and everything else a player usually grows is chrome the
+   product has no use for. */
+
+const BAR = {
+  display: "flex",
+  alignItems: "center",
+  gap: "var(--space-2)",
+  padding: "10px 12px",
+  /* The gradient, not a bar: chrome over photography needs its own contrast, and
+     a hard-edged strip would cut the frame in two. */
+  background: "linear-gradient(to top, rgba(0,0,0,0.62), rgba(0,0,0,0))",
+  color: "#fff"
+};
+const TIME = {
+  fontFamily: "var(--font-sans)",
+  fontSize: "var(--text-label-small)",
+  lineHeight: "var(--text-label-small--line-height)",
+  fontVariantNumeric: "tabular-nums",
+  flex: "none"
+};
+function TransportButton({
+  label,
+  glyph,
+  onClick
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": label,
+    onClick: event => {
+      event.stopPropagation();
+      if (onClick) onClick(event);
+    },
+    className: "cg-state cg-focus",
+    style: {
+      display: "grid",
+      placeItems: "center",
+      width: "32px",
+      height: "32px",
+      flex: "none",
+      border: "none",
+      background: "transparent",
+      borderRadius: "var(--radius-full)",
+      color: "inherit",
+      padding: 0,
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: glyph,
+    size: 22
+  }));
+}
+
+/* THE TIMELINE. A slider, not a progress bar — it reports where the clip is and
+   it is how the reader moves it, which is why it carries the knob and the
+   slider role rather than a bare filled track. */
+function Timeline({
+  progress = 0,
+  elapsed,
+  duration,
+  thin = false
+}) {
+  const at = Math.max(0, Math.min(1, progress));
+  return /*#__PURE__*/React.createElement("div", {
+    role: "slider",
+    tabIndex: 0,
+    "aria-label": "Seek",
+    "aria-valuemin": 0,
+    "aria-valuemax": 100,
+    "aria-valuenow": Math.round(at * 100),
+    "aria-valuetext": elapsed && duration ? `${elapsed} of ${duration}` : undefined,
+    className: "cg-focus",
+    style: {
+      position: "relative",
+      flex: 1,
+      minWidth: 0,
+      height: thin ? "3px" : "16px",
+      display: "flex",
+      alignItems: "center",
+      cursor: "pointer",
+      touchAction: "none"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      height: thin ? "3px" : "4px",
+      borderRadius: "var(--radius-full)",
+      background: thin ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.35)"
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      left: 0,
+      width: `${at * 100}%`,
+      height: thin ? "3px" : "4px",
+      borderRadius: "var(--radius-full)",
+      background: "#fff"
+    }
+  }), !thin && /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      left: `${at * 100}%`,
+      width: "12px",
+      height: "12px",
+      marginLeft: "-6px",
+      borderRadius: "var(--radius-full)",
+      background: "#fff"
+    }
+  }));
+}
+function VideoTransport({
+  playing = true,
+  elapsed = "0:00",
+  duration = "0:00",
+  progress = 0,
+  muted = true,
+  onTogglePlay,
+  onToggleMute
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: BAR
+  }, /*#__PURE__*/React.createElement(TransportButton, {
+    label: playing ? "Pause" : "Play",
+    glyph: playing ? "pause" : "play_arrow",
+    onClick: onTogglePlay
+  }), /*#__PURE__*/React.createElement("span", {
+    style: TIME
+  }, elapsed), /*#__PURE__*/React.createElement(Timeline, {
+    progress: progress,
+    elapsed: elapsed,
+    duration: duration
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...TIME,
+      opacity: 0.8
+    }
+  }, duration), /*#__PURE__*/React.createElement(TransportButton, {
+    label: muted ? "Turn sound on" : "Turn sound off",
+    glyph: muted ? "volume_off" : "volume_up",
+    onClick: onToggleMute
+  }));
+}
+
+/* THE STREAM'S RUNG: a hairline at the very bottom edge of the screen, dragged
+   to seek. It says where the clip is without spending any of the frame, and it
+   is the only transport the stream has — a play/pause there would answer a
+   question nobody scrolling a stream is asking. */
+function SeekLine({
+  progress = 0,
+  elapsed,
+  duration
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "0 0 0 0"
+    }
+  }, /*#__PURE__*/React.createElement(Timeline, {
+    progress: progress,
+    elapsed: elapsed,
+    duration: duration,
+    thin: true
+  }));
+}
+__ds_scope.VideoTransport = VideoTransport;
+__ds_scope.SeekLine = SeekLine;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/proposed/VideoControls.jsx", error: String((e && e.message) || e) }); }
+
+// components/proposed/MediaAttachment.jsx
+try { (() => {
+const { Icon, VideoTransport } = __ds_scope;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* PROPOSED — design.md §6's "media attachment", with the two rules that were open
    last session now settled by the product (2026-08-26 hand-off).
@@ -4245,6 +4442,21 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
      a per-video mute state means the reader re-decides the same thing on every
      scroll. It only plays while it is actually on screen (half-visible, via
      IntersectionObserver) — offscreen video is neither calm nor cheap.
+   · A CLIP KEEPS ITS OWN SHAPE, CLAMPED TO TALL (readme §13, the reel round).
+     A clip's ratio is not chosen by an author the way a picture's crop is, so
+     the crop vocabulary does not govern it: 16:9 and 1:1 clips display true, and
+     anything taller than 4:5 CENTRE-CROPS to 4:5 in a card. Nothing here is ever
+     letterboxed — a clip fills the frame it is given, and the full 9:16 frame
+     lives on the surfaces built for it (the stream, the fullscreen viewer).
+   · THE CONTROL LADDER (readme §13, the reel round). What a clip carries depends
+     on the surface, and `controls` says which rung this tile is on: `"sound"` —
+     a feed card, the sound disc and nothing else; `"transport"` — a detail view,
+     play/pause and a real timeline; `"play"` — the one card that draws play,
+     because the device suppressed autoplay and nothing is going to start; and
+     `"none"` where the surface draws its own.
+   · THE COVER IS THE CLIP'S FACE WHEREVER THE CLIP ISN'T RUNNING (`resting`):
+     first paint before autoplay, and every context where autoplay is suppressed
+     — reduced motion, data saver. It never returns once playback has started.
 
    The sound toggle shows the CURRENT state (`volume_up` = sound on) and its
    accessible name says what the tap will DO. A sensitive post veils the WHOLE
@@ -4254,11 +4466,71 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
    `src`-less tiles render the reserved region with a label saying what belongs
    there. Real photography for mocks now lives in `assets/photos/`. */
 
+/* `portrait` and `landscape` are a CLIP's native shapes, not crop choices — the
+   crop vocabulary (tall · square · wide) still governs every picture. */
 const RATIOS = {
   tall: "4 / 5",
   square: "1 / 1",
-  wide: "1.91 / 1"
+  wide: "1.91 / 1",
+  portrait: "9 / 16",
+  landscape: "16 / 9"
 };
+const TALL = 4 / 5;
+const asNumber = ratio => {
+  const [w, h] = String(RATIOS[ratio] ?? ratio).split("/").map(n => Number(n.trim()));
+  return h ? w / h : null;
+};
+
+/* The shape a clip stands at inside a card: its own, unless it is taller than
+   4:5, which centre-crops. Exported because the cover crops identically — it is
+   the face of the same clip, and a face that disagreed with it would be a lie. */
+function clipFrame(ratio) {
+  const value = asNumber(ratio);
+  return value !== null && value < TALL ? "tall" : ratio;
+}
+
+/* A control that has to survive whatever photograph is under it: the snackbar
+   surface behind the glyph, at the tile's lower-left corner. Every disc a media
+   surface draws is this one — sound, play, and the stream's way back — so they
+   sit at one size and one weight wherever the reader meets them. */
+function MediaDisc({
+  label,
+  glyph,
+  onClick,
+  pressed,
+  corner = "bottom-left"
+}) {
+  const [vertical, horizontal] = corner.split("-");
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": label,
+    "aria-pressed": pressed,
+    onClick: event => {
+      event.stopPropagation();
+      if (onClick) onClick(event);
+    },
+    className: "cg-state cg-focus",
+    style: {
+      position: "absolute",
+      [vertical]: "8px",
+      [horizontal]: "8px",
+      display: "grid",
+      placeItems: "center",
+      width: "36px",
+      height: "36px",
+      border: "none",
+      borderRadius: "var(--radius-full)",
+      background: "var(--surface-snackbar)",
+      color: "var(--on-surface-snackbar)",
+      padding: 0,
+      cursor: "pointer",
+      zIndex: 2
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: glyph,
+    size: 20
+  }));
+}
 
 /* The global mute decision. One value for every video on every surface, so a
    reader decides "sound on" once. Module-level rather than context: a feed and a
@@ -4290,11 +4562,21 @@ function MediaAttachment({
   label = "Media",
   radius = "var(--radius-medium)",
   fit = "contain",
-  maxHeight = "var(--media-max-height)"
+  maxHeight = "var(--media-max-height)",
+  controls = "sound",
+  resting = false,
+  playing = true,
+  elapsed = "0:00",
+  duration = "0:00",
+  progress = 0
 }) {
   const [muted, setMuted] = useGlobalMute();
   const videoRef = React.useRef(null);
   const frameRef = React.useRef(null);
+  const video = kind === "video";
+  // A clip fills the frame it is given; only a picture may be fitted inside one.
+  const frameRatio = video ? clipFrame(ratio) : ratio;
+  const objectFit = video ? "cover" : fit;
 
   /* Play only while at least half the tile is on screen. */
   React.useEffect(() => {
@@ -4317,7 +4599,7 @@ function MediaAttachment({
     ref: frameRef,
     style: {
       position: "relative",
-      aspectRatio: RATIOS[ratio] ?? ratio,
+      aspectRatio: RATIOS[frameRatio] ?? frameRatio,
       width: "100%",
       maxHeight,
       minHeight: 0,
@@ -4325,7 +4607,7 @@ function MediaAttachment({
       borderRadius: radius,
       background: "var(--surface-container-high)"
     }
-  }, src && kind === "video" ? /*#__PURE__*/React.createElement("video", {
+  }, src && video && !resting ? /*#__PURE__*/React.createElement("video", {
     ref: videoRef,
     src: src,
     poster: poster,
@@ -4339,17 +4621,17 @@ function MediaAttachment({
       display: "block",
       width: "100%",
       height: "100%",
-      objectFit: fit
+      objectFit: objectFit
     }
-  }) : src ? /*#__PURE__*/React.createElement("img", {
-    src: src,
+  }) : src || poster ? /*#__PURE__*/React.createElement("img", {
+    src: video ? poster ?? src : src,
     alt: alt ?? "",
     "aria-hidden": alt ? undefined : "true",
     style: {
       display: "block",
       width: "100%",
       height: "100%",
-      objectFit: fit
+      objectFit: objectFit
     }
   }) : /*#__PURE__*/React.createElement("span", {
     style: {
@@ -4360,33 +4642,29 @@ function MediaAttachment({
       fontSize: "var(--text-label-medium)",
       color: "var(--text-secondary)"
     }
-  }, label), kind === "video" && /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    "aria-label": muted ? "Turn sound on" : "Turn sound off",
-    "aria-pressed": !muted,
-    onClick: event => {
-      event.stopPropagation();
-      setMuted(!muted);
-    },
-    className: "cg-state cg-focus",
+  }, label), video && controls === "sound" && /*#__PURE__*/React.createElement(MediaDisc, {
+    label: muted ? "Turn sound on" : "Turn sound off",
+    pressed: !muted,
+    glyph: muted ? "volume_off" : "volume_up",
+    onClick: () => setMuted(!muted)
+  }), video && controls === "play" && /*#__PURE__*/React.createElement(MediaDisc, {
+    label: "Play this video",
+    glyph: "play_arrow",
+    onClick: () => {}
+  }), video && controls === "transport" && /*#__PURE__*/React.createElement("div", {
     style: {
       position: "absolute",
-      left: "8px",
-      bottom: "8px",
-      display: "grid",
-      placeItems: "center",
-      width: "36px",
-      height: "36px",
-      border: "none",
-      borderRadius: "var(--radius-full)",
-      background: "var(--surface-snackbar)",
-      color: "var(--on-surface-snackbar)",
-      padding: 0,
-      cursor: "pointer"
+      left: 0,
+      right: 0,
+      bottom: 0
     }
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: muted ? "volume_off" : "volume_up",
-    size: 20
+  }, /*#__PURE__*/React.createElement(VideoTransport, {
+    playing: playing,
+    elapsed: elapsed,
+    duration: duration,
+    progress: progress,
+    muted: muted,
+    onToggleMute: () => setMuted(!muted)
   })));
 }
 
@@ -4470,6 +4748,8 @@ function MediaGallery({
     }
   }))));
 }
+__ds_scope.clipFrame = clipFrame;
+__ds_scope.MediaDisc = MediaDisc;
 __ds_scope.useGlobalMute = useGlobalMute;
 __ds_scope.MediaAttachment = MediaAttachment;
 __ds_scope.MediaGallery = MediaGallery;
@@ -5112,21 +5392,32 @@ __ds_scope.ExplainableNumber = ExplainableNumber;
 
 // components/proposed/MediaViewer.jsx
 try { (() => {
-const { Icon } = __ds_scope;
+const { Icon, VideoTransport, useGlobalMute } = __ds_scope;
 /* PROPOSED — the full-media view. Settled 2026-08-26: media in a post is shown
    WHOLE, and tapping it in the detail view opens it "covering as much of the
-   screen as possible".
+   screen as possible". Its own surfaces were ruled 2026-09-03 (readme §13, the
+   reel round).
 
-   THE TWO RULES THIS ENCODES:
+   THE RULES THIS ENCODES:
    · The frame is never cut here. `contain`, centred, as large as the viewport
-     allows — a viewer that crops is not a viewer.
-   · It is a place you back out of, not a screen you navigate to: `arrow_back`
-     top-left, Escape, and the backdrop all close it, and it never changes the
-     underlying route. The reader came to look at one thing and expects to land
-     back exactly where they were.
-
-   Nothing else is drawn. No zoom, no share, no counter chrome beyond the plain
-   `n of m` — a viewer that grows a toolbar is a viewer nobody trusts to close.
+     allows — a viewer that crops is not a viewer. This is the surface the feed
+     card's 4:5 clamp exists against: whatever a card crops, the viewer restores.
+   · It is a place you back out of: an X, a swipe DOWN, Escape, and the backdrop
+     all close it, and it never changes the underlying route. The X rather than
+     a back arrow, because the reader is dismissing a layer, not walking a step
+     of a journey — and the swipe is the gesture every full-screen media layer
+     is dismissed with.
+   · A PICTURE PINCH-ZOOMS, and the gallery's swipe carries over: the set is
+     paged here exactly as it is in the card.
+   · A VIDEO TAKES THE FULL TRANSPORT (`VideoTransport`) — play/pause and a real
+     timeline — and ROTATING THE DEVICE fills the screen with it. Rotation is
+     the device's own gesture, so there is no rotate control to draw.
+   · NO ACTS. No stance, no comments, no share: acting on a post happens where
+     the post is, and a viewer that grows a toolbar is a viewer nobody trusts to
+     close.
+   · THE DESCRIPTION IS NOT SHOWN. Alt text is written for the people who cannot
+     see the frame, and printing it under the picture turns a description into a
+     caption the author never wrote.
 
    The scrim is the dialog scrim, so the viewer belongs to the same family as
    every other thing that covers the screen in this system. */
@@ -5135,9 +5426,14 @@ function MediaViewer({
   items = [],
   index = 0,
   onClose,
-  onIndexChange
+  onIndexChange,
+  playing = true,
+  elapsed = "0:00",
+  duration = "0:00",
+  progress = 0
 }) {
   const [current, setCurrent] = React.useState(index);
+  const [muted, setMuted] = useGlobalMute();
   const count = items.length;
   const item = items[Math.min(current, Math.max(count - 1, 0))];
   const move = React.useCallback(next => {
@@ -5222,7 +5518,7 @@ function MediaViewer({
       padding: 0
     }
   }, /*#__PURE__*/React.createElement(Icon, {
-    name: "arrow_back"
+    name: "close"
   })), count > 1 && /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: "var(--text-label-large)",
@@ -5238,10 +5534,22 @@ function MediaViewer({
       gap: "var(--space-1)",
       padding: "0 4px 16px"
     }
-  }, count > 1 && arrow(-1), item.kind === "video" ? /*#__PURE__*/React.createElement("video", {
+  }, count > 1 && arrow(-1), item.kind === "video" ?
+  /*#__PURE__*/
+  /* The transport is the product's own, not the browser's default set:
+     one control vocabulary across the detail view, the stream and here,
+     rather than three players that each look like their platform. */
+  React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0,
+      position: "relative",
+      display: "flex",
+      alignItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement("video", {
     src: item.src,
     poster: item.poster,
-    controls: true,
     autoPlay: true,
     playsInline: true,
     "aria-label": item.alt,
@@ -5251,7 +5559,21 @@ function MediaViewer({
       maxHeight: "100%",
       objectFit: "contain"
     }
-  }) : /*#__PURE__*/React.createElement("img", {
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0
+    }
+  }, /*#__PURE__*/React.createElement(VideoTransport, {
+    playing: playing,
+    elapsed: elapsed,
+    duration: duration,
+    progress: progress,
+    muted: muted,
+    onToggleMute: () => setMuted(!muted)
+  }))) : /*#__PURE__*/React.createElement("img", {
     src: item.src,
     alt: item.alt ?? "",
     "aria-hidden": item.alt ? undefined : "true",
@@ -5726,6 +6048,53 @@ function ReferenceRow({
 __ds_scope.NodeMark = NodeMark;
 __ds_scope.ReferenceRow = ReferenceRow;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/ReferenceRow.jsx", error: String((e && e.message) || e) }); }
+
+// components/content/ShareButton.jsx
+try { (() => {
+const { Icon } = __ds_scope;
+/* Handing a post to the platform's own share sheet (readme §13, the reel round,
+   jakob 2026-09-03).
+
+   ONE TAP, NO SURFACE OF OUR OWN. The sheet belongs to the OS — it is where the
+   reader's own apps and contacts live, and a share menu drawn here would be a
+   worse copy of it that also knows less. So this control has no state, no
+   confirmation and no menu: it is the handoff.
+
+   IT RIDES THE AFFORDANCE ROW as a glyph, the way the comment count does, and
+   the row stays one line. It carries no number, because a share count would be
+   a public tally of something the graph does not record.
+
+   WHERE IT IS DRAWN: the post's detail view and the stream's rail. Whether a
+   FEED CARD grows one is open (backlog item 33) and deliberately undrawn — the
+   row there is already at its width, and share is the affordance a card can
+   most afford to make one tap further away. */
+
+function ShareButton({
+  onShare,
+  targetLabel = "this post"
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onShare ?? (() => {}),
+    "aria-label": `Share ${targetLabel}`,
+    className: "cg-state cg-focus cg-hit",
+    style: {
+      display: "flex",
+      alignItems: "center",
+      border: "none",
+      background: "transparent",
+      borderRadius: "var(--radius-full)",
+      padding: "6px 8px",
+      color: "var(--text-secondary)",
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "share",
+    size: 18
+  }));
+}
+__ds_scope.ShareButton = ShareButton;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/ShareButton.jsx", error: String((e && e.message) || e) }); }
 
 // components/core/MoneyFigure.jsx
 try { (() => {
@@ -7861,6 +8230,8 @@ __ds_ns.NodeMark = __ds_scope.NodeMark;
 
 __ds_ns.ReferenceRow = __ds_scope.ReferenceRow;
 
+__ds_ns.ShareButton = __ds_scope.ShareButton;
+
 __ds_ns.TopicsLine = __ds_scope.TopicsLine;
 
 __ds_ns.BottomSheet = __ds_scope.BottomSheet;
@@ -7971,11 +8342,17 @@ __ds_ns.ProfileHeader = __ds_scope.ProfileHeader;
 
 __ds_ns.ExplainableNumber = __ds_scope.ExplainableNumber;
 
+__ds_ns.MediaDisc = __ds_scope.MediaDisc;
+
 __ds_ns.MediaAttachment = __ds_scope.MediaAttachment;
 
 __ds_ns.MediaGallery = __ds_scope.MediaGallery;
 
 __ds_ns.MediaViewer = __ds_scope.MediaViewer;
+
+__ds_ns.VideoTransport = __ds_scope.VideoTransport;
+
+__ds_ns.SeekLine = __ds_scope.SeekLine;
 
 __ds_ns.SeveranceConfirm = __ds_scope.SeveranceConfirm;
 
