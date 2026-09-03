@@ -143,26 +143,35 @@ fun VideoPlayer(
     // the detail continues from where the feed had it instead of
     // starting a second decoder at zero. See [VideoStage].
     val token = remember(url) { Any() }
-    val player = remember(url) { VideoStage.playerFor(context, url) }
-    val owned = VideoStage.owns(token)
 
-    DisposableEffect(player, token) {
+    // Claiming the stage is a side effect, so it happens after the
+    // composition that asked for it rather than inside it — the surface
+    // entering last is the one that ends up showing.
+    DisposableEffect(url, token) {
+        VideoStage.claim(context, url, token)
+        onDispose {
+            // The player outlives this surface — surrendering is what
+            // hands it on, and releasing it here is what used to make
+            // the next screen start over.
+            VideoStage.surrender(token)
+        }
+    }
+
+    // Read from the stage rather than held: a second clip taking the
+    // stage releases this one's player, and a surface holding its own
+    // reference would go on talking to a released instance.
+    val player = VideoStage.playerFor(token, url)
+
+    DisposableEffect(player) {
         val listener = object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 playing = isPlaying
             }
         }
-        player.addListener(listener)
-        // Claiming the stage is a side effect, so it happens after the
-        // composition that asked for it rather than inside it — the
-        // surface entering last is the one that ends up showing.
-        VideoStage.takeOwnership(token)
+        player?.addListener(listener)
         onDispose {
-            player.removeListener(listener)
-            // The player outlives this surface — surrendering is what
-            // hands it on, and releasing it here is what used to make
-            // the next screen start over.
-            VideoStage.surrender(token)
+            player?.removeListener(listener)
+            playing = false
         }
     }
 
@@ -171,8 +180,8 @@ fun VideoPlayer(
     // with what the reader last said, however it got here. Only the
     // surface actually showing the clip drives it — a screen on its way
     // out must not pause what its replacement just started.
-    LaunchedEffect(autoplay, owned) { if (owned) player.playWhenReady = autoplay }
-    LaunchedEffect(muted) { player.volume = if (muted) 0f else 1f }
+    LaunchedEffect(autoplay, player) { player?.playWhenReady = autoplay }
+    LaunchedEffect(muted, player) { player?.volume = if (muted) 0f else 1f }
 
     // `keepContentOnReset` is the documented lever against the flash:
     // it keeps the frame already on screen visible when the player or
@@ -181,14 +190,15 @@ fun VideoPlayer(
     val presentation = rememberPresentationState(player, keepContentOnReset = true)
 
     Box(modifier = modifier.then(if (testTag != null) Modifier.testTag(testTag) else Modifier)) {
-        // A surface that does not own the player binds nothing: two
-        // surfaces setting the same player's video output is the fight
-        // that reads as a flicker.
-        PlayerSurface(player = player.takeIf { owned }, modifier = Modifier.fillMaxSize())
+        // A surface without the stage binds nothing: two surfaces
+        // setting the same player's video output is the fight that
+        // reads as a flicker.
+        PlayerSurface(player = player, modifier = Modifier.fillMaxSize())
 
         // The poster covers the surface until a frame exists to show —
-        // which is also the state a clip that never autoplays stays in.
-        if (presentation.coverSurface || !owned) {
+        // which is also the state a clip that never autoplays, or one
+        // whose stage another clip has taken, stays in.
+        if (presentation.coverSurface || player == null) {
             AsyncImage(
                 model = posterUrl,
                 contentDescription = contentDescription,
@@ -197,7 +207,7 @@ fun VideoPlayer(
             )
         }
 
-        if (controls == VideoControls.Full) {
+        if (controls == VideoControls.Full && player != null) {
             PlayPauseButton(
                 playing = playing,
                 onToggle = { if (playing) player.pause() else player.play() },
