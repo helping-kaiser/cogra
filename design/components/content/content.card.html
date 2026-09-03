@@ -27,9 +27,9 @@ function Demo(){return (
   <div className="col">
     <span className="lbl">Post card — detail variant</span>
     <PostCard author={ada} variant="detail" title="Six weeks of the same walk" description="Same route, same time." content="Week one I noticed the bakery. Week four I noticed the woman who feeds the cats behind it." timestamp="Yesterday" license={{attribution:1,provenance:0.5}} score="23" edited menuItems={[{label:"Report this"},{label:"Copy link"}]}/>
-    <span className="lbl">The overflow menu, open — the rare interactions, licence among them</span>
+    <span className="lbl">The overflow menu, open — the rare interactions, license among them</span>
     <div style={{display:"flex",justifyContent:"flex-start",height:190}}>
-      <OverflowMenu items={[{label:"Licence terms"},{label:"Report this"},{label:"Copy link"}]} align="left"/>
+      <OverflowMenu items={[{label:"License terms"},{label:"Report this"},{label:"Copy link"}]} align="left"/>
     </div>
     <span className="lbl">Comment thread — nested, one reply pending</span>
     <ul><CommentCard author={mira} content="That corner by the bakery? It does that in September and then never again." timestamp="1h" license={{attribution:0,provenance:0}} edited bundle={b(0.15,0.15,1)} onReply={()=>{}} replies={[{id:"r1",author:ada,content:"The same one. I'll go back in a week and report.",timestamp:"20m",license:{attribution:0,provenance:0},pending:true}]}/></ul>

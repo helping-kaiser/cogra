@@ -5,13 +5,13 @@ import { BottomSheet, SheetItem } from "../core/BottomSheet.jsx";
 /* The overflow menu on a piece of content.
 
    EVERY post and every comment carries one. Genesis content always declares a
-   licence (post.md §1), so there is always at least the licence entry — and a
+   license (post.md §1), so there is always at least the license entry — and a
    trigger that comes and goes between cards is worse than one that is always in
    the same place.
 
    It exists because the affordance row has a budget and the things competing for
    it do not all deserve the same weight. A stance is the gesture the product
-   lives on; checking a licence is something a reader does once in a hundred
+   lives on; checking a license is something a reader does once in a hundred
    readings. The row carries what a reader reaches for; this carries the rest.
 
    Rules it keeps:

@@ -31,7 +31,7 @@ function Demo(){
     <BottomNav slots={["feed","compose","profile"]} active="feed"/>
     <BottomSheet open={open} onClose={()=>setOpen(false)} ariaLabel="This post">
       <SheetTitle>This post</SheetTitle>
-      <SheetItem label="Licence terms" onSelect={()=>setOpen(false)}/>
+      <SheetItem label="License terms" onSelect={()=>setOpen(false)}/>
       <SheetItem label="Copy link" onSelect={()=>setOpen(false)}/>
       <SheetItem label="Report" onSelect={()=>setOpen(false)}/>
     </BottomSheet>
@@ -46,7 +46,7 @@ function Demo(){
     <span className="lbl">In flow, for a specimen — inline drops the scrim and the animation</span>
     <div style={{borderRadius:"var(--radius-extra-large)",overflow:"hidden",maxWidth:260}}>
       <BottomSheet inline ariaLabel="Specimen">
-        <SheetItem label="Licence terms"/>
+        <SheetItem label="License terms"/>
         <SheetItem label="Copy link"/>
       </BottomSheet>
     </div>
