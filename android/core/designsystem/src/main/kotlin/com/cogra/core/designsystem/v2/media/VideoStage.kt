@@ -88,6 +88,10 @@ object VideoStage {
             return
         }
         current?.player?.release()
+        // A new clip has its own face to earn: the last one's rendered
+        // frame says nothing about this one, and inheriting it would
+        // skip the cover on a clip that has not drawn anything yet.
+        hasRendered = false
         holding = Holding(
             url = url,
             player = ExoPlayer.Builder(context.applicationContext).build().apply {
@@ -128,9 +132,28 @@ object VideoStage {
         holding = current.copy(owner = null)
     }
 
+    /**
+     * Whether the clip on stage has ever put a frame on screen.
+     *
+     * **A cover that has already been replaced must not come back.**
+     * `PresentationState` is remembered per composable, so its
+     * `coverSurface` starts true on every new surface — which is why
+     * opening the detail re-showed the cover even though the same
+     * player had been playing a moment earlier. The stage outlives the
+     * surfaces, so it is the thing that can remember.
+     */
+    var hasRendered: Boolean = false
+        private set
+
+    /** The player rendered — from here on this clip needs no stand-in. */
+    fun rendered() {
+        hasRendered = true
+    }
+
     /** Lets go of the decoder entirely. */
     fun release() {
         holding?.player?.release()
         holding = null
+        hasRendered = false
     }
 }

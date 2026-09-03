@@ -6,17 +6,20 @@ import org.junit.Test
 /**
  * When the poster stands in front of the video surface.
  *
- * This is the decision behind the reported glitch: one player moving
- * between the feed's frame and the detail's lands a frame on a surface
- * that has not yet been told how big the video is, and the poster is
- * what hides that frame.
+ * This is the rule behind the reported flash: opening a post's detail
+ * builds a second surface, whose freshly remembered `PresentationState`
+ * starts by saying no frame has been rendered — and the cover came back
+ * over a clip that had been playing a moment before.
+ *
+ * **These pin the rule, not the symptom.** Whether the rule is what
+ * jakob is seeing is a question for the device; the trace answers it.
  */
 class VideoPosterCoverTest {
 
     @Test
     fun aSurfaceWithNoFrameYetShowsThePoster() {
         assertThat(
-            posterCovers(coverSurface = true, hasPlayer = true, videoSizeKnown = true),
+            posterCovers(coverSurface = true, hasPlayer = true, alreadyRendered = false),
         ).isTrue()
     }
 
@@ -24,27 +27,36 @@ class VideoPosterCoverTest {
     fun aFrameWhoseClipLeftTheStageShowsThePoster() {
         // Another clip took the stage; there is no player to draw.
         assertThat(
-            posterCovers(coverSurface = false, hasPlayer = false, videoSizeKnown = true),
+            posterCovers(coverSurface = false, hasPlayer = false, alreadyRendered = true),
         ).isTrue()
     }
 
     @Test
-    fun aSurfaceThatDoesNotYetKnowTheVideoSizeShowsThePoster() {
-        // androidx/media#3238: `videoSizeDp` is filled in from an
-        // effect, so the composition right after a player moves to a new
-        // surface measures at full parent size. A frame landing then is
-        // the wrong-sized first frame — the poster hides it.
+    fun aClipThatHasRenderedNeverShowsItsCoverAgain() {
+        // The detail's case: a new surface says "no frame yet" about
+        // itself, but the clip has a face of its own by now and the
+        // cover has no job.
         assertThat(
-            posterCovers(coverSurface = false, hasPlayer = true, videoSizeKnown = false),
-        ).isTrue()
-    }
-
-    @Test
-    fun aReadySurfaceAtAKnownSizeShowsTheVideo() {
-        // The only combination that reveals the surface: something to
-        // draw, and the geometry to draw it in.
-        assertThat(
-            posterCovers(coverSurface = false, hasPlayer = true, videoSizeKnown = true),
+            posterCovers(coverSurface = true, hasPlayer = true, alreadyRendered = true),
         ).isFalse()
+    }
+
+    @Test
+    fun aReadySurfaceShowsTheVideo() {
+        assertThat(
+            posterCovers(coverSurface = false, hasPlayer = true, alreadyRendered = false),
+        ).isFalse()
+    }
+
+    @Test
+    fun everyPosterCarriesTheReasonItIsThere() {
+        // The reason is what the device log prints, and "the cover
+        // flashed" has more than one cause.
+        assertThat(posterReason(coverSurface = false, hasPlayer = false, alreadyRendered = false))
+            .contains("another clip holds the stage")
+        assertThat(posterReason(coverSurface = true, hasPlayer = true, alreadyRendered = false))
+            .contains("no frame rendered yet")
+        assertThat(posterReason(coverSurface = false, hasPlayer = true, alreadyRendered = true))
+            .isNull()
     }
 }
