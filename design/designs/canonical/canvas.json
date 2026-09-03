@@ -173,6 +173,42 @@
       "page": "entry"
     },
     {
+      "file": "JoinErrors.dc.html",
+      "title": "Join · the errors in place",
+      "x": 0,
+      "y": 5204,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "SignInError.dc.html",
+      "title": "Sign in · wrong credentials",
+      "x": 480,
+      "y": 5204,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "RestoreError.dc.html",
+      "title": "Restore · the code doesn't check out",
+      "x": 960,
+      "y": 5204,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "RecoveryCodeMismatch.dc.html",
+      "title": "Recovery code · the mismatch",
+      "x": 1440,
+      "y": 5204,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "ComposePick.dc.html",
       "title": "Compose · pick the body",
       "x": 0,
@@ -758,6 +794,69 @@
       "page": "media"
     },
     {
+      "file": "FeedCover.dc.html",
+      "title": "Feed · the cover at rest",
+      "x": 0,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
+      "file": "Reel.dc.html",
+      "title": "Reel · the stream",
+      "x": 480,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
+      "file": "PostDetailVideo.dc.html",
+      "title": "Post · a video, the clip pinned",
+      "x": 960,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
+      "file": "PostDetail.dc.html",
+      "title": "Post · the detail view",
+      "x": 1440,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
+      "file": "ViewerPicture.dc.html",
+      "title": "Viewer · a picture",
+      "x": 0,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
+      "file": "ViewerVideo.dc.html",
+      "title": "Viewer · a video",
+      "x": 480,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
+      "file": "ViewerLandscape.dc.html",
+      "title": "Viewer · rotated",
+      "x": 960,
+      "y": 3180,
+      "w": 844,
+      "h": 390,
+      "page": "media"
+    },
+    {
       "file": "Wallet.dc.html",
       "title": "Wallet · at rest",
       "x": 0,
@@ -861,7 +960,7 @@
       "x": -1580,
       "y": 0,
       "w": 1160,
-      "h": 2645,
+      "h": 3284,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -870,7 +969,7 @@
       "x": -2160,
       "y": 0,
       "w": 1740,
-      "h": 2277,
+      "h": 2346,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -888,7 +987,7 @@
       "x": -1870,
       "y": 0,
       "w": 1450,
-      "h": 1229,
+      "h": 1285,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -906,7 +1005,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 1329,
+      "h": 2425,
       "page": "media",
       "title": "Media · flow map"
     },
@@ -942,7 +1041,7 @@
       "x": -2160,
       "y": 0,
       "w": 1740,
-      "h": 1213,
+      "h": 1542,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -978,6 +1077,15 @@
       "title": "Profile edit · what you sign",
       "x": 480,
       "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileEditError.dc.html",
+      "title": "Edit profile · an empty name",
+      "x": 0,
+      "y": 1928,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1152,6 +1260,22 @@
       "y": 1060,
       "w": 290,
       "text": "THE VIDEO CONFORM ROUND (jakob 2026-09-03, backlog item 32). What the video slice built to rulings without boards, drawn — and the two shipped mismatches ruled.\n\nPLAYBACK STANDS AS DRAWN: sound only on every reading surface, both scales — no play/pause, no duration pill. Web strips its in-card transport controls; the real controls belong to the fullscreen viewer, which the roadmap now owns.\n\nTHE BACK ARROW GATES LIKE THE X: any leave of a non-empty comment asks through DiscardConfirm. Empty still leaves at once. Android's announced deviation is the rule; web adds the gate. Post composers keep their plain leave — a post draft is kept, so nothing is at stake.\n\nREFUSALS, THE WHOLE VOCABULARY, on both refusal boards at their scales: the post video cap, the mixed-kind lines ('A post/comment carries pictures or one video, not both.'), the moving GIF (neither platform can encode animated WebP — a still GIF still converts), and count overflow, which used to truncate in silence. A FILE IS JUDGED ON ITS OWN BEFORE IT IS JUDGED AGAINST THE BODY: size and format first, grammar second — one file, one line, the nearest reason. Both boards stage a FULL tray, which is what makes the count and mixed-kind rows honest beside the rest.\n\nMIXED SELECTION: staged content wins — the newcomer of the other kind refuses. From a fresh mixed batch with nothing staged, THE PICTURES ARE KEPT and the video refuses.\n\nA VIDEO IS THE WHOLE BODY: once a clip is staged the add control is gone and a quiet line says why and what is next ('Pick · a video is the whole post'; the same at comment scale on 'Reply · a video and its cover'). Web takes the state 1:1 — the drop region and the file dialog play the grid's part, so no web board, the blessing ComposePickWeb's new refusal routes ride on too.\n\nTHE COVER: four frame samples — 1s, 10%, 50%, 90% — deduped on a clip short enough that two land on the same frame. A FRAME NEEDS NO CROP (it already carries the clip's shape); a picture from the gallery does, through 'Cover · a picture of your own', locked to the video's display shape at the scale it will be seen. ComposeCover's back arrow now reaches the pick, not the crop: the video path never crosses it.\n\nTHE COVER IS CHANGEABLE AT EDIT, VIA THE GALLERY ONLY — frames are not re-offered, because extraction needs a source file the device may no longer hold. A new cover is a NEW LAYER on the attachment: a new picture asset the author holds, the cover pointer swapping at edit-sign, never an alteration of the video. Both edit surfaces are drawn; the clip itself is never swapped, only removed whole.\n\nA FAILED UPLOAD IS NOT A REFUSED FILE. Refusals are answers and cannot be retried; a failed upload is a fault and gets Retry beside Remove, like every other transport fault. Both apps ship no-Retry interims and must change.\n\nTHE DESCRIBE SHEET HAS TWO SHAPES: 'Describe the video' takes ONE entry for the whole clip and never offers the cover a field. Both shapes, and the describe row, carry the reason permanently under the title — 'Read aloud to people who can't see it.' — instead of behind a '?' nobody opens.\n\nVERTICAL VIDEO IS RULED, ITS DRAWING DEFERRED: 9:16 and 16:9 both exist; square is the COMMENT scale's shape only. How the two sit in a feed card leads the next round (backlog item 33).",
+      "page": "media"
+    },
+    {
+      "id": "note-reel-round",
+      "x": -340,
+      "y": 2120,
+      "w": 290,
+      "text": "THE REEL ROUND (jakob 2026-09-03, backlog item 33, with his review-round rulings the same day). How a clip sits in a card, where a portrait clip's tap goes, and the stream it opens.\n\nA CLIP KEEPS ITS OWN SHAPE, CLAMPED TO TALL. 16:9 and 1:1 display true; anything taller than 4:5 CENTRE-CROPS to 4:5 in a card. The cover shares the clip's ratio and crops identically — it is the same clip's face. LETTERBOXING EXISTS NOWHERE, pictures included: a tile is FILLED, never fitted, so a comment's uncropped picture display-crops to its square the way its clip does. Display only — the bytes stay the author's own, and the whole frame is one tap away in the viewer.\n\nTHE CONTROL LADDER — a deliberate revision of the conform round's sound-only-on-every-reading-surface rule. FEED CARD: the sound disc alone. DETAIL: play/pause and a real timeline, uniform for every clip; the chrome auto-hides and a tap on the video reveals it. FULLSCREEN VIEWER: the same full transport, and rotate-to-landscape. STREAM: sound and a thin drag-to-seek line — never the full transport.\n\nTHE TRANSPORT'S ANATOMY IS THE PLATFORM PLAYER'S: a big centred play/pause flanked by the skips, and a bar along the bottom with elapsed · timeline · total · sound · fullscreen. NOTHING SITS ON THE BOTTOM EDGE — Android's gesture zone lives there, and a control in it is a swipe that closes the app.\n\nTHE STREAM CARRIES PORTRAIT CLIPS ONLY, and it is THE DEFAULT FEED NARROWED TO THEM: same graph, same ranking, a mechanical filter. NO SECOND ALGORITHM, and no header saying so — what says it is the SCORE on the rail, the reader's own reach into this post, the same number the card wore. THE BOTTOM BAR STAYS (Instagram, TikTok and YouTube all keep theirs): the stream is a way of reading the feed, not a place outside the app. The seek line sits directly above the bar.\n\nENTRY: a portrait clip's tap in the feed opens the STREAM; any other media's tap opens the POST. From the pinned-clip detail, tapping the clip expands BACK to the stream with the reader's place held.\n\nTHE DETAIL DOOR IS THE SCORE ELEMENT — the exact element a feed card wears. Tapping it SQUISHES the clip to the top of the screen, still playing, and the body rises beneath: a state change, never a page portal. On a card the same element opens the score drill-down (item 13) — one element, two surfaces, two destinations, and no rename.\n\nTHE RAIL, top to bottom: author chip · stance face · comment count · share · the score. People lead; then the acts in the card's own order; the door out last, so a thumb reaching for the stance never passes over the exit. WHITE AND SHADOWED AT 28px, and the unset stance is a LINE FACE in the same weight (sentiment_neutral) — no disc, no ring, because a plate around one control in a column of five reads as chrome. Over photography a token colour is not a quiet control but an invisible one, so what the card says with translucency the stream says with the empty face; a stance already taken shows its own face at the same size. The stance opens THE SAME pad over the paused clip, seal and all; the count opens the same near-full-height comments sheet. Topics, references and the reader's ⋮ are NOT here — they belong to the detail view the score opens.\n\nGUEST AND KEY-ABSENT GATE EXACTLY AS THE FEED: the join prompt over the paused clip, the key notice per the pattern boards. Same edges, same masters, no stream of their own.\n\nSHARE IS NEW, AND IT IS ON EVERY CARD: one tap to the platform's own sheet, no menu of ours and NO COUNT — a share tally would be a public number the graph does not record. THE ACTION ROW'S ORDER IS ITS ORDER OF IMPORTANCE — stance · score · comment · share — and that is also the QUEUE: on a phone too narrow for all four, share moves into the ⋮ menu first, and the row gives way from its end. A new action is ranked against what is already reachable before it earns a slot, never appended by default.\n\nTHE COVER AT REST: first paint before autoplay, and it never returns once playback has started. Where the device suppresses autoplay — reduced motion, data saver — the card wears a PLAY DISC in the sound disc's place, the one card in the product that draws play, and a tap plays it where it stands. Quoted targets and history rows wear the cover as a thumbnail.\n\nTHE POST DETAIL EXISTS AT LAST, both bodies: the gallery post's, and the video post's with the clip pinned. The comments sheet's board is the first of these with the sheet raised — same anatomy, one screen.",
+      "page": "media"
+    },
+    {
+      "id": "note-media-viewer",
+      "x": -340,
+      "y": 3180,
+      "w": 290,
+      "text": "THE FULLSCREEN VIEWER (jakob 2026-09-03, backlog item 33 — the surface the roadmap gave the real controls to, drawn).\n\nIT IS THE WHOLE SURFACE, ON BLACK, WITH NOTHING BEHIND IT. Not a scrim over the post: a viewer you can still read a card through is not full screen, and the black ground is what makes the frame's own edges the only edges. Its stage is POSITIONED, never flex-sized — that is what keeps the frame, and the transport with it, inside the screen whatever shape the media is.\n\nENTRY IS THE SECOND TAP: media in a card opens the POST; media in the post opens the FRAME — or the transport's own fullscreen toggle, the same door. A reader scrolling is choosing between posts; a reader already on the post came to look.\n\nTHE FRAME IS NEVER CUT HERE. This is the surface every crop in the product exists against — the post's one crop shape, the 4:5 cap, a portrait clip's centre-crop — and here the frame is whole, as large as the screen allows. A clip whose shape is not the device's keeps its shape and takes the ground beside it; that is not a card letterboxing, it is the frame at its own size.\n\nA PICTURE PINCH-ZOOMS, and the gallery's SWIPE AND DOTS carry over — the set pages here exactly as it does in the card: DOTS ONLY, no arrows and no n-of-m (the pager ruling holds here too; the count rides the accessible name).\n\nA VIDEO TAKES THE FULL TRANSPORT — the centred play/pause and its skips, and the bar of elapsed · timeline · total · sound, INSET from the bottom edge and clear of the system gesture zone — the product's own, not the browser's default set, so one control vocabulary runs across the detail view, the stream and here. ROTATING THE DEVICE gives the clip the screen's whole height (Viewer · rotated, the one board in this canvas that is not a portrait phone). Rotation is the device's gesture, so nothing draws a rotate control.\n\nTHREE WAYS OUT: the X, a SWIPE DOWN, and the backdrop. An X rather than a back arrow — a layer is being dismissed, not a step of a journey walked.\n\nNO ACTS: no stance, no comment count, no share. Acting on a post happens where the post is, and a viewer that grows a toolbar is a viewer nobody trusts to close.\n\nTHE DESCRIPTION IS NOT SHOWN. Alt text is read aloud to people who cannot see the frame; printed under it, it becomes a caption its author never wrote.",
       "page": "media"
     },
     {

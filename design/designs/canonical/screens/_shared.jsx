@@ -32,6 +32,8 @@ const {
   SheetItem,
   SheetTitle,
   TextField,
+  PasswordField,
+  RecoveryCode,
   SearchBar,
   Chip,
   SegmentedFilter,
@@ -66,6 +68,15 @@ const {
   SensitiveVeil,
   SensitiveScope,
   RedactedContent,
+  MediaDisc,
+  VideoTransport,
+  SeekLine,
+  ShareButton,
+  ExplainableNumber,
+  MediaViewer,
+  ReelRail,
+  ReelCaption,
+  PinnedClip,
 } = components;
 
 /* A standing of one gentle record — the vouch-back default made a bundle. */
@@ -130,6 +141,27 @@ const SOL_POST = {
   score: "9.10",
   comments: 2,
   license: { attribution: 0.5, provenance: 0.5 },
+  menuItems: CITE_MENU,
+};
+
+/* The gallery post (media slice, 2026-08-31): four pictures at one crop shape,
+   one frame swiped, dots only. Shared the moment its detail view needed it too. */
+const MIRA_GALLERY_POST = {
+  author: MIRA,
+  title: "Sunday at the tide market",
+  content:
+    "Everything the flats give up in one morning — the stand by the sea wall had honey from the headland hives again.",
+  timestamp: "4h",
+  media: [
+    { src: "gallery-market.jpg", ratio: "tall", fit: "cover", alt: "Crates of strawberries on a market stand." },
+    { src: "gallery-veg.jpg", ratio: "tall", fit: "cover", alt: "Vegetables laid out on a cutting board." },
+    { src: "gallery-honey.jpg", ratio: "tall", fit: "cover", alt: "A jar of honey in low sun." },
+    { src: "gallery-grapes.jpg", ratio: "tall", fit: "cover", alt: "Two hands holding a bunch of grapes." },
+  ],
+  topics: ["tidemarket", "coastroad"],
+  score: "6.40",
+  comments: 2,
+  license: { attribution: 0, provenance: 0 },
   menuItems: CITE_MENU,
 };
 
@@ -497,3 +529,35 @@ function DetailColumn({ children }) {
     </div>
   );
 }
+
+/* ── The stream's fixtures (readme §13, the reel round) ───────────────────
+   The clip and the post it belongs to. Everything the stream is BUILT from is a
+   master — `ReelRail`, `ReelCaption`, `SeekLine`, `MediaDisc`, `PinnedClip` —
+   because the stream is the ordinary feed in a different frame, not a second
+   product; what stays here is the mock material those masters are handed. */
+
+const CLIP_LAKESIDE = {
+  kind: "video",
+  src: "clip-lakeside.mp4",
+  poster: "clip-lakeside.jpg",
+  ratio: "portrait",
+  alt: "A man standing at the edge of a lake as the light drops.",
+};
+
+const MIRA_CLIP_POST = {
+  author: MIRA,
+  title: "The lake, doing nothing, for forty seconds",
+  content:
+    "Stood there long enough that the midges found me. Worth it for the last ten seconds, when the far shore goes the colour of the water.",
+  timestamp: "35m",
+  media: [CLIP_LAKESIDE],
+  topics: ["stillwater", "coastroad"],
+  score: "7.40",
+  comments: 2,
+  license: { attribution: 0, provenance: 0 },
+  menuItems: CITE_MENU,
+};
+
+/* The bottom bar's height — what the stream's own chrome has to clear. */
+const BAND_HEIGHT = 64;
+
