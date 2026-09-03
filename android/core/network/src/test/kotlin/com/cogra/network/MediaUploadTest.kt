@@ -84,8 +84,11 @@ class MediaUploadTest {
         val number = request.path.orEmpty().substringAfterLast('/').toInt()
         val seen = partAttempts.merge(number, 1, Int::plus) ?: 1
         val owed = failuresFor[number] ?: 0
-        // The blip: the connection goes away rather than answering.
-        if (seen <= owed) return MockResponse().setSocketPolicy(DISCONNECT)
+        // The blip. A real one is a dead socket, which the sender sees
+        // as an `IOException`; a 5xx takes the same branch and is what a
+        // mock server can produce deterministically — the socket-policy
+        // shim in mockwebserver 5's legacy package does not.
+        if (seen <= owed) return MockResponse().setResponseCode(503)
         return MockResponse()
             .setBody("""{"partNumber":$number,"receivedParts":[$number],"partCount":2}""")
             .addHeader("Content-Type", "application/json")
@@ -235,7 +238,6 @@ class MediaUploadTest {
         /** Small enough to keep the test's bytes cheap. */
         const val PART_SIZE = 64
 
-        val DISCONNECT = okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AT_START
         val MILLISECONDS = java.util.concurrent.TimeUnit.MILLISECONDS
     }
 }
