@@ -3,7 +3,7 @@ import { Card } from "../core/Card.jsx";
 import { Button } from "../core/Button.jsx";
 import { ActorChip } from "../people/ActorChip.jsx";
 import { PendingMarker, EditedMarker } from "../honesty/PendingMarker.jsx";
-import { LicenseTerms } from "../forms/LicenseChooser.jsx";
+import { LicenseTerms, LICENSE_MENU_LABEL, LICENSE_MENU_LABEL_SHOWN } from "../forms/LicenseChooser.jsx";
 import { StanceControl } from "../stance/StanceControl.jsx";
 import { OverflowMenu } from "./OverflowMenu.jsx";
 import { Icon, NODE_GLYPHS } from "../navigation/Icon.jsx";
@@ -24,7 +24,9 @@ import { SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
 
 const MAX_INDENT_DEPTH = 1;
 
-/* @handle tokens read as what they are — a reference to a person. */
+/* @handle tokens read as the person they name. Colour is ALL this is: a handle
+   typed into a body is text, never a record — the mention that binds is the
+   structured reference the composer stages (readme §13, the menus round). */
 function withMentions(text) {
   const parts = String(text).split(/(@[a-z0-9_]+)/gi);
   if (parts.length === 1) return text;
@@ -65,16 +67,18 @@ export function CommentCard({
   onOpenTarget,
   actions,
   menuItems = [],
+  defaultShowLicense = false,
   topics = [],
   references = 0,
   onOpenReferences,
   children,
 }) {
-  // Same rule as PostCard: the licence is a rare read, so it arrives from the
-  // menu rather than sitting on the comment.
-  const [showLicense, setShowLicense] = React.useState(false);
+  // Same rule as PostCard: the license is a rare read, so it arrives from the
+  // menu rather than sitting on the comment, and it unfolds on the card itself
+  // rather than on a surface of its own. `defaultShowLicense` draws it unfolded.
+  const [showLicense, setShowLicense] = React.useState(defaultShowLicense);
   const items = license
-    ? [{ label: showLicense ? "Hide licence" : "Licence terms", onSelect: () => setShowLicense((shown) => !shown) }, ...menuItems]
+    ? [{ label: showLicense ? LICENSE_MENU_LABEL_SHOWN : LICENSE_MENU_LABEL, onSelect: () => setShowLicense((shown) => !shown) }, ...menuItems]
     : menuItems;
   /* THE VEIL TAKES THE WHOLE BODY, words and pictures as one block. A comment
      has no title to leave outside it, so what carries the informed choice is

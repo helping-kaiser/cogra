@@ -1,11 +1,11 @@
-Use `BottomSheet` for a set of choices on a phone — the overflow menu, licence terms, a filter with too many options for a segmented row. Use a dialog instead when the reader cannot proceed without answering.
+Use `BottomSheet` for a set of choices on a phone — the overflow menu, license terms, a filter with too many options for a segmented row. Use a dialog instead when the reader cannot proceed without answering.
 
 ```jsx
 const [open, setOpen] = React.useState(false);
 
 <BottomSheet open={open} onClose={() => setOpen(false)} ariaLabel="Post actions">
   <SheetTitle>This post</SheetTitle>
-  <SheetItem label="Licence terms" onSelect={() => { setOpen(false); showLicence(); }} />
+  <SheetItem label="License terms" onSelect={() => { setOpen(false); showLicense(); }} />
   <SheetItem label="Copy link" onSelect={() => setOpen(false)} />
   <SheetItem label="Report" onSelect={() => setOpen(false)} />
 </BottomSheet>

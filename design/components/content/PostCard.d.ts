@@ -58,7 +58,7 @@ export interface PostCardProps {
   onOpenComments?: () => void;
   /**
    * Renders the record's SKELETON instead of its content: an illegal verdict
-   * removes the payload, so title, description, body, media, and the licence all
+   * removes the payload, so title, description, body, media, and the license all
    * go at once — there is no per-field redaction. `true` for the default wording,
    * or `RedactedContentProps` for the reason and date. The author, timestamp,
    * thread position, and stance control survive around it.
@@ -92,7 +92,7 @@ export interface PostCardProps {
    */
   actions?: React.ReactNode;
   /**
-   * Extra overflow-menu items, appended after the licence entry. The rare
+   * Extra overflow-menu items, appended after the license entry. The rare
    * interactions live here — report, open a proposal, copy a link — so the
    * affordance row keeps only what a reader reaches for.
    */

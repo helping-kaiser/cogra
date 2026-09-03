@@ -56,7 +56,7 @@ export interface CommentCardProps {
   targetLabel?: string;
   /** Extra affordances in the same row as the stance control, Reply and Edit. */
   actions?: React.ReactNode;
-  /** Extra overflow-menu items, appended after the licence entry. */
+  /** Extra overflow-menu items, appended after the license entry. */
   menuItems?: readonly { label: string; onSelect?: () => void }[];
   /** An open reply or edit composer, rendered between the card and its replies. */
   children?: React.ReactNode;

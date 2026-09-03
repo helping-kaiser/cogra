@@ -23,4 +23,16 @@ export interface LicenseTermsProps {
 export declare function LicenseTerms(props: LicenseTermsProps): JSX.Element;
 
 export declare const PUBLIC_DOMAIN: License;
-export declare function licenseTerms(license: License): readonly string[];
+
+/** One axis of a license as the read surface states it. */
+export interface LicenseReading {
+  axis: string;
+  reading: string;
+}
+
+export declare function licenseReadings(license: License): readonly LicenseReading[];
+
+/** The words of the menu row that unfolds the terms, and of the one that folds
+ *  them away again — assigned once, spelled by every surface that offers it. */
+export declare const LICENSE_MENU_LABEL: string;
+export declare const LICENSE_MENU_LABEL_SHOWN: string;

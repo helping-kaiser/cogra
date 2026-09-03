@@ -77,6 +77,7 @@ const {
   ReelRail,
   ReelCaption,
   PinnedClip,
+  LICENSE_MENU_LABEL,
 } = components;
 
 /* A standing of one gentle record — the vouch-back default made a bundle. */
@@ -96,10 +97,11 @@ const MIRA = { handle: "mira", displayName: "Mira Voss" };
 const SOL_ADDRESS = "lq1qq2xvpcvfup5j8zscjq05eqylmrc6javzn30v78y7255695yz4t9r5v5m8g6snm4gvsvvzp6mzurcem6ms70epwqmwtnw2pex";
 const SOL_ADDRESS_NEW = "lq1qqw7t3xk0zfvljmv2u49h5tld6mfj7z2vhnn0mjcz2q0edgp5yh3l5wxk8m9dqrrf0e2h4t8ur5cem2n970q4wsxm5u8f30a";
 
-/* Genesis content always declares a licence, so every card has at least that
+/* Genesis content always declares a license, so every card has at least that
    menu entry — without one the dot vanishes, and it must not. Citing rides the
    same menu on every content (readme §13). */
-const CITE_MENU = [{ label: "Cite in a new post", onSelect: () => {} }];
+const CITE_ROW = { label: "Cite in a new post", onSelect: () => {} };
+const CITE_MENU = [CITE_ROW];
 
 const ADA_POST = {
   author: ADA,
@@ -223,16 +225,28 @@ function DetailHeader({ items }) {
   return <PageHeader backHref="#" backLabel="Back to feed" action={<OverflowMenu items={items} ariaLabel="More on this post" />} />;
 }
 
-/* What the one menu holds — the author's post vs someone else's. */
+/* What the one menu holds — the author's post vs someone else's.
+
+   ONE MECHANISM, SPELLED TWICE. A card mounts its own menu and prepends the
+   license row to whatever `menuItems` it was handed; a DETAIL surface hides the
+   card's dot and the header carries the menu instead, so these lists are that
+   same menu written out for the header, and they take the row's words from the
+   master's atom rather than spelling them again. The reader's menu keeps the
+   card's own order, the license row first; the author's leads with the acts it
+   was opened for and lets the license row close it. */
+const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {} };
 const OWN_POST_MENU = [
   { label: "Edit", onSelect: () => {} },
   { label: "Mark as sensitive", onSelect: () => {} },
   { label: "Remove", onSelect: () => {} },
-  { label: "License terms", onSelect: () => {} },
+  LICENSE_ROW,
 ];
-const READER_POST_MENU = [
-  { label: "Cite in a new post", onSelect: () => {} },
-  { label: "License terms", onSelect: () => {} },
+const READER_POST_MENU = [LICENSE_ROW, CITE_ROW];
+/* Another's profile: no license (a profile declares none) and no citing — the
+   word for referencing a person is mentioning (readme §13, the menus round). */
+const PROFILE_MENU = [
+  { label: "Mention in a new post", onSelect: () => {} },
+  { label: "Share this profile", onSelect: () => {} },
 ];
 
 /* A quiet section caption (the references sheet's groups, Explore's recents,
