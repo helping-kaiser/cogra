@@ -570,6 +570,100 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+// The reel round's boards (item 33). The stream and the viewer draw their own
+// chrome, so their markers name the controls rather than the card anatomy; the
+// two viewer boards are scanExempt (the detail beneath the scrim is inactive)
+// and their transport markers stamp `all`, so the under-scrim repeat carries the
+// same badge, dimmed beneath the wash.
+Object.assign(FLOW_MARKERS, {
+  FeedCover: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 2, find: '<a href="/u/', tag: "a", all: true },
+    { n: 3, find: 'aria-label="More on this post"', tag: "button", all: true },
+    { n: 4, find: "aspect-ratio:4 / 5", tag: "div" },
+    { n: 4, find: "aspect-ratio:16 / 9", tag: "div" },
+    { n: 5, find: ">More</button>", tag: "button", all: true },
+    { n: 6, find: '<a href="/t/', tag: "a", all: true },
+    { n: 7, find: 'aria-label="Your stance on this post', tag: "button", all: true },
+    { n: 7, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 8, find: ">Post Score</span>", tag: "button", all: true },
+    { n: 9, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 9, find: 'aria-label="1 comment"', tag: "button" },
+    { n: 10, find: 'aria-label="Turn sound on"', tag: "button" },
+    { n: 11, find: 'aria-label="Play this video"', tag: "button" },
+    ...nav(12),
+  ],
+  Reel: [
+    { n: 1, find: 'aria-label="Back to the feed"', tag: "button" },
+    { n: 2, find: 'aria-label="Turn sound on"', tag: "button" },
+    { n: 3, find: '<a href="/u/', tag: "a" },
+    { n: 4, find: 'aria-label="Take a stance on this post"', tag: "button" },
+    { n: 4, find: ">Choose your stance</button>", tag: "button" },
+    { n: 5, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 6, find: 'aria-label="Share this post"', tag: "button" },
+    { n: 7, find: ">Post Score</span>", tag: "button" },
+    { n: 8, find: ">More</button>", tag: "button" },
+    { n: 9, find: 'alt="A man standing at the edge', tag: "img" },
+    { n: 10, find: 'aria-label="Seek"', tag: "div" },
+    ...nav(11),
+  ],
+  PostDetail: [
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
+    { n: 2, find: 'aria-label="More on this post"', tag: "button" },
+    { n: 3, find: '<a href="/u/', tag: "a" },
+    { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
+    { n: 5, find: 'aria-label="Topics and references"', tag: "button" },
+    { n: 6, find: 'aria-label="Take a stance on this post"', tag: "button" },
+    { n: 6, find: ">Choose your stance</button>", tag: "button" },
+    { n: 7, find: ">Post Score</span>", tag: "button" },
+    { n: 8, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 9, find: 'aria-label="Share this post"', tag: "button" },
+    ...nav(10),
+  ],
+  PostDetailVideo: [
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
+    { n: 2, find: 'aria-label="More on this post"', tag: "button" },
+    { n: 3, find: "aspect-ratio:4 / 5", tag: "div" },
+    { n: 4, find: 'aria-label="Pause"', tag: "button" },
+    { n: 5, find: 'aria-label="Seek"', tag: "div" },
+    { n: 6, find: 'aria-label="Turn sound on"', tag: "button" },
+    { n: 7, find: '<a href="/u/', tag: "a" },
+    { n: 8, find: 'aria-label="Topics and references"', tag: "button" },
+    { n: 9, find: 'aria-label="Take a stance on this post"', tag: "button" },
+    { n: 9, find: ">Choose your stance</button>", tag: "button" },
+    { n: 10, find: ">Post Score</span>", tag: "button" },
+    { n: 11, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 12, find: 'aria-label="Share this post"', tag: "button" },
+    ...nav(13),
+    { n: 18, find: 'aria-label="Back ten seconds"', tag: "button" },
+    { n: 18, find: 'aria-label="Forward ten seconds"', tag: "button" },
+    { n: 19, find: 'aria-label="Full screen"', tag: "button" },
+  ],
+  ViewerPicture: [
+    { n: 1, find: 'aria-label="Close"', tag: "button" },
+    { n: 2, find: 'class="cg-viewer-stage"', tag: "div" },
+    { n: 3, find: 'role="dialog"', tag: "div" },
+  ],
+  ViewerVideo: [
+    { n: 1, find: 'aria-label="Close"', tag: "button" },
+    { n: 2, find: 'aria-label="Pause"', tag: "button" },
+    { n: 3, find: 'aria-label="Seek"', tag: "div" },
+    { n: 4, find: 'aria-label="Turn sound on"', tag: "button" },
+    { n: 5, find: 'role="dialog"', tag: "div" },
+    { n: 6, find: 'aria-label="Back ten seconds"', tag: "button" },
+    { n: 6, find: 'aria-label="Forward ten seconds"', tag: "button" },
+  ],
+  ViewerLandscape: [
+    { n: 1, find: 'aria-label="Close"', tag: "button" },
+    { n: 2, find: 'aria-label="Pause"', tag: "button" },
+    { n: 3, find: 'aria-label="Seek"', tag: "div" },
+    { n: 4, find: 'aria-label="Turn sound on"', tag: "button" },
+    { n: 5, find: 'role="dialog"', tag: "div" },
+    { n: 6, find: 'aria-label="Back ten seconds"', tag: "button" },
+    { n: 6, find: 'aria-label="Forward ten seconds"', tag: "button" },
+  ],
+});
+
 // The Profile page's boards (profile round, item 23). The own-profile boards
 // share the band cluster and the header anatomy; the chats marker for these
 // boards lives here (not in BAND_CHATS below) so each list reads complete.
@@ -682,6 +776,96 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+// The entry round's boards, componentized off the real masters (input-errors
+// bite 1, 2026-09-03): PasswordField and Checkbox bring their own real
+// <input>/<button> elements the hand markup only drew as shapes, so every
+// field and toggle carries its own number now, matched by `id` where the
+// field starts empty (no distinguishing value text to key off).
+Object.assign(FLOW_MARKERS, {
+  Join: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="handle"', tag: "input" },
+    { n: 3, find: 'id="email"', tag: "input" },
+    { n: 4, find: 'id="password"', tag: "input" },
+    { n: 5, find: 'aria-label="Show password"', tag: "button" },
+    { n: 6, find: ">Create account</button>", tag: "button" },
+    { n: 7, find: ">Already have an account? Sign in</button>", tag: "button" },
+  ],
+  SignIn: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="signin-email"', tag: "input" },
+    { n: 3, find: 'id="signin-password"', tag: "input" },
+    { n: 4, find: 'aria-label="Show password"', tag: "button" },
+    { n: 5, find: "Don&#x27;t remember this account on this device", tag: "input" },
+    { n: 6, find: ">Sign in</button>", tag: "button" },
+    { n: 7, find: ">Forgot password?</button>", tag: "button" },
+    { n: 8, find: ">New here? Enter your invite</button>", tag: "button" },
+    { n: 9, find: ">Just looking? Browse the feed", tag: "button" },
+    { n: 10, find: ">On Android? Download the app (APK)</button>", tag: "button" },
+  ],
+  Restore: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="recovery-code"', tag: "input" },
+    { n: 3, find: "Don&#x27;t remember this account on this device", tag: "input" },
+    { n: 4, find: ">Restore the key</button>", tag: "button" },
+  ],
+  RecoveryCode: [
+    { n: 1, find: ">Copy</button>", tag: "button" },
+    { n: 2, find: 'type="text"', tag: "input" },
+    { n: 3, find: ">I&#x27;ve written it down</button>", tag: "button" },
+  ],
+});
+
+/* The five errored boards (input-errors bite 3, 2026-09-03): each copies its
+   parent's control anatomy exactly, so its markers reuse the parent's
+   `find` patterns 1:1 — the error props change styling and a supporting
+   line, never the elements a reader can tap. ProfileEditError is the one
+   exception: Display name's value goes empty to match "can't be empty",
+   so its marker keys off that empty attribute instead of the master's
+   sample name. */
+Object.assign(FLOW_MARKERS, {
+  JoinErrors: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="handle"', tag: "input" },
+    { n: 3, find: 'id="email"', tag: "input" },
+    { n: 4, find: 'id="password"', tag: "input" },
+    { n: 5, find: 'aria-label="Show password"', tag: "button" },
+    { n: 6, find: ">Create account</button>", tag: "button" },
+    { n: 7, find: ">Already have an account? Sign in</button>", tag: "button" },
+  ],
+  SignInError: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="signin-email"', tag: "input" },
+    { n: 3, find: 'id="signin-password"', tag: "input" },
+    { n: 4, find: 'aria-label="Show password"', tag: "button" },
+    { n: 5, find: "Don&#x27;t remember this account on this device", tag: "input" },
+    { n: 6, find: ">Sign in</button>", tag: "button" },
+    { n: 7, find: ">Forgot password?</button>", tag: "button" },
+    { n: 8, find: ">New here? Enter your invite</button>", tag: "button" },
+    { n: 9, find: ">Just looking? Browse the feed", tag: "button" },
+    { n: 10, find: ">On Android? Download the app (APK)</button>", tag: "button" },
+  ],
+  RestoreError: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="recovery-code"', tag: "input" },
+    { n: 3, find: "Don&#x27;t remember this account on this device", tag: "input" },
+    { n: 4, find: ">Restore the key</button>", tag: "button" },
+  ],
+  RecoveryCodeMismatch: [
+    { n: 1, find: ">Copy</button>", tag: "button" },
+    { n: 2, find: 'type="text"', tag: "input" },
+    { n: 3, find: ">I&#x27;ve written it down</button>", tag: "button" },
+  ],
+  ProfileEditError: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: ">Change picture</button>", tag: "button" },
+    { n: 3, find: 'value=""', tag: "input" },
+    { n: 4, find: "whatever the wind allows.</textarea>", tag: "textarea" },
+    { n: 5, find: 'value="solferreira.art"', tag: "input" },
+    { n: 6, find: ">Save</button>", tag: "button" },
+  ],
+});
+
 /* The band's Chats affordance (jakob 2026-09-01): CograBand carries it on
    every tab root, so every wired band board gets the marker in one sweep —
    the number is each board's next free one, the edge points at the chat
@@ -690,11 +874,25 @@ const BAND_CHATS = {
   Main: 18, FeedBare: 18, ApplicantFeed: 18, ApplicantWaiting: 15,
   VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 9,
   Feed: 16, FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedGallery: 15,
+  FeedCover: 17,
   Wallet: 14, WalletEmpty: 9, WalletSetup: 8, WalletKeyAbsent: 10,
   WalletGuest: 8, WalletApplicant: 6,
 };
 for (const [board, n] of Object.entries(BAND_CHATS)) {
   (FLOW_MARKERS[board] ??= []).push({ n, find: 'aria-label="Chats"', tag: "button" });
+}
+
+/* SHARE JOINED THE ACTION ROW (jakob, review round 1), so every board drawing a
+   post card grew one control. Like the band's chats, it is stamped in one sweep
+   at each board's next free number — one edge each, all of them handing off to
+   the platform's own sheet. */
+const CARD_SHARE = {
+  Main: 19, FeedBare: 19, ApplicantFeed: 19, ApplicantWaiting: 16, VouchBack: 19,
+  KeyElsewhere: 18, Feed: 17, FeedNarrowed: 17, FeedFar: 17, FeedGallery: 16,
+  FeedCover: 18, ComposeExpired: 19, ComposeLanded: 14, Removed: 11, ProfilePosts: 21,
+};
+for (const [board, n] of Object.entries(CARD_SHARE)) {
+  (FLOW_MARKERS[board] ??= []).push({ n, find: 'aria-label="Share this post"', tag: "button", all: true });
 }
 
 export function applyFlowMarkers(name, html) {

@@ -20,6 +20,17 @@ fill="none"/>` rect is stripped, per the product's own convention.
 | more-vert.svg | more_vert | the post overflow menu |
 | chat-bubble.svg | chat_bubble | the comments affordance on a card |
 | volume-up.svg / volume-off.svg | volume_up, volume_off | a video's sound toggle |
+| play-arrow.svg / pause.svg | play_arrow, pause | the video transport; the play disc on a suppressed-autoplay card |
+| share.svg | share | handing a post to the OS share sheet |
+| fast-rewind.svg / fast-forward.svg | fast_rewind, fast_forward | the transport's skips, flanking play/pause |
+| fullscreen.svg | fullscreen | the transport's hand-off to the fullscreen viewer |
+| sentiment-neutral.svg | sentiment_neutral | the unset stance anchor on a media surface (its eyes are the official circles as exact arc paths) |
+| close.svg | close | the composer's leave control; the viewer's dismiss |
+| drag-indicator.svg | drag_indicator | the picked tray's reorder handle |
+| lock.svg | lock | a locked field (the edit's licence) |
+| expand-more.svg / chevron-right.svg | expand_more, chevron_right | a disclosure, and a row that opens |
+| arrow-outward.svg | arrow_outward | the wallet's direction badge (rotated 180° for incoming) |
+| content-copy.svg | content_copy | copying the payout address |
 | graph-3.svg | graph_3 | the Post Score |
 
 `graph-3.svg` is the one exception: Material **Symbols** only (hence the

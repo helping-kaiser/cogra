@@ -40,8 +40,8 @@ export function Screen() {
             content="The gulls had been at it before the tide came back. Two frames, both grim."
             timestamp="10m"
             media={[
-              { src: "comment-shingle.jpg", ratio: "4 / 3", fit: "contain", alt: "A stretch of shingle at low tide." },
-              { src: "comment-gulls.jpg", ratio: "1 / 1", fit: "contain", alt: "Gulls on the tideline." },
+              { src: "comment-shingle.jpg", ratio: "4 / 3", fit: "cover", alt: "A stretch of shingle at low tide." },
+              { src: "comment-gulls.jpg", ratio: "1 / 1", fit: "cover", alt: "Gulls on the tideline." },
             ]}
             sensitive={{ reason: "A dead seabird in the second frame." }}
             onReply={() => {}}

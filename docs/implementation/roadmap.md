@@ -388,11 +388,18 @@ the start — and delivery splits by content kind.
 - Metadata is stripped on the device and **checked again here**,
   for video as for pictures: a clean file is stored untouched, a
   faulty strip is repaired.
-- **Inline playback is sound-only**: autoplay muted on visibility
-  with one global sticky mute, one clip playing at a time at 70%
-  visibility or more, no play/pause and no duration pill on a
-  reading surface. Transport controls belong to the fullscreen
-  viewer (2.5.3), not to a card someone is scrolling past.
+- **A feed card is sound-only**: autoplay muted on visibility with
+  one global sticky mute, one clip playing at a time at 70%
+  visibility or more, no play/pause and no duration pill on a card
+  someone is scrolling past. The **post detail** carries real
+  transport — play/pause and a seekable timeline, uniform for every
+  clip, its chrome auto-hiding — and so does the fullscreen viewer
+  (2.5.3); the stream (2.7) carries sound and a drag-to-seek line.
+- **A clip keeps its own ratio, clamped to tall**: 16:9 and 1:1
+  display true, anything taller than 4:5 centre-crops to 4:5, and
+  the cover crops identically. Nothing is letterboxed. Where the
+  device suppresses autoplay, the card wears a **play disc** in the
+  sound disc's place and a tap plays it there.
 - **Hand test:** post a video from the phone; watch it autoplay
   muted in the web feed and take sound on tap.
 - **Surfaces:** backend, API, Android, web.
@@ -410,13 +417,16 @@ from the media path and carrying their own doc write-back:
 - Media in the **comment composer**, and the full feed-card
   redesign pass.
 - **The fullscreen media viewer**, reached by tapping media on the
-  post detail. Pictures pinch-zoom; a video plays with **real
-  transport controls** — the scrubber, play/pause, the elapsed
-  time — and the phone rotates to landscape for it. The viewer
-  **owns** those controls: inline surfaces stay sound-only, so
-  there is one place in the product where a reader is watching
-  rather than passing through, and one place the controls have to
-  work.
+  post detail. Pictures pinch-zoom and keep the gallery's swipe; a
+  video plays with the **full transport** — the scrubber, play/pause,
+  the elapsed time — and the phone rotates to landscape for it. The
+  frame is never cut here, which is what every crop elsewhere is
+  measured against. It carries **no acts** and does not show the
+  description, and it is dismissed by the X, a swipe down, or the
+  backdrop.
+- **Share**, on the post detail: one tap to the platform's own share
+  sheet, a glyph with no count of ours. Whether a feed card carries
+  one is still open, so the row there is unchanged.
 - **Surfaces:** backend, API, Android, web.
 
 ### Slice 2.6 — Private viewer state
@@ -478,13 +488,20 @@ from the media path and carrying their own doc write-back:
   controls toward the same node — the references they authored
   toward that Profile — and tells them, so the author can close
   those through the citation withdrawal that owns them.
-- **The reel view** — a vertical clip opens fullscreen and swipes
-  through to the next one. The stream is **the default feed
-  narrowed to clips**: the same slice, the same graph ranking, one
-  kind admitted. There is no second algorithm and no separate
-  ranker, because a feed a reader did not choose the shape of is
-  exactly what this product refuses — and the no-AI-in-ranking rule
-  has no exception for a surface that is fun.
+- **The reel view** — a **portrait** clip's tap in the feed opens the
+  stream fullscreen and swipes through to the next one; every other
+  media tap opens the post. The stream is **the default feed narrowed
+  to those clips**: the same slice, the same graph ranking, one shape
+  admitted. There is no second algorithm and no separate ranker,
+  because a feed a reader did not choose the shape of is exactly what
+  this product refuses — and the no-AI-in-ranking rule has no
+  exception for a surface that is fun. Nothing labels the stream: the
+  **Post Score on the rail** is what says whose feed it is, and it is
+  also the door to the post — the clip pins to the top of the screen,
+  still playing, and the body rises beneath it. The rail is author ·
+  stance · comments · share · score; the stream carries sound and a
+  drag-to-seek line, never the full transport; guest and key-absent
+  gate exactly as the feed does.
 - **Unhide topic follow** — the follow/unfollow control, backend-
   accepted since 2.3 (`prepareStance` toward the Hashtag) but
   hidden from the client until the topic feed exists to receive it.

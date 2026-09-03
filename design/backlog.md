@@ -392,14 +392,54 @@ WalletGuest) left the `nav · New post` and `stance face` selector
 starts, and KeyElsewhere left the stance-face one: a control start
 must mean one thing everywhere, and those taps now start a gate.
 
-Still owed on this item: the applicant's once-each acting boards
-(deliberately left in the census), the input-error states
-(field-error, wrong-credentials, wrong-code, code-mismatch — separate
-designs, untouched by the network board), the reader's post / comment
-/ profile menus, the topic page and picker, the chat surface, the
-standalone post detail, the settlement/tip/rail record views, the
-settings and invites screens, the item / offer surfaces, the Sky
-(item 16), and item 13's Post Score drill-down.
+Still owed on this item: the reader's post / comment / profile
+menus, the topic page and picker, the chat surface, the
+settlement/tip/rail record views, the settings and invites screens,
+the item / offer surfaces, the Sky (item 16), and item 13's Post Score
+drill-down.
+
+**Round 3 — the input-error boards (2026-09-03).** Five boards, one
+per surface: `JoinErrors`, `SignInError`, `RestoreError`,
+`RecoveryCodeMismatch`, `ProfileEditError` — the field-error,
+wrong-credentials, wrong-code and code-mismatch gaps, closed. Each
+copies its parent screen and changes only the errored parts;
+`TextField`/`PasswordField` grew an `error` prop (M3's text-field
+error state) the round before this one, and `RecoveryCode` grew an
+`error` pass-through this round to reach its own confirm field. 114 →
+109 gaps, 867 → 897 edges, 56/51/5 flows unchanged. Readme §13 *The
+input-error round* records jakob's six rulings.
+
+Two follow-ups the round surfaces, still open:
+
+- **aria-describedby wiring for field errors** — an open a11y question
+  from the `TextField`/`PasswordField` error-state round: the error
+  text renders beside the field but isn't yet wired to the input via
+  `aria-describedby`, and the supporting-line span isn't marked
+  `role="alert"`. Needs a ruling on whether every field error should
+  announce, or only the ones a screen reader wouldn't otherwise catch.
+- **NetworkError, ComposeSeal and ReplySeal still owe their
+  componentize-first pass** — hand-coded boards the componentize
+  principle (above) applies to but hasn't reached yet; each needs its
+  own round before any further alteration.
+
+**Round 4 — the applicant once-each acts (2026-09-03).** The stance
+face and New post starts on `ApplicantFeed`, `ApplicantWaiting`,
+`WalletApplicant` and `ProfileApplicant` wired per the 2026-09-01
+ruling: first tap opens the real surface (`VouchBackPad`, `ComposePick`)
+and the act stages; the exhausted kind answers in place with an
+info-true snackbar on `ApplicantWaiting`, drawn per the Invites
+precedent — no new board. The New-post and stance-face
+control-selector flows except these applicant origins alongside the
+guest ones, since staged is not landed. 6 gaps closed. Readme
+§13 *The applicant once-each round* records the shape.
+
+**The chat surface arrives owing the action row a decision** (jakob
+2026-09-03): sending a post *into a chat* is the next contender for a
+slot on it — Instagram's send arrow — and it likely ranks above sharing
+out of the network entirely. It is ranked against what is already
+reachable there before it earns a slot, per the action-row priority
+rule (readme §13, the reel round); it is deliberately undrawn until the
+chats round.
 
 ### 25 · Media-slice close-out designs · *design*
 
@@ -863,17 +903,16 @@ blessed refusal wording; both refuse an animated GIF with words;
 both give a failed clip upload Retry. The cover-pointer move is a
 schema change both apps and the backend follow.
 
-### 33 · Video playback and the rest of the clip's life · *design*
+### 33 · Video playback and the rest of the clip's life · *design* · **round B built**
 
 Filed by the feature loop 2026-09-02, from the android lane's 1:1
 audit against the item-31 boards. What the video slice built to
 rulings-without-boards, and what has no answer at all yet:
 
-1. **Feed/detail playback chrome.** The roadmap calls playback
-   settled (muted autoplay on visibility, one global sticky mute,
-   real controls) but no board draws the controls, scrubber, or tap
-   targets. Both apps built from existing media tokens — bless or
-   draw.
+1. ~~**Feed/detail playback chrome.**~~ Closed by round B: the
+   **control ladder** is drawn — a card's sound disc, the detail
+   view's play/pause and timeline, the viewer's full transport, the
+   stream's seek line.
 2. **When two clips are visible, which plays?** Undrawn; android
    gates autoplay at 70% per-frame visibility. A rule wants stating.
 3. **What the author sees when a GIF is picked.** Neither platform
@@ -913,24 +952,52 @@ rulings-without-boards, and what has no answer at all yet:
   in a feed card is deliberately undrawn and is this item's lead
   question.
 
-**Round B — the questions this item now holds:**
+**Round B — what it settled (jakob 2026-09-03, all four questions
+ruled in session; drawn the same day, readme §13, *The reel round*):**
 
-1. **The in-feed display vocabulary for a clip's own shape.** What
-   a 9:16 clip does inside a post card that a 16:9 one does not —
-   how tall a vertical clip is allowed to stand, whether it is
-   letterboxed, cropped to a card shape with the full frame in the
-   viewer, or given a card of its own height. The lead question.
-2. **The cover's display semantics, drawn.** Ruled in prose (readme
-   §13): cover until playback first starts, never reverting after;
-   the still representation in quoted targets, history rows, and
-   reduced-motion / data-saver contexts. No board draws the
-   suppressed-autoplay card.
-3. **The fullscreen viewer's own surfaces** — the controls, the
-   rotate-to-landscape frame, pinch-zoom on a picture. Ruled as
-   scope in the roadmap; undrawn.
-4. **The reel view's surfaces** — the swipe-through, and how a
-   reader learns the stream is their own feed narrowed rather than
-   a second algorithm. Ruled as scope in the roadmap; undrawn.
+1. ~~**The in-feed display vocabulary for a clip's own shape.**~~ A
+   clip keeps its **native ratio clamped to tall**: 16:9 and 1:1
+   display true, anything taller than 4:5 centre-crops to it, the
+   cover crops identically, and **letterboxing exists nowhere**.
+2. ~~**The cover's display semantics, drawn.**~~ *Feed · the cover at
+   rest* draws both frames — the cover before first play, and the
+   **suppressed-autoplay card** wearing a play disc where the sound
+   disc sits, the one card in the product that draws play. Quoted
+   targets and history rows wear the cover as a thumbnail (prose).
+3. ~~**The fullscreen viewer's own surfaces.**~~ Three boards —
+   *Viewer · a picture*, *· a video*, *· rotated* — with the full
+   transport, pinch-zoom, the gallery's swipe, dismissal by X, swipe
+   down or backdrop, no acts, and no description shown.
+4. ~~**The reel view's surfaces.**~~ *Reel · the stream*: portrait
+   clips only, **the default feed mechanically narrowed**, no second
+   algorithm and no header saying so — the score on the rail is what
+   says it. The rail is author · stance · comments · share · score,
+   and the score is the **detail door** that squishes the clip to the
+   top of *Post · a video, the clip pinned*.
+
+Round B also drew **the standalone post detail** (both bodies), which
+the canvas had owed since it was wired — `search-and-open-a-post` is no
+longer blocked, and the chronicle rows and every post's media now land
+on a board.
+
+**Review round 1 (jakob, same day)** closed the two questions the round
+had left open and fixed what the canvas showed:
+
+- **Share is on the feed card too**, and the action row now has a
+  stated order: stance, score, comment, share — the order of
+  importance, and the queue by which the row gives way. On a phone too
+  narrow for all four, share moves into the ⋮ menu first; a new action
+  is ranked against what is already reachable before it earns a slot.
+- **Letterboxing exists nowhere, pictures included.** A comment's
+  uncropped pictures display-crop to their square frame, centred, the
+  way its clip already does; the whole frame is one tap away in the
+  viewer. Display only — nothing about the no-crop-at-upload ruling
+  changes, and the bytes stay the author's own.
+- **The score element keeps its double meaning** — the drill-down from
+  a card, the detail door from the stream's rail — and is not renamed.
+- The **viewer boards were broken on the canvas** and are rebuilt: see
+  the round's PR for the root cause (a flex-sized stage with a
+  percentage max-height that never resolved).
 
 ### 34 · The change-history surface · *design*
 

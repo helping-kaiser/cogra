@@ -14,7 +14,7 @@ export interface CommentCardProps {
    * inside. The authoring-side cap is four pictures, or one video with its
    * cover — the same grammar a post's body carries, at comment scale.
    */
-  media?: readonly import("../proposed/MediaAttachment").MediaAttachmentProps[];
+  media?: readonly import("../media/MediaAttachment").MediaAttachmentProps[];
   license?: License;
   pending?: boolean;
   edited?: boolean;
