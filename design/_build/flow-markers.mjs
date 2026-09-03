@@ -570,6 +570,93 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+// The reel round's boards (item 33). The stream and the viewer draw their own
+// chrome, so their markers name the controls rather than the card anatomy; the
+// two viewer boards are scanExempt (the detail beneath the scrim is inactive)
+// and their transport markers stamp `all`, so the under-scrim repeat carries the
+// same badge, dimmed beneath the wash.
+Object.assign(FLOW_MARKERS, {
+  FeedCover: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 2, find: '<a href="/u/', tag: "a", all: true },
+    { n: 3, find: 'aria-label="More on this post"', tag: "button", all: true },
+    { n: 4, find: "aspect-ratio:4 / 5", tag: "div" },
+    { n: 4, find: "aspect-ratio:16 / 9", tag: "div" },
+    { n: 5, find: ">More</button>", tag: "button", all: true },
+    { n: 6, find: '<a href="/t/', tag: "a", all: true },
+    { n: 7, find: 'aria-label="Your stance on this post', tag: "button", all: true },
+    { n: 7, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 8, find: ">Post Score</span>", tag: "button", all: true },
+    { n: 9, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 9, find: 'aria-label="1 comment"', tag: "button" },
+    { n: 10, find: 'aria-label="Turn sound on"', tag: "button" },
+    { n: 11, find: 'aria-label="Play this video"', tag: "button" },
+    ...nav(12),
+  ],
+  Reel: [
+    { n: 1, find: 'aria-label="Back to the feed"', tag: "button" },
+    { n: 2, find: 'aria-label="Turn sound on"', tag: "button" },
+    { n: 3, find: '<a href="/u/', tag: "a" },
+    { n: 4, find: 'aria-label="Take a stance on this post"', tag: "button" },
+    { n: 4, find: ">Choose your stance</button>", tag: "button" },
+    { n: 5, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 6, find: 'aria-label="Share this post"', tag: "button" },
+    { n: 7, find: ">Post Score</span>", tag: "button" },
+    { n: 8, find: ">More</button>", tag: "button" },
+    { n: 9, find: 'alt="A man standing at the edge', tag: "img" },
+    { n: 10, find: 'aria-label="Seek"', tag: "div" },
+  ],
+  PostDetail: [
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
+    { n: 2, find: 'aria-label="More on this post"', tag: "button" },
+    { n: 3, find: '<a href="/u/', tag: "a" },
+    { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
+    { n: 5, find: 'aria-label="Topics and references"', tag: "button" },
+    { n: 6, find: 'aria-label="Take a stance on this post"', tag: "button" },
+    { n: 6, find: ">Choose your stance</button>", tag: "button" },
+    { n: 7, find: ">Post Score</span>", tag: "button" },
+    { n: 8, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 9, find: 'aria-label="Share this post"', tag: "button" },
+    ...nav(10),
+  ],
+  PostDetailVideo: [
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
+    { n: 2, find: 'aria-label="More on this post"', tag: "button" },
+    { n: 3, find: "aspect-ratio:4 / 5", tag: "div" },
+    { n: 4, find: 'aria-label="Pause"', tag: "button" },
+    { n: 5, find: 'aria-label="Seek"', tag: "div" },
+    { n: 6, find: 'aria-label="Turn sound on"', tag: "button" },
+    { n: 7, find: '<a href="/u/', tag: "a" },
+    { n: 8, find: 'aria-label="Topics and references"', tag: "button" },
+    { n: 9, find: 'aria-label="Take a stance on this post"', tag: "button" },
+    { n: 9, find: ">Choose your stance</button>", tag: "button" },
+    { n: 10, find: ">Post Score</span>", tag: "button" },
+    { n: 11, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 12, find: 'aria-label="Share this post"', tag: "button" },
+    ...nav(13),
+  ],
+  ViewerPicture: [
+    { n: 1, find: 'aria-label="Close"', tag: "button" },
+    { n: 2, find: 'aria-label="Previous"', tag: "button" },
+    { n: 2, find: 'aria-label="Next"', tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  ViewerVideo: [
+    { n: 1, find: 'aria-label="Close"', tag: "button" },
+    { n: 2, find: 'aria-label="Pause"', tag: "button", all: true },
+    { n: 3, find: 'aria-label="Seek"', tag: "div", all: true },
+    { n: 4, find: 'aria-label="Turn sound on"', tag: "button", all: true },
+    { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  ViewerLandscape: [
+    { n: 1, find: 'aria-label="Close"', tag: "button" },
+    { n: 2, find: 'aria-label="Pause"', tag: "button" },
+    { n: 3, find: 'aria-label="Seek"', tag: "div" },
+    { n: 4, find: 'aria-label="Turn sound on"', tag: "button" },
+    { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+});
+
 // The Profile page's boards (profile round, item 23). The own-profile boards
 // share the band cluster and the header anatomy; the chats marker for these
 // boards lives here (not in BAND_CHATS below) so each list reads complete.
@@ -690,6 +777,7 @@ const BAND_CHATS = {
   Main: 18, FeedBare: 18, ApplicantFeed: 18, ApplicantWaiting: 15,
   VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 9,
   Feed: 16, FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedGallery: 15,
+  FeedCover: 17,
   Wallet: 14, WalletEmpty: 9, WalletSetup: 8, WalletKeyAbsent: 10,
   WalletGuest: 8, WalletApplicant: 6,
 };

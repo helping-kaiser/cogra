@@ -66,6 +66,12 @@ const {
   SensitiveVeil,
   SensitiveScope,
   RedactedContent,
+  MediaDisc,
+  VideoTransport,
+  SeekLine,
+  ShareButton,
+  ExplainableNumber,
+  MediaViewer,
 } = components;
 
 /* A standing of one gentle record — the vouch-back default made a bundle. */
@@ -130,6 +136,27 @@ const SOL_POST = {
   score: "9.10",
   comments: 2,
   license: { attribution: 0.5, provenance: 0.5 },
+  menuItems: CITE_MENU,
+};
+
+/* The gallery post (media slice, 2026-08-31): four pictures at one crop shape,
+   one frame swiped, dots only. Shared the moment its detail view needed it too. */
+const MIRA_GALLERY_POST = {
+  author: MIRA,
+  title: "Sunday at the tide market",
+  content:
+    "Everything the flats give up in one morning — the stand by the sea wall had honey from the headland hives again.",
+  timestamp: "4h",
+  media: [
+    { src: "gallery-market.jpg", ratio: "tall", fit: "cover", alt: "Crates of strawberries on a market stand." },
+    { src: "gallery-veg.jpg", ratio: "tall", fit: "cover", alt: "Vegetables laid out on a cutting board." },
+    { src: "gallery-honey.jpg", ratio: "tall", fit: "cover", alt: "A jar of honey in low sun." },
+    { src: "gallery-grapes.jpg", ratio: "tall", fit: "cover", alt: "Two hands holding a bunch of grapes." },
+  ],
+  topics: ["tidemarket", "coastroad"],
+  score: "6.40",
+  comments: 2,
+  license: { attribution: 0, provenance: 0 },
   menuItems: CITE_MENU,
 };
 
@@ -494,6 +521,174 @@ function DetailColumn({ children }) {
   return (
     <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 12, padding: "0 0 8px 0" }}>
       {children}
+    </div>
+  );
+}
+
+/* ── The stream (readme §13, the reel round) ──────────────────────────────
+   Screen-local: one board draws the stream, so the rail lives here until a
+   second surface needs it. Everything on it that is a design-system control
+   IS the design-system control — the stance face, the score element — because
+   the stream is the ordinary feed in a different frame, not a second product.
+
+   THE STREAM IS A DARK SURFACE IN BOTH THEMES: it is a clip edge to edge, and
+   its chrome has to read over photography whatever the reader's theme says. So
+   the whole surface takes the dark palette (`data-theme="dark"`) rather than
+   each control inventing a colour of its own. */
+
+const CLIP_LAKESIDE = {
+  kind: "video",
+  src: "clip-lakeside.mp4",
+  poster: "clip-lakeside.jpg",
+  ratio: "portrait",
+  alt: "A man standing at the edge of a lake as the light drops.",
+};
+
+const MIRA_CLIP_POST = {
+  author: MIRA,
+  title: "The lake, doing nothing, for forty seconds",
+  content:
+    "Stood there long enough that the midges found me. Worth it for the last ten seconds, when the far shore goes the colour of the water.",
+  timestamp: "35m",
+  media: [CLIP_LAKESIDE],
+  topics: ["stillwater", "coastroad"],
+  score: "7.40",
+  comments: 2,
+  license: { attribution: 0, provenance: 0 },
+  menuItems: CITE_MENU,
+};
+
+/* A rail control: a glyph over the clip, with its count under it where there is
+   one. The shadow is what makes a bare glyph survive photography — the same
+   problem the sound disc solves with a surface, answered differently because a
+   column of five discs would be a wall of chrome down the frame. */
+function RailButton({ label, glyph, count, onClick }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick ?? (() => {})}
+      className="cg-state cg-focus"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 2,
+        width: 56,
+        border: 0,
+        background: "none",
+        borderRadius: "var(--radius-full)",
+        padding: "6px 0",
+        cursor: "pointer",
+        fontFamily: "var(--font-sans)",
+        fontSize: "var(--text-label-small)",
+        lineHeight: "var(--text-label-small--line-height)",
+        color: "var(--on-surface)",
+      }}
+    >
+      <Icon name={glyph} size={26} />
+      {count !== undefined && <span aria-hidden="true">{count}</span>}
+    </button>
+  );
+}
+
+/* THE RAIL, top to bottom: author · stance · comments · share · the score.
+   People lead, the way they lead on a card (§1) — the author is the one thing
+   here that is not an act. Then the acts in the card's own order, with share
+   arriving after them. THE SCORE SITS LAST because it is the door out of the
+   stream: a thumb reaching for the stance never passes over the exit. Topics,
+   the reference count and the reader's ⋮ are not here — they belong to the
+   detail view, which the score opens. */
+function ReelRail({ score = "7.40", comments = 2 }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        right: 4,
+        bottom: 104,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 14,
+        zIndex: 3,
+        filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.55))",
+      }}
+    >
+      <a href="/u/mira" aria-label="Mira Voss" style={{ display: "block", textDecoration: "none" }}>
+        <MonogramAvatar name="Mira Voss" size={44} src="ava1.jpg" />
+      </a>
+      {/* The same control the card wears, and the same pad it blooms — over the
+          paused clip, seal and all. No bundle: the ordinary case is a post the
+          reader has taken no stance on, and the muted face is that state. */}
+      <StanceControl targetLabel="this post" padInset={16} />
+      <RailButton label="2 comments" glyph="chat_bubble" count={comments} />
+      <RailButton label="Share this post" glyph="share" />
+      {/* THE DETAIL DOOR — the exact element a feed card wears, so the way into
+          the post is a thing the reader has already met, and the number that
+          says this stream is their own ranked feed rides it. */}
+      <ExplainableNumber glyph="graph" label="Post Score" value={score} onOpenDetail={() => {}} />
+    </div>
+  );
+}
+
+/* The caption: the author's handle, the title, and the words clamped — the same
+   two-line budget a card gives them, with the same opener. */
+function ReelCaption({ handle, title, content }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: 16,
+        right: 76,
+        bottom: 20,
+        zIndex: 3,
+        display: "flex",
+        flexDirection: "column",
+        gap: 4,
+        color: "var(--on-surface)",
+        textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+      }}
+    >
+      <span style={{ fontSize: "var(--text-label-large)", fontWeight: "var(--text-label-large--font-weight)" }}>@{handle}</span>
+      <span style={{ fontSize: "var(--text-title-small)", lineHeight: "var(--text-title-small--line-height)", fontWeight: "var(--text-title-small--font-weight)" }}>{title}</span>
+      <span style={{ fontSize: "var(--text-body-small)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+        {content}
+      </span>
+      <button
+        type="button"
+        className="cg-state cg-focus"
+        style={{
+          alignSelf: "flex-start",
+          border: 0,
+          background: "none",
+          padding: "2px 0",
+          cursor: "pointer",
+          fontFamily: "var(--font-sans)",
+          fontSize: "var(--text-label-medium)",
+          fontWeight: "var(--text-label-medium--font-weight)",
+          color: "var(--on-surface)",
+        }}
+      >
+        More
+      </button>
+    </div>
+  );
+}
+
+/* The clip pinned at the top of a video post's detail view — what the squish
+   morph leaves behind, and what the detail view of any clip looks like whether
+   or not a stream was involved. It carries the transport, drawn revealed. */
+function PinnedClip({ item, elapsed, duration, progress }) {
+  return (
+    <div style={{ flex: "none", background: "#000" }}>
+      <MediaAttachment
+        {...item}
+        controls="transport"
+        radius="0px"
+        elapsed={elapsed}
+        duration={duration}
+        progress={progress}
+      />
     </div>
   );
 }
