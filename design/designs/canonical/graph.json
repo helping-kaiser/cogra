@@ -252,7 +252,12 @@
     { "from": "Restore", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back" }] },
     { "from": "Restore", "via": 2, "kind": "advance", "label": "Recovery code field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "Restore", "via": 3, "kind": "advance", "label": "Don't remember this account here", "to": [{ "terminal": "self", "case": "the checkbox flips" }] },
-    { "from": "Restore", "via": 4, "kind": "advance", "label": "Restore the key", "to": [{ "terminal": "back", "case": "key restored — returns where restore began" }, { "gap": "wrong-code error state (not boarded)", "case": "the code doesn't check out" }] },
+    { "from": "Restore", "via": 4, "kind": "advance", "label": "Restore the key", "to": [{ "terminal": "back", "case": "key restored — returns where restore began" }, { "board": "RestoreError", "case": "the code doesn't check out" }] },
+
+    { "from": "RestoreError", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back" }] },
+    { "from": "RestoreError", "via": 2, "kind": "advance", "label": "Recovery code field", "to": [{ "terminal": "self", "case": "typing" }] },
+    { "from": "RestoreError", "via": 3, "kind": "advance", "label": "Don't remember this account here", "to": [{ "terminal": "self", "case": "the checkbox flips" }] },
+    { "from": "RestoreError", "via": 4, "kind": "advance", "label": "Restore the key", "to": [{ "terminal": "back", "case": "key restored — returns where restore began" }, { "terminal": "self", "case": "still failing — the line updates in place" }] },
 
     { "from": "Wallet", "via": 1, "kind": "detour", "label": "? — What is CGT?", "to": [{ "board": "HelpDialog", "case": "the What-is-CGT text" }] },
     { "from": "Wallet", "via": 2, "kind": "advance", "label": "payout address row", "to": [{ "gap": "the full address card as a state of the rest wallet (ruled one-tap-away; the card itself is drawn on the zero board)" }] },
