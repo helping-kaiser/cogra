@@ -284,3 +284,15 @@ Two removal marks, never interchangeable: `Removed by its author` —
 "The words and pictures are gone. The post's place in the thread, and
 every response, remain." — and `Removed under the platform's rules` —
 "A passed proposal removed it. The decision is public."
+
+## Awaiting blessing — the applicant once-each round
+
+Drawn, and up for review in the same pass. Kept apart from the blessed
+lines above until then.
+
+**The staged-act snackbar** — an applicant's second tap of a kind
+already staged answers here instead of opening the real surface again;
+one line per kind, same shape:
+
+- "Your post is staged — it lands with you."
+- "Your stance is staged — it lands with you."
