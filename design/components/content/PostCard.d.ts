@@ -43,7 +43,7 @@ export interface PostCardProps {
   /**
    * The Post Score, already formatted. Uncapped and possibly negative: render a
    * minus sign, never a colour. Renders `ExplainableNumber`; its four-screen
-   * explanation is `components/proposed/score/`.
+   * explanation is item 13's Post Score drill-down, still undesigned.
    */
   score?: string;
   /** Opens the score's detail surface (readme §7.1). */

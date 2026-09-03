@@ -92,10 +92,38 @@ const PATHS = {
   send: ["M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"],
   /* The compose media surfaces' glyphs (media slice, 2026-08-31). */
   close: ["M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"],
-  /* Authoring-side only: a composer's video preview says it is a video and can
-     be played. A READING surface never draws play/pause — presence on screen
-     is the policy there (MediaAttachment). */
+  /* The transport pair. Where a clip is the thing the reader came for — the
+     detail view, the fullscreen viewer — it carries play/pause and a timeline
+     (readme §13, the control ladder). A FEED CARD still draws neither: presence
+     on screen is the policy there, and the one exception is the play disc a
+     suppressed-autoplay card wears, where the device has already said no. */
   play_arrow: ["M8 5v14l11-7z"],
+  pause: ["M6 19h4V5H6v14zm8-14v14h4V5h-4z"],
+  /* The transport's flanking skips, and the toggle that hands the clip the
+     whole screen. Material ships `replay_10`/`forward_10` with the numerals
+     drawn as separate glyph paths; the plain double-triangles carry the same
+     meaning at this size without three-part path data that no one can check. */
+  fast_rewind: ["M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"],
+  fast_forward: ["M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"],
+  fullscreen: ["M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"],
+  /* THE STANCE FACE AS A GLYPH (review round 2). On the stream the anchor sits
+     on photography beside the rail's other glyphs, and an emoji — muted and
+     translucent for "no standing yet" — is unreadable there and off-family
+     besides. `sentiment_neutral` is the same idea drawn as a line face, so the
+     rail reads as one set. The official cut draws its eyes as <circle>s; PATHS
+     holds paths only, so each is carried as an exact arc path — same geometry,
+     the `photo_camera` precedent. It is the UNSET state only: a stance that has
+     been taken still shows its own face, which is the readout. */
+  sentiment_neutral: [
+    "M9 15.5h6v1H9v-1z",
+    "M15.5 8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 1 1 0-3z",
+    "M8.5 8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 1 1 0-3z",
+    "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z",
+  ],
+  /* Handing a post to the OS share sheet (reel round, 2026-09-03). */
+  share: [
+    "M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z",
+  ],
   /* The avatar's change badge (profile round, 2026-09-01). The official cut
      draws its lens as a <circle>; PATHS holds paths only, so that circle is
      carried as an exact arc path — same geometry, nothing redrawn. */

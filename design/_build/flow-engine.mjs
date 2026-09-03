@@ -138,10 +138,26 @@ function resolveStart(flow, view, fails) {
       fails.push(`flow "${flow.name}": no edge is labelled «${s.control}»`);
       return null;
     }
+    // A control whose outcome depends on WHAT it was pressed on — a post's media,
+    // which opens a picture's post or a portrait clip's stream — is still one
+    // control everywhere. `case`/`to` narrows the start to the outcome the flow
+    // means, the same narrowing a given start edge already takes; without one,
+    // every board outcome counts and divergence is still a failure.
+    const narrowed = s.case !== undefined || s.to !== undefined;
+    const wanted = (e) =>
+      (e.to ?? []).filter(
+        (o) =>
+          o.board !== undefined &&
+          (s.case === undefined || o.case === s.case) &&
+          (s.to === undefined || o.board === s.to),
+      );
     const lands = new Map(); // board -> boards carrying the control
     const undesigned = []; // { board, via, text } — origins the control never designs
     for (const e of matches) {
-      const boards = (e.to ?? []).filter((o) => o.board !== undefined);
+      const boards = wanted(e);
+      // Narrowed, an origin whose outcomes are all OTHER meanings of the control
+      // is simply not this journey's start — not an undesigned one.
+      if (boards.length === 0 && narrowed && (e.to ?? []).some((o) => o.board !== undefined)) continue;
       if (boards.length === 0) {
         // An origin whose every outcome is a terminal stops no journey — the
         // act completes in place, and nothing is owed. Only a gap leaves the
@@ -164,14 +180,15 @@ function resolveStart(flow, view, fails) {
       const spread = [...lands].map(([b, from]) => `${b} (from ${[...from].sort().join(", ")})`).join(" · ");
       fails.push(
         `flow "${flow.name}": the start control «${s.control}» diverges — it lands on ${lands.size} different boards: ${spread}. ` +
-          `A control-selector start must mean one thing everywhere; name the odd boards in "except", or start from a board.`,
+          `A control-selector start must mean one thing everywhere; narrow it with "case" or "to", name the odd boards in "except", or start from a board.`,
       );
       return null;
     }
     const [board, from] = [...lands][0];
+    const said = s.case !== undefined ? ` — ${s.case}` : s.to !== undefined ? ` — to ${s.to}` : "";
     return {
       board,
-      step: `start · «${s.control}» on ${from.length} board${from.length === 1 ? "" : "s"} → ${board}`,
+      step: `start · «${s.control}»${said} on ${from.length} board${from.length === 1 ? "" : "s"} → ${board}`,
       startsOn: [...from].sort(),
       startsUndesigned: undesigned.map((u) => `${u.board}/${u.via}: ${u.text}`).sort(),
       startsUndesignedAt: undesigned,

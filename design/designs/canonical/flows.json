@@ -1,5 +1,5 @@
 {
-  "$doc": "User flows — the intent layer. graph.json is the mechanism (what every control does); this file says which journeys the product owes, in words a person can check. `check-flows.mjs` resolves each one against the graph by searching `advance` edges alone and writes the result to flows.resolved.json, the committed witness. A flow declares: `name` (kebab-case) · `description` (its intent in one line) · `start` · optional `waypoints` · `end`. START is either a board (`{board}` — the journey begins on that screen), a given edge (`{board, via}` plus `case`/`to` when that edge offers several outcomes), or a CONTROL (`{control}` — the click, not the screen: it expands to every edge carrying that label, which must all land on the same first board; `except` drops boards that mean something else there). END is a given edge `{board, via}` (plus `case`/`to`), the concluding act. A flow may OMIT `end` instead, and then concludes on ARRIVAL at the board its last point lands on — the start's landing board when it declares no waypoints, the last waypoint's board when it does; the witness reads `end · arrival at <Board>`. That is the shape of a reading journey, which reaches what it came for and has no signing act to name. A GAP counts differently at the two ends: on an end it resolves the flow as BLOCKED, an honest claim on design still owed, while on a start it FAILS, because a journey that can begin from no existing screen is an authoring error rather than a claim. So a given start edge that opens a gap fails, and so does a control whose every origin reaches only a gap; a control with merely some such origins resolves and lists them under `startsUndesigned`. WAYPOINTS are ordered boards the journey passes through; a waypoint's `via` (with `case` or `to`) pins the edge the flow LEAVES that board by, which is how an ambiguous leg is settled — to pin the very first step, name the start board as the first waypoint. Start and end edges are given, never searched, so their kind does not matter; every leg between two points is searched, and a leg that resolves two ways is a hard failure asking for a pin. FORMATTING: one flow per block, one waypoint per line, hand-edited. Never let a script rewrite this file.",
+  "$doc": "User flows — the intent layer. graph.json is the mechanism (what every control does); this file says which journeys the product owes, in words a person can check. `check-flows.mjs` resolves each one against the graph by searching `advance` edges alone and writes the result to flows.resolved.json, the committed witness. A flow declares: `name` (kebab-case) · `description` (its intent in one line) · `start` · optional `waypoints` · `end`. START is either a board (`{board}` — the journey begins on that screen), a given edge (`{board, via}` plus `case`/`to` when that edge offers several outcomes), or a CONTROL (`{control}` — the click, not the screen: it expands to every edge carrying that label, which must all land on the same first board; `except` drops boards that mean something else there, and `case`/`to` narrows a control whose outcome depends on what it was pressed on — a post's media opens a picture's post or a portrait clip's stream, one control, two journeys). END is a given edge `{board, via}` (plus `case`/`to`), the concluding act. A flow may OMIT `end` instead, and then concludes on ARRIVAL at the board its last point lands on — the start's landing board when it declares no waypoints, the last waypoint's board when it does; the witness reads `end · arrival at <Board>`. That is the shape of a reading journey, which reaches what it came for and has no signing act to name. A GAP counts differently at the two ends: on an end it resolves the flow as BLOCKED, an honest claim on design still owed, while on a start it FAILS, because a journey that can begin from no existing screen is an authoring error rather than a claim. So a given start edge that opens a gap fails, and so does a control whose every origin reaches only a gap; a control with merely some such origins resolves and lists them under `startsUndesigned`. WAYPOINTS are ordered boards the journey passes through; a waypoint's `via` (with `case` or `to`) pins the edge the flow LEAVES that board by, which is how an ambiguous leg is settled — to pin the very first step, name the start board as the first waypoint. Start and end edges are given, never searched, so their kind does not matter; every leg between two points is searched, and a leg that resolves two ways is a hard failure asking for a pin. FORMATTING: one flow per block, one waypoint per line, hand-edited. Never let a script rewrite this file.",
   "flows": [
     {
       "name": "publish-a-post",
@@ -143,7 +143,7 @@
     {
       "name": "take-a-stance-on-a-post",
       "description": "Press and hold the stance face, wherever a post is drawn, and the pad blooms; the signed stance lands back where it was taken.",
-      "start": { "control": "stance face", "except": ["Main", "FeedBare", "KeyElsewhere"] },
+      "start": { "control": "stance face", "to": "VouchBackPad", "except": ["Main", "FeedBare", "KeyElsewhere"] },
       "end": { "board": "VouchBackPad", "via": 4, "case": "signed — the stance lands, back where the pad bloomed" }
     },
     {
@@ -365,8 +365,23 @@
     },
     {
       "name": "open-a-posts-pictures",
-      "description": "Post media, wherever a post is drawn, opens the gallery full-bleed; the frames are what the reader came for.",
-      "start": { "control": "post media" }
+      "description": "Post media, wherever a post is drawn, opens the post itself — a reader scrolling is choosing between posts, and the post is where the frames are whole.",
+      "start": { "control": "post media", "case": "pictures — the post opens" }
+    },
+    {
+      "name": "watch-the-stream",
+      "description": "A portrait clip's tap, wherever a post is drawn, opens the stream — the reader's own ranked feed narrowed to clips taller than they are wide, swiped onward from there.",
+      "start": { "control": "post media", "case": "a portrait clip — the stream opens" }
+    },
+    {
+      "name": "reel-to-detail",
+      "description": "The score element on the stream's rail is the detail door: the clip squishes to the top of the screen, still playing, and the post rises beneath it — tapping the pinned clip expands it back into the stream, the reader's place held.",
+      "start": { "board": "Reel", "via": 7 }
+    },
+    {
+      "name": "open-the-viewer",
+      "description": "Media tapped again from the post's own view opens the fullscreen viewer — the frame whole, which is what every crop in the product is measured against.",
+      "start": { "board": "PostDetail", "via": 4 }
     },
     {
       "name": "follow-a-citation",
@@ -376,7 +391,7 @@
     },
     {
       "name": "search-and-open-a-post",
-      "description": "Typing in Explore brings results as they are typed; a post result opens that post — its standalone detail view is still owed.",
+      "description": "Typing in Explore brings results as they are typed; a post result opens that post's own detail view.",
       "start": { "board": "Explore", "via": 1, "case": "typing — results as you type" },
       "end": { "board": "ExploreSearch", "via": 4 }
     },

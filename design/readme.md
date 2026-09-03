@@ -440,14 +440,18 @@ approximate it.
 
 ## 7. Components
 
-The inventory is the source's, not a generic set. Each family below
-exists in `web/src/lib/ui/` (and, unless noted, in Android's
-`core:designsystem` too).
+The inventory is the source's, not a generic set. Most families below
+exist in `web/src/lib/ui/` (and, unless noted, in Android's
+`core:designsystem` too). Where a family is **decided but not yet
+built** in either app — the media family's viewer, transport and rail;
+`ShareButton` — the master is still the design's answer and the apps
+conform to it; §7.1 is for pieces whose semantics are still open, which
+is a different thing from a piece the apps have not reached yet.
 
 | Directory | Components |
 |---|---|
 | `components/core/` | `Button`, `Card`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip`, `HelpDot`, `MoneyFigure`, `CgtMark` |
-| `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow` |
+| `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow`, `ShareButton` |
 | `components/forms/` | `TextField`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
 | `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand` |
 | `components/compose/` | `WizardHeader`, `MediaThumb`, `PickedRow`, `DescribeCounter`, `PickedSheet`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `ActsCard` |
@@ -456,7 +460,8 @@ exists in `web/src/lib/ui/` (and, unless noted, in Android's
 | `components/states/` | `EmptyState`, `LoadingState` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending` |
 | `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `StanceCoachMark`, `SeveranceConfirm` |
-| `components/proposed/` | `MediaAttachment`, `MediaGallery`, `MediaViewer`, `ExplainableNumber` — **not shipped**, see §7.1 |
+| `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `MediaViewer`, `VideoTransport`, `SeekLine`, `PinnedClip`, `ReelRail`, `ReelRailItem`, `ReelCaption` |
+| `components/proposed/` | `ExplainableNumber` — **not shipped**, see §7.1 |
 
 Each has a sibling `.d.ts` (props contract) and `.prompt.md` (what &
 when, plus a usage example). Each directory has one `@dsCard` HTML
@@ -481,8 +486,6 @@ which is what makes a guess expensive.
 
 | Piece | Decided, so built | Open, so absent |
 |---|---|---|
-| `MediaAttachment` / `MediaGallery` | reserved aspect ratio before load; authored, never generated alt text; `surfaceContainerHigh` at the 12px rung; the gallery as a pager at the post's one crop shape, dots only; the 4:5 cap bounding the tile rather than the picture; a height cap budgeted against worst-case card chrome so a whole post fits above the bottom bar; autoplay muted with one global sticky mute | — |
-| `MediaViewer` | media opens full-size from the detail view, never cropped, backed out of rather than navigated away from; real video controls here, sound only in a tile | — |
 | `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the only figure the product has is the Post Score and its explanation is four screens deep | — |
 | `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and topics outside, naming whose mark it is, one tap revealing everything, content kept mounted so revealing moves nothing — a comment's body replaced by one compact block instead; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | whether a reveal survives leaving and returning to the post; where a words-only post names its source, having no wash to carry the line |
 
@@ -1615,7 +1618,10 @@ entry first". What stands:
   applied after render, throwing on drift — so the design system
   never carries canvas metadata; hand boards carry the attributes
   directly. Repeated per-post controls wear the same number on every
-  instance: one edge covers them.
+  instance: one edge covers them. **The badge sits inside the
+  element's corner**, not hanging past it: outside, anything that
+  clips its overflow eats it, and 470 of 1091 badges were drawing
+  cut or invisible — the gate verifies the attribute, not the paint.
 - **The maps are generated** (`_build/gen-maps.mjs`): one flow-map
   board per page (cards mirroring the page grid, every edge as a
   numbered line, arrows for same-page jumps, `⤴ page` for cross-page
@@ -1637,7 +1643,7 @@ entry first". What stands:
   topic page (ruled — a search subpage) and the topic picker,
   field/mismatch error states, the applicant's once-each
   acting boards (ruled), the settlement/tip/rail record views the
-  wallet's traceability promise owes, the standalone post detail,
+  wallet's traceability promise owes,
   the settings and invites screens, the chat surface (its band entry
   now on every tab root), the item / offer surfaces, the Sky
   (item 16), and item 13's Post Score drill-down. Cross-flow reuse
@@ -1721,7 +1727,12 @@ The rulings the layer rests on:
   bottom nav stays `nav`. A control the reader meets on board after
   board — the comment count, the stance face — is declared that way
   rather than pinned to one of them, so the flow claims every place it
-  is offered and the census grows as boards are drawn.
+  is offered and the census grows as boards are drawn. Where the
+  control's outcome depends on **what it was pressed on** — a post's
+  media, which opens a picture's post or a portrait clip's stream —
+  `case` or `to` narrows the start to the journey meant, the same
+  narrowing a given start edge already takes. It is still one control
+  everywhere; without a narrowing, divergence is still a failure.
 - **Web wizards get their own flows.** Where a browser draws its own
   board for a stage, the journey is declared twice, native and web, so
   a divergence between the two stays visible instead of hiding inside
@@ -1894,12 +1905,10 @@ Everything the video slice built to a ruling without a board, plus the
 two mismatches the apps shipped against each other (backlog item 32,
 and the parts of item 33 that could be settled without drawing a feed).
 
-- **Playback stands as drawn.** A video on any reading surface wears
-  the sound control and nothing else — no play/pause, no duration
-  pill, at both scales. Presence on screen is the policy, and a card
-  is a place you are passing through. The real controls belong to the
-  fullscreen viewer, which the roadmap now owns; web strips the
-  transport controls it shipped inline.
+- **A feed card wears the sound control and nothing else** — no
+  play/pause, no duration pill, at both scales. Presence on screen is
+  the policy, and a card is a place you are passing through. What a
+  clip carries on every other surface is the control ladder, below.
 - **The back arrow gates like the X.** Any leave of a non-empty
   comment asks through DiscardConfirm; an empty one leaves at once.
   Two ways out of one screen that lose the same writing cannot behave
@@ -1977,12 +1986,152 @@ and the parts of item 33 that could be settled without drawing a feed).
   snapping back to the cover would erase what the reader just watched.
   **One clip plays at a time, at 70% visibility or more** — android's
   gate, blessed.
-- **Vertical video exists, and its feed frame is next round's
-  question.** 9:16 reel-style and 16:9 horizontal clips are both real;
-  **square is the comment scale's shape only**, so a post card
-  squaring everything is a bug. How the two ratios sit in a card is
-  the lead question of the next round (backlog item 33) and is
-  deliberately undrawn here.
+
+### The reel round — 2026-09-03
+
+How a clip sits in a card, where its tap goes, and the surfaces that
+answer: the stream, the post detail, and the fullscreen viewer (backlog
+item 33, jakob's rulings the same day).
+
+- **A clip keeps its own shape, clamped to tall.** A clip's ratio is
+  not a crop an author chose, so the crop vocabulary does not govern
+  it: **16:9 and 1:1 display true, and anything taller than 4:5
+  centre-crops to 4:5** in a card. The cover shares the clip's ratio
+  and crops identically — it is the same clip's face, and a face that
+  disagreed with it would be a lie. **Letterboxing exists nowhere in
+  the product**: a clip fills the frame it is given, and the full 9:16
+  frame lives on the stream and in the viewer. The
+  post-fits-the-screen cap still bounds the tile as it bounds every
+  tile, and under it the tile is **filled, never fitted**. **Square is
+  the comment scale's shape**, and a comment's pictures and clips alike
+  fill it: an uncropped picture display-crops to its frame, centred,
+  because bars beside a picture spend a card's scarcest resource on
+  nothing and the whole frame is one tap away in the viewer. The crop
+  is display-only — a comment's picture still travels uncropped, and
+  what the author uploaded is what the record holds.
+- **The control ladder** — a deliberate revision of the conform
+  round's sound-only-on-every-reading-surface rule. A **feed card**
+  carries the sound disc alone. A **detail view** carries play/pause
+  and a real timeline, a tap anywhere on it or a drag along it, and
+  the chrome auto-hides with a tap on the video revealing it. The
+  **fullscreen viewer** carries the same full transport, and
+  rotate-to-landscape. The **stream** carries sound and a thin
+  drag-to-seek line, never the full transport. The ladder is **uniform
+  for every clip**: no length threshold decides whether a reader gets
+  controls, because a reader who learns a control on one clip has to
+  find it on the next.
+- **The transport's anatomy is the platform player's** — a big centred
+  play/pause flanked by the skips, and a bar along the bottom carrying
+  elapsed, the timeline, total, sound and the fullscreen toggle. A
+  transport is the one place in this product where inventing a layout
+  costs the reader something, so it is Android's, not ours.
+  **Nothing sits on the bottom edge**: the system gesture zone lives
+  in that strip, so a control there is not a control but a swipe that
+  closes the app. The bar is inset from it, and the stream's seek line
+  rides above the bottom bar rather than under it.
+- **The stream carries portrait clips only** — clips taller than they
+  are wide. Square and landscape clips keep the ordinary grammar, a
+  tap to their post. **It is the default feed narrowed to them**: the
+  same graph, the same ranking, a mechanical filter, and **no second
+  algorithm**. Nothing labels it, because a header saying "your feed"
+  is the reassurance only a product that ranks two ways needs. What
+  says it instead is the **score on the rail** — the reader's own
+  reach into this post, the same number the card wore.
+- **A portrait clip's tap opens the stream; any other media's tap
+  opens the post.** From the pinned-clip detail, tapping the clip
+  expands back into the stream with the reader's place held.
+- **The detail door on a reel is the score element** — the exact
+  element a feed card wears, so the way in is a thing the reader has
+  already met. Tapping it **squishes the clip to the top of the
+  screen**, still playing, and the post rises beneath it: a state
+  change, never a page portal. On a card the same element opens the
+  score drill-down (item 13) — one element, two surfaces, two
+  destinations.
+- **The rail, top to bottom: author · stance · comments · share ·
+  the score.** People lead, the way they lead on a card; then the acts
+  in the card's own order, with share arriving after them; the door
+  out last, so a thumb reaching for the stance never passes over the
+  exit. The stance opens **the same pad** over the paused clip, seal
+  and all, and the count opens **the same comments sheet**. Topics,
+  the reference count and the reader's ⋮ are not on the rail — they
+  belong to the detail view the score opens. Sound obeys the global
+  sticky decision; the caption sits along the bottom. The rail is
+  **white and shadowed at 28px**, and the unset stance is a **line
+  face** in that same weight — `sentiment_neutral`, no disc and no
+  ring, because a plate around one control in a column of five reads
+  as chrome. Over photography a token colour is not a quiet control
+  but an invisible one, so the state that the card says with
+  translucency the stream says with the empty face instead. A stance
+  already taken still shows its own face, at the same size.
+- **The bottom bar stays on the stream.** It is a way of reading the
+  feed, not a place outside the app, so the way to every other tab
+  stays where it always is — as Instagram, TikTok and YouTube all keep
+  theirs. The seek line sits directly above it.
+- **Guest and key-absent gate on the stream exactly as they do in the
+  feed** — the join prompt over the paused clip, the key notice per
+  the pattern boards. The same edges into the same masters; the stream
+  has no guest board of its own.
+- **Share is new, and it is one tap to the platform's own sheet.**
+  Drawn on the rail, on the detail view **and on the feed card**; no
+  menu of ours, because a share menu here would be a worse copy of the
+  one the reader's apps already live in. **No count** — a share tally
+  would be a public number the graph does not record.
+- **The action row's order is its order of importance**: stance,
+  score, comment, then share. That order is also the *queue*: on a
+  phone too narrow to hold all four, **share is the first to move into
+  the ⋮ menu**, and the row gives way from its end. An action added
+  later is ranked against the ones already directly reachable before it
+  earns a slot — never appended by default, because a row that grows by
+  arrival order stops meaning anything.
+- **The score element means two things, and that is allowed.** On a
+  card it opens the score's drill-down; on the stream's rail it is the
+  detail door, and the drill-down is reached from the detail view it
+  opens. One element, one glyph, one number — what it opens is a fact
+  about the surface, not about the element, and renaming it on one
+  surface would cost more than the overload does.
+- **The cover at rest, and the card that never starts.** The cover
+  holds until playback first starts and never returns. Where the
+  device suppresses autoplay — reduced motion, data saver — the card
+  wears a **play disc in the sound disc's place**, the one card in the
+  product that draws play, because autoplay is absent by the device's
+  own word and a cover with no way to play it is a picture pretending
+  to be a clip; the tap plays it there, in the feed. Quoted targets
+  and history rows wear the cover as a thumbnail.
+- **The viewer is reached by the second tap**: media in a card opens
+  the post, media in the post opens the frame — or the transport's own
+  fullscreen toggle, which is the same door. It is **the whole surface
+  on black with nothing behind it**: a viewer you can still read a card
+  through is not full screen. Nothing is cut there —
+  it is the surface every crop in the product is measured against — a
+  picture pinch-zooms and **the gallery's swipe and its dots** carry
+  over, dots only, no arrows and no "n of m" (the pager ruling holds
+  here too: arrows would be a second vocabulary for a gesture the
+  reader already has). And a clip
+  whose shape is not the device's keeps its shape and takes the ground
+  beside it rather than being cropped to the edges. **No acts** on the
+  viewer, and **the description is not shown**: alt text is read aloud
+  to people who cannot see the frame, and printed under it it becomes
+  a caption its author never wrote. Three ways out — the X, a swipe
+  down, and the backdrop.
+- **The round is masters, not markup.** Everything it drew that a second
+  surface could want is in the system: the media family moved into
+  **`components/media/`** and gained `PinnedClip` (the clip above the
+  card, and what the squish morph leaves behind), `ReelRail` /
+  `ReelRailItem` and `ReelCaption` (the stream's chrome), beside
+  `MediaViewer`, `VideoTransport` / `SeekLine`, `MediaDisc` and the
+  shape and ladder rules inside `MediaAttachment`; `ShareButton` rides
+  `PostCard`'s action row. The stream's boards keep only their fixtures
+  — the mock clip and the post it belongs to — and the two over-media
+  dresses (`StanceControl overMedia`, `ExplainableNumber overMedia`)
+  are props on the real controls, so the stream acts through the same
+  pad and the same score element the feed does.
+- **The post detail exists at last, both bodies** — the gallery post's,
+  and the video post's with the clip pinned above the card, which is
+  why the author chip leads the card there rather than the screen. The
+  comments sheet's board is the first of these with the sheet raised:
+  one anatomy, drawn once. The standalone detail the search results,
+  the chronicle rows and every post's media had been opening into a gap
+  now lands on a board.
 
 ## 14. Index
 
@@ -2001,7 +2150,9 @@ and the parts of item 33 that could be settled without drawing a feed).
   `gen-maps.mjs`, `check-flows.mjs` — the canonical-canvas pipeline
   (§13, *Canvas pages and flows*): render the screens, stamp the flow
   numbers, generate the maps, gate the result. Run all four after any
-  screen, component, or graph.json edit. `_build/flow-engine.mjs` is
+  screen, component, or graph.json edit. A screen whose state is not a
+  portrait phone exports `FRAME` and the shell builds that artboard
+  instead — so far only the rotated viewer. `_build/flow-engine.mjs` is
   the gate's user-flow half (§13, *The user-flow layer*): it resolves
   `flows.json` and blesses `flows.resolved.json`.
 
@@ -2020,4 +2171,5 @@ and `iconography.md` for the deeper dives.
 §4, *Imagery*).
 
 **`components/`** — see §7: `core/`, `content/`, `forms/`, `navigation/`,
-`people/`, `states/`, `honesty/`, `stance/`, `proposed/`.
+`compose/`, `media/`, `wallet/`, `people/`, `states/`, `honesty/`,
+`stance/`, `proposed/`.
