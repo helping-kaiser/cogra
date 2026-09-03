@@ -30,8 +30,18 @@ const fontTokens = `:root { --font-figtree: "Figtree"; --font-sans: var(--font-f
 // small orange number — the same number graph.json's edges reference as `via`
 // and the generated maps print on their arrows. Replaced elements (<input>)
 // cannot host ::after; a field's badge goes on its wrapper instead.
+//
+// THE BADGE SITS INSIDE THE CORNER, not outside it (review round 2). Hanging it
+// past the edge read better on a control with room around it and vanished
+// everywhere else: an element that hides its own overflow clips its own
+// ::after, an ancestor that hides overflow clips it too, and an element flush
+// with the artboard's edge has it cut by the frame. Every nav slot on every
+// board was drawing an invisible badge, and the media tiles and the viewers were
+// drawing half of one — the state jakob saw as "the corner of a number in an
+// orange circle". A badge nobody can see annotates nothing, and check-flows
+// cannot catch it because it verifies the attribute, not the paint.
 export const flowBadgeCss = `[data-flow] { position: relative; }
-[data-flow]::after { content: attr(data-flow); position: absolute; top: -7px; right: -7px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-family: var(--font-sans); font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }`;
+[data-flow]::after { content: attr(data-flow); position: absolute; top: 1px; right: 1px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-family: var(--font-sans); font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }`;
 
 // A screen may export PROPS (extra data-props descriptors) and VALS (extra
 // `renderVals` entries, one code string like `keyTitle: this.props.wording ===
