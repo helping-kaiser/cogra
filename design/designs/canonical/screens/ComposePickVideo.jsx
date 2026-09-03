@@ -20,14 +20,29 @@
 /* The device-gallery grid, inert: no selection rings, nothing to tap. Its
    markup is screen-local — the pick grid exists on one step of one flow. */
 function DeadGrid() {
-  const tiles = ["var(--surface-container)", "var(--surface-container-high)", "var(--surface-container-highest)", "var(--surface-container-high)", "var(--surface-container)", "var(--surface-container-highest)", "var(--surface-container-high)", "var(--surface-container)", "var(--surface-container-highest)"];
+  const shades = [
+    "var(--surface-container-highest)",
+    "var(--surface-container-high)",
+    "var(--surface-container-highest)",
+    "var(--surface-container)",
+    "var(--surface-container-high)",
+    "var(--surface-container-highest)",
+    "var(--surface-container-high)",
+    "var(--surface-container)",
+  ];
   return (
-    <div style={{ flex: 1, display: "flex", flexWrap: "wrap", gap: 3, padding: "4px 4px 0", overflow: "hidden", alignContent: "flex-start", opacity: 0.4 }}>
-      <div style={{ position: "relative", width: 125, height: 125, overflow: "hidden" }}>
+    <div style={{ flex: 1, display: "flex", flexWrap: "wrap", gap: 3, padding: "4px 4px 0", overflow: "hidden", alignContent: "flex-start", opacity: 0.45 }}>
+      <div style={{ position: "relative", width: 125, height: 125, overflow: "hidden", outline: "1px solid var(--border-hairline)", outlineOffset: -1 }}>
         <img src="post-photo.jpg" alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
       </div>
-      {tiles.map((bg, index) => (
-        <div key={index} style={{ width: 125, height: 125, background: bg }} />
+      <div style={{ position: "relative", width: 125, height: 125, overflow: "hidden", outline: "1px solid var(--border-hairline)", outlineOffset: -1 }}>
+        <img src="inviter.jpg" alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+      </div>
+      <div style={{ position: "relative", width: 125, height: 125, overflow: "hidden", outline: "1px solid var(--border-hairline)", outlineOffset: -1 }}>
+        <img src="gallery-market.jpg" alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+      </div>
+      {shades.map((bg, index) => (
+        <div key={index} style={{ width: 125, height: 125, background: bg, outline: "1px solid var(--border-hairline)", outlineOffset: -1 }} />
       ))}
     </div>
   );
@@ -48,7 +63,7 @@ export function Screen() {
           Picked · 1
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <MediaThumb src="post-photo.jpg" alt="" size={48} video onRemove={() => {}} removeLabel="Remove this video" />
+          <MediaThumb src="post-photo.jpg" alt="" width={114} height={64} video onRemove={() => {}} removeLabel="Remove this video" />
           <span style={{ flex: 1, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
             A video is the whole post. Its cover comes next.
           </span>
