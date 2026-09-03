@@ -563,10 +563,19 @@ pub async fn finish_upload_session(
     Ok(())
 }
 
-/// Drops a session and its parts. The store-side upload is the caller's
-/// to abort — same ordering as the asset sweep, rows first and the store
-/// after, so a crash between the two leaves collectable garbage rather
-/// than a row pointing at nothing.
+/// Drops a session and its parts.
+///
+/// **The store is released first here, and the row dropped after** —
+/// the opposite of the asset sweep's order, deliberately. That sweep
+/// writes rows first because a row pointing at nothing is a render that
+/// can never succeed, while an unreferenced object is merely garbage. A
+/// session row renders nothing, so the asymmetry that justifies the
+/// order does not exist; what matters instead is that the row is the
+/// only handle anything has on the store-side upload. Drop it while the
+/// upload still lives and its parts become unreachable — billed and
+/// collectable by nothing this server runs. Kept until the abort
+/// succeeds, a failed abort simply leaves the row for the next sweep to
+/// retry, and the cleanup converges.
 pub async fn close_upload_session(pool: &PgPool, id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query!("DELETE FROM media_upload_sessions WHERE id = $1", id)
         .execute(pool)
@@ -574,9 +583,10 @@ pub async fn close_upload_session(pool: &PgPool, id: Uuid) -> Result<(), sqlx::E
     Ok(())
 }
 
-/// A session the sweep collected, and what the store still holds for it.
+/// A session the sweep is about to collect, and what the store still
+/// holds for it.
 #[derive(Debug, Clone)]
-pub struct SweptUpload {
+pub struct ExpiredUpload {
     pub id: Uuid,
     pub storage_key: String,
     pub upload_id: String,
@@ -586,26 +596,40 @@ pub struct SweptUpload {
     pub unfinished: bool,
 }
 
-/// Collects sessions past their expiry.
+/// Sessions past their expiry, oldest first.
+///
+/// Read rather than deleted, because the caller has store-side work to do
+/// per row and the row is the only handle on it — see
+/// [`close_upload_session`] for why that inverts the asset sweep's order.
 ///
 /// An upload nobody finished is worse than an orphaned object: until it
 /// is aborted the store keeps every part, bills for them, and serves them
-/// to no one. So this sweep is not the asset sweep's optional sibling —
-/// it is the only thing that ever releases those parts.
+/// to no one. So this is not the asset sweep's optional sibling — it is
+/// the only thing that ever releases those parts.
 ///
 /// Finished sessions are collected on the same pass. They are kept until
 /// expiry on purpose: while the row lives, a client that lost the
-/// completion's reply gets the asset back instead of a refusal, and that
-/// window is exactly what makes a blip during completion survivable.
-pub async fn sweep_upload_sessions(pool: &PgPool) -> Result<Vec<SweptUpload>, sqlx::Error> {
+/// completion's reply is handed the asset back instead of a refusal, and
+/// that window is exactly what makes a blip during completion survivable.
+///
+/// The limit bounds one tick's work. A backlog is drained over several
+/// ticks rather than in one long transaction, so a sweep that falls
+/// behind never becomes a sweep that blocks.
+pub async fn expired_upload_sessions(
+    pool: &PgPool,
+    limit: i64,
+) -> Result<Vec<ExpiredUpload>, sqlx::Error> {
     sqlx::query_as!(
-        SweptUpload,
+        ExpiredUpload,
         r#"
-        DELETE FROM media_upload_sessions
+        SELECT id, storage_key, upload_id,
+               (media_id IS NULL) AS "unfinished!"
+        FROM media_upload_sessions
         WHERE expires_at <= now()
-        RETURNING id, storage_key, upload_id,
-                  (media_id IS NULL) AS "unfinished!"
+        ORDER BY expires_at
+        LIMIT $1
         "#,
+        limit,
     )
     .fetch_all(pool)
     .await
