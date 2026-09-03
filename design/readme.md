@@ -2317,6 +2317,12 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   lets the search reach that board honestly instead of teleporting to
   it. There is no check-a-license flow — a reveal in place is not a
   journey.
+- **`ComposeDetails` componentized.** The picture path's details stage
+  is now JSX over the masters like its twin `ComposeCited`, and the
+  conversion closed the drift that prompted it — the hand board's
+  staged reference wore an avatar and a stance face and carried no
+  remove, where `StagedReference` gives it the post's own cover, the
+  pair alone, and the ×.
 - **The gate**: 103 → 82 gaps and 897 → 938 edges. The twenty-four
   closed, and three reopened as fresh instances of surfaces already
   owed — the topic picker on the new composer board and again on the
