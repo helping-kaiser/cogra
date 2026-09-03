@@ -3,32 +3,6 @@
    Edit links anywhere: the row IS the affordance and opens Show all; the crop
    step is one Back away (jakob 2026-08-31, "none"). */
 
-/* The removable topic chip is a compose-only pattern, not yet a master —
-   screen-local until the wizard converts (item 17). */
-function TopicRemovable({ topic }) {
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 6,
-        minHeight: 32,
-        padding: "4px 12px",
-        borderRadius: "var(--radius-full)",
-        background: "var(--secondary-container)",
-        color: "var(--on-secondary-container)",
-        fontSize: "var(--text-label-large)",
-        lineHeight: "var(--text-label-large--line-height)",
-        fontWeight: "var(--text-label-large--font-weight)",
-        letterSpacing: "var(--text-label-large--letter-spacing)",
-      }}
-    >
-      #{topic}
-      <Icon name="close" size={16} />
-    </span>
-  );
-}
-
 export function Screen() {
   return (
     <>

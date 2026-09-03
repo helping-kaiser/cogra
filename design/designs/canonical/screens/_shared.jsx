@@ -613,6 +613,32 @@ function ComposeFieldLabel({ children, note }) {
   );
 }
 
+/* The removable topic chip — a compose-only pattern, not yet a master
+   (item 17). Shared the moment a second details board staged topics. */
+function TopicRemovable({ topic }) {
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        minHeight: 32,
+        padding: "4px 12px",
+        borderRadius: "var(--radius-full)",
+        background: "var(--secondary-container)",
+        color: "var(--on-secondary-container)",
+        fontSize: "var(--text-label-large)",
+        lineHeight: "var(--text-label-large--line-height)",
+        fontWeight: "var(--text-label-large--font-weight)",
+        letterSpacing: "var(--text-label-large--letter-spacing)",
+      }}
+    >
+      #{topic}
+      <Icon name="close" size={16} />
+    </span>
+  );
+}
+
 /* Someone else's profile, whole — shared the moment its own overflow menu
    needed the same page with a sheet over it (readme §13, the menus round). */
 function ProfileOtherBody() {
