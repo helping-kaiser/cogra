@@ -68,6 +68,17 @@ sealed interface AssetUpload {
      */
     data class Transcoding(val percent: Int) : AssetUpload
 
+    /**
+     * The bytes are going up, part by part.
+     *
+     * It carries a percentage where [Running] cannot: a resumable
+     * upload knows how many of its parts have landed, and a hundred
+     * megabytes is long enough that a ring with no number reads as a
+     * hang — which is exactly what a dropped part being retried behind
+     * the scenes would otherwise look like.
+     */
+    data class Sending(val percent: Int) : AssetUpload
+
     data object Running : AssetUpload
 
     data class Done(val mediaId: String) : AssetUpload
@@ -79,6 +90,27 @@ sealed interface AssetUpload {
      */
     data class Failed(val message: String) : AssetUpload
 }
+
+/**
+ * Whether this asset is still on its way.
+ *
+ * One predicate rather than a chain repeated at every reading: a clip
+ * is transcoding, then sending its parts, and both are "not there yet"
+ * to every surface that gates on it. Adding a third leg to the journey
+ * should not mean finding ten places that forgot about it.
+ */
+val AssetUpload.inFlight: Boolean
+    get() = this is AssetUpload.Running ||
+        this is AssetUpload.Transcoding ||
+        this is AssetUpload.Sending
+
+/** How far along, where the state can say — a ring needs a number. */
+val AssetUpload.percentOrNull: Int?
+    get() = when (this) {
+        is AssetUpload.Transcoding -> percent
+        is AssetUpload.Sending -> percent
+        else -> null
+    }
 
 /**
  * One picked asset, from the grid to the gallery.
@@ -300,12 +332,12 @@ data class ComposeWizardState(
      */
     val uploadsRunning: Boolean
         get() = picked.any {
-            it.upload is AssetUpload.Running || it.upload is AssetUpload.Transcoding
+            it.upload.inFlight
         }
 
     /** How far the clip's re-encode has got, when one is running. */
     val transcodingPercent: Int?
-        get() = picked.firstNotNullOfOrNull { (it.upload as? AssetUpload.Transcoding)?.percent }
+        get() = picked.firstNotNullOfOrNull { it.upload.percentOrNull }
 
     val uploadsFailed: Boolean get() = picked.any { it.upload is AssetUpload.Failed }
 
@@ -458,8 +490,7 @@ fun ComposeWizardState.pickedPictures(): List<PickedPicture> = picked.map { asse
             crops[asset.uri].toFraming(),
         ),
         described = asset.altText.isNotBlank(),
-        uploading = asset.upload is AssetUpload.Running ||
-            asset.upload is AssetUpload.Transcoding,
+        uploading = asset.upload.inFlight,
         failed = asset.upload is AssetUpload.Failed,
     )
 }

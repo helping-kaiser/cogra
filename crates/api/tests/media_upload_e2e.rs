@@ -50,7 +50,7 @@ impl Rig {
             base_url: "https://media.example/bucket".into(),
             ..Default::default()
         };
-        let schema = api::schema::build(api::schema::ApiContext {
+        let ctx = api::schema::ApiContext {
             pool: pool.clone(),
             boundary: api::l1::StandInBoundary(standin.clone()),
             funding: standin,
@@ -62,13 +62,19 @@ impl Rig {
             breach: Arc::new(api::breach::DisabledCorpus),
             media: media.clone(),
             blobs: blobs.clone(),
-        });
+        };
+        let uploads = api::UploadRouting {
+            pool: ctx.pool.clone(),
+            blobs: ctx.blobs.clone(),
+            media: ctx.media.clone(),
+        };
+        let schema = api::schema::build(ctx);
         Self {
             app: api::app(
                 schema,
                 auth,
                 axum_client_ip::ClientIpSource::XRealIp,
-                &media,
+                uploads,
             ),
             pool,
             blobs,

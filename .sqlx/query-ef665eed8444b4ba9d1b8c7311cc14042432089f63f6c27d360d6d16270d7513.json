@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT id, storage_key, upload_id,\n               (media_id IS NULL) AS \"unfinished!\"\n        FROM media_upload_sessions\n        WHERE expires_at <= now()\n        ORDER BY expires_at\n        LIMIT $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "storage_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "upload_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "unfinished!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "ef665eed8444b4ba9d1b8c7311cc14042432089f63f6c27d360d6d16270d7513"
+}

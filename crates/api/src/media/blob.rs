@@ -10,6 +10,12 @@
 //! lifecycle; the API is a client of it and never holds bytes itself
 //! (architecture.md "Infrastructure").
 //!
+//! The trait carries the store's multipart upload beside its whole-object
+//! put for the same reason it speaks S3 at all: assembling a large upload
+//! out of independently retryable parts is what the object protocol
+//! already does, and reimplementing it a layer up would be a second,
+//! worse copy of a mechanism the store ships.
+//!
 //! Two ordering facts the callers depend on. **Blob first, row second:**
 //! a blob write and a Postgres commit are not one transaction, and of the
 //! two failure modes an orphaned object is collectable garbage while a
@@ -21,6 +27,7 @@
 use std::pin::Pin;
 
 use object_store::aws::AmazonS3Builder;
+use object_store::multipart::{MultipartStore, PartId};
 use object_store::path::Path as ObjectPath;
 use object_store::{
     Attribute, Attributes, Error as ObjectStoreError, ObjectStore, ObjectStoreExt, PutOptions,
@@ -77,6 +84,66 @@ pub trait BlobStore: Send + Sync {
         &'a self,
         key: &'a str,
     ) -> Pin<Box<dyn Future<Output = Result<(), BlobError>> + Send + 'a>>;
+
+    /// Opens a multipart upload against `key` and hands back the store's
+    /// own identifier for it.
+    ///
+    /// The identifier is what makes an upload outlive the request that
+    /// started it: it is persisted beside the session row, and every
+    /// later part carries it, so a client that lost its connection
+    /// resumes against the same upload rather than starting over.
+    fn create_multipart<'a>(
+        &'a self,
+        key: &'a str,
+    ) -> Pin<Box<dyn Future<Output = Result<String, BlobError>> + Send + 'a>>;
+
+    /// Writes one part and returns the store's identifier for it, which
+    /// the completion has to quote back.
+    ///
+    /// `part_idx` is zero-based; the S3 part number is one greater, which
+    /// is the object store's own convention rather than ours.
+    ///
+    /// **Re-sending a part replaces it.** S3 defines a part number as
+    /// naming a position rather than an attempt — "if you upload a new
+    /// part using the same part number as a previously uploaded part, the
+    /// previously uploaded part gets overwritten" — so a client that
+    /// retries a part it is unsure of cannot corrupt the upload by
+    /// sending it twice. That is the property the whole resumable path
+    /// rests on, and it belongs to the store, not to us.
+    fn put_part<'a>(
+        &'a self,
+        key: &'a str,
+        upload_id: &'a str,
+        part_idx: usize,
+        bytes: Vec<u8>,
+    ) -> Pin<Box<dyn Future<Output = Result<String, BlobError>> + Send + 'a>>;
+
+    /// Assembles the parts into the object at `key`, in the order given.
+    ///
+    /// The identifiers are quoted from what this server recorded at each
+    /// part write rather than from a listing of the store, which is what
+    /// S3's own guidance asks for: "maintain your own list of the part
+    /// numbers that you specified when uploading parts and the
+    /// corresponding ETag values".
+    fn complete_multipart<'a>(
+        &'a self,
+        key: &'a str,
+        upload_id: &'a str,
+        content_ids: Vec<String>,
+    ) -> Pin<Box<dyn Future<Output = Result<(), BlobError>> + Send + 'a>>;
+
+    /// Discards an upload and every part written under it.
+    ///
+    /// Aborting one that is already gone succeeds, for the same reason
+    /// [`BlobStore::delete`] does: the sweeper retries, and a retry has to
+    /// converge rather than fail on its own prior success. Until this
+    /// runs, the parts are storage nobody can read — which is why an
+    /// abandoned session is swept rather than left to age out.
+    fn abort_multipart<'a>(
+        &'a self,
+        key: &'a str,
+        upload_id: &'a str,
+    ) -> Pin<Box<dyn Future<Output = Result<(), BlobError>> + Send + 'a>>;
 }
 
 /// How to reach the media service.
@@ -97,7 +164,13 @@ pub struct S3Config {
 /// not a parallel implementation that only looks similar. No local
 /// filesystem variant exists — a dev-only backend that production never
 /// runs is how a dev posture stops being a preview of release.
-pub struct ObjectBlobStore<S: ObjectStore>(S);
+/// The store is bound to [`MultipartStore`] as well as [`ObjectStore`]
+/// because resumable upload is not an extra this seam can do without: a
+/// backend that cannot hold parts between requests cannot carry a large
+/// upload across a dropped connection, and a deployment posture that
+/// silently loses that is exactly what the generic-over-one-implementation
+/// choice above exists to prevent.
+pub struct ObjectBlobStore<S: ObjectStore + MultipartStore>(S);
 
 /// The media service as it actually runs.
 ///
@@ -128,7 +201,7 @@ pub fn in_memory() -> ObjectBlobStore<object_store::memory::InMemory> {
     ObjectBlobStore(object_store::memory::InMemory::new())
 }
 
-impl<S: ObjectStore> BlobStore for ObjectBlobStore<S> {
+impl<S: ObjectStore + MultipartStore> BlobStore for ObjectBlobStore<S> {
     fn put<'a>(
         &'a self,
         key: &'a str,
@@ -179,6 +252,69 @@ impl<S: ObjectStore> BlobStore for ObjectBlobStore<S> {
     ) -> Pin<Box<dyn Future<Output = Result<(), BlobError>> + Send + 'a>> {
         Box::pin(async move {
             match self.0.delete(&ObjectPath::from(key)).await {
+                Ok(()) | Err(ObjectStoreError::NotFound { .. }) => Ok(()),
+                Err(e) => Err(e.into()),
+            }
+        })
+    }
+
+    fn create_multipart<'a>(
+        &'a self,
+        key: &'a str,
+    ) -> Pin<Box<dyn Future<Output = Result<String, BlobError>> + Send + 'a>> {
+        Box::pin(async move { Ok(self.0.create_multipart(&ObjectPath::from(key)).await?) })
+    }
+
+    fn put_part<'a>(
+        &'a self,
+        key: &'a str,
+        upload_id: &'a str,
+        part_idx: usize,
+        bytes: Vec<u8>,
+    ) -> Pin<Box<dyn Future<Output = Result<String, BlobError>> + Send + 'a>> {
+        Box::pin(async move {
+            let part = self
+                .0
+                .put_part(
+                    &ObjectPath::from(key),
+                    &upload_id.to_string(),
+                    part_idx,
+                    PutPayload::from(bytes),
+                )
+                .await?;
+            Ok(part.content_id)
+        })
+    }
+
+    fn complete_multipart<'a>(
+        &'a self,
+        key: &'a str,
+        upload_id: &'a str,
+        content_ids: Vec<String>,
+    ) -> Pin<Box<dyn Future<Output = Result<(), BlobError>> + Send + 'a>> {
+        Box::pin(async move {
+            let parts = content_ids
+                .into_iter()
+                .map(|content_id| PartId { content_id })
+                .collect();
+            self.0
+                .complete_multipart(&ObjectPath::from(key), &upload_id.to_string(), parts)
+                .await?;
+            Ok(())
+        })
+    }
+
+    fn abort_multipart<'a>(
+        &'a self,
+        key: &'a str,
+        upload_id: &'a str,
+    ) -> Pin<Box<dyn Future<Output = Result<(), BlobError>> + Send + 'a>> {
+        Box::pin(async move {
+            match self
+                .0
+                .abort_multipart(&ObjectPath::from(key), &upload_id.to_string())
+                .await
+            {
                 Ok(()) | Err(ObjectStoreError::NotFound { .. }) => Ok(()),
                 Err(e) => Err(e.into()),
             }
