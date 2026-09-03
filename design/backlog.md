@@ -392,9 +392,8 @@ WalletGuest) left the `nav · New post` and `stance face` selector
 starts, and KeyElsewhere left the stance-face one: a control start
 must mean one thing everywhere, and those taps now start a gate.
 
-Still owed on this item: the reader's post / comment / profile
-menus, the topic page and picker, the chat surface, the
-settlement/tip/rail record views, the settings and invites screens,
+Still owed on this item: the topic page and picker, the chat surface,
+the settlement/tip/rail record views, the settings and invites screens,
 the item / offer surfaces, the Sky (item 16), and item 13's Post Score
 drill-down.
 
@@ -432,6 +431,44 @@ precedent — no new board. The New-post and stance-face
 control-selector flows except these applicant origins alongside the
 guest ones, since staged is not landed. 6 gaps closed. Readme
 §13 *The applicant once-each round* records the shape.
+
+**Round 5 — the menus (2026-09-03).** Five boards: `ReaderPostMenu`,
+`CommentMenu` and `ProfileMenu` (one master per menu, not one per
+surface), `PostLicense` (the terms unfolded on the card) and
+`ComposeCited` (the composer opened with a reference already staged).
+24 gaps closed — 15 post-menu, 5 profile, 3 comment, 1 license-terms
+view — and the own profile's ⋮ became the share control itself. 103 →
+81 gaps, 897 → 928 edges, 56/51/5 → 58/53/5 flows. Readme §13 *The
+menus round* records jakob's rulings.
+
+The two gaps the round reopened are fresh instances of surfaces
+already owed, not new debts: `ComposeCited/5` wants the topic picker
+and `PostLicense/7` the score drill-down.
+
+Rows the round deliberately did NOT draw — each a menu function whose
+slice has not been built, and a menu row for a function nothing
+answers is a promise the sheet cannot keep:
+
+- **Report this** — belongs to the moderation surfaces of slices 4 and
+  8 ([docs/instances/moderation.md](../docs/instances/moderation.md)).
+  Its home when it arrives is the post and comment overflow menu.
+- **Hide this** (hideActor) — slice 2.6. Its home is the same overflow
+  menu.
+- **Bookmark** — slice 2.6. Its home is the same overflow menu, ranked
+  against the rows already there before it earns a slot.
+- **The narrow-phone share-into-⋮ state is unboarded.** The reel
+  round's rule says share is the first act to leave the action row when
+  a phone cannot hold four; no board draws that menu with a share row
+  in it.
+- **The reel's deliberate no-⋮ ruling gets a revisit trigger.** The
+  stream's rail carries no overflow on purpose. If the menu ever grows
+  a row a reel viewer needs in the moment, that ruling is reopened —
+  the trigger is a new row, not a new surface.
+
+**The frontends reference only users, and only by exact handle**
+(jakob 2026-09-03): that is wrong. Referencing is a search-backed pick
+of anything referenceable, per the `ReferencePicker` search anatomy
+this canvas already draws. The feature session inherits this.
 
 **The chat surface arrives owing the action row a decision** (jakob
 2026-09-03): sending a post *into a chat* is the next contender for a

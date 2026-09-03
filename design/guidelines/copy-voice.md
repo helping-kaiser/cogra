@@ -324,3 +324,48 @@ validation exists yet to trigger them):
   a local format failure.
 - `That doesn't look like an email address.` — Join's Email field, a
   local format failure.
+
+## Awaiting blessing — the menus round
+
+The words the three overflow menus and the unfolded license terms put
+in front of a reader. The menu rows were already in the fixtures and
+the graph; what is genuinely new is the license block's own readings,
+because the read side stopped borrowing the chooser's.
+
+**The menu rows**, unchanged in wording and settled in spelling — one
+`License terms` everywhere, never the British spelling:
+
+- `License terms` · `Hide license` — the one row, both states. It
+  reveals the terms in place and folds them away again, so it changes
+  its words rather than its position.
+- `Cite in a new post` — on a post's menu and a comment's alike.
+- `Mention in a new post` — the same row on a person, and the same
+  fact; only the far end of the reference differs.
+- `Share this profile` — another's profile.
+- `Share your profile` — your own, where it is the accessible name of
+  the band's share glyph rather than a row, the menu having gone.
+
+**The license block's readings** — NEW, and the reason they exist: the
+chooser's hints speak to the author declaring the terms, so a read
+surface that reused them told a reuser they were owed the credit they
+in fact owe. These address the reuser instead. One per axis value:
+
+- Credit — `Not required` · `Required for commercial use` ·
+  `Required for every use`
+- Public record of use — `Not logged` ·
+  `Commercial uses logged publicly` · `Every use logged publicly`
+
+**The block's own furniture**:
+
+- `License terms` — the caption, the same words as the row that
+  unfolded it, so the answer names the question.
+- `Public domain` — the name of the both-axes-zero pair, on the
+  caption line. The rows below still spell what it means; the name is
+  what a reader already knows it by.
+- `Credit` · `Public record of use` — the axis labels, the chooser's
+  own legends, so a reader who published a post meets the same two
+  words on both sides.
+
+**A staged reference's remove control** takes the referenced thing's
+own name as its accessible name — "Remove The long way home — @ada" —
+because a row of citations wants each × to say which one it drops.

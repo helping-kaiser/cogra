@@ -522,7 +522,7 @@ paper over:
 
 - `BottomSheet` (+ `SheetItem`, `SheetTitle`) — `design.md` §6 lists sheets in
   the scaffolding and the product never built one, so the overflow menu, the
-  licence terms and every filter were each improvising. A sheet is a drawer
+  license terms and every filter were each improvising. A sheet is a drawer
   the reader opened and can drop: it comes from the edge it goes back to,
   covers the bottom bar, traps nothing, and is never open beside the stance
   pad. `OverflowMenu` now presents as a sheet by default — both clients
@@ -663,7 +663,7 @@ Nothing vanishes silently, and none of these use `error` colouring.
   record-granular:** an `illegal` verdict removes the record's payload,
   and "the binding content commitment forbids partial rewrite, so there
   is no per-field redaction" — so **every authored field goes at once**.
-  No title, no body, no description, no media, no licence. There is no
+  No title, no body, no description, no media, no license. There is no
   redacted title beside a surviving body and no redaction inside a
   sentence; anything offering field-level redaction is lying about the
   substrate.
@@ -821,9 +821,9 @@ then anything else the post grows — so each surface stops arranging them
 itself. Nothing in that row may take `primaryContainer`; the stance knob
 already spends the screen's one loud surface.
 
-**The licence moves off the initial view.** It is among the rarest reads
+**The license moves off the initial view.** It is among the rarest reads
 in the product and was competing with the content for the same glance.
-It is now a `Licence terms` item in the new `OverflowMenu`, which every
+It is now a `License terms` item in the new `OverflowMenu`, which every
 post and comment carries — the row carries what a reader reaches for, the
 menu carries the rest.
 
@@ -1160,8 +1160,8 @@ kind (`ReferenceRow`), reused by search's results (item 9).
   through the reader's chosen stance input (the pad, or whatever
   their settings swap in), and displayed on the row for any reader.
 - A signed reference is a compose-time act; an @handle typed in text
-  is only a mention. They must not look identical — the mention is
-  coloured text, the reference is a row in the sheet.
+  is only coloured text, never a record. They must not look identical
+  — the typed handle is colour, the reference is a row in the sheet.
 - Comments wear the same topics-and-citations line as posts
   (`TopicsLine`, shared) and the same overflow menu.
 
@@ -1913,7 +1913,7 @@ and the parts of item 33 that could be settled without drawing a feed).
   comment asks through DiscardConfirm; an empty one leaves at once.
   Two ways out of one screen that lose the same writing cannot behave
   differently — the arrow being "one stage back" is a fact about
-  navigation, not a licence to discard silently. Post composers keep
+  navigation, not a license to discard silently. Post composers keep
   their plain leave: a post draft is kept, so nothing is at stake
   there.
 - **A file is judged on its own before it is judged against the
@@ -2220,6 +2220,80 @@ outcomes and replaces only the gap with a `self` case — the line
 updates in place rather than sending the reader anywhere. Census 114
 → 109 gaps, 867 → 897 edges; the 56/51/5 flow census is unchanged,
 since no declared flow walks an error path.
+
+### The menus round — 2026-09-03
+
+The ⋮ every card and every profile has worn since the canvas was
+wired, answered at last: twenty-four gap edges pointing at three
+menus nobody had drawn (item 23, jakob's rulings the same day).
+
+- **Masters, not per-surface.** Fifteen surfaces open the reader's
+  post menu, three the comment's, five a profile's — and a menu is
+  the same menu wherever its dot sits, so each is drawn ONCE and
+  every surface's edge lands on it. `ReaderPostMenu`, `CommentMenu`
+  and `ProfileMenu` join the sheet boards that were already mastered
+  this way (the filter, the references sheet, the own-post menu).
+- **The license unfolds where it was asked about.** Its row closes
+  the sheet and opens the terms on the card beneath — a state of the
+  card, never a surface of its own, so the row that revealed them
+  reads **Hide license** in the same position, and both cards gained
+  `defaultShowLicense` to draw the unfolded state (the missing-variant
+  rule; `StanceControl`'s `defaultOpen` is the precedent). `PostLicense`
+  is that state drawn, and it is a declared **entry** rather than the
+  target of a tap, because nothing navigates to reach it.
+- **The terms are drawn, not printed.** A quiet inset at the medium
+  rung: a caption naming what unfolded, then one row per axis with the
+  two readings aligned so the pair reads as a pair. It takes **no
+  fill** — the card is already the highest container rung, and a
+  filled inset over it would invert between the themes — and no
+  colour, the terms being neither warning nor promotion. Public domain
+  is the pair readers already have a word for, so the word rides the
+  caption while the rows still spell what it means. The read side got
+  its **own readings**: the chooser's hints address the author
+  declaring the terms, and on a read surface "Every use credits you"
+  tells a reuser they are owed the credit they in fact owe.
+- **Citing and mentioning are one fact.** Both stage a **Reference
+  edge**; the word only records what sits at the far end — citing for
+  a passive node, mentioning for a person. So both rows open the same
+  composer and the same staged row, and only the label knows the
+  difference. A typed @handle is not the other half of this: it is
+  coloured text and nothing more, while the mention that binds is the
+  structured reference.
+- **Both rows open the composer with the reference already staged.**
+  Citations are declared at creation, structured inputs only, so there
+  is no attaching one to a post that landed — the row starts a new
+  post pointing at the old one. `ComposeCited` draws it: the composer
+  fresh, nothing written, the citation already in the references
+  block, which is the honest picture of that moment — the reference is
+  the given, the words are what is missing.
+- **Only what exists gets a row.** The post and comment menus hold
+  License terms and Cite in a new post; another's profile holds Mention
+  in a new post and Share this profile. Report, hide and bookmark are
+  **not** drawn: each belongs to a slice the product has not built, and
+  a row for a function nothing answers is a promise the sheet cannot
+  keep. They wait in the backlog against their slices. Copy link stays
+  out for a different reason — the platform's share sheet already
+  carries it. **The slice order bends where design does not**: functions
+  closely connected in design and flow may be built ahead of their
+  slice when they surface together, rather than splitting one surface
+  across two rounds.
+- **Your own profile has no menu.** With mentioning yourself
+  meaningless and share the only row left, a ⋮ opening a sheet of one
+  row is a tap spent on nothing — so the band's dot **becomes** the
+  share control, wearing the same glyph the action rows use, one tap to
+  the platform's own sheet.
+- **License, not licence.** One spelling across the masters, the
+  fixtures and the prose, and the menu row's words became an **atom**
+  in `LicenseChooser` — assigned once, spelled by the cards that mount
+  their own menu and by the detail headers that carry it for them.
+- **Two flows**: `cite-a-post` and `mention-someone`, each starting at
+  its menu row's control and ending on arrival at the composer with the
+  reference staged. There is no check-a-license flow — a reveal in
+  place is not a journey.
+- **The gate**: 103 → 81 gaps and 897 → 928 edges. The twenty-four
+  closed, and two reopened as fresh instances of surfaces already owed
+  — the topic picker on the new composer board, the score drill-down on
+  the new detail state.
 
 ## 14. Index
 
