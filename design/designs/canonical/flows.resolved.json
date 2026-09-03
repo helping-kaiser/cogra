@@ -19,6 +19,7 @@
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
+        "PostLicense",
         "Profile",
         "ProfileComments",
         "ProfileOther",
@@ -33,7 +34,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 25 boards → ComposePick",
+        "start · «nav · New post» on 26 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -57,6 +58,7 @@
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
+        "PostLicense",
         "Profile",
         "ProfileComments",
         "ProfileOther",
@@ -150,13 +152,14 @@
         "Main",
         "PostDetail",
         "PostDetailVideo",
+        "PostLicense",
         "ProfilePosts",
         "Reel",
         "Removed",
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 18 boards → ReplyEntry",
+        "start · «comment count» on 19 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
@@ -179,6 +182,7 @@
         "Main",
         "PostDetail",
         "PostDetailVideo",
+        "PostLicense",
         "ProfilePosts",
         "Reel",
         "Removed",
@@ -402,13 +406,14 @@
         "FeedNarrowed",
         "PostDetail",
         "PostDetailVideo",
+        "PostLicense",
         "ProfilePosts",
         "Reel",
         "Removed",
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 13 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 14 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -422,6 +427,7 @@
         "FeedNarrowed",
         "PostDetail",
         "PostDetailVideo",
+        "PostLicense",
         "ProfilePosts",
         "Reel",
         "Removed",
@@ -603,6 +609,7 @@
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
+        "PostLicense",
         "Profile",
         "ProfileComments",
         "ProfileOther",
@@ -617,7 +624,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 25 boards → ComposePick",
+        "start · «nav · New post» on 26 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -641,6 +648,7 @@
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
+        "PostLicense",
         "Profile",
         "ProfileComments",
         "ProfileOther",
@@ -673,6 +681,7 @@
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
+        "PostLicense",
         "Profile",
         "ProfileComments",
         "ProfileOther",
@@ -687,7 +696,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 25 boards → ComposePick",
+        "start · «nav · New post» on 26 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a video — its face",
         "ComposeCover · 6 «Next» → ComposeDetails",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -711,6 +720,7 @@
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
+        "PostLicense",
         "Profile",
         "ProfileComments",
         "ProfileOther",
@@ -732,18 +742,20 @@
       "startsOn": [
         "CommentEdit",
         "CommentEditVideo",
+        "ComposeCited",
         "ComposeDetails",
         "EditCompose",
         "ReplySeal"
       ],
       "steps": [
-        "start · «+ Cite something» on 5 boards → ReferencePicker",
+        "start · «+ Cite something» on 6 boards → ReferencePicker",
         "end · ReferencePicker · 5 «result rows» → back — the pick lands in the composer's references"
       ],
       "boards": [
         "ReferencePicker",
         "CommentEdit",
         "CommentEditVideo",
+        "ComposeCited",
         "ComposeDetails",
         "EditCompose",
         "ReplySeal"
@@ -1005,12 +1017,13 @@
         "Main",
         "PostDetail",
         "PostDetailVideo",
+        "PostLicense",
         "Reel",
         "Removed",
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 17 boards → ProfileOther",
+        "start · «author chip» on 18 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
@@ -1029,6 +1042,7 @@
         "Main",
         "PostDetail",
         "PostDetailVideo",
+        "PostLicense",
         "Reel",
         "Removed",
         "VouchBack"
@@ -1199,6 +1213,40 @@
       "boards": [
         "ComposeDetails"
       ]
+    },
+    {
+      "name": "cite-a-post",
+      "description": "The reader's overflow — on a post or on a comment, the same two rows — opens a new post that already points at what it was opened from. A citation is declared at creation, so the journey ends where the reference is already staged.",
+      "status": "resolved",
+      "startsOn": [
+        "CommentMenu",
+        "ReaderPostMenu"
+      ],
+      "steps": [
+        "start · «Cite in a new post» on 2 boards → ComposeCited",
+        "end · arrival at ComposeCited"
+      ],
+      "boards": [
+        "ComposeCited",
+        "CommentMenu",
+        "ReaderPostMenu"
+      ]
+    },
+    {
+      "name": "mention-someone",
+      "description": "Mention in a new post on another's profile stages exactly what citing stages — a Reference edge. The word records only that the far end is a person.",
+      "status": "resolved",
+      "startsOn": [
+        "ProfileMenu"
+      ],
+      "steps": [
+        "start · «Mention in a new post» on 1 board → ComposeCited",
+        "end · arrival at ComposeCited"
+      ],
+      "boards": [
+        "ComposeCited",
+        "ProfileMenu"
+      ]
     }
   ],
   "boardsOnFlows": {
@@ -1259,6 +1307,23 @@
         "cite-something"
       ],
       "endpoint": []
+    },
+    "CommentMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "ComposeCited": {
+      "flows": [
+        "cite-a-post",
+        "cite-something",
+        "mention-someone"
+      ],
+      "endpoint": [
+        "cite-a-post",
+        "mention-someone"
+      ]
     },
     "ComposeCover": {
       "flows": [
@@ -1691,6 +1756,17 @@
         "reel-to-detail"
       ]
     },
+    "PostLicense": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "visit-an-author"
+      ],
+      "endpoint": []
+    },
     "Profile": {
       "flows": [
         "edit-avatar-standalone",
@@ -1741,6 +1817,12 @@
         "edit-your-profile"
       ]
     },
+    "ProfileMenu": {
+      "flows": [
+        "mention-someone"
+      ],
+      "endpoint": []
+    },
     "ProfileOther": {
       "flows": [
         "find-the-thread-a-comment-answers",
@@ -1783,6 +1865,12 @@
       "endpoint": [
         "see-who-stands-with-someone"
       ]
+    },
+    "ReaderPostMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
     },
     "RecoveryCode": {
       "flows": [
@@ -2082,18 +2170,16 @@
   "gapsOnFlows": [
     "ApplicantFeed/11: Post Score drill-down (backlog item 13)",
     "ApplicantFeed/18: the chat surface (not designed)",
-    "ApplicantFeed/5: reader's post menu — licence terms / cite (not boarded)",
     "ApplicantFeed/8: the topic page (ruled 2026-09-01 — not designed)",
     "ApplicantWaiting/15: the chat surface (not designed)",
-    "ApplicantWaiting/2: reader's post menu — licence terms / cite (not boarded)",
     "ApplicantWaiting/5: the topic page (ruled 2026-09-01 — not designed)",
     "ApplicantWaiting/8: Post Score drill-down (backlog item 13)",
     "CommentEdit/9: the topic picker (not boarded)",
     "CommentEditVideo/9: the topic picker (not boarded)",
+    "ComposeCited/5: the topic picker (not boarded)",
     "ComposeDetails/7: the topic picker (not boarded)",
     "ComposeExpired/11: Post Score drill-down (backlog item 13)",
     "ComposeExpired/18: the chat surface (not designed)",
-    "ComposeExpired/5: reader's post menu — licence terms / cite (not boarded)",
     "ComposeExpired/8: the topic page (ruled 2026-09-01 — not designed)",
     "ComposeLanded/7: Post Score drill-down (backlog item 13)",
     "ComposeUploading/10: the topic picker (not boarded)",
@@ -2104,68 +2190,48 @@
     "ExploreSearch/7: the chat surface (not designed)",
     "ExploreSearch/8: the offer's surface (not designed)",
     "Feed/16: the chat surface (not designed)",
-    "Feed/3: reader's post menu — licence terms / cite (not boarded)",
     "Feed/6: the topic page (ruled 2026-09-01 — not designed)",
     "Feed/9: Post Score drill-down (backlog item 13)",
     "FeedBare/11: Post Score drill-down (backlog item 13)",
-    "FeedBare/5: reader's post menu — licence terms / cite (not boarded)",
     "FeedBare/8: the topic page (ruled 2026-09-01 — not designed)",
     "FeedCover/17: the chat surface (not designed)",
-    "FeedCover/3: reader's post menu — licence terms / cite (not boarded)",
     "FeedCover/6: the topic page (ruled 2026-09-01 — not designed)",
     "FeedCover/8: Post Score drill-down (backlog item 13)",
     "FeedFar/16: the chat surface (not designed)",
-    "FeedFar/3: reader's post menu — licence terms / cite (not boarded)",
     "FeedFar/6: the topic page (ruled 2026-09-01 — not designed)",
     "FeedFar/9: Post Score drill-down (backlog item 13)",
     "FeedGallery/15: the chat surface (not designed)",
-    "FeedGallery/3: reader's post menu — licence terms / cite (not boarded)",
     "FeedGallery/6: the topic page (ruled 2026-09-01 — not designed)",
     "FeedGallery/8: Post Score drill-down (backlog item 13)",
     "FeedNarrowed/16: the chat surface (not designed)",
-    "FeedNarrowed/3: reader's post menu — licence terms / cite (not boarded)",
     "FeedNarrowed/6: the topic page (ruled 2026-09-01 — not designed)",
     "FeedNarrowed/9: Post Score drill-down (backlog item 13)",
     "FeedNothing/8: the chat surface (not designed)",
     "KeyElsewhere/10: Post Score drill-down (backlog item 13)",
     "KeyElsewhere/17: the chat surface (not designed)",
-    "KeyElsewhere/4: reader's post menu — licence terms / cite (not boarded)",
     "KeyElsewhere/7: the topic page (ruled 2026-09-01 — not designed)",
     "Main/11: Post Score drill-down (backlog item 13)",
-    "Main/5: reader's post menu — licence terms / cite (not boarded)",
     "Main/8: the topic page (ruled 2026-09-01 — not designed)",
-    "PostDetail/2: reader's post menu — licence terms / cite (not boarded)",
     "PostDetail/7: Post Score drill-down (backlog item 13)",
     "PostDetailVideo/10: Post Score drill-down (backlog item 13)",
-    "PostDetailVideo/2: reader's post menu — licence terms / cite (not boarded)",
+    "PostLicense/7: Post Score drill-down (backlog item 13)",
     "Profile/1: the chat surface (not designed)",
-    "Profile/2: the profile's menu — mention / share (not boarded)",
     "Profile/3: the settings screen (not designed)",
     "Profile/7: the invites screen (not designed)",
     "ProfileApplicant/1: the chat surface (not designed)",
-    "ProfileApplicant/2: the profile's menu — mention / share (not boarded)",
     "ProfileApplicant/3: the settings screen (not designed)",
-    "ProfileComments/2: the profile's menu — mention / share (not boarded)",
     "ProfileComments/5: the chat surface (not designed)",
-    "ProfileComments/8: the comment's menu — cite / licence terms (not boarded)",
-    "ProfileOther/2: the profile's menu — mention / share (not boarded)",
     "ProfileOther/5: the chat surface (not designed)",
     "ProfilePosts/11: the topic page (ruled 2026-09-01 — not designed)",
     "ProfilePosts/13: Post Score drill-down (backlog item 13)",
-    "ProfilePosts/2: the profile's menu — mention / share (not boarded)",
     "ProfilePosts/5: the chat surface (not designed)",
-    "ProfilePosts/8: reader's post menu — licence terms / cite (not boarded)",
     "RefsSheet/1: the topic page (ruled 2026-09-01 — not designed)",
     "RefsSheet/2: the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)",
-    "RemoveMenu/4: the licence-terms view (not boarded)",
     "Removed/4: Post Score drill-down (backlog item 13)",
-    "ReplyEntry/2: the comment's menu — cite / licence terms (not boarded)",
     "ReplyEntry/3: the topic page (ruled 2026-09-01 — not designed)",
-    "ReplyMedia/2: the comment's menu — cite / licence terms (not boarded)",
     "ReplySeal/4: the topic picker (not boarded)",
     "VouchBack/11: Post Score drill-down (backlog item 13)",
     "VouchBack/18: the chat surface (not designed)",
-    "VouchBack/5: reader's post menu — licence terms / cite (not boarded)",
     "VouchBack/8: the topic page (ruled 2026-09-01 — not designed)",
     "Wallet/14: the chat surface (not designed)",
     "Wallet/2: the full address card as a state of the rest wallet (ruled one-tap-away; the card itself is drawn on the zero board)",
