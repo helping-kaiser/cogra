@@ -33,6 +33,7 @@ const {
   SheetTitle,
   TextField,
   PasswordField,
+  RecoveryCode,
   SearchBar,
   Chip,
   SegmentedFilter,

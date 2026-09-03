@@ -809,6 +809,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: "Don&#x27;t remember this account on this device", tag: "input" },
     { n: 4, find: ">Restore the key</button>", tag: "button" },
   ],
+  RecoveryCode: [
+    { n: 1, find: ">Copy</button>", tag: "button" },
+    { n: 2, find: 'type="text"', tag: "input" },
+    { n: 3, find: ">I&#x27;ve written it down</button>", tag: "button" },
+  ],
 });
 
 /* The band's Chats affordance (jakob 2026-09-01): CograBand carries it on
