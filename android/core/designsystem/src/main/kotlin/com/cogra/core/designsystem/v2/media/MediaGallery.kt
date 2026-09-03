@@ -165,6 +165,10 @@ private fun GalleryFrame(
                 posterUrl = item.imageModel(),
                 autoplay = visible >= AUTOPLAY_VISIBLE_FRACTION,
                 durationMs = item.durationMs,
+                // The gallery's own scale, so a clip is framed the way
+                // every picture beside it is — and so the poster and
+                // the video are the same rectangle.
+                contentScale = fit,
                 contentDescription = item.altText,
                 modifier = Modifier.fillMaxSize(),
                 testTag = "gallery_video",
