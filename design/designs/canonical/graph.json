@@ -42,7 +42,8 @@
     "FeedGallery": "a feed whose post carries several pictures — content, not a tap",
     "FeedCover": "a feed whose posts carry clips, one before its first play and one the device will not autoplay — content and device, not a tap",
     "ViewerLandscape": "the viewer with the device turned — rotation, not a tap",
-    "PostLicense": "the post detail with its license unfolded — the menu row reveals the terms in place, so this is a state of the card, not a screen a tap navigates to"
+    "PostLicense": "the post detail with its license unfolded — the menu row reveals the terms in place, so this is a state of the card, not a screen a tap navigates to",
+    "ReplyCited": "the reply's seal with a reference staged — the picker hands its pick back to the composer it was opened from, so this is a state of the seal, not a screen a tap navigates to"
   },
   "boardKinds": {
     "Theme": "reference",
@@ -578,6 +579,17 @@
     { "from": "ReplySeal", "via": 8, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
     { "from": "ReplySeal", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplyEntry", "case": "signed — the thread, the comment settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "ReplySeal", "via": 10, "kind": "back", "label": "Back", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words" }, { "board": "ReplyPictures", "case": "…or the pictures state" }, { "board": "ReplyVideo", "case": "…or the video state" }] },
+
+    { "from": "ReplyCited", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words, the reference still staged" }, { "board": "ReplyPictures", "case": "…or the pictures state" }, { "board": "ReplyVideo", "case": "…or the video state" }] },
+    { "from": "ReplyCited", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
+    { "from": "ReplyCited", "via": 3, "kind": "detour", "label": "? — Signed actions", "to": [{ "board": "HelpDialog", "case": "the Signed-actions text" }] },
+    { "from": "ReplyCited", "via": 4, "kind": "advance", "label": "+ Add a topic", "to": [{ "gap": "the topic picker (not boarded)" }] },
+    { "from": "ReplyCited", "via": 5, "kind": "advance", "label": "+ Cite something", "to": [{ "board": "ReferencePicker", "case": "a second reference — the staged one stays" }] },
+    { "from": "ReplyCited", "via": 6, "kind": "advance", "label": "Adjust (the stance)", "to": [{ "board": "ReplyPad" }] },
+    { "from": "ReplyCited", "via": 7, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense", "case": "the license sheet (master on the compose page)" }] },
+    { "from": "ReplyCited", "via": 8, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
+    { "from": "ReplyCited", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplyEntry", "case": "signed — the thread, the comment and its reference settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "ReplyCited", "via": 10, "kind": "back", "label": "Back", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words, the reference still staged" }, { "board": "ReplyPictures", "case": "…or the pictures state" }, { "board": "ReplyVideo", "case": "…or the video state" }] },
 
     { "from": "DiscardConfirm", "via": 1, "kind": "back", "label": "Keep writing", "to": [{ "terminal": "back", "case": "the dialog closes — back to the stage it covered" }] },
     { "from": "DiscardConfirm", "via": 2, "kind": "cancel", "label": "Discard", "to": [{ "board": "ReplyEntry", "case": "from a reply — the thread" }, { "board": "ReplyMedia", "case": "from the edit — the thread" }] },
