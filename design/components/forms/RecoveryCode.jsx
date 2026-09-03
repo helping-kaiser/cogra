@@ -16,9 +16,13 @@ import { TextField } from "./TextField.jsx";
    point. The size gives way, the tracking stays (§11, Small fixes).
 
    It draws NO BOX of its own — it belongs inside a Card, and a bordered box on a
-   filled card is a second surface saying the same thing twice. */
+   filled card is a second surface saying the same thing twice.
 
-export function RecoveryCode({ code, explainer, onConfirmed }) {
+   `error` mirrors TextField's anatomy: this component draws its own confirm
+   field rather than composing TextField, so the M3 error state needed its
+   own way in. Forwarded verbatim to the confirm field. */
+
+export function RecoveryCode({ code, explainer, onConfirmed, error }) {
   const [typedBack, setTypedBack] = React.useState("");
   const [copyFailed, setCopyFailed] = React.useState(false);
   const matches = typedBack.replace(/\s+/g, "").toUpperCase() === code.replace(/\s+/g, "").toUpperCase();
@@ -55,7 +59,7 @@ export function RecoveryCode({ code, explainer, onConfirmed }) {
           This browser would not let the page copy. Select the code and copy it yourself.
         </p>
       )}
-      <TextField label="Type or paste the code to confirm" mono value={typedBack} onChange={setTypedBack} />
+      <TextField label="Type or paste the code to confirm" mono value={typedBack} onChange={setTypedBack} error={error} />
       <Button size="sm" selfStart disabled={!matches} onClick={onConfirmed}>
         I&apos;ve written it down
       </Button>

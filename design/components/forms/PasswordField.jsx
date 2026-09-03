@@ -7,9 +7,14 @@ import { Icon } from "../navigation/Icon.jsx";
    Android's transparent IconButton — it replaced the web's interim "Show"/"Hide"
    words when the icon exports landed (2026-08-26). No background: an icon button
    in this system never wears one. The state lives in the accessible name, which
-   says what the tap will DO ("Show password"), not what is on screen. */
+   says what the tap will DO ("Show password"), not what is on screen.
 
-export function PasswordField({ label, value, onChange, autoComplete = "current-password", id }) {
+   `error` mirrors TextField's Material 3 error state, since this component
+   duplicates TextField's field markup rather than composing it: the outline
+   and label switch to `--error`, and a body-small supporting line in
+   `--error` renders below the field carrying the message verbatim. */
+
+export function PasswordField({ label, value, onChange, autoComplete = "current-password", id, error }) {
   const generated = React.useId();
   const fieldId = id ?? generated;
   const [visible, setVisible] = React.useState(false);
@@ -22,6 +27,7 @@ export function PasswordField({ label, value, onChange, autoComplete = "current-
           lineHeight: "var(--text-label-large--line-height)",
           letterSpacing: "var(--text-label-large--letter-spacing)",
           fontWeight: "var(--text-label-large--font-weight)",
+          color: error ? "var(--error)" : undefined,
         }}
       >
         {label}
@@ -37,7 +43,7 @@ export function PasswordField({ label, value, onChange, autoComplete = "current-
             flex: 1,
             minWidth: 0,
             borderRadius: "var(--radius-extra-small)",
-            border: "1px solid var(--border-field)",
+            border: error ? "1px solid var(--error)" : "1px solid var(--border-field)",
             background: "transparent",
             color: "var(--on-surface)",
             padding: "8px 12px",
@@ -68,6 +74,18 @@ export function PasswordField({ label, value, onChange, autoComplete = "current-
           <Icon name={visible ? "visibility_off" : "visibility"} />
         </button>
       </div>
+      {error && (
+        <span
+          style={{
+            fontSize: "var(--text-body-small)",
+            lineHeight: "var(--text-body-small--line-height)",
+            letterSpacing: "var(--text-body-small--letter-spacing)",
+            color: "var(--error)",
+          }}
+        >
+          {error}
+        </span>
+      )}
     </div>
   );
 }

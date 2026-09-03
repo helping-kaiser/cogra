@@ -2133,6 +2133,58 @@ item 33, jakob's rulings the same day).
   the chronicle rows and every post's media had been opening into a gap
   now lands on a board.
 
+### The input-error round — 2026-09-03
+
+Five of item 23's still-owed gaps — field-error, wrong-credentials,
+wrong-code, code-mismatch — closed onto boards (jakob's rulings the
+same day).
+
+- **A field error wears M3's own text-field error state**: the
+  outline and label switch to `--error`, and a body-small supporting
+  line in `--error` renders below the field carrying the message
+  verbatim. That line replaces whatever board-level helper the field
+  drew — Material's supporting slot shows one line, never two — so an
+  errored field's helper text disappears and an unerrored field keeps
+  its own.
+- **The error colour is blessed for field states.** It had carried two
+  surfaces before this round — `NetworkError`'s fault line,
+  `SigningPending`'s failure — and now grows a third category
+  deliberately: form and field errors join fault lines and signing
+  failures as the three things `--error` is allowed to mean.
+- **Wrong credentials accuse no field.** Sign-in failure is a
+  form-level line above the submit button, in the fault-line's own
+  voice and styling — neither the email nor the password is
+  individually marked, because the system genuinely doesn't know
+  which one is wrong.
+- **Each surface words its own error.** Unlike the offline board, one
+  network-error master answering for every surface, an input error is
+  worded per field and per surface — "That handle is taken." is not
+  interchangeable with "That code doesn't check out." — so each of the
+  five boards carries its own copy, not a shared component's default
+  text.
+- **Componentize before you alter.** Hand-coded boards get rebuilt
+  from real masters before an error state is drawn onto them, and this
+  is now a general principle, not a one-round fix: Join, SignIn,
+  Restore and RecoveryCode went first this round; NetworkError,
+  ComposeSeal and ReplySeal still owe it their own rounds.
+- **Validation timing: on submit, then live only where already
+  marked.** A field only re-validates as the reader types once it
+  already carries an error — an unmarked field stays quiet until the
+  next submit, so typing never produces a field that turns red out of
+  nowhere.
+
+Five boards drawn: `JoinErrors` (Handle taken, Password too short —
+Email untouched), `SignInError` (the form-level fault line),
+`RestoreError` (the recovery-code field), `RecoveryCodeMismatch` (the
+confirm field — `RecoveryCode` grew an `error` pass-through to reach
+it, mirroring `TextField`'s own anatomy, since the component draws its
+own field rather than composing `TextField`), and `ProfileEditError`
+(Display name). Each board's submit control keeps its parent's other
+outcomes and replaces only the gap with a `self` case — the line
+updates in place rather than sending the reader anywhere. Census 114
+→ 109 gaps, 867 → 897 edges; the 56/51/5 flow census is unchanged,
+since no declared flow walks an error path.
+
 ## 14. Index
 
 **Root**
