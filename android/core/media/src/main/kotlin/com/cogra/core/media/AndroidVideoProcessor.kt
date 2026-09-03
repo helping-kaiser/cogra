@@ -159,7 +159,7 @@ class AndroidVideoProcessor(
 
             cont.invokeOnCancellation { transformer.cancel() }
 
-            transformer.start(editedItem(uri, probe), output.path)
+            transformer.start(editedItem(uri, probe, capBytes), output.path)
 
             // Progress is polled rather than pushed: `getProgress` is
             // what Transformer offers, and a clip is long enough that a
@@ -177,33 +177,51 @@ class AndroidVideoProcessor(
     }
 
     /**
-     * The item to export: the clip, scaled down only when it is bigger
-     * than the upload resolution.
+     * The item to export, and — through the effects it does or does not
+     * carry — whether the encoder runs at all.
      *
-     * The condition matters. Any video effect forces a decode-encode
-     * pass, so attaching the scaler unconditionally would re-encode a
-     * clip that is already small enough and lose quality for nothing.
-     * Below the ceiling the effect list stays empty and Transformer
-     * takes its transmux path.
+     * **An empty effect list means Transformer transmuxes**: the video
+     * track is copied through untouched, no encoder is involved, and no
+     * bitrate setting can apply to it. That is exactly right for a clip
+     * that is already small and lean, and exactly wrong for one that is
+     * not — a phone's own 1080p recording has a short side of 1080, so
+     * the scaler never attached and a gigabyte of source came out as a
+     * gigabyte of upload.
+     *
+     * So the question is asked in two parts. Too big on screen? Scale
+     * it, which decodes and re-encodes on the way. Right size but
+     * carrying far more bits than we intend to send? The encoder still
+     * has to run, and only an effect makes it run — so the clip is
+     * "scaled" to the size it already is. That changes no pixel
+     * dimension; what it changes is which path Transformer takes.
      */
-    private fun editedItem(uri: String, probe: Probe): EditedMediaItem {
-        val effects = if (probe.shortSide > MAX_SHORT_SIDE_PX) {
+    private fun editedItem(uri: String, probe: Probe, capBytes: Long): EditedMediaItem {
+        val target = VideoBitrate.forClip(probe.durationMs, capBytes)
+        val effects = when {
             // The short side is the axis to bound: it makes a portrait
             // clip 1080 wide and a landscape one 1080 tall, which is the
             // shape both of the services the ruling names publish at.
-            Effects(
-                /* audioProcessors = */ emptyList(),
-                /* videoEffects = */ listOf(
-                    Presentation.createForShortSide(MAX_SHORT_SIDE_PX),
-                ),
-            )
-        } else {
-            Effects.EMPTY
+            probe.shortSide > MAX_SHORT_SIDE_PX ->
+                videoEffect(Presentation.createForShortSide(MAX_SHORT_SIDE_PX))
+
+            // Already the right shape, but fatter than what we are
+            // sending. An identity presentation is what puts it through
+            // the encoder at the rate we chose.
+            probe.richerThan(target) ->
+                videoEffect(Presentation.createForShortSide(probe.shortSide))
+
+            // Small enough and lean enough: transmux, and lose nothing.
+            else -> Effects.EMPTY
         }
         return EditedMediaItem.Builder(MediaItem.fromUri(uri))
             .setEffects(effects)
             .build()
     }
+
+    private fun videoEffect(presentation: Presentation) = Effects(
+        /* audioProcessors = */ emptyList(),
+        /* videoEffects = */ listOf(presentation),
+    )
 
     override suspend fun coverFrames(uri: String, count: Int): List<VideoFrame> =
         withContext(Dispatchers.IO) {
@@ -252,8 +270,28 @@ class AndroidVideoProcessor(
     }
 
     /** What the header says, before anything is decoded. */
-    private data class Probe(val width: Int, val height: Int, val durationMs: Int) {
+    private data class Probe(
+        val width: Int,
+        val height: Int,
+        val durationMs: Int,
+        /** The container's own average rate, where it states one. */
+        val bitrate: Int?,
+    ) {
         val shortSide: Int get() = minOf(width, height)
+
+        /**
+         * Whether this clip carries more bits than we mean to send.
+         *
+         * Compared against the whole budget — the video rate plus the
+         * audio beside it — because the container's figure covers both.
+         *
+         * **A clip that will not say is treated as too rich.** The cost
+         * of re-encoding something that was already lean is a little
+         * quality; the cost of waving through something that was not is
+         * the fault this exists to fix.
+         */
+        fun richerThan(targetVideoBps: Int): Boolean =
+            bitrate == null || bitrate > targetVideoBps + VideoBitrate.AUDIO_BPS
     }
 
     private fun probe(uri: String): Probe? = read(uri) { reader ->
@@ -276,10 +314,15 @@ class AndroidVideoProcessor(
             .extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)
             ?.toIntOrNull()
             ?: 0
+        // The container's average rate over both tracks — what decides
+        // whether this clip needs re-encoding at all.
+        val bitrate = reader
+            .extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)
+            ?.toIntOrNull()
         if (rotation == 90 || rotation == 270) {
-            Probe(height, width, duration)
+            Probe(height, width, duration, bitrate)
         } else {
-            Probe(width, height, duration)
+            Probe(width, height, duration, bitrate)
         }
     }
 
