@@ -18,7 +18,7 @@ export function Screen() {
     <>
       <DetailHeader items={READER_POST_MENU} />
       <DetailColumn>
-        <PostCard {...MIRA_GALLERY_POST} variant="detail" />
+        <PostCard {...ADA_POST} variant="detail" />
       </DetailColumn>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
 
