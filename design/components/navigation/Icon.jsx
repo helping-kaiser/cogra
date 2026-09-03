@@ -92,10 +92,17 @@ const PATHS = {
   send: ["M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"],
   /* The compose media surfaces' glyphs (media slice, 2026-08-31). */
   close: ["M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"],
-  /* Authoring-side only: a composer's video preview says it is a video and can
-     be played. A READING surface never draws play/pause — presence on screen
-     is the policy there (MediaAttachment). */
+  /* The transport pair. Where a clip is the thing the reader came for — the
+     detail view, the fullscreen viewer — it carries play/pause and a timeline
+     (readme §13, the control ladder). A FEED CARD still draws neither: presence
+     on screen is the policy there, and the one exception is the play disc a
+     suppressed-autoplay card wears, where the device has already said no. */
   play_arrow: ["M8 5v14l11-7z"],
+  pause: ["M6 19h4V5H6v14zm8-14v14h4V5h-4z"],
+  /* Handing a post to the OS share sheet (reel round, 2026-09-03). */
+  share: [
+    "M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z",
+  ],
   /* The avatar's change badge (profile round, 2026-09-01). The official cut
      draws its lens as a <circle>; PATHS holds paths only, so that circle is
      carried as an exact arc path — same geometry, nothing redrawn. */
