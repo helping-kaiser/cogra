@@ -48,6 +48,29 @@ export const DEFAULT_UPSTREAM_PORT = 3001;
 export const UPSTREAM_READY_TIMEOUT_MS = 120_000;
 
 /**
+ * How long one request may take to arrive in full.
+ *
+ * NODE CUTS A SLOW UPLOAD AT FIVE MINUTES by default: `requestTimeout` is
+ * 300000 ms and it measures the WHOLE request, body included, so a large upload
+ * on a slow link is destroyed halfway up with nothing said about why. That is a
+ * second ceiling under Next's own proxy timeout, and the lower of the two is
+ * the one that decides — so this front has to be at least as patient as the
+ * router behind it or raising the router's would change nothing.
+ *
+ * It matches `UPLOAD_PROXY_TIMEOUT_MS` in `next.config.ts` — 100 MiB, the
+ * largest body the contract admits, at roughly 1 Mbit/s. `prod-timeouts.test.ts`
+ * pins the two together so neither can be raised alone.
+ */
+export const REQUEST_TIMEOUT_MS = 900_000;
+
+/**
+ * How long the HEADERS may take. Left at Node's own minute: headers arrive in
+ * one burst at the start of a request, so a slow body is not what this bounds,
+ * and shortening the window an idle connection can hold is worth keeping.
+ */
+export const HEADERS_TIMEOUT_MS = 60_000;
+
+/**
  * The TLS pair from the stamped directory, or null where the machine
  * never stamped one. Null is a refusal rather than a fallback: the whole
  * point of this path is an https origin the phone already trusts, and a
@@ -133,7 +156,7 @@ export function waitForPort(port, host, { timeoutMs = UPSTREAM_READY_TIMEOUT_MS 
  * first would turn every streamed page into a wait for the last byte.
  */
 export function createProxy(credentials, { upstreamPort, upstreamHost }) {
-  return createHttpsServer(credentials, (req, res) => {
+  const server = createHttpsServer(credentials, (req, res) => {
     const upstream = httpRequest(
       {
         host: upstreamHost,
@@ -156,6 +179,12 @@ export function createProxy(credentials, { upstreamPort, upstreamHost }) {
     });
     req.pipe(upstream);
   });
+
+  // Set after construction rather than through the options object: these are
+  // properties of the server, and assigning them is what Node documents.
+  server.requestTimeout = REQUEST_TIMEOUT_MS;
+  server.headersTimeout = HEADERS_TIMEOUT_MS;
+  return server;
 }
 
 function main() {
