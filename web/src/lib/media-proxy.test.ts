@@ -1,19 +1,26 @@
 // @vitest-environment node
 //
-// The proxy layer's two rules, pinned — because both were broken in ways no
-// unit test could have seen and only a phone reported: a part PUT that reached
-// the storage bucket instead of the API, and a long upload cut by a timeout
-// nobody had set.
+// The proxy layer's rules, pinned — because all three were broken in ways no
+// unit test could have seen and only a phone or a direct probe reported: a
+// part PUT that reached the storage bucket instead of the API, a long upload
+// cut by a timeout nobody had set, and — measured 2026-09-03 — a large body
+// that hung inside `next start`'s own rewrite proxy no matter how patient the
+// timeouts were.
 //
 // These are cheap guards over an expensive failure. They cannot prove the
 // routing works end to end — that took a real 90 MiB upload through the real
-// origin — but they fail the moment someone reorders the rewrites or raises one
-// timeout without the other, which is how this would come back.
+// origin — but they fail the moment someone reorders the rewrites, raises one
+// timeout without the other, or routes an upload back through `next start`,
+// which is how each of these came back.
 
 import { describe, expect, it } from "vitest";
 
 import nextConfig, { UPLOAD_PROXY_TIMEOUT_MS } from "../../next.config";
-import { HEADERS_TIMEOUT_MS, REQUEST_TIMEOUT_MS } from "../../scripts/prod.mjs";
+import {
+  HEADERS_TIMEOUT_MS,
+  isDirectApiPath,
+  REQUEST_TIMEOUT_MS,
+} from "../../scripts/prod.mjs";
 
 async function rewrites() {
   const made = await nextConfig.rewrites!();
@@ -77,5 +84,21 @@ describe("the upload timeouts", () => {
 
   it("leaves the headers window short, since a slow BODY is the problem", () => {
     expect(HEADERS_TIMEOUT_MS).toBeLessThan(REQUEST_TIMEOUT_MS);
+  });
+});
+
+describe("the API bypass in scripts/prod.mjs", () => {
+  it.each([
+    ["/graphql", true],
+    ["/media/uploads/x/parts/1", true],
+    ["/media/uploads", true],
+    ["/media/anything-else", false],
+    ["/posts/1", false],
+  ])("routes %s to the API directly: %s", (pathname, expected) => {
+    // No timeout, however generous, saves a body proxied through `next
+    // start`: the rewrites above describe where the router WOULD send these
+    // paths, but a large one never gets there — it goes around the router
+    // entirely, straight from this TLS front to the API.
+    expect(isDirectApiPath(pathname)).toBe(expected);
   });
 });
