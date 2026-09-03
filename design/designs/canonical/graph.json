@@ -992,7 +992,14 @@
     { "from": "ProfileEdit", "via": 3, "kind": "advance", "label": "Display name", "to": [{ "terminal": "self", "case": "edit in place" }] },
     { "from": "ProfileEdit", "via": 4, "kind": "advance", "label": "Bio", "to": [{ "terminal": "self", "case": "edit in place" }] },
     { "from": "ProfileEdit", "via": 5, "kind": "advance", "label": "Website", "to": [{ "terminal": "self", "case": "edit in place" }] },
-    { "from": "ProfileEdit", "via": 6, "kind": "advance", "label": "Save", "to": [{ "board": "ProfileEditSeal" }, { "gap": "field-error states (not boarded)", "case": "an empty name" }] },
+    { "from": "ProfileEdit", "via": 6, "kind": "advance", "label": "Save", "to": [{ "board": "ProfileEditSeal" }, { "board": "ProfileEditError", "case": "an empty name" }] },
+
+    { "from": "ProfileEditError", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "terminal": "back", "case": "to the profile" }] },
+    { "from": "ProfileEditError", "via": 2, "kind": "advance", "label": "Change picture", "to": [{ "board": "AvatarCrop", "case": "the system picker, then the crop — Next returns here; one seal covers everything" }] },
+    { "from": "ProfileEditError", "via": 3, "kind": "advance", "label": "Display name", "to": [{ "terminal": "self", "case": "edit in place" }] },
+    { "from": "ProfileEditError", "via": 4, "kind": "advance", "label": "Bio", "to": [{ "terminal": "self", "case": "edit in place" }] },
+    { "from": "ProfileEditError", "via": 5, "kind": "advance", "label": "Website", "to": [{ "terminal": "self", "case": "edit in place" }] },
+    { "from": "ProfileEditError", "via": 6, "kind": "advance", "label": "Save", "to": [{ "board": "ProfileEditSeal" }, { "terminal": "self", "case": "still failing — the line updates in place" }] },
 
     { "from": "ProfileEditSeal", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ProfileEdit", "case": "one stage back" }] },
     { "from": "ProfileEditSeal", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves — nothing signed" }] },
