@@ -828,7 +828,7 @@
     { "from": "PostDetailVideo", "via": 19, "kind": "advance", "label": "full screen", "to": [{ "board": "ViewerVideo", "case": "the transport's own way into the viewer — the clip tap is the other" }] },
 
     { "from": "ViewerPicture", "via": 1, "kind": "back", "label": "close the viewer (X)", "to": [{ "terminal": "back", "case": "the X, or a swipe down" }] },
-    { "from": "ViewerPicture", "via": 2, "kind": "detour", "label": "the viewer's pager", "to": [{ "terminal": "self", "case": "swipes between the frames — the same set the card pages" }] },
+    { "from": "ViewerPicture", "via": 2, "kind": "detour", "label": "the viewer's pager", "to": [{ "terminal": "self", "case": "swipe — the same set the card pages, the dots reading position" }] },
     { "from": "ViewerPicture", "via": 3, "kind": "back", "label": "backdrop", "to": [{ "terminal": "back", "case": "a tap outside the frame closes it" }] },
 
     { "from": "ViewerVideo", "via": 1, "kind": "back", "label": "close the viewer (X)", "to": [{ "terminal": "back", "case": "the X, or a swipe down" }] },

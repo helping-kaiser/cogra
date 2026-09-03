@@ -1,6 +1,6 @@
 import React from "react";
 import { Icon } from "../navigation/Icon.jsx";
-import { VideoTransport } from "./VideoControls.jsx";
+import { VideoTransport, GESTURE_ZONE } from "./VideoControls.jsx";
 import { useGlobalMute } from "./MediaAttachment.jsx";
 
 /* PROPOSED — the full-media view. Settled 2026-08-26: media in a post is shown
@@ -28,7 +28,10 @@ import { useGlobalMute } from "./MediaAttachment.jsx";
      of a journey — and the swipe is the gesture every full-screen media layer
      is dismissed with.
    · A PICTURE PINCH-ZOOMS, and the gallery's swipe carries over: the set is
-     paged here exactly as it is in the card.
+     paged here exactly as it is in the card, DOTS AND ALL — dots only, no
+     arrows and no "n of m" (item 21's pager ruling). Arrows would be a second
+     vocabulary for a gesture the reader already has, and the count belongs in
+     the accessible name rather than on the frame.
    · A VIDEO TAKES THE FULL TRANSPORT (`VideoTransport`) — play/pause and a real
      timeline — and ROTATING THE DEVICE fills the screen with it. Rotation is
      the device's own gesture, so there is no rotate control to draw.
@@ -80,36 +83,37 @@ export function MediaViewer({
 
   if (!item) return null;
 
-  const arrow = (direction) => (
-    <button
-      type="button"
-      aria-label={direction < 0 ? "Previous" : "Next"}
-      onClick={(event) => {
-        event.stopPropagation();
-        move(current + direction);
-      }}
-      className="cg-state cg-focus"
+  /* THE SET IS READ THE WAY THE CARD READS IT: dots, and the swipe (item 21's
+     pager ruling — dots only, never arrows and never a "1/n" pill). Arrows here
+     would be a second vocabulary for a gesture the reader already has, and the
+     count belongs to the accessible name, not the frame. */
+  const dots = count > 1 && (
+    <div
+      aria-label={`Picture ${current + 1} of ${count}`}
       style={{
         position: "absolute",
-        top: "50%",
-        transform: "translateY(-50%)",
-        [direction < 0 ? "left" : "right"]: "4px",
+        left: 0,
+        right: 0,
+        bottom: `${GESTURE_ZONE}px`,
         zIndex: 3,
-        width: "var(--touch-target-min)",
-        height: "var(--touch-target-min)",
-        display: "grid",
-        placeItems: "center",
-        border: "none",
-        background: "transparent",
-        borderRadius: "var(--radius-full)",
-        color: "#fff",
+        display: "flex",
+        justifyContent: "center",
+        gap: "6px",
         filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))",
-        cursor: "pointer",
-        padding: 0,
       }}
     >
-      <Icon name="arrow_back" style={direction < 0 ? undefined : { transform: "scaleX(-1)" }} />
-    </button>
+      {items.map((item, index) => (
+        <span
+          key={item.src ?? index}
+          style={{
+            width: "6px",
+            height: "6px",
+            borderRadius: "var(--radius-full)",
+            background: index === current ? "#fff" : "rgba(255,255,255,0.42)",
+          }}
+        />
+      ))}
+    </div>
   );
 
   const media =
@@ -148,7 +152,7 @@ export function MediaViewer({
       {/* THE STAGE. Absolutely inset, the frame fitted inside it — so what is
           drawn is bounded by the screen whatever shape the frame is. The
           click-stop keeps a tap ON the media from closing what was just opened. */}
-      <div onClick={(event) => event.stopPropagation()} style={{ position: "absolute", inset: 0 }}>
+      <div className="cg-viewer-stage" onClick={(event) => event.stopPropagation()} style={{ position: "absolute", inset: 0 }}>
         {media}
         {/* The transport is the product's own, not the browser's default set:
             one control vocabulary across the detail view, the stream and here,
@@ -166,10 +170,9 @@ export function MediaViewer({
           />
         )}
       </div>
-      {count > 1 && arrow(-1)}
-      {count > 1 && arrow(1)}
-      {/* The way out, and where in a set the reader is. Top-left, over the
-          frame: the chrome belongs to the surface, not to the picture. */}
+      {dots}
+      {/* The way out. Top-left, over the frame: the chrome belongs to the
+          surface, not to the picture. */}
       <div
         style={{
           position: "absolute",
@@ -203,17 +206,6 @@ export function MediaViewer({
         >
           <Icon name="close" />
         </button>
-        {count > 1 && (
-          <span
-            style={{
-              fontSize: "var(--text-label-large)",
-              color: "#fff",
-              filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))",
-            }}
-          >
-            {current + 1} of {count}
-          </span>
-        )}
       </div>
     </div>
   );
