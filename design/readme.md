@@ -440,9 +440,13 @@ approximate it.
 
 ## 7. Components
 
-The inventory is the source's, not a generic set. Each family below
-exists in `web/src/lib/ui/` (and, unless noted, in Android's
-`core:designsystem` too).
+The inventory is the source's, not a generic set. Most families below
+exist in `web/src/lib/ui/` (and, unless noted, in Android's
+`core:designsystem` too). Where a family is **decided but not yet
+built** in either app — the media family's viewer, transport and rail;
+`ShareButton` — the master is still the design's answer and the apps
+conform to it; §7.1 is for pieces whose semantics are still open, which
+is a different thing from a piece the apps have not reached yet.
 
 | Directory | Components |
 |---|---|
@@ -456,7 +460,8 @@ exists in `web/src/lib/ui/` (and, unless noted, in Android's
 | `components/states/` | `EmptyState`, `LoadingState` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending` |
 | `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `StanceCoachMark`, `SeveranceConfirm` |
-| `components/proposed/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `MediaViewer`, `VideoTransport`, `SeekLine`, `ExplainableNumber` — **not shipped**, see §7.1 |
+| `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `MediaViewer`, `VideoTransport`, `SeekLine`, `PinnedClip`, `ReelRail`, `ReelRailItem`, `ReelCaption` |
+| `components/proposed/` | `ExplainableNumber` — **not shipped**, see §7.1 |
 
 Each has a sibling `.d.ts` (props contract) and `.prompt.md` (what &
 when, plus a usage example). Each directory has one `@dsCard` HTML
@@ -481,9 +486,6 @@ which is what makes a guess expensive.
 
 | Piece | Decided, so built | Open, so absent |
 |---|---|---|
-| `MediaAttachment` / `MediaGallery` / `MediaDisc` | reserved aspect ratio before load; authored, never generated alt text; `surfaceContainerHigh` at the 12px rung; the gallery as a pager at the post's one crop shape, dots only; the 4:5 cap bounding the tile rather than the picture; a clip keeping its own ratio clamped to tall and never letterboxed; a height cap budgeted against worst-case card chrome so a whole post fits above the bottom bar; autoplay muted with one global sticky mute; the cover at rest, and the play disc a suppressed-autoplay card wears | — |
-| `MediaViewer` | the whole surface on black with nothing behind it, its stage positioned rather than flex-sized so the frame is bounded by the screen; never cropped, dismissed with the X, a swipe down or the backdrop; pinch-zoom on a picture and the gallery's swipe kept; the full transport on a clip, and rotation filling the screen; no acts, and no description | — |
-| `VideoTransport` / `SeekLine` | the ladder above the card's sound disc, at the platform player's anatomy: a big centred play/pause flanked by the skips, the bar inset from the bottom edge with elapsed, total and the fullscreen toggle — nothing in the system gesture zone, where a control is a swipe that closes the app. Uniform for every clip; a hairline drag-to-seek in the stream; the chrome auto-hiding and a tap revealing it | — |
 | `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the only figure the product has is the Post Score and its explanation is four screens deep | — |
 | `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and topics outside, naming whose mark it is, one tap revealing everything, content kept mounted so revealing moves nothing — a comment's body replaced by one compact block instead; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | whether a reveal survives leaving and returning to the post; where a words-only post names its source, having no wash to carry the line |
 
@@ -2111,6 +2113,18 @@ item 33, jakob's rulings the same day).
   to people who cannot see the frame, and printed under it it becomes
   a caption its author never wrote. Three ways out — the X, a swipe
   down, and the backdrop.
+- **The round is masters, not markup.** Everything it drew that a second
+  surface could want is in the system: the media family moved into
+  **`components/media/`** and gained `PinnedClip` (the clip above the
+  card, and what the squish morph leaves behind), `ReelRail` /
+  `ReelRailItem` and `ReelCaption` (the stream's chrome), beside
+  `MediaViewer`, `VideoTransport` / `SeekLine`, `MediaDisc` and the
+  shape and ladder rules inside `MediaAttachment`; `ShareButton` rides
+  `PostCard`'s action row. The stream's boards keep only their fixtures
+  — the mock clip and the post it belongs to — and the two over-media
+  dresses (`StanceControl overMedia`, `ExplainableNumber overMedia`)
+  are props on the real controls, so the stream acts through the same
+  pad and the same score element the feed does.
 - **The post detail exists at last, both bodies** — the gallery post's,
   and the video post's with the clip pinned above the card, which is
   why the author chip leads the card there rather than the screen. The
@@ -2157,4 +2171,5 @@ and `iconography.md` for the deeper dives.
 §4, *Imagery*).
 
 **`components/`** — see §7: `core/`, `content/`, `forms/`, `navigation/`,
-`people/`, `states/`, `honesty/`, `stance/`, `proposed/`.
+`compose/`, `media/`, `wallet/`, `people/`, `states/`, `honesty/`,
+`stance/`, `proposed/`.
