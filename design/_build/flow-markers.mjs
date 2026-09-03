@@ -791,6 +791,18 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Create account</button>", tag: "button" },
     { n: 7, find: ">Already have an account? Sign in</button>", tag: "button" },
   ],
+  SignIn: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="signin-email"', tag: "input" },
+    { n: 3, find: 'id="signin-password"', tag: "input" },
+    { n: 4, find: 'aria-label="Show password"', tag: "button" },
+    { n: 5, find: "Don&#x27;t remember this account on this device", tag: "input" },
+    { n: 6, find: ">Sign in</button>", tag: "button" },
+    { n: 7, find: ">Forgot password?</button>", tag: "button" },
+    { n: 8, find: ">New here? Enter your invite</button>", tag: "button" },
+    { n: 9, find: ">Just looking? Browse the feed", tag: "button" },
+    { n: 10, find: ">On Android? Download the app (APK)</button>", tag: "button" },
+  ],
 });
 
 /* The band's Chats affordance (jakob 2026-09-01): CograBand carries it on
