@@ -280,14 +280,22 @@ fun VideoPlayer(
         // a centre-crop, which is what "letterboxing exists nowhere in
         // the product" asks for. A clip the frame's own shape fills it
         // exactly and nothing is cut.
-        PlayerSurface(
-            player = player,
-            modifier = if (videoAspectRatio != null) {
-                Modifier.fillMaxWidth().aspectRatio(videoAspectRatio)
-            } else {
-                Modifier.fillMaxSize()
-            },
-        )
+        // And a surface with no player is not composed at all. A
+        // `SurfaceView` keeps the last frame it was handed until it is
+        // detached, so a host that has just lost the token goes on
+        // showing that frozen frame — at its own geometry, over the
+        // crossfade, beside the arriving host drawing the live one. Two
+        // pictures of the same clip, one stale: the nested box.
+        if (player != null) {
+            PlayerSurface(
+                player = player,
+                modifier = if (videoAspectRatio != null) {
+                    Modifier.fillMaxWidth().aspectRatio(videoAspectRatio)
+                } else {
+                    Modifier.fillMaxSize()
+                },
+            )
+        }
 
         // The poster covers the surface until a frame of this clip
         // exists to show — which is also the state a clip that never
