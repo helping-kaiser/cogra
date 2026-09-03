@@ -32,6 +32,8 @@ const {
   SheetItem,
   SheetTitle,
   TextField,
+  PasswordField,
+  RecoveryCode,
   SearchBar,
   Chip,
   SegmentedFilter,

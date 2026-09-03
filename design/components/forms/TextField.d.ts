@@ -13,6 +13,9 @@ export interface TextFieldProps {
   /** Renders a textarea instead of an input. */
   rows?: number;
   id?: string;
+  /** M3 text-field error state: error outline, error label, error supporting
+   *  text below the field carrying this message verbatim. Always words. */
+  error?: string;
 }
 
 export declare function TextField(props: TextFieldProps): JSX.Element;

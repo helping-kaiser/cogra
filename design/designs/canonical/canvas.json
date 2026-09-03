@@ -173,6 +173,42 @@
       "page": "entry"
     },
     {
+      "file": "JoinErrors.dc.html",
+      "title": "Join · the errors in place",
+      "x": 0,
+      "y": 5204,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "SignInError.dc.html",
+      "title": "Sign in · wrong credentials",
+      "x": 480,
+      "y": 5204,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "RestoreError.dc.html",
+      "title": "Restore · the code doesn't check out",
+      "x": 960,
+      "y": 5204,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "RecoveryCodeMismatch.dc.html",
+      "title": "Recovery code · the mismatch",
+      "x": 1440,
+      "y": 5204,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "ComposePick.dc.html",
       "title": "Compose · pick the body",
       "x": 0,
@@ -924,7 +960,7 @@
       "x": -1580,
       "y": 0,
       "w": 1160,
-      "h": 2852,
+      "h": 3271,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -1005,7 +1041,7 @@
       "x": -2160,
       "y": 0,
       "w": 1740,
-      "h": 1282,
+      "h": 1542,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1041,6 +1077,15 @@
       "title": "Profile edit · what you sign",
       "x": 480,
       "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileEditError.dc.html",
+      "title": "Edit profile · an empty name",
+      "x": 0,
+      "y": 1928,
       "w": 390,
       "h": 844,
       "page": "profile"

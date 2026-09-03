@@ -4,7 +4,14 @@ import React from "react";
    EXTRA-SMALL rung (4px) — Material's text-field corner — with a 1px `outline`
    border and a transparent fill. `mono` dresses codes and identifiers in the
    platform monospace: the one exception to Figtree (design.md §3), a legibility
-   device for strings read character by character. */
+   device for strings read character by character.
+
+   `error` is Material 3's documented text-field error state: the outline and
+   label both switch to `--error`, and a body-small supporting line in
+   `--error` renders below the field carrying the message. The message is
+   always words (direction-by-words) — this component renders it verbatim,
+   no icon. This line is TextField-internal, separate from any screen-level
+   helper span a board already draws under the field. */
 
 export function TextField({
   label,
@@ -17,12 +24,13 @@ export function TextField({
   placeholder,
   rows,
   id,
+  error,
 }) {
   const generated = React.useId();
   const fieldId = id ?? generated;
   const shared = {
     borderRadius: "var(--radius-extra-small)",
-    border: "1px solid var(--border-field)",
+    border: error ? "1px solid var(--error)" : "1px solid var(--border-field)",
     background: "transparent",
     color: "var(--on-surface)",
     padding: rows ? "8px" : "8px 12px",
@@ -44,6 +52,7 @@ export function TextField({
             lineHeight: "var(--text-label-large--line-height)",
             letterSpacing: "var(--text-label-large--letter-spacing)",
             fontWeight: "var(--text-label-large--font-weight)",
+            color: error ? "var(--error)" : undefined,
           }}
         >
           {label}
@@ -81,6 +90,18 @@ export function TextField({
           onChange={(event) => onChange && onChange(event.target.value)}
           style={shared}
         />
+      )}
+      {error && (
+        <span
+          style={{
+            fontSize: "var(--text-body-small)",
+            lineHeight: "var(--text-body-small--line-height)",
+            letterSpacing: "var(--text-body-small--letter-spacing)",
+            color: "var(--error)",
+          }}
+        >
+          {error}
+        </span>
       )}
     </div>
   );
