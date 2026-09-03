@@ -168,7 +168,14 @@ private fun GalleryFrame(
         // device has only a handful. A frame nobody can see draws its
         // poster instead and holds nothing — which is also what the
         // poster is *for*, so the card looks the same either way.
-        if (videoUrl != null && visible > 0f) {
+        //
+        // **The bar is the autoplay bar, not a sliver.** There is one
+        // stage and the surface entering it last is the one that shows,
+        // so a card the reader is not looking at must not enter it at
+        // all: a card showing 8% of itself was taking the decoder off
+        // the card showing all of itself, which left the card being
+        // read wearing its cover for as long as it sat there.
+        if (videoUrl != null && visible >= AUTOPLAY_VISIBLE_FRACTION) {
             VideoPlayer(
                 url = videoUrl,
                 // The poster is the cover asset: what the author chose
