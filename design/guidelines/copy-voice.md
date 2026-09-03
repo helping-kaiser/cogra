@@ -243,6 +243,12 @@ Retry (`UploadErrorLine` with both ways out):
   the line is drawn short because Retry stands beside it and the pair
   would say "try again" twice.
 
+**The cover's own words** — the crop a gallery picture goes through,
+and the way back to it from an edit:
+
+- `The cover takes the video's shape.`
+- `Change the cover`
+
 Two removal marks, never interchangeable: `Removed by its author` —
 "The words and pictures are gone. The post's place in the thread, and
 every response, remain." — and `Removed under the platform's rules` —
