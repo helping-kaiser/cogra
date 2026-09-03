@@ -27,6 +27,7 @@ import com.cogra.network.auth.BearerInterceptor
 import com.cogra.network.repo.AccountRepositoryImpl
 import com.cogra.network.repo.ContentRepositoryImpl
 import com.cogra.network.repo.MediaRepositoryImpl
+import com.cogra.network.repo.PartUploader
 import com.cogra.network.repo.ProfileRepositoryImpl
 import com.cogra.network.repo.OnboardingRepositoryImpl
 import com.cogra.network.repo.SessionRepositoryImpl
@@ -67,6 +68,20 @@ internal object NetworkProvidesModule {
             .serverUrl(endpoint)
             .addHttpInterceptor(BearerInterceptor(tokens))
             .build()
+
+    /**
+     * The resumable upload's part sender.
+     *
+     * It takes the GraphQL endpoint because the part route is served by
+     * the same app — a second origin setting could only ever disagree
+     * with the first.
+     */
+    @Provides
+    @Singleton
+    fun partUploader(
+        tokens: TokenStore,
+        @GraphqlEndpoint endpoint: String,
+    ): PartUploader = PartUploader(tokens, endpoint)
 
     @Provides
     @Singleton

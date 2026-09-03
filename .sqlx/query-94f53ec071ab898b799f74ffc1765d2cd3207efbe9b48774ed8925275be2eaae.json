@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT part_number, content_id, size_bytes\n        FROM media_upload_parts\n        WHERE session_id = $1\n        ORDER BY part_number\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "part_number",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "content_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "size_bytes",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "94f53ec071ab898b799f74ffc1765d2cd3207efbe9b48774ed8925275be2eaae"
+}

@@ -432,3 +432,14 @@ traversal is unrepresentable rather than defended against.
 Readers fetch bytes from the media origin directly, never through
 the API; in development the web dev server proxies `/media/*` to
 it so a phone loads media from the same origin it already trusts.
+
+The trait carries the store's **multipart upload** beside its
+whole-object put, which is what lets a large upload survive a
+dropped connection: the parts live in the store between requests,
+each is independently retryable, and the server keeps only the
+bookkeeping needed to finish the upload later. Assembly is not the
+end of the road — the parts gather at a staging key, and the
+ordinary pipeline then sniffs, strips, probes and digests those
+bytes exactly as it does a single-shot upload's, so how the bytes
+arrived never decides what may be stored
+([api-spec.md](api-spec.md#content-authoring)).

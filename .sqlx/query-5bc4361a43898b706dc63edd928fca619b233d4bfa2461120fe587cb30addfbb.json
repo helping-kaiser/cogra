@@ -1,0 +1,77 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO media_upload_sessions\n            (id, author_id, storage_key, upload_id, declared_bytes,\n             part_size_bytes, part_count, expires_at)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, now() + make_interval(secs => $8))\n        RETURNING id, author_id, storage_key, upload_id, declared_bytes,\n                  part_size_bytes, part_count, media_id, expires_at\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "author_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "storage_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "upload_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "declared_bytes",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "part_size_bytes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "part_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "media_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 8,
+        "name": "expires_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Int8",
+        "Int4",
+        "Int4",
+        "Float8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "5bc4361a43898b706dc63edd928fca619b233d4bfa2461120fe587cb30addfbb"
+}
