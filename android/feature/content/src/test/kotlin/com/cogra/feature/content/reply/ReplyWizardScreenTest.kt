@@ -51,6 +51,7 @@ class ReplyWizardScreenTest {
     private var coverFrames = mutableListOf<Int>()
     private var coverPickers = 0
     private var dismissedRefusals = mutableListOf<Int>()
+    private var retriedUploads = mutableListOf<String>()
     private var keeps = 0
     private var discards = 0
     private var signs = 0
@@ -75,6 +76,7 @@ class ReplyWizardScreenTest {
             onPickCoverFrame = { coverFrames += it },
             onOpenCoverPicker = { coverPickers += 1 },
             onDismissRefusal = { dismissedRefusals += it },
+            onRetryUpload = { retriedUploads += it },
             onKeepWriting = { keeps += 1 },
             onDiscard = { discards += 1 },
             onNext = { nexts += 1 },
@@ -377,7 +379,7 @@ class ReplyWizardScreenTest {
 
         compose.onNodeWithTag("reply_clip").assertIsDisplayed()
         compose.onNodeWithTag("reply_describe_counter").assertIsDisplayed()
-        repeat(3) {
+        repeat(4) {
             compose.onNodeWithTag("reply_cover_frame_$it").assertIsDisplayed()
         }
         compose.onNodeWithTag("reply_cover_picture").assertIsDisplayed()
@@ -483,6 +485,38 @@ class ReplyWizardScreenTest {
         compose.onNodeWithTag("reply_discard_confirm").assertDoesNotExist()
     }
 
+    // -- The clip that didn't upload (`ReplyVideoFailed`) --
+
+    @Test
+    fun aFailedClipOffersRetryBecauseAFaultIsNotAnAnswer() {
+        compose.setContent { Wizard(failedClip()) }
+
+        // A refusal drops Retry; a fault keeps it — the file was fine
+        // and the network wasn't.
+        compose.onNodeWithTag("reply_clip_failed").assertIsDisplayed()
+        compose.onNodeWithText("That video didn't upload.", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Retry", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Remove it", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun theFailedClipKeepsItsFaceAndItsDescription() {
+        // The frames were cut on the device, so they exist whether or
+        // not the bytes ever reached CoGra — choosing one while the clip
+        // retries is not wasted work.
+        compose.setContent { Wizard(failedClip()) }
+
+        compose.onNodeWithTag("reply_describe_counter").assertIsDisplayed()
+        repeat(4) { compose.onNodeWithTag("reply_cover_frame_$it").assertIsDisplayed() }
+    }
+
+    @Test
+    fun theFooterGoesWithTheUploadItDescribed() {
+        // "it uploads while you write" would contradict the error line.
+        compose.setContent { Wizard(failedClip()) }
+        compose.onNodeWithTag("reply_hint").assertDoesNotExist()
+    }
+
     private fun composerWithWords() = ReplyWizardState(
         target = POST_TARGET,
         body = "The third headland light is real.",
@@ -490,10 +524,19 @@ class ReplyWizardScreenTest {
 
     private fun composerWithClip() = composerWithWords().copy(
         picked = listOf(PickedAsset(URI_CLIP, sourceRatio = 1f, durationMs = 18_000)),
-        coverFrames = List(3) {
+        coverFrames = List(4) {
             VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 108, 108))
         },
     )
+
+    /** The same composer with the clip's upload spent (`ReplyVideoFailed`). */
+    private fun failedClip() = composerWithClip().let { state ->
+        state.copy(
+            picked = state.picked.map {
+                it.copy(upload = AssetUpload.Failed("That video didn't upload."))
+            },
+        )
+    }
 
     private fun composerWithPicture() = composerWithWords().copy(
         picked = listOf(PickedAsset(URI_A, sourceRatio = 0.8f, upload = AssetUpload.Done("m1"))),
