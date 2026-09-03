@@ -43,11 +43,17 @@ export function Screen() {
       <MediaDisc label="Back to the feed" glyph="arrow_back" corner="top-left" onClick={() => {}} />
       <MediaDisc label="Turn sound on" glyph="volume_off" corner="top-right" pressed={false} onClick={() => {}} />
 
-      <ReelRail score="7.40" comments={2} />
+      <ReelRail
+        author={{ handle: MIRA.handle, displayName: MIRA.displayName, src: "ava1.jpg" }}
+        score={MIRA_CLIP_POST.score}
+        comments={MIRA_CLIP_POST.comments}
+        bottom={BAND_HEIGHT + 96}
+      />
       <ReelCaption
-        handle="mira"
-        title="The lake, doing nothing, for forty seconds"
-        content="Stood there long enough that the midges found me. Worth it for the last ten seconds, when the far shore goes the colour of the water."
+        handle={MIRA.handle}
+        title={MIRA_CLIP_POST.title}
+        content={MIRA_CLIP_POST.content}
+        bottom={BAND_HEIGHT + 22}
       />
 
       <div style={{ position: "absolute", left: 0, right: 0, bottom: BAND_HEIGHT + 4, zIndex: 3 }}>
