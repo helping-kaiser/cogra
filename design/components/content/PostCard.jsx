@@ -2,7 +2,7 @@ import React from "react";
 import { Card } from "../core/Card.jsx";
 import { ActorChip } from "../people/ActorChip.jsx";
 import { PendingMarker, EditedMarker } from "../honesty/PendingMarker.jsx";
-import { LicenseTerms } from "../forms/LicenseChooser.jsx";
+import { LicenseTerms, LICENSE_MENU_LABEL, LICENSE_MENU_LABEL_SHOWN } from "../forms/LicenseChooser.jsx";
 import { StanceControl } from "../stance/StanceControl.jsx";
 import { ExplainableNumber } from "../proposed/ExplainableNumber.jsx";
 import { MediaGallery } from "../media/MediaAttachment.jsx";
@@ -75,6 +75,7 @@ export function PostCard({
   topics = [],
   references = 0,
   menuItems = [],
+  defaultShowLicense = false,
 }) {
   const detail = variant === "detail";
   // THE SENSITIVE MARK (readme §13): one flag veils the BODY and the
@@ -88,10 +89,12 @@ export function PostCard({
   // thread position, and the stance a reader can still take all survive, because
   // no record leaves the graph and no removal is silent.
   const hasMedia = !redacted && Array.isArray(media) && media.length > 0;
-  // The licence is a term over downstream reuse, checked once in a hundred
+  // The license is a term over downstream reuse, checked once in a hundred
   // readings — so it is not on the initial view. It arrives when asked for, from
-  // the overflow menu, and stays until the reader is done with it.
-  const [showLicense, setShowLicense] = React.useState(false);
+  // the overflow menu, and stays until the reader is done with it. The reveal is
+  // a state of THIS card, never a surface of its own (readme §13, the menus
+  // round); `defaultShowLicense` is how a board draws it unfolded.
+  const [showLicense, setShowLicense] = React.useState(defaultShowLicense);
   // A media post's caption is clamped and openable in place. The SUMMARY title
   // clamps to one line (readme §13's collapse order: the title gives way before
   // media or the affordance row ever shrink); the detail title never clamps.
@@ -101,9 +104,9 @@ export function PostCard({
   // looking at one picture.
   const [viewing, setViewing] = React.useState(null);
 
-  // The licence rode the payload, so a redacted record has none to show.
+  // The license rode the payload, so a redacted record has none to show.
   const items = license && !redacted
-    ? [{ label: showLicense ? "Hide licence" : "Licence terms", onSelect: () => setShowLicense((shown) => !shown) }, ...menuItems]
+    ? [{ label: showLicense ? LICENSE_MENU_LABEL_SHOWN : LICENSE_MENU_LABEL, onSelect: () => setShowLicense((shown) => !shown) }, ...menuItems]
     : menuItems;
 
   const heading = title ? (

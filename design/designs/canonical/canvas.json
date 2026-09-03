@@ -254,6 +254,15 @@
       "page": "compose"
     },
     {
+      "file": "ComposeCited.dc.html",
+      "title": "Compose · details, a reference staged",
+      "x": 2880,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
       "file": "ReferencePicker.dc.html",
       "title": "Cite something",
       "x": 2400,
@@ -398,6 +407,15 @@
       "page": "comments"
     },
     {
+      "file": "CommentMenu.dc.html",
+      "title": "Comment · the menu, over the thread",
+      "x": 1920,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
       "file": "CommentEditActs.dc.html",
       "title": "Edit comment · the acts",
       "x": 1440,
@@ -470,9 +488,18 @@
       "page": "comments"
     },
     {
+      "file": "ReplyCited.dc.html",
+      "title": "Reply · what you sign, a reference staged",
+      "x": 3360,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
       "file": "DiscardConfirm.dc.html",
       "title": "Discard confirm · reply and edit",
-      "x": 3360,
+      "x": 3840,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -481,7 +508,7 @@
     {
       "file": "ReplyVideoFailed.dc.html",
       "title": "Reply · the clip didn't upload",
-      "x": 3840,
+      "x": 4320,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -490,7 +517,7 @@
     {
       "file": "CommentEditVideo.dc.html",
       "title": "Edit comment · a clip",
-      "x": 4320,
+      "x": 4800,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -821,6 +848,24 @@
       "page": "media"
     },
     {
+      "file": "ReaderPostMenu.dc.html",
+      "title": "Post · the reader's menu",
+      "x": 1920,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
+      "file": "PostLicense.dc.html",
+      "title": "Post · the license unfolded",
+      "x": 2400,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
       "file": "PostDetail.dc.html",
       "title": "Post · the detail view",
       "x": 1440,
@@ -966,18 +1011,18 @@
     },
     {
       "file": "MapCompose.dc.html",
-      "x": -2160,
+      "x": -2450,
       "y": 0,
-      "w": 1740,
+      "w": 2030,
       "h": 2346,
       "page": "compose",
       "title": "Compose · flow map"
     },
     {
       "file": "MapComments.dc.html",
-      "x": -3320,
+      "x": -3610,
       "y": 0,
-      "w": 2900,
+      "w": 3190,
       "h": 1490,
       "page": "comments",
       "title": "Comments · flow map"
@@ -1038,9 +1083,9 @@
     },
     {
       "file": "MapProfile.dc.html",
-      "x": -2160,
+      "x": -2450,
       "y": 0,
-      "w": 1740,
+      "w": 2030,
       "h": 1542,
       "page": "profile",
       "title": "Profile · flow map"
@@ -1094,6 +1139,15 @@
       "file": "ProfilePosts.dc.html",
       "title": "Profile · the posts view",
       "x": 1920,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileMenu.dc.html",
+      "title": "Profile · another's menu",
+      "x": 2880,
       "y": 0,
       "w": 390,
       "h": 844,
