@@ -66,7 +66,9 @@ class VideoBitrateTest {
         // Monotonic: a longer clip never gets a more generous rate.
         val rates = listOf(60_000, 120_000, 240_000, 480_000, 960_000)
             .map { VideoBitrate.forClip(it, postCap) }
-        assertThat(rates).isInOrder(compareByDescending { it })
+        rates.zipWithNext().forEach { (shorter, longer) ->
+            assertThat(longer).isAtMost(shorter)
+        }
     }
 
     @Test

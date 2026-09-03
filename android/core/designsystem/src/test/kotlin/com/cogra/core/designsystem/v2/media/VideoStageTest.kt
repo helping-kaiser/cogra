@@ -15,7 +15,9 @@ import org.robolectric.RobolectricTestRunner
  * detail used to build a second player at position zero, so the cover
  * flashed and playback restarted.
  */
-@OptIn(UnstableApi::class)
+// Media3's `UnstableApi` is a lint marker rather than a Kotlin opt-in,
+// so it propagates by being applied here — `@OptIn` has no effect on it.
+@UnstableApi
 @RunWith(RobolectricTestRunner::class)
 class VideoStageTest {
 
