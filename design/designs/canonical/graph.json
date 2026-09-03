@@ -665,7 +665,7 @@
 
     { "from": "ComposeWords", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposePick", "case": "one stage back — the pick" }] },
     { "from": "ComposeWords", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },
-    { "from": "ComposeWords", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ComposeDetails", "case": "the words path skips crop and cover" }] },
+    { "from": "ComposeWords", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ComposeDetails", "case": "the words path skips crop and cover" }, { "board": "ComposeCited", "case": "a reference rides along — details arrives with it staged" }] },
     { "from": "ComposeWords", "via": 4, "kind": "advance", "label": "Add pictures instead", "to": [{ "board": "ComposePick" }] },
     { "from": "ComposeWords", "via": 5, "kind": "advance", "label": "the body", "to": [{ "terminal": "self", "case": "typing" }] },
 
@@ -722,14 +722,14 @@
     { "from": "RemoveMenu", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
 
     { "from": "ReaderPostMenu", "via": 1, "kind": "detour", "label": "License terms", "to": [{ "terminal": "self", "case": "the sheet closes and the terms unfold on the card — the row reads Hide license", "info": true }] },
-    { "from": "ReaderPostMenu", "via": 2, "kind": "advance", "label": "Cite in a new post", "to": [{ "board": "ComposeCited", "case": "the composer opens fresh, this post already staged as a reference" }] },
+    { "from": "ReaderPostMenu", "via": 2, "kind": "advance", "label": "Cite in a new post", "to": [{ "board": "ComposePick", "case": "the post wizard opens fresh at its first stage — this post rides along invisibly until details" }] },
     { "from": "ReaderPostMenu", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
 
     { "from": "CommentMenu", "via": 1, "kind": "detour", "label": "License terms", "to": [{ "terminal": "self", "case": "the sheet closes and the terms unfold on the comment — the row reads Hide license", "info": true }] },
-    { "from": "CommentMenu", "via": 2, "kind": "advance", "label": "Cite in a new post", "to": [{ "board": "ComposeCited", "case": "the composer opens fresh, this comment already staged as a reference" }] },
+    { "from": "CommentMenu", "via": 2, "kind": "advance", "label": "Cite in a new post", "to": [{ "board": "ComposePick", "case": "the post wizard opens fresh at its first stage — this comment rides along invisibly until details" }] },
     { "from": "CommentMenu", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the menu closes — the thread is still open beneath it" }] },
 
-    { "from": "ProfileMenu", "via": 1, "kind": "advance", "label": "Mention in a new post", "to": [{ "board": "ComposeCited", "case": "the composer opens fresh, this person already staged as a reference — mentioning IS citing" }] },
+    { "from": "ProfileMenu", "via": 1, "kind": "advance", "label": "Mention in a new post", "to": [{ "board": "ComposePick", "case": "the post wizard opens fresh at its first stage — this person rides along invisibly until details, mentioning being citing" }] },
     { "from": "ProfileMenu", "via": 2, "kind": "advance", "label": "Share this profile", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
     { "from": "ProfileMenu", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
 
@@ -748,7 +748,7 @@
     { "from": "PostLicense", "via": 13, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "PostLicense", "via": 14, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
 
-    { "from": "ComposeCited", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "terminal": "back", "case": "leaves toward what it was citing — draft kept, the reference with it" }] },
+    { "from": "ComposeCited", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposeWords", "case": "one stage back — the words, the reference still riding" }] },
     { "from": "ComposeCited", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },
     { "from": "ComposeCited", "via": 3, "kind": "advance", "label": "Title", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "ComposeCited", "via": 4, "kind": "advance", "label": "Description", "to": [{ "terminal": "self", "case": "typing" }] },
