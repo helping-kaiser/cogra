@@ -322,9 +322,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
-    { n: 4, find: "let me find something shorter.", tag: "p" },
+    { n: 4, find: "the ones that survived.", tag: "p" },
     { n: 5, find: ">Remove it</button>", tag: "button", all: true },
-    { n: 6, find: "+ Add pictures or a video</button>", tag: "button" },
+    { n: 6, find: "+ Add pictures · 4 of 4</button>", tag: "button" },
+    { n: 7, find: 'aria-label="Remove this picture"', tag: "button", all: true },
+    { n: 8, find: ">Describe the pictures</button>", tag: "button" },
   ],
   ReplyPicturesWeb: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
