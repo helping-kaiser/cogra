@@ -34,7 +34,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
  *
  * Failure surfaces only when a part has spent its whole retry budget.
  */
-internal class PartUploader(
+class PartUploader(
     private val http: OkHttpClient,
     private val tokens: TokenStore,
     private val endpoint: String,
