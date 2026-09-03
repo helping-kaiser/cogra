@@ -24,6 +24,7 @@ fill="none"/>` rect is stripped, per the product's own convention.
 | share.svg | share | handing a post to the OS share sheet |
 | fast-rewind.svg / fast-forward.svg | fast_rewind, fast_forward | the transport's skips, flanking play/pause |
 | fullscreen.svg | fullscreen | the transport's hand-off to the fullscreen viewer |
+| sentiment-neutral.svg | sentiment_neutral | the unset stance anchor on a media surface (its eyes are the official circles as exact arc paths) |
 | close.svg | close | the composer's leave control; the viewer's dismiss |
 | drag-indicator.svg | drag_indicator | the picked tray's reorder handle |
 | lock.svg | lock | a locked field (the edit's licence) |

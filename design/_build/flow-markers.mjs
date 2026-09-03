@@ -641,8 +641,7 @@ Object.assign(FLOW_MARKERS, {
   ],
   ViewerPicture: [
     { n: 1, find: 'aria-label="Close"', tag: "button" },
-    { n: 2, find: 'aria-label="Previous"', tag: "button" },
-    { n: 2, find: 'aria-label="Next"', tag: "button" },
+    { n: 2, find: 'class="cg-viewer-stage"', tag: "div" },
     { n: 3, find: 'role="dialog"', tag: "div" },
   ],
   ViewerVideo: [
