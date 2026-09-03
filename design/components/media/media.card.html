@@ -1,4 +1,4 @@
-<!-- @dsCard group="Proposed" viewport="1000x1000" name="Post media" subtitle="NOT SHIPPED — the media post, full-bleed and dominant, at true ratios with the card's full inventory around it." -->
+<!-- @dsCard group="Media" viewport="1000x1000" name="Post media" subtitle="The media post, full-bleed and dominant, at true ratios with the card's full inventory around it — and the surfaces a clip opens into." -->
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -66,6 +66,13 @@ function Demo(){return (
       <li><b>The sensitive blur treatment</b> (§9): radius, overlay, and whether reveal is per-item or session-sticky. Its <i>granularity</i> is settled — blur only what is marked, one attachment or one field at a time, so a single image in a gallery can blur alone and so can a title or a description.</li>
     </ul>
     <p>Photography here is real, at true ratios, from <code>assets/photos/</code> — mock material, not brand stock.</p>
+    <h3>The surfaces a clip opens into</h3>
+    <ul>
+      <li><b><code>PinnedClip</code></b> — the top of a video post's detail view, and what the stream's squish morph leaves behind: the clip above the card, still playing, carrying the full transport on black. The post goes into <code>PostCard</code> beneath it <i>without</i> its media.</li>
+      <li><b><code>MediaViewer</code></b> — the whole surface on black with nothing behind it, its stage positioned so the frame is bounded by the screen whatever shape it is. Dots for a set (never arrows, never "n of m"), the X top-left, no acts, no description.</li>
+      <li><b><code>VideoTransport</code> / <code>SeekLine</code></b> — the ladder above the card's sound disc, at the platform player's anatomy: centred play/pause flanked by the skips, the bar inset from the bottom edge with elapsed, total and the fullscreen toggle. <b>Nothing touches the bottom edge</b> — the system gesture zone lives there, and a control in it is a swipe that closes the app.</li>
+      <li><b><code>ReelRail</code> / <code>ReelCaption</code></b> — the stream's chrome: the action row turned on its side (author · stance · comments · share · score, the score last because it is the way out) and the post's words in the card's own budget. White at 28px with a shadow, never a token colour and never a plate — on photography "quiet" and "invisible" are the same thing.</li>
+    </ul>
   </div>
 </div>)}
 ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);

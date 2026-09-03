@@ -8,7 +8,7 @@ import { StanceControl } from "../stance/StanceControl.jsx";
 import { OverflowMenu } from "./OverflowMenu.jsx";
 import { Icon, NODE_GLYPHS } from "../navigation/Icon.jsx";
 import { TopicsLine } from "./TopicsLine.jsx";
-import { MediaGallery } from "../proposed/MediaAttachment.jsx";
+import { MediaGallery } from "../media/MediaAttachment.jsx";
 import { SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
 
 /* The comment of design.md §6 — "author, body, timestamp, media, nested replies,
