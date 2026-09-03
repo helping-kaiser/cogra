@@ -20,6 +20,8 @@ fill="none"/>` rect is stripped, per the product's own convention.
 | more-vert.svg | more_vert | the post overflow menu |
 | chat-bubble.svg | chat_bubble | the comments affordance on a card |
 | volume-up.svg / volume-off.svg | volume_up, volume_off | a video's sound toggle |
+| play-arrow.svg / pause.svg | play_arrow, pause | the video transport; the play disc on a suppressed-autoplay card |
+| share.svg | share | handing a post to the OS share sheet |
 | graph-3.svg | graph_3 | the Post Score |
 
 `graph-3.svg` is the one exception: Material **Symbols** only (hence the
