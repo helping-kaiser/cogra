@@ -31,7 +31,7 @@ export function Screen() {
                 src: "comment-clip.mp4",
                 poster: "comment-camera.jpg",
                 ratio: "square",
-                fit: "contain",
+                fit: "cover",
                 alt: "A film camera panning across the headland at low light.",
               },
             ]}
@@ -45,8 +45,8 @@ export function Screen() {
             content="Two from the stand by the sea wall, before the crowd came."
             timestamp="30m"
             media={[
-              { src: "gallery-market.jpg", ratio: "4 / 3", fit: "contain", alt: "Crates of strawberries on a market stand." },
-              { src: "gallery-honey.jpg", ratio: "1 / 1", fit: "contain", alt: "A jar of honey in low sun." },
+              { src: "gallery-market.jpg", ratio: "4 / 3", fit: "cover", alt: "Crates of strawberries on a market stand." },
+              { src: "gallery-honey.jpg", ratio: "1 / 1", fit: "cover", alt: "A jar of honey in low sun." },
             ]}
             edited
             own

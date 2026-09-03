@@ -76,6 +76,7 @@
     { "from": "Main", "via": 16, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletGuest" }] },
     { "from": "Main", "via": 17, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "GuestGate", "case": "signed out" }] },
     { "from": "Main", "via": 18, "kind": "nav", "label": "chats", "to": [{ "board": "GuestGate" }] },
+    { "from": "Main", "via": 19, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
     { "from": "FeedBare", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "FeedBare", "via": 2, "kind": "advance", "label": "Sign in or join", "to": [{ "board": "SignIn" }] },
@@ -95,6 +96,7 @@
     { "from": "FeedBare", "via": 16, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletGuest" }] },
     { "from": "FeedBare", "via": 17, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "GuestGate", "case": "signed out" }] },
     { "from": "FeedBare", "via": 18, "kind": "nav", "label": "chats", "to": [{ "board": "GuestGate" }] },
+    { "from": "FeedBare", "via": 19, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
     { "from": "ApplicantFeed", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "ApplicantFeed", "via": 2, "kind": "advance", "label": "Resend the link", "to": [{ "terminal": "self", "case": "the verification mail goes out again" }] },
@@ -114,6 +116,7 @@
     { "from": "ApplicantFeed", "via": 16, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletApplicant" }] },
     { "from": "ApplicantFeed", "via": 17, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "ProfileApplicant" }] },
     { "from": "ApplicantFeed", "via": 18, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+    { "from": "ApplicantFeed", "via": 19, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
     { "from": "ApplicantWaiting", "via": 1, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
     { "from": "ApplicantWaiting", "via": 2, "kind": "detour", "label": "post overflow ⋮", "to": [{ "gap": "reader's post menu — licence terms / cite (not boarded)" }] },
@@ -130,6 +133,7 @@
     { "from": "ApplicantWaiting", "via": 13, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletApplicant" }] },
     { "from": "ApplicantWaiting", "via": 14, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "ProfileApplicant" }] },
     { "from": "ApplicantWaiting", "via": 15, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+    { "from": "ApplicantWaiting", "via": 16, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
     { "from": "VouchBack", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "VouchBack", "via": 2, "kind": "back", "label": "Not now", "to": [{ "terminal": "self", "case": "the vouch card steps aside" }] },
@@ -149,6 +153,7 @@
     { "from": "VouchBack", "via": 16, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet", "case": "funds already" }, { "board": "WalletEmpty", "case": "still zero" }] },
     { "from": "VouchBack", "via": 17, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "VouchBack", "via": 18, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+    { "from": "VouchBack", "via": 19, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
     { "from": "VouchBackPad", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog" }] },
     { "from": "VouchBackPad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick" }] },
@@ -172,6 +177,7 @@
     { "from": "KeyElsewhere", "via": 15, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletKeyAbsent" }] },
     { "from": "KeyElsewhere", "via": 16, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "KeyElsewhere", "via": 17, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+    { "from": "KeyElsewhere", "via": 18, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
     { "from": "InviteEntry", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back" }] },
     { "from": "InviteEntry", "via": 2, "kind": "advance", "label": "invite link field", "to": [{ "terminal": "self", "case": "typing" }] },
@@ -369,6 +375,7 @@
     { "from": "Feed", "via": 14, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "Feed", "via": 15, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "Feed", "via": 16, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+    { "from": "Feed", "via": 17, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
     { "from": "FeedSheet", "via": 1, "kind": "detour", "label": "? — How the filter works", "to": [{ "board": "HelpDialog", "case": "the filter text" }] },
     { "from": "FeedSheet", "via": 2, "kind": "advance", "label": "filter chips (kinds · forms · also show)", "to": [{ "terminal": "self", "case": "adjusts what the feed admits" }] },
@@ -393,6 +400,7 @@
     { "from": "FeedNarrowed", "via": 14, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "FeedNarrowed", "via": 15, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "FeedNarrowed", "via": 16, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+    { "from": "FeedNarrowed", "via": 17, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
     { "from": "FeedNothing", "via": 1, "kind": "advance", "label": "filter chip (Nothing · showing seen)", "to": [{ "board": "FeedSheet" }] },
     { "from": "FeedNothing", "via": 2, "kind": "advance", "label": "Show posts again", "to": [{ "board": "Feed", "case": "the default restored" }] },
@@ -419,6 +427,7 @@
     { "from": "FeedFar", "via": 14, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "FeedFar", "via": 15, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "FeedFar", "via": 16, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+    { "from": "FeedFar", "via": 17, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
     { "from": "ReplyEntry", "via": 1, "kind": "advance", "label": "comment author chips", "to": [{ "board": "ProfileOther" }] },
     { "from": "ReplyEntry", "via": 2, "kind": "detour", "label": "comment overflow ⋮", "to": [{ "gap": "the comment's menu — cite / licence terms (not boarded)" }] },
@@ -694,6 +703,7 @@
     { "from": "Removed", "via": 8, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "Removed", "via": 9, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "Removed", "via": 10, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+    { "from": "Removed", "via": 11, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
     { "from": "ComposeLanded", "via": 1, "kind": "back", "label": "back — to feed", "to": [{ "board": "Feed" }] },
     { "from": "ComposeLanded", "via": 2, "kind": "advance", "label": "post overflow ⋮", "to": [{ "board": "RemoveMenu", "case": "the own-post sheet" }] },
@@ -708,6 +718,7 @@
     { "from": "ComposeLanded", "via": 11, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "ComposeLanded", "via": 12, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "ComposeLanded", "via": 13, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+    { "from": "ComposeLanded", "via": 14, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
     { "from": "ComposeExpired", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "ComposeExpired", "via": 2, "kind": "back", "label": "Dismiss", "to": [{ "terminal": "self", "case": "the notice leaves — nothing was spent" }] },
@@ -727,6 +738,7 @@
     { "from": "ComposeExpired", "via": 16, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "ComposeExpired", "via": 17, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "ComposeExpired", "via": 18, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+    { "from": "ComposeExpired", "via": 19, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
     { "from": "FeedGallery", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "FeedGallery", "via": 2, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
@@ -743,6 +755,7 @@
     { "from": "FeedGallery", "via": 13, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "FeedGallery", "via": 14, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "FeedGallery", "via": 15, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+    { "from": "FeedGallery", "via": 16, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
     { "from": "FeedCover", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "FeedCover", "via": 2, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
@@ -761,6 +774,7 @@
     { "from": "FeedCover", "via": 15, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "FeedCover", "via": 16, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "FeedCover", "via": 17, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+    { "from": "FeedCover", "via": 18, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
     { "from": "Reel", "via": 1, "kind": "back", "label": "back to the feed", "to": [{ "terminal": "back", "case": "the stream closes on the feed it narrowed" }] },
     { "from": "Reel", "via": 2, "kind": "advance", "label": "video sound", "to": [{ "terminal": "self", "case": "the sticky decision every video shares" }] },
@@ -992,6 +1006,7 @@
     { "from": "ProfilePosts", "via": 18, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "ProfilePosts", "via": 19, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "ProfilePosts", "via": 20, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+    { "from": "ProfilePosts", "via": 21, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
     { "from": "ProfileComments", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to wherever the chip was" }] },
     { "from": "ProfileComments", "via": 2, "kind": "detour", "label": "profile overflow ⋮", "to": [{ "gap": "the profile's menu — mention / share (not boarded)" }] },

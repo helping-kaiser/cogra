@@ -9,14 +9,15 @@ import { Icon } from "../navigation/Icon.jsx";
    worse copy of it that also knows less. So this control has no state, no
    confirmation and no menu: it is the handoff.
 
-   IT RIDES THE AFFORDANCE ROW as a glyph, the way the comment count does, and
-   the row stays one line. It carries no number, because a share count would be
-   a public tally of something the graph does not record.
+   IT RIDES THE ACTION ROW as a glyph, the way the comment count does, and the
+   row stays one line. It carries no number, because a share count would be a
+   public tally of something the graph does not record.
 
-   WHERE IT IS DRAWN: the post's detail view and the stream's rail. Whether a
-   FEED CARD grows one is open (backlog item 33) and deliberately undrawn — the
-   row there is already at its width, and share is the affordance a card can
-   most afford to make one tap further away. */
+   IT IS LAST IN THE ROW, and that is a rule rather than a layout: the row's
+   order — stance, score, comment, share — is its order of importance, and it is
+   also the queue. On a phone too narrow to hold all four, share is the first to
+   move into the ⋮ menu. `PostCard` draws it; `showShare={false}` is for a
+   surface that has none to offer. */
 
 export function ShareButton({ onShare, targetLabel = "this post" }) {
   return (

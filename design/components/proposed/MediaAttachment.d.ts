@@ -3,9 +3,10 @@
  * before load, with optional authored alt text.
  *
  * A PICTURE's ratio vocabulary is the compose crop ruling's — `tall` 4:5,
- * `square` 1:1, `wide` 1.91:1. `tall` is also the CAP, and it bounds the TILE,
- * not the picture: a taller frame is fitted inside it (`fit="contain"`, the
- * default) with the reserved surface showing at the sides, never cut.
+ * `square` 1:1, `wide` 1.91:1. `tall` is also the CAP. Nothing is letterboxed:
+ * a tile is filled (`fit="cover"`, the default), so an uncropped picture — a
+ * comment's — display-crops to its frame, centred, and the whole frame is one
+ * tap away in the viewer. The crop is display-only; the bytes stay uncropped.
  *
  * A CLIP is not cropped by an author, so it keeps its own shape, clamped to
  * tall: `landscape` 16:9 and `square` display true, and anything taller than
@@ -33,7 +34,7 @@ export interface MediaAttachmentProps {
   /** What belongs here, shown while there is no src. */
   label?: string;
   radius?: string;
-  /** "contain" (default) shows the whole frame; "cover" crops. */
+  /** "cover" (default) fills the tile; "contain" fits the frame inside it. */
   fit?: "contain" | "cover";
   /**
    * Defaults to `var(--media-max-height)` — the height that leaves the rest of
