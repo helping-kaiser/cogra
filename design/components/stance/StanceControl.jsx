@@ -254,7 +254,6 @@ export function StanceControl({
             gap: "var(--space-2)",
             borderRadius: "var(--radius-full)",
             border: wide ? "1px solid var(--border-field)" : 0,
-            ...(overMedia ? OVER_MEDIA_ANCHOR : null),
             background: "none",
             padding: "0 12px",
             cursor: "pointer",
@@ -265,6 +264,7 @@ export function StanceControl({
             fontSize: "var(--text-label-large)",
             fontWeight: "var(--text-label-large--font-weight)",
             color: "var(--primary)",
+            ...(overMedia ? OVER_MEDIA_ANCHOR : null),
           }}
         >
           {/* Never a bare word (§8.3): a viewer with no bundle gets a face
