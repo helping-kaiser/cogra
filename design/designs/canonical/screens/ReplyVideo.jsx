@@ -19,7 +19,18 @@
 
    A VIDEO TAKES ONE DESCRIPTION for the whole clip (jakob 2026-09-02) — the
    same counter row a comment's pictures wear, reading the video instead. The
-   cover takes none of its own: it is the video's face, not a second picture. */
+   cover takes none of its own: it is the video's face, not a second picture.
+
+   THE ADD CONTROL IS GONE AND A LINE SAYS WHY (jakob 2026-09-03): "A video is
+   the whole comment. Give it a cover below." An absent control explains
+   nothing on its own, and the reader who came to add a second thing deserves
+   the reason plus what to do next, in the space the control left.
+
+   FOUR FRAMES, NOT THREE (jakob 2026-09-03): 1s, 10%, 50%, 90% of the clip.
+   1s clears the fade-in black that t=0 so often is, and the three ratios
+   spread the rest. On a clip short enough that two samples land on the same
+   frame they collapse and fewer tiles show — offering the same picture twice
+   is a choice that isn't one. */
 
 function CoverRow() {
   const tile =
@@ -39,7 +50,8 @@ function CoverRow() {
       <Raw
         html={`<div style="display: flex; gap: 8px;">
           <div class="cg-cover-frame" style="${tile} outline: 2px solid var(--primary); outline-offset: 1px;"><img src="comment-camera.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></div>
-          <div class="cg-cover-frame" style="${tile} opacity: 0.65;"><img src="comment-camera.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.4);"></div>
+          <div class="cg-cover-frame" style="${tile} opacity: 0.65;"><img src="comment-camera.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.25) translateX(-4%);"></div>
+          <div class="cg-cover-frame" style="${tile} opacity: 0.65;"><img src="comment-camera.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.5);"></div>
           <div class="cg-cover-frame" style="${tile} opacity: 0.65;"><img src="comment-camera.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.8) translateY(6%);"></div>
           <div class="cg-cover-own" style="width: 56px; height: 56px; border-radius: var(--radius-small); border: 1px dashed var(--border-field); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); box-sizing: border-box; flex: none;">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg>
@@ -86,6 +98,10 @@ export function Screen() {
           onRemove={() => {}}
           removeLabel="Remove this video"
         />
+
+        <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
+          A video is the whole comment. Give it a cover below.
+        </p>
 
         <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} />
 
