@@ -22,6 +22,12 @@ fill="none"/>` rect is stripped, per the product's own convention.
 | volume-up.svg / volume-off.svg | volume_up, volume_off | a video's sound toggle |
 | play-arrow.svg / pause.svg | play_arrow, pause | the video transport; the play disc on a suppressed-autoplay card |
 | share.svg | share | handing a post to the OS share sheet |
+| close.svg | close | the composer's leave control; the viewer's dismiss |
+| drag-indicator.svg | drag_indicator | the picked tray's reorder handle |
+| lock.svg | lock | a locked field (the edit's licence) |
+| expand-more.svg / chevron-right.svg | expand_more, chevron_right | a disclosure, and a row that opens |
+| arrow-outward.svg | arrow_outward | the wallet's direction badge (rotated 180° for incoming) |
+| content-copy.svg | content_copy | copying the payout address |
 | graph-3.svg | graph_3 | the Post Score |
 
 `graph-3.svg` is the one exception: Material **Symbols** only (hence the
