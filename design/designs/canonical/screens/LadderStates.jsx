@@ -17,7 +17,7 @@ export function Screen() {
           license={{ attribution: 0.5, provenance: 0.5 }}
           menuItems={CITE_MENU}
         />
-        {/* A redacted record keeps its menu — the licence rode the payload and is
+        {/* A redacted record keeps its menu — the license rode the payload and is
             gone, but the record can still be cited: it never left the graph. */}
         <PostCard author={ADA} content="" timestamp="1w" redacted={{ reason: "author" }} score="15.20" comments={3} menuItems={CITE_MENU} />
         <PostCard author={TOBIAS} content="" timestamp="2w" redacted={{ reason: "illegal" }} score="4.70" comments={1} menuItems={CITE_MENU} />

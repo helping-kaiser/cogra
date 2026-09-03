@@ -379,6 +379,65 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">License terms</button>", tag: "button" },
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
   ],
+  // The menus round: three sheet boards, one per surface the ⋮ opens on. Each
+  // is scanExempt, so only the sheet's own rows and its scrim carry numbers.
+  ReaderPostMenu: [
+    { n: 1, find: ">License terms</button>", tag: "button" },
+    { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // TWO SCRIMS on this board — the thread's and the menu's — and both take the
+  // same number: the edge is "tap outside", and outside the menu is the whole
+  // screen whichever wash the finger lands on.
+  CommentMenu: [
+    { n: 1, find: ">License terms</button>", tag: "button" },
+    { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div", all: true },
+  ],
+  ProfileMenu: [
+    { n: 1, find: ">Mention in a new post</button>", tag: "button" },
+    { n: 2, find: ">Share this profile</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // The detail view with the terms unfolded — PostDetail's own anatomy, so its
+  // numbering is PostDetail's, unchanged.
+  PostLicense: [
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
+    { n: 2, find: 'aria-label="More on this post"', tag: "button" },
+    { n: 3, find: '<a href="/u/', tag: "a" },
+    { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 5, find: 'aria-label="Topics and references"', tag: "button" },
+    { n: 6, find: 'aria-label="Take a stance on this post"', tag: "button" },
+    { n: 6, find: ">Choose your stance</button>", tag: "button" },
+    { n: 7, find: ">Post Score</span>", tag: "button" },
+    { n: 8, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 9, find: 'aria-label="Share this post"', tag: "button" },
+    ...nav(10),
+  ],
+  ComposeCited: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: "<input", tag: "input" },
+    { n: 4, find: "<textarea", tag: "textarea" },
+    { n: 5, find: ">Add a topic</button>", tag: "button" },
+    { n: 6, find: 'aria-label="Remove The long way home', tag: "button" },
+    { n: 7, find: "+ Cite something", tag: "button" },
+    { n: 8, find: ">Next</button>", tag: "button" },
+  ],
+  ComposeDetails: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="Manage the pictures"', tag: "button" },
+    { n: 4, find: "<input", tag: "input" },
+    { n: 5, find: "<textarea", tag: "textarea" },
+    { n: 6, find: "#fieldnotes", tag: "span" },
+    { n: 6, find: "#coastroad", tag: "span" },
+    { n: 7, find: ">Add a topic</button>", tag: "button" },
+    { n: 8, find: 'aria-label="Remove The long way home', tag: "button" },
+    { n: 9, find: "+ Cite something", tag: "button" },
+    { n: 10, find: ">Next</button>", tag: "button" },
+    { n: 11, find: ">Describe the pictures</button>", tag: "button" },
+  ],
   RemoveConfirm: [
     { n: 1, find: ">Remove</button>", tag: "button" },
     { n: 2, find: ">Keep it</button>", tag: "button" },
@@ -535,6 +594,19 @@ Object.assign(FLOW_MARKERS, {
     { n: 10, find: ">Add a topic</button>", tag: "button" },
     { n: 11, find: ">Next</button>", tag: "button" },
   ],
+  ReplyCited: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
+    { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
+    { n: 4, find: "+ Add a topic", tag: "button" },
+    { n: 5, find: "+ Cite something", tag: "button" },
+    { n: 6, find: ">Adjust</button>", tag: "button" },
+    { n: 7, find: ">Change</button>", tag: "button" },
+    { n: 8, find: ">Mark</button>", tag: "button" },
+    { n: 9, find: ">Sign comment</button>", tag: "button" },
+    { n: 10, find: ">Back</button>", tag: "button" },
+    { n: 11, find: 'aria-label="Remove Tide tables', tag: "button" },
+  ],
   ComposeSealUploading: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
@@ -669,7 +741,7 @@ Object.assign(FLOW_MARKERS, {
 // boards lives here (not in BAND_CHATS below) so each list reads complete.
 const ownProfile = () => [
   { n: 1, find: 'aria-label="Chats"', tag: "button" },
-  { n: 2, find: 'aria-label="More — share your profile"', tag: "button" },
+  { n: 2, find: 'aria-label="Share your profile"', tag: "button" },
   { n: 3, find: 'aria-label="Settings"', tag: "button" },
   { n: 4, find: 'aria-label="Change your picture"', tag: "button" },
   { n: 5, find: 'aria-label="Your stances, both directions"', tag: "button" },
