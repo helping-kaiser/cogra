@@ -32,11 +32,7 @@ internal const val COMMENT_VIDEO_MAX_BYTES = 50L * 1024 * 1024
  * What a surface's media costs and what a file over the clip cap is
  * refused as.
  */
-internal data class PickScale(
-    val pictureMaxBytes: Long,
-    val videoMaxBytes: Long,
-    val tooBigVideo: UploadFailure,
-)
+internal data class PickScale(val pictureMaxBytes: Long, val videoMaxBytes: Long, val tooBigVideo: UploadFailure)
 
 internal val POST_SCALE = PickScale(
     pictureMaxBytes = PICTURE_MAX_BYTES,
