@@ -1,6 +1,21 @@
 //! Genesis-bootstrap integration: the fresh run, the both-sides gate, the
 //! idempotent re-run, the crash-repair path, and the unrepairable state
 //! (architecture.md "Genesis bootstrap").
+//!
+//! **Why this suite writes `l1_*` SQL directly** — the one place outside
+//! `l1-standin` that does, and a deliberate exception to CLAUDE.md's SQL
+//! boundary rather than an oversight. What is under test is what the
+//! bootstrap does when the *substrate* is in a state it did not put it
+//! in: a wiped mirror, an act sealed but never approved, an author
+//! sequence occupied by something else. The seam has no operation for
+//! any of that — by design, since a substrate does not offer "forget the
+//! last hour" — so the only way to build those states is to write the
+//! tables. The exception is bounded: it lives in test code, it never
+//! ships, and it goes away with the tables at the swap, when the
+//! bootstrap's crash windows have to be re-tested against whatever the
+//! real Layer 1 offers instead. `l1-standin`'s `table_ownership` test
+//! guards the migration set, which is the copy that outlives the swap;
+//! this file is not in its scope and does not need to be.
 
 use api::bootstrap::{BootstrapError, BootstrapOutcome, GenesisInput, ensure_operator_login, run};
 use api::l1::{L1Boundary, StandInBoundary};
