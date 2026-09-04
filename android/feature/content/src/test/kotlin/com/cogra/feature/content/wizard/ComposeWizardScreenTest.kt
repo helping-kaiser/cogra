@@ -1,6 +1,8 @@
 package com.cogra.feature.content.wizard
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -13,12 +15,23 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.semantics.SemanticsActions
 import com.cogra.core.designsystem.v2.compose.HelpTopic
+import com.cogra.crypto.ActorKey
 import com.cogra.domain.compose.ComposeDraft
+import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
 import com.cogra.domain.media.DeviceMedia
+import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.VideoFrame
+import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.SealingWriteRepository
+import com.cogra.domain.testing.ThrowingContentRepository
+import com.cogra.domain.testing.ThrowingMediaProcessor
+import com.cogra.domain.testing.ThrowingMediaRepository
+import com.cogra.domain.testing.ThrowingReferenceRepository
+import com.cogra.domain.testing.ThrowingVideoProcessor
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -65,6 +78,7 @@ class ComposeWizardScreenTest {
     private fun Wizard(
         state: ComposeWizardState,
         permission: MediaPermission = MediaPermission.Granted(partial = false),
+        onTogglePick: (String) -> Unit = { picked += it },
     ) {
         ComposeWizardScreen(
             state = state,
@@ -76,7 +90,7 @@ class ComposeWizardScreenTest {
             onBodyChange = {},
             onModeChange = { modeChanges += it },
             onOpenPicker = {},
-            onTogglePick = { picked += it },
+            onTogglePick = onTogglePick,
             onShapeChange = {},
             onFrameAsset = {},
             onCropsChanged = {},
@@ -135,6 +149,48 @@ class ComposeWizardScreenTest {
     )
 
     private val words = ComposeWizardState(mode = BodyMode.Words)
+
+    // -- A real ViewModel, for the questions only the wiring answers --
+
+    private val drafts = object : ComposeDraftStore {
+        var held: ComposeDraft? = null
+
+        override suspend fun draft(): ComposeDraft? = held
+
+        override suspend fun save(draft: ComposeDraft) {
+            held = draft
+        }
+
+        override suspend fun clear() {
+            held = null
+        }
+    }
+
+    private val roll = object : DeviceMediaSource {
+        override suspend fun newestMedia(limit: Int): List<DeviceMedia> =
+            listOf(DeviceMedia("a", 1f))
+    }
+
+    private val pictures = object : ThrowingMediaProcessor() {
+        override suspend fun aspectRatio(uri: String): Float? = 1f
+    }
+
+    private fun viewModel(): ComposeWizardViewModel {
+        val actor = ActorKey.generate()
+        return ComposeWizardViewModel(
+            content = ThrowingContentRepository(),
+            references = ThrowingReferenceRepository(),
+            media = ThrowingMediaRepository(),
+            processor = pictures,
+            video = ThrowingVideoProcessor(),
+            deviceMedia = roll,
+            drafts = drafts,
+            signer = WriteSigner(
+                SealingWriteRepository(actor),
+                FakeIdentityStore().apply { seed = actor.seed() },
+            ),
+        )
+    }
 
     // -- The body stage --
 
@@ -348,6 +404,39 @@ class ComposeWizardScreenTest {
         // branch: the question on the table is the draft.
         compose.onNodeWithText("Or start fresh —").assertExists()
         compose.onNodeWithTag("wizard_switch_words").assertDoesNotExist()
+    }
+
+    /**
+     * Taking the caption's own invitation.
+     *
+     * "Or start fresh —" points at the grid, so a picture picked under
+     * the offer answers it. Driven through the real ViewModel rather than
+     * a hand-built state, because the defect was precisely that no
+     * handler recorded the answer: the offer stayed up over the work, the
+     * stage kept the dim the offer puts on it, and Continue was still
+     * there to replace the new pictures with the old draft.
+     */
+    @Test
+    fun pickingAPictureUnderTheOfferAnswersIt() {
+        drafts.held = ComposeDraft(
+            bodyKind = DraftBodyKind.Media,
+            title = "Salt maps",
+            assets = listOf(DraftAsset("old")),
+        )
+        val wizard = viewModel()
+        wizard.start()
+        wizard.onMediaPermissionGranted()
+
+        compose.setContent {
+            val state by wizard.state.collectAsState()
+            Wizard(state, onTogglePick = wizard::onTogglePick)
+        }
+        compose.onNodeWithTag("wizard_draft_offer").assertIsDisplayed()
+
+        compose.onNodeWithTag("wizard_grid_a").performClick()
+
+        compose.onNodeWithTag("wizard_draft_offer").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_pick_next").assertIsEnabled()
     }
 
     // -- The crop stage --
