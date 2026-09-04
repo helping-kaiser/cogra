@@ -782,7 +782,7 @@ impl SweptSecrets {
 ///
 /// The two windows are different because the tables are. A refresh
 /// token's revoked row is what reuse detection recognises a replayed
-/// token by (auth.md "Reuse detection"), so it is kept long enough for
+/// token by (auth.md "Refresh rotation"), so it is kept long enough for
 /// that answer to still be worth giving — 30 days. A reset link and an
 /// email change prove nothing once consumed, so they go on the short
 /// window.
@@ -1104,31 +1104,39 @@ pub async fn mark_reuse_detected(pool: &PgPool, user_id: Uuid) -> Result<(), sql
 
 /// Takes the account's pending reuse-detection mark: returns the
 /// detection time and clears it, so the notice is delivered exactly
-/// once. Lock-then-clear in one transaction — a concurrent taker
-/// blocks on the row lock and re-evaluates the IS NOT NULL predicate
-/// after commit (READ COMMITTED), so it takes nothing.
+/// once. Lock-then-clear in one statement — a concurrent taker blocks
+/// on the row lock and re-evaluates the `IS NOT NULL` predicate against
+/// the committed row (READ COMMITTED), so it takes nothing.
+///
+/// The clear rides a data-modifying `WITH`, which PostgreSQL runs to
+/// completion whether or not the primary query reads its output, and
+/// which cannot see the sibling's effect — so the value returned is the
+/// detection time and not the NULL just written. A plain
+/// `UPDATE … RETURNING reuse_detected_at` would return the new value:
+/// `RETURNING old.column` is PostgreSQL 18, and this runs on 16.
 pub async fn take_reuse_detected(
     pool: &PgPool,
     user_id: Uuid,
 ) -> Result<Option<DateTime<Utc>>, sqlx::Error> {
-    let mut tx = pool.begin().await?;
-    let pending = sqlx::query_scalar!(
-        r#"SELECT reuse_detected_at AS "reuse_detected_at!" FROM user_credentials
-           WHERE actor_id = $1 AND reuse_detected_at IS NOT NULL FOR UPDATE"#,
+    sqlx::query_scalar!(
+        r#"
+        WITH marked AS (
+            SELECT actor_id, reuse_detected_at
+            FROM user_credentials
+            WHERE actor_id = $1 AND reuse_detected_at IS NOT NULL
+            FOR UPDATE
+        ), cleared AS (
+            UPDATE user_credentials c
+            SET reuse_detected_at = NULL
+            FROM marked m
+            WHERE c.actor_id = m.actor_id
+        )
+        SELECT reuse_detected_at AS "reuse_detected_at!" FROM marked
+        "#,
         user_id,
     )
-    .fetch_optional(&mut *tx)
-    .await?;
-    if pending.is_some() {
-        sqlx::query!(
-            "UPDATE user_credentials SET reuse_detected_at = NULL WHERE actor_id = $1",
-            user_id,
-        )
-        .execute(&mut *tx)
-        .await?;
-    }
-    tx.commit().await?;
-    Ok(pending)
+    .fetch_optional(pool)
+    .await
 }
 
 pub async fn create_password_reset(
