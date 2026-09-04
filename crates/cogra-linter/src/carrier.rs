@@ -15,6 +15,32 @@
 //! defined by literal path prefixes, and a walker would bring glob
 //! semantics, ignore-file resolution, and an ordering and symlink policy
 //! this walk has to fix for itself anyway (´dec:lint:refused-dependencies´).
+//!
+//! # The link policy
+//!
+//! The walk crosses a link — POSIX symbolic link or Windows junction, the
+//! same reparse point to `file_type` — only where it stands exactly at a
+//! root the adoption data marks `optional`. This corpus configures two,
+//! the working-note trees, and they are links on every machine that has
+//! them; a link anywhere else contributes neither a source nor a descent.
+//!
+//! The rule is stated rather than emergent because the alternative is not
+//! a policy at all: following whatever a name resolves to means the corpus
+//! is a property of the checkout, not of the repository. The two roots are
+//! the case the adoption data deliberately admits, and `optional` already
+//! carries exactly the fact that makes them safe to name — that they are
+//! links whose absence is legal.
+//!
+//! A crossed root is walked under its LINK path, so a source found through
+//! `tmp_dev` is reported at `tmp_dev/...` and takes the owner that root's
+//! partition rule assigns. The bytes come from the target; the name — the
+//! only thing an owner, an exclusion, or a finding is ever matched against
+//! — is the corpus's own.
+//!
+//! A broken link is still resolved far enough to report it: a dangling
+//! entry is an [`UNREADABLE_SOURCE`] diagnostic wherever it sits, because
+//! refusing to follow a link is a decision and failing to read one is a
+//! defect, and the two must not look alike.
 
 use std::collections::HashSet;
 use std::fs;
@@ -52,7 +78,13 @@ pub struct SourceFile {
     pub language: Option<Language>,
     /// Whether it is a committed generated file.
     pub generated: bool,
-    /// Its bytes.
+    /// Its bytes, where the run has a reader for them.
+    ///
+    /// Empty for a source that carries no language and is not generated:
+    /// no frontend scans it, so it holds no occurrence to locate and no
+    /// register row to compare, and nothing downstream asks. The walk
+    /// therefore does not read it — which is what keeps an uncurated
+    /// directory in the carrier from costing what its largest file costs.
     pub bytes: Vec<u8>,
 }
 
@@ -178,6 +210,19 @@ impl<'a> Walk<'a> {
     /// `file_type` decides what it is, and only a link is resolved further
     /// — measured on this corpus, an extra `metadata` per entry more than
     /// doubled the walk.
+    ///
+    /// With the link policy in the module header, the only links the walk
+    /// crosses are the configured roots themselves, so the cycle the guard
+    /// answers is the narrow one that survives it: two roots resolving to
+    /// one tree, which is walked under the first of their names and not
+    /// again under the second.
+    ///
+    /// The policy is one arm of the match below — a resolved link that does
+    /// not stand at a configured optional root ends its entry there — and
+    /// it sits ahead of the directory arm so that refusing to cross reads
+    /// as the decision it is. A link that does not resolve at all takes the
+    /// `Err` arm instead and is reported, because a broken link is a defect
+    /// and an uncrossed one is not.
     fn descend(
         &self,
         directory: &Path,
@@ -222,8 +267,12 @@ impl<'a> Walk<'a> {
                 }
             });
             match kind {
+                Ok((_, true)) if !self.adoption.partition.is_optional_root(relative) => continue,
                 Ok((kind, linked)) if kind.is_dir() => {
                     self.descend(&path, linked, sources, failures, entered);
+                }
+                Ok(_) if !self.is_read(relative) => {
+                    sources.push(self.source(relative, Vec::new()));
                 }
                 Ok(_) => match fs::read(&path) {
                     Ok(bytes) => sources.push(self.source(relative, bytes)),
@@ -240,6 +289,21 @@ impl<'a> Walk<'a> {
                 )),
             }
         }
+    }
+
+    /// Whether the run has a reader for this source's bytes.
+    ///
+    /// A frontend reads it, or the register freshness check compares it
+    /// byte-exact against what a generator would write. Nothing else
+    /// consumes bytes, so nothing else has to pay for them: an unreadable
+    /// SOURCE here would be an unread file either way, which is why this
+    /// skips the read rather than reporting one.
+    fn is_read(&self, relative: &Path) -> bool {
+        self.adoption
+            .scanned_regions
+            .language_of(relative)
+            .is_some()
+            || self.adoption.carrier.is_generated(relative)
     }
 
     fn source(&self, relative: &Path, bytes: Vec<u8>) -> SourceFile {
