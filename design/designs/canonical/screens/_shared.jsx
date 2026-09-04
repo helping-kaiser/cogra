@@ -49,6 +49,7 @@ const {
   MoneyFigure,
   CgtMark,
   MediaThumb,
+  PickTray,
   PickedRow,
   DescribeCounter,
   PickedSheet,
