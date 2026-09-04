@@ -48,8 +48,28 @@ impl NetStance {
 
 /// Sum-then-clip. `clip` returns the parameters to the master formula's
 /// domain — the range-safety property of layer1-interface.md §11.3.
+///
+/// Two values `clamp` alone leaves outside that domain, both normalised
+/// here so the reference is at least as defensive as the clients that
+/// re-implement it:
+///
+/// - `-0.0` is not a direction. It arises wherever a difference of equals
+///   is negated — on the clients, from a pad whose vertical axis is
+///   inverted — and `-0.0 == 0.0` compares true while the two serialise
+///   differently, so an unnormalised zero travels into a record as a
+///   value of its own.
+/// - `NaN` names no point in the range at all, and `f64::clamp` returns
+///   it unchanged. The origin is the only answer in domain that carries
+///   no direction, so that is what a nonsense parameter folds to. It is a
+///   floor, not a semantic: a sum that reached `NaN` is refused where
+///   sums are assembled ([`BundleSum::severance_cost`]), because there
+///   the answer would be fabricated rather than merely bounded.
 pub fn clip(x: f64) -> f64 {
-    x.clamp(-LIMIT, LIMIT)
+    if x.is_nan() {
+        return 0.0;
+    }
+    let bounded = x.clamp(-LIMIT, LIMIT);
+    if bounded == 0.0 { 0.0 } else { bounded }
 }
 
 impl BundleSum {
@@ -195,6 +215,25 @@ mod tests {
         }
         assert_eq!(sum(f64::INFINITY, 0.0).severance_cost(), 0);
         assert!(sum(f64::NAN, f64::NAN).severance_batch().is_empty());
+    }
+
+    /// The two values `clamp` leaves outside the domain. `is_sign_negative`
+    /// rather than `==`, because `-0.0 == 0.0` is true and would let an
+    /// unnormalised zero pass.
+    ///
+    /// A clip answers with a value in the domain for every input, negative zero and NaN included.
+    /// ´claim:fold:a-clip-answers-in-domain-for-every-input´
+    #[test]
+    fn clip_normalises_negative_zero_and_nan() {
+        assert!(!clip(-0.0).is_sign_negative(), "-0.0 is not a direction");
+        assert!(
+            !sum(0.3, 0.3).project(-0.3, -0.3).p_d.is_sign_negative(),
+            "and neither is a landing that arrived at zero from above"
+        );
+        assert_eq!(clip(f64::NAN), 0.0);
+        assert_eq!(clip(f64::INFINITY), LIMIT);
+        assert_eq!(clip(f64::NEG_INFINITY), -LIMIT);
+        assert!(sum(-0.0, f64::NAN).fold().is_severed());
     }
 
     /// A fold clips into the unit range on both axes, whatever the bundle's sum reached.

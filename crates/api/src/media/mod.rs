@@ -163,6 +163,16 @@ pub const MIN_MULTIPART_PART_BYTES: usize = 5 * 1024 * 1024;
 
 const DEFAULT_UPLOAD_PART_SIZE_BYTES: usize = 8 * 1024 * 1024;
 
+/// Where a client stops sending an upload in one request and opens a
+/// resumable session instead.
+///
+/// One part, deliberately: "below 8 MiB a single-shot `uploadMedia` is
+/// one round trip and resumability buys nothing, while every video and
+/// any still near its cap belongs on this path" (api-spec.md, "Resuming
+/// a large upload"). Both clients switch at this number, and it leaves
+/// here through `client-constants.json` so neither has to restate it.
+pub const RESUMABLE_THRESHOLD_BYTES: usize = DEFAULT_UPLOAD_PART_SIZE_BYTES;
+
 /// A day, the same window an unreferenced asset gets.
 ///
 /// The two are one policy said twice: an upload nobody finished and an

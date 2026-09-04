@@ -78,6 +78,12 @@ class ComposeWizardViewModel @Inject constructor(
     private val _state = MutableStateFlow(ComposeWizardState())
     val state = _state.asStateFlow()
 
+    /**
+     * The only thing this composer and the reply composer differ by in
+     * their media screening (`PickScale.kt`).
+     */
+    private val scale = POST_SCALE
+
     /** One job per picked asset, so a retry cancels only its own. */
     private val uploads = mutableMapOf<String, Job>()
 
@@ -249,29 +255,17 @@ class ComposeWizardViewModel @Inject constructor(
             } else {
                 video.info(uri)
             }
-            // A file the step cannot read is refused where it was
-            // offered rather than accepted and failed later
-            // (`ComposePickedErrors`). The grid's own rows came out of
-            // `MediaStore` and are readable by construction; this is the
-            // system picker's path, and the dropped-in file's.
-            if (clip == null && known == null && processor.aspectRatio(uri) == null) {
-                _state.update {
-                    it.copy(refused = it.refused + RefusedPick(uri = null, reason = UploadFailure.UNREADABLE_FILE))
+            // The shared screening (`PickScale.kt`), at the post's
+            // scale: unreadable or over the still cap is refused where
+            // it was offered rather than accepted and failed later
+            // (`ComposePickedErrors`). A clip is screened after its
+            // transcode instead — see `startVideoUpload`.
+            if (clip == null) {
+                val refusal = screenPicture(uri, processor, scale, knownReadable = known != null)
+                if (refusal != null) {
+                    _state.update { it.copy(refused = it.refused + refusal) }
+                    return@launch
                 }
-                return@launch
-            }
-            // A picture is weighed as it stands. The pipeline downscales
-            // and re-encodes it, so the cap could in principle be judged
-            // on the result instead — but the board weighs the file the
-            // author offered, and a cap nobody can predict is worse than
-            // one they can. A clip is weighed *after* its transcode
-            // instead: see `startVideoUpload`.
-            val size = if (clip == null) processor.sizeBytes(uri) else null
-            if (size != null && size > MAX_PICTURE_BYTES) {
-                _state.update {
-                    it.copy(refused = it.refused + RefusedPick(uri = uri, reason = UploadFailure.PICTURE_TOO_BIG))
-                }
-                return@launch
             }
             val before = _state.value.picked.size
             _state.update {
@@ -409,30 +403,19 @@ class ComposeWizardViewModel @Inject constructor(
     fun onDescriptionChange(value: String) = _state.update { it.copy(description = value) }
 
     /**
-     * The alt text for one asset. It is added to the details step
-     * rather than found on a board: no canonical board carries a place
-     * for it, and shipping a gallery with no way to describe it would
-     * fail the accessibility bar android.md sets from day one. Flagged
-     * as an addition rather than a match.
-     */
-    /**
      * A picture's description, authored in `DescribeSheet`.
      *
-     * Re-describing an asset that already uploaded sends it again: the
-     * description rides `UploadMediaInput` and an asset row is immutable
-     * after upload (D3), so the only way the new words reach the server is
-     * a fresh upload. That happens when the author steps back from the seal
-     * to Details and edits — rare, but silently keeping the old words would
-     * be worse than the extra call.
-     */
-    /**
-     * Describing a picture never touches its upload: the description is
-     * a fact about the placement and rides `AttachmentClaim` at prepare,
-     * so the bytes already on the server are still the right bytes.
+     * It lives on the details step rather than on a board of its own:
+     * no canonical board carries a place for it, and shipping a gallery
+     * with no way to describe it would fail the accessibility bar
+     * android.md sets from day one.
      *
-     * This is the whole reason pictures may go up before the author has
-     * written anything — an upload invalidated by every keystroke could
-     * only ever start at the seal.
+     * Describing a picture never touches its upload — the description
+     * is a fact about the placement and rides `AttachmentClaim` at
+     * prepare, so the bytes already on the server are still the right
+     * bytes. That is the whole reason pictures may go up before the
+     * author has written anything: an upload invalidated by every
+     * keystroke could only ever start at the seal.
      */
     fun onAltTextChange(uri: String, text: String) =
         _state.update { it.withAltText(uri, text) }
@@ -676,19 +659,17 @@ class ComposeWizardViewModel @Inject constructor(
             _state.update { it.copy(coverMediaId = coverId) }
 
             _state.update { it.withUpload(clip.uri, AssetUpload.Transcoding(0)) }
-            val processed = video.transcode(clip.uri, MAX_VIDEO_BYTES) { percent ->
+            val processed = video.transcode(clip.uri, scale.videoMaxBytes) { percent ->
                 _state.update { it.withUpload(clip.uri, AssetUpload.Transcoding(percent)) }
             }
             if (processed == null) {
                 _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.UNREADABLE_VIDEO)) }
                 return@launch
             }
-            // The cap is judged on what would be sent, not on what was
-            // picked: the whole point of re-encoding is that a large
-            // recording usually becomes a small upload, and weighing the
-            // original would refuse posts the ruling means to allow.
-            if (processed.byteCount > MAX_VIDEO_BYTES) {
-                _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.POST_VIDEO_TOO_BIG)) }
+            // The clip's half of the shared screening (`PickScale.kt`),
+            // which is why it runs here rather than at pick time.
+            if (scale.refusesVideo(processed.byteCount)) {
+                _state.update { it.withUpload(clip.uri, AssetUpload.Failed(scale.tooBigVideo)) }
                 runCatching { File(processed.path).delete() }
                 return@launch
             }
@@ -964,12 +945,11 @@ class ComposeWizardViewModel @Inject constructor(
         /** How much of the camera roll the grid offers before the picker. */
         const val DEVICE_MEDIA_PAGE = 300
 
-        /** A still's cap: ten per post, ten mebibytes each (D9). */
-        const val MAX_PICTURE_BYTES = 10L * 1024 * 1024
-
-        /** A clip's cap: the same hundred megabytes a full gallery costs. */
-        const val MAX_VIDEO_BYTES = 100L * 1024 * 1024
-
+        // The caps this surface screens against, named here for the
+        // suite. Both forward to the shared screening (`PickScale.kt`),
+        // where each number is written once for both composers.
+        const val MAX_PICTURE_BYTES = PICTURE_MAX_BYTES
+        const val MAX_VIDEO_BYTES = POST_VIDEO_MAX_BYTES
 
         /** How many frames `ComposeCover` offers — the board draws four. */
         const val COVER_FRAME_COUNT = 4

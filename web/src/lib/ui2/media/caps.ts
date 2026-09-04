@@ -10,6 +10,11 @@
 //
 // Every check in the codebase compares against the MiB constant. Only display
 // goes through `megabytes`.
+//
+// The four byte figures are the SERVER'S, not this app's: `client-constants.json`
+// exports them and `lib/client-constants.test.ts` pins every one of them to it,
+// so a cap that moves on the backend fails here rather than reaching a reader as
+// an upload the composer accepted and the server refused.
 
 /** One still, matching the server's `DEFAULT_MAX_UPLOAD_BYTES`. */
 export const PICTURE_MAX_BYTES = 10 * 1024 * 1024;

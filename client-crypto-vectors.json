@@ -89,6 +89,84 @@
       "value": "array(2)[uint 1, array(1)[text 'x']]"
     }
   ],
+  "families": [
+    {
+      "actId": "act:alice-addr:1:registration",
+      "wireName": "registration"
+    },
+    {
+      "actId": "act:alice-addr:1:publish",
+      "wireName": "publish"
+    },
+    {
+      "actId": "act:alice-addr:1:opinion",
+      "wireName": "opinion"
+    },
+    {
+      "actId": "act:alice-addr:1:affinity",
+      "wireName": "affinity"
+    },
+    {
+      "actId": "act:alice-addr:1:owner",
+      "wireName": "owner"
+    },
+    {
+      "actId": "act:alice-addr:1:join-request",
+      "wireName": "join-request"
+    },
+    {
+      "actId": "act:alice-addr:1:accept",
+      "wireName": "accept"
+    },
+    {
+      "actId": "act:alice-addr:1:ratify",
+      "wireName": "ratify"
+    },
+    {
+      "actId": "act:alice-addr:1:withdraw",
+      "wireName": "withdraw"
+    },
+    {
+      "actId": "act:alice-addr:1:rescind",
+      "wireName": "rescind"
+    },
+    {
+      "actId": "act:alice-addr:1:leave",
+      "wireName": "leave"
+    },
+    {
+      "actId": "act:alice-addr:1:tag",
+      "wireName": "tag"
+    },
+    {
+      "actId": "act:alice-addr:1:review",
+      "wireName": "review"
+    },
+    {
+      "actId": "act:alice-addr:1:bid",
+      "wireName": "bid"
+    },
+    {
+      "actId": "act:alice-addr:1:invitation",
+      "wireName": "invitation"
+    },
+    {
+      "actId": "act:alice-addr:1:de-invite",
+      "wireName": "de-invite"
+    },
+    {
+      "actId": "act:alice-addr:1:send",
+      "wireName": "send"
+    },
+    {
+      "actId": "act:alice-addr:1:reference",
+      "wireName": "reference"
+    },
+    {
+      "actId": "act:alice-addr:1:participant",
+      "wireName": "participant"
+    }
+  ],
   "handshake": {
     "approvalActId": "act:65b60673d6ed884bf01c2c222d82ada0740f29ac:1:opinion",
     "approvalSignatureHex": "7e7cf6c72479c32e2043d0d1901cc06cf092ae12145e74aeb396c891667ca55354ea642748caeddb49382904146c58133f1f7ec92a71f469de429494472c5703",
@@ -118,7 +196,7 @@
         "middle": null,
         "pD": 1.0,
         "pI": -0.25,
-        "seq": 1,
+        "seq": "1",
         "settlementRef": null,
         "target": "prof:bob"
       },
@@ -142,10 +220,154 @@
     "plaintextHex": "8258200102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2001",
     "recoveryCodeBytesHex": "000102030405060708090a0b0c0d0e0f",
     "recoveryCodeDisplay": "000G4-0R40M-30E20-9185G-R38E1W",
+    "recoveryCodeInputs": [
+      {
+        "bytesHex": "000102030405060708090a0b0c0d0e0f",
+        "case": "the display form",
+        "expect": "bytes",
+        "input": "000G4-0R40M-30E20-9185G-R38E1W"
+      },
+      {
+        "bytesHex": "000102030405060708090a0b0c0d0e0f",
+        "case": "lower case",
+        "expect": "bytes",
+        "input": "000g4-0r40m-30e20-9185g-r38e1w"
+      },
+      {
+        "bytesHex": "000102030405060708090a0b0c0d0e0f",
+        "case": "no grouping",
+        "expect": "bytes",
+        "input": "000G40R40M30E209185GR38E1W"
+      },
+      {
+        "bytesHex": "000102030405060708090a0b0c0d0e0f",
+        "case": "spaces for hyphens",
+        "expect": "bytes",
+        "input": "000G4 0R40M 30E20 9185G R38E1W"
+      },
+      {
+        "bytesHex": "000102030405060708090a0b0c0d0e0f",
+        "case": "a non-breaking space",
+        "expect": "bytes",
+        "input": "000G4 0R40M 30E20 9185G R38E1W"
+      },
+      {
+        "bytesHex": "000102030405060708090a0b0c0d0e0f",
+        "case": "an em space",
+        "expect": "bytes",
+        "input": "000G4 0R40M 30E20 9185G R38E1W"
+      },
+      {
+        "bytesHex": "000102030405060708090a0b0c0d0e0f",
+        "case": "a next-line separator",
+        "expect": "bytes",
+        "input": "000G40R40M30E209185GR38E1W"
+      },
+      {
+        "bytesHex": "000102030405060708090a0b0c0d0e0f",
+        "case": "tabs and newlines",
+        "expect": "bytes",
+        "input": "000G4\t\n0R40M\t\n30E20\t\n9185G\t\nR38E1W"
+      },
+      {
+        "bytesHex": "000102030405060708090a0b0c0d0e0f",
+        "case": "a pasted byte-order mark",
+        "expect": "bytes",
+        "input": "﻿000G4-0R40M-30E20-9185G-R38E1W"
+      },
+      {
+        "bytesHex": "000102030405060708090a0b0c0d0e0f",
+        "case": "leading and trailing space",
+        "expect": "bytes",
+        "input": "  000G4-0R40M-30E20-9185G-R38E1W \n"
+      },
+      {
+        "case": "empty",
+        "expect": "length",
+        "input": ""
+      },
+      {
+        "case": "one character short",
+        "expect": "length",
+        "input": "000G40R40M30E209185GR38E1"
+      },
+      {
+        "case": "one character long",
+        "expect": "length",
+        "input": "000G40R40M30E209185GR38E1W0"
+      },
+      {
+        "case": "a unit separator, which Unicode does not call white space",
+        "expect": "character",
+        "input": "000G40R40M30E209185GR38E1\u001c"
+      },
+      {
+        "case": "trailing pad bits set",
+        "expect": "padBits",
+        "input": "000G40R40M30E209185GR38E11"
+      }
+    ],
     "uploadChallengeHex": "7172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f90",
     "uploadProofTagUtf8": "cogra:key-backup-upload:v1",
     "uploadSignatureHex": "d3b6999b2d50c88e8c68c209eae8096484b6334e4696feb0783e235907ea5ca61eb997934e655bf3319415480c1aef52470a6f65f3622f6011805d34af3b6c0c"
   },
+  "rejections": [
+    {
+      "case": "an empty wire frame",
+      "hex": "",
+      "what": "decodeProposal"
+    },
+    {
+      "case": "a proposal frame that is not an array",
+      "hex": "01",
+      "what": "decodeProposal"
+    },
+    {
+      "case": "a proposal frame of the wrong arity",
+      "hex": "820101",
+      "what": "decodeProposal"
+    },
+    {
+      "case": "a proposal frame truncated inside its head",
+      "hex": "9bffff",
+      "what": "decodeProposal"
+    },
+    {
+      "case": "a proposal frame with trailing bytes",
+      "hex": "8401583b8978186163743a616c6963652d616464723a313a6f70696e696f6ef66870726f663a626f62fb3ff0000000000000fbbfd0000000000000f6f680014c68656c6c6f2c20636f6772618000",
+      "what": "decodeProposal"
+    },
+    {
+      "case": "a non-minimal CBOR head",
+      "hex": "98020101",
+      "what": "decodeProposal"
+    },
+    {
+      "case": "an act id with too few parts",
+      "text": "act:alice:1",
+      "what": "parseActId"
+    },
+    {
+      "case": "an act id with an unknown family",
+      "text": "act:alice:1:nonsense",
+      "what": "parseActId"
+    },
+    {
+      "case": "an act id with a signed sequence",
+      "text": "act:alice:+1:opinion",
+      "what": "parseActId"
+    },
+    {
+      "case": "an act id with a non-numeric sequence",
+      "text": "act:alice:x:opinion",
+      "what": "parseActId"
+    },
+    {
+      "case": "an act id whose sequence overflows u64",
+      "text": "act:alice:18446744073709551616:opinion",
+      "what": "parseActId"
+    }
+  ],
   "sha256Tagged": [
     {
       "digestHex": "186a106b1280521c25b4cc2f9d96d525b3ab4dd87c0e609f86c6ee8ac8358dfd",
@@ -178,10 +400,66 @@
       "tagUtf8": "cogra-l1:approval:v1"
     },
     {
-      "case": "small-order public key",
+      "case": "small-order public key 0100000000000000000000000000000000000000000000000000000000000000",
       "msgUtf8": "cogra",
       "publicKeyHex": "0100000000000000000000000000000000000000000000000000000000000000",
-      "refusal": "A and R are small-order points; the signature verifies under the ordinary equation for every message",
+      "refusal": "A is a small-order point; the signature verifies under the ordinary equation for every message",
+      "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "tagUtf8": "cogra-l1:approval:v1"
+    },
+    {
+      "case": "small-order public key 0000000000000000000000000000000000000000000000000000000000000000",
+      "msgUtf8": "cogra",
+      "publicKeyHex": "0000000000000000000000000000000000000000000000000000000000000000",
+      "refusal": "A is a small-order point; the signature verifies under the ordinary equation for every message",
+      "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "tagUtf8": "cogra-l1:approval:v1"
+    },
+    {
+      "case": "small-order public key 0000000000000000000000000000000000000000000000000000000000000080",
+      "msgUtf8": "cogra",
+      "publicKeyHex": "0000000000000000000000000000000000000000000000000000000000000080",
+      "refusal": "A is a small-order point; the signature verifies under the ordinary equation for every message",
+      "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "tagUtf8": "cogra-l1:approval:v1"
+    },
+    {
+      "case": "small-order public key ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
+      "msgUtf8": "cogra",
+      "publicKeyHex": "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
+      "refusal": "A is a small-order point; the signature verifies under the ordinary equation for every message",
+      "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "tagUtf8": "cogra-l1:approval:v1"
+    },
+    {
+      "case": "small-order public key 26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05",
+      "msgUtf8": "cogra",
+      "publicKeyHex": "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05",
+      "refusal": "A is a small-order point; the signature verifies under the ordinary equation for every message",
+      "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "tagUtf8": "cogra-l1:approval:v1"
+    },
+    {
+      "case": "small-order public key 26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc85",
+      "msgUtf8": "cogra",
+      "publicKeyHex": "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc85",
+      "refusal": "A is a small-order point; the signature verifies under the ordinary equation for every message",
+      "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "tagUtf8": "cogra-l1:approval:v1"
+    },
+    {
+      "case": "small-order public key c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a",
+      "msgUtf8": "cogra",
+      "publicKeyHex": "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a",
+      "refusal": "A is a small-order point; the signature verifies under the ordinary equation for every message",
+      "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "tagUtf8": "cogra-l1:approval:v1"
+    },
+    {
+      "case": "small-order public key c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac03fa",
+      "msgUtf8": "cogra",
+      "publicKeyHex": "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac03fa",
+      "refusal": "A is a small-order point; the signature verifies under the ordinary equation for every message",
       "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "tagUtf8": "cogra-l1:approval:v1"
     },
@@ -225,7 +503,7 @@
       "middle": null,
       "pD": 1.0,
       "pI": -0.25,
-      "seq": 1,
+      "seq": "1",
       "settlementRef": null,
       "target": "prof:bob"
     },
@@ -242,10 +520,10 @@
       "middle": "mint:act:alice-addr:3:publish",
       "pD": 0.5,
       "pI": -1.0,
-      "seq": 7,
+      "seq": "7",
       "settlementRef": "act:alice-addr:5:send",
       "target": "name:general"
     }
   ],
-  "version": 1
+  "version": 2
 }

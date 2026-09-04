@@ -40,9 +40,7 @@ mutation CreateInviteLink($input: CreateInviteLinkInput!) {
       id
     }
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
@@ -54,9 +52,7 @@ mutation RevokeInviteLink($input: RevokeInviteLinkInput!) {
       revokedAt
     }
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
@@ -69,9 +65,7 @@ mutation ApproveApplicants($input: ApproveApplicantsInput!) {
       canonicalProposal
     }
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
