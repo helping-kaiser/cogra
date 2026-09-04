@@ -482,6 +482,35 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+// The compose wizard's LEGACY BOARDS, converted (the conformance round): ten
+// boards that were hand-authored `.dc.html` with no source behind them now
+// render from `screens/`, so their inline `data-flow` stamps become markers
+// here. Same numbers, same elements, same edges — only the authorship moved.
+// The seal's three sheet boards are scanExempt; only the sheet layer and its
+// scrim are stamped, and the seal beneath them is inert in those states.
+Object.assign(FLOW_MARKERS, {
+  ComposeWords: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: ">Add pictures instead</button>", tag: "button" },
+    { n: 5, find: "1px solid var(--border-field)", tag: "div" },
+  ],
+  ComposePick: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: ">Write words instead</button>", tag: "button" },
+    { n: 5, find: ">Show all</button>", tag: "button" },
+    { n: 6, find: ">Cover</span>", tag: "div" },
+    { n: 7, find: 'aria-label="Remove this picture"', tag: "button" },
+    { n: 8, find: ">Your photos app</span>", tag: "button" },
+    // Every tile of the roll is the same control repeated — one edge covers
+    // them, the way one edge covers a feed's repeated per-post affordances.
+    { n: 9, find: "position:relative;width:125px", tag: "div", all: true },
+  ],
+});
+
 // The Media page (HelpDialog, the one Patterns board, carries its attributes
 // directly as a hand board).
 Object.assign(FLOW_MARKERS, {
