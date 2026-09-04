@@ -26,6 +26,8 @@ within a phase, order is flexible.
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
 | 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
 | 2a. Profile surface (with slice 2.2) | 3 | **Q35, Q36, Q41** | The profile header's connection count (which fold counts as a connection — answerable now that every passive class rides one stance control), the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without all three. |
+| 2b. Erasure slice | 1 | **Q53** | What a redaction marks — the usage or the asset row. The direction is ruled; what stays open is the carrier for a per-usage mark, the junction tables having no redaction columns today, and what the bytes-are-the-problem case does to an asset's other parents. |
+| 2c. Client hardening | 1 | **Q54** | Semantic verification of the payload envelope — whether a client decodes what it signs instead of comparing served bytes. Interim-crypto-scoped (Q30): the substrate swap may move who composes a payload. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
@@ -171,6 +173,42 @@ the wait proves painful before the substrate swap.
 
 ---
 
+## Q54 — Semantic verification of the payload envelope on clients
+
+**Where it shows up:**
+[android.md "The actor key"](implementation/android.md#the-actor-key--the-device-is-the-signer),
+[web.md "Key custody"](implementation/web.md#key-custody--webcrypto),
+[data-model.md "The payload envelope"](implementation/data-model.md#the-payload-envelope)
+**Status:** open (parked hardening — the interim handshake is stand-in-scoped, Q30)
+
+### Context
+
+The host composes the proposal and the device signs it. The payload
+is the Peer Content Envelope carrying the authored fields — title,
+description, body, the media manifest, the author's sensitive mark.
+Neither client's CBOR codec reads maps or tags, so both hold that
+payload as opaque bytes and check it by equality against the bytes
+they were served.
+
+The approval checks are therefore positional: the returned act is
+the one this device pre-signed, the host seal verifies, and both
+commitments open over the bytes the device holds. A host that
+composed an envelope other than the one the composer submitted
+passes all four.
+
+### The question
+
+Whether a client should verify the envelope semantically — decode it
+and re-derive it from its own composition inputs before pre-signing.
+That costs map and tag reading in two hand-written codecs plus a
+field-by-field re-derivation; the larger alternative inverts
+ownership, with the client building the envelope and the host
+relaying it. The whole interim handshake is stand-in-scoped (Q30),
+and the substrate swap may move who composes a payload, so decide
+before real value rides the handshake rather than now.
+
+---
+
 ## Q35 — The profile connection count: which fold counts
 
 **Where it shows up:**
@@ -261,6 +299,45 @@ traversed nodes serve the landed version — or is the membership
 guarantee the chronicle's whole contract, with settled reading
 left to the content listings? Decide when a real reader wants the
 settled graph through a profile.
+
+---
+
+## Q53 — What a redaction marks: the usage or the asset
+
+**Where it shows up:**
+[erasure.md §1](instances/erasure.md#1-per-content-removal),
+[layers.md §5](primitive/layers.md#5-deletion-policy),
+[data-model.md "Why parents point at attachments"](implementation/data-model.md#why-parents-point-at-attachments)
+**Status:** open (deferred — the erasure slice is unbuilt; the direction below is ruled)
+
+### Context
+
+The read side is built and the write side is not. `redaction_reason`
+and `redacted_at` sit on every version table and on
+`media_attachments`, and the API branches on them at every content
+and media read surface, but no code path sets either column: the
+state the readers handle is one nothing can produce. The gap is the
+erasure slice, which is not scheduled.
+
+The direction is ruled: **a redaction marks the usage, not the
+asset**. The mark belongs on the post or comment version and its
+gallery junction; the asset row and its bytes stay as they are,
+because one asset can sit in several parents and a picture that must
+go from one of them is innocent in the rest. A redacted gallery must
+never leave an image permanently unusable everywhere it was used.
+Asset-level redaction — the tombstone columns `media_attachments`
+already carries — is reserved for the case where the bytes
+themselves are the problem.
+
+### The question
+
+Which row carries a per-usage mark. The junction tables hold no
+redaction columns, and a version row's tombstone blanks the whole
+version, so a single gallery entry cannot be marked today; the
+carrier is a schema decision the slice makes. Beside it: what the
+bytes-are-the-problem case does to an asset's other parents — the
+one case where poisoning every usage is the point, and the one the
+asset row's own tombstone is for.
 
 ---
 
