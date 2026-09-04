@@ -46,12 +46,11 @@ const TRAILER = 0x3b;
 /** Enough to carry the palette and the first frames of any ordinary GIF. */
 export const ANIMATION_SCAN_BYTES = 512 * 1024;
 
+/** `GIF` plus the three version characters — what `sniffGif` needs. */
+const SIGNATURE_BYTES = 6;
+
 function ascii(bytes: Uint8Array, from: number, to: number): string {
   return String.fromCharCode(...bytes.slice(from, to));
-}
-
-export function isGifFile(file: Blob): boolean {
-  return file.type === "image/gif";
 }
 
 /** GIF87a or GIF89a, read from the bytes rather than from the file's name. */
@@ -125,12 +124,23 @@ export function countGifFrames(bytes: Uint8Array, stopAt = 2): number {
 /**
  * Whether the picked file is an animated GIF.
  *
+ * READ FROM THE BYTES, not from `file.type`. Gating the scan on the declared
+ * type reopened the very hole this module exists to close: an animated GIF
+ * arriving as `image/png` — a rename, or an operating system's wrong guess —
+ * never reached the signature check, passed the picker as an ordinary picture,
+ * and came out of the encoder as one silent frame. The scan is already bounded
+ * and answers 0 frames for anything that is not a GIF, so the type test bought
+ * nothing but the hole.
+ *
  * False for a still GIF, for a GIF this scanner could not follow, and for
  * anything that is not a GIF at all — every one of which keeps the behaviour
  * the app already had.
  */
 export async function isAnimatedGif(file: Blob): Promise<boolean> {
-  if (!isGifFile(file)) return false;
+  // The signature first, so a picture that is not a GIF costs six bytes rather
+  // than half a megabyte — this now runs for every picked picture.
+  const signature = new Uint8Array(await file.slice(0, SIGNATURE_BYTES).arrayBuffer());
+  if (!sniffGif(signature)) return false;
   const head = await file.slice(0, ANIMATION_SCAN_BYTES).arrayBuffer();
   return countGifFrames(new Uint8Array(head)) > 1;
 }

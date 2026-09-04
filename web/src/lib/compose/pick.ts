@@ -26,6 +26,7 @@ import {
   megabytes,
 } from "@/lib/ui2/media/caps";
 import { looksLikeMp4 } from "@/lib/ui2/media/video";
+import { newComposeId } from "./ids";
 import type { MediaKind } from "./wizard";
 
 /** One file that did not get in, and the sentence the author reads about it. */
@@ -115,10 +116,8 @@ export async function screenPick(
   const refusals: PickRefusal[] = [];
   const pictures: File[] = [];
   const videos: File[] = [];
-  let sequence = 0;
   const refuse = (file: File, reason: string) => {
-    sequence += 1;
-    refusals.push({ id: `${Date.now()}-${sequence}-${file.name}`, name: file.name, reason });
+    refusals.push({ id: newComposeId(), name: file.name, reason });
   };
 
   for (const file of files) {

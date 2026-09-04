@@ -1,10 +1,16 @@
 "use client";
 
-// The composer, in create and edit mode (post.md §1, §4): create is a
-// genesis Publish carrying the mandatory license declaration; edit
-// (?post=<id>) is the ordinary-role Publish behind the chain head and
-// never shows the immutable license. The backend prepares; this browser
-// signs.
+// The post EDIT form (post.md §4): the ordinary-role Publish behind the chain
+// head, which never shows the immutable license. The backend prepares; this
+// browser signs.
+//
+// It still carries a create half, and NOTHING CAN REACH IT. The only mount is
+// `compose-route.tsx`, which renders the wizard unless `?post=` is present —
+// and this component reads that same parameter to choose its mode, so
+// `editingId === null` cannot occur in the app. The wizard is the creation
+// surface (wizard-view.tsx). Whether the dead half is deleted or made
+// reachable again is a product call, not a cleanup: it is tested behaviour,
+// and most of this file's suite exercises it.
 //
 // Tagging lives here and nowhere else (F3): cards and detail views show
 // read-only chips, and the author changes their tags on the screen where
@@ -23,6 +29,8 @@ import {
   preparePost,
   preparePostEdit,
 } from "@/lib/api/content-api";
+import { hasFieldErrors, partitionFieldErrors } from "@/lib/api/field-errors";
+import { firstRefusalMessage, writeRefusalMessage } from "@/lib/ui/error-messages";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { prepareTag } from "@/lib/api/topics-api";
 import {
@@ -55,22 +63,6 @@ import { SigningPending } from "@/lib/ui/signing-pending";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { TextField } from "@/lib/ui/text-field";
 import { TransportError } from "@/lib/ui/transport-error";
-
-/** Parses a `["tags", i, "name"]`-shaped refusal path down to the index. */
-function tagErrorIndex(field: readonly string[] | null): number | null {
-  return pathIndex(field, "tags");
-}
-
-/** Parses a `["references", i, …]`-shaped refusal path down to the index. */
-function referenceErrorIndex(field: readonly string[] | null): number | null {
-  return pathIndex(field, "references");
-}
-
-function pathIndex(field: readonly string[] | null, head: string): number | null {
-  if (field === null || field.length < 2 || field[0] !== head) return null;
-  const index = Number(field[1]);
-  return Number.isInteger(index) ? index : null;
-}
 
 export function ComposeForm({
   store = identityStore,
@@ -266,23 +258,13 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
       // that exact chip; everything else is the general refusal line.
       // D19: a batch the balance cannot carry is refused WHOLE, before
       // any act is staged, and reads on that same general line.
-      const perTag: Record<number, string> = {};
-      const perReference: Record<number, string> = {};
-      let general: string | null = null;
-      for (const error of prepared.errors) {
-        const tagIndex = tagErrorIndex(error.field);
-        const referenceIndex = referenceErrorIndex(error.field);
-        if (tagIndex !== null) perTag[tagIndex] = error.message;
-        else if (referenceIndex !== null) perReference[referenceIndex] = error.message;
-        else general = general ?? error.message;
-      }
-      setTagErrors(perTag);
-      setReferenceErrors(perReference);
+      const partition = partitionFieldErrors(prepared.errors, (error) =>
+        writeRefusalMessage(error.code),
+      );
+      setTagErrors(partition.perTag);
+      setReferenceErrors(partition.perReference);
       setRefusedMessage(
-        general ??
-          (Object.keys(perTag).length + Object.keys(perReference).length > 0
-            ? null
-            : "The server refused this write."),
+        partition.general ?? (hasFieldErrors(partition) ? null : "The server refused this write."),
       );
       return;
     }
@@ -320,7 +302,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
         return;
       }
       if (prepared.kind === "refused") {
-        general = prepared.errors[0]?.message ?? "The server refused this write.";
+        general = firstRefusalMessage(prepared.errors, "The server refused this write.");
       } else {
         writes.push(...prepared.value.writes);
       }
@@ -346,7 +328,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
         // (F2): nothing was staged, so nothing stays pending. An added
         // tag carries it on its own chip; a withdrawal has no chip left
         // to carry it, so it reads on the general line.
-        const message = prepared.errors[0]?.message ?? "The server refused this write.";
+        const message = firstRefusalMessage(prepared.errors, "The server refused this write.");
         const index =
           change.kind === "tag" ? tags.findIndex((tag) => tag.name === change.tag.name) : -1;
         if (index >= 0) perTag[index] = message;
@@ -384,7 +366,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
         // (F2): nothing was staged, so nothing stays pending. An added
         // reference carries it on its own chip; a withdrawal has no chip
         // left to carry it, so it reads on the general line.
-        const message = prepared.errors[0]?.message ?? "The server refused this write.";
+        const message = firstRefusalMessage(prepared.errors, "The server refused this write.");
         const index =
           change.kind === "reference"
             ? references.findIndex(

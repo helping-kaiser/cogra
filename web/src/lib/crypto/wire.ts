@@ -196,9 +196,6 @@ export function decodePreCommitment(bytes: Uint8Array): PreCommitment {
     d.finish();
     return new PreCommitment(nonce, signature);
   } catch (e) {
-    if (e instanceof CborDecodeError) {
-      throw new WireError(`malformed pre-commitment: ${e.message}`);
-    }
-    throw e;
+    wrapMalformed(e, "pre-commitment");
   }
 }
