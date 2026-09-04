@@ -172,6 +172,26 @@ class ComposeWizardViewModel @Inject constructor(
     }
 
     /**
+     * Authoring is the offer's third answer.
+     *
+     * The board re-words the caption to "Or start fresh —" and points it
+     * at the grid, so picking a picture *is* an answer — and until it was
+     * recorded as one the offer stayed up over the work: the stage went
+     * on wearing the dim the offer puts on it, `draftToWrite` kept
+     * refusing to persist anything, and Continue was still there to
+     * replace the new pictures with the old draft.
+     *
+     * The held draft is not cleared outright: the first write of the
+     * fresh post overwrites the store, which is the same end state
+     * without a destructive call.
+     */
+    private fun settleOffer() {
+        if (_state.value.draftOffer == null) return
+        _state.update { it.copy(draftOffer = null) }
+        armed = true
+    }
+
+    /**
      * Writes what is authored right now, without waiting out the
      * debounce — the lifecycle's `ON_STOP`, which is the last moment the
      * process is guaranteed to still be running.
@@ -282,6 +302,7 @@ class ComposeWizardViewModel @Inject constructor(
                 )
             }
             val after = _state.value.picked.size
+            if (after > before) settleOffer()
             when {
                 // A picture's own ratio is read from its header for the
                 // crop preview; a clip already stated its shape above.
