@@ -551,6 +551,27 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Restore the key</button>", tag: "button" },
     { n: 6, find: ">Keep the draft, restore later</button>", tag: "button" },
   ],
+  ComposeLicense: [
+    { n: 1, find: 'aria-label="License"', tag: "button" },
+    { n: 2, find: 'data-axis="credit"', tag: "label", all: true },
+    { n: 3, find: 'data-axis="record"', tag: "label", all: true },
+    { n: 4, find: ">Done</button>", tag: "button" },
+    { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ComposeSensitive: [
+    { n: 1, find: 'aria-label="Sensitive"', tag: "button" },
+    { n: 2, find: 'role="switch"', tag: "button" },
+    { n: 3, find: "<input", tag: "input" },
+    { n: 4, find: ">Done</button>", tag: "button" },
+    { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ComposePad: [
+    { n: 1, find: 'aria-label="How stances work"', tag: "button" },
+    { n: 2, find: 'aria-label="Stance pad', tag: "div" },
+    { n: 3, find: ">Cancel</button>", tag: "button" },
+    { n: 4, find: ">Set</button>", tag: "button" },
+    { n: 5, find: "background:var(--scrim-wash", tag: "div" },
+  ],
 });
 
 // The Media page (HelpDialog, the one Patterns board, carries its attributes

@@ -25,7 +25,10 @@
     "ComposePickVideo": "a clip owns the body — the gallery grid and the photos-app tile are inert in this state, and the tray's × is the way back to a step that takes picks",
     "ReaderPostMenu": "the reader's sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "CommentMenu": "the comment's sheet covers the thread, which covers the post detail — two sheets deep, and only the top one (and the wash under it) is live",
-    "ProfileMenu": "the profile's sheet covers the page — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live"
+    "ProfileMenu": "the profile's sheet covers the page — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "ComposeLicense": "the license sheet covers the seal — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "ComposeSensitive": "the sensitive sheet covers the seal — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "ComposePad": "the wash covers the seal — its header, facts and sign button are inactive in this state; only the parked pad is live"
   },
   "entries": {
     "Main": "arrival through an invite link — the inviter's borrowed view",
