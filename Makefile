@@ -6,6 +6,17 @@ export
 DOCKER_COMPOSE ?= docker compose -f docker/docker-compose.yml
 CARGO          = cargo
 
+# The bucket the media one-shot provisions, so `wait-media` can probe the
+# postcondition rather than a proxy for it. Same default as compose and
+# .env.example (development.md "Environment Variables").
+MEDIA_BUCKET ?= cogra-media
+
+# How long a readiness wait may take before it fails with a message.
+# Generous against a cold image pull on a slow link; the point is that an
+# unreachable or misconfigured compose runtime ends in an error instead of
+# hanging make forever behind one line of output.
+WAIT_TIMEOUT ?= 300
+
 # The debug APK the web app hands to hotspot guests (development.md
 # "Reaching the web dev server from the phone"): built by android-build,
 # staged into web/public by web-apk, gitignored at the destination.
@@ -16,7 +27,7 @@ WEB_APK_DIR       = web/public/downloads
 # guest APK trusts it so it can talk https to this machine's web origin.
 ANDROID_DEV_CA = android/app/src/devCa/res/raw/cogra_dev_ca.pem
 
-.PHONY: help init up down reset-db migrate wait-media api api-release bootstrap run ci lint lint-corpus regenerate fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-prod web-apk guest-apk web-ci fuzz-interchange fuzz-linter
+.PHONY: help init up down reset-db migrate wait-db wait-media api api-release bootstrap run ci ci-all lint lint-corpus regenerate fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-prod web-apk guest-apk web-ci design-ci fuzz-interchange fuzz-linter
 
 help: ## Show available commands
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -29,7 +40,7 @@ init: ## First-time setup: copy .env, check & install dependencies
 	else \
 		echo ".env already exists, skipping"; \
 	fi
-	@command -v docker >/dev/null 2>&1 || { echo "Error: docker is not installed"; exit 1; }
+	@$(DOCKER_COMPOSE) version >/dev/null 2>&1 || { echo "Error: the configured compose runtime does not answer: $(DOCKER_COMPOSE)"; exit 1; }
 	@command -v cargo >/dev/null 2>&1 || { echo "Error: cargo is not installed (install via https://rustup.rs)"; exit 1; }
 	@if ! command -v sqlx >/dev/null 2>&1; then \
 		echo "Installing sqlx-cli..."; \
@@ -48,8 +59,7 @@ down: ## Stop all services
 reset-db: ## Wipe all data volumes and restart fresh
 	$(DOCKER_COMPOSE) down -v
 	$(DOCKER_COMPOSE) up -d
-	@echo "Waiting for Postgres to be ready..."
-	@until $(DOCKER_COMPOSE) exec -T postgres pg_isready -U $(POSTGRES_USER) > /dev/null 2>&1; do sleep 1; done
+	$(MAKE) wait-db
 	$(MAKE) migrate
 	$(MAKE) wait-media
 	@echo "Done. Databases are clean and migrated."
@@ -57,12 +67,27 @@ reset-db: ## Wipe all data volumes and restart fresh
 migrate: ## Run pending Postgres migrations
 	sqlx migrate run --source migrations --database-url $(DATABASE_URL)
 
-# `mc ready local` is the readiness probe the media image's own compose
-# recipe uses; the bucket is provisioned by the media-init one-shot, so a
-# ready store is a usable store.
-wait-media: ## Block until the media object store answers
-	@echo "Waiting for the media store to be ready..."
-	@until $(DOCKER_COMPOSE) exec -T media mc ready local > /dev/null 2>&1; do sleep 1; done
+wait-db: ## Block until Postgres accepts connections
+	@echo "Waiting for Postgres to be ready..."
+	@deadline=$$(( $$(date +%s) + $(WAIT_TIMEOUT) )); \
+	until $(DOCKER_COMPOSE) exec -T postgres pg_isready -U $(POSTGRES_USER) > /dev/null 2>&1; do \
+		[ $$(date +%s) -lt $$deadline ] || { echo "Error: Postgres was not ready within $(WAIT_TIMEOUT)s — see 'make logs'"; exit 1; }; \
+		sleep 1; \
+	done
+
+# The postcondition, not a proxy for it: `mc stat` on the bucket succeeds
+# only after the media-init one-shot both created it and opened anonymous
+# download on it, which is the whole of what provisioning does. Waiting on
+# the SERVER instead let `make dev` start the API in the window between a
+# ready store and a provisioned one — widest right after `reset-db`, which
+# destroys the volume and guarantees the one-shot has real work to do.
+wait-media: ## Block until the media object store has its bucket
+	@echo "Waiting for the media store's bucket to be provisioned..."
+	@deadline=$$(( $$(date +%s) + $(WAIT_TIMEOUT) )); \
+	until $(DOCKER_COMPOSE) exec -T media mc stat local/$(MEDIA_BUCKET) > /dev/null 2>&1; do \
+		[ $$(date +%s) -lt $$deadline ] || { echo "Error: the bucket $(MEDIA_BUCKET) was not provisioned within $(WAIT_TIMEOUT)s — see 'make logs' for the media-init one-shot"; exit 1; }; \
+		sleep 1; \
+	done
 
 api: ## Start the API server
 	$(CARGO) run -p api
@@ -70,12 +95,16 @@ api: ## Start the API server
 api-release: ## Start the API server (optimized build; realistic auth/crypto latency)
 	$(CARGO) run --release -p api
 
+# A target directory of this checkout's own. On /mnt/c or /mnt/d worktrees
+# cargo's mtime-based fingerprints can be reused across worktrees that share
+# one target dir, silently exporting stale SDL from another checkout's binary
+# while reporting green. Giving the export its own directory removes the
+# sharing that causes it, where forcing a full rebuild every time treated the
+# symptom and charged every machine for a hazard only worktrees have.
+SCHEMA_TARGET_DIR ?= target/schema
+
 schema: ## Regenerate schema.graphql (the frontend contract) from the Rust schema
-	# Force a fresh build: on /mnt/c worktrees, cargo's mtime-based
-	# fingerprints can be reused across worktrees sharing a target dir,
-	# silently exporting stale SDL from an old binary while reporting green.
-	find crates -name '*.rs' -exec touch {} +
-	$(CARGO) run -p api --bin export-schema > schema.graphql
+	CARGO_TARGET_DIR=$(SCHEMA_TARGET_DIR) $(CARGO) run -p api --bin export-schema > schema.graphql
 
 vectors: ## Regenerate client-crypto-vectors.json (the client crypto contract) from common
 	UPDATE_CLIENT_VECTORS=1 $(CARGO) test -p common --test client_vectors
@@ -90,20 +119,24 @@ sqlx-check: ## Verify .sqlx/ matches the queries against the live schema (needs 
 	$(CARGO) sqlx prepare --workspace --check --database-url $(DATABASE_URL)
 
 bootstrap: up ## One-time instance setup: seed genesis and land the L1 genesis records
-	@echo "Waiting for Postgres to be ready..."
-	@until $(DOCKER_COMPOSE) exec -T postgres pg_isready -U $(POSTGRES_USER) > /dev/null 2>&1; do sleep 1; done
+	$(MAKE) wait-db
 	$(CARGO) run -p api --bin bootstrap
 
 dev: up ## Start DBs, run migrations, then start the API
-	@echo "Waiting for Postgres to be ready..."
-	@until $(DOCKER_COMPOSE) exec -T postgres pg_isready -U $(POSTGRES_USER) > /dev/null 2>&1; do sleep 1; done
+	$(MAKE) wait-db
 	$(MAKE) migrate
 	$(MAKE) wait-media
 	$(MAKE) api
 
 run: init dev ## Full start: init + dev (first-time friendly)
 
-ci: lint lint-corpus sqlx-check test docs-link-check ## Run full CI pipeline locally (lint + corpus lint + sqlx metadata check + test + docs)
+ci: lint lint-corpus sqlx-check test docs-link-check ## Run the Rust gates locally: lint + corpus lint + sqlx metadata check + test + docs links
+
+# Every gate ci.yml has. Kept separate from `ci` because the client and
+# design jobs need toolchains the Rust ones do not — a JDK pair and the
+# Android SDK, and Node — and because ci.yml gates each of them on its own
+# tree changing, so a backend-only change pays for none of them.
+ci-all: ci android-ci web-ci design-ci ## Run every gate ci.yml has, clients and design included
 
 lint: ## Run clippy and fmt check (read-only, matches CI)
 	$(CARGO) fmt --all -- --check
@@ -127,9 +160,14 @@ fmt: ## Format all code
 test: ## Run all tests
 	$(CARGO) test --all
 
+# One input glob and nothing else: every flag, and the exclusions, live in
+# lychee.toml, which lychee reads by default and docs-ci.yml therefore reads
+# too. The glob is recursive because the gate fires on '**/*.md' — a check
+# whose trigger is wider than its coverage goes green having examined
+# nothing relevant to the change.
 docs-link-check: ## Check markdown link targets + anchors (mirrors docs-ci.yml; needs lychee)
 	@command -v lychee >/dev/null 2>&1 || { echo "Error: lychee not found (cargo install lychee)"; exit 1; }
-	lychee --offline --include-fragments --no-progress 'docs/**/*.md' '*.md' 'android/*.md' 'web/*.md'
+	lychee '**/*.md'
 
 build: ## Build all crates
 	$(CARGO) build --all
@@ -144,14 +182,26 @@ build: ## Build all crates
 FUZZ_CARGO ?= cargo +nightly
 FUZZ_TIME  ?= 60
 
-fuzz-interchange: ## Run the cogra-interchange fuzz targets (needs nightly + cargo-fuzz; not a CI gate)
+fuzz-interchange: ## Run the cogra-interchange fuzz targets (needs nightly + cargo-fuzz + python3; not a CI gate)
 	@command -v cargo-fuzz >/dev/null 2>&1 || { echo "Error: cargo-fuzz not found (cargo install cargo-fuzz; needs a nightly toolchain)"; exit 1; }
+	@command -v python3 >/dev/null 2>&1 || { echo "Error: python3 not found (fuzz/seed.sh expands the RFC 8949 vectors with it)"; exit 1; }
 	cd crates/cogra-interchange && bash fuzz/seed.sh
 	cd crates/cogra-interchange && $(FUZZ_CARGO) fuzz run decode_canonical -- -max_total_time=$(FUZZ_TIME) -timeout=10
 	cd crates/cogra-interchange && $(FUZZ_CARGO) fuzz run accept_document -- -max_total_time=$(FUZZ_TIME) -timeout=10
 	@echo "cddl_parse is expected to end in a timeout on the recorded parser-DoS:"
-	cd crates/cogra-interchange && $(FUZZ_CARGO) fuzz run cddl_parse -- -max_total_time=$(FUZZ_TIME) -timeout=10 \
-		|| echo "cddl_parse ended in a libfuzzer timeout (expected: the recorded parser-DoS)"
+	@log=$$(mktemp); \
+	( cd crates/cogra-interchange && $(FUZZ_CARGO) fuzz run cddl_parse -- -max_total_time=$(FUZZ_TIME) -timeout=10 2>&1; \
+		echo $$? > "$$log.status" ) | tee "$$log"; \
+	status=$$(cat "$$log.status"); \
+	if [ "$$status" = 0 ]; then \
+		rm -f "$$log" "$$log.status"; \
+	elif grep -q 'ERROR: libFuzzer: timeout' "$$log"; then \
+		echo "cddl_parse ended in the expected libfuzzer timeout (the recorded parser-DoS)"; \
+		rm -f "$$log" "$$log.status"; \
+	else \
+		echo "cddl_parse failed and it was NOT the expected timeout — a crash, a sanitizer report, an OOM or a leak; inspect the output above"; \
+		rm -f "$$log" "$$log.status"; exit 1; \
+	fi
 
 # The linter's audit-phase fuzz lane (crates/cogra-linter/docs/design.md
 # preview:lint:fuzz-plan). The toolchain rule is fuzz-interchange's: nightly
@@ -178,10 +228,25 @@ android-build: ## Assemble the debug APK (./gradlew :app:assembleDebug)
 android-lint: ## Run Android lint (./gradlew lint; not a CI gate, convenience only)
 	cd android && ./gradlew lint
 
+# Without the pair, the web scripts fall back to a certificate Next
+# generates for `localhost` alone: the server starts, says nothing, and the
+# LAN and hotspot routes stop working. A note rather than a refusal —
+# localhost is a secure context on its own and is a legitimate way to work
+# (development.md "Reaching the web dev server from the phone").
+WEB_CERT     = web/certificates/localhost.pem
+WEB_CERT_KEY = web/certificates/localhost-key.pem
+
+define check_web_cert
+	@[ -f $(WEB_CERT) ] && [ -f $(WEB_CERT_KEY) ] || \
+		echo "Note: no certificate at web/certificates — Next will issue one for localhost only, so phones on the LAN or the hotspot will not reach this server (run scripts/stamp-net.sh)"
+endef
+
 web-dev: ## Start the web app dev server (needs Node from web/.nvmrc)
+	$(call check_web_cert)
 	cd web && npm run dev
 
 web-prod: ## Build the web app and serve it over https — the hand-test path (development.md)
+	$(call check_web_cert)
 	cd web && npm run codegen && npm run build && npm run prod
 
 web-apk: ## Stage the Android debug APK where the web app serves it (run make android-build first)
@@ -209,6 +274,18 @@ guest-apk: ## Build the debug APK for a guest's phone against this machine's dev
 
 web-ci: ## Run the web CI checks (mirrors the web job in ci.yml)
 	cd web && npm ci && npm run codegen && npm run lint && npm test && npm run build
+
+# The four stages in ci.yml's order, then the same diff: the rendered
+# artboards are committed, so a re-render that changes anything means the
+# working tree ships stale design. `--intent-to-add` first, so a newly
+# generated file that was never committed reds as a diff instead of passing
+# as untracked — the workflow's own reason, kept here because this target
+# exists to make that gate reproducible before a push.
+design-ci: ## Render the design tree and check the committed outputs are current (mirrors the design job in ci.yml; needs Node 24)
+	cd design/_build && npm ci
+	cd design/_build && node bundle.mjs && node render-screens.mjs && node gen-maps.mjs && node check-flows.mjs
+	git add --intent-to-add -- design
+	git diff --exit-code -- design
 
 logs: ## Follow docker compose logs
 	$(DOCKER_COMPOSE) logs -f
