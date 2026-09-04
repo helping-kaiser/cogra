@@ -8,7 +8,7 @@
 <style>body{padding:16px}.row{display:flex;gap:24px;align-items:flex-start}.col{display:flex;flex-direction:column;gap:10px;width:360px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { MediaThumb, PickTray, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, CropViewport, CoverRow, UploadStatusLine, UploadErrorLine, ActsCard, ActsFooter, SealFooter, WizardHeader, Button, HelpDot } = window.CoGraDesignSystem_9084ba;
+const { MediaThumb, PickTray, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, CropViewport, CoverRow, UploadStatusLine, UploadErrorLine, ActsCard, ActsFooter, SealFooter, TopicRemovable, StagedReference, RefusedFile, WizardHeader, Button, HelpDot } = window.CoGraDesignSystem_9084ba;
 const P = "../../assets/photos/";
 
 function Demo(){return (
@@ -42,6 +42,17 @@ function Demo(){return (
     <DescribeCounter described={1} total={3} onDescribe={()=>{}}/>
     <span className="lbl">UploadStatusLine — the seal's gate: the sign button is disabled while it shows</span>
     <UploadStatusLine done={2} total={4}/>
+    <span className="lbl">TopicRemovable — a piece of the thing being authored, not a Chip</span>
+    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+      <TopicRemovable topic="fieldnotes"/>
+      <TopicRemovable topic="coastroad"/>
+      <Button variant="outline" size="sm">Add a topic</Button>
+    </div>
+    <span className="lbl">StagedReference — the composer's twin of ReferenceRow: held, not followed</span>
+    <StagedReference kind="post" name="The long way home — @ada" sub="Post" src={P+"01-landscape-4x3.jpg"} value="+0.10 / +0.10" onRemove={()=>{}}/>
+    <span className="lbl">RefusedFile — the answer where the file was offered; Remove it is the only way out</span>
+    <RefusedFile src={P+"10-square-1x1.jpg"} message="That picture is too big — a picture can be up to 10 MB."/>
+    <RefusedFile message="That file isn't a picture or a video CoGra can read."/>
     <span className="lbl">ActsCard — what one signature commits, where the surface has room</span>
     <ActsCard rows={[{label:"Post",value:"Sunday at the tide market",count:"1 action"},{label:"Picture",value:"A new profile picture",count:"1 action"}]} total="2 signed actions"/>
     <span className="lbl">ActsFooter + SealFooter — the same fact on one line, and the pair every seal ends with</span>

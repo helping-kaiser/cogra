@@ -8,7 +8,7 @@
 <style>body{padding:16px}.grid{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}.col{display:flex;flex-direction:column;gap:10px;align-items:flex-start}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}.snackbar-slot{width:24rem;max-width:100%}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { Button, InlineAction, Card, Snackbar, JoinPrompt } = window.CoGraDesignSystem_9084ba;
+const { Button, InlineAction, Card, Snackbar, JoinPrompt, SectionLabel } = window.CoGraDesignSystem_9084ba;
 function Demo(){return (
 <div className="grid">
   <div className="col">
@@ -29,6 +29,18 @@ function Demo(){return (
       <InlineAction>Change</InlineAction>
       <InlineAction>Adjust</InlineAction>
       <InlineAction disabled>Mark</InlineAction>
+    </div>
+    <span className="lbl">InlineAction sm — the same word at label-small, for an action that is one word of the sentence it sits in</span>
+    <p style={{margin:0,fontSize:"var(--text-label-small)",lineHeight:"var(--text-label-small--line-height)",letterSpacing:"0.4px"}}>
+      <span style={{color:"var(--error)"}}>One picture didn't upload.</span>{" "}
+      <InlineAction size="sm">Retry</InlineAction>{" "}
+      <span style={{color:"var(--text-secondary)"}}>·</span>{" "}
+      <InlineAction size="sm">Remove it</InlineAction>
+    </p>
+    <span className="lbl">SectionLabel — a caption, not a heading; it carries the screen gutter itself</span>
+    <div style={{background:"var(--surface-container-lowest)"}}>
+      <SectionLabel>Recent</SectionLabel>
+      <SectionLabel>Posts you cited</SectionLabel>
     </div>
     <span className="lbl">Snackbar — tonal elevation on inverseSurface, 4px rung, centred</span>
     <div className="snackbar-slot"><Snackbar inline message="Signed, still settling." /></div>
