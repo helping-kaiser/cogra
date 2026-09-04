@@ -7,6 +7,8 @@ export interface ActsFooterProps {
   /** How many acts the signature commits. Every board so far shows two or
    *  more; the singular wording is not yet ruled. */
   count?: number;
+  /** The whole line is the button; opening the acts is what it does. */
+  onOpen?: () => void;
 }
 
 export declare function ActsFooter(props: ActsFooterProps): JSX.Element;
