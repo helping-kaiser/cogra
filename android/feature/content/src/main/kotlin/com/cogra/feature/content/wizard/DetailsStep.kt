@@ -121,7 +121,7 @@ private fun UploadFailures(
         UploadErrorLine(
             // The server's own words where it gave any, so a refusal that
             // names the file says so rather than reading as a generic fault.
-            message = failure.message,
+            message = failure.text(),
             onRetry = { onRetry(asset.uri) },
             onRemove = { onRemove(index) },
             testTag = "wizard_upload_failed_$index",

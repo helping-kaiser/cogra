@@ -16,8 +16,6 @@ import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.store.IdentityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -133,8 +131,15 @@ class ComposePostViewModel @Inject constructor(
     private val _state = MutableStateFlow(ComposePostUiState())
     val state = _state.asStateFlow()
 
-    /** Debounces the finder, which runs on every keystroke (D20). */
-    private var finderJob: Job? = null
+    private val sections = SectionsEditor(
+        scope = viewModelScope,
+        references = references,
+        state = _state,
+        tagsOf = { it.tagSection },
+        withTags = { state, tags -> state.copy(tagSection = tags) },
+        referencesOf = { it.referenceSection },
+        withReferences = { state, refs -> state.copy(referenceSection = refs) },
+    )
 
     init {
         viewModelScope.launch {
@@ -246,86 +251,48 @@ class ComposePostViewModel @Inject constructor(
     fun onLicenseChange(v: LicenseChoice) = _state.update { it.copy(license = v) }
     fun onSavedConsumed() = _state.update { it.copy(saved = false) }
 
-    fun onTagInputChange(v: String) = updateTags { it.withInput(v) }
+    fun onTagInputChange(v: String) = sections.onTagInputChange(v)
 
-    fun onAddTag() = updateTags { it.added() }
+    fun onAddTag() = sections.onAddTag()
 
-    fun onRemoveTag(name: String) = updateTags { it.removed(name) }
+    fun onRemoveTag(name: String) = sections.onRemoveTag(name)
 
     /** Tapping a staged chip opens its parameters (F6). */
-    fun onTuneTag(name: String) = updateTags { it.tuned(name) }
+    fun onTuneTag(name: String) = sections.onTuneTag(name)
 
-    fun onDoneTuningTag() = updateTags { it.tuned(null) }
+    fun onDoneTuningTag() = sections.onDoneTuningTag()
 
-    fun onTagRelevanceChange(name: String, value: Double) = updateTags { it.withRelevance(name, value) }
+    fun onTagRelevanceChange(name: String, value: Double) = sections.onTagRelevanceChange(name, value)
 
-    fun onTagConfidenceChange(name: String, value: Double) = updateTags { it.withConfidence(name, value) }
+    fun onTagConfidenceChange(name: String, value: Double) = sections.onTagConfidenceChange(name, value)
 
-    private fun updateTags(block: (TagSectionState) -> TagSectionState) = _state.update {
-        it.copy(tagSection = block(it.tagSection))
-    }
+    private fun updateTags(block: (TagSectionState) -> TagSectionState) = sections.updateTags(block)
 
     // -- References (D10, D20) --
 
-    fun onOpenFinder() = updateReferences { it.withFinder(ReferenceFinderState()) }
+    fun onOpenFinder() = sections.onOpenFinder()
 
-    fun onCloseFinder() {
-        finderJob?.cancel()
-        updateReferences { it.withFinder(null) }
-    }
+    fun onCloseFinder() = sections.onCloseFinder()
 
-    fun onFinderQueryChange(query: String) {
-        finderJob?.cancel()
-        updateReferences { section ->
-            section.withFinder(
-                (section.finder ?: ReferenceFinderState()).copy(
-                    query = query,
-                    searching = query.isNotBlank(),
-                    failed = false,
-                ),
-            )
-        }
-        finderJob = viewModelScope.launch {
-            delay(FINDER_DEBOUNCE_MILLIS)
-            when (val outcome = references.candidateRows(query)) {
-                is Outcome.Success -> updateReferences { section ->
-                    // A result that arrived after the author typed on
-                    // is stale — only the current query's answer lands.
-                    section.finder?.takeIf { it.query == query }?.let {
-                        section.withFinder(
-                            it.copy(candidates = outcome.value, searching = false, failed = false),
-                        )
-                    } ?: section
-                }
-                is Outcome.Refused, is Outcome.Failed -> updateReferences { section ->
-                    section.finder?.takeIf { it.query == query }?.let {
-                        section.withFinder(it.copy(searching = false, failed = true))
-                    } ?: section
-                }
-            }
-        }
-    }
+    fun onFinderQueryChange(query: String) = sections.onFinderQueryChange(query)
 
     /** Picking a candidate stages it and closes the finder. */
-    fun onPickReference(row: ReferenceCandidateRow) {
-        finderJob?.cancel()
-        updateReferences { it.added(row.targetId, row.target).withFinder(null) }
-    }
+    fun onPickReference(row: ReferenceCandidateRow) = sections.onPickReference(row)
 
-    fun onRemoveReference(targetId: String) = updateReferences { it.removed(targetId) }
+    fun onRemoveReference(targetId: String) = sections.onRemoveReference(targetId)
 
-    fun onTuneReference(targetId: String) = updateReferences { it.tuned(targetId) }
+    fun onTuneReference(targetId: String) = sections.onTuneReference(targetId)
 
-    fun onDoneTuningReference() = updateReferences { it.tuned(null) }
+    fun onDoneTuningReference() = sections.onDoneTuningReference()
 
     fun onReferenceRelevanceChange(targetId: String, value: Double) =
-        updateReferences { it.withRelevance(targetId, value) }
+        sections.onReferenceRelevanceChange(targetId, value)
 
     fun onReferenceSupportChange(targetId: String, value: Double) =
-        updateReferences { it.withSupport(targetId, value) }
+        sections.onReferenceSupportChange(targetId, value)
 
     private fun updateReferences(block: (ReferenceSectionState) -> ReferenceSectionState) =
-        _state.update { it.copy(referenceSection = block(it.referenceSection)) }
+        sections.updateReferences(block)
 
     /**
      * The submit gate (F4): a batch of more than one signed act asks

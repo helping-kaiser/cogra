@@ -182,8 +182,32 @@ pieces").
   `design-tokens.json` (`make tokens`). Never transcribe a colour into test
   code or invent one in a screen — screens read roles.
 
-CI runs `./gradlew test` and `./gradlew :app:assembleDebug`, path-filtered to
-`android/**` and `schema.graphql`.
+CI runs `./gradlew ktlintCheck detekt`, `./gradlew test` and
+`./gradlew :app:assembleDebug`, path-filtered to `android/**` and
+`schema.graphql`.
+
+## Static analysis
+
+Two tools, one job each — the Kotlin analogue of `cargo fmt` and
+`clippy -D warnings`. **ktlint owns formatting** and is the one that can
+fix what it finds (`make android-format`); **detekt owns the rules**.
+detekt's ktlint-wrapper ruleset is deliberately not used, or the two
+would report the same finding twice.
+
+- Style lives in `android/.editorconfig` (`ktlint_code_style =
+  intellij_idea`, which is the style the tree is already written in).
+  Rules turned off there name their reason, per the root CLAUDE.md rule
+  that a lint is a documented opinion.
+- detekt's rule config is `android/config/detekt/detekt.yml`, layered
+  over detekt's defaults (`buildUponDefaultConfig`).
+- Both gate against a **per-module baseline** under each module's
+  `config/{ktlint,detekt}/baseline.xml`, so what they fail on is what a
+  change adds. Clearing a baseline is its own pass, not a side effect of
+  an unrelated change.
+- detekt is pinned to a **2.0 prerelease** because no stable release
+  supports Kotlin 2.3: detekt embeds a compiler to parse with, and
+  1.23.8 is built against 2.0.21
+  ([compatibility](https://detekt.dev/docs/introduction/compatibility/)).
 
 Robolectric runs in **offline mode**: its android-all sandbox jars are
 declared in `libs.versions.toml`, staged by the root project's

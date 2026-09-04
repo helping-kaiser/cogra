@@ -193,8 +193,8 @@ class HandshakeTest {
         val actor = ActorKey.generate()
         val p = proposal(actor.address())
         val nonce = ByteArray(SALT_LEN) { 5 }
-        val a = actor.preSign(p, nonce)
-        val b = actor.preSign(p, nonce)
+        val a = actor.preSignWith(p, nonce)
+        val b = actor.preSignWith(p, nonce)
         // Same nonce → identical signature (Ed25519 is deterministic);
         // fresh nonces → distinct pre-digests, distinct signatures.
         assertThat(a.preSignature).isEqualTo(b.preSignature)
@@ -205,7 +205,7 @@ class HandshakeTest {
     fun preSignRejectsWrongNonceLength() {
         val actor = ActorKey.generate()
         assertThrows(IllegalArgumentException::class.java) {
-            actor.preSign(proposal(actor.address()), ByteArray(16))
+            actor.preSignWith(proposal(actor.address()), ByteArray(16))
         }
     }
 

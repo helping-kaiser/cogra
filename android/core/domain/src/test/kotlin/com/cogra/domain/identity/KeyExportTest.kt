@@ -1,6 +1,7 @@
 package com.cogra.domain.identity
 
 import com.cogra.crypto.ActorKey
+import com.cogra.crypto.toHex
 import com.cogra.domain.testing.FakeIdentityStore
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
@@ -28,7 +29,7 @@ class KeyExportTest {
         assertThat(actor.kind).isEqualTo(SecretKind.ACTOR_KEY)
         assertThat(actor.pem).startsWith("-----BEGIN PRIVATE KEY-----")
         assertThat(actor.pem).endsWith("-----END PRIVATE KEY-----")
-        assertThat(actor.hex).isEqualTo(seed.joinToString("") { "%02x".format(it) })
+        assertThat(actor.hex).isEqualTo(seed.toHex())
     }
 
     /** Export reads; it must not disturb what the device holds. */

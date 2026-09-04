@@ -5,7 +5,6 @@
 
 package com.cogra.crypto
 
-import java.security.SecureRandom
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
 
 /** A refused signing step — the device never signs what it cannot verify. */
@@ -24,10 +23,18 @@ class ActorKey private constructor(private val key: Ed25519PrivateKeyParameters)
 
     /**
      * Step 2 of the write — pre-sign: bind the exact proposal under a
-     * fresh private nonce. The [nonce] parameter exists for the golden
-     * vectors; production callers use the random default.
+     * fresh private nonce.
+     *
+     * This is the production form, and the only one outside this
+     * module: the nonce is drawn here rather than accepted, so no call
+     * site can supply a constant. The deterministic form the golden
+     * vectors pin is [preSignWith], mirroring the Rust reference's own
+     * split (`crates/common/src/l1/client.rs`).
      */
-    fun preSign(proposal: Proposal, nonce: ByteArray = randomBytes(SALT_LEN)): PreSignedProposal {
+    fun preSign(proposal: Proposal): PreSignedProposal = preSignWith(proposal, Entropy.bytes(SALT_LEN))
+
+    /** The deterministic form the golden vectors pin. */
+    internal fun preSignWith(proposal: Proposal, nonce: ByteArray): PreSignedProposal {
         require(nonce.size == SALT_LEN) { "nonce must be $SALT_LEN bytes" }
         val digestContent = preDigest(Tags.PRE_DIGEST_CONTENT, nonce, proposal.payload)
         val digestDeps = preDigest(Tags.PRE_DIGEST_DEPS, nonce, canonicalDeps(proposal.deps))
@@ -78,14 +85,11 @@ class ActorKey private constructor(private val key: Ed25519PrivateKeyParameters)
     fun signTagged(tag: String, msg: ByteArray): ByteArray = sign(key, tag, msg)
 
     companion object {
-        fun generate(): ActorKey = fromSeed(randomBytes(32))
+        fun generate(): ActorKey = fromSeed(Entropy.bytes(32))
 
         fun fromSeed(seed: ByteArray): ActorKey {
             require(seed.size == 32) { "an actor seed is 32 bytes" }
             return ActorKey(Ed25519PrivateKeyParameters(seed, 0))
         }
-
-        internal fun randomBytes(len: Int): ByteArray =
-            ByteArray(len).also { SecureRandom().nextBytes(it) }
     }
 }

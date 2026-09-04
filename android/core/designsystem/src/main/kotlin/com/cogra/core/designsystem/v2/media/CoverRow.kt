@@ -17,11 +17,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.R
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
@@ -86,7 +88,7 @@ fun CoverRow(
                     selected = chosen,
                     dimmed = !chosen,
                     onClick = { onPickFrame(index) },
-                    contentDescription = "Frame ${index + 1}",
+                    contentDescription = stringResource(R.string.designsystem_cover_frame, index + 1),
                     testTag = testTagPrefix?.let { "${it}_frame_$index" },
                 )
             }
@@ -133,11 +135,14 @@ private fun OwnPictureTile(
             selected = chosen,
             dimmed = !chosen,
             onClick = onClick,
-            contentDescription = "Your own cover picture",
+            contentDescription = stringResource(R.string.designsystem_cover_own),
             testTag = testTag,
         )
         return
     }
+    // Hoisted: `semantics {}` is not a composable scope, so the label is
+    // read before the modifier chain rather than inside it.
+    val label = stringResource(R.string.designsystem_cover_own_action)
     Column(
         modifier = Modifier
             .size(tileSize)
@@ -148,7 +153,7 @@ private fun OwnPictureTile(
                 shape = RoundedCornerShape(Space.x2),
             )
             .clickable(role = Role.Button, onClick = onClick)
-            .semantics { contentDescription = "A cover picture of your own" }
+            .semantics { contentDescription = label }
             .then(testTag?.let { Modifier.testTag(it) } ?: Modifier),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
