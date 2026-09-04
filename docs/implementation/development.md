@@ -188,8 +188,11 @@ noted; a cold build pays its dependency graph on top.
 | `make vectors` | 30 s | 3 s (2026-09-04) |
 | `make fold-vectors` | 30 s | 9 s (2026-09-04) |
 | `cargo clippy -p cogra-linter --all-targets` | 2 min | 36 s (2026-09-04) |
+| `cargo test -p api --test client_operations` | 2 min | 31–40 s (2026-09-04, warm, own test database) |
 | `make docs-link-check` | 60 s | 8.5 s (2026-09-04, 150 files / 1520 links) |
-| `make android-build` | 20 min | 13 min 2 s cold (2026-08-20) |
+| `make android-build` | 20 min | 13 min 2 s cold (2026-08-20); 12 min 21 s warm (2026-09-04) |
+| `make android-lint` | 3 min | 61 s (2026-09-04, warm) |
+| android module unit tests (5 modules) | 5 min | 115 s (2026-09-04, warm) |
 | `make wait-db` / `make wait-media` | `WAIT_TIMEOUT`, 300 s | seconds on a warm stack; the timeout is the bound, not the expectation |
 
 CI jobs carry the same discipline as `timeout-minutes`, which is the
