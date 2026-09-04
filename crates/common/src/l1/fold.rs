@@ -91,14 +91,34 @@ impl BundleSum {
     /// representable, so the counter-records sum to the negation of the
     /// bundle whatever order the store adds them in.
     pub fn severance_batch(&self) -> Vec<(f64, f64)> {
-        let reach = self.p_d.abs().max(self.p_i.abs());
-        if reach == 0.0 {
+        let n = self.reach_steps();
+        if n == 0 {
             return vec![];
         }
-        let n = (reach.ceil() as u32).max(1);
         let d = walk_back(self.p_d, n);
         let i = walk_back(self.p_i, n);
         d.into_iter().zip(i).collect()
+    }
+
+    /// `⌈max(|Σ_d|, |Σ_i|)⌉` — the one place the step count is computed, so
+    /// the staged batch and the quoted cost cannot drift apart.
+    ///
+    /// A non-finite sum on *either* axis yields no steps — `f64::max` drops
+    /// a `NaN`, so the axes are tested before they are compared. Such a sum
+    /// names no bundle a batch could net, and every alternative answer is
+    /// fabricated: the saturating float-to-integer cast turns `inf` into a
+    /// `u32::MAX`-element allocation, and `f64::min` turns `NaN` into a
+    /// whole-step counter-record for a value that has none. Refusing the
+    /// value where sums are assembled is the store's own boundary.
+    fn reach_steps(&self) -> usize {
+        if !self.p_d.is_finite() || !self.p_i.is_finite() {
+            return 0;
+        }
+        let reach = self.p_d.abs().max(self.p_i.abs());
+        if reach == 0.0 {
+            return 0;
+        }
+        (reach.ceil() as usize).max(1)
     }
 
     /// How many counter-records [`severance_batch`] would stage —
@@ -110,18 +130,14 @@ impl BundleSum {
     ///
     /// [`severance_batch`]: BundleSum::severance_batch
     pub fn severance_cost(&self) -> usize {
-        let reach = self.p_d.abs().max(self.p_i.abs());
-        if reach == 0.0 {
-            return 0;
-        }
-        (reach.ceil() as usize).max(1)
+        self.reach_steps()
     }
 }
 
 /// One axis's walk-back: `n` values summing to exactly `-total`, each in
 /// `[-1, 1]`, front-loaded in whole steps so every partial remainder stays
 /// exactly representable.
-fn walk_back(total: f64, n: u32) -> Vec<f64> {
+fn walk_back(total: f64, n: usize) -> Vec<f64> {
     let sign = if total > 0.0 { -1.0 } else { 1.0 };
     let mut remaining = total.abs();
     (0..n)
@@ -161,6 +177,13 @@ mod tests {
             (2.5, -1.2),
             (-3.4, 2.9),
             (0.0, 7.1),
+            // A sum no bundle can reach, so neither surface may invent an
+            // answer for it: the cast that saturates and the min that
+            // swallows a NaN are what this pins shut.
+            (f64::NAN, f64::NAN),
+            (f64::NAN, 0.5),
+            (f64::INFINITY, 0.0),
+            (f64::NEG_INFINITY, 2.0),
         ] {
             let bundle = sum(p_d, p_i);
             assert_eq!(
@@ -169,6 +192,8 @@ mod tests {
                 "at ({p_d}, {p_i})"
             );
         }
+        assert_eq!(sum(f64::INFINITY, 0.0).severance_cost(), 0);
+        assert!(sum(f64::NAN, f64::NAN).severance_batch().is_empty());
     }
 
     /// A fold clips into the unit range on both axes, whatever the bundle's sum reached.
