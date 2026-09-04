@@ -12,4 +12,8 @@ The label is always visible and always `label-large` — there is no floating-la
 <TextField label="Email" type="email" value={email} onChange={setEmail} error="That doesn't look like an email address." />
 ```
 
-`error` is Material 3's documented text-field error convention: the 1px outline and the label both switch to `--error`, and a body-small supporting line renders directly below the field, in `--error`, carrying the message. The message is always words (direction-by-words) — TextField renders it verbatim, no icon. This line is TextField-internal; it is separate from any screen-level helper span a board already draws under the field.
+```jsx
+<TextField label="Handle" value={handle} onChange={setHandle} hint="3–30 characters: a–z, 0–9, _" />
+```
+
+**Supporting text is one slot with two states**, Material 3's own arrangement. `hint` is the base: a body-small line in `text-secondary` under the field, saying what it will accept. `error` is that line in its error state — the 1px outline and the label switch to `--error` with it, and the message **replaces** the hint rather than joining it. Never pass both expecting two lines: the rule the reader broke is the rule they needed to read, and two lines under one input is where the eye stops knowing which is live. The message is always words (direction-by-words) — TextField renders it verbatim, no icon.
