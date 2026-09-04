@@ -10,7 +10,7 @@ import { attachActorKey } from "@/lib/api/onboarding-api";
 import { createKeyBackupChallenge, uploadKeyBackup } from "@/lib/api/auth-api";
 import type { Outcome } from "@/lib/api/outcome";
 import { fromBase64, randomBytes, toBase64 } from "@/lib/crypto/bytes";
-import { addressOf } from "@/lib/crypto/hashing";
+import { addressOf, CryptoUnavailableError, ed25519Available } from "@/lib/crypto/hashing";
 import { RecoveryCode, sealKeyBackup, signUpload } from "@/lib/crypto/key-backup";
 import type { AuthGuard } from "@/lib/session/guard";
 import type { IdentityStore } from "./store";
@@ -59,10 +59,21 @@ export function createKeyCeremony(deps: {
 
   return {
     async createActorKey() {
+      // Asked before anything is minted or written, so a browser without
+      // Ed25519 is told what is wrong rather than failing somewhere inside the
+      // ceremony. The probe runs once per page (hashing.ts).
+      if (!(await ed25519Available())) {
+        throw new CryptoUnavailableError("this browser cannot hold a CoGra key");
+      }
       const key = await store.saveActor(randomBytes(32), true);
       // A blob parked under the superseded key would never upload: its
       // proof verifies against the key the account now has attached.
       await store.clearPendingBackupBlob();
+      // Handshake material is orphaned by the same stroke and for the same
+      // reason: what is parked was PRE-SIGNED by the key just replaced, and
+      // an approval this key made over it would be signed by a key unrelated
+      // to the pre-commitment. Only an expiry re-stage recovers those writes.
+      await store.clearHandshakes();
       const publicKey = key.publicKeyBytes();
       return { publicKeyBase64: toBase64(publicKey), l0Address: await addressOf(publicKey) };
     },
@@ -84,21 +95,31 @@ export function createKeyCeremony(deps: {
       return code.display();
     },
 
+    // EVERY FAULT IS `false` HERE, because that is what the contract above
+    // promises and what the caller does with it: this runs on every poll pass
+    // and `false` means "still parked, try again". A throw instead — a
+    // malformed challenge through `fromBase64`, a custody store that cannot be
+    // read — rejects the poll's own promise, which nothing is catching. A wipe
+    // that fails leaves the blob parked, so the next pass re-uploads it.
     async uploadPendingBackup() {
-      const blob = await store.pendingBackupBlob();
-      if (blob === null) return true;
-      const key = await store.actorKey();
-      if (key === null) return false;
-      const challenge = await guard.run(() => createKeyBackupChallenge(client));
-      if (challenge.kind !== "success") return false;
-      const signature = await signUpload(key, fromBase64(challenge.value), blob);
-      const outcome = await guard.run(() =>
-        uploadKeyBackup(client, toBase64(blob), challenge.value, toBase64(signature)),
-      );
-      if (outcome.kind !== "success") return false;
-      await store.clearPendingBackupBlob();
-      await store.clearActorSeed();
-      return true;
+      try {
+        const blob = await store.pendingBackupBlob();
+        if (blob === null) return true;
+        const key = await store.actorKey();
+        if (key === null) return false;
+        const challenge = await guard.run(() => createKeyBackupChallenge(client));
+        if (challenge.kind !== "success") return false;
+        const signature = await signUpload(key, fromBase64(challenge.value), blob);
+        const outcome = await guard.run(() =>
+          uploadKeyBackup(client, toBase64(blob), challenge.value, toBase64(signature)),
+        );
+        if (outcome.kind !== "success") return false;
+        await store.clearPendingBackupBlob();
+        await store.clearActorSeed();
+        return true;
+      } catch {
+        return false;
+      }
     },
   };
 }

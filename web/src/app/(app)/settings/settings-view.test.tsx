@@ -77,19 +77,28 @@ function fakeBackup(overrides: Partial<BackupManager> = {}): BackupManager {
   };
 }
 
+function fakeDraftStore() {
+  return {
+    save: vi.fn(async () => {}),
+    load: vi.fn(async () => null),
+    clear: vi.fn(async () => {}),
+  };
+}
+
 function renderSettings({
   seed = null as Uint8Array | null,
   keyOnDevice = false,
   ephemeral = false,
   backup = fakeBackup(),
+  drafts = fakeDraftStore(),
 } = {}) {
   const identity = fakeIdentityStore({ keyOnDevice, seed, ephemeral });
   const store = signedInStore();
   const rendered = renderWithProviders(
-    <SettingsView store={identity} backup={backup} />,
+    <SettingsView store={identity} backup={backup} drafts={drafts} />,
     { store },
   );
-  return { ...rendered, identity, backup, tokenStore: store };
+  return { ...rendered, identity, backup, drafts, tokenStore: store };
 }
 
 describe("SettingsView backup", () => {
@@ -468,5 +477,27 @@ describe("SettingsView sign-out", () => {
     fireEvent.click(await screen.findByTestId("settings_sign_out"));
     await waitFor(() => expect(tokenStore.hasSession()).toBe(false));
     expect(await identity.actorKey()).not.toBeNull();
+  });
+
+  // The unpublished draft goes with the session, on every sign-out — not only
+  // the don't-remember kind. A shared browser would otherwise offer this
+  // account's own words and pictures to whoever signs in next.
+  it("clears the compose draft at sign-out", async () => {
+    server.use(graphql.mutation("RevokeSession", () => HttpResponse.error()));
+    const { tokenStore, drafts } = renderSettings();
+
+    fireEvent.click(await screen.findByTestId("settings_sign_out"));
+    await waitFor(() => expect(tokenStore.hasSession()).toBe(false));
+    expect(drafts.clear).toHaveBeenCalled();
+  });
+
+  it("signs out anyway when the draft cannot be cleared", async () => {
+    server.use(graphql.mutation("RevokeSession", () => HttpResponse.error()));
+    const drafts = fakeDraftStore();
+    drafts.clear.mockRejectedValueOnce(new Error("storage is blocked"));
+    const { tokenStore } = renderSettings({ drafts });
+
+    fireEvent.click(await screen.findByTestId("settings_sign_out"));
+    await waitFor(() => expect(tokenStore.hasSession()).toBe(false));
   });
 });

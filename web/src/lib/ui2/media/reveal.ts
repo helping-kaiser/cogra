@@ -28,8 +28,27 @@
 // persisting it across visits would quietly turn a single "yes" into a
 // standing one.
 
+import { useSyncExternalStore } from "react";
+
 /** Node id → the sensitive state it was revealed at. */
 const revealed = new Map<string, string>();
+
+// SHARED ACROSS SURFACES is a claim about every mounted component, not only the
+// one that was clicked, so the store carries subscribers the way the mute store
+// does. Without them a reveal reaches the card the reader touched and leaves the
+// same node veiled everywhere else until something unrelated re-renders it.
+const listeners = new Set<() => void>();
+
+function emit() {
+  for (const listener of listeners) listener();
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
 
 type Marked = {
   attachmentsStatus: string;
@@ -55,10 +74,29 @@ export function isRevealed(nodeId: string, signature: string): boolean {
 }
 
 export function rememberReveal(nodeId: string, signature: string): void {
+  if (revealed.get(nodeId) === signature) return;
   revealed.set(nodeId, signature);
+  emit();
+}
+
+/**
+ * A node's reveal, as a value a component re-renders on.
+ *
+ * `useSyncExternalStore` is React's documented way to read a store that lives
+ * outside React, and it is what makes the ruling's "shared across surfaces"
+ * true of the render as well as of the map. The server snapshot is `false`:
+ * a server render has no reader, and the veil is the honest first paint.
+ */
+export function useRevealed(nodeId: string, signature: string): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => isRevealed(nodeId, signature),
+    () => false,
+  );
 }
 
 /** Tests only: the map is a session, and a suite is many sessions. */
 export function forgetReveals(): void {
   revealed.clear();
+  emit();
 }

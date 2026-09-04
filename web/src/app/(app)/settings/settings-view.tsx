@@ -23,6 +23,7 @@ import {
   type SessionView,
 } from "@/lib/api/settings-api";
 import { createBackupManager, type BackupManager } from "@/lib/identity/backup";
+import { composeDraftStore, type ComposeDraftStore } from "@/lib/compose/draft-store";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { RestoreCard } from "@/app/applicant-status";
@@ -116,10 +117,12 @@ function feedbackMessage(feedback: Feedback): string {
 export function SettingsView({
   store = identityStore,
   backup: injectedBackup,
+  drafts = composeDraftStore,
 }: {
   /** Test injection. */
   store?: IdentityStore;
   backup?: BackupManager;
+  drafts?: ComposeDraftStore;
 } = {}) {
   const client = useApolloClient();
   const guard = useAuthGuard();
@@ -314,6 +317,15 @@ export function SettingsView({
     // must never block signing out.
     try {
       await store.purgeIfEphemeral();
+    } catch {
+      // sign-out proceeds regardless
+    }
+    // The unpublished draft goes with the session. It holds this account's own
+    // words and pictures, and a shared browser would otherwise offer them to
+    // whoever signs in next. Same ordering and same best-effort rule: it runs
+    // while the account is still active, and a failure never blocks the exit.
+    try {
+      await drafts.clear();
     } catch {
       // sign-out proceeds regardless
     }

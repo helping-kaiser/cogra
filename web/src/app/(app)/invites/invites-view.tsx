@@ -69,7 +69,10 @@ export function InvitesView() {
       .then((meOutcome): Promise<void> | undefined => {
         if (meOutcome.kind !== "success") {
           setLoading(false);
-          if (meOutcome.kind === "failed") setTransportFailed(true);
+          // A refused viewer read used to set nothing at all, so the screen
+          // rendered as loaded with no member and no reason given.
+          if (meOutcome.kind === "refused") setError(meOutcome.errors[0].code);
+          else setTransportFailed(true);
           return;
         }
         setMe(meOutcome.value);
@@ -81,21 +84,42 @@ export function InvitesView() {
           .run(() => fetchInviteLinks(client))
           .then((linksOutcome) => {
             setLoading(false);
+            // Each arm states BOTH banners, so a read cannot leave an earlier
+            // fault standing beside its own answer.
             switch (linksOutcome.kind) {
               case "success":
                 setLinks(linksOutcome.value);
+                setError(null);
                 setTransportFailed(false);
                 break;
               case "refused":
                 setError(linksOutcome.errors[0].code);
+                setTransportFailed(false);
                 break;
               case "failed":
+                setError(null);
                 setTransportFailed(true);
                 break;
             }
           });
       });
   }, [client, guard]);
+
+  /**
+   * ONE PLACE TO BE RIGHT about what a new operation clears.
+   *
+   * Four flags describe one outcome of one operation and no type stops two of
+   * them being true together, so the reset discipline was whatever each
+   * handler remembered: creating a link cleared two of the four, which left an
+   * earlier approval's "your vouch did not finish" standing beside a link that
+   * had just been created successfully.
+   */
+  const beginOperation = () => {
+    setError(null);
+    setTransportFailed(false);
+    setSignIncomplete(false);
+    setVouchSigned(false);
+  };
 
   useEffect(() => {
     void refresh();
@@ -105,8 +129,7 @@ export function InvitesView() {
     event.preventDefault();
     if (creating) return;
     setCreating(true);
-    setError(null);
-    setTransportFailed(false);
+    beginOperation();
     const outcome = await guard.run(() =>
       createInviteLink(client, {
         expiresAt: new Date(Date.now() + LINK_LIFETIME_MS).toISOString(),
@@ -132,8 +155,7 @@ export function InvitesView() {
   const onRevoke = async (linkId: string) => {
     if (revokingId !== null) return;
     setRevokingId(linkId);
-    setError(null);
-    setTransportFailed(false);
+    beginOperation();
     const outcome = await guard.run(() => revokeInviteLink(client, linkId));
     await refresh();
     setRevokingId(null);
@@ -157,10 +179,7 @@ export function InvitesView() {
   const onApprove = async (applicationId: string, pDirected: number, pInterest: number) => {
     if (approvingId !== null) return;
     setApprovingId(applicationId);
-    setError(null);
-    setTransportFailed(false);
-    setSignIncomplete(false);
-    setVouchSigned(false);
+    beginOperation();
     const prepared = await guard.run(() =>
       approveApplicant(client, applicationId, pDirected, pInterest),
     );

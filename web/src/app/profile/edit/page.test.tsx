@@ -224,7 +224,7 @@ describe("ProfileEditPage", () => {
     await screen.findByTestId("profile-edit-display-name");
     fireEvent.click(screen.getByTestId("profile-edit-save"));
     expect(await screen.findByTestId("profile-edit-refused")).toHaveTextContent(
-      "at least one field",
+      "Something in this wasn't accepted",
     );
     expect(push).not.toHaveBeenCalled();
   });

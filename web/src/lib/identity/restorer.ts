@@ -56,6 +56,13 @@ export async function restoreActor(
     throw e;
   }
 
-  await deps.store.saveActor(seed, false);
+  // The decrypted seed exists only here. A custody store that cannot take it
+  // is a `failed` — the variant this result already carries — not a rejection
+  // that throws the seed away out of a function whose caller reads outcomes.
+  try {
+    await deps.store.saveActor(seed, false);
+  } catch (cause) {
+    return { kind: "failed", cause };
+  }
   return { kind: "restored" };
 }
