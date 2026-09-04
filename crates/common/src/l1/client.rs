@@ -13,9 +13,21 @@ use rand::rngs::OsRng;
 
 use super::crypto::{self, tags};
 use super::handshake::{
-    ApprovalWitness, PreSignedProposal, Proposal, VerifiedAct, pre_commitment_msg,
+    ApprovalWitness, PreSignedProposal, Proposal, VerifiedAct, canonical_deps, pre_commitment_msg,
 };
-use super::{L1Error, handshake::canonical_deps};
+
+/// What the client can find wrong with what the host returned.
+///
+/// Every check this module performs is an authentication question — the
+/// returned act is the one that was pre-signed, the host seal verifies, both
+/// commitments open — so the error carries the one variant those checks
+/// produce. The substrate's own failure vocabulary belongs to the substrate
+/// and its boundary, not here.
+#[derive(Debug, thiserror::Error)]
+pub enum ClientError {
+    #[error("authentication failure: {0}")]
+    Authentication(String),
+}
 
 /// An actor keypair under the interim realization. The signing side of a
 /// write is always this object — the backend relays, never signs
@@ -88,12 +100,12 @@ impl ActorKey {
         sent: &PreSignedProposal,
         sealed: &VerifiedAct,
         host_pubkey: &[u8],
-    ) -> Result<ApprovalWitness, L1Error> {
+    ) -> Result<ApprovalWitness, ClientError> {
         if sealed.proposal != sent.proposal
             || sealed.pre_signature != sent.pre_signature
             || sealed.nonce != sent.nonce
         {
-            return Err(L1Error::Authentication(
+            return Err(ClientError::Authentication(
                 "host returned a different act than was pre-signed".into(),
             ));
         }
@@ -113,10 +125,10 @@ impl ActorKey {
         &self,
         sealed: &VerifiedAct,
         host_pubkey: &[u8],
-    ) -> Result<ApprovalWitness, L1Error> {
+    ) -> Result<ApprovalWitness, ClientError> {
         let body = &sealed.proposal.body;
         if body.author != self.address() {
-            return Err(L1Error::Authentication(
+            return Err(ClientError::Authentication(
                 "the sealed act is not this actor's".into(),
             ));
         }
@@ -137,7 +149,7 @@ impl ActorKey {
             &msg,
             &sealed.pre_signature,
         ) {
-            return Err(L1Error::Authentication(
+            return Err(ClientError::Authentication(
                 "the stored pre-commitment is not this key's signature over the act".into(),
             ));
         }
@@ -152,16 +164,16 @@ impl ActorKey {
         &self,
         sealed: &VerifiedAct,
         host_pubkey: &[u8],
-    ) -> Result<(), L1Error> {
+    ) -> Result<(), ClientError> {
         let host_key = crypto::verifying_key_from_bytes(host_pubkey)
-            .ok_or_else(|| L1Error::Authentication("malformed host key".into()))?;
+            .ok_or_else(|| ClientError::Authentication("malformed host key".into()))?;
         if !crypto::verify(
             &host_key,
             tags::HOST_SEAL,
             &sealed.seal_msg(),
             &sealed.host_seal,
         ) {
-            return Err(L1Error::Authentication("invalid host seal".into()));
+            return Err(ClientError::Authentication("invalid host seal".into()));
         }
         let content = crypto::commitment(
             tags::COMMIT_CONTENT,
@@ -169,7 +181,7 @@ impl ActorKey {
             &sealed.proposal.payload,
         );
         if content.as_slice() != sealed.content_commitment.as_slice() {
-            return Err(L1Error::Authentication(
+            return Err(ClientError::Authentication(
                 "content commitment does not open over the payload".into(),
             ));
         }
@@ -179,7 +191,7 @@ impl ActorKey {
             &canonical_deps(&sealed.proposal.deps),
         );
         if deps.as_slice() != sealed.deps_commitment.as_slice() {
-            return Err(L1Error::Authentication(
+            return Err(ClientError::Authentication(
                 "dependency commitment does not open over the dependency list".into(),
             ));
         }
