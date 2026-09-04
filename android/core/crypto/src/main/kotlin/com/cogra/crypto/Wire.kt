@@ -16,7 +16,14 @@ class WireException(message: String) : Exception(message)
 private const val WIRE_VERSION = 1UL
 
 /** The device's pre-commitment leg: nonce plus pre-commitment signature. */
-class PreCommitment(val nonce: ByteArray, val preSignature: ByteArray)
+class PreCommitment(val nonce: ByteArray, val preSignature: ByteArray) {
+    override fun equals(other: Any?): Boolean =
+        other is PreCommitment &&
+            nonce.contentEquals(other.nonce) &&
+            preSignature.contentEquals(other.preSignature)
+
+    override fun hashCode(): Int = 31 * nonce.contentHashCode() + preSignature.contentHashCode()
+}
 
 private fun encodeBodyBytes(body: StructuralBody): ByteArray = body.canonicalBytes()
 
