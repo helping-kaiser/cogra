@@ -964,6 +964,24 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'id="reset-email"', tag: "input" },
     { n: 3, find: ">Send reset link</button>", tag: "button" },
   ],
+  KeyCeremony: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: ">Create my recovery code</button>", tag: "button" },
+    { n: 3, find: ">Not now</button>", tag: "button" },
+  ],
+  // The ceremony's two dialogs. Both are scanExempt: the arrow and the words
+  // beneath the scrim are inactive while the ask is open, so only the
+  // dialog's own pair carries a number — the hand boards stamped exactly
+  // these two and left the arrow bare.
+  KeyConfirm: [
+    { n: 1, find: ">Cancel</button>", tag: "button" },
+    { n: 2, find: ">Show my code</button>", tag: "button" },
+  ],
+  KeyDecline: [
+    { n: 1, find: ">I accept the risk</button>", tag: "button" },
+    { n: 2, find: ">Go back</button>", tag: "button" },
+  ],
+  Verified: [{ n: 1, find: ">Back to CoGra</button>", tag: "button" }],
 });
 
 /* The band's Chats affordance (jakob 2026-09-01): CograBand carries it on
