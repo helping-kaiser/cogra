@@ -137,6 +137,7 @@ export function ReplyWizard({
       started.current.add(cover.id);
       void runVideoUpload(
         client,
+        guard,
         video,
         cover,
         (upload) => dispatch({ type: "upload", id: video.id, upload }),
@@ -152,7 +153,7 @@ export function ReplyWizard({
         dispatch({ type: "upload", id: asset.id, upload }),
       );
     }
-  }, [state.media, video, cover, client, dispatch]);
+  }, [state.media, video, cover, client, guard, dispatch]);
 
   // ---- the clip's length, and the faces it offers ---------------------------
 
