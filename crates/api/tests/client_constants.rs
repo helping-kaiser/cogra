@@ -14,10 +14,19 @@
 //! The default run asserts the committed file matches this crate, so
 //! drift fails `cargo test`; `make constants` (UPDATE_CLIENT_CONSTANTS=1)
 //! rewrites it.
+//!
+//! `stance.tapDefault` exports the CLIENT-FACING half of the low-defaults
+//! policy only. The server states that policy in six named constants
+//! across content, references and topics, and folding those six into one
+//! is a backend refactor rather than a cross-surface one — but a client's
+//! own copy of the tap default has to agree with the value the server
+//! writes when a client omits the parameters, and that is what travels
+//! here.
 
 use std::path::Path;
 
 use api::auth::{HANDLE_CHARSET_PATTERN, HANDLE_MAX_CHARS, HANDLE_MIN_CHARS, PASSWORD_MIN_CHARS};
+use api::content::DEFAULT_STANCE;
 use api::media::{
     MAX_ALT_TEXT_CHARS, MAX_COMMENT_ATTACHMENTS, MAX_COMMENT_VIDEO_BYTES, MAX_PIXEL_DIMENSION,
     MAX_POST_ATTACHMENTS, MAX_POST_VIDEO_BYTES, MIN_MULTIPART_PART_BYTES, MediaConfig,
@@ -62,6 +71,9 @@ fn build_constants() -> Value {
         "paging": {
             "defaultPageSize": DEFAULT_PAGE_SIZE,
             "maxPageSize": MAX_PAGE_SIZE,
+        },
+        "stance": {
+            "tapDefault": DEFAULT_STANCE,
         },
         "registration": {
             "passwordMinChars": PASSWORD_MIN_CHARS,
