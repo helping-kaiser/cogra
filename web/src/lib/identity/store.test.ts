@@ -15,7 +15,7 @@ import { randomBytes } from "@/lib/crypto/bytes";
 import { verify, Tags } from "@/lib/crypto/hashing";
 import { AddrId, ActId } from "@/lib/crypto/identifiers";
 import { Proposal, StructuralBody } from "@/lib/crypto/handshake";
-import { createIdentityStore, type IdentityStore } from "./store";
+import { createIdentityStore, CustodyBlockedError, type IdentityStore } from "./store";
 
 const ACCOUNT_A = "11111111-1111-4111-8111-111111111111";
 const ACCOUNT_B = "22222222-2222-4222-8222-222222222222";
@@ -347,5 +347,67 @@ describe("identity store", () => {
     await store.purgeIfEphemeral();
     account = ACCOUNT_A;
     expect(await store.actorKey()).not.toBeNull();
+  });
+
+  // A re-mint orphans every parked handshake: the material was pre-signed by
+  // the key being replaced, and no later key can approve it.
+  it("clears this account's handshake material and nobody else's", async () => {
+    await store.saveActor(randomBytes(32), true);
+    await store.saveHandshake("staged-a", await (await ActorKey.generate()).preSign(sampleProposal()));
+
+    account = ACCOUNT_B;
+    await store.saveActor(randomBytes(32), true);
+    await store.saveHandshake("staged-b", await (await ActorKey.generate()).preSign(sampleProposal()));
+
+    account = ACCOUNT_A;
+    await store.clearHandshakes();
+    expect(await store.handshakeIds()).toEqual([]);
+
+    account = ACCOUNT_B;
+    expect(await store.handshakeIds()).toEqual(["staged-b"]);
+  });
+});
+
+// A store whose open never succeeds and never errors — the shape of a version
+// upgrade blocked by another tab holding the old version open.
+function factoryThat(event: "blocked" | "error"): IDBFactory {
+  return {
+    open() {
+      const request = {} as IDBOpenDBRequest & { error: DOMException | null };
+      setTimeout(() => {
+        if (event === "blocked") request.onblocked?.(new Event("blocked") as IDBVersionChangeEvent);
+        else request.onerror?.(new Event("error"));
+      }, 0);
+      return request;
+    },
+  } as unknown as IDBFactory;
+}
+
+describe("the custody store's open", () => {
+  const account = "33333333-3333-4333-8333-333333333333";
+
+  // Without an `onblocked` handler this promise never settles, and because the
+  // open is memoized, EVERY later custody call awaits it forever.
+  it("reports a blocked upgrade instead of hanging every later call", async () => {
+    const store = createIdentityStore({
+      activeAccountId: () => account,
+      idb: () => factoryThat("blocked"),
+    });
+    await expect(store.actorKey()).rejects.toThrow(CustodyBlockedError);
+  });
+
+  // The module's own comment: "a failed open must not poison every later call
+  // with the same rejected promise". Nothing reached that line before.
+  it("retries after a failed open rather than caching the rejection", async () => {
+    let broken = true;
+    const working = new IDBFactory();
+    const store = createIdentityStore({
+      activeAccountId: () => account,
+      idb: () => (broken ? factoryThat("error") : working),
+    });
+
+    await expect(store.actorKey()).rejects.toThrow();
+    broken = false;
+    expect(await store.actorKey()).toBeNull();
   });
 });
