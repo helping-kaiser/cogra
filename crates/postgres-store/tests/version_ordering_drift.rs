@@ -83,14 +83,15 @@ fn the_version_ordering_never_drifts_in_the_crate() {
 /// carries the same key sequence the queries order by.
 #[test]
 fn the_current_version_indexes_carry_the_same_rule() {
-    let migration = crate_dir()
-        .join("../../migrations/20260821000002_l1_ordered_versions.sql");
+    let migration = crate_dir().join("../../migrations/20260821000002_l1_ordered_versions.sql");
     let flat = read_flat(&migration);
     let definitions: Vec<&str> = flat
         .match_indices("_current_idx ON")
         .map(|(i, _)| {
             let rest = &flat[i..];
-            &rest[..rest.find(INDEX_END).map_or(rest.len(), |e| e + INDEX_END.len())]
+            &rest[..rest
+                .find(INDEX_END)
+                .map_or(rest.len(), |e| e + INDEX_END.len())]
         })
         .collect();
     assert_eq!(definitions.len(), 7, "seven version tables carry the rule");

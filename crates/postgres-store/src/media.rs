@@ -234,6 +234,9 @@ pub async fn attach_to_comment_version(
     Ok(())
 }
 
+/// The three parallel arrays one gallery is bound as.
+type GalleryArrays = (Vec<Uuid>, Vec<i16>, Vec<Option<String>>);
+
 /// The gallery as the three parallel arrays `unnest` zips back together.
 /// One `unnest` over parallel arrays is what keeps the whole gallery one
 /// statement, and the arrays have to be built before the query borrows
@@ -248,16 +251,18 @@ pub async fn attach_to_comment_version(
 /// refused rather than wrapped. A wrapped index would restart the ordering
 /// at a negative number, and `is_cover` is derived as `ord = 0`, so the
 /// cover would move to whichever placement happened to land on zero.
-fn split_placements(
-    gallery: &[GalleryPlacement],
-) -> Result<(Vec<Uuid>, Vec<i16>, Vec<Option<String>>), sqlx::Error> {
+fn split_placements(gallery: &[GalleryPlacement]) -> Result<GalleryArrays, sqlx::Error> {
     let mut ids = Vec::with_capacity(gallery.len());
     let mut orders = Vec::with_capacity(gallery.len());
     let mut alts = Vec::with_capacity(gallery.len());
     for (index, placement) in gallery.iter().enumerate() {
         let order = i16::try_from(index).map_err(|_| {
             sqlx::Error::Encode(
-                format!("gallery of {} placements exceeds display_order", gallery.len()).into(),
+                format!(
+                    "gallery of {} placements exceeds display_order",
+                    gallery.len()
+                )
+                .into(),
             )
         })?;
         ids.push(placement.attachment_id);
@@ -265,47 +270,6 @@ fn split_placements(
         alts.push(placement.alt_text.clone());
     }
     Ok((ids, orders, alts))
-}
-
-#[cfg(test)]
-mod placement_tests {
-    use super::{GalleryPlacement, split_placements};
-    use uuid::Uuid;
-
-    fn placement(n: u128, alt: Option<&str>) -> GalleryPlacement {
-        GalleryPlacement {
-            attachment_id: Uuid::from_u128(n),
-            alt_text: alt.map(str::to_string),
-        }
-    }
-
-    /// The three arrays are one gallery said three ways, so they have to
-    /// come out the same length and in the same order — `unnest` pads a
-    /// ragged set with NULL, and two of the three columns are NOT NULL.
-    #[test]
-    fn the_three_arrays_agree_on_length_and_order() {
-        let gallery = [
-            placement(1, Some("first")),
-            placement(2, None),
-            placement(3, Some("third")),
-        ];
-        let (ids, orders, alts) = split_placements(&gallery).expect("fits");
-        assert_eq!(ids, vec![Uuid::from_u128(1), Uuid::from_u128(2), Uuid::from_u128(3)]);
-        assert_eq!(orders, vec![0, 1, 2]);
-        assert_eq!(
-            alts,
-            vec![Some("first".to_string()), None, Some("third".to_string())]
-        );
-    }
-
-    /// Position is the order and index 0 is the cover, so the first
-    /// placement is the one `is_cover` will pick out.
-    #[test]
-    fn the_first_placement_holds_position_zero() {
-        let (_, orders, _) = split_placements(&[placement(1, None)]).expect("fits");
-        assert_eq!(orders, vec![0]);
-        assert!(split_placements(&[]).expect("fits").0.is_empty());
-    }
 }
 
 struct GalleryRow {
@@ -815,4 +779,48 @@ pub async fn sweep_orphans(
     )
     .fetch_all(pool)
     .await
+}
+
+#[cfg(test)]
+mod placement_tests {
+    use super::{GalleryPlacement, split_placements};
+    use uuid::Uuid;
+
+    fn placement(n: u128, alt: Option<&str>) -> GalleryPlacement {
+        GalleryPlacement {
+            attachment_id: Uuid::from_u128(n),
+            alt_text: alt.map(str::to_string),
+        }
+    }
+
+    /// The three arrays are one gallery said three ways, so they have to
+    /// come out the same length and in the same order — `unnest` pads a
+    /// ragged set with NULL, and two of the three columns are NOT NULL.
+    #[test]
+    fn the_three_arrays_agree_on_length_and_order() {
+        let gallery = [
+            placement(1, Some("first")),
+            placement(2, None),
+            placement(3, Some("third")),
+        ];
+        let (ids, orders, alts) = split_placements(&gallery).expect("fits");
+        assert_eq!(
+            ids,
+            vec![Uuid::from_u128(1), Uuid::from_u128(2), Uuid::from_u128(3)]
+        );
+        assert_eq!(orders, vec![0, 1, 2]);
+        assert_eq!(
+            alts,
+            vec![Some("first".to_string()), None, Some("third".to_string())]
+        );
+    }
+
+    /// Position is the order and index 0 is the cover, so the first
+    /// placement is the one `is_cover` will pick out.
+    #[test]
+    fn the_first_placement_holds_position_zero() {
+        let (_, orders, _) = split_placements(&[placement(1, None)]).expect("fits");
+        assert_eq!(orders, vec![0]);
+        assert!(split_placements(&[]).expect("fits").0.is_empty());
+    }
 }

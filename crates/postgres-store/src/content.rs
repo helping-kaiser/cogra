@@ -1618,7 +1618,10 @@ mod tests {
     /// position with holes in it.
     #[test]
     fn a_partial_position_is_no_position() {
-        assert_eq!(landing_order(Some(1), Some(2), Some(3)).map(|o| o.position), Some(3));
+        assert_eq!(
+            landing_order(Some(1), Some(2), Some(3)).map(|o| o.position),
+            Some(3)
+        );
         assert_eq!(landing_order(Some(1), Some(2), None), None);
         assert_eq!(landing_order(None, None, None), None);
     }
@@ -1633,7 +1636,13 @@ mod tests {
             id: Some(id),
         };
         assert_eq!(movable(Some(pending)), Some(id));
-        assert_eq!(movable(Some(ContentCursor { id: None, ..pending })), None);
+        assert_eq!(
+            movable(Some(ContentCursor {
+                id: None,
+                ..pending
+            })),
+            None
+        );
         assert_eq!(
             movable(Some(ContentCursor {
                 order: landed(1),
@@ -1683,12 +1692,15 @@ mod tests {
         assert_eq!(pending_from(None), (None, None));
     }
 
+    type LandedAsk = (Option<LandingOrder>, bool, i64);
+    type PendingAsk = ((Option<Timestamp>, Option<Uuid>), bool, i64);
+
     /// What each branch of a walk was asked for — enough to assert the
     /// merge's shape without a database behind it.
     #[derive(Debug, Default, Clone)]
     struct Calls {
-        landed: Vec<(Option<LandingOrder>, bool, i64)>,
-        pending: Vec<((Option<Timestamp>, Option<Uuid>), bool, i64)>,
+        landed: Vec<LandedAsk>,
+        pending: Vec<PendingAsk>,
     }
 
     async fn walk(

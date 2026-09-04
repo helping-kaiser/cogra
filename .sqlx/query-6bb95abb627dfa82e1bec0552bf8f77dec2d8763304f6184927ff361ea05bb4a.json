@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, inviter_id, prefill_dim1, prefill_dim2, single_use,\n                created_at, expires_at, revoked_at\n         FROM auth_invite_links WHERE inviter_id = $1\n         ORDER BY created_at DESC",
+  "query": "SELECT id, inviter_id, prefill_p_d, prefill_p_i, single_use,\n                created_at, expires_at, revoked_at\n         FROM auth_invite_links WHERE inviter_id = $1\n         ORDER BY created_at DESC",
   "describe": {
     "columns": [
       {
@@ -15,13 +15,13 @@
       },
       {
         "ordinal": 2,
-        "name": "prefill_dim1",
-        "type_info": "Float4"
+        "name": "prefill_p_d",
+        "type_info": "Float8"
       },
       {
         "ordinal": 3,
-        "name": "prefill_dim2",
-        "type_info": "Float4"
+        "name": "prefill_p_i",
+        "type_info": "Float8"
       },
       {
         "ordinal": 4,
@@ -60,5 +60,5 @@
       true
     ]
   },
-  "hash": "d7eba72e1d6e59ebe8a58238037f7fa990d16971c77af1124bde6196b42cb352"
+  "hash": "6bb95abb627dfa82e1bec0552bf8f77dec2d8763304f6184927ff361ea05bb4a"
 }
