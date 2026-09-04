@@ -7,14 +7,14 @@
 # enters through the root that matches the target: one document per
 # root, each spreading the same fragment.
 #
-# THE SHAPE IS PRICED, NOT ASSUMED. One document asking all three roots
-# behind `@include` flags measures complexity 39 against the query
-# budget; each per-root document measures 16. The complexity visitor
-# does not discount a guarded arm — `@include(if: false)` walks the
-# same — so the single document paid 39 on every stance read, including
-# the ones that already knew which root to ask. A feed page draws one
-# control per card, which is what makes 39 against 16 worth three
-# documents.
+# THE SHAPE IS PRICED, NOT ASSUMED — measured under
+# `client_operations.rs --nocapture`. One document asking all three
+# roots behind `@include` flags measures complexity 39; each per-root
+# document measures 15. The complexity visitor does not discount a
+# guarded arm — `@include(if: false)` walks the same — so the single
+# document paid 39 on every stance read, including the ones that
+# already knew which root to ask. A feed page draws one control per
+# card, which is what makes 39 against 15 worth three documents.
 #
 # The control holds an opaque target id, so a target of unknown class
 # is probed post → comment → user, at most three of these documents
