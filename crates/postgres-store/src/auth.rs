@@ -147,8 +147,8 @@ macro_rules! invite_link_from_row {
         InviteLink {
             id: $r.id,
             inviter_id: $r.inviter_id,
-            prefill_p_d: f64::from($r.prefill_dim1),
-            prefill_p_i: f64::from($r.prefill_dim2),
+            prefill_p_d: $r.prefill_p_d,
+            prefill_p_i: $r.prefill_p_i,
             single_use: $r.single_use,
             created_at: $r.created_at,
             expires_at: $r.expires_at,
@@ -168,14 +168,14 @@ pub async fn create_invite_link(
 ) -> Result<InviteLink, sqlx::Error> {
     sqlx::query!(
         "INSERT INTO auth_invite_links
-             (id, inviter_id, prefill_dim1, prefill_dim2, single_use, expires_at)
+             (id, inviter_id, prefill_p_d, prefill_p_i, single_use, expires_at)
          VALUES ($1, $2, $3, $4, $5, $6)
-         RETURNING id, inviter_id, prefill_dim1, prefill_dim2, single_use,
+         RETURNING id, inviter_id, prefill_p_d, prefill_p_i, single_use,
                    created_at, expires_at, revoked_at",
         id,
         inviter_id,
-        prefill_p_d as f32,
-        prefill_p_i as f32,
+        prefill_p_d,
+        prefill_p_i,
         single_use,
         expires_at,
     )
@@ -186,7 +186,7 @@ pub async fn create_invite_link(
 
 pub async fn invite_link(pool: &PgPool, id: Uuid) -> Result<Option<InviteLink>, sqlx::Error> {
     Ok(sqlx::query!(
-        "SELECT id, inviter_id, prefill_dim1, prefill_dim2, single_use,
+        "SELECT id, inviter_id, prefill_p_d, prefill_p_i, single_use,
                 created_at, expires_at, revoked_at
          FROM auth_invite_links WHERE id = $1",
         id,
@@ -201,7 +201,7 @@ pub async fn invite_links_for(
     inviter_id: Uuid,
 ) -> Result<Vec<InviteLink>, sqlx::Error> {
     Ok(sqlx::query!(
-        "SELECT id, inviter_id, prefill_dim1, prefill_dim2, single_use,
+        "SELECT id, inviter_id, prefill_p_d, prefill_p_i, single_use,
                 created_at, expires_at, revoked_at
          FROM auth_invite_links WHERE inviter_id = $1
          ORDER BY created_at DESC",
