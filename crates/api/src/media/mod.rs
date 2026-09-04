@@ -597,16 +597,42 @@ pub async fn plan_gallery(
     kind: GalleryKind,
     drafts: &[AttachmentDraft],
 ) -> Result<PlannedGallery, GalleryPlanError> {
-    if drafts.is_empty() {
+    let Some(entries) = gallery_entries(kind, drafts)? else {
         return Ok(PlannedGallery::default());
+    };
+    let ids: Vec<Uuid> = entries.iter().map(|(id, _)| *id).collect();
+    let rows = store::assets_by_ids(pool, &ids)
+        .await
+        .map_err(|e| GalleryPlanError::Internal(e.to_string()))?;
+    resolve_gallery(author, kind, &entries, &rows)
+}
+
+/// The half of gallery planning that reads only what the client sent:
+/// the bound, gallery order, the cover flag, the descriptions, and
+/// duplicate entries.
+///
+/// `None` for an empty gallery, which is not a refusal.
+///
+/// Split from the half that needs the asset rows so the rules are
+/// reachable from a unit test — the branch matrix is the thing worth
+/// testing here, and it needs no database once the rows are in hand.
+#[expect(
+    clippy::type_complexity,
+    reason = "the pair is the id and its authored description, kept together so the two lists cannot desynchronize"
+)]
+fn gallery_entries(
+    kind: GalleryKind,
+    drafts: &[AttachmentDraft],
+) -> Result<Option<Vec<(Uuid, Option<String>)>>, GalleryError> {
+    if drafts.is_empty() {
+        return Ok(None);
     }
     let bound = kind.bound();
     if drafts.len() > bound {
         return Err(GalleryError::at(
             vec!["attachments".to_string()],
             format!("at most {bound} attachments, got {}", drafts.len()),
-        )
-        .into());
+        ));
     }
 
     let mut ids: Vec<Uuid> = Vec::with_capacity(drafts.len());
@@ -619,8 +645,7 @@ pub async fn plan_gallery(
                     "attachments are in gallery order, so displayOrder here is {i}, not {}",
                     draft.display_order
                 ),
-            )
-            .into());
+            ));
         }
         if let Some(is_cover) = draft.is_cover
             && kind.has_cover()
@@ -629,8 +654,7 @@ pub async fn plan_gallery(
             return Err(GalleryError::at(
                 gallery_path(i, "isCover"),
                 "the first attachment is the cover",
-            )
-            .into());
+            ));
         }
         alts.push(
             checked_alt_text(draft.alt_text.as_deref())
@@ -640,57 +664,79 @@ pub async fn plan_gallery(
             return Err(GalleryError::at(
                 gallery_path(i, "mediaId"),
                 "this asset is already in the gallery",
-            )
-            .into());
+            ));
         }
         ids.push(draft.media_id);
     }
 
-    let rows = store::assets_by_ids(pool, &ids)
-        .await
-        .map_err(|e| GalleryPlanError::Internal(e.to_string()))?;
-    let mut manifest = Vec::with_capacity(ids.len());
-    for (i, id) in ids.iter().enumerate() {
-        let Some(asset) = rows.iter().find(|a| a.id == *id) else {
-            return Err(GalleryError::at(gallery_path(i, "mediaId"), "no such asset").into());
-        };
-        if asset.author_id != author {
-            return Err(GalleryError::at(
-                gallery_path(i, "mediaId"),
-                "an attachment must be an asset you uploaded",
-            )
-            .into());
-        }
-        if asset.redacted_at.is_some() {
-            return Err(GalleryError::at(
-                gallery_path(i, "mediaId"),
-                "this asset has been removed",
-            )
-            .into());
-        }
+    Ok(Some(ids.into_iter().zip(alts).collect()))
+}
+
+/// The half of gallery planning that reads the asset rows: the
+/// anti-hijack rule per entry, and the body's shape.
+fn resolve_gallery(
+    author: Uuid,
+    kind: GalleryKind,
+    entries: &[(Uuid, Option<String>)],
+    rows: &[store::MediaAttachment],
+) -> Result<PlannedGallery, GalleryPlanError> {
+    let mut manifest = Vec::with_capacity(entries.len());
+    for (i, (id, alt_text)) in entries.iter().enumerate() {
+        let path = gallery_path(i, "mediaId");
+        let asset = usable_asset(
+            rows.iter().find(|a| a.id == *id),
+            author,
+            &path,
+            "an attachment must be an asset you uploaded",
+        )?;
         if asset.mime_type == video::MIME {
-            if drafts.len() > 1 {
-                return Err(GalleryError::at(
-                    gallery_path(i, "mediaId"),
-                    "a body is pictures or one video, never both",
-                )
-                .into());
+            if entries.len() > 1 {
+                return Err(
+                    GalleryError::at(path, "a body is pictures or one video, never both").into(),
+                );
             }
             let cap = kind.video_bytes();
             if asset.size_bytes.is_some_and(|size| size > cap) {
                 return Err(GalleryError::at(
-                    gallery_path(i, "mediaId"),
+                    path,
                     format!("the video is larger than the {cap} bytes this carries"),
                 )
                 .into());
             }
         }
-        manifest.push(manifest_entry(asset, alts[i].clone())?);
+        manifest.push(manifest_entry(asset, alt_text.clone())?);
     }
     Ok(PlannedGallery {
-        attachment_ids: ids,
+        attachment_ids: entries.iter().map(|(id, _)| *id).collect(),
         manifest,
     })
+}
+
+/// The three rules every asset reference runs before it may be used: the
+/// asset is there, this author uploaded it, and it has not been removed.
+///
+/// Written once because it is the anti-hijack rule (data-model.md "Why
+/// parents point at attachments") and three surfaces — a gallery entry, a
+/// poster, a profile picture — each carried their own copy. Only the
+/// ownership sentence differs, because each names a different thing to
+/// the author.
+fn usable_asset<'a>(
+    asset: Option<&'a store::MediaAttachment>,
+    author: Uuid,
+    path: &[String],
+    not_yours: &str,
+) -> Result<&'a store::MediaAttachment, GalleryError> {
+    let asset = asset.ok_or_else(|| GalleryError::at(path.to_vec(), "no such asset"))?;
+    if asset.author_id != author {
+        return Err(GalleryError::at(path.to_vec(), not_yours));
+    }
+    if asset.redacted_at.is_some() {
+        return Err(GalleryError::at(
+            path.to_vec(),
+            "this asset has been removed",
+        ));
+    }
+    Ok(asset)
 }
 
 /// Checks the poster named on an upload, before any bytes are stored.
@@ -732,15 +778,12 @@ pub async fn plan_cover(
     let rows = store::assets_by_ids(pool, std::slice::from_ref(&id))
         .await
         .map_err(|e| GalleryPlanError::Internal(e.to_string()))?;
-    let Some(asset) = rows.first() else {
-        return Err(GalleryError::at(path, "no such asset").into());
-    };
-    if asset.author_id != author {
-        return Err(GalleryError::at(path, "a cover must be an asset you uploaded").into());
-    }
-    if asset.redacted_at.is_some() {
-        return Err(GalleryError::at(path, "this asset has been removed").into());
-    }
+    let asset = usable_asset(
+        rows.first(),
+        author,
+        &path,
+        "a cover must be an asset you uploaded",
+    )?;
     if asset.mime_type != webp::MIME {
         return Err(GalleryError::at(path, "a cover must be an image, not a video").into());
     }
@@ -816,17 +859,12 @@ pub async fn plan_profile_image(
     let rows = store::assets_by_ids(pool, std::slice::from_ref(&id))
         .await
         .map_err(|e| GalleryPlanError::Internal(e.to_string()))?;
-    let Some(asset) = rows.first() else {
-        return Err(GalleryError::at(path, "no such asset").into());
-    };
-    if asset.author_id != author {
-        return Err(
-            GalleryError::at(path, "a profile picture must be an asset you uploaded").into(),
-        );
-    }
-    if asset.redacted_at.is_some() {
-        return Err(GalleryError::at(path, "this asset has been removed").into());
-    }
+    let asset = usable_asset(
+        rows.first(),
+        author,
+        &path,
+        "a profile picture must be an asset you uploaded",
+    )?;
     Ok(Some(Some(manifest_entry(asset, None)?)))
 }
 
@@ -1026,6 +1064,179 @@ pub async fn orphan_reaper_loop(
             }
             Err(e) => tracing::warn!(error = %e, "media orphan sweep failed"),
         }
+    }
+}
+
+/// The gallery-planning rules, unit-tested.
+///
+/// Both halves of `plan_gallery` are pure once the asset rows are in
+/// hand, and every branch worth pinning lives in one of them — so the
+/// matrix is tested directly here rather than through a server-and-
+/// database round trip, and the integration suites keep testing that the
+/// two halves are wired to a real store.
+#[cfg(test)]
+mod planning_tests {
+    use super::*;
+
+    fn asset(author: Uuid, mime: &str) -> store::MediaAttachment {
+        store::MediaAttachment {
+            id: Uuid::new_v4(),
+            author_id: author,
+            digest: vec![7u8; 32],
+            digest_algo: "sha256".into(),
+            storage_key: "k.webp".into(),
+            mime_type: mime.into(),
+            size_bytes: Some(1024),
+            options: serde_json::json!({}),
+            cover_media_id: None,
+            redaction_reason: None,
+            redacted_at: None,
+            created_at: chrono::Utc::now(),
+        }
+    }
+
+    fn draft(id: Uuid, order: i32) -> AttachmentDraft {
+        AttachmentDraft {
+            media_id: id,
+            display_order: order,
+            is_cover: None,
+            alt_text: None,
+        }
+    }
+
+    fn path_of(e: &GalleryPlanError) -> Vec<String> {
+        match e {
+            GalleryPlanError::BadInput(e) => e.path.clone(),
+            GalleryPlanError::Internal(e) => panic!("expected a field refusal, got {e}"),
+        }
+    }
+
+    /// An empty gallery is not a refusal; a gallery past the kind's
+    /// bound, out of order, carrying the same asset twice, or flagging
+    /// the wrong cover is refused against the field that carried it.
+    ///
+    /// The client-side gallery rules are each refused against the field that carried them.
+    /// ´claim:media:the-gallery-rules-name-their-field´
+    #[test]
+    fn the_gallery_rules_name_their_field() {
+        assert!(
+            gallery_entries(GalleryKind::Post, &[])
+                .expect("empty is not a refusal")
+                .is_none()
+        );
+
+        let over: Vec<AttachmentDraft> = (0..=GalleryKind::Post.bound())
+            .map(|i| draft(Uuid::new_v4(), i as i32))
+            .collect();
+        assert_eq!(
+            gallery_entries(GalleryKind::Post, &over)
+                .expect_err("over the bound")
+                .path,
+            vec!["attachments".to_string()]
+        );
+
+        let misordered = [draft(Uuid::new_v4(), 1)];
+        assert_eq!(
+            gallery_entries(GalleryKind::Post, &misordered)
+                .expect_err("out of gallery order")
+                .path,
+            gallery_path(0, "displayOrder")
+        );
+
+        let twice = Uuid::new_v4();
+        let duplicated = [draft(twice, 0), draft(twice, 1)];
+        assert_eq!(
+            gallery_entries(GalleryKind::Post, &duplicated)
+                .expect_err("the same asset twice")
+                .path,
+            gallery_path(1, "mediaId")
+        );
+
+        let mut wrong_cover = draft(Uuid::new_v4(), 0);
+        wrong_cover.is_cover = Some(false);
+        assert_eq!(
+            gallery_entries(GalleryKind::Post, &[wrong_cover])
+                .expect_err("the first attachment is the cover")
+                .path,
+            gallery_path(0, "isCover")
+        );
+    }
+
+    /// The anti-hijack rule and the body's shape, each against the entry
+    /// that broke them.
+    ///
+    /// An attachment must be an asset this author still holds, and a body is pictures or one video.
+    /// ´claim:media:an-attachment-is-the-authors-own-and-the-body-has-one-shape´
+    #[test]
+    fn an_attachment_is_the_authors_own_and_the_body_has_one_shape() {
+        let author = Uuid::new_v4();
+        let stranger = Uuid::new_v4();
+        let mine = asset(author, webp::MIME);
+        let entries = vec![(mine.id, None)];
+
+        assert!(resolve_gallery(author, GalleryKind::Post, &entries, &[mine.clone()]).is_ok());
+        assert_eq!(
+            path_of(
+                &resolve_gallery(author, GalleryKind::Post, &entries, &[]).expect_err("absent")
+            ),
+            gallery_path(0, "mediaId")
+        );
+
+        let theirs = store::MediaAttachment {
+            author_id: stranger,
+            ..mine.clone()
+        };
+        assert_eq!(
+            path_of(
+                &resolve_gallery(author, GalleryKind::Post, &entries, &[theirs])
+                    .expect_err("someone else's asset")
+            ),
+            gallery_path(0, "mediaId")
+        );
+
+        let removed = store::MediaAttachment {
+            redacted_at: Some(chrono::Utc::now()),
+            ..mine.clone()
+        };
+        assert_eq!(
+            path_of(
+                &resolve_gallery(author, GalleryKind::Post, &entries, &[removed])
+                    .expect_err("a removed asset")
+            ),
+            gallery_path(0, "mediaId")
+        );
+
+        let video = asset(author, video::MIME);
+        let mixed = vec![(mine.id, None), (video.id, None)];
+        assert_eq!(
+            path_of(
+                &resolve_gallery(
+                    author,
+                    GalleryKind::Post,
+                    &mixed,
+                    &[mine.clone(), video.clone()],
+                )
+                .expect_err("pictures or one video, never both")
+            ),
+            gallery_path(1, "mediaId")
+        );
+
+        let oversized = store::MediaAttachment {
+            size_bytes: Some(GalleryKind::Comment.video_bytes() + 1),
+            ..video.clone()
+        };
+        assert_eq!(
+            path_of(
+                &resolve_gallery(
+                    author,
+                    GalleryKind::Comment,
+                    &[(video.id, None)],
+                    &[oversized],
+                )
+                .expect_err("past the parent's video cap")
+            ),
+            gallery_path(0, "mediaId")
+        );
     }
 }
 

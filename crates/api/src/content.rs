@@ -1362,3 +1362,67 @@ async fn land_one(
 fn clear_to_null(field: &Option<String>) -> Option<&str> {
     field.as_deref().filter(|s| !s.is_empty())
 }
+
+#[cfg(test)]
+mod promotion_tests {
+    use common::l1::handshake::StructuralBody;
+
+    use super::*;
+
+    fn body(seq: u64, family: Family, target: NodeId) -> StructuralBody {
+        StructuralBody {
+            author: "l0:test-author".into(),
+            seq,
+            family,
+            middle: None,
+            target,
+            p_d: 0.1,
+            p_i: 1.0,
+            settlement_ref: None,
+            license: None,
+            asserted_parents: vec![],
+        }
+    }
+
+    fn mint(author: &str, seq: u64, family: Family) -> NodeId {
+        NodeId::Mint(ActId {
+            author: author.to_string(),
+            seq,
+            family,
+        })
+    }
+
+    /// The genesis shape decides whether a landed record mints a node or
+    /// adds a version to one, and it is the same derivation on both
+    /// promotion paths — so a write whose target is its own mint is
+    /// genesis, and one naming any other node is an edit.
+    ///
+    /// A write targeting the mint of its own act is the genesis shape; one naming another node is an edit.
+    /// ´claim:content:the-genesis-shape-is-the-self-mint´
+    #[test]
+    fn the_genesis_shape_is_the_self_mint() {
+        let author = "l0:test-author";
+
+        let genesis = body(3, Family::Publish, mint(author, 3, Family::Publish));
+        let (target, is_genesis) = genesis_shape(&genesis);
+        assert!(is_genesis);
+        assert_eq!(target, mint(author, 3, Family::Publish).to_string());
+
+        // Same author and family, a different sequence: not this act's
+        // own mint, so an edit of an earlier one.
+        let edit = body(4, Family::Publish, mint(author, 3, Family::Publish));
+        assert!(!genesis_shape(&edit).1);
+
+        // The family is part of the identifier, so a Review targeting a
+        // Publish mint at the same sequence is an edit, not a genesis.
+        let across_families = body(3, Family::Review, mint(author, 3, Family::Publish));
+        assert!(!genesis_shape(&across_families).1);
+
+        let other_author = body(
+            3,
+            Family::Publish,
+            mint("l0:someone-else", 3, Family::Publish),
+        );
+        assert!(!genesis_shape(&other_author).1);
+    }
+}
