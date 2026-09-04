@@ -11,11 +11,26 @@ import { expect, it } from "vitest";
 import { fromHex, toHex } from "./bytes";
 import { CborEncoder } from "./cbor";
 import { commitment, preDigest, sha256Tagged, Tags, verify } from "./hashing";
-import { ActId, NodeId, parseFamily } from "./identifiers";
+import { ActId, FAMILIES, NodeId, parseFamily } from "./identifiers";
 import { canonicalDeps, preCommitmentMsg, Proposal, StructuralBody, VerifiedAct } from "./handshake";
 import { ActorKey } from "./actor-key";
-import { decodeProposal, decodeVerifiedAct, encodePreCommitmentOf, encodeProposal, encodeVerifiedAct } from "./wire";
-import { openKeyBackup, RecoveryCode, sealKeyBackup, signUpload, UPLOAD_PROOF_TAG } from "./key-backup";
+import {
+  decodePreCommitment,
+  decodeProposal,
+  decodeVerifiedAct,
+  encodePreCommitmentOf,
+  encodeProposal,
+  encodeVerifiedAct,
+} from "./wire";
+import {
+  KeyBackupError,
+  openKeyBackup,
+  RecoveryCode,
+  RecoveryCodeLengthError,
+  sealKeyBackup,
+  signUpload,
+  UPLOAD_PROOF_TAG,
+} from "./key-backup";
 
 interface BodyVector {
   actId: string;
@@ -27,7 +42,13 @@ interface BodyVector {
   middle: string | null;
   pD: number;
   pI: number;
-  seq: number;
+  /**
+   * A STRING, and read with `BigInt`. The field is a u64 and a JSON
+   * number loses precision above 2^53, so the exporter writes it as text
+   * — typing it as `number` here would let a sequence past that range
+   * arrive already wrong.
+   */
+  seq: string;
   settlementRef: string | null;
   target: string;
 }
@@ -35,6 +56,21 @@ interface BodyVector {
 interface Vectors {
   version: number;
   encoding: { cborHex: string; value: string }[];
+  families: { actId: string; wireName: string }[];
+  rejections: {
+    case: string;
+    what: "decodeProposal" | "parseActId";
+    hex?: string;
+    text?: string;
+  }[];
+  signatureRefusals: {
+    case: string;
+    msgUtf8: string;
+    publicKeyHex: string;
+    refusal: string;
+    signatureHex: string;
+    tagUtf8: string;
+  }[];
   sha256Tagged: { digestHex: string; partsHex: string[]; tagUtf8: string }[];
   signing: {
     l0Address: string;
@@ -74,6 +110,12 @@ interface Vectors {
     plaintextHex: string;
     recoveryCodeBytesHex: string;
     recoveryCodeDisplay: string;
+    recoveryCodeInputs: {
+      case: string;
+      input: string;
+      expect: "bytes" | "length" | "character" | "padBits";
+      bytesHex?: string;
+    }[];
     uploadChallengeHex: string;
     uploadProofTagUtf8: string;
     uploadSignatureHex: string;
@@ -191,6 +233,12 @@ it("handshake vectors match", async () => {
   ).toBe(h.preCommitmentMsgHex);
   expect(toHex(pre.preSignature)).toBe(h.preSignatureHex);
   expect(toHex(encodePreCommitmentOf(pre))).toBe(h.wirePreCommitmentHex);
+  // Both directions. The pre-commitment is the one wire object this app
+  // only ever writes, so nothing else exercises the reader — and a codec
+  // pinned in one direction is half a codec.
+  const readBack = decodePreCommitment(fromHex(h.wirePreCommitmentHex));
+  expect(toHex(readBack.nonce)).toBe(h.nonceHex);
+  expect(toHex(readBack.preSignature)).toBe(h.preSignatureHex);
 
   const contentSalt = fromHex(h.contentSaltHex);
   const depsSalt = fromHex(h.depsSaltHex);
@@ -248,6 +296,58 @@ it("key backup vectors match", async () => {
     256,
   );
   expect(toHex(new Uint8Array(contentKey))).toBe(k.contentKeyHex);
+});
+
+it("the census families round-trip by wire name", () => {
+  // SET equality, not order: the wire carries the name, never an index,
+  // so the two lists agreeing member-for-member is the whole contract.
+  expect([...FAMILIES].sort()).toEqual(vectors.families.map((f) => f.wireName).sort());
+  for (const f of vectors.families) {
+    expect(new ActId("alice-addr", 1n, parseFamily(f.wireName)).toString()).toBe(f.actId);
+  }
+});
+
+it("rejects every malformed input the reference rejects", () => {
+  for (const r of vectors.rejections) {
+    if (r.what === "decodeProposal") {
+      expect(() => decodeProposal(fromHex(r.hex ?? "")), r.case).toThrow();
+    } else {
+      expect(() => ActId.parse(r.text ?? ""), r.case).toThrow();
+    }
+  }
+});
+
+it("refuses every signature the reference refuses", async () => {
+  for (const r of vectors.signatureRefusals) {
+    const verified = await verify(
+      fromHex(r.publicKeyHex),
+      r.tagUtf8,
+      utf8(r.msgUtf8),
+      fromHex(r.signatureHex),
+    );
+    expect(verified, `${r.case}: ${r.refusal}`).toBe(false);
+  }
+});
+
+it("reads every recovery-code input the reference reads, and refuses the rest", () => {
+  for (const v of vectors.keyBackup.recoveryCodeInputs) {
+    if (v.expect === "bytes") {
+      expect(toHex(RecoveryCode.fromInput(v.input).bytes), v.case).toBe(v.bytesHex);
+      continue;
+    }
+    let thrown: unknown;
+    try {
+      RecoveryCode.fromInput(v.input);
+    } catch (e) {
+      thrown = e;
+    }
+    expect(thrown, v.case).toBeInstanceOf(KeyBackupError);
+    // The LENGTH failure is the one a reader can act on — characters are
+    // missing or spare — and it is the only one that gets its own class.
+    // An unusable character and set pad bits are both "this code will not
+    // open", which the GCM tag would have said a moment later.
+    expect(thrown instanceof RecoveryCodeLengthError, v.case).toBe(v.expect === "length");
+  }
 });
 
 it("key-backup upload proof vectors match", async () => {
