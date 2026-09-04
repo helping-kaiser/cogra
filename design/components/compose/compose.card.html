@@ -8,15 +8,16 @@
 <style>body{padding:16px}.row{display:flex;gap:24px;align-items:flex-start}.col{display:flex;flex-direction:column;gap:10px;width:360px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { MediaThumb, PickTray, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, CropViewport, CoverRow, UploadStatusLine, UploadErrorLine, ActsCard, WizardHeader, Button, HelpDot } = window.CoGraDesignSystem_9084ba;
+const { MediaThumb, PickTray, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, CropViewport, CoverRow, UploadStatusLine, UploadErrorLine, ActsCard, ActsFooter, SealFooter, WizardHeader, Button, HelpDot } = window.CoGraDesignSystem_9084ba;
 const P = "../../assets/photos/";
 
 function Demo(){return (
 <div className="row">
   <div className="col">
-    <span className="lbl">WizardHeader — the arrow steps ONE stage back; the X leaves the flow, draft kept</span>
-    <WizardHeader title="New post" action={<Button size="sm">Next</Button>}/>
-    <WizardHeader title="What you sign" action={<span style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:"var(--text-label-small)",color:"var(--text-secondary)"}}>Last step</span><HelpDot ariaLabel="Signed actions"/></span>}/>
+    <span className="lbl">WizardHeader — the arrow steps ONE stage back; the X leaves the flow. No forward action up here</span>
+    <WizardHeader title="New post"/>
+    <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing"/>
+    <WizardHeader title="What you sign" stageLabel="Last step" help="Signed actions"/>
     <span className="lbl">MediaThumb — plain, cover, uploading, failed, removable, uncropped</span>
     <div style={{display:"flex",gap:8,alignItems:"flex-start"}}>
       <MediaThumb src={P+"04-square-1x1.jpg"} alt="A jar of honey"/>
@@ -41,8 +42,14 @@ function Demo(){return (
     <DescribeCounter described={1} total={3} onDescribe={()=>{}}/>
     <span className="lbl">UploadStatusLine — the seal's gate: the sign button is disabled while it shows</span>
     <UploadStatusLine done={2} total={4}/>
-    <span className="lbl">ActsCard — what one signature commits</span>
+    <span className="lbl">ActsCard — what one signature commits, where the surface has room</span>
     <ActsCard rows={[{label:"Post",value:"Sunday at the tide market",count:"1 action"},{label:"Picture",value:"A new profile picture",count:"1 action"}]} total="2 signed actions"/>
+    <span className="lbl">ActsFooter + SealFooter — the same fact on one line, and the pair every seal ends with</span>
+    <ActsFooter count={2}/>
+    <SealFooter signLabel="Sign the edit"/>
+    <span className="lbl">SealFooter disabled — the upload's gate, always with the line that says why</span>
+    <UploadStatusLine done={2} total={4}/>
+    <SealFooter signLabel="Sign and publish" disabled/>
   </div>
   <div className="col" style={{width:400}}>
     <span className="lbl">PickedSheet — Show all, the per-picture manager (reorder, cover, remove, describe)</span>
