@@ -230,6 +230,15 @@ pub async fn topics_of(
 /// identifier: a minted node names its genesis act, a Profile names its
 /// actor's atom, and an atom cannot contain a colon — which is what makes
 /// that split unambiguous (`common::l1::identifier`).
+///
+/// The gate's `ELSE NULL` is the deliberate half of that rule, not an
+/// oversight: the grammar's other two constructors are `addr:` (an
+/// Actor) and `name:` (a Type). A Type is a commons anchored vacuously
+/// and has no author at all, so it can carry no author-owned claim.
+/// Whether an Actor node can be tagged — and so whether `addr:` should
+/// resolve to its own atom the way `prof:` does — is a seam question for
+/// the census, not a rule this fold gets to invent, so the class stays
+/// excluded until the seam answers. Excluded either way, but stated.
 pub async fn tagged_with(
     pool: &PgPool,
     canonical_name: &str,
@@ -259,6 +268,7 @@ pub async fn tagged_with(
                  AND (NOT $2 OR r.author = CASE
                          WHEN l.source LIKE 'mint:act:%' THEN split_part(l.source, ':', 3)
                          WHEN l.source LIKE 'prof:%'     THEN split_part(l.source, ':', 2)
+                         ELSE NULL
                      END)
              UNION ALL
                SELECT s.middle, s.author, s.p_d, s.p_i, TRUE, 0, 0, 0, s.pre_signed_at
@@ -274,6 +284,7 @@ pub async fn tagged_with(
                  AND (NOT $2 OR s.author = CASE
                          WHEN s.middle LIKE 'mint:act:%' THEN split_part(s.middle, ':', 3)
                          WHEN s.middle LIKE 'prof:%'     THEN split_part(s.middle, ':', 2)
+                         ELSE NULL
                      END)
            ),
            winners AS (
