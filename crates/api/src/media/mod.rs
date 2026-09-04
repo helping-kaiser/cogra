@@ -922,16 +922,22 @@ pub fn public_url(base_url: &str, storage_key: &str) -> String {
 /// sweeper, because the sweeper's window is a day and this is known now.
 /// Failing that delete is logged and no more: the row is correct, and an
 /// unreferenced object is exactly what the sweeper exists for.
+///
+/// The row is immutable once written, poster included, so a re-upload
+/// naming a *different* poster is refused on `coverMediaId` rather than
+/// handed back the first upload's row: silently discarding the poster
+/// the author just chose is the one outcome that leaves them with
+/// neither an error nor what they asked for.
 pub async fn store_asset(
     pool: &PgPool,
     blobs: &dyn BlobStore,
     author: Uuid,
     asset: ProcessedAsset,
     cover_media_id: Option<Uuid>,
-) -> anyhow::Result<store::MediaAttachment> {
+) -> Result<store::MediaAttachment, GalleryPlanError> {
     let id = Uuid::new_v4();
     let key = storage_key(id, asset.mime);
-    let size_bytes = i64::try_from(asset.bytes.len())?;
+    let size_bytes = i64::try_from(asset.bytes.len()).map_err(internal)?;
     let mut options = serde_json::json!({ "v": 1, "aspect_ratio": asset.aspect_ratio() });
     if let Some(duration_ms) = asset.duration_ms
         && let Some(map) = options.as_object_mut()
@@ -939,7 +945,10 @@ pub async fn store_asset(
         map.insert("duration_ms".into(), duration_ms.into());
     }
 
-    blobs.put(&key, asset.bytes, asset.mime).await?;
+    blobs
+        .put(&key, asset.bytes, asset.mime)
+        .await
+        .map_err(internal)?;
 
     let row = store::insert(
         pool,
@@ -953,14 +962,26 @@ pub async fn store_asset(
         &options,
         cover_media_id,
     )
-    .await?;
+    .await
+    .map_err(internal)?;
 
-    if row.storage_key != key
-        && let Err(e) = blobs.delete(&key).await
-    {
+    let deduped = row.storage_key != key;
+    if deduped && let Err(e) = blobs.delete(&key).await {
         tracing::warn!(error = %e, key, "leaving a duplicate upload's object to the sweeper");
     }
+    if deduped && cover_media_id.is_some() && row.cover_media_id != cover_media_id {
+        return Err(GalleryPlanError::BadInput(GalleryError {
+            path: vec!["coverMediaId".into()],
+            message: "these bytes are already stored under a different poster; \
+                      an asset's poster is fixed when it is created"
+                .into(),
+        }));
+    }
     Ok(row)
+}
+
+fn internal(e: impl std::fmt::Display) -> GalleryPlanError {
+    GalleryPlanError::Internal(e.to_string())
 }
 
 /// How many orphaned assets one sweep tick collects — the bound

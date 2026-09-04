@@ -573,6 +573,45 @@ async fn a_video_uploads_with_its_duration_and_poster(pool: PgPool) {
     assert!(rig.blobs.exists(&key).await.expect("head"));
 }
 
+/// An asset row is immutable once written, poster included, so the
+/// second upload cannot take the poster it names — and being handed the
+/// first upload's row as a success would leave the author with neither
+/// an error nor what they asked for.
+///
+/// Re-uploading identical bytes under a different poster is refused against coverMediaId rather than silently keeping the first poster.
+/// ´claim:media:a-re-upload-may-not-rename-the-poster´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_re_upload_naming_a_different_poster_is_refused(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let first_cover = rig.upload(&token, &photo_with_location()).await;
+    let first_id =
+        Uuid::parse_str(first_cover["media"]["id"].as_str().expect("id")).expect("a uuid");
+    let second_cover = rig.upload(&token, &rig::animated_webp()).await;
+    let second_id =
+        Uuid::parse_str(second_cover["media"]["id"].as_str().expect("id")).expect("a uuid");
+    assert_ne!(first_id, second_id, "two distinct stills");
+
+    let movie = h264_movie(3_000);
+    let stored = rig.upload_with_cover(&token, &movie, Some(first_id)).await;
+    assert_eq!(stored["media"]["coverMedia"]["id"], first_id.to_string());
+
+    let again = rig.upload_with_cover(&token, &movie, Some(second_id)).await;
+    assert_eq!(
+        refused_at(&again),
+        vec!["coverMediaId"],
+        "the poster the author just chose is not silently discarded: {again}"
+    );
+
+    let same = rig.upload_with_cover(&token, &movie, Some(first_id)).await;
+    assert_eq!(
+        same["media"]["id"], stored["media"]["id"],
+        "naming the same poster still deduplicates: {same}"
+    );
+}
+
 /// The four ways a named poster is wrong, each refused against the field
 /// that carried it rather than accepted into a row.
 ///

@@ -144,6 +144,35 @@ pub fn photo_with_location() -> Vec<u8> {
     webp_container(&body)
 }
 
+/// A two-frame animated WebP, built to the container specification's
+/// `ANMF` layout: x, y, width-minus-one and height-minus-one as 24-bit
+/// little-endian triples, then the frame duration, then a flag byte,
+/// then the frame's own image chunk.
+///
+/// A second still that is genuinely a second still: the strip removes
+/// EXIF, so two photos differing only in their location metadata
+/// deduplicate to one asset.
+pub fn animated_webp() -> Vec<u8> {
+    let mut vp8x = vec![0x02, 0, 0, 0];
+    vp8x.extend_from_slice(&[0, 0, 0]);
+    vp8x.extend_from_slice(&[0, 0, 0]);
+    let mut body = webp_chunk(b"VP8X", &vp8x);
+    body.extend_from_slice(&webp_chunk(b"ANIM", &[0, 0, 0, 0, 0, 0]));
+    for duration in [40u32, 60] {
+        let mut frame = Vec::new();
+        for triple in [0u32, 0, 0, 0, duration] {
+            frame.extend_from_slice(&triple.to_le_bytes()[..3]);
+        }
+        frame.push(0);
+        frame.extend_from_slice(&webp_chunk(
+            b"VP8L",
+            &[0x2F, 0x00, 0x00, 0x00, 0x00, 0x88, 0x88, 0x08],
+        ));
+        body.extend_from_slice(&webp_chunk(b"ANMF", &frame));
+    }
+    webp_container(&body)
+}
+
 /// Collects a response body as JSON.
 pub async fn body_json(response: axum::response::Response) -> serde_json::Value {
     use http_body_util::BodyExt;

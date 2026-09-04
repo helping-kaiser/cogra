@@ -1329,11 +1329,7 @@ where
     G: async_graphql::OutputType,
 {
     use async_graphql::connection::query;
-    if first.is_some_and(|n| n > MAX_PAGE_SIZE) || last.is_some_and(|n| n > MAX_PAGE_SIZE) {
-        return Err(async_graphql::Error::new(format!(
-            "first/last may be at most {MAX_PAGE_SIZE}"
-        )));
-    }
+    validate_page_args(first, last, after.as_deref(), before.as_deref())?;
     let first = match (first, last) {
         (None, None) => Some(DEFAULT_PAGE_SIZE),
         (first, _) => first,
@@ -2682,12 +2678,19 @@ pub struct KeysetPage {
     pub limit: i64,
 }
 
-pub fn keyset_page(
+/// The page arguments every connection field accepts, checked once
+/// (api-spec.md "Pagination").
+///
+/// Both connection helpers used to check a subset of these, so the same
+/// input was refused differently depending on which field a client hit
+/// — and one of the two delegated the missing rules to the library,
+/// which answers in its own words.
+pub fn validate_page_args(
     first: Option<i32>,
-    after: Option<String>,
     last: Option<i32>,
-    before: Option<String>,
-) -> async_graphql::Result<KeysetPage> {
+    after: Option<&str>,
+    before: Option<&str>,
+) -> async_graphql::Result<()> {
     if first.is_some_and(|n| n > MAX_PAGE_SIZE) || last.is_some_and(|n| n > MAX_PAGE_SIZE) {
         return Err(async_graphql::Error::new(format!(
             "first/last may be at most {MAX_PAGE_SIZE}"
@@ -2701,6 +2704,16 @@ pub fn keyset_page(
             "paginate forward (first/after) or backward (last/before), not both",
         ));
     }
+    Ok(())
+}
+
+pub fn keyset_page(
+    first: Option<i32>,
+    after: Option<String>,
+    last: Option<i32>,
+    before: Option<String>,
+) -> async_graphql::Result<KeysetPage> {
+    validate_page_args(first, last, after.as_deref(), before.as_deref())?;
     let backward = last.is_some() || before.is_some();
     let cursor = match if backward { &before } else { &after } {
         Some(s) => Some(decode_landing_cursor(s)?),
@@ -3025,6 +3038,35 @@ impl MediaAttachmentType {
 
     async fn created_at(&self) -> DateTime<Utc> {
         self.asset.created_at
+    }
+}
+
+#[cfg(test)]
+mod page_tests {
+    use super::{MAX_PAGE_SIZE, validate_page_args};
+
+    /// The two connection helpers share this, so a client hitting an
+    /// offset list and a client hitting a keyset list are refused the
+    /// same input in the same words.
+    ///
+    /// The page arguments are refused by one rule: over the cap, negative, or mixing the two directions.
+    /// ´claim:pagination:one-rule-refuses-the-page-arguments´
+    #[test]
+    fn the_page_arguments_are_refused_by_one_rule() {
+        assert!(validate_page_args(Some(10), None, None, None).is_ok());
+        assert!(validate_page_args(None, Some(10), None, Some("c")).is_ok());
+        assert!(validate_page_args(None, None, None, None).is_ok());
+
+        assert!(validate_page_args(Some(MAX_PAGE_SIZE + 1), None, None, None).is_err());
+        assert!(validate_page_args(None, Some(MAX_PAGE_SIZE + 1), None, None).is_err());
+        assert!(validate_page_args(Some(-1), None, None, None).is_err());
+        assert!(validate_page_args(None, Some(-1), None, None).is_err());
+        assert!(
+            validate_page_args(Some(10), None, None, Some("c")).is_err(),
+            "first with before mixes the directions"
+        );
+        assert!(validate_page_args(Some(10), Some(10), None, None).is_err());
+        assert!(validate_page_args(None, Some(10), Some("c"), None).is_err());
     }
 }
 
