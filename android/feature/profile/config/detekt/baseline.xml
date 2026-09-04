@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:ProfileScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProfileScreen</ID>
+    <ID>LongMethod:AvatarFlowScreen.kt:@Composable private fun ColumnScope.SealStage</ID>
+    <ID>LongMethod:ProfileEditScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProfileEditScreen</ID>
+    <ID>LongMethod:ProfileScreen.kt:@Composable private fun ProfileHeader</ID>
+    <ID>LongMethod:ProfileScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProfileScreen</ID>
+  </CurrentIssues>
+</SmellBaseline>

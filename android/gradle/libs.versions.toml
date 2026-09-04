@@ -10,6 +10,21 @@ agp = "8.13.2"
 kotlin = "2.3.21"
 ksp = "2.3.11"
 
+# Static analysis. ktlint is the formatter (the analogue of `cargo fmt`)
+# and detekt the rule engine (the analogue of clippy); ktlint's own docs
+# point at JLLeitschuh's plugin for Gradle, and detekt ships its own.
+#
+# **detekt is pinned to a prerelease deliberately.** detekt embeds a
+# Kotlin compiler to parse with, so it is tightly coupled to the Kotlin
+# version in use (detekt.dev/docs/introduction/compatibility). The last
+# stable, 1.23.8, is built against Kotlin 2.0.21 and reports a flood of
+# false positives against 2.3 metadata — detekt#8865, closed as not
+# planned, with "use detekt 2" as the answer. 2.x is the only line that
+# supports Kotlin 2.3 at all.
+detekt = "2.0.0-alpha.6"
+ktlint = "1.8.0"
+ktlintGradle = "14.2.0"
+
 # SDK levels. minSdk 26 gives a clean Android Keystore story for the
 # encrypted token store; compile/target track the current stable platform.
 # targetSdk 36 is also Play's floor for new apps and updates from
@@ -223,3 +238,5 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 apollo = { id = "com.apollographql.apollo", version.ref = "apollo" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlintGradle" }

@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>FunctionOnlyReturningConstant:RefreshTest.kt:RefreshTest$private fun unauthenticated</ID>
+    <ID>MagicNumber:ChunkedUpload.kt:PartUploader$200</ID>
+    <ID>MagicNumber:ChunkedUpload.kt:PartUploader$299</ID>
+    <ID>MagicNumber:ChunkedUpload.kt:PartUploader$400</ID>
+    <ID>MagicNumber:ChunkedUpload.kt:PartUploader$499</ID>
+    <ID>MatchingDeclarationName:ChunkedUpload.kt:PartUploader</ID>
+    <ID>MatchingDeclarationName:Mapping.kt:GraphQlFaultException : Exception</ID>
+    <ID>MatchingDeclarationName:References.kt:ReferenceRepositoryImpl : ReferenceRepository</ID>
+    <ID>MatchingDeclarationName:Topics.kt:TopicRepositoryImpl : TopicRepository</ID>
+    <ID>TooManyFunctions:Mapping.kt:com.cogra.network.Mapping.kt</ID>
+    <ID>TooManyFunctions:NetworkModule.kt:NetworkBindsModule</ID>
+    <ID>TooManyFunctions:RepositoryImpls.kt:AccountRepositoryImpl : AccountRepository</ID>
+    <ID>TooManyFunctions:StoreImpls.kt:IdentityStoreImpl : IdentityStore</ID>
+  </CurrentIssues>
+</SmellBaseline>

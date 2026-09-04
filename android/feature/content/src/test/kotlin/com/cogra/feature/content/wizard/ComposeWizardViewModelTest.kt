@@ -441,7 +441,8 @@ class ComposeWizardViewModelTest {
 
         val failed = vm.state.value.picked.single { it.uri == "b" }.upload
         assertThat(failed).isInstanceOf(AssetUpload.Failed::class.java)
-        assertThat((failed as AssetUpload.Failed).message).isEqualTo("too big")
+        assertThat((failed as AssetUpload.Failed).reason)
+            .isEqualTo(UploadFailure.REFUSED_PICTURE)
         // The other pick is untouched, and the seal will not sign.
         assertThat(vm.state.value.picked.single { it.uri == "a" }.mediaId).isEqualTo("m1")
         assertThat(vm.state.value.canSign).isFalse()
@@ -874,7 +875,7 @@ class ComposeWizardViewModelTest {
 
         val second = vm.state.value.picked[1].upload
         assertThat(second).isInstanceOf(AssetUpload.Failed::class.java)
-        assertThat((second as AssetUpload.Failed).message).isEqualTo("already attached")
+        assertThat((second as AssetUpload.Failed).serverMessage).isEqualTo("already attached")
         // It landed on the pick, so nothing spills into the one-line
         // problem the screen shows for the unplaceable.
         assertThat(vm.state.value.refusal).isNull()
@@ -1014,8 +1015,8 @@ class ComposeWizardViewModelTest {
         assertThat(media.order).containsExactly("still")
         val upload = vm.state.value.picked.single().upload
         assertThat(upload).isInstanceOf(AssetUpload.Failed::class.java)
-        assertThat((upload as AssetUpload.Failed).message)
-            .isEqualTo(ComposeWizardViewModel.UNREADABLE_VIDEO)
+        assertThat((upload as AssetUpload.Failed).reason)
+            .isEqualTo(UploadFailure.UNREADABLE_VIDEO)
         assertThat(vm.state.value.uploadsComplete).isFalse()
     }
 
@@ -1026,7 +1027,7 @@ class ComposeWizardViewModelTest {
         vm.toDetailsWithVideo()
 
         val upload = vm.state.value.picked.single().upload
-        assertThat((upload as AssetUpload.Failed).message).isEqualTo("not H.264")
+        assertThat((upload as AssetUpload.Failed).serverMessage).isEqualTo("not H.264")
     }
 
     @Test
@@ -1055,7 +1056,7 @@ class ComposeWizardViewModelTest {
         // It never joined the batch, so the tray is untouched.
         assertThat(vm.state.value.picked).isEmpty()
         val refused = vm.state.value.refused.single()
-        assertThat(refused.message).isEqualTo(ComposeWizardViewModel.UNREADABLE_FILE)
+        assertThat(refused.reason).isEqualTo(UploadFailure.UNREADABLE_FILE)
         // Nothing to preview: the tile is empty on purpose.
         assertThat(refused.uri).isNull()
 
@@ -1075,7 +1076,7 @@ class ComposeWizardViewModelTest {
 
         assertThat(vm.state.value.picked).isEmpty()
         val refused = vm.state.value.refused.single()
-        assertThat(refused.message).isEqualTo(ComposeWizardViewModel.PICTURE_TOO_BIG)
+        assertThat(refused.reason).isEqualTo(UploadFailure.PICTURE_TOO_BIG)
         // It is a readable picture, so the row can preview it.
         assertThat(refused.uri).isEqualTo("huge.jpg")
     }
@@ -1104,8 +1105,8 @@ class ComposeWizardViewModelTest {
         // been sent is over the cap.
         assertThat(media.order).containsExactly("still")
         val upload = vm.state.value.picked.single().upload
-        assertThat((upload as AssetUpload.Failed).message)
-            .isEqualTo(ComposeWizardViewModel.VIDEO_TOO_BIG)
+        assertThat((upload as AssetUpload.Failed).reason)
+            .isEqualTo(UploadFailure.POST_VIDEO_TOO_BIG)
     }
 
     @Test
