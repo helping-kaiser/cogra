@@ -52,6 +52,61 @@ export function buttonStyle({ variant = "primary", size = "lg", selfStart = fals
    Pass it wherever `buttonStyle` is used on a raw <button>. */
 export const BUTTON_CLASS = "cg-state cg-focus cg-hit";
 
+/* THE BARE PRIMARY WORD — `Button`'s vocabulary with the button's body taken
+   away: the same `label-large` in `primary`, and nothing else. No pill, no
+   padding, no 64px minimum, no shape.
+
+   WHEN THIS AND NOT `Button variant="text"`. A text button is still a button:
+   it holds the 64px minimum so a short label keeps its weight, and it reserves
+   room around the word. That is right when the action OWNS ITS LINE — a dialog
+   footer, the foot of a wizard. It is wrong when the action rides at the end
+   of a line the reader is already reading: on a seal row the label, the value
+   and the action share one line by ruling, and the pill's minimum is what
+   wraps it. So — a `Button` for an action on its own line, an `InlineAction`
+   for one at the end of somebody else's.
+
+   It keeps every promise the pill keeps. `BUTTON_CLASS` rides along, so ink
+   that is 20px tall still answers to a 48px target, and the state layer and
+   focus ring are the same ones. `flex: "none"` is part of the atom rather than
+   the caller's business: every place this word appears, it appears last in a
+   flex row whose middle is the part allowed to give. */
+export function InlineAction({
+  children,
+  onClick,
+  disabled = false,
+  type = "button",
+  ariaLabel,
+  className,
+  style,
+}) {
+  return (
+    <button
+      type={type}
+      disabled={disabled}
+      onClick={onClick}
+      aria-label={ariaLabel}
+      className={className ? `${BUTTON_CLASS} ${className}` : BUTTON_CLASS}
+      style={{
+        border: 0,
+        background: "none",
+        padding: 0,
+        cursor: disabled ? "default" : "pointer",
+        fontFamily: "var(--font-sans)",
+        fontSize: "var(--text-label-large)",
+        lineHeight: "var(--text-label-large--line-height)",
+        fontWeight: "var(--text-label-large--font-weight)",
+        letterSpacing: "var(--text-label-large--letter-spacing)",
+        color: "var(--primary)",
+        opacity: disabled ? "var(--state-disabled)" : undefined,
+        flex: "none",
+        ...style,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
 export function Button({
   children,
   variant = "primary",
