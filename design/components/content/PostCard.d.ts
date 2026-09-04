@@ -6,12 +6,28 @@ export interface PostAuthor {
   displayName?: string | null;
 }
 
-/** The post card of design.md §6, in its summary and detail variants. */
+/**
+ * The post card of design.md §6, in its summary and detail variants.
+ *
+ * A POST'S BODY IS `content` XOR `media` — words or a picture, never both
+ * (`docs/instances/post.md`). The words that belong beside a picture are the
+ * `description`. Both kinds draw in one order: title · body · description.
+ * Handed both, the card renders the media reading and drops `content`.
+ */
 export interface PostCardProps {
   author?: PostAuthor;
   title?: string | null;
+  /**
+   * The caption, under the body on both kinds of post. Clamped to two lines in
+   * the feed with the `More` opener under it; unclamped on `detail`.
+   */
   description?: string | null;
-  content: string;
+  /**
+   * The post's words — the body of a TEXT post, and absent on a media post,
+   * whose body is its `media`. Passing both is an impossible post: the card
+   * draws the media and ignores this.
+   */
+  content?: string | null;
   /** Rendered right-aligned beside the author, body-small on onSurfaceVariant. */
   timestamp?: string;
   /** Shown only when the reader asks for it, from the overflow menu. */
@@ -30,8 +46,9 @@ export interface PostCardProps {
   /** Fires when a stance on this post is signed, so the shell can keep it. */
   onCommit?: (pick: import("../stance/StanceReadout").StancePair, bundle: StanceBundle) => void;
   /**
-   * "summary" clamps the body to four lines and links the text region — the feed.
-   * "detail" sets the body at body-large, unclamped and unlinked — the post page.
+   * "summary" clamps the body to a 4:5 media post's height (22 lines) and the
+   * description to two, and links the text region — the feed. "detail" sets the
+   * body at body-large, unclamped and unlinked — the post page.
    */
   variant?: "summary" | "detail";
   href?: string;
