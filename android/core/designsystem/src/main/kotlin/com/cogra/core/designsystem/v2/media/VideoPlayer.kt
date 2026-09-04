@@ -42,6 +42,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.compose.PlayerSurface
@@ -165,12 +166,18 @@ fun VideoPlayer(
     // entering last is the one that ends up showing.
     val traced = remember(url) { VideoTrace.clip(url) }
 
-    DisposableEffect(url, token) {
+    // Tied to the lifecycle rather than to composition alone: the stage
+    // gives the decoder back when the app goes to the background
+    // ([VideoStageLifecycle]), and a surface still composed behind that
+    // has to ask for a player again when the app comes back — otherwise
+    // it sits on its poster forever, holding a token for a player that
+    // no longer exists.
+    LifecycleStartEffect(url, token) {
         VideoStage.claim(context, url, token)
         VideoStage.holding?.player?.let {
             VideoTrace.handover(traced, "claimed", it.currentPosition, it.isPlaying)
         }
-        onDispose {
+        onStopOrDispose {
             // The player outlives this surface — surrendering is what
             // hands it on, and releasing it here is what used to make
             // the next screen start over.

@@ -141,8 +141,14 @@ object VideoStage {
      * opening the detail re-showed the cover even though the same
      * player had been playing a moment earlier. The stage outlives the
      * surfaces, so it is the thing that can remember.
+     *
+     * Compose state for the same reason [holding] is: the poster rule
+     * reads it while composing, and the surface has to recompose to take
+     * the cover away when the first frame lands. A plain field is read
+     * without recording a dependency, so the answer would change and
+     * nothing would ask again.
      */
-    var hasRendered: Boolean = false
+    var hasRendered: Boolean by mutableStateOf(false)
         private set
 
     /** The player rendered — from here on this clip needs no stand-in. */
