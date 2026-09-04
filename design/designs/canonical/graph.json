@@ -7,6 +7,8 @@
     "os": "Hands off to the OS — browser download, mail app, system sheet"
   },
   "scanExempt": {
+    "KeyConfirm": "the record-your-code dialog covers the ceremony — the arrow beneath the scrim is inactive in this state; only the dialog's own pair is live",
+    "KeyDecline": "the without-a-backup dialog covers the ceremony — the arrow beneath the scrim is inactive in this state; only the dialog's own pair is live",
     "VouchBackPad": "the scrim wash covers the shell — its semantic elements (band, nav, the vouch card's own controls) are inactive in this state; only the parked pad is live",
     "FeedSheet": "the filter sheet covers the feed — the trigger, post cards, and nav beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
     "ExploreFilter": "the search filter sheet covers the results — the field, trigger, rows, and nav beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",

@@ -240,6 +240,44 @@ function TaskCard({ title, body, children }) {
   );
 }
 
+/* The key ceremony, as the two dialogs find it (readme §13, entry). KeyConfirm
+   and KeyDecline are the SAME screen under a different ask, so the screen is
+   written once and the boards differ only in the dialog stacked on it — the
+   ThreadDetail rule: a body on a second board stops being board-local. The
+   ceremony's own second paragraph and its two buttons belong to KeyCeremony,
+   where they are still reachable; under a modal they are not, and drawing
+   controls the dialog has taken away would be drawing a lie. */
+function KeyPledge() {
+  return (
+    <>
+      <PageHeader backHref="#" backLabel="Back" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: "var(--text-headline-small)",
+            lineHeight: "var(--text-headline-small--line-height)",
+            fontWeight: "var(--text-headline-small--font-weight)",
+          }}
+        >
+          Your key
+        </h1>
+        <p
+          style={{
+            margin: "8px 0 0",
+            fontSize: "var(--text-body-large)",
+            lineHeight: "var(--text-body-large--line-height)",
+            letterSpacing: "var(--text-body-large--letter-spacing)",
+          }}
+        >
+          Everything you publish is signed with a key that is created on this device and stays in your hands — CoGra never
+          holds it and can never reissue it.
+        </p>
+      </div>
+    </>
+  );
+}
+
 /* The detail surface's header: back plus the ONE overflow. On a detail view the
    menu lives up here and the card's own dot yields (PostCard hides it in
    detail) — two dots would be two menus for one post. */
