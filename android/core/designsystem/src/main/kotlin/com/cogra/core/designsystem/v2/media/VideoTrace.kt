@@ -21,9 +21,13 @@ import com.cogra.core.designsystem.BuildConfig
  * adb logcat -s CograVideo
  * ```
  *
- * **Debug only.** Every call is behind `BuildConfig.DEBUG`, a compile
- * time constant, so R8 removes the calls and their strings from a
- * release build rather than shipping a quiet logger.
+ * **Debug only, at runtime.** `BuildConfig.DEBUG` is a real branch, not
+ * a folded constant — AGP emits `Boolean.parseBoolean("true")` precisely
+ * so the compiler cannot inline it — and release builds run no shrinker
+ * today. So the gate is what it looks like: a test taken on every call.
+ * What it must not also cost is the line it would have logged, which is
+ * why every message is a lambda inlined into [log] and built only on the
+ * debug side of the test.
  *
  * The vocabulary is deliberately small and every line carries the clip
  * it is about, because two clips on screen at once is one of the cases
@@ -45,7 +49,7 @@ internal object VideoTrace {
      * resizes for the video" would show changing.
      */
     fun surface(clip: String, event: String, widthPx: Int, heightPx: Int) =
-        log("surface  $clip  $event  box=${widthPx}x$heightPx")
+        log { "surface  $clip  $event  box=${widthPx}x$heightPx" }
 
     /**
      * The player was bound to, or unbound from, a surface — and where
@@ -56,7 +60,7 @@ internal object VideoTrace {
      * code intends.
      */
     fun handover(clip: String, event: String, positionMs: Long, playing: Boolean) =
-        log("handover $clip  $event  pos=${positionMs}ms playing=$playing")
+        log { "handover $clip  $event  pos=${positionMs}ms playing=$playing" }
 
     /**
      * `PresentationState.videoSizeDp` arrived — or was still null when
@@ -66,7 +70,7 @@ internal object VideoTrace {
      * the one the previous fix made the geometry depend on.
      */
     fun videoSize(clip: String, width: Float?, height: Float?) =
-        log("videosize $clip  ${width?.toInt() ?: "null"}x${height?.toInt() ?: "null"}")
+        log { "videosize $clip  ${width?.toInt() ?: "null"}x${height?.toInt() ?: "null"}" }
 
     /**
      * The poster went in front of the surface, or came away, and why.
@@ -75,17 +79,17 @@ internal object VideoTrace {
      * least three candidate causes and they need different fixes.
      */
     fun poster(clip: String, shown: Boolean, reason: String) =
-        log("poster   $clip  ${if (shown) "SHOWN" else "hidden"}  $reason")
+        log { "poster   $clip  ${if (shown) "SHOWN" else "hidden"}  $reason" }
 
     /** Autoplay's own decision, with the number it decided on. */
     fun autoplay(clip: String, visibleFraction: Float, playing: Boolean) =
-        log("autoplay $clip  visible=${"%.2f".format(visibleFraction)} play=$playing")
+        log { "autoplay $clip  visible=${"%.2f".format(visibleFraction)} play=$playing" }
 
     /** A frame actually reached the surface — the end of every flash. */
-    fun firstFrame(clip: String) = log("frame    $clip  FIRST")
+    fun firstFrame(clip: String) = log { "frame    $clip  FIRST" }
 
-    private fun log(message: String) {
-        if (BuildConfig.DEBUG) Log.d(TAG, message)
+    private inline fun log(message: () -> String) {
+        if (BuildConfig.DEBUG) Log.d(TAG, message())
     }
 
     private const val CLIP_NAME_CHARS = 12
