@@ -395,6 +395,12 @@ fn recovery_code_inputs(code: &RecoveryCode) -> Value {
 /// fixed code, salt and nonce, with the real open path accepting that
 /// fixture in turn. The upload proof (auth.md "Key recovery") has the actor
 /// key sign the server's challenge bound to those exact blob bytes.
+///
+/// `version` is 2 since the refusal corpus arrived: `signatureRefusals`,
+/// `rejections`, `families` and `keyBackup.recoveryCodeInputs` are groups a
+/// version-1 reader does not know to look for. The number moves only once
+/// every client reads the new shape, which is what each client's own version
+/// assertion states.
 fn build_vectors() -> Value {
     let actor_seed: [u8; 32] = seq_bytes(0x01, 32).try_into().expect("32 bytes");
     let actor = ActorKey::from_seed(actor_seed);
@@ -535,11 +541,6 @@ fn build_vectors() -> Value {
     ));
 
     json!({
-        // 2 since the refusal corpus arrived: `signatureRefusals`,
-        // `rejections`, `families`, and `keyBackup.recoveryCodeInputs`
-        // are groups a version-1 reader does not know to look for. The
-        // number moves only once every client reads the new shape, which
-        // is what their own version assertions state.
         "version": 2,
         "encoding": encoding_vectors(),
         "families": family_vectors(),
