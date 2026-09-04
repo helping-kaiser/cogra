@@ -31,11 +31,13 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.cogra.core.designsystem.R
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.MediaFrame
@@ -226,13 +228,14 @@ private const val AUTOPLAY_VISIBLE_FRACTION = 0.7f
  */
 @Composable
 private fun PageDots(count: Int, current: Int, testTag: String?) {
+    val position = stringResource(R.string.media_gallery_position, current + 1, count)
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = MediaFrame.DotRowTopPadding)
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
             .clearAndSetSemantics {
-                contentDescription = "Picture ${current + 1} of $count"
+                contentDescription = position
             },
         horizontalArrangement = Arrangement.spacedBy(MediaFrame.DotGap, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
