@@ -18,6 +18,7 @@ import androidx.media3.transformer.InAppMp4Muxer
 import androidx.media3.transformer.ProgressHolder
 import androidx.media3.transformer.Transformer
 import androidx.media3.transformer.VideoEncoderSettings
+import com.cogra.domain.CograLog
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
 import com.cogra.domain.media.VideoBitrate
@@ -58,29 +59,45 @@ class AndroidVideoProcessor(
     private val context: Context,
 ) : VideoProcessor {
 
+    /**
+     * On `Dispatchers.IO` like every sibling method here.
+     *
+     * The two `probe` calls bind a `MediaMetadataRetriever` to the
+     * clip's bytes and the file checks touch the disk — blocking work
+     * on a clip of up to a hundred mebibytes. Both callers launch in
+     * `viewModelScope`, which is `Dispatchers.Main.immediate`, so
+     * without this hop the reads ran on the UI thread. The inner
+     * `export` keeps its own `withContext(Dispatchers.Main)`, which
+     * Transformer's Looper contract requires.
+     */
     override suspend fun transcode(
         uri: String,
         capBytes: Long,
         onProgress: (Int) -> Unit,
-    ): ProcessedVideo? {
-        val probe = probe(uri) ?: return null
+    ): ProcessedVideo? = withContext(Dispatchers.IO) {
+        val probe = probe(uri) ?: return@withContext null
         val output = File(context.cacheDir, "upload-${System.nanoTime()}.mp4")
 
         val exported = runCatching { export(uri, probe, output, capBytes, onProgress) }
-            .getOrElse {
+            .getOrElse { failure ->
+                CograLog.w(TAG, failure) { "transcode threw before it could export" }
                 output.delete()
-                return null
+                return@withContext null
             }
         if (!exported || !output.isFile || output.length() == 0L) {
+            CograLog.w(TAG) {
+                "transcode produced nothing (exported=$exported, " +
+                    "isFile=${output.isFile}, length=${output.length()})"
+            }
             output.delete()
-            return null
+            return@withContext null
         }
 
         // The exported file is measured rather than predicted: the
         // encoder decides the final dimensions, and a scaling effect
         // rounds to what the codec accepts.
         val result = probe(Uri.fromFile(output).toString())
-        return ProcessedVideo(
+        ProcessedVideo(
             path = output.path,
             width = result?.width ?: probe.width,
             height = result?.height ?: probe.height,
@@ -151,6 +168,13 @@ class AndroidVideoProcessor(
                             result: ExportResult,
                             exception: ExportException,
                         ) {
+                            // The export's own reason — unsupported
+                            // format, encoder init, decode failure, out
+                            // of disk. It collapses to `false` here, so
+                            // this is the only place it can be kept.
+                            CograLog.w(TAG, exception) {
+                                "export failed with errorCode ${exception.errorCode}"
+                            }
                             if (cont.isActive) cont.resume(false)
                         }
                     },
@@ -362,5 +386,7 @@ class AndroidVideoProcessor(
         const val MAX_SHORT_SIDE_PX = 1080
 
         const val PROGRESS_POLL_MS = 250L
+
+        const val TAG = "VideoProcessor"
     }
 }
