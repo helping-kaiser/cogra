@@ -54,13 +54,20 @@ export interface CommentCardProps {
   /** The viewer authored this comment, so the edit affordance shows. */
   own?: boolean;
   targetLabel?: string;
+  /**
+   * Where this comment shows OUT of its thread — a profile's comments view, a
+   * search result. The card leads with what it answers, one tap to get there.
+   * A thread surface passes no target, since the sheet's post is the context.
+   */
+  target?: string;
+  /** The target's kind, naming the glyph (`NODE_GLYPHS`). Defaults to `"post"`. */
+  targetKind?: string;
+  /** Opens the target. Shown only when both `target` and this are set. */
+  onOpenTarget?: () => void;
   /** Extra affordances in the same row as the stance control, Reply and Edit. */
   actions?: React.ReactNode;
   /** Extra overflow-menu items, appended after the license entry. */
   menuItems?: readonly { label: string; onSelect?: () => void }[];
-  /** Draw the comment with its license terms already unfolded — the reveal is a
-   *  state of the card, never a surface of its own. */
-  defaultShowLicense?: boolean;
   /** An open reply or edit composer, rendered between the card and its replies. */
   children?: React.ReactNode;
 }

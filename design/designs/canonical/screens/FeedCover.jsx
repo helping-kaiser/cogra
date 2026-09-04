@@ -22,7 +22,7 @@
 const SUPPRESSED = {
   ...MIRA_CLIP_POST,
   title: undefined,
-  content: undefined,
+  description: undefined,
   topics: [],
   media: [{ ...CLIP_LAKESIDE, resting: true, controls: "play" }],
 };
@@ -30,7 +30,7 @@ const SUPPRESSED = {
 const AT_REST = {
   author: TOBIAS,
   title: "Crossing at the narrows before the wind got up",
-  content: "Four of us out, one camera wedged in the bow. The far bank is closer than it looks from the road.",
+  description: "Four of us out, one camera wedged in the bow. The far bank is closer than it looks from the road.",
   timestamp: "2h",
   media: [
     {

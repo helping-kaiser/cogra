@@ -34,33 +34,9 @@ export function Screen() {
         </div>
 
         <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <TextField id="handle" label="Handle" value="" />
-            <span
-              style={{
-                fontSize: "var(--text-body-small)",
-                lineHeight: "var(--text-body-small--line-height)",
-                letterSpacing: "var(--text-body-small--letter-spacing)",
-                color: "var(--text-secondary)",
-              }}
-            >
-              3–30 characters: a–z, 0–9, _
-            </span>
-          </div>
+          <TextField id="handle" label="Handle" value="" hint="3–30 characters: a–z, 0–9, _" />
           <TextField id="email" label="Email" type="email" autoComplete="email" value="" />
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <PasswordField id="password" label="Password" autoComplete="new-password" value="" />
-            <span
-              style={{
-                fontSize: "var(--text-body-small)",
-                lineHeight: "var(--text-body-small--line-height)",
-                letterSpacing: "var(--text-body-small--letter-spacing)",
-                color: "var(--text-secondary)",
-              }}
-            >
-              At least 12 characters.
-            </span>
-          </div>
+          <PasswordField id="password" label="Password" autoComplete="new-password" value="" hint="At least 12 characters." />
         </div>
 
         <div style={{ flex: 1 }} />

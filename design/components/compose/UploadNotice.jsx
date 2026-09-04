@@ -1,4 +1,5 @@
 import React from "react";
+import { InlineAction } from "../core/Button.jsx";
 
 /* The two upload notices (media slice, 2026-08-31). Upload runs in the
    background from the moment a picture has its crop (the crop happens on the
@@ -56,32 +57,20 @@ export function UploadStatusLine({ done, total, progress }) {
 }
 
 export function UploadErrorLine({ message = "One picture didn't upload.", onRetry, onRemove }) {
-  const link = {
-    border: 0,
-    background: "none",
-    padding: 0,
-    cursor: "pointer",
-    fontFamily: "var(--font-sans)",
-    fontSize: "var(--text-label-small)",
-    lineHeight: "var(--text-label-small--line-height)",
-    fontWeight: "var(--text-label-small--font-weight)",
-    letterSpacing: "0.5px",
-    color: "var(--primary)",
-  };
   return (
     <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px" }}>
       <span style={{ color: "var(--error)" }}>{message}</span>{" "}
       {onRetry && (
         <>
-          <button type="button" onClick={onRetry} className="cg-state cg-focus cg-hit" style={link}>
+          <InlineAction size="sm" onClick={onRetry}>
             Retry
-          </button>{" "}
+          </InlineAction>{" "}
           <span style={{ color: "var(--text-secondary)" }}>·</span>{" "}
         </>
       )}
-      <button type="button" onClick={onRemove} className="cg-state cg-focus cg-hit" style={link}>
+      <InlineAction size="sm" onClick={onRemove}>
         Remove it
-      </button>
+      </InlineAction>
     </p>
   );
 }

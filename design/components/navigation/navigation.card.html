@@ -8,11 +8,13 @@
 <style>body{padding:16px}.col{display:flex;flex-direction:column;gap:14px;max-width:420px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}.bar{border-radius:var(--radius-medium);overflow:hidden}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { PageHeader, BottomNav, Icon, Button, SegmentedFilter, BorrowedViewBand, ALL_SLOTS } = window.CoGraDesignSystem_9084ba;
+const { PageHeader, BottomNav, Icon, Button, SegmentedFilter, TabBar, BorrowedViewBand, ALL_SLOTS } = window.CoGraDesignSystem_9084ba;
 const link = {color:"var(--primary)",fontSize:"var(--text-label-large)",textDecoration:"none"};
 function Demo(){
   const [active,setActive]=React.useState("feed");
   const [view,setView]=React.useState("ranked");
+  const [chron,setChron]=React.useState("everything");
+  const [dir,setDir]=React.useState("on");
   return (
   <div className="col">
     <span className="lbl">Tab root — no back arrow</span>
@@ -21,6 +23,11 @@ function Demo(){
     <PageHeader title="@ada" backHref="#" backLabel="Back to feed" action={<a href="#" aria-label="Settings" style={{...link,color:"var(--text-secondary)",display:"flex"}}><Icon name="settings"/></a>}/>
     <span className="lbl">Segmented filter — two to four alternatives where exactly one is true, in equal segments. The feed's real filter is a sheet: see "What your feed shows"</span>
     <SegmentedFilter ariaLabel="Order" value={view} onChange={setView} options={[{value:"ranked",label:"Ranked"},{value:"newest",label:"Newest"}]}/>
+    <span className="lbl">TabBar — equal cells and a 2px underline, NOT a segmented pill. Glyph cells take their name from the label; word cells are their own name</span>
+    <TabBar ariaLabel="What the chronicle shows" value={chron} onSelect={setChron}
+            tabs={[{id:"posts",icon:"dynamic_feed",label:"Posts"},{id:"comments",icon:"chat_bubble",label:"Comments"},{id:"everything",icon:"history",label:"Everything"}]}/>
+    <TabBar ariaLabel="Which direction" value={dir} onSelect={setDir}
+            tabs={[{id:"on",label:"On them"},{id:"taken",label:"They've taken"}]}/>
     <span className="lbl">Borrowed-view band — a guest feed is ranked from a borrowed vantage point, and the band always names it</span>
     <BorrowedViewBand handle="mira" displayName="Mira Halvorsen" actionLabel="Sign in or join"/>
     <span className="lbl">The applicant reading — same vantage, no join entry</span>

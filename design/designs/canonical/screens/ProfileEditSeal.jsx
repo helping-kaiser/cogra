@@ -5,16 +5,7 @@
 export function Screen() {
   return (
     <>
-      <WizardHeader
-        title="What you sign"
-        leaveLabel="Leave"
-        action={
-          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>Last step</span>
-            <SystemHelpDot ariaLabel="Changing your profile" />
-          </span>
-        }
-      />
+      <WizardHeader title="What you sign" leaveLabel="Leave" stageLabel="Last step" help="Changing your profile" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <MonogramAvatar name="Sol Ferreira" size={64} />
@@ -30,16 +21,11 @@ export function Screen() {
 
         <ActsCard rows={[{ label: "Profile", value: "A new picture, bio and website", count: "1 action" }]} total="1 signed action" />
 
-        <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          Every change to your profile is signed in your name and stays in your public record.
-        </p>
+        <QuietNote>Every change to your profile is signed in your name and stays in your public record.</QuietNote>
 
         <div style={{ flex: 1 }} />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <Button style={{ width: "100%" }}>Sign the change</Button>
-          <Button variant="text" style={{ width: "100%" }}>Back</Button>
-        </div>
+        <SealFooter signLabel="Sign the change" />
       </div>
     </>
   );

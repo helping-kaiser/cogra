@@ -32,27 +32,12 @@ export function Screen() {
   return (
     <>
       <WizardHeader title="New post" />
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 24px" }}>
-        <p style={{ margin: 0, flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
-          Pick one picture, several, or one video.
-        </p>
-        <Button variant="text" size="sm">Write words instead</Button>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "4px 24px 12px", borderBottom: "1px solid var(--border-hairline)" }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-          <span style={{ flex: 1, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "0.5px", color: "var(--text-secondary)" }}>
-            Picked · 10
-          </span>
-          <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "0.5px", color: "var(--primary)" }}>
-            Show all
-          </span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, overflow: "hidden" }}>
-          {PICKED.map((item, index) => (
-            <MediaThumb key={index} src={item.src} alt={item.alt} onRemove={() => {}} />
-          ))}
-        </div>
-      </div>
+      <PickPrompt caption="Pick one picture, several, or one video." escapeLabel="Write words instead" />
+      <PickTray count={10} onShowAll={() => {}} clip>
+        {PICKED.map((item, index) => (
+          <MediaThumb key={index} src={item.src} alt={item.alt} onRemove={() => {}} />
+        ))}
+      </PickTray>
       <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "14px 24px 0" }}>
         <RefusedFile
           src="gallery-honey.jpg"

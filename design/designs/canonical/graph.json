@@ -7,6 +7,9 @@
     "os": "Hands off to the OS — browser download, mail app, system sheet"
   },
   "scanExempt": {
+    "GuestGate": "the join prompt covers the borrowed view — the band, the post card, and nav beneath the scrim are inactive in this state; only the ask (and its scrim) is live",
+    "KeyConfirm": "the record-your-code dialog covers the ceremony — the arrow beneath the scrim is inactive in this state; only the dialog's own pair is live",
+    "KeyDecline": "the without-a-backup dialog covers the ceremony — the arrow beneath the scrim is inactive in this state; only the dialog's own pair is live",
     "VouchBackPad": "the scrim wash covers the shell — its semantic elements (band, nav, the vouch card's own controls) are inactive in this state; only the parked pad is live",
     "FeedSheet": "the filter sheet covers the feed — the trigger, post cards, and nav beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
     "ExploreFilter": "the search filter sheet covers the results — the field, trigger, rows, and nav beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
@@ -22,7 +25,18 @@
     "ComposePickVideo": "a clip owns the body — the gallery grid and the photos-app tile are inert in this state, and the tray's × is the way back to a step that takes picks",
     "ReaderPostMenu": "the reader's sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "CommentMenu": "the comment's sheet covers the thread, which covers the post detail — two sheets deep, and only the top one (and the wash under it) is live",
-    "ProfileMenu": "the profile's sheet covers the page — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live"
+    "PostLicense": "the license sheet covers the post detail — everything beneath the scrim is inactive in this state, and the terms themselves are a block to read, not controls; only the wash is live",
+    "CommentLicense": "the license sheet covers the thread, which covers the post detail — two sheets deep, and only the wash under the top one is live",
+    "ProfileMenu": "the profile's sheet covers the page — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "ComposeLicense": "the license sheet covers the seal — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "ComposeSensitive": "the sensitive sheet covers the seal — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "ComposePad": "the wash covers the seal — its header, facts and sign button are inactive in this state; only the parked pad is live",
+    "ReplyPad": "the wash covers the reply's seal — its header, its one fact and the sign button are inactive in this state; only the parked pad is live",
+    "EditActs": "the acts sheet covers the edit — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "HelpDialog": "the \"?\" dialog covers the seal — everything beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
+    "DiscardConfirm": "the discard dialog covers the composer it was raised from — everything beneath the scrim is inactive in this state; only the dialog's own pair is live",
+    "PadKeyAbsent": "the wash covers the feed — the band, the post card and nav beneath it are inactive in this state; only the parked pad and the key notice inside it are live",
+    "NetworkError": "the fault in place — a pattern exemplar drawn on the seal, where the retry the failure offers is the only thing this board is about; the seal's own header, facts and way back are `ComposeSeal`'s controls, wired on that board"
   },
   "entries": {
     "Main": "arrival through an invite link — the inviter's borrowed view",
@@ -42,7 +56,6 @@
     "FeedGallery": "a feed whose post carries several pictures — content, not a tap",
     "FeedCover": "a feed whose posts carry clips, one before its first play and one the device will not autoplay — content and device, not a tap",
     "ViewerLandscape": "the viewer with the device turned — rotation, not a tap",
-    "PostLicense": "the post detail with its license unfolded — the menu row reveals the terms in place, so this is a state of the card, not a screen a tap navigates to",
     "ReplyCited": "the reply's seal with a reference staged — the picker hands its pick back to the composer it was opened from, so this is a state of the seal, not a screen a tap navigates to"
   },
   "boardKinds": {
@@ -731,14 +744,14 @@
     { "from": "RemoveMenu", "via": 1, "kind": "advance", "label": "Edit", "to": [{ "board": "EditCompose" }] },
     { "from": "RemoveMenu", "via": 2, "kind": "advance", "label": "Mark as sensitive", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master)" }] },
     { "from": "RemoveMenu", "via": 3, "kind": "advance", "label": "Remove", "to": [{ "board": "RemoveConfirm" }] },
-    { "from": "RemoveMenu", "via": 4, "kind": "detour", "label": "License terms", "to": [{ "terminal": "self", "case": "the sheet closes and the terms unfold on the card beneath — the row reads Hide license", "info": true }] },
+    { "from": "RemoveMenu", "via": 4, "kind": "detour", "label": "License terms", "to": [{ "board": "PostLicense", "case": "the menu closes and the terms come up in a sheet over the post (master — a post's terms read the same from either menu)" }] },
     { "from": "RemoveMenu", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
 
-    { "from": "ReaderPostMenu", "via": 1, "kind": "detour", "label": "License terms", "to": [{ "terminal": "self", "case": "the sheet closes and the terms unfold on the card — the row reads Hide license", "info": true }] },
+    { "from": "ReaderPostMenu", "via": 1, "kind": "detour", "label": "License terms", "to": [{ "board": "PostLicense", "case": "the menu closes and the terms come up in a sheet over the post" }] },
     { "from": "ReaderPostMenu", "via": 2, "kind": "advance", "label": "Cite in a new post", "to": [{ "board": "ComposePick", "case": "the post wizard opens fresh at its first stage — this post rides along invisibly until details" }] },
     { "from": "ReaderPostMenu", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
 
-    { "from": "CommentMenu", "via": 1, "kind": "detour", "label": "License terms", "to": [{ "terminal": "self", "case": "the sheet closes and the terms unfold on the comment — the row reads Hide license", "info": true }] },
+    { "from": "CommentMenu", "via": 1, "kind": "detour", "label": "License terms", "to": [{ "board": "CommentLicense", "case": "the menu closes and the comment's terms come up in a sheet over the thread" }] },
     { "from": "CommentMenu", "via": 2, "kind": "advance", "label": "Cite in a new post", "to": [{ "board": "ComposePick", "case": "the post wizard opens fresh at its first stage — this comment rides along invisibly until details" }] },
     { "from": "CommentMenu", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the menu closes — the thread is still open beneath it" }] },
 
@@ -746,20 +759,9 @@
     { "from": "ProfileMenu", "via": 2, "kind": "advance", "label": "Share this profile", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
     { "from": "ProfileMenu", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
 
-    { "from": "PostLicense", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back" }] },
-    { "from": "PostLicense", "via": 2, "kind": "detour", "label": "post overflow ⋮", "to": [{ "board": "ReaderPostMenu", "case": "the same sheet, its first row now reading Hide license" }] },
-    { "from": "PostLicense", "via": 3, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
-    { "from": "PostLicense", "via": 4, "kind": "advance", "label": "detail media", "to": [{ "board": "ViewerPicture", "case": "the frame, whole and full-screen" }] },
-    { "from": "PostLicense", "via": 5, "kind": "advance", "label": "topics and references", "to": [{ "board": "RefsSheet" }] },
-    { "from": "PostLicense", "via": 6, "kind": "advance", "label": "stance face", "to": [{ "terminal": "self", "case": "tap — a positive act lands" }, { "board": "VouchBackPad", "case": "press-and-hold — the pad blooms (master board)" }] },
-    { "from": "PostLicense", "via": 7, "kind": "detour", "label": "Post Score", "to": [{ "gap": "Post Score drill-down (backlog item 13)" }] },
-    { "from": "PostLicense", "via": 8, "kind": "advance", "label": "comment count", "to": [{ "board": "ReplyEntry" }] },
-    { "from": "PostLicense", "via": 9, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
-    { "from": "PostLicense", "via": 10, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed" }] },
-    { "from": "PostLicense", "via": 11, "kind": "nav", "label": "nav · Explore", "to": [{ "board": "Explore" }] },
-    { "from": "PostLicense", "via": 12, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
-    { "from": "PostLicense", "via": 13, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
-    { "from": "PostLicense", "via": 14, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+    { "from": "PostLicense", "via": 1, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the post is still open beneath it" }] },
+
+    { "from": "CommentLicense", "via": 1, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the thread is still open beneath it" }] },
 
     { "from": "ComposeCited", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposeWords", "case": "one stage back — the words, the reference still riding" }] },
     { "from": "ComposeCited", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },

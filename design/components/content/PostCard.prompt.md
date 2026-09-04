@@ -7,7 +7,7 @@ Use `PostCard` for a post anywhere it appears — the feed, the post page, a pro
 
 **Every card carries the overflow menu.** Genesis content always declares a license, so there is always at least one item in it, and a trigger that appears on some cards and not others is worse than one that is always in the same place.
 
-**The license is not on the initial view.** It is a term over downstream reuse, read once in a hundred readings, so it lives behind the card's overflow menu (`License terms`) and appears under the content only once asked for. Pass extra rare interactions — report, open a proposal, copy a link — as `menuItems`.
+**The license is not on the card.** It is a term over downstream reuse, read once in a hundred readings, so it lives behind the card's overflow menu (`License terms`), and the row opens it in a sheet over the surface the reader asked from. Pass extra rare interactions — report, open a proposal, copy a link — as `menuItems`.
 
 **The Post Score is a prop, not something each surface passes in.** Every post in a ranked listing has one, so `score` renders it in the affordance row after the stance control, as Material's `graph_3` glyph plus the number. Uncapped, negative allowed, never coloured.
 
@@ -21,4 +21,6 @@ Everything a post grows beyond its content goes in the **affordance row**: **one
 
 **Tapping the card opens the post.** Anything in it that has its own meaning — the author chip, the overflow trigger, the affordance row — keeps it; everything else routes to the detail view.
 
-`summary` clamps the body to four lines and makes the text region the link; `detail` sets it at `body-large`, unclamped, with the title at `headline-small`. In both, the **author leads** — people first, so the chip is above the content, never a byline under it. The stance control sits outside the link region because it acts rather than navigates. Media is full-bleed via `media` (`MediaGallery`), portrait capped at 4:5 and height-capped at `--media-max-height` so the whole card — affordance row included — fits above the bottom bar.
+**A post's body is `content` XOR `media` — words or a picture, never both.** Words that belong beside a picture are the `description`, so a media post carries no `content` at all; a text post's body is `content`. Both kinds draw in one order: **title · body · description**. Hand the card both and it renders the media reading and drops `content` — the manifest is the body, and an impossible post never gets an invented layout.
+
+`summary` clamps the description to two lines and the text body to 22 — the height a 4:5 media post takes at the card's own content width, so a feed of both kinds keeps one rhythm — and makes the text region the link; `More` opens what is folded. `detail` sets the body at `body-large`, clamps nothing, and puts the title at `headline-small`. In both, the **author leads** — people first, so the chip is above the content, never a byline under it. The stance control sits outside the link region because it acts rather than navigates. Media is full-bleed via `media` (`MediaGallery`), portrait capped at 4:5 and height-capped at `--media-max-height` so the whole card — affordance row included — fits above the bottom bar.

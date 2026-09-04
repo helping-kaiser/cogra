@@ -416,6 +416,15 @@
       "page": "comments"
     },
     {
+      "file": "CommentLicense.dc.html",
+      "title": "Comment · the license sheet",
+      "x": 2400,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
       "file": "CommentEditActs.dc.html",
       "title": "Edit comment · the acts",
       "x": 1440,
@@ -858,7 +867,7 @@
     },
     {
       "file": "PostLicense.dc.html",
-      "title": "Post · the license unfolded",
+      "title": "Post · the license sheet",
       "x": 2400,
       "y": 2120,
       "w": 390,

@@ -35,7 +35,7 @@ export function Screen() {
             showHandle={false}
           />
         </div>
-        <ChronicleTabs value="comments" />
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="comments" tabs={CHRONICLE_TABS} />
         <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "8px 0 0" }}>
           <CommentCard
             author={ADA}

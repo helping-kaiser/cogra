@@ -7,7 +7,6 @@ export function Screen() {
         <PostCard {...TOBIAS_POST} bundle={null} />
         <PostCard
           author={ADA}
-          content=""
           timestamp="4h"
           media={[{ src: "post-photo.jpg", ratio: "wide", fit: "cover" }]}
           bundle={mkBundle(0.1, 0.1)}

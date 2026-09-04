@@ -327,17 +327,17 @@ validation exists yet to trigger them):
 
 ## Awaiting blessing — the menus round
 
-The words the three overflow menus and the unfolded license terms put
-in front of a reader. The menu rows were already in the fixtures and
+The words the three overflow menus and the license sheet put in front
+of a reader. The menu rows were already in the fixtures and
 the graph; what is genuinely new is the license block's own readings,
 because the read side stopped borrowing the chooser's.
 
 **The menu rows**, unchanged in wording and settled in spelling — one
 `License terms` everywhere, never the British spelling:
 
-- `License terms` · `Hide license` — the one row, both states. It
-  reveals the terms in place and folds them away again, so it changes
-  its words rather than its position.
+- `License terms` — the one row, on a post's menu and a comment's
+  alike. It opens the terms in a sheet over the surface the reader
+  asked from.
 - `Cite in a new post` — on a post's menu and a comment's alike.
 - `Mention in a new post` — the same row on a person, and the same
   fact; only the far end of the reference differs.
@@ -358,7 +358,8 @@ in fact owe. These address the reuser instead. One per axis value:
 **The block's own furniture**:
 
 - `License terms` — the caption, the same words as the row that
-  unfolded it, so the answer names the question.
+  opened the sheet, so the answer names the question. It is the
+  block's only heading; the sheet adds none.
 - `Public domain` — the name of the both-axes-zero pair, on the
   caption line. The rows below still spell what it means; the name is
   what a reader already knows it by.

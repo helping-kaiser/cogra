@@ -8,29 +8,11 @@ export function Screen() {
   return (
     <>
       <WizardHeader title="New post" />
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 24px" }}>
-        <p style={{ margin: 0, flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
-          Pick one picture, several, or one video.
-        </p>
-        <Button variant="text" size="sm">Write words instead</Button>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "4px 24px 12px", borderBottom: "1px solid var(--border-hairline)" }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-          <span style={{ flex: 1, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "0.5px", color: "var(--text-secondary)" }}>
-            Picked · 2
-          </span>
-          <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "0.5px", color: "var(--primary)" }}>
-            Show all
-          </span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <MediaThumb src="post-photo.jpg" cover />
-          <MediaThumb src="gallery-market.jpg" onRemove={() => {}} />
-          <span style={{ flex: 1, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-            The first one is the cover.
-          </span>
-        </div>
-      </div>
+      <PickPrompt caption="Pick one picture, several, or one video." escapeLabel="Write words instead" />
+      <PickTray count={2} onShowAll={() => {}} caption="The first one is the cover.">
+        <MediaThumb src="post-photo.jpg" cover />
+        <MediaThumb src="gallery-market.jpg" onRemove={() => {}} />
+      </PickTray>
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "16px 24px 24px" }}>
         <div

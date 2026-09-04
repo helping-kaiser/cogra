@@ -12,7 +12,7 @@ export interface ReelCaptionProps {
   handle?: string;
   title?: string;
   /** Clamped to two lines; `More` appears only where there is body text to open. */
-  content?: string;
+  description?: string;
   /** Distance from the surface's bottom edge, clearing the bottom bar and the seek line. */
   bottom?: number;
   onMore?: () => void;

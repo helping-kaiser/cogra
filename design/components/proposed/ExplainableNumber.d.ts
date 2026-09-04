@@ -16,6 +16,8 @@ export interface ExplainableNumberProps {
   /** An `Icon` name. A glyph rather than a word keeps the affordance row on one line. */
   glyph?: string;
   onOpenDetail?: () => void;
+  /** Restyled to sit on photography — white with a drop shadow, same register. */
+  overMedia?: boolean;
 }
 
 export declare function ExplainableNumber(props: ExplainableNumberProps): JSX.Element;

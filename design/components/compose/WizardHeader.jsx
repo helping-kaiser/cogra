@@ -1,4 +1,5 @@
 import React from "react";
+import { HelpDot } from "../core/HelpDot.jsx";
 import { PageHeader } from "../navigation/PageHeader.jsx";
 import { Icon } from "../navigation/Icon.jsx";
 
@@ -20,7 +21,23 @@ import { Icon } from "../navigation/Icon.jsx";
    column, never up here, so the top-right corner keeps one meaning through
    the whole flow. (It used to hold Next on early stages; an author trained
    on that corner hit the X once Next moved down.) `action` remains for
-   passive trailing info only — a stage label, the help dot. */
+   passive trailing info only — a stage label, the help dot.
+
+   WHICH IS WHY `stageLabel` AND `help` ARE SLOTS OF THEIR OWN (item 17, the
+   conformance round). "Passive trailing info" turned out to be one thing in
+   practice: on every seal in the system — the post's, the reply's, the
+   picture's, the profile's, the address's, the wallet change's — it is the
+   stage's name and the screen's one "?", in that order. Six boards were
+   assembling that pair by hand through the generic slot, which is six chances
+   for the gap, the colour or the wrap to drift. The header now names it.
+
+   THE ROW EXISTS ONLY WHEN THERE IS SOMETHING TO SPACE. `help` on its own —
+   what the comment and post edits carry, where the screen has a "?" but no
+   stage to name — is the dot and nothing around it. A flex row with one child
+   in it is a wrapper pretending to be a layout.
+
+   `action` stays, and stays generic, for whatever neither of those covers. A
+   board that passes both gets the pair first and its own node after. */
 
 export function WizardHeader({
   title,
@@ -29,6 +46,9 @@ export function WizardHeader({
   onBack,
   onLeave,
   leaveLabel = "Leave — your draft is kept",
+  stageLabel,
+  help,
+  onHelp,
   action,
 }) {
   return (
@@ -60,6 +80,16 @@ export function WizardHeader({
           >
             <Icon name="close" />
           </button>
+          {stageLabel ? (
+            <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
+                {stageLabel}
+              </span>
+              {help && <HelpDot ariaLabel={help} onOpen={onHelp} />}
+            </span>
+          ) : (
+            help && <HelpDot ariaLabel={help} onOpen={onHelp} />
+          )}
           {action}
         </span>
       }
