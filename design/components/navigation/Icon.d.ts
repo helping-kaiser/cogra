@@ -56,3 +56,19 @@ export interface IconProps {
 }
 
 export declare function Icon(props: IconProps): JSX.Element | null;
+
+/**
+ * The semantic glyph atoms (readme §13, Masters/variants/atoms): a node kind's
+ * glyph is assigned exactly once, here — a surface never picks one on its own.
+ * Kinds whose mark isn't a glyph (a person's avatar, a media post's cover, the
+ * text post's T tile, the topic's #) are `NodeMark`'s business instead.
+ */
+export declare const NODE_GLYPHS: {
+  readonly comment: "chat_bubble";
+  readonly proposal: "how_to_vote";
+  readonly item: "inventory_2";
+  readonly campaign: "campaign";
+  readonly offer: "sell";
+  readonly chat: "forum";
+  readonly message: "send";
+};
