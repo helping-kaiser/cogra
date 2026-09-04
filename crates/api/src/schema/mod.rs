@@ -130,6 +130,7 @@ pub fn build_with(ctx: ApiContext, budgets: QueryBudgets) -> ApiSchema {
         .data(loaders.posts)
         .data(loaders.comments)
         .data(loaders.actors)
+        .data(loaders.actors_by_id)
         .data(loaders.post_galleries)
         .data(loaders.comment_galleries)
         .data(loaders.media)

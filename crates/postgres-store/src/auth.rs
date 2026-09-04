@@ -1529,6 +1529,23 @@ pub async fn actor_identities_by_addresses(
     .await
 }
 
+/// Every actor among `ids`, in one round trip — the batched twin of
+/// [`actor_identity`], for a page resolving the authors of what it
+/// serves. An id nothing answers to is simply absent from the result.
+pub async fn actor_identities_by_ids(
+    pool: &PgPool,
+    ids: &[Uuid],
+) -> Result<Vec<ActorIdentity>, sqlx::Error> {
+    sqlx::query_as!(
+        ActorIdentity,
+        "SELECT id, kind, handle, actor_pubkey, l0_address, created_at
+         FROM actors WHERE id = ANY($1)",
+        ids,
+    )
+    .fetch_all(pool)
+    .await
+}
+
 #[cfg(test)]
 mod enum_tests {
     use super::{AccountState, RevokedReason};

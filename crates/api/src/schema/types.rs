@@ -31,8 +31,8 @@ use l1_standin::StandIn;
 use crate::auth::Viewer;
 use crate::l1::StandInBoundary;
 use crate::loaders::{
-    ActorByAddressLoader, CommentByNodeLoader, CommentGalleryLoader, MediaByIdLoader,
-    PayloadStateLoader, PostByNodeLoader, PostGalleryLoader,
+    ActorByAddressLoader, ActorByIdLoader, CommentByNodeLoader, CommentGalleryLoader,
+    MediaByIdLoader, PayloadStateLoader, PostByNodeLoader, PostGalleryLoader,
 };
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 
@@ -2195,20 +2195,22 @@ pub(super) fn gallery_cost(bound: usize, child_complexity: usize) -> usize {
     bound * child_complexity + 1
 }
 
-/// One profile picture by the direct foreign key the version row holds.
+/// One profile picture by the direct foreign key the version row holds,
+/// through the loader that already answers for assets by id.
 ///
-/// A direct read rather than a loader: a profile carries at most two
-/// pictures and a page carries few profiles, so there is no fan-out here
-/// of the shape a gallery has. A row the FK names but the store no longer
-/// holds reads null rather than failing the profile.
+/// A page is capped at `MAX_PAGE_SIZE` posts, every post resolves its
+/// author, and every author resolves an avatar — so a hundred distinct
+/// authors is a hundred asset reads, the same fan-out a gallery has one
+/// level in. A row the FK names but the store no longer holds reads null
+/// rather than failing the profile.
 async fn profile_image(
     ctx: &Context<'_>,
     id: Uuid,
 ) -> async_graphql::Result<Option<MediaAttachmentType>> {
-    let pool = ctx.data::<PgPool>()?;
-    Ok(postgres_store::media::by_id(pool, id)
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+    Ok(ctx
+        .data::<DataLoader<MediaByIdLoader>>()?
+        .load_one(id)
+        .await?
         .map(MediaAttachmentType::asset))
 }
 
@@ -2321,8 +2323,11 @@ async fn viewer_address(ctx: &Context<'_>) -> async_graphql::Result<Option<Strin
     let Some(Some(viewer)) = ctx.data_opt::<Option<Viewer>>() else {
         return Ok(None);
     };
-    let pool = ctx.data::<PgPool>()?;
-    Ok(crate::nodes::address_of(pool, viewer.user_id).await?)
+    Ok(ctx
+        .data::<DataLoader<ActorByIdLoader>>()?
+        .load_one(viewer.user_id)
+        .await?
+        .and_then(|identity| identity.l0_address))
 }
 
 /// The chip row shared by every taggable content node: the content
@@ -2338,7 +2343,9 @@ async fn topic_claims(
     include_pending: bool,
 ) -> async_graphql::Result<Vec<TopicClaim>> {
     let pool = ctx.data::<PgPool>()?;
-    let Some(author) = store::actor_identity(pool, author_id)
+    let Some(author) = ctx
+        .data::<DataLoader<ActorByIdLoader>>()?
+        .load_one(author_id)
         .await?
         .and_then(|identity| identity.l0_address)
     else {
@@ -2393,7 +2400,9 @@ async fn reference_claims(
     include_pending: bool,
 ) -> async_graphql::Result<Vec<ReferenceClaim>> {
     let pool = ctx.data::<PgPool>()?;
-    let Some(author) = store::actor_identity(pool, author_id)
+    let Some(author) = ctx
+        .data::<DataLoader<ActorByIdLoader>>()?
+        .load_one(author_id)
         .await?
         .and_then(|identity| identity.l0_address)
     else {
@@ -2508,8 +2517,9 @@ pub enum CommentTarget {
 }
 
 async fn author_user(ctx: &Context<'_>, author_id: Uuid) -> async_graphql::Result<Option<User>> {
-    let pool = ctx.data::<PgPool>()?;
-    Ok(store::actor_identity(pool, author_id)
+    Ok(ctx
+        .data::<DataLoader<ActorByIdLoader>>()?
+        .load_one(author_id)
         .await?
         .map(|identity| User {
             identity,
