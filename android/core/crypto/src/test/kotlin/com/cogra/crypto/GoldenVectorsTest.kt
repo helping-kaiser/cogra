@@ -7,6 +7,7 @@
 package com.cogra.crypto
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import java.io.File
 import java.util.Base64
 import kotlinx.serialization.json.Json
@@ -15,6 +16,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 private val vectors: JsonElement by lazy {
@@ -44,8 +46,12 @@ private fun bodyOf(json: JsonElement): StructuralBody = StructuralBody(
 
 class GoldenVectorsTest {
 
+    // A compatibility check, not a currency one: the file says which
+    // shape of vectors it holds, and this client reads that shape. It
+    // says nothing about whether the file was regenerated recently —
+    // that is the Gradle input's job (build.gradle.kts).
     @Test
-    fun vectorsFileIsCurrent() {
+    fun theVectorsFileIsTheContractVersionThisClientReads() {
         assertThat(vectors.str("version")).isEqualTo("1")
     }
 
@@ -111,6 +117,58 @@ class GoldenVectorsTest {
         }
     }
 
+    // Every one of these verifies under the plain RFC 8032 equation, or
+    // is the wrong length for a signature at all. Agreeing to refuse
+    // them is what keeps a witness from being replayed onto an act it
+    // never covered — the reference refuses each, so this must too.
+    @Test
+    fun signatureRefusalVectorsAreRefused() {
+        for (case in vectors.jsonObject.getValue("signatureRefusals").jsonArray) {
+            val accepted = verify(
+                case.str("publicKeyHex").hexToBytes(),
+                case.str("tagUtf8"),
+                case.str("msgUtf8").toByteArray(Charsets.UTF_8),
+                case.str("signatureHex").hexToBytes(),
+            )
+            assertWithMessage("%s: %s", case.str("case"), case.str("refusal"))
+                .that(accepted)
+                .isFalse()
+        }
+    }
+
+    // The census, by wire name and by the act id a family renders into.
+    // Order is this client's own; membership is the contract.
+    @Test
+    fun familyVectorsMatch() {
+        val cases = vectors.jsonObject.getValue("families").jsonArray
+        assertThat(cases.map { it.str("wireName") })
+            .containsExactlyElementsIn(
+                Family.entries.filter { it != Family.UNKNOWN }.map { it.wireName },
+            )
+        for (case in cases) {
+            val rendered = ActId("alice-addr", 1UL, Family.parse(case.str("wireName"))).toString()
+            assertWithMessage(case.str("wireName")).that(rendered).isEqualTo(case.str("actId"))
+        }
+    }
+
+    // What must NOT parse. A decoder that accepts a malformed frame is
+    // as much a divergence as one that decodes it differently.
+    @Test
+    fun rejectionVectorsAreRefused() {
+        for (case in vectors.jsonObject.getValue("rejections").jsonArray) {
+            val label = case.str("case")
+            when (val what = case.str("what")) {
+                "decodeProposal" -> assertThrows(label, WireException::class.java) {
+                    decodeProposal(case.str("hex").hexToBytes())
+                }
+                "parseActId" -> assertThrows(label, IdentifierException::class.java) {
+                    ActId.parse(case.str("text"))
+                }
+                else -> throw AssertionError("unknown rejection kind `$what`")
+            }
+        }
+    }
+
     @Test
     fun structuralBodyVectorsMatch() {
         for (case in vectors.jsonObject.getValue("structuralBodies").jsonArray) {
@@ -149,7 +207,7 @@ class GoldenVectorsTest {
                 proposal.body,
                 hs.str("contentPreDigestHex").hexToBytes(),
                 hs.str("depsPreDigestHex").hexToBytes(),
-            ).toHex()
+            ).toHex(),
         ).isEqualTo(hs.str("preCommitmentMsgHex"))
         assertThat(pre.preSignature.toHex()).isEqualTo(hs.str("preSignatureHex"))
         assertThat(encodePreCommitmentOf(pre).toHex()).isEqualTo(hs.str("wirePreCommitmentHex"))
@@ -168,10 +226,10 @@ class GoldenVectorsTest {
             hostSeal = hs.str("hostSealHex").hexToBytes(),
         )
         assertThat(
-            commitment(Tags.COMMIT_CONTENT, sealed.contentSalt, proposal.payload).toHex()
+            commitment(Tags.COMMIT_CONTENT, sealed.contentSalt, proposal.payload).toHex(),
         ).isEqualTo(hs.str("contentCommitmentHex"))
         assertThat(
-            commitment(Tags.COMMIT_DEPS, sealed.depsSalt, canonicalDeps(proposal.deps)).toHex()
+            commitment(Tags.COMMIT_DEPS, sealed.depsSalt, canonicalDeps(proposal.deps)).toHex(),
         ).isEqualTo(hs.str("depsCommitmentHex"))
         assertThat(sealed.sealMsg().toHex()).isEqualTo(hs.str("sealMsgHex"))
         assertThat(encodeVerifiedAct(sealed).toHex()).isEqualTo(hs.str("wireVerifiedActHex"))
@@ -195,6 +253,14 @@ class GoldenVectorsTest {
         assertThat(code.display()).isEqualTo(kb.str("recoveryCodeDisplay"))
         assertThat(kb.str("hkdfInfoUtf8")).isEqualTo("cogra:key-backup:v1")
 
+        // The two halves of the seal, each pinned on its own. Asserting
+        // only the blob would report a swapped HKDF argument order as
+        // "the ciphertext differs", which names neither the derivation
+        // nor the container.
+        assertThat(keyBackupPlaintext(seed).toHex()).isEqualTo(kb.str("plaintextHex"))
+        assertThat(keyBackupContentKey(code, kb.str("hkdfSaltHex").hexToBytes()).toHex())
+            .isEqualTo(kb.str("contentKeyHex"))
+
         val blob = sealKeyBackupWith(
             seed = seed,
             code = code,
@@ -208,6 +274,40 @@ class GoldenVectorsTest {
         val retyped = RecoveryCode.fromInput(kb.str("recoveryCodeDisplay"))
         assertThat(retyped.bytes()).isEqualTo(code.bytes())
         assertThat(openKeyBackup(kb.str("blobHex").hexToBytes(), retyped)).isEqualTo(seed)
+    }
+
+    // Everything a person might type, and everything they might type
+    // wrong. The separator class is the interesting half: no two
+    // languages spell "whitespace" the same, so it is pinned rather
+    // than inherited (KeyBackup.kt).
+    @Test
+    fun recoveryCodeInputVectorsMatch() {
+        val cases = vectors.jsonObject.getValue("keyBackup").jsonObject
+            .getValue("recoveryCodeInputs").jsonArray
+        for (case in cases) {
+            val label = case.str("case")
+            val input = case.str("input")
+            when (val expect = case.str("expect")) {
+                "bytes" -> assertWithMessage(label)
+                    .that(RecoveryCode.fromInput(input).bytes().toHex())
+                    .isEqualTo(case.str("bytesHex"))
+                // The one shape complaint a reader can act on.
+                "length" -> assertThrows(label, RecoveryCodeLengthException::class.java) {
+                    RecoveryCode.fromInput(input)
+                }
+                // A full-length input that will not decode is a wrong
+                // code, which is what the GCM tag would have said next.
+                "character", "padBits" -> {
+                    val thrown = assertThrows(label, KeyBackupException::class.java) {
+                        RecoveryCode.fromInput(input)
+                    }
+                    assertWithMessage(label)
+                        .that(thrown)
+                        .isNotInstanceOf(RecoveryCodeLengthException::class.java)
+                }
+                else -> throw AssertionError("unknown expectation `$expect`")
+            }
+        }
     }
 
     @Test

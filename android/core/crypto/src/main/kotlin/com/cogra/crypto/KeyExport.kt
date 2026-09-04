@@ -16,6 +16,10 @@ data class ExportedKey(val pem: String, val hex: String)
  * version 0, AlgorithmIdentifier { id-Ed25519 }, OCTET STRING { OCTET
  * STRING (32) } }`. The same 16 bytes WebCrypto requires for a private
  * import; the vector in RFC 8410 §10.3 pins them.
+ *
+ * There is no cross-client vector for this and none is wanted: each
+ * client is pinned to the standard, which cannot drift, rather than to
+ * the other client, which can.
  */
 private val PKCS8_PREFIX = byteArrayOf(
     0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06,

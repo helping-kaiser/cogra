@@ -9,6 +9,7 @@ import java.security.MessageDigest
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import org.bouncycastle.crypto.signers.Ed25519Signer
+import org.bouncycastle.math.ec.rfc8032.Ed25519
 
 /**
  * Domain-separation tags. Every signed or hashed object is prefixed so
@@ -37,7 +38,12 @@ private fun be64(v: Long): ByteArray =
  */
 fun sha256Tagged(tag: String, parts: List<ByteArray>): ByteArray {
     val h = MessageDigest.getInstance("SHA-256")
-    val tagBytes = tag.toByteArray(Charsets.US_ASCII)
+    // UTF-8, because the contract calls the field `tagUtf8` and every
+    // other client encodes it that way. US-ASCII's encoder REPLACES what
+    // it cannot represent, so a tag carrying one non-ASCII character
+    // would hash a `?` here and its real bytes everywhere else — a
+    // divergence no signature check could explain.
+    val tagBytes = tag.toByteArray(Charsets.UTF_8)
     h.update(be64(tagBytes.size.toLong()))
     h.update(tagBytes)
     for (p in parts) {
@@ -74,6 +80,14 @@ internal fun sign(key: Ed25519PrivateKeyParameters, tag: String, msg: ByteArray)
 fun verify(publicKey: ByteArray, tag: String, msg: ByteArray, signature: ByteArray): Boolean {
     if (publicKey.size != Ed25519PublicKeyParameters.KEY_SIZE) return false
     if (signature.size != Ed25519PrivateKeyParameters.SIGNATURE_SIZE) return false
+    // RFC 8032 leaves the small-order check to the caller, and the two
+    // clients must not differ on it: a small-order public key admits a
+    // signature that verifies under EVERY message, so accepting one
+    // here would let a witness be replayed onto an act it never
+    // covered. The reference refuses it, so this refuses it — the full
+    // validation costs one scalar multiplication, paid on a path that
+    // runs once per write.
+    if (!Ed25519.validatePublicKeyFull(publicKey, 0)) return false
     val framed = sha256Tagged(tag, listOf(msg))
     val verifier = Ed25519Signer()
     return try {
