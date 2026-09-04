@@ -378,7 +378,7 @@ async fn expire_one_is_targeted_and_terminal(pool: PgPool) {
     );
     assert!(matches!(
         staged::expire_one(&pool, doomed, 0).await,
-        Err(StagedError::NotFound(_))
+        Err(StagedError::WrongState { actual, .. }) if actual == "expired"
     ));
 }
 
