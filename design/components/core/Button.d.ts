@@ -3,8 +3,10 @@
  */
 export interface ButtonProps {
   children?: React.ReactNode;
-  /** filled for the one committing action, outlined for secondary, text for tertiary. */
-  variant?: "primary" | "outline" | "text";
+  /** filled for the one committing action, outlined for secondary, text for
+   *  tertiary — and `inverse` for the filled button standing on a tonal panel,
+   *  where it wears the panel's own pair turned over. */
+  variant?: "primary" | "outline" | "text" | "inverse";
   /** Both carry label-large; they differ only in padding. */
   size?: "sm" | "lg";
   /** Layout, not look: a button in a flex column passes this so it doesn't stretch. */
@@ -42,7 +44,7 @@ export declare function InlineAction(props: InlineActionProps): JSX.Element;
 
 /** The same styling as a plain object, for a link that must look like a button. */
 export declare function buttonStyle(options?: {
-  variant?: "primary" | "outline" | "text";
+  variant?: "primary" | "outline" | "text" | "inverse";
   size?: "sm" | "lg";
   selfStart?: boolean;
   disabled?: boolean;

@@ -1,10 +1,20 @@
 import React from "react";
 
-/* The house button (design.md §6): Material's three vocabularies and no others.
-   Filled `primary`/`onPrimary` for the one committing action on a surface,
-   outlined for a secondary action, text for a tertiary one. Both unfilled
-   variants put `primary` on the LABEL — the label carries the emphasis, not the
-   border, and a body-coloured label on an outlined button reads as disabled.
+/* The house button (design.md §6): Material's three vocabularies, and no others
+   on the page's own ground. Filled `primary`/`onPrimary` for the one committing
+   action on a surface, outlined for a secondary action, text for a tertiary
+   one. Both unfilled variants put `primary` on the LABEL — the label carries
+   the emphasis, not the border, and a body-coloured label on an outlined button
+   reads as disabled.
+
+   `inverse` is the fourth, and it is not a fourth emphasis: it is the filled
+   button standing on a TONAL PANEL instead of the page. The key-absent notice
+   is a `tertiary-container` block, and a `primary` fill inside it is a second
+   colour arguing with the panel's own; the filled button there takes the
+   panel's pair and turns it over — `on-tertiary-container` as the fill,
+   `tertiary-container` as the label. Same shape, same weight, one colour
+   family. Use it only inside such a panel; on the page's ground it is `primary`
+   that carries a committing action.
 
    The pill at every size (Material's button shape, not a rung of the shape
    scale); both sizes carry `label-large`. Heights are TRUE heights (border-box):
@@ -15,6 +25,7 @@ const VARIANTS = {
   primary: { background: "var(--primary)", color: "var(--on-primary)", border: "1px solid transparent" },
   outline: { background: "transparent", color: "var(--primary)", border: "1px solid var(--outline)" },
   text: { background: "transparent", color: "var(--primary)", border: "1px solid transparent" },
+  inverse: { background: "var(--on-tertiary-container)", color: "var(--tertiary-container)", border: "1px solid transparent" },
 };
 
 const SIZES = {
