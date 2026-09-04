@@ -21,8 +21,16 @@ export interface VideoTransportProps {
   /** 0..1 along the timeline. */
   progress?: number;
   muted?: boolean;
+  /** Shows the fullscreen toggle at the bar's right end. Defaults to true. */
+  fullscreen?: boolean;
   onTogglePlay?: () => void;
   onToggleMute?: () => void;
+  onFullscreen?: () => void;
+  /** Fired by both skip-back and skip-forward. */
+  onSkip?: () => void;
+  /** The bar's distance from the frame's bottom edge, clear of the system
+   *  gesture zone. Defaults to `GESTURE_ZONE`. */
+  inset?: number;
 }
 
 export declare function VideoTransport(props: VideoTransportProps): JSX.Element;
@@ -34,3 +42,20 @@ export interface SeekLineProps {
 }
 
 export declare function SeekLine(props: SeekLineProps): JSX.Element;
+
+/** A slider, not a progress bar: it reports where the clip is and is how the
+ *  reader moves it, so it carries the knob and the slider role. */
+export interface TimelineProps {
+  /** 0..1 along the timeline. */
+  progress?: number;
+  elapsed?: string;
+  duration?: string;
+  /** The stream's rung: a 3px hairline with no knob, no glyphs. */
+  thin?: boolean;
+}
+
+export declare function Timeline(props: TimelineProps): JSX.Element;
+
+/** The inset that keeps the transport's bottom bar clear of the system
+ *  gesture zone. */
+export declare const GESTURE_ZONE: number;

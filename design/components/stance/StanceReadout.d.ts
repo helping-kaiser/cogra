@@ -1,3 +1,6 @@
+export declare const DIMENSION_MIN: number;
+export declare const DIMENSION_MAX: number;
+
 /** One picked or folded pair: two continuous values in the closed [-1, +1]. */
 export interface StancePair {
   /** On screen: "For or against". Never "valence", never "p_d". */
@@ -41,6 +44,18 @@ export interface StanceReadoutProps {
 
 export declare function StanceReadout(props: StanceReadoutProps): JSX.Element;
 
+/** A stance RECORD's face and pair, drawn plainly wherever a stance is data
+ *  rather than a control — the stances page's rows, the chronicle's stance
+ *  entries. Never interactive. */
+export interface StanceValueProps {
+  pDirected: number;
+  pInterest: number;
+  /** Shows the exact pair beside the face. Defaults to true. */
+  showPair?: boolean;
+}
+
+export declare function StanceValue(props: StanceValueProps): JSX.Element;
+
 /** The standing and the pick's face — everything above the pad's field. */
 export interface StanceStandingProps {
   pick: StancePair;
@@ -83,6 +98,15 @@ export declare function landingParts(landing: StanceLanding | null): object;
 export declare const DIRECTED_POLES: readonly string[];
 export declare const INTEREST_POLES: readonly string[];
 export declare const PICK_LABEL: string;
+/** Wording for a standing at exactly (0, 0) that has records behind it. */
+export declare const SEVERED_LABEL: string;
+/** Wording for a standing at exactly (0, 0) that has never had a record. */
+export declare const NO_STANDING_LABEL: string;
+/** What a bundle standing at exactly (0, 0) reads as. */
+export declare const ZERO_BUNDLE_EMOJI: string;
+/** The face an unauthored target wears at rest, deliberately outside the
+ *  anchor table so an empty control cannot read as a standing already held. */
+export declare const RESTING_FACE_EMOJI: string;
 /** Visually hidden, still read aloud — where the anchors' words live. */
 export declare const SR_ONLY: React.CSSProperties;
 export declare function signedLine(standing: StancePair, records: number, severed: boolean, targetLabel: string): string;

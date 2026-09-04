@@ -17,3 +17,10 @@ export declare const STANCE_EXPLANATION: string;
  * that pushes Set away from the thumb defeats the parking.
  */
 export declare const STANCE_PAD_HELP: readonly string[];
+
+/**
+ * The same help, for the alternates — which have no field, so the first line
+ * teaches the thing the pad teaches by being a square: that the interaction
+ * carries two values, not one.
+ */
+export declare const STANCE_ALTERNATES_HELP: readonly string[];
