@@ -72,6 +72,13 @@ export function removalReason(node: Bearer): RemovalReason {
   return node.moderationStatus === "ILLEGAL" ? "platform" : "author";
 }
 
+/** Whether a node's gallery is the moving kind — one clip rather than pictures. */
+export function commentHasVideo(node: Bearer): boolean {
+  return node.attachments.some((attachment) =>
+    (attachment.mimeType ?? "").startsWith("video/"),
+  );
+}
+
 /**
  * A video's poster, or null.
  *
@@ -82,13 +89,6 @@ export function removalReason(node: Bearer): RemovalReason {
  * plays untouched. Standing a "Removed" card over a working video would report
  * the wrong thing removed.
  */
-/** Whether a node's gallery is the moving kind — one clip rather than pictures. */
-export function commentHasVideo(node: Bearer): boolean {
-  return node.attachments.some((attachment) =>
-    (attachment.mimeType ?? "").startsWith("video/"),
-  );
-}
-
 export function posterFor(attachment: Attachment): string | null {
   const cover = attachment.coverMedia;
   if (!cover || cover.status === "REDACTED") return null;
