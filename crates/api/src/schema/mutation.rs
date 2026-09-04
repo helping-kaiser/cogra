@@ -1383,7 +1383,8 @@ impl Mutation {
                     .into_iter()
                     .map(|(i, e)| {
                         let mut err = UserError::from_onboarding(&e, "");
-                        let mut path = vec!["approvals".to_string(), i.to_string()];
+                        let mut path = vec!["approvals".to_string()];
+                        path.extend(i.map(|i| i.to_string()));
                         if let Some(inner) = err.field.take() {
                             path.extend(inner);
                         }

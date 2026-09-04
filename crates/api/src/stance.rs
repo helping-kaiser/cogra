@@ -234,6 +234,7 @@ pub async fn prepare_severance<B: L1Boundary>(
             message: "the bundle toward this target already nets to (0, 0)".into(),
         });
     }
+    prepare::check_batch_solvency(boundary, &author, batch.len()).await?;
     let mut prepared = Vec::with_capacity(batch.len());
     for (p_d, p_i) in batch {
         prepared.push(

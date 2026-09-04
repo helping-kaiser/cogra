@@ -522,6 +522,7 @@ pub async fn prepare_reference_withdrawal<B: L1Boundary>(
         )
         .into());
     }
+    prepare::check_batch_solvency(boundary, &author, batch.len()).await?;
     let mut prepared = Vec::with_capacity(batch.len());
     for (relevance, support) in batch {
         let counter = PlannedReference {
