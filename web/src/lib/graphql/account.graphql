@@ -30,9 +30,7 @@ mutation ConfirmPasswordReset($input: ConfirmPasswordResetInput!) {
   confirmPasswordReset(input: $input) {
     ok
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
@@ -48,9 +46,7 @@ mutation CreateKeyBackupChallenge {
   createKeyBackupChallenge {
     challenge
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
@@ -59,9 +55,7 @@ mutation UploadKeyBackup($input: UploadKeyBackupInput!) {
   uploadKeyBackup(input: $input) {
     ok
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
@@ -70,9 +64,7 @@ mutation ChangePassword($input: ChangePasswordInput!) {
   changePassword(input: $input) {
     ok
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
@@ -84,9 +76,7 @@ mutation ChangeHandle($input: ChangeHandleInput!) {
       handle
     }
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
@@ -103,9 +93,7 @@ mutation ConfirmEmailChange($input: ConfirmEmailChangeInput!) {
       id
     }
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }

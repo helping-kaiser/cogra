@@ -7,21 +7,17 @@
 # scalar rides a GraphQL multipart request — see `apollo-link.ts` for the
 # mechanism and its source.
 
+# An upload answers with the SAME selection a gallery read carries
+# (`MediaFields`), so a freshly uploaded asset is drawable without a
+# second read — and so the two clients read one shape rather than each
+# guessing which half of the asset an upload owes them.
 mutation UploadMedia($input: UploadMediaInput!) {
   uploadMedia(input: $input) {
     media {
-      id
-      url
-      altText
-      status
-      options {
-        aspectRatio
-      }
+      ...MediaFields
     }
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
@@ -43,34 +39,23 @@ mutation BeginMediaUpload($declaredBytes: Int!, $kind: MediaUploadKind!) {
       partCount
     }
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
 
 # Assembles the parts and answers with `uploadMedia`'s own payload, so one
-# reader serves both paths — which is why the selection below is character for
-# character the one above.
+# reader serves both paths — which is why it spreads the same fragment.
 #
 # **Safe to retry**: a client whose connection dropped waiting for this reply
 # calls it again and is handed the same asset.
 mutation CompleteMediaUpload($uploadId: UUID!, $coverMediaId: UUID) {
   completeMediaUpload(input: { uploadId: $uploadId, coverMediaId: $coverMediaId }) {
     media {
-      id
-      url
-      altText
-      status
-      options {
-        aspectRatio
-      }
+      ...MediaFields
     }
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
@@ -81,9 +66,7 @@ mutation AbortMediaUpload($uploadId: UUID!) {
   abortMediaUpload(input: { uploadId: $uploadId }) {
     aborted
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
