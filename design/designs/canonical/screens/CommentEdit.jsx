@@ -5,14 +5,6 @@
    affordance into the acts sheet (the CommentEditActs board — the EditActs
    pattern at comment scale). */
 
-function FieldLabel({ children }) {
-  return (
-    <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>
-      {children}
-    </span>
-  );
-}
-
 export function Screen() {
   return (
     <>

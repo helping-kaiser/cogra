@@ -13,14 +13,6 @@
    with words, the same way a post that loses its pictures is — the body
    changes, the post does not become another one. */
 
-function FieldLabel({ children }) {
-  return (
-    <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>
-      {children}
-    </span>
-  );
-}
-
 export function Screen() {
   return (
     <>

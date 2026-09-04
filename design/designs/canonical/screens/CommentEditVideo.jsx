@@ -21,14 +21,6 @@
    The words, topics, citations and the license row are unchanged from
    CommentEdit: one screen, one batch, the license locked. */
 
-function FieldLabel({ children }) {
-  return (
-    <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>
-      {children}
-    </span>
-  );
-}
-
 export function Screen() {
   return (
     <>
