@@ -251,8 +251,7 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
-// The Comments page (JSX boards; the three hand boards carry their attributes
-// directly). Sheet boards are scanExempt; badges stamped on under-scrim
+// The Comments page. Sheet boards are scanExempt; badges stamped on under-scrim
 // repeats sit dimmed beneath the wash, which reads correctly.
 Object.assign(FLOW_MARKERS, {
   ReplyEntry: [
@@ -340,9 +339,8 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
-// The Compose page's JSX boards (the edit wizard's two — EditCompose and
-// EditActs — still carry their attributes directly as hand boards). The sheet
-// boards are scanExempt; only the sheet layer and its scrim are stamped.
+// The Compose page's boards. The sheet boards are scanExempt; only the sheet
+// layer and its scrim are stamped.
 Object.assign(FLOW_MARKERS, {
   ReferencePicker: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
@@ -574,8 +572,7 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
-// The Media page (HelpDialog, the one Patterns board, carries its attributes
-// directly as a hand board).
+// The Media page.
 Object.assign(FLOW_MARKERS, {
   FeedGallery: [
     { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
@@ -1081,6 +1078,84 @@ Object.assign(FLOW_MARKERS, {
   GuestGate: [
     { n: 1, find: ">Keep browsing</button>", tag: "button" },
     { n: 2, find: ">Sign in or join</button>", tag: "button", all: true },
+  ],
+});
+
+/* The reply and edit wizards, the two overlays and the pattern boards
+   (legacy-conversion lane C, 2026-09-04): the last nine boards that had only
+   hand markup. Their via numbers are the hand boards' own — every one
+   re-anchored to the element the master renders in that slot, so graph.json
+   needed no edit. Five of the nine are overlay states and were already drawn
+   with only the top layer live; they take a `scanExempt` line saying so, and
+   `NetworkError` takes one saying why a pattern exemplar wires only its
+   retry. */
+Object.assign(FLOW_MARKERS, {
+  ReplyCompose: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    // The words the reply is made of — the body itself is the "control",
+    // the way the composer boards stamp their fields.
+    { n: 4, find: "The third headland light is real", tag: "p" },
+    { n: 5, find: "+ Add pictures or a video", tag: "button" },
+  ],
+  ReplyPad: [
+    { n: 1, find: 'aria-label="How stances work"', tag: "button" },
+    { n: 2, find: 'aria-label="Stance pad for the post you answer"', tag: "div" },
+    { n: 3, find: ">Cancel</button>", tag: "button" },
+    { n: 4, find: ">Set</button>", tag: "button" },
+    { n: 5, find: "background:var(--scrim-wash", tag: "div" },
+  ],
+  // The bare seal. `ReplyCited` is this list plus its staged reference's ×.
+  ReplySeal: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
+    { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
+    { n: 4, find: "+ Add a topic", tag: "button" },
+    { n: 5, find: "+ Cite something", tag: "button" },
+    { n: 6, find: ">Adjust</button>", tag: "button" },
+    { n: 7, find: ">Change</button>", tag: "button" },
+    { n: 8, find: ">Mark</button>", tag: "button" },
+    { n: 9, find: ">Sign comment</button>", tag: "button" },
+    { n: 10, find: ">Back</button>", tag: "button" },
+  ],
+  EditCompose: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="Editing"', tag: "button" },
+    { n: 4, find: 'aria-label="Manage the pictures"', tag: "button" },
+    { n: 5, find: 'value="Salt maps of the coast road"', tag: "input" },
+    { n: 6, find: "paper against the salt crust.</textarea>", tag: "textarea" },
+    { n: 7, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove #saltmaps"', tag: "button" },
+    { n: 8, find: ">Add a topic</button>", tag: "button" },
+    { n: 9, find: 'aria-label="Remove The long way home', tag: "button" },
+    { n: 10, find: "+ Cite something", tag: "button" },
+    { n: 11, find: "This creates 3 signed actions", tag: "button" },
+    { n: 12, find: ">Sign the edit</button>", tag: "button" },
+    { n: 13, find: ">Mark</button>", tag: "button" },
+  ],
+  EditActs: [
+    { n: 1, find: ">Done</button>", tag: "button" },
+    { n: 2, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  NetworkError: [{ n: 1, find: ">Retry</button>", tag: "button" }],
+  // TWO "Restore the key" buttons stand on this board — the feed's own card
+  // beneath the wash and the pad's notice above it — and both take the number,
+  // the way the guest gate's two asks do: one edge covers them, because both
+  // words lead to the same screen.
+  PadKeyAbsent: [
+    { n: 1, find: 'aria-label="Your key"', tag: "button" },
+    { n: 2, find: ">Restore the key</button>", tag: "button", all: true },
+    { n: 3, find: ">Keep it pending, restore later</button>", tag: "button" },
+  ],
+  HelpDialog: [
+    { n: 1, find: ">Close</button>", tag: "button" },
+    { n: 2, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  DiscardConfirm: [
+    { n: 1, find: ">Keep writing</button>", tag: "button" },
+    { n: 2, find: ">Discard</button>", tag: "button" },
   ],
 });
 
