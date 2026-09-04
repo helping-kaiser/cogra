@@ -1,4 +1,5 @@
 import React from "react";
+import { InlineAction } from "../core/Button.jsx";
 import { Icon } from "../navigation/Icon.jsx";
 
 /* The at-rest form (round 3): ONE line near the top of the wallet — an entry
@@ -98,28 +99,7 @@ export function PayoutAddress({ address, label = "Payouts land at", onCopy, onCh
             <Icon name="content_copy" size={18} />
           </button>
         )}
-        {onChange && (
-          <button
-            type="button"
-            onClick={onChange}
-            className="cg-state cg-focus cg-hit"
-            style={{
-              border: 0,
-              background: "none",
-              padding: 0,
-              cursor: "pointer",
-              fontFamily: "var(--font-sans)",
-              fontSize: "var(--text-label-large)",
-              lineHeight: "var(--text-label-large--line-height)",
-              fontWeight: "var(--text-label-large--font-weight)",
-              letterSpacing: "var(--text-label-large--letter-spacing)",
-              color: "var(--primary)",
-              flex: "none",
-            }}
-          >
-            {changeLabel}
-          </button>
-        )}
+        {onChange && <InlineAction onClick={onChange}>{changeLabel}</InlineAction>}
       </div>
       <code
         style={{

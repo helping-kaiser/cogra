@@ -1616,9 +1616,8 @@ entry first". What stands:
 - **Numbers are stamped by the build, never by components.** JSX
   screens get them from `_build/flow-markers.mjs` — markup anchors
   applied after render, throwing on drift — so the design system
-  never carries canvas metadata; hand boards carry the attributes
-  directly. Repeated per-post controls wear the same number on every
-  instance: one edge covers them. **The badge sits inside the
+  never carries canvas metadata. Repeated per-post controls wear the
+  same number on every instance: one edge covers them. **The badge sits inside the
   element's corner**, not hanging past it: outside, anything that
   clips its overflow eats it, and 470 of 1091 badges were drawing
   cut or invisible — the gate verifies the attribute, not the paint.
@@ -2233,25 +2232,33 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   every surface's edge lands on it. `ReaderPostMenu`, `CommentMenu`
   and `ProfileMenu` join the sheet boards that were already mastered
   this way (the filter, the references sheet, the own-post menu).
-- **The license unfolds where it was asked about.** Its row closes
-  the sheet and opens the terms on the card beneath — a state of the
-  card, never a surface of its own, so the row that revealed them
-  reads **Hide license** in the same position, and both cards gained
-  `defaultShowLicense` to draw the unfolded state (the missing-variant
-  rule; `StanceControl`'s `defaultOpen` is the precedent). `PostLicense`
-  is that state drawn, and it is a declared **entry** rather than the
-  target of a tap, because nothing navigates to reach it.
+- **The license comes up in a sheet.** The row closes the menu and
+  raises the terms over the surface the reader asked from — a drawer
+  they drop by the scrim, the swipe, or Escape, which is the way back
+  a block unfolded inside the post never had. The terms are never a
+  state of the card, so no card carries them and no row ever reads
+  *Hide license*. `PostLicense` draws the sheet over the post detail
+  and `CommentLicense` over the thread: **two boards, because the
+  surface beneath is half of what the sheet says** — pointing the
+  comment's row at the post's board would answer a question about a
+  comment with a post's terms, on a screen the reader is two sheets
+  above. They carry the two readings besides, Ada's credit-on-every-use
+  against the comment's public domain. Both are `scanExempt` and wire
+  one number, the wash: the terms are a block to read, not controls.
 - **The terms are drawn, not printed.** A quiet inset at the medium
-  rung: a caption naming what unfolded, then one row per axis with the
-  two readings aligned so the pair reads as a pair. It takes **no
-  fill** — the card is already the highest container rung, and a
-  filled inset over it would invert between the themes — and no
+  rung: a caption naming the words the reader tapped, then one row per
+  axis with the two readings aligned so the pair reads as a pair. It
+  takes **no fill** — the sheet is already the highest container rung,
+  and a filled inset over it would invert between the themes — and no
   colour, the terms being neither warning nor promotion. Public domain
   is the pair readers already have a word for, so the word rides the
-  caption while the rows still spell what it means. The read side got
-  its **own readings**: the chooser's hints address the author
-  declaring the terms, and on a read surface "Every use credits you"
-  tells a reuser they are owed the credit they in fact owe.
+  caption while the rows still spell what it means. The sheet takes
+  **no `SheetTitle`**: the inset heads itself, and a heading above it
+  would say License terms twice, a few pixels apart, in two sizes —
+  the sheet's name lives on its `aria-label`. The read side got its
+  **own readings**: the chooser's hints address the author declaring
+  the terms, and on a read surface "Every use credits you" tells a
+  reuser they are owed the credit they in fact owe.
 - **Citing and mentioning are one fact.** Both stage a **Reference
   edge**; the word only records what sits at the far end — citing for
   a passive node, mentioning for a person. So both rows open the same
@@ -2287,9 +2294,9 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   act and the total has to count it. Staged topics and references are
   unstageable everywhere: the reply's staged rows carry the same
   remove the post's details rows do, and ReplySeal's componentize pass
-  inherits it. Like `PostLicense`, it is a
-  declared **entry**: the picker hands its pick back to the composer
-  it was opened from, so no tap reaches this state.
+  inherits it. It is a declared **entry**: the picker hands its pick
+  back to the composer it was opened from, so no tap reaches this
+  state.
 - **Only what exists gets a row.** The post and comment menus hold
   License terms and Cite in a new post; another's profile holds Mention
   in a new post and Share this profile. Report, hide and bookmark are
@@ -2315,8 +2322,8 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   arrival at the details stage with the reference staged. The words
   path's `Next` carries the second outcome that says so, which is what
   lets the search reach that board honestly instead of teleporting to
-  it. There is no check-a-license flow — a reveal in place is not a
-  journey.
+  it. There is no check-a-license flow — a detour into a sheet and
+  back out of it is not a journey.
 - **`ComposeDetails` componentized.** The picture path's details stage
   is now JSX over the masters like its twin `ComposeCited`, and the
   conversion closed the drift that prompted it — the hand board's
@@ -2327,6 +2334,132 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   closed, and three reopened as fresh instances of surfaces already
   owed — the topic picker on the new composer board and again on the
   reply's cited seal, the score drill-down on the new detail state.
+
+### The conformance round — 2026-09-04
+
+Before any new surface, the canvas and the library were brought to
+the law they already claimed: whatever is drawn by hand is drawn by
+a master, and every master is one component with variants as props
+(jakob's mandate and rulings, same day).
+
+- **The library owed itself the most.** The bare primary word — a
+  text action with no pill and no minimum width — was re-implemented
+  five times inside `components/` and more on boards. It is now
+  **`InlineAction`**, Button's sibling so button vocabulary has one
+  home, in two rungs: label-large from the seal rows' documented
+  deviation, label-small from the describe/upload family. The rule
+  between them: a Button when the action owns its line, an
+  InlineAction when it rides at the end of somebody else's.
+- **Field labels come from the field.** `TextField`'s own `label` +
+  `corner` slots are the one label anatomy, and **`FieldLabel`** is
+  TextField's named export for captions over things that are not
+  fields — a `label` element when it has a control to point at, a
+  `span` when it does not. The composer's Title and Description
+  gained their accessible names by this ruling.
+- **One identity row under four lists** — **`ContentRow`**: ledger,
+  campaign, door, chronicle. The chronicle is two lines like every
+  other row — the act as its title line, the snippet cut to one line
+  with an ellipsis; no chronicle content needs a third line, and a
+  cut-off excerpt continues where the card opens. The door's glyph
+  rides the system's 20px; the chronicle's inner gaps are the row's
+  own.
+- **One hairline fact row in two emphases** — **`FactRow`**: seal
+  (label strong, value quiet, rules enclosing) and ledger (label
+  quiet, value strong, rules separating).
+- **One tab row** — **`TabBar`**, cell-driven: a cell with an icon
+  takes its accessible name from its label, a text cell's name is
+  its own words. The data decides, so the two can never contradict.
+- **Drawn controls are real controls.** "Show all" in the pick tray
+  is a button, not a span — resting look unchanged, the keyboard
+  path and the 48px target restored.
+- **The inverse Button is a variant, not an override** — the filled
+  button on a tonal panel, documented where Button lives.
+- **Masters gained**: `QuotedRow`, `CropViewport`, `CoverRow` (the
+  raw HTML frame strip became JSX), `PickTray`, `PickPrompt`,
+  `QuietNote`, `ActsFooter`, `SealFooter`, `WizardHeader`'s
+  `stageLabel` + `help`, `Caret`; **graduated from the prelude**:
+  `TopicRemovable`, `StagedReference`, `RefusedFile`, `StanceRow`,
+  `SectionLabel`.
+- **Contracts tell the truth.** Every `.d.ts` describes its `.jsx`,
+  in both directions — declared-but-absent props removed, present-
+  but-undeclared exports added.
+- **The bar the lanes ran under**: pixel-identity outside the named
+  rulings, every render hunk attributed or the lane stops. Three
+  seal boards, both crops and the final batch came out
+  byte-identical; the visible deltas are exactly the ruled ones.
+- **A post's body is words XOR media, and the card says so.** The
+  fixtures had been drawing an impossible post — a picture with a
+  body paragraph AND a description under it. `PostCard` now encodes
+  the law: a media post carries no `content` (handed both, it draws
+  the media and drops the words), and both kinds order **title ·
+  body · description**, the caption last, with the 4px seam between
+  the two fields. The description clamps to **two lines** in the
+  feed; a text body clamps at **22** — floor(358px × 5/4 ÷ 20px),
+  the height a 4:5 picture takes at the card's own content width, so
+  a feed of both kinds keeps one rhythm. The detail view clamps
+  nothing. Every fixture with a picture now carries its words as the
+  description, the stream's caption takes the description too, and
+  the caption paragraph took its own role's leading — unclassed text
+  had been inheriting body-large's.
+- **The compose wizard's ten legacy boards converted** (jakob's
+  ruling: all of them). `ComposeWords`, `ComposePick`, `ComposeCrop`,
+  `ComposeCover`, `ComposeDraft`, `ComposeLicense`, `ComposeSensitive`,
+  `ComposePad`, `ComposeKeyAbsent` and `ComposeSeal` were hand
+  `.dc.html` with no source behind them; each now renders from
+  `screens/` over the masters, and the last inert "Show all" on the
+  canvas became `PickTray`'s button. What moved and why: the seal is
+  `ComposeSealUploading`'s anatomy without the upload gate, and its
+  stance row now reads the **pair** `StanceReadout` spells — it had
+  printed one number while the reference row two lines above printed
+  two. The cover strip is `CoverRow`, so its "A picture" caption goes
+  (the master says a dashed square with the picture glyph is not a
+  photograph, and two other boards already draw it that way). The
+  license rows and the sensitive switch became real controls the way
+  `Checkbox` makes a row one. The grids' local tile palette — four
+  colours with no token behind them — reads off the surface-container
+  rungs, as `ComposePickVideo`'s dead grid already did.
+- **The last nine legacy boards converted**, and with them the
+  canvas: `ReplyCompose`, `ReplyPad`, `ReplySeal`, `EditCompose`,
+  `EditActs`, `DiscardConfirm`, `HelpDialog`, `NetworkError` and
+  `PadKeyAbsent`. Every board now renders from `screens/`; nothing
+  on the canvas hand-copies component markup. What moved and why:
+  the reply's seal reconciles with `ReplyCited`, its staged twin —
+  one add-row pair, drawn once in the prelude, and one "+ Cite
+  something" between them where the bare board had spelled the kinds
+  out. `ReplyPad` **takes** `StancePad`: a reply's stance is toward
+  somebody else's post, so both parameters are the author's and the
+  square is the right value space — the refusal above is about one's
+  own post, not about pads. `NetworkError` is `ComposeSeal` unsent,
+  so its stance row took the same pair correction the seal's did.
+  `DiscardConfirm` draws the reply composer from the prelude rather
+  than a copy, which is where the two boards' "+ Add" words stopped
+  disagreeing. `PadKeyAbsent`'s feed card, drawn before the body-XOR
+  round, arrived carrying everything `PostCard` grew since — its
+  topics, its citation line, its share, and the resting face the pad
+  above it says it has.
+- **Three masters were refused, each for the same reason**: the
+  component and the board are not the same thing. `CropViewport`
+  locks a shape and masks around it, which is right for a profile
+  picture and a video cover and wrong for the post crop, where the
+  author is choosing the shape. `LicenseChooser` draws the two axes
+  as wrapped native radios with no hints; the sheet gives each
+  reading its own row and its consequence, which the master would
+  delete. `StancePad` is the square where both parameters are the
+  author's, and on one's own post the second is not — your own post
+  always reaches you in full, so that board draws **one axis**, and
+  the system owns no one-axis pad to draw it with.
+- **Held for rulings** (each parked in the backlog with its
+  question): ChipMini's tone, the reply seal's staged-reference
+  placement, the Mark drawings, the wizard footer's shape, the
+  comments-sheet shell, the "+ Cite something" voices, the topic
+  chip's ×, the acts line's target, the composer's "+ Add" voices,
+  how each overlay abbreviates the surface under it, the discard
+  dialog's button weighting, and how much of a pattern board's own
+  setting the graph should wire — `NetworkError` gives an edge to
+  its retry alone, and says so in a `scanExempt` line.
+- **The gate**: 939 edges · 82 gaps · flows 58/53/5, unchanged end
+  to end — which is the round's whole claim: the canvas redrawn
+  from masters without the graph moving.
 
 ## 14. Index
 

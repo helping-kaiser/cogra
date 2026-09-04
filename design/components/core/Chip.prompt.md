@@ -8,5 +8,6 @@ Use `Chip` for filters that combine — kinds of content, forms of post, what a 
 - **Chips combine; a segmented filter chooses.** Seven kinds of ranked content, or an open list of topics, are chips. Two to four alternatives where exactly one is true are `SegmentedFilter`.
 - **Selection is colour only** — `secondaryContainer`, no leading check glyph: a check would reflow every label in the row as the reader picks.
 - 32px drawn, 48px tapped via `cg-hit`. A row of seven never grows past a thumb's reach.
+- **`tone="readout"` is not a control** — the borderless 24px `secondaryContainer` span, for topics shown inside something the reader is reading (the acts card's list of what a signature carries). No press, no state layer, no target, and no size choice: a readout offering one would be a control again. A control that must be small stays `md` and the row loses a word instead.
 - A chip is never the loudest thing on a screen: `primaryContainer` is not available to it.
 - `TopicChip` is an anchor because it goes somewhere; `Chip` is a button because it acts. Do not swap them to get the look you want.

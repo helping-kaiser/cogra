@@ -1,7 +1,7 @@
 import React from "react";
 
 /* The license surface (platform-guidelines.md §5), shared by the two composers
-   that declare one and the two read surfaces that show it.
+   that declare one and the sheet the read surfaces open to show it.
 
    Two axes, each a degree on [0,1] — credit and public record of use. The chooser
    offers NAMED READINGS ONLY: the axes are continuous on the wire, but a degree
@@ -23,12 +23,11 @@ export const PROVENANCE_TIERS = [
 
 export const PUBLIC_DOMAIN = { attribution: 0, provenance: 0 };
 
-/* THE MENU ROW THAT REVEALS THE TERMS is an atom (readme §13, atoms): one
+/* THE MENU ROW THAT OPENS THE TERMS is an atom (readme §13, atoms): one
    assignment, many surfaces. The cards prepend it to their own overflow menus
    and the detail surfaces' headers spell the same menu, so the words live here
    rather than in each of them. */
 export const LICENSE_MENU_LABEL = "License terms";
-export const LICENSE_MENU_LABEL_SHOWN = "Hide license";
 
 /* THE READER'S READINGS, not the author's. The chooser's hints address the
    author declaring the terms ("Every use credits you"), which on a read surface
@@ -109,17 +108,17 @@ export function LicenseChooser({ value = PUBLIC_DOMAIN, onChange, name = "licens
 
 /** What a landed node's qualifiers oblige, on the read surface.
 
-   A QUIET INSET, NOT A PARAGRAPH. The terms are the one thing on a card a
+   A QUIET INSET, NOT A PARAGRAPH. The terms are the one thing about a post a
    reader may have to act on — a reuser checking what they owe — so they are
    drawn as a block that can be read at a glance rather than a sentence to be
-   parsed: the caption names what unfolded (the words the reader tapped), and
-   each axis states its own reading on its own row, the two readings aligned so
-   the pair reads as a pair.
+   parsed: the caption names the words the reader tapped, and each axis states
+   its own reading on its own row, the two readings aligned so the pair reads
+   as a pair.
 
-   It takes NO fill. The card ground is already the highest container rung, so a
-   filled inset on top of it would either invert between the themes or claim an
-   elevation this owes nothing to; a hairline at the medium rung recesses it in
-   both. Nothing here is coloured — the terms are neither a warning nor a
+   It takes NO fill. The sheet it comes up in is already the highest container
+   rung, so a filled inset on top of it would either invert between the themes
+   or claim an elevation this owes nothing to; a hairline at the medium rung
+   recesses it in both. Nothing here is coloured — the terms are neither a warning nor a
    promotion, and `--error` is spoken for (readme §13, the input-error round). */
 export function LicenseTerms({ license = PUBLIC_DOMAIN }) {
   const publicDomain = license.attribution === 0 && license.provenance === 0;

@@ -10,9 +10,12 @@ import React from "react";
    glyphs do: a panel behind the words would cover the frame they sit on.
 
    The author's face is NOT here — it is the rail's first item, because people
-   lead in this product and the rail is where the acts on a person begin. */
+   lead in this product and the rail is where the acts on a person begin.
 
-export function ReelCaption({ handle, title, content, bottom = 86, onMore }) {
+   THE WORDS ARE THE DESCRIPTION, never a body: a clip post's body is its media,
+   so the words beside it are the caption (post.md's words-XOR-media). */
+
+export function ReelCaption({ handle, title, description, bottom = 86, onMore }) {
   return (
     <div
       style={{
@@ -42,7 +45,7 @@ export function ReelCaption({ handle, title, content, bottom = 86, onMore }) {
           {title}
         </span>
       )}
-      {content && (
+      {description && (
         <span
           style={{
             fontSize: "var(--text-body-small)",
@@ -52,10 +55,10 @@ export function ReelCaption({ handle, title, content, bottom = 86, onMore }) {
             overflow: "hidden",
           }}
         >
-          {content}
+          {description}
         </span>
       )}
-      {content && (
+      {description && (
         <button
           type="button"
           onClick={onMore ?? (() => {})}

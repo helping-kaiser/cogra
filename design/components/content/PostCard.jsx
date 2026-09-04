@@ -2,7 +2,7 @@ import React from "react";
 import { Card } from "../core/Card.jsx";
 import { ActorChip } from "../people/ActorChip.jsx";
 import { PendingMarker, EditedMarker } from "../honesty/PendingMarker.jsx";
-import { LicenseTerms, LICENSE_MENU_LABEL, LICENSE_MENU_LABEL_SHOWN } from "../forms/LicenseChooser.jsx";
+import { LICENSE_MENU_LABEL } from "../forms/LicenseChooser.jsx";
 import { StanceControl } from "../stance/StanceControl.jsx";
 import { ExplainableNumber } from "../proposed/ExplainableNumber.jsx";
 import { MediaGallery } from "../media/MediaAttachment.jsx";
@@ -26,12 +26,21 @@ import { TopicsLine } from "./TopicsLine.jsx";
    below it as a byline — including on a media post, where every other product
    would put the picture first.
 
+   THE BODY IS WORDS XOR MEDIA. `docs/instances/post.md`: "A Post's body is words
+   or media, never both — words that belong beside a picture are the
+   description." So a media post carries NO `content`: the words beside the
+   picture ARE the description, and the card draws them under it. A text post's
+   body is `content`, with the description under it as its caption. One order for
+   both kinds — TITLE · BODY · DESCRIPTION — so the two shapes read as one card
+   re-proportioned rather than two layouts. Handed both (an impossible post), the
+   card draws the documented media reading and the `content` never appears: the
+   manifest is the body, and half a card is better than an invented one.
+
    A MEDIA POST IS THE SAME CARD, RE-PROPORTIONED. The media runs full-bleed to the
    card's edges and is the largest thing in it; the text around it is trimmed to
-   what orients the reader. Order: author · title · media · caption · markers ·
+   what orients the reader. Order: author · title · media · description · markers ·
    affordance row. The title stays ABOVE the media because it titles the thing —
-   below it, it reads as a caption and the caption reads as a second caption. The
-   body sits below, clamped, with an explicit opener.
+   below it, it reads as a caption and the caption reads as a second caption.
 
    The stance control sits OUTSIDE the link region: it acts, it does not navigate. */
 
@@ -41,6 +50,28 @@ const CLAMP = (lines) => ({
   WebkitBoxOrient: "vertical",
   overflow: "hidden",
 });
+
+/* THE DESCRIPTION IS TWO LINES in the feed, on both kinds of post. It is the
+   caption, not the body: enough to say what the thing is, never enough to
+   become the reading. */
+const DESCRIPTION_CLAMP_LINES = 2;
+
+/* THE TEXT BODY'S CEILING — a text post stands about as tall as a media post,
+   never taller, so a feed of both keeps one rhythm. Derived from the tokens
+   rather than chosen: the feed card fills the 390px phone frame and spends
+   `--card-padding` (16px) on each side, leaving 358px of content; the tallest
+   crop the composer allows is 4:5, so a media post's picture is 358 × 5/4 =
+   447.5px of card; `--text-body-medium--line-height` is 1.25rem = 20px.
+   floor(447.5 / 20) = 22 lines. Past that the body folds and `More` opens it.
+   The detail view is the read surface and clamps nothing. */
+const TEXT_BODY_CLAMP_LINES = 22;
+
+/* A static render cannot measure a paragraph, so the opener is offered on an
+   estimate from the same tokens: at `--text-body-medium` (0.875rem = 14px) the
+   sans averages about half an em to the glyph, so 358 / 7 ≈ 51 characters to
+   the line. A media post needs no estimate — its caption is clamped to two
+   lines and the opener always stands under it. */
+const CHARS_PER_LINE = 51;
 
 export function PostCard({
   author,
@@ -75,7 +106,6 @@ export function PostCard({
   topics = [],
   references = 0,
   menuItems = [],
-  defaultShowLicense = false,
 }) {
   const detail = variant === "detail";
   // THE SENSITIVE MARK (readme §13): one flag veils the BODY and the
@@ -89,12 +119,6 @@ export function PostCard({
   // thread position, and the stance a reader can still take all survive, because
   // no record leaves the graph and no removal is silent.
   const hasMedia = !redacted && Array.isArray(media) && media.length > 0;
-  // The license is a term over downstream reuse, checked once in a hundred
-  // readings — so it is not on the initial view. It arrives when asked for, from
-  // the overflow menu, and stays until the reader is done with it. The reveal is
-  // a state of THIS card, never a surface of its own (readme §13, the menus
-  // round); `defaultShowLicense` is how a board draws it unfolded.
-  const [showLicense, setShowLicense] = React.useState(defaultShowLicense);
   // A media post's caption is clamped and openable in place. The SUMMARY title
   // clamps to one line (readme §13's collapse order: the title gives way before
   // media or the affordance row ever shrink); the detail title never clamps.
@@ -104,9 +128,13 @@ export function PostCard({
   // looking at one picture.
   const [viewing, setViewing] = React.useState(null);
 
-  // The license rode the payload, so a redacted record has none to show.
+  // The license is a term over downstream reuse, checked once in a hundred
+  // readings — so it is not on the card at all. The menu's row opens it in a
+  // sheet over whatever surface the reader asked from (readme §13, the menus
+  // round), and the card's only part in it is carrying the row. The license
+  // rode the payload, so a redacted record has none to show.
   const items = license && !redacted
-    ? [{ label: showLicense ? LICENSE_MENU_LABEL_SHOWN : LICENSE_MENU_LABEL, onSelect: () => setShowLicense((shown) => !shown) }, ...menuItems]
+    ? [{ label: LICENSE_MENU_LABEL, onSelect: () => {} }, ...menuItems]
     : menuItems;
 
   const heading = title ? (
@@ -123,33 +151,48 @@ export function PostCard({
     </h2>
   ) : null;
 
+  // WORDS XOR MEDIA: the picture is the body, so a media post draws no
+  // `content` even when a caller hands it one.
+  const words = hasMedia ? null : content;
   const descriptionStyle = {
     margin: 0,
     fontSize: "var(--text-body-medium)",
+    // The page ground sets `body-large` leading on everything unclassed, which
+    // on a two-line caption at body-medium reads as a gap, not a paragraph. The
+    // role's own line-height comes with the role.
+    lineHeight: "var(--text-body-medium--line-height)",
     color: "var(--text-secondary)",
-    ...(hasMedia && !open && !detail ? CLAMP(1) : null),
+    ...(!open && !detail ? CLAMP(DESCRIPTION_CLAMP_LINES) : null),
   };
   const contentStyle = {
     margin: 0,
     fontSize: detail ? "var(--text-body-large)" : "var(--text-body-medium)",
     lineHeight: detail ? "var(--text-body-large--line-height)" : "var(--text-body-medium--line-height)",
-    ...(detail ? { whiteSpace: "pre-wrap" } : CLAMP(hasMedia && !open ? 2 : 4)),
+    ...(detail ? { whiteSpace: "pre-wrap" } : open ? null : CLAMP(TEXT_BODY_CLAMP_LINES)),
   };
   // THE VEIL WRAPS THE PARAGRAPH, never the text inside it: the clamp's
   // `overflow: hidden` then clips the TEXT before the blur applies, so the halo
   // stays soft on every side instead of being cut at the box's edge.
   const veiledParagraph = (node) => (veil ? <SensitiveVeil kind="text">{node}</SensitiveVeil> : node);
+  // BODY FIRST, DESCRIPTION UNDER IT, on both kinds. The 4px seam between them
+  // is the card's own gap: two fields, one visible join.
   const caption = (
     <>
+      {words && veiledParagraph(<p style={contentStyle}>{words}</p>)}
       {description && veiledParagraph(<p style={descriptionStyle}>{description}</p>)}
-      {content && veiledParagraph(<p style={contentStyle}>{content}</p>)}
     </>
   );
 
   // Only where there is something folded away. "More" is a text control, not a
-  // link: it opens the text in place and never navigates.
+  // link: it opens the text in place and never navigates. A media post's caption
+  // is clamped to two lines and always carries it; a text post's body has 22
+  // lines to fill first, so there the opener waits on the estimate above.
+  const folded = hasMedia
+    ? Boolean(description)
+    : (words && words.length > TEXT_BODY_CLAMP_LINES * CHARS_PER_LINE) ||
+      (description && description.length > DESCRIPTION_CLAMP_LINES * CHARS_PER_LINE);
   const opener =
-    hasMedia && !detail && (content || description) ? (
+    !detail && folded ? (
       <button
         type="button"
         aria-expanded={open}
@@ -240,7 +283,6 @@ export function PostCard({
       {viewing !== null && <MediaViewer items={media} index={viewing} onClose={() => setViewing(null)} />}
       {redacted ? <RedactedContent {...(redacted === true ? {} : redacted)} /> : linkedText}
       {!redacted && opener}
-      {license && showLicense && !redacted && <LicenseTerms license={license} />}
       {/* ONE LINE on both variants — the sheet is the full set's home. On
           detail the whole line is the sheet's opener; in the feed the chips
           navigate and only the count opens it. */}

@@ -21,7 +21,11 @@ export declare function StancePad(props: StancePadProps): JSX.Element;
 
 export declare const FIELD_CORNER_RADIUS_PX: number;
 export declare const KNOB_DIAMETER_PX: number;
+/** The smallest inset that keeps the knob inside the field's corner. */
+export declare function knobTravelInset(cornerRadius?: number, knobDiameter?: number): number;
 export declare const KNOB_TRAVEL_INSET_PX: number;
+/** Half the travel box's extent — the shorter of the field's sides, inset. */
+export declare function padTravelHalfExtent(rect: { width: number; height: number }, inset?: number): number;
 export declare function padPercentOf(pair: StancePair): { x: number; y: number };
 export declare function padPairFrom(
   base: StancePair,

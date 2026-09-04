@@ -20,59 +20,28 @@
    upload of a separate asset. Choosing one while the clip retries is not
    wasted work. */
 
-function CoverRow() {
-  const tile =
-    "width: 56px; height: 56px; border-radius: var(--radius-small); overflow: hidden; flex: none;";
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      <span
-        style={{
-          fontSize: "var(--text-label-large)",
-          lineHeight: "var(--text-label-large--line-height)",
-          fontWeight: "var(--text-label-large--font-weight)",
-          letterSpacing: "var(--text-label-large--letter-spacing)",
-        }}
-      >
-        Cover
-      </span>
-      <Raw
-        html={`<div style="display: flex; gap: 8px;">
-          <div class="cg-cover-frame" style="${tile} outline: 2px solid var(--primary); outline-offset: 1px;"><img src="comment-camera.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></div>
-          <div class="cg-cover-frame" style="${tile} opacity: 0.65;"><img src="comment-camera.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.25) translateX(-4%);"></div>
-          <div class="cg-cover-frame" style="${tile} opacity: 0.65;"><img src="comment-camera.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.5);"></div>
-          <div class="cg-cover-frame" style="${tile} opacity: 0.65;"><img src="comment-camera.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.8) translateY(6%);"></div>
-          <div class="cg-cover-own" style="width: 56px; height: 56px; border-radius: var(--radius-small); border: 1px dashed var(--border-field); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); box-sizing: border-box; flex: none;">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg>
-          </div>
-        </div>`}
-      />
-      <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-        A frame, or a picture of your own.
-      </p>
-    </div>
-  );
-}
+const CLIP_FRAMES = [
+  { src: "comment-camera.jpg" },
+  { src: "comment-camera.jpg", transform: "scale(1.25) translateX(-4%)" },
+  { src: "comment-camera.jpg", transform: "scale(1.5)" },
+  { src: "comment-camera.jpg", transform: "scale(1.8) translateY(6%)" },
+];
 
 export function Screen() {
   return (
     <>
       <WizardHeader title="Reply" leaveLabel="Leave — the reply is discarded" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 56, padding: "8px 12px", borderRadius: "var(--radius-small)", background: "var(--surface-container-highest, var(--surface-container-high))" }}>
-          <img src="ava1.jpg" alt="" style={{ width: 32, height: 32, borderRadius: "var(--radius-full)", objectFit: "cover", flex: "none" }} />
-          <span style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-            <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>
-              The long way home — @ada
-            </span>
-            <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              The light does something at the third headland that I have never managed…
-            </span>
-          </span>
-        </div>
+        <QuotedRow
+          title="The long way home — @ada"
+          snippet="The light does something at the third headland that I have never managed…"
+          name="Ada Okonkwo"
+          src="ava1.jpg"
+        />
 
         <p style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)" }}>
           Eighteen seconds of the same headland, if the light comes through at all.
-          <span style={{ display: "inline-block", width: 2, height: 20, background: "var(--primary)", verticalAlign: "text-bottom", marginLeft: 1 }} />
+          <Caret />
         </p>
 
         <MediaThumb
@@ -89,7 +58,7 @@ export function Screen() {
 
         <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} />
 
-        <CoverRow />
+        <CoverRow frames={CLIP_FRAMES} />
 
         <div style={{ flex: 1 }} />
 

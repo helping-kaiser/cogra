@@ -9,12 +9,13 @@ import { Icon } from "../navigation/Icon.jsx";
    in this system never wears one. The state lives in the accessible name, which
    says what the tap will DO ("Show password"), not what is on screen.
 
-   `error` mirrors TextField's Material 3 error state, since this component
-   duplicates TextField's field markup rather than composing it: the outline
-   and label switch to `--error`, and a body-small supporting line in
-   `--error` renders below the field carrying the message verbatim. */
+   `hint` and `error` mirror TextField's supporting-text slot, since this
+   component duplicates TextField's field markup rather than composing it: one
+   body-small line under the field, `text-secondary` for what the field will
+   accept and `--error` for the message when it is refused — the error replacing
+   the hint, never joining it, and taking the outline and the label with it. */
 
-export function PasswordField({ label, value, onChange, autoComplete = "current-password", id, error }) {
+export function PasswordField({ label, value, onChange, autoComplete = "current-password", id, hint, error }) {
   const generated = React.useId();
   const fieldId = id ?? generated;
   const [visible, setVisible] = React.useState(false);
@@ -74,16 +75,16 @@ export function PasswordField({ label, value, onChange, autoComplete = "current-
           <Icon name={visible ? "visibility_off" : "visibility"} />
         </button>
       </div>
-      {error && (
+      {(error || hint) && (
         <span
           style={{
             fontSize: "var(--text-body-small)",
             lineHeight: "var(--text-body-small--line-height)",
             letterSpacing: "var(--text-body-small--letter-spacing)",
-            color: "var(--error)",
+            color: error ? "var(--error)" : "var(--text-secondary)",
           }}
         >
-          {error}
+          {error || hint}
         </span>
       )}
     </div>

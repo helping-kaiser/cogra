@@ -89,6 +89,8 @@ export interface MediaGalleryProps {
   items?: readonly MediaAttachmentProps[];
   ratio?: "tall" | "square" | "wide" | string;
   radius?: string;
+  /** Passed through to each frame; falls back to the item's own `maxHeight`. */
+  maxHeight?: string;
 }
 
 export declare function MediaGallery(props: MediaGalleryProps): JSX.Element | null;

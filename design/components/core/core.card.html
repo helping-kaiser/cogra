@@ -1,4 +1,4 @@
-<!-- @dsCard group="Components" viewport="700x300" name="Core" subtitle="Buttons, the filled card, the snackbar, the guest dialog" -->
+<!-- @dsCard group="Components" viewport="700x480" name="Core" subtitle="Buttons and the bare primary word, the filled card, the snackbar, the guest dialog" -->
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -8,7 +8,7 @@
 <style>body{padding:16px}.grid{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}.col{display:flex;flex-direction:column;gap:10px;align-items:flex-start}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}.snackbar-slot{width:24rem;max-width:100%}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { Button, Card, Snackbar, JoinPrompt } = window.CoGraDesignSystem_9084ba;
+const { Button, InlineAction, Card, Snackbar, JoinPrompt, SectionLabel, QuietNote } = window.CoGraDesignSystem_9084ba;
 function Demo(){return (
 <div className="grid">
   <div className="col">
@@ -24,6 +24,27 @@ function Demo(){return (
       <Button size="sm" variant="text">Type exact values</Button>
       <Button size="sm" disabled>Sever</Button>
     </div>
+    <span className="lbl">InlineAction — the bare primary word, for an action at the end of somebody else's line</span>
+    <div style={{display:"flex",gap:16,alignItems:"center"}}>
+      <InlineAction>Change</InlineAction>
+      <InlineAction>Adjust</InlineAction>
+      <InlineAction disabled>Mark</InlineAction>
+    </div>
+    <span className="lbl">InlineAction sm — the same word at label-small, for an action that is one word of the sentence it sits in</span>
+    <p style={{margin:0,fontSize:"var(--text-label-small)",lineHeight:"var(--text-label-small--line-height)",letterSpacing:"0.4px"}}>
+      <span style={{color:"var(--error)"}}>One picture didn't upload.</span>{" "}
+      <InlineAction size="sm">Retry</InlineAction>{" "}
+      <span style={{color:"var(--text-secondary)"}}>·</span>{" "}
+      <InlineAction size="sm">Remove it</InlineAction>
+    </p>
+    <span className="lbl">SectionLabel — a caption, not a heading; it carries the screen gutter itself</span>
+    <div style={{background:"var(--surface-container-lowest)"}}>
+      <SectionLabel>Recent</SectionLabel>
+      <SectionLabel>Posts you cited</SectionLabel>
+    </div>
+    <span className="lbl">QuietNote — a fact about the surface, never an action; the column owns the gap</span>
+    <QuietNote>Drag to move, pinch to zoom.</QuietNote>
+    <QuietNote>Words first — pictures can join them, and they upload while you write.</QuietNote>
     <span className="lbl">Snackbar — tonal elevation on inverseSurface, 4px rung, centred</span>
     <div className="snackbar-slot"><Snackbar inline message="Signed, still settling." /></div>
   </div>
@@ -34,6 +55,11 @@ function Demo(){return (
       <p style={{margin:0,color:"var(--text-secondary)"}} className="text-body-medium">Restore it with your recovery code to post, vouch, and act.</p>
       <Button size="sm" selfStart>Restore the key</Button>
     </Card>
+    <span className="lbl">inverse — the filled button on a tonal panel, wearing its pair turned over</span>
+    <div style={{background:"var(--tertiary-container)",color:"var(--on-tertiary-container)",borderRadius:"var(--radius-medium)",padding:16,display:"flex",flexDirection:"column",gap:12}}>
+      <span className="text-body-medium">Your key isn't on this browser.</span>
+      <Button variant="inverse" style={{width:"100%"}}>Restore the key</Button>
+    </div>
   </div>
   <div className="col">
     <span className="lbl">Guest dialog — the affirmative is filled; joining is the one committing action</span>

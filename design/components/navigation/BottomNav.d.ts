@@ -11,6 +11,12 @@ export interface BottomNavProps {
   onSelect?: (slot: string) => void;
   /** Render in flow rather than fixed to the viewport, for specimens. */
   inline?: boolean;
+  /**
+   * Overrides a slot's glyph, keyed by slot name. Merged over the defaults;
+   * `profile` still switches `person`/`person_outline` on selection unless
+   * overridden here.
+   */
+  glyphs?: Partial<Record<"feed" | "search" | "wallet" | "profile", string>>;
 }
 
 export declare function BottomNav(props: BottomNavProps): JSX.Element;

@@ -19,7 +19,6 @@
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
-        "PostLicense",
         "Profile",
         "ProfileComments",
         "ProfileOther",
@@ -34,7 +33,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 26 boards → ComposePick",
+        "start · «nav · New post» on 25 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -58,7 +57,6 @@
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
-        "PostLicense",
         "Profile",
         "ProfileComments",
         "ProfileOther",
@@ -152,14 +150,13 @@
         "Main",
         "PostDetail",
         "PostDetailVideo",
-        "PostLicense",
         "ProfilePosts",
         "Reel",
         "Removed",
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 19 boards → ReplyEntry",
+        "start · «comment count» on 18 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
@@ -182,7 +179,6 @@
         "Main",
         "PostDetail",
         "PostDetailVideo",
-        "PostLicense",
         "ProfilePosts",
         "Reel",
         "Removed",
@@ -406,14 +402,13 @@
         "FeedNarrowed",
         "PostDetail",
         "PostDetailVideo",
-        "PostLicense",
         "ProfilePosts",
         "Reel",
         "Removed",
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 14 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 13 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -427,7 +422,6 @@
         "FeedNarrowed",
         "PostDetail",
         "PostDetailVideo",
-        "PostLicense",
         "ProfilePosts",
         "Reel",
         "Removed",
@@ -609,7 +603,6 @@
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
-        "PostLicense",
         "Profile",
         "ProfileComments",
         "ProfileOther",
@@ -624,7 +617,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 26 boards → ComposePick",
+        "start · «nav · New post» on 25 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -648,7 +641,6 @@
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
-        "PostLicense",
         "Profile",
         "ProfileComments",
         "ProfileOther",
@@ -681,7 +673,6 @@
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
-        "PostLicense",
         "Profile",
         "ProfileComments",
         "ProfileOther",
@@ -696,7 +687,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 26 boards → ComposePick",
+        "start · «nav · New post» on 25 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a video — its face",
         "ComposeCover · 6 «Next» → ComposeDetails",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -720,7 +711,6 @@
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
-        "PostLicense",
         "Profile",
         "ProfileComments",
         "ProfileOther",
@@ -1019,13 +1009,12 @@
         "Main",
         "PostDetail",
         "PostDetailVideo",
-        "PostLicense",
         "Reel",
         "Removed",
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 18 boards → ProfileOther",
+        "start · «author chip» on 17 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
@@ -1044,7 +1033,6 @@
         "Main",
         "PostDetail",
         "PostDetailVideo",
-        "PostLicense",
         "Reel",
         "Removed",
         "VouchBack"
@@ -1772,17 +1760,6 @@
         "reel-to-detail"
       ]
     },
-    "PostLicense": {
-      "flows": [
-        "publish-a-post",
-        "publish-a-video",
-        "publish-words",
-        "reply-to-a-post",
-        "take-a-stance-on-a-post",
-        "visit-an-author"
-      ],
-      "endpoint": []
-    },
     "Profile": {
       "flows": [
         "edit-avatar-standalone",
@@ -2236,7 +2213,6 @@
     "Main/8: the topic page (ruled 2026-09-01 — not designed)",
     "PostDetail/7: Post Score drill-down (backlog item 13)",
     "PostDetailVideo/10: Post Score drill-down (backlog item 13)",
-    "PostLicense/7: Post Score drill-down (backlog item 13)",
     "Profile/1: the chat surface (not designed)",
     "Profile/3: the settings screen (not designed)",
     "Profile/7: the invites screen (not designed)",

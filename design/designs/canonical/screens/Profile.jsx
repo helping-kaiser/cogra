@@ -26,13 +26,13 @@ export function Screen() {
             onCounts={() => {}}
           />
         </div>
-        <ChronicleTabs value="everything" />
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />
         <ChronicleList>
-          <ChronicleCard glyph="dynamic_feed" label="Published a post" time="3d" snippet="Salt maps of the coast road — rubbings from three weekends at low tide." />
-          <ChronicleCard glyph="chat_bubble" label="Commented" time="4d" snippet="The third headland light is real — I have a print from 2019 that almost catches it." />
-          <ChronicleCard face={{ pDirected: 0.4, pInterest: 0.5 }} label="Took a stance" context="on @mira" time="5d" link={false} />
-          <ChronicleCard glyph="dynamic_feed" label="Published a post" time="1w" snippet="Three weekends of walking the same stretch at low tide." />
-          <ChronicleCard glyph="person" label="Updated your profile" time="2w" link={false} />
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="3d" second="Salt maps of the coast road — rubbings from three weekends at low tide." onOpen={() => {}} />
+          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="4d" second="The third headland light is real — I have a print from 2019 that almost catches it." onOpen={() => {}} />
+          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Took a stance" titleAside="on @mira" trailing="5d" inert />
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="1w" second="Three weekends of walking the same stretch at low tide." onOpen={() => {}} />
+          <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated your profile" trailing="2w" inert />
         </ChronicleList>
       </div>
       <BottomNav active="profile" slots={ALL_SLOTS} inline />

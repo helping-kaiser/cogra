@@ -3,52 +3,23 @@
    figures row: two text tabs, both directions SEPARATED — never one merged
    list — and each row is a person with the public stance the row is about,
    its face and pair drawn plainly (every stance is a public record). Tapping
-   the person opens their profile. A read drill-in: back arrow, bar rides. */
-function StanceTabs({ value = "on" }) {
-  const TABS = [
-    { id: "on", label: "On them" },
-    { id: "taken", label: "They've taken" },
-  ];
-  return (
-    <div role="group" aria-label="Which direction" style={{ display: "flex", borderBottom: "1px solid var(--border-hairline)" }}>
-      {TABS.map((tab) => {
-        const selected = tab.id === value;
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            aria-pressed={selected}
-            className="cg-state cg-focus"
-            style={{
-              flex: 1,
-              display: "grid",
-              placeItems: "center",
-              minHeight: "var(--touch-target-min)",
-              border: 0,
-              background: "none",
-              padding: 0,
-              cursor: "pointer",
-              fontFamily: "var(--font-sans)",
-              fontSize: "var(--text-label-large)",
-              fontWeight: "var(--text-label-large--font-weight)",
-              letterSpacing: "var(--text-label-large--letter-spacing)",
-              color: selected ? "var(--primary)" : "var(--text-secondary)",
-              boxShadow: selected ? "inset 0 -2px 0 var(--primary)" : "none",
-            }}
-          >
-            {tab.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
+   the person opens their profile. A read drill-in: back arrow, bar rides.
 
+   THE TAB ROW IS `TabBar` WITH WORDS. Two directions is a choice made in
+   words, not glyphs — and a cell whose own words are its name takes no
+   aria-label, which the master derives from the tab rather than a prop. */
 export function Screen() {
   return (
     <>
       <PageHeader title="@ada · Stances" backHref="#" backLabel="Back" />
-      <StanceTabs value="on" />
+      <TabBar
+        ariaLabel="Which direction"
+        value="on"
+        tabs={[
+          { id: "on", label: "On them" },
+          { id: "taken", label: "They've taken" },
+        ]}
+      />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", paddingTop: 4 }}>
         <StanceRow name="Tobias Lindqvist" handle="tobias" pDirected={0.7} pInterest={0.4} />
         <StanceRow name="Sol Ferreira" handle="sol" pDirected={0.6} pInterest={0.3} />

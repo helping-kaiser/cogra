@@ -17,33 +17,9 @@ export function Screen() {
     <>
       <WizardHeader title="The cover" leaveLabel="Leave — your draft is kept" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
-        <div style={{ position: "relative", width: 390, height: 390, margin: "0 -24px", overflow: "hidden", flex: "none" }}>
-          <img
-            src="gallery-market.jpg"
-            alt=""
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transform: "scale(1.15)", transformOrigin: "50% 45%" }}
-          />
-          <div
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              left: 24,
-              top: 99,
-              width: 342,
-              height: 192,
-              borderRadius: "var(--radius-small)",
-              boxShadow: "0 0 0 400px rgba(0,0,0,0.45)",
-              border: "1px solid rgba(255,255,255,0.7)",
-              boxSizing: "border-box",
-            }}
-          />
-        </div>
-        <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          Drag to move, pinch to zoom.
-        </p>
-        <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          The cover takes the video's shape.
-        </p>
+        <CropViewport src="gallery-market.jpg" shape="rect" height={192} scale={1.15} origin="50% 45%" />
+        <QuietNote>Drag to move, pinch to zoom.</QuietNote>
+        <QuietNote>The cover takes the video's shape.</QuietNote>
         <div style={{ flex: 1 }} />
         <Button style={{ width: "100%" }}>Next</Button>
       </div>
