@@ -152,6 +152,23 @@ The three that decide the shape of a session:
   client and design jobs, which need a JDK pair, the Android SDK, and
   Node.
 
+### The contract artifacts
+
+Four generated files sit at the repo root, and they all work the same
+way: the side that owns the fact writes the file, every consumer pins to
+it by test, and nothing transcribes a value out of it into code. A
+regeneration that changes a byte fails the exporter's own drift test and
+runs both client jobs, so a client can never quietly disagree with the
+server about a number it enforces.
+
+| Artifact | Owner | Regenerate |
+|---|---|---|
+| `schema.graphql` | the Rust schema | `make schema` |
+| `client-crypto-vectors.json` | `common::l1` | `make vectors` |
+| `client-constants.json` | `api` — caps, page size, registration grammar, write-handshake constants | `make constants` |
+| `stance-fold-vectors.json` | `common::l1::fold` | `make fold-vectors` |
+| `design-tokens.json` | design.md §2.2, via web | `make tokens` |
+
 ### What the gates cost
 
 Every recurring action gets an expected duration and a tolerance
@@ -163,9 +180,13 @@ noted; a cold build pays its dependency graph on top.
 
 | Action | Budget | Measured |
 |---|---|---|
-| `make lint-corpus` | 30 s | 12–17 s (2026-09-04, 1858 sources) |
-| `cargo test -p cogra-linter` | 3 min | 90 s (2026-09-04) |
-| `cargo fmt --all -- --check` | 30 s | 11 s (2026-09-04) |
+| `make lint-corpus` | 30 s | 10–17 s (2026-09-04, 1947 sources) |
+| `cargo test -p cogra-linter` | 3 min | 61–90 s (2026-09-04) |
+| `cargo fmt --all -- --check` | 30 s | 6–11 s (2026-09-04) |
+| `cargo test --all` | 12 min | 6 m 36 s (2026-09-04, warm, own test database) |
+| `make constants` | 60 s | 23 s (2026-09-04, cold `api` build) |
+| `make vectors` | 30 s | 3 s (2026-09-04) |
+| `make fold-vectors` | 30 s | 9 s (2026-09-04) |
 | `cargo clippy -p cogra-linter --all-targets` | 2 min | 36 s (2026-09-04) |
 | `make docs-link-check` | 60 s | 8.5 s (2026-09-04, 150 files / 1520 links) |
 | `make android-build` | 20 min | 13 min 2 s cold (2026-08-20) |
