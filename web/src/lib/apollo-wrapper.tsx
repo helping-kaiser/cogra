@@ -12,16 +12,13 @@ import {
 import type { ReactNode } from "react";
 
 import { authorizedLink } from "@/lib/apollo-link";
+import { graphqlUri } from "@/lib/graphql-uri";
 import { tokenStore } from "@/lib/session/token-store";
 
 function makeClient() {
-  const uri =
-    typeof window === "undefined"
-      ? (process.env.GRAPHQL_URL ?? "http://localhost:8080/graphql")
-      : "/graphql";
   return new ApolloClient({
     cache: new InMemoryCache(),
-    link: authorizedLink(tokenStore, uri),
+    link: authorizedLink(tokenStore, graphqlUri()),
   });
 }
 
