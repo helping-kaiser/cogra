@@ -10,87 +10,1159 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300..900&amp;display=swap">
   <style>
     body { margin: 0; }
-    .screen {
-      --primary: #9f4100; --on-primary: #ffffff;
-      --primary-container: #ef6c1a; --on-primary-container: #4f1d00;
-      --secondary-container: #feaa81; --on-secondary-container: #783c1c;
-      --surface: #fff8f6; --on-surface: #251913; --on-surface-variant: #584237;
-      --surface-container: #ffeae1; --surface-container-high: #fbe3d9; --surface-container-highest: #f5ded4;
-      --outline: #8c7165; --outline-variant: #e0c0b2;
-      font-family: 'Figtree', 'Segoe UI', system-ui, sans-serif;
-    }
-    .screen[data-theme="dark"] {
-      --primary: #ff8d50; --on-primary: #341100;
-      --secondary-container: #743918; --on-secondary-container: #f8a57b;
-      --surface: #151312; --on-surface: #e8e1df; --on-surface-variant: #cdc5c2;
-      --surface-container: #221f1e; --surface-container-high: #2c2928; --surface-container-highest: #373433;
-      --outline: #968f8d; --outline-variant: #4b4644;
-    }
-    [data-flow] { position: relative; }
-    [data-flow]::after { content: attr(data-flow); position: absolute; top: -7px; right: -7px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }
+:root { --font-figtree: "Figtree"; --font-sans: var(--font-figtree), "Segoe UI", system-ui, sans-serif; --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+/* The palette of design.md §2, orange-led from the #EF6C1A seed, generated with
+   material-color-utilities (SchemeContent, contrast 0.0) — never hand-picked. The
+   values here are transcribed from the repo-root design-tokens.json, the contract
+   both clients pin to.
+
+   Screens never name a colour — they read a role. A literal hex in a component is
+   a bug (design.md §2.3).
+
+   Both themes are designed, not derived by inversion (§10): the dark neutrals are
+   rebuilt at chroma 1.5 / 2.5 and dark `primary` is taken at tone 70, not
+   Material's 80. `success` is a CoGra role outside Material's set; `error`
+   departs from Material in hue (5, not 25) and tone (35 / 65). */
+
+:root {
+  --seed: #ef6c1a;
+
+  --primary: #9f4100;
+  --on-primary: #ffffff;
+  --primary-container: #ef6c1a;
+  --on-primary-container: #4f1d00;
+  --inverse-primary: #ffb692;
+
+  --secondary: #8e4d2b;
+  --on-secondary: #ffffff;
+  --secondary-container: #feaa81;
+  --on-secondary-container: #783c1c;
+
+  --tertiary: #666000;
+  --on-tertiary: #ffffff;
+  --tertiary-container: #b7af26;
+  --on-tertiary-container: #454100;
+
+  --background: #fff8f6;
+  --on-background: #251913;
+  --surface: #fff8f6;
+  --on-surface: #251913;
+  --surface-variant: #fddccd;
+  --on-surface-variant: #584237;
+  --surface-tint: #9f4100;
+  --inverse-surface: #3b2d27;
+  --inverse-on-surface: #ffede6;
+
+  --surface-bright: #fff8f6;
+  --surface-dim: #edd5cb;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #fff1eb;
+
+  /* THE BRAND WASH (decided 2026-08-31, the wallet's hero): the one
+     decorative gradient surface — a warm sweep from the secondary fill into
+     the surface, for the few places a figure is a trophy, never a default
+     card fill. Both stops are existing palette values; the recipe is the
+     only new thing. */
+  --surface-hero: linear-gradient(140deg, #feaa81 0%, #ffddc9 46%, #fff8f6 100%);
+  --surface-container: #ffeae1;
+  --surface-container-high: #fbe3d9;
+  --surface-container-highest: #f5ded4;
+
+  --error: #a5004a;
+  --on-error: #ffffff;
+  --error-container: #ffd9df;
+  --on-error-container: #8f003f;
+
+  --success: #006c4f;
+  --on-success: #ffffff;
+  --success-container: #98f5ce;
+  --on-success-container: #002116;
+
+  --outline: #8c7165;
+  --outline-variant: #e0c0b2;
+  --scrim: #000000;
+  --shadow: #000000;
+}
+
+/* The dark theme, applied by scope rather than by inversion. Attach
+   `data-theme="dark"` to <html> or any container. */
+[data-theme="dark"] {
+  --primary: #ff8d50;
+  --on-primary: #341100;
+  --primary-container: #ef6c1a;
+  --on-primary-container: #4f1d00;
+  --inverse-primary: #9f4100;
+
+  --secondary: #ffb692;
+  --on-secondary: #542103;
+  --secondary-container: #743918;
+  --on-secondary-container: #f8a57b;
+
+  --tertiary: #d3cb42;
+  --on-tertiary: #343200;
+  --tertiary-container: #b7af26;
+  --on-tertiary-container: #454100;
+
+  --background: #151312;
+  --on-background: #e8e1df;
+  --surface: #151312;
+  --on-surface: #e8e1df;
+  --surface-variant: #4b4644;
+  --on-surface-variant: #cdc5c2;
+  --surface-tint: #ff8d50;
+  --inverse-surface: #e8e1df;
+  --inverse-on-surface: #33302f;
+
+  --surface-bright: #3c3837;
+  --surface-dim: #151312;
+  --surface-container-lowest: #100e0d;
+  --surface-container-low: #1e1b1a;
+  --surface-container: #221f1e;
+  --surface-hero: linear-gradient(140deg, #743918 0%, #3a2417 52%, #151312 100%);
+  --surface-container-high: #2c2928;
+  --surface-container-highest: #373433;
+
+  --error: #ff6b95;
+  --on-error: #66002b;
+  --error-container: #8f003f;
+  --on-error-container: #ffd9df;
+
+  --success: #7cd8b3;
+  --on-success: #003828;
+  --success-container: #00513b;
+  --on-success-container: #98f5ce;
+
+  --outline: #968f8d;
+  --outline-variant: #4b4644;
+  --scrim: #000000;
+  --shadow: #000000;
+}
+
+/* Material 3's fifteen type roles, unmodified (design.md §3) — sizes, line heights,
+   tracking, and weight are Material's; only the family is CoGra's. Values are
+   @material/web's generated typescale tokens, transcribed from the web client's
+   globals.css. Deviating from the scale is a decision to raise, not a per-screen
+   liberty.
+
+   Each role carries its whole style, so a surface reads a role once and gets size,
+   leading, tracking, and weight together. Unclassed text lands on body-large.
+
+   Which role a surface takes (design.md §3):
+     page titles          headline-small
+     card/section heads   title-medium
+     form labels, buttons label-large
+     body and status      body-medium
+     captions, bylines    body-small
+     reading content      body-large
+     a recovery code      title-large, in the platform monospace, wider tracking */
+
+:root {
+  --text-display-large: 3.5625rem;
+  --text-display-large--line-height: 4rem;
+  --text-display-large--letter-spacing: -0.015625rem;
+  --text-display-large--font-weight: 400;
+  --text-display-medium: 2.8125rem;
+  --text-display-medium--line-height: 3.25rem;
+  --text-display-medium--letter-spacing: 0rem;
+  --text-display-medium--font-weight: 400;
+  --text-display-small: 2.25rem;
+  --text-display-small--line-height: 2.75rem;
+  --text-display-small--letter-spacing: 0rem;
+  --text-display-small--font-weight: 400;
+
+  --text-headline-large: 2rem;
+  --text-headline-large--line-height: 2.5rem;
+  --text-headline-large--letter-spacing: 0rem;
+  --text-headline-large--font-weight: 400;
+  --text-headline-medium: 1.75rem;
+  --text-headline-medium--line-height: 2.25rem;
+  --text-headline-medium--letter-spacing: 0rem;
+  --text-headline-medium--font-weight: 400;
+  --text-headline-small: 1.5rem;
+  --text-headline-small--line-height: 2rem;
+  --text-headline-small--letter-spacing: 0rem;
+  --text-headline-small--font-weight: 400;
+
+  --text-title-large: 1.375rem;
+  --text-title-large--line-height: 1.75rem;
+  --text-title-large--letter-spacing: 0rem;
+  --text-title-large--font-weight: 400;
+  --text-title-medium: 1rem;
+  --text-title-medium--line-height: 1.5rem;
+  --text-title-medium--letter-spacing: 0.009375rem;
+  --text-title-medium--font-weight: 500;
+  --text-title-small: 0.875rem;
+  --text-title-small--line-height: 1.25rem;
+  --text-title-small--letter-spacing: 0.00625rem;
+  --text-title-small--font-weight: 500;
+
+  --text-body-large: 1rem;
+  --text-body-large--line-height: 1.5rem;
+  --text-body-large--letter-spacing: 0.03125rem;
+  --text-body-large--font-weight: 400;
+  --text-body-medium: 0.875rem;
+  --text-body-medium--line-height: 1.25rem;
+  --text-body-medium--letter-spacing: 0.015625rem;
+  --text-body-medium--font-weight: 400;
+  --text-body-small: 0.75rem;
+  --text-body-small--line-height: 1rem;
+  --text-body-small--letter-spacing: 0.025rem;
+  --text-body-small--font-weight: 400;
+
+  --text-label-large: 0.875rem;
+  --text-label-large--line-height: 1.25rem;
+  --text-label-large--letter-spacing: 0.00625rem;
+  --text-label-large--font-weight: 500;
+  --text-label-medium: 0.75rem;
+  --text-label-medium--line-height: 1rem;
+  --text-label-medium--letter-spacing: 0.03125rem;
+  --text-label-medium--font-weight: 500;
+  --text-label-small: 0.6875rem;
+  --text-label-small--line-height: 1rem;
+  --text-label-small--letter-spacing: 0.03125rem;
+  --text-label-small--font-weight: 500;
+}
+
+/* Role classes, so HTML outside a React component can read a role the same way
+   a component does. */
+.text-display-large { font-size: var(--text-display-large); line-height: var(--text-display-large--line-height); letter-spacing: var(--text-display-large--letter-spacing); font-weight: var(--text-display-large--font-weight) }
+.text-display-medium { font-size: var(--text-display-medium); line-height: var(--text-display-medium--line-height); letter-spacing: var(--text-display-medium--letter-spacing); font-weight: var(--text-display-medium--font-weight) }
+.text-display-small { font-size: var(--text-display-small); line-height: var(--text-display-small--line-height); letter-spacing: var(--text-display-small--letter-spacing); font-weight: var(--text-display-small--font-weight) }
+.text-headline-large { font-size: var(--text-headline-large); line-height: var(--text-headline-large--line-height); letter-spacing: var(--text-headline-large--letter-spacing); font-weight: var(--text-headline-large--font-weight) }
+.text-headline-medium { font-size: var(--text-headline-medium); line-height: var(--text-headline-medium--line-height); letter-spacing: var(--text-headline-medium--letter-spacing); font-weight: var(--text-headline-medium--font-weight) }
+.text-headline-small { font-size: var(--text-headline-small); line-height: var(--text-headline-small--line-height); letter-spacing: var(--text-headline-small--letter-spacing); font-weight: var(--text-headline-small--font-weight) }
+.text-title-large { font-size: var(--text-title-large); line-height: var(--text-title-large--line-height); letter-spacing: var(--text-title-large--letter-spacing); font-weight: var(--text-title-large--font-weight) }
+.text-title-medium { font-size: var(--text-title-medium); line-height: var(--text-title-medium--line-height); letter-spacing: var(--text-title-medium--letter-spacing); font-weight: var(--text-title-medium--font-weight) }
+.text-title-small { font-size: var(--text-title-small); line-height: var(--text-title-small--line-height); letter-spacing: var(--text-title-small--letter-spacing); font-weight: var(--text-title-small--font-weight) }
+.text-body-large { font-size: var(--text-body-large); line-height: var(--text-body-large--line-height); letter-spacing: var(--text-body-large--letter-spacing); font-weight: var(--text-body-large--font-weight) }
+.text-body-medium { font-size: var(--text-body-medium); line-height: var(--text-body-medium--line-height); letter-spacing: var(--text-body-medium--letter-spacing); font-weight: var(--text-body-medium--font-weight) }
+.text-body-small { font-size: var(--text-body-small); line-height: var(--text-body-small--line-height); letter-spacing: var(--text-body-small--letter-spacing); font-weight: var(--text-body-small--font-weight) }
+.text-label-large { font-size: var(--text-label-large); line-height: var(--text-label-large--line-height); letter-spacing: var(--text-label-large--letter-spacing); font-weight: var(--text-label-large--font-weight) }
+.text-label-medium { font-size: var(--text-label-medium); line-height: var(--text-label-medium--line-height); letter-spacing: var(--text-label-medium--letter-spacing); font-weight: var(--text-label-medium--font-weight) }
+.text-label-small { font-size: var(--text-label-small); line-height: var(--text-label-small--line-height); letter-spacing: var(--text-label-small--letter-spacing); font-weight: var(--text-label-small--font-weight) }
+
+/* The M3 shape scale (design.md §4) — 4 / 8 / 12 / 16 / 28dp, plus the full pill.
+   These five rungs are the only radius names that exist; an off-scale corner is a
+   bug. The direction is rounded and soft, and a square corner should look like a
+   mistake.
+
+   Which rung a surface takes:
+     text fields, snackbar   extra-small (4px)
+     small containers        small (8px)
+     cards, inline blocks    medium (12px)
+     the stance pad's field  large (16px)
+     dialogs, the pad itself extra-large (28px)
+     buttons at every size   the pill (Material's button shape, not a rung) */
+
+:root {
+  --radius-extra-small: 4px;
+  --radius-small: 8px;
+  --radius-medium: 12px;
+  --radius-large: 16px;
+  --radius-extra-large: 28px;
+  --radius-full: 9999px;
+}
+
+/* A 4dp/4px base grid (design.md §4). Screen gutters and list spacing follow M3
+   defaults; the values below are the ones the two clients actually use.
+
+   Observed in the web client: screen gutter 24px (px-6), card padding 16px (p-4),
+   card inner gap 12px (gap-3), screen stack gap 16px (gap-4), list gap 12px. */
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Layout constants read off the clients. */
+  --screen-gutter: var(--space-6);
+  --screen-max-width: 42rem;
+  --card-padding: var(--space-4);
+  --card-gap: var(--space-3);
+  --stack-gap: var(--space-4);
+  /* 48dp minimum touch TARGET — the stance control's resting state included, and
+     enforced by hit area rather than drawn height: `.cg-hit` in states.css expands
+     a 33px small button to a 48px target without moving its ink. */
+  --touch-target-min: 48px;
+  /* The short navigation bar, and the small top app bar's band. */
+  --bottom-bar-height: 64px;
+  --top-bar-height: 48px;
+
+  /* A POST MUST FIT ON THE SCREEN. The whole card — author row, media, text,
+     affordances — has to sit inside the phone's height minus the top safe area
+     and the bottom bar, or the reader never sees a post whole and never sees the
+     affordance row without scrolling. Media is the only part that can flex, so
+     the cap lands on it.
+
+     THE CHROME FIGURE IS THE WORST CASE, NOT THE AVERAGE — measured on the
+     heaviest post the system can produce: author row, title, a two-line caption,
+     a `More` opener, an honesty marker, the 52px affordance row, and the card's
+     own 2×16px padding. Budgeting for the average is how you ship a layout that
+     fits four posts out of five, and the fifth is the one with something to say.
+     A short post simply never reaches the cap; it is a maximum, not a target.
+
+     The floor keeps media from collapsing to a sliver on a short viewport — a
+     landscape phone or a desktop panel — where scrolling is the lesser evil. */
+  --safe-area-top: env(safe-area-inset-top, 44px);
+  --post-chrome-height: 360px;
+  --media-max-height: max(
+    180px,
+    calc(100dvh - var(--safe-area-top) - var(--bottom-bar-height) - var(--post-chrome-height))
+  );
+}
+
+/* M3 motion, standard easing and durations (design.md §4). Motion clarifies where
+   something came from; it never performs. Reduced-motion preferences are honoured
+   on both platforms.
+
+   The one bespoke value is the collapsing top's 200ms translate — the transition
+   that covers the vacated header slot as the region leaves. */
+
+:root {
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1); /* @kind other */
+  --ease-standard-decelerate: cubic-bezier(0, 0, 0, 1); /* @kind other */
+  --ease-standard-accelerate: cubic-bezier(0.3, 0, 1, 1); /* @kind other */
+  --ease-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1); /* @kind other */
+  --ease-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15); /* @kind other */
+
+  --duration-short-2: 100ms; /* @kind other */
+  --duration-short-4: 200ms; /* @kind other */
+  --duration-medium-2: 300ms; /* @kind other */
+  --duration-medium-4: 400ms; /* @kind other */
+  --duration-long-2: 500ms; /* @kind other */
+
+  /* The collapsing top's own transition (collapsing-top.tsx). */
+  --duration-collapsing-top: 200ms; /* @kind other */
+  /* Material's short snackbar duration; the confirmation clears itself. */
+  --duration-snackbar: 4000ms; /* @kind other */
+  /* Android's platform long-press timeout — what the pad's bloom waits for. */
+  --duration-long-press: 500ms; /* @kind other */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-short-2: 0ms; /* @kind other */
+    --duration-short-4: 0ms; /* @kind other */
+    --duration-medium-2: 0ms; /* @kind other */
+    --duration-medium-4: 0ms; /* @kind other */
+    --duration-long-2: 0ms; /* @kind other */
+    --duration-collapsing-top: 0ms; /* @kind other */
+  }
+}
+
+/* Screen transitions (backlog item 2). The source defines none — every consumer
+   was inventing its own, which is how two screens end up sliding different ways.
+
+   THE RULE: a transition says where a screen came from, and nothing else. So the
+   travel is a hint (12% of the screen's width, not a full slide), the fade carries
+   most of the change, and back is the forward motion run in reverse at the shorter
+   duration — returning is retracing, and a shorter move reads as backward without
+   needing a different drawing.
+
+   A DISMISSAL EXITS THE EDGE IT ENTERED FROM. A sheet came up, so it goes down; a
+   dialog faded in place, so it fades. Nothing is ever dismissed sideways: sideways
+   means "another screen at the same level", and a sheet is not one.
+
+   Never animated: the content inside an arriving screen. No list entrance, no
+   staggered cards — the screen arrives whole, which is also why one transition is
+   ever on screen at a time. */
+
+:root {
+  /* Forward is the longer move because it introduces something new. */
+  --duration-nav-forward: 300ms; /* @kind other */
+  --duration-nav-back: 200ms; /* @kind other */
+  --duration-sheet-in: 400ms; /* @kind other */
+  --duration-sheet-out: 200ms; /* @kind other */
+  --duration-dialog-in: 200ms; /* @kind other */
+  --duration-scrim: 200ms; /* @kind other */
+  /* How far a screen travels: a hint of origin, not a slide show. */
+  --nav-travel: 12%; /* @kind other */
+}
+
+@keyframes cg-nav-in { from { opacity: 0; transform: translateX(var(--nav-travel)) } to { opacity: 1; transform: none } }
+@keyframes cg-nav-out { from { opacity: 1; transform: none } to { opacity: 0; transform: translateX(calc(var(--nav-travel) * -0.5)) } }
+@keyframes cg-nav-back-in { from { opacity: 0; transform: translateX(calc(var(--nav-travel) * -0.5)) } to { opacity: 1; transform: none } }
+@keyframes cg-nav-back-out { from { opacity: 1; transform: none } to { opacity: 0; transform: translateX(var(--nav-travel)) } }
+@keyframes cg-sheet-in { from { transform: translateY(100%) } to { transform: none } }
+@keyframes cg-sheet-out { from { transform: none } to { transform: translateY(100%) } }
+@keyframes cg-dialog-in { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+@keyframes cg-fade-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes cg-fade-out { from { opacity: 1 } to { opacity: 0 } }
+
+.cg-nav-in { animation: cg-nav-in var(--duration-nav-forward) var(--ease-emphasized-decelerate) both }
+.cg-nav-out { animation: cg-nav-out var(--duration-nav-back) var(--ease-emphasized-accelerate) both }
+.cg-nav-back-in { animation: cg-nav-back-in var(--duration-nav-back) var(--ease-emphasized-decelerate) both }
+.cg-nav-back-out { animation: cg-nav-back-out var(--duration-nav-back) var(--ease-emphasized-accelerate) both }
+.cg-sheet-in { animation: cg-sheet-in var(--duration-sheet-in) var(--ease-emphasized-decelerate) both }
+.cg-sheet-out { animation: cg-sheet-out var(--duration-sheet-out) var(--ease-emphasized-accelerate) both }
+.cg-dialog-in { animation: cg-dialog-in var(--duration-dialog-in) var(--ease-standard-decelerate) both }
+.cg-scrim-in { animation: cg-fade-in var(--duration-scrim) linear both }
+.cg-scrim-out { animation: cg-fade-out var(--duration-scrim) linear both }
+
+/* Reduced motion: the swap still happens, it just does not travel or fade.
+   A transition is an explanation, and a reader who has asked for stillness has
+   declined the explanation, not the navigation. */
+@media (prefers-reduced-motion: reduce) {
+  .cg-nav-in, .cg-nav-out, .cg-nav-back-in, .cg-nav-back-out,
+  .cg-sheet-in, .cg-sheet-out, .cg-dialog-in, .cg-scrim-in, .cg-scrim-out { animation: none }
+}
+
+/* Semantic aliases over the Material roles. These name where a role is spent
+   (design.md §2.4) rather than introducing a second vocabulary — every one of them
+   resolves to a role above, and a screen may read either.
+
+   `primaryContainer` is the loudest surface in the app: the bar's compose action
+   and a committed stance. One place per screen. */
+
+:root {
+  /* Ground and raised regions. */
+  --surface-page: var(--surface);
+  --surface-card: var(--surface-container-highest);
+  --surface-dialog: var(--surface-container-high);
+  --surface-bar: var(--surface-container);
+  --surface-field: var(--surface-container-highest);
+  --surface-loud: var(--primary-container);
+  --on-surface-loud: var(--on-primary-container);
+  --surface-snackbar: var(--inverse-surface);
+  --on-surface-snackbar: var(--inverse-on-surface);
+
+  /* Text. Secondary text is `onSurfaceVariant`, never `onSurface` at reduced
+     opacity — opacity breaks the contrast guarantee the token carries. */
+  --text-body: var(--on-surface);
+  --text-secondary: var(--on-surface-variant);
+  --text-link: var(--primary);
+  --text-on-loud: var(--on-primary-container);
+  --text-failure: var(--error);
+  --text-landed: var(--success);
+
+  /* Lines. Elevation is tonal; shadows stay soft and never manufacture urgency. */
+  --border-hairline: var(--outline-variant);
+  --border-field: var(--outline);
+  --scrim-dialog: color-mix(in srgb, var(--scrim) 50%, transparent);
+
+  /* Disabled state, as the clients draw it. */
+  --opacity-disabled: 0.4; /* @kind other */
+  /* The resting stance face with no standing behind it: muted and translucent. */
+  --opacity-resting-face: 0.4; /* @kind other */
+}
+
+/* Interaction states.
+
+   THIS IS A DIVERGENCE FROM THE SOURCE, and a deliberate one. `design.md` §4 is
+   silent on hover, press, and focus, and the web client defines none — so every
+   consumer invents its own, which is how a system starts to look accidental. The
+   values below are Material's own documented state-layer opacities, so this fills
+   the gap the way the rest of the system already resolves silences: "where this
+   doc is silent, M3 is the answer".
+
+   The layer is `currentColor` over the control, which is correct for all three
+   button variants without a second token: on a filled button `currentColor` is
+   `onPrimary`, on an unfilled one it is `primary`.
+
+   Press is never a scale-down and never a shadow change — the direction is calm,
+   and a control that shrinks under the thumb performs. */
+
+:root {
+  --state-hover: 0.08; /* @kind other */
+  --state-press: 0.1; /* @kind other */
+  --state-drag: 0.16; /* @kind other */
+  /* Material's disabled opacity. Exempt from the AA guarantee by convention:
+     a disabled control is not an available target. */
+  --state-disabled: 0.38; /* @kind other */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+}
+
+/* Any pressable surface: buttons, bar slots, actor chips, cards that open. */
+.cg-state {
+  position: relative;
+  isolation: isolate;
+}
+
+.cg-state::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity var(--duration-short-2) var(--ease-standard);
+  pointer-events: none;
+}
+
+.cg-state:hover::after { opacity: var(--state-hover) }
+.cg-state:active::after { opacity: var(--state-press) }
+.cg-state:disabled::after, .cg-state[aria-disabled="true"]::after { opacity: 0 }
+
+/* The focus indicator is `onSurface` rather than `primary`: a primary ring
+   disappears against a filled primary button, and this one reads on the page
+   ground and on the loud surface alike, in both themes. Nothing removes it. */
+.cg-focus:focus-visible {
+  outline: var(--focus-ring-width) solid var(--on-surface);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* Visually hidden until focused — the skip-link pattern. A non-drag equivalent for
+   a drag gesture has to be reachable by keyboard, switch, and screen reader (§10),
+   but it does not have to sit on screen beside every instance of the control: a
+   feed of twenty posts would carry twenty copies of it, competing with the thing
+   they duplicate. Pointer users get the gesture and the settings preference; a
+   focus ring brings this into view for everyone else. */
+.cg-sr-focusable {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.cg-sr-focusable:focus-visible {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+}
+
+/* The 48px promise, kept without inflating dense rows.
+
+   `readme.md` §4 and §10 state a 48px minimum target unconditionally, and the
+   small button is 33px tall drawn — which is Material's own dense button size, and
+   right for the pad's action row and a dialog's footer. So the TARGET is expanded
+   rather than the button: a transparent £before overlay centred on the control
+   reaches 48px on both axes while the ink stays where it was.
+
+   This is what Material does for dense controls, and it is why the rule can stay
+   unconditional: nothing in the product is tappable below 48px, whatever it looks
+   like. `min-height/min-width: 100%` keeps the overlay from ever shrinking a
+   control that is already larger. */
+.cg-hit::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  height: var(--touch-target-min);
+  width: var(--touch-target-min);
+  min-height: 100%;
+  min-width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cg-state::after { transition: none }
+}
+
+/* The page ground and the default type role. `body-large` is Material's role for
+   reading content, so it is what unclassed text lands on. */
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--on-surface);
+  font-family: var(--font-sans);
+  font-size: var(--text-body-large);
+  line-height: var(--text-body-large--line-height);
+  letter-spacing: var(--text-body-large--letter-spacing);
+  font-weight: var(--text-body-large--font-weight);
+  -webkit-font-smoothing: antialiased;
+  text-wrap: pretty;
+}
+
+a { color: var(--primary); text-decoration-color: color-mix(in srgb, var(--primary) 40%, transparent) }
+a:hover { color: color-mix(in srgb, var(--primary) 84%, var(--on-surface)); text-decoration-color: currentColor }
+
+code, kbd, samp, pre { font-family: var(--font-mono) }
+
+/* The palette of design.md §2, orange-led from the #EF6C1A seed, generated with
+   material-color-utilities (SchemeContent, contrast 0.0) — never hand-picked. The
+   values here are transcribed from the repo-root design-tokens.json, the contract
+   both clients pin to.
+
+   Screens never name a colour — they read a role. A literal hex in a component is
+   a bug (design.md §2.3).
+
+   Both themes are designed, not derived by inversion (§10): the dark neutrals are
+   rebuilt at chroma 1.5 / 2.5 and dark `primary` is taken at tone 70, not
+   Material's 80. `success` is a CoGra role outside Material's set; `error`
+   departs from Material in hue (5, not 25) and tone (35 / 65). */
+
+[data-theme="dark"] {
+  --seed: #ef6c1a;
+
+  --primary: #9f4100;
+  --on-primary: #ffffff;
+  --primary-container: #ef6c1a;
+  --on-primary-container: #4f1d00;
+  --inverse-primary: #ffb692;
+
+  --secondary: #8e4d2b;
+  --on-secondary: #ffffff;
+  --secondary-container: #feaa81;
+  --on-secondary-container: #783c1c;
+
+  --tertiary: #666000;
+  --on-tertiary: #ffffff;
+  --tertiary-container: #b7af26;
+  --on-tertiary-container: #454100;
+
+  --background: #fff8f6;
+  --on-background: #251913;
+  --surface: #fff8f6;
+  --on-surface: #251913;
+  --surface-variant: #fddccd;
+  --on-surface-variant: #584237;
+  --surface-tint: #9f4100;
+  --inverse-surface: #3b2d27;
+  --inverse-on-surface: #ffede6;
+
+  --surface-bright: #fff8f6;
+  --surface-dim: #edd5cb;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #fff1eb;
+
+  /* THE BRAND WASH (decided 2026-08-31, the wallet's hero): the one
+     decorative gradient surface — a warm sweep from the secondary fill into
+     the surface, for the few places a figure is a trophy, never a default
+     card fill. Both stops are existing palette values; the recipe is the
+     only new thing. */
+  --surface-hero: linear-gradient(140deg, #feaa81 0%, #ffddc9 46%, #fff8f6 100%);
+  --surface-container: #ffeae1;
+  --surface-container-high: #fbe3d9;
+  --surface-container-highest: #f5ded4;
+
+  --error: #a5004a;
+  --on-error: #ffffff;
+  --error-container: #ffd9df;
+  --on-error-container: #8f003f;
+
+  --success: #006c4f;
+  --on-success: #ffffff;
+  --success-container: #98f5ce;
+  --on-success-container: #002116;
+
+  --outline: #8c7165;
+  --outline-variant: #e0c0b2;
+  --scrim: #000000;
+  --shadow: #000000;
+}
+
+/* The dark theme, applied by scope rather than by inversion. Attach
+   `data-theme="dark"` to <html> or any container. */
+[data-theme="dark"] {
+  --primary: #ff8d50;
+  --on-primary: #341100;
+  --primary-container: #ef6c1a;
+  --on-primary-container: #4f1d00;
+  --inverse-primary: #9f4100;
+
+  --secondary: #ffb692;
+  --on-secondary: #542103;
+  --secondary-container: #743918;
+  --on-secondary-container: #f8a57b;
+
+  --tertiary: #d3cb42;
+  --on-tertiary: #343200;
+  --tertiary-container: #b7af26;
+  --on-tertiary-container: #454100;
+
+  --background: #151312;
+  --on-background: #e8e1df;
+  --surface: #151312;
+  --on-surface: #e8e1df;
+  --surface-variant: #4b4644;
+  --on-surface-variant: #cdc5c2;
+  --surface-tint: #ff8d50;
+  --inverse-surface: #e8e1df;
+  --inverse-on-surface: #33302f;
+
+  --surface-bright: #3c3837;
+  --surface-dim: #151312;
+  --surface-container-lowest: #100e0d;
+  --surface-container-low: #1e1b1a;
+  --surface-container: #221f1e;
+  --surface-hero: linear-gradient(140deg, #743918 0%, #3a2417 52%, #151312 100%);
+  --surface-container-high: #2c2928;
+  --surface-container-highest: #373433;
+
+  --error: #ff6b95;
+  --on-error: #66002b;
+  --error-container: #8f003f;
+  --on-error-container: #ffd9df;
+
+  --success: #7cd8b3;
+  --on-success: #003828;
+  --success-container: #00513b;
+  --on-success-container: #98f5ce;
+
+  --outline: #968f8d;
+  --outline-variant: #4b4644;
+  --scrim: #000000;
+  --shadow: #000000;
+}
+
+/* Material 3's fifteen type roles, unmodified (design.md §3) — sizes, line heights,
+   tracking, and weight are Material's; only the family is CoGra's. Values are
+   @material/web's generated typescale tokens, transcribed from the web client's
+   globals.css. Deviating from the scale is a decision to raise, not a per-screen
+   liberty.
+
+   Each role carries its whole style, so a surface reads a role once and gets size,
+   leading, tracking, and weight together. Unclassed text lands on body-large.
+
+   Which role a surface takes (design.md §3):
+     page titles          headline-small
+     card/section heads   title-medium
+     form labels, buttons label-large
+     body and status      body-medium
+     captions, bylines    body-small
+     reading content      body-large
+     a recovery code      title-large, in the platform monospace, wider tracking */
+
+[data-theme="dark"] {
+  --text-display-large: 3.5625rem;
+  --text-display-large--line-height: 4rem;
+  --text-display-large--letter-spacing: -0.015625rem;
+  --text-display-large--font-weight: 400;
+  --text-display-medium: 2.8125rem;
+  --text-display-medium--line-height: 3.25rem;
+  --text-display-medium--letter-spacing: 0rem;
+  --text-display-medium--font-weight: 400;
+  --text-display-small: 2.25rem;
+  --text-display-small--line-height: 2.75rem;
+  --text-display-small--letter-spacing: 0rem;
+  --text-display-small--font-weight: 400;
+
+  --text-headline-large: 2rem;
+  --text-headline-large--line-height: 2.5rem;
+  --text-headline-large--letter-spacing: 0rem;
+  --text-headline-large--font-weight: 400;
+  --text-headline-medium: 1.75rem;
+  --text-headline-medium--line-height: 2.25rem;
+  --text-headline-medium--letter-spacing: 0rem;
+  --text-headline-medium--font-weight: 400;
+  --text-headline-small: 1.5rem;
+  --text-headline-small--line-height: 2rem;
+  --text-headline-small--letter-spacing: 0rem;
+  --text-headline-small--font-weight: 400;
+
+  --text-title-large: 1.375rem;
+  --text-title-large--line-height: 1.75rem;
+  --text-title-large--letter-spacing: 0rem;
+  --text-title-large--font-weight: 400;
+  --text-title-medium: 1rem;
+  --text-title-medium--line-height: 1.5rem;
+  --text-title-medium--letter-spacing: 0.009375rem;
+  --text-title-medium--font-weight: 500;
+  --text-title-small: 0.875rem;
+  --text-title-small--line-height: 1.25rem;
+  --text-title-small--letter-spacing: 0.00625rem;
+  --text-title-small--font-weight: 500;
+
+  --text-body-large: 1rem;
+  --text-body-large--line-height: 1.5rem;
+  --text-body-large--letter-spacing: 0.03125rem;
+  --text-body-large--font-weight: 400;
+  --text-body-medium: 0.875rem;
+  --text-body-medium--line-height: 1.25rem;
+  --text-body-medium--letter-spacing: 0.015625rem;
+  --text-body-medium--font-weight: 400;
+  --text-body-small: 0.75rem;
+  --text-body-small--line-height: 1rem;
+  --text-body-small--letter-spacing: 0.025rem;
+  --text-body-small--font-weight: 400;
+
+  --text-label-large: 0.875rem;
+  --text-label-large--line-height: 1.25rem;
+  --text-label-large--letter-spacing: 0.00625rem;
+  --text-label-large--font-weight: 500;
+  --text-label-medium: 0.75rem;
+  --text-label-medium--line-height: 1rem;
+  --text-label-medium--letter-spacing: 0.03125rem;
+  --text-label-medium--font-weight: 500;
+  --text-label-small: 0.6875rem;
+  --text-label-small--line-height: 1rem;
+  --text-label-small--letter-spacing: 0.03125rem;
+  --text-label-small--font-weight: 500;
+}
+
+/* Role classes, so HTML outside a React component can read a role the same way
+   a component does. */
+.text-display-large { font-size: var(--text-display-large); line-height: var(--text-display-large--line-height); letter-spacing: var(--text-display-large--letter-spacing); font-weight: var(--text-display-large--font-weight) }
+.text-display-medium { font-size: var(--text-display-medium); line-height: var(--text-display-medium--line-height); letter-spacing: var(--text-display-medium--letter-spacing); font-weight: var(--text-display-medium--font-weight) }
+.text-display-small { font-size: var(--text-display-small); line-height: var(--text-display-small--line-height); letter-spacing: var(--text-display-small--letter-spacing); font-weight: var(--text-display-small--font-weight) }
+.text-headline-large { font-size: var(--text-headline-large); line-height: var(--text-headline-large--line-height); letter-spacing: var(--text-headline-large--letter-spacing); font-weight: var(--text-headline-large--font-weight) }
+.text-headline-medium { font-size: var(--text-headline-medium); line-height: var(--text-headline-medium--line-height); letter-spacing: var(--text-headline-medium--letter-spacing); font-weight: var(--text-headline-medium--font-weight) }
+.text-headline-small { font-size: var(--text-headline-small); line-height: var(--text-headline-small--line-height); letter-spacing: var(--text-headline-small--letter-spacing); font-weight: var(--text-headline-small--font-weight) }
+.text-title-large { font-size: var(--text-title-large); line-height: var(--text-title-large--line-height); letter-spacing: var(--text-title-large--letter-spacing); font-weight: var(--text-title-large--font-weight) }
+.text-title-medium { font-size: var(--text-title-medium); line-height: var(--text-title-medium--line-height); letter-spacing: var(--text-title-medium--letter-spacing); font-weight: var(--text-title-medium--font-weight) }
+.text-title-small { font-size: var(--text-title-small); line-height: var(--text-title-small--line-height); letter-spacing: var(--text-title-small--letter-spacing); font-weight: var(--text-title-small--font-weight) }
+.text-body-large { font-size: var(--text-body-large); line-height: var(--text-body-large--line-height); letter-spacing: var(--text-body-large--letter-spacing); font-weight: var(--text-body-large--font-weight) }
+.text-body-medium { font-size: var(--text-body-medium); line-height: var(--text-body-medium--line-height); letter-spacing: var(--text-body-medium--letter-spacing); font-weight: var(--text-body-medium--font-weight) }
+.text-body-small { font-size: var(--text-body-small); line-height: var(--text-body-small--line-height); letter-spacing: var(--text-body-small--letter-spacing); font-weight: var(--text-body-small--font-weight) }
+.text-label-large { font-size: var(--text-label-large); line-height: var(--text-label-large--line-height); letter-spacing: var(--text-label-large--letter-spacing); font-weight: var(--text-label-large--font-weight) }
+.text-label-medium { font-size: var(--text-label-medium); line-height: var(--text-label-medium--line-height); letter-spacing: var(--text-label-medium--letter-spacing); font-weight: var(--text-label-medium--font-weight) }
+.text-label-small { font-size: var(--text-label-small); line-height: var(--text-label-small--line-height); letter-spacing: var(--text-label-small--letter-spacing); font-weight: var(--text-label-small--font-weight) }
+
+/* The M3 shape scale (design.md §4) — 4 / 8 / 12 / 16 / 28dp, plus the full pill.
+   These five rungs are the only radius names that exist; an off-scale corner is a
+   bug. The direction is rounded and soft, and a square corner should look like a
+   mistake.
+
+   Which rung a surface takes:
+     text fields, snackbar   extra-small (4px)
+     small containers        small (8px)
+     cards, inline blocks    medium (12px)
+     the stance pad's field  large (16px)
+     dialogs, the pad itself extra-large (28px)
+     buttons at every size   the pill (Material's button shape, not a rung) */
+
+[data-theme="dark"] {
+  --radius-extra-small: 4px;
+  --radius-small: 8px;
+  --radius-medium: 12px;
+  --radius-large: 16px;
+  --radius-extra-large: 28px;
+  --radius-full: 9999px;
+}
+
+/* A 4dp/4px base grid (design.md §4). Screen gutters and list spacing follow M3
+   defaults; the values below are the ones the two clients actually use.
+
+   Observed in the web client: screen gutter 24px (px-6), card padding 16px (p-4),
+   card inner gap 12px (gap-3), screen stack gap 16px (gap-4), list gap 12px. */
+
+[data-theme="dark"] {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Layout constants read off the clients. */
+  --screen-gutter: var(--space-6);
+  --screen-max-width: 42rem;
+  --card-padding: var(--space-4);
+  --card-gap: var(--space-3);
+  --stack-gap: var(--space-4);
+  /* 48dp minimum touch TARGET — the stance control's resting state included, and
+     enforced by hit area rather than drawn height: `.cg-hit` in states.css expands
+     a 33px small button to a 48px target without moving its ink. */
+  --touch-target-min: 48px;
+  /* The short navigation bar, and the small top app bar's band. */
+  --bottom-bar-height: 64px;
+  --top-bar-height: 48px;
+
+  /* A POST MUST FIT ON THE SCREEN. The whole card — author row, media, text,
+     affordances — has to sit inside the phone's height minus the top safe area
+     and the bottom bar, or the reader never sees a post whole and never sees the
+     affordance row without scrolling. Media is the only part that can flex, so
+     the cap lands on it.
+
+     THE CHROME FIGURE IS THE WORST CASE, NOT THE AVERAGE — measured on the
+     heaviest post the system can produce: author row, title, a two-line caption,
+     a `More` opener, an honesty marker, the 52px affordance row, and the card's
+     own 2×16px padding. Budgeting for the average is how you ship a layout that
+     fits four posts out of five, and the fifth is the one with something to say.
+     A short post simply never reaches the cap; it is a maximum, not a target.
+
+     The floor keeps media from collapsing to a sliver on a short viewport — a
+     landscape phone or a desktop panel — where scrolling is the lesser evil. */
+  --safe-area-top: env(safe-area-inset-top, 44px);
+  --post-chrome-height: 360px;
+  --media-max-height: max(
+    180px,
+    calc(100dvh - var(--safe-area-top) - var(--bottom-bar-height) - var(--post-chrome-height))
+  );
+}
+
+/* M3 motion, standard easing and durations (design.md §4). Motion clarifies where
+   something came from; it never performs. Reduced-motion preferences are honoured
+   on both platforms.
+
+   The one bespoke value is the collapsing top's 200ms translate — the transition
+   that covers the vacated header slot as the region leaves. */
+
+[data-theme="dark"] {
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1); /* @kind other */
+  --ease-standard-decelerate: cubic-bezier(0, 0, 0, 1); /* @kind other */
+  --ease-standard-accelerate: cubic-bezier(0.3, 0, 1, 1); /* @kind other */
+  --ease-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1); /* @kind other */
+  --ease-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15); /* @kind other */
+
+  --duration-short-2: 100ms; /* @kind other */
+  --duration-short-4: 200ms; /* @kind other */
+  --duration-medium-2: 300ms; /* @kind other */
+  --duration-medium-4: 400ms; /* @kind other */
+  --duration-long-2: 500ms; /* @kind other */
+
+  /* The collapsing top's own transition (collapsing-top.tsx). */
+  --duration-collapsing-top: 200ms; /* @kind other */
+  /* Material's short snackbar duration; the confirmation clears itself. */
+  --duration-snackbar: 4000ms; /* @kind other */
+  /* Android's platform long-press timeout — what the pad's bloom waits for. */
+  --duration-long-press: 500ms; /* @kind other */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="dark"] {
+    --duration-short-2: 0ms; /* @kind other */
+    --duration-short-4: 0ms; /* @kind other */
+    --duration-medium-2: 0ms; /* @kind other */
+    --duration-medium-4: 0ms; /* @kind other */
+    --duration-long-2: 0ms; /* @kind other */
+    --duration-collapsing-top: 0ms; /* @kind other */
+  }
+}
+
+/* Screen transitions (backlog item 2). The source defines none — every consumer
+   was inventing its own, which is how two screens end up sliding different ways.
+
+   THE RULE: a transition says where a screen came from, and nothing else. So the
+   travel is a hint (12% of the screen's width, not a full slide), the fade carries
+   most of the change, and back is the forward motion run in reverse at the shorter
+   duration — returning is retracing, and a shorter move reads as backward without
+   needing a different drawing.
+
+   A DISMISSAL EXITS THE EDGE IT ENTERED FROM. A sheet came up, so it goes down; a
+   dialog faded in place, so it fades. Nothing is ever dismissed sideways: sideways
+   means "another screen at the same level", and a sheet is not one.
+
+   Never animated: the content inside an arriving screen. No list entrance, no
+   staggered cards — the screen arrives whole, which is also why one transition is
+   ever on screen at a time. */
+
+[data-theme="dark"] {
+  /* Forward is the longer move because it introduces something new. */
+  --duration-nav-forward: 300ms; /* @kind other */
+  --duration-nav-back: 200ms; /* @kind other */
+  --duration-sheet-in: 400ms; /* @kind other */
+  --duration-sheet-out: 200ms; /* @kind other */
+  --duration-dialog-in: 200ms; /* @kind other */
+  --duration-scrim: 200ms; /* @kind other */
+  /* How far a screen travels: a hint of origin, not a slide show. */
+  --nav-travel: 12%; /* @kind other */
+}
+
+@keyframes cg-nav-in { from { opacity: 0; transform: translateX(var(--nav-travel)) } to { opacity: 1; transform: none } }
+@keyframes cg-nav-out { from { opacity: 1; transform: none } to { opacity: 0; transform: translateX(calc(var(--nav-travel) * -0.5)) } }
+@keyframes cg-nav-back-in { from { opacity: 0; transform: translateX(calc(var(--nav-travel) * -0.5)) } to { opacity: 1; transform: none } }
+@keyframes cg-nav-back-out { from { opacity: 1; transform: none } to { opacity: 0; transform: translateX(var(--nav-travel)) } }
+@keyframes cg-sheet-in { from { transform: translateY(100%) } to { transform: none } }
+@keyframes cg-sheet-out { from { transform: none } to { transform: translateY(100%) } }
+@keyframes cg-dialog-in { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+@keyframes cg-fade-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes cg-fade-out { from { opacity: 1 } to { opacity: 0 } }
+
+.cg-nav-in { animation: cg-nav-in var(--duration-nav-forward) var(--ease-emphasized-decelerate) both }
+.cg-nav-out { animation: cg-nav-out var(--duration-nav-back) var(--ease-emphasized-accelerate) both }
+.cg-nav-back-in { animation: cg-nav-back-in var(--duration-nav-back) var(--ease-emphasized-decelerate) both }
+.cg-nav-back-out { animation: cg-nav-back-out var(--duration-nav-back) var(--ease-emphasized-accelerate) both }
+.cg-sheet-in { animation: cg-sheet-in var(--duration-sheet-in) var(--ease-emphasized-decelerate) both }
+.cg-sheet-out { animation: cg-sheet-out var(--duration-sheet-out) var(--ease-emphasized-accelerate) both }
+.cg-dialog-in { animation: cg-dialog-in var(--duration-dialog-in) var(--ease-standard-decelerate) both }
+.cg-scrim-in { animation: cg-fade-in var(--duration-scrim) linear both }
+.cg-scrim-out { animation: cg-fade-out var(--duration-scrim) linear both }
+
+/* Reduced motion: the swap still happens, it just does not travel or fade.
+   A transition is an explanation, and a reader who has asked for stillness has
+   declined the explanation, not the navigation. */
+@media (prefers-reduced-motion: reduce) {
+  .cg-nav-in, .cg-nav-out, .cg-nav-back-in, .cg-nav-back-out,
+  .cg-sheet-in, .cg-sheet-out, .cg-dialog-in, .cg-scrim-in, .cg-scrim-out { animation: none }
+}
+
+/* Semantic aliases over the Material roles. These name where a role is spent
+   (design.md §2.4) rather than introducing a second vocabulary — every one of them
+   resolves to a role above, and a screen may read either.
+
+   `primaryContainer` is the loudest surface in the app: the bar's compose action
+   and a committed stance. One place per screen. */
+
+[data-theme="dark"] {
+  /* Ground and raised regions. */
+  --surface-page: var(--surface);
+  --surface-card: var(--surface-container-highest);
+  --surface-dialog: var(--surface-container-high);
+  --surface-bar: var(--surface-container);
+  --surface-field: var(--surface-container-highest);
+  --surface-loud: var(--primary-container);
+  --on-surface-loud: var(--on-primary-container);
+  --surface-snackbar: var(--inverse-surface);
+  --on-surface-snackbar: var(--inverse-on-surface);
+
+  /* Text. Secondary text is `onSurfaceVariant`, never `onSurface` at reduced
+     opacity — opacity breaks the contrast guarantee the token carries. */
+  --text-body: var(--on-surface);
+  --text-secondary: var(--on-surface-variant);
+  --text-link: var(--primary);
+  --text-on-loud: var(--on-primary-container);
+  --text-failure: var(--error);
+  --text-landed: var(--success);
+
+  /* Lines. Elevation is tonal; shadows stay soft and never manufacture urgency. */
+  --border-hairline: var(--outline-variant);
+  --border-field: var(--outline);
+  --scrim-dialog: color-mix(in srgb, var(--scrim) 50%, transparent);
+
+  /* Disabled state, as the clients draw it. */
+  --opacity-disabled: 0.4; /* @kind other */
+  /* The resting stance face with no standing behind it: muted and translucent. */
+  --opacity-resting-face: 0.4; /* @kind other */
+}
+
+/* Interaction states.
+
+   THIS IS A DIVERGENCE FROM THE SOURCE, and a deliberate one. `design.md` §4 is
+   silent on hover, press, and focus, and the web client defines none — so every
+   consumer invents its own, which is how a system starts to look accidental. The
+   values below are Material's own documented state-layer opacities, so this fills
+   the gap the way the rest of the system already resolves silences: "where this
+   doc is silent, M3 is the answer".
+
+   The layer is `currentColor` over the control, which is correct for all three
+   button variants without a second token: on a filled button `currentColor` is
+   `onPrimary`, on an unfilled one it is `primary`.
+
+   Press is never a scale-down and never a shadow change — the direction is calm,
+   and a control that shrinks under the thumb performs. */
+
+[data-theme="dark"] {
+  --state-hover: 0.08; /* @kind other */
+  --state-press: 0.1; /* @kind other */
+  --state-drag: 0.16; /* @kind other */
+  /* Material's disabled opacity. Exempt from the AA guarantee by convention:
+     a disabled control is not an available target. */
+  --state-disabled: 0.38; /* @kind other */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+}
+
+/* Any pressable surface: buttons, bar slots, actor chips, cards that open. */
+.cg-state {
+  position: relative;
+  isolation: isolate;
+}
+
+.cg-state::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity var(--duration-short-2) var(--ease-standard);
+  pointer-events: none;
+}
+
+.cg-state:hover::after { opacity: var(--state-hover) }
+.cg-state:active::after { opacity: var(--state-press) }
+.cg-state:disabled::after, .cg-state[aria-disabled="true"]::after { opacity: 0 }
+
+/* The focus indicator is `onSurface` rather than `primary`: a primary ring
+   disappears against a filled primary button, and this one reads on the page
+   ground and on the loud surface alike, in both themes. Nothing removes it. */
+.cg-focus:focus-visible {
+  outline: var(--focus-ring-width) solid var(--on-surface);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* Visually hidden until focused — the skip-link pattern. A non-drag equivalent for
+   a drag gesture has to be reachable by keyboard, switch, and screen reader (§10),
+   but it does not have to sit on screen beside every instance of the control: a
+   feed of twenty posts would carry twenty copies of it, competing with the thing
+   they duplicate. Pointer users get the gesture and the settings preference; a
+   focus ring brings this into view for everyone else. */
+.cg-sr-focusable {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.cg-sr-focusable:focus-visible {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+}
+
+/* The 48px promise, kept without inflating dense rows.
+
+   `readme.md` §4 and §10 state a 48px minimum target unconditionally, and the
+   small button is 33px tall drawn — which is Material's own dense button size, and
+   right for the pad's action row and a dialog's footer. So the TARGET is expanded
+   rather than the button: a transparent £before overlay centred on the control
+   reaches 48px on both axes while the ink stays where it was.
+
+   This is what Material does for dense controls, and it is why the rule can stay
+   unconditional: nothing in the product is tappable below 48px, whatever it looks
+   like. `min-height/min-width: 100%` keeps the overlay from ever shrinking a
+   control that is already larger. */
+.cg-hit::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  height: var(--touch-target-min);
+  width: var(--touch-target-min);
+  min-height: 100%;
+  min-width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cg-state::after { transition: none }
+}
+
+/* The page ground and the default type role. `body-large` is Material's role for
+   reading content, so it is what unclassed text lands on. */
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--on-surface);
+  font-family: var(--font-sans);
+  font-size: var(--text-body-large);
+  line-height: var(--text-body-large--line-height);
+  letter-spacing: var(--text-body-large--letter-spacing);
+  font-weight: var(--text-body-large--font-weight);
+  -webkit-font-smoothing: antialiased;
+  text-wrap: pretty;
+}
+
+a { color: var(--primary); text-decoration-color: color-mix(in srgb, var(--primary) 40%, transparent) }
+a:hover { color: color-mix(in srgb, var(--primary) 84%, var(--on-surface)); text-decoration-color: currentColor }
+
+code, kbd, samp, pre { font-family: var(--font-mono) }
+
+[data-flow] { position: relative; }
+[data-flow]::after { content: attr(data-flow); position: absolute; top: 1px; right: 1px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-family: var(--font-sans); font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }
   </style>
 </helmet>
-<div class="screen" data-theme="{{theme}}" style="width: 390px; height: 844px; display: flex; flex-direction: column; background: var(--surface); color: var(--on-surface); overflow: hidden; box-sizing: border-box;">
-
-  <div style="min-height: 48px; display: flex; align-items: center; gap: 4px; padding: 0 12px; flex: none;">
-    <span data-flow="1" style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></span>
-    <h1 style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 400;">What you sign</h1>
-    <span style="flex: 1;"></span>
-    <span data-flow="2" aria-label="Leave — the reply is discarded" style="height: 48px; width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: var(--on-surface-variant);"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg></span>
-    <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant); margin-right: 8px;">Last step</span>
-    <span data-flow="3" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; border: 1px solid var(--outline); color: var(--on-surface-variant); font-size: 12px; line-height: 16px; font-weight: 500; flex: none; margin-right: 12px;">?</span>
-  </div>
-
-  <div style="flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 8px 24px 24px 24px; overflow: hidden;">
-
-    <p style="margin: 0; font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">Reply to "The long way home" — 89 characters.</p>
-
-    <div style="display: flex; flex-direction: column; border-radius: 12px; background: var(--surface-container-highest); padding: 4px 16px;">
-      <div style="display: flex; align-items: center; gap: 8px; min-height: 44px; border-bottom: 1px solid var(--outline-variant);">
-        <span style="flex: none; font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; color: var(--on-surface-variant); width: 76px;">Comment</span>
-        <span style="flex: 1; font-size: 14px; line-height: 20px; letter-spacing: 0.25px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Reply to @ada's post</span>
-        <span style="flex: none; font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">1 action</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: 8px; min-height: 38px; border-bottom: 1px solid var(--outline-variant);">
-        <span data-flow="4" style="flex: 1; font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; color: var(--primary);">+ Add a topic</span>
-        <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">1 more action</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: 8px; min-height: 38px; border-bottom: 1px solid var(--outline-variant);">
-        <span data-flow="5" style="flex: 1; font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; color: var(--primary);">+ Cite something — a post, a person, a comment, an item</span>
-        <span style="font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--on-surface-variant);">1 more action</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: 8px; min-height: 46px;">
-        <span style="flex: 1; font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">1 signed action</span>
-      </div>
-    </div>
-
-    <div style="display: flex; flex-direction: column;">
-      <div style="display: flex; align-items: center; gap: 8px; min-height: 40px; border-top: 1px solid var(--outline-variant);">
-        <span style="flex: 1; font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">Toward what you answer</span>
-        <span style="display: inline-flex; align-items: baseline; gap: 4px;"><span aria-hidden="true" style="font-size: 14px; line-height: 18px;">&#128578;</span><span style="font-size: 12px; line-height: 16px; color: var(--on-surface-variant);">+0.10 / +0.10</span></span>
-        <span data-flow="6" style="font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px; color: var(--primary);">Adjust</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: 8px; min-height: 40px; border-top: 1px solid var(--outline-variant);">
-        <span style="flex: 1; font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">License</span>
-        <span style="font-size: 14px; line-height: 20px; letter-spacing: 0.25px; color: var(--on-surface-variant);">Public domain — your default</span>
-        <span data-flow="7" style="font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px; color: var(--primary);">Change</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: 8px; min-height: 40px; border-top: 1px solid var(--outline-variant); border-bottom: 1px solid var(--outline-variant);">
-        <span style="flex: 1; font-size: 14px; line-height: 20px; letter-spacing: 0.25px;">Sensitive</span>
-        <span style="font-size: 14px; line-height: 20px; letter-spacing: 0.25px; color: var(--on-surface-variant);">Not marked</span>
-        <span data-flow="8" style="font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px; color: var(--primary);">Mark</span>
-      </div>
-    </div>
-
-    <div style="flex: 1;"></div>
-
-    <div style="display: flex; flex-direction: column; gap: 8px;">
-      <div data-flow="9" style="display: flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 24px; min-width: 64px; border-radius: 9999px; background: var(--primary); color: var(--on-primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Sign comment</div>
-      <div data-flow="10" style="display: flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 40px; padding: 10px 24px; min-width: 64px; border-radius: 9999px; color: var(--primary); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px;">Back</div>
-    </div>
-
-  </div>
-
+<div class="screen" data-theme="{{theme}}" style="width: 390px; height: 844px; background: var(--surface); color: var(--on-surface); font-family: var(--font-sans); box-sizing: border-box; position: relative; display: flex; flex-direction: column; overflow: hidden;">
+<header style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);min-height:48px;padding:0 var(--space-3)"><div style="display:flex;align-items:center;gap:var(--space-2)"><a data-flow="1" href="#" aria-label="Back a step" class="cg-state cg-focus" style="height:48px;width:48px;display:grid;place-items:center;border-radius:var(--radius-full);color:var(--text-secondary);text-decoration:none;flex:none"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></a><h1 style="margin:0;font-size:var(--text-title-large);line-height:var(--text-title-large--line-height);font-weight:var(--text-title-large--font-weight);white-space:nowrap">What you sign</h1></div><span style="display:flex;align-items:center;gap:var(--space-2)"><button data-flow="2" type="button" aria-label="Leave — the reply is discarded" class="cg-state cg-focus" style="height:48px;width:48px;display:grid;place-items:center;border:0;background:none;border-radius:var(--radius-full);color:var(--text-secondary);cursor:pointer;flex:none;padding:0"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg></button><span style="display:flex;align-items:center;gap:8px"><span style="font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);color:var(--text-secondary);white-space:nowrap">Last step</span><button data-flow="3" type="button" aria-label="Signed actions" class="cg-focus" style="display:grid;place-items:center;height:var(--touch-target-min);width:var(--touch-target-min);border:0;background:none;border-radius:var(--radius-full);cursor:pointer;flex:none"><span aria-hidden="true" style="display:grid;place-items:center;height:32px;width:32px;border-radius:var(--radius-full);border:1px solid var(--border-hairline);color:var(--primary);font-family:var(--font-sans);font-size:var(--text-label-large);font-weight:var(--text-label-large--font-weight)">?</span></button></span></span></header><div style="flex:1;display:flex;flex-direction:column;gap:12px;padding:8px 24px 24px;overflow:hidden"><p style="margin:0;font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);letter-spacing:0.4px;color:var(--text-secondary)">Reply to &quot;The long way home&quot; — 89 characters.</p><div style="display:flex;flex-direction:column;border-radius:var(--radius-medium);background:var(--surface-container-highest);padding:4px var(--space-4)"><div style="display:flex;align-items:center;gap:var(--space-2);min-height:44px;border-bottom:1px solid var(--border-hairline)"><span style="flex:none;width:76px;font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);font-weight:var(--text-label-small--font-weight);letter-spacing:0.5px;color:var(--text-secondary)">Comment</span><span style="flex:1;min-width:0;font-size:var(--text-body-medium);line-height:var(--text-body-medium--line-height);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Reply to @ada&#x27;s post</span><span style="flex:none;font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);letter-spacing:0.4px;color:var(--text-secondary)">1 action</span></div><div style="display:flex;align-items:center;gap:var(--space-2);min-height:44px;border-bottom:1px solid var(--border-hairline)"><span style="flex:none;width:76px;font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);font-weight:var(--text-label-small--font-weight);letter-spacing:0.5px;color:var(--text-secondary)"></span><span style="flex:1;min-width:0;font-size:var(--text-body-medium);line-height:var(--text-body-medium--line-height);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><button data-flow="4" type="button" class="cg-state cg-focus cg-hit" style="border:0;background:none;padding:0;cursor:pointer;font-family:var(--font-sans);font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);font-weight:var(--text-label-small--font-weight);letter-spacing:0.5px;color:var(--primary);text-align:left;white-space:nowrap">+ Add a topic</button></span><span style="flex:none;font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);letter-spacing:0.4px;color:var(--text-secondary)">1 more action</span></div><div style="display:flex;align-items:center;gap:var(--space-2);min-height:44px;border-bottom:1px solid var(--border-hairline)"><span style="flex:none;width:76px;font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);font-weight:var(--text-label-small--font-weight);letter-spacing:0.5px;color:var(--text-secondary)"></span><span style="flex:1;min-width:0;font-size:var(--text-body-medium);line-height:var(--text-body-medium--line-height);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><button data-flow="5" type="button" class="cg-state cg-focus cg-hit" style="border:0;background:none;padding:0;cursor:pointer;font-family:var(--font-sans);font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);font-weight:var(--text-label-small--font-weight);letter-spacing:0.5px;color:var(--primary);text-align:left;white-space:nowrap">+ Cite something</button></span><span style="flex:none;font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);letter-spacing:0.4px;color:var(--text-secondary)">1 more action</span></div><div style="display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:48px;padding:6px 0"><span style="font-size:var(--text-body-medium);line-height:var(--text-body-medium--line-height);font-weight:var(--text-label-large--font-weight)">1 signed action</span></div></div><div style="display:flex;flex-direction:column"><div style="display:flex;align-items:center;gap:var(--space-2);min-height:44px;border-top:1px solid var(--border-hairline)"><span style="flex:1;font-size:var(--text-body-medium);line-height:var(--text-body-medium--line-height);white-space:nowrap">Toward what you answer</span><span style="display:inline-flex;align-items:baseline;gap:var(--space-2);flex:none"><span aria-hidden="true">🙂</span><span aria-hidden="true" style="font-size:var(--text-body-small);color:var(--text-secondary);white-space:nowrap">+0.10 / +0.10</span><span style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0">Nice, For or against +0.10, How much reaches you +0.10</span></span><button data-flow="6" type="button" class="cg-state cg-focus cg-hit" style="border:0;background:none;padding:0;cursor:pointer;font-family:var(--font-sans);font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);font-weight:var(--text-label-large--font-weight);letter-spacing:var(--text-label-large--letter-spacing);color:var(--primary);flex:none">Adjust</button></div><div style="display:flex;align-items:center;gap:var(--space-2);min-height:44px;border-top:1px solid var(--border-hairline)"><span style="flex:1;font-size:var(--text-body-medium);line-height:var(--text-body-medium--line-height);white-space:nowrap">License</span><span style="font-size:var(--text-body-medium);line-height:var(--text-body-medium--line-height);color:var(--text-secondary)">Public domain — your default</span><button data-flow="7" type="button" class="cg-state cg-focus cg-hit" style="border:0;background:none;padding:0;cursor:pointer;font-family:var(--font-sans);font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);font-weight:var(--text-label-large--font-weight);letter-spacing:var(--text-label-large--letter-spacing);color:var(--primary);flex:none">Change</button></div><div style="display:flex;align-items:center;gap:var(--space-2);min-height:44px;border-top:1px solid var(--border-hairline);border-bottom:1px solid var(--border-hairline)"><span style="flex:1;font-size:var(--text-body-medium);line-height:var(--text-body-medium--line-height);white-space:nowrap">Sensitive</span><span style="font-size:var(--text-body-medium);line-height:var(--text-body-medium--line-height);color:var(--text-secondary)">Not marked</span><button data-flow="8" type="button" class="cg-state cg-focus cg-hit" style="border:0;background:none;padding:0;cursor:pointer;font-family:var(--font-sans);font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);font-weight:var(--text-label-large--font-weight);letter-spacing:var(--text-label-large--letter-spacing);color:var(--primary);flex:none">Mark</button></div></div><div style="flex:1"></div><div style="display:flex;flex-direction:column;gap:8px"><button data-flow="9" type="button" class="cg-state cg-focus cg-hit" style="background:var(--primary);color:var(--on-primary);border:1px solid transparent;padding:10px 24px;border-radius:var(--radius-full);font-family:var(--font-sans);font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);letter-spacing:var(--text-label-large--letter-spacing);font-weight:var(--text-label-large--font-weight);opacity:1;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:40px;min-width:64px;box-sizing:border-box;width:100%">Sign comment</button><button data-flow="10" type="button" class="cg-state cg-focus cg-hit" style="background:transparent;color:var(--primary);border:1px solid transparent;padding:10px 24px;border-radius:var(--radius-full);font-family:var(--font-sans);font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);letter-spacing:var(--text-label-large--letter-spacing);font-weight:var(--text-label-large--font-weight);opacity:1;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:40px;min-width:64px;box-sizing:border-box;width:100%">Back</button></div></div>
 </div>
 </x-dc>
 <script data-dc-script data-props='{"theme":{"editor":"enum","options":["auto","light","dark"],"default":"auto"}}'>

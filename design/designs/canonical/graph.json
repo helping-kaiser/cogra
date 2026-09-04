@@ -28,7 +28,13 @@
     "ProfileMenu": "the profile's sheet covers the page — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "ComposeLicense": "the license sheet covers the seal — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "ComposeSensitive": "the sensitive sheet covers the seal — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
-    "ComposePad": "the wash covers the seal — its header, facts and sign button are inactive in this state; only the parked pad is live"
+    "ComposePad": "the wash covers the seal — its header, facts and sign button are inactive in this state; only the parked pad is live",
+    "ReplyPad": "the wash covers the reply's seal — its header, its one fact and the sign button are inactive in this state; only the parked pad is live",
+    "EditActs": "the acts sheet covers the edit — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "HelpDialog": "the \"?\" dialog covers the seal — everything beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
+    "DiscardConfirm": "the discard dialog covers the composer it was raised from — everything beneath the scrim is inactive in this state; only the dialog's own pair is live",
+    "PadKeyAbsent": "the wash covers the feed — the band, the post card and nav beneath it are inactive in this state; only the parked pad and the key notice inside it are live",
+    "NetworkError": "the fault in place — a pattern exemplar drawn on the seal, where the retry the failure offers is the only thing this board is about; the seal's own header, facts and way back are `ComposeSeal`'s controls, wired on that board"
   },
   "entries": {
     "Main": "arrival through an invite link — the inviter's borrowed view",

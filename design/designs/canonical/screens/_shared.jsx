@@ -535,6 +535,25 @@ function ProfileOtherBody() {
   );
 }
 
+/* THE REPLY SEAL'S ADD-ROWS — a primary word where a value would sit, so what
+   you could still add lines up with what you have already added. It is
+   `InlineAction`'s small rung, left-aligned and held to one line, and it does
+   NOT clip itself (jakob's ruling): the acts row's value slot already ends a
+   long value in an ellipsis, and a second `overflow: hidden` on the word only
+   cut the atom's 48px hit overlay back to the ink. Truncation belongs to the
+   row; the target belongs to the word.
+
+   It lives here because BOTH reply seals draw it — the bare one and the one
+   with a reference staged are one surface in two states, and a row spelled
+   twice is a row that drifts. */
+function AddRow({ children }) {
+  return (
+    <InlineAction size="sm" style={{ textAlign: "left", whiteSpace: "nowrap" }}>
+      {children}
+    </InlineAction>
+  );
+}
+
 /* The comment sheet's composer foot: your face, and the field that opens a
    comment. Every sheet of comments carries it, so it is written once. */
 function CommentComposerFoot() {

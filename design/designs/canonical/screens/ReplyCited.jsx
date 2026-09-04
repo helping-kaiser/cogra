@@ -15,20 +15,9 @@
    same shape — a state of a surface, drawn because it is designed, declared as
    an entry because no tap reaches it. */
 
-/* The card's own affordance rows — a primary word where a value would sit, so
-   what you could still add lines up with what you have already added. It is
-   `InlineAction`'s small rung, left-aligned and held to one line, and it does
-   NOT clip itself (jakob's ruling): the acts row's value slot already ends a
-   long value in an ellipsis, and a second `overflow: hidden` on the word only
-   cut the atom's 48px hit overlay back to the ink. Truncation belongs to the
-   row; the target belongs to the word. */
-function AddRow({ children }) {
-  return (
-    <InlineAction size="sm" style={{ textAlign: "left", whiteSpace: "nowrap" }}>
-      {children}
-    </InlineAction>
-  );
-}
+/* The card's own affordance rows are `_shared.jsx`'s `AddRow` — `ReplySeal`
+   draws the same pair without the staged reference, and the two are one
+   surface in two states. */
 
 export function Screen() {
   return (
