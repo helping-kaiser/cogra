@@ -148,3 +148,15 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+  # The compose images. The workflows pin every action to a commit SHA and
+  # docker/docker-compose.yml pins both images to a release tag; this is
+  # what keeps a pin from becoming a stale pin. Dependabot updates a SHA
+  # pin and its trailing version comment together, so the actions group
+  # above stays readable after a bump.
+  - package-ecosystem: docker-compose
+    directory: /docker
+    schedule:
+      interval: weekly
+    groups:
+      images:
+        patterns: ["*"]

@@ -49,6 +49,12 @@ impl BundleView {
 /// already counted through the mirror, the second never existed on the
 /// graph — and an empty payload stands in for the unmarked test, since an
 /// empty payload is what makes a record unmarked once it lands.
+///
+/// Census-unknown legs are excluded too. A leg the census has no spec for
+/// carries fallback domain, mask and tier that ingestion invented, so its
+/// parameters were never validated against the family they claim; summing
+/// them into a stance would fold a guess into the number the read rule is
+/// applied to.
 pub async fn bundle(
     pool: &PgPool,
     author_atom: &str,
@@ -65,7 +71,8 @@ pub async fn bundle(
            JOIN mirror_records r ON r.record_id = l.record_id
            WHERE l.leg = 'binary' AND l.family = $1
              AND l.source = $2 AND l.target = $3
-             AND NOT r.payload_marked"#,
+             AND NOT r.payload_marked
+             AND NOT l.census_unknown"#,
         family.as_str(),
         source,
         target,

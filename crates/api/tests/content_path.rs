@@ -1360,7 +1360,7 @@ mod galleries {
         rig.land(&edit, &key).await;
 
         assert_eq!(rendered(&rig.pool, prepared.node).await, vec![b]);
-        let swept = media_store::sweep_orphans(&rig.pool, -1.0)
+        let swept = media_store::sweep_orphans(&rig.pool, -1.0, 100)
             .await
             .expect("sweeps");
         assert!(
