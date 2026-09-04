@@ -270,6 +270,12 @@ export function createWriteSigner(deps: {
    * open question is not a verdict: `failed` keeps the material and
    * resume() retries, where refusing would spend a write on a dropped
    * connection.
+   *
+   * THE READ IS LIVE, AND COSTS A ROUND TRIP. `fetchMe` is
+   * `network-only`, so this adds one to a handshake that already spends
+   * prepare, submit, approve and the seal poll — proportionate for the
+   * check that decides whether this device may sign at all, and it is
+   * paid once per BATCH rather than once per write.
    */
   async function accountKey(): Promise<
     | { kind: "key"; key: ActorKey }
