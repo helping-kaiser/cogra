@@ -27,7 +27,7 @@ export function Screen() {
             onCounts={() => {}}
           />
         </div>
-        <ChronicleTabs value="everything" />
+        <TabBar ariaLabel="What the chronicle shows" value="everything" tabs={CHRONICLE_TABS} />
         <ChronicleList>
           <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="1h" second="First light over the flats — brought the wrong lens, kept the picture anyway." pending onOpen={() => {}} />
           <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.1, pInterest: 0.1 }} title="Took a stance" titleAside="on @mira" trailing="2h" pending inert />
