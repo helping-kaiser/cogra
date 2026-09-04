@@ -197,11 +197,54 @@ export function waitForPort(port, host, { timeoutMs = UPSTREAM_READY_TIMEOUT_MS 
  * its own, only pages, and pages are not the large-body case this exists
  * for).
  */
-export function createProxy(credentials, { upstreamPort, upstreamHost, apiOrigin }) {
+/**
+ * The status a failed proxy attempt deserves.
+ *
+ * A refusal or an unresolvable name is a bad gateway — the upstream is not
+ * there. A timeout is a gateway timeout, which is a different thing to an
+ * operator and to any client that retries. Everything else stays 502: a reset
+ * or a broken pipe means the upstream went away mid-exchange, and 502 is the
+ * honest reading of that.
+ */
+export function statusForProxyError(error) {
+  switch (error?.code) {
+    case "ETIMEDOUT":
+    case "ESOCKETTIMEDOUT":
+      return 504;
+    default:
+      return 502;
+  }
+}
+
+/** What the reader is told, which is only ever true of the case it names. */
+export function proxyErrorText(error) {
+  switch (error?.code) {
+    case "ECONNREFUSED":
+    case "ENOTFOUND":
+    case "EHOSTUNREACH":
+      return "The production server behind this origin is not answering.\n";
+    case "ETIMEDOUT":
+    case "ESOCKETTIMEDOUT":
+      return "The production server behind this origin took too long to answer.\n";
+    default:
+      return "The connection to the production server behind this origin was lost.\n";
+  }
+}
+
+/**
+ * The proxy's request handler, on its own.
+ *
+ * Separate from the server so it can be mounted on a plain http server in a
+ * test: the routing, the error mapping and the abandonment handling are what
+ * is worth pinning, and none of it is about TLS — which the handler never
+ * touches. Every one of these paths was untested while the whole thing lived
+ * inside `createHttpsServer`.
+ */
+export function proxyHandler({ upstreamPort, upstreamHost, apiOrigin }) {
   const api = new URL(apiOrigin);
   const apiPort = api.port || (api.protocol === "https:" ? 443 : 80);
 
-  const server = createHttpsServer(credentials, (req, res) => {
+  return (req, res) => {
     const { pathname } = new URL(req.url, "http://placeholder");
     const target = isDirectApiPath(pathname)
       ? { host: api.hostname, port: apiPort }
@@ -223,12 +266,41 @@ export function createProxy(credentials, { upstreamPort, upstreamHost, apiOrigin
         upstreamRes.pipe(res);
       },
     );
-    upstream.on("error", () => {
-      if (!res.headersSent) res.writeHead(502, { "content-type": "text/plain" });
-      res.end("The production server behind this origin is not answering.\n");
+    upstream.on("error", (error) => {
+      // THE CAUSE IS READ, LOGGED AND MAPPED. Discarding the error object made
+      // every distinct failure — the API refusing the connection, the API
+      // answering 413 and hanging up mid-body, a reset on a long upload — one
+      // sentence with no trace anywhere, which is exactly the distinction an
+      // operator needs while hand-testing a large upload.
+      console.error(`proxy ${req.method} ${req.url} → ${target.host}:${target.port}:`, error);
+      if (res.headersSent || res.writableEnded) {
+        // The upstream's own status and headers are already on the wire.
+        // Appending prose here corrupts what it said: with a content-length it
+        // is a length mismatch, and with chunked encoding it concatenates onto
+        // the API's JSON body so the client's parse fails on a response that
+        // otherwise carried the real reason. A truncated response is a signal
+        // the client can act on; a corrupted one is not.
+        res.destroy();
+        return;
+      }
+      res.writeHead(statusForProxyError(error), { "content-type": "text/plain" });
+      res.end(proxyErrorText(error));
+    });
+    // An abandoned upload must not hold an API connection open until a timeout
+    // reaps it. `pipe` attaches its error handling to the DESTINATION, so the
+    // request side has none of its own.
+    const abandon = () => upstream.destroy();
+    req.on("aborted", abandon);
+    req.on("error", abandon);
+    res.on("close", () => {
+      if (!res.writableEnded) upstream.destroy();
     });
     req.pipe(upstream);
-  });
+  };
+}
+
+export function createProxy(credentials, options) {
+  const server = createHttpsServer(credentials, proxyHandler(options));
 
   // Set after construction rather than through the options object: these are
   // properties of the server, and assigning them is what Node documents.
