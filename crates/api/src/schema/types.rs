@@ -237,7 +237,8 @@ pub enum ErrorCode {
 /// — the list is empty exactly when the mutation succeeded.
 #[derive(SimpleObject, Debug, Clone)]
 pub struct UserError {
-    /// Human-readable description of the refusal.
+    /// Developer-facing description of the refusal, for logs and
+    /// debugging. Clients localize off `code`, never off this string.
     pub message: String,
     pub code: ErrorCode,
     /// Path into the nested input naming the offending field; null for a
