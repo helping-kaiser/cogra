@@ -46,7 +46,7 @@ export function Screen() {
             src="post-photo.jpg"
             value="+0.10 / +0.10"
           />
-          <Button variant="text" size="sm" selfStart>+ Cite something</Button>
+          <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
         </div>
 
         <div style={{ flex: 1 }} />

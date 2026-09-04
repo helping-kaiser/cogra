@@ -33,7 +33,7 @@ export function Screen() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>References</FieldLabel>
-          <Button variant="text" size="sm" selfStart>+ Cite something</Button>
+          <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
