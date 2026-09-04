@@ -416,12 +416,52 @@ Two follow-ups the round surfaces, still open:
   `aria-describedby`, and the supporting-line span isn't marked
   `role="alert"`. Needs a ruling on whether every field error should
   announce, or only the ones a screen reader wouldn't otherwise catch.
-- **NetworkError, ComposeSeal and ReplySeal still owe their
-  componentize-first pass** — hand-coded boards the componentize
-  principle (above) applies to but hasn't reached yet; each needs its
-  own round before any further alteration. `ReplyCited` draws the same
-  seal over the real masters, so ReplySeal's pass has its target
-  already drawn: reconcile the two and the hand-coded copy retires.
+- **Twenty-seven hand-authored boards predate the pipeline and owe
+  their componentize-first pass** — the conformance round
+  (2026-09-04) converted every JSX-sourced board, but these exist
+  only as hand-written `.dc.html`, all live on the canvas, none
+  reachable by the pipeline until a JSX source is written for each:
+  the original compose wizard run (`ComposeWords`, `ComposePick`,
+  `ComposeSeal`, `ComposeLicense`, `ComposeSensitive`, `ComposeCover`,
+  `ComposeCrop`, `ComposeDraft`, `ComposePad`, `ComposeKeyAbsent`),
+  the key ceremony family (`KeyCeremony`, `KeyConfirm`, `KeyDecline`),
+  `ReplyCompose`, `ReplyPad`, `ReplySeal`, `EditCompose`, `EditActs`,
+  `NetworkError`, `GuestGate`, `HelpDialog`, `InviteEntry`,
+  `JoinInvalid`, `PadKeyAbsent`, `DiscardConfirm`, `Reset`,
+  `Verified`. Scope (all this round / the worst first / defer) is
+  jakob's open call. `ReplyCited` draws ReplySeal's seal over the
+  real masters, so that one's target is already drawn; the legacy
+  `ComposePick` also holds the canvas's last inert "Show all", out
+  of the real-controls ruling's reach until converted.
+- **Held rulings from the conformance round (2026-09-04)** — each a
+  visible-change question the round parked rather than decided:
+  ChipMini's tone (Chip `sm` renders 26px bordered on a different
+  fill; a borderless readout tone would keep the seal board exact);
+  the reply seal's staged reference (stays a fact in the acts card
+  as drawn, or becomes a `StagedReference` row like the post's);
+  the Mark action's two drawings (text-Button pill on the comment
+  edits vs bare word on the reply seal — `FactRow`'s prose says the
+  slot takes an `InlineAction`); the "+ Cite something" three voices
+  (legacy span / bare small word / small pill); the topic chip's ×
+  (drawn but not a button — same shape as the "Show all" ruling);
+  the acts line's target (the chevron is drawn but unwired; the
+  whole line is the honest control); the add-rows' `overflow:hidden`
+  clipping their 48px hit overlay; the wizard footer's shape (only
+  3 of 12 Next buttons carry a padded footer of their own, and
+  `SealFooter` deliberately owns no padding — a footer master would
+  install a competing answer); the comments-sheet shell (verbatim
+  between `ReplyMedia` and the thread sheet — factor or leave).
+- **Conformance-round leftovers, no ruling needed, just work**:
+  `PendingMarker` and `StanceValue` are unused across the canvas
+  since the chronicle fold (prune from the prelude destructure or
+  wait for a user); the quiet-note ramp hardcodes 0.4px tracking
+  where the label-small token says 0.5px (`QuietNote` + `ActsFooter`
+  together, one-line fix that moves pixels — needs an eye);
+  board-glue still duplicated in twos and fours (the license lock
+  ×4, the seal avatar row ×2, the vouch card head ×2);
+  `_ds_manifest.json` frozen at the import commit (only the claude.ai
+  app refreshes it); `_adherence.oxlintrc.json` has no wired runner
+  and predates the round's new masters.
 
 **Round 4 — the applicant once-each acts (2026-09-03).** The stance
 face and New post starts on `ApplicantFeed`, `ApplicantWaiting`,
