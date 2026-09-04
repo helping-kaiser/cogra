@@ -807,8 +807,16 @@ pub async fn list_posts(
 /// The two-branch walk both listings share. The namespaces never
 /// interleave — every pending entry sorts ahead of every landed one — so
 /// the walk fills from whichever branch the cursor sits in and continues
-/// into the other, and each branch stays a single index-served query.
-/// Results always come back newest-first, whichever way the walk ran.
+/// into the other. Results always come back newest-first, whichever way
+/// the walk ran.
+///
+/// Each branch is two statements rather than one, chosen in Rust by
+/// `backward`. A single statement can only carry the direction as a
+/// parameter, and a parameterised `ORDER BY` is an expression rather than
+/// a column list: the planner can match it to the listing index only by
+/// const-folding the parameter, which it does under a custom plan and
+/// cannot do under a generic one. Written per direction, the sort is the
+/// index's own order and no plan mode can lose it.
 async fn merge_walk<T, Landed, Pending, LFut, PFut>(
     cursor: Option<ContentCursor>,
     backward: bool,
@@ -931,10 +939,51 @@ async fn list_posts_landed(
         Some(c) => (Some(c.landed_epoch), Some(c.act_time), Some(c.position)),
         None => (None, None, None),
     };
-    let rows = sqlx::query_as!(
-        PostRow,
-        r#"SELECT * FROM (
-               SELECT p.id, p.author_id, p.l1_node_id, p.license,
+    let rows = if backward {
+        sqlx::query_as!(
+            PostRow,
+            r#"SELECT * FROM (
+                   SELECT p.id, p.author_id, p.l1_node_id, p.license,
+                          p.landed_epoch, p.act_time, p.position, p.created_at,
+                          v.title, v.description,
+                          v.content AS "content!", v.redaction_reason,
+                          v.sensitive AS "sensitive!", v.sensitive_reason,
+                          v.pending AS "version_pending!",
+                          v.created_at AS "version_created_at!",
+                          v.version_id AS "version_id!"
+                   FROM posts p
+                   JOIN LATERAL (
+                       SELECT title, description, content, redaction_reason,
+                              sensitive, sensitive_reason,
+                              pending, created_at, version_id
+                       FROM post_versions
+                       WHERE post_id = p.id AND ($5 OR NOT pending)
+                       ORDER BY pending DESC,
+                                landed_epoch DESC NULLS LAST,
+                                act_time DESC NULLS LAST,
+                                position DESC NULLS LAST,
+                                created_at DESC, version_id DESC
+                       LIMIT 1
+                   ) v ON TRUE
+                   WHERE p.landed_epoch IS NOT NULL
+                     AND ($1::bigint IS NULL
+                          OR (p.landed_epoch, p.act_time, p.position) > ($1, $2, $3))
+                   ORDER BY p.landed_epoch ASC, p.act_time ASC, p.position ASC
+                   LIMIT $4
+               ) page
+               ORDER BY landed_epoch DESC, act_time DESC, position DESC"#,
+            ce,
+            ca,
+            cp,
+            limit,
+            include_pending,
+        )
+        .fetch_all(pool)
+        .await?
+    } else {
+        sqlx::query_as!(
+            PostRow,
+            r#"SELECT p.id, p.author_id, p.l1_node_id, p.license,
                       p.landed_epoch, p.act_time, p.position, p.created_at,
                       v.title, v.description,
                       v.content AS "content!", v.redaction_reason,
@@ -948,7 +997,7 @@ async fn list_posts_landed(
                           sensitive, sensitive_reason,
                           pending, created_at, version_id
                    FROM post_versions
-                   WHERE post_id = p.id AND ($6 OR NOT pending)
+                   WHERE post_id = p.id AND ($5 OR NOT pending)
                    ORDER BY pending DESC,
                             landed_epoch DESC NULLS LAST,
                             act_time DESC NULLS LAST,
@@ -958,25 +1007,18 @@ async fn list_posts_landed(
                ) v ON TRUE
                WHERE p.landed_epoch IS NOT NULL
                  AND ($1::bigint IS NULL
-                      OR ($4 AND (p.landed_epoch, p.act_time, p.position) > ($1, $2, $3))
-                      OR (NOT $4 AND (p.landed_epoch, p.act_time, p.position) < ($1, $2, $3)))
-               ORDER BY
-                   CASE WHEN $4 THEN p.landed_epoch END ASC,
-                   CASE WHEN $4 THEN p.act_time END ASC,
-                   CASE WHEN $4 THEN p.position END ASC,
-                   p.landed_epoch DESC, p.act_time DESC, p.position DESC
-               LIMIT $5
-           ) page
-           ORDER BY landed_epoch DESC, act_time DESC, position DESC"#,
-        ce,
-        ca,
-        cp,
-        backward,
-        limit,
-        include_pending,
-    )
-    .fetch_all(pool)
-    .await?;
+                      OR (p.landed_epoch, p.act_time, p.position) < ($1, $2, $3))
+               ORDER BY p.landed_epoch DESC, p.act_time DESC, p.position DESC
+               LIMIT $4"#,
+            ce,
+            ca,
+            cp,
+            limit,
+            include_pending,
+        )
+        .fetch_all(pool)
+        .await?
+    };
     Ok(rows.into_iter().map(post_from_row).collect())
 }
 
@@ -993,10 +1035,49 @@ async fn list_posts_pending(
     limit: i64,
 ) -> Result<Vec<Post>, ContentError> {
     let (at, after_id) = cursor;
-    let rows = sqlx::query_as!(
-        PostRow,
-        r#"SELECT * FROM (
-               SELECT p.id, p.author_id, p.l1_node_id, p.license,
+    let rows = if backward {
+        sqlx::query_as!(
+            PostRow,
+            r#"SELECT * FROM (
+                   SELECT p.id, p.author_id, p.l1_node_id, p.license,
+                          p.landed_epoch, p.act_time, p.position, p.created_at,
+                          v.title, v.description,
+                          v.content AS "content!", v.redaction_reason,
+                          v.sensitive AS "sensitive!", v.sensitive_reason,
+                          v.pending AS "version_pending!",
+                          v.created_at AS "version_created_at!",
+                          v.version_id AS "version_id!"
+                   FROM posts p
+                   JOIN LATERAL (
+                       SELECT title, description, content, redaction_reason,
+                              sensitive, sensitive_reason,
+                              pending, created_at, version_id
+                       FROM post_versions WHERE post_id = p.id
+                       ORDER BY pending DESC,
+                                landed_epoch DESC NULLS LAST,
+                                act_time DESC NULLS LAST,
+                                position DESC NULLS LAST,
+                                created_at DESC, version_id DESC
+                       LIMIT 1
+                   ) v ON TRUE
+                   WHERE p.landed_epoch IS NULL
+                     AND ($1::timestamptz IS NULL
+                          OR ($2::uuid IS NULL AND p.created_at > $1)
+                          OR ($2 IS NOT NULL AND (p.created_at, p.id) > ($1, $2)))
+                   ORDER BY p.created_at ASC, p.id ASC
+                   LIMIT $3
+               ) page
+               ORDER BY created_at DESC, id DESC"#,
+            at,
+            after_id,
+            limit,
+        )
+        .fetch_all(pool)
+        .await?
+    } else {
+        sqlx::query_as!(
+            PostRow,
+            r#"SELECT p.id, p.author_id, p.l1_node_id, p.license,
                       p.landed_epoch, p.act_time, p.position, p.created_at,
                       v.title, v.description,
                       v.content AS "content!", v.redaction_reason,
@@ -1019,26 +1100,17 @@ async fn list_posts_pending(
                ) v ON TRUE
                WHERE p.landed_epoch IS NULL
                  AND ($1::timestamptz IS NULL
-                      OR ($3 AND (($2::uuid IS NULL AND p.created_at > $1)
-                                  OR ($2 IS NOT NULL
-                                      AND (p.created_at, p.id) > ($1, $2))))
-                      OR (NOT $3 AND (($2::uuid IS NULL AND p.created_at < $1)
-                                      OR ($2 IS NOT NULL
-                                          AND (p.created_at, p.id) < ($1, $2)))))
-               ORDER BY
-                   CASE WHEN $3 THEN p.created_at END ASC,
-                   CASE WHEN $3 THEN p.id END ASC,
-                   p.created_at DESC, p.id DESC
-               LIMIT $4
-           ) page
-           ORDER BY created_at DESC, id DESC"#,
-        at,
-        after_id,
-        backward,
-        limit,
-    )
-    .fetch_all(pool)
-    .await?;
+                      OR ($2::uuid IS NULL AND p.created_at < $1)
+                      OR ($2 IS NOT NULL AND (p.created_at, p.id) < ($1, $2)))
+               ORDER BY p.created_at DESC, p.id DESC
+               LIMIT $3"#,
+            at,
+            after_id,
+            limit,
+        )
+        .fetch_all(pool)
+        .await?
+    };
     Ok(rows.into_iter().map(post_from_row).collect())
 }
 
@@ -1225,10 +1297,52 @@ async fn comments_landed(
         Some(c) => (Some(c.landed_epoch), Some(c.act_time), Some(c.position)),
         None => (None, None, None),
     };
-    let rows = sqlx::query_as!(
-        CommentRow,
-        r#"SELECT * FROM (
-               SELECT c.id, c.target_id, c.target_type, c.author_id,
+    let rows = if backward {
+        sqlx::query_as!(
+            CommentRow,
+            r#"SELECT * FROM (
+                   SELECT c.id, c.target_id, c.target_type, c.author_id,
+                          c.l1_node_id, c.license, c.landed_epoch, c.act_time,
+                          c.position, c.created_at,
+                          v.content AS "content!", v.redaction_reason,
+                          v.sensitive AS "sensitive!", v.sensitive_reason,
+                          v.pending AS "version_pending!",
+                          v.created_at AS "version_created_at!",
+                          v.version_id AS "version_id!"
+                   FROM comments c
+                   JOIN LATERAL (
+                       SELECT content, redaction_reason, sensitive,
+                              sensitive_reason, pending, created_at, version_id
+                       FROM comment_versions
+                       WHERE comment_id = c.id AND ($6 OR NOT pending)
+                       ORDER BY pending DESC,
+                                landed_epoch DESC NULLS LAST,
+                                act_time DESC NULLS LAST,
+                                position DESC NULLS LAST,
+                                created_at DESC, version_id DESC
+                       LIMIT 1
+                   ) v ON TRUE
+                   WHERE c.target_id = $5
+                     AND c.landed_epoch IS NOT NULL
+                     AND ($1::bigint IS NULL
+                          OR (c.landed_epoch, c.act_time, c.position) > ($1, $2, $3))
+                   ORDER BY c.landed_epoch ASC, c.act_time ASC, c.position ASC
+                   LIMIT $4
+               ) page
+               ORDER BY landed_epoch DESC, act_time DESC, position DESC"#,
+            ce,
+            ca,
+            cp,
+            limit,
+            target_id,
+            include_pending,
+        )
+        .fetch_all(pool)
+        .await?
+    } else {
+        sqlx::query_as!(
+            CommentRow,
+            r#"SELECT c.id, c.target_id, c.target_type, c.author_id,
                       c.l1_node_id, c.license, c.landed_epoch, c.act_time,
                       c.position, c.created_at,
                       v.content AS "content!", v.redaction_reason,
@@ -1241,7 +1355,7 @@ async fn comments_landed(
                    SELECT content, redaction_reason, sensitive,
                           sensitive_reason, pending, created_at, version_id
                    FROM comment_versions
-                   WHERE comment_id = c.id AND ($7 OR NOT pending)
+                   WHERE comment_id = c.id AND ($6 OR NOT pending)
                    ORDER BY pending DESC,
                             landed_epoch DESC NULLS LAST,
                             act_time DESC NULLS LAST,
@@ -1249,29 +1363,22 @@ async fn comments_landed(
                             created_at DESC, version_id DESC
                    LIMIT 1
                ) v ON TRUE
-               WHERE c.target_id = $6
+               WHERE c.target_id = $5
                  AND c.landed_epoch IS NOT NULL
                  AND ($1::bigint IS NULL
-                      OR ($4 AND (c.landed_epoch, c.act_time, c.position) > ($1, $2, $3))
-                      OR (NOT $4 AND (c.landed_epoch, c.act_time, c.position) < ($1, $2, $3)))
-               ORDER BY
-                   CASE WHEN $4 THEN c.landed_epoch END ASC,
-                   CASE WHEN $4 THEN c.act_time END ASC,
-                   CASE WHEN $4 THEN c.position END ASC,
-                   c.landed_epoch DESC, c.act_time DESC, c.position DESC
-               LIMIT $5
-           ) page
-           ORDER BY landed_epoch DESC, act_time DESC, position DESC"#,
-        ce,
-        ca,
-        cp,
-        backward,
-        limit,
-        target_id,
-        include_pending,
-    )
-    .fetch_all(pool)
-    .await?;
+                      OR (c.landed_epoch, c.act_time, c.position) < ($1, $2, $3))
+               ORDER BY c.landed_epoch DESC, c.act_time DESC, c.position DESC
+               LIMIT $4"#,
+            ce,
+            ca,
+            cp,
+            limit,
+            target_id,
+            include_pending,
+        )
+        .fetch_all(pool)
+        .await?
+    };
     Ok(rows.into_iter().map(comment_from_row).collect())
 }
 
@@ -1285,10 +1392,50 @@ async fn comments_pending(
     limit: i64,
 ) -> Result<Vec<Comment>, ContentError> {
     let (at, after_id) = cursor;
-    let rows = sqlx::query_as!(
-        CommentRow,
-        r#"SELECT * FROM (
-               SELECT c.id, c.target_id, c.target_type, c.author_id,
+    let rows = if backward {
+        sqlx::query_as!(
+            CommentRow,
+            r#"SELECT * FROM (
+                   SELECT c.id, c.target_id, c.target_type, c.author_id,
+                          c.l1_node_id, c.license, c.landed_epoch, c.act_time,
+                          c.position, c.created_at,
+                          v.content AS "content!", v.redaction_reason,
+                          v.sensitive AS "sensitive!", v.sensitive_reason,
+                          v.pending AS "version_pending!",
+                          v.created_at AS "version_created_at!",
+                          v.version_id AS "version_id!"
+                   FROM comments c
+                   JOIN LATERAL (
+                       SELECT content, redaction_reason, sensitive,
+                              sensitive_reason, pending, created_at, version_id
+                       FROM comment_versions WHERE comment_id = c.id
+                       ORDER BY pending DESC,
+                                landed_epoch DESC NULLS LAST,
+                                act_time DESC NULLS LAST,
+                                position DESC NULLS LAST,
+                                created_at DESC, version_id DESC
+                       LIMIT 1
+                   ) v ON TRUE
+                   WHERE c.target_id = $4
+                     AND c.landed_epoch IS NULL
+                     AND ($1::timestamptz IS NULL
+                          OR ($2::uuid IS NULL AND c.created_at > $1)
+                          OR ($2 IS NOT NULL AND (c.created_at, c.id) > ($1, $2)))
+                   ORDER BY c.created_at ASC, c.id ASC
+                   LIMIT $3
+               ) page
+               ORDER BY created_at DESC, id DESC"#,
+            at,
+            after_id,
+            limit,
+            target_id,
+        )
+        .fetch_all(pool)
+        .await?
+    } else {
+        sqlx::query_as!(
+            CommentRow,
+            r#"SELECT c.id, c.target_id, c.target_type, c.author_id,
                       c.l1_node_id, c.license, c.landed_epoch, c.act_time,
                       c.position, c.created_at,
                       v.content AS "content!", v.redaction_reason,
@@ -1308,30 +1455,21 @@ async fn comments_pending(
                             created_at DESC, version_id DESC
                    LIMIT 1
                ) v ON TRUE
-               WHERE c.target_id = $5
+               WHERE c.target_id = $4
                  AND c.landed_epoch IS NULL
                  AND ($1::timestamptz IS NULL
-                      OR ($3 AND (($2::uuid IS NULL AND c.created_at > $1)
-                                  OR ($2 IS NOT NULL
-                                      AND (c.created_at, c.id) > ($1, $2))))
-                      OR (NOT $3 AND (($2::uuid IS NULL AND c.created_at < $1)
-                                      OR ($2 IS NOT NULL
-                                          AND (c.created_at, c.id) < ($1, $2)))))
-               ORDER BY
-                   CASE WHEN $3 THEN c.created_at END ASC,
-                   CASE WHEN $3 THEN c.id END ASC,
-                   c.created_at DESC, c.id DESC
-               LIMIT $4
-           ) page
-           ORDER BY created_at DESC, id DESC"#,
-        at,
-        after_id,
-        backward,
-        limit,
-        target_id,
-    )
-    .fetch_all(pool)
-    .await?;
+                      OR ($2::uuid IS NULL AND c.created_at < $1)
+                      OR ($2 IS NOT NULL AND (c.created_at, c.id) < ($1, $2)))
+               ORDER BY c.created_at DESC, c.id DESC
+               LIMIT $3"#,
+            at,
+            after_id,
+            limit,
+            target_id,
+        )
+        .fetch_all(pool)
+        .await?
+    };
     Ok(rows.into_iter().map(comment_from_row).collect())
 }
 

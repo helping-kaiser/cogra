@@ -274,6 +274,20 @@ pub async fn record_full(
     }))
 }
 
+/// One mirror row as the chronicle read selects it, before its legs are
+/// attached. Named rather than anonymous because the two direction
+/// branches must agree on one row type.
+struct RecordRow {
+    record_id: String,
+    family: String,
+    author: String,
+    epoch: i64,
+    act_time: i64,
+    position: i64,
+    payload_marked: bool,
+    payload_witness: Vec<u8>,
+}
+
 /// The chronicle read (api-spec `records`): filterable along the
 /// mirror's own indexes, newest-first in landing order — keyset cursor
 /// on the authoritative causal key `(epoch, act_time, position)`.
@@ -290,9 +304,50 @@ pub async fn records(
         Some((e, a, p)) => (Some(e), Some(a), Some(p)),
         None => (None, None, None),
     };
-    let rows = sqlx::query!(
-        r#"SELECT * FROM (
-               SELECT r.record_id, r.family, r.author, r.epoch, r.act_time,
+    let rows = if backward {
+        sqlx::query_as!(
+            RecordRow,
+            r#"SELECT * FROM (
+                   SELECT r.record_id, r.family, r.author, r.epoch, r.act_time,
+                          r.position, r.payload_marked, r.payload_witness
+                   FROM mirror_records r
+                   WHERE ($1::text IS NULL OR r.author = $1)
+                     AND ($2::text IS NULL OR r.family = $2)
+                     AND ($3::boolean IS NULL OR r.payload_marked = $3)
+                     AND ($4::bigint IS NULL OR r.epoch >= $4)
+                     AND ($5::bigint IS NULL OR r.epoch <= $5)
+                     AND ($6::text IS NULL OR EXISTS (
+                             SELECT 1 FROM mirror_record_legs l
+                             WHERE l.record_id = r.record_id
+                               AND l.leg IN ('binary', 'a') AND l.target = $6))
+                     AND ($7::text IS NULL OR EXISTS (
+                             SELECT 1 FROM mirror_record_legs l
+                             WHERE l.record_id = r.record_id
+                               AND l.leg = 't' AND l.target = $7))
+                     AND ($8::bigint IS NULL
+                          OR (r.epoch, r.act_time, r.position) > ($8, $9, $10))
+                   ORDER BY r.epoch ASC, r.act_time ASC, r.position ASC
+                   LIMIT $11
+               ) page
+               ORDER BY epoch DESC, act_time DESC, position DESC"#,
+            filter.author.as_deref(),
+            filter.family.as_deref(),
+            filter.payload_marked,
+            filter.since_epoch,
+            filter.until_epoch,
+            filter.target.as_deref(),
+            filter.terminal.as_deref(),
+            ce,
+            ca,
+            cp,
+            limit,
+        )
+        .fetch_all(pool)
+        .await?
+    } else {
+        sqlx::query_as!(
+            RecordRow,
+            r#"SELECT r.record_id, r.family, r.author, r.epoch, r.act_time,
                       r.position, r.payload_marked, r.payload_witness
                FROM mirror_records r
                WHERE ($1::text IS NULL OR r.author = $1)
@@ -309,31 +364,24 @@ pub async fn records(
                          WHERE l.record_id = r.record_id
                            AND l.leg = 't' AND l.target = $7))
                  AND ($8::bigint IS NULL
-                      OR ($11 AND (r.epoch, r.act_time, r.position) > ($8, $9, $10))
-                      OR (NOT $11 AND (r.epoch, r.act_time, r.position) < ($8, $9, $10)))
-               ORDER BY
-                   CASE WHEN $11 THEN r.epoch END ASC,
-                   CASE WHEN $11 THEN r.act_time END ASC,
-                   CASE WHEN $11 THEN r.position END ASC,
-                   r.epoch DESC, r.act_time DESC, r.position DESC
-               LIMIT $12
-           ) page
-           ORDER BY epoch DESC, act_time DESC, position DESC"#,
-        filter.author.as_deref(),
-        filter.family.as_deref(),
-        filter.payload_marked,
-        filter.since_epoch,
-        filter.until_epoch,
-        filter.target.as_deref(),
-        filter.terminal.as_deref(),
-        ce,
-        ca,
-        cp,
-        backward,
-        limit,
-    )
-    .fetch_all(pool)
-    .await?;
+                      OR (r.epoch, r.act_time, r.position) < ($8, $9, $10))
+               ORDER BY r.epoch DESC, r.act_time DESC, r.position DESC
+               LIMIT $11"#,
+            filter.author.as_deref(),
+            filter.family.as_deref(),
+            filter.payload_marked,
+            filter.since_epoch,
+            filter.until_epoch,
+            filter.target.as_deref(),
+            filter.terminal.as_deref(),
+            ce,
+            ca,
+            cp,
+            limit,
+        )
+        .fetch_all(pool)
+        .await?
+    };
     let ids: Vec<String> = rows.iter().map(|r| r.record_id.clone()).collect();
     let mut legs = legs_for(pool, &ids).await?;
     Ok(rows
