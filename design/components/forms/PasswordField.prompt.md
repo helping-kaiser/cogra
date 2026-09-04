@@ -10,4 +10,4 @@ The toggle is the field's trailing `visibility` / `visibility_off` icon button o
 <PasswordField label="Password" value={password} onChange={setPassword} error="At least 12 characters." />
 ```
 
-`error` mirrors TextField's Material 3 error state (this component duplicates TextField's markup rather than composing it): the outline and label switch to `--error`, and a body-small supporting line in `--error` renders below the field carrying the message verbatim.
+`hint` and `error` mirror TextField's supporting-text slot (this component duplicates TextField's markup rather than composing it): one body-small line under the field — `text-secondary` for what the field will accept, `--error` for the message when it is refused, which also takes the outline and the label. The error replaces the hint; a field never carries both.

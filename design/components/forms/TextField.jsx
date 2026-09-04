@@ -6,12 +6,17 @@ import React from "react";
    platform monospace: the one exception to Figtree (design.md §3), a legibility
    device for strings read character by character.
 
-   `error` is Material 3's documented text-field error state: the outline and
-   label both switch to `--error`, and a body-small supporting line in
-   `--error` renders below the field carrying the message. The message is
-   always words (direction-by-words) — this component renders it verbatim,
-   no icon. This line is TextField-internal, separate from any screen-level
-   helper span a board already draws under the field. */
+   SUPPORTING TEXT IS ONE SLOT WITH TWO STATES, which is Material 3's own
+   arrangement rather than two independent lines. `hint` is the base: the
+   body-small line in `--text-secondary` that says what the field will accept
+   ("3–30 characters: a–z, 0–9, _"). `error` is that same line in its error
+   state — the outline and the label switch to `--error` with it, and the
+   message replaces the hint rather than joining it. A field never carries both
+   at once: the rule the reader broke is the rule they needed to read, and two
+   lines under one input is where the eye stops knowing which one is live.
+
+   The message is always words (direction-by-words) — this component renders it
+   verbatim, no icon. */
 
 export function TextField({
   label,
@@ -24,6 +29,7 @@ export function TextField({
   placeholder,
   rows,
   id,
+  hint,
   error,
 }) {
   const generated = React.useId();
@@ -91,16 +97,16 @@ export function TextField({
           style={shared}
         />
       )}
-      {error && (
+      {(error || hint) && (
         <span
           style={{
             fontSize: "var(--text-body-small)",
             lineHeight: "var(--text-body-small--line-height)",
             letterSpacing: "var(--text-body-small--letter-spacing)",
-            color: "var(--error)",
+            color: error ? "var(--error)" : "var(--text-secondary)",
           }}
         >
-          {error}
+          {error || hint}
         </span>
       )}
     </div>

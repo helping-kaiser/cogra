@@ -13,8 +13,12 @@ export interface TextFieldProps {
   /** Renders a textarea instead of an input. */
   rows?: number;
   id?: string;
-  /** M3 text-field error state: error outline, error label, error supporting
-   *  text below the field carrying this message verbatim. Always words. */
+  /** The supporting line under the field, in `text-secondary` — what the field
+   *  will accept ("3–30 characters: a–z, 0–9, _"). */
+  hint?: string;
+  /** The same supporting line in M3's error state: error outline, error label,
+   *  the message in `--error`, always words. It REPLACES `hint` — a field never
+   *  carries both. */
   error?: string;
 }
 
