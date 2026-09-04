@@ -17,8 +17,6 @@ const POSTS = [
     author: { handle: "ada", displayName: "Ada Okonkwo" },
     title: "The long way home",
     description: "Took the coast road instead of the tunnel. Four hours longer, worth every minute.",
-    content:
-      "The light does something at the third headland that I have never managed to photograph properly, and I have tried maybe a dozen times now. This is the closest I have come.",
     timestamp: "2h",
     score: "15.20",
     comments: 3,
@@ -40,7 +38,6 @@ const POSTS = [
     author: { handle: "mira", displayName: "Mira Halvorsen" },
     title: "Sunday, eventually",
     description: "Nobody in this house is in a hurry.",
-    content: "The dog least of all. He has moved twice since breakfast, both times about a foot, both times to stay in the sun.",
     timestamp: "9h",
     score: "-2.10",
     comments: 0,

@@ -124,11 +124,12 @@ const SOL_ADDRESS_NEW = "lq1qqw7t3xk0zfvljmv2u49h5tld6mfj7z2vhnn0mjcz2q0edgp5yh3
 const CITE_ROW = { label: "Cite in a new post", onSelect: () => {} };
 const CITE_MENU = [CITE_ROW];
 
+/* A POST'S BODY IS WORDS XOR MEDIA (post.md). Every fixture with a picture
+   carries its words as the DESCRIPTION — the caption beside the body — and no
+   `content`; only the text posts below have one. */
 const ADA_POST = {
   author: ADA,
   title: "The long way home",
-  content:
-    "The light does something at the third headland that I have never managed to photograph properly, and I have tried maybe a dozen times now. This is the closest I have come.",
   description: "Took the coast road instead of the tunnel. Four hours longer, worth every minute.",
   timestamp: "2h",
   media: [{ src: "post-photo.jpg", ratio: "wide", fit: "cover" }],
@@ -153,7 +154,7 @@ const TOBIAS_POST = {
 const SOL_POST = {
   author: SOL,
   title: "Salt maps of the coast road",
-  content:
+  description:
     "Rubbings from three weekends at low tide — paper against the salt crust, the side of a wax stick, and whatever the wind allowed.",
   timestamp: "3d",
   media: [
@@ -172,7 +173,7 @@ const SOL_POST = {
 const MIRA_GALLERY_POST = {
   author: MIRA,
   title: "Sunday at the tide market",
-  content:
+  description:
     "Everything the flats give up in one morning — the stand by the sea wall had honey from the headland hives again.",
   timestamp: "4h",
   media: [
@@ -597,7 +598,7 @@ const CLIP_LAKESIDE = {
 const MIRA_CLIP_POST = {
   author: MIRA,
   title: "The lake, doing nothing, for forty seconds",
-  content:
+  description:
     "Stood there long enough that the midges found me. Worth it for the last ten seconds, when the far shore goes the colour of the water.",
   timestamp: "35m",
   media: [CLIP_LAKESIDE],
