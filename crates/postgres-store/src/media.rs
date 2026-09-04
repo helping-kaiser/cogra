@@ -796,6 +796,9 @@ mod placement_tests {
     /// The three arrays are one gallery said three ways, so they have to
     /// come out the same length and in the same order — `unnest` pads a
     /// ragged set with NULL, and two of the three columns are NOT NULL.
+    ///
+    /// A gallery's three bound arrays agree on length and on order.
+    /// ´claim:media:a-gallerys-arrays-cannot-diverge´
     #[test]
     fn the_three_arrays_agree_on_length_and_order() {
         let gallery = [
@@ -817,6 +820,9 @@ mod placement_tests {
 
     /// Position is the order and index 0 is the cover, so the first
     /// placement is the one `is_cover` will pick out.
+    ///
+    /// The first placement holds position zero, which is the cover.
+    /// ´claim:media:the-first-placement-is-the-cover´
     #[test]
     fn the_first_placement_holds_position_zero() {
         let (_, orders, _) = split_placements(&[placement(1, None)]).expect("fits");

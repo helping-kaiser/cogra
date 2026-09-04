@@ -46,12 +46,21 @@ fn flatten(text: &str) -> String {
     text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
+/// A with-pending ordering contains a without-pending one, so the short
+/// form is only what the long form did not already claim.
+fn short_form_count(flat: &str, full: usize) -> usize {
+    flat.matches(WITHOUT_PENDING).count() - full
+}
+
 fn read_flat(path: &Path) -> String {
     flatten(&fs::read_to_string(path).unwrap_or_else(|e| panic!("{}: {e}", path.display())))
 }
 
 /// Every place the crate orders version rows uses one of the two forms of
 /// the rule, and no third form has appeared.
+///
+/// Every version ordering in the crate is one of the rule's two forms.
+/// ´claim:content:the-version-ordering-is-written-one-way´
 #[test]
 fn the_version_ordering_never_drifts_in_the_crate() {
     let src = crate_dir().join("src");
@@ -64,9 +73,7 @@ fn the_version_ordering_never_drifts_in_the_crate() {
         let flat = read_flat(&path);
         let key = flat.matches(KEY).count();
         let full = flat.matches(WITH_PENDING).count();
-        // A with-pending ordering contains a without-pending one, so the
-        // short form is only what the long form did not already claim.
-        let short = flat.matches(WITHOUT_PENDING).count() - full;
+        let short = short_form_count(&flat, full);
         assert_eq!(
             key,
             full + short,
@@ -81,6 +88,9 @@ fn the_version_ordering_never_drifts_in_the_crate() {
 
 /// The indexes that serve the rule encode it again. Each `*_current_idx`
 /// carries the same key sequence the queries order by.
+///
+/// The current-version indexes order versions the way the queries do.
+/// ´claim:content:the-indexes-carry-the-version-ordering-rule´
 #[test]
 fn the_current_version_indexes_carry_the_same_rule() {
     let migration = crate_dir().join("../../migrations/20260821000002_l1_ordered_versions.sql");

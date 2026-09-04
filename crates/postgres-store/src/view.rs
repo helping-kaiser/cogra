@@ -66,6 +66,9 @@ mod tests {
     /// become "pending for everyone": a staged write is visible only to
     /// its own author, so the absence of a viewer is what turns the
     /// request back into the landed view.
+    ///
+    /// Pending rows count only for a named viewer, never for nobody.
+    /// ´claim:view:the-pending-view-needs-a-viewer´
     #[test]
     fn pending_needs_a_viewer_to_be_anyones() {
         assert_eq!(
@@ -85,6 +88,9 @@ mod tests {
     /// The empty string the landed view binds is only ever read when the
     /// boolean beside it is false — the queries gate on that boolean, so
     /// it can never be compared against an author.
+    ///
+    /// The landed view binds no actor, so no author can match its slot.
+    /// ´claim:view:the-landed-view-names-no-actor´
     #[test]
     fn the_landed_view_binds_no_actor() {
         assert_eq!(PendingView::Landed.params(), (false, ""));

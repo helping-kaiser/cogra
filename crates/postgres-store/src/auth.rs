@@ -11,17 +11,23 @@ use chrono::{DateTime, Utc};
 use sqlx::{PgConnection, PgPool};
 use uuid::Uuid;
 
-/// The unique-constraint names this module turns into refusals.
-///
-/// PostgreSQL names the constraint, not the column, in a
-/// `unique_violation`: the error's `column_name` field is populated for a
-/// not-null violation and left empty for this one (PostgreSQL "Error and
-/// Notice Message Fields"). So the name is the only handle a refusal has,
-/// and two of these four are names PostgreSQL chose implicitly for an
-/// inline `UNIQUE` — nothing in a migration writes them down. A rename
-/// would silently turn a clean refusal into a 500, which is what
-/// `tests/schema.rs` pins.
 pub mod constraints {
+    //! ´mod:module:constraints´
+    //!
+    //! The unique-constraint names this module's callers turn into
+    //! refusals.
+    //!
+    //! PostgreSQL names the constraint, not the column, in a
+    //! `unique_violation`: the error's `column_name` field is populated
+    //! for a not-null violation and left empty for this one (PostgreSQL
+    //! "Error and Notice Message Fields"). So the name is the only handle
+    //! a refusal has, and two of these four are names PostgreSQL chose
+    //! implicitly for an inline `UNIQUE` — nothing in a migration writes
+    //! them down. The other two are standalone unique indexes and have no
+    //! constraint row at all; the error carries the index's name just the
+    //! same. A rename would silently turn a clean refusal into a 500,
+    //! which is what `tests/schema.rs` pins.
+
     pub const ACTORS_HANDLE: &str = "actors_handle_key";
     pub const ACTORS_PUBKEY: &str = "actors_actor_pubkey_key";
     pub const ACTORS_L0_ADDRESS: &str = "actors_l0_address_key";
@@ -1530,6 +1536,9 @@ mod enum_tests {
     /// Both enums are stored as their own strings and decoded back by a
     /// second, independent list. A typo in either half is a decode that
     /// fails at runtime and nowhere earlier.
+    ///
+    /// Every account state decodes back to the variant that wrote it.
+    /// ´claim:auth:an-account-state-round-trips-through-its-column´
     #[test]
     fn account_states_round_trip_through_their_column_form() {
         for state in [
@@ -1543,6 +1552,8 @@ mod enum_tests {
         assert_eq!(AccountState::parse(""), None);
     }
 
+    /// Every revocation reason decodes back to the variant that wrote it.
+    /// ´claim:auth:a-revocation-reason-round-trips-through-its-column´
     #[test]
     fn revoked_reasons_round_trip_through_their_column_form() {
         for reason in [

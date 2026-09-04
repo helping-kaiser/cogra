@@ -173,8 +173,6 @@ async fn seq_catch_up_agrees_with_the_rust_parser_and_survives_a_stray_row(pool:
     )
     .await
     .expect("ingest");
-    // A row whose third field is not a number: the mirror stores L1's
-    // identifier verbatim, so the store never gets to assume it is one.
     sqlx::query(
         "INSERT INTO mirror_records
              (record_id, family, author, epoch, act_time, position,

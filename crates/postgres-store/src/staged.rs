@@ -687,6 +687,9 @@ mod state_tests {
     /// wrote it. A one-character typo in either direction is a decode
     /// that fails at runtime and nowhere earlier, and the two halves are
     /// two independent lists.
+    ///
+    /// Every handshake state decodes back to the variant that wrote it.
+    /// ´claim:staged:a-handshake-state-round-trips-through-its-column´
     #[test]
     fn every_state_round_trips_through_its_column_form() {
         for state in [

@@ -1564,6 +1564,9 @@ mod tests {
     /// carries the authoring instant it was built from. The round trip
     /// matters because the walk resumes from it: a key that cannot say
     /// which instant it means cannot resume a page.
+    ///
+    /// A pending key names the sentinel namespace and carries the instant it was built from.
+    /// ´claim:content:a-pending-key-carries-its-authoring-instant´
     #[test]
     fn a_pending_key_carries_its_authoring_instant() {
         let key = LandingOrder::pending_at(at(1_700_000_000_000_000));
@@ -1577,6 +1580,9 @@ mod tests {
     /// Every pending key sorts above every landed one — the property the
     /// two-branch walk is built on, and the reason the cursor keeps one
     /// shape across both namespaces.
+    ///
+    /// Every pending key sorts above every landed one.
+    /// ´claim:content:pending-keys-sort-above-landed-ones´
     #[test]
     fn every_pending_key_outranks_every_landed_one() {
         assert!(LandingOrder::pending_at(at(0)) > landed(i64::MAX - 1));
@@ -1585,6 +1591,9 @@ mod tests {
     /// A landed row sorts by its coordinates and an unlanded one by its
     /// authoring instant — the same key either way, so the caller never
     /// branches on which it got.
+    ///
+    /// An unlanded row's sort key is its authoring instant, a landed one's its coordinates.
+    /// ´claim:content:a-sort-key-falls-back-to-the-authoring-instant´
     #[test]
     fn a_sort_key_falls_back_to_the_authoring_instant() {
         let created = at(42);
@@ -1616,6 +1625,9 @@ mod tests {
     /// The table's CHECK admits all three coordinates or none, so a row
     /// carrying part of a position reads as pending rather than as a
     /// position with holes in it.
+    ///
+    /// A row holding part of a landing position holds no position at all.
+    /// ´claim:content:a-partial-position-is-no-position´
     #[test]
     fn a_partial_position_is_no_position() {
         assert_eq!(
@@ -1628,6 +1640,9 @@ mod tests {
 
     /// Only a pending cursor moves, and only one carrying an id can be
     /// found again — so those are the only cursors worth re-reading.
+    ///
+    /// Only a pending cursor carrying an id is worth re-reading.
+    /// ´claim:content:only-a-findable-pending-cursor-is-re-read´
     #[test]
     fn only_a_findable_pending_cursor_is_re_read() {
         let id = Uuid::from_u128(1);
@@ -1655,6 +1670,9 @@ mod tests {
 
     /// A cursor re-points at the coordinates its entry has now, keeping
     /// its id; an entry still pending leaves it standing.
+    ///
+    /// Re-pointing a cursor moves its key and keeps its id.
+    /// ´claim:content:re-pointing-keeps-the-cursors-id´
     #[test]
     fn re_pointing_keeps_the_cursors_id() {
         let id = Uuid::from_u128(2);
@@ -1674,6 +1692,9 @@ mod tests {
     /// The pending branch keysets from a pending cursor and from nothing
     /// else: a landed cursor is in the other namespace, so the pending
     /// branch is walked from its own end instead.
+    ///
+    /// The pending branch keysets from a pending cursor and from nothing else.
+    /// ´claim:content:the-pending-keyset-comes-only-from-a-pending-cursor´
     #[test]
     fn the_pending_keyset_comes_only_from_a_pending_cursor() {
         let id = Uuid::from_u128(3);
@@ -1736,6 +1757,9 @@ mod tests {
     /// A forward walk from the start fills from the pending branch first
     /// and asks the landed branch only for what is left — the namespaces
     /// never interleave, so the merge is a concatenation and not a sort.
+    ///
+    /// A forward walk fills from pending first and asks landed only for the remainder.
+    /// ´claim:content:a-walk-fills-one-branch-then-asks-the-other-for-the-rest´
     #[tokio::test]
     async fn a_forward_walk_fills_pending_then_landed() {
         let (out, calls) = walk(None, false, 5, true, vec![1, 2], vec![3, 4, 5, 6]).await;
@@ -1748,6 +1772,9 @@ mod tests {
 
     /// Excluding pending skips that branch entirely rather than asking
     /// for it and discarding the answer.
+    ///
+    /// A settled walk never asks the pending branch anything.
+    /// ´claim:content:a-settled-walk-never-asks-the-pending-branch´
     #[tokio::test]
     async fn a_settled_walk_never_asks_the_pending_branch() {
         let (out, calls) = walk(None, false, 2, false, vec![1, 2], vec![7, 8, 9]).await;
@@ -1758,6 +1785,9 @@ mod tests {
     /// A backward walk runs the branches in the other order and still
     /// returns newest-first: the pending rows lead the landed ones on the
     /// way out, whichever way the walk ran.
+    ///
+    /// A backward walk runs the branches in the other order and still returns newest-first.
+    /// ´claim:content:a-walk-returns-newest-first-whichever-way-it-ran´
     #[tokio::test]
     async fn a_backward_walk_returns_newest_first() {
         let (out, calls) = walk(
@@ -1779,6 +1809,9 @@ mod tests {
 
     /// A cursor already in the pending namespace does not re-walk the
     /// landed branch behind it on the way back.
+    ///
+    /// A backward walk from a pending cursor never re-walks the landed branch.
+    /// ´claim:content:a-backward-walk-from-pending-skips-the-landed-branch´
     #[tokio::test]
     async fn a_backward_walk_from_a_pending_cursor_skips_the_landed_branch() {
         let (out, calls) = walk(

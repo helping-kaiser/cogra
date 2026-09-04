@@ -306,6 +306,9 @@ mod name_tests {
     /// Formation forbids the alternatives, so a target that is not one
     /// means the mirror is corrupt — which is a refusal, never a name
     /// with a stray prefix left on it.
+    ///
+    /// Only a Type identifier yields a name; every other target refuses.
+    /// ´claim:topics:only-a-type-identifier-yields-a-name´
     #[test]
     fn only_a_type_identifier_yields_a_name() {
         assert_eq!(
