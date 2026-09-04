@@ -44,7 +44,6 @@ export interface LicenseReading {
 
 export declare function licenseReadings(license: License): readonly LicenseReading[];
 
-/** The words of the menu row that unfolds the terms, and of the one that folds
- *  them away again — assigned once, spelled by every surface that offers it. */
+/** The words of the menu row that opens the terms — assigned once, spelled by
+ *  every surface that offers it. */
 export declare const LICENSE_MENU_LABEL: string;
-export declare const LICENSE_MENU_LABEL_SHOWN: string;
