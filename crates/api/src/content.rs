@@ -84,8 +84,17 @@ impl License {
     }
 
     /// The pair a canonical string encodes; None when the string is not
-    /// one CoGra published. The read side has no license of its own to
-    /// fall back on — a record's own bytes are the only source.
+    /// a well-formed license at all. The read side has no license of its
+    /// own to fall back on — a record's own bytes are the only source.
+    ///
+    /// Deliberately more permissive than [`checked`](Self::checked): the
+    /// writing side enforces the three-decimal grid, and this side does
+    /// not. A landed record's bytes are fact whatever the grid says, and
+    /// a reader that refused an off-grid value would serve nothing for a
+    /// record that exists rather than serving what it says. Note that a
+    /// value off the grid does not survive `canonical()` unchanged —
+    /// `0.0005` renders as `0.001` — so parse-then-render is idempotent
+    /// only on the grid CoGra publishes on.
     pub fn parse(canonical: &str) -> Option<Self> {
         let (a, o) = canonical.split_once(';')?;
         let attribution = parse_axis(a.strip_prefix("a=")?)?;
@@ -193,6 +202,29 @@ mod license_tests {
         ] {
             assert!(License::parse(bad).is_none(), "{bad} parsed");
         }
+    }
+
+    /// An off-grid axis is a value the writing side refuses and the
+    /// reading side accepts, because a landed record's bytes are fact
+    /// whatever the grid says. Rendering it does not round-trip, which
+    /// is the cost of that choice and is stated here rather than left
+    /// to be discovered.
+    ///
+    /// A licence finer than the published grid is refused on the way in and read back as written on the way out.
+    /// ´claim:content:an-off-grid-licence-reads-back-as-written´
+    #[test]
+    fn parse_reads_an_off_grid_axis_the_writer_would_refuse() {
+        assert!(
+            License::checked(0.0005, 0.0).is_err(),
+            "the writing side holds the grid"
+        );
+        let read = License::parse("a=0.0005;o=0").expect("a landed record's own bytes");
+        assert_eq!(read.attribution, 0.0005);
+        assert_eq!(
+            read.canonical(),
+            "a=0.001;o=0",
+            "off the grid, parse-then-render is not idempotent"
+        );
     }
 
     /// The checked constructor admits every licence the square defines.
@@ -919,14 +951,187 @@ pub async fn stage_pending(
 ) -> Result<(), ContentError> {
     let body = &write.proposal.body;
     let family = match body.family {
-        f @ (Family::Publish | Family::Review) => f,
+        Family::Publish => ContentFamily::Post,
+        Family::Review => ContentFamily::Comment,
         _ => return Ok(()),
     };
     if write.node_id.is_none() {
-        return Ok(());
+        // The family says this write mints or edits content, and every
+        // such gesture is built with `node: Some(..)`. Reporting the
+        // disagreement as success is what `relay::submit_pre_signed`'s
+        // own doc says must not happen: the pre-commitment is recorded
+        // and the seal proceeds, and no display row is ever created.
+        return Err(ContentError::Internal(
+            "a mint-family staged write carries no node id".into(),
+        ));
     }
     let content = CograContent::decode_payload(&write.proposal.payload)
         .map_err(|e| ContentError::Internal(format!("staged payload not admissible: {e}")))?;
+    let (target, is_genesis) = genesis_shape(body);
+    let shape = match (family, is_genesis) {
+        (ContentFamily::Post, true) => ContentShape::MintPost,
+        (ContentFamily::Post, false) => ContentShape::EditPost(
+            content_store::post(pool, content.node)
+                .await?
+                .ok_or(ContentError::NotFound)?
+                .id,
+        ),
+        (ContentFamily::Comment, true) => ContentShape::MintComment,
+        (ContentFamily::Comment, false) => ContentShape::EditComment(
+            content_store::comment(pool, content.node)
+                .await?
+                .ok_or(ContentError::NotFound)?
+                .id,
+        ),
+    };
+    let gallery = media::resolve_manifest(pool, write.actor_id, &content.media).await?;
+
+    let mut tx = pool
+        .begin()
+        .await
+        .map_err(|e| ContentError::Internal(e.to_string()))?;
+    write_display_rows(
+        &mut tx,
+        pool,
+        shape,
+        &DisplayWrite {
+            actor_id: write.actor_id,
+            target: &target,
+            order: None,
+            created_at,
+            content: &content,
+            gallery: &gallery,
+            body,
+        },
+    )
+    .await?;
+    tx.commit()
+        .await
+        .map_err(|e| ContentError::Internal(e.to_string()))?;
+    Ok(())
+}
+
+/// What a content write does to the display rows: mint a node, or add a
+/// version to the node an edit names.
+///
+/// The `(family, genesis)` square was matched out twice — once on the
+/// pre-commitment path and once on the landing path — and each time
+/// ended in a wildcard defended by `unreachable!`, because `Family` stays
+/// wide across the narrowing that makes the fifth case impossible.
+/// Naming the four cases makes the match exhaustive, and carrying the
+/// edited row's id inside the edit variants removes the `Option` an
+/// edit would otherwise have to unwrap.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ContentFamily {
+    Post,
+    Comment,
+}
+
+enum ContentShape {
+    MintPost,
+    EditPost(Uuid),
+    MintComment,
+    EditComment(Uuid),
+}
+
+/// The display-row fields a content write carries, gathered once.
+///
+/// `order` is what separates the two paths: a pre-commitment write has
+/// no landing order yet, and a landed one does.
+struct DisplayWrite<'a> {
+    actor_id: Uuid,
+    target: &'a str,
+    order: Option<LandingOrder>,
+    created_at: chrono::DateTime<chrono::Utc>,
+    content: &'a CograContent,
+    gallery: &'a [postgres_store::media::GalleryPlacement],
+    body: &'a common::l1::handshake::StructuralBody,
+}
+
+/// Writes the display rows a content write materializes, and hangs its
+/// gallery off them.
+///
+/// One matrix for both promotion paths. They wrote the same four shapes
+/// with the same arguments and differed only in the landing order riding
+/// along and in the "already there?" guard the landing path tries first
+/// — so the guard stays with the landing path and the writes live here.
+async fn write_display_rows(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    pool: &PgPool,
+    shape: ContentShape,
+    write: &DisplayWrite<'_>,
+) -> Result<(), ContentError> {
+    let content = write.content;
+    match shape {
+        ContentShape::MintPost => {
+            let version = content_store::insert_post(
+                tx,
+                content.node,
+                write.actor_id,
+                write.target,
+                record_license(write.body)?,
+                write.order,
+                write.created_at,
+                clear_to_null(&content.title),
+                clear_to_null(&content.description),
+                content.body.as_deref().unwrap_or_default(),
+                content.sensitive.as_ref(),
+            )
+            .await?;
+            attach_post(tx, version, write.gallery).await
+        }
+        ContentShape::EditPost(post_id) => {
+            let version = content_store::insert_post_version(
+                tx,
+                post_id,
+                clear_to_null(&content.title),
+                clear_to_null(&content.description),
+                content.body.as_deref().unwrap_or_default(),
+                content.sensitive.as_ref(),
+                write.order,
+                write.created_at,
+            )
+            .await?;
+            attach_post(tx, version, write.gallery).await
+        }
+        ContentShape::MintComment => {
+            let (target_id, target_type) = comment_parent(pool, write.body).await?;
+            let version = content_store::insert_comment(
+                tx,
+                content.node,
+                target_id,
+                target_type,
+                write.actor_id,
+                write.target,
+                record_license(write.body)?,
+                write.order,
+                write.created_at,
+                content.body.as_deref().unwrap_or_default(),
+                content.sensitive.as_ref(),
+            )
+            .await?;
+            attach_comment(tx, version, write.gallery).await
+        }
+        ContentShape::EditComment(comment_id) => {
+            let version = content_store::insert_comment_version(
+                tx,
+                comment_id,
+                content.body.as_deref().unwrap_or_default(),
+                content.sensitive.as_ref(),
+                write.order,
+                write.created_at,
+            )
+            .await?;
+            attach_comment(tx, version, write.gallery).await
+        }
+    }
+}
+
+/// Whether a mint-family write targets the mint of its own act — the
+/// genesis shape (nodes.md §1) — alongside the target string both paths
+/// need. Derived once: the two paths recomputed it identically, and a
+/// drift between them would file an edit where a mint belongs.
+fn genesis_shape(body: &common::l1::handshake::StructuralBody) -> (String, bool) {
     let own_mint = NodeId::Mint(ActId {
         author: body.author.clone(),
         seq: body.seq,
@@ -935,86 +1140,7 @@ pub async fn stage_pending(
     .to_string();
     let target = body.target.to_string();
     let is_genesis = target == own_mint;
-    let gallery = media::resolve_manifest(pool, write.actor_id, &content.media).await?;
-
-    let mut tx = pool
-        .begin()
-        .await
-        .map_err(|e| ContentError::Internal(e.to_string()))?;
-    match (family, is_genesis) {
-        (Family::Publish, true) => {
-            let version = content_store::insert_post(
-                &mut tx,
-                content.node,
-                write.actor_id,
-                &target,
-                record_license(body)?,
-                None,
-                created_at,
-                clear_to_null(&content.title),
-                clear_to_null(&content.description),
-                content.body.as_deref().unwrap_or_default(),
-                content.sensitive.as_ref(),
-            )
-            .await?;
-            attach_post(&mut tx, version, &gallery).await?;
-        }
-        (Family::Publish, false) => {
-            let post = content_store::post(pool, content.node)
-                .await?
-                .ok_or(ContentError::NotFound)?;
-            let version = content_store::insert_post_version(
-                &mut tx,
-                post.id,
-                clear_to_null(&content.title),
-                clear_to_null(&content.description),
-                content.body.as_deref().unwrap_or_default(),
-                content.sensitive.as_ref(),
-                None,
-                created_at,
-            )
-            .await?;
-            attach_post(&mut tx, version, &gallery).await?;
-        }
-        (Family::Review, true) => {
-            let (target_id, target_type) = comment_parent(pool, body).await?;
-            let version = content_store::insert_comment(
-                &mut tx,
-                content.node,
-                target_id,
-                target_type,
-                write.actor_id,
-                &target,
-                record_license(body)?,
-                None,
-                created_at,
-                content.body.as_deref().unwrap_or_default(),
-                content.sensitive.as_ref(),
-            )
-            .await?;
-            attach_comment(&mut tx, version, &gallery).await?;
-        }
-        (Family::Review, false) => {
-            let comment = content_store::comment(pool, content.node)
-                .await?
-                .ok_or(ContentError::NotFound)?;
-            let version = content_store::insert_comment_version(
-                &mut tx,
-                comment.id,
-                content.body.as_deref().unwrap_or_default(),
-                content.sensitive.as_ref(),
-                None,
-                created_at,
-            )
-            .await?;
-            attach_comment(&mut tx, version, &gallery).await?;
-        }
-        _ => unreachable!("filtered to content families above"),
-    }
-    tx.commit()
-        .await
-        .map_err(|e| ContentError::Internal(e.to_string()))?;
-    Ok(())
+    (target, is_genesis)
 }
 
 /// Hangs a gallery off a post version row, when one was written.
@@ -1094,7 +1220,8 @@ pub async fn land_promoted(
     let mut failures = Vec::new();
     for write in promoted {
         let family = match common::l1::census::Family::parse(&write.family) {
-            Some(f @ (Family::Publish | Family::Review)) => f,
+            Some(Family::Publish) => ContentFamily::Post,
+            Some(Family::Review) => ContentFamily::Comment,
             _ => continue,
         };
         if let Err(e) = land_one(pool, write, family).await {
@@ -1126,7 +1253,7 @@ pub async fn land_promoted(
 async fn land_one(
     pool: &PgPool,
     write: &staged::PromotedWrite,
-    family: Family,
+    family: ContentFamily,
 ) -> Result<(), ContentError> {
     let staged_row = staged::load(pool, write.id).await?;
     let payload = &staged_row.proposal.payload;
@@ -1145,16 +1272,15 @@ async fn land_one(
         position: meta.position,
     };
     let body = &staged_row.proposal.body;
-    let own_mint = NodeId::Mint(ActId {
-        author: body.author.clone(),
-        seq: body.seq,
-        family: body.family,
-    })
-    .to_string();
-    let target = body.target.to_string();
-    let is_genesis = target == own_mint;
+    let (target, is_genesis) = genesis_shape(body);
 
-    let created_at = staged_row.pre_signed_at.unwrap_or_else(chrono::Utc::now);
+    // The authoring instant, like `sealed` above, is set by the pre-sign
+    // leg — so a landed write missing it is the same internal fault, and
+    // substituting `Utc::now()` would stamp the content with its
+    // promotion time and leave no mark that it did.
+    let created_at = staged_row.pre_signed_at.ok_or_else(|| {
+        ContentError::Internal("landed write without an authoring instant".into())
+    })?;
     let gallery = media::resolve_manifest(pool, write.actor_id, &content.media).await?;
 
     let mut tx = pool
@@ -1163,90 +1289,67 @@ async fn land_one(
         .map_err(|e| ContentError::Internal(e.to_string()))?;
     content_store::insert_act_payload(&mut tx, &write.act_id, payload, &sealed.content_salt)
         .await?;
-    match (family, is_genesis) {
-        (Family::Publish, true) => {
+
+    // The rows are normally already on screen from the pre-commitment,
+    // so landing only writes the causal key onto them; the insert
+    // matrix below is the uncommon path where there was no pending row.
+    let shape = match (family, is_genesis) {
+        (ContentFamily::Post, true) => {
             if content_store::land_post(&mut tx, content.node, order).await? {
                 content_store::land_post_version(&mut tx, content.node, created_at, order).await?;
+                None
             } else {
-                let version = content_store::insert_post(
-                    &mut tx,
-                    content.node,
-                    write.actor_id,
-                    &target,
-                    record_license(body)?,
-                    Some(order),
-                    created_at,
-                    clear_to_null(&content.title),
-                    clear_to_null(&content.description),
-                    content.body.as_deref().unwrap_or_default(),
-                    content.sensitive.as_ref(),
-                )
-                .await?;
-                attach_post(&mut tx, version, &gallery).await?;
+                Some(ContentShape::MintPost)
             }
         }
-        (Family::Publish, false) => {
+        (ContentFamily::Post, false) => {
             let post = content_store::post_by_node(pool, &target)
                 .await?
                 .ok_or_else(|| ContentError::Internal("edited post has no display row".into()))?;
-            if !content_store::land_post_version(&mut tx, post.id, created_at, order).await? {
-                let version = content_store::insert_post_version(
-                    &mut tx,
-                    post.id,
-                    clear_to_null(&content.title),
-                    clear_to_null(&content.description),
-                    content.body.as_deref().unwrap_or_default(),
-                    content.sensitive.as_ref(),
-                    Some(order),
-                    created_at,
-                )
-                .await?;
-                attach_post(&mut tx, version, &gallery).await?;
+            if content_store::land_post_version(&mut tx, post.id, created_at, order).await? {
+                None
+            } else {
+                Some(ContentShape::EditPost(post.id))
             }
         }
-        (Family::Review, true) => {
+        (ContentFamily::Comment, true) => {
             if content_store::land_comment(&mut tx, content.node, order).await? {
                 content_store::land_comment_version(&mut tx, content.node, created_at, order)
                     .await?;
+                None
             } else {
-                let (target_id, target_type) = comment_parent(pool, body).await?;
-                let version = content_store::insert_comment(
-                    &mut tx,
-                    content.node,
-                    target_id,
-                    target_type,
-                    write.actor_id,
-                    &target,
-                    record_license(body)?,
-                    Some(order),
-                    created_at,
-                    content.body.as_deref().unwrap_or_default(),
-                    content.sensitive.as_ref(),
-                )
-                .await?;
-                attach_comment(&mut tx, version, &gallery).await?;
+                Some(ContentShape::MintComment)
             }
         }
-        (Family::Review, false) => {
+        (ContentFamily::Comment, false) => {
             let comment = content_store::comment_by_node(pool, &target)
                 .await?
                 .ok_or_else(|| {
                     ContentError::Internal("edited comment has no display row".into())
                 })?;
-            if !content_store::land_comment_version(&mut tx, comment.id, created_at, order).await? {
-                let version = content_store::insert_comment_version(
-                    &mut tx,
-                    comment.id,
-                    content.body.as_deref().unwrap_or_default(),
-                    content.sensitive.as_ref(),
-                    Some(order),
-                    created_at,
-                )
-                .await?;
-                attach_comment(&mut tx, version, &gallery).await?;
+            if content_store::land_comment_version(&mut tx, comment.id, created_at, order).await? {
+                None
+            } else {
+                Some(ContentShape::EditComment(comment.id))
             }
         }
-        _ => unreachable!("filtered to content families above"),
+    };
+    if let Some(shape) = shape {
+        write_display_rows(
+            &mut tx,
+            pool,
+            shape,
+            &DisplayWrite {
+                actor_id: write.actor_id,
+                target: &target,
+                order: Some(order),
+                created_at,
+                content: &content,
+                gallery: &gallery,
+                body,
+            },
+        )
+        .await?;
     }
     tx.commit()
         .await
