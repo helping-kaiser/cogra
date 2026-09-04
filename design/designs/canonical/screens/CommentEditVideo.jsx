@@ -69,7 +69,7 @@ export function Screen() {
               </span>
             }
           />
-          <FactRow label="Sensitive" value="Not marked" action={<Button variant="text" size="sm">Mark</Button>} last />
+          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
         </div>
 
         <div style={{ flex: 1 }} />
