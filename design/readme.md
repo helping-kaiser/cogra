@@ -2380,6 +2380,20 @@ a master, and every master is one component with variants as props
   rulings, every render hunk attributed or the lane stops. Three
   seal boards, both crops and the final batch came out
   byte-identical; the visible deltas are exactly the ruled ones.
+- **A post's body is words XOR media, and the card says so.** The
+  fixtures had been drawing an impossible post — a picture with a
+  body paragraph AND a description under it. `PostCard` now encodes
+  the law: a media post carries no `content` (handed both, it draws
+  the media and drops the words), and both kinds order **title ·
+  body · description**, the caption last, with the 4px seam between
+  the two fields. The description clamps to **two lines** in the
+  feed; a text body clamps at **22** — floor(358px × 5/4 ÷ 20px),
+  the height a 4:5 picture takes at the card's own content width, so
+  a feed of both kinds keeps one rhythm. The detail view clamps
+  nothing. Every fixture with a picture now carries its words as the
+  description, the stream's caption takes the description too, and
+  the caption paragraph took its own role's leading — unclassed text
+  had been inheriting body-large's.
 - **Held for rulings** (each parked in the backlog with its
   question): ChipMini's tone, the reply seal's staged-reference
   placement, the Mark drawings, the wizard footer's shape, the

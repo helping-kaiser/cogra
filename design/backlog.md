@@ -451,6 +451,18 @@ Two follow-ups the round surfaces, still open:
   `SealFooter` deliberately owns no padding — a footer master would
   install a competing answer); the comments-sheet shell (verbatim
   between `ReplyMedia` and the thread sheet — factor or leave).
+- **Two questions the body-XOR pass left open (2026-09-04)**, both
+  drawing-level: (a) a media post's DETAIL view now shows only its
+  description, at body-medium on `text-secondary` where a body-large
+  paragraph used to stand — the smallest reading of the ruling, but
+  the post page's only words are now set as a caption (`PostDetail`,
+  `PostDetailVideo`, `ComposeLanded`, `RemoveConfirm`, `RemoveMenu`);
+  (b) the text body's 22-line clamp comes from the ruled formula
+  floor(358 × 5/4 ÷ 20), i.e. an UNCAPPED 4:5 picture, while
+  `--media-max-height` caps the real picture at 376px on the 390×844
+  board — so a body at the ceiling stands ~64px taller than the media
+  post it is meant to match. Re-derive against the cap, or keep the
+  formula as the intent.
 - **Conformance-round leftovers, no ruling needed, just work**:
   `PendingMarker` and `StanceValue` are unused across the canvas
   since the chronicle fold (prune from the prelude destructure or
