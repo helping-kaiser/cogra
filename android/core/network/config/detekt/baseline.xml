@@ -10,7 +10,6 @@
     <ID>MatchingDeclarationName:ChunkedUpload.kt:PartUploader</ID>
     <ID>MatchingDeclarationName:Mapping.kt:GraphQlFaultException : Exception</ID>
     <ID>MatchingDeclarationName:References.kt:ReferenceRepositoryImpl : ReferenceRepository</ID>
-    <ID>MatchingDeclarationName:StanceStandIn.kt:StanceStandInRepository : StanceRepository</ID>
     <ID>MatchingDeclarationName:Topics.kt:TopicRepositoryImpl : TopicRepository</ID>
     <ID>TooManyFunctions:Mapping.kt:com.cogra.network.Mapping.kt</ID>
     <ID>TooManyFunctions:NetworkModule.kt:NetworkBindsModule</ID>

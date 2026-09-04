@@ -151,4 +151,17 @@
 
     <!-- The comment an edit was opened on has since gone. -->
     <string name="content_comment_gone">That comment is no longer there.</string>
+
+    <!-- Screen-reader labels. `contentDescription` is what TalkBack
+         announces, so an unlocalized literal here has no visual text to
+         fall back on; the counted ones take a positional argument
+         rather than hardcoding English word order. -->
+    <string name="content_license_locked">The license never changes</string>
+    <string name="content_reply_clip">The video on this reply</string>
+    <string name="content_refused_file">A refused file</string>
+    <string name="content_picture_at">Picture %1$d</string>
+    <string name="content_frame_picture_at">Frame picture %1$d</string>
+    <string name="content_draft_first_picture">The draft\'s first picture</string>
+    <string name="content_clip_length">Length %1$s</string>
+    <string name="content_stance_on_post">Where you stand on this post</string>
 </resources>

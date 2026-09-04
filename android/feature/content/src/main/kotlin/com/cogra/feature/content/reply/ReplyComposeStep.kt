@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.atom.CograTextField
@@ -32,6 +33,7 @@ import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.MediaThumb
 import com.cogra.core.designsystem.v2.media.ThumbBadge
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.feature.content.R
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.CoverChoice
@@ -207,7 +209,7 @@ private fun ReplyClip(
         // its two halves — and a part being retried behind the scenes
         // reads as a pause rather than as a failure.
         progress = clip.upload.percentOrNull?.let { it / 100f },
-        contentDescription = "The video on this reply",
+        contentDescription = stringResource(R.string.content_reply_clip),
         testTag = "reply_clip",
     )
     // The fault's words and both ways out, beside the row rather than
@@ -264,7 +266,7 @@ private fun RefusedFiles(refused: List<RefusedPick>, onDismiss: (Int) -> Unit) {
                 MediaThumb(
                     item = MediaItem(file.uri, 1f),
                     badge = ThumbBadge.Failed,
-                    contentDescription = "A refused file",
+                    contentDescription = stringResource(R.string.content_refused_file),
                     testTag = "reply_refused_thumb_$index",
                 )
                 UploadErrorLine(

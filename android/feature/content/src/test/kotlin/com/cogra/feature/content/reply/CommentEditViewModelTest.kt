@@ -98,12 +98,12 @@ class CommentEditViewModelTest {
         var outcome: Outcome<List<PreparedWriteView>>? = null
 
         override suspend fun prepareTag(
-            artifact: String,
+            target: String,
             name: String,
             pDirected: Double?,
             pInterest: Double?,
         ): Outcome<List<PreparedWriteView>> {
-            staged += Triple(artifact, name, pDirected)
+            staged += Triple(target, name, pDirected)
             return outcome ?: Outcome.Success(listOf(sealer.stage(Family.REGISTRATION)))
         }
     }

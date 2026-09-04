@@ -77,8 +77,8 @@
         <error line="489" column="5" source="standard:spacing-between-declarations-with-comments" />
     </file>
     <file name="src/main/kotlin/com/cogra/feature/content/wizard/BodyStep.kt">
-        <error line="234" column="1" source="standard:kdoc" />
-        <error line="240" column="1" source="standard:spacing-between-declarations-with-comments" />
+        <error line="236" column="1" source="standard:kdoc" />
+        <error line="242" column="1" source="standard:spacing-between-declarations-with-comments" />
     </file>
     <file name="src/main/kotlin/com/cogra/feature/content/wizard/ComposeWizardState.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -91,7 +91,7 @@
         <error line="973" column="1" source="standard:no-consecutive-blank-lines" />
     </file>
     <file name="src/main/kotlin/com/cogra/feature/content/wizard/CoverStep.kt">
-        <error line="139" column="1" source="standard:no-consecutive-blank-lines" />
+        <error line="143" column="1" source="standard:no-consecutive-blank-lines" />
     </file>
     <file name="src/main/kotlin/com/cogra/feature/content/wizard/SealStep.kt">
         <error line="3" column="1" source="standard:import-ordering" />

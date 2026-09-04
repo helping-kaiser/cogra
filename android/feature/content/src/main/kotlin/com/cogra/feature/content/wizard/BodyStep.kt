@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -49,6 +50,7 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
+import com.cogra.feature.content.R
 
 /**
  * `ComposeWords` — the words half of the body.
@@ -223,7 +225,7 @@ private fun PickedTray(
                         // they made rather than the original.
                         state.crops[asset.uri].toFraming(),
                     ),
-                    contentDescription = "Picture ${index + 1}",
+                    contentDescription = stringResource(R.string.content_picture_at, index + 1),
                     testTag = "wizard_tray_$index",
                 )
             }
@@ -263,7 +265,7 @@ private fun RefusedFiles(refused: List<RefusedPick>, onDismiss: (Int) -> Unit) {
                 MediaThumb(
                     item = MediaItem(file.uri, 1f),
                     badge = ThumbBadge.Failed,
-                    contentDescription = "A refused file",
+                    contentDescription = stringResource(R.string.content_refused_file),
                     testTag = "wizard_refused_thumb_$index",
                 )
                 UploadErrorLine(
@@ -354,7 +356,7 @@ internal fun DraftOffer(
                 MediaThumb(
                     item = MediaItem(asset.uri, 1f, asset.altText.ifBlank { null }),
                     size = 40.dp,
-                    contentDescription = "The draft's first picture",
+                    contentDescription = stringResource(R.string.content_draft_first_picture),
                 )
             }
             Column(Modifier.weight(1f)) {

@@ -124,4 +124,11 @@
          because nothing here should be learned by accident. -->
     <string name="stance_explain">What this is</string>
     <string name="stance_explain_body">Drag to say two things at once: how you stand on it, and how much you want it in your world. Nothing is signed until you press Set — letting go just leaves your pick where you put it.</string>
+
+    <!-- Screen-reader labels for the cover row. `contentDescription` is
+         what TalkBack announces, so an unlocalized literal here has no
+         visual text to fall back on. -->
+    <string name="designsystem_cover_frame">Frame %1$d</string>
+    <string name="designsystem_cover_own">Your own cover picture</string>
+    <string name="designsystem_cover_own_action">A cover picture of your own</string>
 </resources>

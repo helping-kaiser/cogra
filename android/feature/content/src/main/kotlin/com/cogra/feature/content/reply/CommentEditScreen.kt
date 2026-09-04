@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
@@ -56,6 +57,7 @@ import com.cogra.core.designsystem.v2.compose.DescribeSheet
 import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceEntry
 import com.cogra.feature.content.TopicEntry
@@ -407,7 +409,7 @@ private fun LockedLicenseRow() {
             )
             Icon(
                 imageVector = Icons.Filled.Lock,
-                contentDescription = "The license never changes",
+                contentDescription = stringResource(R.string.content_license_locked),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(16.dp),
             )
