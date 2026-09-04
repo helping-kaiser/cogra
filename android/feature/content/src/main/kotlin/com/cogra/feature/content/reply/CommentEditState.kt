@@ -7,8 +7,13 @@ import com.cogra.domain.repo.ContentRepository
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.wizard.AssetUpload
+import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.PickedAsset
 import com.cogra.feature.content.wizard.inFlight
+import com.cogra.feature.content.wizard.pickedPictures
+import com.cogra.feature.content.wizard.withAltText
+import com.cogra.feature.content.wizard.withSourceRatio
+import com.cogra.feature.content.wizard.withUpload
 
 /**
  * `CommentEdit` — the post's one-screen-one-batch at comment scale.
@@ -129,18 +134,7 @@ data class CommentEditState(
 }
 
 /** The picks as the components see them — whole frames, never cropped. */
-fun CommentEditState.pickedPictures(): List<PickedPicture> = picked.map { asset ->
-    PickedPicture(
-        item = MediaItem(
-            asset.uri,
-            asset.sourceRatio ?: 1f,
-            asset.altText.ifBlank { null },
-        ),
-        described = asset.altText.isNotBlank(),
-        uploading = asset.upload.inFlight,
-        failed = asset.upload is AssetUpload.Failed,
-    )
-}
+fun CommentEditState.pickedPictures(): List<PickedPicture> = picked.pickedPictures()
 
 // ---------------------------------------------------------------------
 // Transitions.
@@ -158,13 +152,13 @@ fun CommentEditState.removePick(uri: String): CommentEditState = copy(
 )
 
 fun CommentEditState.withUpload(uri: String, upload: AssetUpload): CommentEditState =
-    copy(picked = picked.map { if (it.uri == uri) it.copy(upload = upload) else it })
+    copy(picked = picked.withUpload(uri, upload))
 
 fun CommentEditState.withSourceRatio(uri: String, ratio: Float): CommentEditState =
-    copy(picked = picked.map { if (it.uri == uri) it.copy(sourceRatio = ratio) else it })
+    copy(picked = picked.withSourceRatio(uri, ratio))
 
 fun CommentEditState.withAltText(uri: String, text: String): CommentEditState =
-    copy(picked = picked.map { if (it.uri == uri) it.copy(altText = text) else it })
+    copy(picked = picked.withAltText(uri, text))
 
 /** Drops every drawer without leaving the screen. */
 fun CommentEditState.closedSheets(): CommentEditState =

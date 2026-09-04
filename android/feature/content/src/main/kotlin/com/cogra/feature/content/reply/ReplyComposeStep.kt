@@ -33,9 +33,11 @@ import com.cogra.core.designsystem.v2.media.MediaThumb
 import com.cogra.core.designsystem.v2.media.ThumbBadge
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.feature.content.wizard.AssetUpload
+import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.CoverChoice
 import com.cogra.feature.content.wizard.inFlight
 import com.cogra.feature.content.wizard.percentOrNull
+import com.cogra.feature.content.wizard.text
 import com.cogra.feature.content.wizard.PickedAsset
 import com.cogra.feature.content.wizard.RefusedPick
 import com.cogra.feature.content.wizard.formatDuration
@@ -184,7 +186,7 @@ private fun ReplyClip(
     // every other transport fault does. The tile then loses its × —
     // Remove it lives in the error line, and the two removals must never
     // sit two pixels apart meaning the same thing.
-    val failure = (clip.upload as? AssetUpload.Failed)?.message
+    val failure = (clip.upload as? AssetUpload.Failed)?.text()
     MediaThumb(
         item = MediaItem(clip.uri, clip.sourceRatio ?: 1f, clip.altText.ifBlank { null }),
         width = if (failure != null) CLIP_FRAME_FAILED else CLIP_FRAME,
@@ -266,7 +268,7 @@ private fun RefusedFiles(refused: List<RefusedPick>, onDismiss: (Int) -> Unit) {
                     testTag = "reply_refused_thumb_$index",
                 )
                 UploadErrorLine(
-                    message = file.message,
+                    message = file.reason.text(),
                     onRemove = { onDismiss(index) },
                     modifier = Modifier.weight(1f),
                     testTag = "reply_refused_$index",

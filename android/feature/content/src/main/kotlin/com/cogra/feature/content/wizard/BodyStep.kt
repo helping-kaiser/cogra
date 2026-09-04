@@ -267,7 +267,7 @@ private fun RefusedFiles(refused: List<RefusedPick>, onDismiss: (Int) -> Unit) {
                     testTag = "wizard_refused_thumb_$index",
                 )
                 UploadErrorLine(
-                    message = file.message,
+                    message = file.reason.text(),
                     onRemove = { onDismiss(index) },
                     modifier = Modifier.weight(1f),
                     testTag = "wizard_refused_$index",
