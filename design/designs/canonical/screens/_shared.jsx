@@ -94,6 +94,7 @@ const {
   SectionLabel,
   StanceRow,
   TabBar,
+  ContentRow,
 } = components;
 
 /* A standing of one gentle record — the vouch-back default made a bundle. */
