@@ -96,6 +96,75 @@ async fn health_reports_a_failed_cursor_read_as_null(pool: PgPool) {
     assert!(health["mirrorEpoch"].is_null());
 }
 
+/// The GraphQL route is body-bounded like every other write route: a
+/// request over the ceiling is cut at the connection rather than read
+/// into memory. `MultipartOptions` bounds only the file part of a
+/// multipart request, and `DefaultBodyLimit` cannot reach a handler that
+/// consumes the body stream itself, so the bound has to wrap the body.
+/// The caps are shrunk here so the oversized body is kilobytes rather
+/// than the two hundred megabytes the deployed ceiling would need.
+///
+/// Both ways a body arrives are covered: a declared `Content-Length` is
+/// refused by the layer before a byte is read, and an undeclared one is
+/// cut mid-stream and still named as the ceiling rather than as an
+/// internal fault.
+///
+/// A GraphQL request past the route's body ceiling is refused at the transport, whatever its content type.
+/// ´claim:server:the-graphql-body-is-bounded´
+#[sqlx::test(migrations = "../../migrations")]
+async fn graphql_refuses_a_body_past_the_route_limit(pool: PgPool) {
+    let (mut ctx, auth) = rig::api_context(
+        pool,
+        Arc::new(api::mailer::DevMailer::new(None)),
+        api::ratelimit::RateLimitConfig::unlimited(),
+    );
+    ctx.media.max_upload_bytes = 1024;
+    ctx.media.max_video_upload_bytes = 1024;
+    ctx.media.upload_part_size_bytes = 1024;
+    let uploads = rig::upload_routing(&ctx);
+    let app = api::app(
+        api::schema::build(ctx),
+        auth,
+        axum_client_ip::ClientIpSource::ConnectInfo,
+        uploads,
+    )
+    .layer(axum::Extension(axum::extract::ConnectInfo(
+        std::net::SocketAddr::from(([127, 0, 0, 1], 9999)),
+    )));
+
+    let padding = "x".repeat(8 * 1024);
+    let body = serde_json::json!({ "query": format!("{{ __typename }}#{padding}") }).to_string();
+
+    let declared = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/graphql")
+                .header("content-type", "application/json")
+                .header("content-length", body.len())
+                .body(Body::from(body.clone()))
+                .expect("request"),
+        )
+        .await
+        .expect("response");
+    assert_eq!(declared.status(), StatusCode::PAYLOAD_TOO_LARGE);
+
+    let streamed = app
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/graphql")
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .expect("request"),
+        )
+        .await
+        .expect("response");
+    assert_eq!(streamed.status(), StatusCode::PAYLOAD_TOO_LARGE);
+    assert_eq!(body_json(streamed).await["code"], "PAYLOAD_TOO_LARGE");
+}
+
 /// Executes one anonymous GraphQL query and returns the `data` object.
 async fn gql(app: axum::Router, query: String) -> serde_json::Value {
     let body = serde_json::json!({ "query": query }).to_string();

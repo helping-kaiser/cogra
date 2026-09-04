@@ -19,7 +19,7 @@ use common::l1::census::Family;
 use common::l1::fold::BundleSum;
 use common::l1::identifier::NodeId;
 use postgres_store::stance::BundleView;
-use postgres_store::{PgPool, auth as store, stance as stance_store};
+use postgres_store::{PgPool, stance as stance_store};
 use uuid::Uuid;
 
 use crate::l1::L1Boundary;
@@ -177,10 +177,9 @@ async fn read_bundle(
 }
 
 async fn author_address(pool: &PgPool, viewer: Uuid) -> Result<String, StanceError> {
-    store::actor_identity(pool, viewer)
-        .await?
-        .and_then(|identity| identity.l0_address)
-        .ok_or_else(|| StanceError::Internal("viewer without an attached address".into()))
+    crate::nodes::required_address(pool, viewer)
+        .await
+        .map_err(|e| StanceError::Internal(e.to_string()))
 }
 
 /// Prepares one stance record carrying exactly the picked values.
@@ -235,6 +234,7 @@ pub async fn prepare_severance<B: L1Boundary>(
             message: "the bundle toward this target already nets to (0, 0)".into(),
         });
     }
+    prepare::check_batch_solvency(boundary, &author, batch.len()).await?;
     let mut prepared = Vec::with_capacity(batch.len());
     for (p_d, p_i) in batch {
         prepared.push(

@@ -626,6 +626,27 @@ pub async fn insert_act_payload(
     Ok(())
 }
 
+/// Which of `act_ids` carry a payload the controller has reduced
+/// (layers.md §5), in one round trip.
+///
+/// Batched rather than per-act because the field is resolved once per
+/// record on a chronicle page, and an act with no payload row at all is
+/// simply absent — the reader's answer for both absences is the same:
+/// nothing has been removed.
+pub async fn reduced_payload_acts(
+    pool: &PgPool,
+    act_ids: &[String],
+) -> Result<Vec<String>, ContentError> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT act_id AS "act_id!"
+           FROM act_payloads
+           WHERE act_id = ANY($1) AND payload_state = 'reduced'"#,
+        act_ids,
+    )
+    .fetch_all(pool)
+    .await?)
+}
+
 /// The landing coordinates of a row, all-present or all-absent (the
 /// table's own CHECK); a mixed row is impossible and reads as pending.
 fn landing_order(
@@ -1515,6 +1536,36 @@ pub async fn count_comments_for_target(
         include_pending,
     )
     .fetch_one(pool)
+    .await?)
+}
+
+/// A content id with the class that answers for it and the node it
+/// minted.
+#[derive(Debug, Clone)]
+pub struct ContentRef {
+    pub id: Uuid,
+    /// `"post"` or `"comment"` — the entity table the row came from.
+    pub kind: String,
+    pub l1_node_id: String,
+}
+
+/// The class and minted node of every content id among `ids`, in one
+/// round trip — the batched dispatch behind `node`/`nodes`. An id that
+/// names no content is simply absent.
+///
+/// The entity tables are the registry, pending rows included; the two
+/// arms are disjoint, so a UUID appears at most once.
+pub async fn content_refs(pool: &PgPool, ids: &[Uuid]) -> Result<Vec<ContentRef>, ContentError> {
+    Ok(sqlx::query_as!(
+        ContentRef,
+        r#"SELECT id AS "id!", 'post' AS "kind!", l1_node_id AS "l1_node_id!"
+           FROM posts WHERE id = ANY($1)
+           UNION ALL
+           SELECT id AS "id!", 'comment' AS "kind!", l1_node_id AS "l1_node_id!"
+           FROM comments WHERE id = ANY($1)"#,
+        ids,
+    )
+    .fetch_all(pool)
     .await?)
 }
 

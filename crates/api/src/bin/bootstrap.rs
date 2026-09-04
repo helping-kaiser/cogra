@@ -4,29 +4,9 @@
 //! safe: a half-failed run completes its missing half.
 
 use anyhow::Context;
-use api::bootstrap::{BootstrapOutcome, GenesisInput, run};
+use api::bootstrap::{BootstrapOutcome, GenesisInput, guidelines_hash, run};
+use api::env_or;
 use l1_standin::{StandIn, StandInConfig};
-use sha2::{Digest, Sha256};
-
-fn env_or(key: &str, default: &str) -> String {
-    std::env::var(key).unwrap_or_else(|_| default.to_string())
-}
-
-/// SHA-256 hex digest of the canonical version-1 platform-guidelines
-/// document, pinned into the Charter payload (network.md §3).
-fn guidelines_hash() -> String {
-    let path = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../docs/instances/platform-guidelines.md"
-    );
-    match std::fs::read(path) {
-        Ok(bytes) => format!("{:x}", Sha256::digest(&bytes)),
-        Err(e) => {
-            tracing::warn!(error = %e, "platform-guidelines.md unreadable; pinning a zero digest");
-            format!("{:x}", Sha256::digest(b""))
-        }
-    }
-}
 
 /// Runs the bootstrap and prints what an operator needs afterwards: the
 /// genesis identity, the login that reaches it, and the one-time recovery
@@ -62,7 +42,7 @@ async fn main() -> anyhow::Result<()> {
         handle: env_or("GENESIS_HANDLE", "genesis"),
         display_name: env_or("GENESIS_DISPLAY_NAME", "Genesis Moderator"),
         guidelines_version: "1".to_string(),
-        guidelines_hash: guidelines_hash(),
+        guidelines_hash: guidelines_hash()?,
         burn_per_account_micro: 100_000_000,
     };
     let handle = input.handle.clone();

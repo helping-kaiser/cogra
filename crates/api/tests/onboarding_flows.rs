@@ -614,7 +614,7 @@ async fn approval_guards_hold(pool: PgPool) {
         rig: &Rig,
         who: Uuid,
         id: Uuid,
-    ) -> Result<usize, Vec<(usize, OnboardingError)>> {
+    ) -> Result<usize, Vec<onboarding::ApprovalFault>> {
         onboarding::approve_applicants(
             &rig.pool,
             &rig.boundary,

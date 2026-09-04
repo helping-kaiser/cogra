@@ -60,6 +60,13 @@ struct SubmitArgs {
 /// The author's next unused sequence value is found by probing: the dev
 /// tool counts upward from 0 until seal accepts. Good enough for a hand
 /// tool.
+///
+/// Only an occupied author sequence is worth probing past. `Conflict`
+/// carries a free-text cause, so discarding it would spend sixty-five
+/// thousand signed round trips on a conflict that was never about the
+/// sequence and then report the wrong reason; the word matched below is
+/// the stand-in's own (`seal.rs`), and a wording change there degrades
+/// this to the loud branch, which is the safe direction.
 async fn submit(standin: &StandIn, actor: &ActorKey, args: SubmitArgs) -> anyhow::Result<()> {
     let host_key = standin.host_public_key().await?;
     for seq in 0..u16::MAX as u64 {
@@ -90,11 +97,16 @@ async fn submit(standin: &StandIn, actor: &ActorKey, args: SubmitArgs) -> anyhow
                 println!("approved: {act_id}");
                 return Ok(());
             }
-            Err(l1_standin::StandInError::Conflict(_)) => continue,
+            Err(l1_standin::StandInError::Conflict(cause)) if cause.contains("sequence") => {
+                continue;
+            }
+            Err(l1_standin::StandInError::Conflict(cause)) => {
+                bail!("seal conflicted for a reason other than an occupied sequence: {cause}")
+            }
             Err(e) => bail!("seal rejected: {e}"),
         }
     }
-    bail!("no free sequence value found")
+    bail!("no free sequence value found below {}", u16::MAX)
 }
 
 /// Dispatches one hand-test command. `.env` is read first, with the same

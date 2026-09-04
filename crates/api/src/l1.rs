@@ -3,12 +3,21 @@
 //! The single L1 interface boundary (architecture.md §5 "The seam is one
 //! boundary").
 //!
-//! All substrate access — relaying signed records over the two handshake
-//! legs, ingesting accepted records, reading the B_i export — flows
-//! through this trait, and nothing else in CoGra speaks to the substrate.
-//! Swapping the stand-in for the real Layer 1 is therefore one new
-//! implementation here and nothing else (roadmap.md "The stand-in and the
-//! swap").
+//! All substrate access on the request path — relaying signed records
+//! over the two handshake legs, ingesting accepted records, reading the
+//! B_i export and the published θ — flows through this trait, and nothing
+//! else on that path speaks to the substrate.
+//!
+//! The swap is this trait plus a named list beside it, not this trait
+//! alone. `l1_standin::DevSubstrate` collects the surfaces that are
+//! deliberately *not* the seam and that CoGra reaches for anyway:
+//! crediting a burn (a Layer-0 economy CoGra does not run), closing an
+//! epoch (a clock the real substrate keeps itself), and reading back a
+//! sealed act (a crash-recovery affordance for the bootstrap). Each needs
+//! its own answer at the swap — a real L0 rail, the substrate's own
+//! close, a resumable bootstrap — so "one new implementation here" is
+//! true of the request path and not of the whole system (roadmap.md "The
+//! stand-in and the swap").
 
 use std::future::Future;
 

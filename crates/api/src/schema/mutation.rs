@@ -1383,7 +1383,8 @@ impl Mutation {
                     .into_iter()
                     .map(|(i, e)| {
                         let mut err = UserError::from_onboarding(&e, "");
-                        let mut path = vec!["approvals".to_string(), i.to_string()];
+                        let mut path = vec!["approvals".to_string()];
+                        path.extend(i.map(|i| i.to_string()));
                         if let Some(inner) = err.field.take() {
                             path.extend(inner);
                         }
@@ -2138,7 +2139,19 @@ impl Mutation {
                 }
             };
 
-        let row = media::store_asset(pool, blobs.as_ref(), v.user_id, asset, cover).await?;
+        let row = match media::store_asset(pool, blobs.as_ref(), v.user_id, asset, cover).await {
+            Ok(row) => row,
+            Err(media::GalleryPlanError::BadInput(e)) => {
+                return Ok(UploadMediaPayload::refused(UserError::at(
+                    ErrorCode::BadInput,
+                    e.message,
+                    e.path,
+                )));
+            }
+            Err(media::GalleryPlanError::Internal(e)) => {
+                return Err(async_graphql::Error::new(e));
+            }
+        };
         Ok(UploadMediaPayload {
             media: Some(MediaAttachmentType::asset(row)),
             user_errors: vec![],

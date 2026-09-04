@@ -23,7 +23,7 @@
 use common::hashtag::{HashtagNameError, canonicalize};
 use common::l1::census::Family;
 use common::l1::identifier::{ActId, NodeId};
-use postgres_store::{PgPool, auth as store, content as content_store, topics as topics_store};
+use postgres_store::{PgPool, topics as topics_store};
 use uuid::Uuid;
 
 use crate::l1::L1Boundary;
@@ -313,31 +313,16 @@ pub async fn prepare_tag<B: L1Boundary>(
 /// classes with an API surface to tag are the content nodes this slice
 /// carries.
 async fn taggable_node(pool: &PgPool, target: Uuid) -> Result<NodeId, TopicsError> {
-    let node = match content_store::content_kind(pool, target)
+    crate::nodes::resolve_content_node(pool, target)
         .await
         .map_err(|e| TopicsError::Internal(e.to_string()))?
-    {
-        Some("post") => content_store::post(pool, target)
-            .await
-            .map_err(|e| TopicsError::Internal(e.to_string()))?
-            .map(|p| p.l1_node_id),
-        Some("comment") => content_store::comment(pool, target)
-            .await
-            .map_err(|e| TopicsError::Internal(e.to_string()))?
-            .map(|c| c.l1_node_id),
-        _ => None,
-    };
-    let node =
-        node.ok_or_else(|| TagError::at(vec!["target".to_string()], "no such taggable content"))?;
-    NodeId::parse(&node).map_err(|e| TopicsError::Internal(format!("stored node id: {e}")))
+        .ok_or_else(|| TagError::at(vec!["target".to_string()], "no such taggable content").into())
 }
 
 async fn author_address(pool: &PgPool, viewer: Uuid) -> Result<String, TopicsError> {
-    store::actor_identity(pool, viewer)
+    crate::nodes::required_address(pool, viewer)
         .await
-        .map_err(|e| TopicsError::Internal(e.to_string()))?
-        .and_then(|identity| identity.l0_address)
-        .ok_or_else(|| TopicsError::Internal("viewer without an attached address".into()))
+        .map_err(|e| TopicsError::Internal(e.to_string()))
 }
 
 #[cfg(test)]

@@ -121,15 +121,25 @@ pub async fn check_batch_solvency<B: L1Boundary>(
     }
     let theta = boundary.current_theta().await?;
     let balance = boundary.balance(author).await?;
-    let price = theta * acts as f64;
-    if balance.balance < price {
-        return Err(PrepareError::BatchWriteRule {
+    if affordable(balance.balance, theta, acts) {
+        Ok(())
+    } else {
+        Err(PrepareError::BatchWriteRule {
             balance: balance.balance,
             theta,
             acts,
-        });
+        })
     }
-    Ok(())
+}
+
+/// The write rule itself (architecture.md "Write eligibility"): a
+/// balance carries `acts` acts when it is at least their price.
+///
+/// One act is the same question with `acts = 1`, so the per-act
+/// pre-check and the batch pre-check cannot disagree about the
+/// boundary case — a balance exactly equal to the price writes.
+fn affordable(balance: f64, theta: f64, acts: usize) -> bool {
+    balance >= theta * acts as f64
 }
 
 /// Prepares one gesture: formation checks, the write-rule pre-check, seq
@@ -180,7 +190,7 @@ pub async fn prepare<B: L1Boundary>(
 
     let theta = boundary.current_theta().await?;
     let balance = boundary.balance(&gesture.author).await?;
-    if balance.balance < theta {
+    if !affordable(balance.balance, theta, 1) {
         return Err(PrepareError::WriteRule {
             balance: balance.balance,
             theta,
@@ -243,4 +253,34 @@ pub async fn prepare<B: L1Boundary>(
         proposal,
         gc_after_epochs,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::affordable;
+
+    /// A batch is priced as the sum of its acts, and a balance exactly equal to that price writes.
+    /// ´claim:prepare:a-batch-is-priced-as-the-sum-of-its-acts´
+    #[test]
+    fn a_batch_is_priced_as_the_sum_of_its_acts() {
+        assert!(affordable(0.25, 0.05, 5), "five acts at 0.05 cost 0.25");
+        assert!(affordable(0.05, 0.05, 1), "the boundary case writes");
+        assert!(
+            !affordable(0.2, 0.05, 5),
+            "four acts' worth cannot carry five"
+        );
+    }
+
+    /// One act priced as a batch is the same answer the per-act write rule gives.
+    /// ´claim:prepare:one-act-prices-like-the-per-act-rule´
+    #[test]
+    fn one_act_prices_like_the_per_act_rule() {
+        for (balance, theta) in [(1.0, 0.5), (0.5, 0.5), (0.49, 0.5), (0.0, 0.1)] {
+            assert_eq!(
+                affordable(balance, theta, 1),
+                balance >= theta,
+                "balance {balance} against theta {theta}"
+            );
+        }
+    }
 }

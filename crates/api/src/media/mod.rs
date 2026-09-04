@@ -46,18 +46,45 @@ use postgres_store::media as store;
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
+use crate::env_or;
+
 pub use blob::{BlobError, BlobStore, ObjectBlobStore, S3Config};
 
-/// The widest canvas a decode is allowed to open, per axis.
+/// The widest canvas the pipeline admits, per axis.
 ///
-/// This is a decompression-bomb bound, not a taste judgement: a
-/// compressed image declares its canvas and the decoder allocates the
-/// canvas, so a small file can ask for an enormous buffer. 4096 clears
-/// every crop the composer produces (4:5 is 3277 × 4096, 1.91:1 is
-/// 4096 × 2145) and every twelve-megapixel phone photo (4032 × 3024),
-/// and refuses the forty-eight-megapixel originals clients are supposed
-/// to downscale before they ever reach the wire.
+/// For a still this is a decompression-bomb bound: a compressed image
+/// declares its canvas and the decoder allocates the canvas, so a small
+/// file can ask for an enormous buffer. 4096 clears every crop the
+/// composer produces (4:5 is 3277 × 4096, 1.91:1 is 4096 × 2145) and
+/// every twelve-megapixel phone photo (4032 × 3024), and refuses the
+/// forty-eight-megapixel originals clients are supposed to downscale
+/// before they ever reach the wire.
+///
+/// A video is never decoded here, so the bound is not about allocation
+/// on this side — but the declared canvas is not inert either: it is
+/// what `aspectRatio` is derived from and what a client reserves layout
+/// with. A container declaring 65535 × 65535 would serve a plausible
+/// "1:1" for a canvas no reader can lay out. The same number bounds both
+/// because it is the same statement — the widest picture this pipeline
+/// carries — and it clears DCI 4K (4096 × 2160).
 pub const MAX_PIXEL_DIMENSION: u32 = 4096;
+
+/// What a probe learned about the stored bytes: the canvas, and the
+/// playing time where the format states one.
+///
+/// One type for both formats. They differ only in whether a duration is
+/// always present, which is what the `Option` says — two structurally
+/// identical types differing in that one field is a distinction the
+/// caller has to re-unify anyway.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Probe {
+    pub width: u32,
+    pub height: u32,
+    /// Milliseconds of playback. Video always states one — a fact about
+    /// the asset, never a limit on it: there is deliberately no duration
+    /// cap. A still states one only when it is animated.
+    pub duration_ms: Option<u64>,
+}
 
 /// What the byte pipeline can refuse, and why. Every variant is a
 /// field-level refusal on the uploaded file rather than a server fault:
@@ -144,10 +171,6 @@ const DEFAULT_UPLOAD_PART_SIZE_BYTES: usize = 8 * 1024 * 1024;
 /// clocks. S3's own guidance is to abort incomplete uploads on a
 /// lifecycle rule; this is that rule, run by the server that opened them.
 const DEFAULT_UPLOAD_SESSION_TTL_SECS: f64 = 86_400.0;
-
-fn env_or(var: &str, fallback: &str) -> String {
-    std::env::var(var).unwrap_or_else(|_| fallback.to_string())
-}
 
 fn env_parsed<T: std::str::FromStr>(var: &str, fallback: T) -> anyhow::Result<T>
 where
@@ -322,45 +345,66 @@ fn gcd(a: u32, b: u32) -> u32 {
 /// damaged the file refuses the upload instead of publishing something
 /// that will not play.
 pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaError> {
-    if webp::sniff(bytes) {
-        if bytes.len() > caps.still_bytes {
-            return Err(MediaError::TooLarge {
-                limit: caps.still_bytes,
+    let format = Format::of(bytes).ok_or(MediaError::Unsupported)?;
+    let limit = format.cap(caps);
+    if bytes.len() > limit {
+        return Err(MediaError::TooLarge { limit });
+    }
+    let stripped = (format.strip)(bytes)?;
+    let probe = (format.probe)(&stripped)?;
+    Ok(ProcessedAsset {
+        digest: Sha256::digest(&stripped).into(),
+        bytes: stripped,
+        width: probe.width,
+        height: probe.height,
+        mime: format.mime,
+        duration_ms: probe.duration_ms,
+    })
+}
+
+/// One stored format's half of the pipeline: the cap that bounds it, the
+/// strip that cleans it, the probe that proves it.
+///
+/// The two formats' passes were written out twice and differed only in
+/// which three of these they named, which is exactly the shape a table
+/// carries better than a branch: a third format is a row, not another
+/// copy of the sniff-cap-strip-probe-digest sequence.
+struct Format {
+    mime: &'static str,
+    still: bool,
+    strip: fn(&[u8]) -> Result<Vec<u8>, MediaError>,
+    probe: fn(&[u8]) -> Result<Probe, MediaError>,
+}
+
+impl Format {
+    /// The format the bytes are, decided by the bytes alone.
+    fn of(bytes: &[u8]) -> Option<Self> {
+        if webp::sniff(bytes) {
+            return Some(Self {
+                mime: webp::MIME,
+                still: true,
+                strip: webp::strip_metadata,
+                probe: webp::probe,
             });
         }
-        let stripped = webp::strip_metadata(bytes)?;
-        let probe = webp::probe(&stripped)?;
-        let digest: [u8; 32] = Sha256::digest(&stripped).into();
-        return Ok(ProcessedAsset {
-            bytes: stripped,
-            digest,
-            width: probe.width,
-            height: probe.height,
-            mime: webp::MIME,
-            duration_ms: probe.duration_ms,
-        });
-    }
-
-    if video::sniff(bytes) {
-        if bytes.len() > caps.video_bytes {
-            return Err(MediaError::TooLarge {
-                limit: caps.video_bytes,
+        if video::sniff(bytes) {
+            return Some(Self {
+                mime: video::MIME,
+                still: false,
+                strip: video::strip_metadata,
+                probe: video::probe,
             });
         }
-        let stripped = video::strip_metadata(bytes)?;
-        let probe = video::probe(&stripped)?;
-        let digest: [u8; 32] = Sha256::digest(&stripped).into();
-        return Ok(ProcessedAsset {
-            bytes: stripped,
-            digest,
-            width: probe.width,
-            height: probe.height,
-            mime: video::MIME,
-            duration_ms: Some(probe.duration_ms),
-        });
+        None
     }
 
-    Err(MediaError::Unsupported)
+    fn cap(&self, caps: UploadCaps) -> usize {
+        if self.still {
+            caps.still_bytes
+        } else {
+            caps.video_bytes
+        }
+    }
 }
 
 /// Assets one post's gallery may carry.
@@ -553,16 +597,42 @@ pub async fn plan_gallery(
     kind: GalleryKind,
     drafts: &[AttachmentDraft],
 ) -> Result<PlannedGallery, GalleryPlanError> {
-    if drafts.is_empty() {
+    let Some(entries) = gallery_entries(kind, drafts)? else {
         return Ok(PlannedGallery::default());
+    };
+    let ids: Vec<Uuid> = entries.iter().map(|(id, _)| *id).collect();
+    let rows = store::assets_by_ids(pool, &ids)
+        .await
+        .map_err(|e| GalleryPlanError::Internal(e.to_string()))?;
+    resolve_gallery(author, kind, &entries, &rows)
+}
+
+/// The half of gallery planning that reads only what the client sent:
+/// the bound, gallery order, the cover flag, the descriptions, and
+/// duplicate entries.
+///
+/// `None` for an empty gallery, which is not a refusal.
+///
+/// Split from the half that needs the asset rows so the rules are
+/// reachable from a unit test — the branch matrix is the thing worth
+/// testing here, and it needs no database once the rows are in hand.
+#[expect(
+    clippy::type_complexity,
+    reason = "the pair is the id and its authored description, kept together so the two lists cannot desynchronize"
+)]
+fn gallery_entries(
+    kind: GalleryKind,
+    drafts: &[AttachmentDraft],
+) -> Result<Option<Vec<(Uuid, Option<String>)>>, GalleryError> {
+    if drafts.is_empty() {
+        return Ok(None);
     }
     let bound = kind.bound();
     if drafts.len() > bound {
         return Err(GalleryError::at(
             vec!["attachments".to_string()],
             format!("at most {bound} attachments, got {}", drafts.len()),
-        )
-        .into());
+        ));
     }
 
     let mut ids: Vec<Uuid> = Vec::with_capacity(drafts.len());
@@ -575,8 +645,7 @@ pub async fn plan_gallery(
                     "attachments are in gallery order, so displayOrder here is {i}, not {}",
                     draft.display_order
                 ),
-            )
-            .into());
+            ));
         }
         if let Some(is_cover) = draft.is_cover
             && kind.has_cover()
@@ -585,8 +654,7 @@ pub async fn plan_gallery(
             return Err(GalleryError::at(
                 gallery_path(i, "isCover"),
                 "the first attachment is the cover",
-            )
-            .into());
+            ));
         }
         alts.push(
             checked_alt_text(draft.alt_text.as_deref())
@@ -596,57 +664,79 @@ pub async fn plan_gallery(
             return Err(GalleryError::at(
                 gallery_path(i, "mediaId"),
                 "this asset is already in the gallery",
-            )
-            .into());
+            ));
         }
         ids.push(draft.media_id);
     }
 
-    let rows = store::assets_by_ids(pool, &ids)
-        .await
-        .map_err(|e| GalleryPlanError::Internal(e.to_string()))?;
-    let mut manifest = Vec::with_capacity(ids.len());
-    for (i, id) in ids.iter().enumerate() {
-        let Some(asset) = rows.iter().find(|a| a.id == *id) else {
-            return Err(GalleryError::at(gallery_path(i, "mediaId"), "no such asset").into());
-        };
-        if asset.author_id != author {
-            return Err(GalleryError::at(
-                gallery_path(i, "mediaId"),
-                "an attachment must be an asset you uploaded",
-            )
-            .into());
-        }
-        if asset.redacted_at.is_some() {
-            return Err(GalleryError::at(
-                gallery_path(i, "mediaId"),
-                "this asset has been removed",
-            )
-            .into());
-        }
+    Ok(Some(ids.into_iter().zip(alts).collect()))
+}
+
+/// The half of gallery planning that reads the asset rows: the
+/// anti-hijack rule per entry, and the body's shape.
+fn resolve_gallery(
+    author: Uuid,
+    kind: GalleryKind,
+    entries: &[(Uuid, Option<String>)],
+    rows: &[store::MediaAttachment],
+) -> Result<PlannedGallery, GalleryPlanError> {
+    let mut manifest = Vec::with_capacity(entries.len());
+    for (i, (id, alt_text)) in entries.iter().enumerate() {
+        let path = gallery_path(i, "mediaId");
+        let asset = usable_asset(
+            rows.iter().find(|a| a.id == *id),
+            author,
+            &path,
+            "an attachment must be an asset you uploaded",
+        )?;
         if asset.mime_type == video::MIME {
-            if drafts.len() > 1 {
-                return Err(GalleryError::at(
-                    gallery_path(i, "mediaId"),
-                    "a body is pictures or one video, never both",
-                )
-                .into());
+            if entries.len() > 1 {
+                return Err(
+                    GalleryError::at(path, "a body is pictures or one video, never both").into(),
+                );
             }
             let cap = kind.video_bytes();
             if asset.size_bytes.is_some_and(|size| size > cap) {
                 return Err(GalleryError::at(
-                    gallery_path(i, "mediaId"),
+                    path,
                     format!("the video is larger than the {cap} bytes this carries"),
                 )
                 .into());
             }
         }
-        manifest.push(manifest_entry(asset, alts[i].clone())?);
+        manifest.push(manifest_entry(asset, alt_text.clone())?);
     }
     Ok(PlannedGallery {
-        attachment_ids: ids,
+        attachment_ids: entries.iter().map(|(id, _)| *id).collect(),
         manifest,
     })
+}
+
+/// The three rules every asset reference runs before it may be used: the
+/// asset is there, this author uploaded it, and it has not been removed.
+///
+/// Written once because it is the anti-hijack rule (data-model.md "Why
+/// parents point at attachments") and three surfaces — a gallery entry, a
+/// poster, a profile picture — each carried their own copy. Only the
+/// ownership sentence differs, because each names a different thing to
+/// the author.
+fn usable_asset<'a>(
+    asset: Option<&'a store::MediaAttachment>,
+    author: Uuid,
+    path: &[String],
+    not_yours: &str,
+) -> Result<&'a store::MediaAttachment, GalleryError> {
+    let asset = asset.ok_or_else(|| GalleryError::at(path.to_vec(), "no such asset"))?;
+    if asset.author_id != author {
+        return Err(GalleryError::at(path.to_vec(), not_yours));
+    }
+    if asset.redacted_at.is_some() {
+        return Err(GalleryError::at(
+            path.to_vec(),
+            "this asset has been removed",
+        ));
+    }
+    Ok(asset)
 }
 
 /// Checks the poster named on an upload, before any bytes are stored.
@@ -688,15 +778,12 @@ pub async fn plan_cover(
     let rows = store::assets_by_ids(pool, std::slice::from_ref(&id))
         .await
         .map_err(|e| GalleryPlanError::Internal(e.to_string()))?;
-    let Some(asset) = rows.first() else {
-        return Err(GalleryError::at(path, "no such asset").into());
-    };
-    if asset.author_id != author {
-        return Err(GalleryError::at(path, "a cover must be an asset you uploaded").into());
-    }
-    if asset.redacted_at.is_some() {
-        return Err(GalleryError::at(path, "this asset has been removed").into());
-    }
+    let asset = usable_asset(
+        rows.first(),
+        author,
+        &path,
+        "a cover must be an asset you uploaded",
+    )?;
     if asset.mime_type != webp::MIME {
         return Err(GalleryError::at(path, "a cover must be an image, not a video").into());
     }
@@ -772,17 +859,12 @@ pub async fn plan_profile_image(
     let rows = store::assets_by_ids(pool, std::slice::from_ref(&id))
         .await
         .map_err(|e| GalleryPlanError::Internal(e.to_string()))?;
-    let Some(asset) = rows.first() else {
-        return Err(GalleryError::at(path, "no such asset").into());
-    };
-    if asset.author_id != author {
-        return Err(
-            GalleryError::at(path, "a profile picture must be an asset you uploaded").into(),
-        );
-    }
-    if asset.redacted_at.is_some() {
-        return Err(GalleryError::at(path, "this asset has been removed").into());
-    }
+    let asset = usable_asset(
+        rows.first(),
+        author,
+        &path,
+        "a profile picture must be an asset you uploaded",
+    )?;
     Ok(Some(Some(manifest_entry(asset, None)?)))
 }
 
@@ -878,16 +960,22 @@ pub fn public_url(base_url: &str, storage_key: &str) -> String {
 /// sweeper, because the sweeper's window is a day and this is known now.
 /// Failing that delete is logged and no more: the row is correct, and an
 /// unreferenced object is exactly what the sweeper exists for.
+///
+/// The row is immutable once written, poster included, so a re-upload
+/// naming a *different* poster is refused on `coverMediaId` rather than
+/// handed back the first upload's row: silently discarding the poster
+/// the author just chose is the one outcome that leaves them with
+/// neither an error nor what they asked for.
 pub async fn store_asset(
     pool: &PgPool,
     blobs: &dyn BlobStore,
     author: Uuid,
     asset: ProcessedAsset,
     cover_media_id: Option<Uuid>,
-) -> anyhow::Result<store::MediaAttachment> {
+) -> Result<store::MediaAttachment, GalleryPlanError> {
     let id = Uuid::new_v4();
     let key = storage_key(id, asset.mime);
-    let size_bytes = i64::try_from(asset.bytes.len())?;
+    let size_bytes = i64::try_from(asset.bytes.len()).map_err(internal)?;
     let mut options = serde_json::json!({ "v": 1, "aspect_ratio": asset.aspect_ratio() });
     if let Some(duration_ms) = asset.duration_ms
         && let Some(map) = options.as_object_mut()
@@ -895,7 +983,10 @@ pub async fn store_asset(
         map.insert("duration_ms".into(), duration_ms.into());
     }
 
-    blobs.put(&key, asset.bytes, asset.mime).await?;
+    blobs
+        .put(&key, asset.bytes, asset.mime)
+        .await
+        .map_err(internal)?;
 
     let row = store::insert(
         pool,
@@ -909,14 +1000,26 @@ pub async fn store_asset(
         &options,
         cover_media_id,
     )
-    .await?;
+    .await
+    .map_err(internal)?;
 
-    if row.storage_key != key
-        && let Err(e) = blobs.delete(&key).await
-    {
+    let deduped = row.storage_key != key;
+    if deduped && let Err(e) = blobs.delete(&key).await {
         tracing::warn!(error = %e, key, "leaving a duplicate upload's object to the sweeper");
     }
+    if deduped && cover_media_id.is_some() && row.cover_media_id != cover_media_id {
+        return Err(GalleryPlanError::BadInput(GalleryError {
+            path: vec!["coverMediaId".into()],
+            message: "these bytes are already stored under a different poster; \
+                      an asset's poster is fixed when it is created"
+                .into(),
+        }));
+    }
     Ok(row)
+}
+
+fn internal(e: impl std::fmt::Display) -> GalleryPlanError {
+    GalleryPlanError::Internal(e.to_string())
 }
 
 /// How many orphaned assets one sweep tick collects — the bound
@@ -964,6 +1067,187 @@ pub async fn orphan_reaper_loop(
     }
 }
 
+/// The gallery-planning rules, unit-tested.
+///
+/// Both halves of `plan_gallery` are pure once the asset rows are in
+/// hand, and every branch worth pinning lives in one of them — so the
+/// matrix is tested directly here rather than through a server-and-
+/// database round trip, and the integration suites keep testing that the
+/// two halves are wired to a real store.
+#[cfg(test)]
+mod planning_tests {
+    use super::*;
+
+    fn asset(author: Uuid, mime: &str) -> store::MediaAttachment {
+        store::MediaAttachment {
+            id: Uuid::new_v4(),
+            author_id: author,
+            digest: vec![7u8; 32],
+            digest_algo: "sha256".into(),
+            storage_key: "k.webp".into(),
+            mime_type: mime.into(),
+            size_bytes: Some(1024),
+            options: serde_json::json!({}),
+            cover_media_id: None,
+            redaction_reason: None,
+            redacted_at: None,
+            created_at: chrono::Utc::now(),
+        }
+    }
+
+    fn draft(id: Uuid, order: i32) -> AttachmentDraft {
+        AttachmentDraft {
+            media_id: id,
+            display_order: order,
+            is_cover: None,
+            alt_text: None,
+        }
+    }
+
+    fn path_of(e: &GalleryPlanError) -> Vec<String> {
+        match e {
+            GalleryPlanError::BadInput(e) => e.path.clone(),
+            GalleryPlanError::Internal(e) => panic!("expected a field refusal, got {e}"),
+        }
+    }
+
+    /// An empty gallery is not a refusal; a gallery past the kind's
+    /// bound, out of order, carrying the same asset twice, or flagging
+    /// the wrong cover is refused against the field that carried it.
+    ///
+    /// The client-side gallery rules are each refused against the field that carried them.
+    /// ´claim:media:the-gallery-rules-name-their-field´
+    #[test]
+    fn the_gallery_rules_name_their_field() {
+        assert!(
+            gallery_entries(GalleryKind::Post, &[])
+                .expect("empty is not a refusal")
+                .is_none()
+        );
+
+        let over: Vec<AttachmentDraft> = (0..=GalleryKind::Post.bound())
+            .map(|i| draft(Uuid::new_v4(), i as i32))
+            .collect();
+        assert_eq!(
+            gallery_entries(GalleryKind::Post, &over)
+                .expect_err("over the bound")
+                .path,
+            vec!["attachments".to_string()]
+        );
+
+        let misordered = [draft(Uuid::new_v4(), 1)];
+        assert_eq!(
+            gallery_entries(GalleryKind::Post, &misordered)
+                .expect_err("out of gallery order")
+                .path,
+            gallery_path(0, "displayOrder")
+        );
+
+        let twice = Uuid::new_v4();
+        let duplicated = [draft(twice, 0), draft(twice, 1)];
+        assert_eq!(
+            gallery_entries(GalleryKind::Post, &duplicated)
+                .expect_err("the same asset twice")
+                .path,
+            gallery_path(1, "mediaId")
+        );
+
+        let mut wrong_cover = draft(Uuid::new_v4(), 0);
+        wrong_cover.is_cover = Some(false);
+        assert_eq!(
+            gallery_entries(GalleryKind::Post, &[wrong_cover])
+                .expect_err("the first attachment is the cover")
+                .path,
+            gallery_path(0, "isCover")
+        );
+    }
+
+    /// The anti-hijack rule and the body's shape, each against the entry
+    /// that broke them.
+    ///
+    /// An attachment must be an asset this author still holds, and a body is pictures or one video.
+    /// ´claim:media:an-attachment-is-the-authors-own-and-the-body-has-one-shape´
+    #[test]
+    fn an_attachment_is_the_authors_own_and_the_body_has_one_shape() {
+        let author = Uuid::new_v4();
+        let stranger = Uuid::new_v4();
+        let mine = asset(author, webp::MIME);
+        let entries = vec![(mine.id, None)];
+
+        assert!(
+            resolve_gallery(
+                author,
+                GalleryKind::Post,
+                &entries,
+                std::slice::from_ref(&mine)
+            )
+            .is_ok()
+        );
+        assert_eq!(
+            path_of(
+                &resolve_gallery(author, GalleryKind::Post, &entries, &[]).expect_err("absent")
+            ),
+            gallery_path(0, "mediaId")
+        );
+
+        let theirs = store::MediaAttachment {
+            author_id: stranger,
+            ..mine.clone()
+        };
+        assert_eq!(
+            path_of(
+                &resolve_gallery(author, GalleryKind::Post, &entries, &[theirs])
+                    .expect_err("someone else's asset")
+            ),
+            gallery_path(0, "mediaId")
+        );
+
+        let removed = store::MediaAttachment {
+            redacted_at: Some(chrono::Utc::now()),
+            ..mine.clone()
+        };
+        assert_eq!(
+            path_of(
+                &resolve_gallery(author, GalleryKind::Post, &entries, &[removed])
+                    .expect_err("a removed asset")
+            ),
+            gallery_path(0, "mediaId")
+        );
+
+        let video = asset(author, video::MIME);
+        let mixed = vec![(mine.id, None), (video.id, None)];
+        assert_eq!(
+            path_of(
+                &resolve_gallery(
+                    author,
+                    GalleryKind::Post,
+                    &mixed,
+                    &[mine.clone(), video.clone()],
+                )
+                .expect_err("pictures or one video, never both")
+            ),
+            gallery_path(1, "mediaId")
+        );
+
+        let oversized = store::MediaAttachment {
+            size_bytes: Some(GalleryKind::Comment.video_bytes() + 1),
+            ..video.clone()
+        };
+        assert_eq!(
+            path_of(
+                &resolve_gallery(
+                    author,
+                    GalleryKind::Comment,
+                    &[(video.id, None)],
+                    &[oversized],
+                )
+                .expect_err("past the parent's video cap")
+            ),
+            gallery_path(0, "mediaId")
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -983,16 +1267,7 @@ mod tests {
     /// A two-frame animation, built to the container specification's
     /// layout the way the webp module's own fixtures are.
     fn animated_two_frames() -> Vec<u8> {
-        fn chunk(fourcc: &[u8; 4], payload: &[u8]) -> Vec<u8> {
-            let mut out = Vec::new();
-            out.extend_from_slice(fourcc);
-            out.extend_from_slice(&(payload.len() as u32).to_le_bytes());
-            out.extend_from_slice(payload);
-            if payload.len() % 2 == 1 {
-                out.push(0);
-            }
-            out
-        }
+        use webp::{chunk, container};
         let mut vp8x = vec![0x02, 0, 0, 0];
         vp8x.extend_from_slice(&[0, 0, 0]);
         vp8x.extend_from_slice(&[0, 0, 0]);
@@ -1010,12 +1285,7 @@ mod tests {
             ));
             body.extend_from_slice(&chunk(b"ANMF", &frame));
         }
-        let mut out = Vec::new();
-        out.extend_from_slice(b"RIFF");
-        out.extend_from_slice(&((4 + body.len()) as u32).to_le_bytes());
-        out.extend_from_slice(b"WEBP");
-        out.extend_from_slice(&body);
-        out
+        container(&body)
     }
 
     /// An animated WebP is accepted and carries the duration its frames state, while a still carries none.

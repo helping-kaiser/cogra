@@ -342,6 +342,11 @@ pub async fn apply_with_invite(
         .ok_or_else(|| OnboardingError::Internal("application vanished after creation".into()))
 }
 
+/// A refusal from an approval batch, and where it belongs: an entry's
+/// index, or `None` when the batch as a whole is refused and no single
+/// entry is at fault.
+pub type ApprovalFault = (Option<usize>, OnboardingError);
+
 /// One approval: the application plus the stance values the inviter
 /// commits (pre-filled from the link, adjusted at will).
 #[derive(Debug, Clone)]
@@ -357,10 +362,12 @@ pub struct Approval {
 /// inviter's signature, never a server write (api-spec
 /// `approveApplicants`).
 ///
-/// Every entry is validated before any is executed, so the mutation
-/// refuses a bad batch wholesale rather than half-approving it. Failures
-/// after that pass are per-entry: the approvals that already executed
-/// stand, and their repair path is the applicant's own status poll.
+/// Every entry is validated before any is executed, and the whole batch
+/// is priced against the inviter's balance before any of it is staged
+/// (D19) — an inviter who cannot afford five vouches is refused five
+/// rather than discovering it on the third. Failures after that pass are
+/// per-entry: the approvals that already executed stand, and their repair
+/// path is the applicant's own status poll.
 pub async fn approve_applicants<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -368,17 +375,21 @@ pub async fn approve_applicants<B: L1Boundary>(
     cfg: &OnboardingConfig,
     inviter: Uuid,
     approvals: &[Approval],
-) -> Result<Vec<prepare::Prepared>, Vec<(usize, OnboardingError)>> {
+) -> Result<Vec<prepare::Prepared>, Vec<ApprovalFault>> {
     let mut errors = Vec::new();
     let mut applications = Vec::with_capacity(approvals.len());
     for (i, approval) in approvals.iter().enumerate() {
         match validate_approval(pool, inviter, approval).await {
             Ok(application) => applications.push(application),
-            Err(e) => errors.push((i, e)),
+            Err(e) => errors.push((Some(i), e)),
         }
     }
     if !errors.is_empty() {
         return Err(errors);
+    }
+
+    if let Err(e) = price_batch(pool, boundary, inviter, approvals.len()).await {
+        return Err(vec![(None, e)]);
     }
 
     let mut prepared = Vec::with_capacity(approvals.len());
@@ -396,7 +407,7 @@ pub async fn approve_applicants<B: L1Boundary>(
         {
             Ok(opinion) => prepared.push(opinion),
             Err(e) => {
-                errors.push((i, e));
+                errors.push((Some(i), e));
             }
         }
     }
@@ -519,13 +530,23 @@ async fn approve_one<B: L1Boundary>(
     Ok(opinion)
 }
 
+/// The inviter's own vouches, priced as one gesture (D19).
+async fn price_batch<B: L1Boundary>(
+    pool: &PgPool,
+    boundary: &B,
+    inviter: Uuid,
+    acts: usize,
+) -> Result<(), OnboardingError> {
+    let address = actor_address(pool, inviter).await?;
+    Ok(prepare::check_batch_solvency(boundary, &address, acts).await?)
+}
+
 /// The attached L0 address of an actor row; Internal when the actor is
 /// missing or keyless — callers only reach here past the attach proof.
 async fn actor_address(pool: &PgPool, actor_id: Uuid) -> Result<String, OnboardingError> {
-    store::actor_identity(pool, actor_id)
-        .await?
-        .and_then(|identity| identity.l0_address)
-        .ok_or_else(|| OnboardingError::Internal("actor without an attached address".into()))
+    crate::nodes::required_address(pool, actor_id)
+        .await
+        .map_err(|e| OnboardingError::Internal(e.to_string()))
 }
 
 /// The interim Registration payload until the Peer Content Envelope
@@ -605,7 +626,7 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
         .balance(&address)
         .await
         .map_err(|e| OnboardingError::Internal(e.to_string()))?;
-    if balance.burned_total == 0.0 {
+    if crate::bootstrap::never_burned(balance.burned_total) {
         funding
             .credit_burn(&address, cfg.admission_burn_micro)
             .await

@@ -31,8 +31,8 @@ use l1_standin::StandIn;
 use crate::auth::Viewer;
 use crate::l1::StandInBoundary;
 use crate::loaders::{
-    ActorByAddressLoader, CommentByNodeLoader, CommentGalleryLoader, MediaByIdLoader,
-    PostByNodeLoader, PostGalleryLoader,
+    ActorByAddressLoader, ActorByIdLoader, CommentByNodeLoader, CommentGalleryLoader,
+    MediaByIdLoader, PayloadStateLoader, PostByNodeLoader, PostGalleryLoader,
 };
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 
@@ -237,7 +237,8 @@ pub enum ErrorCode {
 /// — the list is empty exactly when the mutation succeeded.
 #[derive(SimpleObject, Debug, Clone)]
 pub struct UserError {
-    /// Human-readable description of the refusal.
+    /// Developer-facing description of the refusal, for logs and
+    /// debugging. Clients localize off `code`, never off this string.
     pub message: String,
     pub code: ErrorCode,
     /// Path into the nested input naming the offending field; null for a
@@ -528,15 +529,11 @@ impl Record {
     /// FULL until the payload controller removes; a reduced record
     /// keeps its structure and witness forever (layers.md §5).
     async fn payload_state(&self, ctx: &Context<'_>) -> async_graphql::Result<PayloadState> {
-        let pool = ctx.data::<PgPool>()?;
-        let reduced = sqlx::query_scalar!(
-            r#"SELECT payload_state = 'reduced' AS "reduced!"
-               FROM act_payloads WHERE act_id = $1"#,
-            self.0.record_id,
-        )
-        .fetch_optional(pool)
-        .await?
-        .unwrap_or(false);
+        let reduced = ctx
+            .data::<DataLoader<PayloadStateLoader>>()?
+            .load_one(self.0.record_id.clone())
+            .await?
+            .unwrap_or(false);
         Ok(if reduced {
             PayloadState::Reduced
         } else {
@@ -1332,11 +1329,7 @@ where
     G: async_graphql::OutputType,
 {
     use async_graphql::connection::query;
-    if first.is_some_and(|n| n > MAX_PAGE_SIZE) || last.is_some_and(|n| n > MAX_PAGE_SIZE) {
-        return Err(async_graphql::Error::new(format!(
-            "first/last may be at most {MAX_PAGE_SIZE}"
-        )));
-    }
+    validate_page_args(first, last, after.as_deref(), before.as_deref())?;
     let first = match (first, last) {
         (None, None) => Some(DEFAULT_PAGE_SIZE),
         (first, _) => first,
@@ -2198,20 +2191,22 @@ pub(super) fn gallery_cost(bound: usize, child_complexity: usize) -> usize {
     bound * child_complexity + 1
 }
 
-/// One profile picture by the direct foreign key the version row holds.
+/// One profile picture by the direct foreign key the version row holds,
+/// through the loader that already answers for assets by id.
 ///
-/// A direct read rather than a loader: a profile carries at most two
-/// pictures and a page carries few profiles, so there is no fan-out here
-/// of the shape a gallery has. A row the FK names but the store no longer
-/// holds reads null rather than failing the profile.
+/// A page is capped at `MAX_PAGE_SIZE` posts, every post resolves its
+/// author, and every author resolves an avatar — so a hundred distinct
+/// authors is a hundred asset reads, the same fan-out a gallery has one
+/// level in. A row the FK names but the store no longer holds reads null
+/// rather than failing the profile.
 async fn profile_image(
     ctx: &Context<'_>,
     id: Uuid,
 ) -> async_graphql::Result<Option<MediaAttachmentType>> {
-    let pool = ctx.data::<PgPool>()?;
-    Ok(postgres_store::media::by_id(pool, id)
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+    Ok(ctx
+        .data::<DataLoader<MediaByIdLoader>>()?
+        .load_one(id)
+        .await?
         .map(MediaAttachmentType::asset))
 }
 
@@ -2324,8 +2319,9 @@ async fn viewer_address(ctx: &Context<'_>) -> async_graphql::Result<Option<Strin
     let Some(Some(viewer)) = ctx.data_opt::<Option<Viewer>>() else {
         return Ok(None);
     };
-    let pool = ctx.data::<PgPool>()?;
-    Ok(store::actor_identity(pool, viewer.user_id)
+    Ok(ctx
+        .data::<DataLoader<ActorByIdLoader>>()?
+        .load_one(viewer.user_id)
         .await?
         .and_then(|identity| identity.l0_address))
 }
@@ -2343,7 +2339,9 @@ async fn topic_claims(
     include_pending: bool,
 ) -> async_graphql::Result<Vec<TopicClaim>> {
     let pool = ctx.data::<PgPool>()?;
-    let Some(author) = store::actor_identity(pool, author_id)
+    let Some(author) = ctx
+        .data::<DataLoader<ActorByIdLoader>>()?
+        .load_one(author_id)
         .await?
         .and_then(|identity| identity.l0_address)
     else {
@@ -2398,7 +2396,9 @@ async fn reference_claims(
     include_pending: bool,
 ) -> async_graphql::Result<Vec<ReferenceClaim>> {
     let pool = ctx.data::<PgPool>()?;
-    let Some(author) = store::actor_identity(pool, author_id)
+    let Some(author) = ctx
+        .data::<DataLoader<ActorByIdLoader>>()?
+        .load_one(author_id)
         .await?
         .and_then(|identity| identity.l0_address)
     else {
@@ -2513,8 +2513,9 @@ pub enum CommentTarget {
 }
 
 async fn author_user(ctx: &Context<'_>, author_id: Uuid) -> async_graphql::Result<Option<User>> {
-    let pool = ctx.data::<PgPool>()?;
-    Ok(store::actor_identity(pool, author_id)
+    Ok(ctx
+        .data::<DataLoader<ActorByIdLoader>>()?
+        .load_one(author_id)
         .await?
         .map(|identity| User {
             identity,
@@ -2677,12 +2678,19 @@ pub struct KeysetPage {
     pub limit: i64,
 }
 
-pub fn keyset_page(
+/// The page arguments every connection field accepts, checked once
+/// (api-spec.md "Pagination").
+///
+/// Both connection helpers used to check a subset of these, so the same
+/// input was refused differently depending on which field a client hit
+/// — and one of the two delegated the missing rules to the library,
+/// which answers in its own words.
+pub fn validate_page_args(
     first: Option<i32>,
-    after: Option<String>,
     last: Option<i32>,
-    before: Option<String>,
-) -> async_graphql::Result<KeysetPage> {
+    after: Option<&str>,
+    before: Option<&str>,
+) -> async_graphql::Result<()> {
     if first.is_some_and(|n| n > MAX_PAGE_SIZE) || last.is_some_and(|n| n > MAX_PAGE_SIZE) {
         return Err(async_graphql::Error::new(format!(
             "first/last may be at most {MAX_PAGE_SIZE}"
@@ -2696,6 +2704,16 @@ pub fn keyset_page(
             "paginate forward (first/after) or backward (last/before), not both",
         ));
     }
+    Ok(())
+}
+
+pub fn keyset_page(
+    first: Option<i32>,
+    after: Option<String>,
+    last: Option<i32>,
+    before: Option<String>,
+) -> async_graphql::Result<KeysetPage> {
+    validate_page_args(first, last, after.as_deref(), before.as_deref())?;
     let backward = last.is_some() || before.is_some();
     let cursor = match if backward { &before } else { &after } {
         Some(s) => Some(decode_landing_cursor(s)?),
@@ -2810,7 +2828,6 @@ where
 
 /// The shared comments/replies read: a target's direct children,
 /// newest-first in landing order.
-#[allow(clippy::too_many_arguments)]
 async fn comments_connection(
     ctx: &Context<'_>,
     target: Uuid,
@@ -3021,6 +3038,35 @@ impl MediaAttachmentType {
 
     async fn created_at(&self) -> DateTime<Utc> {
         self.asset.created_at
+    }
+}
+
+#[cfg(test)]
+mod page_tests {
+    use super::{MAX_PAGE_SIZE, validate_page_args};
+
+    /// The two connection helpers share this, so a client hitting an
+    /// offset list and a client hitting a keyset list are refused the
+    /// same input in the same words.
+    ///
+    /// The page arguments are refused by one rule: over the cap, negative, or mixing the two directions.
+    /// ´claim:pagination:one-rule-refuses-the-page-arguments´
+    #[test]
+    fn the_page_arguments_are_refused_by_one_rule() {
+        assert!(validate_page_args(Some(10), None, None, None).is_ok());
+        assert!(validate_page_args(None, Some(10), None, Some("c")).is_ok());
+        assert!(validate_page_args(None, None, None, None).is_ok());
+
+        assert!(validate_page_args(Some(MAX_PAGE_SIZE + 1), None, None, None).is_err());
+        assert!(validate_page_args(None, Some(MAX_PAGE_SIZE + 1), None, None).is_err());
+        assert!(validate_page_args(Some(-1), None, None, None).is_err());
+        assert!(validate_page_args(None, Some(-1), None, None).is_err());
+        assert!(
+            validate_page_args(Some(10), None, None, Some("c")).is_err(),
+            "first with before mixes the directions"
+        );
+        assert!(validate_page_args(Some(10), Some(10), None, None).is_err());
+        assert!(validate_page_args(None, Some(10), Some("c"), None).is_err());
     }
 }
 
