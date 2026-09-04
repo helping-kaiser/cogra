@@ -18,46 +18,42 @@ export function Screen() {
       </DetailColumn>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
 
-      <BottomSheet open ariaLabel="Comments" height="calc(100% - 72px)">
-        <SheetTitle>Comments</SheetTitle>
-        <ul style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 12, margin: 0, padding: "0 16px", listStyle: "none" }}>
-          <CommentCard
-            author={TOBIAS}
-            content="Eighteen seconds of the same headland, if the light comes through at all."
-            timestamp="1h"
-            media={[
-              {
-                kind: "video",
-                src: "comment-clip.mp4",
-                poster: "comment-camera.jpg",
-                ratio: "square",
-                fit: "cover",
-                alt: "A film camera panning across the headland at low light.",
-              },
-            ]}
-            bundle={mkBundle(0.1, 0.1)}
-            onReply={() => {}}
-            license={{ attribution: 0, provenance: 0 }}
-            menuItems={CITE_MENU}
-          />
-          <CommentCard
-            author={SOL}
-            content="Two from the stand by the sea wall, before the crowd came."
-            timestamp="30m"
-            media={[
-              { src: "gallery-market.jpg", ratio: "4 / 3", fit: "cover", alt: "Crates of strawberries on a market stand." },
-              { src: "gallery-honey.jpg", ratio: "1 / 1", fit: "cover", alt: "A jar of honey in low sun." },
-            ]}
-            edited
-            own
-            onEdit={() => {}}
-            onReply={() => {}}
-            license={{ attribution: 0, provenance: 0 }}
-            menuItems={CITE_MENU}
-          />
-        </ul>
-        <CommentComposerFoot />
-      </BottomSheet>
+      <CommentsSheet>
+        <CommentCard
+          author={TOBIAS}
+          content="Eighteen seconds of the same headland, if the light comes through at all."
+          timestamp="1h"
+          media={[
+            {
+              kind: "video",
+              src: "comment-clip.mp4",
+              poster: "comment-camera.jpg",
+              ratio: "square",
+              fit: "cover",
+              alt: "A film camera panning across the headland at low light.",
+            },
+          ]}
+          bundle={mkBundle(0.1, 0.1)}
+          onReply={() => {}}
+          license={{ attribution: 0, provenance: 0 }}
+          menuItems={CITE_MENU}
+        />
+        <CommentCard
+          author={SOL}
+          content="Two from the stand by the sea wall, before the crowd came."
+          timestamp="30m"
+          media={[
+            { src: "gallery-market.jpg", ratio: "4 / 3", fit: "cover", alt: "Crates of strawberries on a market stand." },
+            { src: "gallery-honey.jpg", ratio: "1 / 1", fit: "cover", alt: "A jar of honey in low sun." },
+          ]}
+          edited
+          own
+          onEdit={() => {}}
+          onReply={() => {}}
+          license={{ attribution: 0, provenance: 0 }}
+          menuItems={CITE_MENU}
+        />
+      </CommentsSheet>
     </>
   );
 }
