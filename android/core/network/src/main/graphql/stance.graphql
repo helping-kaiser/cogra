@@ -3,12 +3,23 @@
 # severance's own staging.
 #
 # `viewerStance` is a FIELD on each stance-able node, not a root read,
-# and the control holds an opaque target id — a post, a comment, or the
-# person whose Profile it points at. So one document asks every
-# stance-able root and the caller keeps whichever answered. The three
-# flags let a target whose class is already known ask only its own root:
-# a node never changes class, so the probe is a one-time cost per target
-# rather than one per drag-time projection.
+# and no interface gathers the three types that carry it. So the read
+# enters through the root that matches the target: one document per
+# root, each spreading the same fragment.
+#
+# THE SHAPE IS PRICED, NOT ASSUMED. One document asking all three roots
+# behind `@include` flags measures complexity 39 against the query
+# budget; each per-root document measures 16. The complexity visitor
+# does not discount a guarded arm — `@include(if: false)` walks the
+# same — so the single document paid 39 on every stance read, including
+# the ones that already knew which root to ask. A feed page draws one
+# control per card, which is what makes 39 against 16 worth three
+# documents.
+#
+# The control holds an opaque target id, so a target of unknown class
+# is probed post → comment → user, at most three of these documents
+# once. A node never changes class, so every read after the first asks
+# one root (StanceRepositoryImpl remembers the answer).
 
 fragment StanceBundleFields on StanceBundle {
   pDirected
@@ -19,34 +30,37 @@ fragment StanceBundleFields on StanceBundle {
   rawPDirected
   rawPInterest
   recordCount
+  # Either axis at zero — the contract's own reading of "carries
+  # nothing". Selected so both clients read the same field for it.
+  inert
   severed
   severanceCost
   projected {
     pDirected
     pInterest
+    inert
     severed
   }
 }
 
-query ViewerStance(
-  $target: UUID!
-  $pick: StancePickInput
-  $includePending: Boolean!
-  $asPost: Boolean!
-  $asComment: Boolean!
-  $asUser: Boolean!
-) {
-  post(id: $target) @include(if: $asPost) {
+query PostStance($id: UUID!, $pick: StancePickInput, $includePending: Boolean!) {
+  post(id: $id) {
     viewerStance(pick: $pick, includePending: $includePending) {
       ...StanceBundleFields
     }
   }
-  comment(id: $target) @include(if: $asComment) {
+}
+
+query CommentStance($id: UUID!, $pick: StancePickInput, $includePending: Boolean!) {
+  comment(id: $id) {
     viewerStance(pick: $pick, includePending: $includePending) {
       ...StanceBundleFields
     }
   }
-  user(id: $target) @include(if: $asUser) {
+}
+
+query ProfileStance($id: UUID!, $pick: StancePickInput, $includePending: Boolean!) {
+  user(id: $id) {
     viewerStance(pick: $pick, includePending: $includePending) {
       ...StanceBundleFields
     }
