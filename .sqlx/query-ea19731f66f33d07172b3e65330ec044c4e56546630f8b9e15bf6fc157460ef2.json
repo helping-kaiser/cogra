@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM auth_password_resets\n         WHERE expires_at < now() - make_interval(secs => $1)\n            OR used_at < now() - make_interval(secs => $1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Float8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ea19731f66f33d07172b3e65330ec044c4e56546630f8b9e15bf6fc157460ef2"
+}

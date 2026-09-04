@@ -1,0 +1,49 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH candidates AS (\n               SELECT l.target AS target,\n                      l.p_i    AS relevance,\n                      l.p_d    AS support,\n                      FALSE    AS pending\n               FROM mirror_record_legs l\n               JOIN mirror_records r ON r.record_id = l.record_id\n               WHERE l.leg = 't' AND l.family = 'reference'\n                 AND l.source = $1\n                 AND r.author = $2\n                 AND NOT r.payload_marked\n                 AND NOT l.census_unknown\n             UNION ALL\n               SELECT s.target, s.p_d, s.p_i, TRUE\n               FROM staged_writes s\n               WHERE $3\n                 AND s.family = 'reference'\n                 AND s.middle = $1\n                 AND s.author = $4\n                 AND octet_length(s.payload) = 0\n                 AND s.pre_signed_at IS NOT NULL\n                 AND s.state NOT IN ('landed', 'expired')\n           )\n           SELECT target                            AS \"target!\",\n                  SUM(relevance)::float8            AS \"relevance!\",\n                  SUM(support)::float8              AS \"support!\",\n                  COUNT(*)::bigint                  AS \"records!\",\n                  BOOL_OR(pending)                  AS \"pending!\"\n           FROM candidates\n           GROUP BY target\n           ORDER BY target",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "target!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "relevance!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 2,
+        "name": "support!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "records!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "pending!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Bool",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "2ba0ef687fd7b9163b2cf791f4993cca948ad6a3204d016870516b485dc5aa72"
+}

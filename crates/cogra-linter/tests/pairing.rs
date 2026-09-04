@@ -344,7 +344,7 @@ fn the_check_and_the_measurement_agree_over_a_fixture() {
 #[test]
 fn the_check_and_the_measurement_agree_over_this_corpus() {
     let reported = measured(ruled(), &root());
-    assert_eq!(reported.len(), 106, "the size `[profiles]` records");
+    assert_eq!(reported.len(), 108, "the size `[profiles]` records");
 
     let run = cogra_linter::check(ruled(), &root()).expect("the check runs over the corpus");
     assert_eq!(covered(&run), reported, "one pairing, one census");
