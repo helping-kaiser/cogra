@@ -50,16 +50,41 @@ use crate::env_or;
 
 pub use blob::{BlobError, BlobStore, ObjectBlobStore, S3Config};
 
-/// The widest canvas a decode is allowed to open, per axis.
+/// The widest canvas the pipeline admits, per axis.
 ///
-/// This is a decompression-bomb bound, not a taste judgement: a
-/// compressed image declares its canvas and the decoder allocates the
-/// canvas, so a small file can ask for an enormous buffer. 4096 clears
-/// every crop the composer produces (4:5 is 3277 × 4096, 1.91:1 is
-/// 4096 × 2145) and every twelve-megapixel phone photo (4032 × 3024),
-/// and refuses the forty-eight-megapixel originals clients are supposed
-/// to downscale before they ever reach the wire.
+/// For a still this is a decompression-bomb bound: a compressed image
+/// declares its canvas and the decoder allocates the canvas, so a small
+/// file can ask for an enormous buffer. 4096 clears every crop the
+/// composer produces (4:5 is 3277 × 4096, 1.91:1 is 4096 × 2145) and
+/// every twelve-megapixel phone photo (4032 × 3024), and refuses the
+/// forty-eight-megapixel originals clients are supposed to downscale
+/// before they ever reach the wire.
+///
+/// A video is never decoded here, so the bound is not about allocation
+/// on this side — but the declared canvas is not inert either: it is
+/// what `aspectRatio` is derived from and what a client reserves layout
+/// with. A container declaring 65535 × 65535 would serve a plausible
+/// "1:1" for a canvas no reader can lay out. The same number bounds both
+/// because it is the same statement — the widest picture this pipeline
+/// carries — and it clears DCI 4K (4096 × 2160).
 pub const MAX_PIXEL_DIMENSION: u32 = 4096;
+
+/// What a probe learned about the stored bytes: the canvas, and the
+/// playing time where the format states one.
+///
+/// One type for both formats. They differ only in whether a duration is
+/// always present, which is what the `Option` says — two structurally
+/// identical types differing in that one field is a distinction the
+/// caller has to re-unify anyway.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Probe {
+    pub width: u32,
+    pub height: u32,
+    /// Milliseconds of playback. Video always states one — a fact about
+    /// the asset, never a limit on it: there is deliberately no duration
+    /// cap. A still states one only when it is animated.
+    pub duration_ms: Option<u64>,
+}
 
 /// What the byte pipeline can refuse, and why. Every variant is a
 /// field-level refusal on the uploaded file rather than a server fault:
@@ -320,45 +345,66 @@ fn gcd(a: u32, b: u32) -> u32 {
 /// damaged the file refuses the upload instead of publishing something
 /// that will not play.
 pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaError> {
-    if webp::sniff(bytes) {
-        if bytes.len() > caps.still_bytes {
-            return Err(MediaError::TooLarge {
-                limit: caps.still_bytes,
+    let format = Format::of(bytes).ok_or(MediaError::Unsupported)?;
+    let limit = format.cap(caps);
+    if bytes.len() > limit {
+        return Err(MediaError::TooLarge { limit });
+    }
+    let stripped = (format.strip)(bytes)?;
+    let probe = (format.probe)(&stripped)?;
+    Ok(ProcessedAsset {
+        digest: Sha256::digest(&stripped).into(),
+        bytes: stripped,
+        width: probe.width,
+        height: probe.height,
+        mime: format.mime,
+        duration_ms: probe.duration_ms,
+    })
+}
+
+/// One stored format's half of the pipeline: the cap that bounds it, the
+/// strip that cleans it, the probe that proves it.
+///
+/// The two formats' passes were written out twice and differed only in
+/// which three of these they named, which is exactly the shape a table
+/// carries better than a branch: a third format is a row, not another
+/// copy of the sniff-cap-strip-probe-digest sequence.
+struct Format {
+    mime: &'static str,
+    still: bool,
+    strip: fn(&[u8]) -> Result<Vec<u8>, MediaError>,
+    probe: fn(&[u8]) -> Result<Probe, MediaError>,
+}
+
+impl Format {
+    /// The format the bytes are, decided by the bytes alone.
+    fn of(bytes: &[u8]) -> Option<Self> {
+        if webp::sniff(bytes) {
+            return Some(Self {
+                mime: webp::MIME,
+                still: true,
+                strip: webp::strip_metadata,
+                probe: webp::probe,
             });
         }
-        let stripped = webp::strip_metadata(bytes)?;
-        let probe = webp::probe(&stripped)?;
-        let digest: [u8; 32] = Sha256::digest(&stripped).into();
-        return Ok(ProcessedAsset {
-            bytes: stripped,
-            digest,
-            width: probe.width,
-            height: probe.height,
-            mime: webp::MIME,
-            duration_ms: probe.duration_ms,
-        });
-    }
-
-    if video::sniff(bytes) {
-        if bytes.len() > caps.video_bytes {
-            return Err(MediaError::TooLarge {
-                limit: caps.video_bytes,
+        if video::sniff(bytes) {
+            return Some(Self {
+                mime: video::MIME,
+                still: false,
+                strip: video::strip_metadata,
+                probe: video::probe,
             });
         }
-        let stripped = video::strip_metadata(bytes)?;
-        let probe = video::probe(&stripped)?;
-        let digest: [u8; 32] = Sha256::digest(&stripped).into();
-        return Ok(ProcessedAsset {
-            bytes: stripped,
-            digest,
-            width: probe.width,
-            height: probe.height,
-            mime: video::MIME,
-            duration_ms: Some(probe.duration_ms),
-        });
+        None
     }
 
-    Err(MediaError::Unsupported)
+    fn cap(&self, caps: UploadCaps) -> usize {
+        if self.still {
+            caps.still_bytes
+        } else {
+            caps.video_bytes
+        }
+    }
 }
 
 /// Assets one post's gallery may carry.
@@ -981,16 +1027,7 @@ mod tests {
     /// A two-frame animation, built to the container specification's
     /// layout the way the webp module's own fixtures are.
     fn animated_two_frames() -> Vec<u8> {
-        fn chunk(fourcc: &[u8; 4], payload: &[u8]) -> Vec<u8> {
-            let mut out = Vec::new();
-            out.extend_from_slice(fourcc);
-            out.extend_from_slice(&(payload.len() as u32).to_le_bytes());
-            out.extend_from_slice(payload);
-            if payload.len() % 2 == 1 {
-                out.push(0);
-            }
-            out
-        }
+        use webp::{chunk, container};
         let mut vp8x = vec![0x02, 0, 0, 0];
         vp8x.extend_from_slice(&[0, 0, 0]);
         vp8x.extend_from_slice(&[0, 0, 0]);
@@ -1008,12 +1045,7 @@ mod tests {
             ));
             body.extend_from_slice(&chunk(b"ANMF", &frame));
         }
-        let mut out = Vec::new();
-        out.extend_from_slice(b"RIFF");
-        out.extend_from_slice(&((4 + body.len()) as u32).to_le_bytes());
-        out.extend_from_slice(b"WEBP");
-        out.extend_from_slice(&body);
-        out
+        container(&body)
     }
 
     /// An animated WebP is accepted and carries the duration its frames state, while a still carries none.
