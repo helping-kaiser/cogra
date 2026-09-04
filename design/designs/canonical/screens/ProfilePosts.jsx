@@ -46,7 +46,7 @@ export function Screen() {
             showHandle={false}
           />
         </div>
-        <ChronicleTabs value="posts" />
+        <TabBar ariaLabel="What the chronicle shows" value="posts" tabs={CHRONICLE_TABS} />
         <FeedList>
           <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} />
           <PostCard {...ADA_SECOND_POST} />

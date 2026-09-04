@@ -411,9 +411,6 @@ const CHRONICLE_TABS = [
   { id: "comments", icon: "chat_bubble", label: "Comments" },
   { id: "everything", icon: "history", label: "Everything" },
 ];
-function ChronicleTabs({ value = "everything" }) {
-  return <TabBar ariaLabel="What the chronicle shows" value={value} tabs={CHRONICLE_TABS} />;
-}
 
 /* The chronicle column: cards on 8px of surface, the wallet history's seam. */
 function ChronicleList({ children }) {
@@ -503,7 +500,7 @@ function ProfileOtherBody() {
             showHandle={false}
           />
         </div>
-        <ChronicleTabs value="everything" />
+        <TabBar ariaLabel="What the chronicle shows" value="everything" tabs={CHRONICLE_TABS} />
         <ChronicleList>
           <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="2h" second="The long way home — the light does something at the third headland." onOpen={() => {}} />
           <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="1d" second="The glovebox camera earns its keep — this is the print from 2019." onOpen={() => {}} />
