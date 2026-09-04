@@ -56,12 +56,7 @@ export function Screen() {
             menuItems={CITE_MENU}
           />
         </ul>
-        <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 0", borderTop: "1px solid var(--border-hairline)" }}>
-          <MonogramAvatar name="Sol Ferreira" />
-          <div style={{ flex: 1 }}>
-            <TextField label="Add a comment" value="" />
-          </div>
-        </div>
+        <CommentComposerFoot />
       </BottomSheet>
     </>
   );

@@ -517,6 +517,19 @@ function ProfileOtherBody() {
   );
 }
 
+/* The comment sheet's composer foot: your face, and the field that opens a
+   comment. Every sheet of comments carries it, so it is written once. */
+function CommentComposerFoot() {
+  return (
+    <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 0", borderTop: "1px solid var(--border-hairline)" }}>
+      <MonogramAvatar name="Sol Ferreira" />
+      <div style={{ flex: 1 }}>
+        <TextField label="Add a comment" value="" />
+      </div>
+    </div>
+  );
+}
+
 function CommentsThreadSheet() {
   return (
     <BottomSheet open ariaLabel="Comments" height="calc(100% - 72px)">
@@ -583,12 +596,7 @@ function CommentsThreadSheet() {
           ]}
         />
       </ul>
-      <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 0", borderTop: "1px solid var(--border-hairline)" }}>
-        <MonogramAvatar name="Sol Ferreira" />
-        <div style={{ flex: 1 }}>
-          <TextField label="Add a comment" value="" />
-        </div>
-      </div>
+      <CommentComposerFoot />
     </BottomSheet>
   );
 }
