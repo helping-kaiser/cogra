@@ -28,10 +28,7 @@ export function Screen() {
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>Topics</FieldLabel>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, minHeight: 32, padding: "4px 12px", borderRadius: "var(--radius-full)", background: "var(--secondary-container)", color: "var(--on-secondary-container)", fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>
-              #glovebox
-              <Icon name="close" size={16} />
-            </span>
+            <TopicRemovable topic="glovebox" />
             <Button variant="outline" size="sm">Add a topic</Button>
           </div>
         </div>
@@ -41,22 +38,20 @@ export function Screen() {
           <Button variant="text" size="sm" selfStart>+ Cite something</Button>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 44, borderTop: "1px solid var(--border-hairline)", borderBottom: "1px solid var(--border-hairline)" }}>
-          <span style={{ flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>License</span>
-          <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>Public domain</span>
-          <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
-            <Icon name="lock" size={16} />
-          </span>
-        </div>
+        <FactRow
+          label="License"
+          value="Public domain"
+          action={
+            <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
+              <Icon name="lock" size={16} />
+            </span>
+          }
+          last
+        />
 
         <div style={{ flex: 1 }} />
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          This creates 2 signed actions
-          <span style={{ display: "inline-flex" }}>
-            <Icon name="expand_more" size={16} />
-          </span>
-        </div>
+        <ActsFooter count={2} />
         <Button style={{ width: "100%" }}>Sign the edit</Button>
       </div>
 
