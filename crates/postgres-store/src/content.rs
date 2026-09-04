@@ -1529,3 +1529,245 @@ pub async fn content_kind(pool: &PgPool, id: Uuid) -> Result<Option<&'static str
     }
     Ok(None)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn landed(epoch: i64) -> LandingOrder {
+        LandingOrder {
+            landed_epoch: epoch,
+            act_time: 0,
+            position: 0,
+        }
+    }
+
+    fn at(micros: i64) -> Timestamp {
+        chrono::DateTime::from_timestamp_micros(micros).expect("in range")
+    }
+
+    /// The pending namespace is the sentinel epoch, and a pending key
+    /// carries the authoring instant it was built from. The round trip
+    /// matters because the walk resumes from it: a key that cannot say
+    /// which instant it means cannot resume a page.
+    #[test]
+    fn a_pending_key_carries_its_authoring_instant() {
+        let key = LandingOrder::pending_at(at(1_700_000_000_000_000));
+        assert!(key.is_pending());
+        assert_eq!(key.landed_epoch, PENDING_EPOCH);
+        assert_eq!(key.pending_instant(), Some(at(1_700_000_000_000_000)));
+        assert!(!landed(3).is_pending());
+        assert_eq!(landed(3).pending_instant(), None);
+    }
+
+    /// Every pending key sorts above every landed one — the property the
+    /// two-branch walk is built on, and the reason the cursor keeps one
+    /// shape across both namespaces.
+    #[test]
+    fn every_pending_key_outranks_every_landed_one() {
+        assert!(LandingOrder::pending_at(at(0)) > landed(i64::MAX - 1));
+    }
+
+    /// A landed row sorts by its coordinates and an unlanded one by its
+    /// authoring instant — the same key either way, so the caller never
+    /// branches on which it got.
+    #[test]
+    fn a_sort_key_falls_back_to_the_authoring_instant() {
+        let created = at(42);
+        let post = Post {
+            id: Uuid::nil(),
+            author_id: Uuid::nil(),
+            l1_node_id: String::new(),
+            license: String::new(),
+            order: None,
+            created_at: created,
+            title: None,
+            description: None,
+            content: String::new(),
+            redaction_reason: None,
+            sensitive: false,
+            sensitive_reason: None,
+            version_pending: false,
+            version_created_at: created,
+            version_id: 0,
+        };
+        assert_eq!(post.sort_key(), LandingOrder::pending_at(created));
+        let landed_post = Post {
+            order: Some(landed(7)),
+            ..post
+        };
+        assert_eq!(landed_post.sort_key(), landed(7));
+    }
+
+    /// The table's CHECK admits all three coordinates or none, so a row
+    /// carrying part of a position reads as pending rather than as a
+    /// position with holes in it.
+    #[test]
+    fn a_partial_position_is_no_position() {
+        assert_eq!(landing_order(Some(1), Some(2), Some(3)).map(|o| o.position), Some(3));
+        assert_eq!(landing_order(Some(1), Some(2), None), None);
+        assert_eq!(landing_order(None, None, None), None);
+    }
+
+    /// Only a pending cursor moves, and only one carrying an id can be
+    /// found again — so those are the only cursors worth re-reading.
+    #[test]
+    fn only_a_findable_pending_cursor_is_re_read() {
+        let id = Uuid::from_u128(1);
+        let pending = ContentCursor {
+            order: LandingOrder::pending_at(at(9)),
+            id: Some(id),
+        };
+        assert_eq!(movable(Some(pending)), Some(id));
+        assert_eq!(movable(Some(ContentCursor { id: None, ..pending })), None);
+        assert_eq!(
+            movable(Some(ContentCursor {
+                order: landed(1),
+                id: Some(id)
+            })),
+            None
+        );
+        assert_eq!(movable(None), None);
+    }
+
+    /// A cursor re-points at the coordinates its entry has now, keeping
+    /// its id; an entry still pending leaves it standing.
+    #[test]
+    fn re_pointing_keeps_the_cursors_id() {
+        let id = Uuid::from_u128(2);
+        let cursor = ContentCursor {
+            order: LandingOrder::pending_at(at(9)),
+            id: Some(id),
+        };
+        let moved = repoint(Some(cursor), Some(landed(5))).expect("some");
+        assert_eq!(moved.order, landed(5));
+        assert_eq!(moved.id, Some(id));
+        assert_eq!(
+            repoint(Some(cursor), None).expect("some").order,
+            cursor.order
+        );
+    }
+
+    /// The pending branch keysets from a pending cursor and from nothing
+    /// else: a landed cursor is in the other namespace, so the pending
+    /// branch is walked from its own end instead.
+    #[test]
+    fn the_pending_keyset_comes_only_from_a_pending_cursor() {
+        let id = Uuid::from_u128(3);
+        let pending = ContentCursor {
+            order: LandingOrder::pending_at(at(9)),
+            id: Some(id),
+        };
+        assert_eq!(pending_from(Some(pending)), (Some(at(9)), Some(id)));
+        assert_eq!(
+            pending_from(Some(ContentCursor {
+                order: landed(1),
+                id: Some(id)
+            })),
+            (None, None)
+        );
+        assert_eq!(pending_from(None), (None, None));
+    }
+
+    /// What each branch of a walk was asked for — enough to assert the
+    /// merge's shape without a database behind it.
+    #[derive(Debug, Default, Clone)]
+    struct Calls {
+        landed: Vec<(Option<LandingOrder>, bool, i64)>,
+        pending: Vec<((Option<Timestamp>, Option<Uuid>), bool, i64)>,
+    }
+
+    async fn walk(
+        cursor: Option<ContentCursor>,
+        backward: bool,
+        limit: i64,
+        include_pending: bool,
+        pending_rows: Vec<i32>,
+        landed_rows: Vec<i32>,
+    ) -> (Vec<i32>, Calls) {
+        let calls = std::cell::RefCell::new(Calls::default());
+        let out = merge_walk(
+            cursor,
+            backward,
+            limit,
+            include_pending,
+            |c, back, n| {
+                calls.borrow_mut().landed.push((c, back, n));
+                let rows = landed_rows.clone();
+                async move { Ok(rows.into_iter().take(n.max(0) as usize).collect()) }
+            },
+            |c, back, n| {
+                calls.borrow_mut().pending.push((c, back, n));
+                let rows = pending_rows.clone();
+                async move { Ok(rows.into_iter().take(n.max(0) as usize).collect()) }
+            },
+        )
+        .await
+        .expect("walk");
+        (out, calls.into_inner())
+    }
+
+    /// A forward walk from the start fills from the pending branch first
+    /// and asks the landed branch only for what is left — the namespaces
+    /// never interleave, so the merge is a concatenation and not a sort.
+    #[tokio::test]
+    async fn a_forward_walk_fills_pending_then_landed() {
+        let (out, calls) = walk(None, false, 5, true, vec![1, 2], vec![3, 4, 5, 6]).await;
+        assert_eq!(out, vec![1, 2, 3, 4, 5]);
+        assert_eq!(calls.pending.len(), 1);
+        assert_eq!(calls.pending[0].2, 5);
+        assert_eq!(calls.landed.len(), 1);
+        assert_eq!(calls.landed[0].2, 3, "asks only for the remainder");
+    }
+
+    /// Excluding pending skips that branch entirely rather than asking
+    /// for it and discarding the answer.
+    #[tokio::test]
+    async fn a_settled_walk_never_asks_the_pending_branch() {
+        let (out, calls) = walk(None, false, 2, false, vec![1, 2], vec![7, 8, 9]).await;
+        assert_eq!(out, vec![7, 8]);
+        assert!(calls.pending.is_empty());
+    }
+
+    /// A backward walk runs the branches in the other order and still
+    /// returns newest-first: the pending rows lead the landed ones on the
+    /// way out, whichever way the walk ran.
+    #[tokio::test]
+    async fn a_backward_walk_returns_newest_first() {
+        let (out, calls) = walk(
+            Some(ContentCursor {
+                order: landed(4),
+                id: None,
+            }),
+            true,
+            5,
+            true,
+            vec![1, 2],
+            vec![3, 4],
+        )
+        .await;
+        assert_eq!(out, vec![1, 2, 3, 4]);
+        assert!(calls.landed[0].1, "the landed branch is asked backward");
+        assert_eq!(calls.pending[0].2, 3, "and pending for the remainder");
+    }
+
+    /// A cursor already in the pending namespace does not re-walk the
+    /// landed branch behind it on the way back.
+    #[tokio::test]
+    async fn a_backward_walk_from_a_pending_cursor_skips_the_landed_branch() {
+        let (out, calls) = walk(
+            Some(ContentCursor {
+                order: LandingOrder::pending_at(at(9)),
+                id: None,
+            }),
+            true,
+            3,
+            true,
+            vec![1, 2],
+            vec![3, 4],
+        )
+        .await;
+        assert_eq!(out, vec![1, 2]);
+        assert!(calls.landed.is_empty());
+    }
+}

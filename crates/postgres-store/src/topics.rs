@@ -101,6 +101,29 @@ fn type_name(target: &str) -> Result<String, TopicsError> {
         .ok_or_else(|| TopicsError::NotATypeTarget(target.to_string()))
 }
 
+#[cfg(test)]
+mod name_tests {
+    use super::{TopicsError, type_name};
+
+    /// A Tag's terminal target is a Type identifier and nothing else.
+    /// Formation forbids the alternatives, so a target that is not one
+    /// means the mirror is corrupt — which is a refusal, never a name
+    /// with a stray prefix left on it.
+    #[test]
+    fn only_a_type_identifier_yields_a_name() {
+        assert_eq!(type_name("name:bot-defense").expect("a name"), "bot-defense");
+        assert_eq!(type_name("name:").expect("a name"), "");
+        assert!(matches!(
+            type_name("prof:alice"),
+            Err(TopicsError::NotATypeTarget(t)) if t == "prof:alice"
+        ));
+        assert!(matches!(
+            type_name("bot-defense"),
+            Err(TopicsError::NotATypeTarget(_))
+        ));
+    }
+}
+
 /// The current topics of one node, as one author declares them.
 ///
 /// The bundle key is (author, content, Type); this read fixes the first

@@ -137,6 +137,39 @@ fn decode_revoked_reason(s: &str) -> Result<RevokedReason, sqlx::Error> {
         .ok_or_else(|| sqlx::Error::Decode(format!("unknown revoked_reason {s:?}").into()))
 }
 
+#[cfg(test)]
+mod enum_tests {
+    use super::{AccountState, RevokedReason};
+
+    /// Both enums are stored as their own strings and decoded back by a
+    /// second, independent list. A typo in either half is a decode that
+    /// fails at runtime and nowhere earlier.
+    #[test]
+    fn account_states_round_trip_through_their_column_form() {
+        for state in [
+            AccountState::Guest,
+            AccountState::Applicant,
+            AccountState::Member,
+        ] {
+            assert_eq!(AccountState::parse(state.as_str()), Some(state));
+        }
+        assert_eq!(AccountState::parse("Member"), None);
+        assert_eq!(AccountState::parse(""), None);
+    }
+
+    #[test]
+    fn revoked_reasons_round_trip_through_their_column_form() {
+        for reason in [
+            RevokedReason::Rotated,
+            RevokedReason::Owner,
+            RevokedReason::Security,
+        ] {
+            assert_eq!(RevokedReason::parse(reason.as_str()), Some(reason));
+        }
+        assert_eq!(RevokedReason::parse("rotate"), None);
+    }
+}
+
 /// One refresh-token session row (auth.md "Sessions"). A rotated row
 /// links its successor and carries the successor's token sealed under
 /// the consumed token — openable only by presenting that raw token,

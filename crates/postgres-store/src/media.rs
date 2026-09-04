@@ -267,6 +267,47 @@ fn split_placements(
     Ok((ids, orders, alts))
 }
 
+#[cfg(test)]
+mod placement_tests {
+    use super::{GalleryPlacement, split_placements};
+    use uuid::Uuid;
+
+    fn placement(n: u128, alt: Option<&str>) -> GalleryPlacement {
+        GalleryPlacement {
+            attachment_id: Uuid::from_u128(n),
+            alt_text: alt.map(str::to_string),
+        }
+    }
+
+    /// The three arrays are one gallery said three ways, so they have to
+    /// come out the same length and in the same order — `unnest` pads a
+    /// ragged set with NULL, and two of the three columns are NOT NULL.
+    #[test]
+    fn the_three_arrays_agree_on_length_and_order() {
+        let gallery = [
+            placement(1, Some("first")),
+            placement(2, None),
+            placement(3, Some("third")),
+        ];
+        let (ids, orders, alts) = split_placements(&gallery).expect("fits");
+        assert_eq!(ids, vec![Uuid::from_u128(1), Uuid::from_u128(2), Uuid::from_u128(3)]);
+        assert_eq!(orders, vec![0, 1, 2]);
+        assert_eq!(
+            alts,
+            vec![Some("first".to_string()), None, Some("third".to_string())]
+        );
+    }
+
+    /// Position is the order and index 0 is the cover, so the first
+    /// placement is the one `is_cover` will pick out.
+    #[test]
+    fn the_first_placement_holds_position_zero() {
+        let (_, orders, _) = split_placements(&[placement(1, None)]).expect("fits");
+        assert_eq!(orders, vec![0]);
+        assert!(split_placements(&[]).expect("fits").0.is_empty());
+    }
+}
+
 struct GalleryRow {
     version_id: i64,
     display_order: i16,

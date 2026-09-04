@@ -57,3 +57,40 @@ impl<'a> PendingView<'a> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::PendingView;
+
+    /// Asking for pending without a viewer is the case that must not
+    /// become "pending for everyone": a staged write is visible only to
+    /// its own author, so the absence of a viewer is what turns the
+    /// request back into the landed view.
+    #[test]
+    fn pending_needs_a_viewer_to_be_anyones() {
+        assert_eq!(
+            PendingView::from_include_pending(true, Some("alice")),
+            PendingView::IncludingPending { actor: "alice" }
+        );
+        assert_eq!(
+            PendingView::from_include_pending(true, None),
+            PendingView::Landed
+        );
+        assert_eq!(
+            PendingView::from_include_pending(false, Some("alice")),
+            PendingView::Landed
+        );
+    }
+
+    /// The empty string the landed view binds is only ever read when the
+    /// boolean beside it is false — the queries gate on that boolean, so
+    /// it can never be compared against an author.
+    #[test]
+    fn the_landed_view_binds_no_actor() {
+        assert_eq!(PendingView::Landed.params(), (false, ""));
+        assert_eq!(
+            PendingView::IncludingPending { actor: "alice" }.params(),
+            (true, "alice")
+        );
+    }
+}

@@ -76,6 +76,31 @@ impl StagedState {
     }
 }
 
+#[cfg(test)]
+mod state_tests {
+    use super::StagedState;
+
+    /// Every state the column can hold decodes back to the variant that
+    /// wrote it. A one-character typo in either direction is a decode
+    /// that fails at runtime and nowhere earlier, and the two halves are
+    /// two independent lists.
+    #[test]
+    fn every_state_round_trips_through_its_column_form() {
+        for state in [
+            StagedState::AwaitingPreSign,
+            StagedState::Sealing,
+            StagedState::AwaitingApproval,
+            StagedState::Relaying,
+            StagedState::Landed,
+            StagedState::Expired,
+        ] {
+            assert_eq!(StagedState::parse(state.as_str()), Some(state));
+        }
+        assert_eq!(StagedState::parse("awaiting-pre-sign"), None);
+        assert_eq!(StagedState::parse(""), None);
+    }
+}
+
 /// One staged write, reconstructed into seam types. The staging actor is
 /// one actor row for every writer — an applicant's staged Registration
 /// stages under their own account's actor row (auth.md §Application).
