@@ -111,6 +111,16 @@ pub(crate) async fn seal(
     if pre.proposal.deps.len() + body.asserted_parents.len() > MAX_DEPS {
         return Err(formation("dependency list exceeds the bound"));
     }
+    // The sequence is a u64 in the identifier and a BIGINT in storage. A
+    // value above i64::MAX would store as a negative beside an act_id text
+    // carrying the unsigned one — the column and the identifier disagreeing
+    // about the same act — so it is refused where the two meet.
+    if body.seq > i64::MAX as u64 {
+        return Err(formation(format!(
+            "author-local sequence {} exceeds the stored range",
+            body.seq
+        )));
+    }
 
     let author_key = crypto::verifying_key_from_bytes(&pre.author_pubkey)
         .ok_or_else(|| StandInError::Authentication("malformed author public key".into()))?;
@@ -236,18 +246,7 @@ pub(crate) async fn sealed_act(
     .fetch_optional(standin.pool())
     .await?;
     let Some(row) = row else { return Ok(None) };
-    let body = rebuild_body(
-        &row.author,
-        row.seq,
-        &row.family,
-        row.middle.as_deref(),
-        &row.target,
-        row.p_d,
-        row.p_i,
-        row.settlement_ref.as_deref(),
-        row.license.as_deref(),
-        &row.asserted_parents,
-    )?;
+    let body = stored_body!(row).to_body()?;
     let deps = row
         .deps
         .iter()
@@ -297,18 +296,7 @@ pub(crate) async fn approve(
         return Ok(());
     }
 
-    let body = rebuild_body(
-        &row.author,
-        row.seq,
-        &row.family,
-        row.middle.as_deref(),
-        &row.target,
-        row.p_d,
-        row.p_i,
-        row.settlement_ref.as_deref(),
-        row.license.as_deref(),
-        &row.asserted_parents,
-    )?;
+    let body = stored_body!(row).to_body()?;
     let seal_msg = seal_message(
         &body,
         &row.pre_signature,
@@ -340,80 +328,122 @@ pub(crate) async fn approve(
     Ok(())
 }
 
-/// Rebuilds the canonical structural body from stored columns.
-#[expect(
-    clippy::too_many_arguments,
-    reason = "column-to-field mapping; a struct here would just rename the row"
-)]
-pub(crate) fn rebuild_body(
-    author: &str,
-    seq: i64,
-    family: &str,
-    middle: Option<&str>,
-    target: &str,
-    p_d: f64,
-    p_i: f64,
-    settlement_ref: Option<&str>,
-    license: Option<&str>,
-    asserted_parents: &[String],
-) -> Result<common::l1::StructuralBody, StandInError> {
-    let family = common::l1::Family::parse(family)
-        .ok_or_else(|| StandInError::Formation(format!("stored family {family} unknown")))?;
-    let middle = middle
-        .map(NodeId::parse)
-        .transpose()
-        .map_err(|e| StandInError::Formation(e.to_string()))?;
-    let target = NodeId::parse(target).map_err(|e| StandInError::Formation(e.to_string()))?;
-    let asserted_parents = asserted_parents
-        .iter()
-        .map(|p| ActId::parse(p))
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|e| StandInError::Formation(e.to_string()))?;
-    Ok(common::l1::StructuralBody {
-        author: author.to_string(),
-        seq: seq as u64,
-        family,
-        middle,
-        target,
-        p_d,
-        p_i,
-        settlement_ref: settlement_ref
-            .map(ActId::parse)
-            .transpose()
-            .map_err(|e| StandInError::Formation(e.to_string()))?,
-        license: license.map(str::to_string),
-        asserted_parents,
-    })
+/// The ten stored columns a structural body is rebuilt from, borrowed off
+/// whichever row carries them.
+pub(crate) struct StoredBody<'a> {
+    pub author: &'a str,
+    pub seq: i64,
+    pub family: &'a str,
+    pub middle: Option<&'a str>,
+    pub target: &'a str,
+    pub p_d: f64,
+    pub p_i: f64,
+    pub settlement_ref: Option<&'a str>,
+    pub license: Option<&'a str>,
+    pub asserted_parents: &'a [String],
 }
 
-/// The legs of an act's graph projection, as (role, source, target) with
-/// the leg-rendered parameters (layer1-interface.md §8.1).
+/// Borrows the body columns off a row of any of the three `l1_acts`
+/// selections that carry them.
+///
+/// A macro rather than a function because `sqlx::query!` mints an anonymous
+/// record type per query: the three rows share these field names but no
+/// type a parameter could name. Written once here, so the ten columns are
+/// listed in one place instead of at every call.
+macro_rules! stored_body {
+    ($row:expr) => {
+        $crate::seal::StoredBody {
+            author: &$row.author,
+            seq: $row.seq,
+            family: &$row.family,
+            middle: $row.middle.as_deref(),
+            target: &$row.target,
+            p_d: $row.p_d,
+            p_i: $row.p_i,
+            settlement_ref: $row.settlement_ref.as_deref(),
+            license: $row.license.as_deref(),
+            asserted_parents: &$row.asserted_parents,
+        }
+    };
+}
+pub(crate) use stored_body;
+
+impl StoredBody<'_> {
+    /// Rebuilds the canonical structural body from stored columns.
+    pub(crate) fn to_body(&self) -> Result<common::l1::StructuralBody, StandInError> {
+        let formation = |e: common::l1::IdentifierError| StandInError::Formation(e.to_string());
+        let family = common::l1::Family::parse(self.family).ok_or_else(|| {
+            StandInError::Formation(format!("stored family {} unknown", self.family))
+        })?;
+        let body = common::l1::StructuralBody {
+            author: self.author.to_string(),
+            seq: self.seq as u64,
+            family,
+            middle: self
+                .middle
+                .map(NodeId::parse)
+                .transpose()
+                .map_err(formation)?,
+            target: NodeId::parse(self.target).map_err(formation)?,
+            p_d: self.p_d,
+            p_i: self.p_i,
+            settlement_ref: self
+                .settlement_ref
+                .map(ActId::parse)
+                .transpose()
+                .map_err(formation)?,
+            license: self.license.map(str::to_string),
+            asserted_parents: self
+                .asserted_parents
+                .iter()
+                .map(|p| ActId::parse(p))
+                .collect::<Result<Vec<_>, _>>()
+                .map_err(formation)?,
+        };
+        Ok(body)
+    }
+}
+
+/// One leg of an act's graph projection: its role, its two endpoints, and
+/// the parameters the census renders for that role.
+pub(crate) type ProjectionLeg = (common::l1::LegRole, NodeId, NodeId, f64, f64);
+
+/// The legs of an act's graph projection (layer1-interface.md §8.1).
+///
+/// A hyper act without a middle is refused rather than panicked on. Nothing
+/// this crate seals can be in that state — `endpoint_check` gates the only
+/// insert — but the storage read path does not re-run formation and the
+/// column is nullable, so a row written around this crate would otherwise
+/// take a library path down.
 pub(crate) fn projection_legs(
     body: &common::l1::StructuralBody,
-) -> Vec<(common::l1::LegRole, NodeId, NodeId, f64, f64)> {
+) -> Result<Vec<ProjectionLeg>, StandInError> {
     use common::l1::census::{LegRole, leg_params};
     match body.family.kind() {
         FamilyKind::Binary => {
             let (p_d, p_i) = leg_params(LegRole::Binary, body.p_d, body.p_i);
-            vec![(
+            Ok(vec![(
                 LegRole::Binary,
                 body.source(),
                 body.target.clone(),
                 p_d,
                 p_i,
-            )]
+            )])
         }
         FamilyKind::Hyper => {
-            let middle = body
-                .middle
-                .clone()
-                .expect("hyper act formation guarantees a middle node");
+            let middle = body.middle.clone().ok_or_else(|| {
+                formation(format!(
+                    "stored {} act {} carries no middle node",
+                    body.family,
+                    body.act_id()
+                ))
+            })?;
             let (a_pd, a_pi) = leg_params(LegRole::A, body.p_d, body.p_i);
             let (t_pd, t_pi) = leg_params(LegRole::T, body.p_d, body.p_i);
-            vec![
+            Ok(vec![
                 (LegRole::A, body.source(), middle.clone(), a_pd, a_pi),
                 (LegRole::T, middle, body.target.clone(), t_pd, t_pi),
-            ]
+            ])
         }
     }
 }

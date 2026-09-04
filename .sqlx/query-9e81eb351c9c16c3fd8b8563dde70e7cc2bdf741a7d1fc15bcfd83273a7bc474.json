@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE l1_accounts\n            SET balance_micro = balance_micro - $1 * landed.acts,\n                action_count  = action_count + landed.acts\n           FROM UNNEST($2::TEXT[], $3::BIGINT[]) AS landed(address, acts)\n          WHERE l1_accounts.address = landed.address",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "TextArray",
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9e81eb351c9c16c3fd8b8563dde70e7cc2bdf741a7d1fc15bcfd83273a7bc474"
+}

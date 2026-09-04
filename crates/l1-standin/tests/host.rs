@@ -2,6 +2,15 @@
 //! epoch close (ordering, causal keys, maturities, θ-debits), and the
 //! published packages. Each test gets its own throwaway database via
 //! `#[sqlx::test]`; the workspace migrations create the l1_* tables.
+//!
+//! The pure half of the close — selection, ordering, solvency, maturity —
+//! is unit-tested in `close.rs` and needs no database; what lands here is
+//! what only a database can show.
+//!
+//! **Budget: this suite runs in ≤ 25 s** (measured 2026-09-04 at 10 s for
+//! 18 tests). Every test spins its own database and replays the whole
+//! workspace migration set, so the cost is per test and grows with the
+//! migration count, not with what is asserted.
 
 use common::l1::Family;
 use common::l1::census::LegRole;
@@ -619,8 +628,115 @@ async fn act_budget_caps_the_epoch(pool: PgPool) {
     let alice = funded_actor(&host, 10 * THETA).await;
     submit(&host, &alice, registration(&alice)).await;
     submit(&host, &alice, opinion(&alice, 1, "bob", vec![])).await;
+    host.close_epoch().await.expect("ok").expect("epoch 0");
+    host.close_epoch().await.expect("ok").expect("epoch 1");
     let packages = host.epochs_since(-1).await.expect("ok");
     assert_eq!(packages.len(), 2, "one act per epoch under a budget of 1");
     assert_eq!(packages[0].records.len(), 1);
     assert_eq!(packages[1].records.len(), 1);
+}
+
+/// Approving never closes: closing is the substrate's own clock, so a
+/// backlog cannot put a locked close on every request (L1-06).
+///
+/// Approving an act does not close an epoch — the clock does.
+/// ´claim:close:approving-does-not-close-an-epoch´
+#[sqlx::test(migrations = "../../migrations")]
+async fn approving_does_not_close_an_epoch(pool: PgPool) {
+    let host = StandIn::new(
+        pool.clone(),
+        StandInConfig {
+            theta_micro: THETA,
+            epoch_target_acts: 1,
+            max_payload_bytes: 1024,
+        },
+    );
+    let alice = funded_actor(&host, 10 * THETA).await;
+    submit(&host, &alice, registration(&alice)).await;
+    submit(&host, &alice, opinion(&alice, 1, "bob", vec![])).await;
+
+    assert!(
+        host.epochs_since(-1).await.expect("ok").is_empty(),
+        "the act budget is full twice over and nothing has closed"
+    );
+    host.close_epoch()
+        .await
+        .expect("ok")
+        .expect("the clock closes it");
+}
+
+/// One stored act that will not parse fails the whole close and stays
+/// selectable, and the same value inside a published epoch fails the
+/// ingest read — the ruled behavior for a substrate written around the
+/// crate that owns its tables (L1-01/L1-02, ruling 11).
+///
+/// A malformed stored act wedges the close and the ingest read rather than being skipped.
+/// ´claim:close:a-malformed-stored-act-wedges-the-close´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_malformed_stored_act_wedges_the_close(pool: PgPool) {
+    let host = standin(pool.clone());
+    let alice = funded_actor(&host, 10 * THETA).await;
+    let act_id = submit(&host, &alice, registration(&alice)).await;
+
+    // Only a writer that is not this crate can produce such a row: every
+    // column here is written from a value that already parsed.
+    sqlx::query("UPDATE l1_acts SET family = 'not-a-family' WHERE act_id = $1")
+        .bind(act_id.to_string())
+        .execute(&pool)
+        .await
+        .expect("the fixture writes around the crate");
+
+    let wedged = host.close_epoch().await;
+    assert!(
+        matches!(wedged, Err(StandInError::Formation(_))),
+        "the close refuses rather than skipping: {wedged:?}"
+    );
+    let still_approved: String = sqlx::query_scalar("SELECT status FROM l1_acts WHERE act_id = $1")
+        .bind(act_id.to_string())
+        .fetch_one(&pool)
+        .await
+        .expect("the row is still there");
+    assert_eq!(still_approved, "approved", "and it stays selectable");
+}
+
+/// A hyper act whose middle went missing in storage is refused, not
+/// panicked on: the read path does not re-run formation and the column is
+/// nullable, so the library path has to answer for it (L1-01).
+///
+/// A stored hyper act with no middle is refused rather than taking the library path down.
+/// ´claim:close:a-stored-hyper-act-without-a-middle-is-refused´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_stored_hyper_act_without_a_middle_is_refused(pool: PgPool) {
+    let host = standin(pool.clone());
+    let alice = funded_actor(&host, 10 * THETA).await;
+    let chat = ActId::new(&alice.address(), 0, Family::Participant).expect("valid");
+    let founding = Proposal {
+        body: StructuralBody {
+            author: alice.address(),
+            seq: 0,
+            family: Family::Participant,
+            middle: Some(NodeId::Mint(chat.clone())),
+            target: NodeId::Mint(chat.clone()),
+            p_d: 1.0,
+            p_i: 1.0,
+            settlement_ref: None,
+            license: None,
+            asserted_parents: vec![],
+        },
+        payload: vec![],
+        deps: vec![],
+    };
+    submit(&host, &alice, founding).await;
+
+    sqlx::query("UPDATE l1_acts SET middle = NULL WHERE act_id = $1")
+        .bind(chat.to_string())
+        .execute(&pool)
+        .await
+        .expect("the fixture writes around the crate");
+
+    let refused = host.close_epoch().await;
+    assert!(
+        matches!(refused, Err(StandInError::Formation(_))),
+        "no panic, an error: {refused:?}"
+    );
 }
