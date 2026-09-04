@@ -1,3 +1,4 @@
+// @vitest-environment node
 // The fold contract: this module's clip and its local landing, pinned to
 // the repo-root `stance-fold-vectors.json` exported from the Rust
 // reference (`crates/common/src/l1/fold.rs`). Never transcribe a vector

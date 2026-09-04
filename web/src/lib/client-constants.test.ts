@@ -1,3 +1,4 @@
+// @vitest-environment node
 // The numbers the backend exports and this app must not restate.
 //
 // `client-constants.json` at the repo root is generated from the Rust
