@@ -41,10 +41,15 @@ pub async fn run_migrations(pool: &PgPool) -> Result<(), sqlx::migrate::MigrateE
     MIGRATOR.run(pool).await
 }
 
-/// Round-trip probe — true when PostgreSQL answers `SELECT 1`.
-pub async fn ping(pool: &PgPool) -> bool {
+/// Round-trip probe — `Ok` when PostgreSQL answers `SELECT 1`.
+///
+/// The error is returned rather than collapsed into a bool: a health
+/// check that goes red is worth a reason, and a pool timeout, a TLS
+/// failure and a dropped connection are three different operational
+/// facts. What to log is the caller's call, not this crate's.
+pub async fn ping(pool: &PgPool) -> Result<(), sqlx::Error> {
     sqlx::query_scalar::<_, i32>("SELECT 1")
         .fetch_one(pool)
         .await
-        .is_ok()
+        .map(|_| ())
 }
