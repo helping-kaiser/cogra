@@ -527,6 +527,30 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'class="cg-cover-own"', tag: "div" },
     { n: 6, find: ">Next</button>", tag: "button" },
   ],
+  ComposeDraft: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Discard</button>", tag: "button" },
+    { n: 4, find: ">Continue</button>", tag: "button" },
+  ],
+  ComposeSeal: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
+    { n: 4, find: ">Change</button>", tag: "button" },
+    { n: 5, find: ">Adjust</button>", tag: "button" },
+    { n: 6, find: ">Mark</button>", tag: "button" },
+    { n: 7, find: ">Sign and publish</button>", tag: "button" },
+    { n: 8, find: ">Back</button>", tag: "button" },
+  ],
+  ComposeKeyAbsent: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Change</button>", tag: "button" },
+    { n: 4, find: 'aria-label="Your key"', tag: "button" },
+    { n: 5, find: ">Restore the key</button>", tag: "button" },
+    { n: 6, find: ">Keep the draft, restore later</button>", tag: "button" },
+  ],
 });
 
 // The Media page (HelpDialog, the one Patterns board, carries its attributes
