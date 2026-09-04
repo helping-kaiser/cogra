@@ -8,7 +8,7 @@
 // the obvious thing — mints a new one on every keystroke in the title field and
 // pins ten phone photos in memory ten times over.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import type { PickedAsset } from "./wizard";
 
@@ -28,44 +28,68 @@ export function useRevokeOnChange(urls: readonly string[]): void {
   }, [urls]);
 }
 
-export function usePreviewUrls(assets: readonly PickedAsset[]): Readonly<Record<string, string>> {
-  const [urls, setUrls] = useState<Record<string, string>>({});
-  // The map is mirrored in a ref so the unmount cleanup can revoke what is
-  // actually outstanding without listing state as a dependency. It is also what
-  // the effect below reconciles against, rather than the state value: a state
-  // updater must be pure (React's Rules of Hooks — "Keep components and hooks
-  // pure"), and Strict Mode calls it twice in development, which minting an
-  // object URL inside one would turn into two blobs held for the tab's life.
-  const live = useRef<Record<string, string>>({});
+// One object URL per blob, minted at most once.
+//
+// The mint is memoized on the blob itself so that computing the map is
+// IDEMPOTENT: React invokes a render — and a `useMemo` factory — more than once
+// in Strict Mode and may throw a render's result away, and a mint that ran
+// twice would hold two blobs alive where one was handed out. Revoking drops the
+// memo with the url, so a blob that comes back is minted afresh rather than
+// handed a dead one.
+const mintedFor = new WeakMap<Blob, string>();
 
-  useEffect(() => {
-    const current = live.current;
+function urlFor(file: Blob): string {
+  const existing = mintedFor.get(file);
+  if (existing !== undefined) return existing;
+  const url = URL.createObjectURL(file);
+  mintedFor.set(file, url);
+  return url;
+}
+
+function release(file: Blob | undefined, url: string): void {
+  if (file !== undefined) mintedFor.delete(file);
+  URL.revokeObjectURL(url);
+}
+
+export function usePreviewUrls(assets: readonly PickedAsset[]): Readonly<Record<string, string>> {
+  // DERIVED, not stored. Writing this map into state from an effect is the
+  // cascading render React's own guidance warns about ("You Might Not Need an
+  // Effect"), and the mint that used to sit inside the `setUrls` updater broke
+  // the rule that a state updater is pure — Strict Mode calls it twice, so
+  // every newly picked asset minted two urls and only the second was ever
+  // revoked.
+  const urls = useMemo(() => {
     const next: Record<string, string> = {};
-    let changed = false;
-    for (const asset of assets) {
-      const existing = current[asset.id];
-      if (existing !== undefined) {
-        next[asset.id] = existing;
-      } else {
-        next[asset.id] = URL.createObjectURL(asset.file);
-        changed = true;
-      }
-    }
-    for (const [id, url] of Object.entries(current)) {
-      if (next[id] === undefined) {
-        URL.revokeObjectURL(url);
-        changed = true;
-      }
-    }
-    if (!changed) return;
-    live.current = next;
-    setUrls(next);
+    for (const asset of assets) next[asset.id] = urlFor(asset.file);
+    return next;
   }, [assets]);
 
+  // The release half, which is what an effect is genuinely for: it runs after
+  // the render that dropped those assets has committed, so nothing still on
+  // screen loses its src.
+  const outstanding = useRef<{ urls: Record<string, string>; files: Map<string, Blob> }>({
+    urls: {},
+    files: new Map(),
+  });
+
   useEffect(() => {
+    const held = outstanding.current;
+    for (const [id, url] of Object.entries(held.urls)) {
+      if (urls[id] === undefined) release(held.files.get(id), url);
+    }
+    outstanding.current = {
+      urls,
+      files: new Map(assets.map((asset) => [asset.id, asset.file])),
+    };
+  }, [assets, urls]);
+
+  useEffect(() => {
+    const held = outstanding;
     return () => {
-      for (const url of Object.values(live.current)) URL.revokeObjectURL(url);
-      live.current = {};
+      for (const [id, url] of Object.entries(held.current.urls)) {
+        release(held.current.files.get(id), url);
+      }
+      held.current = { urls: {}, files: new Map() };
     };
   }, []);
 
