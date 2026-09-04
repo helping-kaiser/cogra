@@ -16,26 +16,50 @@ import React from "react";
    32px drawn, 48px tapped: `cg-hit` grows the target without inflating a row of
    seven of them past the height of the screen. Selection is
    `secondaryContainer`, colour only \u2014 no check glyph, because a leading check on
-   the selected chips reflows every label in the row as the reader picks. */
+   the selected chips reflows every label in the row as the reader picks.
+
+   Both wear the same PILL and the same size rung, because a size the topic half
+   of the family does not understand is exactly the drift this file exists to
+   prevent. */
 
 const PILL = {
   display: "inline-flex",
   alignItems: "center",
   position: "relative",
-  height: "32px",
-  padding: "0 var(--space-3)",
   borderRadius: "var(--radius-full)",
   fontFamily: "var(--font-sans)",
-  fontSize: "var(--text-label-large)",
-  lineHeight: "var(--text-label-large--line-height)",
-  letterSpacing: "var(--text-label-large--letter-spacing)",
-  fontWeight: "var(--text-label-large--font-weight)",
   cursor: "pointer",
   whiteSpace: "nowrap",
   textDecoration: "none",
 };
 
-export function Chip({ label, selected = false, onToggle, ariaLabel, disabled = false }) {
+/* TWO SIZES, ONE PILL. `md` is the chip proper — a control the thumb reaches,
+   32px drawn and 48px tapped. `sm` is the same pill 24px tall on `label-small`,
+   and it is a READOUT rather than a control: the topics inside the acts card,
+   where the reader is being shown what a signature will carry, not offered
+   something to press. That is why the small rung does not get a smaller tap
+   target — nothing at this size is meant to be tapped. Where a control must be
+   small, it stays `md` and the row loses a word instead. */
+const SIZES = {
+  md: {
+    height: "32px",
+    padding: "0 var(--space-3)",
+    fontSize: "var(--text-label-large)",
+    lineHeight: "var(--text-label-large--line-height)",
+    letterSpacing: "var(--text-label-large--letter-spacing)",
+    fontWeight: "var(--text-label-large--font-weight)",
+  },
+  sm: {
+    height: "24px",
+    padding: "0 var(--space-2)",
+    fontSize: "var(--text-label-small)",
+    lineHeight: "var(--text-label-small--line-height)",
+    letterSpacing: "var(--text-label-small--letter-spacing)",
+    fontWeight: "var(--text-label-small--font-weight)",
+  },
+};
+
+export function Chip({ label, selected = false, onToggle, ariaLabel, disabled = false, size = "md" }) {
   return (
     <button
       type="button"
@@ -47,6 +71,7 @@ export function Chip({ label, selected = false, onToggle, ariaLabel, disabled = 
       className="cg-state cg-focus cg-hit"
       style={{
         ...PILL,
+        ...SIZES[size] ?? SIZES.md,
         border: selected ? "1px solid transparent" : "1px solid var(--border-field)",
         background: selected ? "var(--secondary-container)" : "transparent",
         color: selected ? "var(--on-secondary-container)" : "var(--text-body)",
@@ -60,10 +85,11 @@ export function Chip({ label, selected = false, onToggle, ariaLabel, disabled = 
 
 /* A topic. The `#` is part of the word, not an icon: readers type it, and a topic
    without it reads as a name. It navigates, so it is an anchor. */
-export function TopicChip({ topic, href, onClick, inert = false, style: override }) {
+export function TopicChip({ topic, href, onClick, inert = false, size = "md", style: override }) {
   const name = topic.replace(/^#/, "");
   const style = {
     ...PILL,
+    ...SIZES[size] ?? SIZES.md,
     border: "1px solid var(--border-hairline)",
     background: "var(--surface-card)",
     color: "var(--text-body)",

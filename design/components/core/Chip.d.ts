@@ -10,6 +10,8 @@ export interface ChipProps {
   /** When the label alone does not say what is being filtered. */
   ariaLabel?: string;
   disabled?: boolean;
+  /** `md` is the chip proper (32px, label-large); `sm` is the 24px readout rung. */
+  size?: "md" | "sm";
 }
 
 export declare function Chip(props: ChipProps): JSX.Element;
@@ -23,6 +25,12 @@ export interface TopicChipProps {
   topic: string;
   href?: string;
   onClick?: (event: React.MouseEvent) => void;
+  /** The same pill as a span, for a topic inside a larger tap target — a link
+   *  nested in a button is two controls fighting over one press. */
+  inert?: boolean;
+  /** `md` is the chip proper (32px, label-large); `sm` is the 24px readout rung. */
+  size?: "md" | "sm";
+  style?: React.CSSProperties;
 }
 
 export declare function TopicChip(props: TopicChipProps): JSX.Element;
