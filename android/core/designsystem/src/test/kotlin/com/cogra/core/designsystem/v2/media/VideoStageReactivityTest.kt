@@ -2,12 +2,14 @@ package com.cogra.core.designsystem.v2.media
 
 import android.content.Context
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -146,7 +148,13 @@ class VideoStageReactivityTest {
             alreadyRendered = VideoStage.hasRendered,
             clipOnStage = VideoStage.holding?.url == url,
         )
-        if (reason != null) Box(Modifier.testTag("poster"))
+        // Sized, so "displayed" is a question with an answer: a bare box
+        // measures 0x0 and is never displayed whether it is there or not.
+        if (reason != null) Box(Modifier.size(POSTER).testTag("poster"))
+    }
+
+    private companion object {
+        val POSTER = 64.dp
     }
 
     private class FakeLifecycleOwner : LifecycleOwner {

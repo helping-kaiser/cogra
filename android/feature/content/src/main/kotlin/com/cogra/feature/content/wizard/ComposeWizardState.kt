@@ -84,11 +84,15 @@ sealed interface AssetUpload {
     data class Done(val mediaId: String) : AssetUpload
 
     /**
-     * The upload failed or was refused. [message] is the server's own
-     * words where it gave any, so a refusal that names the file says so
-     * rather than reading as a generic fault.
+     * The upload failed or was refused.
+     *
+     * [reason] names what happened and the screen resolves it to copy,
+     * so the words live in `strings.xml` like every other line the app
+     * shows. [serverMessage] is the server's own words where it gave
+     * any — deliberately preferred, so a refusal that names the file
+     * says so rather than reading as a generic fault.
      */
-    data class Failed(val message: String) : AssetUpload
+    data class Failed(val reason: UploadFailure, val serverMessage: String? = null) : AssetUpload
 }
 
 /**
@@ -148,7 +152,8 @@ data class PickedAsset(
  */
 data class RefusedPick(
     val uri: String?,
-    val message: String,
+    /** Why, as a reason the screen resolves to copy. */
+    val reason: UploadFailure,
     /** Draws the clip marker on the refused tile. */
     val isVideo: Boolean = false,
 )
@@ -481,19 +486,8 @@ data class ComposeWizardState(
  * The mapping is explicit and lives here rather than in the design system,
  * which carries no domain dependency (android/CLAUDE.md).
  */
-fun ComposeWizardState.pickedPictures(): List<PickedPicture> = picked.map { asset ->
-    PickedPicture(
-        item = MediaItem(
-            asset.uri,
-            asset.sourceRatio ?: 1f,
-            asset.altText.ifBlank { null },
-            crops[asset.uri].toFraming(),
-        ),
-        described = asset.altText.isNotBlank(),
-        uploading = asset.upload.inFlight,
-        failed = asset.upload is AssetUpload.Failed,
-    )
-}
+fun ComposeWizardState.pickedPictures(): List<PickedPicture> =
+    picked.pickedPictures { crops[it.uri].toFraming() }
 
 // ---------------------------------------------------------------------
 // Transitions. Pure functions on the state, so every branch of the
@@ -630,14 +624,11 @@ fun ComposeWizardState.movedPick(from: Int, to: Int): ComposeWizardState {
     return copy(picked = reordered)
 }
 
-/** Records one asset's upload state without disturbing the others (D5). */
 fun ComposeWizardState.withUpload(uri: String, upload: AssetUpload): ComposeWizardState =
-    copy(picked = picked.map { if (it.uri == uri) it.copy(upload = upload) else it })
+    copy(picked = picked.withUpload(uri, upload))
 
-/** Records an asset's own ratio once the pipeline has read it. */
 fun ComposeWizardState.withSourceRatio(uri: String, ratio: Float): ComposeWizardState =
-    copy(picked = picked.map { if (it.uri == uri) it.copy(sourceRatio = ratio) else it })
+    copy(picked = picked.withSourceRatio(uri, ratio))
 
-/** The alt text one asset carries — authored, never generated (D20). */
 fun ComposeWizardState.withAltText(uri: String, text: String): ComposeWizardState =
-    copy(picked = picked.map { if (it.uri == uri) it.copy(altText = text) else it })
+    copy(picked = picked.withAltText(uri, text))

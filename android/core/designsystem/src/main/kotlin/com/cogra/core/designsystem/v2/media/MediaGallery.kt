@@ -228,7 +228,7 @@ private const val AUTOPLAY_VISIBLE_FRACTION = 0.7f
  */
 @Composable
 private fun PageDots(count: Int, current: Int, testTag: String?) {
-    val position = stringResource(R.string.media_gallery_position, current + 1, count)
+    val position = stringResource(R.string.designsystem_gallery_position, current + 1, count)
     Row(
         modifier = Modifier
             .fillMaxWidth()

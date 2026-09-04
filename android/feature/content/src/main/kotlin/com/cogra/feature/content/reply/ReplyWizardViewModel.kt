@@ -20,13 +20,14 @@ import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.feature.content.ReferenceCandidateRow
-import com.cogra.feature.content.ReferenceFinderState
 import com.cogra.feature.content.ReferenceSectionState
+import com.cogra.feature.content.SectionsEditor
 import com.cogra.feature.content.TagSectionState
-import com.cogra.feature.content.candidateRows
 import com.cogra.feature.content.referenceFieldIndex
 import com.cogra.feature.content.tagFieldIndex
 import com.cogra.feature.content.wizard.AssetUpload
+import com.cogra.feature.content.wizard.UploadFailure
+import com.cogra.feature.content.wizard.uploadPicture
 import com.cogra.feature.content.wizard.CoverChoice
 import com.cogra.feature.content.wizard.RefusedPick
 import com.cogra.feature.content.wizard.attachmentFieldIndex
@@ -34,7 +35,6 @@ import java.io.File
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -83,7 +83,17 @@ class ReplyWizardViewModel @Inject constructor(
      * completed or aborted the store keeps every part it was handed.
      */
     private var uploadSession: String? = null
-    private var finderJob: Job? = null
+
+    private val sections = SectionsEditor(
+        scope = viewModelScope,
+        references = references,
+        state = _state,
+        tagsOf = { it.tagSection },
+        withTags = { state, tags -> state.copy(tagSection = tags) },
+        referencesOf = { it.referenceSection },
+        withReferences = { state, refs -> state.copy(referenceSection = refs) },
+    )
+
     private var started = false
 
     /** Pins what is being answered. Idempotent: the route calls it on every entry. */
@@ -132,12 +142,12 @@ class ReplyWizardViewModel @Inject constructor(
      */
     private suspend fun refusePicture(uri: String): Boolean {
         if (processor.aspectRatio(uri) == null) {
-            _state.update { it.copy(refused = it.refused + RefusedPick(null, UNREADABLE_FILE)) }
+            _state.update { it.copy(refused = it.refused + RefusedPick(null, UploadFailure.UNREADABLE_FILE)) }
             return false
         }
         val size = processor.sizeBytes(uri)
         if (size != null && size > MAX_PICTURE_BYTES) {
-            _state.update { it.copy(refused = it.refused + RefusedPick(uri, PICTURE_TOO_BIG)) }
+            _state.update { it.copy(refused = it.refused + RefusedPick(uri, UploadFailure.PICTURE_TOO_BIG)) }
             return false
         }
         return true
@@ -182,7 +192,7 @@ class ReplyWizardViewModel @Inject constructor(
                 _state.update { it.withUpload(uri, AssetUpload.Transcoding(percent)) }
             }
             if (processed == null) {
-                _state.update { it.removePick(uri).copy(refused = it.refused + RefusedPick(uri, UNREADABLE_FILE)) }
+                _state.update { it.removePick(uri).copy(refused = it.refused + RefusedPick(uri, UploadFailure.UNREADABLE_FILE)) }
                 return@launch
             }
             // The cap is judged on what would be sent. Re-encoding is
@@ -193,7 +203,7 @@ class ReplyWizardViewModel @Inject constructor(
             if (processed.byteCount > MAX_VIDEO_BYTES) {
                 runCatching { File(processed.path).delete() }
                 _state.update {
-                    it.removePick(uri).copy(refused = it.refused + RefusedPick(uri, VIDEO_TOO_BIG))
+                    it.removePick(uri).copy(refused = it.refused + RefusedPick(uri, UploadFailure.COMMENT_VIDEO_TOO_BIG))
                 }
                 return@launch
             }
@@ -225,23 +235,8 @@ class ReplyWizardViewModel @Inject constructor(
         uploads.remove(uri)?.cancel()
         _state.update { it.withUpload(uri, AssetUpload.Running) }
         uploads[uri] = viewModelScope.launch {
-            val picture = processor.process(uri, CropSpec(targetRatio = ratio ?: 1f))
-            if (picture == null) {
-                _state.update { it.withUpload(uri, AssetUpload.Failed(UNREADABLE)) }
-                return@launch
-            }
-            when (val outcome = media.uploadMedia(picture)) {
-                is Outcome.Success -> _state.update {
-                    it.withUpload(uri, AssetUpload.Done(outcome.value.id))
-                }
-                is Outcome.Refused -> _state.update {
-                    it.withUpload(
-                        uri,
-                        AssetUpload.Failed(outcome.errors.firstOrNull()?.message ?: REFUSED),
-                    )
-                }
-                is Outcome.Failed -> _state.update { it.withUpload(uri, AssetUpload.Failed(TRANSPORT)) }
-            }
+            val result = uploadPicture(uri, CropSpec(targetRatio = ratio ?: 1f), processor, media)
+            _state.update { it.withUpload(uri, result) }
         }
     }
 
@@ -297,11 +292,11 @@ class ReplyWizardViewModel @Inject constructor(
                 is Outcome.Refused -> _state.update {
                     it.withUpload(
                         clip.uri,
-                        AssetUpload.Failed(outcome.errors.firstOrNull()?.message ?: REFUSED_VIDEO),
+                        AssetUpload.Failed(UploadFailure.REFUSED_VIDEO, outcome.errors.firstOrNull()?.message),
                     )
                 }
                 is Outcome.Failed -> _state.update {
-                    it.withUpload(clip.uri, AssetUpload.Failed(TRANSPORT))
+                    it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.TRANSPORT))
                 }
             }
         }
@@ -326,7 +321,7 @@ class ReplyWizardViewModel @Inject constructor(
             )
         }
         if (picture == null) {
-            _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UNREADABLE_COVER)) }
+            _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.UNREADABLE_COVER)) }
             return null
         }
         return when (val outcome = media.uploadMedia(picture)) {
@@ -335,13 +330,13 @@ class ReplyWizardViewModel @Inject constructor(
                 _state.update {
                     it.withUpload(
                         clip.uri,
-                        AssetUpload.Failed(outcome.errors.firstOrNull()?.message ?: REFUSED_COVER),
+                        AssetUpload.Failed(UploadFailure.REFUSED_COVER, outcome.errors.firstOrNull()?.message),
                     )
                 }
                 null
             }
             is Outcome.Failed -> {
-                _state.update { it.withUpload(clip.uri, AssetUpload.Failed(TRANSPORT)) }
+                _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.TRANSPORT)) }
                 null
             }
         }
@@ -388,81 +383,44 @@ class ReplyWizardViewModel @Inject constructor(
 
     // -- Topics and citations --
 
-    fun onTagInputChange(value: String) = updateTags { it.withInput(value) }
+    fun onTagInputChange(value: String) = sections.onTagInputChange(value)
 
-    fun onAddTag() = updateTags { it.added() }
+    fun onAddTag() = sections.onAddTag()
 
-    fun onRemoveTag(name: String) = updateTags { it.removed(name) }
+    fun onRemoveTag(name: String) = sections.onRemoveTag(name)
 
-    fun onTuneTag(name: String) = updateTags { it.tuned(name) }
+    fun onTuneTag(name: String) = sections.onTuneTag(name)
 
-    fun onDoneTuningTag() = updateTags { it.tuned(null) }
+    fun onDoneTuningTag() = sections.onDoneTuningTag()
 
-    fun onTagRelevanceChange(name: String, value: Double) = updateTags { it.withRelevance(name, value) }
+    fun onTagRelevanceChange(name: String, value: Double) = sections.onTagRelevanceChange(name, value)
 
-    fun onTagConfidenceChange(name: String, value: Double) = updateTags { it.withConfidence(name, value) }
+    fun onTagConfidenceChange(name: String, value: Double) = sections.onTagConfidenceChange(name, value)
 
-    private fun updateTags(block: (TagSectionState) -> TagSectionState) =
-        _state.update { it.copy(tagSection = block(it.tagSection)) }
+    private fun updateTags(block: (TagSectionState) -> TagSectionState) = sections.updateTags(block)
 
-    fun onOpenFinder() = updateReferences { it.withFinder(ReferenceFinderState()) }
+    fun onOpenFinder() = sections.onOpenFinder()
 
-    fun onCloseFinder() {
-        finderJob?.cancel()
-        updateReferences { it.withFinder(null) }
-    }
+    fun onCloseFinder() = sections.onCloseFinder()
 
-    fun onFinderQueryChange(query: String) {
-        finderJob?.cancel()
-        updateReferences { section ->
-            section.withFinder(
-                (section.finder ?: ReferenceFinderState()).copy(
-                    query = query,
-                    searching = query.isNotBlank(),
-                    failed = false,
-                ),
-            )
-        }
-        finderJob = viewModelScope.launch {
-            delay(FINDER_DEBOUNCE_MILLIS)
-            when (val outcome = references.candidateRows(query)) {
-                is Outcome.Success -> updateReferences { section ->
-                    // An answer that arrived after the author typed on is
-                    // stale — only the current query's lands.
-                    section.finder?.takeIf { it.query == query }?.let {
-                        section.withFinder(
-                            it.copy(candidates = outcome.value, searching = false, failed = false),
-                        )
-                    } ?: section
-                }
-                is Outcome.Refused, is Outcome.Failed -> updateReferences { section ->
-                    section.finder?.takeIf { it.query == query }?.let {
-                        section.withFinder(it.copy(searching = false, failed = true))
-                    } ?: section
-                }
-            }
-        }
-    }
+    fun onFinderQueryChange(query: String) = sections.onFinderQueryChange(query)
 
-    fun onPickReference(row: ReferenceCandidateRow) {
-        finderJob?.cancel()
-        updateReferences { it.added(row.targetId, row.target).withFinder(null) }
-    }
+    fun onPickReference(row: ReferenceCandidateRow) = sections.onPickReference(row)
 
-    fun onRemoveReference(targetId: String) = updateReferences { it.removed(targetId) }
+    fun onRemoveReference(targetId: String) = sections.onRemoveReference(targetId)
 
-    fun onTuneReference(targetId: String) = updateReferences { it.tuned(targetId) }
+    fun onTuneReference(targetId: String) = sections.onTuneReference(targetId)
 
-    fun onDoneTuningReference() = updateReferences { it.tuned(null) }
+    fun onDoneTuningReference() = sections.onDoneTuningReference()
 
     fun onReferenceRelevanceChange(targetId: String, value: Double) =
-        updateReferences { it.withRelevance(targetId, value) }
+        sections.onReferenceRelevanceChange(targetId, value)
 
     fun onReferenceSupportChange(targetId: String, value: Double) =
-        updateReferences { it.withSupport(targetId, value) }
+        sections.onReferenceSupportChange(targetId, value)
 
     private fun updateReferences(block: (ReferenceSectionState) -> ReferenceSectionState) =
-        _state.update { it.copy(referenceSection = block(it.referenceSection)) }
+        sections.updateReferences(block)
 
     // -- Signing --
 
@@ -597,7 +555,7 @@ class ReplyWizardViewModel @Inject constructor(
                 attachmentIndex != null && attachmentIndex in picks.indices -> {
                     picks = picks.mapIndexed { i, asset ->
                         if (i == attachmentIndex) {
-                            asset.copy(upload = AssetUpload.Failed(error.message))
+                            asset.copy(upload = AssetUpload.Failed(UploadFailure.REFUSED_PICTURE, error.message))
                         } else {
                             asset
                         }
@@ -618,27 +576,8 @@ class ReplyWizardViewModel @Inject constructor(
     private fun failTransport() = _state.update { it.copy(submitting = false, transportFailed = true) }
 
     // Internal rather than private so the suite can assert against the
-    // words themselves instead of re-typing them.
+    // caps themselves instead of re-typing them.
     internal companion object {
-        const val FINDER_DEBOUNCE_MILLIS = 250L
-
-        const val UNREADABLE = "That file could not be read as a picture."
-        const val REFUSED = "The server would not take that picture."
-        const val TRANSPORT = "The upload could not reach the server."
-
-        const val REFUSED_VIDEO = "The server would not take that video."
-        const val UNREADABLE_COVER = "That picture could not be read as a cover."
-        const val REFUSED_COVER = "The server would not take that cover."
-
-        // Blessed verbatim in design/guidelines/copy-voice.md "Refused
-        // files". Each line names the cap it broke, because that is the
-        // only place a cap is named — nothing announces the limits in
-        // advance. **Screens say MB; the caps are MiB**, so the number
-        // shown under-promises and can never turn a file the product
-        // would have accepted into a refusal.
-        const val UNREADABLE_FILE = "That file isn't a picture or a video CoGra can read."
-        const val PICTURE_TOO_BIG = "That picture is too big — a picture can be up to 10 MB."
-        const val VIDEO_TOO_BIG = "That video is too big — a comment's video can be up to 50 MB."
 
         /** A comment picture's cap: four per comment, ten mebibytes each. */
         const val MAX_PICTURE_BYTES = 10L * 1024 * 1024

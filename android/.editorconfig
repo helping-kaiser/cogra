@@ -1,0 +1,41 @@
+# ktlint reads its rule configuration from here (ktlint's own docs,
+# "Configuration"). `root = true` stops the lookup at android/, so the
+# Kotlin surface's style is stated in one place.
+root = true
+
+[*.{kt,kts}]
+# The style the code was written in. ktlint 1.x defaults to
+# `ktlint_official`, a stricter house style that would rewrite
+# essentially every file in the tree, and `android_studio` forbids the
+# trailing commas this codebase uses everywhere. `intellij_idea` is the
+# one of the three that describes what is actually here.
+ktlint_code_style = intellij_idea
+
+# 120 rather than Android Studio's 100: the codebase's own long lines are
+# doc comments and builder chains that read worse when broken. detekt's
+# MaxLineLength is set to the same number so the two agree.
+max_line_length = 120
+
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+end_of_line = lf
+
+# Compose functions are PascalCase by convention, which the naming rule
+# reads as a violation on every one of them.
+ktlint_function_naming_ignore_when_annotated_with = Composable, Preview
+
+# Two rules describe a different house style rather than a defect, and
+# are turned off with the reason named rather than suppressed silently
+# (CLAUDE.md "a lint is a documented opinion"):
+#
+# - `function-signature` would rewrite ~700 signatures to put each
+#   parameter and every expression body on its own line. This codebase
+#   keeps a signature on one line while it fits, which is what the ~36k
+#   lines already read as.
+ktlint_standard_function-signature = disabled
+# - `blank-line-between-when-conditions` wants a blank line between the
+#   arms of any `when` that has one multiline arm. The `when`s here are
+#   dense on purpose — most are three-branch `Outcome` matches read as a
+#   single shape.
+ktlint_standard_blank-line-between-when-conditions = disabled

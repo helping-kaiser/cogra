@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<baseline version="1.0">
+    <file name="src/main/kotlin/com/cogra/feature/topics/TopicViewModel.kt">
+        <error line="9" column="1" source="standard:import-ordering" />
+        <error line="34" column="5" source="standard:class-signature" />
+        <error line="34" column="41" source="standard:class-signature" />
+    </file>
+</baseline>

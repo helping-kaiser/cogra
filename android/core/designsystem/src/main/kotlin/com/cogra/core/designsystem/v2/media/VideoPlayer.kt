@@ -429,7 +429,8 @@ private fun PlayPauseButton(
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val label = stringResource(if (playing) R.string.media_video_pause else R.string.media_video_play)
+    val label =
+        stringResource(if (playing) R.string.designsystem_video_pause else R.string.designsystem_video_play)
     Box(
         modifier = modifier
             .size(CONTROL_DIAMETER)
@@ -458,7 +459,8 @@ private fun PlayPauseButton(
  */
 @Composable
 private fun MuteButton(muted: Boolean) {
-    val label = stringResource(if (muted) R.string.media_video_unmute else R.string.media_video_mute)
+    val label =
+        stringResource(if (muted) R.string.designsystem_video_unmute else R.string.designsystem_video_mute)
     Box(
         modifier = Modifier
             .padding(start = Space.x2)

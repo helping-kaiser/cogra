@@ -125,16 +125,23 @@
     <string name="stance_explain">What this is</string>
     <string name="stance_explain_body">Drag to say two things at once: how you stand on it, and how much you want it in your world. Nothing is signed until you press Set — letting go just leaves your pick where you put it.</string>
 
+    <!-- Screen-reader labels for the cover row. `contentDescription` is
+         what TalkBack announces, so an unlocalized literal here has no
+         visual text to fall back on. -->
+    <string name="designsystem_cover_frame">Frame %1$d</string>
+    <string name="designsystem_cover_own">Your own cover picture</string>
+    <string name="designsystem_cover_own_action">A cover picture of your own</string>
+
     <!-- The video surface's two controls. Both are labelled by what the
          press does, not by what the clip is doing, which is what a
          screen reader announces on a button. -->
-    <string name="media_video_play">Play</string>
-    <string name="media_video_pause">Pause</string>
-    <string name="media_video_mute">Mute</string>
-    <string name="media_video_unmute">Unmute</string>
+    <string name="designsystem_video_play">Play</string>
+    <string name="designsystem_video_pause">Pause</string>
+    <string name="designsystem_video_mute">Mute</string>
+    <string name="designsystem_video_unmute">Unmute</string>
 
     <!-- The gallery's dot row, read as a position. Positional arguments
          because the order of the two numbers is a property of the
          language, not of the layout. -->
-    <string name="media_gallery_position">Picture %1$d of %2$d</string>
+    <string name="designsystem_gallery_position">Picture %1$d of %2$d</string>
 </resources>

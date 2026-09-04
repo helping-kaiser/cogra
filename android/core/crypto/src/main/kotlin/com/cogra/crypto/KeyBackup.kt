@@ -13,7 +13,7 @@ import org.bouncycastle.crypto.generators.HKDFBytesGenerator
 import org.bouncycastle.crypto.params.HKDFParameters
 
 /** A blob that will not open: wrong code, tampered bytes, or bad format. */
-open class KeyBackupException(message: String) : Exception(message)
+open class KeyBackupException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
 /**
  * The input is not a recovery code's length. It is the one parse
@@ -31,18 +31,31 @@ private const val AES_NONCE_LEN = 12
 private const val HKDF_INFO = "cogra:key-backup:v1"
 private const val CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 
-/** A 16-byte recovery code and its display/normalization rules. */
-class RecoveryCode(val bytes: ByteArray) {
+/**
+ * A 16-byte recovery code and its display/normalization rules.
+ *
+ * The bytes are copied in and copied out, the way [ActorKey.seed] hands
+ * back BouncyCastle's defensive copy: a secret held by reference is one
+ * the caller can still be holding — or still mutating — after it has
+ * been sealed under.
+ */
+class RecoveryCode(bytes: ByteArray) {
+
+    private val secret: ByteArray = bytes.copyOf()
+
     init {
-        require(bytes.size == CODE_LEN) { "a recovery code is $CODE_LEN bytes" }
+        require(secret.size == CODE_LEN) { "a recovery code is $CODE_LEN bytes" }
     }
+
+    /** The code's bytes, as a copy. */
+    fun bytes(): ByteArray = secret.copyOf()
 
     /** The display form: 26 Crockford characters grouped 5-5-5-5-6. */
     fun display(): String {
         var bits = 0
         var nbits = 0
         val chars = StringBuilder()
-        for (b in bytes) {
+        for (b in secret) {
             bits = (bits shl 8) or (b.toInt() and 0xFF)
             nbits += 8
             while (nbits >= 5) {
@@ -57,7 +70,7 @@ class RecoveryCode(val bytes: ByteArray) {
     }
 
     companion object {
-        fun generate(): RecoveryCode = RecoveryCode(ActorKey.randomBytes(CODE_LEN))
+        fun generate(): RecoveryCode = RecoveryCode(Entropy.bytes(CODE_LEN))
 
         /**
          * The reading rule for anything a user typed: uppercase,
@@ -106,7 +119,7 @@ class RecoveryCode(val bytes: ByteArray) {
 
 private fun contentKey(code: RecoveryCode, salt: ByteArray): ByteArray {
     val hkdf = HKDFBytesGenerator(SHA256Digest())
-    hkdf.init(HKDFParameters(code.bytes, salt, HKDF_INFO.toByteArray(Charsets.US_ASCII)))
+    hkdf.init(HKDFParameters(code.bytes(), salt, HKDF_INFO.toByteArray(Charsets.US_ASCII)))
     return ByteArray(32).also { hkdf.generateBytes(it, 0, it.size) }
 }
 
@@ -117,15 +130,24 @@ private fun cipher(mode: Int, key: ByteArray, nonce: ByteArray, aad: ByteArray):
     }
 
 /**
- * Seals the actor seed under the recovery code. The [salt] and [nonce]
- * parameters exist for the golden vectors; production callers use the
- * random defaults.
+ * Seals the actor seed under the recovery code — the production form.
+ *
+ * Salt and nonce are drawn here rather than accepted. The content key
+ * is a pure function of `(code, salt)`, so a caller that could supply
+ * both could reuse an AES-GCM nonce under an identical key; the
+ * deterministic form the golden vectors pin is [sealKeyBackupWith],
+ * mirroring the Rust reference's own split
+ * (`crates/common/src/l1/key_backup.rs`).
  */
-fun sealKeyBackup(
+fun sealKeyBackup(seed: ByteArray, code: RecoveryCode): ByteArray =
+    sealKeyBackupWith(seed, code, Entropy.bytes(HKDF_SALT_LEN), Entropy.bytes(AES_NONCE_LEN))
+
+/** The deterministic form the golden vectors pin. */
+internal fun sealKeyBackupWith(
     seed: ByteArray,
     code: RecoveryCode,
-    salt: ByteArray = ActorKey.randomBytes(HKDF_SALT_LEN),
-    nonce: ByteArray = ActorKey.randomBytes(AES_NONCE_LEN),
+    salt: ByteArray,
+    nonce: ByteArray,
 ): ByteArray {
     require(seed.size == 32) { "an actor seed is 32 bytes" }
     require(salt.size == HKDF_SALT_LEN) { "the HKDF salt is $HKDF_SALT_LEN bytes" }
@@ -153,7 +175,7 @@ fun openKeyBackup(blob: ByteArray, code: RecoveryCode): ByteArray {
         cipher(Cipher.DECRYPT_MODE, contentKey(code, salt), nonce, header)
             .doFinal(blob.copyOfRange(headerLen, blob.size))
     } catch (e: java.security.GeneralSecurityException) {
-        throw KeyBackupException("the blob does not open under this code")
+        throw KeyBackupException("the blob does not open under this code", e)
     }
     try {
         val d = CborDecoder(plaintext)
@@ -164,7 +186,7 @@ fun openKeyBackup(blob: ByteArray, code: RecoveryCode): ByteArray {
         if (seed.size != 32) throw KeyBackupException("malformed blob container")
         return seed
     } catch (e: CborDecodeException) {
-        throw KeyBackupException("malformed blob container: ${e.message}")
+        throw KeyBackupException("malformed blob container: ${e.message}", e)
     }
 }
 

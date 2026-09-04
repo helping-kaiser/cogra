@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<baseline version="1.0">
+    <file name="src/main/kotlin/com/cogra/domain/Models.kt">
+        <error line="28" column="5" source="standard:class-signature" />
+        <error line="29" column="5" source="standard:class-signature" />
+        <error line="29" column="35" source="standard:class-signature" />
+        <error line="89" column="5" source="standard:class-signature" />
+        <error line="90" column="5" source="standard:class-signature" />
+        <error line="91" column="5" source="standard:class-signature" />
+        <error line="91" column="28" source="standard:class-signature" />
+        <error line="196" column="1" source="standard:no-consecutive-blank-lines" />
+        <error line="215" column="5" source="standard:class-signature" />
+        <error line="216" column="5" source="standard:class-signature" />
+        <error line="216" column="29" source="standard:class-signature" />
+        <error line="237" column="5" source="standard:class-signature" />
+        <error line="238" column="5" source="standard:class-signature" />
+        <error line="238" column="28" source="standard:class-signature" />
+        <error line="445" column="9" source="standard:class-signature" />
+        <error line="446" column="9" source="standard:class-signature" />
+        <error line="447" column="9" source="standard:class-signature" />
+        <error line="447" column="34" source="standard:class-signature" />
+        <error line="481" column="5" source="standard:class-signature" />
+        <error line="482" column="5" source="standard:class-signature" />
+        <error line="482" column="26" source="standard:class-signature" />
+        <error line="545" column="1" source="standard:kdoc" />
+        <error line="553" column="1" source="standard:spacing-between-declarations-with-comments" />
+        <error line="562" column="5" source="standard:class-signature" />
+        <error line="563" column="5" source="standard:class-signature" />
+        <error line="563" column="32" source="standard:class-signature" />
+        <error line="574" column="5" source="standard:class-signature" />
+        <error line="575" column="5" source="standard:class-signature" />
+        <error line="575" column="37" source="standard:class-signature" />
+        <error line="586" column="5" source="standard:class-signature" />
+        <error line="587" column="5" source="standard:class-signature" />
+        <error line="587" column="28" source="standard:class-signature" />
+        <error line="610" column="5" source="standard:class-signature" />
+        <error line="611" column="5" source="standard:class-signature" />
+        <error line="611" column="41" source="standard:class-signature" />
+        <error line="614" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/domain/compose/ComposeDraft.kt">
+        <error line="22" column="5" source="standard:class-signature" />
+        <error line="23" column="5" source="standard:class-signature" />
+        <error line="23" column="30" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/domain/content/LandingSignal.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="17" column="5" source="standard:class-signature" />
+        <error line="18" column="5" source="standard:class-signature" />
+        <error line="19" column="5" source="standard:class-signature" />
+        <error line="19" column="33" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/domain/content/SensitiveReveals.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="22" column="5" source="standard:class-signature" />
+        <error line="23" column="5" source="standard:class-signature" />
+        <error line="24" column="5" source="standard:class-signature" />
+        <error line="24" column="34" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/domain/identity/KeyCeremony.kt">
+        <error line="124" column="5" source="standard:class-signature" />
+        <error line="125" column="5" source="standard:class-signature" />
+        <error line="125" column="44" source="standard:class-signature" />
+        <error line="158" column="5" source="standard:class-signature" />
+        <error line="159" column="5" source="standard:class-signature" />
+        <error line="159" column="44" source="standard:class-signature" />
+        <error line="203" column="5" source="standard:class-signature" />
+        <error line="204" column="5" source="standard:class-signature" />
+        <error line="204" column="36" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/domain/identity/KeyExport.kt">
+        <error line="27" column="5" source="standard:class-signature" />
+        <error line="27" column="41" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/domain/identity/Register.kt">
+        <error line="15" column="5" source="standard:class-signature" />
+        <error line="16" column="5" source="standard:class-signature" />
+        <error line="16" column="36" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/domain/identity/SecurityNotices.kt">
+        <error line="10" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/domain/media/Media.kt">
+        <error line="18" column="5" source="standard:class-signature" />
+        <error line="19" column="5" source="standard:class-signature" />
+        <error line="20" column="5" source="standard:class-signature" />
+        <error line="20" column="21" source="standard:class-signature" />
+        <error line="67" column="5" source="standard:class-signature" />
+        <error line="68" column="5" source="standard:class-signature" />
+        <error line="68" column="35" source="standard:class-signature" />
+        <error line="129" column="5" source="standard:class-signature" />
+        <error line="130" column="5" source="standard:class-signature" />
+        <error line="130" column="28" source="standard:class-signature" />
+        <error line="149" column="5" source="standard:class-signature" />
+        <error line="150" column="5" source="standard:class-signature" />
+        <error line="150" column="36" source="standard:class-signature" />
+        <error line="162" column="5" source="standard:class-signature" />
+        <error line="163" column="5" source="standard:class-signature" />
+        <error line="164" column="5" source="standard:class-signature" />
+        <error line="165" column="5" source="standard:class-signature" />
+        <error line="165" column="23" source="standard:class-signature" />
+        <error line="221" column="5" source="standard:class-signature" />
+        <error line="222" column="5" source="standard:class-signature" />
+        <error line="223" column="5" source="standard:class-signature" />
+        <error line="223" column="33" source="standard:class-signature" />
+        <error line="255" column="5" source="standard:class-signature" />
+        <error line="256" column="5" source="standard:class-signature" />
+        <error line="257" column="5" source="standard:class-signature" />
+        <error line="257" column="24" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/domain/repo/Repositories.kt">
+        <error line="7" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/domain/signing/RegistrationFlow.kt">
+        <error line="6" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/domain/signing/RegistrationSigner.kt">
+        <error line="29" column="9" source="standard:class-signature" />
+        <error line="30" column="9" source="standard:class-signature" />
+        <error line="31" column="9" source="standard:class-signature" />
+        <error line="31" column="34" source="standard:class-signature" />
+        <error line="32" column="9" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/domain/signing/WriteSigner.kt">
+        <error line="10" column="1" source="standard:import-ordering" />
+        <error line="67" column="5" source="standard:class-signature" />
+        <error line="68" column="5" source="standard:class-signature" />
+        <error line="68" column="41" source="standard:class-signature" />
+        <error line="184" column="24" source="standard:multiline-if-else" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/domain/identity/KeyCeremonyTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/domain/signing/RegistrationFlowTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="54" column="120" source="standard:max-line-length" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/domain/signing/RegistrationSignerTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="44" column="5" source="standard:class-signature" />
+        <error line="45" column="5" source="standard:class-signature" />
+        <error line="46" column="5" source="standard:class-signature" />
+        <error line="46" column="29" source="standard:class-signature" />
+        <error line="47" column="5" source="standard:class-signature" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/domain/signing/WriteSignerTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/testFixtures/kotlin/com/cogra/domain/testing/Fakes.kt">
+        <error line="8" column="1" source="standard:import-ordering" />
+        <error line="347" column="21" source="standard:string-template" />
+    </file>
+</baseline>
