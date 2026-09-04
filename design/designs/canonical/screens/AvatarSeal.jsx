@@ -5,19 +5,10 @@
 export function Screen() {
   return (
     <>
-      <WizardHeader
-        title="What you sign"
-        leaveLabel="Leave"
-        action={
-          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>Last step</span>
-            <SystemHelpDot ariaLabel="Changing your picture" />
-          </span>
-        }
-      />
+      <WizardHeader title="What you sign" leaveLabel="Leave" stageLabel="Last step" help="Changing your picture" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <img src="comment-camera.jpg" alt="" style={{ width: 64, height: 64, borderRadius: "var(--radius-full)", objectFit: "cover", flex: "none" }} />
+          <MonogramAvatar name="Sol Ferreira" size={64} src="comment-camera.jpg" />
           <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
             <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>
               Your profile picture
@@ -36,10 +27,7 @@ export function Screen() {
 
         <div style={{ flex: 1 }} />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <Button style={{ width: "100%" }}>Sign the change</Button>
-          <Button variant="text" style={{ width: "100%" }}>Back</Button>
-        </div>
+        <SealFooter signLabel="Sign the change" />
       </div>
     </>
   );

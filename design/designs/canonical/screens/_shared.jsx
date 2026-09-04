@@ -21,6 +21,7 @@ const {
   TopicChip,
   Card,
   Button,
+  InlineAction,
   Icon,
   MediaGallery,
   MediaAttachment,
@@ -83,6 +84,7 @@ const {
   TopicRemovable,
   StagedReference,
   ActsFooter,
+  SealFooter,
   FactRow,
 } = components;
 
