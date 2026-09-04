@@ -17,14 +17,14 @@
 
 /* The card's own affordance rows — a primary word where a value would sit, so
    what you could still add lines up with what you have already added. It is
-   `InlineAction`'s small rung with the acts row's own truncation on top: the
-   row is ruled to one line, so a long label ends in an ellipsis rather than
-   wrapping the 44px row. The `overflow: hidden` that buys that also clips the
-   atom's 48px hit overlay back to the ink — the ellipsis and the hit promise
-   are in tension here, and resolving it is a ruling, not a conversion. */
+   `InlineAction`'s small rung, left-aligned and held to one line, and it does
+   NOT clip itself (jakob's ruling): the acts row's value slot already ends a
+   long value in an ellipsis, and a second `overflow: hidden` on the word only
+   cut the atom's 48px hit overlay back to the ink. Truncation belongs to the
+   row; the target belongs to the word. */
 function AddRow({ children }) {
   return (
-    <InlineAction size="sm" style={{ textAlign: "left", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+    <InlineAction size="sm" style={{ textAlign: "left", whiteSpace: "nowrap" }}>
       {children}
     </InlineAction>
   );
