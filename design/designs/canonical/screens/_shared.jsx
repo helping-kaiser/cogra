@@ -83,7 +83,7 @@ const {
   ReelCaption,
   PinnedClip,
   LICENSE_MENU_LABEL,
-  LICENSE_MENU_LABEL_SHOWN,
+  LicenseTerms,
   NodeMark,
   TopicRemovable,
   StagedReference,
@@ -303,9 +303,31 @@ const OWN_POST_MENU = [
   LICENSE_ROW,
 ];
 const READER_POST_MENU = [LICENSE_ROW, CITE_ROW];
-/* The same menu once the terms are unfolded: the row that revealed them is the
-   row that folds them away, so it changes its words rather than its place. */
-const READER_POST_MENU_SHOWN = [{ label: LICENSE_MENU_LABEL_SHOWN, onSelect: () => {} }, CITE_ROW];
+/* WHAT THE LICENSE ROW OPENS (readme §13, the menus round). The terms come up
+   from the bottom edge over the surface the reader asked from, and go back to
+   it the way any sheet does — the scrim, the swipe, Escape. A block unfolded
+   inside a post had no such way back, which is the whole reason this is a
+   sheet.
+
+   BOARD GLUE, not a master — the `DetailHeader` rule: masters stacked with the
+   sheet's own gutter and no new drawing between them. `LicenseTerms` draws the
+   terms here exactly as the read side has always drawn them.
+
+   IT CARRIES NO `SheetTitle`. The inset heads itself — its caption is the words
+   the reader tapped, and the public-domain word rides that same line — so a
+   title above it would say License terms twice, a few pixels apart, in two
+   sizes. The sheet's name lives on the `aria-label`, which is where a screen
+   reader asks for it. */
+function LicenseSheet({ license }) {
+  return (
+    <BottomSheet open ariaLabel="License terms">
+      <div style={{ padding: "0 24px" }}>
+        <LicenseTerms license={license} />
+      </div>
+    </BottomSheet>
+  );
+}
+
 /* Another's profile: no license (a profile declares none) and no citing — the
    word for referencing a person is mentioning (readme §13, the menus round). */
 const PROFILE_MENU = [
