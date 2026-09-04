@@ -1242,9 +1242,10 @@ pub async fn confirm_email_change_original_side(
 /// against the email uniqueness constraint (auth.md "Email change").
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EmailChangeApply {
+    /// The account's address is the proven change's target — whether
+    /// this call moved it or an earlier one did.
     Applied,
-    /// No fully-proven, unexpired change is pending — or it already
-    /// applied.
+    /// No fully-proven, unexpired change is pending.
     NotReady,
     /// The proven change collides with another account's email; the
     /// change row stays live, so a retry within the TTL can still apply
@@ -1254,30 +1255,48 @@ pub enum EmailChangeApply {
 
 /// Applies the account's newest fully-proven, unexpired email change —
 /// `user_credentials.email` updates only when both sides hold (auth.md
-/// "Email change"). Idempotent.
+/// "Email change").
+///
+/// Idempotent in effect and in what it reports. The update is guarded by
+/// `email IS DISTINCT FROM`, so a second call moves no row; that alone
+/// cannot be read as failure, because "already at the target" and "no
+/// proven change exists" are the same zero-row answer. The statement
+/// therefore reports whether a proven change *exists*, and the address
+/// is the proven target either way — so a retried confirm answers
+/// `Applied` rather than `NotReady`.
 pub async fn apply_email_change_if_complete(
     pool: &PgPool,
     user_id: Uuid,
 ) -> Result<EmailChangeApply, sqlx::Error> {
-    let result = sqlx::query!(
-        "UPDATE user_credentials c
-         SET email = ec.new_email
-         FROM (
-             SELECT new_email FROM auth_email_changes
-             WHERE user_id = $1
-               AND original_confirmed_at IS NOT NULL
-               AND new_verified_at IS NOT NULL
-               AND expires_at > NOW()
-             ORDER BY created_at DESC LIMIT 1
-         ) ec
-         WHERE c.actor_id = $1 AND c.email IS DISTINCT FROM ec.new_email",
+    let result = sqlx::query_scalar!(
+        r#"
+        WITH proven AS (
+            SELECT new_email FROM auth_email_changes
+            WHERE user_id = $1
+              AND original_confirmed_at IS NOT NULL
+              AND new_verified_at IS NOT NULL
+              AND expires_at > NOW()
+            ORDER BY created_at DESC LIMIT 1
+        ), moved AS (
+            UPDATE user_credentials c
+            SET email = p.new_email
+            FROM proven p
+            WHERE c.actor_id = $1 AND c.email IS DISTINCT FROM p.new_email
+            RETURNING c.actor_id
+        )
+        SELECT (EXISTS (SELECT 1 FROM proven)
+                AND (EXISTS (SELECT 1 FROM moved)
+                     OR EXISTS (SELECT 1 FROM user_credentials c, proven p
+                                WHERE c.actor_id = $1 AND c.email = p.new_email)))
+               AS "applied!"
+        "#,
         user_id,
     )
-    .execute(pool)
+    .fetch_one(pool)
     .await;
     match result {
-        Ok(done) if done.rows_affected() == 1 => Ok(EmailChangeApply::Applied),
-        Ok(_) => Ok(EmailChangeApply::NotReady),
+        Ok(true) => Ok(EmailChangeApply::Applied),
+        Ok(false) => Ok(EmailChangeApply::NotReady),
         Err(sqlx::Error::Database(e))
             if e.is_unique_violation() && e.constraint() == Some("user_credentials_email_key") =>
         {
