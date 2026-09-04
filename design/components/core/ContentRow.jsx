@@ -28,17 +28,19 @@ import { StanceValue } from "../stance/StanceReadout.jsx";
 const VARIANTS = {
   /* The wallet's history. Its trailing edge is money, which is body-sized
      because a figure is read, not glanced at, and quiet while it is pending. */
-  ledger: { second: "label-small", trailing: "body-medium", disc: "container" },
+  ledger: { second: "label-small", trailing: "body-medium", loud: true, disc: "container" },
   /* A campaign in a list. The disc is the campaign's cover — a TILE, because a
      campaign is a thing with a face, not somebody with one. */
-  campaign: { second: "label-small", trailing: "body-medium", disc: "container", image: "tile" },
+  campaign: { second: "label-small", trailing: "body-medium", loud: true, disc: "container", image: "tile" },
   /* A doorway into a section. The filled disc is deliberate: it is the one row
      in the wallet that is an entrance rather than an entry, and the fill is what
      says so without a word of chrome. */
-  door: { second: "label-small", trailing: "body-medium", disc: "primary" },
+  door: { second: "label-small", trailing: "body-medium", loud: true, disc: "primary" },
   /* A record in the chronicle. Its second line is the act's own words, so it
-     takes body type rather than the label type a context line wears. */
-  chronicle: { second: "body-medium", trailing: "label-small", disc: "container" },
+     takes body type rather than the label type a context line wears — and its
+     trailing edge is a TIME, which is a quiet fact rather than the row's point,
+     so it is the one variant whose trailing edge is not `loud`. */
+  chronicle: { second: "body-medium", trailing: "label-small", loud: false, disc: "container" },
 };
 
 const TYPE = {
@@ -199,7 +201,7 @@ export function ContentRow({
           <span
             style={{
               ...TYPE[shape.trailing],
-              color: pending ? "var(--text-secondary)" : "var(--on-surface)",
+              color: pending || !shape.loud ? "var(--text-secondary)" : "var(--on-surface)",
             }}
           >
             {trailing}

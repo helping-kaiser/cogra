@@ -21,7 +21,8 @@ export interface ContentRowProps {
   titleAside?: React.ReactNode;
   /** The second line: always ONE line, ellipsized, in `text-secondary`. */
   second?: React.ReactNode;
-  /** What the list keeps on its trailing edge — a figure, a time. */
+  /** What the list keeps on its trailing edge. A figure is the row's point and
+   *  keeps `on-surface`; the chronicle's time is a quiet fact and does not. */
   trailing?: React.ReactNode;
   /** The trailing figure goes quiet and the row wears *Still settling*. */
   pending?: boolean;

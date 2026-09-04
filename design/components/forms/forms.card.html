@@ -19,8 +19,10 @@ function Demo(){
   <div className="grid">
     <div className="col">
       <TextField label="Email" type="email" value={email} onChange={setEmail}/>
-      <TextField label="Handle" value="a" onChange={()=>{}} error="3–30 characters: a–z, 0–9, _"/>
-      <PasswordField label="Password" value={pw} onChange={setPw}/>
+      <span className="lbl">Supporting text — one slot, two states; the error replaces the hint</span>
+      <TextField label="Handle" value="ada" onChange={()=>{}} hint="3–30 characters: a–z, 0–9, _"/>
+      <TextField label="Handle" value="a" onChange={()=>{}} hint="3–30 characters: a–z, 0–9, _" error="That handle is taken."/>
+      <PasswordField label="Password" value={pw} onChange={setPw} hint="At least 12 characters."/>
       <Checkbox label="Don't remember this account on this device" checked={forget} onChange={setForget}/>
       <TextField label="What do you want to publish?" rows={3} value={body} onChange={setBody}/>
     </div>

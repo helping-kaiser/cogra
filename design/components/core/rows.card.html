@@ -1,0 +1,64 @@
+<!-- @dsCard group="Components" viewport="760x560" name="Rows" subtitle="The fact row in two emphases, the quoted row, and the identity row's four variants" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{padding:16px}.grid{display:grid;grid-template-columns:340px 360px;gap:24px;align-items:start}.col{display:flex;flex-direction:column;gap:8px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}.rows{display:flex;flex-direction:column}.list{display:flex;flex-direction:column;gap:8px}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { FactRow, QuotedRow, ContentRow, LedgerRow, StanceReadout, MoneyFigure } = window.CoGraDesignSystem_9084ba;
+function Demo(){return (
+<div className="grid">
+  <div className="col">
+    <span className="lbl">FactRow · seal — strong label, quiet value, rules enclosing the block</span>
+    <div className="rows">
+      <FactRow label="License" value="Public domain — your default" action="Change"/>
+      <FactRow label="Where you stand on it" value={<StanceReadout pair={{pDirected:0.1,pInterest:0.1}}/>} action="Adjust"/>
+      <FactRow label="Sensitive" value="Not marked" action="Mark" last/>
+    </div>
+
+    <span className="lbl">FactRow · ledger — quiet label, the value is the answer, rules between</span>
+    <div className="rows">
+      <FactRow emphasis="ledger" label="Deposit" value={<MoneyFigure amount={12500}/>}/>
+      <FactRow emphasis="ledger" label="Where it sits" value="In escrow, on the rail"/>
+      <FactRow emphasis="ledger" label="At settlement" value="One public record" last/>
+    </div>
+
+    <span className="lbl">QuotedRow — the post a reply answers: contained, and inert</span>
+    <QuotedRow
+      title="The long way home — @ada"
+      snippet="The light does something at the third headland that I have never managed…"
+      name="Ada Okonkwo"/>
+  </div>
+
+  <div className="col">
+    <span className="lbl">ContentRow · ledger — the wallet's history, through LedgerRow</span>
+    <div className="list">
+      <LedgerRow words="Tip from @tobias" context='On "Salt maps of the coast road"' when="4d" amount={2} name="Tobias Lindqvist" onOpen={()=>{}}/>
+      <LedgerRow words="Payout · settling" when="2d" amount={3.1} pending glyph="campaign"/>
+    </div>
+
+    <span className="lbl">ContentRow · campaign — a tile disc, because a campaign is a thing with a face</span>
+    <div className="list">
+      <ContentRow variant="campaign" title="Sunday at the tide market" second="Open · ends 8 Sep" glyph="campaign" trailing="12,500" onOpen={()=>{}}/>
+    </div>
+
+    <span className="lbl">ContentRow · door — the filled disc says entrance, not entry</span>
+    <div className="list">
+      <ContentRow variant="door" title="Campaigns" second="1 open · start a new one" glyph="campaign" onOpen={()=>{}}/>
+    </div>
+
+    <span className="lbl">ContentRow · chronicle — body-sized second line, a time, no chevron, inert</span>
+    <div className="list">
+      <ContentRow variant="chronicle" title="Signed a post" titleAside="3 acts"
+        second="Sunday at the tide market — four pictures, two topics, one stance."
+        glyph="history" trailing="4d" chevron={false} inert/>
+      <ContentRow variant="chronicle" title="Changed the payout address"
+        second="Waiting on the rail." glyph="wallet" trailing="2d" pending chevron={false} inert/>
+    </div>
+  </div>
+</div>)}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script></body></html>
