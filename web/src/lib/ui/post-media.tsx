@@ -20,7 +20,6 @@
 // direction (an author's choice shown as a platform verdict) is the worse error.
 
 import type React from "react";
-import { useState } from "react";
 
 import {
   fitFor,
@@ -30,7 +29,7 @@ import {
 import { BodyVeil } from "@/lib/ui2/media/body-veil";
 import { MediaGallery, type GalleryItem, type PlayerSurface } from "@/lib/ui2/media/media-gallery";
 import { RemovedPlaceholder, type RemovalReason } from "@/lib/ui2/media/removed-placeholder";
-import { isRevealed, rememberReveal, sensitiveSignature } from "@/lib/ui2/media/reveal";
+import { rememberReveal, sensitiveSignature, useRevealed } from "@/lib/ui2/media/reveal";
 
 type Attachment = {
   id: string;
@@ -233,9 +232,10 @@ function SharedVeil({
   testId?: string;
 }) {
   const shared = nodeId !== undefined && signature !== undefined;
-  // The store is not React state, so a reveal made here has to be turned into
-  // a render. The counter is that, and nothing else reads it.
-  const [, bump] = useState(0);
+  // Subscribed rather than read: the reveal belongs to the node, so every
+  // mounted surface showing it lifts its veil together. An unshared veil still
+  // has to call the hook — the empty key never matches a remembered reveal.
+  const revealed = useRevealed(nodeId ?? "", signature ?? "");
   const veilId = testId ? `${testId}-veil` : undefined;
 
   if (!shared) {
@@ -251,10 +251,9 @@ function SharedVeil({
       radius="0px"
       reason={reason}
       testId={veilId}
-      revealed={isRevealed(nodeId, signature)}
+      revealed={revealed}
       onReveal={() => {
         rememberReveal(nodeId, signature);
-        bump((n) => n + 1);
       }}
     >
       {children}
