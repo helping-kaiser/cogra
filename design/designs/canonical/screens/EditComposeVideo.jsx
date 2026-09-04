@@ -16,7 +16,7 @@
 export function Screen() {
   return (
     <>
-      <WizardHeader title="Edit post" leaveLabel="Leave — your draft is kept" action={<SystemHelpDot ariaLabel="Editing" />} />
+      <WizardHeader title="Edit post" leaveLabel="Leave — your draft is kept" help="Editing" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>Video</FieldLabel>
