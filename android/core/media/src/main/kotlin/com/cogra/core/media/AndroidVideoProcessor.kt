@@ -25,6 +25,9 @@ import com.cogra.domain.media.VideoBitrate
 import com.cogra.domain.media.VideoFrame
 import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
+import com.cogra.domain.media.coverFrameAtMs
+import com.cogra.domain.media.richerThan
+import com.cogra.domain.media.rotatedDimensions
 import java.io.File
 import kotlin.coroutines.resume
 import kotlinx.coroutines.Dispatchers
@@ -256,12 +259,7 @@ class AndroidVideoProcessor(
                     ?: return@read emptyList()
                 buildList {
                     repeat(count) { index ->
-                        // Frames sit at the midpoints of `count` equal
-                        // slices rather than at 0, half and end: the
-                        // first frame of a clip is often black, and the
-                        // last one is often the moment the recorder
-                        // reached for the button.
-                        val atMs = (duration.toLong() * (2 * index + 1) / (2L * count)).toInt()
+                        val atMs = coverFrameAtMs(duration, index, count)
                         val bitmap = runCatching {
                             reader.getFrameAtTime(
                                 atMs * 1_000L,
@@ -303,19 +301,7 @@ class AndroidVideoProcessor(
     ) {
         val shortSide: Int get() = minOf(width, height)
 
-        /**
-         * Whether this clip carries more bits than we mean to send.
-         *
-         * Compared against the whole budget — the video rate plus the
-         * audio beside it — because the container's figure covers both.
-         *
-         * **A clip that will not say is treated as too rich.** The cost
-         * of re-encoding something that was already lean is a little
-         * quality; the cost of waving through something that was not is
-         * the fault this exists to fix.
-         */
-        fun richerThan(targetVideoBps: Int): Boolean =
-            bitrate == null || bitrate > targetVideoBps + VideoBitrate.AUDIO_BPS
+        fun richerThan(targetVideoBps: Int): Boolean = richerThan(bitrate, targetVideoBps)
     }
 
     private fun probe(uri: String): Probe? = read(uri) { reader ->
@@ -331,9 +317,6 @@ class AndroidVideoProcessor(
             .extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)
             ?.toIntOrNull()
             ?: return@read null
-        // A rotated recording reports its stored dimensions, so the
-        // quarter turns swap them back before anything reasons about
-        // which side is short.
         val rotation = reader
             .extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)
             ?.toIntOrNull()
@@ -343,11 +326,8 @@ class AndroidVideoProcessor(
         val bitrate = reader
             .extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)
             ?.toIntOrNull()
-        if (rotation == 90 || rotation == 270) {
-            Probe(height, width, duration, bitrate)
-        } else {
-            Probe(width, height, duration, bitrate)
-        }
+        val (shown, tall) = rotatedDimensions(width, height, rotation)
+        Probe(shown, tall, duration, bitrate)
     }
 
     /**
