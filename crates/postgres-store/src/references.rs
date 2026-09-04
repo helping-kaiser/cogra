@@ -44,37 +44,10 @@
 use common::l1::fold::BundleSum;
 use sqlx::PgPool;
 
-/// Which view of the graph a references read takes: L1's — only what has
-/// landed — or L2's, which also counts one actor's acts still in flight
-/// (api-spec.md "Conventions", the `includePending` split).
-///
-/// The pending half names *whose* acts it counts, because a staged write is
-/// not on the graph: only its own author may see it.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ReferenceView<'a> {
-    Landed,
-    IncludingPending { actor: &'a str },
-}
-
-impl<'a> ReferenceView<'a> {
-    /// The `includePending` argument as the API takes it: pending rows
-    /// count only in the L2 view, and only when there is a viewer whose own
-    /// in-flight acts they can be.
-    pub fn from_include_pending(include_pending: bool, viewer: Option<&'a str>) -> Self {
-        match (include_pending, viewer) {
-            (true, Some(actor)) => ReferenceView::IncludingPending { actor },
-            _ => ReferenceView::Landed,
-        }
-    }
-
-    /// `(pending counted, whose)` — the shape the queries bind.
-    fn params(self) -> (bool, &'a str) {
-        match self {
-            ReferenceView::Landed => (false, ""),
-            ReferenceView::IncludingPending { actor } => (true, actor),
-        }
-    }
-}
+/// The fold view a references read takes — see
+/// [`crate::view::PendingView`], which every fold with a pending half
+/// shares.
+pub use crate::view::PendingView as ReferenceView;
 
 /// One standing citation from an artifact, as one author's bundle nets it.
 #[derive(Debug, Clone, PartialEq)]
@@ -143,6 +116,7 @@ pub async fn references_of(
                  AND l.source = $1
                  AND r.author = $2
                  AND NOT r.payload_marked
+                 AND NOT l.census_unknown
              UNION ALL
                SELECT s.target, s.p_d, s.p_i, TRUE
                FROM staged_writes s
@@ -221,6 +195,7 @@ pub async fn bundle(
                  AND l.target = $2
                  AND r.author = $3
                  AND NOT r.payload_marked
+                 AND NOT l.census_unknown
              UNION ALL
                SELECT s.p_d, s.p_i
                FROM staged_writes s

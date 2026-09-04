@@ -1,0 +1,74 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM (\n                   SELECT r.record_id, r.family, r.author, r.epoch, r.act_time,\n                          r.position, r.payload_marked, r.payload_witness\n                   FROM mirror_records r\n                   WHERE ($1::text IS NULL OR r.author = $1)\n                     AND ($2::text IS NULL OR r.family = $2)\n                     AND ($3::boolean IS NULL OR r.payload_marked = $3)\n                     AND ($4::bigint IS NULL OR r.epoch >= $4)\n                     AND ($5::bigint IS NULL OR r.epoch <= $5)\n                     AND ($6::text IS NULL OR EXISTS (\n                             SELECT 1 FROM mirror_record_legs l\n                             WHERE l.record_id = r.record_id\n                               AND l.leg IN ('binary', 'a') AND l.target = $6))\n                     AND ($7::text IS NULL OR EXISTS (\n                             SELECT 1 FROM mirror_record_legs l\n                             WHERE l.record_id = r.record_id\n                               AND l.leg = 't' AND l.target = $7))\n                     AND ($8::bigint IS NULL\n                          OR (r.epoch, r.act_time, r.position) > ($8, $9, $10))\n                   ORDER BY r.epoch ASC, r.act_time ASC, r.position ASC\n                   LIMIT $11\n               ) page\n               ORDER BY epoch DESC, act_time DESC, position DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "record_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "family",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "author",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "epoch",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "act_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "position",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "payload_marked",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "payload_witness",
+        "type_info": "Bytea"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "0dfb723e376d885fa7bd96f91f139ee28ea7cb558dbd13aa1e57d77110e49095"
+}

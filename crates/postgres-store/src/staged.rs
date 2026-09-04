@@ -151,6 +151,17 @@ impl StagedWrite {
 /// prepare path (bootstrap repair, the dev CLI) can never cause identifier
 /// reuse. Runs on a connection so prepare composes it with the staged
 /// insert in one transaction.
+///
+/// The catch-up reads the sequence out of the record identifier, which is
+/// L1's own string stored verbatim: `act:<author>:<seq>:<family>`, whose
+/// third field is the sequence (`common::l1::identifier::ActId`). The
+/// digits test is not decoration. An unqualified `::BIGINT` raises on the
+/// first row whose third field is not a number, and the raise is not
+/// scoped to that row — it fails the allocation, and with it every
+/// prepare this author attempts, for as long as the row is in the mirror.
+/// A row that is not an act identifier carries no sequence to catch up
+/// to, so skipping it is also the right answer; `tests/staged.rs` pins
+/// the decomposition against the Rust parser it mirrors.
 pub async fn allocate_seq(conn: &mut PgConnection, author: &str) -> Result<i64, StagedError> {
     sqlx::query!(
         "INSERT INTO author_seq_counters (author, next_seq) VALUES ($1, 0)
@@ -164,7 +175,9 @@ pub async fn allocate_seq(conn: &mut PgConnection, author: &str) -> Result<i64, 
            SET next_seq = GREATEST(
                    next_seq,
                    (SELECT COALESCE(MAX(split_part(record_id, ':', 3)::BIGINT) + 1, 0)
-                    FROM mirror_records WHERE author = $1)
+                    FROM mirror_records
+                    WHERE author = $1
+                      AND split_part(record_id, ':', 3) ~ '^[0-9]{1,18}$')
                ) + 1
            WHERE author = $1
            RETURNING next_seq - 1 AS "seq!""#,
@@ -384,6 +397,28 @@ pub async fn list_for_actor(
     Ok(writes)
 }
 
+/// The refusal a state-guarded write owes when it matched no row.
+///
+/// A miss has exactly two causes and they are different answers: the row
+/// is gone, or the row is somewhere else in the handshake. Every guarded
+/// write in this module re-reads the state to tell them apart, and each
+/// one that wrote that block out longhand was a chance to answer the
+/// second with the first.
+async fn missed_transition(pool: &PgPool, id: Uuid, expected: &str) -> StagedError {
+    match sqlx::query_scalar!("SELECT state FROM staged_writes WHERE id = $1", id)
+        .fetch_optional(pool)
+        .await
+    {
+        Ok(Some(actual)) => StagedError::WrongState {
+            id,
+            expected: expected.to_string(),
+            actual,
+        },
+        Ok(None) => StagedError::NotFound(id),
+        Err(e) => StagedError::Storage(e),
+    }
+}
+
 /// Guarded state transition: `from` → `to`, failing with the actual state
 /// when the row is elsewhere in the handshake.
 async fn transition(
@@ -406,15 +441,7 @@ async fn transition(
     if updated == 1 {
         return Ok(());
     }
-    let actual = sqlx::query_scalar!("SELECT state FROM staged_writes WHERE id = $1", id)
-        .fetch_optional(pool)
-        .await?
-        .ok_or(StagedError::NotFound(id))?;
-    Err(StagedError::WrongState {
-        id,
-        expected: from_strs.join(" or "),
-        actual,
-    })
+    Err(missed_transition(pool, id, &from_strs.join(" or ")).await)
 }
 
 /// Stores the device's pre-commitment leg and moves the write into
@@ -447,17 +474,7 @@ pub async fn record_pre_signed(
             id,
             "pre-commitment recorded without an authoring instant".into(),
         )),
-        None => {
-            let actual = sqlx::query_scalar!("SELECT state FROM staged_writes WHERE id = $1", id)
-                .fetch_optional(pool)
-                .await?
-                .ok_or(StagedError::NotFound(id))?;
-            Err(StagedError::WrongState {
-                id,
-                expected: "awaiting_pre_sign or sealing".to_string(),
-                actual,
-            })
-        }
+        None => Err(missed_transition(pool, id, "awaiting_pre_sign or sealing").await),
     }
 }
 
@@ -483,15 +500,7 @@ pub async fn record_sealed(pool: &PgPool, id: Uuid, act: &VerifiedAct) -> Result
     if updated == 1 {
         return Ok(());
     }
-    let actual = sqlx::query_scalar!("SELECT state FROM staged_writes WHERE id = $1", id)
-        .fetch_optional(pool)
-        .await?
-        .ok_or(StagedError::NotFound(id))?;
-    Err(StagedError::WrongState {
-        id,
-        expected: "sealing".to_string(),
-        actual,
-    })
+    Err(missed_transition(pool, id, StagedState::Sealing.as_str()).await)
 }
 
 /// Returns a failed seal to `awaiting_pre_sign` so the device can retry,
@@ -513,15 +522,7 @@ pub async fn revert_to_pre_sign(pool: &PgPool, id: Uuid) -> Result<(), StagedErr
     .fetch_optional(&mut *tx)
     .await?;
     let Some(staged_rows) = reverted else {
-        let actual = sqlx::query_scalar!("SELECT state FROM staged_writes WHERE id = $1", id)
-            .fetch_optional(pool)
-            .await?
-            .ok_or(StagedError::NotFound(id))?;
-        return Err(StagedError::WrongState {
-            id,
-            expected: StagedState::Sealing.as_str().to_string(),
-            actual,
-        });
+        return Err(missed_transition(pool, id, StagedState::Sealing.as_str()).await);
     };
     discard_pending_content(&mut tx, std::iter::once(staged_rows)).await?;
     tx.commit().await?;
@@ -581,6 +582,10 @@ pub async fn promote_landed(pool: &PgPool, epoch: i64) -> Result<Vec<PromotedWri
 
 /// Expires one staged write immediately — the terminal path for a
 /// handshake that can never complete (a seal lost before it was stored).
+///
+/// A write already in a terminal state is refused as `WrongState`, not as
+/// `NotFound`: the row is there, and saying otherwise would send a caller
+/// looking for a write it is holding.
 pub async fn expire_one(pool: &PgPool, id: Uuid, current_epoch: i64) -> Result<(), StagedError> {
     let mut tx = pool.begin().await?;
     let expired = sqlx::query_as!(
@@ -593,8 +598,10 @@ pub async fn expire_one(pool: &PgPool, id: Uuid, current_epoch: i64) -> Result<(
         current_epoch,
     )
     .fetch_optional(&mut *tx)
-    .await?
-    .ok_or(StagedError::NotFound(id))?;
+    .await?;
+    let Some(expired) = expired else {
+        return Err(missed_transition(pool, id, "neither landed nor expired").await);
+    };
     discard_pending_content(&mut tx, std::iter::once(expired)).await?;
     tx.commit().await?;
     Ok(())
@@ -670,4 +677,32 @@ pub async fn reap_expired(
     .execute(pool)
     .await?
     .rows_affected())
+}
+
+#[cfg(test)]
+mod state_tests {
+    use super::StagedState;
+
+    /// Every state the column can hold decodes back to the variant that
+    /// wrote it. A one-character typo in either direction is a decode
+    /// that fails at runtime and nowhere earlier, and the two halves are
+    /// two independent lists.
+    ///
+    /// Every handshake state decodes back to the variant that wrote it.
+    /// ´claim:staged:a-handshake-state-round-trips-through-its-column´
+    #[test]
+    fn every_state_round_trips_through_its_column_form() {
+        for state in [
+            StagedState::AwaitingPreSign,
+            StagedState::Sealing,
+            StagedState::AwaitingApproval,
+            StagedState::Relaying,
+            StagedState::Landed,
+            StagedState::Expired,
+        ] {
+            assert_eq!(StagedState::parse(state.as_str()), Some(state));
+        }
+        assert_eq!(StagedState::parse("awaiting-pre-sign"), None);
+        assert_eq!(StagedState::parse(""), None);
+    }
 }

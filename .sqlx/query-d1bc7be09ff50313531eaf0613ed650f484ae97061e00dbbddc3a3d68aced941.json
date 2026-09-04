@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM (\n               SELECT p.id, p.author_id, p.l1_node_id, p.license,\n                      p.landed_epoch, p.act_time, p.position, p.created_at,\n                      v.title, v.description,\n                      v.content AS \"content!\", v.redaction_reason,\n                      v.sensitive AS \"sensitive!\", v.sensitive_reason,\n                      v.pending AS \"version_pending!\",\n                      v.created_at AS \"version_created_at!\",\n                      v.version_id AS \"version_id!\"\n               FROM posts p\n               JOIN LATERAL (\n                   SELECT title, description, content, redaction_reason,\n                          sensitive, sensitive_reason,\n                          pending, created_at, version_id\n                   FROM post_versions\n                   WHERE post_id = p.id AND ($6 OR NOT pending)\n                   ORDER BY pending DESC,\n                            landed_epoch DESC NULLS LAST,\n                            act_time DESC NULLS LAST,\n                            position DESC NULLS LAST,\n                            created_at DESC, version_id DESC\n                   LIMIT 1\n               ) v ON TRUE\n               WHERE p.landed_epoch IS NOT NULL\n                 AND ($1::bigint IS NULL\n                      OR ($4 AND (p.landed_epoch, p.act_time, p.position) > ($1, $2, $3))\n                      OR (NOT $4 AND (p.landed_epoch, p.act_time, p.position) < ($1, $2, $3)))\n               ORDER BY\n                   CASE WHEN $4 THEN p.landed_epoch END ASC,\n                   CASE WHEN $4 THEN p.act_time END ASC,\n                   CASE WHEN $4 THEN p.position END ASC,\n                   p.landed_epoch DESC, p.act_time DESC, p.position DESC\n               LIMIT $5\n           ) page\n           ORDER BY landed_epoch DESC, act_time DESC, position DESC",
+  "query": "SELECT * FROM (\n                   SELECT p.id, p.author_id, p.l1_node_id, p.license,\n                          p.landed_epoch, p.act_time, p.position, p.created_at,\n                          v.title, v.description,\n                          v.content AS \"content!\", v.redaction_reason,\n                          v.sensitive AS \"sensitive!\", v.sensitive_reason,\n                          v.pending AS \"version_pending!\",\n                          v.created_at AS \"version_created_at!\",\n                          v.version_id AS \"version_id!\"\n                   FROM posts p\n                   JOIN LATERAL (\n                       SELECT title, description, content, redaction_reason,\n                              sensitive, sensitive_reason,\n                              pending, created_at, version_id\n                       FROM post_versions\n                       WHERE post_id = p.id AND ($5 OR NOT pending)\n                       ORDER BY pending DESC,\n                                landed_epoch DESC NULLS LAST,\n                                act_time DESC NULLS LAST,\n                                position DESC NULLS LAST,\n                                created_at DESC, version_id DESC\n                       LIMIT 1\n                   ) v ON TRUE\n                   WHERE p.landed_epoch IS NOT NULL\n                     AND ($1::bigint IS NULL\n                          OR (p.landed_epoch, p.act_time, p.position) > ($1, $2, $3))\n                   ORDER BY p.landed_epoch ASC, p.act_time ASC, p.position ASC\n                   LIMIT $4\n               ) page\n               ORDER BY landed_epoch DESC, act_time DESC, position DESC",
   "describe": {
     "columns": [
       {
@@ -94,7 +94,6 @@
         "Int8",
         "Int8",
         "Int8",
-        "Bool",
         "Int8",
         "Bool"
       ]
@@ -119,5 +118,5 @@
       false
     ]
   },
-  "hash": "0dd9846a6bfb4cecb74e0976fd0fde9dd07249dd74f46375362e16788748580f"
+  "hash": "d1bc7be09ff50313531eaf0613ed650f484ae97061e00dbbddc3a3d68aced941"
 }

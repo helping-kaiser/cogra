@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH candidates AS (\n               SELECT l.source                AS node,\n                      r.author                AS author,\n                      l.p_i                   AS relevance,\n                      l.p_d                   AS confidence,\n                      FALSE                   AS pending,\n                      r.epoch                 AS epoch,\n                      r.act_time              AS act_time,\n                      r.position              AS position,\n                      NULL::timestamptz       AS authored_at\n               FROM mirror_record_legs l\n               JOIN mirror_records r ON r.record_id = l.record_id\n               WHERE l.leg = 't' AND l.family = 'tag'\n                 AND l.target = $1\n                 AND NOT r.payload_marked\n                 AND NOT l.census_unknown\n                 AND (NOT $2 OR r.author = CASE\n                         WHEN l.source LIKE 'mint:act:%' THEN split_part(l.source, ':', 3)\n                         WHEN l.source LIKE 'prof:%'     THEN split_part(l.source, ':', 2)\n                         ELSE NULL\n                     END)\n             UNION ALL\n               SELECT s.middle, s.author, s.p_d, s.p_i, TRUE, 0, 0, 0, s.pre_signed_at\n               FROM staged_writes s\n               WHERE $3\n                 AND s.family = 'tag'\n                 AND s.target = $1\n                 AND s.author = $4\n                 AND s.middle IS NOT NULL\n                 AND octet_length(s.payload) = 0\n                 AND s.pre_signed_at IS NOT NULL\n                 AND s.state NOT IN ('landed', 'expired')\n                 AND (NOT $2 OR s.author = CASE\n                         WHEN s.middle LIKE 'mint:act:%' THEN split_part(s.middle, ':', 3)\n                         WHEN s.middle LIKE 'prof:%'     THEN split_part(s.middle, ':', 2)\n                         ELSE NULL\n                     END)\n           ),\n           winners AS (\n               SELECT DISTINCT ON (author, node) *\n               FROM candidates\n               ORDER BY author, node, pending DESC,\n                        epoch DESC, act_time DESC, position DESC,\n                        authored_at DESC\n           )\n           SELECT node        AS \"node!\",\n                  author      AS \"author!\",\n                  relevance   AS \"relevance!\",\n                  confidence  AS \"confidence!\",\n                  pending     AS \"pending!\"\n           FROM winners\n           WHERE relevance <> 0\n           ORDER BY pending DESC, epoch DESC, act_time DESC, position DESC,\n                    authored_at DESC, node\n           LIMIT $5",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "node!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "author!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "relevance!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "confidence!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "pending!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bool",
+        "Bool",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "ab62f6d2b62161ff39bc107882537053206efb8421a28cfd91e5b6915abd0cf2"
+}

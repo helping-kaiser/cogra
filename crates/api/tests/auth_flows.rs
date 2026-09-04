@@ -468,7 +468,9 @@ async fn password_resets_are_single_use_and_revoke_all_sessions(pool: PgPool) {
 
 /// The original side alone changes nothing; the change applies when the
 /// new side lands, and a wrong token matches nothing on the way.
-/// Re-applying afterwards is idempotent.
+/// Re-applying afterwards is idempotent in effect and in what it
+/// reports — the second call still answers `Applied`, because the
+/// address is the proven target either way.
 ///
 /// (´claim:auth:an-email-change-needs-both-sides´)
 #[sqlx::test(migrations = "../../migrations")]
@@ -530,7 +532,9 @@ async fn the_email_change_applies_only_when_both_sides_stand(pool: PgPool) {
         store::apply_email_change_if_complete(&pool, user)
             .await
             .expect("no-op"),
-        store::EmailChangeApply::NotReady
+        store::EmailChangeApply::Applied,
+        "a retried confirm reports the change it is looking at, not the \
+         absence of one"
     );
 }
 

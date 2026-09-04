@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE author_seq_counters\n           SET next_seq = GREATEST(\n                   next_seq,\n                   (SELECT COALESCE(MAX(split_part(record_id, ':', 3)::BIGINT) + 1, 0)\n                    FROM mirror_records\n                    WHERE author = $1\n                      AND split_part(record_id, ':', 3) ~ '^[0-9]{1,18}$')\n               ) + 1\n           WHERE author = $1\n           RETURNING next_seq - 1 AS \"seq!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "seq!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "866ac69dcc221a4df11f3d37a183f91149c4d120412c4c10835ea1f79a4cf9b6"
+}

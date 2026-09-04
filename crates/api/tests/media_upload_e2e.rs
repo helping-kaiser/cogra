@@ -383,7 +383,7 @@ async fn an_unattached_asset_is_swept_with_its_object(pool: PgPool) {
         .expect("key");
     assert!(rig.blobs.exists(&key).await.expect("head"));
 
-    let swept = postgres_store::media::sweep_orphans(&rig.pool, 0.0)
+    let swept = postgres_store::media::sweep_orphans(&rig.pool, 0.0, 100)
         .await
         .expect("sweep");
     assert_eq!(swept.len(), 1, "the unattached asset is an orphan");
@@ -441,7 +441,7 @@ async fn a_poster_is_not_swept_out_from_under_its_video(pool: PgPool) {
     let poster = insert_asset(&rig.pool, author, 1, None).await;
     let video = insert_asset(&rig.pool, author, 2, Some(poster)).await;
 
-    let swept = postgres_store::media::sweep_orphans(&rig.pool, 0.0)
+    let swept = postgres_store::media::sweep_orphans(&rig.pool, 0.0, 100)
         .await
         .expect("sweep");
     assert_eq!(
@@ -450,7 +450,7 @@ async fn a_poster_is_not_swept_out_from_under_its_video(pool: PgPool) {
         "the video is unreferenced, but its poster is spoken for"
     );
 
-    let swept = postgres_store::media::sweep_orphans(&rig.pool, 0.0)
+    let swept = postgres_store::media::sweep_orphans(&rig.pool, 0.0, 100)
         .await
         .expect("sweep");
     assert_eq!(
