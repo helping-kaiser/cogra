@@ -227,8 +227,8 @@ mod tests {
     fn clip_normalises_negative_zero_and_nan() {
         assert!(!clip(-0.0).is_sign_negative(), "-0.0 is not a direction");
         assert!(
-            !clip(-1.0 * 0.0).is_sign_negative(),
-            "a negated zero folds to a positive zero"
+            !sum(0.3, 0.3).project(-0.3, -0.3).p_d.is_sign_negative(),
+            "and neither is a landing that arrived at zero from above"
         );
         assert_eq!(clip(f64::NAN), 0.0);
         assert_eq!(clip(f64::INFINITY), LIMIT);

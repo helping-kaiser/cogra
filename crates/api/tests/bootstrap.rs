@@ -659,8 +659,8 @@ async fn the_operator_login_completes_the_genesis_account(pool: PgPool) {
         .expect("blob row");
     let retyped = common::l1::key_backup::RecoveryCode::from_input(&code)
         .expect("the printed code reads back through the reference parser");
-    let opened = common::l1::key_backup::open(&blob, &retyped)
-        .expect("the printed code opens the blob");
+    let opened =
+        common::l1::key_backup::open(&blob, &retyped).expect("the printed code opens the blob");
     let custodied = genesis::system_key(&pool, credentials.actor_id)
         .await
         .expect("query")

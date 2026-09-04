@@ -17,12 +17,10 @@
 
 use std::path::Path;
 
-use api::auth::{
-    HANDLE_CHARSET_PATTERN, HANDLE_MAX_CHARS, HANDLE_MIN_CHARS, PASSWORD_MIN_CHARS,
-};
+use api::auth::{HANDLE_CHARSET_PATTERN, HANDLE_MAX_CHARS, HANDLE_MIN_CHARS, PASSWORD_MIN_CHARS};
 use api::media::{
     MAX_ALT_TEXT_CHARS, MAX_COMMENT_ATTACHMENTS, MAX_COMMENT_VIDEO_BYTES, MAX_PIXEL_DIMENSION,
-    MAX_POST_ATTACHMENTS, MAX_POST_VIDEO_BYTES, MediaConfig, MIN_MULTIPART_PART_BYTES,
+    MAX_POST_ATTACHMENTS, MAX_POST_VIDEO_BYTES, MIN_MULTIPART_PART_BYTES, MediaConfig,
     RESUMABLE_THRESHOLD_BYTES,
 };
 use api::schema::types::{
@@ -82,9 +80,8 @@ fn build_constants() -> Value {
     })
 }
 
-/// The video cap the *server* enforces is the post cap, and the config's
-/// default has to agree with the per-kind constant the resolver checks —
-/// otherwise the artifact would export two numbers for one rule.
+/// The config default and the per-kind constant the resolver checks are
+/// one number, or the artifact would export two numbers for one rule.
 ///
 /// The exported media caps are the caps the server itself enforces, not a second statement of them.
 /// ´claim:constants:the-exported-caps-are-the-enforced-caps´
@@ -92,20 +89,21 @@ fn build_constants() -> Value {
 fn the_exported_caps_are_the_ones_the_server_enforces() {
     let media = MediaConfig::default();
     assert_eq!(
-        media.max_video_upload_bytes as i64,
-        MAX_POST_VIDEO_BYTES,
+        media.max_video_upload_bytes as i64, MAX_POST_VIDEO_BYTES,
         "the transport default and the post-video cap are one number"
     );
-    assert!(
-        MAX_COMMENT_VIDEO_BYTES < MAX_POST_VIDEO_BYTES,
-        "a comment's video budget is the smaller of the two"
-    );
-    assert!(
-        RESUMABLE_THRESHOLD_BYTES >= MIN_MULTIPART_PART_BYTES,
-        "a client switching to the resumable path below S3's part floor \
-         would open a session that cannot assemble"
-    );
 }
+
+/// The two relations between exported caps that hold by construction, so
+/// they are checked by construction: a `const` assertion refuses to
+/// compile rather than waiting for a test run, and clippy is right that a
+/// runtime `assert!` over two constants asserts nothing.
+///
+/// A comment's video budget is the smaller of the two, and the resumable
+/// threshold clears S3's floor under every part but the last — a client
+/// switching below that floor would open a session that cannot assemble.
+const _: () = assert!(MAX_COMMENT_VIDEO_BYTES < MAX_POST_VIDEO_BYTES);
+const _: () = assert!(RESUMABLE_THRESHOLD_BYTES >= MIN_MULTIPART_PART_BYTES);
 
 /// The terminal-refusal list is exported by name, and those names are the
 /// SDL's — a variant renamed in Rust changes the string both clients
@@ -115,10 +113,9 @@ fn the_exported_caps_are_the_ones_the_server_enforces() {
 /// ´claim:constants:every-terminal-refusal-is-a-published-code´
 #[test]
 fn the_terminal_refusals_are_published_error_codes() {
-    let sdl = std::fs::read_to_string(
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../schema.graphql"),
-    )
-    .expect("the exported SDL is committed");
+    let sdl =
+        std::fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../schema.graphql"))
+            .expect("the exported SDL is committed");
     for code in TERMINAL_WRITE_REFUSALS {
         let name = error_code_name(code);
         assert!(

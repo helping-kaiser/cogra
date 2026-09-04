@@ -77,52 +77,46 @@ fn rejection_vectors() -> Value {
     let wire_cases: [(&str, Vec<u8>); 6] = [
         ("an empty wire frame", vec![]),
         ("a proposal frame that is not an array", vec![0x01]),
-        (
-            "a proposal frame of the wrong arity",
-            {
-                let mut e = Encoder::new();
-                e.array(2).uint(1).uint(1);
-                e.finish()
-            },
-        ),
+        ("a proposal frame of the wrong arity", {
+            let mut e = Encoder::new();
+            e.array(2).uint(1).uint(1);
+            e.finish()
+        }),
         (
             "a proposal frame truncated inside its head",
             vec![0x9b, 0xff, 0xff],
         ),
-        (
-            "a proposal frame with trailing bytes",
-            {
-                let mut framed = wire::encode_proposal(&Proposal {
-                    body: StructuralBody {
-                        author: "alice-addr".into(),
-                        seq: 1,
-                        family: common::l1::Family::Opinion,
-                        middle: None,
-                        target: NodeId::parse("prof:bob").expect("valid node id"),
-                        p_d: 1.0,
-                        p_i: -0.25,
-                        settlement_ref: None,
-                        license: None,
-                        asserted_parents: vec![],
-                    },
-                    payload: b"hello, cogra".to_vec(),
-                    deps: vec![],
-                });
-                framed.push(0x00);
-                framed
-            },
-        ),
-        (
-            "a non-minimal CBOR head",
-            vec![0x98, 0x02, 0x01, 0x01],
-        ),
+        ("a proposal frame with trailing bytes", {
+            let mut framed = wire::encode_proposal(&Proposal {
+                body: StructuralBody {
+                    author: "alice-addr".into(),
+                    seq: 1,
+                    family: common::l1::Family::Opinion,
+                    middle: None,
+                    target: NodeId::parse("prof:bob").expect("valid node id"),
+                    p_d: 1.0,
+                    p_i: -0.25,
+                    settlement_ref: None,
+                    license: None,
+                    asserted_parents: vec![],
+                },
+                payload: b"hello, cogra".to_vec(),
+                deps: vec![],
+            });
+            framed.push(0x00);
+            framed
+        }),
+        ("a non-minimal CBOR head", vec![0x98, 0x02, 0x01, 0x01]),
     ];
 
     let identifier_cases: [(&str, &str); 5] = [
         ("an act id with too few parts", "act:alice:1"),
         ("an act id with an unknown family", "act:alice:1:nonsense"),
         ("an act id with a signed sequence", "act:alice:+1:opinion"),
-        ("an act id with a non-numeric sequence", "act:alice:x:opinion"),
+        (
+            "an act id with a non-numeric sequence",
+            "act:alice:x:opinion",
+        ),
         (
             "an act id whose sequence overflows u64",
             "act:alice:18446744073709551616:opinion",
@@ -147,14 +141,16 @@ fn rejection_vectors() -> Value {
     json!(out)
 }
 
+/// One structural body, as the document states it.
+///
+/// `seq` travels as a STRING, not a number. It is `u64` on every side,
+/// and a JSON number above 2^53 loses precision in a JavaScript reader
+/// before any assertion runs — a large-sequence vector would then produce
+/// a different act id than the reference encoded, and read as a
+/// misleading diff or a false pass.
 fn body_json(b: &StructuralBody) -> Value {
     json!({
         "author": b.author,
-        // A STRING, not a number. `seq` is u64 on every side, and a JSON
-        // number above 2^53 loses precision in a JavaScript reader before
-        // any assertion runs — a large-sequence vector would then produce
-        // a different act id than the reference encoded, and read as a
-        // misleading diff or a false pass.
         "seq": b.seq.to_string(),
         "family": b.family.as_str(),
         "middle": b.middle.as_ref().map(|m| m.to_string()),
@@ -313,6 +309,11 @@ fn signature_refusals(actor_signing: &SigningKey, sample: &[u8]) -> Value {
 ///
 /// Every entry is asserted against the reference below, so the document
 /// cannot record a verdict the reference does not actually reach.
+///
+/// The unit-separator case puts U+001C IN PLACE OF a code character
+/// rather than between two: a parser that wrongly strips it would then
+/// refuse for length instead, and the two verdicts have to stay
+/// distinguishable for the case to catch anything.
 fn recovery_code_inputs(code: &RecoveryCode) -> Value {
     let display = code.display();
     let squashed = display.replace('-', "");
@@ -326,10 +327,7 @@ fn recovery_code_inputs(code: &RecoveryCode) -> Value {
         ("a next-line separator", display.replace('-', "\u{85}")),
         ("tabs and newlines", display.replace('-', "\t\n")),
         ("a pasted byte-order mark", format!("\u{feff}{display}")),
-        (
-            "leading and trailing space",
-            format!("  {display}\u{a0}\n"),
-        ),
+        ("leading and trailing space", format!("  {display}\u{a0}\n")),
     ];
     let refused: [(&str, String, &str); 5] = [
         ("empty", String::new(), "length"),
@@ -339,9 +337,6 @@ fn recovery_code_inputs(code: &RecoveryCode) -> Value {
             "length",
         ),
         ("one character long", format!("{squashed}0"), "length"),
-        // In place of a code character, not between them: a parser that
-        // wrongly strips U+001C would then refuse for length instead, so
-        // the two verdicts stay distinguishable.
         (
             "a unit separator, which Unicode does not call white space",
             format!("{}\u{1c}", &squashed[..squashed.len() - 1]),

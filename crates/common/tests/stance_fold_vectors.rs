@@ -88,7 +88,13 @@ fn landing_vectors() -> Value {
         ),
         ("inert on the directed axis alone", 0.3, 0.4, -0.3, 0.0),
         ("inert on the interest axis alone", 0.4, 0.3, 0.0, -0.3),
-        ("a landing that would carry a negative zero", 0.3, 0.3, -0.3, -0.3),
+        (
+            "a landing that would carry a negative zero",
+            0.3,
+            0.3,
+            -0.3,
+            -0.3,
+        ),
     ];
     json!(
         cases
@@ -163,7 +169,7 @@ fn build_vectors() -> Value {
 /// the clip exists to prevent.
 ///
 /// The exported vectors distinguish a positive zero from a negative one.
-/// ´claim:fold-vectors:the-vectors-distinguish-the-two-zeros´
+/// ´claim:fold:the-vectors-distinguish-the-two-zeros´
 #[test]
 fn the_document_can_state_the_difference_between_the_zeros() {
     assert_ne!(bits(0.0), bits(-0.0));
@@ -182,9 +188,9 @@ fn the_document_can_state_the_difference_between_the_zeros() {
 }
 
 /// The committed fold vectors match what this crate derives, so drift fails the build rather than reaching a client.
-/// ´claim:fold-vectors:the-committed-vectors-match-what-the-crate-derives´
+/// ´claim:fold:the-committed-vectors-match-what-the-crate-derives´
 #[test]
-fn exported_vectors_match_the_committed_file() {
+fn exported_fold_vectors_match_the_committed_file() {
     let rendered = format!(
         "{}\n",
         serde_json::to_string_pretty(&build_vectors()).expect("vectors serialize")
