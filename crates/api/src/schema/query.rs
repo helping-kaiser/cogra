@@ -271,7 +271,10 @@ impl Query {
     /// id that resolves to no known node yields an empty page rather than
     /// an error — the same contract a null slot in `nodes` carries.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
-    #[allow(clippy::too_many_arguments)]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "each argument is a GraphQL field argument the schema declares; grouping them into a struct would change the published contract"
+    )]
     async fn records(
         &self,
         ctx: &Context<'_>,

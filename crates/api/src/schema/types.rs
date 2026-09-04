@@ -2810,7 +2810,6 @@ where
 
 /// The shared comments/replies read: a target's direct children,
 /// newest-first in landing order.
-#[allow(clippy::too_many_arguments)]
 async fn comments_connection(
     ctx: &Context<'_>,
     target: Uuid,
