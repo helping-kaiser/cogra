@@ -20,6 +20,9 @@
     "handleMinChars": 3,
     "passwordMinChars": 12
   },
+  "stance": {
+    "tapDefault": 0.1
+  },
   "version": 1,
   "writeSigner": {
     "sealPollAttempts": 5,

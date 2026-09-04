@@ -24,6 +24,7 @@ import {
   HANDLE_PATTERN,
   PASSWORD_MIN_CHARS,
 } from "@/lib/onboarding/registration-rules";
+import { TAP_DEFAULT } from "@/lib/stance/model";
 import {
   SEAL_POLL_ATTEMPTS,
   SEAL_POLL_DELAY_MS,
@@ -50,6 +51,7 @@ type Constants = {
     stillBytes: number;
   };
   paging: { defaultPageSize: number; maxPageSize: number };
+  stance: { tapDefault: number };
   registration: {
     handleCharsetPattern: string;
     handleMaxChars: number;
@@ -88,6 +90,15 @@ describe("paging", () => {
   it("asks for the contract's default page", () => {
     expect(CONTENT_PAGE_SIZE).toBe(constants.paging.defaultPageSize);
     expect(PROFILE_PAGE_SIZE).toBe(constants.paging.defaultPageSize);
+  });
+});
+
+describe("the stance pad", () => {
+  // Both axes, because the tap is one policy and not two: a default
+  // that moved on one axis only would tilt every plain tap.
+  it("commits the contract's low default on a plain tap", () => {
+    expect(TAP_DEFAULT.pDirected).toBe(constants.stance.tapDefault);
+    expect(TAP_DEFAULT.pInterest).toBe(constants.stance.tapDefault);
   });
 });
 

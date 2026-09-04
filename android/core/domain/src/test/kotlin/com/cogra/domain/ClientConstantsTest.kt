@@ -12,6 +12,7 @@ import com.cogra.domain.media.RESUMABLE_THRESHOLD_BYTES
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.signing.TERMINAL_REFUSALS
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.stance.StancePair
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.ThrowingWriteRepository
 import com.google.common.truth.Truth.assertThat
@@ -43,6 +44,15 @@ class ClientConstantsTest {
         assertThat(RESUMABLE_THRESHOLD_BYTES).isEqualTo(media.long("resumableThresholdBytes"))
         assertThat(ContentRepository.MAX_COMMENT_ATTACHMENTS)
             .isEqualTo(media.int("commentAttachments"))
+    }
+
+    // Both axes, because the tap is one policy and not two: a default
+    // that moved on one axis only would tilt every plain tap.
+    @Test
+    fun `a plain tap commits the contract's low default`() {
+        val tapDefault = group("stance").getValue("tapDefault").jsonPrimitive.content.toDouble()
+        assertThat(StancePair.TapDefault.pDirected).isEqualTo(tapDefault)
+        assertThat(StancePair.TapDefault.pInterest).isEqualTo(tapDefault)
     }
 
     @Test
