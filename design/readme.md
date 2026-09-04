@@ -2328,6 +2328,68 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   owed — the topic picker on the new composer board and again on the
   reply's cited seal, the score drill-down on the new detail state.
 
+### The conformance round — 2026-09-04
+
+Before any new surface, the canvas and the library were brought to
+the law they already claimed: whatever is drawn by hand is drawn by
+a master, and every master is one component with variants as props
+(jakob's mandate and rulings, same day).
+
+- **The library owed itself the most.** The bare primary word — a
+  text action with no pill and no minimum width — was re-implemented
+  five times inside `components/` and more on boards. It is now
+  **`InlineAction`**, Button's sibling so button vocabulary has one
+  home, in two rungs: label-large from the seal rows' documented
+  deviation, label-small from the describe/upload family. The rule
+  between them: a Button when the action owns its line, an
+  InlineAction when it rides at the end of somebody else's.
+- **Field labels come from the field.** `TextField`'s own `label` +
+  `corner` slots are the one label anatomy, and **`FieldLabel`** is
+  TextField's named export for captions over things that are not
+  fields — a `label` element when it has a control to point at, a
+  `span` when it does not. The composer's Title and Description
+  gained their accessible names by this ruling.
+- **One identity row under four lists** — **`ContentRow`**: ledger,
+  campaign, door, chronicle. The chronicle is two lines like every
+  other row — the act as its title line, the snippet cut to one line
+  with an ellipsis; no chronicle content needs a third line, and a
+  cut-off excerpt continues where the card opens. The door's glyph
+  rides the system's 20px; the chronicle's inner gaps are the row's
+  own.
+- **One hairline fact row in two emphases** — **`FactRow`**: seal
+  (label strong, value quiet, rules enclosing) and ledger (label
+  quiet, value strong, rules separating).
+- **One tab row** — **`TabBar`**, cell-driven: a cell with an icon
+  takes its accessible name from its label, a text cell's name is
+  its own words. The data decides, so the two can never contradict.
+- **Drawn controls are real controls.** "Show all" in the pick tray
+  is a button, not a span — resting look unchanged, the keyboard
+  path and the 48px target restored.
+- **The inverse Button is a variant, not an override** — the filled
+  button on a tonal panel, documented where Button lives.
+- **Masters gained**: `QuotedRow`, `CropViewport`, `CoverRow` (the
+  raw HTML frame strip became JSX), `PickTray`, `PickPrompt`,
+  `QuietNote`, `ActsFooter`, `SealFooter`, `WizardHeader`'s
+  `stageLabel` + `help`, `Caret`; **graduated from the prelude**:
+  `TopicRemovable`, `StagedReference`, `RefusedFile`, `StanceRow`,
+  `SectionLabel`.
+- **Contracts tell the truth.** Every `.d.ts` describes its `.jsx`,
+  in both directions — declared-but-absent props removed, present-
+  but-undeclared exports added.
+- **The bar the lanes ran under**: pixel-identity outside the named
+  rulings, every render hunk attributed or the lane stops. Three
+  seal boards, both crops and the final batch came out
+  byte-identical; the visible deltas are exactly the ruled ones.
+- **Held for rulings** (each parked in the backlog with its
+  question): ChipMini's tone, the reply seal's staged-reference
+  placement, the Mark drawings, the wizard footer's shape, the
+  comments-sheet shell, the "+ Cite something" voices, the topic
+  chip's ×, the acts line's target — and the twenty-seven
+  hand-authored boards that predate the pipeline.
+- **The gate**: 939 edges · 82 gaps · flows 58/53/5, unchanged end
+  to end — which is the round's whole claim: the canvas redrawn
+  from masters without the graph moving.
+
 ## 14. Index
 
 **Root**
