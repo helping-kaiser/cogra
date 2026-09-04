@@ -60,9 +60,7 @@ export function Screen() {
           removeLabel="Remove this video"
         />
 
-        <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          A video is the whole comment. Give it a cover below.
-        </p>
+        <QuietNote>A video is the whole comment. Give it a cover below.</QuietNote>
 
         <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} />
 
@@ -70,9 +68,7 @@ export function Screen() {
 
         <div style={{ flex: 1 }} />
 
-        <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          Words first — a video can join them, and it uploads while you write.
-        </p>
+        <QuietNote>Words first — a video can join them, and it uploads while you write.</QuietNote>
         <Button style={{ width: "100%" }}>Next</Button>
       </div>
     </>

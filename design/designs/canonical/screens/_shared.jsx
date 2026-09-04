@@ -94,6 +94,7 @@ const {
   CoverRow,
   Caret,
   SectionLabel,
+  QuietNote,
   StanceRow,
   TabBar,
   ContentRow,

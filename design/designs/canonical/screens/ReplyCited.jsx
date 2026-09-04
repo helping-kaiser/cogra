@@ -40,9 +40,7 @@ export function Screen() {
         help="Signed actions"
       />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          Reply to "The long way home" — 89 characters.
-        </p>
+        <QuietNote>Reply to "The long way home" — 89 characters.</QuietNote>
 
         <ActsCard
           rows={[

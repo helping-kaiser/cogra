@@ -26,9 +26,7 @@ export function Screen() {
     <>
       <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
-        <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          Your comment on "The long way home".
-        </p>
+        <QuietNote>Your comment on "The long way home".</QuietNote>
 
         <TextField label="Words" rows={2} value="Eighteen seconds of the same headland, if the light comes through at all." />
 

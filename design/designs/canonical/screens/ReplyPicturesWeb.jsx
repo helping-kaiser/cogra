@@ -39,9 +39,7 @@ export function Screen() {
 
         <div style={{ flex: 1 }} />
 
-        <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          Words first — pictures can join them, and they upload while you write.
-        </p>
+        <QuietNote>Words first — pictures can join them, and they upload while you write.</QuietNote>
         <Button style={{ width: "100%" }}>Next</Button>
       </div>
     </>

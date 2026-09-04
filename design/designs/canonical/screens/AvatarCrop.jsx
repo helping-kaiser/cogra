@@ -10,12 +10,8 @@ export function Screen() {
       <WizardHeader title="Your picture" leaveLabel="Leave" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
         <CropViewport src="comment-camera.jpg" shape="circle" scale={1.2} origin="50% 35%" />
-        <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          Drag to move, pinch to zoom.
-        </p>
-        <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          One picture, shown everywhere you appear.
-        </p>
+        <QuietNote>Drag to move, pinch to zoom.</QuietNote>
+        <QuietNote>One picture, shown everywhere you appear.</QuietNote>
         <div style={{ flex: 1 }} />
         <Button style={{ width: "100%" }}>Next</Button>
       </div>
