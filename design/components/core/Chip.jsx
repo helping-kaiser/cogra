@@ -23,12 +23,9 @@ import React from "react";
    prevent. */
 
 /* TWO SIZES, ONE PILL. `md` is the chip proper — a control the thumb reaches,
-   32px drawn and 48px tapped. `sm` is the same pill 24px tall on `label-small`,
-   and it is a READOUT rather than a control: the topics inside the acts card,
-   where the reader is being shown what a signature will carry, not offered
-   something to press. That is why the small rung does not get a smaller tap
-   target — nothing at this size is meant to be tapped. Where a control must be
-   small, it stays `md` and the row loses a word instead. */
+   32px drawn and 48px tapped. `sm` is the same pill 24px tall on `label-small`.
+   Neither gets a smaller tap target: where a control must be small, it stays
+   `md` and the row loses a word instead. */
 const SIZES = {
   md: {
     height: "32px",
@@ -70,7 +67,43 @@ function pill(size) {
   };
 }
 
-export function Chip({ label, selected = false, onToggle, ariaLabel, disabled = false, size = "md" }) {
+/* THE READOUT TONE (jakob's ruling, the conformance round). A readout is a chip
+   the reader is being SHOWN — the topics inside the acts card, where what a
+   signature will carry is read back to its author — and it is not a control:
+   no press, no state layer, no target, so no button and no `switch` role over
+   something nothing can switch. It is the borderless `secondary-container`
+   pill, 24px true, and it takes the `secondary-container` pair for the same
+   reason `TopicRemovable` does: what is drawn there is a piece of the thing
+   being authored, not a filter over somebody else's.
+
+   IT HAS ONE RUNG, the small one. A readout that offered a size choice would be
+   a control again; `size` belongs to the filter tone.
+
+   The box is `min-height` and padding rather than the filter pill's fixed
+   height, because a readout has to grow with the reader's text setting instead
+   of clipping it — nothing here is a target that a growing box would move.
+   `flex: none` is the acts row's business: that row's value slot clips, and a
+   topic shrunk to nothing would be a lie about what is being signed. The
+   letter-spacing is spelled `0.5px` rather than the token the way
+   `InlineAction`'s small rung is — the same half-pixel at a 16px root, taken
+   from the call site value for value. */
+const READOUT = {
+  display: "inline-flex",
+  alignItems: "center",
+  minHeight: "24px",
+  padding: "2px 8px",
+  borderRadius: "var(--radius-full)",
+  background: "var(--secondary-container)",
+  color: "var(--on-secondary-container)",
+  fontSize: "var(--text-label-small)",
+  lineHeight: "var(--text-label-small--line-height)",
+  fontWeight: "var(--text-label-small--font-weight)",
+  letterSpacing: "0.5px",
+  flex: "none",
+};
+
+export function Chip({ label, selected = false, onToggle, ariaLabel, disabled = false, size = "md", tone = "filter" }) {
+  if (tone === "readout") return <span style={READOUT}>{label}</span>;
   return (
     <button
       type="button"
