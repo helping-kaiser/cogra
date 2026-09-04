@@ -26,7 +26,7 @@ export function Screen() {
             onCounts={() => {}}
           />
         </div>
-        <TabBar ariaLabel="What the chronicle shows" value="everything" tabs={CHRONICLE_TABS} />
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />
         <ChronicleList>
           <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="3d" second="Salt maps of the coast road — rubbings from three weekends at low tide." onOpen={() => {}} />
           <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="4d" second="The third headland light is real — I have a print from 2019 that almost catches it." onOpen={() => {}} />

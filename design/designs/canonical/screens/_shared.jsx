@@ -414,6 +414,10 @@ const CHRONICLE_TABS = [
   { id: "comments", icon: "chat_bubble", label: "Comments" },
   { id: "everything", icon: "history", label: "Everything" },
 ];
+/* The tab strip's own name, assigned beside the tabs it names — a decided copy
+   string is an atom (readme, Masters and atoms), and five boards spelling it
+   out is five chances for one of them to say something else. */
+const CHRONICLE_TABS_LABEL = "What the chronicle shows";
 
 /* The chronicle column: cards on 8px of surface, the wallet history's seam. */
 function ChronicleList({ children }) {
@@ -478,7 +482,7 @@ function ProfileOtherBody() {
             showHandle={false}
           />
         </div>
-        <TabBar ariaLabel="What the chronicle shows" value="everything" tabs={CHRONICLE_TABS} />
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />
         <ChronicleList>
           <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="2h" second="The long way home — the light does something at the third headland." onOpen={() => {}} />
           <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="1d" second="The glovebox camera earns its keep — this is the print from 2019." onOpen={() => {}} />
