@@ -83,9 +83,13 @@ const {
   NodeMark,
   TopicRemovable,
   StagedReference,
+  RefusedFile,
   ActsFooter,
   SealFooter,
   FactRow,
+  QuotedRow,
+  CoverRow,
+  Caret,
 } = components;
 
 /* A standing of one gentle record — the vouch-back default made a bundle. */
@@ -531,23 +535,6 @@ function ChronicleList({ children }) {
   return (
     <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "8px 16px 0" }}>
       {children}
-    </div>
-  );
-}
-
-/* A file the surface refused (comment video round, 2026-09-02): the tile wears
-   MediaThumb's failed badge, the words sit beside it in UploadErrorLine, and
-   the only way out is Remove it — retrying cannot make a file smaller or a
-   format readable. The refusal is drawn where the file was offered, never in a
-   dialog and never in a snackbar. A file nothing can read has no preview, so
-   its tile is empty on purpose. Screen-local until a second product needs it. */
-function RefusedFile({ src, alt = "", video = false, message }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
-      <MediaThumb src={src} alt={alt} video={video} failed />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <UploadErrorLine message={message} onRemove={() => {}} />
-      </div>
     </div>
   );
 }
