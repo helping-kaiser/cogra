@@ -1,5 +1,6 @@
 import React from "react";
 import { Icon } from "../navigation/Icon.jsx";
+import { BUTTON_CLASS } from "../core/Button.jsx";
 
 /* A topic staged on a composer (item 17, the conformance round): the hash and
    the word in the secondary container, with the × that takes it back out.
@@ -13,15 +14,20 @@ import { Icon } from "../navigation/Icon.jsx";
    THE HASH IS DRAWN, NOT TYPED. The author names a topic; the mark that says
    what kind of name it is belongs to the row that shows it back.
 
-   THE × IS DRAWN, NOT WIRED — a glyph inside the pill, not a button, on every
-   board that stages a topic. So the one thing the author can do here cannot be
-   done by keyboard and has no name a screen reader can read. `PickTray`'s
-   "Show all" had exactly this shape and was ruled a real button; this one is
-   still waiting on its ruling, and the master draws what was designed rather
-   than deciding it. When the ruling comes, the × becomes the button — not the
-   pill, which would make removal the only thing a topic is for. */
+   THE × IS THE BUTTON, NOT THE PILL (jakob's ruling, the conformance round).
+   It was drawn as a glyph, which cannot be reached by keyboard and tells a
+   screen reader nothing — `PickTray`'s "Show all" had exactly this shape and
+   was ruled the same way. The pill stays inert: making the whole pill the
+   button would say removal is the only thing a topic is for. The button adds
+   no box of its own — no border, no background, no padding, colour inherited —
+   so the drawing is the glyph it always was, and the state layer, the focus
+   ring and the 48px target arrive with `BUTTON_CLASS`.
 
-export function TopicRemovable({ topic }) {
+   IT NAMES THE TOPIC IT REMOVES. "Remove #coastroad", with the hash the pill
+   draws, because a row of these is a row of identically-named controls
+   otherwise. */
+
+export function TopicRemovable({ topic, onRemove }) {
   return (
     <span
       style={{
@@ -40,7 +46,24 @@ export function TopicRemovable({ topic }) {
       }}
     >
       #{topic}
-      <Icon name="close" size={16} />
+      <button
+        type="button"
+        aria-label={`Remove #${topic}`}
+        onClick={onRemove}
+        className={BUTTON_CLASS}
+        style={{
+          flex: "none",
+          display: "inline-flex",
+          border: 0,
+          background: "none",
+          padding: 0,
+          borderRadius: "var(--radius-full)",
+          color: "inherit",
+          cursor: "pointer",
+        }}
+      >
+        <Icon name="close" size={16} />
+      </button>
     </span>
   );
 }

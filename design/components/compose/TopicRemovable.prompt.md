@@ -14,4 +14,4 @@ A topic the author has staged, shown back to them.
 
 The row it sits in is the composer's own — a wrapping flex row ending in the outline `Add a topic` button, under a field label.
 
-The × is drawn but not wired, on every board that stages a topic — so the one action here has no keyboard path and no name. That is waiting on a ruling, the one `PickTray`'s "Show all" already got. When it lands, the × becomes the button; the pill must not, or removal becomes the only thing a topic is for.
+**The × is the button, not the pill.** Making the pill pressable would say removal is the only thing a topic is for. The button adds no box — no border, no background, no padding, colour inherited — so it draws the glyph it always was, and brings the state layer, the focus ring and the 48px target with it. It names what it removes: `Remove #coastroad`, because a row of these is otherwise a row of identically-named controls.

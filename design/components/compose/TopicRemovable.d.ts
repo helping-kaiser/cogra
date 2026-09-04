@@ -6,6 +6,8 @@
 export interface TopicRemovableProps {
   /** The topic's name, without the hash — the mark is drawn. */
   topic?: string;
+  /** The × is the button; the pill stays inert. Named "Remove #<topic>". */
+  onRemove?: () => void;
 }
 
 export declare function TopicRemovable(props: TopicRemovableProps): JSX.Element;
