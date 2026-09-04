@@ -83,6 +83,7 @@ const {
   TopicRemovable,
   StagedReference,
   ActsFooter,
+  FactRow,
 } = components;
 
 /* A standing of one gentle record — the vouch-back default made a bundle. */
