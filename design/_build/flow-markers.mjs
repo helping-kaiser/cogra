@@ -982,6 +982,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Go back</button>", tag: "button" },
   ],
   Verified: [{ n: 1, find: ">Back to CoGra</button>", tag: "button" }],
+  // The ask over the borrowed view, also scanExempt. TWO "Sign in or join"
+  // buttons stand on this board — the band's and the ask's — and both take
+  // the number, the way the comments page's under-scrim repeats do: one edge
+  // covers them, because both words lead to the same screen.
+  GuestGate: [
+    { n: 1, find: ">Keep browsing</button>", tag: "button" },
+    { n: 2, find: ">Sign in or join</button>", tag: "button", all: true },
+  ],
 });
 
 /* The band's Chats affordance (jakob 2026-09-01): CograBand carries it on
