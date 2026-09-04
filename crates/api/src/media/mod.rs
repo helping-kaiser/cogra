@@ -1174,7 +1174,15 @@ mod planning_tests {
         let mine = asset(author, webp::MIME);
         let entries = vec![(mine.id, None)];
 
-        assert!(resolve_gallery(author, GalleryKind::Post, &entries, &[mine.clone()]).is_ok());
+        assert!(
+            resolve_gallery(
+                author,
+                GalleryKind::Post,
+                &entries,
+                std::slice::from_ref(&mine)
+            )
+            .is_ok()
+        );
         assert_eq!(
             path_of(
                 &resolve_gallery(author, GalleryKind::Post, &entries, &[]).expect_err("absent")

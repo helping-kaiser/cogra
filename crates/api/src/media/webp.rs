@@ -501,7 +501,9 @@ mod tests {
 
     /// A frame chunk too short to carry its own duration is malformed
     /// like every other truncation here, and frame chunks beside a still
-    /// that declares no animation cannot fabricate one for it.
+    /// that declares no animation cannot fabricate one for it. The second
+    /// fixture shortens a frame payload to less than its own header; the
+    /// third gives a plain `VP8L` still a frame chunk it never declared.
     ///
     /// A duration is refused rather than substituted when the frames are truncated or the file declares no animation.
     /// ´claim:media:a-fabricated-duration-is-refused´
@@ -511,7 +513,6 @@ mod tests {
         let full = animation_duration_ms(&chunks(&truncated).expect("valid"));
         assert_eq!(full, Ok(Some(80)), "the honest file reads its own frames");
 
-        // Shorten the first frame's payload to less than its own header.
         truncated = {
             let mut vp8x = vec![FLAG_ANIMATION, 0, 0, 0];
             vp8x.extend_from_slice(&[0, 0, 0, 0, 0, 0]);

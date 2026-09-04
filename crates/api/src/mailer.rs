@@ -73,6 +73,18 @@ impl Mailer for DevMailer {
     }
 }
 
+/// Appends one message to the configured sink, creating the path on the
+/// way.
+///
+/// The flush is not optional. `write_all` hands the bytes to a blocking
+/// task and returns before that task has necessarily run, and tokio's own
+/// documentation is explicit: "a file will not be closed immediately when
+/// it goes out of scope if there are any IO operations that have not yet
+/// completed", and "to ensure that a file is closed immediately when it
+/// is dropped, you should call `flush` before dropping it". Without it a
+/// message can be sent, the send awaited, and the message still be absent
+/// from the file — and any write error goes with the handle instead of
+/// reaching the caller.
 async fn append(path: &Path, mail: &Mail) -> std::io::Result<()> {
     use tokio::io::AsyncWriteExt;
 
@@ -94,15 +106,6 @@ async fn append(path: &Path, mail: &Mail) -> std::io::Result<()> {
         .open(path)
         .await?;
     file.write_all(entry.as_bytes()).await?;
-    // `write_all` hands the bytes to a blocking task and returns; the
-    // task may not have run yet. tokio's own documentation is explicit
-    // that "a file will not be closed immediately when it goes out of
-    // scope if there are any IO operations that have not yet completed"
-    // and that "to ensure that a file is closed immediately when it is
-    // dropped, you should call `flush` before dropping it" — so without
-    // this, a message can be sent, the send awaited, and the message
-    // still be absent from the file, and any write error is lost with
-    // the handle.
     file.flush().await
 }
 

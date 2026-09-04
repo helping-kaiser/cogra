@@ -342,6 +342,13 @@ pub async fn receive_part(
 /// decided by [`super::process`] from the assembled bytes — the same call
 /// the single-shot upload makes, so the two paths cannot drift into
 /// admitting different things.
+/// A refused poster leaves the session standing rather than discarding
+/// it: the bytes are assembled and correct, and the repair is a second
+/// `complete` naming a poster that exists — re-sending the whole file
+/// because one field was wrong is not the trade. The session then ages
+/// out on its own, and [`sweep_expired`] closes its row whatever the
+/// store says, so a session left here cannot block the collection of any
+/// other.
 pub async fn complete(
     pool: &PgPool,
     blobs: &dyn BlobStore,
@@ -414,13 +421,6 @@ pub async fn complete(
         }
     };
 
-    // The session is deliberately left standing when the poster is
-    // refused: the bytes are assembled and correct, and the fix is a
-    // second `complete` naming a poster that exists — re-sending the
-    // whole file because one field was wrong is not the trade. The
-    // session ages out on its own, and the sweep now closes its row
-    // whatever the store says, so a session left here cannot block the
-    // collection of any other.
     let cover = plan_cover(pool, author, !asset.is_still(), cover_media_id)
         .await
         .map_err(|e| match e {

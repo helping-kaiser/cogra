@@ -214,17 +214,19 @@ pub async fn land_promoted(
 /// present-but-empty field clears and an absent one keeps what stands. An
 /// empty display name never leaves prepare, and one arriving here is
 /// therefore a fault rather than a clear.
+///
+/// Not every landed `Family::Registration` is a profile update: the
+/// admission and genesis payloads share the family. A profile update
+/// always asserts its chain parent (substrate.md §9) and those are
+/// unchained, so that structural fact is the discriminator — the same one
+/// `onboarding::ensure_admission_staged` uses for the mirror-image
+/// decision. Sniffing the payload's leading bytes instead would
+/// re-assert `common::envelope`'s wire framing here, and a change to that
+/// framing would silently reclassify every profile update as an admission
+/// payload and return `Ok(())` for all of them.
 async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), ProfileError> {
     let staged_row = staged::load(pool, write.id).await?;
     let payload = &staged_row.proposal.payload;
-    // A profile update always asserts its chain parent (substrate.md
-    // §9); an admission or genesis Registration is unchained. That
-    // structural fact is the discriminator — the same one
-    // `onboarding::ensure_admission_staged` uses for the mirror-image
-    // decision. Sniffing the payload's first three bytes instead would
-    // re-assert `common::envelope`'s wire framing here, and a change to
-    // that framing would silently reclassify every profile update as an
-    // admission payload and return `Ok(())` for all of them.
     if staged_row.proposal.body.asserted_parents.is_empty() {
         return Ok(());
     }

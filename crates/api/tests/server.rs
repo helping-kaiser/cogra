@@ -104,6 +104,11 @@ async fn health_reports_a_failed_cursor_read_as_null(pool: PgPool) {
 /// The caps are shrunk here so the oversized body is kilobytes rather
 /// than the two hundred megabytes the deployed ceiling would need.
 ///
+/// Both ways a body arrives are covered: a declared `Content-Length` is
+/// refused by the layer before a byte is read, and an undeclared one is
+/// cut mid-stream and still named as the ceiling rather than as an
+/// internal fault.
+///
 /// A GraphQL request past the route's body ceiling is refused at the transport, whatever its content type.
 /// ´claim:server:the-graphql-body-is-bounded´
 #[sqlx::test(migrations = "../../migrations")]
@@ -130,7 +135,6 @@ async fn graphql_refuses_a_body_past_the_route_limit(pool: PgPool) {
     let padding = "x".repeat(8 * 1024);
     let body = serde_json::json!({ "query": format!("{{ __typename }}#{padding}") }).to_string();
 
-    // Declared length: refused by the layer before a byte is read.
     let declared = app
         .clone()
         .oneshot(
@@ -146,8 +150,6 @@ async fn graphql_refuses_a_body_past_the_route_limit(pool: PgPool) {
         .expect("response");
     assert_eq!(declared.status(), StatusCode::PAYLOAD_TOO_LARGE);
 
-    // Undeclared length: the cut surfaces mid-stream and is still named
-    // as the ceiling rather than as an internal fault.
     let streamed = app
         .oneshot(
             Request::builder()

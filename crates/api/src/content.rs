@@ -944,6 +944,14 @@ async fn parent_node(pool: &PgPool, target: Uuid) -> Result<NodeId, ContentError
 /// Idempotent, because the pre-sign leg accepts a retry: the entity row
 /// is inserted only once, and a version row keyed by the same authoring
 /// instant collides with itself.
+///
+/// A write whose family says it mints or edits content but which carries
+/// no node id is a fault, not a quiet success. Every mint-capable gesture
+/// is built with `node: Some(..)`, so the two disagreeing means the
+/// staged row is wrong — and reporting that as success is exactly what
+/// `relay::submit_pre_signed`'s own doc says must not happen: the
+/// pre-commitment is recorded, the seal proceeds, and no display row is
+/// ever created.
 pub async fn stage_pending(
     pool: &PgPool,
     write: &staged::StagedWrite,
@@ -956,11 +964,6 @@ pub async fn stage_pending(
         _ => return Ok(()),
     };
     if write.node_id.is_none() {
-        // The family says this write mints or edits content, and every
-        // such gesture is built with `node: Some(..)`. Reporting the
-        // disagreement as success is what `relay::submit_pre_signed`'s
-        // own doc says must not happen: the pre-commitment is recorded
-        // and the seal proceeds, and no display row is ever created.
         return Err(ContentError::Internal(
             "a mint-family staged write carries no node id".into(),
         ));
@@ -1247,9 +1250,15 @@ pub async fn land_promoted(
 ///
 /// Those insert branches are otherwise the uncommon path: the rows are
 /// normally already on screen from the pre-commitment, so landing only
-/// writes the causal key onto them. An insert means a record landed
-/// without a pending row of its own — a mirror rebuild, or a write staged
-/// before pending rows existed.
+/// writes the causal key onto them, and the `land_*` guard below is what
+/// tries that first. An insert means a record landed without a pending
+/// row of its own — a mirror rebuild, or a write staged before pending
+/// rows existed.
+///
+/// The authoring instant, like `sealed`, is set by the pre-sign leg, so a
+/// landed write missing it is the same internal fault its sibling is:
+/// substituting `Utc::now()` would stamp the content with its promotion
+/// time and leave no mark that it did.
 async fn land_one(
     pool: &PgPool,
     write: &staged::PromotedWrite,
@@ -1274,10 +1283,6 @@ async fn land_one(
     let body = &staged_row.proposal.body;
     let (target, is_genesis) = genesis_shape(body);
 
-    // The authoring instant, like `sealed` above, is set by the pre-sign
-    // leg — so a landed write missing it is the same internal fault, and
-    // substituting `Utc::now()` would stamp the content with its
-    // promotion time and leave no mark that it did.
     let created_at = staged_row.pre_signed_at.ok_or_else(|| {
         ContentError::Internal("landed write without an authoring instant".into())
     })?;
@@ -1290,9 +1295,6 @@ async fn land_one(
     content_store::insert_act_payload(&mut tx, &write.act_id, payload, &sealed.content_salt)
         .await?;
 
-    // The rows are normally already on screen from the pre-commitment,
-    // so landing only writes the causal key onto them; the insert
-    // matrix below is the uncommon path where there was no pending row.
     let shape = match (family, is_genesis) {
         (ContentFamily::Post, true) => {
             if content_store::land_post(&mut tx, content.node, order).await? {
@@ -1395,7 +1397,10 @@ mod promotion_tests {
     /// The genesis shape decides whether a landed record mints a node or
     /// adds a version to one, and it is the same derivation on both
     /// promotion paths — so a write whose target is its own mint is
-    /// genesis, and one naming any other node is an edit.
+    /// genesis, and one naming any other node is an edit. The cases
+    /// below vary each component of the identifier in turn: the same
+    /// author and family at a different sequence, the same author and
+    /// sequence under a different family, and a different author.
     ///
     /// A write targeting the mint of its own act is the genesis shape; one naming another node is an edit.
     /// ´claim:content:the-genesis-shape-is-the-self-mint´
@@ -1408,13 +1413,9 @@ mod promotion_tests {
         assert!(is_genesis);
         assert_eq!(target, mint(author, 3, Family::Publish).to_string());
 
-        // Same author and family, a different sequence: not this act's
-        // own mint, so an edit of an earlier one.
         let edit = body(4, Family::Publish, mint(author, 3, Family::Publish));
         assert!(!genesis_shape(&edit).1);
 
-        // The family is part of the identifier, so a Review targeting a
-        // Publish mint at the same sequence is an edit, not a genesis.
         let across_families = body(3, Family::Review, mint(author, 3, Family::Publish));
         assert!(!genesis_shape(&across_families).1);
 
