@@ -27,6 +27,7 @@ fill="none"/>` rect is stripped, per the product's own convention.
 | sentiment-neutral.svg | sentiment_neutral | the unset stance anchor on a media surface (its eyes are the official circles as exact arc paths) |
 | close.svg | close | the composer's leave control; the viewer's dismiss |
 | drag-indicator.svg | drag_indicator | the picked tray's reorder handle |
+| image.svg | image | the cover strip's own-picture tile |
 | lock.svg | lock | a locked field (the edit's license) |
 | expand-more.svg / chevron-right.svg | expand_more, chevron_right | a disclosure, and a row that opens |
 | arrow-outward.svg | arrow_outward | the wallet's direction badge (rotated 180° for incoming) |
