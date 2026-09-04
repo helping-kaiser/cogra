@@ -393,104 +393,25 @@ function ProfileBand({ children }) {
   );
 }
 
-/* The chronicle's tab row (profile round, 2026-09-01): full-width icon tabs,
-   the way every social profile draws this row — the segmented pill was ruled
-   out at three options. Icon-only cells with accessible names; the selected
-   tab speaks in primary AND a 2px underline. The underline is a deliberate
-   deviation from "selection is colour only": an icon's colour alone is too
-   quiet to carry which of three same-weight glyphs is on. Screen-local until
-   it settles, then it graduates to components/. */
-function ChronicleTabs({ value = "everything" }) {
-  const TABS = [
-    { id: "posts", icon: "dynamic_feed", label: "Posts" },
-    { id: "comments", icon: "chat_bubble", label: "Comments" },
-    { id: "everything", icon: "history", label: "Everything" },
-  ];
-  return (
-    <div role="group" aria-label="What the chronicle shows" style={{ display: "flex", borderBottom: "1px solid var(--border-hairline)" }}>
-      {TABS.map((tab) => {
-        const selected = tab.id === value;
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            aria-pressed={selected}
-            aria-label={tab.label}
-            className="cg-state cg-focus"
-            style={{
-              flex: 1,
-              display: "grid",
-              placeItems: "center",
-              minHeight: "var(--touch-target-min)",
-              border: 0,
-              background: "none",
-              padding: 0,
-              cursor: "pointer",
-              color: selected ? "var(--primary)" : "var(--text-secondary)",
-              boxShadow: selected ? "inset 0 -2px 0 var(--primary)" : "none",
-            }}
-          >
-            <Icon name={tab.icon} size={22} />
-          </button>
-        );
-      })}
-    </div>
-  );
-}
+/* The chronicle's tab row (profile round, 2026-09-01): the `TabBar` master
+   holding the chronicle's own three glyphs. What lives here is the tab data —
+   the row itself is the one every list-choosing surface draws, and the icon
+   cells take their accessible names from these labels, which is the only way
+   an icon-only control gets one.
 
-/* The profile's chronicle as CONTAINERS, the wallet history's anatomy (jakob
-   2026-09-01 — "draw inspiration from there"): each act its own card on the
-   surface-card ground, a leading 40px disc carrying the act's kind (a glyph,
-   or the stance record's own face), the verb and its snippet, the time on the
-   trailing edge, Still settling where an act pends. A card with somewhere to
-   go is a button; a record with no destination is the same card, inert. */
-function ChronicleCard({ glyph, face, label, context, snippet, time, pending = false, link = true }) {
-  const disc = (
-    <span
-      style={{ width: 40, height: 40, borderRadius: "var(--radius-full)", background: "var(--surface-container-high)", color: "var(--text-secondary)", display: "grid", placeItems: "center", flex: "none" }}
-    >
-      {face ? <StanceValue pDirected={face.pDirected} pInterest={face.pInterest} showPair={false} /> : <Icon name={glyph ?? "history"} size={20} />}
-    </span>
-  );
-  const inner = (
-    <>
-      {disc}
-      <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-        <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-          <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>{label}</span>
-          {context && <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>{context}</span>}
-        </span>
-        {snippet && (
-          <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{snippet}</span>
-        )}
-      </span>
-      <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flex: "none" }}>
-        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>{time}</span>
-        {pending && <PendingMarker />}
-      </span>
-    </>
-  );
-  const style = {
-    display: "flex",
-    alignItems: "center",
-    gap: "var(--space-3)",
-    width: "100%",
-    boxSizing: "border-box",
-    border: 0,
-    borderRadius: "var(--radius-medium)",
-    background: "var(--surface-card)",
-    padding: "var(--space-3)",
-    fontFamily: "var(--font-sans)",
-    color: "var(--on-surface)",
-    textAlign: "left",
-  };
-  return link ? (
-    <button type="button" className="cg-state cg-focus" style={{ ...style, cursor: "pointer" }}>
-      {inner}
-    </button>
-  ) : (
-    <div style={style}>{inner}</div>
-  );
+   The chronicle's cards are `ContentRow`'s `chronicle` variant, written where
+   they are read: each act its own card on the surface-card ground, a leading
+   disc carrying the act's kind (a glyph, or the stance record's own face),
+   the verb and its snippet, the time on the trailing edge, Still settling
+   where an act pends. A card with somewhere to go is a button; a record with
+   no destination is the same card, `inert`. */
+const CHRONICLE_TABS = [
+  { id: "posts", icon: "dynamic_feed", label: "Posts" },
+  { id: "comments", icon: "chat_bubble", label: "Comments" },
+  { id: "everything", icon: "history", label: "Everything" },
+];
+function ChronicleTabs({ value = "everything" }) {
+  return <TabBar ariaLabel="What the chronicle shows" value={value} tabs={CHRONICLE_TABS} />;
 }
 
 /* The chronicle column: cards on 8px of surface, the wallet history's seam. */
@@ -583,11 +504,11 @@ function ProfileOtherBody() {
         </div>
         <ChronicleTabs value="everything" />
         <ChronicleList>
-          <ChronicleCard glyph="dynamic_feed" label="Published a post" time="2h" snippet="The long way home — the light does something at the third headland." />
-          <ChronicleCard glyph="chat_bubble" label="Commented" time="1d" snippet="The glovebox camera earns its keep — this is the print from 2019." />
-          <ChronicleCard face={{ pDirected: 0.6, pInterest: 0.3 }} label="Took a stance" context="on @tobias" time="2d" link={false} />
-          <ChronicleCard glyph="dynamic_feed" label="Published a post" time="5d" snippet="Took the coast road instead of the tunnel. Four hours longer, worth every minute." />
-          <ChronicleCard glyph="person" label="Updated their profile" time="1w" link={false} />
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="2h" second="The long way home — the light does something at the third headland." onOpen={() => {}} />
+          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="1d" second="The glovebox camera earns its keep — this is the print from 2019." onOpen={() => {}} />
+          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Took a stance" titleAside="on @tobias" trailing="2d" inert />
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="5d" second="Took the coast road instead of the tunnel. Four hours longer, worth every minute." onOpen={() => {}} />
+          <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated their profile" trailing="1w" inert />
         </ChronicleList>
       </div>
       <BottomNav active={null} slots={ALL_SLOTS} inline />
