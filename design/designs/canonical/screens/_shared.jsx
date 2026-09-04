@@ -80,6 +80,9 @@ const {
   LICENSE_MENU_LABEL,
   LICENSE_MENU_LABEL_SHOWN,
   NodeMark,
+  TopicRemovable,
+  StagedReference,
+  ActsFooter,
 } = components;
 
 /* A standing of one gentle record — the vouch-back default made a bundle. */
@@ -580,29 +583,6 @@ function ThreadDetail({ menuItems = READER_POST_MENU }) {
    arrives as a circle and everything else as its tile — the menus round's whole
    point is that citing a post and mentioning a person stage the same fact, and
    a row that drew them differently would deny it. */
-function StagedReference({ kind = "post", name, sub, src, value }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 48, padding: "8px 12px", borderRadius: "var(--radius-small)", background: "var(--surface-container-highest)", boxSizing: "border-box" }}>
-      <NodeMark kind={kind} name={name} src={src} />
-      <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-        <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
-        {sub && <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{sub}</span>}
-      </span>
-      {value && (
-        <span style={{ flex: "none", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{value}</span>
-      )}
-      <button
-        type="button"
-        aria-label={`Remove ${name}`}
-        className="cg-state cg-focus"
-        style={{ flex: "none", display: "grid", placeItems: "center", height: 32, width: 32, border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0 }}
-      >
-        <Icon name="close" size={18} />
-      </button>
-    </div>
-  );
-}
-
 /* A composer field's label — the wizard stages' own caption weight. */
 function ComposeFieldLabel({ children, note }) {
   return (
@@ -610,32 +590,6 @@ function ComposeFieldLabel({ children, note }) {
       <span style={{ flex: 1, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>{children}</span>
       {note && <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>{note}</span>}
     </div>
-  );
-}
-
-/* The removable topic chip — a compose-only pattern, not yet a master
-   (item 17). Shared the moment a second details board staged topics. */
-function TopicRemovable({ topic }) {
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 6,
-        minHeight: 32,
-        padding: "4px 12px",
-        borderRadius: "var(--radius-full)",
-        background: "var(--secondary-container)",
-        color: "var(--on-secondary-container)",
-        fontSize: "var(--text-label-large)",
-        lineHeight: "var(--text-label-large--line-height)",
-        fontWeight: "var(--text-label-large--font-weight)",
-        letterSpacing: "var(--text-label-large--letter-spacing)",
-      }}
-    >
-      #{topic}
-      <Icon name="close" size={16} />
-    </span>
   );
 }
 
