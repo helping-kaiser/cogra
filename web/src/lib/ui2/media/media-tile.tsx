@@ -29,7 +29,17 @@ export function isVideoAsset(mimeType?: string | null): boolean {
 
 export type MediaTileProps = {
   src?: string | null;
-  /** What the asset IS. Absent on every surface that has no video to draw. */
+  /**
+   * What the asset IS.
+   *
+   * Optional HERE and required on `GalleryItem`, which is the deliberate
+   * split: a gallery entry is always a real attachment, and the contract
+   * types `MediaAttachment.mimeType` as `String!`, so an omitted
+   * selection has to be a compile error there. This component also draws
+   * the ASSET-LESS reserved region — a labelled frame with no `src` at
+   * all — and demanding a type for a file that does not exist would be
+   * demanding a fabrication.
+   */
   mimeType?: string | null;
   /**
    * The video's face. Null where the asset names none — and null where the

@@ -36,7 +36,14 @@ type Attachment = {
   url: string;
   altText?: string | null;
   status: string;
-  mimeType?: string | null;
+  /**
+   * THE CONTRACT'S `String!`, TYPED AS ONE. Every read that carries a
+   * gallery selects it, and typing it optional let an omitted selection
+   * reach here as `undefined` — which draws an image tile where a player
+   * belongs, silently, on exactly the read that forgot the field. Non-null
+   * makes that a compile error at the query boundary instead.
+   */
+  mimeType: string;
   options: { aspectRatio?: string | null; durationMs?: number | null };
   coverMedia?: {
     url: string;
@@ -73,9 +80,7 @@ export function removalReason(node: Bearer): RemovalReason {
 
 /** Whether a node's gallery is the moving kind — one clip rather than pictures. */
 export function commentHasVideo(node: Bearer): boolean {
-  return node.attachments.some((attachment) =>
-    (attachment.mimeType ?? "").startsWith("video/"),
-  );
+  return node.attachments.some((attachment) => attachment.mimeType.startsWith("video/"));
 }
 
 /**
@@ -104,7 +109,7 @@ export function galleryItems(node: Bearer): readonly GalleryItem[] {
       // inventing a description would be worse than saying nothing.
       altText: attachment.altText ?? null,
       sourceRatio: ratio,
-      mimeType: attachment.mimeType ?? null,
+      mimeType: attachment.mimeType,
       poster: posterFor(attachment),
       durationMs: attachment.options.durationMs ?? null,
     };
