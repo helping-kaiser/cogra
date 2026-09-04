@@ -535,6 +535,9 @@ pub(crate) async fn epochs_since(
 /// Rebuilds one published epoch's records from storage, in position
 /// order. Each record's legs are read back ordered by role ('a' before
 /// 't' lexically), matching `projection_legs`'s own ordering.
+///
+/// The legs come back in one query and are grouped in memory: a query per
+/// record is the same N+1 the write side avoids.
 async fn load_epoch(conn: &mut PgConnection, epoch: i64) -> Result<EpochPackage, StandInError> {
     let rows = sqlx::query!(
         r#"SELECT act_id, author, family, act_time AS "act_time!",
@@ -547,8 +550,6 @@ async fn load_epoch(conn: &mut PgConnection, epoch: i64) -> Result<EpochPackage,
     .fetch_all(&mut *conn)
     .await?;
 
-    // One query for the epoch's legs, grouped in memory: a query per record
-    // is the same N+1 the write side avoids.
     let act_ids: Vec<String> = rows.iter().map(|r| r.act_id.clone()).collect();
     let mut legs_by_act: HashMap<String, Vec<PublishedLeg>> = HashMap::new();
     for l in sqlx::query!(
@@ -695,7 +696,8 @@ mod tests {
     }
 
     /// An insolvent author's act defers rather than landing unpaid, and a
-    /// solvent author is debited exactly θ per act landed.
+    /// solvent author is debited exactly θ per act landed. `mallory` has no
+    /// account at all: the gate is a balance, never a default.
     ///
     /// An insolvent author's act defers, and a solvent author pays θ once per act.
     /// ´claim:close:solvency-is-debited-once-per-act´
@@ -710,7 +712,6 @@ mod tests {
                 candidate("alice", 0, "bob", &[]),
                 candidate("alice", 1, "bob", &[]),
                 candidate("alice", 2, "bob", &[]),
-                // No account at all: the gate is a balance, not a default.
                 candidate("mallory", 0, "bob", &[]),
             ],
             &mut state,
@@ -783,8 +784,8 @@ mod tests {
     }
 
     /// Both legs of a hyper act see the same pre-act degrees, so neither
-    /// matures the other; a second act over the same endpoints sees the
-    /// degrees the first left.
+    /// matures the other; the second act over the same endpoints then reads
+    /// the degrees the first left.
     ///
     /// Maturity replays from pre-act degrees, so a hyper act's two legs never mature one another.
     /// ´claim:close:maturity-replays-from-pre-act-degrees´
@@ -822,7 +823,6 @@ mod tests {
             "both legs read the same pre-act degrees: {legs:?}"
         );
 
-        // A second act over the same endpoints reads what the first left.
         let mut second_body = founding.body.clone();
         second_body.seq = 1;
         second_body.family = Family::Participant;

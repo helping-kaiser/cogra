@@ -165,6 +165,10 @@ mod tests {
     /// they may never disagree — a read surface quoting one number while
     /// the write path stages another is the failure this pins.
     ///
+    /// The non-finite pairs are sums no bundle can reach, so neither
+    /// surface may invent an answer for one: the cast that saturates and
+    /// the `min` that swallows a `NaN` are what they pin shut.
+    ///
     /// The quoted severance cost is the batch it prices, so a read surface and the write path can never disagree about it.
     /// ´claim:fold:the-quoted-cost-is-the-batch-it-prices´
     #[test]
@@ -177,9 +181,6 @@ mod tests {
             (2.5, -1.2),
             (-3.4, 2.9),
             (0.0, 7.1),
-            // A sum no bundle can reach, so neither surface may invent an
-            // answer for it: the cast that saturates and the min that
-            // swallows a NaN are what this pins shut.
             (f64::NAN, f64::NAN),
             (f64::NAN, 0.5),
             (f64::INFINITY, 0.0),

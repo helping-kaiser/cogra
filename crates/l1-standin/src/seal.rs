@@ -49,6 +49,12 @@ fn formation(msg: impl Into<String>) -> StandInError {
 ///   fold reads it. Offer revision is a new Offer.
 /// - **Carriage and dependency bounds**, checked against
 ///   `StandInConfig::max_payload_bytes` and `MAX_DEPS`.
+/// - **Storable sequence.** The author-local sequence is a `u64` in the
+///   identifier and a BIGINT in storage. A value above `i64::MAX` would
+///   store as a negative beside an `act_id` text carrying the unsigned
+///   one — the column and the identifier disagreeing about the same act —
+///   so it is refused where the two meet rather than narrowing the
+///   identifier grammar the clients share.
 /// - **Authorship.** The stated author's key binds to the address, and
 ///   the pre-commitment verifies over the exact proposal. Key
 ///   consistency across the author's history needs no separate check:
@@ -111,10 +117,6 @@ pub(crate) async fn seal(
     if pre.proposal.deps.len() + body.asserted_parents.len() > MAX_DEPS {
         return Err(formation("dependency list exceeds the bound"));
     }
-    // The sequence is a u64 in the identifier and a BIGINT in storage. A
-    // value above i64::MAX would store as a negative beside an act_id text
-    // carrying the unsigned one — the column and the identifier disagreeing
-    // about the same act — so it is refused where the two meet.
     if body.seq > i64::MAX as u64 {
         return Err(formation(format!(
             "author-local sequence {} exceeds the stored range",

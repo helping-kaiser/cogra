@@ -668,7 +668,9 @@ async fn approving_does_not_close_an_epoch(pool: PgPool) {
 /// One stored act that will not parse fails the whole close and stays
 /// selectable, and the same value inside a published epoch fails the
 /// ingest read — the ruled behavior for a substrate written around the
-/// crate that owns its tables (L1-01/L1-02, ruling 11).
+/// crate that owns its tables (L1-01/L1-02, ruling 11). Only a writer that
+/// is not this crate can produce such a row: every column it writes comes
+/// from a value that already parsed.
 ///
 /// A malformed stored act wedges the close and the ingest read rather than being skipped.
 /// ´claim:close:a-malformed-stored-act-wedges-the-close´
@@ -678,8 +680,6 @@ async fn a_malformed_stored_act_wedges_the_close(pool: PgPool) {
     let alice = funded_actor(&host, 10 * THETA).await;
     let act_id = submit(&host, &alice, registration(&alice)).await;
 
-    // Only a writer that is not this crate can produce such a row: every
-    // column here is written from a value that already parsed.
     sqlx::query("UPDATE l1_acts SET family = 'not-a-family' WHERE act_id = $1")
         .bind(act_id.to_string())
         .execute(&pool)
