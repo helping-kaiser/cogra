@@ -90,11 +90,23 @@ async fn submit(standin: &StandIn, actor: &ActorKey, args: SubmitArgs) -> anyhow
                 println!("approved: {act_id}");
                 return Ok(());
             }
-            Err(l1_standin::StandInError::Conflict(_)) => continue,
+            // Only an occupied author sequence is worth probing past.
+            // The variant carries a free-text cause, so discarding it
+            // would spend sixty-five thousand signed round trips on a
+            // conflict that was never about the sequence and then report
+            // the wrong reason. The word is the stand-in's own
+            // (`seal.rs`); a wording change there degrades this to the
+            // loud branch below, which is the safe direction.
+            Err(l1_standin::StandInError::Conflict(cause)) if cause.contains("sequence") => {
+                continue;
+            }
+            Err(l1_standin::StandInError::Conflict(cause)) => {
+                bail!("seal conflicted for a reason other than an occupied sequence: {cause}")
+            }
             Err(e) => bail!("seal rejected: {e}"),
         }
     }
-    bail!("no free sequence value found")
+    bail!("no free sequence value found below {}", u16::MAX)
 }
 
 /// Dispatches one hand-test command. `.env` is read first, with the same

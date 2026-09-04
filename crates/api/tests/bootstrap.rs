@@ -149,6 +149,55 @@ async fn crash_before_the_l1_half_is_repaired(pool: PgPool) {
     );
 }
 
+/// The repair path is where a changed input is most dangerous: the
+/// stored parameter rows are reloaded only for keys, and the Charter
+/// about to be sealed is built wholly from the current input — so
+/// without a check the immutable record would permanently contradict the
+/// rows already committed. `guidelines_hash` is recomputed from a file on
+/// every invocation, which is how the values genuinely differ across
+/// runs in production.
+///
+/// A repair run whose genesis input disagrees with what the first run committed is refused rather than sealing the contradiction.
+/// ´claim:bootstrap:a-changed-genesis-input-is-refused-on-repair´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_repair_run_with_changed_input_is_refused(pool: PgPool) {
+    let host = standin(&pool);
+    run(&host, &pool, input()).await.expect("first run");
+
+    for table in [
+        "mirror_record_legs",
+        "mirror_records",
+        "l1_act_legs",
+        "l1_acts",
+        "l1_epochs",
+        "l1_node_state",
+        "l1_accounts",
+    ] {
+        sqlx::query(&format!("DELETE FROM {table}"))
+            .execute(&pool)
+            .await
+            .expect("wipe");
+    }
+    sqlx::query("UPDATE mirror_epoch_cursor SET last_epoch = -1")
+        .execute(&pool)
+        .await
+        .expect("cursor reset");
+
+    let changed = GenesisInput {
+        guidelines_hash: "c0ffee".into(),
+        ..input()
+    };
+    let err = run(&host, &pool, changed).await.expect_err("diverged");
+    assert!(matches!(err, BootstrapError::Diverged(_)), "got {err:?}");
+    assert!(
+        err.to_string().contains("guidelines_hash"),
+        "the refusal names the parameter that disagreed: {err}"
+    );
+
+    let outcome = run(&host, &pool, input()).await.expect("unchanged repairs");
+    assert_eq!(outcome, BootstrapOutcome::Repaired);
+}
+
 /// The recorded L0 address of a cast member, for building act identifiers.
 async fn address_of(pool: &PgPool, handle: &str) -> String {
     genesis::actor_by_handle(pool, handle)
@@ -301,9 +350,10 @@ async fn a_sealed_unapproved_act_is_recovered(pool: PgPool) {
     );
 }
 
-/// The same identifier holding different content — what a re-run with
-/// changed genesis input would produce — is refused as divergence rather
-/// than replayed.
+/// The same identifier holding different content is refused as
+/// divergence rather than replayed. The divergence is driven through the
+/// substrate here because that is what this claim covers; a re-run with
+/// changed *input* is a different path, covered below.
 ///
 /// One identifier holding different content is refused as divergence rather than replayed over.
 /// ´claim:bootstrap:divergence-is-refused-not-replayed´
@@ -556,7 +606,7 @@ async fn missing_l2_half_with_l1_records_is_unrepairable(pool: PgPool) {
     }
 
     let err = run(&host, &pool, input()).await.expect_err("unrepairable");
-    assert!(matches!(err, BootstrapError::Unrepairable));
+    assert!(matches!(err, BootstrapError::Unrepairable(_)));
 }
 
 /// The credentials verify like any login, and the uploaded blob is a
@@ -640,5 +690,5 @@ async fn the_operator_login_requires_a_bootstrapped_instance(pool: PgPool) {
     let err = ensure_operator_login(&pool, "operator", "op@example.com", "pw pw pw pw")
         .await
         .expect_err("no genesis actor yet");
-    assert!(matches!(err, BootstrapError::Unrepairable));
+    assert!(matches!(err, BootstrapError::Unrepairable(_)));
 }

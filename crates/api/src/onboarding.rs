@@ -626,7 +626,7 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
         .balance(&address)
         .await
         .map_err(|e| OnboardingError::Internal(e.to_string()))?;
-    if balance.burned_total == 0.0 {
+    if crate::bootstrap::never_burned(balance.burned_total) {
         funding
             .credit_burn(&address, cfg.admission_burn_micro)
             .await
