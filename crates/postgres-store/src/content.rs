@@ -626,6 +626,27 @@ pub async fn insert_act_payload(
     Ok(())
 }
 
+/// Which of `act_ids` carry a payload the controller has reduced
+/// (layers.md §5), in one round trip.
+///
+/// Batched rather than per-act because the field is resolved once per
+/// record on a chronicle page, and an act with no payload row at all is
+/// simply absent — the reader's answer for both absences is the same:
+/// nothing has been removed.
+pub async fn reduced_payload_acts(
+    pool: &PgPool,
+    act_ids: &[String],
+) -> Result<Vec<String>, ContentError> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT act_id AS "act_id!"
+           FROM act_payloads
+           WHERE act_id = ANY($1) AND payload_state = 'reduced'"#,
+        act_ids,
+    )
+    .fetch_all(pool)
+    .await?)
+}
+
 /// The landing coordinates of a row, all-present or all-absent (the
 /// table's own CHECK); a mixed row is impossible and reads as pending.
 fn landing_order(

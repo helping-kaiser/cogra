@@ -32,7 +32,7 @@ use crate::auth::Viewer;
 use crate::l1::StandInBoundary;
 use crate::loaders::{
     ActorByAddressLoader, CommentByNodeLoader, CommentGalleryLoader, MediaByIdLoader,
-    PostByNodeLoader, PostGalleryLoader,
+    PayloadStateLoader, PostByNodeLoader, PostGalleryLoader,
 };
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 
@@ -529,15 +529,11 @@ impl Record {
     /// FULL until the payload controller removes; a reduced record
     /// keeps its structure and witness forever (layers.md §5).
     async fn payload_state(&self, ctx: &Context<'_>) -> async_graphql::Result<PayloadState> {
-        let pool = ctx.data::<PgPool>()?;
-        let reduced = sqlx::query_scalar!(
-            r#"SELECT payload_state = 'reduced' AS "reduced!"
-               FROM act_payloads WHERE act_id = $1"#,
-            self.0.record_id,
-        )
-        .fetch_optional(pool)
-        .await?
-        .unwrap_or(false);
+        let reduced = ctx
+            .data::<DataLoader<PayloadStateLoader>>()?
+            .load_one(self.0.record_id.clone())
+            .await?
+            .unwrap_or(false);
         Ok(if reduced {
             PayloadState::Reduced
         } else {
