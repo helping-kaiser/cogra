@@ -157,9 +157,15 @@ function afterReload(upload: PickedAsset["upload"]): PickedAsset["upload"] {
  */
 function restored(stored: StoredState): WizardState {
   const base = emptyWizard();
-  const take = <K extends keyof WizardState>(key: K): WizardState[K] => {
-    const value = (stored as Partial<WizardState>)[key];
-    return value === undefined ? base[key] : (value as WizardState[K]);
+  // The two fields the stored shape genuinely differs on — `assets` and
+  // `cover` carry bytes rather than blobs — are rebuilt below. Every other
+  // field is read as OPTIONAL, whatever the declared type says: that is the
+  // whole point, since an older draft simply does not have the newer ones.
+  type PlainFields = Omit<WizardState, "assets" | "cover">;
+  const plain = stored as Partial<PlainFields>;
+  const take = <K extends keyof PlainFields>(key: K): PlainFields[K] => {
+    const value = plain[key];
+    return value === undefined ? base[key] : value;
   };
   return {
     step: take("step"),

@@ -118,11 +118,6 @@ export function ed25519Available(): Promise<boolean> {
   return ed25519Probe;
 }
 
-/** Tests only: the probe is a page, and a suite is many pages. */
-export function resetEd25519ProbeForTests(): void {
-  ed25519Probe = null;
-}
-
 /** Verifies a tagged signature; a malformed key or signature just fails. */
 export async function verify(
   publicKey: Uint8Array,

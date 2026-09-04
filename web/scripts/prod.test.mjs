@@ -5,6 +5,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { request as httpRequest } from "node:http";
+import { connect } from "node:net";
 
 import {
   forwardedHeaders,
@@ -156,6 +157,31 @@ function upstreamOn(handler) {
   });
 }
 
+/** A port that was bound and is now free, so a connection to it is refused. */
+async function closedPort() {
+  const server = createServer(() => {});
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address();
+  await new Promise((resolve) => server.close(resolve));
+  return port;
+}
+
+/**
+ * The response as BYTES. The http client hides the shape of a truncated
+ * answer behind an error, and the shape is what is under test.
+ */
+function rawGet(port, path = "/") {
+  return new Promise((resolve, reject) => {
+    const socket = connect(port, "127.0.0.1", () => {
+      socket.write(`GET ${path} HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n`);
+    });
+    const chunks = [];
+    socket.on("data", (chunk) => chunks.push(chunk));
+    socket.on("close", () => resolve(Buffer.concat(chunks).toString()));
+    socket.on("error", reject);
+  });
+}
+
 function get(port, path = "/") {
   return new Promise((resolve, reject) => {
     const req = httpRequest({ host: "127.0.0.1", port, path, method: "GET" }, (res) => {
@@ -189,8 +215,7 @@ describe("proxyHandler", () => {
 
   it("answers 502 when nothing is listening upstream", async () => {
     const port = await proxyOn({
-      // Port 1 needs privileges nothing here has, so the connection is refused.
-      upstreamPort: 1,
+      upstreamPort: await closedPort(),
       upstreamHost: "127.0.0.1",
       apiOrigin: "http://127.0.0.1:1/graphql",
     });
@@ -206,9 +231,11 @@ describe("proxyHandler", () => {
   // API's JSON error so the client's parse fails on the real reason.
   it("truncates rather than appending prose after the headers went out", async () => {
     const upstreamPort = await upstreamOn((_, res) => {
-      res.writeHead(200, { "content-type": "application/json" });
-      res.write('{"partial":');
-      res.socket.destroy();
+      // A declared length the upstream then fails to deliver: the client sees
+      // the answer, and then the connection dies under it.
+      res.writeHead(200, { "content-type": "application/json", "content-length": "40" });
+      res.write('{"error":"too large"');
+      setTimeout(() => res.socket.destroy(), 30);
     });
     const port = await proxyOn({
       upstreamPort,
@@ -216,13 +243,14 @@ describe("proxyHandler", () => {
       apiOrigin: "http://127.0.0.1:1/graphql",
     });
 
-    // The connection dies rather than delivering a body the client would
-    // mis-parse; either outcome is fine as long as no sentence of the proxy's
-    // own reached what the upstream had already said.
-    const answer = await get(port).catch(() => null);
-    if (answer !== null) {
-      expect(answer.body).not.toMatch(/production server/);
-    }
+    const raw = await rawGet(port);
+    // The upstream's own answer reached the client…
+    expect(raw).toContain("200 OK");
+    expect(raw).toContain('{"error":"too large"');
+    // …and nothing of the proxy's was appended to it. Appending would be a
+    // length mismatch here, and a sentence concatenated onto the API's JSON
+    // wherever the encoding is chunked.
+    expect(raw).not.toContain("production server");
   });
 
   // `/graphql` and `/media/uploads/*` go straight to the API; everything else

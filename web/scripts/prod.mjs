@@ -187,17 +187,6 @@ export function waitForPort(port, host, { timeoutMs = UPSTREAM_READY_TIMEOUT_MS 
 }
 
 /**
- * The TLS front. Bodies are piped in both directions and never buffered:
- * the App Router streams its responses, and a proxy that collected them
- * first would turn every streamed page into a wait for the last byte.
- *
- * `/graphql` and `/media/uploads/*` skip `next start` entirely and go
- * straight to the API — see `isDirectApiPath`. Everything else still goes
- * to `next start`, which serves it directly (`next dev` has no front of
- * its own, only pages, and pages are not the large-body case this exists
- * for).
- */
-/**
  * The status a failed proxy attempt deserves.
  *
  * A refusal or an unresolvable name is a bad gateway — the upstream is not
@@ -232,13 +221,18 @@ export function proxyErrorText(error) {
 }
 
 /**
- * The proxy's request handler, on its own.
+ * The proxy's request handler. Bodies are piped in both directions and never
+ * buffered: the App Router streams its responses, and a proxy that collected
+ * them first would turn every streamed page into a wait for the last byte.
  *
- * Separate from the server so it can be mounted on a plain http server in a
- * test: the routing, the error mapping and the abandonment handling are what
- * is worth pinning, and none of it is about TLS — which the handler never
- * touches. Every one of these paths was untested while the whole thing lived
- * inside `createHttpsServer`.
+ * `/graphql` and `/media/uploads/*` skip `next start` entirely and go straight
+ * to the API — see `isDirectApiPath`. Everything else still goes to
+ * `next start`, which serves it directly (`next dev` has no front of its own,
+ * only pages, and pages are not the large-body case this exists for).
+ *
+ * It is separate from the server so it can be mounted on a plain http server
+ * in a test: the routing, the error mapping and the abandonment handling are
+ * what is worth pinning, and none of it is about TLS.
  */
 export function proxyHandler({ upstreamPort, upstreamHost, apiOrigin }) {
   const api = new URL(apiOrigin);
@@ -263,6 +257,16 @@ export function proxyHandler({ upstreamPort, upstreamHost, apiOrigin }) {
       },
       (upstreamRes) => {
         res.writeHead(upstreamRes.statusCode ?? 502, upstreamRes.headers);
+        // A RESPONSE THAT DIES MID-BODY IS NOT AN ERROR ON THE REQUEST. The
+        // upstream answered — its status and headers are already on the wire —
+        // and then the connection went. `pipe` attaches its error handling to
+        // the DESTINATION, so nothing here was listening: the client was left
+        // waiting on a body that would never arrive, until its own timeout.
+        // Destroying is the honest end; the truncation is the signal.
+        upstreamRes.on("error", (error) => {
+          console.error(`proxy ${req.method} ${req.url} body:`, error);
+          res.destroy();
+        });
         upstreamRes.pipe(res);
       },
     );
@@ -299,6 +303,7 @@ export function proxyHandler({ upstreamPort, upstreamHost, apiOrigin }) {
   };
 }
 
+/** The TLS front: the handler above, behind the stamped certificate pair. */
 export function createProxy(credentials, options) {
   const server = createHttpsServer(credentials, proxyHandler(options));
 

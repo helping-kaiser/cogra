@@ -62,14 +62,14 @@ export function usePreviewUrls(assets: readonly PickedAsset[]): Readonly<Record<
     }
     if (!changed) return;
     live.current = next;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- The object-URL
-    // table IS an external system, which is the case the rule exempts: the urls
-    // cannot be derived during render, because minting one is a side effect and
-    // a render may run twice or be thrown away. Reflecting the table's keys
-    // into state is the documented way to read an external resource a component
-    // renders. Deriving them in a `useMemo` instead was tried and is worse —
-    // the memo survives Strict Mode's simulated unmount while the revocation
-    // does not, so the second mount renders urls that were already revoked.
+    // THE RULE IS DISABLED DELIBERATELY, and this is the case it exempts: the
+    // object-URL table is an external system. These urls cannot be derived
+    // during render — minting one is a side effect, and a render may run twice
+    // or be thrown away — so reflecting the table's keys into state is the only
+    // honest way to read it. Deriving them in a `useMemo` instead was tried and
+    // is worse: the memo survives Strict Mode's simulated unmount while the
+    // revocation does not, so the second mount renders urls already revoked.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setUrls(next);
   }, [assets]);
 
