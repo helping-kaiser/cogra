@@ -1,42 +1,47 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT leg, source, target, p_d, p_i, tau FROM l1_act_legs\n             WHERE act_id = $1 ORDER BY leg",
+  "query": "SELECT act_id, leg, source, target, p_d, p_i, tau FROM l1_act_legs\n         WHERE act_id = ANY($1) ORDER BY act_id, leg",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "leg",
+        "name": "act_id",
         "type_info": "Text"
       },
       {
         "ordinal": 1,
-        "name": "source",
+        "name": "leg",
         "type_info": "Text"
       },
       {
         "ordinal": 2,
-        "name": "target",
+        "name": "source",
         "type_info": "Text"
       },
       {
         "ordinal": 3,
+        "name": "target",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
         "name": "p_d",
         "type_info": "Float8"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "p_i",
         "type_info": "Float8"
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "tau",
         "type_info": "Float8"
       }
     ],
     "parameters": {
       "Left": [
-        "Text"
+        "TextArray"
       ]
     },
     "nullable": [
@@ -45,8 +50,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "bb5508bb4fde185e84eeeaad3c9b0f4edcc3acd35b5294260a26f93ea125deb4"
+  "hash": "4f4a00d055d2f53068d3de73459604191910af665cbc01c84aa0b6fa495c7adb"
 }

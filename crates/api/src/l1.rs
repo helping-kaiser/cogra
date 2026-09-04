@@ -42,6 +42,7 @@ impl From<StandInError> for BoundaryError {
             StandInError::Authentication(m) => BoundaryError::Authentication(m),
             StandInError::Conflict(m) => BoundaryError::Conflict(m),
             StandInError::UnknownAct(m) => BoundaryError::UnknownAct(m),
+            StandInError::Host(m) => BoundaryError::Substrate(m),
             StandInError::Storage(e) => BoundaryError::Substrate(e.to_string()),
         }
     }
