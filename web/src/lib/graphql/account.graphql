@@ -11,6 +11,11 @@ query Me {
     displayName {
       value
     }
+    # WHOSE KEY THE ACCOUNT ACCEPTS. A custody slot holding a key says
+    # nothing on its own about whose it is, so the signer compares this
+    # against the slot's public half before it signs anything
+    # (`key-usable.ts`). Null is the pre-attach window.
+    actorPubkey
     accountState
     hasReciprocated
     invitedBy {

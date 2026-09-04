@@ -222,10 +222,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
       : (contentChanged ? 1 : 0) + changes.length + referenceActs(refChanges);
 
   const signAll = async (writes: readonly StagedWriteView[]): Promise<boolean> => {
-    const results = [];
-    for (const staged of writes) {
-      results.push(await signer.signStaged(staged));
-    }
+    const results = await signer.sign(writes);
     return results.every((result) => result.kind === "done");
   };
 

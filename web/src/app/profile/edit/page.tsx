@@ -150,10 +150,7 @@ export default function ProfileEditPage() {
       setTransportFailed(true);
       return;
     }
-    const results = [];
-    for (const staged of prepared.value) {
-      results.push(await signer.signStaged(staged));
-    }
+    const results = await signer.sign(prepared.value);
     setSubmitting(false);
     if (results.every((result) => result.kind === "done")) {
       router.push("/profile");

@@ -1406,7 +1406,9 @@ describe("PostView — references", () => {
       url: `https://media.test/${id}.webp`,
       altText,
       status,
-      options: { __typename: "MediaOptions", aspectRatio: "4:5" },
+      mimeType: "image/webp",
+      options: { __typename: "MediaOptions", aspectRatio: "4:5", durationMs: null },
+      coverMedia: null,
     });
 
     const withBody = (body: Parameters<typeof detail>[6]) =>
