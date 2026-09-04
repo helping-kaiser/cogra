@@ -1,4 +1,4 @@
-<!-- @dsCard group="Compose" viewport="1180x980" name="Composing media" subtitle="The authoring-side media pieces: the thumb's upload states, the picked row (no crop/edit links — the row opens the manager), Show all, Describe, the seal's gate and acts card." -->
+<!-- @dsCard group="Compose" viewport="1180x980" name="Composing media" subtitle="The authoring-side media pieces: the thumb's upload states, the pick tray, the crop window, the cover strip, the picked row (no crop/edit links — the row opens the manager), Show all, Describe, the seal's gate and acts card." -->
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -8,7 +8,7 @@
 <style>body{padding:16px}.row{display:flex;gap:24px;align-items:flex-start}.col{display:flex;flex-direction:column;gap:10px;width:360px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { MediaThumb, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, UploadStatusLine, UploadErrorLine, ActsCard, WizardHeader, Button, HelpDot } = window.CoGraDesignSystem_9084ba;
+const { MediaThumb, PickTray, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, CropViewport, CoverRow, UploadStatusLine, UploadErrorLine, ActsCard, WizardHeader, Button, HelpDot } = window.CoGraDesignSystem_9084ba;
 const P = "../../assets/photos/";
 
 function Demo(){return (
@@ -26,6 +26,15 @@ function Demo(){return (
       <MediaThumb src={P+"03-landscape-16x9.jpg"} alt="A lake" onRemove={()=>{}}/>
       <MediaThumb src={P+"05-portrait-4x5.jpg"} alt="A person with a camera" width={38} height={48} fit="contain" onRemove={()=>{}}/>
     </div>
+    <span className="lbl">PickTray — the pick step's band; Show all is a real button, and one clip has no set to show</span>
+    <PickTray count={3} onShowAll={()=>{}}>
+      <MediaThumb src={P+"01-landscape-4x3.jpg"} alt="Strawberries" cover/>
+      <MediaThumb src={P+"04-square-1x1.jpg"} alt="Honey" onRemove={()=>{}}/>
+      <MediaThumb src={P+"10-square-1x1.jpg"} alt="Grapes" onRemove={()=>{}}/>
+    </PickTray>
+    <PickTray count={1} caption="A video is the whole post. Its cover comes next.">
+      <MediaThumb src={P+"03-landscape-16x9.jpg"} alt="" width={114} height={64} video onRemove={()=>{}} removeLabel="Remove this video"/>
+    </PickTray>
     <span className="lbl">PickedRow — the whole row opens Show all; no crop/edit links, ever</span>
     <PickedRow items={[{src:P+"01-landscape-4x3.jpg",cover:true},{src:P+"04-square-1x1.jpg",progress:0.65},{src:P+"10-square-1x1.jpg",failed:true}]} caption="3 pictures — the body" onManage={()=>{}}/>
     <UploadErrorLine onRetry={()=>{}} onRemove={()=>{}}/>
@@ -40,6 +49,13 @@ function Demo(){return (
     <PickedSheet inline open items={[{src:P+"01-landscape-4x3.jpg",alt:"Strawberries",described:true},{src:P+"04-square-1x1.jpg",alt:"Honey",onDescribe:()=>{},onRemove:()=>{}},{src:P+"10-square-1x1.jpg",alt:"Grapes",onDescribe:()=>{},onRemove:()=>{}}]}/>
   </div>
   <div className="col" style={{width:400}}>
+    <span className="lbl">CropViewport — the shape is locked to how the result will be seen; circle for a face, the clip's ratio for a cover</span>
+    <div style={{display:"flex",gap:8,paddingLeft:24}}>
+      <CropViewport src={P+"05-portrait-4x5.jpg"} shape="circle" scale={1.2} origin="50% 35%" size={170} inset={10}/>
+      <CropViewport src={P+"03-landscape-16x9.jpg"} shape="rect" height={84} scale={1.15} origin="50% 45%" size={170} inset={10}/>
+    </div>
+    <span className="lbl">CoverRow — four frames from the clip, the chosen one outlined; the dashed tile is a picture of your own</span>
+    <CoverRow frames={[{src:P+"03-landscape-16x9.jpg"},{src:P+"03-landscape-16x9.jpg",transform:"scale(1.25) translateX(-4%)"},{src:P+"03-landscape-16x9.jpg",transform:"scale(1.5)"},{src:P+"03-landscape-16x9.jpg",transform:"scale(1.8) translateY(6%)"}]} selected={0}/>
     <span className="lbl">DescribeSheet — alt text, authored and optional, never from the crop step</span>
     <DescribeSheet inline open src={P+"01-landscape-4x3.jpg"} value="Crates of strawberries on the stand by the sea wall."/>
     <span className="lbl">DescribeSheet video — one entry for the whole clip; the cover is never offered</span>
