@@ -4,16 +4,17 @@
 
 | Tool | Purpose | Install |
 |---|---|---|
-| Rust (stable) | Language toolchain | https://rustup.rs |
+| rustup | Language toolchain. The version is pinned in `rust-toolchain.toml`, and rustup installs it on first use — nothing here selects a channel by hand | https://rustup.rs |
 | Docker + Compose | Local databases (any compose-compatible runtime works — see `DOCKER_COMPOSE` below) | https://docs.docker.com/get-docker |
 | sqlx-cli | Running migrations | Auto-installed by `make init`; manual: `cargo install sqlx-cli --no-default-features --features postgres` |
 | mkcert | The dev server's certificate, for phones that reach it by address ([below](#reaching-the-web-dev-server-from-the-phone)) | https://github.com/FiloSottile/mkcert |
+| lychee | The markdown link check in `make ci` | `cargo install lychee` |
+| Node | The web app and the design tree (`make web-ci`, `make design-ci`) | The version in `web/.nvmrc` |
+| python3 | Only for `make fuzz-interchange`, whose seed script expands the RFC 8949 vectors with it | Any 3.x |
 
 Verify everything is in place:
 ```bash
-rustc --version        # >= 1.75
-cargo --version
-docker --version
+cargo --version        # the version rust-toolchain.toml pins
 docker compose version
 sqlx --version
 ```
@@ -49,7 +50,9 @@ over file values.
 | Variable | Default | Description |
 |---|---|---|
 | `DATABASE_URL` | `postgres://gnp:gnp_secret@localhost:5432/gnp_db` | Full Postgres connection URL (used by sqlx-cli and the app) |
-| `DOCKER_COMPOSE` | `docker compose -f docker/docker-compose.yml` | Compose command the make targets drive (make-only; the binaries never read it) — override to use another compose-compatible runtime, e.g. `wsl.exe -d claude-podman --cd /mnt/c/Users/<name>/dev/cogra -- podman compose -f docker/docker-compose.yml` |
+| `DOCKER_COMPOSE` | `docker compose -f docker/docker-compose.yml` | Compose command the make targets drive (make-only; the binaries never read it) — override to use another compose-compatible runtime, e.g. `wsl.exe -d claude-podman --cd /mnt/c/Users/<name>/dev/cogra -- podman compose -f docker/docker-compose.yml`. `make init` probes this command rather than a binary name, so the check is right on every runtime |
+| `COMPOSE_PROJECT` | `gnp` | Container-name prefix (compose-only). The default is what the `docker exec` recipes below name; set it, and move the ports, to run a second checkout's stack beside the first |
+| `WAIT_TIMEOUT` | `300` | Seconds `make wait-db` and `make wait-media` allow before failing with a message (make-only) |
 | `POSTGRES_USER` | `gnp` | Postgres username (used by Docker and Makefile) |
 | `POSTGRES_PASSWORD` | `gnp_secret` | Postgres password |
 | `POSTGRES_DB` | `gnp_db` | Postgres database name |
@@ -87,12 +90,26 @@ over file values.
 | `MEDIA_ORPHAN_REAPER_INTERVAL_SECS` | `600` | Sweep interval of the media orphan reaper |
 | `MEDIA_ORPHAN_MAX_AGE_SECS` | `86400` | How long an asset no parent references survives before the reaper collects it and its object |
 | `MEDIA_UPLOAD_PART_SIZE_BYTES` | `8388608` | How large a piece a resumable upload is cut into ([api-spec.md "Resuming a large upload"](api-spec.md#content-authoring)). Refused below 5 MiB, the floor S3 puts under every part but the last — a smaller cut would accept every part and then fail to assemble. It also decides what a blip costs: a dropped connection loses at most the part in flight |
-| `MEDIA_UPLOAD_SESSION_TTL_SECS` | `86400` | How long an unfinished upload survives before the media reaper aborts it and releases its parts. A day, matching `MEDIA_ORPHAN_MAX_AGE_SECS` — an upload nobody finished and an asset nobody attached are the same abandoned compose. An operator should also configure the store's own `AbortIncompleteMultipartUpload` lifecycle rule as a backstop, for the uploads a crash orphans before their session row exists |
+| `MEDIA_UPLOAD_SESSION_TTL_SECS` | `86400` | How long an unfinished upload survives before the media reaper aborts it and releases its parts. A day, matching `MEDIA_ORPHAN_MAX_AGE_SECS` — an upload nobody finished and an asset nobody attached are the same abandoned compose |
+| `MEDIA_STALE_UPLOADS_EXPIRY` | `24h` | The store-side backstop, for the uploads a crash orphans before their session row exists (compose-only). MinIO implements it as a server setting, not as an S3 `AbortIncompleteMultipartUpload` lifecycle rule — it rejects such a rule — and the expiry matches the TTL above: the same abandoned upload, seen from both sides. Another store needs the lifecycle rule instead |
+| `MEDIA_STALE_UPLOADS_CLEANUP_INTERVAL` | `6h` | How often the store looks for them (compose-only) |
 | `BREACH_CHECK` | `hibp` | The password breach corpus ([auth.md "Password requirements"](auth.md#password-requirements)): `hibp` (live range API) or `off` (offline dev — no lookup) |
 | `CLIENT_IP_SOURCE` | `ConnectInfo` | Client-IP derivation ([auth.md "Rate limiting"](auth.md#rate-limiting)): `ConnectInfo` (socket peer) by default; `RightmostXForwardedFor` only behind a reverse proxy that is the sole ingress |
 | `GENESIS_HANDLE` | `genesis` | The Genesis Moderator's handle (`make bootstrap`) |
 | `GENESIS_DISPLAY_NAME` | `Genesis Moderator` | The Genesis Moderator's display name |
+| `GENESIS_EMAIL` | `genesis@cogra.local` | The operator login that reaches the genesis account |
+| `GENESIS_PASSWORD` | *(none)* | Its password. No default: `make bootstrap` refuses without one, the posture `DATABASE_URL` takes, so a deployment that forgets it gets an error instead of an instance on a publicly-known password |
 | `RUST_LOG` | `debug` | Log level filter (`trace`, `debug`, `info`, `warn`, `error`) |
+
+The web front reads three variables of its own. They are listed here and
+in `.env.example` because a developer copying that file cannot otherwise
+learn they exist; no Rust binary reads any of them.
+
+| Variable | Default | Description |
+|---|---|---|
+| `GRAPHQL_URL` | `http://localhost:8080/graphql` | Where the web server's `/graphql` rewrite sends requests (`web/next.config.ts`) |
+| `PORT` | `3000` | The port the web server listens on (`web/scripts/prod.mjs`) |
+| `WEB_UPSTREAM_PORT` | `3001` | The port the https front proxies to |
 
 ---
 
@@ -107,47 +124,75 @@ over file values.
   `android/app/src/devCa/res/raw/cogra_dev_ca.pem` (gitignored — the CA
   is per-machine). Run it after every network change on setups where
   the DB, the API, or the phones sit on different network namespaces
-  and rendezvous on the host's LAN address. Without mkcert on `PATH` it
-  stamps `.env` and says what it skipped.
+  and rendezvous on the host's LAN address. It needs iproute2 for the
+  address, so it runs on Linux — inside the dev shell, not on a Windows
+  host.
+
+  Its exit codes say how far it got: **0** stamped and certified, **1**
+  nothing was done (a variable it stamps is missing from `.env`, or one
+  did not take the stamp — either way `.env` is left as it was), **3**
+  stamped but not certified, because mkcert is not on `PATH`. After a 3
+  the web servers still start, on a certificate Next issues for
+  `localhost` alone, and only the tunnel route works; `make web-dev` and
+  `make web-prod` say so.
 
 ---
 
 ## Make Commands
 
-```
-make init         First-time setup: copy .env, check/install dependencies
-make run          Full start: init + dev (first-time friendly)
-make dev          Start DBs + migrate + start API
-make api          Start the API server only
-make api-release   Start the API server in release mode (realistic auth/crypto latency)
-make up           Start Postgres in background
-make down         Stop all services (data persists in volumes)
-make reset-db     Wipe all volumes, restart services, re-run migrations
-make migrate      Run pending Postgres migrations only
-make bootstrap    One-time instance setup: seed genesis, land the L1 genesis records
-make ci           Full CI pipeline: lint, lint-corpus, sqlx-check, test, then docs-link-check
-make lint         cargo clippy (offline) + cargo fmt --check (read-only)
-make lint-corpus  Run the corpus linter over the repository (mirrors the corpus-lint job in ci.yml)
-make regenerate   Regenerate every generated register the linter maintains; run before pushing after adding or renaming a test function
-make fmt          cargo fmt --all (writes files)
-make test         cargo test --all
-make schema       Regenerate schema.graphql (the frontend contract)
-make vectors      Regenerate client-crypto-vectors.json (the client crypto contract)
-make sqlx-prepare Regenerate .sqlx/ offline metadata (needs a live, migrated DB)
-make sqlx-check   Verify .sqlx/ matches the queries (needs a live, migrated DB)
-make docs-link-check  Check markdown link targets + anchors (needs lychee)
-make build        cargo build --all
-make logs         Follow docker compose logs (Ctrl+C to stop)
-make android-ci   Run the Android CI checks (mirrors the android job in ci.yml; needs JDK 17 + JDK 21 + Android SDK)
-make android-test Run Android unit tests; scope to one module with m=feature:home
-make android-build  Assemble the debug APK
-make android-lint Run Android lint (not a CI gate, convenience only)
-make web-dev      Start the web app dev server over https (needs Node from web/.nvmrc)
-make web-prod     Build the web app and serve it over https — the hand-test path
-make web-apk      Stage the Android debug APK where the web app serves it
-make guest-apk    Build that APK against this machine's dev server, and stage it
-make web-ci       Run the web CI checks (mirrors the web job in ci.yml)
-```
+`make help` prints every target with its description, generated from the
+Makefile itself. It is the list — a second copy here would only drift
+away from it, and did.
+
+The three that decide the shape of a session:
+
+- `make run` — first time: `init`, then `dev`.
+- `make dev` — start the databases, migrate, start the API.
+- `make ci` — the Rust gates, before pushing. `make ci-all` adds the
+  client and design jobs, which need a JDK pair, the Android SDK, and
+  Node.
+
+### What the gates cost
+
+Every recurring action gets an expected duration and a tolerance
+([engineering-process.md](engineering-process.md) — a commissioned
+surface has a measured, recorded budget). Exceeding one is a finding,
+not a cost to absorb. Measured on the Home PC's WSL toolboxes
+(`claude-cogra`, `claude-android`) with warm dependency builds unless
+noted; a cold build pays its dependency graph on top.
+
+| Action | Budget | Measured |
+|---|---|---|
+| `make lint-corpus` | 30 s | 12–17 s (2026-09-04, 1858 sources) |
+| `cargo test -p cogra-linter` | 3 min | 90 s (2026-09-04) |
+| `cargo fmt --all -- --check` | 30 s | 11 s (2026-09-04) |
+| `cargo clippy -p cogra-linter --all-targets` | 2 min | 36 s (2026-09-04) |
+| `make docs-link-check` | 60 s | 8.5 s (2026-09-04, 150 files / 1520 links) |
+| `make android-build` | 20 min | 13 min 2 s cold (2026-08-20) |
+| `make wait-db` / `make wait-media` | `WAIT_TIMEOUT`, 300 s | seconds on a warm stack; the timeout is the bound, not the expectation |
+
+CI jobs carry the same discipline as `timeout-minutes`, which is the
+budget the runner enforces: a job with none runs to GitHub's six-hour
+default. The measurements are one run of every job on 2026-09-04, with
+the action caches warm; a run that invalidates them — a `Cargo.lock`
+bump, a new Gradle or npm dependency — pays its whole graph on top,
+which is the case the headroom is for.
+
+| Job | timeout-minutes | Measured |
+|---|---|---|
+| Detect code changes | 5 | 9 s |
+| Corpus lint | 20 | 2 m 37 s |
+| Lint | 30 | 2 m 19 s |
+| Test | 45 | 12 m 34 s |
+| Query budgets | 30 | 2 m 40 s |
+| Android | 45 | 1 m 31 s |
+| Web | 30 | 7 m 1 s |
+| Design | 20 | 1 m 54 s |
+| Markdown link check | 15 | 6 s |
+
+`Test` dominates because it builds sqlx-cli from source; `Query budgets`
+reaches the same database in a fifth of the time by letting
+`#[sqlx::test]` apply the migrations instead.
 
 ### Reaching the web dev server from the phone
 
@@ -283,7 +328,7 @@ password: gnp_secret
 database: gnp_db
 ```
 
-Or via Docker:
+Or through the container (`gnp` is `COMPOSE_PROJECT`'s default):
 ```bash
 docker exec -it gnp_postgres psql -U gnp -d gnp_db
 ```

@@ -369,7 +369,8 @@ When fixing wrong, stale, or imprecise text in a docs pass:
 make run    # first-time: init + start DBs + migrate + start API
 make dev    # returning: start DBs + migrate + start API
 make api    # just the API (if DBs already running)
-make ci     # lint + sqlx check + test + docs link check (run before pushing)
+make ci     # the Rust gates: lint + corpus lint + sqlx check + test + docs links
+make ci-all # ci plus the android, web and design jobs (needs their toolchains)
 ```
 
 Full make-target list, env vars, and other dev guidance:

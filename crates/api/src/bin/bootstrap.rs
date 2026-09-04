@@ -33,6 +33,12 @@ fn guidelines_hash() -> String {
 /// code. `.env` is read first, with the same precedence the server uses
 /// (main.rs).
 ///
+/// `GENESIS_PASSWORD` is required rather than defaulted, on the posture
+/// `DATABASE_URL` already takes: a deployment that forgets it should get an
+/// error, not a running instance whose operator account stands on a
+/// publicly-known password. The other genesis inputs keep their defaults —
+/// a handle and a display name are not secrets.
+///
 /// The admission burn is seeded at 100 units, which buys an admitted
 /// account roughly 1893 acts at the reference θ.
 #[tokio::main]
@@ -77,7 +83,10 @@ async fn main() -> anyhow::Result<()> {
     }
 
     let email = env_or("GENESIS_EMAIL", "genesis@cogra.local");
-    let password = env_or("GENESIS_PASSWORD", "genesis-dev-password");
+    let password = std::env::var("GENESIS_PASSWORD").context(
+        "GENESIS_PASSWORD must be set (see .env.example): the operator login for the \
+         Genesis Moderator is never a compiled-in default",
+    )?;
     let login = api::bootstrap::ensure_operator_login(&pool, &handle, &email, &password).await?;
     if login.credentials_created {
         println!("  Operator login    : {email} (GENESIS_EMAIL / GENESIS_PASSWORD)");
