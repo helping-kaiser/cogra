@@ -8,7 +8,7 @@
 // the obvious thing — mints a new one on every keystroke in the title field and
 // pins ten phone photos in memory ten times over.
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { PickedAsset } from "./wizard";
 
@@ -28,68 +28,55 @@ export function useRevokeOnChange(urls: readonly string[]): void {
   }, [urls]);
 }
 
-// One object URL per blob, minted at most once.
-//
-// The mint is memoized on the blob itself so that computing the map is
-// IDEMPOTENT: React invokes a render — and a `useMemo` factory — more than once
-// in Strict Mode and may throw a render's result away, and a mint that ran
-// twice would hold two blobs alive where one was handed out. Revoking drops the
-// memo with the url, so a blob that comes back is minted afresh rather than
-// handed a dead one.
-const mintedFor = new WeakMap<Blob, string>();
-
-function urlFor(file: Blob): string {
-  const existing = mintedFor.get(file);
-  if (existing !== undefined) return existing;
-  const url = URL.createObjectURL(file);
-  mintedFor.set(file, url);
-  return url;
-}
-
-function release(file: Blob | undefined, url: string): void {
-  if (file !== undefined) mintedFor.delete(file);
-  URL.revokeObjectURL(url);
-}
-
 export function usePreviewUrls(assets: readonly PickedAsset[]): Readonly<Record<string, string>> {
-  // DERIVED, not stored. Writing this map into state from an effect is the
-  // cascading render React's own guidance warns about ("You Might Not Need an
-  // Effect"), and the mint that used to sit inside the `setUrls` updater broke
-  // the rule that a state updater is pure — Strict Mode calls it twice, so
-  // every newly picked asset minted two urls and only the second was ever
-  // revoked.
-  const urls = useMemo(() => {
+  const [urls, setUrls] = useState<Record<string, string>>({});
+  // What is actually outstanding, mirrored in a ref so the unmount cleanup can
+  // revoke it without listing state as a dependency — and so the effect below
+  // reconciles against the object-URL table rather than against a render's
+  // value.
+  const live = useRef<Record<string, string>>({});
+
+  useEffect(() => {
+    // MINTED AND REVOKED HERE, not inside a `setUrls` updater. React's rules
+    // require a state updater to be pure and Strict Mode calls it twice to
+    // surface violations, so every newly picked asset used to mint two object
+    // URLs — the second went into the map, the first was never revoked and
+    // pinned its blob for the life of the tab.
+    const current = live.current;
     const next: Record<string, string> = {};
-    for (const asset of assets) next[asset.id] = urlFor(asset.file);
-    return next;
+    let changed = false;
+    for (const asset of assets) {
+      const existing = current[asset.id];
+      if (existing !== undefined) {
+        next[asset.id] = existing;
+      } else {
+        next[asset.id] = URL.createObjectURL(asset.file);
+        changed = true;
+      }
+    }
+    for (const [id, url] of Object.entries(current)) {
+      if (next[id] === undefined) {
+        URL.revokeObjectURL(url);
+        changed = true;
+      }
+    }
+    if (!changed) return;
+    live.current = next;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- The object-URL
+    // table IS an external system, which is the case the rule exempts: the urls
+    // cannot be derived during render, because minting one is a side effect and
+    // a render may run twice or be thrown away. Reflecting the table's keys
+    // into state is the documented way to read an external resource a component
+    // renders. Deriving them in a `useMemo` instead was tried and is worse —
+    // the memo survives Strict Mode's simulated unmount while the revocation
+    // does not, so the second mount renders urls that were already revoked.
+    setUrls(next);
   }, [assets]);
 
-  // The release half, which is what an effect is genuinely for: it runs after
-  // the render that dropped those assets has committed, so nothing still on
-  // screen loses its src.
-  const outstanding = useRef<{ urls: Record<string, string>; files: Map<string, Blob> }>({
-    urls: {},
-    files: new Map(),
-  });
-
   useEffect(() => {
-    const held = outstanding.current;
-    for (const [id, url] of Object.entries(held.urls)) {
-      if (urls[id] === undefined) release(held.files.get(id), url);
-    }
-    outstanding.current = {
-      urls,
-      files: new Map(assets.map((asset) => [asset.id, asset.file])),
-    };
-  }, [assets, urls]);
-
-  useEffect(() => {
-    const held = outstanding;
     return () => {
-      for (const [id, url] of Object.entries(held.current.urls)) {
-        release(held.current.files.get(id), url);
-      }
-      held.current = { urls: {}, files: new Map() };
+      for (const url of Object.values(live.current)) URL.revokeObjectURL(url);
+      live.current = {};
     };
   }, []);
 

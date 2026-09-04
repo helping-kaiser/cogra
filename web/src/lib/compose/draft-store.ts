@@ -217,8 +217,11 @@ export function createComposeDraftStore(deps: {
       // Nothing to key it under, and the composer is a member surface — so
       // there is no case where this drops a draft a reader could see again.
       if (account === null) return;
-      await forgetLegacy();
+      // Read BEFORE the first await: a `clear` that lands while this save is
+      // still reading blobs bumps the generation, and a save that captured it
+      // afterwards would think it was current and write the draft back.
       const startedIn = generation;
+      await forgetLegacy();
       const assets: StoredAsset[] = await Promise.all(
         state.assets.map(async ({ file, ...rest }) => ({
           ...rest,
