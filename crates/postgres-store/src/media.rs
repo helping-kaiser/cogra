@@ -169,8 +169,7 @@ pub async fn attach_to_post_version(
     if gallery.is_empty() {
         return Ok(());
     }
-    let (ids, alts) = split_placements(gallery);
-    let orders: Vec<i16> = (0..gallery.len() as i16).collect();
+    let (ids, orders, alts) = split_placements(gallery)?;
     sqlx::query!(
         "INSERT INTO post_attachments
              (post_version_id, attachment_id, display_order, is_cover, alt_text)
@@ -198,8 +197,7 @@ pub async fn attach_to_comment_version(
     if gallery.is_empty() {
         return Ok(());
     }
-    let (ids, alts) = split_placements(gallery);
-    let orders: Vec<i16> = (0..gallery.len() as i16).collect();
+    let (ids, orders, alts) = split_placements(gallery)?;
     sqlx::query!(
         "INSERT INTO comment_attachments
              (comment_version_id, attachment_id, display_order, alt_text)
@@ -216,15 +214,37 @@ pub async fn attach_to_comment_version(
     Ok(())
 }
 
-/// The gallery as the two parallel arrays `unnest` zips back together.
+/// The gallery as the three parallel arrays `unnest` zips back together.
 /// One `unnest` over parallel arrays is what keeps the whole gallery one
 /// statement, and the arrays have to be built before the query borrows
 /// them.
-fn split_placements(gallery: &[GalleryPlacement]) -> (Vec<Uuid>, Vec<Option<String>>) {
-    gallery
-        .iter()
-        .map(|p| (p.attachment_id, p.alt_text.clone()))
-        .unzip()
+///
+/// All three are built in one pass so their lengths cannot diverge:
+/// `unnest` pads the short arrays of a ragged set with NULL, and both
+/// `attachment_id` and `display_order` are `NOT NULL`, so a divergence is
+/// either a refused statement or wrong rows — never a visible mismatch.
+///
+/// `display_order` is a `smallint`, so a gallery longer than `i16::MAX` is
+/// refused rather than wrapped. A wrapped index would restart the ordering
+/// at a negative number, and `is_cover` is derived as `ord = 0`, so the
+/// cover would move to whichever placement happened to land on zero.
+fn split_placements(
+    gallery: &[GalleryPlacement],
+) -> Result<(Vec<Uuid>, Vec<i16>, Vec<Option<String>>), sqlx::Error> {
+    let mut ids = Vec::with_capacity(gallery.len());
+    let mut orders = Vec::with_capacity(gallery.len());
+    let mut alts = Vec::with_capacity(gallery.len());
+    for (index, placement) in gallery.iter().enumerate() {
+        let order = i16::try_from(index).map_err(|_| {
+            sqlx::Error::Encode(
+                format!("gallery of {} placements exceeds display_order", gallery.len()).into(),
+            )
+        })?;
+        ids.push(placement.attachment_id);
+        orders.push(order);
+        alts.push(placement.alt_text.clone());
+    }
+    Ok((ids, orders, alts))
 }
 
 struct GalleryRow {
@@ -690,14 +710,14 @@ pub async fn expired_upload_sessions(
 ///
 /// The limit bounds one tick's work, for the reason
 /// [`expired_upload_sessions`] states: a backlog is drained over several
-/// ticks rather than in one transaction that holds a row lock on every
-/// candidate at once — and those locks are contended, because a gallery
-/// write takes a `FOR KEY SHARE` lock on the asset it references as its
-/// own foreign-key check. Oldest first, so the drain converges.
+/// ticks rather than in one transaction that holds row locks on every
+/// candidate at once — and each of those locks is contended, because a
+/// gallery write takes a `FOR KEY SHARE` lock on the asset it references
+/// as its own foreign-key check. Oldest first, so the drain converges.
 ///
-/// The candidate select and the delete are one statement and therefore
-/// one snapshot, so bounding the work does not open a window in which an
-/// asset could be referenced between being chosen and being removed.
+/// The candidate select and the delete share one statement and therefore
+/// one snapshot, so bounding the work does not widen the window in which
+/// an asset could be referenced between being chosen and being removed.
 pub async fn sweep_orphans(
     pool: &PgPool,
     max_age_secs: f64,
