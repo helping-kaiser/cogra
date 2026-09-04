@@ -160,6 +160,10 @@ export function PostCard({
   const descriptionStyle = {
     margin: 0,
     fontSize: "var(--text-body-medium)",
+    // The page ground sets `body-large` leading on everything unclassed, which
+    // on a two-line caption at body-medium reads as a gap, not a paragraph. The
+    // role's own line-height comes with the role.
+    lineHeight: "var(--text-body-medium--line-height)",
     color: "var(--text-secondary)",
     ...(!open && !detail ? CLAMP(DESCRIPTION_CLAMP_LINES) : null),
   };
