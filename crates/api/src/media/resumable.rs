@@ -342,6 +342,13 @@ pub async fn receive_part(
 /// decided by [`super::process`] from the assembled bytes — the same call
 /// the single-shot upload makes, so the two paths cannot drift into
 /// admitting different things.
+/// A refused poster leaves the session standing rather than discarding
+/// it: the bytes are assembled and correct, and the repair is a second
+/// `complete` naming a poster that exists — re-sending the whole file
+/// because one field was wrong is not the trade. The session then ages
+/// out on its own, and [`sweep_expired`] closes its row whatever the
+/// store says, so a session left here cannot block the collection of any
+/// other.
 pub async fn complete(
     pool: &PgPool,
     blobs: &dyn BlobStore,
@@ -423,7 +430,10 @@ pub async fn complete(
 
     let row = store_asset(pool, blobs, author, asset, cover)
         .await
-        .map_err(SessionError::internal)?;
+        .map_err(|e| match e {
+            super::GalleryPlanError::BadInput(e) => SessionError::BadInput(e),
+            super::GalleryPlanError::Internal(e) => SessionError::Internal(e),
+        })?;
 
     store::finish_upload_session(pool, session_id, row.id)
         .await
@@ -460,8 +470,9 @@ pub async fn abort(
 /// The order is the one [`store::close_upload_session`] argues for: the
 /// row is the only handle on the store-side upload, so dropping it while
 /// the upload lives strands the parts. A store failure here therefore
-/// leaves the row, and the sweep retries it — which is why nothing in
-/// this function is allowed to be fatal to its caller.
+/// leaves the row for [`sweep_expired`] to retry — which is why nothing
+/// in this function is allowed to be fatal to its caller, and why the
+/// sweep, having no further retry behind it, closes the row regardless.
 async fn discard(pool: &PgPool, blobs: &dyn BlobStore, session: &store::UploadSession) {
     if let Err(e) = blobs
         .abort_multipart(&session.storage_key, &session.upload_id)
@@ -485,6 +496,17 @@ async fn discard(pool: &PgPool, blobs: &dyn BlobStore, session: &store::UploadSe
 /// than on a timer of its own: the two collect the two halves of the same
 /// abandoned compose, and a second loop would be a second thing to
 /// configure for no gain.
+///
+/// **The row is always closed, whatever the store said.** This is the
+/// last resort — [`discard`] is the retrying path, and the sweep is what
+/// it retries into — so a store failure here must not leave the row
+/// standing. The batch is `LIMIT`-shaped and ordered by expiry, so rows
+/// that can never be collected sort to the *front*: leaving them would
+/// fill every batch with the same sessions and stop the sweep collecting
+/// anything, silently, while it went on logging warnings. Closing anyway
+/// can leave a store-side orphan, which is the failure the whole write
+/// ordering already prefers and which the bucket's own lifecycle rule
+/// collects (the guidance `media/mod.rs` cites for exactly this).
 pub async fn sweep_expired(pool: &PgPool, blobs: &Arc<dyn BlobStore>) {
     let expired = match store::expired_upload_sessions(pool, SWEEP_BATCH).await {
         Ok(expired) => expired,
@@ -508,11 +530,9 @@ pub async fn sweep_expired(pool: &PgPool, blobs: &Arc<dyn BlobStore>) {
                 .await
             {
                 tracing::warn!(error = %e, session = %session.id, "expired upload not aborted");
-                continue;
             }
             if let Err(e) = blobs.delete(&session.storage_key).await {
                 tracing::warn!(error = %e, session = %session.id, "staging object not removed");
-                continue;
             }
         }
         if let Err(e) = store::close_upload_session(pool, session.id).await {

@@ -66,3 +66,14 @@ export function fromBase64(s: string): Uint8Array<ArrayBuffer> {
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
   return out;
 }
+
+/**
+ * base64url (RFC 4648 §5) — the alphabet a JWK member is encoded in.
+ *
+ * Normalizes to the standard alphabet and delegates, so a malformed member
+ * fails the way every other bad base64 in this module does rather than with
+ * whatever `atob` happens to throw.
+ */
+export function fromBase64Url(s: string): Uint8Array<ArrayBuffer> {
+  return fromBase64(s.replace(/-/g, "+").replace(/_/g, "/"));
+}

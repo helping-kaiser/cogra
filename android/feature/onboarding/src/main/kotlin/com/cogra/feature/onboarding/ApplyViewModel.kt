@@ -4,9 +4,9 @@ import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.domain.ErrorCode
-import com.cogra.domain.MIN_HANDLE_LENGTH
 import com.cogra.domain.Outcome
 import com.cogra.domain.identity.Register
+import com.cogra.domain.registrationFormValid
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +24,7 @@ data class ApplyUiState(
     val transportFailed: Boolean = false,
 ) {
     val formValid: Boolean
-        get() = handle.length >= MIN_HANDLE_LENGTH && email.contains('@') && password.length >= 12
+        get() = registrationFormValid(handle, email, password)
 }
 
 /**

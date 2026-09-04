@@ -42,6 +42,10 @@ export type RecordRow = {
   postId: string | null;
 };
 
+/**
+ * One page of the chronicle per fetch — the server's own default, pinned
+ * to `client-constants.json` in `lib/client-constants.test.ts`.
+ */
 export const PROFILE_PAGE_SIZE = 20;
 
 export async function fetchProfileByHandle(
@@ -72,9 +76,17 @@ export async function fetchMyProfile(
   return success(fetched.value.me ?? null);
 }
 
-type RecordNode = AuthorRecordsQuery["records"]["edges"][number]["node"];
+export type RecordNode = AuthorRecordsQuery["records"]["edges"][number]["node"];
 
-function rowLabel(node: RecordNode, genesis: boolean): string {
+/**
+ * The honest label for one chronicle row.
+ *
+ * Exported because it is a pure decision over the record family and the
+ * genesis mark, and a branch matrix that reads wrong is the whole defect —
+ * pinning it directly costs nothing, while reaching all six arms through a
+ * query fixture costs six fixtures.
+ */
+export function rowLabel(node: RecordNode, genesis: boolean): string {
   switch (node.family) {
     case "PUBLISH":
       return genesis ? "Published a post" : "Edited a post";
@@ -154,7 +166,8 @@ export async function fetchAuthorRecords(
  */
 export type MediaSelection = "unchanged" | { readonly clear: true } | { readonly mediaId: string };
 
-function mediaField(selection: MediaSelection | undefined): string | null | undefined {
+/** The three-valued rule above, as the value the variables object carries. */
+export function mediaField(selection: MediaSelection | undefined): string | null | undefined {
   if (selection === undefined || selection === "unchanged") return undefined;
   return "clear" in selection ? null : selection.mediaId;
 }

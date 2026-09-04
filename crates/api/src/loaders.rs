@@ -114,6 +114,29 @@ impl Loader<String> for ActorByAddressLoader {
     }
 }
 
+/// Actors by their own id — the author every content node names.
+///
+/// `ActorByAddressLoader` cannot serve this: it keys on the L0 address,
+/// which is what a citation carries, while a post carries its author's
+/// row id. A page of a hundred posts resolves a hundred authors, and
+/// each of those resolves an avatar, so this is where that fan-out
+/// starts.
+pub struct ActorByIdLoader(PgPool);
+
+impl Loader<Uuid> for ActorByIdLoader {
+    type Value = ActorIdentity;
+    type Error = LoadError;
+
+    async fn load(&self, keys: &[Uuid]) -> Result<HashMap<Uuid, ActorIdentity>, LoadError> {
+        Ok(store::actor_identities_by_ids(&self.0, keys)
+            .await
+            .map_err(LoadError::from_display)?
+            .into_iter()
+            .map(|identity| (identity.id, identity))
+            .collect())
+    }
+}
+
 /// Post galleries by the version row they hang off.
 ///
 /// The gallery is a per-node list, so a feed page of twenty posts asks
@@ -184,6 +207,29 @@ impl Loader<Uuid> for MediaByIdLoader {
     }
 }
 
+/// Whether an act's payload has been reduced, keyed on the act
+/// identifier.
+///
+/// `Record.payloadState` is a per-record field, so a chronicle page asks
+/// once per record; batching collapses a page into one read. A key with
+/// no row is absent from the map, which the resolver reads as FULL —
+/// the same answer an act that never carried a payload deserves.
+pub struct PayloadStateLoader(PgPool);
+
+impl Loader<String> for PayloadStateLoader {
+    type Value = bool;
+    type Error = LoadError;
+
+    async fn load(&self, keys: &[String]) -> Result<HashMap<String, bool>, LoadError> {
+        Ok(content_store::reduced_payload_acts(&self.0, keys)
+            .await
+            .map_err(LoadError::from_display)?
+            .into_iter()
+            .map(|act_id| (act_id, true))
+            .collect())
+    }
+}
+
 /// Groups a flat gallery read back into one list per version, preserving
 /// the query's own ordering — which is gallery order.
 ///
@@ -205,9 +251,11 @@ pub struct NodeLoaders {
     pub posts: DataLoader<PostByNodeLoader>,
     pub comments: DataLoader<CommentByNodeLoader>,
     pub actors: DataLoader<ActorByAddressLoader>,
+    pub actors_by_id: DataLoader<ActorByIdLoader>,
     pub post_galleries: DataLoader<PostGalleryLoader>,
     pub comment_galleries: DataLoader<CommentGalleryLoader>,
     pub media: DataLoader<MediaByIdLoader>,
+    pub payload_states: DataLoader<PayloadStateLoader>,
 }
 
 impl NodeLoaders {
@@ -216,9 +264,11 @@ impl NodeLoaders {
             posts: DataLoader::new(PostByNodeLoader(pool.clone()), tokio::spawn),
             comments: DataLoader::new(CommentByNodeLoader(pool.clone()), tokio::spawn),
             actors: DataLoader::new(ActorByAddressLoader(pool.clone()), tokio::spawn),
+            actors_by_id: DataLoader::new(ActorByIdLoader(pool.clone()), tokio::spawn),
             post_galleries: DataLoader::new(PostGalleryLoader(pool.clone()), tokio::spawn),
             comment_galleries: DataLoader::new(CommentGalleryLoader(pool.clone()), tokio::spawn),
-            media: DataLoader::new(MediaByIdLoader(pool), tokio::spawn),
+            media: DataLoader::new(MediaByIdLoader(pool.clone()), tokio::spawn),
+            payload_states: DataLoader::new(PayloadStateLoader(pool), tokio::spawn),
         }
     }
 }

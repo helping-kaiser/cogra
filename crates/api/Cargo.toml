@@ -34,6 +34,8 @@ postgres-store   = { path = "../postgres-store" }
 tokio              = { workspace = true }
 tokio-util         = { workspace = true }
 axum               = { workspace = true }
+tower-http         = { workspace = true }
+http-body-util     = { workspace = true }
 # `tempfile` is what makes an uploaded body spool to disk instead of
 # being buffered in memory: without it a concurrent burst of uploads is a
 # memory-exhaustion primitive rather than a queue of temporary files.
@@ -70,4 +72,3 @@ mp4                = { workspace = true }
 # real MP4 to test the probe against needs the type it is defined over.
 bytes          = { version = "1" }
 tower          = { version = "0.5", features = ["util"] }
-http-body-util = { version = "0.1" }

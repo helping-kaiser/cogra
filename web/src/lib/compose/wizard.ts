@@ -23,7 +23,10 @@ import { PUBLIC_DOMAIN } from "@/lib/license";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
 
-/** The write side's cap; a whole-batch refusal, so the picker enforces it too. */
+/**
+ * The write side's cap; a whole-batch refusal, so the picker enforces it too.
+ * Pinned to `client-constants.json` in `lib/client-constants.test.ts`.
+ */
 export const POST_ATTACHMENT_CAP = 10;
 
 export type BodyMode = "words" | "media";
@@ -90,15 +93,6 @@ export type CoverAsset = {
 
 /** A picture of the author's own rather than a frame out of the clip. */
 export const COVER_FROM_PICTURE = -1;
-
-// THE SENSITIVE SELF-MARK IS NOT HERE, and its absence is deliberate.
-// ComposeSensitive draws it and D19 puts it in the wizard's scope, but the
-// contract has no way to carry it: `PreparePostInput` has no sensitive field
-// and there is no mutation that sets one — `SENSITIVE` exists only as a
-// read-side `FieldModerationStatus`. A toggle whose value is dropped on the
-// floor would tell an author their post is veiled when it is not, which is the
-// one kind of wrong this particular control must never be. It lands when the
-// contract can carry it; reported as a blocked item rather than faked.
 
 export type WizardState = {
   readonly step: Step;

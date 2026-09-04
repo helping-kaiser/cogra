@@ -77,8 +77,17 @@ schema_version   = [1, 0, 0]
 [carrier]
 
 # Version-control internals, build outputs, dependency trees.
+#
+# ADDED 2026-09-04: .claude/worktrees/ is version-control internals of the
+# same kind as .git/ — a git worktree materializes a further, complete
+# checkout of this repository under it, so a walk that descends there reads
+# the corpus a second time under paths that are not its own. It is the
+# other half of the walk's link policy (crates/cogra-linter/src/carrier.rs
+# module header): the walk stops leaving the repository through a link, and
+# stops re-entering it through a nested checkout.
 exclude_trees = [
   ".git/",
+  ".claude/worktrees/",         # agent git worktrees: further checkouts
   "target/",                    # cargo, workspace-level
   "android/build/",
   "android/app/build/",
@@ -102,6 +111,8 @@ generated_files = [
   "web/package-lock.json",
   "design-tokens.json",
   "client-crypto-vectors.json",
+  "client-constants.json",
+  "stance-fold-vectors.json",
   "android/gradle/libs.versions.toml",
   # The per-owner label registers of the rust-test profile, one per
   # owner with covered assets, materialized by the generator on
@@ -457,6 +468,13 @@ becoming an empty carrier, and optional does not touch that case.
 When the trees are present they are fully checked: LBL
 ansatz:labels:unchecked-locals expressly REJECTS exempting the
 working notes from resolution.
+THE ROWS ALSO NAME WHERE THE WALK MAY CROSS A LINK. optional = true
+is the only place the carrier walk follows a link out of the tree
+(crates/cogra-linter/src/carrier.rs, "The link policy"): these two
+roots are links wherever they exist, and no other name in the corpus
+is allowed to resolve somewhere else. Adding optional = true to a row
+therefore says two things — an absent root is legal, and a link there
+is crossed — and both are meant.
 """
 
 # --- 20: the residual rule that makes Omega total ---------------
@@ -681,9 +699,10 @@ business. 38 files declare `mod tests`, so a census that kept them
 would derive mod:*:tests thirty-eight times and fail injectivity in
 every owner. The consequence is accepted plainly — an inline test
 module carries no label of its own.
-MEASURED 2026-09-03 by the linter's own census machinery: 106
-module definitions — the resumable upload session is the most recent
-— and after the exclusion no duplicate module name in any owner (api,
+MEASURED 2026-09-04 by the linter's own census machinery: 111
+module definitions — the envelope tree's split into pce, cogra and
+media is the most recent — and after the exclusion no
+duplicate module name in any owner (api,
 cogra-interchange, cogra-linter, common, l1-standin,
 postgres-store all clean). The census grows with the
 corpus, so the number is re-measured whenever a slice adds Rust

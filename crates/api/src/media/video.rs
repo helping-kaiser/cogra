@@ -31,7 +31,7 @@ use std::io::Cursor;
 
 use mp4::{MediaType, Mp4Reader, TrackType};
 
-use super::MediaError;
+use super::{MAX_PIXEL_DIMENSION, MediaError, Probe};
 
 /// The single stored moving format. Clients re-encode to it on device.
 pub const MIME: &str = "video/mp4";
@@ -185,9 +185,15 @@ fn shift_before(removals: &[(usize, usize)], position: u64) -> u64 {
         .sum()
 }
 
-/// Whether the file carries anything the strip would remove — the check
-/// half of check-then-repair.
-pub fn carries_metadata(bytes: &[u8]) -> bool {
+/// Whether the file carries anything the strip would remove.
+///
+/// Test-only: the production path calls [`strip_metadata`]
+/// unconditionally, which makes the same check internally and returns
+/// the file unchanged when there is nothing to remove. Exposing a
+/// separate check half would invite a caller to ask twice and act on the
+/// answer between the two.
+#[cfg(test)]
+fn carries_metadata(bytes: &[u8]) -> bool {
     let mut found = Vec::new();
     metadata_ranges(bytes, 0, bytes.len(), &mut found).is_ok() && !found.is_empty()
 }
@@ -354,19 +360,6 @@ fn write_chunk_offsets(
     Ok(())
 }
 
-/// What the header probe learned. The pixels are never touched: the
-/// dimensions and the duration are facts the container states about
-/// itself, and a file that misstates them fails the codec check first.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Probe {
-    pub width: u32,
-    pub height: u32,
-    /// The movie duration in milliseconds — written to the asset's
-    /// options as `duration_ms`. A fact about the asset, never a limit
-    /// on it: there is deliberately no duration cap.
-    pub duration_ms: u64,
-}
-
 /// Whether the bytes are an MP4 container, read from the bytes alone.
 ///
 /// `ftyp` sits at offset 4, after its own box size, and the brand
@@ -437,11 +430,16 @@ pub fn probe(bytes: &[u8]) -> Result<Probe, MediaError> {
     if width == 0 || height == 0 {
         return Err(MediaError::Undecodable);
     }
+    if width > MAX_PIXEL_DIMENSION || height > MAX_PIXEL_DIMENSION {
+        return Err(MediaError::Codec(
+            "the video canvas is wider than the pipeline admits",
+        ));
+    }
 
     Ok(Probe {
         width,
         height,
-        duration_ms: u64::try_from(mp4.duration().as_millis()).unwrap_or(u64::MAX),
+        duration_ms: Some(u64::try_from(mp4.duration().as_millis()).unwrap_or(u64::MAX)),
     })
 }
 
@@ -555,7 +553,8 @@ mod tests {
         assert_eq!(probed.width, 1920);
         assert_eq!(probed.height, 1080);
         assert_eq!(
-            probed.duration_ms, 2_500,
+            probed.duration_ms,
+            Some(2_500),
             "the duration is read, never capped"
         );
     }

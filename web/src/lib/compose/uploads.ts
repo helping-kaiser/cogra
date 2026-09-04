@@ -8,12 +8,35 @@
 
 import type { ApolloClient } from "@apollo/client";
 
-import { uploadMedia } from "@/lib/api/media-api";
+import { uploadMedia, uploadVideo, UploadPartsError } from "@/lib/api/media-api";
+import type { Outcome, UserError } from "@/lib/api/outcome";
+import type { AuthGuard } from "@/lib/session/guard";
+import { mediaRefusalMessage } from "@/lib/ui/error-messages";
 import { encodeForUpload } from "@/lib/ui2/media/encode-image";
 import { stripVideoMetadata } from "@/lib/ui2/media/strip-video";
 import type { AssetUpload, CoverAsset, PickedAsset } from "./wizard";
 
 export type UploadStep = (next: AssetUpload) => void;
+
+function refusalFor(errors: readonly UserError[], subject: string): string {
+  const first = errors[0];
+  return first === undefined
+    ? `The server refused that ${subject}.`
+    : mediaRefusalMessage(first.code, subject);
+}
+
+/**
+ * What a transport-tier failure says.
+ *
+ * "Couldn't reach the server" is right for a fetch that never landed and
+ * wrong for a parts run that the server answered and refused, so the parts
+ * path's own sentence is kept when it carries one.
+ */
+function transportMessage(outcome: Outcome<unknown> & { kind: "failed" }): string {
+  return outcome.cause instanceof UploadPartsError
+    ? outcome.cause.message
+    : "Couldn't reach the server.";
+}
 
 /**
  * Runs one asset all the way to an id, reporting each stage as it starts.
@@ -57,12 +80,13 @@ export async function runUpload(
     return;
   }
   if (uploaded.kind === "refused") {
-    // A refusal is the server's own words about these bytes — too large, wrong
-    // type, over the hourly limit — so it is shown rather than paraphrased. It
-    // stays retryable because a rate limit is the common case and it clears.
+    // The refusal is read off its CODE, never off the server's sentence:
+    // `UserError.message` is developer-facing fallback text (api-spec.md
+    // § Errors). It stays retryable because a rate limit is the common case
+    // and it clears.
     step({
       kind: "failed",
-      message: uploaded.errors[0]?.message ?? "The server refused that picture.",
+      message: refusalFor(uploaded.errors, "picture"),
       retryable: true,
     });
     return;
@@ -96,9 +120,15 @@ export function waitingAssets(assets: readonly PickedAsset[]): readonly PickedAs
  * upload the file with its GPS tag intact, which is the outcome the strip
  * exists to prevent — so it is reported as a refusal instead, and it is not
  * retryable, because a second attempt cannot make the container readable.
+ *
+ * THE CLIP GOES BY WHICHEVER PATH ITS SIZE CALLS FOR. `uploadVideo` sends
+ * anything at or above eight mebibytes as a resumable session whose parts are
+ * retried individually, and anything smaller in one request — the same
+ * boundary, on the same reasoning, as android's.
  */
 export async function runVideoUpload(
   client: ApolloClient,
+  guard: AuthGuard,
   video: PickedAsset,
   cover: CoverAsset,
   onVideo: UploadStep,
@@ -121,7 +151,7 @@ export async function runVideoUpload(
   if (poster.kind !== "success") {
     const message =
       poster.kind === "refused"
-        ? (poster.errors[0]?.message ?? "The server refused that cover.")
+        ? refusalFor(poster.errors, "cover")
         : "Couldn't reach the server.";
     onCover({ kind: "failed", message, retryable: true });
     onVideo({ kind: "failed", message: "The cover didn't upload.", retryable: true });
@@ -146,7 +176,7 @@ export async function runVideoUpload(
   }
 
   onVideo({ kind: "uploading" });
-  const uploaded = await uploadMedia(client, {
+  const uploaded = await uploadVideo(client, guard, {
     blob: stripped.blob,
     coverMediaId: poster.value.id,
   });
@@ -158,10 +188,10 @@ export async function runVideoUpload(
   if (uploaded.kind === "refused") {
     onVideo({
       kind: "failed",
-      message: uploaded.errors[0]?.message ?? "The server refused that video.",
+      message: refusalFor(uploaded.errors, "video"),
       retryable: true,
     });
     return;
   }
-  onVideo({ kind: "failed", message: "Couldn't reach the server.", retryable: true });
+  onVideo({ kind: "failed", message: transportMessage(uploaded), retryable: true });
 }

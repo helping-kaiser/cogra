@@ -3,8 +3,16 @@
 import { IDBFactory } from "fake-indexeddb";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { composeDraftStore, draftIsWorthKeeping, draftSummary } from "./draft-store";
+import {
+  createComposeDraftStore,
+  draftIsWorthKeeping,
+  draftSummary,
+  type ComposeDraftStore,
+} from "./draft-store";
 import { emptyWizard, wizardReducer, type WizardState } from "./wizard";
+
+const ACCOUNT_A = "11111111-1111-4111-8111-111111111111";
+const ACCOUNT_B = "22222222-2222-4222-8222-222222222222";
 
 function draft(...changes: ((s: WizardState) => WizardState)[]): WizardState {
   return changes.reduce((state, change) => change(state), emptyWizard());
@@ -16,8 +24,13 @@ const picked = (id: string) => (state: WizardState) =>
     assets: [{ id, file: new Blob([new Uint8Array([7]) as BlobPart]) }],
   });
 
+let account: string | null;
+let composeDraftStore: ComposeDraftStore;
+
 beforeEach(() => {
   globalThis.indexedDB = new IDBFactory();
+  account = ACCOUNT_A;
+  composeDraftStore = createComposeDraftStore({ activeAccountId: () => account });
 });
 
 describe("the local draft", () => {
@@ -113,6 +126,71 @@ describe("the local draft", () => {
     await composeDraftStore.save(draft(picked("b0")));
     expect((await composeDraftStore.load())!.assets).toHaveLength(1);
   });
+
+  // A shared browser is the case: one reader's unpublished words and pictures
+  // must not be waiting in the composer for whoever signs in next.
+  it("belongs to the account that wrote it", async () => {
+    await composeDraftStore.save(
+      draft((s) => wizardReducer(s, { type: "title", title: "A's unpublished post" })),
+    );
+
+    account = ACCOUNT_B;
+    expect(await composeDraftStore.load()).toBeNull();
+    await composeDraftStore.save(
+      draft((s) => wizardReducer(s, { type: "title", title: "B's own" })),
+    );
+
+    account = ACCOUNT_A;
+    expect((await composeDraftStore.load())!.title).toBe("A's unpublished post");
+  });
+
+  it("clears its own account's draft and leaves the other's", async () => {
+    await composeDraftStore.save(draft(picked("a0")));
+    account = ACCOUNT_B;
+    await composeDraftStore.save(draft(picked("b0")));
+
+    account = ACCOUNT_A;
+    await composeDraftStore.clear();
+    expect(await composeDraftStore.load()).toBeNull();
+
+    account = ACCOUNT_B;
+    expect((await composeDraftStore.load())!.assets).toHaveLength(1);
+  });
+
+  it("has nowhere to put a draft with nobody signed in", async () => {
+    account = null;
+    await composeDraftStore.save(draft(picked("a0")));
+    expect(await composeDraftStore.load()).toBeNull();
+  });
+
+  // The pre-multi-account record belonged to whoever was signed in when it was
+  // written, and nothing ties it to an account — so it is dropped rather than
+  // handed to the next reader to open the composer.
+  it("drops the pre-account record instead of adopting it", async () => {
+    const legacy = new Promise<void>((resolve, reject) => {
+      const open = indexedDB.open("cogra.compose", 1);
+      open.onupgradeneeded = () => open.result.createObjectStore("draft");
+      open.onerror = () => reject(open.error);
+      open.onsuccess = () => {
+        const db = open.result;
+        const tx = db.transaction("draft", "readwrite");
+        tx.objectStore("draft").put(
+          { schema: 1, savedAt: "2026-09-01T00:00:00Z", state: emptyWizard() },
+          "current",
+        );
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onabort = () => reject(tx.error);
+      };
+    });
+    await legacy;
+
+    expect(await composeDraftStore.load()).toBeNull();
+    account = ACCOUNT_B;
+    expect(await composeDraftStore.load()).toBeNull();
+  });
 });
 
 describe("what the draft card says", () => {
@@ -125,14 +203,14 @@ describe("what the draft card says", () => {
       (s) => wizardReducer(s, { type: "words", words: "Three weekends\nof walking" }),
     );
     expect(draftSummary(words).title).toBe("Three weekends");
-    expect(draftSummary(words).detail).toBe("Words — kept on this device");
+    expect(draftSummary(words).detail).toBe("Words — saved on this device, for now");
     expect(draftSummary(emptyWizard()).title).toBe("Untitled");
   });
 
   it("counts the pictures in the singular and the plural", () => {
-    expect(draftSummary(draft(picked("a"))).detail).toBe("1 picture — kept on this device");
+    expect(draftSummary(draft(picked("a"))).detail).toBe("1 picture — saved on this device, for now");
     expect(draftSummary(draft(picked("a"), picked("b"))).detail).toBe(
-      "2 pictures — kept on this device",
+      "2 pictures — saved on this device, for now",
     );
   });
 

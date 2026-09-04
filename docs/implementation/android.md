@@ -65,9 +65,16 @@ beside it flags its clip sensitive
 ([auth.md "Key recovery"](auth.md#key-recovery)); both live in
 `core:designsystem`, since the ceremony and settings show the
 same code the same way.
-Before each signature the app verifies what it signs — the recomputed pre-digests at pre-sign;
-the host seal, exact body, and both commitment openings at
-approval — so the user never signs blind bytes. The concrete signing crypto follows the L1 key model, which
+Before it signs an approval the app runs four checks: the returned
+act carries the same body, payload and dependency list this device
+pre-signed, under the same pre-signature and nonce; the host seal
+verifies under the host key; and the content and dependency
+commitments open over the bytes the device itself holds. The
+payload rides as opaque bytes, so what the four establish is that
+the host returned the act this device signed — not that the
+envelope encodes what the user typed
+([open-questions.md Q54](../open-questions.md#q54--semantic-verification-of-the-payload-envelope-on-clients)).
+The concrete signing crypto follows the L1 key model, which
 is open with the L1 team
 ([open-questions.md Q30](../open-questions.md#q30--l1-key-model-signature-scheme-and-actor-key-rotation));
 until it resolves, the app's key handling stays scheme-neutral.

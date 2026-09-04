@@ -1,0 +1,25 @@
+# The markdown link check, configured once.
+#
+# `make docs-link-check` and the `link-check` job of .github/workflows/
+# docs-ci.yml both run lychee at the repository root, where it reads this
+# file by default (`--config`, default `lychee.toml`). Each side passes only
+# the input glob, so the two cannot drift in what they check or how.
+
+# Only local targets: a file that moved and an anchor that was renamed are
+# the failures this gate exists for. Reaching the network would make a
+# merge depend on other people's uptime.
+offline = true
+
+# A link to a heading that no longer exists is as broken as a link to a
+# file that no longer exists.
+include_fragments = "anchor-only"
+
+no_progress = true
+
+# Machine-generated and third-party markdown. The first-party Kotlin
+# grammar answers to tree-sitter's conventions and its own upstream, not to
+# this repository's links; it is outside the corpus linter's carrier for
+# the same reason (corpus-adoption.toml, [carrier] vendored_trees).
+exclude_path = [
+  "crates/cogra-linter/vendor/",
+]

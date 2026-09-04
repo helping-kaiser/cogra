@@ -25,8 +25,8 @@ import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.valueOrNull
 import com.cogra.domain.AttachmentClaim
 import com.cogra.feature.content.ReferenceCandidateRow
-import com.cogra.feature.content.ReferenceFinderState
 import com.cogra.feature.content.ReferenceSectionState
+import com.cogra.feature.content.SectionsEditor
 import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.candidateRows
 import com.cogra.feature.content.referenceFieldIndex
@@ -78,6 +78,12 @@ class ComposeWizardViewModel @Inject constructor(
     private val _state = MutableStateFlow(ComposeWizardState())
     val state = _state.asStateFlow()
 
+    /**
+     * The only thing this composer and the reply composer differ by in
+     * their media screening (`PickScale.kt`).
+     */
+    private val scale = POST_SCALE
+
     /** One job per picked asset, so a retry cancels only its own. */
     private val uploads = mutableMapOf<String, Job>()
 
@@ -91,7 +97,16 @@ class ComposeWizardViewModel @Inject constructor(
      */
     private var uploadSession: String? = null
 
-    private var finderJob: Job? = null
+    private val sections = SectionsEditor(
+        scope = viewModelScope,
+        references = references,
+        state = _state,
+        tagsOf = { it.tagSection },
+        withTags = { state, tags -> state.copy(tagSection = tags) },
+        referencesOf = { it.referenceSection },
+        withReferences = { state, refs -> state.copy(referenceSection = refs) },
+    )
+
     private var started = false
 
     /**
@@ -240,29 +255,17 @@ class ComposeWizardViewModel @Inject constructor(
             } else {
                 video.info(uri)
             }
-            // A file the step cannot read is refused where it was
-            // offered rather than accepted and failed later
-            // (`ComposePickedErrors`). The grid's own rows came out of
-            // `MediaStore` and are readable by construction; this is the
-            // system picker's path, and the dropped-in file's.
-            if (clip == null && known == null && processor.aspectRatio(uri) == null) {
-                _state.update {
-                    it.copy(refused = it.refused + RefusedPick(uri = null, message = UNREADABLE_FILE))
+            // The shared screening (`PickScale.kt`), at the post's
+            // scale: unreadable or over the still cap is refused where
+            // it was offered rather than accepted and failed later
+            // (`ComposePickedErrors`). A clip is screened after its
+            // transcode instead — see `startVideoUpload`.
+            if (clip == null) {
+                val refusal = screenPicture(uri, processor, scale, knownReadable = known != null)
+                if (refusal != null) {
+                    _state.update { it.copy(refused = it.refused + refusal) }
+                    return@launch
                 }
-                return@launch
-            }
-            // A picture is weighed as it stands. The pipeline downscales
-            // and re-encodes it, so the cap could in principle be judged
-            // on the result instead — but the board weighs the file the
-            // author offered, and a cap nobody can predict is worse than
-            // one they can. A clip is weighed *after* its transcode
-            // instead: see `startVideoUpload`.
-            val size = if (clip == null) processor.sizeBytes(uri) else null
-            if (size != null && size > MAX_PICTURE_BYTES) {
-                _state.update {
-                    it.copy(refused = it.refused + RefusedPick(uri = uri, message = PICTURE_TOO_BIG))
-                }
-                return@launch
             }
             val before = _state.value.picked.size
             _state.update {
@@ -400,109 +403,64 @@ class ComposeWizardViewModel @Inject constructor(
     fun onDescriptionChange(value: String) = _state.update { it.copy(description = value) }
 
     /**
-     * The alt text for one asset. It is added to the details step
-     * rather than found on a board: no canonical board carries a place
-     * for it, and shipping a gallery with no way to describe it would
-     * fail the accessibility bar android.md sets from day one. Flagged
-     * as an addition rather than a match.
-     */
-    /**
      * A picture's description, authored in `DescribeSheet`.
      *
-     * Re-describing an asset that already uploaded sends it again: the
-     * description rides `UploadMediaInput` and an asset row is immutable
-     * after upload (D3), so the only way the new words reach the server is
-     * a fresh upload. That happens when the author steps back from the seal
-     * to Details and edits — rare, but silently keeping the old words would
-     * be worse than the extra call.
-     */
-    /**
-     * Describing a picture never touches its upload: the description is
-     * a fact about the placement and rides `AttachmentClaim` at prepare,
-     * so the bytes already on the server are still the right bytes.
+     * It lives on the details step rather than on a board of its own:
+     * no canonical board carries a place for it, and shipping a gallery
+     * with no way to describe it would fail the accessibility bar
+     * android.md sets from day one.
      *
-     * This is the whole reason pictures may go up before the author has
-     * written anything — an upload invalidated by every keystroke could
-     * only ever start at the seal.
+     * Describing a picture never touches its upload — the description
+     * is a fact about the placement and rides `AttachmentClaim` at
+     * prepare, so the bytes already on the server are still the right
+     * bytes. That is the whole reason pictures may go up before the
+     * author has written anything: an upload invalidated by every
+     * keystroke could only ever start at the seal.
      */
     fun onAltTextChange(uri: String, text: String) =
         _state.update { it.withAltText(uri, text) }
 
-    fun onTagInputChange(value: String) = updateTags { it.withInput(value) }
+    // The topics + citations surface is one implementation, shared with
+    // the reply wizard, the comment edit and the post edit; these
+    // forward to it so the screens keep talking to the ViewModel.
+    fun onTagInputChange(value: String) = sections.onTagInputChange(value)
 
-    fun onAddTag() = updateTags { it.added() }
+    fun onAddTag() = sections.onAddTag()
 
-    fun onRemoveTag(name: String) = updateTags { it.removed(name) }
+    fun onRemoveTag(name: String) = sections.onRemoveTag(name)
 
-    fun onTuneTag(name: String) = updateTags { it.tuned(name) }
+    fun onTuneTag(name: String) = sections.onTuneTag(name)
 
-    fun onDoneTuningTag() = updateTags { it.tuned(null) }
+    fun onDoneTuningTag() = sections.onDoneTuningTag()
 
-    fun onTagRelevanceChange(name: String, value: Double) = updateTags { it.withRelevance(name, value) }
+    fun onTagRelevanceChange(name: String, value: Double) = sections.onTagRelevanceChange(name, value)
 
-    fun onTagConfidenceChange(name: String, value: Double) = updateTags { it.withConfidence(name, value) }
+    fun onTagConfidenceChange(name: String, value: Double) = sections.onTagConfidenceChange(name, value)
 
-    private fun updateTags(block: (TagSectionState) -> TagSectionState) =
-        _state.update { it.copy(tagSection = block(it.tagSection)) }
+    private fun updateTags(block: (TagSectionState) -> TagSectionState) = sections.updateTags(block)
 
-    fun onOpenFinder() = updateReferences { it.withFinder(ReferenceFinderState()) }
+    fun onOpenFinder() = sections.onOpenFinder()
 
-    fun onCloseFinder() {
-        finderJob?.cancel()
-        updateReferences { it.withFinder(null) }
-    }
+    fun onCloseFinder() = sections.onCloseFinder()
 
-    fun onFinderQueryChange(query: String) {
-        finderJob?.cancel()
-        updateReferences { section ->
-            section.withFinder(
-                (section.finder ?: ReferenceFinderState()).copy(
-                    query = query,
-                    searching = query.isNotBlank(),
-                    failed = false,
-                ),
-            )
-        }
-        finderJob = viewModelScope.launch {
-            delay(FINDER_DEBOUNCE_MILLIS)
-            when (val outcome = references.candidateRows(query)) {
-                is Outcome.Success -> updateReferences { section ->
-                    // An answer that arrived after the author typed on
-                    // is stale — only the current query's lands.
-                    section.finder?.takeIf { it.query == query }?.let {
-                        section.withFinder(
-                            it.copy(candidates = outcome.value, searching = false, failed = false),
-                        )
-                    } ?: section
-                }
-                is Outcome.Refused, is Outcome.Failed -> updateReferences { section ->
-                    section.finder?.takeIf { it.query == query }?.let {
-                        section.withFinder(it.copy(searching = false, failed = true))
-                    } ?: section
-                }
-            }
-        }
-    }
+    fun onFinderQueryChange(query: String) = sections.onFinderQueryChange(query)
 
-    fun onPickReference(row: ReferenceCandidateRow) {
-        finderJob?.cancel()
-        updateReferences { it.added(row.targetId, row.target).withFinder(null) }
-    }
+    fun onPickReference(row: ReferenceCandidateRow) = sections.onPickReference(row)
 
-    fun onRemoveReference(targetId: String) = updateReferences { it.removed(targetId) }
+    fun onRemoveReference(targetId: String) = sections.onRemoveReference(targetId)
 
-    fun onTuneReference(targetId: String) = updateReferences { it.tuned(targetId) }
+    fun onTuneReference(targetId: String) = sections.onTuneReference(targetId)
 
-    fun onDoneTuningReference() = updateReferences { it.tuned(null) }
+    fun onDoneTuningReference() = sections.onDoneTuningReference()
 
     fun onReferenceRelevanceChange(targetId: String, value: Double) =
-        updateReferences { it.withRelevance(targetId, value) }
+        sections.onReferenceRelevanceChange(targetId, value)
 
     fun onReferenceSupportChange(targetId: String, value: Double) =
-        updateReferences { it.withSupport(targetId, value) }
+        sections.onReferenceSupportChange(targetId, value)
 
     private fun updateReferences(block: (ReferenceSectionState) -> ReferenceSectionState) =
-        _state.update { it.copy(referenceSection = block(it.referenceSection)) }
+        sections.updateReferences(block)
 
     private fun prefillReference(targetId: String?) {
         if (targetId == null) return
@@ -701,19 +659,17 @@ class ComposeWizardViewModel @Inject constructor(
             _state.update { it.copy(coverMediaId = coverId) }
 
             _state.update { it.withUpload(clip.uri, AssetUpload.Transcoding(0)) }
-            val processed = video.transcode(clip.uri, MAX_VIDEO_BYTES) { percent ->
+            val processed = video.transcode(clip.uri, scale.videoMaxBytes) { percent ->
                 _state.update { it.withUpload(clip.uri, AssetUpload.Transcoding(percent)) }
             }
             if (processed == null) {
-                _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UNREADABLE_VIDEO)) }
+                _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.UNREADABLE_VIDEO)) }
                 return@launch
             }
-            // The cap is judged on what would be sent, not on what was
-            // picked: the whole point of re-encoding is that a large
-            // recording usually becomes a small upload, and weighing the
-            // original would refuse posts the ruling means to allow.
-            if (processed.byteCount > MAX_VIDEO_BYTES) {
-                _state.update { it.withUpload(clip.uri, AssetUpload.Failed(VIDEO_TOO_BIG)) }
+            // The clip's half of the shared screening (`PickScale.kt`),
+            // which is why it runs here rather than at pick time.
+            if (scale.refusesVideo(processed.byteCount)) {
+                _state.update { it.withUpload(clip.uri, AssetUpload.Failed(scale.tooBigVideo)) }
                 runCatching { File(processed.path).delete() }
                 return@launch
             }
@@ -730,11 +686,11 @@ class ComposeWizardViewModel @Inject constructor(
                 is Outcome.Refused -> _state.update {
                     it.withUpload(
                         clip.uri,
-                        AssetUpload.Failed(outcome.errors.firstOrNull()?.message ?: REFUSED_VIDEO),
+                        AssetUpload.Failed(UploadFailure.REFUSED_VIDEO, outcome.errors.firstOrNull()?.message),
                     )
                 }
                 is Outcome.Failed -> _state.update {
-                    it.withUpload(clip.uri, AssetUpload.Failed(TRANSPORT))
+                    it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.TRANSPORT))
                 }
             }
             // The transcode's cache copy has served its purpose either
@@ -763,7 +719,7 @@ class ComposeWizardViewModel @Inject constructor(
             )
         }
         if (picture == null) {
-            _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UNREADABLE_COVER)) }
+            _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.UNREADABLE_COVER)) }
             return null
         }
         return when (val outcome = media.uploadMedia(picture)) {
@@ -772,13 +728,13 @@ class ComposeWizardViewModel @Inject constructor(
                 _state.update {
                     it.withUpload(
                         clip.uri,
-                        AssetUpload.Failed(outcome.errors.firstOrNull()?.message ?: REFUSED_COVER),
+                        AssetUpload.Failed(UploadFailure.REFUSED_COVER, outcome.errors.firstOrNull()?.message),
                     )
                 }
                 null
             }
             is Outcome.Failed -> {
-                _state.update { it.withUpload(clip.uri, AssetUpload.Failed(TRANSPORT)) }
+                _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.TRANSPORT)) }
                 null
             }
         }
@@ -788,24 +744,8 @@ class ComposeWizardViewModel @Inject constructor(
         uploads.remove(uri)?.cancel()
         _state.update { it.withUpload(uri, AssetUpload.Running) }
         uploads[uri] = viewModelScope.launch {
-            val picture = processor.process(uri, crop)
-            if (picture == null) {
-                // The client half of the decode gate (D11): bytes that
-                // do not decode never reach the wire.
-                _state.update { it.withUpload(uri, AssetUpload.Failed(UNREADABLE)) }
-                return@launch
-            }
-            when (val outcome = media.uploadMedia(picture)) {
-                is Outcome.Success -> _state.update {
-                    it.withUpload(uri, AssetUpload.Done(outcome.value.id))
-                }
-                is Outcome.Refused -> _state.update {
-                    it.withUpload(uri, AssetUpload.Failed(outcome.errors.firstOrNull()?.message ?: REFUSED))
-                }
-                is Outcome.Failed -> _state.update {
-                    it.withUpload(uri, AssetUpload.Failed(TRANSPORT))
-                }
-            }
+            val result = uploadPicture(uri, crop, processor, media)
+            _state.update { it.withUpload(uri, result) }
         }
     }
 
@@ -975,7 +915,7 @@ class ComposeWizardViewModel @Inject constructor(
                 attachmentIndex != null && attachmentIndex in picks.indices -> {
                     picks = picks.mapIndexed { i, asset ->
                         if (i == attachmentIndex) {
-                            asset.copy(upload = AssetUpload.Failed(error.message))
+                            asset.copy(upload = AssetUpload.Failed(UploadFailure.REFUSED_PICTURE, error.message))
                         } else {
                             asset
                         }
@@ -996,10 +936,8 @@ class ComposeWizardViewModel @Inject constructor(
     private fun failTransport() = _state.update { it.copy(submitting = false, transportFailed = true) }
 
     // Internal rather than private so the suite can assert against the
-    // words themselves instead of re-typing them: a copy change should
-    // move the test with it, not break it.
+    // caps themselves instead of re-typing them.
     internal companion object {
-        const val FINDER_DEBOUNCE_MILLIS = 250L
 
         /** Long enough that a typed word is one write, short enough to be a save. */
         const val DRAFT_SAVE_DEBOUNCE_MILLIS = 400L
@@ -1007,33 +945,11 @@ class ComposeWizardViewModel @Inject constructor(
         /** How much of the camera roll the grid offers before the picker. */
         const val DEVICE_MEDIA_PAGE = 300
 
-        const val UNREADABLE = "That file could not be read as a picture."
-        const val REFUSED = "The server would not take that picture."
-        const val TRANSPORT = "The upload could not reach the server."
-
-        // The refusal copy is blessed, verbatim, in
-        // design/guidelines/copy-voice.md "Refused files". Each line
-        // names the cap it broke, because that is the only place a cap
-        // is named — nothing announces the limits in advance.
-        //
-        // **Screens say MB; the caps are MiB.** The enforced limit is
-        // the binary one, so the number on screen under-promises and can
-        // never turn a file the product would have accepted into a
-        // refusal.
-        const val UNREADABLE_FILE = "That file isn't a picture or a video CoGra can read."
-        const val PICTURE_TOO_BIG = "That picture is too big — a picture can be up to 10 MB."
-        const val VIDEO_TOO_BIG = "That video is too big — a post's video can be up to 100 MB."
-
-        /** A still's cap: ten per post, ten mebibytes each (D9). */
-        const val MAX_PICTURE_BYTES = 10L * 1024 * 1024
-
-        /** A clip's cap: the same hundred megabytes a full gallery costs. */
-        const val MAX_VIDEO_BYTES = 100L * 1024 * 1024
-
-        const val UNREADABLE_VIDEO = "That file could not be read as a video."
-        const val REFUSED_VIDEO = "The server would not take that video."
-        const val UNREADABLE_COVER = "That picture could not be read as a cover."
-        const val REFUSED_COVER = "The server would not take that cover."
+        // The caps this surface screens against, named here for the
+        // suite. Both forward to the shared screening (`PickScale.kt`),
+        // where each number is written once for both composers.
+        const val MAX_PICTURE_BYTES = PICTURE_MAX_BYTES
+        const val MAX_VIDEO_BYTES = POST_VIDEO_MAX_BYTES
 
         /** How many frames `ComposeCover` offers — the board draws four. */
         const val COVER_FRAME_COUNT = 4

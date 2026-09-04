@@ -48,8 +48,15 @@ fragment MediaFields on MediaAttachment {
 # `coverMediaId` names an already-uploaded still as the video's poster.
 # A still passes it null — the two-step upload sends the cover first and
 # names it on the video, because an asset row is immutable once written.
-mutation UploadMedia($file: Upload!, $coverMediaId: UUID) {
-  uploadMedia(input: { file: $file, coverMediaId: $coverMediaId }) {
+#
+# The input rides as ONE variable rather than as its fields spread into
+# an inline object: both clients name this operation `UploadMedia`, and
+# an operation of one name with two variable contracts is a contract
+# the schema cannot check. Taking `UploadMediaInput!` whole also means
+# a field added to it reaches this client as a compile error rather
+# than as silence.
+mutation UploadMedia($input: UploadMediaInput!) {
+  uploadMedia(input: $input) {
     media {
       ...MediaFields
     }

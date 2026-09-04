@@ -29,7 +29,7 @@ use std::io::Cursor;
 
 use image::{ImageFormat, ImageReader, Limits};
 
-use super::{MAX_PIXEL_DIMENSION, MediaError};
+use super::{MAX_PIXEL_DIMENSION, MediaError, Probe};
 
 /// The single stored format (the media rulings, D9): clients re-encode on
 /// device, so the server accepts one thing and knows exactly what it is.
@@ -42,28 +42,31 @@ const CHUNK_EXIF: &[u8; 4] = b"EXIF";
 const CHUNK_XMP: &[u8; 4] = b"XMP ";
 const CHUNK_ANMF: &[u8; 4] = b"ANMF";
 
-/// The `VP8X` flag byte's EXIF and XMP bits. The container specification
-/// draws the byte MSB-first as `Rsv Rsv I L E X A R`, so ICC is 0x20,
-/// alpha 0x10, EXIF 0x08, XMP 0x04, animation 0x02. Only the two that
-/// advertise dropped chunks are cleared; the animation bit describes
-/// pixel data that stays.
+/// The chunks the container specification defines and this reader
+/// carries through. Everything else is refused rather than copied.
+///
+/// A deny-list would let any invented four-character code ride into
+/// public storage under an image content type, bounded only by the still
+/// cap — the same channel `video.rs` closes by taking an unknown
+/// vendor's `uuid` box whole, and RIFF's vendor-extension surface is
+/// every unrecognized code. `EXIF` and `XMP ` are recognized and
+/// deliberately dropped; a code in neither list is not a WebP chunk.
+const KEPT_CHUNKS: [&[u8; 4]; 7] = [
+    b"VP8 ", b"VP8L", b"VP8X", b"ALPH", b"ANIM", b"ANMF", b"ICCP",
+];
+
+/// The `VP8X` flag byte's EXIF, XMP and animation bits. The container
+/// specification draws the byte MSB-first as `Rsv Rsv I L E X A R`, so
+/// ICC is 0x20, alpha 0x10, EXIF 0x08, XMP 0x04, animation 0x02. Only
+/// the two that advertise dropped chunks are cleared; the animation bit
+/// describes pixel data that stays, and is what makes a frame chunk
+/// meaningful.
 const FLAG_EXIF: u8 = 0x08;
 const FLAG_XMP: u8 = 0x04;
+const FLAG_ANIMATION: u8 = 0x02;
 
 const HEADER_LEN: usize = 12;
 const CHUNK_HEADER_LEN: usize = 8;
-
-/// What the decode probe learned. Only the dimensions and the animation's
-/// length survive it — the pixels are decoded to prove they decode, then
-/// dropped.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Probe {
-    pub width: u32,
-    pub height: u32,
-    /// The animation's length in milliseconds, summed from its frames.
-    /// Null on a single-frame picture, which has no duration to state.
-    pub duration_ms: Option<u64>,
-}
 
 /// Whether the bytes are a WebP container, read from the bytes alone.
 /// The client's declared content type is a claim about the file, never
@@ -153,6 +156,11 @@ pub fn strip_metadata(bytes: &[u8]) -> Result<Vec<u8>, MediaError> {
         if &chunk.fourcc == CHUNK_EXIF || &chunk.fourcc == CHUNK_XMP {
             continue;
         }
+        if !KEPT_CHUNKS.contains(&&chunk.fourcc) {
+            return Err(MediaError::Malformed(
+                "a chunk the container specification does not define",
+            ));
+        }
         out.extend_from_slice(&chunk.fourcc);
         let size = u32::try_from(chunk.payload.len())
             .map_err(|_| MediaError::Malformed("chunk larger than the container allows"))?;
@@ -177,6 +185,54 @@ pub fn strip_metadata(bytes: &[u8]) -> Result<Vec<u8>, MediaError> {
     Ok(out)
 }
 
+/// The animation's length, summed over its frames.
+///
+/// Each `ANMF` chunk states its own frame duration — a 24-bit
+/// little-endian millisecond count at offset 12 of the payload, after the
+/// frame's x, y, width and height (the WebP Container Specification,
+/// "Animation"). The total is their sum, which is what a reader sees one
+/// loop take.
+///
+/// Two things are refused rather than substituted, because the duration
+/// is a *declared* number this function sums out of untrusted bytes
+/// rather than a property of realized samples. A frame chunk too short
+/// to carry its own duration is malformed, like every other truncation
+/// in this file — reading it as zero would let a broken file state a
+/// duration it never declared. And a frame chunk in a file whose `VP8X`
+/// does not set the animation bit is not a frame: without that check,
+/// junk `ANMF` chunks beside a one-pixel `VP8L` fabricate a duration for
+/// a still.
+///
+/// `None` when the file carries no frame chunks at all, which is the
+/// single-frame case: a still has no duration to state, and `durationMs`
+/// reads null for it.
+fn animation_duration_ms(chunks: &[Chunk<'_>]) -> Result<Option<u64>, MediaError> {
+    let animated = chunks.iter().any(|chunk| {
+        &chunk.fourcc == CHUNK_VP8X
+            && chunk
+                .payload
+                .first()
+                .is_some_and(|flags| flags & FLAG_ANIMATION != 0)
+    });
+
+    let mut total: u64 = 0;
+    let mut frames = 0usize;
+    for frame in chunks.iter().filter(|chunk| &chunk.fourcc == CHUNK_ANMF) {
+        if !animated {
+            return Err(MediaError::Malformed(
+                "a frame chunk in a file that declares no animation",
+            ));
+        }
+        let raw = frame
+            .payload
+            .get(12..15)
+            .ok_or(MediaError::Malformed("a truncated animation frame"))?;
+        total += u64::from(raw[0]) | u64::from(raw[1]) << 8 | u64::from(raw[2]) << 16;
+        frames += 1;
+    }
+    Ok((frames > 0).then_some(total))
+}
+
 /// The refusal gate: bytes that do not decode as the format they claim to
 /// be are not an image, whatever their header says. The dimensions come
 /// out of the same pass, so the derived aspect ratio describes the pixels
@@ -188,38 +244,8 @@ pub fn strip_metadata(bytes: &[u8]) -> Result<Vec<u8>, MediaError> {
 /// At the 4096-pixel cap the worst case is a square RGBA canvas of
 /// 4096 × 4096 × 4 = 64 MiB, so 96 MiB leaves the decoder scratch space
 /// without leaving room for a bomb.
-/// The animation's length, summed over its frames.
-///
-/// Each `ANMF` chunk states its own frame duration — a 24-bit
-/// little-endian millisecond count at offset 12 of the payload, after the
-/// frame's x, y, width and height (the WebP Container Specification,
-/// "Animation"). The total is their sum, which is what a reader sees one
-/// loop take.
-///
-/// `None` when the file carries no frame chunks at all, which is the
-/// single-frame case: a still has no duration to state, and `durationMs`
-/// reads null for it.
-fn animation_duration_ms(chunks: &[Chunk<'_>]) -> Option<u64> {
-    let mut frames = chunks
-        .iter()
-        .filter(|chunk| &chunk.fourcc == CHUNK_ANMF)
-        .peekable();
-    frames.peek()?;
-    Some(
-        frames
-            .map(|frame| {
-                frame
-                    .payload
-                    .get(12..15)
-                    .map(|raw| u64::from(raw[0]) | u64::from(raw[1]) << 8 | u64::from(raw[2]) << 16)
-                    .unwrap_or(0)
-            })
-            .sum(),
-    )
-}
-
 pub fn probe(bytes: &[u8]) -> Result<Probe, MediaError> {
-    let duration_ms = animation_duration_ms(&chunks(bytes)?);
+    let duration_ms = animation_duration_ms(&chunks(bytes)?)?;
     let mut reader = ImageReader::with_format(Cursor::new(bytes), ImageFormat::WebP);
     let mut limits = Limits::no_limits();
     limits.max_image_width = Some(MAX_PIXEL_DIMENSION);
@@ -239,6 +265,34 @@ pub fn probe(bytes: &[u8]) -> Result<Probe, MediaError> {
     })
 }
 
+/// One RIFF chunk, padded when its payload length is odd.
+///
+/// Test-only, and shared with the pipeline's own tests one module up:
+/// four copies of this eight-line builder is four places a fixture can
+/// stop describing the same container.
+#[cfg(test)]
+pub(super) fn chunk(fourcc: &[u8; 4], payload: &[u8]) -> Vec<u8> {
+    let mut out = Vec::new();
+    out.extend_from_slice(fourcc);
+    out.extend_from_slice(&(payload.len() as u32).to_le_bytes());
+    out.extend_from_slice(payload);
+    if payload.len() % 2 == 1 {
+        out.push(0);
+    }
+    out
+}
+
+/// A WebP container around a chunk sequence.
+#[cfg(test)]
+pub(super) fn container(body: &[u8]) -> Vec<u8> {
+    let mut out = Vec::new();
+    out.extend_from_slice(RIFF);
+    out.extend_from_slice(&((4 + body.len()) as u32).to_le_bytes());
+    out.extend_from_slice(WEBP);
+    out.extend_from_slice(body);
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -255,26 +309,6 @@ mod tests {
         out.extend_from_slice(b"VP8L");
         out.extend_from_slice(&(payload.len() as u32).to_le_bytes());
         out.extend_from_slice(&payload);
-        out
-    }
-
-    fn chunk(fourcc: &[u8; 4], payload: &[u8]) -> Vec<u8> {
-        let mut out = Vec::new();
-        out.extend_from_slice(fourcc);
-        out.extend_from_slice(&(payload.len() as u32).to_le_bytes());
-        out.extend_from_slice(payload);
-        if payload.len() % 2 == 1 {
-            out.push(0);
-        }
-        out
-    }
-
-    fn container(body: &[u8]) -> Vec<u8> {
-        let mut out = Vec::new();
-        out.extend_from_slice(b"RIFF");
-        out.extend_from_slice(&((4 + body.len()) as u32).to_le_bytes());
-        out.extend_from_slice(b"WEBP");
-        out.extend_from_slice(body);
         out
     }
 
@@ -401,8 +435,6 @@ mod tests {
         ));
     }
 
-    const FLAG_ANIMATION: u8 = 0x02;
-
     /// A three-frame animation at the durations given, built to the
     /// container specification's `ANMF` layout: x, y, width-minus-one and
     /// height-minus-one as 24-bit little-endian triples, then the frame
@@ -456,14 +488,132 @@ mod tests {
     fn an_animations_duration_is_the_sum_of_its_frames() {
         let animated = animation(&[40, 60, 100]);
         let parsed = chunks(&animated).expect("a valid container");
-        assert_eq!(animation_duration_ms(&parsed), Some(200));
+        assert_eq!(animation_duration_ms(&parsed), Ok(Some(200)));
 
         let single = one_pixel_vp8l();
         let still = chunks(&single).expect("a valid container");
         assert_eq!(
             animation_duration_ms(&still),
-            None,
+            Ok(None),
             "a still has no duration to state"
+        );
+    }
+
+    /// A frame chunk too short to carry its own duration is malformed
+    /// like every other truncation here, and frame chunks beside a still
+    /// that declares no animation cannot fabricate one for it. The second
+    /// fixture shortens a frame payload to less than its own header; the
+    /// third gives a plain `VP8L` still a frame chunk it never declared.
+    ///
+    /// A duration is refused rather than substituted when the frames are truncated or the file declares no animation.
+    /// ´claim:media:a-fabricated-duration-is-refused´
+    #[test]
+    fn a_fabricated_duration_is_refused() {
+        let mut truncated = animation(&[40, 40]);
+        let full = animation_duration_ms(&chunks(&truncated).expect("valid"));
+        assert_eq!(full, Ok(Some(80)), "the honest file reads its own frames");
+
+        truncated = {
+            let mut vp8x = vec![FLAG_ANIMATION, 0, 0, 0];
+            vp8x.extend_from_slice(&[0, 0, 0, 0, 0, 0]);
+            let mut body = chunk(CHUNK_VP8X, &vp8x);
+            body.extend_from_slice(&chunk(CHUNK_ANMF, &[0u8; 14]));
+            container(&body)
+        };
+        assert!(matches!(
+            animation_duration_ms(&chunks(&truncated).expect("valid container")),
+            Err(MediaError::Malformed(_))
+        ));
+
+        let mut frame = Vec::new();
+        for triple in [0u32, 0, 0, 0, 0xFF_FFFF] {
+            frame.extend_from_slice(&triple.to_le_bytes()[..3]);
+        }
+        frame.push(0);
+        let mut body = chunk(b"VP8L", &[0x2F, 0x00, 0x00, 0x00, 0x00, 0x88, 0x88, 0x08]);
+        body.extend_from_slice(&chunk(CHUNK_ANMF, &frame));
+        assert!(
+            matches!(
+                animation_duration_ms(&chunks(&container(&body)).expect("valid container")),
+                Err(MediaError::Malformed(_))
+            ),
+            "a still cannot be given a duration by junk frame chunks"
+        );
+    }
+
+    /// A four-character code the container specification does not define
+    /// is refused rather than copied into public storage under an image
+    /// content type.
+    ///
+    /// A chunk the container specification does not define is refused, not carried through.
+    /// ´claim:media:an-unknown-chunk-is-refused´
+    #[test]
+    fn stripping_refuses_an_unrecognized_chunk() {
+        let mut body = chunk(b"VP8L", &[0x2F, 0x00, 0x00, 0x00, 0x00, 0x88, 0x88, 0x08]);
+        body.extend_from_slice(&chunk(b"EVIL", b"#!/bin/sh\nrm -rf /\n"));
+        assert!(matches!(
+            strip_metadata(&container(&body)),
+            Err(MediaError::Malformed(_))
+        ));
+    }
+
+    /// An odd-length kept chunk is padded on the way out, which no
+    /// fixture in the crate exercised: every kept chunk was even and the
+    /// only odd ones were dropped before the pad branch.
+    ///
+    /// A kept chunk of odd payload length is padded, and the rewrite re-parses to the same chunks.
+    /// ´claim:media:an-odd-chunk-is-padded´
+    #[test]
+    fn an_odd_length_kept_chunk_is_padded() {
+        let profile = b"odd-profile-abc";
+        assert_eq!(profile.len() % 2, 1, "the fixture must be odd");
+        let mut vp8x = vec![0x20, 0, 0, 0];
+        vp8x.extend_from_slice(&[0, 0, 0, 0, 0, 0]);
+        let mut body = chunk(CHUNK_VP8X, &vp8x);
+        body.extend_from_slice(&chunk(b"ICCP", profile));
+        body.extend_from_slice(&chunk(
+            b"VP8L",
+            &[0x2F, 0x00, 0x00, 0x00, 0x00, 0x88, 0x88, 0x08],
+        ));
+
+        let once = strip_metadata(&container(&body)).expect("a valid container");
+        assert_eq!(once.len() % 2, 0, "the pad byte lands");
+        let parsed = chunks(&once).expect("the rewrite re-parses");
+        let kept: Vec<&[u8; 4]> = parsed.iter().map(|chunk| &chunk.fourcc).collect();
+        assert_eq!(kept, vec![CHUNK_VP8X, b"ICCP", b"VP8L"]);
+        assert_eq!(
+            parsed.get(1).map(|chunk| chunk.payload),
+            Some(profile.as_slice()),
+            "the odd payload survives its pad byte"
+        );
+        assert_eq!(
+            strip_metadata(&once).expect("a valid container"),
+            once,
+            "stripping twice is stripping once"
+        );
+    }
+
+    /// The walker advances past a final chunk whose pad byte is missing,
+    /// and the rewrite supplies it — so such a file is normalised rather
+    /// than refused, and the normalised form is then stable.
+    ///
+    /// A final chunk missing its pad byte is normalised, and the normalised file strips to itself.
+    /// ´claim:media:an-unpadded-final-chunk-is-normalised´
+    #[test]
+    fn an_unpadded_final_chunk_is_normalised() {
+        let profile = b"odd-profile-abc";
+        let mut body = chunk(b"VP8L", &[0x2F, 0x00, 0x00, 0x00, 0x00, 0x88, 0x88, 0x08]);
+        body.extend_from_slice(b"ICCP");
+        body.extend_from_slice(&(profile.len() as u32).to_le_bytes());
+        body.extend_from_slice(profile);
+
+        let unpadded = container(&body);
+        let once = strip_metadata(&unpadded).expect("a valid container");
+        assert_ne!(once, unpadded, "the missing pad byte is supplied");
+        assert_eq!(
+            strip_metadata(&once).expect("a valid container"),
+            once,
+            "and the normalised form is then stable"
         );
     }
 

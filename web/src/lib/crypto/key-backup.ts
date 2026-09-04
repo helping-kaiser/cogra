@@ -36,6 +36,27 @@ const HKDF_SALT_LEN = 16;
 const AES_NONCE_LEN = 12;
 const HKDF_INFO = "cogra:key-backup:v1";
 const CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+
+/**
+ * What a typed or pasted code may carry between its characters, as THE
+ * REFERENCE defines it: a hyphen, every character Unicode gives the
+ * `White_Space` property, and U+FEFF — a byte-order mark rides along on
+ * a paste often enough to be worth naming.
+ *
+ * The class is STATED rather than inherited from a language's shorthand,
+ * because no two of the three clients spell "whitespace" the same.
+ * JavaScript's `\s` is `White_Space` minus U+0085 plus U+FEFF; Kotlin's
+ * `Char.isWhitespace` adds U+001C-U+001F and drops U+0085. Writing
+ * `\p{White_Space}` says what is meant in one term, and the two ends it
+ * pins down are real: a code pasted with a next-line separator (U+0085)
+ * opens, and one carrying a unit separator (U+001C, which Unicode does
+ * NOT call white space) is refused rather than silently repaired.
+ *
+ * Built from a source string so the file stays ASCII: a literal BOM in
+ * a character class is invisible to every reader of this line.
+ */
+const SEPARATORS = new RegExp("[-\\p{White_Space}\\uFEFF]", "gu");
+
 /**
  * The upload proof's domain tag. Storing a blob is an L2 operation, not
  * an L1 act, so it carries this module's `cogra:key-backup:*` prefix
@@ -83,8 +104,8 @@ export class RecoveryCode {
 
   /**
    * The reading rule for anything a user typed: uppercase, `I`/`L` →
-   * `1`, `O` → `0`, separators stripped. Applies to a fragment as much
-   * as to a whole code, which is what lets the write-it-down
+   * `1`, `O` → `0`, {@link SEPARATORS} stripped. Applies to a fragment
+   * as much as to a whole code, which is what lets the write-it-down
    * confirmation compare a typed code against the one on screen.
    */
   static normalize(input: string): string {
@@ -93,7 +114,7 @@ export class RecoveryCode {
       .replaceAll("I", "1")
       .replaceAll("L", "1")
       .replaceAll("O", "0")
-      .replace(/-|\s/g, "");
+      .replace(SEPARATORS, "");
   }
 
   /**

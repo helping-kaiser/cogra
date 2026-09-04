@@ -4,10 +4,11 @@
 // the backend relays, never signs. The key rides WebCrypto (web.md
 // "Key custody").
 
-import { concat, equalBytes, fromHex, randomBytes } from "./bytes";
+import { concat, equalBytes, fromBase64Url, fromHex, randomBytes } from "./bytes";
 import {
   addressOf,
   commitment,
+  CryptoUnavailableError,
   preDigest,
   SALT_LEN,
   sign,
@@ -36,13 +37,6 @@ export class HandshakeError extends Error {
 // read (key-export.ts).
 export const PKCS8_PREFIX = fromHex("302e020100300506032b657004220420");
 
-function fromBase64Url(s: string): Uint8Array<ArrayBuffer> {
-  const bin = atob(s.replace(/-/g, "+").replace(/_/g, "/"));
-  const out = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-  return out;
-}
-
 /**
  * Imports a seed as a signing pair fit for custody (web.md "Key
  * custody"): the private key is non-extractable — IndexedDB persists the
@@ -55,7 +49,16 @@ export async function importActorKeyPair(
 ): Promise<{ privateKey: CryptoKey; publicKey: Uint8Array<ArrayBuffer> }> {
   if (seed.length !== 32) throw new RangeError("an actor seed is 32 bytes");
   const pkcs8 = concat(PKCS8_PREFIX, seed);
-  const throwaway = await crypto.subtle.importKey("pkcs8", pkcs8, "Ed25519", true, ["sign"]);
+  let throwaway: CryptoKey;
+  try {
+    throwaway = await crypto.subtle.importKey("pkcs8", pkcs8, "Ed25519", true, ["sign"]);
+  } catch (e) {
+    // The seed is 32 bytes and the wrapper is a constant, so nothing here can
+    // be malformed: a rejection is the runtime saying it has no Ed25519. Named
+    // as such, because custody failing is a different sentence to a reader
+    // than a key failing.
+    throw new CryptoUnavailableError("this browser cannot hold a CoGra key", { cause: e });
+  }
   const jwk = await crypto.subtle.exportKey("jwk", throwaway);
   if (jwk.x === undefined) throw new Error("Ed25519 JWK export is missing the public key");
   const privateKey = await crypto.subtle.importKey("pkcs8", pkcs8, "Ed25519", false, ["sign"]);
@@ -128,6 +131,16 @@ export class ActorKey {
    * exact equality against what the host returned.
    */
   async approve(sent: PreSignedProposal, sealed: VerifiedAct, hostPubkey: Uint8Array): Promise<ApprovalWitness> {
+    // THE MATERIAL HAS TO BE THIS KEY'S. `sent` is read back out of IndexedDB
+    // on the web, so it can outlive the key that pre-signed it — a re-mint
+    // between staging and approval leaves material whose pre-signature no
+    // later key can stand behind. The Rust reference proves authorship before
+    // signing over recovered material (`ActorKey::approve_recovered`,
+    // crates/common/src/l1/client.rs); this is the same precondition, checked
+    // against the pubkey the material itself carries.
+    if (!equalBytes(sent.authorPubkey, this.publicKey)) {
+      throw new HandshakeError("handshake material was pre-signed by a different key");
+    }
     if (
       !sealed.proposal.equals(sent.proposal) ||
       !equalBytes(sealed.preSignature, sent.preSignature) ||

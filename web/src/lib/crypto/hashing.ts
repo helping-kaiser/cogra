@@ -80,7 +80,96 @@ export async function sign(
   return new Uint8Array(await crypto.subtle.sign("Ed25519", privateKey, framed));
 }
 
-/** Verifies a tagged signature; malformed keys or signatures just fail. */
+/**
+ * The environment cannot run Ed25519 — not a verdict about any signature.
+ *
+ * Its own type because the two answers demand opposite handling. "This
+ * signature does not verify" is a fact about the bytes and spends the write
+ * that carried them; "this browser has no Ed25519" is a fact about the browser
+ * and must spend nothing, or a reader on an unsupported build loses write
+ * material to a check that never ran.
+ */
+export class CryptoUnavailableError extends Error {
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = "CryptoUnavailableError";
+  }
+}
+
+let ed25519Probe: Promise<boolean> | null = null;
+
+/**
+ * Whether this browser can hold a CoGra key, probed once per page.
+ *
+ * WebCrypto has no capability registry — the documented way to ask whether an
+ * algorithm is supported is to attempt an operation and see whether it rejects
+ * with `NotSupportedError`. A key generation is the cheapest complete answer:
+ * a runtime that can generate an Ed25519 pair can import, sign and verify one.
+ */
+export function ed25519Available(): Promise<boolean> {
+  ed25519Probe ??= (async () => {
+    try {
+      await crypto.subtle.generateKey("Ed25519", false, ["sign", "verify"]);
+      return true;
+    } catch {
+      return false;
+    }
+  })();
+  return ed25519Probe;
+}
+
+/**
+ * The Ed25519 group order `ℓ`. RFC 8032 §5.1.7 requires `S` in `[0, ℓ)`,
+ * and a verifier that skips the check accepts a second, malleated
+ * signature over the same message — two distinct approvals for one act.
+ */
+const ED25519_ORDER =
+  7237005577332262213973186563042994240857116359379907606001950938285454250989n;
+
+/**
+ * The eight small-order point encodings — the whole torsion subgroup,
+ * one entry per element.
+ *
+ * A public key that is one of these has no discrete log to guard: with
+ * `A` small-order, the ordinary verification equation holds for EVERY
+ * message, so a "valid" signature proves nothing about who produced it.
+ * The reference refuses them (`verify_strict`'s rule) and so does this,
+ * because a signature that verifies against any message is exactly the
+ * thing an approval must never be.
+ *
+ * A TABLE, BECAUSE THE BROWSER HAS NO CURVE PRIMITIVE. The reference
+ * multiplies by the cofactor and asks; WebCrypto exposes nothing that
+ * can, so the class is enumerated instead — and every member of it is a
+ * `signatureRefusals` vector, so a missing row fails a test here rather
+ * than admitting a forgery the other two clients refuse.
+ */
+const SMALL_ORDER_KEYS: ReadonlySet<string> = new Set([
+  "0100000000000000000000000000000000000000000000000000000000000000",
+  "0000000000000000000000000000000000000000000000000000000000000000",
+  "0000000000000000000000000000000000000000000000000000000000000080",
+  "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
+  "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05",
+  "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc85",
+  "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a",
+  "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac03fa",
+]);
+
+/** `S`, the signature's second half, read as the little-endian scalar it is. */
+function signatureScalar(signature: Uint8Array): bigint {
+  let s = 0n;
+  for (let i = 63; i >= 32; i--) s = (s << 8n) | BigInt(signature[i]);
+  return s;
+}
+
+/**
+ * Verifies a tagged signature; a malformed key or signature just fails.
+ *
+ * The two checks below the length guards are the STRICT rules the Rust
+ * reference verifies under. WebCrypto's own strictness is the runtime's
+ * business and differs between engines, so they are stated here rather
+ * than assumed — the golden vectors' `signatureRefusals` are what pins
+ * them.
+ */
 export async function verify(
   publicKey: Uint8Array,
   tag: string,
@@ -89,12 +178,27 @@ export async function verify(
 ): Promise<boolean> {
   if (publicKey.length !== 32) return false;
   if (signature.length !== 64) return false;
+  if (SMALL_ORDER_KEYS.has(toHex(publicKey))) return false;
+  if (signatureScalar(signature) >= ED25519_ORDER) return false;
   const framed = await sha256Tagged(tag, [msg]);
+  let key: CryptoKey;
   try {
-    const key = await crypto.subtle.importKey("raw", publicKey.slice(), "Ed25519", false, ["verify"]);
+    key = await crypto.subtle.importKey("raw", publicKey.slice(), "Ed25519", false, ["verify"]);
+  } catch (e) {
+    // `DataError` is the spec's answer for key data the algorithm cannot
+    // parse — a real verdict about these bytes, so `false` as before. Every
+    // other rejection (`NotSupportedError` above all) says the runtime could
+    // not do the work, and answering `false` to that is a lie the caller acts
+    // on by throwing the write away.
+    if (e instanceof DOMException && e.name === "DataError") return false;
+    throw new CryptoUnavailableError("this browser cannot import an Ed25519 key", { cause: e });
+  }
+  try {
     return await crypto.subtle.verify("Ed25519", key, signature.slice(), framed);
-  } catch {
-    return false;
+  } catch (e) {
+    throw new CryptoUnavailableError("this browser cannot verify an Ed25519 signature", {
+      cause: e,
+    });
   }
 }
 

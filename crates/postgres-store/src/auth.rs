@@ -11,6 +11,38 @@ use chrono::{DateTime, Utc};
 use sqlx::{PgConnection, PgPool};
 use uuid::Uuid;
 
+pub mod constraints {
+    //! ´mod:module:constraints´
+    //!
+    //! The unique-constraint names this module's callers turn into
+    //! refusals.
+    //!
+    //! PostgreSQL names the constraint, not the column, in a
+    //! `unique_violation`: the error's `column_name` field is populated
+    //! for a not-null violation and left empty for this one (PostgreSQL
+    //! "Error and Notice Message Fields"). So the name is the only handle
+    //! a refusal has, and two of these four are names PostgreSQL chose
+    //! implicitly for an inline `UNIQUE` — nothing in a migration writes
+    //! them down. The other two are standalone unique indexes and have no
+    //! constraint row at all; the error carries the index's name just the
+    //! same. A rename would silently turn a clean refusal into a 500,
+    //! which is what `tests/schema.rs` pins.
+
+    pub const ACTORS_HANDLE: &str = "actors_handle_key";
+    pub const ACTORS_PUBKEY: &str = "actors_actor_pubkey_key";
+    pub const ACTORS_L0_ADDRESS: &str = "actors_l0_address_key";
+    pub const CREDENTIALS_EMAIL: &str = "user_credentials_email_key";
+
+    /// Every name a refusal in this module depends on — what the schema
+    /// test walks.
+    pub const ALL: [&str; 4] = [
+        ACTORS_HANDLE,
+        ACTORS_PUBKEY,
+        ACTORS_L0_ADDRESS,
+        CREDENTIALS_EMAIL,
+    ];
+}
+
 /// One invite link (data-model.md `auth_invite_links`): pure service-side
 /// staging UX — nothing binds until the inviter's priced approval.
 #[derive(Debug, Clone)]
@@ -140,6 +172,22 @@ pub struct Credentials {
     pub email_verified_at: Option<DateTime<Utc>>,
 }
 
+/// Maps one user_credentials row onto the struct, decoding the account
+/// state — the one mapping in this module that cannot be a `query_as!`,
+/// because `account_state` is TEXT in the column and an enum in the
+/// struct and the decode is fallible.
+macro_rules! credentials_from_row {
+    ($r:expr) => {
+        Ok(Credentials {
+            actor_id: $r.actor_id,
+            email: $r.email,
+            password_hash: $r.password_hash,
+            account_state: decode_account_state(&$r.account_state)?,
+            email_verified_at: $r.email_verified_at,
+        })
+    };
+}
+
 /// Maps one auth_invite_links row (a sqlx anonymous record) onto the
 /// struct — the queries all select the same field set.
 macro_rules! invite_link_from_row {
@@ -147,8 +195,8 @@ macro_rules! invite_link_from_row {
         InviteLink {
             id: $r.id,
             inviter_id: $r.inviter_id,
-            prefill_p_d: f64::from($r.prefill_dim1),
-            prefill_p_i: f64::from($r.prefill_dim2),
+            prefill_p_d: $r.prefill_p_d,
+            prefill_p_i: $r.prefill_p_i,
             single_use: $r.single_use,
             created_at: $r.created_at,
             expires_at: $r.expires_at,
@@ -168,14 +216,14 @@ pub async fn create_invite_link(
 ) -> Result<InviteLink, sqlx::Error> {
     sqlx::query!(
         "INSERT INTO auth_invite_links
-             (id, inviter_id, prefill_dim1, prefill_dim2, single_use, expires_at)
+             (id, inviter_id, prefill_p_d, prefill_p_i, single_use, expires_at)
          VALUES ($1, $2, $3, $4, $5, $6)
-         RETURNING id, inviter_id, prefill_dim1, prefill_dim2, single_use,
+         RETURNING id, inviter_id, prefill_p_d, prefill_p_i, single_use,
                    created_at, expires_at, revoked_at",
         id,
         inviter_id,
-        prefill_p_d as f32,
-        prefill_p_i as f32,
+        prefill_p_d,
+        prefill_p_i,
         single_use,
         expires_at,
     )
@@ -186,7 +234,7 @@ pub async fn create_invite_link(
 
 pub async fn invite_link(pool: &PgPool, id: Uuid) -> Result<Option<InviteLink>, sqlx::Error> {
     Ok(sqlx::query!(
-        "SELECT id, inviter_id, prefill_dim1, prefill_dim2, single_use,
+        "SELECT id, inviter_id, prefill_p_d, prefill_p_i, single_use,
                 created_at, expires_at, revoked_at
          FROM auth_invite_links WHERE id = $1",
         id,
@@ -201,7 +249,7 @@ pub async fn invite_links_for(
     inviter_id: Uuid,
 ) -> Result<Vec<InviteLink>, sqlx::Error> {
     Ok(sqlx::query!(
-        "SELECT id, inviter_id, prefill_dim1, prefill_dim2, single_use,
+        "SELECT id, inviter_id, prefill_p_d, prefill_p_i, single_use,
                 created_at, expires_at, revoked_at
          FROM auth_invite_links WHERE inviter_id = $1
          ORDER BY created_at DESC",
@@ -356,8 +404,8 @@ fn refused_unique(
     match result {
         Ok(_) => Ok(None),
         Err(sqlx::Error::Database(e)) if e.is_unique_violation() => match e.constraint() {
-            Some("actors_handle_key") => Ok(Some(RegisterOutcome::HandleTaken)),
-            Some("user_credentials_email_key") => Ok(Some(RegisterOutcome::EmailInUse)),
+            Some(constraints::ACTORS_HANDLE) => Ok(Some(RegisterOutcome::HandleTaken)),
+            Some(constraints::CREDENTIALS_EMAIL) => Ok(Some(RegisterOutcome::EmailInUse)),
             _ => Err(sqlx::Error::Database(e)),
         },
         Err(e) => Err(e),
@@ -595,7 +643,7 @@ pub async fn attach_actor_key(
         Ok(r) if r.rows_affected() == 1 => Ok(AttachOutcome::Attached),
         Ok(_) => Ok(AttachOutcome::Refused),
         Err(sqlx::Error::Database(e)) if e.is_unique_violation() => match e.constraint() {
-            Some("actors_actor_pubkey_key" | "actors_l0_address_key") => {
+            Some(constraints::ACTORS_PUBKEY | constraints::ACTORS_L0_ADDRESS) => {
                 Ok(AttachOutcome::KeyInUse)
             }
             _ => Err(sqlx::Error::Database(e)),
@@ -681,7 +729,8 @@ pub async fn inviter_of(
     pool: &PgPool,
     account_id: Uuid,
 ) -> Result<Option<ActorIdentity>, sqlx::Error> {
-    Ok(sqlx::query!(
+    sqlx::query_as!(
+        ActorIdentity,
         "SELECT i.id, i.kind, i.handle, i.actor_pubkey, i.l0_address, i.created_at
          FROM auth_applications ap
          JOIN auth_invite_links l ON l.id = ap.invite_link_id
@@ -691,15 +740,7 @@ pub async fn inviter_of(
         account_id,
     )
     .fetch_optional(pool)
-    .await?
-    .map(|r| ActorIdentity {
-        id: r.id,
-        kind: r.kind,
-        handle: r.handle,
-        actor_pubkey: r.actor_pubkey,
-        l0_address: r.l0_address,
-        created_at: r.created_at,
-    }))
+    .await
 }
 
 /// Whether the reciprocation latch is set on the account's landed
@@ -757,6 +798,82 @@ pub async fn reap_unverified_accounts(
     Ok(count)
 }
 
+/// What one secret sweep removed, per table.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct SweptSecrets {
+    pub refresh_tokens: u64,
+    pub password_resets: u64,
+    pub email_changes: u64,
+}
+
+impl SweptSecrets {
+    pub fn total(&self) -> u64 {
+        self.refresh_tokens + self.password_resets + self.email_changes
+    }
+}
+
+/// Deletes spent bearer-secret rows past their retention bound.
+///
+/// Three tables here store a token hash and keep the row after the token
+/// stops being usable: a refresh token past expiry or revocation, a reset
+/// link past use or expiry, an email change past its last proof or
+/// expiry. None of them is evidence of anything once the window closes,
+/// and a hash that no longer answers any question is only a hash left
+/// lying around, so the row goes.
+///
+/// The two windows are different because the tables are. A refresh
+/// token's revoked row is what reuse detection recognises a replayed
+/// token by (auth.md "Refresh rotation"), so it is kept long enough for
+/// that answer to still be worth giving — 30 days. A reset link and an
+/// email change prove nothing once consumed, so they go on the short
+/// window.
+///
+/// `auth_invite_links` and `auth_applications` are deliberately not
+/// swept: neither declares a secret column, and both are the provenance
+/// record of how an account came to exist — who invited whom, which
+/// application landed. That is an audit trail, and an audit trail with a
+/// reaper is not one.
+pub async fn sweep_spent_secrets(
+    pool: &PgPool,
+    refresh_grace_secs: f64,
+    single_use_grace_secs: f64,
+) -> Result<SweptSecrets, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let refresh_tokens = sqlx::query!(
+        "DELETE FROM auth_refresh_tokens
+         WHERE expires_at < now() - make_interval(secs => $1)
+            OR revoked_at < now() - make_interval(secs => $1)",
+        refresh_grace_secs,
+    )
+    .execute(&mut *tx)
+    .await?
+    .rows_affected();
+    let password_resets = sqlx::query!(
+        "DELETE FROM auth_password_resets
+         WHERE expires_at < now() - make_interval(secs => $1)
+            OR used_at < now() - make_interval(secs => $1)",
+        single_use_grace_secs,
+    )
+    .execute(&mut *tx)
+    .await?
+    .rows_affected();
+    let email_changes = sqlx::query!(
+        "DELETE FROM auth_email_changes
+         WHERE expires_at < now() - make_interval(secs => $1)
+            OR new_verified_at < now() - make_interval(secs => $1)",
+        single_use_grace_secs,
+    )
+    .execute(&mut *tx)
+    .await?
+    .rows_affected();
+    tx.commit().await?;
+    Ok(SweptSecrets {
+        refresh_tokens,
+        password_resets,
+        email_changes,
+    })
+}
+
 pub async fn credentials_by_email(
     pool: &PgPool,
     email: &str,
@@ -768,15 +885,7 @@ pub async fn credentials_by_email(
     )
     .fetch_optional(pool)
     .await?
-    .map(|r| {
-        Ok(Credentials {
-            actor_id: r.actor_id,
-            email: r.email,
-            password_hash: r.password_hash,
-            account_state: decode_account_state(&r.account_state)?,
-            email_verified_at: r.email_verified_at,
-        })
-    })
+    .map(|r| credentials_from_row!(r))
     .transpose()
 }
 
@@ -791,15 +900,7 @@ pub async fn credentials_by_actor(
     )
     .fetch_optional(pool)
     .await?
-    .map(|r| {
-        Ok(Credentials {
-            actor_id: r.actor_id,
-            email: r.email,
-            password_hash: r.password_hash,
-            account_state: decode_account_state(&r.account_state)?,
-            email_verified_at: r.email_verified_at,
-        })
-    })
+    .map(|r| credentials_from_row!(r))
     .transpose()
 }
 
@@ -1028,31 +1129,39 @@ pub async fn mark_reuse_detected(pool: &PgPool, user_id: Uuid) -> Result<(), sql
 
 /// Takes the account's pending reuse-detection mark: returns the
 /// detection time and clears it, so the notice is delivered exactly
-/// once. Lock-then-clear in one transaction — a concurrent taker
-/// blocks on the row lock and re-evaluates the IS NOT NULL predicate
-/// after commit (READ COMMITTED), so it takes nothing.
+/// once. Lock-then-clear in one statement — a concurrent taker blocks
+/// on the row lock and re-evaluates the `IS NOT NULL` predicate against
+/// the committed row (READ COMMITTED), so it takes nothing.
+///
+/// The clear rides a data-modifying `WITH`, which PostgreSQL runs to
+/// completion whether or not the primary query reads its output, and
+/// which cannot see the sibling's effect — so the value returned is the
+/// detection time and not the NULL just written. A plain
+/// `UPDATE … RETURNING reuse_detected_at` would return the new value:
+/// `RETURNING old.column` is PostgreSQL 18, and this runs on 16.
 pub async fn take_reuse_detected(
     pool: &PgPool,
     user_id: Uuid,
 ) -> Result<Option<DateTime<Utc>>, sqlx::Error> {
-    let mut tx = pool.begin().await?;
-    let pending = sqlx::query_scalar!(
-        r#"SELECT reuse_detected_at AS "reuse_detected_at!" FROM user_credentials
-           WHERE actor_id = $1 AND reuse_detected_at IS NOT NULL FOR UPDATE"#,
+    sqlx::query_scalar!(
+        r#"
+        WITH marked AS (
+            SELECT actor_id, reuse_detected_at
+            FROM user_credentials
+            WHERE actor_id = $1 AND reuse_detected_at IS NOT NULL
+            FOR UPDATE
+        ), cleared AS (
+            UPDATE user_credentials c
+            SET reuse_detected_at = NULL
+            FROM marked m
+            WHERE c.actor_id = m.actor_id
+        )
+        SELECT reuse_detected_at AS "reuse_detected_at!" FROM marked
+        "#,
         user_id,
     )
-    .fetch_optional(&mut *tx)
-    .await?;
-    if pending.is_some() {
-        sqlx::query!(
-            "UPDATE user_credentials SET reuse_detected_at = NULL WHERE actor_id = $1",
-            user_id,
-        )
-        .execute(&mut *tx)
-        .await?;
-    }
-    tx.commit().await?;
-    Ok(pending)
+    .fetch_optional(pool)
+    .await
 }
 
 pub async fn create_password_reset(
@@ -1166,9 +1275,10 @@ pub async fn confirm_email_change_original_side(
 /// against the email uniqueness constraint (auth.md "Email change").
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EmailChangeApply {
+    /// The account's address is the proven change's target — whether
+    /// this call moved it or an earlier one did.
     Applied,
-    /// No fully-proven, unexpired change is pending — or it already
-    /// applied.
+    /// No fully-proven, unexpired change is pending.
     NotReady,
     /// The proven change collides with another account's email; the
     /// change row stays live, so a retry within the TTL can still apply
@@ -1178,32 +1288,51 @@ pub enum EmailChangeApply {
 
 /// Applies the account's newest fully-proven, unexpired email change —
 /// `user_credentials.email` updates only when both sides hold (auth.md
-/// "Email change"). Idempotent.
+/// "Email change").
+///
+/// Idempotent in effect and in what it reports. The update is guarded by
+/// `email IS DISTINCT FROM`, so a second call moves no row; that alone
+/// cannot be read as failure, because "already at the target" and "no
+/// proven change exists" are the same zero-row answer. The statement
+/// therefore reports whether a proven change *exists*, and the address
+/// is the proven target either way — so a retried confirm answers
+/// `Applied` rather than `NotReady`.
 pub async fn apply_email_change_if_complete(
     pool: &PgPool,
     user_id: Uuid,
 ) -> Result<EmailChangeApply, sqlx::Error> {
-    let result = sqlx::query!(
-        "UPDATE user_credentials c
-         SET email = ec.new_email
-         FROM (
-             SELECT new_email FROM auth_email_changes
-             WHERE user_id = $1
-               AND original_confirmed_at IS NOT NULL
-               AND new_verified_at IS NOT NULL
-               AND expires_at > NOW()
-             ORDER BY created_at DESC LIMIT 1
-         ) ec
-         WHERE c.actor_id = $1 AND c.email IS DISTINCT FROM ec.new_email",
+    let result = sqlx::query_scalar!(
+        r#"
+        WITH proven AS (
+            SELECT new_email FROM auth_email_changes
+            WHERE user_id = $1
+              AND original_confirmed_at IS NOT NULL
+              AND new_verified_at IS NOT NULL
+              AND expires_at > NOW()
+            ORDER BY created_at DESC LIMIT 1
+        ), moved AS (
+            UPDATE user_credentials c
+            SET email = p.new_email
+            FROM proven p
+            WHERE c.actor_id = $1 AND c.email IS DISTINCT FROM p.new_email
+            RETURNING c.actor_id
+        )
+        SELECT (EXISTS (SELECT 1 FROM proven)
+                AND (EXISTS (SELECT 1 FROM moved)
+                     OR EXISTS (SELECT 1 FROM user_credentials c, proven p
+                                WHERE c.actor_id = $1 AND c.email = p.new_email)))
+               AS "applied!"
+        "#,
         user_id,
     )
-    .execute(pool)
+    .fetch_one(pool)
     .await;
     match result {
-        Ok(done) if done.rows_affected() == 1 => Ok(EmailChangeApply::Applied),
-        Ok(_) => Ok(EmailChangeApply::NotReady),
+        Ok(true) => Ok(EmailChangeApply::Applied),
+        Ok(false) => Ok(EmailChangeApply::NotReady),
         Err(sqlx::Error::Database(e))
-            if e.is_unique_violation() && e.constraint() == Some("user_credentials_email_key") =>
+            if e.is_unique_violation()
+                && e.constraint() == Some(constraints::CREDENTIALS_EMAIL) =>
         {
             Ok(EmailChangeApply::EmailInUse)
         }
@@ -1227,7 +1356,11 @@ pub async fn change_handle(
     .await
     {
         Ok(r) => Ok(r.rows_affected() == 1),
-        Err(sqlx::Error::Database(e)) if e.is_unique_violation() => Ok(false),
+        Err(sqlx::Error::Database(e))
+            if e.is_unique_violation() && e.constraint() == Some(constraints::ACTORS_HANDLE) =>
+        {
+            Ok(false)
+        }
         Err(e) => Err(e),
     }
 }
@@ -1335,20 +1468,13 @@ pub struct ActorIdentity {
 }
 
 pub async fn actor_identity(pool: &PgPool, id: Uuid) -> Result<Option<ActorIdentity>, sqlx::Error> {
-    Ok(sqlx::query!(
+    sqlx::query_as!(
+        ActorIdentity,
         "SELECT id, kind, handle, actor_pubkey, l0_address, created_at FROM actors WHERE id = $1",
         id,
     )
     .fetch_optional(pool)
-    .await?
-    .map(|r| ActorIdentity {
-        id: r.id,
-        kind: r.kind,
-        handle: r.handle,
-        actor_pubkey: r.actor_pubkey,
-        l0_address: r.l0_address,
-        created_at: r.created_at,
-    }))
+    .await
 }
 
 /// Handle lookup — one namespace across kinds, so a handle resolves to
@@ -1358,21 +1484,14 @@ pub async fn actor_identity_by_handle(
     pool: &PgPool,
     handle: &str,
 ) -> Result<Option<ActorIdentity>, sqlx::Error> {
-    Ok(sqlx::query!(
+    sqlx::query_as!(
+        ActorIdentity,
         "SELECT id, kind, handle, actor_pubkey, l0_address, created_at
          FROM actors WHERE handle = $1",
         handle,
     )
     .fetch_optional(pool)
-    .await?
-    .map(|r| ActorIdentity {
-        id: r.id,
-        kind: r.kind,
-        handle: r.handle,
-        actor_pubkey: r.actor_pubkey,
-        l0_address: r.l0_address,
-        created_at: r.created_at,
-    }))
+    .await
 }
 
 /// The actor fronting an L0 address atom — the mirror's author strings
@@ -1382,21 +1501,14 @@ pub async fn actor_identity_by_address(
     pool: &PgPool,
     l0_address: &str,
 ) -> Result<Option<ActorIdentity>, sqlx::Error> {
-    Ok(sqlx::query!(
+    sqlx::query_as!(
+        ActorIdentity,
         "SELECT id, kind, handle, actor_pubkey, l0_address, created_at
          FROM actors WHERE l0_address = $1",
         l0_address,
     )
     .fetch_optional(pool)
-    .await?
-    .map(|r| ActorIdentity {
-        id: r.id,
-        kind: r.kind,
-        handle: r.handle,
-        actor_pubkey: r.actor_pubkey,
-        l0_address: r.l0_address,
-        created_at: r.created_at,
-    }))
+    .await
 }
 
 /// Every actor among `l0_addresses`, in one round trip — the batched
@@ -1407,21 +1519,67 @@ pub async fn actor_identities_by_addresses(
     pool: &PgPool,
     l0_addresses: &[String],
 ) -> Result<Vec<ActorIdentity>, sqlx::Error> {
-    Ok(sqlx::query!(
+    sqlx::query_as!(
+        ActorIdentity,
         "SELECT id, kind, handle, actor_pubkey, l0_address, created_at
          FROM actors WHERE l0_address = ANY($1)",
         l0_addresses,
     )
     .fetch_all(pool)
-    .await?
-    .into_iter()
-    .map(|r| ActorIdentity {
-        id: r.id,
-        kind: r.kind,
-        handle: r.handle,
-        actor_pubkey: r.actor_pubkey,
-        l0_address: r.l0_address,
-        created_at: r.created_at,
-    })
-    .collect())
+    .await
+}
+
+/// Every actor among `ids`, in one round trip — the batched twin of
+/// [`actor_identity`], for a page resolving the authors of what it
+/// serves. An id nothing answers to is simply absent from the result.
+pub async fn actor_identities_by_ids(
+    pool: &PgPool,
+    ids: &[Uuid],
+) -> Result<Vec<ActorIdentity>, sqlx::Error> {
+    sqlx::query_as!(
+        ActorIdentity,
+        "SELECT id, kind, handle, actor_pubkey, l0_address, created_at
+         FROM actors WHERE id = ANY($1)",
+        ids,
+    )
+    .fetch_all(pool)
+    .await
+}
+
+#[cfg(test)]
+mod enum_tests {
+    use super::{AccountState, RevokedReason};
+
+    /// Both enums are stored as their own strings and decoded back by a
+    /// second, independent list. A typo in either half is a decode that
+    /// fails at runtime and nowhere earlier.
+    ///
+    /// Every account state decodes back to the variant that wrote it.
+    /// ´claim:auth:an-account-state-round-trips-through-its-column´
+    #[test]
+    fn account_states_round_trip_through_their_column_form() {
+        for state in [
+            AccountState::Guest,
+            AccountState::Applicant,
+            AccountState::Member,
+        ] {
+            assert_eq!(AccountState::parse(state.as_str()), Some(state));
+        }
+        assert_eq!(AccountState::parse("Member"), None);
+        assert_eq!(AccountState::parse(""), None);
+    }
+
+    /// Every revocation reason decodes back to the variant that wrote it.
+    /// ´claim:auth:a-revocation-reason-round-trips-through-its-column´
+    #[test]
+    fn revoked_reasons_round_trip_through_their_column_form() {
+        for reason in [
+            RevokedReason::Rotated,
+            RevokedReason::Owner,
+            RevokedReason::Security,
+        ] {
+            assert_eq!(RevokedReason::parse(reason.as_str()), Some(reason));
+        }
+        assert_eq!(RevokedReason::parse("rotate"), None);
+    }
 }
