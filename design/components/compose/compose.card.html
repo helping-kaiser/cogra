@@ -8,7 +8,7 @@
 <style>body{padding:16px}.row{display:flex;gap:24px;align-items:flex-start}.col{display:flex;flex-direction:column;gap:10px;width:360px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { MediaThumb, PickTray, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, CropViewport, CoverRow, Caret, UploadStatusLine, UploadErrorLine, ActsCard, ActsFooter, SealFooter, TopicRemovable, StagedReference, RefusedFile, WizardHeader, Button, HelpDot } = window.CoGraDesignSystem_9084ba;
+const { MediaThumb, PickPrompt, PickTray, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, CropViewport, CoverRow, Caret, UploadStatusLine, UploadErrorLine, ActsCard, ActsFooter, SealFooter, TopicRemovable, StagedReference, RefusedFile, WizardHeader, Button, HelpDot } = window.CoGraDesignSystem_9084ba;
 const P = "../../assets/photos/";
 
 function Demo(){return (
@@ -29,6 +29,8 @@ function Demo(){return (
       <MediaThumb src={P+"03-landscape-16x9.jpg"} alt="A lake" onRemove={()=>{}}/>
       <MediaThumb src={P+"05-portrait-4x5.jpg"} alt="A person with a camera" width={38} height={48} fit="contain" onRemove={()=>{}}/>
     </div>
+    <span className="lbl">PickPrompt — what the step takes, with the way out of the media path beside it</span>
+    <PickPrompt caption="Pick one picture, several, or one video." escapeLabel="Write words instead" onEscape={()=>{}}/>
     <span className="lbl">PickTray — the pick step's band; Show all is a real button, and one clip has no set to show</span>
     <PickTray count={3} onShowAll={()=>{}}>
       <MediaThumb src={P+"01-landscape-4x3.jpg"} alt="Strawberries" cover/>

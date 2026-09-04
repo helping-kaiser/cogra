@@ -51,6 +51,7 @@ const {
   CgtMark,
   MediaThumb,
   PickTray,
+  PickPrompt,
   PickedRow,
   DescribeCounter,
   PickedSheet,
