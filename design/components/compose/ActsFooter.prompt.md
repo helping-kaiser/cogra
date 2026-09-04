@@ -10,4 +10,4 @@ The one line that says how much a signature commits, where a full acts card woul
 
 **It belongs to the button, not to the column.** The spacer above pushes the pair to the bottom; the footer then sits directly on the sign button with no gap, so the count is read on the way to the button rather than after it.
 
-The chevron is drawn but not wired: whether it opens the acts card is unruled. When it is, the whole line becomes the target — a 16px glyph is not one.
+**The whole line is the button**, not the chevron — a 16px glyph is not a target, and the sentence is what the author is reading when they decide they want the detail. It carries no label of its own: the sentence is the name. The button adds no box, so the line draws exactly as before and brings the state layer, the focus ring and the 48px target with it.
