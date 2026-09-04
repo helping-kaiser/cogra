@@ -61,6 +61,13 @@ const pairOf = (bits: BitPair): StancePair => ({
   pInterest: f64(bits.pInterestBits),
 });
 
+// The shape this client reads, not how fresh the file is.
+describe("the vectors file", () => {
+  it("is the version this client reads", () => {
+    expect(vectors.version).toBe(1);
+  });
+});
+
 describe("clip", () => {
   it.each(vectors.clip)("$case", ({ inputBits, outputBits }) => {
     expect(bitsOf(clampDimension(f64(inputBits)))).toBe(outputBits);

@@ -38,6 +38,14 @@ private fun JsonObject.text(key: String): String = getValue(key).jsonPrimitive.c
 
 class ClientConstantsTest {
 
+    // The shape this client reads, not how fresh the file is: a group
+    // renamed or restructured on the server fails here rather than as a
+    // missing key deep inside one of the tests below.
+    @Test
+    fun `the file is the contract version this client reads`() {
+        assertThat(constants.getValue("version").jsonPrimitive.content).isEqualTo("1")
+    }
+
     @Test
     fun `the media caps this module owns are the contract's`() {
         val media = group("media")

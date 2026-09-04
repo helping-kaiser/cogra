@@ -50,6 +50,14 @@ private fun pairOf(json: JsonElement): StancePair = StancePair(
 
 class StanceFoldVectorsTest {
 
+    // The shape this client reads, not how fresh the file is.
+    @Test
+    fun `the file is the contract version this client reads`() {
+        assertWithMessage("stance-fold-vectors.json version")
+            .that(vectors.getValue("version").jsonPrimitive.content)
+            .isEqualTo("1")
+    }
+
     @Test
     fun `the clip matches the reference bit for bit`() {
         for (case in vectors.getValue("clip").jsonArray) {

@@ -69,6 +69,15 @@ const constants = JSON.parse(
   readFileSync(new URL("../../../client-constants.json", import.meta.url), "utf-8"),
 ) as Constants;
 
+// The shape this client reads, not how fresh the file is: a group
+// renamed or restructured on the server fails here rather than as an
+// undefined deep inside one of the expectations below.
+describe("the contract file", () => {
+  it("is the version this client reads", () => {
+    expect(constants.version).toBe(1);
+  });
+});
+
 describe("media caps", () => {
   it("match the contract", () => {
     expect(PICTURE_MAX_BYTES).toBe(constants.media.stillBytes);
