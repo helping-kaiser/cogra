@@ -31,6 +31,12 @@ export declare function Button(props: ButtonProps): JSX.Element;
 export interface InlineActionProps {
   children?: React.ReactNode;
   onClick?: () => void;
+  /** `lg` is label-large, for the word ending a row of its own; `sm` is
+   *  label-small, for the word inside a sentence the reader is already in —
+   *  the composer's describe counter, the upload error's ways out. */
+  size?: "sm" | "lg";
+  /** Layout, not look: the word stacked in a flex column doesn't stretch. */
+  selfStart?: boolean;
   disabled?: boolean;
   type?: "button" | "submit";
   /** When the word alone does not say what it changes. */
