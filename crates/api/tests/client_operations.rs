@@ -157,14 +157,29 @@ fn spreads_in(text: &str) -> BTreeSet<String> {
     out
 }
 
-/// Every `.graphql` file in one client's operation directory, split into
+/// Every `.graphql` file at or under `dir`, in path order.
+///
+/// Recursive, because both clients' toolchains are: Apollo Kotlin and the
+/// codegen preset pick up a document wherever it sits under the operation
+/// root, so a flat read would leave a document in a subdirectory building
+/// on a device and unmeasured here.
+fn graphql_files(dir: &Path) -> Vec<PathBuf> {
+    let mut files = Vec::new();
+    for entry in std::fs::read_dir(dir).unwrap_or_else(|e| panic!("read {}: {e}", dir.display())) {
+        let path = entry.expect("dir entry").path();
+        if path.is_dir() {
+            files.extend(graphql_files(&path));
+        } else if path.extension().is_some_and(|e| e == "graphql") {
+            files.push(path);
+        }
+    }
+    files
+}
+
+/// Every `.graphql` file in one client's operation tree, split into
 /// definitions.
 fn corpus(dir: &Path) -> Vec<Definition> {
-    let mut files: Vec<PathBuf> = std::fs::read_dir(dir)
-        .unwrap_or_else(|e| panic!("read {}: {e}", dir.display()))
-        .map(|entry| entry.expect("dir entry").path())
-        .filter(|path| path.extension().is_some_and(|e| e == "graphql"))
-        .collect();
+    let mut files = graphql_files(dir);
     files.sort();
     assert!(!files.is_empty(), "no documents under {}", dir.display());
     files
