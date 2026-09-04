@@ -2,7 +2,7 @@ import React from "react";
 import { Card } from "../core/Card.jsx";
 import { ActorChip } from "../people/ActorChip.jsx";
 import { PendingMarker, EditedMarker } from "../honesty/PendingMarker.jsx";
-import { LicenseTerms, LICENSE_MENU_LABEL, LICENSE_MENU_LABEL_SHOWN } from "../forms/LicenseChooser.jsx";
+import { LICENSE_MENU_LABEL } from "../forms/LicenseChooser.jsx";
 import { StanceControl } from "../stance/StanceControl.jsx";
 import { ExplainableNumber } from "../proposed/ExplainableNumber.jsx";
 import { MediaGallery } from "../media/MediaAttachment.jsx";
@@ -106,7 +106,6 @@ export function PostCard({
   topics = [],
   references = 0,
   menuItems = [],
-  defaultShowLicense = false,
 }) {
   const detail = variant === "detail";
   // THE SENSITIVE MARK (readme §13): one flag veils the BODY and the
@@ -120,12 +119,6 @@ export function PostCard({
   // thread position, and the stance a reader can still take all survive, because
   // no record leaves the graph and no removal is silent.
   const hasMedia = !redacted && Array.isArray(media) && media.length > 0;
-  // The license is a term over downstream reuse, checked once in a hundred
-  // readings — so it is not on the initial view. It arrives when asked for, from
-  // the overflow menu, and stays until the reader is done with it. The reveal is
-  // a state of THIS card, never a surface of its own (readme §13, the menus
-  // round); `defaultShowLicense` is how a board draws it unfolded.
-  const [showLicense, setShowLicense] = React.useState(defaultShowLicense);
   // A media post's caption is clamped and openable in place. The SUMMARY title
   // clamps to one line (readme §13's collapse order: the title gives way before
   // media or the affordance row ever shrink); the detail title never clamps.
@@ -135,9 +128,13 @@ export function PostCard({
   // looking at one picture.
   const [viewing, setViewing] = React.useState(null);
 
-  // The license rode the payload, so a redacted record has none to show.
+  // The license is a term over downstream reuse, checked once in a hundred
+  // readings — so it is not on the card at all. The menu's row opens it in a
+  // sheet over whatever surface the reader asked from (readme §13, the menus
+  // round), and the card's only part in it is carrying the row. The license
+  // rode the payload, so a redacted record has none to show.
   const items = license && !redacted
-    ? [{ label: showLicense ? LICENSE_MENU_LABEL_SHOWN : LICENSE_MENU_LABEL, onSelect: () => setShowLicense((shown) => !shown) }, ...menuItems]
+    ? [{ label: LICENSE_MENU_LABEL, onSelect: () => {} }, ...menuItems]
     : menuItems;
 
   const heading = title ? (
@@ -286,7 +283,6 @@ export function PostCard({
       {viewing !== null && <MediaViewer items={media} index={viewing} onClose={() => setViewing(null)} />}
       {redacted ? <RedactedContent {...(redacted === true ? {} : redacted)} /> : linkedText}
       {!redacted && opener}
-      {license && showLicense && !redacted && <LicenseTerms license={license} />}
       {/* ONE LINE on both variants — the sheet is the full set's home. On
           detail the whole line is the sheet's opener; in the feed the chips
           navigate and only the count opens it. */}

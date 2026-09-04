@@ -3,7 +3,7 @@ import { Card } from "../core/Card.jsx";
 import { Button } from "../core/Button.jsx";
 import { ActorChip } from "../people/ActorChip.jsx";
 import { PendingMarker, EditedMarker } from "../honesty/PendingMarker.jsx";
-import { LicenseTerms, LICENSE_MENU_LABEL, LICENSE_MENU_LABEL_SHOWN } from "../forms/LicenseChooser.jsx";
+import { LICENSE_MENU_LABEL } from "../forms/LicenseChooser.jsx";
 import { StanceControl } from "../stance/StanceControl.jsx";
 import { OverflowMenu } from "./OverflowMenu.jsx";
 import { Icon, NODE_GLYPHS } from "../navigation/Icon.jsx";
@@ -67,19 +67,15 @@ export function CommentCard({
   onOpenTarget,
   actions,
   menuItems = [],
-  defaultShowLicense = false,
   topics = [],
   references = 0,
   onOpenReferences,
   children,
 }) {
   // Same rule as PostCard: the license is a rare read, so it arrives from the
-  // menu rather than sitting on the comment, and it unfolds on the card itself
-  // rather than on a surface of its own. `defaultShowLicense` draws it unfolded.
-  const [showLicense, setShowLicense] = React.useState(defaultShowLicense);
-  const items = license
-    ? [{ label: showLicense ? LICENSE_MENU_LABEL_SHOWN : LICENSE_MENU_LABEL, onSelect: () => setShowLicense((shown) => !shown) }, ...menuItems]
-    : menuItems;
+  // menu rather than sitting on the comment, and it comes up in a sheet over
+  // the thread rather than on the card.
+  const items = license ? [{ label: LICENSE_MENU_LABEL, onSelect: () => {} }, ...menuItems] : menuItems;
   /* THE VEIL TAKES THE WHOLE BODY, words and pictures as one block. A comment
      has no title to leave outside it, so what carries the informed choice is
      the frame the card already wears — the author, the timestamp, the topics,
@@ -167,7 +163,6 @@ export function CommentCard({
         {/* The same topics-and-citations line a post wears, one line, clipped —
             a comment is content like any other and signs the same acts. */}
         <TopicsLine topics={topics} references={references} onOpenReferences={onOpenReferences} />
-        {license && showLicense && <LicenseTerms license={license} />}
         {edited && <EditedMarker />}
         {pending && <PendingMarker />}
         {/* One affordance row, as on PostCard: the stance leads, everything else

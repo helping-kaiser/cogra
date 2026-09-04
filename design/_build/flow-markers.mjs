@@ -397,21 +397,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Share this profile</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
-  // The detail view with the terms unfolded — PostDetail's own anatomy, so its
-  // numbering is PostDetail's, unchanged.
-  PostLicense: [
-    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
-    { n: 2, find: 'aria-label="More on this post"', tag: "button" },
-    { n: 3, find: '<a href="/u/', tag: "a" },
-    { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
-    { n: 5, find: 'aria-label="Topics and references"', tag: "button" },
-    { n: 6, find: 'aria-label="Take a stance on this post"', tag: "button" },
-    { n: 6, find: ">Choose your stance</button>", tag: "button" },
-    { n: 7, find: ">Post Score</span>", tag: "button" },
-    { n: 8, find: 'aria-label="3 comments"', tag: "button" },
-    { n: 9, find: 'aria-label="Share this post"', tag: "button" },
-    ...nav(10),
-  ],
+  // The license sheet, over the post and over the thread. Both are scanExempt:
+  // the terms are a block to read, not a set of controls, so the only thing
+  // either board wires is the wash that drops the sheet. CommentLicense has two
+  // — the thread's and the sheet's — and they take the same number, as on
+  // CommentMenu: outside the sheet is outside it whichever wash the finger
+  // lands on.
+  PostLicense: [{ n: 1, find: 'class="cg-scrim-in"', tag: "div" }],
+  CommentLicense: [{ n: 1, find: 'class="cg-scrim-in"', tag: "div", all: true }],
   ComposeCited: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },

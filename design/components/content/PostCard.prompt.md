@@ -7,7 +7,7 @@ Use `PostCard` for a post anywhere it appears — the feed, the post page, a pro
 
 **Every card carries the overflow menu.** Genesis content always declares a license, so there is always at least one item in it, and a trigger that appears on some cards and not others is worse than one that is always in the same place.
 
-**The license is not on the initial view.** It is a term over downstream reuse, read once in a hundred readings, so it lives behind the card's overflow menu (`License terms`) and appears under the content only once asked for. Pass extra rare interactions — report, open a proposal, copy a link — as `menuItems`.
+**The license is not on the card.** It is a term over downstream reuse, read once in a hundred readings, so it lives behind the card's overflow menu (`License terms`), and the row opens it in a sheet over the surface the reader asked from. Pass extra rare interactions — report, open a proposal, copy a link — as `menuItems`.
 
 **The Post Score is a prop, not something each surface passes in.** Every post in a ranked listing has one, so `score` renders it in the affordance row after the stance control, as Material's `graph_3` glyph plus the number. Uncapped, negative allowed, never coloured.
 
