@@ -18,6 +18,7 @@ pub mod references;
 pub mod staged;
 pub mod stance;
 pub mod topics;
+pub mod view;
 
 /// Re-exported so callers don't need a direct sqlx dependency.
 pub use sqlx::PgPool;
