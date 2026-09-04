@@ -1,7 +1,26 @@
+# The media image, pinned. Every other input this repository builds from is
+# pinned — Cargo.lock, package-lock.json, the Postgres tag below, and four
+# dependabot ecosystems with a written rationale per hold — and the object
+# store is the one component holding user data. Server and client share the
+# tag on purpose: the one-shot provisions with the `mc` this release ships,
+# so a floating client could meet a pinned server across an API change.
+x-media-image: &media-image docker.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+
+# Written once and used by both media services. They MUST agree — the
+# one-shot authenticates against the server with them — and two copies of a
+# literal that must agree is a hang waiting to happen (the alias loop below
+# retries until it gives up, on credentials that will never work).
+x-media-credentials: &media-credentials
+  MINIO_ROOT_USER: ${MEDIA_ACCESS_KEY_ID:-cogra_media}
+  MINIO_ROOT_PASSWORD: ${MEDIA_SECRET_ACCESS_KEY:-cogra_media_secret}
+
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: gnp_postgres
+    # Parameterised like the ports below, so a second checkout can bring up
+    # its own stack instead of colliding on the name. The default keeps the
+    # documented `docker exec -it gnp_postgres psql` recipes working.
+    container_name: ${COMPOSE_PROJECT:-gnp}_postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-gnp}
@@ -24,13 +43,22 @@ services:
   # the store moving to another host, another provider, or a federated
   # peer. Registry-qualified so podman resolves it without a search list.
   media:
-    image: docker.io/minio/minio
-    container_name: gnp_media
+    image: *media-image
+    container_name: ${COMPOSE_PROJECT:-gnp}_media
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MEDIA_ACCESS_KEY_ID:-cogra_media}
-      MINIO_ROOT_PASSWORD: ${MEDIA_SECRET_ACCESS_KEY:-cogra_media_secret}
+      <<: *media-credentials
+      # The store-side backstop for uploads a crash orphans before their
+      # session row exists (development.md, MEDIA_UPLOAD_SESSION_TTL_SECS).
+      # MinIO implements it as a server setting rather than as an
+      # S3 `AbortIncompleteMultipartUpload` lifecycle rule — it rejects
+      # such a rule — and it defaults to these values; they are written
+      # here so the backstop is a configured fact rather than a default
+      # that could change under us. The expiry matches the in-process
+      # reaper's own TTL: the same abandoned upload, seen from both sides.
+      MINIO_API_STALE_UPLOADS_EXPIRY: ${MEDIA_STALE_UPLOADS_EXPIRY:-24h}
+      MINIO_API_STALE_UPLOADS_CLEANUP_INTERVAL: ${MEDIA_STALE_UPLOADS_CLEANUP_INTERVAL:-6h}
     ports:
       - "${MEDIA_PORT:-9000}:9000"
       - "${MEDIA_CONSOLE_PORT:-9001}:9001"
@@ -50,23 +78,39 @@ services:
   # account" (api-spec.md "Everything on the graph is public"). It waits by
   # retrying rather than on a compose health condition, so the recipe holds
   # on runtimes whose `depends_on` conditions differ.
+  #
+  # `sh -eu` so any step's failure is the container's exit status, and the
+  # alias retry is bounded so wrong or missing credentials fail loudly
+  # instead of spinning one attempt per second forever. `make wait-media`
+  # waits on this container's postcondition — the bucket, readable
+  # anonymously — so a one-shot that gives up stops `make dev` at its
+  # deadline with a message rather than starting the API against a store
+  # with no bucket.
   media-init:
-    image: docker.io/minio/minio
-    container_name: gnp_media_init
+    image: *media-image
+    container_name: ${COMPOSE_PROJECT:-gnp}_media_init
     depends_on:
       - media
     restart: "no"
     entrypoint:
       - /bin/sh
+      - -eu
       - -c
       - |
+        attempt=0
         until mc alias set store http://media:9000 \
-            "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"; do sleep 1; done
+            "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"; do
+          attempt=$$((attempt + 1))
+          if [ "$$attempt" -ge 60 ]; then
+            echo "media-init: the store did not accept these credentials after $$attempt attempts" >&2
+            exit 1
+          fi
+          sleep 1
+        done
         mc mb --ignore-existing "store/$$MEDIA_BUCKET"
         mc anonymous set download "store/$$MEDIA_BUCKET"
     environment:
-      MINIO_ROOT_USER: ${MEDIA_ACCESS_KEY_ID:-cogra_media}
-      MINIO_ROOT_PASSWORD: ${MEDIA_SECRET_ACCESS_KEY:-cogra_media_secret}
+      <<: *media-credentials
       MEDIA_BUCKET: ${MEDIA_BUCKET:-cogra-media}
 
 volumes:
