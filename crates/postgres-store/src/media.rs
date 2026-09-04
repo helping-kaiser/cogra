@@ -46,6 +46,13 @@ pub struct MediaAttachment {
     /// attachment leads a multi-asset parent (data-model.md
     /// "media_attachments.options shape").
     pub cover_media_id: Option<Uuid>,
+    /// The erasure slice's columns. Nothing in the repo writes them yet —
+    /// the slice is unbuilt, deliberately, and the read surfaces that
+    /// branch on them are ahead of it rather than dead. The direction
+    /// they will be built in is recorded in docs/open-questions.md:
+    /// redaction marks the *usage* — a post or comment version, a gallery
+    /// junction row — rather than the asset, so an innocent picture that
+    /// was once in a redacted gallery is never permanently unusable.
     pub redaction_reason: Option<String>,
     pub redacted_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
@@ -72,6 +79,19 @@ pub struct SweptAsset {
 /// Uniqueness is on `(author_id, digest)`, never on the digest alone: two
 /// authors uploading identical bytes get two rows and two objects, so
 /// removing one author's asset can never break the other's render.
+///
+/// The key is here for resolution rather than for storage: the signed
+/// envelope's manifest names attachments by digest, and
+/// [`assets_by_digests`] can only turn a manifest back into rows because
+/// an author and a digest name at most one asset. Storage is the cheap
+/// resource; ambiguity here is not.
+///
+/// The conflict arm returns whatever row was already there, redaction
+/// columns included — so once the erasure slice exists, a re-upload of
+/// bytes whose usage was redacted hands the caller back the existing
+/// asset. That is the intended answer under the direction recorded in
+/// docs/open-questions.md: redaction marks the usage, not the bytes, so
+/// the row is still a perfectly good asset to attach somewhere else.
 ///
 /// The poster rides the insert rather than a later update because an asset
 /// row is immutable after upload — there is no update surface for one
