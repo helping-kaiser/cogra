@@ -2,18 +2,6 @@
    ActsCard, the gate is UploadStatusLine, and the sign button is DISABLED
    while it shows — nothing signs until the content it signs exists. */
 
-/* The chip the acts card shows a topic as. Held out of the conformance round:
-   it is a 24px borderless span on `secondary-container`, and `Chip`'s smallest
-   rung renders 26px with a hairline and no fill — so adopting it would change
-   the drawing, and which of the two is right is jakob's call. */
-function ChipMini({ children }) {
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", minHeight: 24, padding: "2px 8px", borderRadius: "var(--radius-full)", background: "var(--secondary-container)", color: "var(--on-secondary-container)", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "0.5px", flex: "none" }}>
-      {children}
-    </span>
-  );
-}
-
 export function Screen() {
   return (
     <>
@@ -28,8 +16,8 @@ export function Screen() {
               label: "Topics",
               value: (
                 <span style={{ display: "flex", gap: 6, overflow: "hidden", alignItems: "center" }}>
-                  <ChipMini>#tidemarket</ChipMini>
-                  <ChipMini>#coastroad</ChipMini>
+                  <Chip label="#tidemarket" tone="readout" />
+                  <Chip label="#coastroad" tone="readout" />
                 </span>
               ),
               count: "2 actions",
