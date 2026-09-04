@@ -20,6 +20,8 @@
 mod close;
 mod seal;
 
+use std::sync::Arc;
+
 use common::l1::handshake::{AccountBalance, ApprovalWitness, EpochPackage};
 use common::l1::identifier::ActId;
 use common::l1::{PreSignedProposal, VerifiedAct};
@@ -27,6 +29,7 @@ use ed25519_dalek::SigningKey;
 use rand::RngCore;
 use rand::rngs::OsRng;
 use sqlx::PgPool;
+use tokio::sync::OnceCell;
 
 /// Operating values for the constants layer1-interface.md §6 marks
 /// "illustrative, not locked": the per-act price θ (micro-units), the
@@ -47,6 +50,49 @@ impl StandInConfig {
     /// batch against it — a test funding an author for exactly N acts —
     /// states the multiple rather than a bare number.
     pub const DEFAULT_THETA_MICRO: i64 = 52_810;
+
+    /// A checked config. The three values are operating constants, not free
+    /// parameters: a non-positive θ lets an author with no account at all
+    /// pass the solvency gate, a non-positive act budget defers every
+    /// candidate, and a zero payload bound admits no act that carries
+    /// anything.
+    pub fn new(
+        theta_micro: i64,
+        epoch_target_acts: i64,
+        max_payload_bytes: usize,
+    ) -> Result<Self, StandInError> {
+        let config = Self {
+            theta_micro,
+            epoch_target_acts,
+            max_payload_bytes,
+        };
+        config.check()?;
+        Ok(config)
+    }
+
+    /// The same check, for a config assembled field-by-field. `StandIn`
+    /// runs it before every close, so a degenerate value is refused rather
+    /// than quietly degrading the epoch it governs.
+    pub fn check(&self) -> Result<(), StandInError> {
+        if self.theta_micro <= 0 {
+            return Err(StandInError::Host(format!(
+                "θ must be positive, got {}",
+                self.theta_micro
+            )));
+        }
+        if self.epoch_target_acts <= 0 {
+            return Err(StandInError::Host(format!(
+                "the epoch act budget must be positive, got {}",
+                self.epoch_target_acts
+            )));
+        }
+        if self.max_payload_bytes == 0 {
+            return Err(StandInError::Host(
+                "the payload bound must be positive".into(),
+            ));
+        }
+        Ok(())
+    }
 }
 
 impl Default for StandInConfig {
@@ -73,6 +119,11 @@ pub enum StandInError {
     Conflict(String),
     #[error("unknown act {0}")]
     UnknownAct(String),
+    /// The host itself is at fault — a degenerate operating constant, or a
+    /// selection whose own published order it could not honor. No
+    /// submission is to blame and no retry helps.
+    #[error("host: {0}")]
+    Host(String),
     #[error(transparent)]
     Storage(#[from] sqlx::Error),
 }
@@ -92,11 +143,19 @@ pub struct StoredAct {
 pub struct StandIn {
     pool: PgPool,
     config: StandInConfig,
+    /// The host identity, read once per process. Behind an `Arc` because
+    /// `StandIn` is cloned per consumer over one shared pool, and the
+    /// identity is one per database, not one per clone.
+    host_key: Arc<OnceCell<SigningKey>>,
 }
 
 impl StandIn {
     pub fn new(pool: PgPool, config: StandInConfig) -> Self {
-        Self { pool, config }
+        Self {
+            pool,
+            config,
+            host_key: Arc::new(OnceCell::new()),
+        }
     }
 
     pub fn config(&self) -> &StandInConfig {
@@ -104,26 +163,46 @@ impl StandIn {
     }
 
     /// The host signing key — generated on first use, persisted so every
-    /// process sees one host identity. Insert-if-absent, then read
-    /// whatever won: a process that loses the race for the singleton row
-    /// reads back the seed that did land, rather than minting a second one.
+    /// process sees one host identity, and then held: it is a
+    /// process-lifetime singleton, so re-reading it per seal buys nothing
+    /// and re-drawing entropy per seal buys less.
     pub(crate) async fn host_key(&self) -> Result<SigningKey, StandInError> {
-        let mut seed = [0u8; 32];
-        OsRng.fill_bytes(&mut seed);
-        sqlx::query!(
-            "INSERT INTO l1_host (singleton, signing_seed) VALUES (TRUE, $1)
-             ON CONFLICT (singleton) DO NOTHING",
-            &seed[..],
-        )
-        .execute(&self.pool)
-        .await?;
-        let row = sqlx::query!("SELECT signing_seed FROM l1_host WHERE singleton")
-            .fetch_one(&self.pool)
+        self.host_key
+            .get_or_try_init(|| self.load_host_key())
+            .await
+            .cloned()
+    }
+
+    /// Read the singleton, minting it only if the table is empty.
+    /// Insert-if-absent then read whatever won: a process that loses the
+    /// race reads back the seed that did land, rather than minting a
+    /// second one.
+    async fn load_host_key(&self) -> Result<SigningKey, StandInError> {
+        let existing = sqlx::query!("SELECT signing_seed FROM l1_host WHERE singleton")
+            .fetch_optional(&self.pool)
             .await?;
-        let stored: [u8; 32] =
-            row.signing_seed.as_slice().try_into().map_err(|_| {
-                StandInError::Authentication("stored host seed is not 32 bytes".into())
-            })?;
+        let seed = match existing {
+            Some(row) => row.signing_seed,
+            None => {
+                let mut fresh = [0u8; 32];
+                OsRng.fill_bytes(&mut fresh);
+                sqlx::query!(
+                    "INSERT INTO l1_host (singleton, signing_seed) VALUES (TRUE, $1)
+                     ON CONFLICT (singleton) DO NOTHING",
+                    &fresh[..],
+                )
+                .execute(&self.pool)
+                .await?;
+                sqlx::query!("SELECT signing_seed FROM l1_host WHERE singleton")
+                    .fetch_one(&self.pool)
+                    .await?
+                    .signing_seed
+            }
+        };
+        let stored: [u8; 32] = seed
+            .as_slice()
+            .try_into()
+            .map_err(|_| StandInError::Authentication("stored host seed is not 32 bytes".into()))?;
         Ok(SigningKey::from_bytes(&stored))
     }
 
@@ -192,18 +271,17 @@ impl StandIn {
     }
 
     /// Relay leg 2 — approve: verify the approval witness; the act becomes
-    /// orderable. Closes the epoch when the act budget fills.
+    /// orderable.
+    ///
+    /// Approving does not close an epoch. Closing is the substrate's own
+    /// clock (`close_loop`, or `l1-dev close` for a deterministic test):
+    /// the real Layer 1 does not close because a writer wrote, and a
+    /// backlog the close cannot drain — acts deferred for an unsatisfied
+    /// dependency or an insolvent author keep `status = 'approved'` by
+    /// design — would otherwise put a whole locked close on every single
+    /// request, to select nothing.
     pub async fn approve(&self, witness: ApprovalWitness) -> Result<(), StandInError> {
-        seal::approve(self, witness).await?;
-        let approved = sqlx::query_scalar!(
-            r#"SELECT COUNT(*) AS "n!" FROM l1_acts WHERE status = 'approved'"#
-        )
-        .fetch_one(&self.pool)
-        .await?;
-        if approved >= self.config.epoch_target_acts {
-            self.close_epoch().await?;
-        }
-        Ok(())
+        seal::approve(self, witness).await
     }
 
     /// Close the current epoch: fix the authoritative ordered act sequence,
@@ -223,6 +301,53 @@ impl StandIn {
 
     pub(crate) fn pool(&self) -> &PgPool {
         &self.pool
+    }
+}
+
+/// The surfaces that are *not* the seam: what CoGra reaches for that the
+/// real Layer 1 will not offer, named in one place so the swap has a list
+/// instead of a search.
+///
+/// The seam is `api`'s `L1Boundary` — the two relay legs, the epoch read,
+/// the B_i read, the published θ. Everything here is stand-in-only:
+/// crediting a burn stands in for a Layer-0 economy CoGra does not run,
+/// closing an epoch stands in for a clock the substrate keeps itself, and
+/// reading back a sealed act is a crash-recovery affordance the seam
+/// deliberately does not carry. At the swap each of these needs an answer
+/// of its own — a real L0 rail, the substrate's own close, and a resumable
+/// bootstrap — and none of them is "one new implementation of the
+/// boundary".
+pub trait DevSubstrate {
+    /// Credit a committed burn to an address (stand-in Layer 0).
+    fn credit_burn(
+        &self,
+        address: &str,
+        amount_micro: i64,
+    ) -> impl std::future::Future<Output = Result<(), StandInError>> + Send;
+
+    /// Close the current epoch, standing in for the substrate's own clock.
+    fn close_epoch(
+        &self,
+    ) -> impl std::future::Future<Output = Result<Option<EpochPackage>, StandInError>> + Send;
+
+    /// Read back a sealed act, so an interrupted bootstrap can resume.
+    fn sealed_act(
+        &self,
+        act_id: &ActId,
+    ) -> impl std::future::Future<Output = Result<Option<StoredAct>, StandInError>> + Send;
+}
+
+impl DevSubstrate for StandIn {
+    async fn credit_burn(&self, address: &str, amount_micro: i64) -> Result<(), StandInError> {
+        StandIn::credit_burn(self, address, amount_micro).await
+    }
+
+    async fn close_epoch(&self) -> Result<Option<EpochPackage>, StandInError> {
+        StandIn::close_epoch(self).await
+    }
+
+    async fn sealed_act(&self, act_id: &ActId) -> Result<Option<StoredAct>, StandInError> {
+        StandIn::sealed_act(self, act_id).await
     }
 }
 

@@ -336,6 +336,20 @@ impl Family {
         }
     }
 
+    /// The middle node's own class rule, for the hyper families that fix
+    /// one. It takes the middle the kind dispatch already resolved rather
+    /// than an `Option`, so no family arm can be reached with the middle
+    /// missing — the case is refused once, where the kind is decided.
+    fn middle_check(self, middle: &NodeId) -> Result<(), String> {
+        match self {
+            Family::Participant => match middle {
+                NodeId::Mint(_) => Ok(()),
+                _ => Err(format!("middle must be a Chat (minted node), got {middle}")),
+            },
+            _ => Ok(()),
+        }
+    }
+
     /// Endpoint-typing check for the act's incidence (§9.5/§9.6 columns;
     /// `author` is the acting actor's address atom). `middle` is `None` for
     /// binary families, and the initiating source is always the author's own
@@ -369,6 +383,7 @@ impl Family {
                 if !m.is_passive() {
                     return Err(format!("middle node must be passive, got {m}"));
                 }
+                self.middle_check(m)?;
             }
         }
         let class_err = |what: &str, want: &str, got: &NodeId| -> Result<(), String> {
@@ -398,13 +413,9 @@ impl Family {
                 NodeId::Mint(_) => Ok(()),
                 _ => class_err("target", "a Chat (minted node)", target),
             },
-            Family::Participant => match (middle, target) {
-                (Some(NodeId::Mint(_)), NodeId::Mint(_)) => Ok(()),
-                (Some(NodeId::Mint(_)), _) => {
-                    class_err("terminal target", "a Chat (minted node)", target)
-                }
-                (Some(m), _) => class_err("middle", "a Chat (minted node)", m),
-                (None, _) => Err("hyper family requires a middle node".into()),
+            Family::Participant => match target {
+                NodeId::Mint(_) => Ok(()),
+                _ => class_err("terminal target", "a Chat (minted node)", target),
             },
             Family::Owner => match target {
                 NodeId::Mint(_) => Ok(()),

@@ -73,8 +73,8 @@ impl From<l1_standin::StandInError> for BootstrapError {
     }
 }
 
-impl From<common::l1::L1Error> for BootstrapError {
-    fn from(e: common::l1::L1Error) -> Self {
+impl From<common::l1::ClientError> for BootstrapError {
+    fn from(e: common::l1::ClientError) -> Self {
         BootstrapError::Relay(e.to_string())
     }
 }
