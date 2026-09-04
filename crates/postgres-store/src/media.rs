@@ -675,9 +675,14 @@ pub async fn expired_upload_sessions(
 ///   old bytes' digests stay committed on the superseded record (post.md
 ///   §4), so the bytes have to stay too.
 ///
-/// Each `NOT EXISTS` is an index-only probe of the junction's reverse
-/// index on `attachment_id`; without it Postgres has no index leading with
-/// that column and every probe is a sequential scan.
+/// Each `NOT EXISTS` is an index probe of the referencing column — the
+/// four junctions' reverse index on `attachment_id`, the two version
+/// tables' partial index on the picture column, the asset table's own
+/// `cover_media_id`, and the session table's `media_id`. Postgres creates
+/// no index behind a foreign key, so without them each probe is a
+/// sequential scan and so is the delete's own integrity re-check. A new
+/// way to reference an asset owes this list a probe *and* that column an
+/// index, in the same change.
 ///
 /// Rows are deleted and their keys returned; the caller removes the
 /// objects. Doing it in that order means a crash between the two leaves
