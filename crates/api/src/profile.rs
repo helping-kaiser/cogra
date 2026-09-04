@@ -15,7 +15,7 @@ use common::envelope::CograProfile;
 use common::l1::census::Family;
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::content::LandingOrder;
-use postgres_store::{PgPool, auth as store, content as content_store, mirror, profile, staged};
+use postgres_store::{PgPool, content as content_store, mirror, profile, staged};
 use uuid::Uuid;
 
 use crate::ingest::PromotionFailure;
@@ -121,10 +121,9 @@ pub async fn prepare_profile_update<B: L1Boundary>(
             message: "the display name cannot be cleared".into(),
         });
     }
-    let address = store::actor_identity(pool, viewer)
-        .await?
-        .and_then(|identity| identity.l0_address)
-        .ok_or_else(|| ProfileError::Internal("viewer without an attached address".into()))?;
+    let address = crate::nodes::required_address(pool, viewer)
+        .await
+        .map_err(|e| ProfileError::Internal(e.to_string()))?;
     let prof = NodeId::Prof(address.clone());
     let prof_string = prof.to_string();
     if staged::has_pending_targeting(pool, viewer, Family::Registration, &prof_string).await? {

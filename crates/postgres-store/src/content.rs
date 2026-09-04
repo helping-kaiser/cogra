@@ -1539,6 +1539,36 @@ pub async fn count_comments_for_target(
     .await?)
 }
 
+/// A content id with the class that answers for it and the node it
+/// minted.
+#[derive(Debug, Clone)]
+pub struct ContentRef {
+    pub id: Uuid,
+    /// `"post"` or `"comment"` — the entity table the row came from.
+    pub kind: String,
+    pub l1_node_id: String,
+}
+
+/// The class and minted node of every content id among `ids`, in one
+/// round trip — the batched dispatch behind `node`/`nodes`. An id that
+/// names no content is simply absent.
+///
+/// The entity tables are the registry, pending rows included; the two
+/// arms are disjoint, so a UUID appears at most once.
+pub async fn content_refs(pool: &PgPool, ids: &[Uuid]) -> Result<Vec<ContentRef>, ContentError> {
+    Ok(sqlx::query_as!(
+        ContentRef,
+        r#"SELECT id AS "id!", 'post' AS "kind!", l1_node_id AS "l1_node_id!"
+           FROM posts WHERE id = ANY($1)
+           UNION ALL
+           SELECT id AS "id!", 'comment' AS "kind!", l1_node_id AS "l1_node_id!"
+           FROM comments WHERE id = ANY($1)"#,
+        ids,
+    )
+    .fetch_all(pool)
+    .await?)
+}
+
 /// Which content kind a UUID names — the `node(id)` dispatch. The
 /// entity tables are the registry, pending rows included; a UUID in
 /// neither is not a content node (actors resolve through their own

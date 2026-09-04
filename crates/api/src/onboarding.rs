@@ -522,10 +522,9 @@ async fn approve_one<B: L1Boundary>(
 /// The attached L0 address of an actor row; Internal when the actor is
 /// missing or keyless — callers only reach here past the attach proof.
 async fn actor_address(pool: &PgPool, actor_id: Uuid) -> Result<String, OnboardingError> {
-    store::actor_identity(pool, actor_id)
-        .await?
-        .and_then(|identity| identity.l0_address)
-        .ok_or_else(|| OnboardingError::Internal("actor without an attached address".into()))
+    crate::nodes::required_address(pool, actor_id)
+        .await
+        .map_err(|e| OnboardingError::Internal(e.to_string()))
 }
 
 /// The interim Registration payload until the Peer Content Envelope

@@ -16,7 +16,7 @@ use common::envelope::{CograContent, SensitiveMark};
 use common::l1::census::Family;
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::content::LandingOrder;
-use postgres_store::{PgPool, auth as store, content as content_store, mirror, staged};
+use postgres_store::{PgPool, content as content_store, mirror, staged};
 use uuid::Uuid;
 
 use crate::ingest::PromotionFailure;
@@ -24,6 +24,7 @@ use crate::l1::L1Boundary;
 use crate::media::{
     self, AttachmentDraft, GalleryError, GalleryKind, GalleryPlanError, PlannedGallery,
 };
+use crate::nodes;
 use crate::prepare::{self, Gesture, PrepareError, Target};
 use crate::references::{self, ReferenceDraft, ReferenceError, ReferencesError};
 use crate::topics::{self, TagDraft, TagError, TopicsError};
@@ -487,11 +488,9 @@ fn self_mark(draft: SelfMarkDraft) -> Result<Option<SensitiveMark>, ContentError
 }
 
 async fn author_address(pool: &PgPool, viewer: Uuid) -> Result<String, ContentError> {
-    store::actor_identity(pool, viewer)
+    nodes::required_address(pool, viewer)
         .await
-        .map_err(|e| ContentError::Internal(e.to_string()))?
-        .and_then(|identity| identity.l0_address)
-        .ok_or_else(|| ContentError::Internal("viewer without an attached address".into()))
+        .map_err(|e| ContentError::Internal(e.to_string()))
 }
 
 /// Prepares a new Post: one genesis Publish whose envelope carries the
@@ -891,28 +890,13 @@ async fn chained_edit_target(
 /// Resolves a comment target UUID to its minted node identifier — a
 /// Post or Comment this slice.
 async fn parent_node(pool: &PgPool, target: Uuid) -> Result<NodeId, ContentError> {
-    let node_string = match content_store::content_kind(pool, target).await? {
-        Some("post") => {
-            content_store::post(pool, target)
-                .await?
-                .ok_or(ContentError::NotFound)?
-                .l1_node_id
-        }
-        Some("comment") => {
-            content_store::comment(pool, target)
-                .await?
-                .ok_or(ContentError::NotFound)?
-                .l1_node_id
-        }
-        _ => {
-            return Err(ContentError::BadInput {
-                field: "target",
-                message: "target is not commentable content".into(),
-            });
-        }
-    };
-    NodeId::parse(&node_string)
-        .map_err(|e| ContentError::Internal(format!("stored node id unparseable: {e}")))
+    nodes::resolve_content_node(pool, target)
+        .await
+        .map_err(|e| ContentError::Internal(e.to_string()))?
+        .ok_or_else(|| ContentError::BadInput {
+            field: "target",
+            message: "target is not commentable content".into(),
+        })
 }
 
 /// Pre-commitment materialization (substrate.md §6; architecture.md

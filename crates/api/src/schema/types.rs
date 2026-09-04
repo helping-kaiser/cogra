@@ -2322,9 +2322,7 @@ async fn viewer_address(ctx: &Context<'_>) -> async_graphql::Result<Option<Strin
         return Ok(None);
     };
     let pool = ctx.data::<PgPool>()?;
-    Ok(store::actor_identity(pool, viewer.user_id)
-        .await?
-        .and_then(|identity| identity.l0_address))
+    Ok(crate::nodes::address_of(pool, viewer.user_id).await?)
 }
 
 /// The chip row shared by every taggable content node: the content

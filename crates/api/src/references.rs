@@ -44,7 +44,7 @@
 use common::l1::census::Family;
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::references::ReferenceView;
-use postgres_store::{PgPool, auth as store, content as content_store, references as store_refs};
+use postgres_store::{PgPool, references as store_refs};
 use uuid::Uuid;
 
 use crate::l1::L1Boundary;
@@ -541,32 +541,18 @@ pub async fn prepare_reference_withdrawal<B: L1Boundary>(
 /// classes with an API surface to cite from are the content nodes this
 /// slice carries, exactly as `taggable_node` narrows Tag.
 async fn citing_node(pool: &PgPool, artifact: Uuid) -> Result<NodeId, ReferencesError> {
-    let node = match content_store::content_kind(pool, artifact)
+    crate::nodes::resolve_content_node(pool, artifact)
         .await
         .map_err(|e| ReferencesError::Internal(e.to_string()))?
-    {
-        Some("post") => content_store::post(pool, artifact)
-            .await
-            .map_err(|e| ReferencesError::Internal(e.to_string()))?
-            .map(|p| p.l1_node_id),
-        Some("comment") => content_store::comment(pool, artifact)
-            .await
-            .map_err(|e| ReferencesError::Internal(e.to_string()))?
-            .map(|c| c.l1_node_id),
-        _ => None,
-    };
-    let node = node.ok_or_else(|| {
-        ReferenceError::at(vec!["artifact".to_string()], "no such citing artifact")
-    })?;
-    NodeId::parse(&node).map_err(|e| ReferencesError::Internal(format!("stored node id: {e}")))
+        .ok_or_else(|| {
+            ReferenceError::at(vec!["artifact".to_string()], "no such citing artifact").into()
+        })
 }
 
 async fn author_address(pool: &PgPool, viewer: Uuid) -> Result<String, ReferencesError> {
-    store::actor_identity(pool, viewer)
+    crate::nodes::required_address(pool, viewer)
         .await
-        .map_err(|e| ReferencesError::Internal(e.to_string()))?
-        .and_then(|identity| identity.l0_address)
-        .ok_or_else(|| ReferencesError::Internal("viewer without an attached address".into()))
+        .map_err(|e| ReferencesError::Internal(e.to_string()))
 }
 
 #[cfg(test)]
