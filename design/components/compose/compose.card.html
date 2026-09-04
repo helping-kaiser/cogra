@@ -8,7 +8,7 @@
 <style>body{padding:16px}.row{display:flex;gap:24px;align-items:flex-start}.col{display:flex;flex-direction:column;gap:10px;width:360px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { MediaThumb, PickTray, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, CropViewport, CoverRow, UploadStatusLine, UploadErrorLine, ActsCard, ActsFooter, SealFooter, TopicRemovable, StagedReference, RefusedFile, WizardHeader, Button, HelpDot } = window.CoGraDesignSystem_9084ba;
+const { MediaThumb, PickTray, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, CropViewport, CoverRow, Caret, UploadStatusLine, UploadErrorLine, ActsCard, ActsFooter, SealFooter, TopicRemovable, StagedReference, RefusedFile, WizardHeader, Button, HelpDot } = window.CoGraDesignSystem_9084ba;
 const P = "../../assets/photos/";
 
 function Demo(){return (
@@ -18,6 +18,8 @@ function Demo(){return (
     <WizardHeader title="New post"/>
     <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing"/>
     <WizardHeader title="What you sign" stageLabel="Last step" help="Signed actions"/>
+    <span className="lbl">Caret — the still frame of the composer's cursor; it is what makes drawn words read as being written</span>
+    <p style={{margin:0,fontSize:"var(--text-body-large)",lineHeight:"var(--text-body-large--line-height)"}}>The glovebox camera earns its keep — this is the print from 2019.<Caret/></p>
     <span className="lbl">MediaThumb — plain, cover, uploading, failed, removable, uncropped</span>
     <div style={{display:"flex",gap:8,alignItems:"flex-start"}}>
       <MediaThumb src={P+"04-square-1x1.jpg"} alt="A jar of honey"/>
