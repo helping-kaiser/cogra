@@ -168,6 +168,40 @@
       "tagUtf8": "cogra-l1:approval:v1"
     }
   ],
+  "signatureRefusals": [
+    {
+      "case": "non-canonical scalar S",
+      "msgUtf8": "cogra",
+      "publicKeyHex": "79b5562e8fe654f94078b112e8a98ba7901f853ae695bed7e0e3910bad049664",
+      "refusal": "S is not in [0, ℓ)",
+      "signatureHex": "120c0fd5af8b90142e4ea6790df6c628975342dc9346cc19aee92a8c15aed790ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "tagUtf8": "cogra-l1:approval:v1"
+    },
+    {
+      "case": "small-order public key",
+      "msgUtf8": "cogra",
+      "publicKeyHex": "0100000000000000000000000000000000000000000000000000000000000000",
+      "refusal": "A and R are small-order points; the signature verifies under the ordinary equation for every message",
+      "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "tagUtf8": "cogra-l1:approval:v1"
+    },
+    {
+      "case": "63-byte signature",
+      "msgUtf8": "cogra",
+      "publicKeyHex": "79b5562e8fe654f94078b112e8a98ba7901f853ae695bed7e0e3910bad049664",
+      "refusal": "a signature is exactly 64 bytes",
+      "signatureHex": "120c0fd5af8b90142e4ea6790df6c628975342dc9346cc19aee92a8c15aed7909502a0f94396ba0609a5abf20c0807de5ed872d9e6b059c37bb21be25e34b6",
+      "tagUtf8": "cogra-l1:approval:v1"
+    },
+    {
+      "case": "65-byte signature",
+      "msgUtf8": "cogra",
+      "publicKeyHex": "79b5562e8fe654f94078b112e8a98ba7901f853ae695bed7e0e3910bad049664",
+      "refusal": "a signature is exactly 64 bytes",
+      "signatureHex": "120c0fd5af8b90142e4ea6790df6c628975342dc9346cc19aee92a8c15aed7909502a0f94396ba0609a5abf20c0807de5ed872d9e6b059c37bb21be25e34b60300",
+      "tagUtf8": "cogra-l1:approval:v1"
+    }
+  ],
   "signing": {
     "l0Address": "65b60673d6ed884bf01c2c222d82ada0740f29ac",
     "publicKeyHex": "79b5562e8fe654f94078b112e8a98ba7901f853ae695bed7e0e3910bad049664",

@@ -8,7 +8,7 @@
 //! realization transparency, exact approval, removable-projection binding
 //! (layer1-interface.md §8.2) — and leaves the schemes to the deployment.
 
-use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
+use ed25519_dalek::{Signature, Signer, SigningKey, VerifyingKey};
 use sha2::{Digest, Sha256};
 
 pub mod tags {
@@ -60,12 +60,27 @@ pub fn sign(key: &SigningKey, tag: &[u8], msg: &[u8]) -> Vec<u8> {
     key.sign(&framed).to_bytes().to_vec()
 }
 
+/// Strict Ed25519 verification, which is the seam's acceptance boundary:
+/// three languages verify these signatures with three libraries, and only a
+/// boundary named in one place keeps a seal the browser accepts from being
+/// one the phone refuses.
+///
+/// Strict is `ed25519_dalek::VerifyingKey::verify_strict`, whose contract
+/// adds two refusals to the ordinary check: a small-order public key `A`
+/// and a small-order `R` in the signature. The scalar `S` is required to be
+/// canonical (`0 ≤ S < ℓ`) by every `verify_*` in that crate, strict or
+/// not. The small-order case is not academic — under the identity public
+/// key a single signature verifies against every message, and only the
+/// strict equation refuses it.
+///
+/// The refusals are pinned across the clients by the `signatureRefusals`
+/// group of `client-crypto-vectors.json`.
 pub fn verify(key: &VerifyingKey, tag: &[u8], msg: &[u8], signature: &[u8]) -> bool {
     let Ok(sig) = Signature::from_slice(signature) else {
         return false;
     };
     let framed = sha256_tagged(tag, &[msg]);
-    key.verify(&framed, &sig).is_ok()
+    key.verify_strict(&framed, &sig).is_ok()
 }
 
 pub fn verifying_key_from_bytes(bytes: &[u8]) -> Option<VerifyingKey> {
@@ -116,6 +131,55 @@ mod tests {
             msg,
             b"xx"
         ));
+    }
+
+    /// The seam accepts a signature under strict verification only, so a
+    /// small-order public key forges nothing: the same bytes that satisfy the
+    /// ordinary group equation against every message are refused here.
+    ///
+    /// The key is the canonical encoding of the neutral element (y = 1,
+    /// sign 0). It has order 1, so `[k]A` is the identity for every
+    /// challenge `k` and the group equation collapses to `[S]B = R`; with
+    /// `S = 0` and `R` the same identity encoding, one signature satisfies
+    /// it for every message.
+    ///
+    /// Strict verification is the seam's acceptance boundary, so a small-order key forges nothing.
+    /// ´claim:crypto:strict-verification-refuses-what-a-small-order-key-forges´
+    #[test]
+    fn a_small_order_key_forges_nothing_under_strict_verification() {
+        use ed25519_dalek::Verifier;
+
+        let mut small_order = [0u8; 32];
+        small_order[0] = 1;
+        let key =
+            verifying_key_from_bytes(&small_order).expect("the identity is a valid point encoding");
+        let mut forged = [0u8; 64];
+        forged[0] = 1;
+
+        let framed = sha256_tagged(tags::APPROVAL, &[b"one message"]);
+        let parsed = Signature::from_slice(&forged).expect("64 bytes");
+        assert!(
+            key.verify(&framed, &parsed).is_ok(),
+            "the ordinary equation accepts the forgery — which is what makes the boundary strict"
+        );
+
+        assert!(!verify(&key, tags::APPROVAL, b"one message", &forged));
+        assert!(!verify(&key, tags::APPROVAL, b"another message", &forged));
+    }
+
+    /// A signature whose scalar S is outside [0, ℓ) is refused, so the
+    /// malleability the scalar range forbids never reaches the seam.
+    ///
+    /// A signature carrying a non-canonical scalar is refused.
+    /// ´claim:crypto:a-non-canonical-scalar-is-refused´
+    #[test]
+    fn a_non_canonical_scalar_is_refused() {
+        let key = SigningKey::from_bytes(&[9u8; 32]);
+        let msg = b"structural body";
+        let mut sig = sign(&key, tags::APPROVAL, msg);
+        assert!(verify(&key.verifying_key(), tags::APPROVAL, msg, &sig));
+        sig[32..].fill(0xFF);
+        assert!(!verify(&key.verifying_key(), tags::APPROVAL, msg, &sig));
     }
 
     /// A commitment binds its tag, its salt, and its payload, so changing any one of the three changes it.

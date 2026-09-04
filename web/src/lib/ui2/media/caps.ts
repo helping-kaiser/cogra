@@ -32,6 +32,20 @@ export const POST_VIDEO_MAX_BYTES = 100 * 1024 * 1024;
 export const COMMENT_VIDEO_MAX_BYTES = 50 * 1024 * 1024;
 
 /**
+ * When a file stops going in one request and starts going in parts.
+ *
+ * One part size, which is the server's default: "below 8 MiB a single-shot
+ * `uploadMedia` is one round trip and resumability buys nothing, while every
+ * video and any still near its cap belongs on this path" (api-spec.md,
+ * "Resuming a large upload"). Android's `RESUMABLE_THRESHOLD_BYTES` is the
+ * same number for the same reason.
+ *
+ * It is not a cap and never refuses anything — it only picks which of the two
+ * upload paths a video takes.
+ */
+export const RESUMABLE_THRESHOLD_BYTES = 8 * 1024 * 1024;
+
+/**
  * The readable figure for a cap, as screens write it.
  *
  * The mebibyte count is rendered with an MB label rather than converted — that

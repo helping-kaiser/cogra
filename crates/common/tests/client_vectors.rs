@@ -93,6 +93,106 @@ fn encoding_vectors() -> Value {
     ])
 }
 
+/// The signature-refusal corpus: the acceptance boundary the seam requires,
+/// stated as inputs every implementation must refuse.
+///
+/// Three languages verify these signatures with three libraries, and the
+/// load-bearing direction is the host seal — a client deciding whether to
+/// approve what the backend sealed. A boundary difference would surface as
+/// "the phone refuses a write the browser approved", never as a failing
+/// test, so the reference's verdict is exported and pinned instead.
+///
+/// Each entry is refused by `crypto::verify` here, asserted below. `refusal`
+/// names why, so an implementation that accepts one knows which check it is
+/// missing rather than only that it disagreed.
+///
+/// The small-order key is the canonical encoding of the neutral element:
+/// order 1, so the group equation collapses to `[S]B = R` and the pair
+/// `(R, S) = (identity, 0)` satisfies it for every message. Only strict
+/// verification — which refuses a small-order `A` and a small-order `R` —
+/// rejects it. The non-canonical `S` is the scalar-range check every
+/// conforming verifier owes, whatever else it does.
+fn signature_refusals(actor_signing: &SigningKey, sample: &[u8]) -> Value {
+    let actor_pubkey = hx(actor_signing.verifying_key().as_bytes());
+    let tag = String::from_utf8(tags::APPROVAL.to_vec()).expect("ASCII");
+
+    let mut small_order_key = [0u8; 32];
+    small_order_key[0] = 1;
+    let mut small_order_sig = [0u8; 64];
+    small_order_sig[0] = 1;
+
+    let mut non_canonical_s = sample.to_vec();
+    non_canonical_s[32..].fill(0xFF);
+
+    let mut long = sample.to_vec();
+    long.push(0);
+
+    for (case, pubkey, signature) in [
+        (
+            "non-canonical scalar S",
+            actor_signing.verifying_key().as_bytes().as_slice(),
+            non_canonical_s.as_slice(),
+        ),
+        (
+            "small-order public key",
+            small_order_key.as_slice(),
+            small_order_sig.as_slice(),
+        ),
+        (
+            "63-byte signature",
+            actor_signing.verifying_key().as_bytes().as_slice(),
+            &sample[..63],
+        ),
+        (
+            "65-byte signature",
+            actor_signing.verifying_key().as_bytes().as_slice(),
+            long.as_slice(),
+        ),
+    ] {
+        let key = crypto::verifying_key_from_bytes(pubkey)
+            .unwrap_or_else(|| panic!("{case}: the key parses, so the refusal is the signature's"));
+        assert!(
+            !crypto::verify(&key, tags::APPROVAL, b"cogra", signature),
+            "{case} is refused by the reference"
+        );
+    }
+
+    json!([
+        {
+            "case": "non-canonical scalar S",
+            "refusal": "S is not in [0, ℓ)",
+            "publicKeyHex": actor_pubkey,
+            "tagUtf8": tag,
+            "msgUtf8": "cogra",
+            "signatureHex": hx(&non_canonical_s),
+        },
+        {
+            "case": "small-order public key",
+            "refusal": "A and R are small-order points; the signature verifies under the ordinary equation for every message",
+            "publicKeyHex": hx(&small_order_key),
+            "tagUtf8": tag,
+            "msgUtf8": "cogra",
+            "signatureHex": hx(&small_order_sig),
+        },
+        {
+            "case": "63-byte signature",
+            "refusal": "a signature is exactly 64 bytes",
+            "publicKeyHex": actor_pubkey,
+            "tagUtf8": tag,
+            "msgUtf8": "cogra",
+            "signatureHex": hx(&sample[..63]),
+        },
+        {
+            "case": "65-byte signature",
+            "refusal": "a signature is exactly 64 bytes",
+            "publicKeyHex": actor_pubkey,
+            "tagUtf8": tag,
+            "msgUtf8": "cogra",
+            "signatureHex": hx(&long),
+        },
+    ])
+}
+
 /// Builds the whole vector document.
 ///
 /// The handshake section runs exactly as l1::client performs it, under a
@@ -259,6 +359,7 @@ fn build_vectors() -> Value {
                 "signatureHex": hx(&sign_sample),
             }],
         },
+        "signatureRefusals": signature_refusals(&actor_signing, &sign_sample),
         "structuralBodies": [body_json(&body), body_json(&body_full)],
         "handshake": {
             "host": {"seedHex": hx(&host_seed), "publicKeyHex": hx(host.verifying_key().as_bytes())},

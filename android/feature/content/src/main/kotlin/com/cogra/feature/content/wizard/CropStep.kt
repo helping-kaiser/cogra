@@ -11,6 +11,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import com.cogra.core.designsystem.v2.media.CropFraming
 import com.cogra.core.designsystem.v2.media.CropShapeChips
 import com.cogra.core.designsystem.v2.media.CropState
@@ -23,6 +24,7 @@ import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.CropWindow
+import com.cogra.feature.content.R
 
 /**
  * `ComposeCrop` — one shape for the whole post, framed per picture
@@ -115,7 +117,7 @@ internal fun ColumnScope.CropStepBody(
                     selected = index == state.framingIndex,
                     dimmed = index != state.framingIndex,
                     onClick = { onFrameAsset(index) },
-                    contentDescription = "Frame picture ${index + 1}",
+                    contentDescription = stringResource(R.string.content_frame_picture_at, index + 1),
                     testTag = "wizard_filmstrip_$index",
                 )
             }

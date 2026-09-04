@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MagicNumber:ImageProcessing.kt:180f</ID>
+    <ID>MagicNumber:ImageProcessing.kt:90f</ID>
+  </CurrentIssues>
+</SmellBaseline>

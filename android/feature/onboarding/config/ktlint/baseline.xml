@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<baseline version="1.0">
+    <file name="src/main/kotlin/com/cogra/feature/onboarding/ApplyViewModel.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="40" column="5" source="standard:class-signature" />
+        <error line="40" column="36" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/feature/onboarding/InviteEntryViewModel.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="38" column="5" source="standard:class-signature" />
+        <error line="38" column="50" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/feature/onboarding/KeyCeremonyViewModel.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/feature/onboarding/OnboardingScreens.kt">
+        <error line="372" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/feature/onboarding/OnboardingViewModelsTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+</baseline>
