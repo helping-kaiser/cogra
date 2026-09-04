@@ -44,10 +44,118 @@ fn tagged(tag: &[u8], parts: &[&[u8]]) -> Value {
     })
 }
 
+/// Every family's wire name and the act identifier it renders, so all 19
+/// are pinned cross-language rather than the five the handshake happens
+/// to exercise.
+///
+/// The wire names are embedded in every act identifier and therefore in
+/// every signing base, so a client whose spelling drifts signs a
+/// different record than it displays.
+fn family_vectors() -> Value {
+    json!(
+        common::l1::Family::ALL
+            .into_iter()
+            .map(|family| {
+                let id = ActId::new("alice-addr", 1, family).expect("a valid author atom");
+                json!({"wireName": family.as_str(), "actId": id.to_string()})
+            })
+            .collect::<Vec<_>>()
+    )
+}
+
+/// Inputs every implementation must refuse, and the boundary they name.
+///
+/// The positive paths were pinned from the first version of this
+/// document; the refusals never were, so each language's decoder drew its
+/// own acceptance boundary and the three were never compared. A grammar
+/// one side accepts and another refuses is a write the browser approves
+/// and the phone rejects — a divergence no positive vector can see.
+///
+/// Every entry is asserted refused by the reference below, so the
+/// document cannot claim a refusal the reference does not reach.
+fn rejection_vectors() -> Value {
+    let wire_cases: [(&str, Vec<u8>); 6] = [
+        ("an empty wire frame", vec![]),
+        ("a proposal frame that is not an array", vec![0x01]),
+        (
+            "a proposal frame of the wrong arity",
+            {
+                let mut e = Encoder::new();
+                e.array(2).uint(1).uint(1);
+                e.finish()
+            },
+        ),
+        (
+            "a proposal frame truncated inside its head",
+            vec![0x9b, 0xff, 0xff],
+        ),
+        (
+            "a proposal frame with trailing bytes",
+            {
+                let mut framed = wire::encode_proposal(&Proposal {
+                    body: StructuralBody {
+                        author: "alice-addr".into(),
+                        seq: 1,
+                        family: common::l1::Family::Opinion,
+                        middle: None,
+                        target: NodeId::parse("prof:bob").expect("valid node id"),
+                        p_d: 1.0,
+                        p_i: -0.25,
+                        settlement_ref: None,
+                        license: None,
+                        asserted_parents: vec![],
+                    },
+                    payload: b"hello, cogra".to_vec(),
+                    deps: vec![],
+                });
+                framed.push(0x00);
+                framed
+            },
+        ),
+        (
+            "a non-minimal CBOR head",
+            vec![0x98, 0x02, 0x01, 0x01],
+        ),
+    ];
+
+    let identifier_cases: [(&str, &str); 5] = [
+        ("an act id with too few parts", "act:alice:1"),
+        ("an act id with an unknown family", "act:alice:1:nonsense"),
+        ("an act id with a signed sequence", "act:alice:+1:opinion"),
+        ("an act id with a non-numeric sequence", "act:alice:x:opinion"),
+        (
+            "an act id whose sequence overflows u64",
+            "act:alice:18446744073709551616:opinion",
+        ),
+    ];
+
+    let mut out = Vec::new();
+    for (case, bytes) in wire_cases {
+        assert!(
+            wire::decode_proposal(&bytes).is_err(),
+            "{case}: the reference refuses this frame"
+        );
+        out.push(json!({"case": case, "what": "decodeProposal", "hex": hx(&bytes)}));
+    }
+    for (case, text) in identifier_cases {
+        assert!(
+            ActId::parse(text).is_err(),
+            "{case}: the reference refuses this identifier"
+        );
+        out.push(json!({"case": case, "what": "parseActId", "text": text}));
+    }
+    json!(out)
+}
+
 fn body_json(b: &StructuralBody) -> Value {
     json!({
         "author": b.author,
-        "seq": b.seq,
+        // A STRING, not a number. `seq` is u64 on every side, and a JSON
+        // number above 2^53 loses precision in a JavaScript reader before
+        // any assertion runs — a large-sequence vector would then produce
+        // a different act id than the reference encoded, and read as a
+        // misleading diff or a false pass.
+        "seq": b.seq.to_string(),
         "family": b.family.as_str(),
         "middle": b.middle.as_ref().map(|m| m.to_string()),
         "target": b.target.to_string(),
@@ -191,6 +299,86 @@ fn signature_refusals(actor_signing: &SigningKey, sample: &[u8]) -> Value {
             "signatureHex": hx(&long),
         },
     ])
+}
+
+/// The typed-input corpus for the recovery code: what a person may hand
+/// the parser, and what the reference makes of it.
+///
+/// The display direction was already pinned; the reading direction was
+/// each client's own guess, and the guesses differed exactly where no two
+/// languages agree — the separator class. `expect` is `bytes` for an
+/// input that parses (the code's own 16 bytes) and otherwise names the
+/// refusal, so a client that accepts a code the reference refuses fails
+/// here rather than opening a blob nobody else can.
+///
+/// Every entry is asserted against the reference below, so the document
+/// cannot record a verdict the reference does not actually reach.
+fn recovery_code_inputs(code: &RecoveryCode) -> Value {
+    let display = code.display();
+    let squashed = display.replace('-', "");
+    let accepted: [(&str, String); 10] = [
+        ("the display form", display.clone()),
+        ("lower case", display.to_lowercase()),
+        ("no grouping", squashed.clone()),
+        ("spaces for hyphens", display.replace('-', " ")),
+        ("a non-breaking space", display.replace('-', "\u{a0}")),
+        ("an em space", display.replace('-', "\u{2003}")),
+        ("a next-line separator", display.replace('-', "\u{85}")),
+        ("tabs and newlines", display.replace('-', "\t\n")),
+        ("a pasted byte-order mark", format!("\u{feff}{display}")),
+        (
+            "leading and trailing space",
+            format!("  {display}\u{a0}\n"),
+        ),
+    ];
+    let refused: [(&str, String, &str); 5] = [
+        ("empty", String::new(), "length"),
+        (
+            "one character short",
+            squashed[..squashed.len() - 1].to_string(),
+            "length",
+        ),
+        ("one character long", format!("{squashed}0"), "length"),
+        // In place of a code character, not between them: a parser that
+        // wrongly strips U+001C would then refuse for length instead, so
+        // the two verdicts stay distinguishable.
+        (
+            "a unit separator, which Unicode does not call white space",
+            format!("{}\u{1c}", &squashed[..squashed.len() - 1]),
+            "character",
+        ),
+        (
+            "trailing pad bits set",
+            format!("{}1", &squashed[..squashed.len() - 1]),
+            "padBits",
+        ),
+    ];
+
+    let mut out = Vec::new();
+    for (case, input) in accepted {
+        let parsed = RecoveryCode::from_input(&input)
+            .unwrap_or_else(|e| panic!("{case}: the reference accepts this input ({e})"));
+        assert_eq!(parsed.bytes(), code.bytes(), "{case}");
+        out.push(json!({
+            "case": case,
+            "input": input,
+            "expect": "bytes",
+            "bytesHex": hx(code.bytes()),
+        }));
+    }
+    for (case, input, refusal) in refused {
+        let error = RecoveryCode::from_input(&input)
+            .err()
+            .unwrap_or_else(|| panic!("{case}: the reference refuses this input"));
+        let named = match error {
+            key_backup::RecoveryCodeError::Length => "length",
+            key_backup::RecoveryCodeError::Character(_) => "character",
+            key_backup::RecoveryCodeError::PadBits => "padBits",
+        };
+        assert_eq!(named, refusal, "{case}");
+        out.push(json!({"case": case, "input": input, "expect": refusal}));
+    }
+    json!(out)
 }
 
 /// Builds the whole vector document.
@@ -344,6 +532,8 @@ fn build_vectors() -> Value {
     json!({
         "version": 1,
         "encoding": encoding_vectors(),
+        "families": family_vectors(),
+        "rejections": rejection_vectors(),
         "sha256Tagged": [
             tagged(tags::PRE_COMMITMENT, &[]),
             tagged(tags::COMMIT_CONTENT, &[b"", &[1, 2]]),
@@ -389,6 +579,7 @@ fn build_vectors() -> Value {
         "keyBackup": {
             "recoveryCodeBytesHex": hx(&code_bytes),
             "recoveryCodeDisplay": code.display(),
+            "recoveryCodeInputs": recovery_code_inputs(&code),
             "hkdfInfoUtf8": "cogra:key-backup:v1",
             "hkdfSaltHex": hx(&hkdf_salt),
             "contentKeyHex": hx(&content_key),
