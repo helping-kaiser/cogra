@@ -8,6 +8,7 @@ import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.PickedAsset
+import com.cogra.feature.content.wizard.inFlight
 
 /**
  * `CommentEdit` — the post's one-screen-one-batch at comment scale.
@@ -136,7 +137,7 @@ fun CommentEditState.pickedPictures(): List<PickedPicture> = picked.map { asset 
             asset.altText.ifBlank { null },
         ),
         described = asset.altText.isNotBlank(),
-        uploading = asset.upload is AssetUpload.Running,
+        uploading = asset.upload.inFlight,
         failed = asset.upload is AssetUpload.Failed,
     )
 }
