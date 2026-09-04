@@ -234,3 +234,26 @@ async fn a_partial_landing_position_is_rejected(pool: PgPool) {
     .await
     .expect("a whole position is accepted");
 }
+
+/// Refusals key on constraint *names*: PostgreSQL reports the constraint
+/// and not the column on a unique violation, and two of the four names
+/// `auth::constraints` relies on were never written down by a migration —
+/// PostgreSQL derived them from an inline `UNIQUE`. A migration that
+/// re-declares either one under a name of its own turns `HANDLE_TAKEN`
+/// and `EMAIL_IN_USE` into 500s, with nothing else to catch it.
+///
+/// Every constraint name a refusal keys on exists in the schema.
+/// ´claim:schema:every-refusal-name-exists-in-the-schema´
+#[sqlx::test(migrations = "../../migrations")]
+async fn refusal_constraint_names_exist(pool: PgPool) {
+    for name in postgres_store::auth::constraints::ALL {
+        let exists: bool = sqlx::query_scalar(
+            "SELECT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = $1 AND contype = 'u')",
+        )
+        .bind(name)
+        .fetch_one(&pool)
+        .await
+        .expect("constraint lookup");
+        assert!(exists, "no unique constraint named {name}");
+    }
+}

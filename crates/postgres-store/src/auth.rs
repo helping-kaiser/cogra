@@ -11,6 +11,32 @@ use chrono::{DateTime, Utc};
 use sqlx::{PgConnection, PgPool};
 use uuid::Uuid;
 
+/// The unique-constraint names this module turns into refusals.
+///
+/// PostgreSQL names the constraint, not the column, in a
+/// `unique_violation`: the error's `column_name` field is populated for a
+/// not-null violation and left empty for this one (PostgreSQL "Error and
+/// Notice Message Fields"). So the name is the only handle a refusal has,
+/// and two of these four are names PostgreSQL chose implicitly for an
+/// inline `UNIQUE` — nothing in a migration writes them down. A rename
+/// would silently turn a clean refusal into a 500, which is what
+/// `tests/schema.rs` pins.
+pub mod constraints {
+    pub const ACTORS_HANDLE: &str = "actors_handle_key";
+    pub const ACTORS_PUBKEY: &str = "actors_actor_pubkey_key";
+    pub const ACTORS_L0_ADDRESS: &str = "actors_l0_address_key";
+    pub const CREDENTIALS_EMAIL: &str = "user_credentials_email_key";
+
+    /// Every name a refusal in this module depends on — what the schema
+    /// test walks.
+    pub const ALL: [&str; 4] = [
+        ACTORS_HANDLE,
+        ACTORS_PUBKEY,
+        ACTORS_L0_ADDRESS,
+        CREDENTIALS_EMAIL,
+    ];
+}
+
 /// One invite link (data-model.md `auth_invite_links`): pure service-side
 /// staging UX — nothing binds until the inviter's priced approval.
 #[derive(Debug, Clone)]
@@ -356,8 +382,8 @@ fn refused_unique(
     match result {
         Ok(_) => Ok(None),
         Err(sqlx::Error::Database(e)) if e.is_unique_violation() => match e.constraint() {
-            Some("actors_handle_key") => Ok(Some(RegisterOutcome::HandleTaken)),
-            Some("user_credentials_email_key") => Ok(Some(RegisterOutcome::EmailInUse)),
+            Some(constraints::ACTORS_HANDLE) => Ok(Some(RegisterOutcome::HandleTaken)),
+            Some(constraints::CREDENTIALS_EMAIL) => Ok(Some(RegisterOutcome::EmailInUse)),
             _ => Err(sqlx::Error::Database(e)),
         },
         Err(e) => Err(e),
@@ -595,7 +621,7 @@ pub async fn attach_actor_key(
         Ok(r) if r.rows_affected() == 1 => Ok(AttachOutcome::Attached),
         Ok(_) => Ok(AttachOutcome::Refused),
         Err(sqlx::Error::Database(e)) if e.is_unique_violation() => match e.constraint() {
-            Some("actors_actor_pubkey_key" | "actors_l0_address_key") => {
+            Some(constraints::ACTORS_PUBKEY | constraints::ACTORS_L0_ADDRESS) => {
                 Ok(AttachOutcome::KeyInUse)
             }
             _ => Err(sqlx::Error::Database(e)),
@@ -1306,7 +1332,8 @@ pub async fn apply_email_change_if_complete(
         Ok(true) => Ok(EmailChangeApply::Applied),
         Ok(false) => Ok(EmailChangeApply::NotReady),
         Err(sqlx::Error::Database(e))
-            if e.is_unique_violation() && e.constraint() == Some("user_credentials_email_key") =>
+            if e.is_unique_violation()
+                && e.constraint() == Some(constraints::CREDENTIALS_EMAIL) =>
         {
             Ok(EmailChangeApply::EmailInUse)
         }
@@ -1330,7 +1357,11 @@ pub async fn change_handle(
     .await
     {
         Ok(r) => Ok(r.rows_affected() == 1),
-        Err(sqlx::Error::Database(e)) if e.is_unique_violation() => Ok(false),
+        Err(sqlx::Error::Database(e))
+            if e.is_unique_violation() && e.constraint() == Some(constraints::ACTORS_HANDLE) =>
+        {
+            Ok(false)
+        }
         Err(e) => Err(e),
     }
 }
