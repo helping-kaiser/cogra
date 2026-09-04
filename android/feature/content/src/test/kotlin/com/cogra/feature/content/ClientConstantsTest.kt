@@ -17,12 +17,12 @@ import com.cogra.feature.content.reply.ReplyWizardViewModel
 import com.cogra.feature.content.wizard.ComposeWizardState
 import com.cogra.feature.content.wizard.ComposeWizardViewModel
 import com.google.common.truth.Truth.assertThat
-import java.io.File
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Test
+import java.io.File
 
 private val constants: JsonObject by lazy {
     Json.parseToJsonElement(File("../../../client-constants.json").readText()).jsonObject

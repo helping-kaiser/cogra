@@ -17,8 +17,6 @@
 package com.cogra.domain.stance
 
 import com.google.common.truth.Truth.assertWithMessage
-import java.io.File
-import java.util.Locale
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -27,6 +25,8 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Test
+import java.io.File
+import java.util.Locale
 
 private val vectors: JsonObject by lazy {
     Json.parseToJsonElement(File("../../../stance-fold-vectors.json").readText()).jsonObject
