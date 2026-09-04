@@ -8,4 +8,10 @@ Use `Button` for anything that performs an action; a control that navigates stay
 
 Variants are Material's three and no others: `primary` (filled) for the **one** committing action on a surface, `outline` for a secondary action, `text` for a tertiary one. Both unfilled variants put `primary` on the label — never a body-coloured label with a coloured border. Sizes differ in padding only. `disabled` is 40% opacity on the whole control, never a grey swap. Never use `primaryContainer` on a button: that surface belongs to the compose action and a committed stance.
 
+```jsx
+<InlineAction onClick={openLicense}>Change</InlineAction>
+```
+
+`InlineAction` is the bare primary word — the same `label-large` in `primary` with no pill, no padding and no 64px minimum. **The test is whose line the action is on.** An action on its own line is a `Button`, `text` variant included: the minimum width is what keeps a short label from reading as an afterthought. An action at the end of a line the reader is already reading — a seal row's `Change`, the payout address's `Change` — is an `InlineAction`, because there the 64px minimum is what wraps a row that is meant to hold one line. It carries `BUTTON_CLASS` like every other pressable control, so 20px of ink still answers to a 48px target.
+
 **Both sizes are tappable at 48px.** `sm` draws 33px of ink and `lg` 40px — Material's dense and default heights — but `BUTTON_CLASS` carries `cg-hit`, which expands the target to 48px on both axes without moving the ink. So a dialog footer and the stance pad's action row stay compact while the system's 48px minimum stays unconditional. If you build a pressable control by hand, add `cg-state cg-focus cg-hit` to it.

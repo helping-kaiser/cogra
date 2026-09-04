@@ -20,6 +20,26 @@ export interface ButtonProps {
 
 export declare function Button(props: ButtonProps): JSX.Element;
 
+/**
+ * The bare primary word — `Button`'s label with the button's body taken away.
+ * Use it for an action that rides at the end of a line the reader is already
+ * reading (a seal row's "Change", the address row's "Change"); use `Button`
+ * when the action owns its own line. Same 48px target, no pill.
+ */
+export interface InlineActionProps {
+  children?: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  type?: "button" | "submit";
+  /** When the word alone does not say what it changes. */
+  ariaLabel?: string;
+  /** Extra classes; the state-layer and focus classes are applied for you. */
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+export declare function InlineAction(props: InlineActionProps): JSX.Element;
+
 /** The same styling as a plain object, for a link that must look like a button. */
 export declare function buttonStyle(options?: {
   variant?: "primary" | "outline" | "text";
