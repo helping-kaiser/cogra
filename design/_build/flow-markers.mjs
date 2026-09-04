@@ -938,6 +938,34 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+/* The entry-and-keys family, converted off the masters (legacy-conversion lane
+   A, 2026-09-04): the eight boards that had only hand markup until now. The
+   via numbers are the hand boards' own — every one of them re-anchored to the
+   element the master renders in that slot, so graph.json needed no edit. The
+   fields key off `id` (they start empty, so there is no value text to key
+   off), and the back arrows off PageHeader's accessible name. */
+Object.assign(FLOW_MARKERS, {
+  InviteEntry: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="invite-link"', tag: "input" },
+    { n: 3, find: ">Continue</button>", tag: "button" },
+    { n: 4, find: ">Already have an account? Sign in</button>", tag: "button" },
+    { n: 5, find: ">Just looking? Browse the feed", tag: "button" },
+  ],
+  JoinInvalid: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="invite-link"', tag: "input" },
+    { n: 3, find: ">Continue</button>", tag: "button" },
+    { n: 4, find: ">Already have an account? Sign in</button>", tag: "button" },
+    { n: 5, find: ">Just looking? Browse the feed", tag: "button" },
+  ],
+  Reset: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="reset-email"', tag: "input" },
+    { n: 3, find: ">Send reset link</button>", tag: "button" },
+  ],
+});
+
 /* The band's Chats affordance (jakob 2026-09-01): CograBand carries it on
    every tab root, so every wired band board gets the marker in one sweep —
    the number is each board's next free one, the edge points at the chat
