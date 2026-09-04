@@ -91,6 +91,8 @@ const {
   QuotedRow,
   CoverRow,
   Caret,
+  SectionLabel,
+  StanceRow,
 } = components;
 
 /* A standing of one gentle record — the vouch-back default made a bundle. */
@@ -265,26 +267,6 @@ const PROFILE_MENU = [
   { label: "Share this profile", onSelect: () => {} },
 ];
 
-/* A quiet section caption (the references sheet's groups, Explore's recents,
-   the sectioned surfaces). */
-function SectionLabel({ children }) {
-  return (
-    <span
-      style={{
-        display: "block",
-        padding: "12px 24px 4px",
-        fontSize: "var(--text-label-small)",
-        lineHeight: "var(--text-label-small--line-height)",
-        fontWeight: "var(--text-label-small--font-weight)",
-        letterSpacing: "var(--text-label-small--letter-spacing, 0.5px)",
-        color: "var(--text-secondary)",
-      }}
-    >
-      {children}
-    </span>
-  );
-}
-
 /* A device-local recent query — a quiet row, never a record (readme §13). */
 function RecentRow({ text }) {
   return (
@@ -406,28 +388,6 @@ function ProfileBand({ children }) {
     >
       {children}
     </CograBand>
-  );
-}
-
-/* A person row on the stances page — the actor, and THE STANCE THE ROW IS
-   ABOUT (jakob 2026-09-01): the record's own value, face and pair, read-only.
-   Unlike a follow, a stance has sign and magnitude, so the value is the
-   row's information; acting on the person means opening their profile first
-   — the whole row does exactly that. */
-function StanceRow({ name, handle, src, pDirected, pInterest }) {
-  return (
-    <button
-      type="button"
-      className="cg-state cg-focus"
-      style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", boxSizing: "border-box", minHeight: 56, border: 0, background: "none", padding: "6px 16px", cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left" }}
-    >
-      <MonogramAvatar name={name} size={40} src={src} />
-      <span style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>{name}</span>
-        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>@{handle}</span>
-      </span>
-      <StanceValue pDirected={pDirected} pInterest={pInterest} />
-    </button>
   );
 }
 
