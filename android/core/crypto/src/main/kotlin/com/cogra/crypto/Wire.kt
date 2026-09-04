@@ -10,7 +10,7 @@
 package com.cogra.crypto
 
 /** A wire blob that does not parse. */
-class WireException(message: String) : Exception(message)
+class WireException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
 /** The wire format version every envelope opens with. */
 private const val WIRE_VERSION = 1UL
@@ -55,9 +55,9 @@ private fun decodeBody(bytes: ByteArray): StructuralBody {
             assertedParents = assertedParents,
         )
     } catch (e: CborDecodeException) {
-        throw WireException("malformed structural body: ${e.message}")
+        throw WireException("malformed structural body: ${e.message}", e)
     } catch (e: IdentifierException) {
-        throw WireException("malformed structural body: ${e.message}")
+        throw WireException("malformed structural body: ${e.message}", e)
     }
 }
 
@@ -94,9 +94,9 @@ fun decodeProposal(bytes: ByteArray): Proposal {
         d.finish()
         return Proposal(body, payload, deps)
     } catch (e: CborDecodeException) {
-        throw WireException("malformed proposal: ${e.message}")
+        throw WireException("malformed proposal: ${e.message}", e)
     } catch (e: IdentifierException) {
-        throw WireException("malformed proposal: ${e.message}")
+        throw WireException("malformed proposal: ${e.message}", e)
     }
 }
 
@@ -145,9 +145,9 @@ fun decodeVerifiedAct(bytes: ByteArray): VerifiedAct {
         d.finish()
         return act
     } catch (e: CborDecodeException) {
-        throw WireException("malformed verified act: ${e.message}")
+        throw WireException("malformed verified act: ${e.message}", e)
     } catch (e: IdentifierException) {
-        throw WireException("malformed verified act: ${e.message}")
+        throw WireException("malformed verified act: ${e.message}", e)
     }
 }
 
@@ -180,6 +180,6 @@ fun decodePreCommitment(bytes: ByteArray): PreCommitment {
         d.finish()
         return PreCommitment(nonce, signature)
     } catch (e: CborDecodeException) {
-        throw WireException("malformed pre-commitment: ${e.message}")
+        throw WireException("malformed pre-commitment: ${e.message}", e)
     }
 }

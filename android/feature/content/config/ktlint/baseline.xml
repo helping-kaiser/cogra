@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<baseline version="1.0">
+    <file name="src/main/kotlin/com/cogra/feature/content/ComposePostScreen.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="154" column="46" source="standard:multiline-if-else" />
+        <error line="155" column="38" source="standard:multiline-if-else" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/feature/content/ComposePostViewModel.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="353" column="23" source="standard:wrapping" />
+        <error line="360" column="17" source="standard:wrapping" />
+        <error line="367" column="27" source="standard:wrapping" />
+        <error line="377" column="21" source="standard:wrapping" />
+        <error line="400" column="27" source="standard:wrapping" />
+        <error line="401" column="104" source="standard:wrapping" />
+        <error line="408" column="27" source="standard:wrapping" />
+        <error line="409" column="86" source="standard:wrapping" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/feature/content/FeedViewModel.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="104" column="5" source="standard:spacing-between-declarations-with-comments" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/feature/content/PostDetailScreen.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="471" column="31" source="standard:multiline-if-else" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/feature/content/PostDetailViewModel.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="79" column="1" source="standard:no-consecutive-blank-lines" />
+        <error line="127" column="5" source="standard:spacing-between-declarations-with-comments" />
+        <error line="268" column="1" source="standard:no-consecutive-blank-lines" />
+        <error line="279" column="1" source="standard:no-blank-line-before-rbrace" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/feature/content/ReferenceSection.kt">
+        <error line="193" column="5" source="standard:class-signature" />
+        <error line="194" column="5" source="standard:class-signature" />
+        <error line="194" column="37" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/feature/content/reply/CommentEditScreen.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/feature/content/reply/CommentEditState.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/feature/content/reply/CommentEditViewModel.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/feature/content/reply/ReplyComposeStep.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/feature/content/reply/ReplyWizardState.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/feature/content/reply/ReplyWizardViewModel.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="195" column="31" source="standard:function-literal" />
+        <error line="195" column="47" source="standard:argument-list-wrapping" />
+        <error line="195" column="50" source="standard:argument-list-wrapping" />
+        <error line="195" column="57" source="standard:argument-list-wrapping" />
+        <error line="195" column="67" source="standard:binary-expression-wrapping" />
+        <error line="195" column="79" source="standard:binary-expression-wrapping" />
+        <error line="195" column="92" source="standard:argument-list-wrapping" />
+        <error line="195" column="97" source="standard:argument-list-wrapping" />
+        <error line="195" column="121" source="standard:max-line-length" />
+        <error line="195" column="126" source="standard:argument-list-wrapping" />
+        <error line="195" column="127" source="standard:argument-list-wrapping" />
+        <error line="195" column="129" source="standard:function-literal" />
+        <error line="206" column="35" source="standard:argument-list-wrapping" />
+        <error line="206" column="38" source="standard:argument-list-wrapping" />
+        <error line="206" column="45" source="standard:argument-list-wrapping" />
+        <error line="206" column="80" source="standard:argument-list-wrapping" />
+        <error line="206" column="85" source="standard:argument-list-wrapping" />
+        <error line="206" column="120" source="standard:argument-list-wrapping" />
+        <error line="206" column="121" source="standard:argument-list-wrapping" />
+        <error line="206" column="121" source="standard:max-line-length" />
+        <error line="485" column="5" source="standard:kdoc" />
+        <error line="489" column="5" source="standard:spacing-between-declarations-with-comments" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/feature/content/wizard/BodyStep.kt">
+        <error line="234" column="1" source="standard:kdoc" />
+        <error line="240" column="1" source="standard:spacing-between-declarations-with-comments" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/feature/content/wizard/ComposeWizardState.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/feature/content/wizard/ComposeWizardViewModel.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="411" column="5" source="standard:kdoc" />
+        <error line="418" column="5" source="standard:kdoc" />
+        <error line="428" column="5" source="standard:spacing-between-declarations-with-comments" />
+        <error line="973" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/feature/content/wizard/CoverStep.kt">
+        <error line="139" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/feature/content/wizard/SealStep.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/feature/content/ComposePostViewModelTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/feature/content/ContentScreensTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="1218" column="24" source="standard:argument-list-wrapping" />
+        <error line="1218" column="43" source="standard:argument-list-wrapping" />
+        <error line="1218" column="72" source="standard:argument-list-wrapping" />
+        <error line="1218" column="87" source="standard:argument-list-wrapping" />
+        <error line="1218" column="93" source="standard:argument-list-wrapping" />
+        <error line="1218" column="94" source="standard:argument-list-wrapping" />
+        <error line="1218" column="95" source="standard:argument-list-wrapping" />
+        <error line="1218" column="98" source="standard:argument-list-wrapping" />
+        <error line="1218" column="110" source="standard:function-literal" />
+        <error line="1218" column="119" source="standard:binary-expression-wrapping" />
+        <error line="1218" column="121" source="standard:max-line-length" />
+        <error line="1218" column="123" source="standard:function-literal" />
+        <error line="1218" column="124" source="standard:argument-list-wrapping" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/feature/content/FeedViewModelTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/feature/content/PostDetailViewModelTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="143" column="1" source="standard:no-consecutive-blank-lines" />
+        <error line="244" column="1" source="standard:spacing-between-declarations-with-annotations" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/feature/content/TagCall.kt">
+        <error line="9" column="5" source="standard:class-signature" />
+        <error line="10" column="5" source="standard:class-signature" />
+        <error line="11" column="5" source="standard:class-signature" />
+        <error line="12" column="5" source="standard:class-signature" />
+        <error line="12" column="28" source="standard:class-signature" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/feature/content/reply/CommentEditViewModelTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="60" column="9" source="standard:class-signature" />
+        <error line="96" column="9" source="standard:class-signature" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/feature/content/reply/ReplyWizardScreenTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/feature/content/reply/ReplyWizardStateTest.kt">
+        <error line="415" column="30" source="standard:argument-list-wrapping" />
+        <error line="415" column="42" source="standard:argument-list-wrapping" />
+        <error line="415" column="48" source="standard:argument-list-wrapping" />
+        <error line="415" column="77" source="standard:argument-list-wrapping" />
+        <error line="415" column="80" source="standard:argument-list-wrapping" />
+        <error line="415" column="92" source="standard:argument-list-wrapping" />
+        <error line="415" column="98" source="standard:argument-list-wrapping" />
+        <error line="415" column="121" source="standard:max-line-length" />
+        <error line="415" column="127" source="standard:argument-list-wrapping" />
+        <error line="415" column="128" source="standard:argument-list-wrapping" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/feature/content/reply/ReplyWizardViewModelTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="61" column="9" source="standard:class-signature" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/feature/content/wizard/ComposeWizardScreenTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/feature/content/wizard/ComposeWizardViewModelTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+</baseline>
