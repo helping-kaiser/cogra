@@ -46,6 +46,8 @@ use postgres_store::media as store;
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
+use crate::env_or;
+
 pub use blob::{BlobError, BlobStore, ObjectBlobStore, S3Config};
 
 /// The widest canvas a decode is allowed to open, per axis.
@@ -144,10 +146,6 @@ const DEFAULT_UPLOAD_PART_SIZE_BYTES: usize = 8 * 1024 * 1024;
 /// clocks. S3's own guidance is to abort incomplete uploads on a
 /// lifecycle rule; this is that rule, run by the server that opened them.
 const DEFAULT_UPLOAD_SESSION_TTL_SECS: f64 = 86_400.0;
-
-fn env_or(var: &str, fallback: &str) -> String {
-    std::env::var(var).unwrap_or_else(|_| fallback.to_string())
-}
 
 fn env_parsed<T: std::str::FromStr>(var: &str, fallback: T) -> anyhow::Result<T>
 where

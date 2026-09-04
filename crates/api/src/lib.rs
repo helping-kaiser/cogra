@@ -49,6 +49,16 @@ use crate::media::{BlobStore, MediaConfig};
 use crate::ratelimit::RequestIp;
 use crate::schema::ApiSchema;
 
+/// An environment variable, or the fallback the caller names.
+///
+/// It lives in the library because the server, the bootstrap tool and the
+/// media configuration all read their settings the same way; three private
+/// copies of one line drift apart the moment one of them grows a trim or a
+/// case rule.
+pub fn env_or(key: &str, default: &str) -> String {
+    std::env::var(key).unwrap_or_else(|_| default.to_string())
+}
+
 /// Process liveness only — store connectivity is the GraphQL `health`
 /// query's job.
 async fn health() -> Json<Value> {

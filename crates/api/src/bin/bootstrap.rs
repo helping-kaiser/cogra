@@ -5,12 +5,9 @@
 
 use anyhow::Context;
 use api::bootstrap::{BootstrapOutcome, GenesisInput, run};
+use api::env_or;
 use l1_standin::{StandIn, StandInConfig};
 use sha2::{Digest, Sha256};
-
-fn env_or(key: &str, default: &str) -> String {
-    std::env::var(key).unwrap_or_else(|_| default.to_string())
-}
 
 /// SHA-256 hex digest of the canonical version-1 platform-guidelines
 /// document, pinned into the Charter payload (network.md §3).
