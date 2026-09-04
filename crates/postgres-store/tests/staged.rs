@@ -138,6 +138,62 @@ async fn seq_allocation_is_monotone_and_catches_up_with_the_mirror(pool: PgPool)
     );
 }
 
+/// The catch-up reads the sequence out of the record identifier with
+/// `split_part`, which is the same decomposition
+/// `common::l1::identifier::ActId::parse` performs in Rust. Two things
+/// have to hold: the two agree on a real identifier, and a row that is
+/// not one is skipped rather than raising — an unguarded `::BIGINT`
+/// would fail the allocation, and with it every prepare that author
+/// attempts for as long as the row sits in the mirror.
+///
+/// SQL and Rust read the same sequence out of a record identifier, and a row that is not one is skipped.
+/// ´claim:staged:the-sql-and-rust-identifier-decompositions-agree´
+#[sqlx::test(migrations = "../../migrations")]
+async fn seq_catch_up_agrees_with_the_rust_parser_and_survives_a_stray_row(pool: PgPool) {
+    for id in [
+        "act:alice:0:registration",
+        "act:alice:12:opinion",
+        "act:alice:9007199254740993:publish",
+    ] {
+        let sql: i64 = sqlx::query_scalar("SELECT split_part($1, ':', 3)::BIGINT")
+            .bind(id)
+            .fetch_one(&pool)
+            .await
+            .expect("split_part");
+        let parsed = ActId::parse(id).expect("parses");
+        assert_eq!(sql as u64, parsed.seq, "{id}");
+    }
+
+    mirror::ingest_epoch(
+        &pool,
+        &EpochPackage {
+            epoch: 0,
+            records: vec![published("alice", 4, Family::Registration, 0, 0)],
+        },
+    )
+    .await
+    .expect("ingest");
+    // A row whose third field is not a number: the mirror stores L1's
+    // identifier verbatim, so the store never gets to assume it is one.
+    sqlx::query(
+        "INSERT INTO mirror_records
+             (record_id, family, author, epoch, act_time, position,
+              payload_marked, payload_witness)
+         VALUES ('addr:alice', 'registration', 'alice', 0, 1, 1, FALSE, '\\x00')",
+    )
+    .execute(&pool)
+    .await
+    .expect("stray row");
+
+    let mut conn = pool.acquire().await.expect("conn");
+    assert_eq!(
+        staged::allocate_seq(&mut conn, "alice")
+            .await
+            .expect("allocates past the stray row"),
+        5
+    );
+}
+
 /// A staged write loads back as what was written, down to the handshake parts nothing has filled yet.
 /// ´claim:staged:a-staged-write-round-trips´
 #[sqlx::test(migrations = "../../migrations")]

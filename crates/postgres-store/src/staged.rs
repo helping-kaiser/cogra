@@ -151,6 +151,17 @@ impl StagedWrite {
 /// prepare path (bootstrap repair, the dev CLI) can never cause identifier
 /// reuse. Runs on a connection so prepare composes it with the staged
 /// insert in one transaction.
+///
+/// The catch-up reads the sequence out of the record identifier, which is
+/// L1's own string stored verbatim: `act:<author>:<seq>:<family>`, whose
+/// third field is the sequence (`common::l1::identifier::ActId`). The
+/// digits test is not decoration. An unqualified `::BIGINT` raises on the
+/// first row whose third field is not a number, and the raise is not
+/// scoped to that row — it fails the allocation, and with it every
+/// prepare this author attempts, for as long as the row is in the mirror.
+/// A row that is not an act identifier carries no sequence to catch up
+/// to, so skipping it is also the right answer; `tests/staged.rs` pins
+/// the decomposition against the Rust parser it mirrors.
 pub async fn allocate_seq(conn: &mut PgConnection, author: &str) -> Result<i64, StagedError> {
     sqlx::query!(
         "INSERT INTO author_seq_counters (author, next_seq) VALUES ($1, 0)
@@ -164,7 +175,9 @@ pub async fn allocate_seq(conn: &mut PgConnection, author: &str) -> Result<i64, 
            SET next_seq = GREATEST(
                    next_seq,
                    (SELECT COALESCE(MAX(split_part(record_id, ':', 3)::BIGINT) + 1, 0)
-                    FROM mirror_records WHERE author = $1)
+                    FROM mirror_records
+                    WHERE author = $1
+                      AND split_part(record_id, ':', 3) ~ '^[0-9]{1,18}$')
                ) + 1
            WHERE author = $1
            RETURNING next_seq - 1 AS "seq!""#,
