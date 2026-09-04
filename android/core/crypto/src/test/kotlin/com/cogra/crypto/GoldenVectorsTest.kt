@@ -17,13 +17,6 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Test
 
-private fun ByteArray.hex(): String = joinToString("") { "%02x".format(it) }
-
-private fun String.unhex(): ByteArray {
-    check(length % 2 == 0)
-    return ByteArray(length / 2) { substring(it * 2, it * 2 + 2).toInt(16).toByte() }
-}
-
 private val vectors: JsonElement by lazy {
     // The repo-root contract file, exactly as the Rust exporter wrote it.
     Json.parseToJsonElement(File("../../../client-crypto-vectors.json").readText())
@@ -88,7 +81,7 @@ class GoldenVectorsTest {
         assertThat(produced.size).isEqualTo(expected.size)
         for ((case, vector) in produced.zip(expected)) {
             assertThat(vector.str("value")).isEqualTo(case.first)
-            assertThat(case.second.hex()).isEqualTo(vector.str("cborHex"))
+            assertThat(case.second.toHex()).isEqualTo(vector.str("cborHex"))
         }
     }
 
@@ -96,8 +89,8 @@ class GoldenVectorsTest {
     fun taggedHashVectorsMatch() {
         for (case in vectors.jsonObject.getValue("sha256Tagged").jsonArray) {
             val parts = case.jsonObject.getValue("partsHex").jsonArray
-                .map { it.jsonPrimitive.content.unhex() }
-            assertThat(sha256Tagged(case.str("tagUtf8"), parts).hex())
+                .map { it.jsonPrimitive.content.hexToBytes() }
+            assertThat(sha256Tagged(case.str("tagUtf8"), parts).toHex())
                 .isEqualTo(case.str("digestHex"))
         }
     }
@@ -105,15 +98,15 @@ class GoldenVectorsTest {
     @Test
     fun signingVectorsMatch() {
         val signing = vectors.jsonObject.getValue("signing")
-        val key = ActorKey.fromSeed(signing.str("seedHex").unhex())
-        assertThat(key.publicKeyBytes().hex()).isEqualTo(signing.str("publicKeyHex"))
+        val key = ActorKey.fromSeed(signing.str("seedHex").hexToBytes())
+        assertThat(key.publicKeyBytes().toHex()).isEqualTo(signing.str("publicKeyHex"))
         assertThat(key.address()).isEqualTo(signing.str("l0Address"))
         for (sample in signing.jsonObject.getValue("samples").jsonArray) {
             val tag = sample.str("tagUtf8")
             val msg = sample.str("msgUtf8").toByteArray(Charsets.UTF_8)
             // Ed25519 is deterministic: byte-equality, not just verification.
             val signature = key.signTagged(tag, msg)
-            assertThat(signature.hex()).isEqualTo(sample.str("signatureHex"))
+            assertThat(signature.toHex()).isEqualTo(sample.str("signatureHex"))
             assertThat(verify(key.publicKeyBytes(), tag, msg, signature)).isTrue()
         }
     }
@@ -123,43 +116,43 @@ class GoldenVectorsTest {
         for (case in vectors.jsonObject.getValue("structuralBodies").jsonArray) {
             val body = bodyOf(case)
             assertThat(body.actId().toString()).isEqualTo(case.str("actId"))
-            assertThat(body.canonicalBytes().hex()).isEqualTo(case.str("canonicalBytesHex"))
+            assertThat(body.canonicalBytes().toHex()).isEqualTo(case.str("canonicalBytesHex"))
         }
     }
 
     @Test
     fun handshakeVectorsMatch() {
         val hs = vectors.jsonObject.getValue("handshake")
-        val actor = ActorKey.fromSeed(vectors.jsonObject.getValue("signing").str("seedHex").unhex())
-        val hostPubkey = hs.jsonObject.getValue("host").str("publicKeyHex").unhex()
+        val actor = ActorKey.fromSeed(vectors.jsonObject.getValue("signing").str("seedHex").hexToBytes())
+        val hostPubkey = hs.jsonObject.getValue("host").str("publicKeyHex").hexToBytes()
 
         val proposalJson = hs.jsonObject.getValue("proposal")
         val proposal = Proposal(
             body = bodyOf(proposalJson.jsonObject.getValue("body")),
-            payload = proposalJson.str("payloadHex").unhex(),
+            payload = proposalJson.str("payloadHex").hexToBytes(),
             deps = proposalJson.jsonObject.getValue("deps").jsonArray
                 .map { ActId.parse(it.jsonPrimitive.content) },
         )
-        assertThat(canonicalDeps(proposal.deps).hex()).isEqualTo(hs.str("canonicalDepsHex"))
-        assertThat(encodeProposal(proposal).hex()).isEqualTo(hs.str("wireProposalHex"))
-        assertThat(decodeProposal(hs.str("wireProposalHex").unhex())).isEqualTo(proposal)
+        assertThat(canonicalDeps(proposal.deps).toHex()).isEqualTo(hs.str("canonicalDepsHex"))
+        assertThat(encodeProposal(proposal).toHex()).isEqualTo(hs.str("wireProposalHex"))
+        assertThat(decodeProposal(hs.str("wireProposalHex").hexToBytes())).isEqualTo(proposal)
 
         // Pre-sign under the pinned nonce: every intermediate matches.
-        val nonce = hs.str("nonceHex").unhex()
-        val pre = actor.preSign(proposal, nonce)
-        assertThat(preDigest(Tags.PRE_DIGEST_CONTENT, nonce, proposal.payload).hex())
+        val nonce = hs.str("nonceHex").hexToBytes()
+        val pre = actor.preSignWith(proposal, nonce)
+        assertThat(preDigest(Tags.PRE_DIGEST_CONTENT, nonce, proposal.payload).toHex())
             .isEqualTo(hs.str("contentPreDigestHex"))
-        assertThat(preDigest(Tags.PRE_DIGEST_DEPS, nonce, canonicalDeps(proposal.deps)).hex())
+        assertThat(preDigest(Tags.PRE_DIGEST_DEPS, nonce, canonicalDeps(proposal.deps)).toHex())
             .isEqualTo(hs.str("depsPreDigestHex"))
         assertThat(
             preCommitmentMsg(
                 proposal.body,
-                hs.str("contentPreDigestHex").unhex(),
-                hs.str("depsPreDigestHex").unhex(),
-            ).hex()
+                hs.str("contentPreDigestHex").hexToBytes(),
+                hs.str("depsPreDigestHex").hexToBytes(),
+            ).toHex()
         ).isEqualTo(hs.str("preCommitmentMsgHex"))
-        assertThat(pre.preSignature.hex()).isEqualTo(hs.str("preSignatureHex"))
-        assertThat(encodePreCommitmentOf(pre).hex()).isEqualTo(hs.str("wirePreCommitmentHex"))
+        assertThat(pre.preSignature.toHex()).isEqualTo(hs.str("preSignatureHex"))
+        assertThat(encodePreCommitmentOf(pre).toHex()).isEqualTo(hs.str("wirePreCommitmentHex"))
 
         // The sealed act: commitments recompute, the seal message and
         // wire form match, and the host seal verifies.
@@ -168,53 +161,53 @@ class GoldenVectorsTest {
             authorPubkey = actor.publicKeyBytes(),
             nonce = nonce,
             preSignature = pre.preSignature,
-            contentSalt = hs.str("contentSaltHex").unhex(),
-            depsSalt = hs.str("depsSaltHex").unhex(),
-            contentCommitment = hs.str("contentCommitmentHex").unhex(),
-            depsCommitment = hs.str("depsCommitmentHex").unhex(),
-            hostSeal = hs.str("hostSealHex").unhex(),
+            contentSalt = hs.str("contentSaltHex").hexToBytes(),
+            depsSalt = hs.str("depsSaltHex").hexToBytes(),
+            contentCommitment = hs.str("contentCommitmentHex").hexToBytes(),
+            depsCommitment = hs.str("depsCommitmentHex").hexToBytes(),
+            hostSeal = hs.str("hostSealHex").hexToBytes(),
         )
         assertThat(
-            commitment(Tags.COMMIT_CONTENT, sealed.contentSalt, proposal.payload).hex()
+            commitment(Tags.COMMIT_CONTENT, sealed.contentSalt, proposal.payload).toHex()
         ).isEqualTo(hs.str("contentCommitmentHex"))
         assertThat(
-            commitment(Tags.COMMIT_DEPS, sealed.depsSalt, canonicalDeps(proposal.deps)).hex()
+            commitment(Tags.COMMIT_DEPS, sealed.depsSalt, canonicalDeps(proposal.deps)).toHex()
         ).isEqualTo(hs.str("depsCommitmentHex"))
-        assertThat(sealed.sealMsg().hex()).isEqualTo(hs.str("sealMsgHex"))
-        assertThat(encodeVerifiedAct(sealed).hex()).isEqualTo(hs.str("wireVerifiedActHex"))
-        val decoded = decodeVerifiedAct(hs.str("wireVerifiedActHex").unhex())
-        assertThat(decoded.proposal).isEqualTo(proposal)
-        assertThat(decoded.hostSeal).isEqualTo(sealed.hostSeal)
+        assertThat(sealed.sealMsg().toHex()).isEqualTo(hs.str("sealMsgHex"))
+        assertThat(encodeVerifiedAct(sealed).toHex()).isEqualTo(hs.str("wireVerifiedActHex"))
+        // Every field, not a sample of two: a decoder that swapped the
+        // two same-length salts passed the old pair of assertions.
+        assertThat(decodeVerifiedAct(hs.str("wireVerifiedActHex").hexToBytes())).isEqualTo(sealed)
 
         // The real approval path accepts the pinned act and reproduces
         // the pinned witness.
         val witness = actor.approve(pre, sealed, hostPubkey)
         assertThat(witness.actId.toString()).isEqualTo(hs.str("approvalActId"))
-        assertThat(witness.approvalSignature.hex()).isEqualTo(hs.str("approvalSignatureHex"))
+        assertThat(witness.approvalSignature.toHex()).isEqualTo(hs.str("approvalSignatureHex"))
     }
 
     @Test
     fun keyBackupVectorsMatch() {
         val kb = vectors.jsonObject.getValue("keyBackup")
-        val seed = vectors.jsonObject.getValue("signing").str("seedHex").unhex()
-        val code = RecoveryCode(kb.str("recoveryCodeBytesHex").unhex())
+        val seed = vectors.jsonObject.getValue("signing").str("seedHex").hexToBytes()
+        val code = RecoveryCode(kb.str("recoveryCodeBytesHex").hexToBytes())
 
         assertThat(code.display()).isEqualTo(kb.str("recoveryCodeDisplay"))
         assertThat(kb.str("hkdfInfoUtf8")).isEqualTo("cogra:key-backup:v1")
 
-        val blob = sealKeyBackup(
+        val blob = sealKeyBackupWith(
             seed = seed,
             code = code,
-            salt = kb.str("hkdfSaltHex").unhex(),
-            nonce = kb.str("aesNonceHex").unhex(),
+            salt = kb.str("hkdfSaltHex").hexToBytes(),
+            nonce = kb.str("aesNonceHex").hexToBytes(),
         )
-        assertThat(blob.hex()).isEqualTo(kb.str("blobHex"))
+        assertThat(blob.toHex()).isEqualTo(kb.str("blobHex"))
         assertThat(Base64.getEncoder().encodeToString(blob)).isEqualTo(kb.str("blobBase64"))
 
         // The blob opens under the display form a user would retype.
         val retyped = RecoveryCode.fromInput(kb.str("recoveryCodeDisplay"))
-        assertThat(retyped.bytes).isEqualTo(code.bytes)
-        assertThat(openKeyBackup(kb.str("blobHex").unhex(), retyped)).isEqualTo(seed)
+        assertThat(retyped.bytes()).isEqualTo(code.bytes())
+        assertThat(openKeyBackup(kb.str("blobHex").hexToBytes(), retyped)).isEqualTo(seed)
     }
 
     @Test
@@ -222,12 +215,12 @@ class GoldenVectorsTest {
         val kb = vectors.jsonObject.getValue("keyBackup")
         assertThat(UPLOAD_PROOF_TAG).isEqualTo(kb.str("uploadProofTagUtf8"))
 
-        val actor = ActorKey.fromSeed(vectors.jsonObject.getValue("signing").str("seedHex").unhex())
+        val actor = ActorKey.fromSeed(vectors.jsonObject.getValue("signing").str("seedHex").hexToBytes())
         val signature = signUpload(
             key = actor,
-            challenge = kb.str("uploadChallengeHex").unhex(),
-            blob = kb.str("blobHex").unhex(),
+            challenge = kb.str("uploadChallengeHex").hexToBytes(),
+            blob = kb.str("blobHex").hexToBytes(),
         )
-        assertThat(signature.hex()).isEqualTo(kb.str("uploadSignatureHex"))
+        assertThat(signature.toHex()).isEqualTo(kb.str("uploadSignatureHex"))
     }
 }

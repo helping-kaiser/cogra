@@ -1,0 +1,54 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:CommentEditViewModel.kt:CommentEditViewModel$fun onSign</ID>
+    <ID>CyclomaticComplexMethod:ComposePostViewModel.kt:ComposePostViewModel$private fun stage</ID>
+    <ID>CyclomaticComplexMethod:ComposeWizardScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable internal fun ComposeWizardScreen</ID>
+    <ID>CyclomaticComplexMethod:ComposeWizardViewModel.kt:ComposeWizardViewModel$fun onTogglePick</ID>
+    <ID>CyclomaticComplexMethod:ReplyWizardScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable internal fun ReplyWizardScreen</ID>
+    <ID>FunctionOnlyReturningConstant:RobolectricEglShim.kt:EGLContext.Companion$@JvmStatic fun getEGL: EGL?</ID>
+    <ID>LargeClass:ComposePostViewModelTest.kt:ComposePostViewModelTest</ID>
+    <ID>LargeClass:ComposeWizardViewModelTest.kt:ComposeWizardViewModelTest</ID>
+    <ID>LargeClass:ContentScreensTest.kt:ContentScreensTest</ID>
+    <ID>LongMethod:BodyStep.kt:@Composable internal fun DraftOffer</ID>
+    <ID>LongMethod:CommentEditScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable internal fun CommentEditScreen</ID>
+    <ID>LongMethod:CommentEditViewModel.kt:CommentEditViewModel$fun onSign</ID>
+    <ID>LongMethod:ComposePostScreen.kt:@Composable internal fun MultiActionConfirm</ID>
+    <ID>LongMethod:ComposePostScreen.kt:@Composable internal fun TopicEntry</ID>
+    <ID>LongMethod:ComposePostScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ComposePostScreen</ID>
+    <ID>LongMethod:ComposePostViewModel.kt:ComposePostViewModel$private fun stage</ID>
+    <ID>LongMethod:ComposeWizardScreen.kt:@Composable fun ComposeWizardRoute</ID>
+    <ID>LongMethod:ComposeWizardScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable internal fun ComposeWizardScreen</ID>
+    <ID>LongMethod:ComposeWizardScreenTest.kt:ComposeWizardScreenTest$@Composable private fun Wizard</ID>
+    <ID>LongMethod:ComposeWizardViewModel.kt:ComposeWizardViewModel$fun onSign</ID>
+    <ID>LongMethod:FeedScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun FeedScreen</ID>
+    <ID>LongMethod:PostDetailScreen.kt:@Composable private fun CommentThread</ID>
+    <ID>LongMethod:PostDetailScreen.kt:@Composable private fun PostWithThread</ID>
+    <ID>LongMethod:PostDetailScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun PostDetailScreen</ID>
+    <ID>LongMethod:ReferenceEntry.kt:@Composable internal fun ReferenceEntry</ID>
+    <ID>LongMethod:ReferenceEntry.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable private fun ReferenceFinderSheet</ID>
+    <ID>LongMethod:ReplyComposeStep.kt:@Composable internal fun ColumnScope.ReplyComposeStepBody</ID>
+    <ID>LongMethod:ReplyWizardScreen.kt:@Composable fun ReplyWizardRoute</ID>
+    <ID>LongMethod:ReplyWizardScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable internal fun ReplyWizardScreen</ID>
+    <ID>LongMethod:SealStep.kt:@Composable internal fun ColumnScope.SealStepBody</ID>
+    <ID>MagicNumber:ComposePostScreen.kt:0.5</ID>
+    <ID>MagicNumber:ComposeWizardViewModel.kt:1.91f</ID>
+    <ID>MagicNumber:ComposeWizardViewModel.kt:4f</ID>
+    <ID>MagicNumber:ComposeWizardViewModel.kt:5f</ID>
+    <ID>MagicNumber:ReplyComposeStep.kt:100f</ID>
+    <ID>MagicNumber:SealStep.kt:10</ID>
+    <ID>MatchingDeclarationName:PostBody.kt:BodySurface</ID>
+    <ID>MaxLineLength:ContentScreensTest.kt:ContentScreensTest$renderComposer(ComposePostUiState(tagSection = TagSectionState(tags = tagRows("rust"))), onTuneTag = { tuned = it })</ID>
+    <ID>MaxLineLength:ReplyWizardStateTest.kt:ReplyWizardStateTest$refused = listOf(RefusedPick(null, UploadFailure.UNREADABLE_FILE), RefusedPick(null, UploadFailure.PICTURE_TOO_BIG))</ID>
+    <ID>MaxLineLength:ReplyWizardViewModel.kt:ReplyWizardViewModel$_state.update { it.removePick(uri).copy(refused = it.refused + RefusedPick(uri, UploadFailure.UNREADABLE_FILE)) }</ID>
+    <ID>MaxLineLength:ReplyWizardViewModel.kt:ReplyWizardViewModel$it.removePick(uri).copy(refused = it.refused + RefusedPick(uri, UploadFailure.COMMENT_VIDEO_TOO_BIG))</ID>
+    <ID>TooManyFunctions:CommentEditViewModel.kt:CommentEditViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:ComposePostViewModel.kt:ComposePostViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:ComposeWizardState.kt:com.cogra.feature.content.wizard.ComposeWizardState.kt</ID>
+    <ID>TooManyFunctions:ComposeWizardViewModel.kt:ComposeWizardViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:ReplyWizardViewModel.kt:ReplyWizardViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:SectionsEditor.kt:SectionsEditor&lt;S&gt;</ID>
+    <ID>UtilityClassWithPublicConstructor:RobolectricEglShim.kt:EGLContext</ID>
+  </CurrentIssues>
+</SmellBaseline>

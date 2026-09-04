@@ -10,6 +10,46 @@ plugins {
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.apollo) apply false
+    alias(libs.plugins.detekt) apply false
+    alias(libs.plugins.ktlint) apply false
+}
+
+// Static analysis, on every module. The backend gates on `cargo fmt` and
+// `clippy -D warnings` and the web surface on `npm run lint`; android was
+// the only surface with no equivalent, so a missing space after `=` could
+// sit in the nav graph unremarked.
+//
+// The split is deliberate: **ktlint owns formatting** (it is the one that
+// can also fix what it finds, via `ktlintFormat`) and **detekt owns the
+// rules** — swallowed exceptions, complexity, the shapes this audit kept
+// finding by hand. detekt's own ktlint-wrapper ruleset is therefore left
+// out, or the two would report the same formatting findings twice.
+val ktlintVersion = libs.versions.ktlint
+
+subprojects {
+    apply(plugin = "org.jlleitschuh.gradle.ktlint")
+    apply(plugin = "dev.detekt")
+
+    extensions.configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+        version.set(ktlintVersion)
+        android.set(true)
+        // Generated sources are not ours to format (android/CLAUDE.md:
+        // never hand-edit generated code).
+        filter { exclude { it.file.path.contains("${File.separator}build${File.separator}") } }
+    }
+
+    extensions.configure<dev.detekt.gradle.extensions.DetektExtension> {
+        // Our config file states only what we change; everything else is
+        // detekt's own default set.
+        buildUponDefaultConfig = true
+        config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+        // Per module, like ktlint's: the generate task writes one file
+        // per Gradle project, so a shared path would have each module
+        // overwrite the last.
+        baseline = file("config/detekt/baseline.xml")
+        parallel = true
+        basePath.set(rootProject.layout.projectDirectory)
+    }
 }
 
 // Robolectric fetches its android-all sandbox jars from Maven Central at

@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>LongMethod:LoginScreen.kt:@Composable fun LoginScreen</ID>
+    <ID>LongMethod:PasswordResetScreens.kt:@Composable fun PasswordResetScreen</ID>
+    <ID>MaxLineLength:LoginViewModel.kt:LoginViewModel$fun onPasswordChange</ID>
+  </CurrentIssues>
+</SmellBaseline>

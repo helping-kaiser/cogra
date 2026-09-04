@@ -8,6 +8,7 @@ import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.PickedAsset
 import com.cogra.feature.content.wizard.RefusedPick
+import com.cogra.feature.content.wizard.UploadFailure
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -206,7 +207,7 @@ class ReplyWizardStateTest {
     fun aFailedUploadIsVisibleToTheSeal() {
         val state = composerWithWords()
             .addPick(URI_A)
-            .withUpload(URI_A, AssetUpload.Failed("refused"))
+            .withUpload(URI_A, AssetUpload.Failed(UploadFailure.REFUSED_PICTURE))
 
         assertThat(state.uploadsFailed).isTrue()
         assertThat(state.canSign).isFalse()
@@ -404,16 +405,17 @@ class ReplyWizardStateTest {
     fun aRefusedFileIsNotSomethingToLose() {
         // It never joined the composer, so there is nothing to ask about.
         val onlyRefusals = ReplyWizardState(target = POST_TARGET)
-            .copy(refused = listOf(RefusedPick(null, "Nope.")))
+            .copy(refused = listOf(RefusedPick(null, UploadFailure.REFUSED_PICTURE)))
         assertThat(onlyRefusals.hasSomethingToLose).isFalse()
     }
 
     @Test
     fun aRefusalLeavesOnRequestAndTheRestStay() {
         val two = ReplyWizardState(target = POST_TARGET).copy(
-            refused = listOf(RefusedPick(null, "One."), RefusedPick(null, "Two.")),
+            refused = listOf(RefusedPick(null, UploadFailure.UNREADABLE_FILE), RefusedPick(null, UploadFailure.PICTURE_TOO_BIG)),
         )
-        assertThat(two.dismissedRefusal(0).refused.map { it.message }).containsExactly("Two.")
+        assertThat(two.dismissedRefusal(0).refused.map { it.reason })
+            .containsExactly(UploadFailure.PICTURE_TOO_BIG)
         // An index nothing is at changes nothing.
         assertThat(two.dismissedRefusal(9).refused).hasSize(2)
     }

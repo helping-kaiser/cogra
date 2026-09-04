@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<baseline version="1.0">
+    <file name="src/main/kotlin/com/cogra/crypto/Handshake.kt">
+        <error line="197" column="5" source="standard:class-signature" />
+        <error line="198" column="5" source="standard:class-signature" />
+        <error line="198" column="38" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/crypto/Hashing.kt">
+        <error line="8" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/crypto/KeyBackup.kt">
+        <error line="8" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/crypto/KeyExport.kt">
+        <error line="1" column="1" source="standard:filename" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/crypto/GoldenVectorsTest.kt">
+        <error line="9" column="1" source="standard:import-ordering" />
+        <error line="152" column="22" source="standard:trailing-comma-on-call-site" />
+        <error line="171" column="90" source="standard:trailing-comma-on-call-site" />
+        <error line="174" column="96" source="standard:trailing-comma-on-call-site" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/crypto/HandshakeTest.kt">
+        <error line="71" column="103" source="standard:trailing-comma-on-call-site" />
+        <error line="218" column="98" source="standard:trailing-comma-on-call-site" />
+    </file>
+</baseline>

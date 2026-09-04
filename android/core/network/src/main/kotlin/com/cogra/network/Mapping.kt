@@ -22,6 +22,7 @@ import com.cogra.domain.AccountState
 import com.cogra.domain.ActorRef
 import com.cogra.domain.ApplicationInfo
 import com.cogra.domain.ApplicationView
+import com.cogra.domain.CograLog
 import com.cogra.domain.CommentView
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
@@ -89,15 +90,28 @@ internal fun rateLimitedRefusal(): Outcome.Refused = Outcome.Refused(
  * Success(data) otherwise.
  */
 internal suspend fun <D : Operation.Data> ApolloCall<D>.fetch(): Outcome<D> {
+    val name = operation.name()
     val response = execute()
-    response.exception?.let { return Outcome.Failed(it) }
+    response.exception?.let {
+        // The one place the cause exists. Above here every state
+        // collapses it to a flag, so a TLS trust failure, a dead host
+        // and a DNS failure all become the same connectivity notice —
+        // and without this line they are indistinguishable in logcat too.
+        CograLog.w(TAG, it) { "$name failed in transport" }
+        return Outcome.Failed(it)
+    }
     val errors = response.errors
     if (!errors.isNullOrEmpty()) {
         if (errors.any { it.extensions?.get("code") == "UNAUTHENTICATED" }) return unauthenticatedRefusal()
         if (errors.any { it.extensions?.get("code") == "RATE_LIMITED" }) return rateLimitedRefusal()
-        return Outcome.Failed(GraphQlFaultException(errors.map { it.message }))
+        val fault = GraphQlFaultException(errors.map { it.message })
+        CograLog.w(TAG, fault) { "$name answered with a GraphQL errors array" }
+        return Outcome.Failed(fault)
     }
-    val data = response.data ?: return Outcome.Failed(IllegalStateException("response carried no data"))
+    val data = response.data ?: run {
+        CograLog.w(TAG) { "$name answered with neither data nor errors" }
+        return Outcome.Failed(IllegalStateException("response carried no data"))
+    }
     return Outcome.Success(data)
 }
 
@@ -108,9 +122,15 @@ internal suspend fun <D : Operation.Data> ApolloCall<D>.fetch(): Outcome<D> {
  */
 internal fun <T> payload(errors: List<UserError>, value: () -> T?): Outcome<T> {
     if (errors.isNotEmpty()) return Outcome.Refused(errors)
-    val v = value() ?: return Outcome.Failed(IllegalStateException("null result without userErrors"))
+    val v = value() ?: run {
+        CograLog.w(TAG) { "payload carried a null result with no userErrors" }
+        return Outcome.Failed(IllegalStateException("null result without userErrors"))
+    }
     return Outcome.Success(v)
 }
+
+/** Every line from this tier, under one tag. */
+private const val TAG = "Apollo"
 
 /** Chains [fetch] and [payload] for the common single-payload mutation. */
 internal suspend fun <D : Operation.Data, T> ApolloCall<D>.payloadOutcome(

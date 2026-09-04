@@ -211,13 +211,17 @@ private fun CreateCard(
                 style = MaterialTheme.typography.titleMedium,
             )
             Text(stringResource(R.string.invites_create_body))
+            // The switch says what the label beside it says, from the
+            // same resource. Hoisted because `semantics {}` is not a
+            // composable scope.
+            val singleUseLabel = stringResource(R.string.invites_single_use)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Switch(
                     checked = state.singleUse,
                     onCheckedChange = onSingleUseChange,
                     modifier = Modifier
                         .testTag("invites_single_use")
-                        .semantics { contentDescription = "single use" },
+                        .semantics { contentDescription = singleUseLabel },
                 )
                 Text(
                     text = stringResource(R.string.invites_single_use),
