@@ -24,18 +24,12 @@ export function Screen() {
         />
         <DescribeCounter described={0} total={2} onDescribe={() => {}} />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <ComposeFieldLabel note="Optional">Title</ComposeFieldLabel>
-          <TextField label="" value="Salt maps of the coast road" />
-        </div>
+        <TextField label="Title" corner="Optional" value="Salt maps of the coast road" />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <ComposeFieldLabel note="Optional">Description</ComposeFieldLabel>
-          <TextField label="" rows={3} value="Rubbings from three weekends at low tide — paper against the salt crust." />
-        </div>
+        <TextField label="Description" corner="Optional" rows={3} value="Rubbings from three weekends at low tide — paper against the salt crust." />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <ComposeFieldLabel>Topics</ComposeFieldLabel>
+          <FieldLabel>Topics</FieldLabel>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <TopicRemovable topic="fieldnotes" />
             <TopicRemovable topic="coastroad" />
@@ -44,7 +38,7 @@ export function Screen() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <ComposeFieldLabel>References</ComposeFieldLabel>
+          <FieldLabel>References</FieldLabel>
           <StagedReference
             kind="post"
             name="The long way home — @ada"

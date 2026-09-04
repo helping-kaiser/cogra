@@ -584,12 +584,20 @@ function ThreadDetail({ menuItems = READER_POST_MENU }) {
    arrives as a circle and everything else as its tile — the menus round's whole
    point is that citing a post and mentioning a person stage the same fact, and
    a row that drew them differently would deny it. */
-/* A composer field's label — the wizard stages' own caption weight. */
-function ComposeFieldLabel({ children, note }) {
+/* THE CAPTION OVER A COMPOSER SECTION THAT IS NOT A FIELD — Pictures, Video,
+   Cover, Topics, References. It is `TextField`'s own label row with the field
+   taken away: the same baseline row, the same `label-large` word holding the
+   line. A caption whose section IS a field belongs in `TextField`'s `label`
+   and `corner` props instead, and every one of them is written that way.
+
+   IT IS A SPAN, NOT A `<label>`. The element points at nothing — a topic tray
+   is not a labelable control — and a `<label>` with no `for` is a label in
+   name only (HTML Living Standard §4.10.4). The word is a caption here; the
+   real labels live inside the fields. */
+function FieldLabel({ children }) {
   return (
-    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-      <span style={{ flex: 1, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>{children}</span>
-      {note && <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>{note}</span>}
+    <div style={{ display: "flex", alignItems: "baseline", gap: "var(--space-2)" }}>
+      <span style={{ flex: 1, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", letterSpacing: "var(--text-label-large--letter-spacing)", fontWeight: "var(--text-label-large--font-weight)" }}>{children}</span>
     </div>
   );
 }
