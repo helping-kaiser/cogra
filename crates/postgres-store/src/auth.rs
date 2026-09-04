@@ -757,6 +757,82 @@ pub async fn reap_unverified_accounts(
     Ok(count)
 }
 
+/// What one secret sweep removed, per table.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct SweptSecrets {
+    pub refresh_tokens: u64,
+    pub password_resets: u64,
+    pub email_changes: u64,
+}
+
+impl SweptSecrets {
+    pub fn total(&self) -> u64 {
+        self.refresh_tokens + self.password_resets + self.email_changes
+    }
+}
+
+/// Deletes spent bearer-secret rows past their retention bound.
+///
+/// Three tables here store a token hash and keep the row after the token
+/// stops being usable: a refresh token past expiry or revocation, a reset
+/// link past use or expiry, an email change past its last proof or
+/// expiry. None of them is evidence of anything once the window closes,
+/// and a hash that no longer answers any question is only a hash left
+/// lying around, so the row goes.
+///
+/// The two windows are different because the tables are. A refresh
+/// token's revoked row is what reuse detection recognises a replayed
+/// token by (auth.md "Reuse detection"), so it is kept long enough for
+/// that answer to still be worth giving — 30 days. A reset link and an
+/// email change prove nothing once consumed, so they go on the short
+/// window.
+///
+/// `auth_invite_links` and `auth_applications` are deliberately not
+/// swept: neither declares a secret column, and both are the provenance
+/// record of how an account came to exist — who invited whom, which
+/// application landed. That is an audit trail, and an audit trail with a
+/// reaper is not one.
+pub async fn sweep_spent_secrets(
+    pool: &PgPool,
+    refresh_grace_secs: f64,
+    single_use_grace_secs: f64,
+) -> Result<SweptSecrets, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let refresh_tokens = sqlx::query!(
+        "DELETE FROM auth_refresh_tokens
+         WHERE expires_at < now() - make_interval(secs => $1)
+            OR revoked_at < now() - make_interval(secs => $1)",
+        refresh_grace_secs,
+    )
+    .execute(&mut *tx)
+    .await?
+    .rows_affected();
+    let password_resets = sqlx::query!(
+        "DELETE FROM auth_password_resets
+         WHERE expires_at < now() - make_interval(secs => $1)
+            OR used_at < now() - make_interval(secs => $1)",
+        single_use_grace_secs,
+    )
+    .execute(&mut *tx)
+    .await?
+    .rows_affected();
+    let email_changes = sqlx::query!(
+        "DELETE FROM auth_email_changes
+         WHERE expires_at < now() - make_interval(secs => $1)
+            OR new_verified_at < now() - make_interval(secs => $1)",
+        single_use_grace_secs,
+    )
+    .execute(&mut *tx)
+    .await?
+    .rows_affected();
+    tx.commit().await?;
+    Ok(SweptSecrets {
+        refresh_tokens,
+        password_resets,
+        email_changes,
+    })
+}
+
 pub async fn credentials_by_email(
     pool: &PgPool,
     email: &str,
