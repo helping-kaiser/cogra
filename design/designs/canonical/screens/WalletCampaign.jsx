@@ -4,15 +4,6 @@
    The campaign's full page (anchors, reach, settlement detail) is a future
    item; this is the wallet's window into it. */
 
-function FactRow({ label, value, last }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 44, borderBottom: last ? undefined : "1px solid var(--border-hairline)" }}>
-      <span style={{ flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>{label}</span>
-      <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", textAlign: "right" }}>{value}</span>
-    </div>
-  );
-}
-
 export function Screen() {
   return (
     <>
@@ -31,10 +22,10 @@ export function Screen() {
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <FactRow label="Deposit" value={<MoneyFigure amount={12500} />} />
-            <FactRow label="Where it sits" value="In escrow, on the rail" />
-            <FactRow label="Window" value="Runs 6 more days · ends 8 Sep" />
-            <FactRow label="At settlement" value="One public record" last />
+            <FactRow emphasis="ledger" label="Deposit" value={<MoneyFigure amount={12500} />} />
+            <FactRow emphasis="ledger" label="Where it sits" value="In escrow, on the rail" />
+            <FactRow emphasis="ledger" label="Window" value="Runs 6 more days · ends 8 Sep" />
+            <FactRow emphasis="ledger" label="At settlement" value="One public record" last />
           </div>
           <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
             Every payout will be traceable to the paths that carried the reach. What the window doesn't spend returns when it settles.
