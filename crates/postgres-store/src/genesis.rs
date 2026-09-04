@@ -180,6 +180,29 @@ pub async fn seed_parameter(
     Ok(())
 }
 
+/// The genesis value of every governed parameter — the oldest carrier
+/// row per parameter, which is what the seeding run wrote.
+///
+/// The bootstrap's repair path compares its input against these, so a
+/// re-run with changed genesis input is refused rather than sealing an
+/// immutable Charter that contradicts the rows already committed.
+pub async fn seeded_parameters(
+    pool: &PgPool,
+) -> Result<Vec<(String, serde_json::Value)>, sqlx::Error> {
+    let rows = sqlx::query!(
+        r#"SELECT DISTINCT ON (parameter)
+                  parameter AS "parameter!", value AS "value!"
+           FROM network_parameter_versions
+           ORDER BY parameter, created_at"#
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|row| (row.parameter, row.value))
+        .collect())
+}
+
 /// True once any carrier row exists (idempotency check for the seed).
 pub async fn parameters_seeded(pool: &PgPool) -> Result<bool, sqlx::Error> {
     sqlx::query_scalar!(r#"SELECT EXISTS(SELECT 1 FROM network_parameter_versions) AS "exists!""#)

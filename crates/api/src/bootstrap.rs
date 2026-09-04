@@ -46,11 +46,15 @@ pub enum BootstrapOutcome {
 
 #[derive(Debug, thiserror::Error)]
 pub enum BootstrapError {
-    #[error(
-        "the L1 genesis records exist but the operator's service rows do not; \
-             the custodied keys are gone and the instance cannot be repaired"
-    )]
-    Unrepairable,
+    /// The instance cannot be brought to a consistent state, for the
+    /// reason the string names.
+    ///
+    /// This is a one-shot operator tool, so the message *is* the
+    /// diagnostic: a fixed sentence describing one of the several
+    /// situations that reach here would be actively wrong for the
+    /// others — a mis-sized custodied seed is not "the keys are gone".
+    #[error("unrepairable: {0}")]
+    Unrepairable(String),
     #[error("genesis diverged: {0}")]
     Diverged(String),
     #[error(transparent)]
@@ -65,6 +69,45 @@ pub enum BootstrapError {
     Relay(String),
     #[error("operator login: {0}")]
     OperatorLogin(String),
+    #[error("the platform-guidelines document could not be read from {path}: {source}")]
+    Guidelines {
+        path: String,
+        source: std::io::Error,
+    },
+}
+
+/// The canonical platform-guidelines document, located relative to this
+/// crate at compile time.
+const GUIDELINES_PATH: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../docs/instances/platform-guidelines.md"
+);
+
+/// SHA-256 hex digest of the canonical version-1 platform-guidelines
+/// document, pinned into the Charter payload (network.md §3).
+///
+/// A read failure is fatal, on the posture `DATABASE_URL` already takes
+/// and `ingest_or_refuse` already states. The digest goes into an L1
+/// record that is never deletable, and the value substituted when the
+/// file is missing — the digest of the empty input — is a pin that is
+/// simply wrong, committed permanently, with nothing afterwards to
+/// verify it. A deployment running the binary without the source tree at
+/// this path should get an error, not an instance whose Charter pins
+/// nothing.
+pub fn guidelines_hash() -> Result<String, BootstrapError> {
+    digest_of(std::path::Path::new(GUIDELINES_PATH))
+}
+
+/// The hex SHA-256 of a file, or the reason it could not be read. Split
+/// out from [`guidelines_hash`] so the failure path is reachable from a
+/// test: the compile-time path exists whenever the tests run.
+pub fn digest_of(path: &std::path::Path) -> Result<String, BootstrapError> {
+    use sha2::{Digest, Sha256};
+    let bytes = std::fs::read(path).map_err(|source| BootstrapError::Guidelines {
+        path: path.display().to_string(),
+        source,
+    })?;
+    Ok(format!("{:x}", Sha256::digest(&bytes)))
 }
 
 impl From<l1_standin::StandInError> for BootstrapError {
@@ -121,6 +164,28 @@ fn genesis_parameters(input: &GenesisInput) -> Vec<(&'static str, serde_json::Va
 
 struct CastMember {
     key: ActorKey,
+}
+
+/// The author-local sequence each genesis act occupies. Named because
+/// the numbers are hand-maintained across two actors and eighty lines,
+/// and a collision between two of them is a runtime seal `Conflict`
+/// routed through `resume_act` rather than anything a compiler sees.
+const SEQ_REGISTRATION: u64 = 0;
+const SEQ_GM_ENDORSES_PUBLISHER: u64 = 1;
+const SEQ_GM_ENDORSES_MODERATOR: u64 = 2;
+const SEQ_PUBLISHER_CHARTER: u64 = 1;
+const SEQ_PUBLISHER_ROLE_TAG: u64 = 2;
+
+/// Whether an address has never been credited (the funding-idempotency
+/// guard, shared by the bootstrap's genesis burn and the onboarding
+/// flow's admission burn).
+///
+/// `burned_total` is an integer micro count divided by 1e6, so the
+/// comparison against zero is exact rather than approximate — but the
+/// two callers were writing that reasoning out separately, and a guard
+/// that must agree in two places is one predicate.
+pub fn never_burned(burned_total: f64) -> bool {
+    burned_total == 0.0
 }
 
 /// The bootstrap's ingestion step. Ordinary ingestion treats a
@@ -192,11 +257,18 @@ pub async fn run(
 
     match (l2_half, l1_half) {
         (true, true) => return Ok(BootstrapOutcome::AlreadyComplete),
-        (false, true) => return Err(BootstrapError::Unrepairable),
+        (false, true) => {
+            return Err(BootstrapError::Unrepairable(
+                "the L1 genesis records exist but the operator's service rows do not; \
+                 the custodied keys are gone"
+                    .into(),
+            ));
+        }
         _ => {}
     }
 
     let cast = if l2_half {
+        refuse_diverged_input(pool, &input).await?;
         load_cast(pool, &input).await?
     } else {
         seed_l2(pool, &input).await?
@@ -210,7 +282,7 @@ pub async fn run(
     let [gm, publisher, moderator, treasury] = &cast;
     for member in &cast {
         let address = member.key.address();
-        if standin.balance(&address).await?.burned_total == 0.0 {
+        if never_burned(standin.balance(&address).await?.burned_total) {
             standin
                 .credit_burn(&address, input.burn_per_account_micro)
                 .await?;
@@ -252,7 +324,7 @@ pub async fn run(
         &gm.key,
         opinion(
             &gm.key,
-            1,
+            SEQ_GM_ENDORSES_PUBLISHER,
             &publisher.key.address(),
             vec![pub_reg_id.clone()],
         ),
@@ -260,7 +332,12 @@ pub async fn run(
     .await?;
     submit(
         &gm.key,
-        opinion(&gm.key, 2, &moderator.key.address(), vec![mod_reg_id]),
+        opinion(
+            &gm.key,
+            SEQ_GM_ENDORSES_MODERATOR,
+            &moderator.key.address(),
+            vec![mod_reg_id],
+        ),
     )
     .await?;
 
@@ -275,33 +352,20 @@ pub async fn run(
                 .map(|(k, v)| (k.to_string(), v)),
         ),
     });
-    let charter = Proposal {
-        body: StructuralBody {
-            author: publisher.key.address(),
-            seq: 1,
-            family: Family::Publish,
-            middle: None,
-            target: NodeId::Mint(
-                ActId::new(&publisher.key.address(), 1, Family::Publish)
-                    .map_err(|e| BootstrapError::Relay(e.to_string()))?,
-            ),
-            p_d: 1.0,
-            p_i: 1.0,
-            settlement_ref: None,
-            license: None,
-            asserted_parents: vec![pub_reg_id],
-        },
-        payload: serde_json::to_vec(&charter_payload)
-            .map_err(|e| BootstrapError::Relay(e.to_string()))?,
-        deps: vec![],
-    };
+    let charter = own_mint(
+        &publisher.key.address(),
+        SEQ_PUBLISHER_CHARTER,
+        Family::Publish,
+        serde_json::to_vec(&charter_payload).map_err(|e| BootstrapError::Relay(e.to_string()))?,
+        vec![pub_reg_id],
+    )?;
     let charter_id = charter.body.act_id();
     submit(&publisher.key, charter).await?;
 
     let role_tag = Proposal {
         body: StructuralBody {
             author: publisher.key.address(),
-            seq: 2,
+            seq: SEQ_PUBLISHER_ROLE_TAG,
             family: Family::Tag,
             middle: Some(NodeId::Prof(gm.key.address())),
             target: NodeId::name("moderator").map_err(|e| BootstrapError::Relay(e.to_string()))?,
@@ -317,7 +381,11 @@ pub async fn run(
     };
     submit(&publisher.key, role_tag).await?;
 
-    standin.close_epoch().await?;
+    if standin.close_epoch().await?.is_none() {
+        return Err(BootstrapError::Relay(
+            "no epoch was closed; the genesis acts were not orderable".into(),
+        ));
+    }
     ingest_or_refuse(&boundary, pool).await?;
 
     let landed = mirror::has_record_by(pool, &publisher.key.address(), Family::Publish).await?;
@@ -327,6 +395,48 @@ pub async fn run(
         ));
     }
     Ok(outcome)
+}
+
+/// Refuses a repair run whose input disagrees with what the first run
+/// already committed.
+///
+/// The repair branch reloads keys only: the `network_parameter_versions`
+/// rows the first run wrote keep their original values, while the
+/// Charter about to be sealed is built wholly from the *current* input.
+/// Without this check a re-run with a changed guidelines hash — which is
+/// recomputed from a file on every invocation — seals an immutable L1
+/// record that permanently contradicts the L2 rows, on the path the
+/// module doc advertises as safe to re-run.
+///
+/// `resume_act` catches the same divergence *only where the act was
+/// already sealed*. The window this closes is the one where it was not:
+/// a wiped substrate, or a crash before the Charter's seal.
+async fn refuse_diverged_input(pool: &PgPool, input: &GenesisInput) -> Result<(), BootstrapError> {
+    let stored: std::collections::HashMap<String, serde_json::Value> =
+        genesis::seeded_parameters(pool)
+            .await?
+            .into_iter()
+            .collect();
+    if stored.is_empty() {
+        return Ok(());
+    }
+    for (parameter, value) in genesis_parameters(input) {
+        match stored.get(parameter) {
+            Some(committed) if *committed == value => {}
+            Some(committed) => {
+                return Err(BootstrapError::Diverged(format!(
+                    "the stored genesis value of `{parameter}` is {committed}, \
+                     but this run supplies {value}"
+                )));
+            }
+            None => {
+                return Err(BootstrapError::Diverged(format!(
+                    "this run declares `{parameter}`, which the seeded instance does not carry"
+                )));
+            }
+        }
+    }
+    Ok(())
 }
 
 /// Resumes one genesis act past a seal Conflict. An identical act sealed
@@ -360,11 +470,45 @@ async fn resume_act(
     Ok(())
 }
 
+/// A genesis act targeting the mint of its own identifier — the genesis
+/// shape (nodes.md §1).
+///
+/// Author, sequence and family are stated once and the target derived
+/// from them, because a body that declares one triple and targets
+/// another is a silently mis-targeted mint that nothing enforces.
+fn own_mint(
+    author: &str,
+    seq: u64,
+    family: Family,
+    payload: Vec<u8>,
+    asserted_parents: Vec<ActId>,
+) -> Result<Proposal, BootstrapError> {
+    Ok(Proposal {
+        body: StructuralBody {
+            author: author.to_string(),
+            seq,
+            family,
+            middle: None,
+            target: NodeId::Mint(
+                ActId::new(author, seq, family)
+                    .map_err(|e| BootstrapError::Relay(e.to_string()))?,
+            ),
+            p_d: 1.0,
+            p_i: 1.0,
+            settlement_ref: None,
+            license: None,
+            asserted_parents,
+        },
+        payload,
+        deps: vec![],
+    })
+}
+
 fn registration(actor: &ActorKey) -> Proposal {
     Proposal {
         body: StructuralBody {
             author: actor.address(),
-            seq: 0,
+            seq: SEQ_REGISTRATION,
             family: Family::Registration,
             middle: None,
             target: NodeId::Prof(actor.address()),
@@ -402,29 +546,12 @@ fn opinion(actor: &ActorKey, seq: u64, target_addr: &str, parents: Vec<ActId>) -
 /// reserved Types, and the parameter carrier.
 async fn seed_l2(pool: &PgPool, input: &GenesisInput) -> Result<[CastMember; 4], BootstrapError> {
     let mut tx = pool.begin().await?;
-    let mut cast = Vec::with_capacity(4);
-    let members: [(&str, &str, &str); 4] = [
-        ("user", input.handle.as_str(), input.display_name.as_str()),
-        ("system", PUBLISHER_HANDLE, "The Publisher"),
-        ("system", MODERATOR_HANDLE, "The Moderator"),
-        ("system", TREASURY_HANDLE, "The Treasury"),
+    let cast = [
+        seed_member(&mut tx, "user", &input.handle, &input.display_name).await?,
+        seed_member(&mut tx, "system", PUBLISHER_HANDLE, "The Publisher").await?,
+        seed_member(&mut tx, "system", MODERATOR_HANDLE, "The Moderator").await?,
+        seed_member(&mut tx, "system", TREASURY_HANDLE, "The Treasury").await?,
     ];
-    for (kind, handle, display_name) in members {
-        let key = ActorKey::generate();
-        let actor_id = Uuid::new_v4();
-        genesis::insert_actor(
-            &mut tx,
-            actor_id,
-            kind,
-            handle,
-            &key.public_key_bytes(),
-            &key.address(),
-        )
-        .await?;
-        genesis::insert_profile_version(&mut tx, actor_id, display_name, None).await?;
-        genesis::insert_system_key(&mut tx, actor_id, &key.seed()).await?;
-        cast.push(CastMember { key });
-    }
     for name in RESERVED_TYPES {
         genesis::seed_reserved_type(&mut tx, name).await?;
     }
@@ -432,37 +559,101 @@ async fn seed_l2(pool: &PgPool, input: &GenesisInput) -> Result<[CastMember; 4],
         genesis::seed_parameter(&mut tx, parameter, &value).await?;
     }
     tx.commit().await?;
-    Ok(cast
-        .try_into()
-        .unwrap_or_else(|_| unreachable!("exactly four cast members are built above")))
+    Ok(cast)
+}
+
+/// One cast member's actor row, profile version and custodied key.
+async fn seed_member(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    kind: &str,
+    handle: &str,
+    display_name: &str,
+) -> Result<CastMember, BootstrapError> {
+    let key = ActorKey::generate();
+    let actor_id = Uuid::new_v4();
+    genesis::insert_actor(
+        tx,
+        actor_id,
+        kind,
+        handle,
+        &key.public_key_bytes(),
+        &key.address(),
+    )
+    .await?;
+    genesis::insert_profile_version(tx, actor_id, display_name, None).await?;
+    genesis::insert_system_key(tx, actor_id, &key.seed()).await?;
+    Ok(CastMember { key })
 }
 
 /// Reloads the cast from the stored service rows and custodied keys.
+///
+/// Written out as four calls rather than a loop collecting into a `Vec`
+/// so the fixed-size array is built directly: the `try_into` a loop needs
+/// carries a failure case the construction cannot produce, and defending
+/// it with a panic in library code is the shape this crate avoids.
 async fn load_cast(pool: &PgPool, input: &GenesisInput) -> Result<[CastMember; 4], BootstrapError> {
-    let mut cast = Vec::with_capacity(4);
-    for handle in [
-        input.handle.as_str(),
-        PUBLISHER_HANDLE,
-        MODERATOR_HANDLE,
-        TREASURY_HANDLE,
-    ] {
-        let row = genesis::actor_by_handle(pool, handle)
-            .await?
-            .ok_or(BootstrapError::Unrepairable)?;
-        let seed = genesis::system_key(pool, row.id)
-            .await?
-            .ok_or(BootstrapError::Unrepairable)?;
-        let seed: [u8; 32] = seed
-            .as_slice()
-            .try_into()
-            .map_err(|_| BootstrapError::Unrepairable)?;
-        cast.push(CastMember {
-            key: ActorKey::from_seed(seed),
-        });
+    Ok([
+        load_member(pool, &input.handle).await?,
+        load_member(pool, PUBLISHER_HANDLE).await?,
+        load_member(pool, MODERATOR_HANDLE).await?,
+        load_member(pool, TREASURY_HANDLE).await?,
+    ])
+}
+
+/// One cast member reloaded from its actor row and custodied seed.
+///
+/// The three ways this fails are three different situations for an
+/// operator — a handle no actor row answers to (a re-run with a changed
+/// `GENESIS_HANDLE` reaches here), a row with no custodied key, and a
+/// key of the wrong length — so each says which it was.
+async fn load_member(pool: &PgPool, handle: &str) -> Result<CastMember, BootstrapError> {
+    Ok(CastMember {
+        key: ActorKey::from_seed(custodied_seed(pool, handle).await?),
+    })
+}
+
+/// The custodied seed behind a genesis handle.
+async fn custodied_seed(pool: &PgPool, handle: &str) -> Result<[u8; 32], BootstrapError> {
+    let row = genesis::actor_by_handle(pool, handle)
+        .await?
+        .ok_or_else(|| {
+            BootstrapError::Unrepairable(format!("no actor row carries the handle `{handle}`"))
+        })?;
+    let seed = genesis::system_key(pool, row.id).await?.ok_or_else(|| {
+        BootstrapError::Unrepairable(format!("`{handle}` has no custodied key row"))
+    })?;
+    let len = seed.len();
+    seed.as_slice().try_into().map_err(|_| {
+        BootstrapError::Unrepairable(format!(
+            "`{handle}`'s custodied key is {len} bytes, not the 32 a seed is"
+        ))
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{BootstrapError, digest_of, guidelines_hash};
+
+    /// The pin is the digest of the document itself, and an unreadable
+    /// document is an error rather than the empty-input digest — which
+    /// would be a wrong pin, committed permanently, with nothing
+    /// afterwards to verify it.
+    ///
+    /// The guidelines pin is the document's own digest, and an unreadable document refuses instead of pinning the empty digest.
+    /// ´claim:bootstrap:the-guidelines-pin-is-read-or-refused´
+    #[test]
+    fn the_guidelines_pin_is_read_or_refused() {
+        let hash = guidelines_hash().expect("the document ships with the crate");
+        assert_eq!(hash.len(), 64, "a hex SHA-256");
+        assert_ne!(
+            hash, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "never the empty-input digest"
+        );
+        assert!(matches!(
+            digest_of(std::path::Path::new("no/such/guidelines.md")),
+            Err(BootstrapError::Guidelines { .. })
+        ));
     }
-    Ok(cast
-        .try_into()
-        .unwrap_or_else(|_| unreachable!("exactly four cast members are loaded above")))
 }
 
 /// The Genesis Moderator's identity, for display after a fresh bootstrap.
@@ -500,7 +691,9 @@ pub async fn ensure_operator_login(
 ) -> Result<OperatorLogin, BootstrapError> {
     let row = genesis::actor_by_handle(pool, handle)
         .await?
-        .ok_or(BootstrapError::Unrepairable)?;
+        .ok_or_else(|| {
+            BootstrapError::Unrepairable(format!("no actor row carries the handle `{handle}`"))
+        })?;
     let hash = crate::auth::hash_password(password)
         .map_err(|e| BootstrapError::OperatorLogin(e.to_string()))?;
     let credentials_created = genesis::insert_credentials(pool, row.id, email, &hash).await?;
@@ -509,13 +702,7 @@ pub async fn ensure_operator_login(
         .await?
         .is_none()
     {
-        let seed = genesis::system_key(pool, row.id)
-            .await?
-            .ok_or(BootstrapError::Unrepairable)?;
-        let seed: [u8; 32] = seed
-            .as_slice()
-            .try_into()
-            .map_err(|_| BootstrapError::Unrepairable)?;
+        let seed = custodied_seed(pool, handle).await?;
         let code = common::l1::key_backup::RecoveryCode::generate();
         let blob = common::l1::key_backup::seal(&seed, &code);
         postgres_store::auth::upload_key_backup(pool, row.id, &blob).await?;
