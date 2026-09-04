@@ -187,21 +187,58 @@ export function waitForPort(port, host, { timeoutMs = UPSTREAM_READY_TIMEOUT_MS 
 }
 
 /**
- * The TLS front. Bodies are piped in both directions and never buffered:
- * the App Router streams its responses, and a proxy that collected them
- * first would turn every streamed page into a wait for the last byte.
+ * The status a failed proxy attempt deserves.
  *
- * `/graphql` and `/media/uploads/*` skip `next start` entirely and go
- * straight to the API — see `isDirectApiPath`. Everything else still goes
- * to `next start`, which serves it directly (`next dev` has no front of
- * its own, only pages, and pages are not the large-body case this exists
- * for).
+ * A refusal or an unresolvable name is a bad gateway — the upstream is not
+ * there. A timeout is a gateway timeout, which is a different thing to an
+ * operator and to any client that retries. Everything else stays 502: a reset
+ * or a broken pipe means the upstream went away mid-exchange, and 502 is the
+ * honest reading of that.
  */
-export function createProxy(credentials, { upstreamPort, upstreamHost, apiOrigin }) {
+export function statusForProxyError(error) {
+  switch (error?.code) {
+    case "ETIMEDOUT":
+    case "ESOCKETTIMEDOUT":
+      return 504;
+    default:
+      return 502;
+  }
+}
+
+/** What the reader is told, which is only ever true of the case it names. */
+export function proxyErrorText(error) {
+  switch (error?.code) {
+    case "ECONNREFUSED":
+    case "ENOTFOUND":
+    case "EHOSTUNREACH":
+      return "The production server behind this origin is not answering.\n";
+    case "ETIMEDOUT":
+    case "ESOCKETTIMEDOUT":
+      return "The production server behind this origin took too long to answer.\n";
+    default:
+      return "The connection to the production server behind this origin was lost.\n";
+  }
+}
+
+/**
+ * The proxy's request handler. Bodies are piped in both directions and never
+ * buffered: the App Router streams its responses, and a proxy that collected
+ * them first would turn every streamed page into a wait for the last byte.
+ *
+ * `/graphql` and `/media/uploads/*` skip `next start` entirely and go straight
+ * to the API — see `isDirectApiPath`. Everything else still goes to
+ * `next start`, which serves it directly (`next dev` has no front of its own,
+ * only pages, and pages are not the large-body case this exists for).
+ *
+ * It is separate from the server so it can be mounted on a plain http server
+ * in a test: the routing, the error mapping and the abandonment handling are
+ * what is worth pinning, and none of it is about TLS.
+ */
+export function proxyHandler({ upstreamPort, upstreamHost, apiOrigin }) {
   const api = new URL(apiOrigin);
   const apiPort = api.port || (api.protocol === "https:" ? 443 : 80);
 
-  const server = createHttpsServer(credentials, (req, res) => {
+  return (req, res) => {
     const { pathname } = new URL(req.url, "http://placeholder");
     const target = isDirectApiPath(pathname)
       ? { host: api.hostname, port: apiPort }
@@ -220,15 +257,55 @@ export function createProxy(credentials, { upstreamPort, upstreamHost, apiOrigin
       },
       (upstreamRes) => {
         res.writeHead(upstreamRes.statusCode ?? 502, upstreamRes.headers);
+        // A RESPONSE THAT DIES MID-BODY IS NOT AN ERROR ON THE REQUEST. The
+        // upstream answered — its status and headers are already on the wire —
+        // and then the connection went. `pipe` attaches its error handling to
+        // the DESTINATION, so nothing here was listening: the client was left
+        // waiting on a body that would never arrive, until its own timeout.
+        // Destroying is the honest end; the truncation is the signal.
+        upstreamRes.on("error", (error) => {
+          console.error(`proxy ${req.method} ${req.url} body:`, error);
+          res.destroy();
+        });
         upstreamRes.pipe(res);
       },
     );
-    upstream.on("error", () => {
-      if (!res.headersSent) res.writeHead(502, { "content-type": "text/plain" });
-      res.end("The production server behind this origin is not answering.\n");
+    upstream.on("error", (error) => {
+      // THE CAUSE IS READ, LOGGED AND MAPPED. Discarding the error object made
+      // every distinct failure — the API refusing the connection, the API
+      // answering 413 and hanging up mid-body, a reset on a long upload — one
+      // sentence with no trace anywhere, which is exactly the distinction an
+      // operator needs while hand-testing a large upload.
+      console.error(`proxy ${req.method} ${req.url} → ${target.host}:${target.port}:`, error);
+      if (res.headersSent || res.writableEnded) {
+        // The upstream's own status and headers are already on the wire.
+        // Appending prose here corrupts what it said: with a content-length it
+        // is a length mismatch, and with chunked encoding it concatenates onto
+        // the API's JSON body so the client's parse fails on a response that
+        // otherwise carried the real reason. A truncated response is a signal
+        // the client can act on; a corrupted one is not.
+        res.destroy();
+        return;
+      }
+      res.writeHead(statusForProxyError(error), { "content-type": "text/plain" });
+      res.end(proxyErrorText(error));
+    });
+    // An abandoned upload must not hold an API connection open until a timeout
+    // reaps it. `pipe` attaches its error handling to the DESTINATION, so the
+    // request side has none of its own.
+    const abandon = () => upstream.destroy();
+    req.on("aborted", abandon);
+    req.on("error", abandon);
+    res.on("close", () => {
+      if (!res.writableEnded) upstream.destroy();
     });
     req.pipe(upstream);
-  });
+  };
+}
+
+/** The TLS front: the handler above, behind the stamped certificate pair. */
+export function createProxy(credentials, options) {
+  const server = createHttpsServer(credentials, proxyHandler(options));
 
   // Set after construction rather than through the options object: these are
   // properties of the server, and assigning them is what Node documents.

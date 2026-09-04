@@ -1,21 +1,45 @@
-// The local draft: one unpublished post, kept on this device.
+// The local draft: one unpublished post per account, held on this device.
 //
 // IndexedDB rather than localStorage, because the draft holds the picked
 // pictures themselves and a `Blob` survives the structured clone IndexedDB uses
-// while localStorage takes strings alone. The board says so in as many words —
-// "2 pictures — kept on this device" — and it is the promise the expiry notice
-// leans on: "nothing was spent, your draft is saved" is only true if the
-// pictures are still there.
+// while localStorage takes strings alone. That is what the board's "2 pictures
+// — saved on this device, for now" and the expiry notice's "nothing was spent"
+// lean on. It is a BEST-EFFORT promise, not a durable one: a browser may evict
+// its storage, a private window discards it at the end of the session, and a
+// signed-out account's draft is cleared on purpose.
+//
+// PER ACCOUNT, not per browser. A single global record meant a reader who
+// signed out left their unpublished words and pictures sitting in the composer
+// for whoever signed in next; the key is the account id, and sign-out clears
+// the account's own.
 //
 // ONE DRAFT, not a list. The wizard offers "Continue" or "Discard" over a single
 // saved draft; a drafts inbox is a surface nobody has designed.
 
-import { kindOf, type CoverAsset, type PickedAsset, type WizardState } from "./wizard";
+import { tokenStore } from "@/lib/session/token-store";
+import { emptyWizard, kindOf, type CoverAsset, type PickedAsset, type WizardState } from "./wizard";
 
 const DB_NAME = "cogra.compose";
 const DB_VERSION = 1;
 const STORE = "draft";
-const KEY = "current";
+/**
+ * The pre-multi-account record, which belonged to whoever was signed in when it
+ * was written. It is DROPPED rather than adopted: nothing ties it to an
+ * account, so handing it to the next reader to open the composer is exactly the
+ * leak the per-account key exists to close.
+ */
+const LEGACY_SINGLETON_KEY = "current";
+
+/**
+ * The stored shape's version.
+ *
+ * A draft is a snapshot of a type that keeps growing — `cover` arrived with
+ * video, `sensitive` three days after the store shipped — and a restore that
+ * spreads an older payload back in hands the wizard `undefined` where its own
+ * type promises a value, which turns a controlled input uncontrolled. The
+ * version is what lets `load` say "not a shape this build reads" instead.
+ */
+const DRAFT_SCHEMA = 1;
 
 export type ComposeDraftStore = {
   save(state: WizardState): Promise<void>;
@@ -23,28 +47,51 @@ export type ComposeDraftStore = {
   clear(): Promise<void>;
 };
 
-function open(): Promise<IDBDatabase> {
+function open(idb: IDBFactory): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    const request = idb.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = () => {
       if (!request.result.objectStoreNames.contains(STORE)) {
         request.result.createObjectStore(STORE);
       }
     };
+    // A blocked open never settles on its own; rejecting lets the next call
+    // retry rather than leaving the composer waiting forever.
+    request.onblocked = () => reject(new Error("the draft database is blocked by another tab"));
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
 }
 
-function run<T>(mode: IDBTransactionMode, act: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
-  return open().then(
+function run<T>(
+  idb: IDBFactory,
+  mode: IDBTransactionMode,
+  act: (store: IDBObjectStore) => IDBRequest<T>,
+): Promise<T> {
+  return open(idb).then(
     (db) =>
       new Promise<T>((resolve, reject) => {
+        // CLOSED ON EVERY PATH, not only on completion. A connection left open
+        // by an aborted transaction is what blocks a later version bump, and
+        // the failure paths are exactly the ones that used to leak it.
+        let closed = false;
+        const close = () => {
+          if (closed) return;
+          closed = true;
+          db.close();
+        };
         const transaction = db.transaction(STORE, mode);
         const request = act(transaction.objectStore(STORE));
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-        transaction.oncomplete = () => db.close();
+        request.onerror = () => {
+          close();
+          reject(request.error);
+        };
+        transaction.oncomplete = close;
+        transaction.onabort = () => {
+          close();
+          reject(transaction.error ?? new Error("the draft transaction aborted"));
+        };
       }),
   );
 }
@@ -62,12 +109,15 @@ function run<T>(mode: IDBTransactionMode, act: (store: IDBObjectStore) => IDBReq
 type StoredAsset = Omit<PickedAsset, "file"> & { bytes: ArrayBuffer; fileType: string };
 /** The video's face travels the same way, and for the same reason. */
 type StoredCover = Omit<CoverAsset, "file"> & { bytes: ArrayBuffer; fileType: string };
+type StoredState = Omit<WizardState, "assets" | "cover"> & {
+  assets: readonly StoredAsset[];
+  cover: StoredCover | null;
+};
+
 type StoredDraft = {
+  schema: number;
   savedAt: string;
-  state: Omit<WizardState, "assets" | "cover"> & {
-    assets: readonly StoredAsset[];
-    cover: StoredCover | null;
-  };
+  state: StoredState;
 };
 
 /**
@@ -96,63 +146,141 @@ function afterReload(upload: PickedAsset["upload"]): PickedAsset["upload"] {
  * cleared. A save issued AFTER the clear starts in the new generation and is
  * kept, which is what lets the next compose session save normally.
  */
-let generation = 0;
-
-export const composeDraftStore: ComposeDraftStore = {
-  async save(state) {
-    const startedIn = generation;
-    const assets: StoredAsset[] = await Promise.all(
-      state.assets.map(async ({ file, ...rest }) => ({
-        ...rest,
-        bytes: await file.arrayBuffer(),
-        fileType: file.type,
-      })),
-    );
-    const cover: StoredCover | null =
-      state.cover === null
+/**
+ * The stored payload READ RATHER THAN CAST.
+ *
+ * Every field is taken through the empty wizard's own value, so a field added
+ * after this draft was written comes back as its default instead of the
+ * `undefined` the declared type promises will never be there — the difference
+ * between a toggle that reads "off" and a controlled input that silently turns
+ * uncontrolled.
+ */
+function restored(stored: StoredState): WizardState {
+  const base = emptyWizard();
+  // The two fields the stored shape genuinely differs on — `assets` and
+  // `cover` carry bytes rather than blobs — are rebuilt below. Every other
+  // field is read as OPTIONAL, whatever the declared type says: that is the
+  // whole point, since an older draft simply does not have the newer ones.
+  type PlainFields = Omit<WizardState, "assets" | "cover">;
+  const plain = stored as Partial<PlainFields>;
+  const take = <K extends keyof PlainFields>(key: K): PlainFields[K] => {
+    const value = plain[key];
+    return value === undefined ? base[key] : value;
+  };
+  return {
+    step: take("step"),
+    mode: take("mode"),
+    words: take("words"),
+    assets: (stored.assets ?? []).map(({ bytes, fileType, ...asset }) => ({
+      ...asset,
+      file: new Blob([bytes], { type: fileType }),
+      upload: afterReload(asset.upload),
+    })),
+    cover:
+      stored.cover == null
         ? null
         : {
-            ...state.cover,
-            bytes: await state.cover.file.arrayBuffer(),
-            fileType: state.cover.file.type,
-          };
-    if (startedIn !== generation) return;
-    const draft: StoredDraft = {
-      savedAt: new Date().toISOString(),
-      state: { ...state, assets, cover },
-    };
-    await run("readwrite", (store) => store.put(draft, KEY));
-  },
+            ...stored.cover,
+            file: new Blob([stored.cover.bytes], { type: stored.cover.fileType }),
+            upload: afterReload(stored.cover.upload),
+          },
+    shape: take("shape"),
+    focused: take("focused"),
+    title: take("title"),
+    description: take("description"),
+    tags: take("tags"),
+    references: take("references"),
+    license: take("license"),
+    sensitive: take("sensitive"),
+    sensitiveReason: take("sensitiveReason"),
+    pDirected: take("pDirected"),
+  };
+}
 
-  async load() {
-    const draft = await run<StoredDraft | undefined>("readonly", (store) => store.get(KEY));
-    if (draft === undefined) return null;
-    const { assets, cover, ...rest } = draft.state;
-    return {
-      ...rest,
-      assets: assets.map(({ bytes, fileType, ...asset }) => ({
-        ...asset,
-        file: new Blob([bytes], { type: fileType }),
-        upload: afterReload(asset.upload),
-      })),
-      // A draft written before video carries no cover field at all, so the
-      // nullish fallback is what keeps an old draft loadable.
-      cover:
-        cover == null
+export function createComposeDraftStore(deps: {
+  /** The account the draft belongs to — per call, never captured. */
+  activeAccountId: () => string | null;
+  /** Injectable for tests. */
+  idb?: () => IDBFactory;
+}): ComposeDraftStore {
+  const { activeAccountId } = deps;
+  const factory = deps.idb ?? (() => indexedDB);
+  // Per store rather than per module, so a suite can drive one wizard's
+  // generation without every other instance in the process seeing it.
+  let generation = 0;
+  let droppedLegacy = false;
+
+  /** Drops the pre-multi-account record once per store, on first access. */
+  async function forgetLegacy(): Promise<void> {
+    if (droppedLegacy) return;
+    droppedLegacy = true;
+    await run(factory(), "readwrite", (store) => store.delete(LEGACY_SINGLETON_KEY));
+  }
+
+  return {
+    async save(state) {
+      const account = activeAccountId();
+      // Nothing to key it under, and the composer is a member surface — so
+      // there is no case where this drops a draft a reader could see again.
+      if (account === null) return;
+      // Read BEFORE the first await: a `clear` that lands while this save is
+      // still reading blobs bumps the generation, and a save that captured it
+      // afterwards would think it was current and write the draft back.
+      const startedIn = generation;
+      await forgetLegacy();
+      const assets: StoredAsset[] = await Promise.all(
+        state.assets.map(async ({ file, ...rest }) => ({
+          ...rest,
+          bytes: await file.arrayBuffer(),
+          fileType: file.type,
+        })),
+      );
+      const cover: StoredCover | null =
+        state.cover === null
           ? null
           : {
-              ...cover,
-              file: new Blob([cover.bytes], { type: cover.fileType }),
-              upload: afterReload(cover.upload),
-            },
-    };
-  },
+              ...state.cover,
+              bytes: await state.cover.file.arrayBuffer(),
+              fileType: state.cover.file.type,
+            };
+      if (startedIn !== generation) return;
+      const draft: StoredDraft = {
+        schema: DRAFT_SCHEMA,
+        savedAt: new Date().toISOString(),
+        state: { ...state, assets, cover },
+      };
+      await run(factory(), "readwrite", (store) => store.put(draft, account));
+    },
 
-  async clear() {
-    generation += 1;
-    await run("readwrite", (store) => store.delete(KEY));
-  },
-};
+    async load() {
+      const account = activeAccountId();
+      if (account === null) return null;
+      await forgetLegacy();
+      const draft = await run<StoredDraft | undefined>(factory(), "readonly", (store) =>
+        store.get(account),
+      );
+      if (draft === undefined) return null;
+      // A shape this build does not read is DROPPED, not guessed at. Offering
+      // back a draft assembled out of a payload we cannot vouch for is worse
+      // than offering none: the reader would seal it believing it is what they
+      // wrote.
+      if (draft.schema !== DRAFT_SCHEMA) return null;
+      return restored(draft.state);
+    },
+
+    async clear() {
+      const account = activeAccountId();
+      generation += 1;
+      if (account === null) return;
+      await run(factory(), "readwrite", (store) => store.delete(account));
+    },
+  };
+}
+
+/** The one draft store of the running page, scoped to the active session's account. */
+export const composeDraftStore: ComposeDraftStore = createComposeDraftStore({
+  activeAccountId: () => tokenStore.activeAccountId(),
+});
 
 /** What the draft card says it is holding, without opening the whole wizard. */
 export function draftSummary(state: WizardState): { title: string; detail: string } {
@@ -166,12 +294,12 @@ export function draftSummary(state: WizardState): { title: string; detail: strin
   const first = state.assets[0];
   const detail =
     state.mode === "words"
-      ? "Words — kept on this device"
+      ? "Words — saved on this device, for now"
       : first !== undefined && kindOf(first) === "video"
-        ? "1 video — kept on this device"
+        ? "1 video — saved on this device, for now"
         : count === 1
-          ? "1 picture — kept on this device"
-          : `${count} pictures — kept on this device`;
+          ? "1 picture — saved on this device, for now"
+          : `${count} pictures — saved on this device, for now`;
   return { title, detail };
 }
 

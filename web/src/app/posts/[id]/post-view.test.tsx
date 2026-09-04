@@ -1149,7 +1149,7 @@ describe("PostView", () => {
       fireEvent.click(screen.getByTestId("comment-edit-save"));
 
       expect(await screen.findByTestId("comment-edit-tag-error-0")).toHaveTextContent(
-        "`a-b` is not a legal topic name: reserved",
+        "Something in this wasn't accepted",
       );
       expect(signer.signStaged).not.toHaveBeenCalled();
       // The editor stays open on the work that was refused.

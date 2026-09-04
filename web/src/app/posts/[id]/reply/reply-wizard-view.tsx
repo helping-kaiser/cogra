@@ -30,6 +30,8 @@ import { useRouter } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
 import { prepareComment } from "@/lib/api/content-api";
+import { hasFieldErrors, partitionFieldErrors } from "@/lib/api/field-errors";
+import { firstRefusalMessage, writeRefusalMessage } from "@/lib/ui/error-messages";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
@@ -77,12 +79,6 @@ type Captured = {
   frames: readonly Blob[];
   urls: readonly string[];
 };
-
-function pathIndex(field: readonly string[] | null, head: string): number | null {
-  if (field === null || field.length < 2 || field[0] !== head) return null;
-  const index = Number(field[1]);
-  return Number.isInteger(index) ? index : null;
-}
 
 export function ReplyWizard({
   target,
@@ -308,27 +304,21 @@ export function ReplyWizard({
     }
     if (prepared.kind === "refused") {
       setBusy(false);
-      const perTag: Record<number, string> = {};
-      const perReference: Record<number, string> = {};
-      let general: string | null = null;
-      for (const error of prepared.errors) {
-        const tag = pathIndex(error.field, "tags");
-        const reference = pathIndex(error.field, "references");
-        if (tag !== null) perTag[tag] = error.message;
-        else if (reference !== null) perReference[reference] = error.message;
-        else general = general ?? error.message;
-      }
-      setTagErrors(perTag);
-      setReferenceErrors(perReference);
-      const sectioned = Object.keys(perTag).length + Object.keys(perReference).length > 0;
+      const partition = partitionFieldErrors(prepared.errors, (error) =>
+        writeRefusalMessage(error.code),
+      );
+      setTagErrors(partition.perTag);
+      setReferenceErrors(partition.perReference);
       setRefusal(
-        general ??
-          (sectioned ? "Something in the details was refused." : "The server refused this write."),
+        partition.general ??
+          (hasFieldErrors(partition)
+            ? "Something in the details was refused."
+            : "The server refused this write."),
       );
       // The refused chip lives in the seal's own sheet, so the sheet is
       // reopened on it rather than the reader hunting for what was refused.
-      if (Object.keys(perTag).length > 0) setSheet("topics");
-      else if (Object.keys(perReference).length > 0) setSheet("references");
+      if (Object.keys(partition.perTag).length > 0) setSheet("topics");
+      else if (Object.keys(partition.perReference).length > 0) setSheet("references");
       return;
     }
 
@@ -352,7 +342,7 @@ export function ReplyWizard({
     const refused = results.find((result) => result.kind === "refused");
     setRefusal(
       refused && refused.kind === "refused"
-        ? (refused.errors[0]?.message ?? "The comment wasn't signed.")
+        ? firstRefusalMessage(refused.errors, "The comment wasn't signed.")
         : "The comment wasn't signed.",
     );
   };

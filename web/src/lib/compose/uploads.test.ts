@@ -137,7 +137,10 @@ describe("runUpload", () => {
     expect(variables.input).toEqual({ file: expect.any(File) });
   });
 
-  it("shows the server's own refusal, and leaves it retryable", async () => {
+  // The refusal is read off its CODE, never off `UserError.message` — which the
+  // contract calls developer-facing fallback text. A rate limit clears, so it
+  // stays retryable.
+  it("reads the refusal off its code, and leaves it retryable", async () => {
     encodable();
     const client = clientAnswering({
       uploadMedia: {
@@ -153,7 +156,7 @@ describe("runUpload", () => {
 
     expect(seen.at(-1)).toEqual({
       kind: "failed",
-      message: "too many uploads, wait before retrying",
+      message: "Too many attempts — wait a moment and try again.",
       retryable: true,
     });
   });
@@ -297,10 +300,10 @@ describe("runVideoUpload", () => {
 
     await runVideoUpload(client, clip, cover, video.step, poster.step);
 
-    // The server's own words on the cover…
+    // The refusal on the cover, named as a cover rather than as a file…
     expect(poster.seen.at(-1)).toEqual({
       kind: "failed",
-      message: "the file is larger than 10485760 bytes",
+      message: "That cover wasn't accepted — try a different one.",
       retryable: true,
     });
     // …and a video that never went up at all.

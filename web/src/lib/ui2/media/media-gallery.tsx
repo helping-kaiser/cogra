@@ -112,7 +112,11 @@ export function MediaGallery({
     };
     strip.addEventListener("scroll", onScroll, { passive: true });
     return () => strip.removeEventListener("scroll", onScroll);
-  }, []);
+    // The strip is only rendered on the multi-item path, so at mount the ref is
+    // null for a gallery of nought or one. The listener has to follow the
+    // element rather than the mount, or a gallery that grows past one swipes
+    // with a readout stuck on "Picture 1".
+  }, [items.length]);
 
   if (items.length === 0) return null;
 
@@ -166,7 +170,9 @@ export function MediaGallery({
       >
         {items.map((item, index) => (
           <div
-            key={item.src ?? index}
+            // The same asset can be attached twice, so the src alone is not an
+            // identity; the position is what distinguishes the two frames.
+            key={`${index}:${item.src ?? ""}`}
             style={{ scrollSnapAlign: "start" }}
             className="w-full flex-none"
           >
@@ -195,7 +201,7 @@ export function MediaGallery({
       >
         {items.map((item, index) => (
           <span
-            key={item.src ?? index}
+            key={`${index}:${item.src ?? ""}`}
             aria-hidden="true"
             style={{
               background: index === page ? "var(--primary)" : "var(--border-hairline)",

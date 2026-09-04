@@ -10,7 +10,7 @@ import type { ApolloClient } from "@apollo/client";
 import { createKeyBackupChallenge, fetchKeyBackup, uploadKeyBackup } from "@/lib/api/auth-api";
 import type { UserError } from "@/lib/api/outcome";
 import { ActorKey } from "@/lib/crypto/actor-key";
-import { fromBase64, toBase64 } from "@/lib/crypto/bytes";
+import { equalBytes, fromBase64, toBase64 } from "@/lib/crypto/bytes";
 import {
   KeyBackupError,
   openKeyBackup,
@@ -77,7 +77,26 @@ export function createBackupManager(deps: {
 }): BackupManager {
   const { client, guard, store } = deps;
 
-  async function sealAndUpload(seed: Uint8Array): Promise<BackupResult> {
+  /**
+   * The account's custody key — the one the server has attached, and so the
+   * only one whose signature proves possession. Taken from the store rather
+   * than re-derived from whatever seed is in hand: in `rekey` the seed comes
+   * out of the SERVER'S blob, and a proof made by that seed's key proves
+   * possession of the blob, not of the account.
+   */
+  async function custodyKey(): Promise<{ kind: "key"; key: ActorKey } | OpenFailure> {
+    try {
+      const key = await store.actorKey();
+      if (key === null) {
+        return { kind: "failed", cause: new Error("no actor key on this device") };
+      }
+      return { kind: "key", key };
+    } catch (cause) {
+      return { kind: "failed", cause };
+    }
+  }
+
+  async function sealAndUpload(seed: Uint8Array, key: ActorKey): Promise<BackupResult> {
     const code = RecoveryCode.generate();
     const blob = await sealKeyBackup(seed, code);
     // The proof of actor possession the server demands: a session alone
@@ -85,11 +104,7 @@ export function createBackupManager(deps: {
     const challenge = await guard.run(() => createKeyBackupChallenge(client));
     if (challenge.kind === "refused") return { kind: "refused", errors: challenge.errors };
     if (challenge.kind === "failed") return { kind: "failed", cause: challenge.cause };
-    const signature = await signUpload(
-      await ActorKey.fromSeed(seed),
-      fromBase64(challenge.value),
-      blob,
-    );
+    const signature = await signUpload(key, fromBase64(challenge.value), blob);
     const uploaded = await guard.run(() =>
       uploadKeyBackup(client, toBase64(blob), challenge.value, toBase64(signature)),
     );
@@ -133,12 +148,30 @@ export function createBackupManager(deps: {
 
   return {
     async enable() {
-      const seed = await store.actorSeed();
+      let seed: Uint8Array | null;
+      try {
+        seed = await store.actorSeed();
+      } catch (cause) {
+        return { kind: "failed", cause };
+      }
       if (seed === null) return { kind: "noSeed" };
-      const result = await sealAndUpload(seed);
+      const key = await custodyKey();
+      if (key.kind !== "key") return key;
+      const result = await sealAndUpload(seed, key.key);
       if (result.kind === "created") {
-        await store.clearPendingBackupBlob();
-        await store.clearActorSeed();
+        // THE CODE IS THE ONLY COPY, AND IT IS ALREADY SPENT. The blob sits on
+        // the server sealed under it, so a wipe that throws must not take the
+        // code down with it — that would leave a backup nobody can ever open.
+        // The wipes are best-effort: a retained seed is a far smaller harm
+        // than a lost code, and a later `enable()` overwrites the blob anyway.
+        try {
+          await store.clearPendingBackupBlob();
+          await store.clearActorSeed();
+        } catch {
+          // Deliberately swallowed — the code below is what must reach the
+          // caller, and there is nothing the reader could do about a store
+          // fault at this point.
+        }
       }
       return result;
     },
@@ -146,11 +179,30 @@ export function createBackupManager(deps: {
     async rekey(currentCodeInput) {
       const opened = await openCurrent(currentCodeInput);
       if (opened.kind !== "opened") return opened;
-      return sealAndUpload(opened.seed);
+      const key = await custodyKey();
+      if (key.kind !== "key") return key;
+      // LOUDLY, rather than by uploading a blob the account cannot use. The
+      // fetched blob is supposed to hold this account's own seed; if it holds
+      // another, re-sealing it under a fresh code would hand the reader a code
+      // for a key that is not theirs, and the mismatch would only surface much
+      // later as writes the backend refuses.
+      const blobKey = await ActorKey.fromSeed(opened.seed);
+      if (!equalBytes(blobKey.publicKeyBytes(), key.key.publicKeyBytes())) {
+        return {
+          kind: "failed",
+          cause: new Error("the stored backup holds a different key than this device's custody"),
+        };
+      }
+      return sealAndUpload(opened.seed, key.key);
     },
 
     async revealRetained() {
-      const seed = await store.actorSeed();
+      let seed: Uint8Array | null;
+      try {
+        seed = await store.actorSeed();
+      } catch (cause) {
+        return { kind: "failed", cause };
+      }
       if (seed === null) return { kind: "noSeed" };
       return { kind: "revealed", secrets: secretsFromSeed(seed) };
     },

@@ -61,6 +61,15 @@ TypeScript — is pinned instead by the golden vectors in
 `client-crypto-vectors.json` at the repo root, exported from the
 reference implementation in `common` (`make vectors`).
 
+**The browser floor is WebCrypto Ed25519.** A browser without it
+cannot hold a CoGra key at all, and the app says so rather than
+letting the failure surface as something else: the ceremony
+probes the capability before minting, and a verification that
+cannot run raises its own error instead of answering "this
+signature is invalid" — a false verdict that would spend the
+write material it was checking. Reading and browsing need none of
+it; only custody does.
+
 The seed is generated as raw bytes — it must enter the
 key-backup blob ([auth.md "Key recovery"](auth.md#key-recovery))
 — then imported as a **non-extractable** Ed25519 `CryptoKey` and

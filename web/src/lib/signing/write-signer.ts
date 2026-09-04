@@ -16,6 +16,7 @@ import {
 } from "@/lib/api/writes-api";
 import { ActorKey, HandshakeError } from "@/lib/crypto/actor-key";
 import { fromBase64, toBase64 } from "@/lib/crypto/bytes";
+import { CryptoUnavailableError } from "@/lib/crypto/hashing";
 import type { PreSignedProposal } from "@/lib/crypto/handshake";
 import { decodeProposal, decodeVerifiedAct, encodePreCommitmentOf, WireError } from "@/lib/crypto/wire";
 import type { AuthGuard } from "@/lib/session/guard";
@@ -141,6 +142,12 @@ export function createWriteSigner(deps: {
       const witness = await key.approve(pre, act, fromBase64(hostKey.value));
       approvalSignature = toBase64(witness.approvalSignature);
     } catch (e) {
+      // AN ENVIRONMENT FAULT IS NOT A VERDICT. A browser that cannot run
+      // Ed25519 learned nothing about the host's seal, so the material must
+      // survive: `rejectedByDevice` clears it, and a reader who opens the same
+      // account in a browser that can verify would find the write already
+      // spent by a check that never ran.
+      if (e instanceof CryptoUnavailableError) return { kind: "failed", id, cause: e };
       if (e instanceof HandshakeError || e instanceof WireError) {
         return reject(id, e.message);
       }
@@ -178,6 +185,7 @@ export function createWriteSigner(deps: {
         try {
           fresh = await key.preSign(decodeProposal(fromBase64(staged.canonicalProposal)));
         } catch (e) {
+          if (e instanceof CryptoUnavailableError) return { kind: "failed", id, cause: e };
           if (e instanceof WireError) return reject(id, e.message);
           throw e;
         }

@@ -54,6 +54,10 @@ export function fakeIdentityStore(initial: {
       return Promise.resolve();
     },
     handshakeIds: () => Promise.resolve([...handshakes]),
+    clearHandshakes() {
+      handshakes.clear();
+      return Promise.resolve();
+    },
     reciprocationDismissed: () => Promise.resolve(dismissed),
     markReciprocationDismissed() {
       dismissed = true;

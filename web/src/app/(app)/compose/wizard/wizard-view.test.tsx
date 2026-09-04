@@ -378,7 +378,7 @@ describe("the compose wizard", () => {
     fireEvent.click(await screen.findByTestId("wizard-next"));
 
     // The server's own words, on the details screen, with the retry beside them.
-    expect(await screen.findByText(/too many uploads/)).toBeInTheDocument();
+    expect(await screen.findByText(/Too many attempts/)).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("wizard-next"));
     expect(await screen.findByTestId("wizard-seal-blocked")).toHaveTextContent(
       "One picture didn't upload",

@@ -80,7 +80,45 @@ export async function sign(
   return new Uint8Array(await crypto.subtle.sign("Ed25519", privateKey, framed));
 }
 
-/** Verifies a tagged signature; malformed keys or signatures just fail. */
+/**
+ * The environment cannot run Ed25519 — not a verdict about any signature.
+ *
+ * Its own type because the two answers demand opposite handling. "This
+ * signature does not verify" is a fact about the bytes and spends the write
+ * that carried them; "this browser has no Ed25519" is a fact about the browser
+ * and must spend nothing, or a reader on an unsupported build loses write
+ * material to a check that never ran.
+ */
+export class CryptoUnavailableError extends Error {
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = "CryptoUnavailableError";
+  }
+}
+
+let ed25519Probe: Promise<boolean> | null = null;
+
+/**
+ * Whether this browser can hold a CoGra key, probed once per page.
+ *
+ * WebCrypto has no capability registry — the documented way to ask whether an
+ * algorithm is supported is to attempt an operation and see whether it rejects
+ * with `NotSupportedError`. A key generation is the cheapest complete answer:
+ * a runtime that can generate an Ed25519 pair can import, sign and verify one.
+ */
+export function ed25519Available(): Promise<boolean> {
+  ed25519Probe ??= (async () => {
+    try {
+      await crypto.subtle.generateKey("Ed25519", false, ["sign", "verify"]);
+      return true;
+    } catch {
+      return false;
+    }
+  })();
+  return ed25519Probe;
+}
+
+/** Verifies a tagged signature; a malformed key or signature just fails. */
 export async function verify(
   publicKey: Uint8Array,
   tag: string,
@@ -90,11 +128,24 @@ export async function verify(
   if (publicKey.length !== 32) return false;
   if (signature.length !== 64) return false;
   const framed = await sha256Tagged(tag, [msg]);
+  let key: CryptoKey;
   try {
-    const key = await crypto.subtle.importKey("raw", publicKey.slice(), "Ed25519", false, ["verify"]);
+    key = await crypto.subtle.importKey("raw", publicKey.slice(), "Ed25519", false, ["verify"]);
+  } catch (e) {
+    // `DataError` is the spec's answer for key data the algorithm cannot
+    // parse — a real verdict about these bytes, so `false` as before. Every
+    // other rejection (`NotSupportedError` above all) says the runtime could
+    // not do the work, and answering `false` to that is a lie the caller acts
+    // on by throwing the write away.
+    if (e instanceof DOMException && e.name === "DataError") return false;
+    throw new CryptoUnavailableError("this browser cannot import an Ed25519 key", { cause: e });
+  }
+  try {
     return await crypto.subtle.verify("Ed25519", key, signature.slice(), framed);
-  } catch {
-    return false;
+  } catch (e) {
+    throw new CryptoUnavailableError("this browser cannot verify an Ed25519 signature", {
+      cause: e,
+    });
   }
 }
 
