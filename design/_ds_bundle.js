@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL_SHOWN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"5b1030f3b363","components/compose/DescribeSheet.jsx":"bcc91f82beee","components/compose/MediaThumb.jsx":"36b454665a85","components/compose/PickedRow.jsx":"6bb23e6042dc","components/compose/PickedSheet.jsx":"952252dd4d23","components/compose/UploadNotice.jsx":"d178689c7d88","components/compose/WizardHeader.jsx":"53ce0aad9241","components/content/CommentCard.jsx":"337cb31db015","components/content/OverflowMenu.jsx":"fa89204ca7b5","components/content/PostCard.jsx":"3f7c847a9c0f","components/content/ReferenceRow.jsx":"bad43ae893d4","components/content/ShareButton.jsx":"a94e6dee7156","components/content/TopicsLine.jsx":"b3bfa12c4d86","components/core/BottomSheet.jsx":"8c75a6d0f693","components/core/Button.jsx":"ff5a90231bbe","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"48c703bd16e0","components/core/HelpDot.jsx":"eabf92544b27","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"a6b3171b05e1","components/forms/PasswordField.jsx":"6f714084cce7","components/forms/RecoveryCode.jsx":"f153ef01978a","components/forms/SearchBar.jsx":"2ed2d91945fc","components/forms/TextField.jsx":"4bc89566dbcb","components/honesty/PendingMarker.jsx":"28eaaf4ffa77","components/honesty/SensitiveVeil.jsx":"73819cc142d6","components/honesty/TransportError.jsx":"2f66269a8f3c","components/media/MediaAttachment.jsx":"9690b37fd6d3","components/media/MediaViewer.jsx":"8de3eaa8144c","components/media/PinnedClip.jsx":"deaed5abc604","components/media/ReelCaption.jsx":"7c8b95b2687f","components/media/ReelRail.jsx":"9e5e1f908b8f","components/media/VideoControls.jsx":"bf80af8840a2","components/navigation/BorrowedViewBand.jsx":"66c07c53862e","components/navigation/BottomNav.jsx":"53a749d4ddf1","components/navigation/CograBand.jsx":"177723728533","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"8fedb2f39e19","components/navigation/Icon.jsx":"792a402b9ec3","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"63d3f3e7404c","components/people/ActorChip.jsx":"0870cb9a9681","components/people/ProfileHeader.jsx":"f24d0bc82d50","components/proposed/ExplainableNumber.jsx":"9a4a12a0d268","components/stance/SeveranceConfirm.jsx":"1a0dbafb9e95","components/stance/StanceAlternates.jsx":"0b50770f4aa0","components/stance/StanceCoachMark.jsx":"4d4cfdcab8db","components/stance/StanceControl.jsx":"9dd1bf8386ce","components/stance/StancePad.jsx":"f6eda3aa07e3","components/stance/StanceReadout.jsx":"3c01d2740d9a","components/stance/StanceSlider.jsx":"325286a6b95d","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"964687345182","components/wallet/LedgerRow.jsx":"96a7cfea6280","components/wallet/PayoutAddress.jsx":"d7783723d684","components/wallet/WalletBalance.jsx":"3ff65daba8d2","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"44ff990afba5","designs/core-loop/data.jsx":"1a69aa16a143"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL_SHOWN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"5b1030f3b363","components/compose/DescribeSheet.jsx":"bcc91f82beee","components/compose/MediaThumb.jsx":"36b454665a85","components/compose/PickedRow.jsx":"6bb23e6042dc","components/compose/PickedSheet.jsx":"952252dd4d23","components/compose/UploadNotice.jsx":"d178689c7d88","components/compose/WizardHeader.jsx":"53ce0aad9241","components/content/CommentCard.jsx":"337cb31db015","components/content/OverflowMenu.jsx":"fa89204ca7b5","components/content/PostCard.jsx":"3f7c847a9c0f","components/content/ReferenceRow.jsx":"bad43ae893d4","components/content/ShareButton.jsx":"a94e6dee7156","components/content/TopicsLine.jsx":"b3bfa12c4d86","components/core/BottomSheet.jsx":"8c75a6d0f693","components/core/Button.jsx":"4772aa400e31","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"b3886aac495c","components/core/ContentRow.jsx":"55ff930f818b","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"eabf92544b27","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuotedRow.jsx":"0f57be65250d","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"a6b3171b05e1","components/forms/PasswordField.jsx":"c8a8c044b921","components/forms/RecoveryCode.jsx":"f153ef01978a","components/forms/SearchBar.jsx":"2ed2d91945fc","components/forms/TextField.jsx":"ce88a74da356","components/honesty/PendingMarker.jsx":"28eaaf4ffa77","components/honesty/SensitiveVeil.jsx":"73819cc142d6","components/honesty/TransportError.jsx":"2f66269a8f3c","components/media/MediaAttachment.jsx":"9690b37fd6d3","components/media/MediaViewer.jsx":"8de3eaa8144c","components/media/PinnedClip.jsx":"deaed5abc604","components/media/ReelCaption.jsx":"7c8b95b2687f","components/media/ReelRail.jsx":"9e5e1f908b8f","components/media/VideoControls.jsx":"bf80af8840a2","components/navigation/BorrowedViewBand.jsx":"66c07c53862e","components/navigation/BottomNav.jsx":"53a749d4ddf1","components/navigation/CograBand.jsx":"177723728533","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"8fedb2f39e19","components/navigation/Icon.jsx":"792a402b9ec3","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"63d3f3e7404c","components/people/ActorChip.jsx":"0870cb9a9681","components/people/ProfileHeader.jsx":"f24d0bc82d50","components/proposed/ExplainableNumber.jsx":"9a4a12a0d268","components/stance/SeveranceConfirm.jsx":"1a0dbafb9e95","components/stance/StanceAlternates.jsx":"0b50770f4aa0","components/stance/StanceCoachMark.jsx":"4d4cfdcab8db","components/stance/StanceControl.jsx":"9dd1bf8386ce","components/stance/StancePad.jsx":"f6eda3aa07e3","components/stance/StanceReadout.jsx":"3c01d2740d9a","components/stance/StanceSlider.jsx":"325286a6b95d","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"964687345182","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"d7783723d684","components/wallet/WalletBalance.jsx":"3ff65daba8d2","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"44ff990afba5","designs/core-loop/data.jsx":"1a69aa16a143"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"}]} */
 
 (() => {
 
@@ -271,11 +271,21 @@ __ds_scope.SheetTitle = SheetTitle;
 
 // components/core/Button.jsx
 try { (() => {
-/* The house button (design.md §6): Material's three vocabularies and no others.
-   Filled `primary`/`onPrimary` for the one committing action on a surface,
-   outlined for a secondary action, text for a tertiary one. Both unfilled
-   variants put `primary` on the LABEL — the label carries the emphasis, not the
-   border, and a body-coloured label on an outlined button reads as disabled.
+/* The house button (design.md §6): Material's three vocabularies, and no others
+   on the page's own ground. Filled `primary`/`onPrimary` for the one committing
+   action on a surface, outlined for a secondary action, text for a tertiary
+   one. Both unfilled variants put `primary` on the LABEL — the label carries
+   the emphasis, not the border, and a body-coloured label on an outlined button
+   reads as disabled.
+
+   `inverse` is the fourth, and it is not a fourth emphasis: it is the filled
+   button standing on a TONAL PANEL instead of the page. The key-absent notice
+   is a `tertiary-container` block, and a `primary` fill inside it is a second
+   colour arguing with the panel's own; the filled button there takes the
+   panel's pair and turns it over — `on-tertiary-container` as the fill,
+   `tertiary-container` as the label. Same shape, same weight, one colour
+   family. Use it only inside such a panel; on the page's ground it is `primary`
+   that carries a committing action.
 
    The pill at every size (Material's button shape, not a rung of the shape
    scale); both sizes carry `label-large`. Heights are TRUE heights (border-box):
@@ -296,6 +306,11 @@ const VARIANTS = {
   text: {
     background: "transparent",
     color: "var(--primary)",
+    border: "1px solid transparent"
+  },
+  inverse: {
+    background: "var(--on-tertiary-container)",
+    color: "var(--tertiary-container)",
     border: "1px solid transparent"
   }
 };
@@ -341,6 +356,57 @@ function buttonStyle({
    of target, which is how the unconditional 48px promise survives a dense row.
    Pass it wherever `buttonStyle` is used on a raw <button>. */
 const BUTTON_CLASS = "cg-state cg-focus cg-hit";
+
+/* THE BARE PRIMARY WORD — `Button`'s vocabulary with the button's body taken
+   away: the same `label-large` in `primary`, and nothing else. No pill, no
+   padding, no 64px minimum, no shape.
+
+   WHEN THIS AND NOT `Button variant="text"`. A text button is still a button:
+   it holds the 64px minimum so a short label keeps its weight, and it reserves
+   room around the word. That is right when the action OWNS ITS LINE — a dialog
+   footer, the foot of a wizard. It is wrong when the action rides at the end
+   of a line the reader is already reading: on a seal row the label, the value
+   and the action share one line by ruling, and the pill's minimum is what
+   wraps it. So — a `Button` for an action on its own line, an `InlineAction`
+   for one at the end of somebody else's.
+
+   It keeps every promise the pill keeps. `BUTTON_CLASS` rides along, so ink
+   that is 20px tall still answers to a 48px target, and the state layer and
+   focus ring are the same ones. `flex: "none"` is part of the atom rather than
+   the caller's business: every place this word appears, it appears last in a
+   flex row whose middle is the part allowed to give. */
+function InlineAction({
+  children,
+  onClick,
+  disabled = false,
+  type = "button",
+  ariaLabel,
+  className,
+  style
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    type: type,
+    disabled: disabled,
+    onClick: onClick,
+    "aria-label": ariaLabel,
+    className: className ? `${BUTTON_CLASS} ${className}` : BUTTON_CLASS,
+    style: {
+      border: 0,
+      background: "none",
+      padding: 0,
+      cursor: disabled ? "default" : "pointer",
+      fontFamily: "var(--font-sans)",
+      fontSize: "var(--text-label-large)",
+      lineHeight: "var(--text-label-large--line-height)",
+      fontWeight: "var(--text-label-large--font-weight)",
+      letterSpacing: "var(--text-label-large--letter-spacing)",
+      color: "var(--primary)",
+      opacity: disabled ? "var(--state-disabled)" : undefined,
+      flex: "none",
+      ...style
+    }
+  }, children);
+}
 function Button({
   children,
   variant = "primary",
@@ -372,6 +438,7 @@ function Button({
 }
 __ds_scope.buttonStyle = buttonStyle;
 __ds_scope.BUTTON_CLASS = BUTTON_CLASS;
+__ds_scope.InlineAction = InlineAction;
 __ds_scope.Button = Button;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/Button.jsx", error: String((e && e.message) || e) }); }
 
@@ -431,12 +498,17 @@ try { (() => {
    platform monospace: the one exception to Figtree (design.md §3), a legibility
    device for strings read character by character.
 
-   `error` is Material 3's documented text-field error state: the outline and
-   label both switch to `--error`, and a body-small supporting line in
-   `--error` renders below the field carrying the message. The message is
-   always words (direction-by-words) — this component renders it verbatim,
-   no icon. This line is TextField-internal, separate from any screen-level
-   helper span a board already draws under the field. */
+   SUPPORTING TEXT IS ONE SLOT WITH TWO STATES, which is Material 3's own
+   arrangement rather than two independent lines. `hint` is the base: the
+   body-small line in `--text-secondary` that says what the field will accept
+   ("3–30 characters: a–z, 0–9, _"). `error` is that same line in its error
+   state — the outline and the label switch to `--error` with it, and the
+   message replaces the hint rather than joining it. A field never carries both
+   at once: the rule the reader broke is the rule they needed to read, and two
+   lines under one input is where the eye stops knowing which one is live.
+
+   The message is always words (direction-by-words) — this component renders it
+   verbatim, no icon. */
 
 function TextField({
   label,
@@ -449,6 +521,7 @@ function TextField({
   placeholder,
   rows,
   id,
+  hint,
   error
 }) {
   const generated = React.useId();
@@ -509,14 +582,14 @@ function TextField({
     autoComplete: autoComplete,
     onChange: event => onChange && onChange(event.target.value),
     style: shared
-  }), error && /*#__PURE__*/React.createElement("span", {
+  }), (error || hint) && /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: "var(--text-body-small)",
       lineHeight: "var(--text-body-small--line-height)",
       letterSpacing: "var(--text-body-small--letter-spacing)",
-      color: "var(--error)"
+      color: error ? "var(--error)" : "var(--text-secondary)"
     }
-  }, error));
+  }, error || hint));
 }
 __ds_scope.TextField = TextField;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/forms/TextField.jsx", error: String((e && e.message) || e) }); }
@@ -4167,30 +4240,66 @@ try { (() => {
    32px drawn, 48px tapped: `cg-hit` grows the target without inflating a row of
    seven of them past the height of the screen. Selection is
    `secondaryContainer`, colour only \u2014 no check glyph, because a leading check on
-   the selected chips reflows every label in the row as the reader picks. */
+   the selected chips reflows every label in the row as the reader picks.
 
-const PILL = {
-  display: "inline-flex",
-  alignItems: "center",
-  position: "relative",
-  height: "32px",
-  padding: "0 var(--space-3)",
-  borderRadius: "var(--radius-full)",
-  fontFamily: "var(--font-sans)",
-  fontSize: "var(--text-label-large)",
-  lineHeight: "var(--text-label-large--line-height)",
-  letterSpacing: "var(--text-label-large--letter-spacing)",
-  fontWeight: "var(--text-label-large--font-weight)",
-  cursor: "pointer",
-  whiteSpace: "nowrap",
-  textDecoration: "none"
+   Both wear the same pill and the same size rung, because a size the topic half
+   of the family does not understand is exactly the drift this file exists to
+   prevent. */
+
+/* TWO SIZES, ONE PILL. `md` is the chip proper — a control the thumb reaches,
+   32px drawn and 48px tapped. `sm` is the same pill 24px tall on `label-small`,
+   and it is a READOUT rather than a control: the topics inside the acts card,
+   where the reader is being shown what a signature will carry, not offered
+   something to press. That is why the small rung does not get a smaller tap
+   target — nothing at this size is meant to be tapped. Where a control must be
+   small, it stays `md` and the row loses a word instead. */
+const SIZES = {
+  md: {
+    height: "32px",
+    padding: "0 var(--space-3)",
+    fontSize: "var(--text-label-large)",
+    lineHeight: "var(--text-label-large--line-height)",
+    letterSpacing: "var(--text-label-large--letter-spacing)",
+    fontWeight: "var(--text-label-large--font-weight)"
+  },
+  sm: {
+    height: "24px",
+    padding: "0 var(--space-2)",
+    fontSize: "var(--text-label-small)",
+    lineHeight: "var(--text-label-small--line-height)",
+    letterSpacing: "var(--text-label-small--letter-spacing)",
+    fontWeight: "var(--text-label-small--font-weight)"
+  }
 };
+
+/* The size rung is woven into the pill rather than layered over it, so the
+   declarations come out in one fixed order at either size. */
+function pill(size) {
+  const rung = SIZES[size] ?? SIZES.md;
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    position: "relative",
+    height: rung.height,
+    padding: rung.padding,
+    borderRadius: "var(--radius-full)",
+    fontFamily: "var(--font-sans)",
+    fontSize: rung.fontSize,
+    lineHeight: rung.lineHeight,
+    letterSpacing: rung.letterSpacing,
+    fontWeight: rung.fontWeight,
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+    textDecoration: "none"
+  };
+}
 function Chip({
   label,
   selected = false,
   onToggle,
   ariaLabel,
-  disabled = false
+  disabled = false,
+  size = "md"
 }) {
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -4201,7 +4310,7 @@ function Chip({
     onClick: onToggle,
     className: "cg-state cg-focus cg-hit",
     style: {
-      ...PILL,
+      ...pill(size),
       border: selected ? "1px solid transparent" : "1px solid var(--border-field)",
       background: selected ? "var(--secondary-container)" : "transparent",
       color: selected ? "var(--on-secondary-container)" : "var(--text-body)",
@@ -4217,11 +4326,12 @@ function TopicChip({
   href,
   onClick,
   inert = false,
+  size = "md",
   style: override
 }) {
   const name = topic.replace(/^#/, "");
   const style = {
-    ...PILL,
+    ...pill(size),
     border: "1px solid var(--border-hairline)",
     background: "var(--surface-card)",
     color: "var(--text-body)",
@@ -6336,6 +6446,362 @@ __ds_scope.NodeMark = NodeMark;
 __ds_scope.ReferenceRow = ReferenceRow;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/ReferenceRow.jsx", error: String((e && e.message) || e) }); }
 
+// components/core/ContentRow.jsx
+try { (() => {
+const { Icon, MonogramAvatar, PendingMarker, StanceValue } = __ds_scope;
+/* THE IDENTITY ROW — the card-lite line every list in this product is built
+   from: a 40px disc saying who or what, two lines of words saying which and
+   when, and whatever the list keeps on its trailing edge.
+
+   ONE MASTER, because the wallet's history, the campaigns list, the campaigns
+   door and the chronicle were four copies of one row, and four copies drift in
+   four directions — the door's glyph had grown 2px, the chronicle's inner gaps
+   had grown 1px and 2px, and nobody had decided any of it. The variants below
+   are the differences that are DESIGNED; everything else is now one value.
+
+   THE DISC LEADS, and what fills it is an order of precedence, not a choice:
+   a picture if there is one, else a monogram for a name, else a stance face,
+   else the glyph for the kind. It always sits in a 40px box that can carry a
+   badge, whether or not this row wants one — a badge that moved the words when
+   it appeared would make the same list two rhythms.
+
+   THE SECOND LINE IS ONE LINE, in every variant, ellipsized. A row in a list is
+   scanned, not read: the moment one row can be two lines tall, the reader loses
+   the vertical rhythm that lets them skim past nine of them to find the tenth.
+   Where the whole snippet matters, the row's destination is where it belongs. */
+
+const VARIANTS = {
+  /* The wallet's history. Its trailing edge is money, which is body-sized
+     because a figure is read, not glanced at, and quiet while it is pending. */
+  ledger: {
+    second: "label-small",
+    trailing: "body-medium",
+    disc: "container"
+  },
+  /* A campaign in a list. The disc is the campaign's cover — a TILE, because a
+     campaign is a thing with a face, not somebody with one. */
+  campaign: {
+    second: "label-small",
+    trailing: "body-medium",
+    disc: "container",
+    image: "tile"
+  },
+  /* A doorway into a section. The filled disc is deliberate: it is the one row
+     in the wallet that is an entrance rather than an entry, and the fill is what
+     says so without a word of chrome. */
+  door: {
+    second: "label-small",
+    trailing: "body-medium",
+    disc: "primary"
+  },
+  /* A record in the chronicle. Its second line is the act's own words, so it
+     takes body type rather than the label type a context line wears. */
+  chronicle: {
+    second: "body-medium",
+    trailing: "label-small",
+    disc: "container"
+  }
+};
+const TYPE = {
+  "label-small": {
+    fontSize: "var(--text-label-small)",
+    lineHeight: "var(--text-label-small--line-height)"
+  },
+  "body-medium": {
+    fontSize: "var(--text-body-medium)",
+    lineHeight: "var(--text-body-medium--line-height)"
+  }
+};
+const TONES = {
+  container: {
+    background: "var(--surface-container-high)",
+    color: "var(--text-secondary)"
+  },
+  primary: {
+    background: "var(--primary)",
+    color: "var(--on-primary)"
+  }
+};
+function Disc({
+  image,
+  imageShape,
+  name,
+  face,
+  glyph,
+  tone
+}) {
+  if (image) {
+    return /*#__PURE__*/React.createElement("img", {
+      src: image,
+      alt: "",
+      style: {
+        width: "40px",
+        height: "40px",
+        borderRadius: imageShape === "tile" ? "var(--radius-small)" : "var(--radius-full)",
+        objectFit: "cover",
+        display: "block"
+      }
+    });
+  }
+  if (name) return /*#__PURE__*/React.createElement(MonogramAvatar, {
+    name: name,
+    size: 40
+  });
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: "40px",
+      height: "40px",
+      borderRadius: "var(--radius-full)",
+      ...(TONES[tone] ?? TONES.container),
+      display: "grid",
+      placeItems: "center"
+    }
+  }, face ? /*#__PURE__*/React.createElement(StanceValue, {
+    pDirected: face.pDirected,
+    pInterest: face.pInterest,
+    showPair: false
+  }) : /*#__PURE__*/React.createElement(Icon, {
+    name: glyph ?? "wallet",
+    size: 20
+  }));
+}
+function ContentRow({
+  variant = "ledger",
+  title,
+  titleAside,
+  second,
+  trailing,
+  pending = false,
+  image,
+  name,
+  face,
+  glyph,
+  direction,
+  chevron = true,
+  inert = false,
+  onOpen
+}) {
+  const shape = VARIANTS[variant] ?? VARIANTS.ledger;
+  /* A row is a control unless it is declared not to be. `inert` is the
+     chronicle's case: a record of something that happened, which has no
+     destination — the same card, with nothing to press. */
+  const Tag = inert ? "div" : "button";
+  const ellipsis = {
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap"
+  };
+  const heading = /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-large)",
+      lineHeight: "var(--text-label-large--line-height)",
+      fontWeight: "var(--text-label-large--font-weight)",
+      ...ellipsis
+    }
+  }, title);
+  return /*#__PURE__*/React.createElement(Tag, {
+    type: inert ? undefined : "button",
+    onClick: inert ? undefined : onOpen,
+    className: inert ? undefined : "cg-state cg-focus",
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-3)",
+      width: "100%",
+      border: 0,
+      borderRadius: "var(--radius-medium)",
+      background: "var(--surface-card)",
+      padding: "var(--space-3)",
+      cursor: onOpen ? "pointer" : "default",
+      fontFamily: "var(--font-sans)",
+      color: "var(--on-surface)",
+      textAlign: "left",
+      boxSizing: "border-box"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "relative",
+      flex: "none",
+      width: "40px",
+      height: "40px"
+    }
+  }, /*#__PURE__*/React.createElement(Disc, {
+    image: image,
+    imageShape: shape.image,
+    name: name,
+    face: face,
+    glyph: glyph,
+    tone: shape.disc
+  }), direction && /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      position: "absolute",
+      right: "-3px",
+      bottom: "-3px",
+      width: "18px",
+      height: "18px",
+      borderRadius: "var(--radius-full)",
+      background: "var(--primary)",
+      color: "var(--on-primary)",
+      display: "grid",
+      placeItems: "center",
+      border: "2px solid var(--surface)",
+      boxSizing: "content-box",
+      transform: direction === "in" ? "rotate(180deg)" : undefined
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "arrow_outward",
+    size: 11
+  }))), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      minWidth: 0,
+      display: "flex",
+      flexDirection: "column",
+      gap: "1px"
+    }
+  }, titleAside ? /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "flex",
+      alignItems: "baseline",
+      gap: "var(--space-2)",
+      minWidth: 0
+    }
+  }, heading, /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...TYPE["label-small"],
+      color: "var(--text-secondary)",
+      flex: "none"
+    }
+  }, titleAside)) : heading, second && /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...TYPE[shape.second],
+      color: "var(--text-secondary)",
+      ...ellipsis
+    }
+  }, second)), (trailing || pending) && /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: "none",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "flex-end",
+      gap: "2px"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...TYPE[shape.trailing],
+      color: pending ? "var(--text-secondary)" : "var(--on-surface)"
+    }
+  }, trailing), pending && /*#__PURE__*/React.createElement(PendingMarker, null)), chevron && /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: "none",
+      display: "inline-flex",
+      color: "var(--text-secondary)"
+    },
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "chevron_right",
+    size: 18
+  })));
+}
+__ds_scope.ContentRow = ContentRow;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/ContentRow.jsx", error: String((e && e.message) || e) }); }
+
+// components/core/FactRow.jsx
+try { (() => {
+const { InlineAction } = __ds_scope;
+/* A FACT ROW: one hairline line reading label · value, with an optional action
+   at the end of it. The wizard's "What you sign" list and the wallet's campaign
+   facts are the same row — they disagree only about which half is the quiet
+   one, and that disagreement is the variant.
+
+   `seal` is the list a reader checks before signing. The LABEL is the strong
+   half, because what they read down is the names of the things they are about
+   to put their name on; the value is the current answer, and it goes quiet. Its
+   rules ENCLOSE — a hairline above every row and one below the last — so the
+   block reads as a bounded list standing on the page's own ground.
+
+   `ledger` is a list of facts about something already made. There the label is
+   the question and the VALUE is the answer, so the value keeps `on-surface` and
+   right-aligns while the label goes quiet. Its rules SEPARATE — under every row
+   but the last — because the block sits inside a card that already bounds it.
+
+   THE ROW HOLDS ONE LINE, which is why the action slot draws an `InlineAction`
+   and never a `Button`: the pill's 64px minimum width is exactly what wraps a
+   row ruled to stay on one.
+
+   The 44px minimum is the row's own, not a tap target — the row is not
+   pressable; the word at its end is, and that word brings its own 48px. */
+
+const EMPHASIS = {
+  seal: {
+    label: {
+      whiteSpace: "nowrap"
+    },
+    value: {
+      color: "var(--text-secondary)"
+    },
+    /* A node in the seal's value slot draws its own line — the stance readout
+       is a face and a pair, not a sentence — so only a string gets the voice. */
+    wrapNodes: false,
+    border: last => ({
+      borderTop: "1px solid var(--border-hairline)",
+      borderBottom: last ? "1px solid var(--border-hairline)" : undefined
+    })
+  },
+  ledger: {
+    label: {
+      color: "var(--text-secondary)"
+    },
+    value: {
+      textAlign: "right"
+    },
+    wrapNodes: true,
+    border: last => ({
+      borderBottom: last ? undefined : "1px solid var(--border-hairline)"
+    })
+  }
+};
+function FactRow({
+  label,
+  value,
+  action,
+  onAction,
+  emphasis = "seal",
+  last = false
+}) {
+  const shape = EMPHASIS[emphasis] ?? EMPHASIS.seal;
+  const type = {
+    fontSize: "var(--text-body-medium)",
+    lineHeight: "var(--text-body-medium--line-height)"
+  };
+  const wrapped = value != null && (typeof value === "string" || shape.wrapNodes) ? /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...type,
+      ...shape.value
+    }
+  }, value) : value;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-2)",
+      minHeight: "44px",
+      ...shape.border(last)
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      ...type,
+      ...shape.label
+    }
+  }, label), wrapped, typeof action === "string" ? /*#__PURE__*/React.createElement(InlineAction, {
+    onClick: onAction
+  }, action) : action);
+}
+__ds_scope.FactRow = FactRow;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/FactRow.jsx", error: String((e && e.message) || e) }); }
+
 // components/core/MoneyFigure.jsx
 try { (() => {
 /* The money figure — the one shape every CGT amount on screen uses (readme
@@ -6446,6 +6912,71 @@ __ds_scope.CgtMark = CgtMark;
 __ds_scope.MoneyFigure = MoneyFigure;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/MoneyFigure.jsx", error: String((e && e.message) || e) }); }
 
+// components/core/QuotedRow.jsx
+try { (() => {
+const { MonogramAvatar } = __ds_scope;
+/* THE THING BEING ANSWERED, held above the answer. Every reply composer opens
+   with it: whose post this is and how it starts, on a tone of its own so the
+   words the reader is about to type are visibly not part of it.
+
+   It is CONTAINED and it is INERT. Contained, because the composer's own body
+   sits on the page's ground with no box at all — the box is the whole signal
+   that this block is quoted rather than written. Inert, because the reader is
+   already inside the thing it names: a row that navigated away from a composer
+   holding unsent words would be a trap, and there is nowhere for it to go.
+
+   The snippet ellipsizes and the title does not. The title is a name and a
+   handle — losing its end loses who — while the snippet is only a taste, and
+   one line of it is the point. That is why the column carries no gap: title and
+   snippet are one two-line address, not two facts. */
+
+function QuotedRow({
+  title,
+  snippet,
+  name,
+  src
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-2)",
+      minHeight: "56px",
+      padding: "var(--space-2) var(--space-3)",
+      borderRadius: "var(--radius-small)",
+      background: "var(--surface-container-highest)"
+    }
+  }, /*#__PURE__*/React.createElement(MonogramAvatar, {
+    name: name,
+    size: 32,
+    src: src
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      display: "flex",
+      flexDirection: "column",
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-large)",
+      lineHeight: "var(--text-label-large--line-height)",
+      fontWeight: "var(--text-label-large--font-weight)"
+    }
+  }, title), snippet && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      color: "var(--text-secondary)",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap"
+    }
+  }, snippet)));
+}
+__ds_scope.QuotedRow = QuotedRow;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/QuotedRow.jsx", error: String((e && e.message) || e) }); }
+
 // components/forms/Checkbox.jsx
 try { (() => {
 const { Icon } = __ds_scope;
@@ -6531,10 +7062,11 @@ const { BUTTON_CLASS, Icon } = __ds_scope;
    in this system never wears one. The state lives in the accessible name, which
    says what the tap will DO ("Show password"), not what is on screen.
 
-   `error` mirrors TextField's Material 3 error state, since this component
-   duplicates TextField's field markup rather than composing it: the outline
-   and label switch to `--error`, and a body-small supporting line in
-   `--error` renders below the field carrying the message verbatim. */
+   `hint` and `error` mirror TextField's supporting-text slot, since this
+   component duplicates TextField's field markup rather than composing it: one
+   body-small line under the field, `text-secondary` for what the field will
+   accept and `--error` for the message when it is refused — the error replacing
+   the hint, never joining it, and taking the outline and the label with it. */
 
 function PasswordField({
   label,
@@ -6542,6 +7074,7 @@ function PasswordField({
   onChange,
   autoComplete = "current-password",
   id,
+  hint,
   error
 }) {
   const generated = React.useId();
@@ -6606,14 +7139,14 @@ function PasswordField({
     }
   }, /*#__PURE__*/React.createElement(Icon, {
     name: visible ? "visibility_off" : "visibility"
-  }))), error && /*#__PURE__*/React.createElement("span", {
+  }))), (error || hint) && /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: "var(--text-body-small)",
       lineHeight: "var(--text-body-small--line-height)",
       letterSpacing: "var(--text-body-small--letter-spacing)",
-      color: "var(--error)"
+      color: error ? "var(--error)" : "var(--text-secondary)"
     }
-  }, error));
+  }, error || hint));
 }
 __ds_scope.PasswordField = PasswordField;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/forms/PasswordField.jsx", error: String((e && e.message) || e) }); }
@@ -8237,7 +8770,7 @@ __ds_scope.EarnedChart = EarnedChart;
 
 // components/wallet/LedgerRow.jsx
 try { (() => {
-const { Icon, MoneyFigure, MonogramAvatar, PendingMarker } = __ds_scope;
+const { ContentRow, MoneyFigure } = __ds_scope;
 /* One line of the wallet's history (item 12 round 2): an IDENTITY ROW, not a
    ledger line — the leading disc is who or what the money moved with (the
    tipper's face, the paying campaign's cover, a glyph for the rest), wearing
@@ -8247,47 +8780,14 @@ const { Icon, MoneyFigure, MonogramAvatar, PendingMarker } = __ds_scope;
    is an arrow, the amount is never coloured.
 
    One stream, newest first. A payout not yet landed is `pending`: the figure
-   goes quiet and the row wears the product's own Still settling. */
+   goes quiet and the row wears the product's own Still settling.
 
-function Disc({
-  image,
-  name,
-  glyph
-}) {
-  if (image) {
-    return /*#__PURE__*/React.createElement("img", {
-      src: image,
-      alt: "",
-      style: {
-        width: "40px",
-        height: "40px",
-        borderRadius: "var(--radius-full)",
-        objectFit: "cover",
-        display: "block"
-      }
-    });
-  }
-  if (name) {
-    return /*#__PURE__*/React.createElement(MonogramAvatar, {
-      name: name,
-      size: 40
-    });
-  }
-  return /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: "40px",
-      height: "40px",
-      borderRadius: "var(--radius-full)",
-      background: "var(--surface-container-high)",
-      color: "var(--text-secondary)",
-      display: "grid",
-      placeItems: "center"
-    }
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: glyph ?? "wallet",
-    size: 20
-  }));
-}
+   THE SHAPE IS `ContentRow`'s, and this file is what the wallet calls it. The
+   row itself — disc, two lines, trailing edge, chevron — is the master every
+   list in the product draws; what belongs here is the wallet's vocabulary:
+   `words` and `context`, an amount rather than a trailing node, and direction
+   read off the sign when nobody says otherwise. */
+
 function LedgerRow({
   words,
   context,
@@ -8302,110 +8802,21 @@ function LedgerRow({
   onOpen
 }) {
   const dir = direction ?? (amount < 0 ? "out" : "in");
-  return /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: onOpen,
-    className: "cg-state cg-focus",
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: "var(--space-3)",
-      width: "100%",
-      border: 0,
-      borderRadius: "var(--radius-medium)",
-      background: "var(--surface-card)",
-      padding: "var(--space-3)",
-      cursor: onOpen ? "pointer" : "default",
-      fontFamily: "var(--font-sans)",
-      color: "var(--on-surface)",
-      textAlign: "left",
-      boxSizing: "border-box"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      position: "relative",
-      flex: "none",
-      width: "40px",
-      height: "40px"
-    }
-  }, /*#__PURE__*/React.createElement(Disc, {
+  return /*#__PURE__*/React.createElement(ContentRow, {
+    variant: "ledger",
+    title: words,
+    second: context || when ? /*#__PURE__*/React.createElement(React.Fragment, null, context, context && when ? " · " : "", when) : undefined,
+    trailing: /*#__PURE__*/React.createElement(MoneyFigure, {
+      amount: amount,
+      signed: signed
+    }),
+    pending: pending,
     image: image,
     name: name,
-    glyph: glyph
-  }), /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true",
-    style: {
-      position: "absolute",
-      right: "-3px",
-      bottom: "-3px",
-      width: "18px",
-      height: "18px",
-      borderRadius: "var(--radius-full)",
-      background: "var(--primary)",
-      color: "var(--on-primary)",
-      display: "grid",
-      placeItems: "center",
-      border: "2px solid var(--surface)",
-      boxSizing: "content-box",
-      transform: dir === "in" ? "rotate(180deg)" : undefined
-    }
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "arrow_outward",
-    size: 11
-  }))), /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: 1,
-      minWidth: 0,
-      display: "flex",
-      flexDirection: "column",
-      gap: "1px"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-label-large)",
-      lineHeight: "var(--text-label-large--line-height)",
-      fontWeight: "var(--text-label-large--font-weight)",
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-      whiteSpace: "nowrap"
-    }
-  }, words), (context || when) && /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      color: "var(--text-secondary)",
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-      whiteSpace: "nowrap"
-    }
-  }, context, context && when ? " · " : "", when)), /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: "none",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "flex-end",
-      gap: "2px"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-body-medium)",
-      lineHeight: "var(--text-body-medium--line-height)",
-      color: pending ? "var(--text-secondary)" : "var(--on-surface)"
-    }
-  }, /*#__PURE__*/React.createElement(MoneyFigure, {
-    amount: amount,
-    signed: signed
-  })), pending && /*#__PURE__*/React.createElement(PendingMarker, null)), /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: "none",
-      display: "inline-flex",
-      color: "var(--text-secondary)"
-    },
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "chevron_right",
-    size: 18
-  })));
+    glyph: glyph,
+    direction: dir,
+    onOpen: onOpen
+  });
 }
 __ds_scope.LedgerRow = LedgerRow;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/wallet/LedgerRow.jsx", error: String((e && e.message) || e) }); }
@@ -8740,6 +9151,8 @@ __ds_ns.SheetTitle = __ds_scope.SheetTitle;
 
 __ds_ns.BUTTON_CLASS = __ds_scope.BUTTON_CLASS;
 
+__ds_ns.InlineAction = __ds_scope.InlineAction;
+
 __ds_ns.Button = __ds_scope.Button;
 
 __ds_ns.Card = __ds_scope.Card;
@@ -8747,6 +9160,10 @@ __ds_ns.Card = __ds_scope.Card;
 __ds_ns.Chip = __ds_scope.Chip;
 
 __ds_ns.TopicChip = __ds_scope.TopicChip;
+
+__ds_ns.ContentRow = __ds_scope.ContentRow;
+
+__ds_ns.FactRow = __ds_scope.FactRow;
 
 __ds_ns.HelpDot = __ds_scope.HelpDot;
 
@@ -8757,6 +9174,8 @@ __ds_ns.JoinPrompt = __ds_scope.JoinPrompt;
 __ds_ns.CgtMark = __ds_scope.CgtMark;
 
 __ds_ns.MoneyFigure = __ds_scope.MoneyFigure;
+
+__ds_ns.QuotedRow = __ds_scope.QuotedRow;
 
 __ds_ns.Snackbar = __ds_scope.Snackbar;
 

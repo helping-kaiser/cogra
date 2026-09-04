@@ -12,3 +12,4 @@ What holds:
 - **The words + context carry what paid it** — the traceability promise; `onOpen` opens the source.
 - A payout not yet landed is `pending`: quiet figure, the product's own *Still settling*.
 - Rows are card-lite (`surface-card`, medium radius) with 8px seams — the feed's rhythm, calmer.
+- **The shape is [`ContentRow`](../core/ContentRow.prompt.md)'s**, in its `ledger` variant; what lives here is the wallet's vocabulary over it — `words` and `context`, an amount rather than a trailing node, and direction read off the sign when nobody says otherwise.

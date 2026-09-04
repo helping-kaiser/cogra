@@ -18,20 +18,9 @@ import React from "react";
    `secondaryContainer`, colour only \u2014 no check glyph, because a leading check on
    the selected chips reflows every label in the row as the reader picks.
 
-   Both wear the same PILL and the same size rung, because a size the topic half
+   Both wear the same pill and the same size rung, because a size the topic half
    of the family does not understand is exactly the drift this file exists to
    prevent. */
-
-const PILL = {
-  display: "inline-flex",
-  alignItems: "center",
-  position: "relative",
-  borderRadius: "var(--radius-full)",
-  fontFamily: "var(--font-sans)",
-  cursor: "pointer",
-  whiteSpace: "nowrap",
-  textDecoration: "none",
-};
 
 /* TWO SIZES, ONE PILL. `md` is the chip proper — a control the thumb reaches,
    32px drawn and 48px tapped. `sm` is the same pill 24px tall on `label-small`,
@@ -59,6 +48,28 @@ const SIZES = {
   },
 };
 
+/* The size rung is woven into the pill rather than layered over it, so the
+   declarations come out in one fixed order at either size. */
+function pill(size) {
+  const rung = SIZES[size] ?? SIZES.md;
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    position: "relative",
+    height: rung.height,
+    padding: rung.padding,
+    borderRadius: "var(--radius-full)",
+    fontFamily: "var(--font-sans)",
+    fontSize: rung.fontSize,
+    lineHeight: rung.lineHeight,
+    letterSpacing: rung.letterSpacing,
+    fontWeight: rung.fontWeight,
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+    textDecoration: "none",
+  };
+}
+
 export function Chip({ label, selected = false, onToggle, ariaLabel, disabled = false, size = "md" }) {
   return (
     <button
@@ -70,8 +81,7 @@ export function Chip({ label, selected = false, onToggle, ariaLabel, disabled = 
       onClick={onToggle}
       className="cg-state cg-focus cg-hit"
       style={{
-        ...PILL,
-        ...SIZES[size] ?? SIZES.md,
+        ...pill(size),
         border: selected ? "1px solid transparent" : "1px solid var(--border-field)",
         background: selected ? "var(--secondary-container)" : "transparent",
         color: selected ? "var(--on-secondary-container)" : "var(--text-body)",
@@ -88,8 +98,7 @@ export function Chip({ label, selected = false, onToggle, ariaLabel, disabled = 
 export function TopicChip({ topic, href, onClick, inert = false, size = "md", style: override }) {
   const name = topic.replace(/^#/, "");
   const style = {
-    ...PILL,
-    ...SIZES[size] ?? SIZES.md,
+    ...pill(size),
     border: "1px solid var(--border-hairline)",
     background: "var(--surface-card)",
     color: "var(--text-body)",
