@@ -27,7 +27,7 @@ WEB_APK_DIR       = web/public/downloads
 # guest APK trusts it so it can talk https to this machine's web origin.
 ANDROID_DEV_CA = android/app/src/devCa/res/raw/cogra_dev_ca.pem
 
-.PHONY: help init up down reset-db migrate wait-db wait-media api api-release bootstrap run ci ci-all lint lint-corpus regenerate fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-format android-test android-build web-dev web-prod web-apk guest-apk web-ci design-ci fuzz-interchange fuzz-linter
+.PHONY: help init up down reset-db migrate wait-db wait-media api api-release bootstrap run ci ci-all lint lint-corpus regenerate fmt test build logs dev docs-link-check schema vectors constants tokens sqlx-prepare sqlx-check android-ci android-lint android-format android-test android-build web-dev web-prod web-apk guest-apk web-ci design-ci fuzz-interchange fuzz-linter
 
 help: ## Show available commands
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -108,6 +108,9 @@ schema: ## Regenerate schema.graphql (the frontend contract) from the Rust schem
 
 vectors: ## Regenerate client-crypto-vectors.json (the client crypto contract) from common
 	UPDATE_CLIENT_VECTORS=1 $(CARGO) test -p common --test client_vectors
+
+constants: ## Regenerate client-constants.json (the caps, page size, registration and write-handshake constants both clients pin to) from api
+	UPDATE_CLIENT_CONSTANTS=1 SQLX_OFFLINE=true $(CARGO) test -p api --test client_constants
 
 tokens: ## Regenerate design-tokens.json (the colour contract both clients pin to) from design.md §2.2
 	cd web && UPDATE_DESIGN_TOKENS=1 npx vitest run src/lib/ui/design-tokens.test.ts
