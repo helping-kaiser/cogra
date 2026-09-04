@@ -173,6 +173,7 @@ pub async fn topics_of(
                  AND l.source = $1
                  AND r.author = $2
                  AND NOT r.payload_marked
+                 AND NOT l.census_unknown
              UNION ALL
                SELECT s.target, s.p_d, s.p_i, TRUE, 0, 0, 0, s.pre_signed_at
                FROM staged_writes s
@@ -265,6 +266,7 @@ pub async fn tagged_with(
                WHERE l.leg = 't' AND l.family = 'tag'
                  AND l.target = $1
                  AND NOT r.payload_marked
+                 AND NOT l.census_unknown
                  AND (NOT $2 OR r.author = CASE
                          WHEN l.source LIKE 'mint:act:%' THEN split_part(l.source, ':', 3)
                          WHEN l.source LIKE 'prof:%'     THEN split_part(l.source, ':', 2)

@@ -143,6 +143,7 @@ pub async fn references_of(
                  AND l.source = $1
                  AND r.author = $2
                  AND NOT r.payload_marked
+                 AND NOT l.census_unknown
              UNION ALL
                SELECT s.target, s.p_d, s.p_i, TRUE
                FROM staged_writes s
@@ -221,6 +222,7 @@ pub async fn bundle(
                  AND l.target = $2
                  AND r.author = $3
                  AND NOT r.payload_marked
+                 AND NOT l.census_unknown
              UNION ALL
                SELECT s.p_d, s.p_i
                FROM staged_writes s

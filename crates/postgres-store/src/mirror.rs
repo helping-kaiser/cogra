@@ -40,6 +40,12 @@ pub async fn last_ingested_epoch(pool: &PgPool) -> Result<i64, MirrorError> {
 /// does not describe cannot occur in a census-valid package; one that
 /// appears is ingested with minimal fallback metadata and logged loudly,
 /// because a published record is never dropped.
+///
+/// It is also *marked*. Fallback metadata is invented, and the mirror is
+/// the store that must never diverge, so the invention has to be a fact a
+/// reader can see rather than a value indistinguishable from census
+/// truth: parameter folds skip a marked leg and the record read carries
+/// the mark. Ingestion still never stalls on one.
 pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), MirrorError> {
     let mut tx = pool.begin().await?;
     let cursor = sqlx::query_scalar!(
@@ -77,8 +83,8 @@ pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), M
                 .iter()
                 .find(|s| s.role == leg.role)
                 .copied();
-            let (domain, mask, tier) = match spec {
-                Some(s) => (s.domain.as_str(), s.mask, s.tier.as_str()),
+            let (domain, mask, tier, census_unknown) = match spec {
+                Some(s) => (s.domain.as_str(), s.mask, s.tier.as_str(), false),
                 None => {
                     tracing::error!(
                         record = %record.act_id,
@@ -86,15 +92,15 @@ pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), M
                         role = leg.role.as_str(),
                         "no census leg spec; ingesting with minimal fallback metadata"
                     );
-                    ("minimal", [false, false, false, true], "marginal")
+                    ("minimal", [false, false, false, true], "marginal", true)
                 }
             };
             sqlx::query!(
                 "INSERT INTO mirror_record_legs
                      (record_id, leg, source, target, p_d, p_i,
                       domain, mask_a00, mask_a01, mask_a10, mask_a11, tier,
-                      tau, family, epoch, act_time, position)
-                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)",
+                      tau, family, epoch, act_time, position, census_unknown)
+                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)",
                 record.act_id.to_string(),
                 leg.role.as_str(),
                 leg.source.to_string(),
@@ -112,6 +118,7 @@ pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), M
                 record.epoch,
                 record.act_time,
                 record.position,
+                census_unknown,
             )
             .execute(&mut *tx)
             .await?;
@@ -210,6 +217,10 @@ pub struct RecordLeg {
     pub target: String,
     pub p_d: f64,
     pub p_i: f64,
+    /// True when ingestion had no census spec for this leg's role and
+    /// wrote fallback domain, mask and tier. The parameters are the
+    /// record's own; the family-fixed metadata beside them is invented.
+    pub census_unknown: bool,
 }
 
 impl RecordFull {
@@ -421,7 +432,7 @@ async fn legs_for(pool: &PgPool, record_ids: &[String]) -> Result<Vec<LegOwned>,
         return Ok(vec![]);
     }
     Ok(sqlx::query!(
-        "SELECT record_id, leg, source, target, p_d, p_i
+        "SELECT record_id, leg, source, target, p_d, p_i, census_unknown
          FROM mirror_record_legs WHERE record_id = ANY($1)",
         record_ids,
     )
@@ -436,6 +447,7 @@ async fn legs_for(pool: &PgPool, record_ids: &[String]) -> Result<Vec<LegOwned>,
             target: l.target,
             p_d: l.p_d,
             p_i: l.p_i,
+            census_unknown: l.census_unknown,
         },
     })
     .collect())
