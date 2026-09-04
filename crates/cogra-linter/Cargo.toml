@@ -50,7 +50,7 @@ swc_ecma_ast = "29.0.0"
 # rather than two. Verified against docs.rs/tree-sitter 0.26.13 on
 # 2026-08-26; the parser declares ABI 14, which the runtime's own
 # MIN_COMPATIBLE_LANGUAGE_VERSION admits (asserted in the suite).
-tree-sitter = "0.26.13"
+tree-sitter = "0.27.0"
 # `LanguageFn`, which is what the vendored grammar's `tree_sitter_kotlin()`
 # becomes before it is a `Language`. Direct rather than transitive because
 # this crate names the type: the vendored tree carries no `bindings/rust`,
