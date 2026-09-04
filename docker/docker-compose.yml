@@ -16,7 +16,7 @@ x-media-credentials: &media-credentials
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     # Parameterised like the ports below, so a second checkout can bring up
     # its own stack instead of colliding on the name. The default keeps the
     # documented `docker exec -it gnp_postgres psql` recipes working.
