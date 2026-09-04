@@ -222,6 +222,31 @@ fn a_source_carries_its_bytes() {
     assert_eq!(sources[0].bytes, b"the bytes of README.md\n");
 }
 
+/// It stays in the carrier and stays owned, which is the part totality
+/// needs; what it does not do is cost what its size costs, and the carrier's
+/// only uncurated directories are the working notes a hand-test session
+/// leaves recordings and dumps in.
+///
+/// A source no frontend reads and no generator writes carries no bytes.
+/// ´claim:walk:an-unscanned-source-is-not-read´
+#[test]
+fn a_source_nothing_will_read_is_not_read() {
+    let root = tree("carrier-unscanned", &["migrations/1.sql", "docs/README.md"]);
+    let adoption = ruled();
+    let sources = Walk::new(&adoption, &root)
+        .sources()
+        .expect("a readable tree");
+
+    let unscanned = found(&sources, "migrations/1.sql");
+    assert_eq!(unscanned.language, None);
+    assert!(unscanned.bytes.is_empty());
+    assert_eq!(unscanned.owner, OwnerId::new("tree.repo-root"));
+    assert!(
+        !found(&sources, "docs/README.md").bytes.is_empty(),
+        "a source a frontend does read still carries what it read"
+    );
+}
+
 /// An absent optional root is silent.
 /// ´claim:walk:an-absent-optional-root-is-silent´
 #[test]
@@ -402,14 +427,176 @@ fn f8_a_root_the_walk_reached_is_silent() {
     );
 }
 
+/// A directory link at `link` pointing at `target`, or `None` where the
+/// platform refused to make one.
+///
+/// Windows needs `SeCreateSymbolicLinkPrivilege` — Developer Mode or an
+/// elevated shell — to create a link at all, so a machine without it skips
+/// these cases instead of failing them. `#[cfg(unix)]` was the alternative
+/// and it is what left the crossing branch untested on the one platform
+/// whose junctions raised the question: a junction is a reparse point with
+/// a name-surrogate tag, so it takes the same `is_symlink` branch as a
+/// POSIX link and needs the same assertions.
+#[cfg(any(unix, windows))]
+fn link_dir(target: &Path, link: &Path) -> Option<()> {
+    #[cfg(unix)]
+    let made = std::os::unix::fs::symlink(target, link);
+    #[cfg(windows)]
+    let made = std::os::windows::fs::symlink_dir(target, link);
+    made.ok()
+}
+
+/// A file link, under the same platform rule as [`link_dir`].
+#[cfg(any(unix, windows))]
+fn link_file(target: &Path, link: &Path) -> Option<()> {
+    #[cfg(unix)]
+    let made = std::os::unix::fs::symlink(target, link);
+    #[cfg(windows)]
+    let made = std::os::windows::fs::symlink_file(target, link);
+    made.ok()
+}
+
+/// Says a case was skipped rather than passing silently.
+#[cfg(any(unix, windows))]
+fn unprivileged(case: &str) {
+    eprintln!("{case}: skipped, this platform would not create a link");
+}
+
+/// A tree outside the corpus root, for a link to point at.
+#[cfg(any(unix, windows))]
+fn outside(name: &str) -> PathBuf {
+    tree(name, &["notes.md", "deeper/more.md"])
+}
+
+/// The bytes come from the target and the name comes from the corpus, which
+/// is what lets a rule, an exclusion and a finding all keep meaning what
+/// they say while the tree they describe lives somewhere else.
+///
+/// A link at a configured optional root is crossed under its own name.
+/// ´claim:walk:a-linked-optional-root-is-crossed´
+#[cfg(any(unix, windows))]
+#[test]
+fn a_link_at_a_configured_optional_root_is_crossed_under_its_own_name() {
+    let target = outside("carrier-link-target");
+    let root = tree("carrier-link-crossed", &["README.md"]);
+    let Some(()) = link_dir(&target, &root.join("tmp_dev")) else {
+        return unprivileged("a_link_at_a_configured_optional_root_is_crossed");
+    };
+    let adoption = ruled();
+    let sources = Walk::new(&adoption, &root)
+        .sources()
+        .expect("a readable tree");
+
+    let notes = found(&sources, "tmp_dev/notes.md");
+    assert_eq!(
+        notes.owner,
+        OwnerId::new("tree.working-notes"),
+        "the owner is the one the link path's rule assigns, not the target's"
+    );
+    assert_eq!(
+        notes.bytes, b"the bytes of notes.md\n",
+        "the bytes come from the target the link resolves to"
+    );
+    found(&sources, "tmp_dev/deeper/more.md");
+}
+
+/// This is the case that made the corpus a property of the checkout: a
+/// worktree where a lane wrote its own scratch directory, and a machine
+/// where the same name is a junction into another repository, walked
+/// identically because the walk never asked which it was.
+///
+/// A link that is not a configured optional root is not followed.
+/// ´claim:walk:an-unconfigured-link-is-not-followed´
+#[cfg(any(unix, windows))]
+#[test]
+fn a_directory_link_outside_the_configured_roots_is_not_followed() {
+    let target = outside("carrier-link-stray-target");
+    let root = tree("carrier-link-stray", &["README.md"]);
+    let Some(()) = link_dir(&target, &root.join("elsewhere")) else {
+        return unprivileged("a_directory_link_outside_the_configured_roots_is_not_followed");
+    };
+    let adoption = ruled();
+    let sources = Walk::new(&adoption, &root)
+        .sources()
+        .expect("an unfollowed link is a decision, not a failure");
+
+    let paths: Vec<String> = sources
+        .iter()
+        .map(|source| source.path.to_string_lossy().into_owned())
+        .collect();
+    assert_eq!(
+        paths,
+        vec![String::from("README.md")],
+        "the corpus is what the repository holds, not what its names resolve to"
+    );
+}
+
+/// A file link outside the configured roots is not read.
+/// ´claim:walk:an-unconfigured-file-link-is-not-read´
+#[cfg(any(unix, windows))]
+#[test]
+fn a_file_link_outside_the_configured_roots_is_not_read() {
+    let target = outside("carrier-link-file-target");
+    let root = tree("carrier-link-file", &["README.md"]);
+    let Some(()) = link_file(&target.join("notes.md"), &root.join("borrowed.md")) else {
+        return unprivileged("a_file_link_outside_the_configured_roots_is_not_read");
+    };
+    let adoption = ruled();
+    let sources = Walk::new(&adoption, &root)
+        .sources()
+        .expect("an unfollowed link is a decision, not a failure");
+    assert!(
+        !sources
+            .iter()
+            .any(|source| source.path == *Path::new("borrowed.md")),
+        "one file is as much of an escape as a whole tree"
+    );
+}
+
+/// The narrow cycle that survives the link policy: crossing happens only at
+/// the configured roots, so the only way to arrive twice is for two of them
+/// to resolve to one place.
+///
+/// Two configured roots resolving to one tree are walked once.
+/// ´claim:walk:a-link-cycle-is-entered-once´
+#[cfg(any(unix, windows))]
+#[test]
+fn two_configured_roots_resolving_to_one_tree_are_walked_once() {
+    let target = outside("carrier-link-cycle-target");
+    let root = tree("carrier-link-cycle", &["README.md"]);
+    let Some(()) = link_dir(&target, &root.join("tmp_dev")) else {
+        return unprivileged("two_configured_roots_resolving_to_one_tree_are_walked_once");
+    };
+    link_dir(&target, &root.join("tmp_research_files")).expect("the second link, privilege held");
+    let adoption = ruled();
+    let sources = Walk::new(&adoption, &root)
+        .sources()
+        .expect("a readable tree");
+
+    let paths: Vec<String> = sources
+        .iter()
+        .map(|source| source.path.to_string_lossy().into_owned())
+        .collect();
+    assert_eq!(
+        paths,
+        vec![
+            String::from("README.md"),
+            String::from("tmp_dev/deeper/more.md"),
+            String::from("tmp_dev/notes.md"),
+        ],
+        "the entries are walked in path order, so the first name wins and the second is skipped"
+    );
+}
+
 /// An unreadable entry is a diagnostic beside a shorter list, never an empty carrier.
 /// ´claim:walk:an-unreadable-entry-is-a-diagnostic´
-#[cfg(unix)]
+#[cfg(any(unix, windows))]
 #[test]
 fn an_unreadable_entry_is_a_diagnostic_beside_a_shorter_list() {
     let root = tree("carrier-unreadable", &["README.md", "docs/README.md"]);
-    std::os::unix::fs::symlink(root.join("nowhere.md"), root.join("dangling.md"))
-        .expect("a link to nothing");
+    let Some(()) = link_file(&root.join("nowhere.md"), &root.join("dangling.md")) else {
+        return unprivileged("an_unreadable_entry_is_a_diagnostic_beside_a_shorter_list");
+    };
     let adoption = ruled();
 
     let outcome = Walk::new(&adoption, &root)
