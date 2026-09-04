@@ -9,4 +9,4 @@ The quiet word that names a group on a sectioned surface.
 
 **It carries the screen gutter itself**, because it sits in the scroll column beside full-bleed rows that carry their own. Its padding is asymmetric on purpose — 12 above, 4 below — so it belongs to the group it opens instead of floating between two of them.
 
-Do not reach for it as a form field's label: that is `TextField`'s own, and a composer field's caption is `ComposeFieldLabel`'s weight.
+Do not reach for it as a form field's label: that is `TextField`'s own `label` and `corner`. A composer section's caption — Pictures, Topics, References — is `label-large` beside them, not this word.
