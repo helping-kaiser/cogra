@@ -105,21 +105,22 @@ fn encoding_vectors() -> Value {
 /// Each entry is refused by `crypto::verify` here, asserted below. `refusal`
 /// names why, so an implementation that accepts one knows which check it is
 /// missing rather than only that it disagreed.
+///
+/// The small-order key is the canonical encoding of the neutral element:
+/// order 1, so the group equation collapses to `[S]B = R` and the pair
+/// `(R, S) = (identity, 0)` satisfies it for every message. Only strict
+/// verification — which refuses a small-order `A` and a small-order `R` —
+/// rejects it. The non-canonical `S` is the scalar-range check every
+/// conforming verifier owes, whatever else it does.
 fn signature_refusals(actor_signing: &SigningKey, sample: &[u8]) -> Value {
     let actor_pubkey = hx(actor_signing.verifying_key().as_bytes());
     let tag = String::from_utf8(tags::APPROVAL.to_vec()).expect("ASCII");
 
-    // The canonical encoding of the neutral element: order 1, so the group
-    // equation collapses to [S]B = R and the pair (R, S) = (identity, 0)
-    // satisfies it for every message. Only strict verification — which
-    // refuses a small-order A and a small-order R — rejects it.
     let mut small_order_key = [0u8; 32];
     small_order_key[0] = 1;
     let mut small_order_sig = [0u8; 64];
     small_order_sig[0] = 1;
 
-    // S outside [0, ℓ): the scalar-malleability check every conforming
-    // verifier owes, whatever else it does.
     let mut non_canonical_s = sample.to_vec();
     non_canonical_s[32..].fill(0xFF);
 

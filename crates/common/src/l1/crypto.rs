@@ -137,16 +137,18 @@ mod tests {
     /// small-order public key forges nothing: the same bytes that satisfy the
     /// ordinary group equation against every message are refused here.
     ///
+    /// The key is the canonical encoding of the neutral element (y = 1,
+    /// sign 0). It has order 1, so `[k]A` is the identity for every
+    /// challenge `k` and the group equation collapses to `[S]B = R`; with
+    /// `S = 0` and `R` the same identity encoding, one signature satisfies
+    /// it for every message.
+    ///
     /// Strict verification is the seam's acceptance boundary, so a small-order key forges nothing.
     /// ´claim:crypto:strict-verification-refuses-what-a-small-order-key-forges´
     #[test]
     fn a_small_order_key_forges_nothing_under_strict_verification() {
         use ed25519_dalek::Verifier;
 
-        // The canonical encoding of the neutral element (y = 1, sign 0). It
-        // has order 1, so [k]A is the identity for every challenge k and the
-        // group equation collapses to [S]B = R; with S = 0 and R the same
-        // identity encoding, one signature satisfies it for every message.
         let mut small_order = [0u8; 32];
         small_order[0] = 1;
         let key =

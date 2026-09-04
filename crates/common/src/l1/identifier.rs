@@ -69,6 +69,13 @@ impl ActId {
         })
     }
 
+    /// Reads the canonical text form.
+    ///
+    /// The sequence grammar is digits only. `u64::from_str` would also take
+    /// a leading `+`, which the canonical form never emits and the
+    /// TypeScript and Kotlin parsers never accept — one grammar across the
+    /// three languages, so no body is admitted here that a client will
+    /// refuse.
     pub fn parse(s: &str) -> Result<Self, IdentifierError> {
         let rest = s
             .strip_prefix("act:")
@@ -78,10 +85,6 @@ impl ActId {
             (Some(a), Some(q), Some(f)) => (a, q, f),
             _ => return Err(IdentifierError::Unparseable(s.to_string())),
         };
-        // `u64::from_str` accepts a leading `+`, which the canonical form
-        // never emits and the TypeScript and Kotlin parsers never accept:
-        // one grammar across the three languages, so a signed sequence
-        // cannot be admitted here and refused on a client.
         if !seq.bytes().all(|b| b.is_ascii_digit()) {
             return Err(IdentifierError::InvalidSequence(seq.to_string()));
         }
@@ -223,6 +226,9 @@ mod tests {
         assert!(ActId::new("ok", 1, Family::Opinion).is_ok());
     }
 
+    /// The signed sequence forms are part of it: the grammar is digits
+    /// only, in every language that parses an act identifier.
+    ///
     /// A text that is no identifier fails to parse rather than parsing into a wrong one.
     /// ´claim:identifier:an-unparseable-text-fails-rather-than-misparses´
     #[test]
@@ -236,9 +242,6 @@ mod tests {
         ] {
             assert!(NodeId::parse(bad).is_err() || ActId::parse(bad).is_err());
         }
-        // The sequence grammar is digits only, in every language that
-        // parses an act identifier — the signed forms `u64::from_str`
-        // would otherwise take are refused here too.
         for signed in ["act:a:+5:opinion", "act:a:-5:opinion"] {
             assert!(ActId::parse(signed).is_err(), "{signed}");
             assert!(
