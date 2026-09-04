@@ -123,7 +123,7 @@ variant, the where-you-are comment affordance on detail;
 a static board shows the parked pad from the master. Screens can
 keep canvas tweak chips via `PROPS`/`VALS` exports. The rule is
 readme §13 *Masters, variants, and screens*. The conformance round
-(2026-09-04) finished the job: all 119 canonical boards render from
+(2026-09-04) finished the job: every canonical board renders from
 `screens/`, and no hand-written `.dc.html` is left on the canvas.
 The canonical artboards hand-copy component markup, so system updates
 don't propagate — the entry-session post cards already drifted

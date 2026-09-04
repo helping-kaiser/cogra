@@ -2232,25 +2232,33 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   every surface's edge lands on it. `ReaderPostMenu`, `CommentMenu`
   and `ProfileMenu` join the sheet boards that were already mastered
   this way (the filter, the references sheet, the own-post menu).
-- **The license unfolds where it was asked about.** Its row closes
-  the sheet and opens the terms on the card beneath — a state of the
-  card, never a surface of its own, so the row that revealed them
-  reads **Hide license** in the same position, and both cards gained
-  `defaultShowLicense` to draw the unfolded state (the missing-variant
-  rule; `StanceControl`'s `defaultOpen` is the precedent). `PostLicense`
-  is that state drawn, and it is a declared **entry** rather than the
-  target of a tap, because nothing navigates to reach it.
+- **The license comes up in a sheet.** The row closes the menu and
+  raises the terms over the surface the reader asked from — a drawer
+  they drop by the scrim, the swipe, or Escape, which is the way back
+  a block unfolded inside the post never had. The terms are never a
+  state of the card, so no card carries them and no row ever reads
+  *Hide license*. `PostLicense` draws the sheet over the post detail
+  and `CommentLicense` over the thread: **two boards, because the
+  surface beneath is half of what the sheet says** — pointing the
+  comment's row at the post's board would answer a question about a
+  comment with a post's terms, on a screen the reader is two sheets
+  above. They carry the two readings besides, Ada's credit-on-every-use
+  against the comment's public domain. Both are `scanExempt` and wire
+  one number, the wash: the terms are a block to read, not controls.
 - **The terms are drawn, not printed.** A quiet inset at the medium
-  rung: a caption naming what unfolded, then one row per axis with the
-  two readings aligned so the pair reads as a pair. It takes **no
-  fill** — the card is already the highest container rung, and a
-  filled inset over it would invert between the themes — and no
+  rung: a caption naming the words the reader tapped, then one row per
+  axis with the two readings aligned so the pair reads as a pair. It
+  takes **no fill** — the sheet is already the highest container rung,
+  and a filled inset over it would invert between the themes — and no
   colour, the terms being neither warning nor promotion. Public domain
   is the pair readers already have a word for, so the word rides the
-  caption while the rows still spell what it means. The read side got
-  its **own readings**: the chooser's hints address the author
-  declaring the terms, and on a read surface "Every use credits you"
-  tells a reuser they are owed the credit they in fact owe.
+  caption while the rows still spell what it means. The sheet takes
+  **no `SheetTitle`**: the inset heads itself, and a heading above it
+  would say License terms twice, a few pixels apart, in two sizes —
+  the sheet's name lives on its `aria-label`. The read side got its
+  **own readings**: the chooser's hints address the author declaring
+  the terms, and on a read surface "Every use credits you" tells a
+  reuser they are owed the credit they in fact owe.
 - **Citing and mentioning are one fact.** Both stage a **Reference
   edge**; the word only records what sits at the far end — citing for
   a passive node, mentioning for a person. So both rows open the same
@@ -2286,9 +2294,9 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   act and the total has to count it. Staged topics and references are
   unstageable everywhere: the reply's staged rows carry the same
   remove the post's details rows do, and ReplySeal's componentize pass
-  inherits it. Like `PostLicense`, it is a
-  declared **entry**: the picker hands its pick back to the composer
-  it was opened from, so no tap reaches this state.
+  inherits it. It is a declared **entry**: the picker hands its pick
+  back to the composer it was opened from, so no tap reaches this
+  state.
 - **Only what exists gets a row.** The post and comment menus hold
   License terms and Cite in a new post; another's profile holds Mention
   in a new post and Share this profile. Report, hide and bookmark are
@@ -2314,8 +2322,8 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   arrival at the details stage with the reference staged. The words
   path's `Next` carries the second outcome that says so, which is what
   lets the search reach that board honestly instead of teleporting to
-  it. There is no check-a-license flow — a reveal in place is not a
-  journey.
+  it. There is no check-a-license flow — a detour into a sheet and
+  back out of it is not a journey.
 - **`ComposeDetails` componentized.** The picture path's details stage
   is now JSX over the masters like its twin `ComposeCited`, and the
   conversion closed the drift that prompted it — the hand board's
@@ -2413,7 +2421,7 @@ a master, and every master is one component with variants as props
 - **The last nine legacy boards converted**, and with them the
   canvas: `ReplyCompose`, `ReplyPad`, `ReplySeal`, `EditCompose`,
   `EditActs`, `DiscardConfirm`, `HelpDialog`, `NetworkError` and
-  `PadKeyAbsent`. All 119 boards now render from `screens/`; nothing
+  `PadKeyAbsent`. Every board now renders from `screens/`; nothing
   on the canvas hand-copies component markup. What moved and why:
   the reply's seal reconciles with `ReplyCited`, its staged twin —
   one add-row pair, drawn once in the prelude, and one "+ Cite
