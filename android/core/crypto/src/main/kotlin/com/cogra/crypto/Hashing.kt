@@ -92,5 +92,5 @@ fun verify(publicKey: ByteArray, tag: String, msg: ByteArray, signature: ByteArr
  */
 fun addressOf(publicKey: ByteArray): String {
     val digest = MessageDigest.getInstance("SHA-256").digest(publicKey)
-    return digest.copyOfRange(0, 20).joinToString("") { "%02x".format(it) }
+    return digest.copyOfRange(0, 20).toHex()
 }

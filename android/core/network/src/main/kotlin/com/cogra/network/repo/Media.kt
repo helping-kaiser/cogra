@@ -10,6 +10,7 @@ import com.apollographql.apollo.api.Optional
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
 import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.media.PartFailure
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
 import com.cogra.domain.media.RESUMABLE_THRESHOLD_BYTES
@@ -169,7 +170,18 @@ class MediaRepositoryImpl @Inject constructor(
             partCount = opened.partCount,
             onProgress = onProgress,
         )
-        if (failure != null) return Outcome.Failed(IllegalStateException(failure))
+        // A refused part is a business answer in the `Outcome`
+        // vocabulary, not a fault — telling the author to check their
+        // connection about it is advice that cannot help. The part
+        // route answers with a status and no `userErrors` payload, so
+        // the refusal carries no server words and the composer falls
+        // back to its own copy.
+        when (failure) {
+            null -> Unit
+            PartFailure.REFUSED -> return Outcome.Refused(emptyList())
+            PartFailure.UNREADABLE, PartFailure.TRANSPORT ->
+                return Outcome.Failed(IllegalStateException("upload stopped: $failure"))
+        }
 
         // Completion is idempotent by contract, so a lost reply is
         // worth asking again for: the session remembers the asset it

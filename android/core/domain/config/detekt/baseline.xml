@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:RegistrationSigner.kt:RegistrationSigner$suspend fun advance: RegistrationProgress</ID>
+    <ID>CyclomaticComplexMethod:WriteSigner.kt:WriteSigner$private suspend fun approveFrom: WriteResult</ID>
+    <ID>CyclomaticComplexMethod:WriteSigner.kt:WriteSigner$private suspend fun resumeOne: WriteResult</ID>
+    <ID>CyclomaticComplexMethod:WriteSigner.kt:WriteSigner$suspend fun signStaged: WriteResult</ID>
+    <ID>MagicNumber:MediaGeometry.kt:270</ID>
+    <ID>MagicNumber:MediaGeometry.kt:90</ID>
+    <ID>MatchingDeclarationName:HandshakeSteps.kt:PreSignedStep</ID>
+    <ID>MatchingDeclarationName:MediaGeometry.kt:PixelRect</ID>
+    <ID>MaxLineLength:RegistrationFlowTest.kt:RegistrationFlowTest$private</ID>
+    <ID>NestedBlockDepth:WriteSigner.kt:WriteSigner$private suspend fun resumeOne: WriteResult</ID>
+    <ID>SwallowedException:KeyCeremony.kt:ActorRestorer$e: KeyBackupException</ID>
+    <ID>TooManyFunctions:Repositories.kt:AccountRepository</ID>
+    <ID>TooManyFunctions:Stores.kt:IdentityStore</ID>
+  </CurrentIssues>
+</SmellBaseline>

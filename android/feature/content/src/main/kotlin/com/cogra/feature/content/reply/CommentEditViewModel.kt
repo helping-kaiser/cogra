@@ -17,21 +17,21 @@ import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.feature.content.ReferenceCandidateRow
-import com.cogra.feature.content.ReferenceFinderState
 import com.cogra.feature.content.ReferenceSectionState
+import com.cogra.feature.content.SectionsEditor
 import com.cogra.feature.content.TagRow
 import com.cogra.feature.content.TagSectionState
-import com.cogra.feature.content.candidateRows
 import com.cogra.feature.content.editableRow
 import com.cogra.feature.content.referenceFieldIndex
 import com.cogra.feature.content.tagFieldIndex
 import com.cogra.feature.content.wizard.AssetUpload
+import com.cogra.feature.content.wizard.UploadFailure
+import com.cogra.feature.content.wizard.uploadPicture
 import com.cogra.feature.content.wizard.PickedAsset
 import com.cogra.feature.content.wizard.attachmentFieldIndex
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -60,7 +60,17 @@ class CommentEditViewModel @Inject constructor(
     val state: StateFlow<CommentEditState> = _state.asStateFlow()
 
     private val uploads = mutableMapOf<String, Job>()
-    private var finderJob: Job? = null
+
+    private val sections = SectionsEditor(
+        scope = viewModelScope,
+        references = references,
+        state = _state,
+        tagsOf = { it.tagSection },
+        withTags = { state, tags -> state.copy(tagSection = tags) },
+        referencesOf = { it.referenceSection },
+        withReferences = { state, refs -> state.copy(referenceSection = refs) },
+    )
+
     private var started = false
 
     /**
@@ -156,23 +166,8 @@ class CommentEditViewModel @Inject constructor(
         uploads.remove(uri)?.cancel()
         _state.update { it.withUpload(uri, AssetUpload.Running) }
         uploads[uri] = viewModelScope.launch {
-            val picture = processor.process(uri, CropSpec(targetRatio = ratio ?: 1f))
-            if (picture == null) {
-                _state.update { it.withUpload(uri, AssetUpload.Failed(UNREADABLE)) }
-                return@launch
-            }
-            when (val outcome = media.uploadMedia(picture)) {
-                is Outcome.Success -> _state.update {
-                    it.withUpload(uri, AssetUpload.Done(outcome.value.id))
-                }
-                is Outcome.Refused -> _state.update {
-                    it.withUpload(
-                        uri,
-                        AssetUpload.Failed(outcome.errors.firstOrNull()?.message ?: REFUSED),
-                    )
-                }
-                is Outcome.Failed -> _state.update { it.withUpload(uri, AssetUpload.Failed(TRANSPORT)) }
-            }
+            val result = uploadPicture(uri, CropSpec(targetRatio = ratio ?: 1f), processor, media)
+            _state.update { it.withUpload(uri, result) }
         }
     }
 
@@ -212,79 +207,44 @@ class CommentEditViewModel @Inject constructor(
 
     // -- Topics and citations --
 
-    fun onTagInputChange(value: String) = updateTags { it.withInput(value) }
+    fun onTagInputChange(value: String) = sections.onTagInputChange(value)
 
-    fun onAddTag() = updateTags { it.added() }
+    fun onAddTag() = sections.onAddTag()
 
-    fun onRemoveTag(name: String) = updateTags { it.removed(name) }
+    fun onRemoveTag(name: String) = sections.onRemoveTag(name)
 
-    fun onTuneTag(name: String) = updateTags { it.tuned(name) }
+    fun onTuneTag(name: String) = sections.onTuneTag(name)
 
-    fun onDoneTuningTag() = updateTags { it.tuned(null) }
+    fun onDoneTuningTag() = sections.onDoneTuningTag()
 
-    fun onTagRelevanceChange(name: String, value: Double) = updateTags { it.withRelevance(name, value) }
+    fun onTagRelevanceChange(name: String, value: Double) = sections.onTagRelevanceChange(name, value)
 
-    fun onTagConfidenceChange(name: String, value: Double) = updateTags { it.withConfidence(name, value) }
+    fun onTagConfidenceChange(name: String, value: Double) = sections.onTagConfidenceChange(name, value)
 
-    private fun updateTags(block: (TagSectionState) -> TagSectionState) =
-        _state.update { it.copy(tagSection = block(it.tagSection)) }
+    private fun updateTags(block: (TagSectionState) -> TagSectionState) = sections.updateTags(block)
 
-    fun onOpenFinder() = updateReferences { it.withFinder(ReferenceFinderState()) }
+    fun onOpenFinder() = sections.onOpenFinder()
 
-    fun onCloseFinder() {
-        finderJob?.cancel()
-        updateReferences { it.withFinder(null) }
-    }
+    fun onCloseFinder() = sections.onCloseFinder()
 
-    fun onFinderQueryChange(query: String) {
-        finderJob?.cancel()
-        updateReferences { section ->
-            section.withFinder(
-                (section.finder ?: ReferenceFinderState()).copy(
-                    query = query,
-                    searching = query.isNotBlank(),
-                    failed = false,
-                ),
-            )
-        }
-        finderJob = viewModelScope.launch {
-            delay(FINDER_DEBOUNCE_MILLIS)
-            when (val outcome = references.candidateRows(query)) {
-                is Outcome.Success -> updateReferences { section ->
-                    section.finder?.takeIf { it.query == query }?.let {
-                        section.withFinder(
-                            it.copy(candidates = outcome.value, searching = false, failed = false),
-                        )
-                    } ?: section
-                }
-                is Outcome.Refused, is Outcome.Failed -> updateReferences { section ->
-                    section.finder?.takeIf { it.query == query }?.let {
-                        section.withFinder(it.copy(searching = false, failed = true))
-                    } ?: section
-                }
-            }
-        }
-    }
+    fun onFinderQueryChange(query: String) = sections.onFinderQueryChange(query)
 
-    fun onPickReference(row: ReferenceCandidateRow) {
-        finderJob?.cancel()
-        updateReferences { it.added(row.targetId, row.target).withFinder(null) }
-    }
+    fun onPickReference(row: ReferenceCandidateRow) = sections.onPickReference(row)
 
-    fun onRemoveReference(targetId: String) = updateReferences { it.removed(targetId) }
+    fun onRemoveReference(targetId: String) = sections.onRemoveReference(targetId)
 
-    fun onTuneReference(targetId: String) = updateReferences { it.tuned(targetId) }
+    fun onTuneReference(targetId: String) = sections.onTuneReference(targetId)
 
-    fun onDoneTuningReference() = updateReferences { it.tuned(null) }
+    fun onDoneTuningReference() = sections.onDoneTuningReference()
 
     fun onReferenceRelevanceChange(targetId: String, value: Double) =
-        updateReferences { it.withRelevance(targetId, value) }
+        sections.onReferenceRelevanceChange(targetId, value)
 
     fun onReferenceSupportChange(targetId: String, value: Double) =
-        updateReferences { it.withSupport(targetId, value) }
+        sections.onReferenceSupportChange(targetId, value)
 
     private fun updateReferences(block: (ReferenceSectionState) -> ReferenceSectionState) =
-        _state.update { it.copy(referenceSection = block(it.referenceSection)) }
+        sections.updateReferences(block)
 
     /**
      * Signs the edit, then each topic and citation the edit newly
@@ -417,7 +377,7 @@ class CommentEditViewModel @Inject constructor(
                 attachmentIndex != null && attachmentIndex in picks.indices -> {
                     picks = picks.mapIndexed { i, asset ->
                         if (i == attachmentIndex) {
-                            asset.copy(upload = AssetUpload.Failed(error.message))
+                            asset.copy(upload = AssetUpload.Failed(UploadFailure.REFUSED_PICTURE, error.message))
                         } else {
                             asset
                         }
@@ -438,15 +398,14 @@ class CommentEditViewModel @Inject constructor(
     private fun failTransport() = _state.update { it.copy(submitting = false, transportFailed = true) }
 
     private companion object {
-        const val FINDER_DEBOUNCE_MILLIS = 250L
 
         /** A Tag at relevance 0 is how a topic is taken off (hashtag.md §4). */
         const val WITHDRAWN = 0.0
 
+        // The one message still carried as prose: `refusal` is also the
+        // channel the server's own words arrive on, so moving this to a
+        // resource means reshaping `problem()` on three screens and the
+        // JVM tests that read it — a sweep of its own (AND-04 note).
         const val GONE = "That comment is no longer there."
-
-        const val UNREADABLE = "That file could not be read as a picture."
-        const val REFUSED = "The server would not take that picture."
-        const val TRANSPORT = "The upload could not reach the server."
     }
 }
