@@ -61,7 +61,9 @@ export function Screen() {
 
         {/* The pick's readout, in the pad's own block shape: the name of the
             quantity, then the face and the number under it. */}
-        <div style={{ display: "flex", flexDirection: "column" }}>
+        {/* The readout clears the corner the "?" sits in, the way the master's
+            own standing block does. */}
+        <div style={{ display: "flex", flexDirection: "column", paddingRight: 40 }}>
           <span aria-hidden="true" style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
             Your pick
           </span>

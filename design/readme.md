@@ -2394,12 +2394,40 @@ a master, and every master is one component with variants as props
   description, the stream's caption takes the description too, and
   the caption paragraph took its own role's leading — unclassed text
   had been inheriting body-large's.
+- **The compose wizard's ten legacy boards converted** (jakob's
+  ruling: all of them). `ComposeWords`, `ComposePick`, `ComposeCrop`,
+  `ComposeCover`, `ComposeDraft`, `ComposeLicense`, `ComposeSensitive`,
+  `ComposePad`, `ComposeKeyAbsent` and `ComposeSeal` were hand
+  `.dc.html` with no source behind them; each now renders from
+  `screens/` over the masters, and the last inert "Show all" on the
+  canvas became `PickTray`'s button. What moved and why: the seal is
+  `ComposeSealUploading`'s anatomy without the upload gate, and its
+  stance row now reads the **pair** `StanceReadout` spells — it had
+  printed one number while the reference row two lines above printed
+  two. The cover strip is `CoverRow`, so its "A picture" caption goes
+  (the master says a dashed square with the picture glyph is not a
+  photograph, and two other boards already draw it that way). The
+  license rows and the sensitive switch became real controls the way
+  `Checkbox` makes a row one. The grids' local tile palette — four
+  colours with no token behind them — reads off the surface-container
+  rungs, as `ComposePickVideo`'s dead grid already did.
+- **Three masters were refused, each for the same reason**: the
+  component and the board are not the same thing. `CropViewport`
+  locks a shape and masks around it, which is right for a profile
+  picture and a video cover and wrong for the post crop, where the
+  author is choosing the shape. `LicenseChooser` draws the two axes
+  as wrapped native radios with no hints; the sheet gives each
+  reading its own row and its consequence, which the master would
+  delete. `StancePad` is the square where both parameters are the
+  author's, and on one's own post the second is not — your own post
+  always reaches you in full, so that board draws **one axis**, and
+  the system owns no one-axis pad to draw it with.
 - **Held for rulings** (each parked in the backlog with its
   question): ChipMini's tone, the reply seal's staged-reference
   placement, the Mark drawings, the wizard footer's shape, the
   comments-sheet shell, the "+ Cite something" voices, the topic
-  chip's ×, the acts line's target — and the twenty-seven
-  hand-authored boards that predate the pipeline.
+  chip's ×, the acts line's target — and the seventeen
+  hand-authored boards that still predate the pipeline.
 - **The gate**: 939 edges · 82 gaps · flows 58/53/5, unchanged end
   to end — which is the round's whole claim: the canvas redrawn
   from masters without the graph moving.

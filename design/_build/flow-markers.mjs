@@ -340,9 +340,9 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
-// The Compose page's JSX boards (the 13 hand boards carry their attributes
-// directly). The sheet boards are scanExempt; only the sheet layer and its
-// scrim are stamped.
+// The Compose page's JSX boards (the edit wizard's two — EditCompose and
+// EditActs — still carry their attributes directly as hand boards). The sheet
+// boards are scanExempt; only the sheet layer and its scrim are stamped.
 Object.assign(FLOW_MARKERS, {
   ReferencePicker: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },

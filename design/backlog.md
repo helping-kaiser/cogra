@@ -123,10 +123,9 @@ variant, the where-you-are comment affordance on detail;
 a static board shows the parked pad from the master. Screens can
 keep canvas tweak chips via `PROPS`/`VALS` exports. The rule is
 readme §13 *Masters, variants, and screens*. **Remaining:** the
-task-flow boards (compose wizard, seals, key/auth ceremony screens)
-are still hand-authored `.dc.html` — convert them as their sections
-are next touched; `ReplyPad`/`ComposePad` (hand-copied pads) are
-first in line.
+reply and edit wizards and the key/auth ceremony screens are still
+hand-authored `.dc.html` — convert them as their sections are next
+touched; `ReplyPad` (the last hand-copied pad) is first in line.
 The canonical artboards hand-copy component markup, so system updates
 don't propagate — the entry-session post cards already drifted
 (missing elements newer boards carry). Change the authoring model so
@@ -416,23 +415,57 @@ Two follow-ups the round surfaces, still open:
   `aria-describedby`, and the supporting-line span isn't marked
   `role="alert"`. Needs a ruling on whether every field error should
   announce, or only the ones a screen reader wouldn't otherwise catch.
-- **Twenty-seven hand-authored boards predate the pipeline and owe
+- **Seventeen hand-authored boards predate the pipeline and owe
   their componentize-first pass** — the conformance round
-  (2026-09-04) converted every JSX-sourced board, but these exist
-  only as hand-written `.dc.html`, all live on the canvas, none
-  reachable by the pipeline until a JSX source is written for each:
-  the original compose wizard run (`ComposeWords`, `ComposePick`,
-  `ComposeSeal`, `ComposeLicense`, `ComposeSensitive`, `ComposeCover`,
-  `ComposeCrop`, `ComposeDraft`, `ComposePad`, `ComposeKeyAbsent`),
-  the key ceremony family (`KeyCeremony`, `KeyConfirm`, `KeyDecline`),
-  `ReplyCompose`, `ReplyPad`, `ReplySeal`, `EditCompose`, `EditActs`,
+  (2026-09-04) converted every JSX-sourced board and then the whole
+  compose wizard run; these exist only as hand-written `.dc.html`,
+  all live on the canvas, none reachable by the pipeline until a JSX
+  source is written for each: the key ceremony family
+  (`KeyCeremony`, `KeyConfirm`, `KeyDecline`), `ReplyCompose`,
+  `ReplyPad`, `ReplySeal`, `EditCompose`, `EditActs`,
   `NetworkError`, `GuestGate`, `HelpDialog`, `InviteEntry`,
   `JoinInvalid`, `PadKeyAbsent`, `DiscardConfirm`, `Reset`,
   `Verified`. Scope (all this round / the worst first / defer) is
   jakob's open call. `ReplyCited` draws ReplySeal's seal over the
-  real masters, so that one's target is already drawn; the legacy
-  `ComposePick` also holds the canvas's last inert "Show all", out
-  of the real-controls ruling's reach until converted.
+  real masters, so that one's target is already drawn; `ReplyPad`
+  wants the one-axis pad `ComposePad` now draws for itself.
+- **What the compose-wizard conversion surfaced**, each needing a
+  ruling before anyone fills it in:
+  - **`SheetTitle` has no trailing slot.** The license and sensitive
+    sheets each need the sheet's name plus the screen's one "?" (and
+    the sensitive one the switch besides), so both assemble the row
+    by hand — the same six-copies drift that made `stageLabel` and
+    `help` slots on `WizardHeader`.
+  - **`HelpDot` has no tonal-panel variant.** It spends `--primary`
+    on the glyph and `--border-hairline` on the ring, which inside
+    the key-absent `tertiary-container` block is the second colour
+    family `Button`'s `inverse` exists to avoid, so that board draws
+    its own ring in `currentColor`.
+  - **`PickPrompt` requires an escape.** The draft board's
+    fresh-start line is the same caption with nothing to escape to;
+    it is spelled at the master's values instead of taking it.
+  - **No one-axis stance pad exists.** `ComposePad` draws its own
+    and `ReplyPad` will want the same one. Its readout is 😄 "Glad",
+    which is in no `STANCE_ANCHORS` row (the nearest anchor to a
+    gentle positive is 🙂 "Nice") — the face and the words need a
+    ruling before either board can read from the table.
+  - **A flow badge on a field never paints.** `[data-flow]::after`
+    generates no box on a replaced element, and the composer boards
+    stamp the `<input>`/`<textarea>` itself (`ComposeCited`,
+    `ComposeDetails`, `ComposeUploading`, `EditComposeVideo`,
+    `ComposeSensitive`) — check-flows verifies the attribute, not the
+    paint. The badge belongs on the field's wrapper; `ComposeLicense`
+    already stamps the row rather than its hidden radio.
+  - **The seal is drawn four ways under its own overlays.** The
+    license, sensitive and pad boards each abbreviate the seal
+    beneath the scrim differently — and differently from
+    `ComposeSeal` itself. The conversion preserved each as drawn;
+    whether an overlay should sit over the real seal is a drawing
+    ruling.
+  - **The device-gallery grid now lives on three boards** —
+    `ComposePick` live, `ComposePickVideo` dead, `ComposeDraft`
+    dimmed — each screen-local by the rule that the grid exists on
+    one step of one flow. Three is where that rule stops being true.
 - **Held rulings from the conformance round (2026-09-04)** — each a
   visible-change question the round parked rather than decided:
   ChipMini's tone (Chip `sm` renders 26px bordered on a different
