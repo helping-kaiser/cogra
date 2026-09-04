@@ -52,7 +52,7 @@ export function Screen() {
       <ReelCaption
         handle={MIRA.handle}
         title={MIRA_CLIP_POST.title}
-        content={MIRA_CLIP_POST.content}
+        description={MIRA_CLIP_POST.description}
         bottom={BAND_HEIGHT + 22}
       />
 
