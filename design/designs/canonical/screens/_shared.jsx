@@ -69,6 +69,7 @@ const {
   StancePad,
   StanceReadout,
   StanceValue,
+  TransportError,
   SensitiveVeil,
   SensitiveScope,
   RedactedContent,
@@ -531,6 +532,40 @@ function ProfileOtherBody() {
         </ChronicleList>
       </div>
       <BottomNav active={null} slots={ALL_SLOTS} inline />
+    </>
+  );
+}
+
+/* THE REPLY WIZARD'S FIRST STAGE, whole (legacy conversion, lane C): the thing
+   being answered, the words being written, the way to add pictures to them, and
+   the foot. It lives here for the KeyPledge reason — `DiscardConfirm` draws
+   this same composer under its dialog, and a body on a second board stops being
+   board-local. Drawn once, the two boards cannot disagree about what the
+   composer's "+ Add" offers, which is exactly what the hand copies had done. */
+function ReplyDraft() {
+  return (
+    <>
+      <WizardHeader title="Reply" leaveLabel="Leave — the reply is discarded" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
+        <QuotedRow
+          title="The long way home — @ada"
+          snippet="The light does something at the third headland that I have never managed…"
+          name="Ada Okonkwo"
+          src="ava1.jpg"
+        />
+
+        <p style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)" }}>
+          The third headland light is real — I have a print from 2019 that almost catches it. Almost.
+          <Caret />
+        </p>
+
+        <InlineAction size="sm" selfStart>+ Add pictures or a video</InlineAction>
+
+        <div style={{ flex: 1 }} />
+
+        <QuietNote>Words first — pictures can join them.</QuietNote>
+        <Button style={{ width: "100%" }}>Next</Button>
+      </div>
     </>
   );
 }
