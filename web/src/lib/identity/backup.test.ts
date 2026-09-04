@@ -174,9 +174,26 @@ describe("backup manager", () => {
     ).rejects.toThrow();
     expect(await store.actorSeed()).toBeNull();
 
-    // Rekey signs with the key recovered from the blob, not a stored seed.
+    // Rekey proves possession with the account's CUSTODY key — the one the
+    // server has attached — never with a key derived from the fetched blob.
     const key = await store.actorKey();
     expect(await proofVerifies(sink, key!.publicKeyBytes())).toBe(true);
+  });
+
+  // The blob is supposed to hold this account's own seed. If it holds
+  // another's, re-sealing it would hand the reader a code for a key that is
+  // not theirs, and nothing would say so until writes started being refused.
+  it("rekey refuses a blob holding a key other than this device's custody", async () => {
+    const currentCode = RecoveryCode.generate();
+    const foreignBlob = toBase64(await sealKeyBackup(randomBytes(32), currentCode));
+    await store.saveActor(randomBytes(32), false);
+    const sink: UploadSink = { blob: null };
+    server.use(challengeHandler(), keyBackupHandler(foreignBlob), uploadHandler(sink));
+
+    const result = await manager.rekey(currentCode.display());
+    expect(result.kind).toBe("failed");
+    // Loudly means nothing was written: no blob left the browser.
+    expect(sink.blob).toBeNull();
   });
 
   it("a refused challenge stops the upload and keeps the seed", async () => {
@@ -280,6 +297,7 @@ describe("backup manager", () => {
   it("rekey surfaces an upload refusal", async () => {
     const seed = randomBytes(32);
     const currentCode = RecoveryCode.generate();
+    await store.saveActor(seed, false);
     server.use(
       challengeHandler(),
       keyBackupHandler(toBase64(await sealKeyBackup(seed, currentCode))),

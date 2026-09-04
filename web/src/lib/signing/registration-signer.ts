@@ -11,6 +11,7 @@ import { toBase64 } from "@/lib/crypto/bytes";
 import type { KeyCeremony } from "@/lib/identity/key-ceremony";
 import type { IdentityStore } from "@/lib/identity/store";
 import type { AuthGuard } from "@/lib/session/guard";
+import { keyUsable } from "./key-usable";
 import type { WriteSigner } from "./write-signer";
 
 export type RegistrationProgress =
@@ -54,16 +55,6 @@ export function createRegistrationSigner(deps: {
   async function devicePubkey(): Promise<string | null> {
     const key = await store.actorKey();
     return key === null ? null : toBase64(key.publicKeyBytes());
-  }
-
-  /**
-   * The slot key counts as this account's only while the account's
-   * attached key doesn't contradict it (roadmap.md slice 1.1) — a
-   * mismatch reads as key-not-on-device, so the UI offers restore
-   * instead of signing with a foreign key.
-   */
-  function keyUsable(devicePub: string | null, attachedPub: string | null): boolean {
-    return devicePub !== null && (attachedPub === null || attachedPub === devicePub);
   }
 
   /**
