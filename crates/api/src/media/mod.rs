@@ -919,6 +919,10 @@ pub async fn store_asset(
     Ok(row)
 }
 
+/// How many orphaned assets one sweep tick collects — the bound
+/// `resumable::SWEEP_BATCH` puts on the session sweep sharing this tick.
+const ORPHAN_SWEEP_BATCH: i64 = 200;
+
 /// The orphan sweep (development.md, `MEDIA_ORPHAN_*`): the same reaper
 /// shape the account and rate-limit sweeps use.
 ///
@@ -945,7 +949,7 @@ pub async fn orphan_reaper_loop(
     loop {
         ticker.tick().await;
         resumable::sweep_expired(&pool, &blobs).await;
-        match store::sweep_orphans(&pool, max_age_secs).await {
+        match store::sweep_orphans(&pool, max_age_secs, ORPHAN_SWEEP_BATCH).await {
             Ok(swept) if swept.is_empty() => {}
             Ok(swept) => {
                 tracing::debug!(rows = swept.len(), "media sweeper collected orphans");

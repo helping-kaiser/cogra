@@ -697,9 +697,10 @@ business. 38 files declare `mod tests`, so a census that kept them
 would derive mod:*:tests thirty-eight times and fail injectivity in
 every owner. The consequence is accepted plainly — an inline test
 module carries no label of its own.
-MEASURED 2026-09-03 by the linter's own census machinery: 106
-module definitions — the resumable upload session is the most recent
-— and after the exclusion no duplicate module name in any owner (api,
+MEASURED 2026-09-04 by the linter's own census machinery: 108
+module definitions — the store's shared fold view and its refusal
+constraint names are the most recent — and after the exclusion no
+duplicate module name in any owner (api,
 cogra-interchange, cogra-linter, common, l1-standin,
 postgres-store all clean). The census grows with the
 corpus, so the number is re-measured whenever a slice adds Rust

@@ -46,6 +46,13 @@ pub struct MediaAttachment {
     /// attachment leads a multi-asset parent (data-model.md
     /// "media_attachments.options shape").
     pub cover_media_id: Option<Uuid>,
+    /// The erasure slice's columns. Nothing in the repo writes them yet —
+    /// the slice is unbuilt, deliberately, and the read surfaces that
+    /// branch on them are ahead of it rather than dead. The direction
+    /// they will be built in is recorded in docs/open-questions.md:
+    /// redaction marks the *usage* — a post or comment version, a gallery
+    /// junction row — rather than the asset, so an innocent picture that
+    /// was once in a redacted gallery is never permanently unusable.
     pub redaction_reason: Option<String>,
     pub redacted_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
@@ -72,6 +79,19 @@ pub struct SweptAsset {
 /// Uniqueness is on `(author_id, digest)`, never on the digest alone: two
 /// authors uploading identical bytes get two rows and two objects, so
 /// removing one author's asset can never break the other's render.
+///
+/// The key is here for resolution rather than for storage: the signed
+/// envelope's manifest names attachments by digest, and
+/// [`assets_by_digests`] can only turn a manifest back into rows because
+/// an author and a digest name at most one asset. Storage is the cheap
+/// resource; ambiguity here is not.
+///
+/// The conflict arm returns whatever row was already there, redaction
+/// columns included — so once the erasure slice exists, a re-upload of
+/// bytes whose usage was redacted hands the caller back the existing
+/// asset. That is the intended answer under the direction recorded in
+/// docs/open-questions.md: redaction marks the usage, not the bytes, so
+/// the row is still a perfectly good asset to attach somewhere else.
 ///
 /// The poster rides the insert rather than a later update because an asset
 /// row is immutable after upload — there is no update surface for one
@@ -169,8 +189,7 @@ pub async fn attach_to_post_version(
     if gallery.is_empty() {
         return Ok(());
     }
-    let (ids, alts) = split_placements(gallery);
-    let orders: Vec<i16> = (0..gallery.len() as i16).collect();
+    let (ids, orders, alts) = split_placements(gallery)?;
     sqlx::query!(
         "INSERT INTO post_attachments
              (post_version_id, attachment_id, display_order, is_cover, alt_text)
@@ -198,8 +217,7 @@ pub async fn attach_to_comment_version(
     if gallery.is_empty() {
         return Ok(());
     }
-    let (ids, alts) = split_placements(gallery);
-    let orders: Vec<i16> = (0..gallery.len() as i16).collect();
+    let (ids, orders, alts) = split_placements(gallery)?;
     sqlx::query!(
         "INSERT INTO comment_attachments
              (comment_version_id, attachment_id, display_order, alt_text)
@@ -216,15 +234,42 @@ pub async fn attach_to_comment_version(
     Ok(())
 }
 
-/// The gallery as the two parallel arrays `unnest` zips back together.
+/// The three parallel arrays one gallery is bound as.
+type GalleryArrays = (Vec<Uuid>, Vec<i16>, Vec<Option<String>>);
+
+/// The gallery as the three parallel arrays `unnest` zips back together.
 /// One `unnest` over parallel arrays is what keeps the whole gallery one
 /// statement, and the arrays have to be built before the query borrows
 /// them.
-fn split_placements(gallery: &[GalleryPlacement]) -> (Vec<Uuid>, Vec<Option<String>>) {
-    gallery
-        .iter()
-        .map(|p| (p.attachment_id, p.alt_text.clone()))
-        .unzip()
+///
+/// All three are built in one pass so their lengths cannot diverge:
+/// `unnest` pads the short arrays of a ragged set with NULL, and both
+/// `attachment_id` and `display_order` are `NOT NULL`, so a divergence is
+/// either a refused statement or wrong rows — never a visible mismatch.
+///
+/// `display_order` is a `smallint`, so a gallery longer than `i16::MAX` is
+/// refused rather than wrapped. A wrapped index would restart the ordering
+/// at a negative number, and `is_cover` is derived as `ord = 0`, so the
+/// cover would move to whichever placement happened to land on zero.
+fn split_placements(gallery: &[GalleryPlacement]) -> Result<GalleryArrays, sqlx::Error> {
+    let mut ids = Vec::with_capacity(gallery.len());
+    let mut orders = Vec::with_capacity(gallery.len());
+    let mut alts = Vec::with_capacity(gallery.len());
+    for (index, placement) in gallery.iter().enumerate() {
+        let order = i16::try_from(index).map_err(|_| {
+            sqlx::Error::Encode(
+                format!(
+                    "gallery of {} placements exceeds display_order",
+                    gallery.len()
+                )
+                .into(),
+            )
+        })?;
+        ids.push(placement.attachment_id);
+        orders.push(order);
+        alts.push(placement.alt_text.clone());
+    }
+    Ok((ids, orders, alts))
 }
 
 struct GalleryRow {
@@ -675,37 +720,113 @@ pub async fn expired_upload_sessions(
 ///   old bytes' digests stay committed on the superseded record (post.md
 ///   §4), so the bytes have to stay too.
 ///
-/// Each `NOT EXISTS` is an index-only probe of the junction's reverse
-/// index on `attachment_id`; without it Postgres has no index leading with
-/// that column and every probe is a sequential scan.
+/// Each `NOT EXISTS` is an index probe of the referencing column — the
+/// four junctions' reverse index on `attachment_id`, the two version
+/// tables' partial index on the picture column, the asset table's own
+/// `cover_media_id`, and the session table's `media_id`. Postgres creates
+/// no index behind a foreign key, so without them each probe is a
+/// sequential scan and so is the delete's own integrity re-check. A new
+/// way to reference an asset owes this list a probe *and* that column an
+/// index, in the same change.
 ///
 /// Rows are deleted and their keys returned; the caller removes the
 /// objects. Doing it in that order means a crash between the two leaves
 /// an unreferenced object rather than a row pointing at nothing.
+///
+/// The limit bounds one tick's work, for the reason
+/// [`expired_upload_sessions`] states: a backlog is drained over several
+/// ticks rather than in one transaction that holds row locks on every
+/// candidate at once — and each of those locks is contended, because a
+/// gallery write takes a `FOR KEY SHARE` lock on the asset it references
+/// as its own foreign-key check. Oldest first, so the drain converges.
+///
+/// The candidate select and the delete share one statement and therefore
+/// one snapshot, so bounding the work does not widen the window in which
+/// an asset could be referenced between being chosen and being removed.
 pub async fn sweep_orphans(
     pool: &PgPool,
     max_age_secs: f64,
+    limit: i64,
 ) -> Result<Vec<SweptAsset>, sqlx::Error> {
     sqlx::query_as!(
         SweptAsset,
         r#"
+        WITH candidates AS (
+            SELECT m.id
+            FROM media_attachments m
+            WHERE m.created_at <= now() - make_interval(secs => $1)
+              AND NOT EXISTS (SELECT 1 FROM post_attachments         a WHERE a.attachment_id = m.id)
+              AND NOT EXISTS (SELECT 1 FROM comment_attachments      a WHERE a.attachment_id = m.id)
+              AND NOT EXISTS (SELECT 1 FROM chat_message_attachments a WHERE a.attachment_id = m.id)
+              AND NOT EXISTS (SELECT 1 FROM item_attachments         a WHERE a.attachment_id = m.id)
+              AND NOT EXISTS (
+                    SELECT 1 FROM actor_profile_versions p WHERE p.avatar_id = m.id)
+              AND NOT EXISTS (SELECT 1 FROM chat_versions c WHERE c.image_id = m.id)
+              AND NOT EXISTS (
+                    SELECT 1 FROM media_attachments v WHERE v.cover_media_id = m.id)
+              AND NOT EXISTS (
+                    SELECT 1 FROM media_upload_sessions s WHERE s.media_id = m.id)
+            ORDER BY m.created_at
+            LIMIT $2
+        )
         DELETE FROM media_attachments m
-        WHERE m.created_at <= now() - make_interval(secs => $1)
-          AND NOT EXISTS (SELECT 1 FROM post_attachments         a WHERE a.attachment_id = m.id)
-          AND NOT EXISTS (SELECT 1 FROM comment_attachments      a WHERE a.attachment_id = m.id)
-          AND NOT EXISTS (SELECT 1 FROM chat_message_attachments a WHERE a.attachment_id = m.id)
-          AND NOT EXISTS (SELECT 1 FROM item_attachments         a WHERE a.attachment_id = m.id)
-          AND NOT EXISTS (
-                SELECT 1 FROM actor_profile_versions p WHERE p.avatar_id = m.id)
-          AND NOT EXISTS (SELECT 1 FROM chat_versions c WHERE c.image_id = m.id)
-          AND NOT EXISTS (
-                SELECT 1 FROM media_attachments v WHERE v.cover_media_id = m.id)
-          AND NOT EXISTS (
-                SELECT 1 FROM media_upload_sessions s WHERE s.media_id = m.id)
-        RETURNING id, storage_key
+        USING candidates c
+        WHERE m.id = c.id
+        RETURNING m.id, m.storage_key
         "#,
         max_age_secs,
+        limit,
     )
     .fetch_all(pool)
     .await
+}
+
+#[cfg(test)]
+mod placement_tests {
+    use super::{GalleryPlacement, split_placements};
+    use uuid::Uuid;
+
+    fn placement(n: u128, alt: Option<&str>) -> GalleryPlacement {
+        GalleryPlacement {
+            attachment_id: Uuid::from_u128(n),
+            alt_text: alt.map(str::to_string),
+        }
+    }
+
+    /// The three arrays are one gallery said three ways, so they have to
+    /// come out the same length and in the same order — `unnest` pads a
+    /// ragged set with NULL, and two of the three columns are NOT NULL.
+    ///
+    /// A gallery's three bound arrays agree on length and on order.
+    /// ´claim:media:a-gallerys-arrays-cannot-diverge´
+    #[test]
+    fn the_three_arrays_agree_on_length_and_order() {
+        let gallery = [
+            placement(1, Some("first")),
+            placement(2, None),
+            placement(3, Some("third")),
+        ];
+        let (ids, orders, alts) = split_placements(&gallery).expect("fits");
+        assert_eq!(
+            ids,
+            vec![Uuid::from_u128(1), Uuid::from_u128(2), Uuid::from_u128(3)]
+        );
+        assert_eq!(orders, vec![0, 1, 2]);
+        assert_eq!(
+            alts,
+            vec![Some("first".to_string()), None, Some("third".to_string())]
+        );
+    }
+
+    /// Position is the order and index 0 is the cover, so the first
+    /// placement is the one `is_cover` will pick out.
+    ///
+    /// The first placement holds position zero, which is the cover.
+    /// ´claim:media:the-first-placement-is-the-cover´
+    #[test]
+    fn the_first_placement_holds_position_zero() {
+        let (_, orders, _) = split_placements(&[placement(1, None)]).expect("fits");
+        assert_eq!(orders, vec![0]);
+        assert!(split_placements(&[]).expect("fits").0.is_empty());
+    }
 }

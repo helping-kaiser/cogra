@@ -234,3 +234,37 @@ async fn a_partial_landing_position_is_rejected(pool: PgPool) {
     .await
     .expect("a whole position is accepted");
 }
+
+/// Refusals key on constraint *names*: PostgreSQL reports the constraint
+/// and not the column on a unique violation, and two of the four names
+/// `auth::constraints` relies on were never written down by a migration —
+/// PostgreSQL derived them from an inline `UNIQUE`. A migration that
+/// re-declares either one under a name of its own turns `HANDLE_TAKEN`
+/// and `EMAIL_IN_USE` into 500s, with nothing else to catch it.
+///
+/// The lookup is on the unique *index* rather than on `pg_constraint`,
+/// because the four names arrive two ways: `actors.handle` and
+/// `user_credentials.email` are inline `UNIQUE` constraints, while the
+/// actor key and address are standalone `CREATE UNIQUE INDEX` and have no
+/// constraint row at all. What the error message carries either way is
+/// the index's name.
+///
+/// Every name a refusal keys on names a unique index in the schema.
+/// ´claim:schema:every-refusal-name-exists-in-the-schema´
+#[sqlx::test(migrations = "../../migrations")]
+async fn refusal_constraint_names_exist(pool: PgPool) {
+    for name in postgres_store::auth::constraints::ALL {
+        let exists: bool = sqlx::query_scalar(
+            "SELECT EXISTS (
+                 SELECT 1 FROM pg_class c
+                 JOIN pg_index i ON i.indexrelid = c.oid
+                 WHERE c.relname = $1 AND i.indisunique
+             )",
+        )
+        .bind(name)
+        .fetch_one(&pool)
+        .await
+        .expect("index lookup");
+        assert!(exists, "no unique index named {name}");
+    }
+}

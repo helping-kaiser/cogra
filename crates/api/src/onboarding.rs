@@ -667,9 +667,21 @@ pub async fn land_promoted(
     failures
 }
 
+/// How long a revoked or expired refresh token is kept: long enough for
+/// reuse detection to still recognise a replayed one.
+const REFRESH_TOKEN_RETENTION_SECS: f64 = 30.0 * 24.0 * 60.0 * 60.0;
+
+/// How long a consumed or expired reset link or email change is kept.
+/// Nothing reads them after that; only the hash would remain.
+const SINGLE_USE_RETENTION_SECS: f64 = 7.0 * 24.0 * 60.0 * 60.0;
+
 /// The account reaper (auth.md "Reaper"): a periodic sweep deleting
 /// never-verified accounts past their bound — freeing handle and email.
 /// Verified accounts are never reaped.
+///
+/// The spent-secret sweep rides the same tick. Both collect rows that
+/// have stopped answering any question, and a second interval to
+/// configure would buy nothing.
 pub async fn reaper_loop(pool: PgPool, interval_secs: u64) {
     let mut ticker = tokio::time::interval(std::time::Duration::from_secs(interval_secs));
     ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
@@ -679,6 +691,22 @@ pub async fn reaper_loop(pool: PgPool, interval_secs: u64) {
             Ok(0) => {}
             Ok(n) => tracing::info!(reaped = n, "never-verified accounts swept"),
             Err(e) => tracing::error!(error = %e, "account reaper failed"),
+        }
+        match store::sweep_spent_secrets(
+            &pool,
+            REFRESH_TOKEN_RETENTION_SECS,
+            SINGLE_USE_RETENTION_SECS,
+        )
+        .await
+        {
+            Ok(swept) if swept.total() == 0 => {}
+            Ok(swept) => tracing::info!(
+                refresh_tokens = swept.refresh_tokens,
+                password_resets = swept.password_resets,
+                email_changes = swept.email_changes,
+                "spent auth secrets swept"
+            ),
+            Err(e) => tracing::error!(error = %e, "spent-secret sweep failed"),
         }
     }
 }

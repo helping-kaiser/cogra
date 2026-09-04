@@ -55,7 +55,13 @@ impl Query {
         };
         Ok(Health {
             backend_version: env!("CARGO_PKG_VERSION").to_string(),
-            postgres_connected: postgres_store::ping(pool).await,
+            postgres_connected: match postgres_store::ping(pool).await {
+                Ok(()) => true,
+                Err(e) => {
+                    tracing::warn!(error = %e, "postgres health probe failed");
+                    false
+                }
+            },
             mirror_epoch,
         })
     }

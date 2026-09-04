@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        WITH proven AS (\n            SELECT new_email FROM auth_email_changes\n            WHERE user_id = $1\n              AND original_confirmed_at IS NOT NULL\n              AND new_verified_at IS NOT NULL\n              AND expires_at > NOW()\n            ORDER BY created_at DESC LIMIT 1\n        ), moved AS (\n            UPDATE user_credentials c\n            SET email = p.new_email\n            FROM proven p\n            WHERE c.actor_id = $1 AND c.email IS DISTINCT FROM p.new_email\n            RETURNING c.actor_id\n        )\n        SELECT (EXISTS (SELECT 1 FROM proven)\n                AND (EXISTS (SELECT 1 FROM moved)\n                     OR EXISTS (SELECT 1 FROM user_credentials c, proven p\n                                WHERE c.actor_id = $1 AND c.email = p.new_email)))\n               AS \"applied!\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "applied!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "e51a708838d5f619a73e20ca97a52bfbfbe6ebb6651817267d1250a5a9c97018"
+}

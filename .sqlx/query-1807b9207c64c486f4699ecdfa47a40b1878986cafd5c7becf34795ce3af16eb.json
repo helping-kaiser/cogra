@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, inviter_id, prefill_dim1, prefill_dim2, single_use,\n                created_at, expires_at, revoked_at\n         FROM auth_invite_links WHERE id = $1",
+  "query": "INSERT INTO auth_invite_links\n             (id, inviter_id, prefill_p_d, prefill_p_i, single_use, expires_at)\n         VALUES ($1, $2, $3, $4, $5, $6)\n         RETURNING id, inviter_id, prefill_p_d, prefill_p_i, single_use,\n                   created_at, expires_at, revoked_at",
   "describe": {
     "columns": [
       {
@@ -15,13 +15,13 @@
       },
       {
         "ordinal": 2,
-        "name": "prefill_dim1",
-        "type_info": "Float4"
+        "name": "prefill_p_d",
+        "type_info": "Float8"
       },
       {
         "ordinal": 3,
-        "name": "prefill_dim2",
-        "type_info": "Float4"
+        "name": "prefill_p_i",
+        "type_info": "Float8"
       },
       {
         "ordinal": 4,
@@ -46,7 +46,12 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Uuid",
+        "Uuid",
+        "Float8",
+        "Float8",
+        "Bool",
+        "Timestamptz"
       ]
     },
     "nullable": [
@@ -60,5 +65,5 @@
       true
     ]
   },
-  "hash": "43da63a57b1c13f26aa8b4b8115934034185000ee91ff05ef05b9a8d00655804"
+  "hash": "1807b9207c64c486f4699ecdfa47a40b1878986cafd5c7becf34795ce3af16eb"
 }
