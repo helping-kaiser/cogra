@@ -2,7 +2,11 @@
    LEADS — it is the odd one out and must not split the wallet's own parts
    (jakob's round-2 correction) — inset to the same margins as every card.
    Beneath it the wallet stays honestly readable: balance and history are
-   public; only signing needs the key. */
+   public; only signing needs the key.
+
+   THE RESTORE BUTTON IS `Button`'s `inverse` — the filled button standing on
+   a tonal panel, taking the panel's own pair turned over rather than a
+   `primary` fill arguing with it. */
 export function Screen() {
   return (
     <>
@@ -16,7 +20,7 @@ export function Screen() {
             <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
               Everything below stays readable — it's public, like the address it sits at. Changing the address needs your key.
             </p>
-            <Button style={{ width: "100%", background: "var(--on-tertiary-container)", color: "var(--tertiary-container)" }}>Restore the key</Button>
+            <Button variant="inverse" style={{ width: "100%" }}>Restore the key</Button>
           </div>
         </div>
 
