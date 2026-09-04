@@ -3,6 +3,14 @@
 // same reads from process-local memory, so a screen can be exercised
 // without a server.
 //
+// **In the debug source set, and nothing binds it.** It shipped in every
+// variant from `src/main` while no DI binding named it, which made an
+// accidental future binding a correctness hazard in a release build —
+// its arithmetic is deliberately not the published fold rule (below).
+// Here it cannot reach a release APK at all. Whether the no-backend run
+// it supports is still wanted, or whether it should go entirely, is
+// jakob's call.
+//
 // It is a STAND-IN FOR THE BACKEND, not client-side arithmetic the real
 // build keeps: the raw-edge rule says the *record* carries the picked
 // values verbatim and the client never derives a delta (api-spec.md
@@ -24,15 +32,13 @@ import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import javax.inject.Inject
+import javax.inject.Singleton
 
 @Singleton
-class StanceStandInRepository @Inject constructor(
-    private val writes: WriteRepository,
-) : StanceRepository {
+class StanceStandInRepository @Inject constructor(private val writes: WriteRepository) : StanceRepository {
 
     private val lock = Mutex()
     private val picks = mutableMapOf<String, MutableList<StancePair>>()

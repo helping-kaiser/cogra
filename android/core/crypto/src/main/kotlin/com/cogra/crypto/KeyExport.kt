@@ -35,6 +35,6 @@ fun exportActorSeed(seed: ByteArray): ExportedKey {
     val body = Base64.getEncoder().encodeToString(der).chunked(PEM_LINE).joinToString("\n")
     return ExportedKey(
         pem = "-----BEGIN PRIVATE KEY-----\n$body\n-----END PRIVATE KEY-----",
-        hex = seed.joinToString("") { "%02x".format(it) },
+        hex = seed.toHex(),
     )
 }

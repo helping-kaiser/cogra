@@ -94,7 +94,22 @@ class PreSignedProposal(
     /** The private nonce under the pre-digests. */
     val nonce: ByteArray,
     val preSignature: ByteArray,
-)
+) {
+    override fun equals(other: Any?): Boolean =
+        other is PreSignedProposal &&
+            proposal == other.proposal &&
+            authorPubkey.contentEquals(other.authorPubkey) &&
+            nonce.contentEquals(other.nonce) &&
+            preSignature.contentEquals(other.preSignature)
+
+    override fun hashCode(): Int {
+        var result = proposal.hashCode()
+        result = 31 * result + authorPubkey.contentHashCode()
+        result = 31 * result + nonce.contentHashCode()
+        result = 31 * result + preSignature.contentHashCode()
+        return result
+    }
+}
 
 /** The message the pre-commitment signature covers. */
 fun preCommitmentMsg(
@@ -141,6 +156,37 @@ class VerifiedAct(
         e.uint(1u)
         return e.finish()
     }
+
+    /**
+     * Content equality, like every Rust counterpart derives. A
+     * round-trip is then one assertion rather than nine spelled out by
+     * hand — and a decoder that swapped two same-length salts fails it,
+     * which a nine-field list only catches if every field is listed.
+     */
+    override fun equals(other: Any?): Boolean =
+        other is VerifiedAct &&
+            proposal == other.proposal &&
+            authorPubkey.contentEquals(other.authorPubkey) &&
+            nonce.contentEquals(other.nonce) &&
+            preSignature.contentEquals(other.preSignature) &&
+            contentSalt.contentEquals(other.contentSalt) &&
+            depsSalt.contentEquals(other.depsSalt) &&
+            contentCommitment.contentEquals(other.contentCommitment) &&
+            depsCommitment.contentEquals(other.depsCommitment) &&
+            hostSeal.contentEquals(other.hostSeal)
+
+    override fun hashCode(): Int {
+        var result = proposal.hashCode()
+        result = 31 * result + authorPubkey.contentHashCode()
+        result = 31 * result + nonce.contentHashCode()
+        result = 31 * result + preSignature.contentHashCode()
+        result = 31 * result + contentSalt.contentHashCode()
+        result = 31 * result + depsSalt.contentHashCode()
+        result = 31 * result + contentCommitment.contentHashCode()
+        result = 31 * result + depsCommitment.contentHashCode()
+        result = 31 * result + hostSeal.contentHashCode()
+        return result
+    }
 }
 
 /**
@@ -150,4 +196,11 @@ class VerifiedAct(
 class ApprovalWitness(
     val actId: ActId,
     val approvalSignature: ByteArray,
-)
+) {
+    override fun equals(other: Any?): Boolean =
+        other is ApprovalWitness &&
+            actId == other.actId &&
+            approvalSignature.contentEquals(other.approvalSignature)
+
+    override fun hashCode(): Int = 31 * actId.hashCode() + approvalSignature.contentHashCode()
+}

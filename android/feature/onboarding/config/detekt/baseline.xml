@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>LongMethod:OnboardingScreens.kt:@Composable fun ApplyScreen</ID>
+    <ID>LongMethod:OnboardingScreens.kt:@Composable fun InviteEntryScreen</ID>
+    <ID>LongMethod:OnboardingScreens.kt:@Composable fun KeyCeremonyScreen</ID>
+  </CurrentIssues>
+</SmellBaseline>

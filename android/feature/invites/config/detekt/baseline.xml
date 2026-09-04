@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>LongMethod:InvitesScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun InvitesScreen</ID>
+  </CurrentIssues>
+</SmellBaseline>

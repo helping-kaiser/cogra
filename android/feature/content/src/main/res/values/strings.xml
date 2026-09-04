@@ -129,4 +129,39 @@
     <string name="content_expired_body">"%1$s" couldn\'t finish settling. Nothing was spent — your draft is saved.</string>
     <string name="content_expired_dismiss">Dismiss</string>
     <string name="content_expired_open">Open the draft</string>
+
+    <!-- What a failed upload says. Blessed verbatim in
+         design/guidelines/copy-voice.md "Refused files": each line names
+         the cap it broke, because that is the only place a cap is named
+         — nothing announces the limits in advance.
+         **Screens say MB; the caps are MiB**, so the number shown
+         under-promises and can never turn a file the product would have
+         accepted into a refusal. -->
+    <string name="content_upload_unreadable_picture">That file could not be read as a picture.</string>
+    <string name="content_upload_unreadable_video">That file could not be read as a video.</string>
+    <string name="content_upload_unreadable_file">That file isn\'t a picture or a video CoGra can read.</string>
+    <string name="content_upload_unreadable_cover">That picture could not be read as a cover.</string>
+    <string name="content_upload_refused_picture">The server would not take that picture.</string>
+    <string name="content_upload_refused_video">The server would not take that video.</string>
+    <string name="content_upload_refused_cover">The server would not take that cover.</string>
+    <string name="content_upload_picture_too_big">That picture is too big — a picture can be up to 10 MB.</string>
+    <string name="content_upload_post_video_too_big">That video is too big — a post\'s video can be up to 100 MB.</string>
+    <string name="content_upload_comment_video_too_big">That video is too big — a comment\'s video can be up to 50 MB.</string>
+    <string name="content_upload_transport">The upload could not reach the server.</string>
+
+    <!-- The comment an edit was opened on has since gone. -->
+    <string name="content_comment_gone">That comment is no longer there.</string>
+
+    <!-- Screen-reader labels. `contentDescription` is what TalkBack
+         announces, so an unlocalized literal here has no visual text to
+         fall back on; the counted ones take a positional argument
+         rather than hardcoding English word order. -->
+    <string name="content_license_locked">The license never changes</string>
+    <string name="content_reply_clip">The video on this reply</string>
+    <string name="content_refused_file">A refused file</string>
+    <string name="content_picture_at">Picture %1$d</string>
+    <string name="content_frame_picture_at">Frame picture %1$d</string>
+    <string name="content_draft_first_picture">The draft\'s first picture</string>
+    <string name="content_clip_length">Length %1$s</string>
+    <string name="content_stance_on_post">Where you stand on this post</string>
 </resources>

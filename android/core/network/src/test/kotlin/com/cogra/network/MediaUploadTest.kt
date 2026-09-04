@@ -51,6 +51,7 @@ class MediaUploadTest {
 
     /** Part numbers to fail, and how many times before letting through. */
     private var failuresFor = mutableMapOf<Int, Int>()
+    private var refusalsFor = mutableMapOf<Int, Int>()
 
     private var completeCalls = 0
     private var beginCalls = 0
@@ -89,6 +90,8 @@ class MediaUploadTest {
         // mock server can produce deterministically — the socket-policy
         // shim in mockwebserver 5's legacy package does not.
         if (seen <= owed) return MockResponse().setResponseCode(503)
+        // A refusal: an answer about the request, not a blip.
+        refusalsFor[number]?.let { return MockResponse().setResponseCode(it) }
         return MockResponse()
             .setBody("""{"partNumber":$number,"receivedParts":[$number],"partCount":2}""")
             .addHeader("Content-Type", "application/json")
@@ -193,6 +196,42 @@ class MediaUploadTest {
 
         assertThat(outcome).isInstanceOf(Outcome.Failed::class.java)
         // It gave up rather than looping, and never asked to complete.
+        assertThat(completeCalls).isEqualTo(0)
+    }
+
+    /**
+     * A refused part is an answer, and the two tiers say different
+     * things: telling the author to check their connection about a 4xx
+     * is advice that cannot help (AND-05).
+     */
+    @Test
+    fun aRefusedPartIsARefusalRatherThanAFault() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        refusalsFor[1] = 422
+        val (repo, clip) = repositoryFor(PART_SIZE + 10)
+
+        val outcome = repo.uploadVideo(clip, COVER)
+
+        assertThat(outcome).isInstanceOf(Outcome.Refused::class.java)
+        // A refusal is not retried, and completion is never asked for.
+        assertThat(partAttempts[1]).isEqualTo(1)
+        assertThat(completeCalls).isEqualTo(0)
+    }
+
+    /**
+     * With no token the request would go out unauthenticated, be
+     * answered 401, and burn the whole retry budget before reporting a
+     * connectivity fault that never happened (AND-12).
+     */
+    @Test
+    fun anUnreadableTokenStopsBeforeSendingAnythingUnauthenticated() = runTest {
+        // No token saved at all.
+        val (repo, clip) = repositoryFor(PART_SIZE + 10)
+
+        val outcome = repo.uploadVideo(clip, COVER)
+
+        assertThat(outcome).isInstanceOf(Outcome.Failed::class.java)
+        assertThat(partAttempts).isEmpty()
         assertThat(completeCalls).isEqualTo(0)
     }
 

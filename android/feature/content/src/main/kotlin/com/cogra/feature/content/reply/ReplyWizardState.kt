@@ -9,8 +9,13 @@ import com.cogra.domain.repo.ContentRepository
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.wizard.AssetUpload
+import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.CoverChoice
 import com.cogra.feature.content.wizard.inFlight
+import com.cogra.feature.content.wizard.pickedPictures
+import com.cogra.feature.content.wizard.withAltText
+import com.cogra.feature.content.wizard.withSourceRatio
+import com.cogra.feature.content.wizard.withUpload
 import com.cogra.feature.content.wizard.PickedAsset
 import com.cogra.feature.content.wizard.RefusedPick
 
@@ -313,18 +318,7 @@ data class ReplyWizardState(
  * dependency (android/CLAUDE.md). Comment pictures never crop, so every
  * item carries its own ratio and no framing.
  */
-fun ReplyWizardState.pickedPictures(): List<PickedPicture> = picked.map { asset ->
-    PickedPicture(
-        item = MediaItem(
-            asset.uri,
-            asset.sourceRatio ?: 1f,
-            asset.altText.ifBlank { null },
-        ),
-        described = asset.altText.isNotBlank(),
-        uploading = asset.upload.inFlight,
-        failed = asset.upload is AssetUpload.Failed,
-    )
-}
+fun ReplyWizardState.pickedPictures(): List<PickedPicture> = picked.pickedPictures()
 
 /**
  * Forgets a previous clip's face.
@@ -420,14 +414,11 @@ fun ReplyWizardState.dismissedRefusal(index: Int): ReplyWizardState =
         copy(refused = refused.filterIndexed { at, _ -> at != index })
     }
 
-/** Records one asset's upload state without disturbing the others (D5). */
 fun ReplyWizardState.withUpload(uri: String, upload: AssetUpload): ReplyWizardState =
-    copy(picked = picked.map { if (it.uri == uri) it.copy(upload = upload) else it })
+    copy(picked = picked.withUpload(uri, upload))
 
-/** Records an asset's own ratio once the pipeline has read it. */
 fun ReplyWizardState.withSourceRatio(uri: String, ratio: Float): ReplyWizardState =
-    copy(picked = picked.map { if (it.uri == uri) it.copy(sourceRatio = ratio) else it })
+    copy(picked = picked.withSourceRatio(uri, ratio))
 
-/** The alt text one asset carries — authored, never generated (D20). */
 fun ReplyWizardState.withAltText(uri: String, text: String): ReplyWizardState =
-    copy(picked = picked.map { if (it.uri == uri) it.copy(altText = text) else it })
+    copy(picked = picked.withAltText(uri, text))

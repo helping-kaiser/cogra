@@ -27,7 +27,7 @@ WEB_APK_DIR       = web/public/downloads
 # guest APK trusts it so it can talk https to this machine's web origin.
 ANDROID_DEV_CA = android/app/src/devCa/res/raw/cogra_dev_ca.pem
 
-.PHONY: help init up down reset-db migrate wait-db wait-media api api-release bootstrap run ci ci-all lint lint-corpus regenerate fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-prod web-apk guest-apk web-ci design-ci fuzz-interchange fuzz-linter
+.PHONY: help init up down reset-db migrate wait-db wait-media api api-release bootstrap run ci ci-all lint lint-corpus regenerate fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-format android-test android-build web-dev web-prod web-apk guest-apk web-ci design-ci fuzz-interchange fuzz-linter
 
 help: ## Show available commands
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -217,16 +217,19 @@ fuzz-linter: ## Run the cogra-linter fuzz targets (needs nightly + cargo-fuzz; n
 	cd crates/cogra-linter && $(FUZZ_CARGO) fuzz run markdown_regions -- -max_total_time=$(FUZZ_TIME) -timeout=10
 	cd crates/cogra-linter && $(FUZZ_CARGO) fuzz run adoption_load -- -max_total_time=$(FUZZ_TIME) -timeout=10
 
-android-ci: android-test android-build ## Run the Android CI checks (mirrors the android job in ci.yml; needs JDK 17 + JDK 21 + Android SDK)
+android-ci: android-lint android-test android-build ## Run the Android CI checks (mirrors the android job in ci.yml; needs JDK 17 + JDK 21 + Android SDK)
+
+android-lint: ## Run ktlint + detekt over the Kotlin surface (~40 s)
+	cd android && ./gradlew ktlintCheck detekt
+
+android-format: ## Fix what ktlint can fix (./gradlew ktlintFormat)
+	cd android && ./gradlew ktlintFormat
 
 android-test: ## Run Android unit tests; scope to one module with m=feature:home
 	cd android && ./gradlew $(if $(m),:$(m):test,test)
 
 android-build: ## Assemble the debug APK (./gradlew :app:assembleDebug)
 	cd android && ./gradlew :app:assembleDebug
-
-android-lint: ## Run Android lint (./gradlew lint; not a CI gate, convenience only)
-	cd android && ./gradlew lint
 
 # Without the pair, the web scripts fall back to a certificate Next
 # generates for `localhost` alone: the server starts, says nothing, and the
