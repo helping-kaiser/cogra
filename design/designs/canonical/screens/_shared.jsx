@@ -449,13 +449,6 @@ function ThreadDetail({ menuItems = READER_POST_MENU }) {
   );
 }
 
-/* A REFERENCE ALREADY STAGED IN A COMPOSER (readme §13, the menus round). The
-   composer's own row for a citation the author has committed to: the kind's
-   mark from the one glyph assignment, what it points at, the pair signed on the
-   act, and the × that takes it back out. The mark is `NodeMark`, so a person
-   arrives as a circle and everything else as its tile — the menus round's whole
-   point is that citing a post and mentioning a person stage the same fact, and
-   a row that drew them differently would deny it. */
 /* Someone else's profile, whole — shared the moment its own overflow menu
    needed the same page with a sheet over it (readme §13, the menus round). */
 function ProfileOtherBody() {
