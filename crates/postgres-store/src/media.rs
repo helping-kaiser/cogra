@@ -687,29 +687,50 @@ pub async fn expired_upload_sessions(
 /// Rows are deleted and their keys returned; the caller removes the
 /// objects. Doing it in that order means a crash between the two leaves
 /// an unreferenced object rather than a row pointing at nothing.
+///
+/// The limit bounds one tick's work, for the reason
+/// [`expired_upload_sessions`] states: a backlog is drained over several
+/// ticks rather than in one transaction that holds a row lock on every
+/// candidate at once — and those locks are contended, because a gallery
+/// write takes a `FOR KEY SHARE` lock on the asset it references as its
+/// own foreign-key check. Oldest first, so the drain converges.
+///
+/// The candidate select and the delete are one statement and therefore
+/// one snapshot, so bounding the work does not open a window in which an
+/// asset could be referenced between being chosen and being removed.
 pub async fn sweep_orphans(
     pool: &PgPool,
     max_age_secs: f64,
+    limit: i64,
 ) -> Result<Vec<SweptAsset>, sqlx::Error> {
     sqlx::query_as!(
         SweptAsset,
         r#"
+        WITH candidates AS (
+            SELECT m.id
+            FROM media_attachments m
+            WHERE m.created_at <= now() - make_interval(secs => $1)
+              AND NOT EXISTS (SELECT 1 FROM post_attachments         a WHERE a.attachment_id = m.id)
+              AND NOT EXISTS (SELECT 1 FROM comment_attachments      a WHERE a.attachment_id = m.id)
+              AND NOT EXISTS (SELECT 1 FROM chat_message_attachments a WHERE a.attachment_id = m.id)
+              AND NOT EXISTS (SELECT 1 FROM item_attachments         a WHERE a.attachment_id = m.id)
+              AND NOT EXISTS (
+                    SELECT 1 FROM actor_profile_versions p WHERE p.avatar_id = m.id)
+              AND NOT EXISTS (SELECT 1 FROM chat_versions c WHERE c.image_id = m.id)
+              AND NOT EXISTS (
+                    SELECT 1 FROM media_attachments v WHERE v.cover_media_id = m.id)
+              AND NOT EXISTS (
+                    SELECT 1 FROM media_upload_sessions s WHERE s.media_id = m.id)
+            ORDER BY m.created_at
+            LIMIT $2
+        )
         DELETE FROM media_attachments m
-        WHERE m.created_at <= now() - make_interval(secs => $1)
-          AND NOT EXISTS (SELECT 1 FROM post_attachments         a WHERE a.attachment_id = m.id)
-          AND NOT EXISTS (SELECT 1 FROM comment_attachments      a WHERE a.attachment_id = m.id)
-          AND NOT EXISTS (SELECT 1 FROM chat_message_attachments a WHERE a.attachment_id = m.id)
-          AND NOT EXISTS (SELECT 1 FROM item_attachments         a WHERE a.attachment_id = m.id)
-          AND NOT EXISTS (
-                SELECT 1 FROM actor_profile_versions p WHERE p.avatar_id = m.id)
-          AND NOT EXISTS (SELECT 1 FROM chat_versions c WHERE c.image_id = m.id)
-          AND NOT EXISTS (
-                SELECT 1 FROM media_attachments v WHERE v.cover_media_id = m.id)
-          AND NOT EXISTS (
-                SELECT 1 FROM media_upload_sessions s WHERE s.media_id = m.id)
-        RETURNING id, storage_key
+        USING candidates c
+        WHERE m.id = c.id
+        RETURNING m.id, m.storage_key
         "#,
         max_age_secs,
+        limit,
     )
     .fetch_all(pool)
     .await
