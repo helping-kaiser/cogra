@@ -8,10 +8,11 @@
 // Shared by /u/<handle> (public) and /profile (the viewer's own tab).
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { fetchMe } from "@/lib/api/auth-api";
+import { appendDeduped } from "@/lib/api/pagination";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { RestoreCard } from "@/app/applicant-status";
@@ -67,14 +68,28 @@ export function ProfileScreen({
   const [hasMore, setHasMore] = useState(false);
   const [invitesLocked, setInvitesLocked] = useState(false);
 
+  // Which chronicle read is the live one. A filter switch fires a new read
+  // without cancelling the old, and the old one resolving afterwards would
+  // overwrite the cleared list with the PREVIOUS filter's rows — and set that
+  // filter's cursor, so "Load more" would then walk the wrong connection.
+  const rowsRequest = useRef(0);
+
   const loadRows = useCallback(
     async (authorId: string, which: ChronicleFilter, after: string | null) => {
+      const request = (rowsRequest.current += 1);
       setRowsLoading(true);
       setPageFailed(false);
       const outcome = await fetchAuthorRecords(client, authorId, which, after);
+      if (request !== rowsRequest.current) return;
       setRowsLoading(false);
       if (outcome.kind === "success") {
-        setRows((current) => (after === null ? outcome.value.items : [...current, ...outcome.value.items]));
+        // The chronicle is the surface most exposed to the repeat
+        // `appendDeduped` exists for: it lists the author's own records, and a
+        // record that lands between two fetches leaves the pending namespace
+        // for a place below the cursor the walk resumes from.
+        setRows((current) =>
+          after === null ? outcome.value.items : appendDeduped(current, outcome.value.items),
+        );
         setEndCursor(outcome.value.endCursor);
         setHasMore(outcome.value.hasNextPage);
       } else {
@@ -125,7 +140,14 @@ export function ProfileScreen({
   // resolving phase would misread the viewer as anonymous.
   useEffect(() => {
     if (phase === "resolving") return;
-    return refresh();
+    const stop = refresh();
+    return () => {
+      // `refresh`'s own cancellation does not reach the `loadRows` it launches,
+      // so the request counter is bumped here too: a read still in flight
+      // belongs to a screen that is going away.
+      rowsRequest.current += 1;
+      stop();
+    };
   }, [refresh, phase]);
 
   const onFilter = (next: ChronicleFilter) => {
