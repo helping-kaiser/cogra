@@ -166,6 +166,22 @@ pub struct Credentials {
     pub email_verified_at: Option<DateTime<Utc>>,
 }
 
+/// Maps one user_credentials row onto the struct, decoding the account
+/// state — the one mapping in this module that cannot be a `query_as!`,
+/// because `account_state` is TEXT in the column and an enum in the
+/// struct and the decode is fallible.
+macro_rules! credentials_from_row {
+    ($r:expr) => {
+        Ok(Credentials {
+            actor_id: $r.actor_id,
+            email: $r.email,
+            password_hash: $r.password_hash,
+            account_state: decode_account_state(&$r.account_state)?,
+            email_verified_at: $r.email_verified_at,
+        })
+    };
+}
+
 /// Maps one auth_invite_links row (a sqlx anonymous record) onto the
 /// struct — the queries all select the same field set.
 macro_rules! invite_link_from_row {
@@ -707,7 +723,8 @@ pub async fn inviter_of(
     pool: &PgPool,
     account_id: Uuid,
 ) -> Result<Option<ActorIdentity>, sqlx::Error> {
-    Ok(sqlx::query!(
+    sqlx::query_as!(
+        ActorIdentity,
         "SELECT i.id, i.kind, i.handle, i.actor_pubkey, i.l0_address, i.created_at
          FROM auth_applications ap
          JOIN auth_invite_links l ON l.id = ap.invite_link_id
@@ -717,15 +734,7 @@ pub async fn inviter_of(
         account_id,
     )
     .fetch_optional(pool)
-    .await?
-    .map(|r| ActorIdentity {
-        id: r.id,
-        kind: r.kind,
-        handle: r.handle,
-        actor_pubkey: r.actor_pubkey,
-        l0_address: r.l0_address,
-        created_at: r.created_at,
-    }))
+    .await
 }
 
 /// Whether the reciprocation latch is set on the account's landed
@@ -870,15 +879,7 @@ pub async fn credentials_by_email(
     )
     .fetch_optional(pool)
     .await?
-    .map(|r| {
-        Ok(Credentials {
-            actor_id: r.actor_id,
-            email: r.email,
-            password_hash: r.password_hash,
-            account_state: decode_account_state(&r.account_state)?,
-            email_verified_at: r.email_verified_at,
-        })
-    })
+    .map(|r| credentials_from_row!(r))
     .transpose()
 }
 
@@ -893,15 +894,7 @@ pub async fn credentials_by_actor(
     )
     .fetch_optional(pool)
     .await?
-    .map(|r| {
-        Ok(Credentials {
-            actor_id: r.actor_id,
-            email: r.email,
-            password_hash: r.password_hash,
-            account_state: decode_account_state(&r.account_state)?,
-            email_verified_at: r.email_verified_at,
-        })
-    })
+    .map(|r| credentials_from_row!(r))
     .transpose()
 }
 
@@ -1469,20 +1462,13 @@ pub struct ActorIdentity {
 }
 
 pub async fn actor_identity(pool: &PgPool, id: Uuid) -> Result<Option<ActorIdentity>, sqlx::Error> {
-    Ok(sqlx::query!(
+    sqlx::query_as!(
+        ActorIdentity,
         "SELECT id, kind, handle, actor_pubkey, l0_address, created_at FROM actors WHERE id = $1",
         id,
     )
     .fetch_optional(pool)
-    .await?
-    .map(|r| ActorIdentity {
-        id: r.id,
-        kind: r.kind,
-        handle: r.handle,
-        actor_pubkey: r.actor_pubkey,
-        l0_address: r.l0_address,
-        created_at: r.created_at,
-    }))
+    .await
 }
 
 /// Handle lookup — one namespace across kinds, so a handle resolves to
@@ -1492,21 +1478,14 @@ pub async fn actor_identity_by_handle(
     pool: &PgPool,
     handle: &str,
 ) -> Result<Option<ActorIdentity>, sqlx::Error> {
-    Ok(sqlx::query!(
+    sqlx::query_as!(
+        ActorIdentity,
         "SELECT id, kind, handle, actor_pubkey, l0_address, created_at
          FROM actors WHERE handle = $1",
         handle,
     )
     .fetch_optional(pool)
-    .await?
-    .map(|r| ActorIdentity {
-        id: r.id,
-        kind: r.kind,
-        handle: r.handle,
-        actor_pubkey: r.actor_pubkey,
-        l0_address: r.l0_address,
-        created_at: r.created_at,
-    }))
+    .await
 }
 
 /// The actor fronting an L0 address atom — the mirror's author strings
@@ -1516,21 +1495,14 @@ pub async fn actor_identity_by_address(
     pool: &PgPool,
     l0_address: &str,
 ) -> Result<Option<ActorIdentity>, sqlx::Error> {
-    Ok(sqlx::query!(
+    sqlx::query_as!(
+        ActorIdentity,
         "SELECT id, kind, handle, actor_pubkey, l0_address, created_at
          FROM actors WHERE l0_address = $1",
         l0_address,
     )
     .fetch_optional(pool)
-    .await?
-    .map(|r| ActorIdentity {
-        id: r.id,
-        kind: r.kind,
-        handle: r.handle,
-        actor_pubkey: r.actor_pubkey,
-        l0_address: r.l0_address,
-        created_at: r.created_at,
-    }))
+    .await
 }
 
 /// Every actor among `l0_addresses`, in one round trip — the batched
@@ -1541,21 +1513,12 @@ pub async fn actor_identities_by_addresses(
     pool: &PgPool,
     l0_addresses: &[String],
 ) -> Result<Vec<ActorIdentity>, sqlx::Error> {
-    Ok(sqlx::query!(
+    sqlx::query_as!(
+        ActorIdentity,
         "SELECT id, kind, handle, actor_pubkey, l0_address, created_at
          FROM actors WHERE l0_address = ANY($1)",
         l0_addresses,
     )
     .fetch_all(pool)
-    .await?
-    .into_iter()
-    .map(|r| ActorIdentity {
-        id: r.id,
-        kind: r.kind,
-        handle: r.handle,
-        actor_pubkey: r.actor_pubkey,
-        l0_address: r.l0_address,
-        created_at: r.created_at,
-    })
-    .collect())
+    .await
 }
