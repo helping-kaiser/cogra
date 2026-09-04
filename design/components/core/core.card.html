@@ -8,7 +8,7 @@
 <style>body{padding:16px}.grid{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}.col{display:flex;flex-direction:column;gap:10px;align-items:flex-start}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}.snackbar-slot{width:24rem;max-width:100%}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { Button, InlineAction, Card, Snackbar, JoinPrompt, SectionLabel } = window.CoGraDesignSystem_9084ba;
+const { Button, InlineAction, Card, Snackbar, JoinPrompt, SectionLabel, QuietNote } = window.CoGraDesignSystem_9084ba;
 function Demo(){return (
 <div className="grid">
   <div className="col">
@@ -42,6 +42,9 @@ function Demo(){return (
       <SectionLabel>Recent</SectionLabel>
       <SectionLabel>Posts you cited</SectionLabel>
     </div>
+    <span className="lbl">QuietNote — a fact about the surface, never an action; the column owns the gap</span>
+    <QuietNote>Drag to move, pinch to zoom.</QuietNote>
+    <QuietNote>Words first — pictures can join them, and they upload while you write.</QuietNote>
     <span className="lbl">Snackbar — tonal elevation on inverseSurface, 4px rung, centred</span>
     <div className="snackbar-slot"><Snackbar inline message="Signed, still settling." /></div>
   </div>

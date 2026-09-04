@@ -19,9 +19,7 @@ export function Screen() {
     <>
       <WizardHeader title="What you sign" stageLabel="Last step" help="Signed actions" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          Sunday at the tide market — 4 pictures.
-        </p>
+        <QuietNote>Sunday at the tide market — 4 pictures.</QuietNote>
 
         <ActsCard
           rows={[
