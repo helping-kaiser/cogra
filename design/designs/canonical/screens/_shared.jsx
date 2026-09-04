@@ -93,6 +93,7 @@ const {
   Caret,
   SectionLabel,
   StanceRow,
+  TabBar,
 } = components;
 
 /* A standing of one gentle record — the vouch-back default made a bundle. */
