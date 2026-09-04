@@ -400,10 +400,66 @@
       "tagUtf8": "cogra-l1:approval:v1"
     },
     {
-      "case": "small-order public key",
+      "case": "small-order public key 0100000000000000000000000000000000000000000000000000000000000000",
       "msgUtf8": "cogra",
       "publicKeyHex": "0100000000000000000000000000000000000000000000000000000000000000",
-      "refusal": "A and R are small-order points; the signature verifies under the ordinary equation for every message",
+      "refusal": "A is a small-order point; the signature verifies under the ordinary equation for every message",
+      "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "tagUtf8": "cogra-l1:approval:v1"
+    },
+    {
+      "case": "small-order public key 0000000000000000000000000000000000000000000000000000000000000000",
+      "msgUtf8": "cogra",
+      "publicKeyHex": "0000000000000000000000000000000000000000000000000000000000000000",
+      "refusal": "A is a small-order point; the signature verifies under the ordinary equation for every message",
+      "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "tagUtf8": "cogra-l1:approval:v1"
+    },
+    {
+      "case": "small-order public key 0000000000000000000000000000000000000000000000000000000000000080",
+      "msgUtf8": "cogra",
+      "publicKeyHex": "0000000000000000000000000000000000000000000000000000000000000080",
+      "refusal": "A is a small-order point; the signature verifies under the ordinary equation for every message",
+      "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "tagUtf8": "cogra-l1:approval:v1"
+    },
+    {
+      "case": "small-order public key ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
+      "msgUtf8": "cogra",
+      "publicKeyHex": "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
+      "refusal": "A is a small-order point; the signature verifies under the ordinary equation for every message",
+      "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "tagUtf8": "cogra-l1:approval:v1"
+    },
+    {
+      "case": "small-order public key 26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05",
+      "msgUtf8": "cogra",
+      "publicKeyHex": "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05",
+      "refusal": "A is a small-order point; the signature verifies under the ordinary equation for every message",
+      "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "tagUtf8": "cogra-l1:approval:v1"
+    },
+    {
+      "case": "small-order public key 26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc85",
+      "msgUtf8": "cogra",
+      "publicKeyHex": "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc85",
+      "refusal": "A is a small-order point; the signature verifies under the ordinary equation for every message",
+      "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "tagUtf8": "cogra-l1:approval:v1"
+    },
+    {
+      "case": "small-order public key c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a",
+      "msgUtf8": "cogra",
+      "publicKeyHex": "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a",
+      "refusal": "A is a small-order point; the signature verifies under the ordinary equation for every message",
+      "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "tagUtf8": "cogra-l1:approval:v1"
+    },
+    {
+      "case": "small-order public key c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac03fa",
+      "msgUtf8": "cogra",
+      "publicKeyHex": "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac03fa",
+      "refusal": "A is a small-order point; the signature verifies under the ordinary equation for every message",
       "signatureHex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "tagUtf8": "cogra-l1:approval:v1"
     },
@@ -469,5 +525,5 @@
       "target": "name:general"
     }
   ],
-  "version": 1
+  "version": 2
 }

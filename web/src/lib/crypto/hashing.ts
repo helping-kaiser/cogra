@@ -127,23 +127,30 @@ const ED25519_ORDER =
   7237005577332262213973186563042994240857116359379907606001950938285454250989n;
 
 /**
- * The eight small-order point encodings.
+ * The eight small-order point encodings — the whole torsion subgroup,
+ * one entry per element.
  *
  * A public key that is one of these has no discrete log to guard: with
- * `A` and `R` both small-order, the ordinary verification equation holds
- * for EVERY message, so a "valid" signature proves nothing about who
- * produced it. The reference refuses them (`verify_strict`'s rule) and
- * so does this, because a signature that verifies against any message is
- * exactly the thing an approval must never be.
+ * `A` small-order, the ordinary verification equation holds for EVERY
+ * message, so a "valid" signature proves nothing about who produced it.
+ * The reference refuses them (`verify_strict`'s rule) and so does this,
+ * because a signature that verifies against any message is exactly the
+ * thing an approval must never be.
+ *
+ * A TABLE, BECAUSE THE BROWSER HAS NO CURVE PRIMITIVE. The reference
+ * multiplies by the cofactor and asks; WebCrypto exposes nothing that
+ * can, so the class is enumerated instead — and every member of it is a
+ * `signatureRefusals` vector, so a missing row fails a test here rather
+ * than admitting a forgery the other two clients refuse.
  */
 const SMALL_ORDER_KEYS: ReadonlySet<string> = new Set([
   "0100000000000000000000000000000000000000000000000000000000000000",
   "0000000000000000000000000000000000000000000000000000000000000000",
+  "0000000000000000000000000000000000000000000000000000000000000080",
   "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
-  "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
   "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05",
-  "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a",
   "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc85",
+  "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a",
   "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac03fa",
 ]);
 

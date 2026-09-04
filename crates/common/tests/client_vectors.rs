@@ -30,6 +30,10 @@ fn hx(b: &[u8]) -> String {
     hex::encode(b)
 }
 
+fn unhex(s: &str) -> Vec<u8> {
+    hex::decode(s).expect("a vector's hex literal decodes")
+}
+
 fn cbor(build: impl FnOnce(&mut Encoder)) -> String {
     let mut e = Encoder::new();
     build(&mut e);
@@ -210,18 +214,33 @@ fn encoding_vectors() -> Value {
 /// names why, so an implementation that accepts one knows which check it is
 /// missing rather than only that it disagreed.
 ///
-/// The small-order key is the canonical encoding of the neutral element:
-/// order 1, so the group equation collapses to `[S]B = R` and the pair
-/// `(R, S) = (identity, 0)` satisfies it for every message. Only strict
-/// verification — which refuses a small-order `A` and a small-order `R` —
-/// rejects it. The non-canonical `S` is the scalar-range check every
-/// conforming verifier owes, whatever else it does.
+/// EVERY small-order public key is exported, not one sample of them. A
+/// client that cannot compute the order of a point — the browser, which
+/// has no curve primitive for it — refuses this class from a table, and a
+/// table checked against one member is a table that passes while missing
+/// the other seven. The whole class travels so the pin is the class.
+///
+/// The neutral element is the readable case: order 1, so the group
+/// equation collapses to `[S]B = R` and the pair `(R, S) = (identity, 0)`
+/// satisfies it for every message. Only strict verification — which
+/// refuses a small-order `A` — rejects it. The non-canonical `S` is the
+/// scalar-range check every conforming verifier owes, whatever else it
+/// does.
+const SMALL_ORDER_KEYS: [&str; 8] = [
+    "0100000000000000000000000000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000000000000000000000000080",
+    "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
+    "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05",
+    "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc85",
+    "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a",
+    "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac03fa",
+];
+
 fn signature_refusals(actor_signing: &SigningKey, sample: &[u8]) -> Value {
     let actor_pubkey = hx(actor_signing.verifying_key().as_bytes());
     let tag = String::from_utf8(tags::APPROVAL.to_vec()).expect("ASCII");
 
-    let mut small_order_key = [0u8; 32];
-    small_order_key[0] = 1;
     let mut small_order_sig = [0u8; 64];
     small_order_sig[0] = 1;
 
@@ -231,29 +250,53 @@ fn signature_refusals(actor_signing: &SigningKey, sample: &[u8]) -> Value {
     let mut long = sample.to_vec();
     long.push(0);
 
-    for (case, pubkey, signature) in [
-        (
-            "non-canonical scalar S",
-            actor_signing.verifying_key().as_bytes().as_slice(),
-            non_canonical_s.as_slice(),
-        ),
-        (
-            "small-order public key",
-            small_order_key.as_slice(),
-            small_order_sig.as_slice(),
-        ),
-        (
-            "63-byte signature",
-            actor_signing.verifying_key().as_bytes().as_slice(),
-            &sample[..63],
-        ),
-        (
-            "65-byte signature",
-            actor_signing.verifying_key().as_bytes().as_slice(),
-            long.as_slice(),
-        ),
+    let mut cases = vec![json!({
+        "case": "non-canonical scalar S",
+        "refusal": "S is not in [0, ℓ)",
+        "publicKeyHex": actor_pubkey,
+        "tagUtf8": tag,
+        "msgUtf8": "cogra",
+        "signatureHex": hx(&non_canonical_s),
+    })];
+
+    for key_hex in SMALL_ORDER_KEYS {
+        let bytes = unhex(key_hex);
+        cases.push(json!({
+            "case": format!("small-order public key {key_hex}"),
+            "refusal": "A is a small-order point; the signature verifies under the ordinary equation for every message",
+            "publicKeyHex": key_hex,
+            "tagUtf8": tag,
+            "msgUtf8": "cogra",
+            "signatureHex": hx(&small_order_sig),
+        }));
+        let key = crypto::verifying_key_from_bytes(&bytes)
+            .unwrap_or_else(|| panic!("{key_hex}: a small-order encoding still parses as a key"));
+        assert!(
+            !crypto::verify(&key, tags::APPROVAL, b"cogra", &small_order_sig),
+            "the small-order key {key_hex} is refused by the reference"
+        );
+    }
+
+    for (case, signature) in [
+        ("63-byte signature", &sample[..63]),
+        ("65-byte signature", long.as_slice()),
     ] {
-        let key = crypto::verifying_key_from_bytes(pubkey)
+        cases.push(json!({
+            "case": case,
+            "refusal": "a signature is exactly 64 bytes",
+            "publicKeyHex": actor_pubkey,
+            "tagUtf8": tag,
+            "msgUtf8": "cogra",
+            "signatureHex": hx(signature),
+        }));
+    }
+
+    for (case, signature) in [
+        ("non-canonical scalar S", non_canonical_s.as_slice()),
+        ("63-byte signature", &sample[..63]),
+        ("65-byte signature", long.as_slice()),
+    ] {
+        let key = crypto::verifying_key_from_bytes(actor_signing.verifying_key().as_bytes())
             .unwrap_or_else(|| panic!("{case}: the key parses, so the refusal is the signature's"));
         assert!(
             !crypto::verify(&key, tags::APPROVAL, b"cogra", signature),
@@ -261,40 +304,7 @@ fn signature_refusals(actor_signing: &SigningKey, sample: &[u8]) -> Value {
         );
     }
 
-    json!([
-        {
-            "case": "non-canonical scalar S",
-            "refusal": "S is not in [0, ℓ)",
-            "publicKeyHex": actor_pubkey,
-            "tagUtf8": tag,
-            "msgUtf8": "cogra",
-            "signatureHex": hx(&non_canonical_s),
-        },
-        {
-            "case": "small-order public key",
-            "refusal": "A and R are small-order points; the signature verifies under the ordinary equation for every message",
-            "publicKeyHex": hx(&small_order_key),
-            "tagUtf8": tag,
-            "msgUtf8": "cogra",
-            "signatureHex": hx(&small_order_sig),
-        },
-        {
-            "case": "63-byte signature",
-            "refusal": "a signature is exactly 64 bytes",
-            "publicKeyHex": actor_pubkey,
-            "tagUtf8": tag,
-            "msgUtf8": "cogra",
-            "signatureHex": hx(&sample[..63]),
-        },
-        {
-            "case": "65-byte signature",
-            "refusal": "a signature is exactly 64 bytes",
-            "publicKeyHex": actor_pubkey,
-            "tagUtf8": tag,
-            "msgUtf8": "cogra",
-            "signatureHex": hx(&long),
-        },
-    ])
+    Value::Array(cases)
 }
 
 /// The typed-input corpus for the recovery code: what a person may hand
@@ -525,7 +535,12 @@ fn build_vectors() -> Value {
     ));
 
     json!({
-        "version": 1,
+        // 2 since the refusal corpus arrived: `signatureRefusals`,
+        // `rejections`, `families`, and `keyBackup.recoveryCodeInputs`
+        // are groups a version-1 reader does not know to look for. The
+        // number moves only once every client reads the new shape, which
+        // is what their own version assertions state.
+        "version": 2,
         "encoding": encoding_vectors(),
         "families": family_vectors(),
         "rejections": rejection_vectors(),

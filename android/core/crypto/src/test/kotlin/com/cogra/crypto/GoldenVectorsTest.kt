@@ -52,7 +52,7 @@ class GoldenVectorsTest {
     // that is the Gradle input's job (build.gradle.kts).
     @Test
     fun theVectorsFileIsTheContractVersionThisClientReads() {
-        assertThat(vectors.str("version")).isEqualTo("1")
+        assertThat(vectors.str("version")).isEqualTo("2")
     }
 
     @Test

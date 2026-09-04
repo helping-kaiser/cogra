@@ -2,8 +2,7 @@
 // The client-crypto contract: every assertion pins this implementation
 // to the repo-root client-crypto-vectors.json exported from the Rust
 // reference (`make vectors`). Mirrors android/core/crypto
-// GoldenVectorsTest.kt, plus the two fields the Kotlin test leaves
-// unused (keyBackup.contentKeyHex / plaintextHex).
+// GoldenVectorsTest.kt group for group.
 
 import { readFileSync } from "node:fs";
 import { Buffer } from "node:buffer";
@@ -143,8 +142,11 @@ function bodyOf(v: BodyVector): StructuralBody {
   });
 }
 
-it("the vectors file is current", () => {
-  expect(vectors.version).toBe(1);
+// A compatibility check, not a currency one: the file says which shape
+// of vectors it holds, and this client reads that shape. Whether it was
+// regenerated recently is the exporter's own drift test to answer.
+it("is the contract version this client reads", () => {
+  expect(vectors.version).toBe(2);
 });
 
 it("encoding vectors match", () => {
