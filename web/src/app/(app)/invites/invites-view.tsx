@@ -193,10 +193,7 @@ export function InvitesView() {
       setTransportFailed(true);
       return;
     }
-    const results = [];
-    for (const staged of prepared.value) {
-      results.push(await signer.signStaged(staged));
-    }
+    const results = await signer.sign(prepared.value);
     if (results.every((result) => result.kind === "done")) {
       setVouchSigned(true);
     } else {

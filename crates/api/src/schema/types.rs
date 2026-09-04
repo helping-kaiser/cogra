@@ -233,6 +233,36 @@ pub enum ErrorCode {
     ChallengeExpired,
 }
 
+/// The refusals that end a two-signature handshake for good, so the
+/// device may drop the material it was holding (api-spec.md "The write
+/// flow").
+///
+/// The server decides this, not the clients: it is the server that knows
+/// which of its own refusals a retry could ever clear. Everything absent
+/// from this list — a `RateLimited` backoff, an `Internal` fault, an
+/// `Unauthenticated` that a refresh heals, a code a build does not yet
+/// know — leaves the handshake resumable, which is why the list is
+/// stated positively rather than as its complement.
+pub const TERMINAL_WRITE_REFUSALS: [ErrorCode; 6] = [
+    ErrorCode::SignatureInvalid,
+    ErrorCode::StagedWriteExpired,
+    ErrorCode::NotFound,
+    ErrorCode::BadInput,
+    ErrorCode::Forbidden,
+    ErrorCode::WriteRuleFailed,
+];
+
+/// How many times a device re-reads a staged write waiting for the host
+/// seal before giving up and leaving the write to `resume`.
+///
+/// A budget about the server's own latency belongs to the server: the
+/// stand-in seals inside the submit call, so this bounded poll covers
+/// only the asynchronous contract a real Layer 1 is allowed to take.
+pub const SEAL_POLL_ATTEMPTS: u32 = 5;
+
+/// The wait between the attempts [`SEAL_POLL_ATTEMPTS`] budgets.
+pub const SEAL_POLL_INTERVAL_MS: u64 = 1_000;
+
 /// An expected business outcome, carried as data on the mutation payload
 /// — the list is empty exactly when the mutation succeeded.
 #[derive(SimpleObject, Debug, Clone)]

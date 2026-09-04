@@ -4,6 +4,12 @@
 // container's CBOR is a CoGra-only artifact, so each secret leaves in
 // the encoding the wider world already reads — for Ed25519 that is
 // RFC 8410's PKCS#8, plus the raw bytes as hex.
+//
+// THE STANDARD IS THE REFERENCE HERE, NOT THE OTHER CLIENT. Key export
+// has no Rust counterpart and no entry in `client-crypto-vectors.json`,
+// deliberately: each client is pinned to RFC 8410 §10.3's own vector
+// (`key-export.test.ts`, and `KeyExportTest.kt` on android), which
+// cannot drift, rather than to the other client, which can.
 
 import { PKCS8_PREFIX } from "./actor-key";
 import { concat, toBase64, toHex } from "./bytes";

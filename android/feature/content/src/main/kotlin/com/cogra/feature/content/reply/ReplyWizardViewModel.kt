@@ -26,11 +26,16 @@ import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.referenceFieldIndex
 import com.cogra.feature.content.tagFieldIndex
 import com.cogra.feature.content.wizard.AssetUpload
+import com.cogra.feature.content.wizard.COMMENT_SCALE
+import com.cogra.feature.content.wizard.COMMENT_VIDEO_MAX_BYTES
+import com.cogra.feature.content.wizard.PICTURE_MAX_BYTES
 import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.uploadPicture
 import com.cogra.feature.content.wizard.CoverChoice
 import com.cogra.feature.content.wizard.RefusedPick
 import com.cogra.feature.content.wizard.attachmentFieldIndex
+import com.cogra.feature.content.wizard.refusesVideo
+import com.cogra.feature.content.wizard.screenPicture
 import java.io.File
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -64,6 +69,12 @@ class ReplyWizardViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(ReplyWizardState())
     val state: StateFlow<ReplyWizardState> = _state.asStateFlow()
+
+    /**
+     * The only thing this composer and the post composer differ by in
+     * their media screening (`PickScale.kt`).
+     */
+    private val scale = COMMENT_SCALE
 
     private val uploads = mutableMapOf<String, Job>()
 
@@ -133,24 +144,18 @@ class ReplyWizardViewModel @Inject constructor(
     }
 
     /**
-     * Weighs a picture and reads it, refusing it where it was offered.
+     * The shared screening (`PickScale.kt`) at the comment's scale,
+     * answering whether the file may join the composer.
      *
-     * Answers whether the file may join the composer. A refusal is drawn
-     * on the composer that asked for it (`ReplyMediaErrors`) rather than
-     * in a dialog or a snackbar — errors sit on the surface they
-     * happened on.
+     * A refusal is drawn on the composer that asked for it
+     * (`ReplyMediaErrors`) rather than in a dialog or a snackbar —
+     * errors sit on the surface they happened on. The platform picker
+     * hands over a bare URI, so nothing here is known-readable.
      */
     private suspend fun refusePicture(uri: String): Boolean {
-        if (processor.aspectRatio(uri) == null) {
-            _state.update { it.copy(refused = it.refused + RefusedPick(null, UploadFailure.UNREADABLE_FILE)) }
-            return false
-        }
-        val size = processor.sizeBytes(uri)
-        if (size != null && size > MAX_PICTURE_BYTES) {
-            _state.update { it.copy(refused = it.refused + RefusedPick(uri, UploadFailure.PICTURE_TOO_BIG)) }
-            return false
-        }
-        return true
+        val refusal = screenPicture(uri, processor, scale) ?: return true
+        _state.update { it.copy(refused = it.refused + refusal) }
+        return false
     }
 
     /**
@@ -188,22 +193,21 @@ class ReplyWizardViewModel @Inject constructor(
         uploads.remove(uri)?.cancel()
         uploads[uri] = viewModelScope.launch {
             _state.update { it.withUpload(uri, AssetUpload.Transcoding(0)) }
-            val processed = video.transcode(uri, MAX_VIDEO_BYTES) { percent ->
+            val processed = video.transcode(uri, scale.videoMaxBytes) { percent ->
                 _state.update { it.withUpload(uri, AssetUpload.Transcoding(percent)) }
             }
             if (processed == null) {
-                _state.update { it.removePick(uri).copy(refused = it.refused + RefusedPick(uri, UploadFailure.UNREADABLE_FILE)) }
+                _state.update {
+                    it.removePick(uri).copy(refused = it.refused + RefusedPick(uri, UploadFailure.UNREADABLE_FILE))
+                }
                 return@launch
             }
-            // The cap is judged on what would be sent. Re-encoding is
-            // precisely what usually brings a long recording under it,
-            // so weighing the original would refuse comments the caps
-            // mean to allow. The backend only refuses at prepare, which
-            // is far too late to be told.
-            if (processed.byteCount > MAX_VIDEO_BYTES) {
+            // The clip's half of the shared screening (`PickScale.kt`),
+            // which is why it runs here rather than at pick time.
+            if (scale.refusesVideo(processed.byteCount)) {
                 runCatching { File(processed.path).delete() }
                 _state.update {
-                    it.removePick(uri).copy(refused = it.refused + RefusedPick(uri, UploadFailure.COMMENT_VIDEO_TOO_BIG))
+                    it.removePick(uri).copy(refused = it.refused + RefusedPick(uri, scale.tooBigVideo))
                 }
                 return@launch
             }
@@ -483,10 +487,6 @@ class ReplyWizardViewModel @Inject constructor(
     }
 
     /**
-     * The author left. The comment is discarded — comments keep no
-     * drafts, so there is nothing here but the signal to go.
-     */
-    /**
      * The way out the author asked for, which is not always the way out
      * they get.
      *
@@ -579,17 +579,11 @@ class ReplyWizardViewModel @Inject constructor(
     // caps themselves instead of re-typing them.
     internal companion object {
 
-        /** A comment picture's cap: four per comment, ten mebibytes each. */
-        const val MAX_PICTURE_BYTES = 10L * 1024 * 1024
-
-        /**
-         * A comment clip's cap — half a post's.
-         *
-         * Checked here, before a byte leaves: the backend only refuses
-         * at prepare, and being told after the upload that the upload
-         * was pointless is the worst version of this.
-         */
-        const val MAX_VIDEO_BYTES = 50L * 1024 * 1024
+        // The caps this surface screens against, named here for the
+        // suite. Both forward to the shared screening (`PickScale.kt`),
+        // where each number is written once for both composers.
+        const val MAX_PICTURE_BYTES = PICTURE_MAX_BYTES
+        const val MAX_VIDEO_BYTES = COMMENT_VIDEO_MAX_BYTES
 
         /** How many frames the inline cover row offers — the board draws four. */
         const val COVER_FRAME_COUNT = 4

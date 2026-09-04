@@ -463,8 +463,7 @@ export function ComposeWizard({
   };
 
   const finish = async (node: string, writes: readonly StagedWriteView[]) => {
-    const results = [];
-    for (const staged of writes) results.push(await signer.signStaged(staged));
+    const results = await signer.sign(writes);
     setBusy(false);
 
     if (results.every((result) => result.kind === "done")) {

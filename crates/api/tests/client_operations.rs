@@ -35,22 +35,46 @@ mod rig;
 const TOO_COMPLEX: &str = "Query is too complex.";
 const TOO_DEEP: &str = "Query is nested too deep.";
 
-/// The page sizes the clients actually send, keyed by the variable name
-/// the document binds them to: `FEED_PAGE_SIZE` / `CONTENT_PAGE_SIZE`
-/// (20) and an unset `limit` — the priciest of the values either client
-/// passes for it, since an absent limit charges the default page. A
-/// reply thread arrives as a count rather than a page (Q49), so neither
-/// corpus binds a replies page-size variable any more.
+/// The page size the clients actually send, READ FROM THE ARTIFACT the
+/// clients are themselves pinned to (`client-constants.json`,
+/// `paging.defaultPageSize`) rather than restated here.
+///
+/// A hardcoded copy is the defect this closes: raise the clients' page
+/// size and a guard that kept measuring at the old one passes while real
+/// traffic is heavier, and the miss is multiplicative because the page
+/// size multiplies every connection's cost. The coupling now runs
+/// through one file — the clients' own tests pin their constants to it,
+/// and so does this — instead of through a sentence.
+fn default_page_size() -> usize {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../client-constants.json");
+    let raw = std::fs::read_to_string(&path).expect("client-constants.json is committed");
+    let parsed: serde_json::Value = serde_json::from_str(&raw).expect("the artifact is JSON");
+    parsed["paging"]["defaultPageSize"]
+        .as_u64()
+        .expect("paging.defaultPageSize is a number") as usize
+}
+
+/// The variables the clients bind, keyed by the variable name each
+/// document uses. `limit` stays unset — the priciest value either corpus
+/// passes for it, since an absent limit charges the default page. A reply
+/// thread arrives as a count rather than a page (Q49), so neither corpus
+/// binds a replies page-size variable any more.
 ///
 /// Only variables a complexity expression reads need a value: the
 /// visitor resolves `first`/`last`/`limit` from the request at
 /// validation time, and a missing one is a validation error rather than
 /// a free field. A new paginated field with a new variable name lands
 /// here or fails loudly, which is the point.
+///
+/// `@include` flags are deliberately left unbound: the complexity
+/// visitor prices every branch of a document whatever its flags say, so
+/// leaving them unset measures the worst case, which is what a ceiling
+/// has to admit.
 fn client_variables() -> async_graphql::Variables {
+    let page = default_page_size();
     async_graphql::Variables::from_json(serde_json::json!({
-        "first": 20,
-        "commentsFirst": 20,
+        "first": page,
+        "commentsFirst": page,
         "limit": null,
     }))
 }

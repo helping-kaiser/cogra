@@ -23,7 +23,10 @@ import { PUBLIC_DOMAIN } from "@/lib/license";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
 
-/** The write side's cap; a whole-batch refusal, so the picker enforces it too. */
+/**
+ * The write side's cap; a whole-batch refusal, so the picker enforces it too.
+ * Pinned to `client-constants.json` in `lib/client-constants.test.ts`.
+ */
 export const POST_ATTACHMENT_CAP = 10;
 
 export type BodyMode = "words" | "media";

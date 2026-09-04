@@ -103,6 +103,26 @@ function view(id: string, state: StagedWriteState, verifiedAct: string | null): 
   return { id, state, family: "REGISTRATION", canonicalProposal: PROPOSAL_B64, verifiedAct };
 }
 
+/** The account, answering with the public key it has attached. */
+function meAnswering(actorPubkey: string | null) {
+  return graphql.query("Me", () =>
+    HttpResponse.json({
+      data: {
+        me: {
+          __typename: "User",
+          id: "acct-1",
+          handle: "ada",
+          displayName: { __typename: "DisplayField", value: "Ada" },
+          actorPubkey,
+          accountState: "MEMBER",
+          hasReciprocated: true,
+          invitedBy: null,
+        },
+      },
+    }),
+  );
+}
+
 const PROPOSAL = sampleProposal();
 const PROPOSAL_B64 = toBase64(encodeProposal(PROPOSAL));
 const ID = "sw-1";
@@ -135,6 +155,11 @@ describe("write signer", () => {
     hostHandler = graphql.query("HostPublicKey", () =>
       HttpResponse.json({ data: { hostPublicKey: toBase64(host.publicKeyBytes()) } }),
     );
+    // Every signing leg first asks whose key the account accepts, so the
+    // account answers with THIS device's key by default. It is added
+    // here rather than in each test because it is not what any of them
+    // is about; `meAnswering` overrides it where it is.
+    server.use(meAnswering(toBase64(actorPub)));
     signer = createWriteSigner({
       client: client(),
       guard: passthroughGuard,
@@ -562,5 +587,47 @@ describe("write signer", () => {
     });
     const result = await keyless.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
     expect(result.kind).toBe("failed");
+  });
+
+  // WCRYPT-04: the slot-versus-attached invariant, on the post-membership
+  // path. A slot filled by another account's restore must not sign — and
+  // it must say so rather than fail quietly, because the fix is a restore
+  // the reader has to be told to make.
+  it("refuses to sign with a key the account has not attached", async () => {
+    const other = await ActorKey.generate();
+    server.use(meAnswering(toBase64(other.publicKeyBytes())));
+
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    expect(result.kind).toBe("refused");
+    if (result.kind === "refused") expect(result.errors[0].code).toBe("FORBIDDEN");
+    // Not spent: a restore of the account's own key finishes this write.
+    expect(await store.handshake(ID)).toBeNull();
+  });
+
+  it("refuses every write of a batch when the device key is not the account's", async () => {
+    const other = await ActorKey.generate();
+    server.use(meAnswering(toBase64(other.publicKeyBytes())));
+
+    const results = await signer.sign([
+      view("sw-a", "AWAITING_PRE_SIGN", null),
+      view("sw-b", "AWAITING_PRE_SIGN", null),
+    ]);
+    expect(results.map((r) => r.kind)).toEqual(["refused", "refused"]);
+    expect(results.map((r) => r.id)).toEqual(["sw-a", "sw-b"]);
+  });
+
+  it("signs a batch in order, one result per write", async () => {
+    const results = await signer.sign([
+      view("sw-a", "RELAYING", null),
+      view("sw-b", "LANDED", null),
+    ]);
+    expect(results).toEqual([
+      { kind: "done", id: "sw-a", state: "RELAYING" },
+      { kind: "done", id: "sw-b", state: "LANDED" },
+    ]);
+  });
+
+  it("signs nothing, and asks the account nothing, for an empty batch", async () => {
+    expect(await signer.sign([])).toEqual([]);
   });
 });

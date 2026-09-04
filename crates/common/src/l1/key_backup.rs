@@ -31,6 +31,10 @@ const VERSION: u8 = 0x01;
 const HEADER_LEN: usize = 1 + HKDF_SALT_LEN + AES_NONCE_LEN;
 const CROCKFORD: &[u8; 32] = b"0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 
+/// How many characters a code's display form carries: 16 bytes is 128
+/// bits, and Crockford packs five bits per character.
+pub const DISPLAY_LEN: usize = 26;
+
 /// A blob that will not open, or a malformed container.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum KeyBackupError {
@@ -40,6 +44,39 @@ pub enum KeyBackupError {
     Version(u8),
     #[error("malformed blob container")]
     Malformed,
+}
+
+/// Why a typed recovery code is not one.
+///
+/// The length case is separated because it is the only refusal a reader
+/// can act on: characters are missing or spare. Every other rejection of
+/// a full-length input is a code that will not open, which is what the
+/// GCM tag would have said a moment later.
+#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+pub enum RecoveryCodeError {
+    #[error("a recovery code has {DISPLAY_LEN} characters")]
+    Length,
+    #[error("invalid recovery-code character `{0}`")]
+    Character(char),
+    #[error("invalid recovery code")]
+    PadBits,
+}
+
+/// Whether a character is transcription noise rather than part of the
+/// code: the display's own grouping hyphen, anything Unicode gives the
+/// `White_Space` property, and the byte-order mark a paste out of a
+/// document carries.
+///
+/// ENUMERATED, NOT DELEGATED. No two of the three languages that read a
+/// typed code spell "whitespace" the same way: Rust's
+/// [`char::is_whitespace`] is exactly `White_Space`; Kotlin's
+/// `Char.isWhitespace` adds U+001C–U+001F and drops U+0085; JavaScript's
+/// `\s` drops U+0085 and adds U+FEFF. Left to each language's built-in
+/// predicate, the three parsers agree only over the characters anyone has
+/// happened to type. The reference picks `White_Space` ∪ {U+FEFF}, the
+/// clients spell that set out, and `recoveryCodeInputs` pins it.
+fn is_separator(c: char) -> bool {
+    c == '-' || c == '\u{feff}' || c.is_whitespace()
 }
 
 /// A 16-byte recovery code — generated, never user-chosen (auth.md
@@ -77,7 +114,11 @@ impl RecoveryCode {
         if nbits > 0 {
             chars.push(char::from(CROCKFORD[((bits << (5 - nbits)) & 31) as usize]));
         }
-        debug_assert_eq!(chars.len(), 26, "16 code bytes encode to 26 characters");
+        debug_assert_eq!(
+            chars.len(),
+            DISPLAY_LEN,
+            "16 code bytes encode to 26 characters"
+        );
         [
             &chars[0..5],
             &chars[5..10],
@@ -86,6 +127,63 @@ impl RecoveryCode {
             &chars[20..26],
         ]
         .join("-")
+    }
+
+    /// The reading rule for anything a person typed or pasted: separators
+    /// dropped, case folded up, and the three characters Crockford leaves
+    /// out of its alphabet mapped to the digits they are mistaken for.
+    ///
+    /// Applies to a fragment as much as to a whole code, which is what
+    /// lets a write-it-down confirmation compare a partial entry against
+    /// the code on screen.
+    pub fn normalize(input: &str) -> String {
+        input
+            .chars()
+            .filter(|c| !is_separator(*c))
+            .flat_map(char::to_uppercase)
+            .map(|c| match c {
+                'I' | 'L' => '1',
+                'O' => '0',
+                other => other,
+            })
+            .collect()
+    }
+
+    /// Parses user input under [`normalize`]. No check digit — AES-GCM's
+    /// tag is what detects a mistyped code, at unlock.
+    ///
+    /// The trailing pad bits are checked because 26 characters carry 130
+    /// bits and the code is 128: a code whose last two bits are set is
+    /// one no encoder could have produced, so refusing it here names the
+    /// typo instead of letting it read as a wrong code.
+    ///
+    /// [`normalize`]: RecoveryCode::normalize
+    pub fn from_input(input: &str) -> Result<Self, RecoveryCodeError> {
+        let normalized = Self::normalize(input);
+        if normalized.chars().count() != DISPLAY_LEN {
+            return Err(RecoveryCodeError::Length);
+        }
+        let mut bits: u64 = 0;
+        let mut nbits: u32 = 0;
+        let mut out = [0u8; CODE_LEN];
+        let mut at = 0;
+        for c in normalized.chars() {
+            let value = CROCKFORD
+                .iter()
+                .position(|a| char::from(*a) == c)
+                .ok_or(RecoveryCodeError::Character(c))? as u64;
+            bits = (bits << 5) | value;
+            nbits += 5;
+            if nbits >= 8 {
+                nbits -= 8;
+                out[at] = ((bits >> nbits) & 0xFF) as u8;
+                at += 1;
+            }
+        }
+        if bits & ((1 << nbits) - 1) != 0 {
+            return Err(RecoveryCodeError::PadBits);
+        }
+        Ok(Self(out))
     }
 }
 
@@ -256,6 +354,100 @@ mod tests {
             display
                 .chars()
                 .all(|c| c == '-' || CROCKFORD.contains(&(c as u8)))
+        );
+    }
+
+    /// A code read off a screen and typed back comes back as itself,
+    /// whatever a reader did to the spacing or the case.
+    ///
+    /// A displayed recovery code parses back to its own bytes however it was transcribed.
+    /// ´claim:backup:a-displayed-code-parses-back-to-its-bytes´
+    #[test]
+    fn a_typed_code_round_trips_through_normalization() {
+        let code = RecoveryCode::from_bytes([0x5Au8; CODE_LEN]);
+        let display = code.display();
+        for transcription in [
+            display.clone(),
+            display.to_lowercase(),
+            display.replace('-', ""),
+            display.replace('-', " "),
+            display.replace('-', "\u{a0}"),
+            display.replace('-', "\u{2003}"),
+            display.replace('-', "\u{85}"),
+            display.replace('-', "\t\n"),
+            format!("\u{feff}{display}"),
+        ] {
+            assert_eq!(
+                RecoveryCode::from_input(&transcription)
+                    .unwrap_or_else(|e| panic!("{transcription:?}: {e}"))
+                    .bytes(),
+                code.bytes(),
+                "{transcription:?}"
+            );
+        }
+    }
+
+    /// The substitutions Crockford's alphabet exists for: `I`, `L` and `O`
+    /// are not in it precisely because a reader confuses them with `1` and
+    /// `0`, so a code typed with them reads as the digits.
+    ///
+    /// A code typed with the letters Crockford omits reads as the digits they are mistaken for.
+    /// ´claim:backup:the-omitted-letters-read-as-their-digits´
+    #[test]
+    fn the_crockford_substitutions_apply() {
+        assert_eq!(RecoveryCode::normalize("iIlLoO"), "111100");
+        assert_eq!(RecoveryCode::normalize("a-b c\u{a0}d"), "ABCD");
+    }
+
+    /// A separator class delegated to each language's built-in predicate
+    /// would agree only over the characters anyone had typed. U+001C is
+    /// the concrete divergence: Kotlin calls it whitespace and Unicode
+    /// does not, so the reference has to say which answer is the contract.
+    ///
+    /// The separator class is the one the reference states, not whatever a language calls whitespace.
+    /// ´claim:backup:the-separator-class-is-the-reference-s´
+    #[test]
+    fn the_separator_class_is_stated_rather_than_inherited() {
+        let squashed = RecoveryCode::from_bytes([0x5Au8; CODE_LEN])
+            .display()
+            .replace('-', "");
+        assert_eq!(
+            RecoveryCode::from_input(&format!("{}\u{1c}", &squashed[..squashed.len() - 1])).err(),
+            Some(RecoveryCodeError::Character('\u{1c}')),
+            "a unit separator is not white space, so it reaches the alphabet"
+        );
+        assert!(is_separator('\u{feff}'), "a pasted byte-order mark is");
+    }
+
+    /// The two refusals a full-length input can carry, told apart from the
+    /// one a reader can act on.
+    ///
+    /// A recovery code refuses a wrong length, an unusable character, and set pad bits, each by name.
+    /// ´claim:backup:a-recovery-code-refuses-by-name´
+    #[test]
+    fn a_malformed_code_refuses_by_name() {
+        let squashed = RecoveryCode::from_bytes([0u8; CODE_LEN])
+            .display()
+            .replace('-', "");
+        let refusal = |input: &str| RecoveryCode::from_input(input).err();
+        assert_eq!(refusal(""), Some(RecoveryCodeError::Length));
+        assert_eq!(
+            refusal(&squashed[..squashed.len() - 1]),
+            Some(RecoveryCodeError::Length)
+        );
+        assert_eq!(
+            refusal(&format!("{squashed}0")),
+            Some(RecoveryCodeError::Length)
+        );
+        assert_eq!(
+            refusal(&squashed.replace('0', "U")),
+            Some(RecoveryCodeError::Character('U')),
+            "U is deliberately outside Crockford's alphabet"
+        );
+        assert_eq!(
+            refusal(&format!("{}1", &squashed[..squashed.len() - 1])),
+            Some(RecoveryCodeError::PadBits),
+            "26 characters carry 130 bits and the code is 128"
         );
     }
 

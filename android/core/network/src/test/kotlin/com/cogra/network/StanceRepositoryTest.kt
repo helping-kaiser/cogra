@@ -1,5 +1,5 @@
 // The stance repository against a MockWebServer through the real
-// generated Apollo client: the three-root probe and the class it
+// generated Apollo client: the root-by-root probe and the class it
 // remembers, the bundle → domain mapping for all three reads, the tier
 // split on a missing target and a missing bundle, and the severance
 // batch.
@@ -92,26 +92,31 @@ class StanceRepositoryTest {
         {"__typename":"StanceBundle",
          "pDirected":$pDirected,"pInterest":$pInterest,
          "rawPDirected":$rawPDirected,"rawPInterest":$rawPInterest,
-         "recordCount":$recordCount,"severed":$severed,
+         "recordCount":$recordCount,
+         "inert":${pDirected == 0.0 || pInterest == 0.0},"severed":$severed,
          "severanceCost":$severanceCost,
          "projected":${projected ?: "null"}}
     """.trimIndent()
 
-    private fun projectedJson(pDirected: Double, pInterest: Double, severed: Boolean) =
-        """{"pDirected":$pDirected,"pInterest":$pInterest,"severed":$severed}"""
-
-    /** One response with the bundle hung off exactly one root. */
-    private fun answerJson(root: String, bundle: String?) = when (root) {
-        "post" -> """{"data":{"post":{"viewerStance":${bundle ?: "null"}},
-                              "comment":null,"user":null}}"""
-        "comment" -> """{"data":{"post":null,
-                                 "comment":{"viewerStance":${bundle ?: "null"}},
-                                 "user":null}}"""
-        else -> """{"data":{"post":null,"comment":null,
-                            "user":{"viewerStance":${bundle ?: "null"}}}}"""
+    private fun projectedJson(pDirected: Double, pInterest: Double, severed: Boolean): String {
+        val inert = pDirected == 0.0 || pInterest == 0.0
+        return """{"pDirected":$pDirected,"pInterest":$pInterest,"inert":$inert,"severed":$severed}"""
     }
 
-    private val noAnswer = """{"data":{"post":null,"comment":null,"user":null}}"""
+    /** One root's own document, answering with (or without) a bundle. */
+    private fun answerJson(root: String, bundle: String?) =
+        """{"data":{"$root":{"viewerStance":${bundle ?: "null"}}}}"""
+
+    /** The same root saying it does not hold that id — the probe moves on. */
+    private fun missJson(root: String) = """{"data":{"$root":null}}"""
+
+    /** Which document a recorded request carried. */
+    private fun MockWebServer.nextOperation(): String {
+        val body = takeRequest().body.readUtf8()
+        return listOf("PostStance", "CommentStance", "ProfileStance", "PrepareSeverance")
+            .firstOrNull { body.contains("\"operationName\":\"$it\"") || body.contains("query $it(") }
+            ?: body
+    }
 
     @Test
     fun `standing folds the bundle the backend reports`() = runTest {
@@ -174,39 +179,37 @@ class StanceRepositoryTest {
     }
 
     @Test
-    fun `the first read probes every root and later reads ask only the one that answered`() = runTest {
+    fun `the first read probes root by root and later reads ask only the one that answered`() = runTest {
         val repo = repo()
+        enqueue(missJson("post"))
+        enqueue(missJson("comment"))
         enqueue(answerJson("user", bundleJson()))
         enqueue(answerJson("user", bundleJson()))
 
         repo.standing("u1")
         repo.standing("u1")
 
-        val probe = server.takeRequest().body.readUtf8()
-        assertThat(probe).contains("\"asPost\":true")
-        assertThat(probe).contains("\"asComment\":true")
-        assertThat(probe).contains("\"asUser\":true")
-
-        val narrowed = server.takeRequest().body.readUtf8()
-        assertThat(narrowed).contains("\"asPost\":false")
-        assertThat(narrowed).contains("\"asComment\":false")
-        assertThat(narrowed).contains("\"asUser\":true")
+        assertThat(server.nextOperation()).isEqualTo("PostStance")
+        assertThat(server.nextOperation()).isEqualTo("CommentStance")
+        assertThat(server.nextOperation()).isEqualTo("ProfileStance")
+        // The class is remembered, so the second read is one document.
+        assertThat(server.nextOperation()).isEqualTo("ProfileStance")
+        assertThat(server.requestCount).isEqualTo(4)
     }
 
     @Test
     fun `a comment target is remembered as a comment`() = runTest {
         val repo = repo()
+        enqueue(missJson("post"))
         enqueue(answerJson("comment", bundleJson()))
         enqueue(answerJson("comment", bundleJson()))
 
         repo.standing("c1")
         repo.standing("c1")
-        server.takeRequest()
 
-        val narrowed = server.takeRequest().body.readUtf8()
-        assertThat(narrowed).contains("\"asComment\":true")
-        assertThat(narrowed).contains("\"asPost\":false")
-        assertThat(narrowed).contains("\"asUser\":false")
+        assertThat(server.nextOperation()).isEqualTo("PostStance")
+        assertThat(server.nextOperation()).isEqualTo("CommentStance")
+        assertThat(server.nextOperation()).isEqualTo("CommentStance")
     }
 
     @Test
@@ -301,7 +304,9 @@ class StanceRepositoryTest {
 
     @Test
     fun `an id no root answers is refused as not found`() = runTest {
-        enqueue(noAnswer)
+        enqueue(missJson("post"))
+        enqueue(missJson("comment"))
+        enqueue(missJson("user"))
 
         val outcome = repo().standing("ghost")
 
@@ -313,17 +318,19 @@ class StanceRepositoryTest {
     fun `a target that stops answering is probed again`() = runTest {
         val repo = repo()
         enqueue(answerJson("post", bundleJson()))
-        enqueue(noAnswer)
-        enqueue(answerJson("post", bundleJson()))
+        // The remembered root has gone quiet: the memo is dropped…
+        enqueue(missJson("post"))
+        // …so the next read starts the probe over rather than staying
+        // on a class that no longer holds the id.
+        enqueue(missJson("post"))
+        enqueue(answerJson("comment", bundleJson()))
 
         repo.standing("t1")
         repo.standing("t1")
         repo.standing("t1")
-        repeat(2) { server.takeRequest() }
 
-        val reprobe = server.takeRequest().body.readUtf8()
-        assertThat(reprobe).contains("\"asComment\":true")
-        assertThat(reprobe).contains("\"asUser\":true")
+        repeat(3) { server.nextOperation() }
+        assertThat(server.nextOperation()).isEqualTo("CommentStance")
     }
 
     @Test

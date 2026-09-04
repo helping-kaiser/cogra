@@ -111,6 +111,8 @@ generated_files = [
   "web/package-lock.json",
   "design-tokens.json",
   "client-crypto-vectors.json",
+  "client-constants.json",
+  "stance-fold-vectors.json",
   "android/gradle/libs.versions.toml",
   # The per-owner label registers of the rust-test profile, one per
   # owner with covered assets, materialized by the generator on

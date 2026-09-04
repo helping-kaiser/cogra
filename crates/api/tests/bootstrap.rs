@@ -657,30 +657,10 @@ async fn the_operator_login_completes_the_genesis_account(pool: PgPool) {
         .await
         .expect("query")
         .expect("blob row");
-    let code_bytes: [u8; 16] = {
-        const ALPHABET: &[u8; 32] = b"0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-        let mut bits: u64 = 0;
-        let mut nbits = 0u32;
-        let mut out = Vec::new();
-        for c in code.chars().filter(|c| *c != '-') {
-            let v = ALPHABET
-                .iter()
-                .position(|a| *a as char == c)
-                .expect("crockford char") as u64;
-            bits = (bits << 5) | v;
-            nbits += 5;
-            if nbits >= 8 {
-                nbits -= 8;
-                out.push(((bits >> nbits) & 0xFF) as u8);
-            }
-        }
-        out.try_into().expect("16 code bytes")
-    };
-    let opened = common::l1::key_backup::open(
-        &blob,
-        &common::l1::key_backup::RecoveryCode::from_bytes(code_bytes),
-    )
-    .expect("the printed code opens the blob");
+    let retyped = common::l1::key_backup::RecoveryCode::from_input(&code)
+        .expect("the printed code reads back through the reference parser");
+    let opened =
+        common::l1::key_backup::open(&blob, &retyped).expect("the printed code opens the blob");
     let custodied = genesis::system_key(&pool, credentials.actor_id)
         .await
         .expect("query")

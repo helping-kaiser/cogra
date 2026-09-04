@@ -25,9 +25,7 @@ mutation Register($input: RegisterInput!) {
     }
     expiresAt
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
@@ -36,9 +34,7 @@ mutation VerifyEmail($input: VerifyEmailInput!) {
   verifyEmail(input: $input) {
     ok
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
@@ -55,9 +51,7 @@ mutation AttachActorKey($input: AttachActorKeyInput!) {
       id
     }
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
@@ -68,9 +62,7 @@ mutation ApplyWithInvite($input: ApplyWithInviteInput!) {
       id
     }
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
@@ -93,14 +85,7 @@ query ApplicationStatus {
     stagedWrites(first: 10) {
       edges {
         node {
-          id
-          state
-          family
-          canonicalProposal
-          verifiedAct
-          record {
-            id
-          }
+          ...StagedWriteFields
         }
       }
     }

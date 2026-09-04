@@ -355,10 +355,7 @@ export function PostView({
    * all of them are this device's to sign.
    */
   const signAll = async (writes: readonly StagedWriteView[]): Promise<boolean> => {
-    const results = [];
-    for (const staged of writes) {
-      results.push(await signer.signStaged(staged));
-    }
+    const results = await signer.sign(writes);
     return results.every((result) => result.kind === "done");
   };
 

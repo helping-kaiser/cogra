@@ -21,7 +21,10 @@ import type { GalleryEntryDraft } from "@/lib/api/content-api";
 import { CENTERED } from "@/lib/ui2/media/crop";
 import { kindOf, type AssetUpload, type CoverAsset, type MediaKind, type PickedAsset } from "./wizard";
 
-/** D9(ii): four per comment, checked whole before anything is staged. */
+/**
+ * D9(ii): four per comment, checked whole before anything is staged.
+ * Pinned to `client-constants.json` in `lib/client-constants.test.ts`.
+ */
 export const COMMENT_ATTACHMENT_CAP = 4;
 
 export type CommentMedia = readonly PickedAsset[];

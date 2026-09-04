@@ -31,6 +31,43 @@ private const val AES_NONCE_LEN = 12
 private const val HKDF_INFO = "cogra:key-backup:v1"
 private const val CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 
+/** U+FEFF — the byte-order mark a paste carries in ahead of the code. */
+private const val BYTE_ORDER_MARK = 0xFEFF
+
+/** U+0085 NEXT LINE — `White_Space`, and in no separator category. */
+private const val NEXT_LINE = 0x85
+
+/** The C0 run U+0009-U+000D: tab, line feed, vertical tab, form feed, return. */
+private const val C0_WHITE_SPACE_FIRST = 0x09
+private const val C0_WHITE_SPACE_LAST = 0x0D
+
+/**
+ * The characters Unicode gives the `White_Space` property.
+ *
+ * `Character.isSpaceChar` is the part of that property Unicode also
+ * classes as a separator; what it leaves out is the C0 run and
+ * NEXT LINE, which are named above.
+ */
+private fun Char.isUnicodeWhiteSpace(): Boolean =
+    Character.isSpaceChar(this) ||
+        code in C0_WHITE_SPACE_FIRST..C0_WHITE_SPACE_LAST ||
+        code == NEXT_LINE
+
+/**
+ * What [RecoveryCode.normalize] drops: `-`, every `White_Space`
+ * character, and the byte-order mark.
+ *
+ * The class is stated here rather than inherited from the platform,
+ * because no two of the three clients spell "whitespace" the same and a
+ * code typed on one has to read on all. Kotlin's own
+ * `Char.isWhitespace()` is `Character.isWhitespace() ||
+ * Character.isSpaceChar()`, which ADDS U+001C-U+001F — the C0
+ * file/group/record/unit separators, which Unicode does not call white
+ * space — and DROPS U+0085, which it does.
+ */
+private fun Char.isCodeSeparator(): Boolean =
+    this == '-' || code == BYTE_ORDER_MARK || isUnicodeWhiteSpace()
+
 /**
  * A 16-byte recovery code and its display/normalization rules.
  *
@@ -84,7 +121,7 @@ class RecoveryCode(bytes: ByteArray) {
                 .replace("I", "1")
                 .replace("L", "1")
                 .replace("O", "0")
-                .filter { it != '-' && !it.isWhitespace() }
+                .filter { !it.isCodeSeparator() }
 
         /**
          * Parses user input under [normalize]. No check digit —
@@ -119,7 +156,10 @@ class RecoveryCode(bytes: ByteArray) {
 
 private fun contentKey(code: RecoveryCode, salt: ByteArray): ByteArray {
     val hkdf = HKDFBytesGenerator(SHA256Digest())
-    hkdf.init(HKDFParameters(code.bytes(), salt, HKDF_INFO.toByteArray(Charsets.US_ASCII)))
+    // UTF-8, as the contract's own `hkdfInfoUtf8` names it: US-ASCII's
+    // encoder replaces what it cannot represent, so a non-ASCII info
+    // string would derive one key here and another everywhere else.
+    hkdf.init(HKDFParameters(code.bytes(), salt, HKDF_INFO.toByteArray(Charsets.UTF_8)))
     return ByteArray(32).also { hkdf.generateBytes(it, 0, it.size) }
 }
 
@@ -152,12 +192,25 @@ internal fun sealKeyBackupWith(
     require(seed.size == 32) { "an actor seed is 32 bytes" }
     require(salt.size == HKDF_SALT_LEN) { "the HKDF salt is $HKDF_SALT_LEN bytes" }
     require(nonce.size == AES_NONCE_LEN) { "the AES-GCM nonce is $AES_NONCE_LEN bytes" }
-    val plaintext = CborEncoder().array(2u).bytes(seed).uint(1u).finish()
     val header = byteArrayOf(VERSION) + salt + nonce
     val ciphertext = cipher(Cipher.ENCRYPT_MODE, contentKey(code, salt), nonce, header)
-        .doFinal(plaintext)
+        .doFinal(keyBackupPlaintext(seed))
     return header + ciphertext
 }
+
+/**
+ * The CBOR container the blob encrypts: `[seed, containerVersion]`.
+ *
+ * Reachable from the suite so the vectors can pin the plaintext and the
+ * derived key separately. Without those two, a swapped HKDF argument
+ * order reports only as "the blob differs", which names neither half.
+ */
+internal fun keyBackupPlaintext(seed: ByteArray): ByteArray =
+    CborEncoder().array(2u).bytes(seed).uint(1u).finish()
+
+/** The HKDF output the container is sealed under — pinned by the vectors. */
+internal fun keyBackupContentKey(code: RecoveryCode, salt: ByteArray): ByteArray =
+    contentKey(code, salt)
 
 /**
  * Opens a blob with the recovery code, returning the actor seed. A

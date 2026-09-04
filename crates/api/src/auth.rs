@@ -174,10 +174,34 @@ pub fn verify_password(hash: &str, password: &str) -> bool {
         .is_ok()
 }
 
-/// The password floor (auth.md "Password requirements"): minimum 12
-/// characters, no maximum, no composition rules.
+/// The password floor (auth.md "Password requirements"): no maximum, no
+/// composition rules.
+///
+/// Named rather than inline because both clients enforce it before a
+/// round trip, and a form that disagrees with the server refuses a
+/// password the server would take — or takes one it refuses. The number
+/// leaves here through `client-constants.json`.
+pub const PASSWORD_MIN_CHARS: usize = 12;
+
+/// The handle grammar's length bounds (auth.md "Handle and email
+/// format"), named for the same reason as [`PASSWORD_MIN_CHARS`].
+pub const HANDLE_MIN_CHARS: usize = 3;
+
+/// See [`HANDLE_MIN_CHARS`].
+pub const HANDLE_MAX_CHARS: usize = 30;
+
+/// The handle charset, as the anchored regular expression a client
+/// compiles.
+///
+/// The pattern is the exported form of the predicate [`normalize_handle`]
+/// applies, and the test below holds the two together: a client cannot
+/// read the Rust predicate, and a prose restatement of a charset is
+/// exactly the kind of rule that drifts.
+pub const HANDLE_CHARSET_PATTERN: &str = "^[a-z0-9_]+$";
+
+/// The password floor (auth.md "Password requirements").
 pub fn check_password(password: &str) -> Result<(), &'static str> {
-    if password.chars().count() < 12 {
+    if password.chars().count() < PASSWORD_MIN_CHARS {
         return Err("password must be at least 12 characters");
     }
     Ok(())
@@ -211,7 +235,7 @@ pub async fn validate_new_password(
 pub fn normalize_handle(handle: &str) -> Result<String, &'static str> {
     let folded = handle.trim().to_lowercase();
     let count = folded.chars().count();
-    if !(3..=30).contains(&count) {
+    if !(HANDLE_MIN_CHARS..=HANDLE_MAX_CHARS).contains(&count) {
         return Err("handle must be 3-30 characters");
     }
     if !folded
@@ -576,6 +600,31 @@ mod tests {
         assert!(normalize_handle("has-dash").is_err());
         assert!(normalize_handle("has space").is_err());
         assert!(normalize_handle("Ünïcode").is_err());
+    }
+
+    /// The pattern is what the clients compile; the predicate is what the
+    /// server runs. Only a test can hold the two together, and the class
+    /// below is read off the pattern by hand — change one and this fails.
+    ///
+    /// The pattern describes the handle AFTER folding, which is the form
+    /// the server stores, so the expectation folds before it decides.
+    ///
+    /// The exported handle pattern admits exactly the characters the server's own predicate admits.
+    /// ´claim:auth:the-exported-handle-pattern-is-the-predicate´
+    #[test]
+    fn the_handle_charset_pattern_matches_the_predicate() {
+        assert_eq!(HANDLE_CHARSET_PATTERN, "^[a-z0-9_]+$");
+        let class_admits = |c: char| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_';
+        for c in ('\0'..='\u{7f}').chain(['é', 'Ü', '→', '\u{a0}']) {
+            let folded = format!("aa{c}").trim().to_lowercase();
+            let expected = (HANDLE_MIN_CHARS..=HANDLE_MAX_CHARS).contains(&folded.chars().count())
+                && folded.chars().all(class_admits);
+            assert_eq!(
+                normalize_handle(&format!("aa{c}")).is_ok(),
+                expected,
+                "the predicate and {HANDLE_CHARSET_PATTERN} disagree about {c:?}"
+            );
+        }
     }
 
     /// An email is normalized to one spelling and admitted under a deliberately lenient grammar.

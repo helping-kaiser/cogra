@@ -42,6 +42,15 @@ function signer(result: (staged: StagedWriteView) => WriteResult = (s) => ({
       signed.push(staged.id);
       return result(staged);
     }),
+    // The stance path deliberately signs one at a time — it short-circuits
+    // on the first write that does not land, which the batch helper does
+    // not do — so this arm is here for the interface and unreached.
+    sign: vi.fn(async (writes: readonly StagedWriteView[]) =>
+      writes.map((staged) => {
+        signed.push(staged.id);
+        return result(staged);
+      }),
+    ),
     resume: vi.fn(async () => []),
   };
 }
