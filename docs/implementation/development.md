@@ -173,19 +173,26 @@ noted; a cold build pays its dependency graph on top.
 
 CI jobs carry the same discipline as `timeout-minutes`, which is the
 budget the runner enforces: a job with none runs to GitHub's six-hour
-default. Current values, from `.github/workflows/`:
+default. The measurements are one run of every job on 2026-09-04, with
+the action caches warm; a run that invalidates them — a `Cargo.lock`
+bump, a new Gradle or npm dependency — pays its whole graph on top,
+which is the case the headroom is for.
 
-| Job | timeout-minutes |
-|---|---|
-| Detect code changes | 5 |
-| Corpus lint | 20 |
-| Lint | 30 |
-| Test | 45 |
-| Query budgets | 30 |
-| Android | 45 |
-| Web | 30 |
-| Design | 20 |
-| Markdown link check | 15 |
+| Job | timeout-minutes | Measured |
+|---|---|---|
+| Detect code changes | 5 | 9 s |
+| Corpus lint | 20 | 2 m 37 s |
+| Lint | 30 | 2 m 19 s |
+| Test | 45 | 12 m 34 s |
+| Query budgets | 30 | 2 m 40 s |
+| Android | 45 | 1 m 31 s |
+| Web | 30 | 7 m 1 s |
+| Design | 20 | 1 m 54 s |
+| Markdown link check | 15 | 6 s |
+
+`Test` dominates because it builds sqlx-cli from source; `Query budgets`
+reaches the same database in a fifth of the time by letting
+`#[sqlx::test]` apply the migrations instead.
 
 ### Reaching the web dev server from the phone
 
