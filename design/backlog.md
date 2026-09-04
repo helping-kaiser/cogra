@@ -122,10 +122,9 @@ variant, the where-you-are comment affordance on detail;
 `StanceControl` `defaultOpen`/`defaultPick`/`padInset`/`padNote` so
 a static board shows the parked pad from the master. Screens can
 keep canvas tweak chips via `PROPS`/`VALS` exports. The rule is
-readme §13 *Masters, variants, and screens*. **Remaining:** the
-reply and edit wizards and the key/auth ceremony screens are still
-hand-authored `.dc.html` — convert them as their sections are next
-touched; `ReplyPad` (the last hand-copied pad) is first in line.
+readme §13 *Masters, variants, and screens*. The conformance round
+(2026-09-04) finished the job: all 119 canonical boards render from
+`screens/`, and no hand-written `.dc.html` is left on the canvas.
 The canonical artboards hand-copy component markup, so system updates
 don't propagate — the entry-session post cards already drifted
 (missing elements newer boards carry). Change the authoring model so
@@ -415,20 +414,50 @@ Two follow-ups the round surfaces, still open:
   `aria-describedby`, and the supporting-line span isn't marked
   `role="alert"`. Needs a ruling on whether every field error should
   announce, or only the ones a screen reader wouldn't otherwise catch.
-- **Seventeen hand-authored boards predate the pipeline and owe
-  their componentize-first pass** — the conformance round
-  (2026-09-04) converted every JSX-sourced board and then the whole
-  compose wizard run; these exist only as hand-written `.dc.html`,
-  all live on the canvas, none reachable by the pipeline until a JSX
-  source is written for each: the key ceremony family
-  (`KeyCeremony`, `KeyConfirm`, `KeyDecline`), `ReplyCompose`,
+- **Every board on the canvas renders from a JSX source** — the
+  conformance round (2026-09-04) converted all 27 boards that had
+  only hand-written `.dc.html` behind them: the compose wizard's
+  ten, the entry-and-keys family's eight, and the reply and edit
+  wizards, the two overlays and the pattern boards — `ReplyCompose`,
   `ReplyPad`, `ReplySeal`, `EditCompose`, `EditActs`,
-  `NetworkError`, `GuestGate`, `HelpDialog`, `InviteEntry`,
-  `JoinInvalid`, `PadKeyAbsent`, `DiscardConfirm`, `Reset`,
-  `Verified`. Scope (all this round / the worst first / defer) is
-  jakob's open call. `ReplyCited` draws ReplySeal's seal over the
-  real masters, so that one's target is already drawn; `ReplyPad`
-  wants the one-axis pad `ComposePad` now draws for itself.
+  `DiscardConfirm`, `HelpDialog`, `NetworkError`, `PadKeyAbsent`.
+  119 screens, all of them reachable by the pipeline, none of them
+  hand-copying component markup. Every via kept its number and its
+  meaning, so `graph.json` took no edge; the conversion's visible
+  corrections are the ones a rebuild over the masters makes —
+  `ReplySeal` and `ReplyCited` now say one "+ Cite something"
+  between them, `ReplyCompose` and `DiscardConfirm` one "+ Add
+  pictures or a video", `NetworkError`'s stance row prints the pair
+  its own reference row prints, and `PadKeyAbsent`'s feed card grew
+  everything `PostCard` grew since it was drawn.
+  Two shapes moved into `_shared.jsx` on the way, both by the rule
+  that a body on a second board stops being board-local: the reply
+  seal's add-rows, and the reply composer itself.
+
+  **What the last nine surfaced**, each a ruling still owed:
+  - **`NetworkError` wires one control of eight.** The board is the
+    seal, and over the masters its header, its three facts and its
+    way back are real buttons again — but the graph gives it only
+    the retry, so it carries a `scanExempt` line saying the rest are
+    `ComposeSeal`'s controls, wired there. Its uploading twin wires
+    all eight. Either the fault board wires its own, or the
+    exemption stands as the pattern boards' rule.
+  - **The overlays abbreviate the surface under them, each
+    differently.** `ReplyPad`, `EditActs` and `HelpDialog` each draw
+    a shortened version of the seal or edit they cover, and
+    differently from one another — the same question `ComposePad`
+    and the license and sensitive sheets left open, now on three
+    more boards. Preserved as drawn.
+  - **`DiscardConfirm` gives the filled button to the destructive
+    answer**, where `RemoveConfirm` gives it to the safe one.
+    Preserved as drawn.
+  - **The composer's "+ Add" speaks in two voices.** `ReplyCompose`
+    says it as a bare small word; `ReplyPictures` and its siblings
+    say the same thing as a small text pill. The same three-voices
+    question the cite word has.
+  - **`FactRow` has no note slot.** The reply pad's seal carried its
+    coaching line inside the ruled block; the master's seal rules
+    enclose the row, so the line now stands beneath it.
 - **What the compose-wizard conversion surfaced**, each needing a
   ruling before anyone fills it in:
   - **`SheetTitle` has no trailing slot.** The license and sensitive

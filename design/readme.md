@@ -1616,9 +1616,8 @@ entry first". What stands:
 - **Numbers are stamped by the build, never by components.** JSX
   screens get them from `_build/flow-markers.mjs` — markup anchors
   applied after render, throwing on drift — so the design system
-  never carries canvas metadata; hand boards carry the attributes
-  directly. Repeated per-post controls wear the same number on every
-  instance: one edge covers them. **The badge sits inside the
+  never carries canvas metadata. Repeated per-post controls wear the
+  same number on every instance: one edge covers them. **The badge sits inside the
   element's corner**, not hanging past it: outside, anything that
   clips its overflow eats it, and 470 of 1091 badges were drawing
   cut or invisible — the gate verifies the attribute, not the paint.
@@ -2411,6 +2410,25 @@ a master, and every master is one component with variants as props
   `Checkbox` makes a row one. The grids' local tile palette — four
   colours with no token behind them — reads off the surface-container
   rungs, as `ComposePickVideo`'s dead grid already did.
+- **The last nine legacy boards converted**, and with them the
+  canvas: `ReplyCompose`, `ReplyPad`, `ReplySeal`, `EditCompose`,
+  `EditActs`, `DiscardConfirm`, `HelpDialog`, `NetworkError` and
+  `PadKeyAbsent`. All 119 boards now render from `screens/`; nothing
+  on the canvas hand-copies component markup. What moved and why:
+  the reply's seal reconciles with `ReplyCited`, its staged twin —
+  one add-row pair, drawn once in the prelude, and one "+ Cite
+  something" between them where the bare board had spelled the kinds
+  out. `ReplyPad` **takes** `StancePad`: a reply's stance is toward
+  somebody else's post, so both parameters are the author's and the
+  square is the right value space — the refusal above is about one's
+  own post, not about pads. `NetworkError` is `ComposeSeal` unsent,
+  so its stance row took the same pair correction the seal's did.
+  `DiscardConfirm` draws the reply composer from the prelude rather
+  than a copy, which is where the two boards' "+ Add" words stopped
+  disagreeing. `PadKeyAbsent`'s feed card, drawn before the body-XOR
+  round, arrived carrying everything `PostCard` grew since — its
+  topics, its citation line, its share, and the resting face the pad
+  above it says it has.
 - **Three masters were refused, each for the same reason**: the
   component and the board are not the same thing. `CropViewport`
   locks a shape and masks around it, which is right for a profile
@@ -2426,8 +2444,11 @@ a master, and every master is one component with variants as props
   question): ChipMini's tone, the reply seal's staged-reference
   placement, the Mark drawings, the wizard footer's shape, the
   comments-sheet shell, the "+ Cite something" voices, the topic
-  chip's ×, the acts line's target — and the seventeen
-  hand-authored boards that still predate the pipeline.
+  chip's ×, the acts line's target, the composer's "+ Add" voices,
+  how each overlay abbreviates the surface under it, the discard
+  dialog's button weighting, and how much of a pattern board's own
+  setting the graph should wire — `NetworkError` gives an edge to
+  its retry alone, and says so in a `scanExempt` line.
 - **The gate**: 939 edges · 82 gaps · flows 58/53/5, unchanged end
   to end — which is the round's whole claim: the canvas redrawn
   from masters without the graph moving.
