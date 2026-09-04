@@ -18,6 +18,53 @@ import React from "react";
    The message is always words (direction-by-words) — this component renders it
    verbatim, no icon. */
 
+/* THE LABEL ROW, ASSIGNED ONCE. `TextField` renders it over its own field, and
+   the composer's captions over sections that are NOT fields — Pictures, Video,
+   Cover, Topics, References — render it over a tray or a list. Those captions
+   have always been dressed as field labels; assigning that anatomy here is what
+   keeps them from drifting apart. A caption whose section IS a field belongs in
+   `TextField`'s `label` and `corner` instead, and every one of them is written
+   that way.
+
+   `htmlFor` CHOOSES THE ELEMENT. With one, the word names a control and the row
+   is a `<label>`. Without one there is no control to name, so it is a `<span>`:
+   a `<label>` with no `for` is a label in name only (HTML Living Standard
+   §4.10.4), and a topic tray is not a labelable control. */
+
+export function FieldLabel({ children, htmlFor, corner, error }) {
+  const Name = htmlFor ? "label" : "span";
+  return (
+    <div style={{ display: "flex", alignItems: "baseline", gap: "var(--space-2)" }}>
+      <Name
+        htmlFor={htmlFor}
+        style={{
+          flex: 1,
+          fontSize: "var(--text-label-large)",
+          lineHeight: "var(--text-label-large--line-height)",
+          letterSpacing: "var(--text-label-large--letter-spacing)",
+          fontWeight: "var(--text-label-large--font-weight)",
+          color: error ? "var(--error)" : undefined,
+        }}
+      >
+        {children}
+      </Name>
+      {/* The corner word — "Optional" on the details fields. A quiet fact
+          beside the label, never inside it, so the label stays the name. */}
+      {corner && (
+        <span
+          style={{
+            fontSize: "var(--text-label-small)",
+            lineHeight: "var(--text-label-small--line-height)",
+            color: "var(--text-secondary)",
+          }}
+        >
+          {corner}
+        </span>
+      )}
+    </div>
+  );
+}
+
 export function TextField({
   label,
   corner,
@@ -49,34 +96,9 @@ export function TextField({
   };
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: "var(--space-2)" }}>
-        <label
-          htmlFor={fieldId}
-          style={{
-            flex: 1,
-            fontSize: "var(--text-label-large)",
-            lineHeight: "var(--text-label-large--line-height)",
-            letterSpacing: "var(--text-label-large--letter-spacing)",
-            fontWeight: "var(--text-label-large--font-weight)",
-            color: error ? "var(--error)" : undefined,
-          }}
-        >
-          {label}
-        </label>
-        {/* The corner word — "Optional" on the details fields. A quiet fact
-            beside the label, never inside it, so the label stays the name. */}
-        {corner && (
-          <span
-            style={{
-              fontSize: "var(--text-label-small)",
-              lineHeight: "var(--text-label-small--line-height)",
-              color: "var(--text-secondary)",
-            }}
-          >
-            {corner}
-          </span>
-        )}
-      </div>
+      <FieldLabel htmlFor={fieldId} corner={corner} error={error}>
+        {label}
+      </FieldLabel>
       {rows ? (
         <textarea
           id={fieldId}

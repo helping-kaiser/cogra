@@ -8,7 +8,7 @@
 <style>body{padding:16px}.grid{display:grid;grid-template-columns:300px 320px;gap:24px;align-items:start}.col{display:flex;flex-direction:column;gap:12px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { TextField, PasswordField, Checkbox, LicenseChooser, LicenseTerms, RecoveryCode, Card } = window.CoGraDesignSystem_9084ba;
+const { TextField, FieldLabel, PasswordField, Checkbox, LicenseChooser, LicenseTerms, RecoveryCode, Card } = window.CoGraDesignSystem_9084ba;
 function Demo(){
   const [email,setEmail]=React.useState("ada@example.org");
   const [pw,setPw]=React.useState("hunter2hunter2");
@@ -25,6 +25,8 @@ function Demo(){
       <PasswordField label="Password" value={pw} onChange={setPw} hint="At least 12 characters."/>
       <Checkbox label="Don't remember this account on this device" checked={forget} onChange={setForget}/>
       <TextField label="What do you want to publish?" rows={3} value={body} onChange={setBody}/>
+      <span className="lbl">The label row alone — a caption over a section that is not a field</span>
+      <FieldLabel>Topics</FieldLabel>
     </div>
     <div className="col">
       <LicenseChooser value={license} onChange={setLicense}/>
