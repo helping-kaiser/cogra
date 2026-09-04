@@ -6,6 +6,18 @@ export interface License {
   provenance: number;
 }
 
+/** One radio option on a license axis. */
+export interface LicenseTier {
+  value: 0 | 0.5 | 1;
+  label: string;
+  hint: string;
+}
+
+/** The Credit axis's three named readings, offered by `LicenseChooser`. */
+export declare const ATTRIBUTION_TIERS: readonly LicenseTier[];
+/** The Public record of use axis's three named readings. */
+export declare const PROVENANCE_TIERS: readonly LicenseTier[];
+
 export interface LicenseChooserProps {
   value?: License;
   onChange?: (license: License) => void;

@@ -56,6 +56,10 @@ export interface PostCardProps {
   comments?: number;
   /** Opens the comments sheet. Defaults to `onOpen`. */
   onOpenComments?: () => void;
+  /** Shows `ShareButton` in the affordance row. Defaults to true. */
+  showShare?: boolean;
+  /** Fired when the reader shares the post, from `ShareButton`. */
+  onShare?: () => void;
   /**
    * Renders the record's SKELETON instead of its content: an illegal verdict
    * removes the payload, so title, description, body, media, and the license all
@@ -80,6 +84,10 @@ export interface PostCardProps {
   topics?: readonly string[];
   /** The citation count, riding the end of the topics line. */
   references?: number;
+  /** Opens the topics-and-references sheet. On detail, the whole line opens it. */
+  onOpenReferences?: () => void;
+  /** The post's media items, rendered full-bleed via `MediaGallery`. */
+  media?: readonly import("../media/MediaAttachment").MediaAttachmentProps[];
   /**
    * Detail variant only: takes over the media tap, which otherwise opens
    * `MediaViewer` in place. In the feed the same tap opens the post.
