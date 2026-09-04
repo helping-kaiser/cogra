@@ -10,13 +10,20 @@
 package com.cogra.crypto
 
 /** A wire blob that does not parse. */
-class WireException(message: String) : Exception(message)
+class WireException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
 /** The wire format version every envelope opens with. */
 private const val WIRE_VERSION = 1UL
 
 /** The device's pre-commitment leg: nonce plus pre-commitment signature. */
-class PreCommitment(val nonce: ByteArray, val preSignature: ByteArray)
+class PreCommitment(val nonce: ByteArray, val preSignature: ByteArray) {
+    override fun equals(other: Any?): Boolean =
+        other is PreCommitment &&
+            nonce.contentEquals(other.nonce) &&
+            preSignature.contentEquals(other.preSignature)
+
+    override fun hashCode(): Int = 31 * nonce.contentHashCode() + preSignature.contentHashCode()
+}
 
 private fun encodeBodyBytes(body: StructuralBody): ByteArray = body.canonicalBytes()
 
@@ -48,9 +55,9 @@ private fun decodeBody(bytes: ByteArray): StructuralBody {
             assertedParents = assertedParents,
         )
     } catch (e: CborDecodeException) {
-        throw WireException("malformed structural body: ${e.message}")
+        throw WireException("malformed structural body: ${e.message}", e)
     } catch (e: IdentifierException) {
-        throw WireException("malformed structural body: ${e.message}")
+        throw WireException("malformed structural body: ${e.message}", e)
     }
 }
 
@@ -87,9 +94,9 @@ fun decodeProposal(bytes: ByteArray): Proposal {
         d.finish()
         return Proposal(body, payload, deps)
     } catch (e: CborDecodeException) {
-        throw WireException("malformed proposal: ${e.message}")
+        throw WireException("malformed proposal: ${e.message}", e)
     } catch (e: IdentifierException) {
-        throw WireException("malformed proposal: ${e.message}")
+        throw WireException("malformed proposal: ${e.message}", e)
     }
 }
 
@@ -138,9 +145,9 @@ fun decodeVerifiedAct(bytes: ByteArray): VerifiedAct {
         d.finish()
         return act
     } catch (e: CborDecodeException) {
-        throw WireException("malformed verified act: ${e.message}")
+        throw WireException("malformed verified act: ${e.message}", e)
     } catch (e: IdentifierException) {
-        throw WireException("malformed verified act: ${e.message}")
+        throw WireException("malformed verified act: ${e.message}", e)
     }
 }
 
@@ -173,6 +180,6 @@ fun decodePreCommitment(bytes: ByteArray): PreCommitment {
         d.finish()
         return PreCommitment(nonce, signature)
     } catch (e: CborDecodeException) {
-        throw WireException("malformed pre-commitment: ${e.message}")
+        throw WireException("malformed pre-commitment: ${e.message}", e)
     }
 }

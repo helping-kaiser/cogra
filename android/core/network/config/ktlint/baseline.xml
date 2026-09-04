@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<baseline version="1.0">
+    <file name="src/main/kotlin/com/cogra/network/Mapping.kt">
+        <error line="18" column="1" source="standard:import-ordering" />
+        <error line="70" column="5" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/network/auth/Auth.kt">
+        <error line="12" column="1" source="standard:import-ordering" />
+        <error line="104" column="5" source="standard:class-signature" />
+        <error line="105" column="5" source="standard:class-signature" />
+        <error line="105" column="45" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/network/di/NetworkModule.kt">
+        <error line="7" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/network/repo/ChunkedUpload.kt">
+        <error line="1" column="1" source="standard:filename" />
+        <error line="7" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/network/repo/Media.kt">
+        <error line="1" column="1" source="standard:filename" />
+        <error line="7" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/network/repo/References.kt">
+        <error line="1" column="1" source="standard:filename" />
+        <error line="33" column="5" source="standard:class-signature" />
+        <error line="34" column="5" source="standard:class-signature" />
+        <error line="34" column="34" source="standard:class-signature" />
+        <error line="35" column="5" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/network/repo/RepositoryImpls.kt">
+        <error line="6" column="1" source="standard:import-ordering" />
+        <error line="140" column="5" source="standard:class-signature" />
+        <error line="141" column="5" source="standard:class-signature" />
+        <error line="141" column="34" source="standard:class-signature" />
+        <error line="142" column="5" source="standard:class-signature" />
+        <error line="221" column="5" source="standard:class-signature" />
+        <error line="222" column="5" source="standard:class-signature" />
+        <error line="222" column="34" source="standard:class-signature" />
+        <error line="223" column="5" source="standard:class-signature" />
+        <error line="271" column="5" source="standard:class-signature" />
+        <error line="272" column="5" source="standard:class-signature" />
+        <error line="272" column="34" source="standard:class-signature" />
+        <error line="273" column="5" source="standard:class-signature" />
+        <error line="328" column="5" source="standard:class-signature" />
+        <error line="329" column="5" source="standard:class-signature" />
+        <error line="329" column="34" source="standard:class-signature" />
+        <error line="330" column="5" source="standard:class-signature" />
+        <error line="495" column="5" source="standard:class-signature" />
+        <error line="496" column="5" source="standard:class-signature" />
+        <error line="496" column="34" source="standard:class-signature" />
+        <error line="497" column="5" source="standard:class-signature" />
+        <error line="763" column="1" source="standard:no-blank-line-before-rbrace" />
+        <error line="860" column="5" source="standard:class-signature" />
+        <error line="861" column="5" source="standard:class-signature" />
+        <error line="861" column="34" source="standard:class-signature" />
+        <error line="862" column="5" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/network/repo/Stance.kt">
+        <error line="1" column="1" source="standard:filename" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/network/repo/StanceStandIn.kt">
+        <error line="1" column="1" source="standard:filename" />
+        <error line="17" column="1" source="standard:import-ordering" />
+        <error line="34" column="5" source="standard:class-signature" />
+        <error line="34" column="41" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/network/repo/Topics.kt">
+        <error line="1" column="1" source="standard:filename" />
+        <error line="30" column="5" source="standard:class-signature" />
+        <error line="31" column="5" source="standard:class-signature" />
+        <error line="31" column="34" source="standard:class-signature" />
+        <error line="32" column="5" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/network/store/ComposeDraftStoreImpl.kt">
+        <error line="12" column="1" source="standard:import-ordering" />
+        <error line="38" column="5" source="standard:class-signature" />
+        <error line="39" column="5" source="standard:class-signature" />
+        <error line="39" column="36" source="standard:class-signature" />
+        <error line="40" column="5" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/network/store/EncryptedStore.kt">
+        <error line="10" column="1" source="standard:import-ordering" />
+        <error line="61" column="5" source="standard:class-signature" />
+        <error line="62" column="5" source="standard:class-signature" />
+        <error line="62" column="37" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/network/store/StorageHealth.kt">
+        <error line="10" column="1" source="standard:import-ordering" />
+        <error line="44" column="5" source="standard:class-signature" />
+        <error line="44" column="51" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/network/store/StoreImpls.kt">
+        <error line="6" column="1" source="standard:import-ordering" />
+        <error line="88" column="5" source="standard:class-signature" />
+        <error line="89" column="5" source="standard:class-signature" />
+        <error line="89" column="36" source="standard:class-signature" />
+        <error line="90" column="5" source="standard:class-signature" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/network/ContentRepositoryTest.kt">
+        <error line="8" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/network/MediaUploadTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/network/ReferenceRepositoryTest.kt">
+        <error line="8" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/network/RepositoriesTest.kt">
+        <error line="7" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/network/StanceRepositoryTest.kt">
+        <error line="9" column="1" source="standard:import-ordering" />
+        <error line="105" column="17" source="standard:wrapping" />
+        <error line="107" column="20" source="standard:wrapping" />
+        <error line="110" column="15" source="standard:wrapping" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/network/TopicRepositoryTest.kt">
+        <error line="8" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/network/auth/RefreshTest.kt">
+        <error line="7" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/network/store/StoresTest.kt">
+        <error line="7" column="1" source="standard:import-ordering" />
+    </file>
+</baseline>

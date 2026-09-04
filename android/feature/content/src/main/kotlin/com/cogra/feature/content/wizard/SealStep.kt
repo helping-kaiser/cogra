@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -40,6 +41,7 @@ import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
 import com.cogra.domain.LicenseChoice
+import com.cogra.feature.content.R
 
 /**
  * `ComposeSeal` — every act with its cost, before a single signature.
@@ -459,6 +461,8 @@ internal fun StanceSheet(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         val reading = "+%.2f".format(pDirected)
+        // Hoisted: `semantics {}` is not a composable scope.
+        val spoken = stringResource(R.string.content_stance_on_post)
         Text(
             text = "Your pick: $reading",
             style = MaterialTheme.typography.bodyMedium,
@@ -472,7 +476,7 @@ internal fun StanceSheet(
                 .fillMaxWidth()
                 .testTag("wizard_stance_slider")
                 .semantics {
-                    contentDescription = "Where you stand on this post"
+                    contentDescription = spoken
                     stateDescription = reading
                 },
         )

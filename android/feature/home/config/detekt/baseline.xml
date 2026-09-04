@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:StatusBanners.kt:@Composable private fun ApplicantStatus</ID>
+    <ID>LongMethod:StatusBanners.kt:@Composable fun StatusBanners</ID>
+    <ID>TooManyFunctions:HomeViewModel.kt:HomeViewModel : ViewModel</ID>
+  </CurrentIssues>
+</SmellBaseline>

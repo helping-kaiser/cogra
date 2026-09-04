@@ -205,7 +205,7 @@ class ComposeWizardStateTest {
     fun oneFailedUploadLeavesTheOthersAlone() {
         val state = media
             .withUpload("a", AssetUpload.Done("m1"))
-            .withUpload("b", AssetUpload.Failed("nope"))
+            .withUpload("b", AssetUpload.Failed(UploadFailure.REFUSED_PICTURE))
         assertThat(state.uploadedIds).containsExactly("m1")
         assertThat(state.uploadsFailed).isTrue()
         assertThat(state.uploadsComplete).isFalse()

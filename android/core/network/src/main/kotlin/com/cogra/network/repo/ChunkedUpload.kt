@@ -4,6 +4,8 @@
 
 package com.cogra.network.repo
 
+import com.cogra.domain.CograLog
+import com.cogra.domain.media.PartFailure
 import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.UploadRetry
 import com.cogra.domain.store.TokenStore
@@ -58,8 +60,9 @@ class PartUploader(
      * Sequential also makes progress monotonic, which is what the ring
      * in front of the author is showing.
      *
-     * Answers null on success, or the message to surface when a part
-     * has exhausted its attempts.
+     * Answers null on success, or what went wrong when a part has
+     * exhausted its attempts — as a value, so the repository above can
+     * tell a refusal from a fault instead of reading a sentence.
      */
     suspend fun sendAll(
         uploadId: String,
@@ -67,7 +70,7 @@ class PartUploader(
         partSizeBytes: Int,
         partCount: Int,
         onProgress: (UploadProgress) -> Unit,
-    ): String? = withContext(io) {
+    ): PartFailure? = withContext(io) {
         onProgress(UploadProgress(uploadId, sentParts = 0, partCount = partCount))
         RandomAccessFile(file, "r").use { source ->
             for (partNumber in 1..partCount) {
@@ -76,7 +79,7 @@ class PartUploader(
                 // the last is whatever remains. A part of any other size
                 // is refused at the route, not discovered at assembly.
                 val length = minOf(partSizeBytes.toLong(), file.length() - offset).toInt()
-                if (length <= 0) return@withContext MALFORMED
+                if (length <= 0) return@withContext PartFailure.UNREADABLE
                 val bytes = ByteArray(length)
                 source.seek(offset)
                 source.readFully(bytes)
@@ -97,7 +100,7 @@ class PartUploader(
      * over GraphQL, so a 4xx that is not an expired token means the
      * request was wrong and repeating it would only be slower.
      */
-    private suspend fun sendOne(uploadId: String, partNumber: Int, bytes: ByteArray): String? {
+    private suspend fun sendOne(uploadId: String, partNumber: Int, bytes: ByteArray): PartFailure? {
         var attempt = 1
         while (true) {
             val wait = UploadRetry.delayMs(attempt, random.nextDouble())
@@ -105,20 +108,43 @@ class PartUploader(
 
             when (attemptPart(uploadId, partNumber, bytes)) {
                 PartResult.Sent -> return null
-                PartResult.Refused -> return REFUSED
+                PartResult.Refused -> return PartFailure.REFUSED
+                // The token could not be read, so every further attempt
+                // would repeat the same local failure against a working
+                // connection. Spending the budget on it only delays a
+                // message that was already going to be wrong.
+                PartResult.NoToken -> return PartFailure.TRANSPORT
                 PartResult.Transient ->
-                    if (!UploadRetry.retryable(attempt)) return TRANSPORT
+                    if (!UploadRetry.retryable(attempt)) return PartFailure.TRANSPORT
             }
             attempt += 1
         }
     }
 
-    private enum class PartResult { Sent, Refused, Transient }
+    private enum class PartResult { Sent, Refused, Transient, NoToken }
 
-    private fun attemptPart(uploadId: String, partNumber: Int, bytes: ByteArray): PartResult {
-        val access = runCatching { kotlinx.coroutines.runBlocking { tokens.current() } }
-            .getOrNull()
-            ?.accessToken
+    /**
+     * One attempt, suspending rather than blocking.
+     *
+     * The token read is a `suspend` call and this runs inside
+     * `withContext(io)`, so it is simply awaited — blocking a
+     * dispatcher thread on `runBlocking` to reach it was a workaround
+     * for a `suspend` this function could always have been.
+     */
+    private suspend fun attemptPart(uploadId: String, partNumber: Int, bytes: ByteArray): PartResult {
+        // Never send this unauthenticated: the store answers 401, the
+        // loop reads that as transient, and six attempts later the
+        // author is told the network is at fault when the fault was
+        // reading our own token store.
+        val access = runCatching { tokens.current()?.accessToken }
+            .getOrElse { failure ->
+                CograLog.w(TAG, failure) { "could not read the access token for part $partNumber" }
+                return PartResult.NoToken
+            }
+            ?: run {
+                CograLog.w(TAG) { "no access token held for part $partNumber" }
+                return PartResult.NoToken
+            }
         val connection = runCatching {
             URI(partUrl(uploadId, partNumber)).toURL().openConnection() as HttpURLConnection
         }.getOrElse { return PartResult.Transient }
@@ -129,7 +155,7 @@ class PartUploader(
             connection.connectTimeout = CONNECT_TIMEOUT_MS
             connection.readTimeout = READ_TIMEOUT_MS
             connection.setFixedLengthStreamingMode(bytes.size)
-            access?.let { connection.setRequestProperty("Authorization", "Bearer $it") }
+            connection.setRequestProperty("Authorization", "Bearer $access")
             connection.setRequestProperty("Content-Type", OCTET_STREAM)
             connection.outputStream.use { it.write(bytes) }
 
@@ -179,8 +205,6 @@ class PartUploader(
         const val CONNECT_TIMEOUT_MS = 30_000
         const val READ_TIMEOUT_MS = 60_000
 
-        const val TRANSPORT = "The upload could not reach the server."
-        const val REFUSED = "The server would not take that video."
-        const val MALFORMED = "That file could not be read as a video."
+        const val TAG = "PartUploader"
     }
 }
