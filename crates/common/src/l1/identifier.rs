@@ -78,6 +78,13 @@ impl ActId {
             (Some(a), Some(q), Some(f)) => (a, q, f),
             _ => return Err(IdentifierError::Unparseable(s.to_string())),
         };
+        // `u64::from_str` accepts a leading `+`, which the canonical form
+        // never emits and the TypeScript and Kotlin parsers never accept:
+        // one grammar across the three languages, so a signed sequence
+        // cannot be admitted here and refused on a client.
+        if !seq.bytes().all(|b| b.is_ascii_digit()) {
+            return Err(IdentifierError::InvalidSequence(seq.to_string()));
+        }
         let seq: u64 = seq
             .parse()
             .map_err(|_| IdentifierError::InvalidSequence(seq.to_string()))?;
@@ -228,6 +235,16 @@ mod tests {
             "act:a:1:nope",
         ] {
             assert!(NodeId::parse(bad).is_err() || ActId::parse(bad).is_err());
+        }
+        // The sequence grammar is digits only, in every language that
+        // parses an act identifier — the signed forms `u64::from_str`
+        // would otherwise take are refused here too.
+        for signed in ["act:a:+5:opinion", "act:a:-5:opinion"] {
+            assert!(ActId::parse(signed).is_err(), "{signed}");
+            assert!(
+                NodeId::parse(&format!("mint:{signed}")).is_err(),
+                "{signed}"
+            );
         }
     }
 }
