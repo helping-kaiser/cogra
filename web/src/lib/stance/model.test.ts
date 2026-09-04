@@ -2,7 +2,15 @@
 
 import { describe, expect, it } from "vitest";
 
-import { clampDimension, clampPair, ORIGIN, samePair, TAP_DEFAULT } from "./model";
+import {
+  clampDimension,
+  clampPair,
+  isInert,
+  isSevered,
+  ORIGIN,
+  samePair,
+  TAP_DEFAULT,
+} from "./model";
 
 describe("stance model", () => {
   it("bounds a dimension to the closed [-1, +1]", () => {
@@ -35,12 +43,23 @@ describe("stance model", () => {
     expect(samePair(TAP_DEFAULT, ORIGIN)).toBe(false);
   });
 
-  it("offers no inertness or severance predicate to the client", async () => {
-    // Both are the fold's statements about itself and arrive as flags on
-    // the read. A predicate here is what a client would eventually reach
-    // for instead (design.md §8.2).
-    const model: Record<string, unknown> = await import("./model");
-    expect(Object.keys(model)).not.toContain("inertAxes");
-    expect(Object.keys(model)).not.toContain("isSevered");
+  // The predicates mirror the reference's `NetStance::is_inert` and
+  // `is_severed` (crates/common/src/l1/fold.rs), and they exist for the
+  // ONE thing that has no served answer: the landing line under a drag.
+  // What a STORED bundle is remains the graph's statement, arriving as a
+  // flag on the read — `stance-data.ts` says so, and no surface derives
+  // it from a value.
+  it("calls a pair inert when either axis is at zero", () => {
+    expect(isInert({ pDirected: 0, pInterest: 0.8 })).toBe(true);
+    expect(isInert({ pDirected: 0.8, pInterest: 0 })).toBe(true);
+    expect(isInert({ pDirected: 0.8, pInterest: 0.8 })).toBe(false);
+  });
+
+  it("calls a pair severed only when both axes are at zero", () => {
+    expect(isSevered(ORIGIN)).toBe(true);
+    expect(isSevered({ pDirected: 0, pInterest: 0.3 })).toBe(false);
+    // A negative zero is not a third state: `clampDimension` normalises
+    // it away, and the predicate reads what the clip produced.
+    expect(isSevered(clampPair({ pDirected: -0, pInterest: -0 }))).toBe(true);
   });
 });
