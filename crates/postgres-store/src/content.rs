@@ -14,6 +14,20 @@
 //! record landed last, not the one whose row was written last. Like every
 //! mirror-derived column they are rebuildable and never authoritative
 //! (data-model.md "The Boundary Rule").
+//!
+//! # Why the post and comment halves are written twice
+//!
+//! Eight pairs here are structurally identical, differing only in table
+//! name and three columns. They stay separate because the bulk of each
+//! pair is a SQL literal and sqlx's macros accept nothing but a literal —
+//! not `concat!`, not a `const`, not a macro that expands to one. A
+//! generic factoring could therefore share the Rust plumbing around the
+//! queries but not the queries, which is where both the volume and the
+//! risk are; the result reads worse, not better.
+//!
+//! What the duplication actually endangers is the version-ordering rule,
+//! and that has its own guard: `tests/version_ordering_drift.rs` fails
+//! the build if any copy of it drifts, in the crate or in the indexes.
 
 use common::envelope::SensitiveMark;
 use sqlx::{PgPool, Postgres, Transaction};
