@@ -16,7 +16,7 @@ hr{border:0;border-top:1px solid var(--border-hairline);margin:4px 0}
 </style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { ProfileHeader, ActorChip, MonogramAvatar } = window.CoGraDesignSystem_9084ba;
+const { ProfileHeader, ActorChip, MonogramAvatar, StanceRow, TabBar } = window.CoGraDesignSystem_9084ba;
 const PHOTO = "../../assets/photos/06-portrait-3x4.jpg";
 const bundle = { current:{pDirected:0.55,pInterest:0.2}, rawSum:{pDirected:0.9,pInterest:0.3}, records:4, severance:{records:4} };
 function Demo(){return (
@@ -27,6 +27,12 @@ function Demo(){return (
                  bio="Coast roads, long exposures, and the occasional argument about routing."
                  stancesOn="128" stancesTaken="341" bundle={bundle}
                  menuItems={[{label:"Copy link"},{label:"Report"}]}/>
+  <hr/>
+  <span className="lbl">StanceRow — a stances list; the value IS the row's information, and the whole row opens the person</span>
+  <TabBar ariaLabel="Which direction" value="on" tabs={[{id:"on",label:"On them"},{id:"taken",label:"They've taken"}]}/>
+  <StanceRow name="Tobias Lindqvist" handle="tobias" pDirected={0.7} pInterest={0.4} onOpen={()=>{}}/>
+  <StanceRow name="Mira Voss" handle="mira" src={PHOTO} pDirected={0.4} pInterest={0.5} onOpen={()=>{}}/>
+  <StanceRow name="Juno Baptiste" handle="juno" pDirected={-0.2} pInterest={0.1} onOpen={()=>{}}/>
   <hr/>
   <span className="lbl">Your own — no stance to take, so the row is what you do to your own record</span>
   <ProfileHeader handle="juno" displayName="Juno Baptiste" own stancesOn="12" stancesTaken="96"
