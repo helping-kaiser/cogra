@@ -11,12 +11,19 @@ name: Docs CI
 # path-skipped workflow posts NO status on PRs that don't match,
 # leaving the required check pending forever and blocking merges.
 # See ci.yml's header for the same rationale.
+#
+# Actions are pinned to full commit SHAs and every job carries
+# `timeout-minutes`, for the reasons ci.yml's header states.
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # Least privilege (GitHub's hardening guide): checkout needs contents,
 # paths-filter reads PR file lists via the API on pull_request events.
@@ -28,25 +35,24 @@ jobs:
   link-check:
     name: Markdown link check
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7
-      - uses: dorny/paths-filter@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4
         id: filter
         with:
           filters: |
             docs:
               - 'docs/**'
               - '**/*.md'
+      # One input glob, and every flag from lychee.toml at the repository
+      # root — the same file `make docs-link-check` reads, so the two
+      # cannot drift. The glob is recursive because the filter above fires
+      # on '**/*.md': a narrower check set would go green having examined
+      # nothing the change touched.
       - name: Run lychee
         if: steps.filter.outputs.docs == 'true'
-        uses: lycheeverse/lychee-action@v2
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2
         with:
-          args: >-
-            --offline
-            --include-fragments
-            --no-progress
-            'docs/**/*.md'
-            '*.md'
-            'android/*.md'
-            'web/*.md'
+          args: "'**/*.md'"
           fail: true

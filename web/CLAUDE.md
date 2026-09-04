@@ -34,8 +34,12 @@ client preset) generates typed operations from it into
 never a second schema copy. The predev hook exists because the
 gitignored artifacts silently go stale after a pull — a compiled
 query then omits fields the source `.graphql` asks for. Operation
-documents live in `src/lib/graphql/` or as `graphql()` calls in
-components.
+documents live in `src/lib/graphql/`, in a `.graphql` file — never
+as a `graphql()` call in a component. The guard that prices every
+client operation against the schema's query budgets
+(`crates/api/tests/client_operations.rs`) reads that tree and
+nothing else, so a document written anywhere else reaches a device
+unmeasured.
 
 ## Layout
 
