@@ -1,0 +1,32 @@
+# Only what we change; `buildUponDefaultConfig = true` supplies the rest.
+#
+# Two rules are turned off rather than baselined, because they would fire
+# on the shape this codebase deliberately uses:
+#
+# - Compose `@Composable` functions are capitalised by convention, which
+#   detekt's function-naming rule reads as a violation.
+# - The doc comments here are long on purpose (the repo's "explain why"
+#   rule), so comment length is not a finding.
+
+naming:
+  FunctionNaming:
+    # `@Composable` functions are PascalCase by Compose convention
+    # (developer.android.com/develop/ui/compose/documentation).
+    ignoreAnnotated: ['Composable']
+  TopLevelPropertyNaming:
+    active: false
+
+complexity:
+  LongParameterList:
+    # Compose functions take their state and every callback as
+    # parameters — that is the stateless-screen rule, not a smell.
+    ignoreAnnotated: ['Composable']
+  TooManyFunctions:
+    ignoreAnnotatedFunctions: ['Composable']
+
+style:
+  MaxLineLength:
+    # Matches ktlint's own default, so the two agree on one width.
+    maxLineLength: 120
+  ReturnCount:
+    active: false

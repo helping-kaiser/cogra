@@ -1,0 +1,29 @@
+# https://editorconfig.org — the cross-editor half of the line-ending and
+# whitespace policy .gitattributes enforces at commit time (INFRA-15).
+# Formatting proper stays with each surface's formatter (cargo fmt,
+# prettier/eslint, Gradle); this file only states what every editor should
+# agree on before a formatter runs.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{ts,tsx,js,jsx,mjs,cjs,json,css,scss,yml,yaml,graphql}]
+indent_size = 2
+
+# Two trailing spaces are a hard line break in markdown, so trimming them
+# would silently reflow prose.
+[*.md]
+trim_trailing_whitespace = false
+
+# Recipe lines must begin with a literal tab.
+[Makefile]
+indent_style = tab
+
+[*.bat]
+end_of_line = crlf

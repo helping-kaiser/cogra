@@ -61,10 +61,10 @@ class KeyBackupTest {
             sealKeyBackup(ByteArray(16), code)
         }
         assertThrows(IllegalArgumentException::class.java) {
-            sealKeyBackup(ByteArray(32), code, salt = ByteArray(8))
+            sealKeyBackupWith(ByteArray(32), code, salt = ByteArray(8), nonce = ByteArray(12))
         }
         assertThrows(IllegalArgumentException::class.java) {
-            sealKeyBackup(ByteArray(32), code, nonce = ByteArray(8))
+            sealKeyBackupWith(ByteArray(32), code, salt = ByteArray(16), nonce = ByteArray(8))
         }
         assertThrows(IllegalArgumentException::class.java) { RecoveryCode(ByteArray(8)) }
     }
@@ -79,7 +79,7 @@ class KeyBackupTest {
             .replace('1', 'l')
             .replace('0', 'o')
             .replace("-", " - ")
-        assertThat(RecoveryCode.fromInput(sloppy).bytes).isEqualTo(code.bytes)
+        assertThat(RecoveryCode.fromInput(sloppy).bytes()).isEqualTo(code.bytes())
     }
 
     @Test

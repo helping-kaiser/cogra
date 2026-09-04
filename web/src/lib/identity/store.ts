@@ -36,6 +36,8 @@ type UxRecord = {
   ephemeral: boolean;
 };
 
+const EMPTY_UX: UxRecord = { reciprocationDismissed: false, ephemeral: false };
+
 export type IdentityStore = {
   /** The account's custody key, or null before the ceremony ran on this device. */
   actorKey(): Promise<ActorKey | null>;
@@ -72,6 +74,15 @@ export type IdentityStore = {
    */
   setEphemeral(value: boolean): Promise<void>;
   /**
+   * Drops every handshake this account has parked on this device.
+   *
+   * A re-mint orphans the material: what is stored was pre-signed by the key
+   * that is being replaced, and no later key can approve it (the pre-signature
+   * is the old key's). Leaving it behind only produces approvals signed by a
+   * key unrelated to the pre-commitment.
+   */
+  clearHandshakes(): Promise<void>;
+  /**
    * The sign-out (and session-invalidation) custody step: when the
    * active account is flagged ephemeral, purge its records — actor,
    * parked blob, handshake material, ux. Unflagged accounts keep
@@ -81,6 +92,21 @@ export type IdentityStore = {
   purgeIfEphemeral(): Promise<void>;
 };
 
+/**
+ * The custody database cannot be opened because another tab holds an older
+ * version of it open.
+ *
+ * Its own type, because the caller's answer is a sentence no other fault
+ * deserves — "close the other CoGra tab" — and because a blocked open that
+ * simply never settles takes every later custody call down with it.
+ */
+export class CustodyBlockedError extends Error {
+  constructor() {
+    super("another tab is holding an older version of the custody database open");
+    this.name = "CustodyBlockedError";
+  }
+}
+
 function asPromise<T>(req: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
     req.onsuccess = () => resolve(req.result);
@@ -88,9 +114,31 @@ function asPromise<T>(req: IDBRequest<T>): Promise<T> {
   });
 }
 
-function openDb(): Promise<IDBDatabase> {
+/**
+ * A transaction's OUTCOME, not its requests'.
+ *
+ * A successful request says only that the store accepted the operation; the
+ * durable fact is the COMMIT. A transaction can still abort after every
+ * request in it succeeded — quota exhaustion at commit time, or an abort
+ * raised from elsewhere — and IndexedDB reports that on the transaction
+ * (`abort`), which nothing listening to requests alone ever sees. Custody is
+ * precisely the data that must not be reported as written when it was not: a
+ * `saveActor` that resolves without landing attaches a public key this device
+ * cannot sign with, and a `saveHandshake` that resolves without landing
+ * submits a pre-commitment whose material is gone on the next page load.
+ */
+function committed(tx: IDBTransaction): Promise<void> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    tx.oncomplete = () => resolve();
+    tx.onabort = () => reject(tx.error ?? new Error("custody transaction aborted"));
+    tx.onerror = () => reject(tx.error ?? new Error("custody transaction failed"));
+  });
+}
+
+function openDb(factory: IDBFactory, onLost: () => void): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = factory.open(DB_NAME, DB_VERSION);
+    let settled = false;
     req.onupgradeneeded = () => {
       const db = req.result;
       if (!db.objectStoreNames.contains(ACTOR)) db.createObjectStore(ACTOR);
@@ -98,21 +146,64 @@ function openDb(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(HANDSHAKE)) db.createObjectStore(HANDSHAKE);
       if (!db.objectStoreNames.contains(UX)) db.createObjectStore(UX);
     };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    // WITHOUT THIS HANDLER A VERSION BUMP HANGS CUSTODY FOR GOOD. `blocked`
+    // fires when an older connection — another tab — is still open, and when
+    // it does, neither `success` nor `error` follows until that tab yields. A
+    // memoized open promise then never settles and every custody call after it
+    // awaits forever. Rejecting instead makes the next call retry, by which
+    // time the `versionchange` handler below has usually closed the other tab's
+    // connection.
+    req.onblocked = () => {
+      if (settled) return;
+      settled = true;
+      reject(new CustodyBlockedError());
+    };
+    req.onsuccess = () => {
+      const db = req.result;
+      if (settled) {
+        // The block cleared after we gave up on it; nobody holds this
+        // connection, and leaving it open would block the next upgrade.
+        db.close();
+        return;
+      }
+      settled = true;
+      // The other half of the same problem: this tab must yield to a NEWER
+      // version rather than block it. Closing here drops the cached
+      // connection, so the next call re-opens at the new version.
+      db.onversionchange = () => {
+        db.close();
+        onLost();
+      };
+      db.onclose = onLost;
+      resolve(db);
+    };
+    req.onerror = () => {
+      if (settled) return;
+      settled = true;
+      reject(req.error);
+    };
   });
 }
 
 export function createIdentityStore(deps: {
   /** The signed-in account custody resolves to — per call, never captured. */
   activeAccountId: () => string | null;
+  /**
+   * The IndexedDB implementation, read per open. Injectable so a test can
+   * hand in a factory that fails — the recovery paths below are otherwise
+   * unreachable from a suite.
+   */
+  idb?: () => IDBFactory;
 }): IdentityStore {
   const { activeAccountId } = deps;
+  const idb = deps.idb ?? (() => indexedDB);
   let dbPromise: Promise<IDBDatabase> | null = null;
   const adoptions = new Map<string, Promise<void>>();
 
   function db(): Promise<IDBDatabase> {
-    dbPromise ??= openDb().catch((e: unknown) => {
+    dbPromise ??= openDb(idb(), () => {
+      dbPromise = null;
+    }).catch((e: unknown) => {
       // A failed open must not poison every later call with the same
       // rejected promise — the next call retries.
       dbPromise = null;
@@ -129,12 +220,41 @@ export function createIdentityStore(deps: {
 
   async function write(store: string, key: IDBValidKey, value: unknown): Promise<void> {
     const tx = (await db()).transaction(store, "readwrite");
-    await asPromise(tx.objectStore(store).put(value, key));
+    const landed = committed(tx);
+    tx.objectStore(store).put(value, key);
+    await landed;
   }
 
   async function remove(store: string, key: IDBValidKey): Promise<void> {
     const tx = (await db()).transaction(store, "readwrite");
-    await asPromise(tx.objectStore(store).delete(key));
+    const landed = committed(tx);
+    tx.objectStore(store).delete(key);
+    await landed;
+  }
+
+  /**
+   * Read and write in ONE transaction.
+   *
+   * A read in one transaction and the write it decides in the next is a lost
+   * update the moment two callers overlap — and the two ux flags are written
+   * by separate handlers over the same record. The follow-up request is issued
+   * from inside the read's `success` handler, which is where the transaction is
+   * still active by construction.
+   */
+  async function updateRecord<T>(
+    store: string,
+    key: IDBValidKey,
+    update: (current: T | null) => T | null,
+  ): Promise<void> {
+    const tx = (await db()).transaction(store, "readwrite");
+    const landed = committed(tx);
+    const objectStore = tx.objectStore(store);
+    const current = objectStore.get(key);
+    current.onsuccess = () => {
+      const next = update((current.result as T | undefined) ?? null);
+      if (next !== null) objectStore.put(next, key);
+    };
+    await landed;
   }
 
   async function allKeys(store: string): Promise<string[]> {
@@ -155,44 +275,75 @@ export function createIdentityStore(deps: {
   }
 
   /** Moves a legacy singleton record into the account's slot — only when vacant. */
-  async function adoptSlot(store: string, account: string): Promise<void> {
-    const legacy = await read(store, LEGACY_SINGLETON_KEY);
-    if (legacy === null) return;
-    // An occupied slot keeps its own record; the legacy one stays put
-    // for a later account whose slot is still empty.
-    if ((await read(store, account)) !== null) return;
-    await write(store, account, legacy);
-    await remove(store, LEGACY_SINGLETON_KEY);
+  function adoptSlot(objectStore: IDBObjectStore, account: string): void {
+    const legacy = objectStore.get(LEGACY_SINGLETON_KEY);
+    legacy.onsuccess = () => {
+      if (legacy.result === undefined) return;
+      const target = objectStore.get(account);
+      target.onsuccess = () => {
+        // An occupied slot keeps its own record; the legacy one stays put
+        // for a later account whose slot is still empty.
+        if (target.result !== undefined) return;
+        objectStore.put(legacy.result, account);
+        objectStore.delete(LEGACY_SINGLETON_KEY);
+      };
+    };
   }
 
-  async function adoptUx(account: string): Promise<void> {
-    const legacy = await read<boolean>(UX, LEGACY_RECIPROCATION_KEY);
-    if (legacy === null) return;
-    if ((await read(UX, account)) !== null) return;
-    await write(UX, account, {
-      reciprocationDismissed: legacy === true,
-      ephemeral: false,
-    } satisfies UxRecord);
-    await remove(UX, LEGACY_RECIPROCATION_KEY);
+  function adoptUx(objectStore: IDBObjectStore, account: string): void {
+    const legacy = objectStore.get(LEGACY_RECIPROCATION_KEY);
+    legacy.onsuccess = () => {
+      if (legacy.result === undefined) return;
+      const dismissed = legacy.result === true;
+      const target = objectStore.get(account);
+      target.onsuccess = () => {
+        if (target.result !== undefined) return;
+        objectStore.put(
+          { reciprocationDismissed: dismissed, ephemeral: false } satisfies UxRecord,
+          account,
+        );
+        objectStore.delete(LEGACY_RECIPROCATION_KEY);
+      };
+    };
   }
 
-  async function adoptHandshakes(account: string): Promise<void> {
-    const bare = (await allKeys(HANDSHAKE)).filter((key) => !key.includes(KEY_SEPARATOR));
-    for (const stagedWriteId of bare) {
-      const record = await read(HANDSHAKE, stagedWriteId);
-      if (record === null) continue;
-      const target = handshakeKey(account, stagedWriteId);
-      if ((await read(HANDSHAKE, target)) !== null) continue;
-      await write(HANDSHAKE, target, record);
-      await remove(HANDSHAKE, stagedWriteId);
-    }
+  function adoptHandshakes(objectStore: IDBObjectStore, account: string): void {
+    const keys = objectStore.getAllKeys();
+    keys.onsuccess = () => {
+      const bare = keys.result.map(String).filter((key) => !key.includes(KEY_SEPARATOR));
+      for (const stagedWriteId of bare) {
+        const record = objectStore.get(stagedWriteId);
+        record.onsuccess = () => {
+          if (record.result === undefined) return;
+          const target = handshakeKey(account, stagedWriteId);
+          const existing = objectStore.get(target);
+          existing.onsuccess = () => {
+            if (existing.result !== undefined) return;
+            objectStore.put(record.result, target);
+            objectStore.delete(stagedWriteId);
+          };
+        };
+      }
+    };
   }
 
+  /**
+   * The whole migration, in ONE transaction.
+   *
+   * Written as four transactions it was four chances to half-finish: a crash
+   * between the write into the account's slot and the removal of the legacy
+   * key left the record in BOTH, and the next account adopted the leftover.
+   * Every read and write here lands together or not at all, so the legacy key
+   * is gone exactly when its record has a new home.
+   */
   async function runAdoption(account: string): Promise<void> {
-    await adoptSlot(ACTOR, account);
-    await adoptSlot(BACKUP, account);
-    await adoptUx(account);
-    await adoptHandshakes(account);
+    const tx = (await db()).transaction([ACTOR, BACKUP, HANDSHAKE, UX], "readwrite");
+    const landed = committed(tx);
+    adoptSlot(tx.objectStore(ACTOR), account);
+    adoptSlot(tx.objectStore(BACKUP), account);
+    adoptUx(tx.objectStore(UX), account);
+    adoptHandshakes(tx.objectStore(HANDSHAKE), account);
+    await landed;
   }
 
   /** One-shot per account and page: later calls await the first pass. */
@@ -225,9 +376,7 @@ export function createIdentityStore(deps: {
   }
 
   async function readUx(account: string): Promise<UxRecord> {
-    return (
-      (await read<UxRecord>(UX, account)) ?? { reciprocationDismissed: false, ephemeral: false }
-    );
+    return (await read<UxRecord>(UX, account)) ?? EMPTY_UX;
   }
 
   return {
@@ -259,9 +408,9 @@ export function createIdentityStore(deps: {
 
     async clearActorSeed() {
       const account = await forWrite();
-      const record = await read<ActorRecord>(ACTOR, account);
-      if (record === null || record.seed === null) return;
-      await write(ACTOR, account, { ...record, seed: null } satisfies ActorRecord);
+      await updateRecord<ActorRecord>(ACTOR, account, (record) =>
+        record === null || record.seed === null ? null : { ...record, seed: null },
+      );
     },
 
     async savePendingBackupBlob(blob) {
@@ -322,26 +471,63 @@ export function createIdentityStore(deps: {
 
     async markReciprocationDismissed() {
       const account = await forWrite();
-      const ux = await readUx(account);
-      await write(UX, account, { ...ux, reciprocationDismissed: true } satisfies UxRecord);
+      await updateRecord<UxRecord>(UX, account, (ux) => ({
+        ...(ux ?? EMPTY_UX),
+        reciprocationDismissed: true,
+      }));
     },
 
     async setEphemeral(value) {
       const account = await forWrite();
-      const ux = await readUx(account);
-      await write(UX, account, { ...ux, ephemeral: value } satisfies UxRecord);
+      await updateRecord<UxRecord>(UX, account, (ux) => ({
+        ...(ux ?? EMPTY_UX),
+        ephemeral: value,
+      }));
     },
 
+    async clearHandshakes() {
+      const account = await forWrite();
+      const tx = (await db()).transaction(HANDSHAKE, "readwrite");
+      const landed = committed(tx);
+      const objectStore = tx.objectStore(HANDSHAKE);
+      const keys = objectStore.getAllKeys();
+      keys.onsuccess = () => {
+        const prefix = account + KEY_SEPARATOR;
+        for (const key of keys.result.map(String)) {
+          if (key.startsWith(prefix)) objectStore.delete(key);
+        }
+      };
+      await landed;
+    },
+
+    /**
+     * One transaction, because a half-purge is the worst outcome available:
+     * the ephemeral promise is that nothing of this account stays behind, and
+     * a crash between two of five removals leaves exactly the records the
+     * reader asked not to keep.
+     */
     async purgeIfEphemeral() {
       const account = await forRead();
       if (account === null) return;
-      if (!(await readUx(account)).ephemeral) return;
-      await remove(ACTOR, account);
-      await remove(BACKUP, account);
-      for (const stagedWriteId of await handshakeIdsOf(account)) {
-        await remove(HANDSHAKE, handshakeKey(account, stagedWriteId));
-      }
-      await remove(UX, account);
+      const tx = (await db()).transaction([ACTOR, BACKUP, HANDSHAKE, UX], "readwrite");
+      const landed = committed(tx);
+      const ux = tx.objectStore(UX).get(account);
+      ux.onsuccess = () => {
+        const record = (ux.result as UxRecord | undefined) ?? null;
+        if (record === null || !record.ephemeral) return;
+        tx.objectStore(ACTOR).delete(account);
+        tx.objectStore(BACKUP).delete(account);
+        tx.objectStore(UX).delete(account);
+        const handshakes = tx.objectStore(HANDSHAKE);
+        const keys = handshakes.getAllKeys();
+        keys.onsuccess = () => {
+          const prefix = account + KEY_SEPARATOR;
+          for (const key of keys.result.map(String)) {
+            if (key.startsWith(prefix)) handshakes.delete(key);
+          }
+        };
+      };
+      await landed;
     },
   };
 }

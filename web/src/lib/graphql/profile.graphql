@@ -1,7 +1,7 @@
 # The profile surface (api-spec.md "Actors"; roadmap "Slice 2.1"):
 # public reads by handle, the viewer's own profile, the authored
-# chronicle, and the parallel-Registration update. Documents stay flat
-# per the house style.
+# chronicle, and the parallel-Registration update. The shared
+# selections live in `fragments.graphql`.
 
 query UserProfile($handle: String!) {
   user(handle: $handle) {
@@ -119,15 +119,10 @@ query AuthorRecords($author: UUID!, $family: RecordFamily, $first: Int!, $after:
 mutation PrepareProfileUpdate($input: PrepareProfileUpdateInput!) {
   prepareProfileUpdate(input: $input) {
     writes {
-      id
-      family
-      canonicalProposal
-      gcAfterEpochs
+      ...PreparedWriteFields
     }
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }

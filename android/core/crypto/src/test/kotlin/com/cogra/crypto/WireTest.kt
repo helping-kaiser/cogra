@@ -58,35 +58,47 @@ class WireTest {
 
     @Test
     fun verifiedActRoundTrips() {
-        val act = VerifiedAct(
-            proposal = fullProposal(),
-            authorPubkey = ByteArray(32) { 1 },
-            nonce = ByteArray(32) { 2 },
-            preSignature = ByteArray(64) { 3 },
-            contentSalt = ByteArray(32) { 4 },
-            depsSalt = ByteArray(32) { 5 },
-            contentCommitment = ByteArray(32) { 6 },
-            depsCommitment = ByteArray(32) { 7 },
-            hostSeal = ByteArray(64) { 8 },
+        val act = fullAct()
+        assertThat(decodeVerifiedAct(encodeVerifiedAct(act))).isEqualTo(act)
+    }
+
+    private fun fullAct() = VerifiedAct(
+        proposal = fullProposal(),
+        authorPubkey = ByteArray(32) { 1 },
+        nonce = ByteArray(32) { 2 },
+        preSignature = ByteArray(64) { 3 },
+        contentSalt = ByteArray(32) { 4 },
+        depsSalt = ByteArray(32) { 5 },
+        contentCommitment = ByteArray(32) { 6 },
+        depsCommitment = ByteArray(32) { 7 },
+        hostSeal = ByteArray(64) { 8 },
+    )
+
+    @Test
+    fun verifiedActDecodeIsFieldOrderSensitive() {
+        // Two same-length salts swapped: the whole-value comparison
+        // catches it, which is what a field-by-field list only does if
+        // every field was remembered.
+        val act = fullAct()
+        val swapped = VerifiedAct(
+            proposal = act.proposal,
+            authorPubkey = act.authorPubkey,
+            nonce = act.nonce,
+            preSignature = act.preSignature,
+            contentSalt = act.depsSalt,
+            depsSalt = act.contentSalt,
+            contentCommitment = act.contentCommitment,
+            depsCommitment = act.depsCommitment,
+            hostSeal = act.hostSeal,
         )
-        val decoded = decodeVerifiedAct(encodeVerifiedAct(act))
-        assertThat(decoded.proposal).isEqualTo(act.proposal)
-        assertThat(decoded.authorPubkey).isEqualTo(act.authorPubkey)
-        assertThat(decoded.nonce).isEqualTo(act.nonce)
-        assertThat(decoded.preSignature).isEqualTo(act.preSignature)
-        assertThat(decoded.contentSalt).isEqualTo(act.contentSalt)
-        assertThat(decoded.depsSalt).isEqualTo(act.depsSalt)
-        assertThat(decoded.contentCommitment).isEqualTo(act.contentCommitment)
-        assertThat(decoded.depsCommitment).isEqualTo(act.depsCommitment)
-        assertThat(decoded.hostSeal).isEqualTo(act.hostSeal)
+        assertThat(decodeVerifiedAct(encodeVerifiedAct(act))).isNotEqualTo(swapped)
     }
 
     @Test
     fun preCommitmentRoundTrips() {
         val blob = encodePreCommitment(ByteArray(32) { 9 }, ByteArray(64) { 7 })
-        val decoded = decodePreCommitment(blob)
-        assertThat(decoded.nonce).isEqualTo(ByteArray(32) { 9 })
-        assertThat(decoded.preSignature).isEqualTo(ByteArray(64) { 7 })
+        assertThat(decodePreCommitment(blob))
+            .isEqualTo(PreCommitment(ByteArray(32) { 9 }, ByteArray(64) { 7 }))
     }
 
     @Test

@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, inviter_id, prefill_p_d, prefill_p_i, single_use,\n                created_at, expires_at, revoked_at\n         FROM auth_invite_links WHERE inviter_id = $1\n         ORDER BY created_at DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "inviter_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "prefill_p_d",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "prefill_p_i",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "single_use",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "expires_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "revoked_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "6bb95abb627dfa82e1bec0552bf8f77dec2d8763304f6184927ff361ea05bb4a"
+}

@@ -4,34 +4,20 @@
 //! safe: a half-failed run completes its missing half.
 
 use anyhow::Context;
-use api::bootstrap::{BootstrapOutcome, GenesisInput, run};
+use api::bootstrap::{BootstrapOutcome, GenesisInput, guidelines_hash, run};
+use api::env_or;
 use l1_standin::{StandIn, StandInConfig};
-use sha2::{Digest, Sha256};
-
-fn env_or(key: &str, default: &str) -> String {
-    std::env::var(key).unwrap_or_else(|_| default.to_string())
-}
-
-/// SHA-256 hex digest of the canonical version-1 platform-guidelines
-/// document, pinned into the Charter payload (network.md §3).
-fn guidelines_hash() -> String {
-    let path = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../docs/instances/platform-guidelines.md"
-    );
-    match std::fs::read(path) {
-        Ok(bytes) => format!("{:x}", Sha256::digest(&bytes)),
-        Err(e) => {
-            tracing::warn!(error = %e, "platform-guidelines.md unreadable; pinning a zero digest");
-            format!("{:x}", Sha256::digest(b""))
-        }
-    }
-}
 
 /// Runs the bootstrap and prints what an operator needs afterwards: the
 /// genesis identity, the login that reaches it, and the one-time recovery
 /// code. `.env` is read first, with the same precedence the server uses
 /// (main.rs).
+///
+/// `GENESIS_PASSWORD` is required rather than defaulted, on the posture
+/// `DATABASE_URL` already takes: a deployment that forgets it should get an
+/// error, not a running instance whose operator account stands on a
+/// publicly-known password. The other genesis inputs keep their defaults —
+/// a handle and a display name are not secrets.
 ///
 /// The admission burn is seeded at 100 units, which buys an admitted
 /// account roughly 1893 acts at the reference θ.
@@ -56,7 +42,7 @@ async fn main() -> anyhow::Result<()> {
         handle: env_or("GENESIS_HANDLE", "genesis"),
         display_name: env_or("GENESIS_DISPLAY_NAME", "Genesis Moderator"),
         guidelines_version: "1".to_string(),
-        guidelines_hash: guidelines_hash(),
+        guidelines_hash: guidelines_hash()?,
         burn_per_account_micro: 100_000_000,
     };
     let handle = input.handle.clone();
@@ -77,7 +63,10 @@ async fn main() -> anyhow::Result<()> {
     }
 
     let email = env_or("GENESIS_EMAIL", "genesis@cogra.local");
-    let password = env_or("GENESIS_PASSWORD", "genesis-dev-password");
+    let password = std::env::var("GENESIS_PASSWORD").context(
+        "GENESIS_PASSWORD must be set (see .env.example): the operator login for the \
+         Genesis Moderator is never a compiled-in default",
+    )?;
     let login = api::bootstrap::ensure_operator_login(&pool, &handle, &email, &password).await?;
     if login.credentials_created {
         println!("  Operator login    : {email} (GENESIS_EMAIL / GENESIS_PASSWORD)");

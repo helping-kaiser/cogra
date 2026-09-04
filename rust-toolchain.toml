@@ -1,3 +1,9 @@
+# Pinned, like every other input this repository builds from. `stable`
+# meant whatever rustup last fetched, and `clippy -D warnings` turns a
+# newly stabilised lint into a hard failure — so a stable release could red
+# a pull request that changed nothing, and then red main. Bumping is a
+# deliberate commit; .github/workflows/ci.yml states the same version and
+# checks the two agree.
 [toolchain]
-channel = "stable"
+channel = "1.98.0"
 components = ["rustfmt", "clippy"]

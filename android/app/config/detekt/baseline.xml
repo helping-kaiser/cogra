@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:CograNavGraph.kt:@Composable private fun CograNavGraphContent</ID>
+    <ID>LongMethod:CograNavGraph.kt:@Composable private fun CograNavGraphContent</ID>
+    <ID>MatchingDeclarationName:SecurityNoticeDialog.kt:SecurityNoticeViewModel : ViewModel</ID>
+  </CurrentIssues>
+</SmellBaseline>

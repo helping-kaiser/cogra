@@ -1,0 +1,79 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MagicNumber:ActorKey.kt:ActorKey.Companion$32</ID>
+    <ID>MagicNumber:Cbor.kt:CborDecoder$0xF6</ID>
+    <ID>MagicNumber:Cbor.kt:CborDecoder$0xFB</ID>
+    <ID>MagicNumber:Cbor.kt:CborDecoder$0xFF</ID>
+    <ID>MagicNumber:Cbor.kt:CborDecoder$23</ID>
+    <ID>MagicNumber:Cbor.kt:CborDecoder$24</ID>
+    <ID>MagicNumber:Cbor.kt:CborDecoder$25</ID>
+    <ID>MagicNumber:Cbor.kt:CborDecoder$26</ID>
+    <ID>MagicNumber:Cbor.kt:CborDecoder$27</ID>
+    <ID>MagicNumber:Cbor.kt:CborDecoder$4</ID>
+    <ID>MagicNumber:Cbor.kt:CborDecoder$5</ID>
+    <ID>MagicNumber:Cbor.kt:CborDecoder$8</ID>
+    <ID>MagicNumber:Cbor.kt:CborEncoder$0xF6</ID>
+    <ID>MagicNumber:Cbor.kt:CborEncoder$0xFB</ID>
+    <ID>MagicNumber:Cbor.kt:CborEncoder$0xFF</ID>
+    <ID>MagicNumber:Cbor.kt:CborEncoder$0xFFFF_FFFFu</ID>
+    <ID>MagicNumber:Cbor.kt:CborEncoder$0xFFFFu</ID>
+    <ID>MagicNumber:Cbor.kt:CborEncoder$0xFFu</ID>
+    <ID>MagicNumber:Cbor.kt:CborEncoder$23u</ID>
+    <ID>MagicNumber:Cbor.kt:CborEncoder$24</ID>
+    <ID>MagicNumber:Cbor.kt:CborEncoder$25</ID>
+    <ID>MagicNumber:Cbor.kt:CborEncoder$26</ID>
+    <ID>MagicNumber:Cbor.kt:CborEncoder$27</ID>
+    <ID>MagicNumber:Cbor.kt:CborEncoder$3</ID>
+    <ID>MagicNumber:Cbor.kt:CborEncoder$4</ID>
+    <ID>MagicNumber:Cbor.kt:CborEncoder$56</ID>
+    <ID>MagicNumber:Cbor.kt:CborEncoder$8</ID>
+    <ID>MagicNumber:Handshake.kt:3u</ID>
+    <ID>MagicNumber:Handshake.kt:StructuralBody$9u</ID>
+    <ID>MagicNumber:Handshake.kt:VerifiedAct$5u</ID>
+    <ID>MagicNumber:Hashing.kt:0xFF</ID>
+    <ID>MagicNumber:Hashing.kt:20</ID>
+    <ID>MagicNumber:Hashing.kt:7</ID>
+    <ID>MagicNumber:Hashing.kt:8</ID>
+    <ID>MagicNumber:Hex.kt:4</ID>
+    <ID>MagicNumber:Identifiers.kt:ActId.Companion$3</ID>
+    <ID>MagicNumber:KeyBackup.kt:128</ID>
+    <ID>MagicNumber:KeyBackup.kt:32</ID>
+    <ID>MagicNumber:KeyBackup.kt:RecoveryCode$0xFF</ID>
+    <ID>MagicNumber:KeyBackup.kt:RecoveryCode$10</ID>
+    <ID>MagicNumber:KeyBackup.kt:RecoveryCode$14</ID>
+    <ID>MagicNumber:KeyBackup.kt:RecoveryCode$15</ID>
+    <ID>MagicNumber:KeyBackup.kt:RecoveryCode$19</ID>
+    <ID>MagicNumber:KeyBackup.kt:RecoveryCode$20</ID>
+    <ID>MagicNumber:KeyBackup.kt:RecoveryCode$25</ID>
+    <ID>MagicNumber:KeyBackup.kt:RecoveryCode$26</ID>
+    <ID>MagicNumber:KeyBackup.kt:RecoveryCode$31</ID>
+    <ID>MagicNumber:KeyBackup.kt:RecoveryCode$4</ID>
+    <ID>MagicNumber:KeyBackup.kt:RecoveryCode$5</ID>
+    <ID>MagicNumber:KeyBackup.kt:RecoveryCode$8</ID>
+    <ID>MagicNumber:KeyBackup.kt:RecoveryCode$9</ID>
+    <ID>MagicNumber:KeyBackup.kt:RecoveryCode.Companion$0xFF</ID>
+    <ID>MagicNumber:KeyBackup.kt:RecoveryCode.Companion$26</ID>
+    <ID>MagicNumber:KeyBackup.kt:RecoveryCode.Companion$5</ID>
+    <ID>MagicNumber:KeyBackup.kt:RecoveryCode.Companion$8</ID>
+    <ID>MagicNumber:KeyExport.kt:32</ID>
+    <ID>MagicNumber:Wire.kt:12UL</ID>
+    <ID>MagicNumber:Wire.kt:12u</ID>
+    <ID>MagicNumber:Wire.kt:3UL</ID>
+    <ID>MagicNumber:Wire.kt:3u</ID>
+    <ID>MagicNumber:Wire.kt:4UL</ID>
+    <ID>MagicNumber:Wire.kt:4u</ID>
+    <ID>MagicNumber:Wire.kt:9UL</ID>
+    <ID>MatchingDeclarationName:Hashing.kt:Tags</ID>
+    <ID>MatchingDeclarationName:KeyExport.kt:ExportedKey</ID>
+    <ID>ThrowsCount:ActorKey.kt:ActorKey$fun approve: ApprovalWitness</ID>
+    <ID>ThrowsCount:Identifiers.kt:ActId.Companion$fun parse: ActId</ID>
+    <ID>ThrowsCount:KeyBackup.kt:RecoveryCode.Companion$fun fromInput: RecoveryCode</ID>
+    <ID>ThrowsCount:KeyBackup.kt:fun openKeyBackup: ByteArray</ID>
+    <ID>ThrowsCount:Wire.kt:fun decodePreCommitment: PreCommitment</ID>
+    <ID>ThrowsCount:Wire.kt:fun decodeProposal: Proposal</ID>
+    <ID>ThrowsCount:Wire.kt:fun decodeVerifiedAct: VerifiedAct</ID>
+    <ID>ThrowsCount:Wire.kt:private fun decodeBody: StructuralBody</ID>
+  </CurrentIssues>
+</SmellBaseline>

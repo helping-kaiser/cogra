@@ -10,6 +10,7 @@ import com.apollographql.apollo.api.Optional
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
 import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.media.PartFailure
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
 import com.cogra.domain.media.RESUMABLE_THRESHOLD_BYTES
@@ -20,6 +21,7 @@ import com.cogra.network.graphql.BeginMediaUploadMutation
 import com.cogra.network.graphql.CompleteMediaUploadMutation
 import com.cogra.network.graphql.UploadMediaMutation
 import com.cogra.network.graphql.type.MediaUploadKind
+import com.cogra.network.graphql.type.UploadMediaInput
 import com.cogra.network.payloadOutcome
 import com.cogra.network.toDomain
 import java.io.File
@@ -78,7 +80,7 @@ class MediaRepositoryImpl @Inject constructor(
             .build()
 
         client.mutation(
-            UploadMediaMutation(file = upload, coverMediaId = Optional.absent()),
+            UploadMediaMutation(UploadMediaInput(file = upload, coverMediaId = Optional.absent())),
         ).payloadOutcome({ it.uploadMedia.userErrors.map { e -> e.userErrorFields } }) { data ->
             // A null asset beside empty userErrors is a server fault,
             // which is what `payload` turns it into — never a success
@@ -130,7 +132,7 @@ class MediaRepositoryImpl @Inject constructor(
             .build()
 
         client.mutation(
-            UploadMediaMutation(file = upload, coverMediaId = Optional.present(coverMediaId)),
+            UploadMediaMutation(UploadMediaInput(file = upload, coverMediaId = Optional.present(coverMediaId))),
         ).payloadOutcome({ it.uploadMedia.userErrors.map { e -> e.userErrorFields } }) { data ->
             data.uploadMedia.media?.mediaFields?.toDomain()
         }
@@ -169,7 +171,18 @@ class MediaRepositoryImpl @Inject constructor(
             partCount = opened.partCount,
             onProgress = onProgress,
         )
-        if (failure != null) return Outcome.Failed(IllegalStateException(failure))
+        // A refused part is a business answer in the `Outcome`
+        // vocabulary, not a fault — telling the author to check their
+        // connection about it is advice that cannot help. The part
+        // route answers with a status and no `userErrors` payload, so
+        // the refusal carries no server words and the composer falls
+        // back to its own copy.
+        when (failure) {
+            null -> Unit
+            PartFailure.REFUSED -> return Outcome.Refused(emptyList())
+            PartFailure.UNREADABLE, PartFailure.TRANSPORT ->
+                return Outcome.Failed(IllegalStateException("upload stopped: $failure"))
+        }
 
         // Completion is idempotent by contract, so a lost reply is
         // worth asking again for: the session remembers the asset it

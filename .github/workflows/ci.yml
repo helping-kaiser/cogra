@@ -23,12 +23,35 @@ name: CI
 # patterns are OR'd as alternative inclusions rather than subtracted,
 # so the `'**'` line alone matches every file and the gate never
 # fires. Do not remove it without replacing the filter shape.
+#
+# Every action is pinned to a full commit SHA. GitHub's hardening guide:
+# "Pinning an action to a full-length commit SHA is currently the only way
+# to use an action as an immutable release" — a tag can be moved by anyone
+# who gains write access to the action's repository. The trailing comment
+# records which release the SHA is, and dependabot's github-actions
+# ecosystem (.github/dependabot.yml) updates both together.
+#
+# Every job carries `timeout-minutes`. Without one a job runs to GitHub's
+# six-hour default, so a hang costs six hours of runner time instead of
+# failing at a stated budget (engineering-process.md: a commissioned
+# surface has a measured, recorded budget). The values are each job's
+# measured or expected duration with generous headroom, and the budget
+# table lives in docs/implementation/development.md.
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+
+# One run per ref. A second push to a PR branch makes the first run's
+# verdict irrelevant, and the jobs below spin up Postgres, build Gradle and
+# install npm — the superseded run should stop paying. Pushes to main are
+# NOT cancelled: main's history is the record, and a cancelled run there
+# leaves a commit with no verdict.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # Least privilege (GitHub's hardening guide): checkout needs contents,
 # paths-filter reads PR file lists via the API on pull_request events.
@@ -38,24 +61,34 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  # The compiler is an input like any other, and it is the one input that
+  # was floating while Cargo.lock, package-lock.json and four dependabot
+  # ecosystems were pinned. `clippy -D warnings` turns every newly
+  # stabilised lint into a hard failure, so a floating toolchain reds a PR
+  # that changed nothing and then reds main. `dtolnay/rust-toolchain` does
+  # not read rust-toolchain.toml — its toolchain comes from the input or
+  # the ref — so the version is stated here and the corpus-lint job checks
+  # that it is the one rust-toolchain.toml names.
+  RUST_CHANNEL: '1.98.0'
 
 jobs:
   changes:
     name: Detect code changes
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       code: ${{ steps.filter.outputs.code }}
       android: ${{ steps.frontends.outputs.android }}
       web: ${{ steps.frontends.outputs.web }}
       design: ${{ steps.frontends.outputs.design }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       # The Rust gate. `android/**`, `web/**`, and `design/**` are subtracted
       # alongside docs so a frontend- or design-only PR skips the Rust
       # lint/test jobs; a schema.graphql change is NOT excluded, so it still
       # trips the Rust jobs (and, below, the frontend ones) since all sides of
       # the contract depend on it.
-      - uses: dorny/paths-filter@v4
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4
         id: filter
         with:
           predicate-quantifier: 'every'
@@ -69,13 +102,14 @@ jobs:
               - '!design/**'
       # The frontend and design gates. Default (OR) quantifier: any of these
       # paths fires them. Kept in their own step because the OR semantics are
-      # incompatible with the `every` quantifier the Rust gate above needs. Both
-      # contract artifacts are listed for the same reason schema.graphql is:
-      # the frontend golden-vector tests pin to client-crypto-vectors.json,
-      # so a vector regeneration must run them, not just the Rust jobs.
+      # incompatible with the `every` quantifier the Rust gate above needs. Every
+      # contract artifact is listed for the same reason schema.graphql is: the
+      # frontend tests pin to client-crypto-vectors.json, client-constants.json
+      # and stance-fold-vectors.json, so regenerating one must run them and not
+      # only the Rust jobs.
       # `.github/workflows/**` is listed because these jobs' own setup steps
       # live there — an action bump must run them, or its green is vacuous.
-      - uses: dorny/paths-filter@v4
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4
         id: frontends
         with:
           filters: |
@@ -83,11 +117,15 @@ jobs:
               - 'android/**'
               - 'schema.graphql'
               - 'client-crypto-vectors.json'
+              - 'client-constants.json'
+              - 'stance-fold-vectors.json'
               - '.github/workflows/**'
             web:
               - 'web/**'
               - 'schema.graphql'
               - 'client-crypto-vectors.json'
+              - 'client-constants.json'
+              - 'stance-fold-vectors.json'
               - '.github/workflows/**'
             design:
               - 'design/**'
@@ -106,10 +144,18 @@ jobs:
   corpus-lint:
     name: Corpus lint
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      # Ungated, so this is the one job that runs on every PR — which makes
+      # it the place the toolchain pin is checked. A mismatch would leave CI
+      # measuring one compiler while every developer runs another.
+      - name: The workflow's toolchain is the one rust-toolchain.toml names
+        run: grep -qx "channel = \"${RUST_CHANNEL}\"" rust-toolchain.toml
+      - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
+        with:
+          toolchain: ${{ env.RUST_CHANNEL }}
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
       # Debug rather than release: the suite below compiles the crate in
       # debug anyway, so the check binary is a by-product. Release buys
       # about two seconds of runtime for a separate optimized build of the
@@ -128,6 +174,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     # No database here: the sqlx `query!` macros compile against the committed
     # `.sqlx/` metadata. A query changed without re-running `cargo sqlx prepare`
     # fails the build with "no cached data for this query" — the staleness
@@ -135,11 +182,12 @@ jobs:
     env:
       SQLX_OFFLINE: true
     steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
         with:
+          toolchain: ${{ env.RUST_CHANNEL }}
           components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
       - name: Check formatting
         run: cargo fmt --all -- --check
       - name: Run clippy
@@ -150,6 +198,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     services:
       postgres:
         image: postgres:16-alpine
@@ -168,9 +217,11 @@ jobs:
       DATABASE_URL: postgres://gnp:gnp_secret@localhost:5432/gnp_db
       RUST_LOG: debug
     steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
+        with:
+          toolchain: ${{ env.RUST_CHANNEL }}
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
       - name: Install sqlx-cli
         run: cargo install sqlx-cli --no-default-features --features rustls,postgres
       - name: Run migrations
@@ -189,17 +240,77 @@ jobs:
         run: |
           cargo run -p api --bin export-schema > schema.graphql
           git diff --exit-code schema.graphql
-      # Same rationale for the other cross-platform contract artifact: the
-      # test already ran under `cargo test --all`; the named step makes
-      # client-crypto drift readable from the checks list alone.
+      # Same rationale for the three other cross-platform contract
+      # artifacts: each test already ran under `cargo test --all`; the named
+      # steps make contract drift readable from the checks list alone.
       - name: Check client-crypto-vectors.json drift
         run: cargo test -p common --test client_vectors
+      - name: Check client-constants.json drift
+        run: cargo test -p api --test client_constants
+      - name: Check stance-fold-vectors.json drift
+        run: cargo test -p common --test stance_fold_vectors
+
+  # The client query-cost guards, on the change class they were written for.
+  #
+  # `client_operations` replays every committed operation from both client
+  # corpora against both budget postures and fails when the heaviest
+  # document grows into the stated headroom; `query_budgets` pins the
+  # postures themselves. Both live in crates/api/tests, so they ran only
+  # under the `test` job — which the `code` filter subtracts `android/**`
+  # and `web/**` from. Adding a field to a client .graphql file, the single
+  # most common way to grow the heaviest document, therefore ran neither.
+  #
+  # Gated on the union, so the guards run on backend PRs too even though
+  # `test` runs them again there. That is the same trade the schema-drift
+  # and client-vector steps above already take: a named check on the list
+  # is worth a repeated run.
+  #
+  # Cheaper than `test` despite the database: the suites are
+  # `#[sqlx::test(migrations = "../../migrations")]`, which applies the
+  # migrations itself, so no sqlx-cli is built from source here.
+  query-budgets:
+    name: Query budgets
+    needs: changes
+    if: >-
+      needs.changes.outputs.code == 'true' ||
+      needs.changes.outputs.android == 'true' ||
+      needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: gnp
+          POSTGRES_PASSWORD: gnp_secret
+          POSTGRES_DB: gnp_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://gnp:gnp_secret@localhost:5432/gnp_db
+      SQLX_OFFLINE: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
+        with:
+          toolchain: ${{ env.RUST_CHANNEL }}
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      - name: Replay every committed client operation against both postures
+        run: cargo test -p api --test client_operations
+      - name: Pin the budget postures
+        run: cargo test -p api --test query_budgets
 
   android:
     name: Android
     needs: changes
     if: needs.changes.outputs.android == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     # Driven by the committed Gradle wrapper so CI and local builds resolve the
     # same Gradle. Apollo codegen, Hilt/KSP processing, and the unit tests all
     # run as part of these tasks.
@@ -207,8 +318,8 @@ jobs:
       run:
         working-directory: android
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6
         with:
           distribution: temurin
           # Both toolchains: 17 compiles the app, 21 launches the tests
@@ -217,8 +328,14 @@ jobs:
           java-version: |
             17
             21
-      - uses: android-actions/setup-android@v4
-      - uses: gradle/actions/setup-gradle@v6
+      - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4
+      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6
+      # The Kotlin surface's own gate, the analogue of `cargo clippy` and
+      # `npm run lint`: ktlint owns formatting, detekt the rules. Both run
+      # against a baseline of what was already there, so what they fail on
+      # is what this change added. Measured at ~40 s together.
+      - name: Lint
+        run: ./gradlew ktlintCheck detekt
       - name: Unit tests
         run: ./gradlew test
       - name: Assemble debug APK
@@ -229,14 +346,15 @@ jobs:
     needs: changes
     if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     # Codegen runs against the committed schema.graphql, so contract drift
     # fails this job as a TypeScript compile error in `build`.
     defaults:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version-file: web/.nvmrc
           cache: npm
@@ -257,12 +375,13 @@ jobs:
     needs: changes
     if: needs.changes.outputs.design == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: design/_build
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           # No engines field and no .nvmrc under design/_build, so the major
           # is the honest granularity: the scripts are plain ESM over Babel
@@ -278,6 +397,7 @@ jobs:
       # _ds_bundle.js, render-screens and gen-maps render the artboards and
       # the canvas map from it, and check-flows walks the rendered tree and
       # exits nonzero on a structural failure. That exit is the gate.
+      # `make design-ci` runs the same four stages and the same diff.
       - name: Render the design tree
         run: node bundle.mjs && node render-screens.mjs && node gen-maps.mjs && node check-flows.mjs
       # The rendered outputs are committed, so a re-render that changes

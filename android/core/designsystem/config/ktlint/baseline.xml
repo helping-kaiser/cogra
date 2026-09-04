@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<baseline version="1.0">
+    <file name="src/main/kotlin/com/cogra/core/designsystem/KeyGate.kt">
+        <error line="11" column="1" source="standard:import-ordering" />
+        <error line="59" column="57" source="standard:multiline-if-else" />
+        <error line="60" column="10" source="standard:multiline-if-else" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/core/designsystem/PasswordTextField.kt">
+        <error line="47" column="1" source="standard:indent" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/core/designsystem/StanceAnchors.kt">
+        <error line="37" column="5" source="standard:class-signature" />
+        <error line="38" column="5" source="standard:class-signature" />
+        <error line="39" column="5" source="standard:class-signature" />
+        <error line="39" column="35" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/core/designsystem/StancePad.kt">
+        <error line="29" column="1" source="standard:import-ordering" />
+        <error line="407" column="29" source="standard:multiline-if-else" />
+        <error line="407" column="39" source="standard:multiline-if-else" />
+        <error line="467" column="29" source="standard:multiline-if-else" />
+        <error line="467" column="39" source="standard:multiline-if-else" />
+        <error line="498" column="5" source="standard:class-signature" />
+        <error line="499" column="5" source="standard:class-signature" />
+        <error line="499" column="31" source="standard:class-signature" />
+        <error line="539" column="5" source="standard:class-signature" />
+        <error line="540" column="5" source="standard:class-signature" />
+        <error line="540" column="31" source="standard:class-signature" />
+        <error line="858" column="5" source="standard:class-signature" />
+        <error line="859" column="5" source="standard:class-signature" />
+        <error line="860" column="5" source="standard:class-signature" />
+        <error line="861" column="5" source="standard:class-signature" />
+        <error line="861" column="24" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/core/designsystem/TagParameterSliders.kt">
+        <error line="46" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/core/designsystem/v2/atom/Fields.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/core/designsystem/v2/compose/PickedPictures.kt">
+        <error line="242" column="61" source="standard:statement-wrapping" />
+        <error line="242" column="86" source="standard:statement-wrapping" />
+        <error line="242" column="92" source="standard:statement-wrapping" />
+        <error line="245" column="59" source="standard:statement-wrapping" />
+        <error line="245" column="84" source="standard:statement-wrapping" />
+        <error line="245" column="90" source="standard:statement-wrapping" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/core/designsystem/v2/compose/UploadNotice.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="30" column="1" source="standard:kdoc" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/core/designsystem/v2/media/CropState.kt">
+        <error line="26" column="5" source="standard:class-signature" />
+        <error line="27" column="5" source="standard:class-signature" />
+        <error line="28" column="5" source="standard:class-signature" />
+        <error line="29" column="5" source="standard:class-signature" />
+        <error line="29" column="23" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/core/designsystem/v2/media/MediaCrop.kt">
+        <error line="108" column="51" source="standard:statement-wrapping" />
+        <error line="108" column="84" source="standard:statement-wrapping" />
+        <error line="108" column="90" source="standard:statement-wrapping" />
+        <error line="109" column="52" source="standard:statement-wrapping" />
+        <error line="109" column="86" source="standard:statement-wrapping" />
+        <error line="109" column="92" source="standard:statement-wrapping" />
+        <error line="110" column="49" source="standard:statement-wrapping" />
+        <error line="110" column="80" source="standard:statement-wrapping" />
+        <error line="110" column="86" source="standard:statement-wrapping" />
+        <error line="111" column="51" source="standard:statement-wrapping" />
+        <error line="111" column="84" source="standard:statement-wrapping" />
+        <error line="111" column="90" source="standard:statement-wrapping" />
+        <error line="112" column="48" source="standard:statement-wrapping" />
+        <error line="112" column="78" source="standard:statement-wrapping" />
+        <error line="112" column="84" source="standard:statement-wrapping" />
+        <error line="113" column="49" source="standard:statement-wrapping" />
+        <error line="113" column="80" source="standard:statement-wrapping" />
+        <error line="113" column="86" source="standard:statement-wrapping" />
+        <error line="114" column="54" source="standard:statement-wrapping" />
+        <error line="114" column="68" source="standard:statement-wrapping" />
+        <error line="114" column="74" source="standard:statement-wrapping" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/core/designsystem/v2/media/MediaThumb.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/core/designsystem/v2/media/VideoPlayer.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/core/designsystem/v2/media/VideoStage.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="57" column="9" source="standard:class-signature" />
+        <error line="58" column="9" source="standard:class-signature" />
+        <error line="59" column="9" source="standard:class-signature" />
+        <error line="59" column="25" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/core/designsystem/v2/token/MediaTokens.kt">
+        <error line="108" column="15" source="standard:property-naming" />
+        <error line="118" column="15" source="standard:property-naming" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/core/designsystem/v2/token/Previews.kt">
+        <error line="1" column="1" source="standard:filename" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/core/designsystem/SeveranceConfirmTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/core/designsystem/StancePadTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="678" column="41" source="standard:argument-list-wrapping" />
+        <error line="678" column="53" source="standard:argument-list-wrapping" />
+        <error line="678" column="58" source="standard:argument-list-wrapping" />
+        <error line="678" column="61" source="standard:argument-list-wrapping" />
+        <error line="678" column="64" source="standard:argument-list-wrapping" />
+        <error line="678" column="86" source="standard:argument-list-wrapping" />
+        <error line="678" column="109" source="standard:argument-list-wrapping" />
+        <error line="678" column="121" source="standard:max-line-length" />
+        <error line="678" column="126" source="standard:argument-list-wrapping" />
+        <error line="691" column="41" source="standard:argument-list-wrapping" />
+        <error line="691" column="61" source="standard:argument-list-wrapping" />
+        <error line="691" column="83" source="standard:argument-list-wrapping" />
+        <error line="691" column="105" source="standard:argument-list-wrapping" />
+        <error line="691" column="121" source="standard:argument-list-wrapping" />
+        <error line="691" column="121" source="standard:max-line-length" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/core/designsystem/TagParameterSlidersTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+    <file name="src/test/kotlin/com/cogra/core/designsystem/v2/atom/AtomsTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+    </file>
+</baseline>

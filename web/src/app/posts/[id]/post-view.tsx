@@ -30,6 +30,7 @@ import {
   type PostDetail,
   type ReplyView,
 } from "@/lib/api/content-api";
+import { firstRefusalMessage } from "@/lib/ui/error-messages";
 import { appendDeduped } from "@/lib/api/pagination";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { prepareTag } from "@/lib/api/topics-api";
@@ -354,10 +355,7 @@ export function PostView({
    * all of them are this device's to sign.
    */
   const signAll = async (writes: readonly StagedWriteView[]): Promise<boolean> => {
-    const results = [];
-    for (const staged of writes) {
-      results.push(await signer.signStaged(staged));
-    }
+    const results = await signer.sign(writes);
     return results.every((result) => result.kind === "done");
   };
 
@@ -418,7 +416,7 @@ export function PostView({
         return;
       }
       if (prepared.kind === "refused") {
-        general = prepared.errors[0]?.message ?? "The server refused this write.";
+        general = firstRefusalMessage(prepared.errors, "The server refused this write.");
       } else {
         writes.push(...prepared.value.writes);
       }
@@ -443,7 +441,7 @@ export function PostView({
         // A PRE-STAGING refusal is a field error, never the signing line
         // (F2). An added tag carries it on its own chip; a withdrawal has
         // no chip left to carry it, so it reads on the general line.
-        const message = prepared.errors[0]?.message ?? "The server refused this write.";
+        const message = firstRefusalMessage(prepared.errors, "The server refused this write.");
         const index =
           change.kind === "tag"
             ? editing.tags.findIndex((tag) => tag.name === change.tag.name)
@@ -477,7 +475,7 @@ export function PostView({
         return;
       }
       if (prepared.kind === "refused") {
-        const message = prepared.errors[0]?.message ?? "The server refused this write.";
+        const message = firstRefusalMessage(prepared.errors, "The server refused this write.");
         const index =
           change.kind === "reference"
             ? editing.references.findIndex(

@@ -404,7 +404,7 @@ class ComposeWizardScreenTest {
     fun aFailedUploadCarriesItsWordsAndBothWaysOut() {
         val state = withPicks
             .copy(step = WizardStep.Details)
-            .withUpload("b", AssetUpload.Failed("too big"))
+            .withUpload("b", AssetUpload.Failed(UploadFailure.PICTURE_TOO_BIG))
         compose.setContent { Wizard(state) }
 
         // The line carries the failure's words; the tile only wears the
@@ -583,7 +583,7 @@ class ComposeWizardScreenTest {
     fun aRefusedFileIsListedUnderTheTrayWithItsOwnWords() {
         val state = withPicks.copy(
             refused = listOf(
-                RefusedPick(null, "That file isn't a picture or a video CoGra can read."),
+                RefusedPick(null, UploadFailure.UNREADABLE_FILE),
             ),
         )
         compose.setContent { Wizard(state) }
@@ -597,7 +597,7 @@ class ComposeWizardScreenTest {
 
     @Test
     fun aRefusalOffersNoRetryBecauseRetryingCannotHelp() {
-        val state = withPicks.copy(refused = listOf(RefusedPick(null, "Too big.")))
+        val state = withPicks.copy(refused = listOf(RefusedPick(null, UploadFailure.PICTURE_TOO_BIG)))
         compose.setContent { Wizard(state) }
 
         compose.onNodeWithText("Retry", substring = true).assertDoesNotExist()
@@ -608,7 +608,7 @@ class ComposeWizardScreenTest {
     fun theStepStaysUsableWithNothingPickedButSomethingRefused() {
         val state = ComposeWizardState(
             mode = BodyMode.Media,
-            refused = listOf(RefusedPick(null, "Nope.")),
+            refused = listOf(RefusedPick(null, UploadFailure.REFUSED_PICTURE)),
         )
         compose.setContent { Wizard(state) }
 

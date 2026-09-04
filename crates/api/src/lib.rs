@@ -41,6 +41,7 @@ use postgres_store::PgPool;
 use serde_json::{Value, json};
 use tokio_util::compat::TokioAsyncReadCompatExt;
 use tokio_util::io::StreamReader;
+use tower_http::limit::RequestBodyLimitLayer;
 use uuid::Uuid;
 
 use crate::auth::{AuthConfig, Viewer};
@@ -48,6 +49,16 @@ use crate::media::resumable::{self, SessionError};
 use crate::media::{BlobStore, MediaConfig};
 use crate::ratelimit::RequestIp;
 use crate::schema::ApiSchema;
+
+/// An environment variable, or the fallback the caller names.
+///
+/// It lives in the library because the server, the bootstrap tool and the
+/// media configuration all read their settings the same way; three private
+/// copies of one line drift apart the moment one of them grows a trim or a
+/// case rule.
+pub fn env_or(key: &str, default: &str) -> String {
+    std::env::var(key).unwrap_or_else(|_| default.to_string())
+}
 
 /// Process liveness only — store connectivity is the GraphQL `health`
 /// query's job.
@@ -93,11 +104,17 @@ struct AppState {
 /// single request an unbounded write. Everything else about the parse is
 /// the extractor's own pipeline — body stream, `StreamReader`, the
 /// compatibility shim, `receive_batch_body`.
+///
+/// The whole body is bounded a layer above, by
+/// `RequestBodyLimitLayer` on the route (see [`app`]): consuming the body
+/// stream directly is precisely the case axum documents `DefaultBodyLimit`
+/// as *not* covering, so the limit has to wrap the body rather than ride
+/// an extractor.
 async fn graphql_handler(
     State(state): State<AppState>,
     ClientIp(ip): ClientIp,
     req: Request,
-) -> Result<GraphQLResponse, GraphQLRejection> {
+) -> axum::response::Response {
     let (parts, body) = req.into_parts();
     let viewer: Option<Viewer> = parts
         .headers
@@ -112,17 +129,49 @@ async fn graphql_handler(
         .map(str::to_owned);
 
     let reader = StreamReader::new(body.into_data_stream().map_err(std::io::Error::other)).compat();
-    let request = async_graphql::http::receive_batch_body(content_type, reader, state.multipart)
+    let parsed = async_graphql::http::receive_batch_body(content_type, reader, state.multipart)
         .await
-        .map_err(GraphQLRejection)?
-        .into_single()
-        .map_err(GraphQLRejection)?;
+        .and_then(async_graphql::BatchRequest::into_single);
+    let request = match parsed {
+        Ok(request) => request,
+        Err(e) if over_the_body_limit(&e) => {
+            return upload_error(
+                StatusCode::PAYLOAD_TOO_LARGE,
+                "PAYLOAD_TOO_LARGE",
+                "the request body is larger than this endpoint accepts",
+                &[],
+            );
+        }
+        Err(e) => return GraphQLRejection(e).into_response(),
+    };
 
-    Ok(state
+    let response: GraphQLResponse = state
         .schema
         .execute(request.data(viewer).data(RequestIp(ip)))
         .await
-        .into())
+        .into();
+    response.into_response()
+}
+
+/// Whether a parse failure is the body ceiling being hit rather than a
+/// malformed request.
+///
+/// A body cut by `RequestBodyLimitLayer` surfaces as a stream error
+/// several wrappers down — the limited body's own error, boxed by axum,
+/// carried through an `io::Error` into async-graphql's parse error — so
+/// the whole `source()` chain is walked. This is the same downcast axum's
+/// `Bytes` extractor performs to answer 413 instead of 500; without it a
+/// client that sends no `Content-Length` (chunked transfer) is told the
+/// server broke rather than that the body was too large.
+fn over_the_body_limit(err: &(dyn std::error::Error + 'static)) -> bool {
+    let mut cause = Some(err);
+    while let Some(e) = cause {
+        if e.is::<http_body_util::LengthLimitError>() {
+            return true;
+        }
+        cause = e.source();
+    }
+    false
 }
 
 /// The viewer a request carries, or the status that refuses it.
@@ -268,6 +317,18 @@ async fn upload_part(
 /// refuses before a handler exists and can only answer with a status
 /// code, so the readable refusal naming the expected byte count is left
 /// to the handler and this catches only what is wildly out of range.
+///
+/// `/graphql` carries the same kind of ceiling one layer out.
+/// `MultipartOptions` bounds the *file part* of a multipart request and
+/// nothing else — a plain JSON body, or the non-file fields of a
+/// multipart envelope, pass it untouched — and `DefaultBodyLimit` cannot
+/// help, because it reaches only extractors that read the body through
+/// `Bytes` and this handler consumes the body stream itself.
+/// `tower_http`'s `RequestBodyLimitLayer` wraps the body instead of the
+/// extractor, which is what axum's own documentation points at for a
+/// handler in this shape. The bound sits one part above the multipart
+/// transport ceiling so that the file part is always refused by the
+/// readable multipart error rather than by the connection being cut.
 pub fn app(
     schema: ApiSchema,
     auth: AuthConfig,
@@ -279,8 +340,14 @@ pub fn app(
         .max_file_size(media.transport_limit_bytes())
         .max_num_files(1);
     let part_limit = media.upload_part_size_bytes.saturating_mul(2);
+    let graphql_limit = media
+        .transport_limit_bytes()
+        .saturating_add(media.upload_part_size_bytes);
     let mut router = Router::new()
-        .route("/graphql", post(graphql_handler))
+        .route(
+            "/graphql",
+            post(graphql_handler).layer(RequestBodyLimitLayer::new(graphql_limit)),
+        )
         .route(
             "/media/uploads/{session_id}/parts/{part_number}",
             put(upload_part).layer(DefaultBodyLimit::max(part_limit)),

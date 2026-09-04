@@ -1,0 +1,123 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM (\n                   SELECT c.id, c.target_id, c.target_type, c.author_id,\n                          c.l1_node_id, c.license, c.landed_epoch, c.act_time,\n                          c.position, c.created_at,\n                          v.content AS \"content!\", v.redaction_reason,\n                          v.sensitive AS \"sensitive!\", v.sensitive_reason,\n                          v.pending AS \"version_pending!\",\n                          v.created_at AS \"version_created_at!\",\n                          v.version_id AS \"version_id!\"\n                   FROM comments c\n                   JOIN LATERAL (\n                       SELECT content, redaction_reason, sensitive,\n                              sensitive_reason, pending, created_at, version_id\n                       FROM comment_versions\n                       WHERE comment_id = c.id AND ($6 OR NOT pending)\n                       ORDER BY pending DESC,\n                                landed_epoch DESC NULLS LAST,\n                                act_time DESC NULLS LAST,\n                                position DESC NULLS LAST,\n                                created_at DESC, version_id DESC\n                       LIMIT 1\n                   ) v ON TRUE\n                   WHERE c.target_id = $5\n                     AND c.landed_epoch IS NOT NULL\n                     AND ($1::bigint IS NULL\n                          OR (c.landed_epoch, c.act_time, c.position) > ($1, $2, $3))\n                   ORDER BY c.landed_epoch ASC, c.act_time ASC, c.position ASC\n                   LIMIT $4\n               ) page\n               ORDER BY landed_epoch DESC, act_time DESC, position DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "target_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "target_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "author_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "l1_node_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "license",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "landed_epoch",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "act_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "position",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 10,
+        "name": "content!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "redaction_reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "sensitive!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 13,
+        "name": "sensitive_reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "version_pending!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 15,
+        "name": "version_created_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 16,
+        "name": "version_id!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Uuid",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "f9da98c16b477e37718c7a1b6d4d460b3b94ed913e2eccc9fec0b345916086e0"
+}

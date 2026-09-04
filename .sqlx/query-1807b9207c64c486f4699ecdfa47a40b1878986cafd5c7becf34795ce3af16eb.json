@@ -1,0 +1,69 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO auth_invite_links\n             (id, inviter_id, prefill_p_d, prefill_p_i, single_use, expires_at)\n         VALUES ($1, $2, $3, $4, $5, $6)\n         RETURNING id, inviter_id, prefill_p_d, prefill_p_i, single_use,\n                   created_at, expires_at, revoked_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "inviter_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "prefill_p_d",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "prefill_p_i",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "single_use",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "expires_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "revoked_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Float8",
+        "Float8",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "1807b9207c64c486f4699ecdfa47a40b1878986cafd5c7becf34795ce3af16eb"
+}

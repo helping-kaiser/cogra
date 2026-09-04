@@ -6,8 +6,8 @@
 #
 # `hashtag(name:)` resolves any well-formed name (D4): a Type is
 # anchored vacuously, so a topic nobody has tagged yet still renders —
-# null answers only a substrate-illegal name. Field selections are
-# inlined per the house style (content.graphql).
+# null answers only a substrate-illegal name. The shared selections
+# live in `fragments.graphql`.
 
 query HashtagDetail($name: String!, $includePending: Boolean! = true) {
   hashtag(name: $name) {
@@ -23,136 +23,14 @@ query HashtagDetail($name: String!, $includePending: Boolean! = true) {
       pending
       node {
         __typename
+        # The same card renders here, so it reads the same post the feed
+        # reads — the video fields included, or the card would be handed
+        # a post whose attachments cannot say whether they move.
         ... on Post {
-          id
-          title {
-            value
-            status
-          }
-          description {
-            value
-            status
-          }
-          content {
-            value
-            status
-          }
-          # The same card renders here, so it reads the same gallery — the
-          # video fields included, or the card would be handed a post whose
-          # attachments cannot say whether they move.
-          attachments {
-            id
-            url
-            altText
-            status
-            mimeType
-            options {
-              aspectRatio
-              durationMs
-            }
-            coverMedia {
-              id
-              url
-              status
-              options {
-                aspectRatio
-              }
-            }
-          }
-          attachmentsStatus
-          author {
-            id
-            handle
-            displayName {
-              value
-            }
-            avatar {
-              url
-            }
-          }
-          createdAt
-          updatedAt
-          landing {
-            state
-          }
-          moderationStatus
-          license {
-            attribution
-            provenance
-          }
-          topics(includePending: $includePending) {
-            hashtag {
-              id
-              name {
-                value
-                status
-              }
-            }
-            relevance
-            confidence
-            pending
-          }
-          # The reference row (D12, D16): the author's own current
-          # citations only — the content-intrinsic channel, the one that
-          # needs no forward-path weight. The target is typed so a chip
-          # renders without a second read; it is null when CoGra carries
-          # no display row for what the citation names.
-          references(includePending: $includePending) {
-            targetId
-            relevance
-            support
-            withdrawalCost
-            pending
-            target {
-              __typename
-              ... on User {
-                id
-                handle
-                displayName {
-                  value
-                }
-              }
-              ... on Post {
-                id
-                title {
-                  value
-                }
-                content {
-                  value
-                }
-                author {
-                  handle
-                }
-              }
-              # A referenced comment opens the post carrying it —
-              # comment permalinks are a parked item — so the selection
-              # walks up far enough to find one.
-              ... on Comment {
-                id
-                content {
-                  value
-                }
-                author {
-                  handle
-                }
-                target {
-                  __typename
-                  ... on Post {
-                    id
-                  }
-                  ... on Comment {
-                    target {
-                      __typename
-                      ... on Post {
-                        id
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
+          ...PostFields
         }
+        # A tagged comment draws a line, not a card: it opens the post
+        # carrying it, so the selection stops at what that line needs.
         ... on Comment {
           id
           content {
@@ -199,9 +77,7 @@ mutation PrepareTag($input: PrepareTagInput!) {
       canonicalProposal
     }
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }

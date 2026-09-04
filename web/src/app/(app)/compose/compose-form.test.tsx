@@ -275,8 +275,10 @@ describe("ComposeForm", () => {
     fireEvent.click(screen.getByTestId("compose-tag-add"));
     fireEvent.click(screen.getByTestId("compose-submit"));
 
+    // The chip carries the client's own copy for the code, not the server's
+    // sentence — `UserError.message` is developer-facing (api-spec.md).
     expect(await screen.findByTestId("compose-tag-error-1")).toHaveTextContent(
-      "not a legal topic name",
+      "Something in this wasn't accepted",
     );
     // A field error is not the general refusal line.
     expect(screen.queryByTestId("compose-refused")).not.toBeInTheDocument();
@@ -335,7 +337,7 @@ describe("ComposeForm", () => {
     fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "b" } });
     fireEvent.click(screen.getByTestId("compose-submit"));
     expect(await screen.findByTestId("compose-refused")).toHaveTextContent(
-      "the write rule refused",
+      "didn't pass the network's rules",
     );
   });
 
@@ -524,7 +526,7 @@ describe("ComposeForm", () => {
     fireEvent.click(screen.getByTestId("compose-submit"));
 
     expect(await screen.findByTestId("compose-tag-error-0")).toHaveTextContent(
-      "`a-b` is not a legal topic name: reserved",
+      "Something in this wasn't accepted",
     );
     expect(screen.queryByTestId("compose-refused")).not.toBeInTheDocument();
     expect(screen.queryByTestId("compose-signing-failed")).not.toBeInTheDocument();
@@ -851,7 +853,7 @@ describe("ComposeForm — references", () => {
                 {
                   __typename: "UserError",
                   message: "A post cannot reference itself.",
-                  code: "INVALID_ARGUMENT",
+                  code: "BAD_INPUT",
                   field: ["references", "0", "target"],
                 },
               ],
@@ -869,7 +871,7 @@ describe("ComposeForm — references", () => {
     fireEvent.click(screen.getByTestId("compose-submit"));
 
     expect(await screen.findByTestId("compose-reference-error-0")).toHaveTextContent(
-      "A post cannot reference itself.",
+      "Something in this wasn't accepted",
     );
     expect(screen.queryByTestId("compose-refused")).not.toBeInTheDocument();
   });
@@ -889,7 +891,7 @@ describe("ComposeForm — references", () => {
                 {
                   __typename: "UserError",
                   message: "Your balance can't carry all 3 actions.",
-                  code: "INSUFFICIENT_BALANCE",
+                  code: "WRITE_RULE_FAILED",
                   field: null,
                 },
               ],
@@ -907,7 +909,7 @@ describe("ComposeForm — references", () => {
     fireEvent.click(screen.getByTestId("compose-submit"));
 
     expect(await screen.findByTestId("compose-refused")).toHaveTextContent(
-      "Your balance can't carry all 3 actions.",
+      "your balance may not cover it",
     );
     expect(screen.queryByTestId("compose-reference-error-0")).not.toBeInTheDocument();
   });

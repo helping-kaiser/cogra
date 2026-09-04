@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<baseline version="1.0">
+    <file name="src/main/kotlin/com/cogra/core/media/AndroidMediaProcessor.kt">
+        <error line="30" column="5" source="standard:class-signature" />
+        <error line="30" column="43" source="standard:class-signature" />
+        <error line="127" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/core/media/AndroidVideoProcessor.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="62" column="5" source="standard:class-signature" />
+        <error line="62" column="34" source="standard:class-signature" />
+        <error line="249" column="33" source="standard:comment-wrapping" />
+        <error line="250" column="30" source="standard:comment-wrapping" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/core/media/ImageProcessing.kt">
+        <error line="16" column="5" source="standard:class-signature" />
+        <error line="17" column="5" source="standard:class-signature" />
+        <error line="18" column="5" source="standard:class-signature" />
+        <error line="18" column="21" source="standard:class-signature" />
+    </file>
+    <file name="src/main/kotlin/com/cogra/core/media/MediaStoreMediaSource.kt">
+        <error line="39" column="5" source="standard:class-signature" />
+        <error line="39" column="43" source="standard:class-signature" />
+    </file>
+</baseline>

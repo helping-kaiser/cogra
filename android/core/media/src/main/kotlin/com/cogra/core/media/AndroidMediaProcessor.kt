@@ -8,6 +8,7 @@ import android.provider.OpenableColumns
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.ProcessedPicture
+import com.cogra.domain.media.cropRect
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -116,44 +117,10 @@ class AndroidMediaProcessor(
  */
 internal fun Bitmap.cropped(crop: CropSpec): Bitmap {
     if (!crop.targetRatio.isFinite() || crop.targetRatio <= 0f) return this
-
-    val window = crop.window
-    val rect = if (window == null || window.isWhole) {
-        centredWindow(crop.targetRatio)
-    } else {
-        floatArrayOf(
-            window.left * width,
-            window.top * height,
-            window.right * width,
-            window.bottom * height,
-        )
-    }
-
-    val x = rect[0].toInt().coerceIn(0, (width - 1).coerceAtLeast(0))
-    val y = rect[1].toInt().coerceIn(0, (height - 1).coerceAtLeast(0))
-    val w = (rect[2].toInt() - x).coerceIn(1, width - x)
-    val h = (rect[3].toInt() - y).coerceIn(1, height - y)
-    if (x == 0 && y == 0 && w == width && h == height) return this
-    return Bitmap.createBitmap(this, x, y, w, h)
-}
-
-/**
- * The largest [targetRatio] rectangle the picture holds, centred — the
- * framing a picture carries when the author left it alone.
- */
-private fun Bitmap.centredWindow(targetRatio: Float): FloatArray {
-    val sourceRatio = width.toFloat() / height.toFloat()
-    val w: Float
-    val h: Float
-    if (sourceRatio > targetRatio) {
-        h = height.toFloat()
-        w = h * targetRatio
-    } else {
-        w = width.toFloat()
-        h = w / targetRatio
-    }
-    val left = (width - w) / 2f
-    val top = (height - h) / 2f
-    return floatArrayOf(left, top, left + w, top + h)
+    // The arithmetic is `core:domain`'s, where it is a plain JVM test;
+    // what stays here is the one platform call it feeds.
+    val rect = cropRect(width, height, crop)
+    if (rect.isWhole(width, height)) return this
+    return Bitmap.createBitmap(this, rect.left, rect.top, rect.width, rect.height)
 }
 

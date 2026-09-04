@@ -13,7 +13,7 @@ import org.bouncycastle.crypto.generators.HKDFBytesGenerator
 import org.bouncycastle.crypto.params.HKDFParameters
 
 /** A blob that will not open: wrong code, tampered bytes, or bad format. */
-open class KeyBackupException(message: String) : Exception(message)
+open class KeyBackupException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
 /**
  * The input is not a recovery code's length. It is the one parse
@@ -31,18 +31,68 @@ private const val AES_NONCE_LEN = 12
 private const val HKDF_INFO = "cogra:key-backup:v1"
 private const val CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 
-/** A 16-byte recovery code and its display/normalization rules. */
-class RecoveryCode(val bytes: ByteArray) {
+/** U+FEFF — the byte-order mark a paste carries in ahead of the code. */
+private const val BYTE_ORDER_MARK = 0xFEFF
+
+/** U+0085 NEXT LINE — `White_Space`, and in no separator category. */
+private const val NEXT_LINE = 0x85
+
+/** The C0 run U+0009-U+000D: tab, line feed, vertical tab, form feed, return. */
+private const val C0_WHITE_SPACE_FIRST = 0x09
+private const val C0_WHITE_SPACE_LAST = 0x0D
+
+/**
+ * The characters Unicode gives the `White_Space` property.
+ *
+ * `Character.isSpaceChar` is the part of that property Unicode also
+ * classes as a separator; what it leaves out is the C0 run and
+ * NEXT LINE, which are named above.
+ */
+private fun Char.isUnicodeWhiteSpace(): Boolean =
+    Character.isSpaceChar(this) ||
+        code in C0_WHITE_SPACE_FIRST..C0_WHITE_SPACE_LAST ||
+        code == NEXT_LINE
+
+/**
+ * What [RecoveryCode.normalize] drops: `-`, every `White_Space`
+ * character, and the byte-order mark.
+ *
+ * The class is stated here rather than inherited from the platform,
+ * because no two of the three clients spell "whitespace" the same and a
+ * code typed on one has to read on all. Kotlin's own
+ * `Char.isWhitespace()` is `Character.isWhitespace() ||
+ * Character.isSpaceChar()`, which ADDS U+001C-U+001F — the C0
+ * file/group/record/unit separators, which Unicode does not call white
+ * space — and DROPS U+0085, which it does.
+ */
+private fun Char.isCodeSeparator(): Boolean =
+    this == '-' || code == BYTE_ORDER_MARK || isUnicodeWhiteSpace()
+
+/**
+ * A 16-byte recovery code and its display/normalization rules.
+ *
+ * The bytes are copied in and copied out, the way [ActorKey.seed] hands
+ * back BouncyCastle's defensive copy: a secret held by reference is one
+ * the caller can still be holding — or still mutating — after it has
+ * been sealed under.
+ */
+class RecoveryCode(bytes: ByteArray) {
+
+    private val secret: ByteArray = bytes.copyOf()
+
     init {
-        require(bytes.size == CODE_LEN) { "a recovery code is $CODE_LEN bytes" }
+        require(secret.size == CODE_LEN) { "a recovery code is $CODE_LEN bytes" }
     }
+
+    /** The code's bytes, as a copy. */
+    fun bytes(): ByteArray = secret.copyOf()
 
     /** The display form: 26 Crockford characters grouped 5-5-5-5-6. */
     fun display(): String {
         var bits = 0
         var nbits = 0
         val chars = StringBuilder()
-        for (b in bytes) {
+        for (b in secret) {
             bits = (bits shl 8) or (b.toInt() and 0xFF)
             nbits += 8
             while (nbits >= 5) {
@@ -57,7 +107,7 @@ class RecoveryCode(val bytes: ByteArray) {
     }
 
     companion object {
-        fun generate(): RecoveryCode = RecoveryCode(ActorKey.randomBytes(CODE_LEN))
+        fun generate(): RecoveryCode = RecoveryCode(Entropy.bytes(CODE_LEN))
 
         /**
          * The reading rule for anything a user typed: uppercase,
@@ -71,7 +121,7 @@ class RecoveryCode(val bytes: ByteArray) {
                 .replace("I", "1")
                 .replace("L", "1")
                 .replace("O", "0")
-                .filter { it != '-' && !it.isWhitespace() }
+                .filter { !it.isCodeSeparator() }
 
         /**
          * Parses user input under [normalize]. No check digit —
@@ -106,7 +156,10 @@ class RecoveryCode(val bytes: ByteArray) {
 
 private fun contentKey(code: RecoveryCode, salt: ByteArray): ByteArray {
     val hkdf = HKDFBytesGenerator(SHA256Digest())
-    hkdf.init(HKDFParameters(code.bytes, salt, HKDF_INFO.toByteArray(Charsets.US_ASCII)))
+    // UTF-8, as the contract's own `hkdfInfoUtf8` names it: US-ASCII's
+    // encoder replaces what it cannot represent, so a non-ASCII info
+    // string would derive one key here and another everywhere else.
+    hkdf.init(HKDFParameters(code.bytes(), salt, HKDF_INFO.toByteArray(Charsets.UTF_8)))
     return ByteArray(32).also { hkdf.generateBytes(it, 0, it.size) }
 }
 
@@ -117,25 +170,47 @@ private fun cipher(mode: Int, key: ByteArray, nonce: ByteArray, aad: ByteArray):
     }
 
 /**
- * Seals the actor seed under the recovery code. The [salt] and [nonce]
- * parameters exist for the golden vectors; production callers use the
- * random defaults.
+ * Seals the actor seed under the recovery code — the production form.
+ *
+ * Salt and nonce are drawn here rather than accepted. The content key
+ * is a pure function of `(code, salt)`, so a caller that could supply
+ * both could reuse an AES-GCM nonce under an identical key; the
+ * deterministic form the golden vectors pin is [sealKeyBackupWith],
+ * mirroring the Rust reference's own split
+ * (`crates/common/src/l1/key_backup.rs`).
  */
-fun sealKeyBackup(
+fun sealKeyBackup(seed: ByteArray, code: RecoveryCode): ByteArray =
+    sealKeyBackupWith(seed, code, Entropy.bytes(HKDF_SALT_LEN), Entropy.bytes(AES_NONCE_LEN))
+
+/** The deterministic form the golden vectors pin. */
+internal fun sealKeyBackupWith(
     seed: ByteArray,
     code: RecoveryCode,
-    salt: ByteArray = ActorKey.randomBytes(HKDF_SALT_LEN),
-    nonce: ByteArray = ActorKey.randomBytes(AES_NONCE_LEN),
+    salt: ByteArray,
+    nonce: ByteArray,
 ): ByteArray {
     require(seed.size == 32) { "an actor seed is 32 bytes" }
     require(salt.size == HKDF_SALT_LEN) { "the HKDF salt is $HKDF_SALT_LEN bytes" }
     require(nonce.size == AES_NONCE_LEN) { "the AES-GCM nonce is $AES_NONCE_LEN bytes" }
-    val plaintext = CborEncoder().array(2u).bytes(seed).uint(1u).finish()
     val header = byteArrayOf(VERSION) + salt + nonce
     val ciphertext = cipher(Cipher.ENCRYPT_MODE, contentKey(code, salt), nonce, header)
-        .doFinal(plaintext)
+        .doFinal(keyBackupPlaintext(seed))
     return header + ciphertext
 }
+
+/**
+ * The CBOR container the blob encrypts: `[seed, containerVersion]`.
+ *
+ * Reachable from the suite so the vectors can pin the plaintext and the
+ * derived key separately. Without those two, a swapped HKDF argument
+ * order reports only as "the blob differs", which names neither half.
+ */
+internal fun keyBackupPlaintext(seed: ByteArray): ByteArray =
+    CborEncoder().array(2u).bytes(seed).uint(1u).finish()
+
+/** The HKDF output the container is sealed under — pinned by the vectors. */
+internal fun keyBackupContentKey(code: RecoveryCode, salt: ByteArray): ByteArray =
+    contentKey(code, salt)
 
 /**
  * Opens a blob with the recovery code, returning the actor seed. A
@@ -153,7 +228,7 @@ fun openKeyBackup(blob: ByteArray, code: RecoveryCode): ByteArray {
         cipher(Cipher.DECRYPT_MODE, contentKey(code, salt), nonce, header)
             .doFinal(blob.copyOfRange(headerLen, blob.size))
     } catch (e: java.security.GeneralSecurityException) {
-        throw KeyBackupException("the blob does not open under this code")
+        throw KeyBackupException("the blob does not open under this code", e)
     }
     try {
         val d = CborDecoder(plaintext)
@@ -164,7 +239,7 @@ fun openKeyBackup(blob: ByteArray, code: RecoveryCode): ByteArray {
         if (seed.size != 32) throw KeyBackupException("malformed blob container")
         return seed
     } catch (e: CborDecodeException) {
-        throw KeyBackupException("malformed blob container: ${e.message}")
+        throw KeyBackupException("malformed blob container: ${e.message}", e)
     }
 }
 

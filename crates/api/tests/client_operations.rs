@@ -35,22 +35,46 @@ mod rig;
 const TOO_COMPLEX: &str = "Query is too complex.";
 const TOO_DEEP: &str = "Query is nested too deep.";
 
-/// The page sizes the clients actually send, keyed by the variable name
-/// the document binds them to: `FEED_PAGE_SIZE` / `CONTENT_PAGE_SIZE`
-/// (20) and an unset `limit` — the priciest of the values either client
-/// passes for it, since an absent limit charges the default page. A
-/// reply thread arrives as a count rather than a page (Q49), so neither
-/// corpus binds a replies page-size variable any more.
+/// The page size the clients actually send, READ FROM THE ARTIFACT the
+/// clients are themselves pinned to (`client-constants.json`,
+/// `paging.defaultPageSize`) rather than restated here.
+///
+/// A hardcoded copy is the defect this closes: raise the clients' page
+/// size and a guard that kept measuring at the old one passes while real
+/// traffic is heavier, and the miss is multiplicative because the page
+/// size multiplies every connection's cost. The coupling now runs
+/// through one file — the clients' own tests pin their constants to it,
+/// and so does this — instead of through a sentence.
+fn default_page_size() -> usize {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../client-constants.json");
+    let raw = std::fs::read_to_string(&path).expect("client-constants.json is committed");
+    let parsed: serde_json::Value = serde_json::from_str(&raw).expect("the artifact is JSON");
+    parsed["paging"]["defaultPageSize"]
+        .as_u64()
+        .expect("paging.defaultPageSize is a number") as usize
+}
+
+/// The variables the clients bind, keyed by the variable name each
+/// document uses. `limit` stays unset — the priciest value either corpus
+/// passes for it, since an absent limit charges the default page. A reply
+/// thread arrives as a count rather than a page (Q49), so neither corpus
+/// binds a replies page-size variable any more.
 ///
 /// Only variables a complexity expression reads need a value: the
 /// visitor resolves `first`/`last`/`limit` from the request at
 /// validation time, and a missing one is a validation error rather than
 /// a free field. A new paginated field with a new variable name lands
 /// here or fails loudly, which is the point.
+///
+/// `@include` flags are deliberately left unbound: the complexity
+/// visitor prices every branch of a document whatever its flags say, so
+/// leaving them unset measures the worst case, which is what a ceiling
+/// has to admit.
 fn client_variables() -> async_graphql::Variables {
+    let page = default_page_size();
     async_graphql::Variables::from_json(serde_json::json!({
-        "first": 20,
-        "commentsFirst": 20,
+        "first": page,
+        "commentsFirst": page,
         "limit": null,
     }))
 }
@@ -157,14 +181,29 @@ fn spreads_in(text: &str) -> BTreeSet<String> {
     out
 }
 
-/// Every `.graphql` file in one client's operation directory, split into
+/// Every `.graphql` file at or under `dir`, in path order.
+///
+/// Recursive, because both clients' toolchains are: Apollo Kotlin and the
+/// codegen preset pick up a document wherever it sits under the operation
+/// root, so a flat read would leave a document in a subdirectory building
+/// on a device and unmeasured here.
+fn graphql_files(dir: &Path) -> Vec<PathBuf> {
+    let mut files = Vec::new();
+    for entry in std::fs::read_dir(dir).unwrap_or_else(|e| panic!("read {}: {e}", dir.display())) {
+        let path = entry.expect("dir entry").path();
+        if path.is_dir() {
+            files.extend(graphql_files(&path));
+        } else if path.extension().is_some_and(|e| e == "graphql") {
+            files.push(path);
+        }
+    }
+    files
+}
+
+/// Every `.graphql` file in one client's operation tree, split into
 /// definitions.
 fn corpus(dir: &Path) -> Vec<Definition> {
-    let mut files: Vec<PathBuf> = std::fs::read_dir(dir)
-        .unwrap_or_else(|e| panic!("read {}: {e}", dir.display()))
-        .map(|entry| entry.expect("dir entry").path())
-        .filter(|path| path.extension().is_some_and(|e| e == "graphql"))
-        .collect();
+    let mut files = graphql_files(dir);
     files.sort();
     assert!(!files.is_empty(), "no documents under {}", dir.display());
     files

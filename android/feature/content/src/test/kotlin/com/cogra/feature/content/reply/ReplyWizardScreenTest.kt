@@ -16,6 +16,7 @@ import com.cogra.domain.media.VideoFrame
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.PickedAsset
 import com.cogra.feature.content.wizard.RefusedPick
+import com.cogra.feature.content.wizard.UploadFailure
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -364,7 +365,7 @@ class ReplyWizardScreenTest {
     @Test
     fun aFailedUploadSaysSo() {
         val failed = composerWithWords().copy(
-            picked = listOf(PickedAsset(URI_A, upload = AssetUpload.Failed("refused"))),
+            picked = listOf(PickedAsset(URI_A, upload = AssetUpload.Failed(UploadFailure.REFUSED_PICTURE))),
         )
 
         compose.setContent { Wizard(failed) }
@@ -419,7 +420,7 @@ class ReplyWizardScreenTest {
     @Test
     fun aRefusedFileIsListedWhereItWasOfferedWithNoRetry() {
         val state = composerWithWords().copy(
-            refused = listOf(RefusedPick(null, "That file isn't a picture or a video CoGra can read.")),
+            refused = listOf(RefusedPick(null, UploadFailure.UNREADABLE_FILE)),
         )
         compose.setContent { Wizard(state) }
 
@@ -445,8 +446,8 @@ class ReplyWizardScreenTest {
     fun everyRefusedFileGetsItsOwnLine() {
         val state = composerWithWords().copy(
             refused = listOf(
-                RefusedPick(URI_CLIP, "That video is too big — a comment's video can be up to 50 MB."),
-                RefusedPick(null, "That file isn't a picture or a video CoGra can read."),
+                RefusedPick(URI_CLIP, UploadFailure.COMMENT_VIDEO_TOO_BIG),
+                RefusedPick(null, UploadFailure.UNREADABLE_FILE),
             ),
         )
         compose.setContent { Wizard(state) }
@@ -536,7 +537,7 @@ class ReplyWizardScreenTest {
     private fun failedClip() = composerWithClip().let { state ->
         state.copy(
             picked = state.picked.map {
-                it.copy(upload = AssetUpload.Failed("That video didn't upload."))
+                it.copy(upload = AssetUpload.Failed(UploadFailure.REFUSED_VIDEO, "That video didn't upload."))
             },
         )
     }

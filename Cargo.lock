@@ -173,6 +173,7 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tower",
+ "tower-http",
  "tracing",
  "tracing-subscriber",
  "uuid",
@@ -2205,11 +2206,8 @@ dependencies = [
 name = "l1-standin"
 version = "0.1.0"
 dependencies = [
- "anyhow",
- "chrono",
  "common",
  "ed25519-dalek",
- "hex",
  "rand 0.8.8",
  "sqlx",
  "thiserror 2.0.20",
@@ -4494,6 +4492,7 @@ dependencies = [
  "futures-util",
  "http",
  "http-body",
+ "http-body-util",
  "pin-project-lite",
  "tower",
  "tower-layer",

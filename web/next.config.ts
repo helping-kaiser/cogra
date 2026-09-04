@@ -12,40 +12,6 @@ const privateNetworkOrigins = [
   ...Array.from({ length: 16 }, (_, i) => `172.${16 + i}.*.*`),
 ];
 
-// Where served media lives. The contract mints ABSOLUTE urls from
-// MEDIA_BASE_URL, so `next/image` sees an external src and needs the host
-// allowlisted — `images.domains` was removed in Next 16, and `remotePatterns`
-// is the documented replacement.
-//
-// THE ALLOWLIST IS NOT OPTIONAL IN DEVELOPMENT. Next checks by HOSTNAME for
-// every src that does not begin with `/`, and it makes no exception for the
-// app's own origin: dev's same-origin `http://localhost:3000/media/...` is an
-// absolute url like any other, so an empty pattern list rejects every served
-// picture — a throw in dev, a 400 from the optimizer in a build. The default
-// therefore mirrors the API's own (`crates/api/src/media/mod.rs`), so the two
-// agree about where media lives even when neither is given the env var.
-//
-// `protocol`, `port`, and `search` are pinned rather than left to the implied
-// `**` wildcard: the docs warn that omitting them "may allow malicious actors
-// to optimize urls you did not intend", and an image optimizer pointed at an
-// attacker-chosen host is an open proxy.
-const mediaOrigin = process.env.MEDIA_BASE_URL ?? "http://localhost:3000/media";
-const mediaPatterns = (() => {
-  const url = new URL(mediaOrigin);
-  return [
-    {
-      protocol: url.protocol.replace(":", "") as "http" | "https",
-      hostname: url.hostname,
-      port: url.port,
-      // D6 puts every asset under the base url's own path; nothing else on
-      // that host is ours to optimize. Taken from the url rather than fixed at
-      // `/media`, which a media origin serving from any other path would miss.
-      pathname: `${url.pathname.replace(/\/$/, "")}/**`,
-      search: "",
-    },
-  ];
-})();
-
 // The API's own origin, taken from the GraphQL url the same way every other
 // consumer does. Upload traffic goes here rather than to the media origin: the
 // bytes are being GIVEN to the API, and only the finished asset is served from
@@ -80,26 +46,25 @@ const nextConfig: NextConfig = {
   experimental: {
     proxyTimeout: UPLOAD_PROXY_TIMEOUT_MS,
   },
+  // THE OPTIMIZER IS OFF, FOR THE WHOLE APP. Served media is display-ready by
+  // construction: the client re-encodes every still to WebP within 1080x1440
+  // before upload (D11), so a second pass would re-encode bytes that need no
+  // work — and video posters are frames of an already-encoded clip. The
+  // decision was previously made one `<Image unoptimized>` at a time, which
+  // left a `remotePatterns`/`formats`/`qualities` block that nothing read:
+  // `unoptimized` short-circuits in `generateImgAttrs` before any of it is
+  // consulted, and the hostname allowlist lives in the `/_next/image` route an
+  // unoptimized image never requests. `images.unoptimized` is Next's own
+  // app-wide form of the decision — it is a first-class image config key,
+  // defaulting to false (`node_modules/next/dist/shared/lib/image-config.js`)
+  // — so it is stated once, here. The `formats` and `qualities` entries that
+  // stood beside it were the framework's own defaults restated.
+  //
+  // Turning it back on means restoring `remotePatterns` for MEDIA_BASE_URL's
+  // host — the contract mints absolute media urls, and an empty pattern list
+  // rejects every one of them.
   images: {
-    remotePatterns: mediaPatterns,
-    // THE OTHER HALF OF THE SAME PROBLEM, and the one the allowlist hides.
-    // Next refuses to fetch an absolute image url whose hostname resolves to a
-    // PRIVATE ip — `localhost`, or the LAN address a phone reaches the dev
-    // server on — and reports it with the same "not allowed" message the
-    // allowlist uses, so an allowlisted host still fails. In development the
-    // media origin IS that private address by design (the `/media` proxy
-    // below), and fetching it is the intent rather than an SSRF: the flag is
-    // therefore on in development and OFF in production, where a private-ip
-    // media origin would be exactly the mistake the guard exists to catch.
-    dangerouslyAllowLocalIP: process.env.NODE_ENV !== "production",
-    // Stored assets are already WebP — the client re-encodes before upload
-    // (D11) — so the optimizer's only remaining job is resizing, and it should
-    // not spend a second lossy pass converting between modern formats.
-    formats: ["image/webp"],
-    // Next 16 defaults `qualities` to [75]; a `quality` prop outside the list
-    // is coerced to the nearest member, so the value the tiles ask for has to
-    // be declared here to be honoured.
-    qualities: [75],
+    unoptimized: true,
   },
   // Pin Turbopack's workspace root to this package: root inference has
   // repeatedly crashed the dev server mid-run in the monorepo layout

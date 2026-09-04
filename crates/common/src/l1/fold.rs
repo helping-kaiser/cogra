@@ -48,8 +48,28 @@ impl NetStance {
 
 /// Sum-then-clip. `clip` returns the parameters to the master formula's
 /// domain — the range-safety property of layer1-interface.md §11.3.
+///
+/// Two values `clamp` alone leaves outside that domain, both normalised
+/// here so the reference is at least as defensive as the clients that
+/// re-implement it:
+///
+/// - `-0.0` is not a direction. It arises wherever a difference of equals
+///   is negated — on the clients, from a pad whose vertical axis is
+///   inverted — and `-0.0 == 0.0` compares true while the two serialise
+///   differently, so an unnormalised zero travels into a record as a
+///   value of its own.
+/// - `NaN` names no point in the range at all, and `f64::clamp` returns
+///   it unchanged. The origin is the only answer in domain that carries
+///   no direction, so that is what a nonsense parameter folds to. It is a
+///   floor, not a semantic: a sum that reached `NaN` is refused where
+///   sums are assembled ([`BundleSum::severance_cost`]), because there
+///   the answer would be fabricated rather than merely bounded.
 pub fn clip(x: f64) -> f64 {
-    x.clamp(-LIMIT, LIMIT)
+    if x.is_nan() {
+        return 0.0;
+    }
+    let bounded = x.clamp(-LIMIT, LIMIT);
+    if bounded == 0.0 { 0.0 } else { bounded }
 }
 
 impl BundleSum {
@@ -91,14 +111,34 @@ impl BundleSum {
     /// representable, so the counter-records sum to the negation of the
     /// bundle whatever order the store adds them in.
     pub fn severance_batch(&self) -> Vec<(f64, f64)> {
-        let reach = self.p_d.abs().max(self.p_i.abs());
-        if reach == 0.0 {
+        let n = self.reach_steps();
+        if n == 0 {
             return vec![];
         }
-        let n = (reach.ceil() as u32).max(1);
         let d = walk_back(self.p_d, n);
         let i = walk_back(self.p_i, n);
         d.into_iter().zip(i).collect()
+    }
+
+    /// `⌈max(|Σ_d|, |Σ_i|)⌉` — the one place the step count is computed, so
+    /// the staged batch and the quoted cost cannot drift apart.
+    ///
+    /// A non-finite sum on *either* axis yields no steps — `f64::max` drops
+    /// a `NaN`, so the axes are tested before they are compared. Such a sum
+    /// names no bundle a batch could net, and every alternative answer is
+    /// fabricated: the saturating float-to-integer cast turns `inf` into a
+    /// `u32::MAX`-element allocation, and `f64::min` turns `NaN` into a
+    /// whole-step counter-record for a value that has none. Refusing the
+    /// value where sums are assembled is the store's own boundary.
+    fn reach_steps(&self) -> usize {
+        if !self.p_d.is_finite() || !self.p_i.is_finite() {
+            return 0;
+        }
+        let reach = self.p_d.abs().max(self.p_i.abs());
+        if reach == 0.0 {
+            return 0;
+        }
+        (reach.ceil() as usize).max(1)
     }
 
     /// How many counter-records [`severance_batch`] would stage —
@@ -110,18 +150,14 @@ impl BundleSum {
     ///
     /// [`severance_batch`]: BundleSum::severance_batch
     pub fn severance_cost(&self) -> usize {
-        let reach = self.p_d.abs().max(self.p_i.abs());
-        if reach == 0.0 {
-            return 0;
-        }
-        (reach.ceil() as usize).max(1)
+        self.reach_steps()
     }
 }
 
 /// One axis's walk-back: `n` values summing to exactly `-total`, each in
 /// `[-1, 1]`, front-loaded in whole steps so every partial remainder stays
 /// exactly representable.
-fn walk_back(total: f64, n: u32) -> Vec<f64> {
+fn walk_back(total: f64, n: usize) -> Vec<f64> {
     let sign = if total > 0.0 { -1.0 } else { 1.0 };
     let mut remaining = total.abs();
     (0..n)
@@ -149,6 +185,10 @@ mod tests {
     /// they may never disagree — a read surface quoting one number while
     /// the write path stages another is the failure this pins.
     ///
+    /// The non-finite pairs are sums no bundle can reach, so neither
+    /// surface may invent an answer for one: the cast that saturates and
+    /// the `min` that swallows a `NaN` are what they pin shut.
+    ///
     /// The quoted severance cost is the batch it prices, so a read surface and the write path can never disagree about it.
     /// ´claim:fold:the-quoted-cost-is-the-batch-it-prices´
     #[test]
@@ -161,6 +201,10 @@ mod tests {
             (2.5, -1.2),
             (-3.4, 2.9),
             (0.0, 7.1),
+            (f64::NAN, f64::NAN),
+            (f64::NAN, 0.5),
+            (f64::INFINITY, 0.0),
+            (f64::NEG_INFINITY, 2.0),
         ] {
             let bundle = sum(p_d, p_i);
             assert_eq!(
@@ -169,6 +213,27 @@ mod tests {
                 "at ({p_d}, {p_i})"
             );
         }
+        assert_eq!(sum(f64::INFINITY, 0.0).severance_cost(), 0);
+        assert!(sum(f64::NAN, f64::NAN).severance_batch().is_empty());
+    }
+
+    /// The two values `clamp` leaves outside the domain. `is_sign_negative`
+    /// rather than `==`, because `-0.0 == 0.0` is true and would let an
+    /// unnormalised zero pass.
+    ///
+    /// A clip answers with a value in the domain for every input, negative zero and NaN included.
+    /// ´claim:fold:a-clip-answers-in-domain-for-every-input´
+    #[test]
+    fn clip_normalises_negative_zero_and_nan() {
+        assert!(!clip(-0.0).is_sign_negative(), "-0.0 is not a direction");
+        assert!(
+            !sum(0.3, 0.3).project(-0.3, -0.3).p_d.is_sign_negative(),
+            "and neither is a landing that arrived at zero from above"
+        );
+        assert_eq!(clip(f64::NAN), 0.0);
+        assert_eq!(clip(f64::INFINITY), LIMIT);
+        assert_eq!(clip(f64::NEG_INFINITY), -LIMIT);
+        assert!(sum(-0.0, f64::NAN).fold().is_severed());
     }
 
     /// A fold clips into the unit range on both axes, whatever the bundle's sum reached.

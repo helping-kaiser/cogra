@@ -45,17 +45,35 @@ copy_into() {
     echo "$n"
 }
 
+# A corpus that ended up empty is the failure this script exists to make
+# impossible: the campaign after it finds nothing and reports a clean run,
+# which is indistinguishable from a campaign that found nothing because
+# there was nothing wrong. A mistyped or moved root fails here instead.
+seed_into() {
+    local target="$1" dest="$2"
+    shift 2
+    local n
+    n="$(copy_into "$dest" "$@")"
+    if [ "$n" -eq 0 ]; then
+        echo "seed.sh: no seeds for $target — a campaign over an empty corpus reports nothing" >&2
+        exit 1
+    fi
+    echo "seeded $n files -> $target"
+}
+
+# stderr is not suppressed: when a root is missing, find's own message is
+# the only thing that says which one.
 mapfile -t md < <(find "$root/docs" "$root/crates" "$root/android" "$root/web" \
-    -name '*.md' -not -path '*/node_modules/*' -not -path '*/target/*' 2>/dev/null || true)
+    -name '*.md' -not -path '*/node_modules/*' -not -path '*/target/*')
 mapfile -t rs < <(find "$root/crates" -name '*.rs' \
-    -not -path '*/fuzz/*' -not -path '*/target/*' 2>/dev/null || true)
+    -not -path '*/fuzz/*' -not -path '*/target/*')
 mapfile -t toml < <(find "$root/crates" -name '*.toml' \
-    -not -path '*/fuzz/*' -not -path '*/target/*' 2>/dev/null || true)
+    -not -path '*/fuzz/*' -not -path '*/target/*')
 
-for f in "$root"/*.md; do [ -f "$f" ] && md+=("$f"); done
+for f in "$root"/*.md; do [ -f "$f" ] || continue; md+=("$f"); done
 
-echo "seeded $(copy_into "$here/corpus/pretokenize_rust" "${rs[@]}") rust files -> pretokenize_rust"
-echo "seeded $(copy_into "$here/corpus/scan_region" "${md[@]}" "${rs[@]}") files -> scan_region"
-echo "seeded $(copy_into "$here/corpus/markdown_regions" "${md[@]}") markdown files -> markdown_regions"
-echo "seeded $(copy_into "$here/corpus/adoption_load" \
-    "$root/corpus-adoption.toml" "$root/Cargo.toml" "${toml[@]}") toml files -> adoption_load"
+seed_into pretokenize_rust "$here/corpus/pretokenize_rust" "${rs[@]}"
+seed_into scan_region "$here/corpus/scan_region" "${md[@]}" "${rs[@]}"
+seed_into markdown_regions "$here/corpus/markdown_regions" "${md[@]}"
+seed_into adoption_load "$here/corpus/adoption_load" \
+    "$root/corpus-adoption.toml" "$root/Cargo.toml" "${toml[@]}"

@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -28,6 +29,7 @@ import com.cogra.core.designsystem.v2.media.CoverPick
 import com.cogra.core.designsystem.v2.media.CoverRow
 import com.cogra.core.designsystem.v2.token.MediaOverlay
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.feature.content.R
 
 /**
  * `ComposeCover` — the video's face.
@@ -123,6 +125,8 @@ private fun CoverPreview(model: Any?, durationMs: Int) {
 
 @Composable
 private fun DurationBadge(label: String, modifier: Modifier = Modifier) {
+    // Hoisted: `semantics {}` is not a composable scope.
+    val spoken = stringResource(R.string.content_clip_length, label)
     Text(
         text = label,
         style = MaterialTheme.typography.labelSmall,
@@ -131,7 +135,7 @@ private fun DurationBadge(label: String, modifier: Modifier = Modifier) {
             .clip(RoundedCornerShape(Space.x1))
             .background(MediaOverlay.Badge)
             .padding(horizontal = Space.x2, vertical = 1.dp)
-            .semantics { contentDescription = "Length $label" }
+            .semantics { contentDescription = spoken }
             .testTag("wizard_cover_duration"),
     )
 }

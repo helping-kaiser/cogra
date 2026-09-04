@@ -15,6 +15,10 @@ const server = startMswServer();
 const invited: MeUser = {
   id: "u1",
   handle: "ada",
+  // The account's attached key. Null here because this fixture never
+  // signs — the guard that reads it refuses before any leg runs, which
+  // is a path this file's own tests do not walk.
+  actorPubkey: null,
   displayName: { value: null },
   accountState: "MEMBER",
   hasReciprocated: false,

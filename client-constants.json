@@ -1,0 +1,39 @@
+{
+  "media": {
+    "altTextChars": 1000,
+    "commentAttachments": 4,
+    "commentVideoBytes": 52428800,
+    "maxPixelDimension": 4096,
+    "minMultipartPartBytes": 5242880,
+    "postAttachments": 10,
+    "postVideoBytes": 104857600,
+    "resumableThresholdBytes": 8388608,
+    "stillBytes": 10485760
+  },
+  "paging": {
+    "defaultPageSize": 20,
+    "maxPageSize": 100
+  },
+  "registration": {
+    "handleCharsetPattern": "^[a-z0-9_]+$",
+    "handleMaxChars": 30,
+    "handleMinChars": 3,
+    "passwordMinChars": 12
+  },
+  "stance": {
+    "tapDefault": 0.1
+  },
+  "version": 1,
+  "writeSigner": {
+    "sealPollAttempts": 5,
+    "sealPollIntervalMs": 1000,
+    "terminalRefusals": [
+      "SIGNATURE_INVALID",
+      "STAGED_WRITE_EXPIRED",
+      "NOT_FOUND",
+      "BAD_INPUT",
+      "FORBIDDEN",
+      "WRITE_RULE_FAILED"
+    ]
+  }
+}

@@ -699,6 +699,34 @@ impl Partition {
             .iter()
             .find(|rule| rule.path.matches_str(&relative))
     }
+
+    /// Whether `path` stands exactly at a root a rule marks optional.
+    ///
+    /// Prefix matching is the wrong question here and containment is not
+    /// meant: the carrier walk asks this of a link entry to decide whether
+    /// to cross it, and only the root itself is configured — a link deeper
+    /// inside an optional tree is not what the adoption data named.
+    ///
+    /// ```
+    /// use cogra_linter::Adoption;
+    /// use std::path::Path;
+    ///
+    /// # let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../corpus-adoption.toml");
+    /// # let adoption = Adoption::load(Path::new(path)).expect("ruled adoption data");
+    /// let omega = &adoption.partition;
+    ///
+    /// assert!(omega.is_optional_root(Path::new("tmp_dev")));
+    /// assert!(!omega.is_optional_root(Path::new("tmp_dev/notes")));
+    /// assert!(!omega.is_optional_root(Path::new("docs")));
+    /// ```
+    #[must_use]
+    pub fn is_optional_root(&self, path: &Path) -> bool {
+        let relative = relative_str(path);
+        self.rules
+            .iter()
+            .filter(|rule| rule.optional)
+            .any(|rule| rule.path.as_str().trim_end_matches('/') == relative)
+    }
 }
 
 /// One rule of Ω.

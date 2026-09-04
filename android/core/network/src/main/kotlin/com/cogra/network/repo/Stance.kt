@@ -24,8 +24,10 @@ import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
+import com.cogra.network.graphql.CommentStanceQuery
+import com.cogra.network.graphql.PostStanceQuery
 import com.cogra.network.graphql.PrepareSeveranceMutation
-import com.cogra.network.graphql.ViewerStanceQuery
+import com.cogra.network.graphql.ProfileStanceQuery
 import com.cogra.network.graphql.fragment.StanceBundleFields
 import com.cogra.network.graphql.type.PrepareSeveranceInput
 import com.cogra.network.graphql.type.StancePickInput
@@ -36,8 +38,22 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/** Which stance-able root answered for a target id. */
+/**
+ * Which stance-able root answered for a target id. The declaration
+ * order is the probe order: a post is what a feed is made of, so it is
+ * asked first.
+ */
 private enum class TargetKind { POST, COMMENT, USER }
+
+/**
+ * What one root said about a target.
+ *
+ * The absent case — no answer at all — is `null` rather than a member
+ * here, because "this root does not hold that id" and "this root holds
+ * it but there is no viewer" are answered differently: the first moves
+ * the probe on, the second is a refusal the guard can act on.
+ */
+private class RootAnswer(val bundle: StanceBundleFields?)
 
 @Singleton
 class StanceRepositoryImpl @Inject constructor(
@@ -121,54 +137,58 @@ class StanceRepositoryImpl @Inject constructor(
     }
 
     /**
-     * The one read behind all three: `viewerStance` is a node field, so
-     * an unclassified target asks every stance-able root and keeps
-     * whichever answered.
+     * The one read behind all three.
+     *
+     * A target whose class is already known asks its own root and
+     * nothing else; an unclassified one is probed in [TargetKind]'s
+     * order and stops at the first root that answers. That probe is
+     * why the memo above exists — it happens once per target, and
+     * every read after it is a single document.
      */
     private suspend fun bundle(
         target: String,
         pick: StancePair?,
         includePending: Boolean,
     ): Outcome<StanceBundleFields> = guard.run {
-        val known = kinds[target]
-        client.query(
-            ViewerStanceQuery(
-                target = target,
-                pick = Optional.presentIfNotNull(
-                    pick?.let { StancePickInput(it.pDirected, it.pInterest) },
-                ),
-                includePending = includePending,
-                asPost = known == null || known == TargetKind.POST,
-                asComment = known == null || known == TargetKind.COMMENT,
-                asUser = known == null || known == TargetKind.USER,
-            ),
-        ).fetch().flatMap { data ->
-            val post = data.post
-            val comment = data.comment
-            val user = data.user
-            val answered = when {
-                post != null -> TargetKind.POST to post.viewerStance?.stanceBundleFields
-                comment != null -> TargetKind.COMMENT to comment.viewerStance?.stanceBundleFields
-                user != null -> TargetKind.USER to user.viewerStance?.stanceBundleFields
-                else -> null
+        val picked = Optional.presentIfNotNull(
+            pick?.let { StancePickInput(it.pDirected, it.pInterest) },
+        )
+        for (kind in kinds[target]?.let { listOf(it) } ?: TargetKind.entries) {
+            when (val read = ask(kind, target, picked, includePending)) {
+                is Outcome.Failed -> return@run Outcome.Failed(read.cause)
+                is Outcome.Refused -> return@run Outcome.Refused(read.errors)
+                is Outcome.Success -> {
+                    val answer = read.value ?: continue
+                    kinds[target] = kind
+                    // A node that answered with a null bundle has an
+                    // unauthenticated reader behind it, or one with no
+                    // actor on the graph. The first is the common case
+                    // and the guard refreshes and replays on it; the
+                    // second costs that one wasted refresh and then
+                    // reports the same refusal.
+                    return@run answer.bundle?.let { Outcome.Success(it) } ?: unauthenticatedRefusal()
+                }
             }
-            if (answered == null) {
-                // Either the id names nothing stance-able, or a
-                // remembered class went stale under a vanished node —
-                // forget it so the next read probes again.
-                kinds.remove(target)
-                return@flatMap Outcome.Refused(
-                    listOf(UserError(ErrorCode.NOT_FOUND, "no such stance target", listOf("target"))),
-                )
-            }
-            val (kind, fold) = answered
-            kinds[target] = kind
-            // A node that answered with a null bundle has an
-            // unauthenticated reader behind it, or one with no actor on
-            // the graph. The first is the common case and the guard
-            // refreshes and replays on it; the second costs that one
-            // wasted refresh and then reports the same refusal.
-            fold?.let { Outcome.Success(it) } ?: unauthenticatedRefusal()
         }
+        // Either the id names nothing stance-able, or a remembered
+        // class went stale under a vanished node — forget it so the
+        // next read probes again.
+        kinds.remove(target)
+        Outcome.Refused(listOf(UserError(ErrorCode.NOT_FOUND, "no such stance target", listOf("target"))))
+    }
+
+    /** One root's answer, or null where that root does not hold the id. */
+    private suspend fun ask(
+        kind: TargetKind,
+        target: String,
+        pick: Optional<StancePickInput?>,
+        includePending: Boolean,
+    ): Outcome<RootAnswer?> = when (kind) {
+        TargetKind.POST -> client.query(PostStanceQuery(target, pick, includePending)).fetch()
+            .map { data -> data.post?.let { RootAnswer(it.viewerStance?.stanceBundleFields) } }
+        TargetKind.COMMENT -> client.query(CommentStanceQuery(target, pick, includePending)).fetch()
+            .map { data -> data.comment?.let { RootAnswer(it.viewerStance?.stanceBundleFields) } }
+        TargetKind.USER -> client.query(ProfileStanceQuery(target, pick, includePending)).fetch()
+            .map { data -> data.user?.let { RootAnswer(it.viewerStance?.stanceBundleFields) } }
     }
 }

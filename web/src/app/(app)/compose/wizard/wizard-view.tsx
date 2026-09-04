@@ -20,6 +20,8 @@ import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { preparePost } from "@/lib/api/content-api";
+import { hasFieldErrors, partitionFieldErrors } from "@/lib/api/field-errors";
+import { firstRefusalMessage, writeRefusalMessage } from "@/lib/ui/error-messages";
 import { fetchReferenceCandidates } from "@/lib/api/references-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
@@ -42,6 +44,7 @@ import {
   type WizardState,
 } from "@/lib/compose/wizard";
 import { captureFrames, probeVideo } from "@/lib/ui2/media/video";
+import { newComposeId } from "@/lib/compose/ids";
 import { screenPick, type PickRefusal } from "@/lib/compose/pick";
 import {
   composeDraftStore,
@@ -59,13 +62,6 @@ import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import { PickedSheet } from "@/lib/ui2/compose/picked-sheet";
 import { SealStep, type SealSheet } from "./seal-step";
-
-/** The refusal path shapes the batched sections use, down to their index. */
-function pathIndex(field: readonly string[] | null, head: string): number | null {
-  if (field === null || field.length < 2 || field[0] !== head) return null;
-  const index = Number(field[1]);
-  return Number.isInteger(index) ? index : null;
-}
 
 /** A stable empty list, so the preview effect does not re-run on every render. */
 const NO_ASSETS: readonly PickedAsset[] = [];
@@ -200,7 +196,7 @@ export function ComposeWizard({
         if (first !== undefined) {
           dispatch({
             type: "coverIfUnset",
-            cover: { id: `cover-${Date.now()}`, file: first, frame: 0, upload: { kind: "waiting" } },
+            cover: { id: newComposeId(), file: first, frame: 0, upload: { kind: "waiting" } },
           });
         }
       })
@@ -220,7 +216,7 @@ export function ComposeWizard({
     if (cover !== null) started.current.delete(cover.id);
     dispatch({
       type: "cover",
-      cover: { id: `cover-${Date.now()}`, file, frame, upload: { kind: "waiting" } },
+      cover: { id: newComposeId(), file, frame, upload: { kind: "waiting" } },
     });
     if (video !== undefined) {
       started.current.delete(video.id);
@@ -245,8 +241,8 @@ export function ComposeWizard({
     if (outcome.accepted.length === 0) return;
     dispatch({
       type: "pick",
-      assets: outcome.accepted.map((file, index) => ({
-        id: `${Date.now()}-${index}-${file.name}`,
+      assets: outcome.accepted.map((file) => ({
+        id: newComposeId(),
         file,
         kind: outcome.kind,
       })),
@@ -365,6 +361,7 @@ export function ComposeWizard({
       started.current.add(cover.id);
       void runVideoUpload(
         client,
+        guard,
         video,
         cover,
         (upload) => dispatch({ type: "upload", id: video.id, upload }),
@@ -380,7 +377,7 @@ export function ComposeWizard({
         dispatch({ type: "upload", id: asset.id, upload }),
       );
     }
-  }, [uploading, state.assets, video, cover, ratio, client, dispatch]);
+  }, [uploading, state.assets, video, cover, ratio, client, guard, dispatch]);
 
   const retry = (id: string) => {
     started.current.delete(id);
@@ -443,27 +440,20 @@ export function ComposeWizard({
     }
     if (prepared.kind === "refused") {
       setBusy(false);
-      const perTag: Record<number, string> = {};
-      const perReference: Record<number, string> = {};
-      let general: string | null = null;
-      for (const error of prepared.errors) {
-        const tag = pathIndex(error.field, "tags");
-        const reference = pathIndex(error.field, "references");
-        if (tag !== null) perTag[tag] = error.message;
-        else if (reference !== null) perReference[reference] = error.message;
-        else general = general ?? error.message;
-      }
-      setTagErrors(perTag);
-      setReferenceErrors(perReference);
+      const partition = partitionFieldErrors(prepared.errors, (error) =>
+        writeRefusalMessage(error.code),
+      );
+      setTagErrors(partition.perTag);
+      setReferenceErrors(partition.perReference);
       // A refusal that landed on a section is shown on that section's own chip,
       // so the seal only speaks when nothing else can.
       setRefusal(
-        general ??
-          (Object.keys(perTag).length + Object.keys(perReference).length > 0
+        partition.general ??
+          (hasFieldErrors(partition)
             ? "Something in the details was refused."
             : "The server refused this write."),
       );
-      if (Object.keys(perTag).length + Object.keys(perReference).length > 0) {
+      if (hasFieldErrors(partition)) {
         dispatch({ type: "goto", step: "details" });
       }
       return;
@@ -473,8 +463,7 @@ export function ComposeWizard({
   };
 
   const finish = async (node: string, writes: readonly StagedWriteView[]) => {
-    const results = [];
-    for (const staged of writes) results.push(await signer.signStaged(staged));
+    const results = await signer.sign(writes);
     setBusy(false);
 
     if (results.every((result) => result.kind === "done")) {
@@ -506,7 +495,7 @@ export function ComposeWizard({
     const refused = results.find((result) => result.kind === "refused");
     setRefusal(
       refused && refused.kind === "refused"
-        ? (refused.errors[0]?.message ?? "The post wasn't signed.")
+        ? firstRefusalMessage(refused.errors, "The post wasn't signed.")
         : "The post wasn't signed. Nothing was spent.",
     );
   };

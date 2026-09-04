@@ -34,38 +34,9 @@
 
 use sqlx::PgPool;
 
-/// Which view of the graph a topics read takes: L1's — only what has
-/// landed — or L2's, which also counts one actor's acts still in flight
-/// (api-spec.md "Conventions", the `includePending` split).
-///
-/// The pending half names *whose* acts it counts, because a staged write
-/// is not on the graph: only its own author may see it. Passing an actor
-/// other than the requesting viewer would leak an unlanded act.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TopicView<'a> {
-    Landed,
-    IncludingPending { actor: &'a str },
-}
-
-impl<'a> TopicView<'a> {
-    /// The `includePending` argument as the API takes it: pending rows
-    /// count only in the L2 view, and only when there is a viewer whose
-    /// own in-flight acts they can be.
-    pub fn from_include_pending(include_pending: bool, viewer: Option<&'a str>) -> Self {
-        match (include_pending, viewer) {
-            (true, Some(actor)) => TopicView::IncludingPending { actor },
-            _ => TopicView::Landed,
-        }
-    }
-
-    /// `(pending counted, whose)` — the shape the queries bind.
-    fn params(self) -> (bool, &'a str) {
-        match self {
-            TopicView::Landed => (false, ""),
-            TopicView::IncludingPending { actor } => (true, actor),
-        }
-    }
-}
+/// The fold view a topics read takes — see [`crate::view::PendingView`],
+/// which every fold with a pending half shares.
+pub use crate::view::PendingView as TopicView;
 
 /// Which Tag records a topic read admits — feed-ranking.md §4's channel
 /// test, the same test that decides which records a viewer's topic feed
@@ -173,6 +144,7 @@ pub async fn topics_of(
                  AND l.source = $1
                  AND r.author = $2
                  AND NOT r.payload_marked
+                 AND NOT l.census_unknown
              UNION ALL
                SELECT s.target, s.p_d, s.p_i, TRUE, 0, 0, 0, s.pre_signed_at
                FROM staged_writes s
@@ -230,6 +202,15 @@ pub async fn topics_of(
 /// identifier: a minted node names its genesis act, a Profile names its
 /// actor's atom, and an atom cannot contain a colon — which is what makes
 /// that split unambiguous (`common::l1::identifier`).
+///
+/// The gate's `ELSE NULL` is the deliberate half of that rule, not an
+/// oversight: the grammar's other two constructors are `addr:` (an
+/// Actor) and `name:` (a Type). A Type is a commons anchored vacuously
+/// and has no author at all, so it can carry no author-owned claim.
+/// Whether an Actor node can be tagged — and so whether `addr:` should
+/// resolve to its own atom the way `prof:` does — is a seam question for
+/// the census, not a rule this fold gets to invent, so the class stays
+/// excluded until the seam answers. Excluded either way, but stated.
 pub async fn tagged_with(
     pool: &PgPool,
     canonical_name: &str,
@@ -256,9 +237,11 @@ pub async fn tagged_with(
                WHERE l.leg = 't' AND l.family = 'tag'
                  AND l.target = $1
                  AND NOT r.payload_marked
+                 AND NOT l.census_unknown
                  AND (NOT $2 OR r.author = CASE
                          WHEN l.source LIKE 'mint:act:%' THEN split_part(l.source, ':', 3)
                          WHEN l.source LIKE 'prof:%'     THEN split_part(l.source, ':', 2)
+                         ELSE NULL
                      END)
              UNION ALL
                SELECT s.middle, s.author, s.p_d, s.p_i, TRUE, 0, 0, 0, s.pre_signed_at
@@ -274,6 +257,7 @@ pub async fn tagged_with(
                  AND (NOT $2 OR s.author = CASE
                          WHEN s.middle LIKE 'mint:act:%' THEN split_part(s.middle, ':', 3)
                          WHEN s.middle LIKE 'prof:%'     THEN split_part(s.middle, ':', 2)
+                         ELSE NULL
                      END)
            ),
            winners AS (
@@ -312,4 +296,33 @@ pub async fn tagged_with(
             pending: r.pending,
         })
         .collect())
+}
+
+#[cfg(test)]
+mod name_tests {
+    use super::{TopicsError, type_name};
+
+    /// A Tag's terminal target is a Type identifier and nothing else.
+    /// Formation forbids the alternatives, so a target that is not one
+    /// means the mirror is corrupt — which is a refusal, never a name
+    /// with a stray prefix left on it.
+    ///
+    /// Only a Type identifier yields a name; every other target refuses.
+    /// ´claim:topics:only-a-type-identifier-yields-a-name´
+    #[test]
+    fn only_a_type_identifier_yields_a_name() {
+        assert_eq!(
+            type_name("name:bot-defense").expect("a name"),
+            "bot-defense"
+        );
+        assert_eq!(type_name("name:").expect("a name"), "");
+        assert!(matches!(
+            type_name("prof:alice"),
+            Err(TopicsError::NotATypeTarget(t)) if t == "prof:alice"
+        ));
+        assert!(matches!(
+            type_name("bot-defense"),
+            Err(TopicsError::NotATypeTarget(_))
+        ));
+    }
 }

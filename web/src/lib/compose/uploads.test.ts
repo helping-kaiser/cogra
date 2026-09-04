@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ApolloClient } from "@apollo/client";
 import { CENTERED } from "@/lib/ui2/media/crop";
+import type { AuthGuard } from "@/lib/session/guard";
 import { runUpload, runVideoUpload, waitingAssets } from "./uploads";
 import type { AssetUpload, CoverAsset, PickedAsset } from "./wizard";
 
@@ -33,6 +34,12 @@ function steps() {
 function clientAnswering(data: unknown): ApolloClient {
   return { mutate: vi.fn(async () => ({ data })) } as unknown as ApolloClient;
 }
+
+/**
+ * A guard that only passes the block through. The refresh-and-replay it adds
+ * is `guard.test.ts`'s subject; here it would only hide which call was made.
+ */
+const guard: AuthGuard = { run: (block) => block() };
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -137,7 +144,10 @@ describe("runUpload", () => {
     expect(variables.input).toEqual({ file: expect.any(File) });
   });
 
-  it("shows the server's own refusal, and leaves it retryable", async () => {
+  // The refusal is read off its CODE, never off `UserError.message` — which the
+  // contract calls developer-facing fallback text. A rate limit clears, so it
+  // stays retryable.
+  it("reads the refusal off its code, and leaves it retryable", async () => {
     encodable();
     const client = clientAnswering({
       uploadMedia: {
@@ -153,7 +163,7 @@ describe("runUpload", () => {
 
     expect(seen.at(-1)).toEqual({
       kind: "failed",
-      message: "too many uploads, wait before retrying",
+      message: "Too many attempts — wait a moment and try again.",
       retryable: true,
     });
   });
@@ -233,7 +243,7 @@ describe("runVideoUpload", () => {
     const video = steps();
     const poster = steps();
 
-    await runVideoUpload(client, clip, cover, video.step, poster.step);
+    await runVideoUpload(client, guard, clip, cover, video.step, poster.step);
 
     const calls = (client.mutate as ReturnType<typeof vi.fn>).mock.calls;
     expect(calls).toHaveLength(2);
@@ -252,7 +262,7 @@ describe("runVideoUpload", () => {
     encodable();
     const client = clientAnsweringInTurn("media-cover", "media-video");
 
-    await runVideoUpload(client, clip, cover, steps().step, steps().step);
+    await runVideoUpload(client, guard, clip, cover, steps().step, steps().step);
 
     expect(stripVideoMetadata).toHaveBeenCalledWith(clip.file);
     const sent = (client.mutate as ReturnType<typeof vi.fn>).mock.calls[1]![0].variables.input
@@ -270,7 +280,7 @@ describe("runVideoUpload", () => {
     const client = clientAnsweringInTurn("media-cover", "media-video");
     const video = steps();
 
-    await runVideoUpload(client, clip, cover, video.step, steps().step);
+    await runVideoUpload(client, guard, clip, cover, video.step, steps().step);
 
     // Falling back to the picked bytes would upload the file with its metadata
     // intact — the exact outcome the strip exists to prevent. And it is not
@@ -295,12 +305,12 @@ describe("runVideoUpload", () => {
     const video = steps();
     const poster = steps();
 
-    await runVideoUpload(client, clip, cover, video.step, poster.step);
+    await runVideoUpload(client, guard, clip, cover, video.step, poster.step);
 
-    // The server's own words on the cover…
+    // The refusal on the cover, named as a cover rather than as a file…
     expect(poster.seen.at(-1)).toEqual({
       kind: "failed",
-      message: "the file is larger than 10485760 bytes",
+      message: "That cover wasn't accepted — try a different one.",
       retryable: true,
     });
     // …and a video that never went up at all.
@@ -320,7 +330,7 @@ describe("runVideoUpload", () => {
       }),
     );
     await expect(
-      runVideoUpload(clientAnswering({}), clip, cover, () => {}, () => {}),
+      runVideoUpload(clientAnswering({}), guard, clip, cover, () => {}, () => {}),
     ).resolves.toBeUndefined();
   });
 });

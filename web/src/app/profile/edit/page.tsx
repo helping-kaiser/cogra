@@ -15,6 +15,7 @@ import {
   type MediaSelection,
 } from "@/lib/api/profile-api";
 import { uploadMedia } from "@/lib/api/media-api";
+import { firstRefusalMessage, mediaRefusalMessage } from "@/lib/ui/error-messages";
 import { encodeForUpload } from "@/lib/ui2/media/encode-image";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useAuthPhase } from "@/lib/session/provider";
@@ -101,7 +102,9 @@ export default function ProfileEditPage() {
       selection: "unchanged",
       error:
         result.kind === "refused"
-          ? (result.errors[0]?.message ?? "The server refused that picture.")
+          ? (result.errors[0] === undefined
+              ? "The server refused that picture."
+              : mediaRefusalMessage(result.errors[0].code, "picture"))
           : "Couldn't reach the server.",
     };
   };
@@ -139,7 +142,7 @@ export default function ProfileEditPage() {
     );
     if (prepared.kind === "refused") {
       setSubmitting(false);
-      setRefusedMessage(prepared.errors[0]?.message ?? "The server refused this update.");
+      setRefusedMessage(firstRefusalMessage(prepared.errors, "The server refused this update."));
       return;
     }
     if (prepared.kind === "failed") {
@@ -147,10 +150,7 @@ export default function ProfileEditPage() {
       setTransportFailed(true);
       return;
     }
-    const results = [];
-    for (const staged of prepared.value) {
-      results.push(await signer.signStaged(staged));
-    }
+    const results = await signer.sign(prepared.value);
     setSubmitting(false);
     if (results.every((result) => result.kind === "done")) {
       router.push("/profile");

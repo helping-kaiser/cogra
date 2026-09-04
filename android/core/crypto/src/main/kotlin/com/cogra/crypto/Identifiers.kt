@@ -65,6 +65,22 @@ private fun requireAtom(s: String): String {
 }
 
 /**
+ * The sequence of an act identifier: ASCII DIGITS ONLY.
+ *
+ * `toULongOrNull` accepts a leading `+`, so `act:alice:+1:opinion` would
+ * parse here and be refused by the reference — one identifier text that
+ * two clients disagree about, which is a divergence in the thing act ids
+ * exist to be. The digit check is stated before the conversion, and the
+ * `rejections` vectors pin it.
+ */
+private fun parseSeq(s: String): ULong {
+    if (s.isEmpty() || !s.all { it in '0'..'9' }) {
+        throw IdentifierException("invalid sequence value `$s`: digits only")
+    }
+    return s.toULongOrNull() ?: throw IdentifierException("sequence `$s` does not fit a u64")
+}
+
+/**
  * An authored-act identifier: act(author, s_q, family) — chosen by the
  * actor before submission, no host-assigned component.
  */
@@ -82,8 +98,7 @@ data class ActId(val author: String, val seq: ULong, val family: Family) {
             if (rest == s) throw IdentifierException("unparseable identifier `$s`")
             val parts = rest.split(":", limit = 3)
             if (parts.size != 3) throw IdentifierException("unparseable identifier `$s`")
-            val seq = parts[1].toULongOrNull()
-                ?: throw IdentifierException("invalid sequence value `${parts[1]}`")
+            val seq = parseSeq(parts[1])
             return ActId(parts[0], seq, Family.parse(parts[2]))
         }
     }

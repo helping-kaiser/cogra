@@ -39,6 +39,21 @@ describe("the sensitive reveal", () => {
     expect(screen.queryByTestId("detail-veil")).not.toBeInTheDocument();
   });
 
+  // "Shared across surfaces" is a claim about what is on screen NOW, not only
+  // about what a later mount reads back: two surfaces showing one node lift
+  // their veils together, without either being re-rendered by anything else.
+  it("lifts every mounted surface showing the node, not only the one clicked", () => {
+    render(
+      <>
+        <Surface nodeId="post-1" node={MARKED} testId="card" />
+        <Surface nodeId="post-1" node={MARKED} testId="page" />
+      </>,
+    );
+    fireEvent.click(screen.getByTestId("card-veil-reveal"));
+    expect(screen.queryByTestId("card-veil")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("page-veil")).not.toBeInTheDocument();
+  });
+
   it("is per node — revealing one says nothing about another", () => {
     render(
       <>

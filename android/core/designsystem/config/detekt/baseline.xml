@@ -1,0 +1,47 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:MediaThumb.kt:@Composable fun MediaThumb</ID>
+    <ID>LargeClass:StancePadTest.kt:StancePadTest</ID>
+    <ID>LongMethod:PickedPictures.kt:@Composable private fun PickedSheetRow</ID>
+    <ID>LongMethod:ReferenceChip.kt:@Composable fun ReferenceChip</ID>
+    <ID>LongMethod:SensitiveVeil.kt:@Composable fun SensitiveVeil</ID>
+    <ID>LongMethod:SeveranceConfirm.kt:@Composable fun SeveranceConfirm</ID>
+    <ID>LongMethod:StancePad.kt:@Composable fun StanceControl</ID>
+    <ID>LongMethod:StancePad.kt:@Composable private fun StancePadOverlay</ID>
+    <ID>LongMethod:TopicChip.kt:@Composable fun TopicChip</ID>
+    <ID>LongMethod:VideoPlayer.kt:@OptIn(UnstableApi::class) @Composable fun VideoPlayer</ID>
+    <ID>LongMethod:WizardHeader.kt:@Composable fun WizardHeader</ID>
+    <ID>MagicNumber:CropState.kt:100</ID>
+    <ID>MagicNumber:CropState.kt:191</ID>
+    <ID>MagicNumber:CropState.kt:4</ID>
+    <ID>MagicNumber:CropState.kt:5</ID>
+    <ID>MagicNumber:MediaCrop.kt:1.5f</ID>
+    <ID>MagicNumber:MediaGallery.kt:0.8f</ID>
+    <ID>MagicNumber:MediaGallery.kt:1.91f</ID>
+    <ID>MagicNumber:MediaGallery.kt:4</ID>
+    <ID>MagicNumber:MediaThumb.kt:0.65f</ID>
+    <ID>MagicNumber:MediaThumb.kt:100</ID>
+    <ID>MagicNumber:MediaTile.kt:0.5f</ID>
+    <ID>MagicNumber:MediaTile.kt:0.8f</ID>
+    <ID>MagicNumber:MediaTile.kt:1.91f</ID>
+    <ID>MagicNumber:MediaTokens.kt:MediaShape.Tall$4f</ID>
+    <ID>MagicNumber:MediaTokens.kt:MediaShape.Tall$5f</ID>
+    <ID>MagicNumber:MediaTokens.kt:MediaShape.Wide$1.91f</ID>
+    <ID>MagicNumber:ReferenceChip.kt:8</ID>
+    <ID>MagicNumber:SensitiveVeil.kt:1.91f</ID>
+    <ID>MagicNumber:StancePad.kt:50</ID>
+    <ID>MagicNumber:TopicChip.kt:8</ID>
+    <ID>MatchingDeclarationName:CropPreview.kt:CropTransformation : Transformation</ID>
+    <ID>MatchingDeclarationName:DiscardConfirm.kt:DiscardSubject</ID>
+    <ID>MatchingDeclarationName:MediaThumb.kt:ThumbBadge</ID>
+    <ID>MatchingDeclarationName:Previews.kt:ThemePreviews</ID>
+    <ID>MatchingDeclarationName:ReferenceChip.kt:ReferenceChipValues</ID>
+    <ID>MatchingDeclarationName:TopicChip.kt:TagChipValues</ID>
+    <ID>MaxLineLength:StancePadTest.kt:StancePadTest$landing = StanceLanding(StancePoint(0.0, 0.4), inertDirected = true, inertInterest = false, severance = false)</ID>
+    <ID>MaxLineLength:StancePadTest.kt:StancePadTest$landing = StanceLanding(StancePoint.Origin, inertDirected = true, inertInterest = true, severance = true)</ID>
+    <ID>SwallowedException:KeyGate.kt:e: ActivityNotFoundException</ID>
+    <ID>TooManyFunctions:CropState.kt:CropState</ID>
+  </CurrentIssues>
+</SmellBaseline>

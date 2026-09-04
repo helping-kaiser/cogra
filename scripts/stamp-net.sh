@@ -14,13 +14,44 @@
 # re-issued here too, and the CA that signs it is staged where the debug
 # Android build picks it up — a guest's app verifies that address the
 # same way their browser does.
+#
+# Exit codes: 0 stamped and certified, 1 nothing was done, 3 stamped but
+# NOT certified (mkcert absent). A caller that needs the certificate can
+# tell the partial run from the complete one, which exit 0 for both made
+# impossible.
+#
+# It needs iproute2 for the address, so it runs on Linux — inside the dev
+# shell, not on a Windows host.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 [ -f .env ] || { echo ".env not found (run make init first)"; exit 1; }
 
 IP=$(ip -4 route get 1.1.1.1 2>/dev/null | grep -oE 'src [0-9.]+' | awk '{print $2}')
-[ -n "$IP" ] || { echo "no routable IPv4 found"; exit 1; }
+[ -n "$IP" ] || { echo "no routable IPv4 found (this script needs iproute2 — run it inside the dev shell)"; exit 1; }
+
+# The five variables the edits below rewrite. sed substitutes zero times
+# without complaining and exits 0, so a .env predating one of them — the
+# realistic case, the media variables being younger than DATABASE_URL —
+# would be stamped for what it has and silently left alone for the rest.
+# Both halves of that are answered here: every name must be present before
+# any edit runs, and every name must carry the address afterwards.
+STAMPED="DATABASE_URL WEB_ORIGIN MEDIA_S3_ENDPOINT MEDIA_BASE_URL MEDIA_ORIGIN"
+
+for var in $STAMPED; do
+    grep -qE "^${var}=" .env || {
+        echo "${var} is not in .env — copy the line from .env.example and re-run" >&2
+        exit 1
+    }
+done
+
+# The edits are in place and unbacked, and `-include .env` in the Makefile
+# absorbs a malformed line rather than reporting it, so the original is
+# kept until every check below has passed.
+BACKUP="$(mktemp)"
+cp .env "$BACKUP"
+restore() { cp "$BACKUP" .env; rm -f "$BACKUP"; }
+trap 'restore' EXIT
 
 sed -i -E "s#^DATABASE_URL=postgres://([^@]+)@[^:/]+:#DATABASE_URL=postgres://\1@${IP}:#" .env
 sed -i -E "s#^WEB_ORIGIN=https?://[^:/]+#WEB_ORIGIN=https://${IP}#" .env
@@ -40,7 +71,17 @@ sed -i -E "s#^MEDIA_BASE_URL=https?://[^:/]+#MEDIA_BASE_URL=https://${IP}#" .env
 # stamped for the same split-distro reason as MEDIA_S3_ENDPOINT.
 sed -i -E "s#^MEDIA_ORIGIN=https?://[^:/]+#MEDIA_ORIGIN=http://${IP}#" .env
 
-grep -E '^(DATABASE_URL|WEB_ORIGIN|MEDIA_S3_ENDPOINT|MEDIA_BASE_URL|MEDIA_ORIGIN)=' .env
+for var in $STAMPED; do
+    grep -qE "^${var}=[^[:space:]]*${IP}" .env || {
+        echo "${var} did not take the stamp — its line does not match the pattern above" >&2
+        exit 1
+    }
+done
+
+trap - EXIT
+rm -f "$BACKUP"
+
+grep -E "^($(echo "$STAMPED" | tr ' ' '|'))=" .env
 echo "stamped ${IP}"
 
 # The certificate and the CA behind it. Browsers reach the dev server past
@@ -49,7 +90,7 @@ echo "stamped ${IP}"
 if ! command -v mkcert >/dev/null 2>&1; then
     echo "mkcert not found — certificate left as is; the app cannot reach ${IP}" >&2
     echo "  install it (https://github.com/FiloSottile/mkcert) and re-run" >&2
-    exit 0
+    exit 3
 fi
 
 CERT_DIR=web/certificates

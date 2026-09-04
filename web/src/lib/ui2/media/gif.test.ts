@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { countGifFrames, isAnimatedGif, isGifFile, sniffGif } from "./gif";
+import { countGifFrames, isAnimatedGif, sniffGif } from "./gif";
 
 /** Assembles a GIF from parts, so each test states only what it is about. */
 function gif({
@@ -113,16 +113,19 @@ describe("isAnimatedGif", () => {
     await expect(isAnimatedGif(still)).resolves.toBe(false);
   });
 
-  it("leaves every other format alone", async () => {
-    // A JPEG must never take the GIF path, whatever its bytes look like.
-    const jpeg = new Blob([gif({ frames: 2 }) as BlobPart], { type: "image/jpeg" });
-    await expect(isAnimatedGif(jpeg)).resolves.toBe(false);
+  // THE BYTES DECIDE, not the label. A `File`'s type is the operating
+  // system's guess from the extension, so an animated GIF renamed `.png`
+  // claims `image/png` — and it is precisely that file which used to skip the
+  // signature check and come out of the encoder as one silent frame.
+  it("finds the animation whatever the file claims to be", async () => {
+    const mislabelled = new Blob([gif({ frames: 2 }) as BlobPart], { type: "image/png" });
+    await expect(isAnimatedGif(mislabelled)).resolves.toBe(true);
   });
-});
 
-describe("isGifFile", () => {
-  it("sorts by the declared type, which is what the picker hands over", () => {
-    expect(isGifFile(new Blob([], { type: "image/gif" }))).toBe(true);
-    expect(isGifFile(new Blob([], { type: "image/webp" }))).toBe(false);
+  it("leaves bytes that are not a GIF alone, whatever they claim", async () => {
+    const jpeg = new Blob([new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10])], {
+      type: "image/gif",
+    });
+    await expect(isAnimatedGif(jpeg)).resolves.toBe(false);
   });
 });

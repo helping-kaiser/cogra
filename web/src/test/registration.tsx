@@ -45,11 +45,21 @@ export function fakeCeremony(overrides: Partial<KeyCeremony> = {}): KeyCeremony 
 }
 
 export function fakeWriteSigner(overrides: Partial<WriteSigner> = {}): WriteSigner {
-  return {
+  const signer: WriteSigner = {
     signStaged: vi.fn((staged: StagedWriteView) =>
       Promise.resolve({ kind: "done" as const, id: staged.id, state: "RELAYING" as const }),
     ),
+    // The batch leg is the real signer's shape — one `signStaged` per
+    // write, in order — and it reads `signer.signStaged` rather than
+    // closing over the default, so a test that scripts the single-write
+    // leg has scripted the batch too.
+    sign: vi.fn(async (writes: readonly StagedWriteView[]) => {
+      const results = [];
+      for (const staged of writes) results.push(await signer.signStaged(staged));
+      return results;
+    }),
     resume: vi.fn(() => Promise.resolve([])),
     ...overrides,
   };
+  return signer;
 }

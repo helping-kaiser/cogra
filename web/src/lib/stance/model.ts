@@ -25,12 +25,22 @@ export const ORIGIN: StancePair = { pDirected: 0, pInterest: 0 };
  */
 export const TAP_DEFAULT: StancePair = { pDirected: 0.1, pInterest: 0.1 };
 
+/**
+ * The reference's `clip` (`crates/common/src/l1/fold.rs`), value for
+ * value: NaN to the origin, the rest bounded into `[-1, +1]`, and a
+ * negative zero normalised away.
+ *
+ * NaN names no point in the range at all and `f64::clamp` returns it
+ * unchanged, so the origin — the one answer in domain carrying no
+ * direction — is what a nonsense parameter folds to. Negative zero is
+ * not a direction either: it arises from the pad's inverted vertical
+ * axis on any drag that never moved vertically, and `-0 === 0` compares
+ * true while the two serialise differently, so an unnormalised zero
+ * would travel into a record as a value of its own.
+ */
 export function clampDimension(value: number): number {
   if (Number.isNaN(value)) return 0;
   const bounded = Math.min(DIMENSION_MAX, Math.max(DIMENSION_MIN, value));
-  // Negative zero is not a direction. It arises from the pad's inverted
-  // vertical axis on any drag that never moved vertically, and it would
-  // otherwise travel into a record as a value of its own.
   return bounded === 0 ? 0 : bounded;
 }
 
@@ -45,8 +55,32 @@ export function samePair(a: StancePair, b: StancePair): boolean {
   return a.pDirected === b.pDirected && a.pInterest === b.pInterest;
 }
 
-// Whether a folded pair is routing-inert or severed is the FOLD's
-// statement about itself, and arrives as a flag on the read
-// (`stance-data.ts`). No predicate for it lives here: a client that
-// could compare a value against zero would eventually do so, and the
-// answer it reached would be its own rather than the graph's.
+// WHAT A STORED BUNDLE IS, THE GRAPH SAYS. `inert` and `severed` arrive
+// as flags on the read (`stance-data.ts`), and no surface re-derives
+// them from the served pair — the fold's statement about itself is the
+// answer, and a client's own comparison would be a second opinion.
+//
+// The two predicates below exist for the ONE thing that has no served
+// answer: the landing line under a drag, which folds the raw sums
+// against the pick locally so it can keep up with the thumb
+// (design.md §8.3, `landing.ts`). That fold is display, and `project`
+// is still what answers before anything is signed — but the flags it
+// reports have to mean what the graph means by them, so they are the
+// reference's own definitions rather than the pad's guess at them.
+
+/**
+ * Routing-inert on an axis — the reference's `NetStance::is_inert`:
+ * "an edge with either parameter at `0` is routing-inert; indifference
+ * is magnitude zero, not a third sign" (edges.md §1).
+ */
+export function isInert(pair: StancePair): boolean {
+  return pair.pDirected === 0 || pair.pInterest === 0;
+}
+
+/**
+ * Severance — the pair nets to `(0, 0)` (design.md §8.2), the
+ * reference's `NetStance::is_severed`.
+ */
+export function isSevered(pair: StancePair): boolean {
+  return pair.pDirected === 0 && pair.pInterest === 0;
+}

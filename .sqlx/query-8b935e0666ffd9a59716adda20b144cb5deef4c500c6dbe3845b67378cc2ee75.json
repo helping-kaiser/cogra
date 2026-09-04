@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE l1_acts SET status = 'accepted', epoch = $1,\n                act_time = published.act_time, position = published.position\n           FROM UNNEST($2::TEXT[], $3::BIGINT[], $4::BIGINT[])\n                AS published(act_id, act_time, position)\n          WHERE l1_acts.act_id = published.act_id",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "TextArray",
+        "Int8Array",
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8b935e0666ffd9a59716adda20b144cb5deef4c500c6dbe3845b67378cc2ee75"
+}

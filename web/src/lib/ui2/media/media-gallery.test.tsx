@@ -8,6 +8,7 @@ const items = (count: number, sourceRatio: number | null = 1): GalleryItem[] =>
     src: `/media/${index}`,
     altText: `Picture ${index + 1}`,
     sourceRatio,
+    mimeType: "image/webp",
   }));
 
 describe("MediaGallery", () => {
@@ -36,8 +37,8 @@ describe("MediaGallery", () => {
   it("renders every frame at the one shape, so the card never changes height per swipe", () => {
     // A mixed set on an explicit square frame — the comment case.
     const mixed: GalleryItem[] = [
-      { src: "/media/a", altText: "A", sourceRatio: 4 / 3 },
-      { src: "/media/b", altText: "B", sourceRatio: 1 },
+      { src: "/media/a", altText: "A", sourceRatio: 4 / 3, mimeType: "image/webp" },
+      { src: "/media/b", altText: "B", sourceRatio: 1, mimeType: "image/webp" },
     ];
     render(<MediaGallery items={mixed} ratio={1} />);
     expect(screen.getByTestId("media-gallery-page-0").style.aspectRatio).toBe("1 / 1");
@@ -51,8 +52,8 @@ describe("MediaGallery", () => {
 
   it("fits a picture whole when its shape is not the frame's, and fills when it is", () => {
     const mixed: GalleryItem[] = [
-      { src: "/media/a", altText: "A", sourceRatio: 4 / 3 },
-      { src: "/media/b", altText: "B", sourceRatio: 1 },
+      { src: "/media/a", altText: "A", sourceRatio: 4 / 3, mimeType: "image/webp" },
+      { src: "/media/b", altText: "B", sourceRatio: 1, mimeType: "image/webp" },
     ];
     render(<MediaGallery items={mixed} ratio={1} />);
     // The 4:3 frame is letterboxed inside the square; the square one fills it.

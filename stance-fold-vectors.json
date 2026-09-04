@@ -1,0 +1,316 @@
+{
+  "clip": [
+    {
+      "case": "zero",
+      "inputBits": "0000000000000000",
+      "outputBits": "0000000000000000"
+    },
+    {
+      "case": "negative zero",
+      "inputBits": "8000000000000000",
+      "outputBits": "0000000000000000"
+    },
+    {
+      "case": "in range",
+      "inputBits": "3fd999999999999a",
+      "outputBits": "3fd999999999999a"
+    },
+    {
+      "case": "in range, negative",
+      "inputBits": "bfd0000000000000",
+      "outputBits": "bfd0000000000000"
+    },
+    {
+      "case": "at the ceiling",
+      "inputBits": "3ff0000000000000",
+      "outputBits": "3ff0000000000000"
+    },
+    {
+      "case": "at the floor",
+      "inputBits": "bff0000000000000",
+      "outputBits": "bff0000000000000"
+    },
+    {
+      "case": "above the ceiling",
+      "inputBits": "4004000000000000",
+      "outputBits": "3ff0000000000000"
+    },
+    {
+      "case": "below the floor",
+      "inputBits": "c008000000000000",
+      "outputBits": "bff0000000000000"
+    },
+    {
+      "case": "not a number",
+      "inputBits": "7ff8000000000000",
+      "outputBits": "0000000000000000"
+    },
+    {
+      "case": "infinite",
+      "inputBits": "7ff0000000000000",
+      "outputBits": "3ff0000000000000"
+    },
+    {
+      "case": "negatively infinite",
+      "inputBits": "fff0000000000000",
+      "outputBits": "bff0000000000000"
+    }
+  ],
+  "landings": [
+    {
+      "case": "an empty bundle taking a tap",
+      "inert": false,
+      "landing": {
+        "pDirectedBits": "3fb999999999999a",
+        "pInterestBits": "3fb999999999999a"
+      },
+      "pick": {
+        "pDirectedBits": "3fb999999999999a",
+        "pInterestBits": "3fb999999999999a"
+      },
+      "rawSum": {
+        "pDirectedBits": "0000000000000000",
+        "pInterestBits": "0000000000000000"
+      },
+      "severed": false
+    },
+    {
+      "case": "a pick appends rather than replaces",
+      "inert": false,
+      "landing": {
+        "pDirectedBits": "3fe3333333333333",
+        "pInterestBits": "3fe3333333333333"
+      },
+      "pick": {
+        "pDirectedBits": "3fb999999999999a",
+        "pInterestBits": "3fb999999999999a"
+      },
+      "rawSum": {
+        "pDirectedBits": "3fe0000000000000",
+        "pInterestBits": "3fe0000000000000"
+      },
+      "severed": false
+    },
+    {
+      "case": "a pick clipped at the ceiling",
+      "inert": false,
+      "landing": {
+        "pDirectedBits": "3ff0000000000000",
+        "pInterestBits": "3ff0000000000000"
+      },
+      "pick": {
+        "pDirectedBits": "3ff0000000000000",
+        "pInterestBits": "3ff0000000000000"
+      },
+      "rawSum": {
+        "pDirectedBits": "3feccccccccccccd",
+        "pInterestBits": "3feccccccccccccd"
+      },
+      "severed": false
+    },
+    {
+      "case": "a counter-pick reaching severance",
+      "inert": true,
+      "landing": {
+        "pDirectedBits": "0000000000000000",
+        "pInterestBits": "0000000000000000"
+      },
+      "pick": {
+        "pDirectedBits": "bff0000000000000",
+        "pInterestBits": "bff0000000000000"
+      },
+      "rawSum": {
+        "pDirectedBits": "3ff0000000000000",
+        "pInterestBits": "3ff0000000000000"
+      },
+      "severed": true
+    },
+    {
+      "case": "a counter-pick against a sum beyond the clip",
+      "inert": false,
+      "landing": {
+        "pDirectedBits": "3ff0000000000000",
+        "pInterestBits": "3ff0000000000000"
+      },
+      "pick": {
+        "pDirectedBits": "bff0000000000000",
+        "pInterestBits": "bff0000000000000"
+      },
+      "rawSum": {
+        "pDirectedBits": "4014000000000000",
+        "pInterestBits": "4014000000000000"
+      },
+      "severed": false
+    },
+    {
+      "case": "a counter-pick that nets a sum beyond the clip",
+      "inert": true,
+      "landing": {
+        "pDirectedBits": "0000000000000000",
+        "pInterestBits": "0000000000000000"
+      },
+      "pick": {
+        "pDirectedBits": "c014000000000000",
+        "pInterestBits": "c014000000000000"
+      },
+      "rawSum": {
+        "pDirectedBits": "4014000000000000",
+        "pInterestBits": "4014000000000000"
+      },
+      "severed": true
+    },
+    {
+      "case": "inert on the directed axis alone",
+      "inert": true,
+      "landing": {
+        "pDirectedBits": "0000000000000000",
+        "pInterestBits": "3fd999999999999a"
+      },
+      "pick": {
+        "pDirectedBits": "bfd3333333333333",
+        "pInterestBits": "0000000000000000"
+      },
+      "rawSum": {
+        "pDirectedBits": "3fd3333333333333",
+        "pInterestBits": "3fd999999999999a"
+      },
+      "severed": false
+    },
+    {
+      "case": "inert on the interest axis alone",
+      "inert": true,
+      "landing": {
+        "pDirectedBits": "3fd999999999999a",
+        "pInterestBits": "0000000000000000"
+      },
+      "pick": {
+        "pDirectedBits": "0000000000000000",
+        "pInterestBits": "bfd3333333333333"
+      },
+      "rawSum": {
+        "pDirectedBits": "3fd999999999999a",
+        "pInterestBits": "3fd3333333333333"
+      },
+      "severed": false
+    },
+    {
+      "case": "a landing that would carry a negative zero",
+      "inert": true,
+      "landing": {
+        "pDirectedBits": "0000000000000000",
+        "pInterestBits": "0000000000000000"
+      },
+      "pick": {
+        "pDirectedBits": "bfd3333333333333",
+        "pInterestBits": "bfd3333333333333"
+      },
+      "rawSum": {
+        "pDirectedBits": "3fd3333333333333",
+        "pInterestBits": "3fd3333333333333"
+      },
+      "severed": true
+    }
+  ],
+  "severance": [
+    {
+      "batch": [],
+      "case": "an already-netted bundle",
+      "cost": 0,
+      "rawSum": {
+        "pDirectedBits": "0000000000000000",
+        "pInterestBits": "0000000000000000"
+      }
+    },
+    {
+      "batch": [
+        {
+          "pDirectedBits": "bfe0000000000000",
+          "pInterestBits": "bfe0000000000000"
+        }
+      ],
+      "case": "within one record's reach",
+      "cost": 1,
+      "rawSum": {
+        "pDirectedBits": "3fe0000000000000",
+        "pInterestBits": "3fe0000000000000"
+      }
+    },
+    {
+      "batch": [
+        {
+          "pDirectedBits": "bff0000000000000",
+          "pInterestBits": "3ff0000000000000"
+        }
+      ],
+      "case": "at exactly one record",
+      "cost": 1,
+      "rawSum": {
+        "pDirectedBits": "3ff0000000000000",
+        "pInterestBits": "bff0000000000000"
+      }
+    },
+    {
+      "batch": [
+        {
+          "pDirectedBits": "bfa999999999999a",
+          "pInterestBits": "0000000000000000"
+        }
+      ],
+      "case": "below one record",
+      "cost": 1,
+      "rawSum": {
+        "pDirectedBits": "3fa999999999999a",
+        "pInterestBits": "0000000000000000"
+      }
+    },
+    {
+      "batch": [
+        {
+          "pDirectedBits": "bff0000000000000",
+          "pInterestBits": "3ff0000000000000"
+        },
+        {
+          "pDirectedBits": "bff0000000000000",
+          "pInterestBits": "3fc9999999999998"
+        },
+        {
+          "pDirectedBits": "bfe0000000000000",
+          "pInterestBits": "0000000000000000"
+        }
+      ],
+      "case": "beyond one record",
+      "cost": 3,
+      "rawSum": {
+        "pDirectedBits": "4004000000000000",
+        "pInterestBits": "bff3333333333333"
+      }
+    },
+    {
+      "batch": [
+        {
+          "pDirectedBits": "3ff0000000000000",
+          "pInterestBits": "bff0000000000000"
+        },
+        {
+          "pDirectedBits": "3ff0000000000000",
+          "pInterestBits": "bff0000000000000"
+        },
+        {
+          "pDirectedBits": "3ff0000000000000",
+          "pInterestBits": "bfeccccccccccccc"
+        },
+        {
+          "pDirectedBits": "3fd9999999999998",
+          "pInterestBits": "8000000000000000"
+        }
+      ],
+      "case": "beyond one record, both axes",
+      "cost": 4,
+      "rawSum": {
+        "pDirectedBits": "c00b333333333333",
+        "pInterestBits": "4007333333333333"
+      }
+    }
+  ],
+  "version": 1
+}
