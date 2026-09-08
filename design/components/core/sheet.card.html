@@ -1,4 +1,4 @@
-<!-- @dsCard group="Components" viewport="760x520" name="The bottom sheet" subtitle="A drawer of choices the reader opened and can drop — up from the bottom edge, back down to it" -->
+<!-- @dsCard group="Components" viewport="1040x700" name="The bottom sheet" subtitle="A drawer of choices the reader opened and can drop — up from the bottom edge, back down to it" -->
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -36,8 +36,29 @@ function Demo(){
       <SheetItem label="Report" onSelect={()=>setOpen(false)}/>
     </BottomSheet>
   </div>
+  <div className="frame">
+    <div className="inner">
+      <PostCard author={{handle:"ada",displayName:"Ada Okonkwo"}} timestamp="2h" score="15.20" comments={3}
+                content="Took the coast road instead of the tunnel. Four hours longer, worth every minute."
+                menuItems={[{label:"Copy link"},{label:"Report"}]}/>
+    </div>
+    <BottomSheet open ariaLabel="Comments" height="calc(100% - 72px)">
+      <SheetTitle>Comments</SheetTitle>
+      <div style={{padding:"0 24px",display:"flex",flexDirection:"column",gap:12,fontSize:"var(--text-body-small)",color:"var(--text-secondary)"}}>
+        <span>That stretch after the second bend is the reason I keep a camera in the glovebox.</span>
+        <span>Which headland is the third one, counting from the ferry landing?</span>
+      </div>
+    </BottomSheet>
+    <BottomSheet open stacked ariaLabel="Comment actions">
+      <SheetTitle>This comment</SheetTitle>
+      <SheetItem label="License terms"/>
+      <SheetItem label="Cite in a new post"/>
+    </BottomSheet>
+  </div>
   <div className="col">
-    <span className="lbl">The overflow menu on the card above opens the same sheet — that is its default presentation on both clients</span>
+    <span className="lbl">The overflow menu on the first card opens the same sheet — that is its default presentation on both clients</span>
+    <span className="lbl">Beside it, a sheet over a sheet: the menu is stacked over the comments thread</span>
+    <p><b>A sheet over a sheet is drawn as layers.</b> <code>stacked</code> lifts the sheet a layer, so the wash it already draws falls between the two rather than under both — and the thread below keeps its top edge, its handle and its title in view, dimmed.</p>
     <p><b>It covers the bottom bar.</b> A sheet is a decision surface; a navigation bar under it offers to leave mid-decision.</p>
     <p><b>Top corners only</b>, at the 28px rung. The bottom edge is the screen's — a rounded bottom flush to the edge draws a gap that is not there.</p>
     <p><b>The grab handle is not a control.</b> It says which edge this came from and which way it goes back.</p>

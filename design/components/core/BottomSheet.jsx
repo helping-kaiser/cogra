@@ -11,9 +11,10 @@ import React from "react";
    drawer is how a product starts asking permission to show a menu.
 
    Rules it keeps:
-   · `surfaceContainerHigh` at the 28px rung, TOP CORNERS ONLY — the bottom edge
-     is the screen's, and a rounded bottom on a surface flush to the edge draws a
-     gap that is not there.
+   · `surfaceContainerHigh` at the 28px rung — a rung higher when it is
+     `stacked` — TOP CORNERS ONLY: the bottom edge is the screen's, and a
+     rounded bottom on a surface flush to the edge draws a gap that is not
+     there.
    · The grab handle is `outlineVariant`, 32×4, and it is not a control: it says
      which edge this came from and which way it goes back.
    · It covers the bottom bar rather than sitting above it. A sheet is a decision
@@ -29,7 +30,18 @@ import React from "react";
    the comments sheet fills the screen up to a sliver below the top (readme §13,
    2026-08-28), and a pinned input row at its foot needs the surface itself to
    own the height. The children then manage their own scrolling. */
-export function BottomSheet({ open = false, onClose, ariaLabel, children, inline = false, maxHeight = "62%", height }) {
+
+/* `stacked` is the sheet that opens over another sheet — the comment's menu and
+   the comment's license, both over the comments thread. A SHEET OVER A SHEET IS
+   DRAWN AS LAYERS. Left flat, the upper sheet's wash resolves beneath the lower
+   sheet's surface: nothing dims, and two surfaces of one colour meet at a
+   shadowless seam. Stacked, the sheet takes the layer above, so the wash it
+   already draws — the same `--scrim-dialog` — falls BETWEEN the two and dims
+   what it covers, while the sheet below keeps its top edge, its handle and its
+   title visible above this one. Its surface takes the next tonal rung,
+   `surfaceContainerHighest`: elevation is tonal (`tokens/semantic.css`), and two
+   surfaces at one rung claim one elevation. */
+export function BottomSheet({ open = false, onClose, ariaLabel, children, inline = false, maxHeight = "62%", height, stacked = false }) {
   const [shown, setShown] = React.useState(open);
   const [closing, setClosing] = React.useState(false);
 
@@ -57,6 +69,10 @@ export function BottomSheet({ open = false, onClose, ariaLabel, children, inline
     return () => document.removeEventListener("keydown", onKey);
   }, [open, inline, onClose]);
 
+  /* The wash's layer; the surface rides one above it, so a stacked sheet's wash
+     clears the sheet below instead of sliding under it. */
+  const washLayer = stacked ? 42 : 40;
+
   const surface = (
     <div
       role="dialog"
@@ -67,7 +83,7 @@ export function BottomSheet({ open = false, onClose, ariaLabel, children, inline
         display: "flex",
         flexDirection: "column",
         gap: 0,
-        background: "var(--surface-dialog)",
+        background: stacked ? "var(--surface-container-highest)" : "var(--surface-dialog)",
         color: "var(--on-surface)",
         borderRadius: "var(--radius-extra-large) var(--radius-extra-large) 0 0",
         padding: "var(--space-2) 0 calc(var(--space-6) + env(safe-area-inset-bottom, 0px))",
@@ -78,7 +94,7 @@ export function BottomSheet({ open = false, onClose, ariaLabel, children, inline
               left: 0,
               right: 0,
               bottom: 0,
-              zIndex: 41,
+              zIndex: washLayer + 1,
               ...(height ? { height, overflow: "hidden" } : { maxHeight, overflowY: "auto" }),
             }),
       }}
@@ -97,7 +113,7 @@ export function BottomSheet({ open = false, onClose, ariaLabel, children, inline
         aria-hidden="true"
         onPointerDown={onClose}
         className={closing ? "cg-scrim-out" : "cg-scrim-in"}
-        style={{ position: "fixed", inset: 0, zIndex: 40, background: "var(--scrim-dialog)" }}
+        style={{ position: "fixed", inset: 0, zIndex: washLayer, background: "var(--scrim-dialog)" }}
       />
       {surface}
     </>
