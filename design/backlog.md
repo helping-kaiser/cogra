@@ -435,9 +435,6 @@ Two follow-ups the round surfaces, still open:
   seal's add-rows, and the reply composer itself.
 
   **What the last nine surfaced**, each a ruling still owed:
-  - **`DiscardConfirm` gives the filled button to the destructive
-    answer**, where `RemoveConfirm` gives it to the safe one.
-    Preserved as drawn.
   - **The composer's "+ Add" speaks in two voices.** `ReplyCompose`
     says it as a bare small word; `ReplyPictures` and its siblings
     say the same thing as a small text pill. The same three-voices
