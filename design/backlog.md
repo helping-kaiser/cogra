@@ -460,11 +460,6 @@ Two follow-ups the round surfaces, still open:
     enclose the row, so the line now stands beneath it.
 - **What the compose-wizard conversion surfaced**, each needing a
   ruling before anyone fills it in:
-  - **`SheetTitle` has no trailing slot.** The license and sensitive
-    sheets each need the sheet's name plus the screen's one "?" (and
-    the sensitive one the switch besides), so both assemble the row
-    by hand — the same six-copies drift that made `stageLabel` and
-    `help` slots on `WizardHeader`.
   - **`HelpDot` has no tonal-panel variant.** It spends `--primary`
     on the glyph and `--border-hairline` on the ring, which inside
     the key-absent `tertiary-container` block is the second colour

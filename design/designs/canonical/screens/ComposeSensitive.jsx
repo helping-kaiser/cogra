@@ -12,9 +12,8 @@
    with its state on it. The system has no switch master: this is the only one
    in it, and one instance is a control, not a component.
 
-   THE HEADING ROW IS NOT `SheetTitle` either. That master is the sheet's name
-   and nothing beside it, by rule; this row is the name, the screen's one "?"
-   and the switch the sheet exists for. */
+   THE HEADING ROW IS `SheetTitle`, and the "?" and the switch ride its
+   `trailing` slot — the name and what the line carries besides it. */
 export function Screen() {
   return (
     <>
@@ -31,24 +30,26 @@ export function Screen() {
       </div>
 
       <BottomSheet open ariaLabel="Mark as sensitive">
+        <SheetTitle
+          trailing={
+            <>
+              <HelpDot ariaLabel="Sensitive" />
+              <button
+                type="button"
+                role="switch"
+                aria-checked="true"
+                aria-label="Mark as sensitive"
+                className="cg-state cg-focus cg-hit"
+                style={{ position: "relative", width: 44, height: 24, flex: "none", border: 0, padding: 0, borderRadius: "var(--radius-full)", background: "var(--primary)", cursor: "pointer" }}
+              >
+                <span aria-hidden="true" style={{ position: "absolute", right: 3, top: 3, width: 18, height: 18, borderRadius: "var(--radius-full)", background: "var(--on-primary)" }} />
+              </button>
+            </>
+          }
+        >
+          Mark as sensitive
+        </SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 24px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <h2 style={{ margin: 0, flex: 1, fontSize: "var(--text-title-large)", lineHeight: "var(--text-title-large--line-height)", fontWeight: "var(--text-title-large--font-weight)" }}>
-              Mark as sensitive
-            </h2>
-            <HelpDot ariaLabel="Sensitive" />
-            <button
-              type="button"
-              role="switch"
-              aria-checked="true"
-              aria-label="Mark as sensitive"
-              className="cg-state cg-focus cg-hit"
-              style={{ position: "relative", width: 44, height: 24, flex: "none", border: 0, padding: 0, borderRadius: "var(--radius-full)", background: "var(--primary)", cursor: "pointer" }}
-            >
-              <span aria-hidden="true" style={{ position: "absolute", right: 3, top: 3, width: 18, height: 18, borderRadius: "var(--radius-full)", background: "var(--on-primary)" }} />
-            </button>
-          </div>
-
           <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }}>
             Veils the pictures and the description until a reader chooses to look.
           </p>

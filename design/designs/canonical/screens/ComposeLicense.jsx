@@ -95,13 +95,8 @@ export function Screen() {
       </div>
 
       <BottomSheet open ariaLabel="License terms">
+        <SheetTitle trailing={<HelpDot ariaLabel="License" />}>License</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "0 24px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <h2 style={{ margin: 0, flex: 1, fontSize: "var(--text-title-large)", lineHeight: "var(--text-title-large--line-height)", fontWeight: "var(--text-title-large--font-weight)" }}>
-              License
-            </h2>
-            <HelpDot ariaLabel="License" />
-          </div>
           <QuietNote>Terms for anyone who reuses this.</QuietNote>
 
           <AxisLabel>Credit</AxisLabel>
