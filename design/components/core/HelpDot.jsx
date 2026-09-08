@@ -7,7 +7,20 @@ import React from "react";
    on the search boards and moved into the system when the filter sheet — a
    master — needed to carry one. */
 
-export function HelpDot({ ariaLabel = "What is this?", onOpen }) {
+/* `inverse` is `Button`'s word for the same situation: the component standing on
+   a TONAL PANEL instead of the page's ground. On the page the ring is
+   `--border-hairline` and the glyph `--primary`; inside a `tertiary-container`
+   block that pair is a second colour family arguing with the panel's own, so
+   there the dot takes the panel's `currentColor` for both. The geometry is the
+   same either way — 32px of ring inside the 48px target. Use it only inside such
+   a panel. */
+const RINGS = {
+  page: { border: "1px solid var(--border-hairline)", color: "var(--primary)" },
+  inverse: { border: "1px solid currentColor" },
+};
+
+export function HelpDot({ ariaLabel = "What is this?", onOpen, variant = "page" }) {
+  const ring = RINGS[variant] ?? RINGS.page;
   return (
     <button
       type="button"
@@ -24,6 +37,7 @@ export function HelpDot({ ariaLabel = "What is this?", onOpen }) {
         borderRadius: "var(--radius-full)",
         cursor: "pointer",
         flex: "none",
+        color: variant === "inverse" ? "inherit" : undefined,
       }}
     >
       <span
@@ -34,8 +48,7 @@ export function HelpDot({ ariaLabel = "What is this?", onOpen }) {
           height: "32px",
           width: "32px",
           borderRadius: "var(--radius-full)",
-          border: "1px solid var(--border-hairline)",
-          color: "var(--primary)",
+          ...ring,
           fontFamily: "var(--font-sans)",
           fontSize: "var(--text-label-large)",
           fontWeight: "var(--text-label-large--font-weight)",
