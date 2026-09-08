@@ -2473,6 +2473,74 @@ a master, and every master is one component with variants as props
   to end — which is the round's whole claim: the canvas redrawn
   from masters without the graph moving.
 
+### The parked rulings — 2026-09-08
+
+The questions the conformance round held, answered by jakob and
+applied in one pass. Every visible pixel on the canvas moves for one
+of these and nothing else.
+
+- **An overlay sits over the REAL surface.** A sheet, a dialog or a
+  wash covers the surface the reader came from, so the board draws
+  that surface whole rather than a shortened stand-in of it — the
+  round's largest visible change, on six boards. The post's seal, the
+  reply's seal and the post edit are each written once in
+  `_shared.jsx` and drawn by the board that owns them and by every
+  overlay over them, by the same rule that moved `ReplyDraft` there:
+  a body on a second board stops being board-local. The under-layers
+  stay inert, which is what their `scanExempt` lines already say, so
+  the graph does not move.
+- **The text body's clamp is derived against the picture the reader
+  sees.** `--media-max-height` caps a 4:5 crop before its uncapped
+  447.5px — 376px on the 390×844 board — so the ceiling is
+  floor(376 ÷ 20) = **18** lines, and a text post again stands as
+  tall as the media post beside it rather than ~64px taller.
+- **`SheetTitle` owns the heading's row.** `trailing` takes what the
+  line carries besides the name — the screen's one "?", the switch a
+  sheet exists for — and the license and sensitive sheets stop
+  assembling that row by hand. Their names take the master's
+  `title-medium`.
+- **`HelpDot` has an `inverse`**, `Button`'s word for the same
+  situation: on a tonal panel the ring and the glyph take the panel's
+  own `currentColor` instead of spending `--border-hairline` and
+  `--primary` inside a block that has a colour family already. The
+  two key-absent boards adopt it and render byte-identical.
+- **An acts row that offers an act is the button.** `ActsCard`'s
+  second row kind has no value slot to clip, so the seal's add-rows
+  keep the 48px target their word promises instead of having it cut
+  back to the ink. Truncation stays where a long value needs it.
+- **A pattern exemplar wires only the behaviour it exemplifies** —
+  the `scanExempt` convention's stated rule now (§13, canvas pages),
+  with `NetworkError` as its exemplar: the surface's other controls
+  belong to the board that owns them, and wiring them twice would
+  give one control two edges.
+- **The discard dialog gives its filled button to the safe answer**,
+  `RemoveConfirm`'s weighting. A think-twice dialog exists to make
+  the costly answer deliberate; the destructive word stays quiet.
+- **The license sheet reads the master's tiers.** `ATTRIBUTION_TIERS`
+  and `PROVENANCE_TIERS` carry the readings and their hints, so the
+  sheet keeps its own layout — one axis per section, one reading per
+  row — and cannot say a shorter version of what a license promises.
+- **The one-axis pad names a face the table has**: at +0.30 the
+  nearest `STANCE_ANCHORS` row is the first, 🙂 "Nice".
+- **A component never states a raw type value** (§7). The quiet note
+  and the acts footer take `--text-label-small--letter-spacing`, and
+  the label-small line gains 0.1px of tracking on 32 boards.
+- **The composer's "+ Add" speaks in one voice** — the bare small
+  word on all five sites. An action riding the end of somebody else's
+  line is an `InlineAction`; the pill is for an action that owns its
+  line.
+- **The edit's staged reference shows the whole staged fact**, as
+  `ComposeDetails` draws it: the kind under the name, and the pair
+  the citation signs.
+- **Item 35 ruled** (video playback): media is full-bleed on card and
+  detail alike, the handover is a shared element on the media frame
+  with the chrome fading, and a video post's card description says
+  `1 clip · 0:24` rather than "1 picture". All three are conform
+  items for the apps.
+- **The gate**: 927 edges · 81 gaps · flows 58/53/5, unchanged end to
+  end — the under-layers grew real controls, and every one of them
+  sits on a board the scan already exempts.
+
 ## 14. Index
 
 **Root**
