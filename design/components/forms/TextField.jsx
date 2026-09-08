@@ -16,7 +16,18 @@ import React from "react";
    lines under one input is where the eye stops knowing which one is live.
 
    The message is always words (direction-by-words) — this component renders it
-   verbatim, no icon. */
+   verbatim, no icon.
+
+   THE SUPPORTING LINE IS WIRED TO THE FIELD (jakob's ruling, the slice-2.5
+   round), the way the W3C's own forms tutorial wires one: the line carries an
+   id and the control names it in `aria-describedby`, so the rule a field will
+   accept is read out with the field rather than sitting beside it unreachable.
+   In the error state the control adds `aria-invalid` (WCAG technique ARIA21)
+   and the line takes `role="alert"`, because a message that appears in answer
+   to something the reader just did has to announce itself — a screen reader
+   that has moved on never comes back to look. Announcing is uniform: every
+   field error, not a judgement per field about which ones would be noticed
+   anyway. None of it draws a pixel. */
 
 /* THE LABEL ROW, ASSIGNED ONCE. `TextField` renders it over its own field, and
    the composer's captions over sections that are NOT fields — Pictures, Video,
@@ -81,6 +92,8 @@ export function TextField({
 }) {
   const generated = React.useId();
   const fieldId = id ?? generated;
+  const supportId = `${fieldId}-support`;
+  const described = error || hint ? supportId : undefined;
   const shared = {
     borderRadius: "var(--radius-extra-small)",
     border: error ? "1px solid var(--error)" : "1px solid var(--border-field)",
@@ -105,6 +118,8 @@ export function TextField({
           rows={rows}
           value={value}
           placeholder={placeholder}
+          aria-describedby={described}
+          aria-invalid={error ? "true" : undefined}
           onChange={(event) => onChange && onChange(event.target.value)}
           style={shared}
         />
@@ -115,12 +130,16 @@ export function TextField({
           value={value}
           placeholder={placeholder}
           autoComplete={autoComplete}
+          aria-describedby={described}
+          aria-invalid={error ? "true" : undefined}
           onChange={(event) => onChange && onChange(event.target.value)}
           style={shared}
         />
       )}
       {(error || hint) && (
         <span
+          id={supportId}
+          role={error ? "alert" : undefined}
           style={{
             fontSize: "var(--text-body-small)",
             lineHeight: "var(--text-body-small--line-height)",
