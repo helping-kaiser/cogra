@@ -14,43 +14,10 @@
    THE CITE ROW SAYS "+ Cite something". The hand board spelled it out — "a
    post, a person, a comment, an item" — while the staged twin said the short
    form, so one surface said two things depending on whether a reference had
-   landed. The picker's own screen is where the kinds are enumerated. */
+   landed. The picker's own screen is where the kinds are enumerated.
+
+   THE BODY IS `_shared.jsx`'s `ReplySealBody`, because the reply's stance pad
+   stands on this seal and draws it whole. */
 export function Screen() {
-  return (
-    <>
-      <WizardHeader
-        title="What you sign"
-        leaveLabel="Leave — the reply is discarded"
-        stageLabel="Last step"
-        help="Signed actions"
-      />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuietNote>Reply to "The long way home" — 89 characters.</QuietNote>
-
-        {/* One act signed, so no all-or-nothing subline: it appears the moment a
-            signature carries more than one thing (`ActsCard`'s rule). */}
-        <ActsCard
-          rows={[
-            { label: "Comment", value: "Reply to @ada's post", count: "1 action" },
-            ...ADD_ROWS,
-          ]}
-          total="1 signed action"
-        />
-
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow
-            label="Toward what you answer"
-            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
-            action="Adjust"
-          />
-          <FactRow label="License" value="Public domain — your default" action="Change" />
-          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
-        </div>
-
-        <div style={{ flex: 1 }} />
-
-        <SealFooter signLabel="Sign comment" />
-      </div>
-    </>
-  );
+  return <ReplySealBody />;
 }

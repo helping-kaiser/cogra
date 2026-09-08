@@ -608,6 +608,177 @@ const ADD_ROWS = [
   { label: "", action: "+ Cite something", count: "1 more action" },
 ];
 
+/* ── WHAT AN OVERLAY SITS ON (jakob's ruling, 2026-09-08) ──────────────────
+   A sheet, a dialog or a wash covers the surface the reader came from, and
+   that surface is the real one — not a shortened stand-in of it. An overlay
+   board therefore draws the board beneath it whole, and each of those bodies
+   is written once here for the `KeyPledge` reason: a body on a second board
+   stops being board-local, and three sketches of one seal are three chances
+   to disagree about it.
+
+   The bodies stay inert under their overlay — the boards say so in their
+   `scanExempt` lines — so nothing here is wired; it is drawn. */
+
+/* THE POST'S SEAL, whole — `ComposeSeal` itself, and what the stance pad, the
+   license sheet, the sensitive sheet and the "?" dialog stand on. */
+function ComposeSealBody() {
+  return (
+    <>
+      <WizardHeader title="What you sign" stageLabel="Last step" help="Signed actions" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
+        <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
+
+        <ActsCard
+          rows={[
+            { label: "Post", value: "Salt maps of the coast road", count: "1 action" },
+            {
+              label: "Topics",
+              value: (
+                <span style={{ display: "flex", gap: 6, overflow: "hidden", alignItems: "center" }}>
+                  <Chip label="#fieldnotes" tone="readout" />
+                  <Chip label="#coastroad" tone="readout" />
+                </span>
+              ),
+              count: "2 actions",
+            },
+            {
+              label: "References",
+              /* The staged citation carries the stance that rides with it, so
+                 the row is two lines: what is cited, and what signing it says
+                 about the citer. */
+              value: (
+                <span style={{ display: "flex", flexDirection: "column", padding: "6px 0", minWidth: 0 }}>
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>The long way home — @ada</span>
+                  <StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />
+                </span>
+              ),
+              count: "1 action",
+            },
+          ]}
+          total="4 signed actions"
+          note="they land together, or none does"
+        />
+
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <FactRow label="License" value="Public domain — your default" action="Change" />
+          <FactRow
+            label="Where you stand on it"
+            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
+            action="Adjust"
+          />
+          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+        </div>
+
+        <div style={{ flex: 1 }} />
+
+        <SealFooter signLabel="Sign and publish" />
+      </div>
+    </>
+  );
+}
+
+/* THE REPLY'S SEAL, whole — `ReplySeal` itself, and what the reply's stance pad
+   stands on. */
+function ReplySealBody() {
+  return (
+    <>
+      <WizardHeader
+        title="What you sign"
+        leaveLabel="Leave — the reply is discarded"
+        stageLabel="Last step"
+        help="Signed actions"
+      />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
+        <QuietNote>Reply to "The long way home" — 89 characters.</QuietNote>
+
+        {/* One act signed, so no all-or-nothing subline: it appears the moment a
+            signature carries more than one thing (`ActsCard`'s rule). */}
+        <ActsCard
+          rows={[
+            { label: "Comment", value: "Reply to @ada's post", count: "1 action" },
+            ...ADD_ROWS,
+          ]}
+          total="1 signed action"
+        />
+
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <FactRow
+            label="Toward what you answer"
+            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
+            action="Adjust"
+          />
+          <FactRow label="License" value="Public domain — your default" action="Change" />
+          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+        </div>
+
+        <div style={{ flex: 1 }} />
+
+        <SealFooter signLabel="Sign comment" />
+      </div>
+    </>
+  );
+}
+
+/* THE POST EDIT, whole — `EditCompose` itself, and what its acts sheet stands
+   on. */
+function EditComposeBody() {
+  return (
+    <>
+      <WizardHeader title="Edit post" leaveLabel="Leave — your draft is kept" help="Editing" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
+        <PickedRow
+          items={[{ src: "post-photo.jpg" }, { src: "inviter.jpg" }]}
+          caption="2 pictures — the body"
+          onManage={() => {}}
+        />
+
+        <TextField label="Title" corner="Optional" value="Salt maps of the coast road" />
+
+        <TextField
+          label="Description"
+          corner="Optional"
+          rows={2}
+          value="Rubbings from three weekends at low tide — paper against the salt crust."
+        />
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <FieldLabel>Topics</FieldLabel>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <TopicRemovable topic="fieldnotes" />
+            <TopicRemovable topic="saltmaps" />
+            <Button variant="outline" size="sm">Add a topic</Button>
+          </div>
+          <QuietNote>Withdrawn: #coastroad</QuietNote>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <FieldLabel>References</FieldLabel>
+          <StagedReference kind="post" name="The long way home — @ada" src="post-photo.jpg" />
+          <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <FactRow
+            label="License"
+            value="Public domain"
+            action={
+              <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
+                <Icon name="lock" size={16} />
+              </span>
+            }
+          />
+          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+        </div>
+
+        <div style={{ flex: 1 }} />
+
+        <ActsFooter count={3} />
+        <Button style={{ width: "100%" }}>Sign the edit</Button>
+      </div>
+    </>
+  );
+}
+
 /* The comment sheet's composer foot: your face, and the field that opens a
    comment. Every sheet of comments carries it, so it is written once. */
 function CommentComposerFoot() {

@@ -15,26 +15,14 @@
    EVERYTHING AROUND THE FIELD IS THE PAD'S OWN GRAMMAR, kept: the "?" in the
    top-right corner out of the readouts' reading order (`HelpDot`, at the
    master's geometry), the pick's readout ABOVE the field where a thumb cannot
-   cover it, the note, and Cancel · Set — release never commits, Set does. */
+   cover it, the note, and Cancel · Set — release never commits, Set does.
+
+   THE SEAL BENEATH IS THE SEAL — `ComposeSealBody`, the same body
+   `ComposeSeal` draws. What a wash covers is inert, not shortened. */
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" stageLabel="Last step" />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
-        <ActsCard total="4 signed actions" note="they land together, or none does" />
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow label="License" value="Public domain — your default" />
-          <FactRow
-            label="Where you stand on it"
-            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
-            action="Adjust"
-            last
-          />
-        </div>
-        <div style={{ flex: 1 }} />
-        <Button style={{ width: "100%" }}>Sign and publish</Button>
-      </div>
+      <ComposeSealBody />
 
       {/* The wash over the shell; the parked pad above it stays sharp. */}
       <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "var(--scrim-wash, rgba(0, 0, 0, 0.5))" }} />

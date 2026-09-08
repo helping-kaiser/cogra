@@ -9,20 +9,14 @@
    second action, nothing to decide — a "?" that led somewhere would be a
    navigation the reader did not ask for.
 
-   THE SEAL BENEATH IS DRAWN SHORT, as the hand board drew it: the note, the
-   total, and the button. What a modal covers is inert, so these boards
-   abbreviate the surface they stand on — preserved exactly as found, a drawing
-   question the round leaves open. */
+   THE SEAL BENEATH IS THE SEAL — `ComposeSealBody`, the same body
+   `ComposeSeal` draws. What a modal covers is inert, not shortened: the reader
+   opened the "?" from a surface they can still see, and a stand-in for it would
+   be the one thing on the board that is not true. */
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" stageLabel="Last step" help="Signed actions" />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
-        <ActsCard total="4 signed actions" note="they land together, or none does" />
-        <div style={{ flex: 1 }} />
-        <Button style={{ width: "100%" }}>Sign and publish</Button>
-      </div>
+      <ComposeSealBody />
 
       <DialogSurface ariaLabel="Signed actions" width="21rem">
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>

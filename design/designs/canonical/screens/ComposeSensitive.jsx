@@ -3,10 +3,8 @@
    it is up — the sheet and its scrim are the only live things — which is what
    the board's `scanExempt` line says.
 
-   THE ACTS CARD BENEATH CARRIES NO ROWS. That is the seal as this state draws
-   it: the count and the all-or-nothing line, and nothing to read down, because
-   what is being decided is on the sheet. `ActsCard` with no rows is exactly
-   that block, so the card is the master's even here.
+   THE SEAL BENEATH IS THE SEAL — `ComposeSealBody`, the same body
+   `ComposeSeal` draws. What a sheet covers is inert, not shortened.
 
    THE SWITCH IS DRAWN ON THIS BOARD, and it is a real one — `role="switch"`
    with its state on it. The system has no switch master: this is the only one
@@ -17,17 +15,7 @@
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" stageLabel="Last step" />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
-        <ActsCard total="4 signed actions" note="they land together, or none does" />
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow label="License" value="Public domain — your default" action="Change" />
-          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
-        </div>
-        <div style={{ flex: 1 }} />
-        <Button style={{ width: "100%" }}>Sign and publish</Button>
-      </div>
+      <ComposeSealBody />
 
       <BottomSheet open ariaLabel="Mark as sensitive">
         <SheetTitle

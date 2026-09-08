@@ -442,12 +442,6 @@ Two follow-ups the round surfaces, still open:
     `ComposeSeal`'s controls, wired there. Its uploading twin wires
     all eight. Either the fault board wires its own, or the
     exemption stands as the pattern boards' rule.
-  - **The overlays abbreviate the surface under them, each
-    differently.** `ReplyPad`, `EditActs` and `HelpDialog` each draw
-    a shortened version of the seal or edit they cover, and
-    differently from one another — the same question `ComposePad`
-    and the license and sensitive sheets left open, now on three
-    more boards. Preserved as drawn.
   - **`DiscardConfirm` gives the filled button to the destructive
     answer**, where `RemoveConfirm` gives it to the safe one.
     Preserved as drawn.
@@ -455,9 +449,12 @@ Two follow-ups the round surfaces, still open:
     says it as a bare small word; `ReplyPictures` and its siblings
     say the same thing as a small text pill. The same three-voices
     question the cite word has.
-  - **`FactRow` has no note slot.** The reply pad's seal carried its
-    coaching line inside the ruled block; the master's seal rules
-    enclose the row, so the line now stands beneath it.
+  - **"Replying also signs where you stand on the post it answers."
+    is no longer drawn anywhere.** The line was the reply pad's
+    abbreviated seal's coaching note; the pad now covers the real
+    reply seal, which never carried it. Either the seal earns the
+    line — `FactRow` has no note slot, so it would stand beneath the
+    ruled block or the master would grow one — or the copy retires.
 - **What the compose-wizard conversion surfaced**, each needing a
   ruling before anyone fills it in:
   - **`PickPrompt` requires an escape.** The draft board's
@@ -475,12 +472,6 @@ Two follow-ups the round surfaces, still open:
     `ComposeSensitive`) — check-flows verifies the attribute, not the
     paint. The badge belongs on the field's wrapper; `ComposeLicense`
     already stamps the row rather than its hidden radio.
-  - **The seal is drawn four ways under its own overlays.** The
-    license, sensitive and pad boards each abbreviate the seal
-    beneath the scrim differently — and differently from
-    `ComposeSeal` itself. The conversion preserved each as drawn;
-    whether an overlay should sit over the real seal is a drawing
-    ruling.
   - **The device-gallery grid now lives on three boards** —
     `ComposePick` live, `ComposePickVideo` dead, `ComposeDraft`
     dimmed — each screen-local by the rule that the grid exists on
