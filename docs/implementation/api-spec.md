@@ -2911,13 +2911,18 @@ input PreparePostInput {
 "Edit a Post — stages one ordinary-role Publish + payload record
  at attachment 0 carrying the Post's complete new content state;
  an omitted title, description, or gallery is a Post without one.
- Only the eligible author's edit is prepared. New tags or
- citations are their own gestures, not edit fields."
+ Only the eligible author's edit is prepared. A tag or a citation
+ is its own record rather than a field of this input — which is a
+ statement about the records, not about the screen: the edit
+ surface stages them beside the edit and seals the whole batch
+ under one signature, one act count, all or none."
 input PreparePostEditInput {
   id: UUID!
   title: String
   description: String
-  content: String!
+  "The words half of the body, under the same exclusive-or a create
+   carries."
+  content: String
   attachments: [AttachmentInput!]
   "The self-mark the edit leaves standing — complete state like the
    body, so omitting it unmarks the post."
