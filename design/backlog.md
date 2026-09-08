@@ -435,10 +435,6 @@ Two follow-ups the round surfaces, still open:
   seal's add-rows, and the reply composer itself.
 
   **What the last nine surfaced**, each a ruling still owed:
-  - **The composer's "+ Add" speaks in two voices.** `ReplyCompose`
-    says it as a bare small word; `ReplyPictures` and its siblings
-    say the same thing as a small text pill. The same three-voices
-    question the cite word has.
   - **"Replying also signs where you stand on the post it answers."
     is no longer drawn anywhere.** The line was the reply pad's
     abbreviated seal's coaching note; the pad now covers the real

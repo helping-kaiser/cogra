@@ -31,7 +31,7 @@ export function Screen() {
         <DescribeCounter described={0} total={2} onDescribe={() => {}} />
 
         <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-          <Button variant="text" size="sm">+ Add pictures · 2 of 4</Button>
+          <InlineAction size="sm">+ Add pictures · 2 of 4</InlineAction>
           <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
             …or drop pictures or a video here.
           </span>
