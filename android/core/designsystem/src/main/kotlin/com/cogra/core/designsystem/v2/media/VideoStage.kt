@@ -118,6 +118,28 @@ object VideoStage {
         holding?.takeIf { it.owner === token && it.url == url }?.player
 
     /**
+     * Whether another *surface* is showing this clip instead of [token].
+     *
+     * The one reason a surface stops drawing at all. During a navigation
+     * both screens are composed, the arriving one holds the token, and
+     * the leaving one's `SurfaceView` still carries the frame it was
+     * last handed — two pictures of the same clip, one frozen, side by
+     * side through the crossfade.
+     *
+     * An **empty stage is not that**. Nobody is showing the clip, and a
+     * surface torn down there cannot get the player back: Media3 binds a
+     * player to its view from `AndroidView`'s update callback, which runs
+     * on a layout pass, and an app returning from the background
+     * recomposes without running one. The rebuilt surface then never
+     * binds — the player plays to nobody, renders no frame, and the card
+     * sits blank until something unrelated forces a layout.
+     */
+    fun displaced(token: Any, url: String): Boolean {
+        val current = holding ?: return false
+        return current.url == url && current.owner != null && current.owner !== token
+    }
+
+    /**
      * The surface is going away.
      *
      * The player is kept — that is the whole point — but it stops

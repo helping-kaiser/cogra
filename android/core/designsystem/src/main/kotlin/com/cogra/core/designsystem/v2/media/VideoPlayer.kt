@@ -200,6 +200,11 @@ fun VideoPlayer(
     // one composable over, and that is not a reason to draw a cover.
     val clipOnStage = VideoStage.holding?.url == url
 
+    // The one reason to give the surface up: another surface is showing
+    // this clip. An empty stage is not that, and a surface that leaves
+    // the composition there comes back unbound — see [VideoStage.displaced].
+    val displaced = VideoStage.displaced(token, url)
+
     DisposableEffect(player) {
         val listener = object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -236,11 +241,10 @@ fun VideoPlayer(
     LaunchedEffect(autoplay, player) { player?.playWhenReady = autoplay }
     LaunchedEffect(muted, player) { player?.volume = if (muted) 0f else 1f }
 
-    // `keepContentOnReset` is the documented lever against the flash:
-    // it keeps the frame already on screen visible when the player or
-    // its tracks change, which is exactly what re-attaching one player
-    // to a second surface looks like from the state holder's side.
-    val presentation = rememberPresentationState(player, keepContentOnReset = true)
+    // Read for the clip's own size and nothing else. The poster asks the
+    // stage instead: `PresentationState` is remembered across the player
+    // being swapped, so it answers about the player that has gone.
+    val presentation = rememberPresentationState(player)
 
     // **Geometry from what is already known, never from what arrives.**
     //
@@ -281,28 +285,29 @@ fun VideoPlayer(
             .onSizeChanged { VideoTrace.surface(traced, "measured", it.width, it.height) },
         contentAlignment = Alignment.Center,
     ) {
-        // A surface without the stage binds nothing: two surfaces
-        // setting the same player's video output is the fight that
-        // reads as a flicker.
         // Sized once, from a number known before composition. A clip
         // taller than its frame overflows it and is clipped by the box —
         // a centre-crop, which is what "letterboxing exists nowhere in
         // the product" asks for. A clip the frame's own shape fills it
         // exactly and nothing is cut.
-        // And a surface with no player is not composed at all. A
-        // `SurfaceView` keeps the last frame it was handed until it is
-        // detached, so a host that has just lost the token goes on
-        // showing that frozen frame — at its own geometry, over the
-        // crossfade, beside the arriving host drawing the live one. Two
-        // pictures of the same clip, one stale: the nested box.
-        if (player != null) {
+        //
+        // The surface outlives the player, which is what Media3's
+        // nullable `PlayerSurface(player: Player?)` is for: it keeps its
+        // view and rebinds when a player arrives. Only a surface
+        // displaced by another one leaves — a `SurfaceView` keeps the
+        // last frame it was handed until it is detached, so a host that
+        // has just lost the token would go on showing that frozen frame
+        // beside the arriving host drawing the live one.
+        if (!displaced) {
             PlayerSurface(
                 player = player,
-                modifier = if (videoAspectRatio != null) {
-                    Modifier.fillMaxWidth().aspectRatio(videoAspectRatio)
-                } else {
-                    Modifier.fillMaxSize()
-                },
+                modifier = (
+                    if (videoAspectRatio != null) {
+                        Modifier.fillMaxWidth().aspectRatio(videoAspectRatio)
+                    } else {
+                        Modifier.fillMaxSize()
+                    }
+                    ).testTag(SURFACE_TAG),
             )
         }
 
@@ -313,8 +318,6 @@ fun VideoPlayer(
         // arriving surface is showing the very same clip through the
         // crossfade, and a cover on top of that is the flash.
         val reason = posterReason(
-            coverSurface = presentation.coverSurface,
-            hasPlayer = player != null,
             alreadyRendered = VideoStage.hasRendered,
             clipOnStage = clipOnStage,
         )
@@ -326,7 +329,7 @@ fun VideoPlayer(
                 model = posterUrl,
                 contentDescription = contentDescription,
                 contentScale = contentScale,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().testTag(POSTER_TAG),
             )
         }
 
@@ -370,30 +373,26 @@ enum class VideoControls { SoundOnly, Full }
 /**
  * Whether the poster stands in front of the surface.
  *
- * [coverSurface] is Media3's own answer about this surface — no frame
- * has been rendered on it yet, so there is nothing behind the poster to
- * show. [hasPlayer] and [clipOnStage] are the stage's two halves: which
- * surface may bind the player, and which clip the player holds.
- * [alreadyRendered] is the stage's memory of having drawn this clip at
- * all.
+ * [clipOnStage] says whether the player holds this clip at all;
+ * [alreadyRendered] is the stage's memory of having drawn it.
  */
 internal fun posterCovers(
-    coverSurface: Boolean,
-    hasPlayer: Boolean,
     alreadyRendered: Boolean,
     clipOnStage: Boolean,
-): Boolean = posterReason(coverSurface, hasPlayer, alreadyRendered, clipOnStage) != null
+): Boolean = posterReason(alreadyRendered, clipOnStage) != null
 
 /**
  * *Why* the poster is in front, or null when it is not.
  *
- * **A cover is a stand-in for a frame that does not exist yet.** Once
- * this clip has rendered one, it has a face of its own and the cover has
- * no job — which is the rule the detail was breaking: opening it made a
- * new surface, whose freshly remembered `PresentationState` starts with
- * `coverSurface` true, and the cover came back over a clip that had been
- * playing a moment before. [alreadyRendered] belongs to the stage rather
- * than the surface precisely because it has to outlive the surface.
+ * **A cover is a stand-in for a frame that does not exist yet**, and the
+ * stage is the only thing that knows whether one exists. Media3's
+ * per-surface `PresentationState` is not: it is remembered across the
+ * player being swapped, so a returning app — whose stage released its
+ * decoder and built a fresh one — is told the released player's frame is
+ * still on screen, and the cover stays off a surface with nothing behind
+ * it. [alreadyRendered] belongs to the stage for the same reason it
+ * outlives the surfaces: opening the detail makes a new surface, and the
+ * clip it shows already has a face.
  *
  * **Losing the token is not losing the clip.** A navigation composes
  * both screens at once and the arriving surface takes the token, so the
@@ -402,25 +401,18 @@ internal fun posterCovers(
  * there put the hand-picked still on top of a clip in motion, in both
  * directions; drawing nothing lets the arriving surface show through.
  * So the question is asked in the order the reader experiences it: is
- * this clip on stage at all, has it ever drawn a frame, and only then
- * whose surface holds it.
+ * this clip on stage at all, and has it ever drawn a frame.
  *
  * The reason is what the device log carries, and it names which of the
- * causes is in play. A third is not in this function at all — a
- * `SurfaceView` destroyed and recreated shows its own black window,
- * which no poster rule would explain — so naming these lets the log
- * rule them in or out, and their absence points at that one.
+ * causes is in play.
  */
 internal fun posterReason(
-    coverSurface: Boolean,
-    hasPlayer: Boolean,
     alreadyRendered: Boolean,
     clipOnStage: Boolean,
 ): String? = when {
     !clipOnStage -> "no clip on stage"
     alreadyRendered -> null
-    !hasPlayer || coverSurface -> "no frame rendered yet"
-    else -> null
+    else -> "no frame rendered yet"
 }
 
 @Composable
@@ -509,6 +501,10 @@ fun formatRunningTime(ms: Int): String {
         "$minutes:${seconds.toString().padStart(2, '0')}"
     }
 }
+
+/** The player's own surface, and the still that stands in front of it. */
+internal const val SURFACE_TAG = "video_surface"
+internal const val POSTER_TAG = "video_poster"
 
 private val CONTROL_DIAMETER = 56.dp
 private val CONTROL_GLYPH = 32.dp

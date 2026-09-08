@@ -143,8 +143,6 @@ class VideoStageReactivityTest {
     @Composable
     private fun PosterProbe(url: String) {
         val reason = posterReason(
-            coverSurface = true,
-            hasPlayer = true,
             alreadyRendered = VideoStage.hasRendered,
             clipOnStage = VideoStage.holding?.url == url,
         )
