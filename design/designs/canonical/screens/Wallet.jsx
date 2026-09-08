@@ -3,46 +3,10 @@
    away, out of scrolling's way), the earned bars, the CAMPAIGNS DOORWAY (the
    campaigns page owns creating and managing; here the wallet keeps only the
    door), and the history — where campaign money now lives as ordinary
-   entries: escrow out, top-up out, return in. */
+   entries: escrow out, top-up out, return in.
 
-function CampaignsDoor() {
-  return (
-    <button
-      type="button"
-      className="cg-state cg-focus"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        width: "100%",
-        border: 0,
-        borderRadius: "var(--radius-medium)",
-        background: "var(--surface-card)",
-        padding: 12,
-        cursor: "pointer",
-        fontFamily: "var(--font-sans)",
-        color: "var(--on-surface)",
-        textAlign: "left",
-        boxSizing: "border-box",
-      }}
-    >
-      <span style={{ width: 40, height: 40, borderRadius: "var(--radius-full)", background: "var(--primary)", color: "var(--on-primary)", display: "grid", placeItems: "center", flex: "none" }}>
-        <Icon name="campaign" size={22} />
-      </span>
-      <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 1 }}>
-        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>
-          Campaigns
-        </span>
-        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
-          1 open · start a new one
-        </span>
-      </span>
-      <span style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }} aria-hidden="true">
-        <Icon name="chevron_right" size={18} />
-      </span>
-    </button>
-  );
-}
+   THE DOOR IS `ContentRow`'s `door` variant — the same row the history below
+   it draws, with the filled disc that says entrance rather than entry. */
 
 export function Screen() {
   return (
@@ -72,7 +36,7 @@ export function Screen() {
         />
 
         <div style={{ padding: "12px 16px 0" }}>
-          <CampaignsDoor />
+          <ContentRow variant="door" title="Campaigns" second="1 open · start a new one" glyph="campaign" onOpen={() => {}} />
         </div>
 
         <SectionLabel>History</SectionLabel>

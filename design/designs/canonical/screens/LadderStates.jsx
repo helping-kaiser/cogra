@@ -19,8 +19,8 @@ export function Screen() {
         />
         {/* A redacted record keeps its menu — the license rode the payload and is
             gone, but the record can still be cited: it never left the graph. */}
-        <PostCard author={ADA} content="" timestamp="1w" redacted={{ reason: "author" }} score="15.20" comments={3} menuItems={CITE_MENU} />
-        <PostCard author={TOBIAS} content="" timestamp="2w" redacted={{ reason: "illegal" }} score="4.70" comments={1} menuItems={CITE_MENU} />
+        <PostCard author={ADA} timestamp="1w" redacted={{ reason: "author" }} score="15.20" comments={3} menuItems={CITE_MENU} />
+        <PostCard author={TOBIAS} timestamp="2w" redacted={{ reason: "illegal" }} score="4.70" comments={1} menuItems={CITE_MENU} />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>

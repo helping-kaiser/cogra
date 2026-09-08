@@ -8,8 +8,9 @@
 
 import type { ApolloClient } from "@apollo/client";
 
-import { uploadMedia } from "@/lib/api/media-api";
-import type { UserError } from "@/lib/api/outcome";
+import { uploadMedia, uploadVideo, UploadPartsError } from "@/lib/api/media-api";
+import type { Outcome, UserError } from "@/lib/api/outcome";
+import type { AuthGuard } from "@/lib/session/guard";
 import { mediaRefusalMessage } from "@/lib/ui/error-messages";
 import { encodeForUpload } from "@/lib/ui2/media/encode-image";
 import { stripVideoMetadata } from "@/lib/ui2/media/strip-video";
@@ -22,6 +23,19 @@ function refusalFor(errors: readonly UserError[], subject: string): string {
   return first === undefined
     ? `The server refused that ${subject}.`
     : mediaRefusalMessage(first.code, subject);
+}
+
+/**
+ * What a transport-tier failure says.
+ *
+ * "Couldn't reach the server" is right for a fetch that never landed and
+ * wrong for a parts run that the server answered and refused, so the parts
+ * path's own sentence is kept when it carries one.
+ */
+function transportMessage(outcome: Outcome<unknown> & { kind: "failed" }): string {
+  return outcome.cause instanceof UploadPartsError
+    ? outcome.cause.message
+    : "Couldn't reach the server.";
 }
 
 /**
@@ -106,9 +120,15 @@ export function waitingAssets(assets: readonly PickedAsset[]): readonly PickedAs
  * upload the file with its GPS tag intact, which is the outcome the strip
  * exists to prevent — so it is reported as a refusal instead, and it is not
  * retryable, because a second attempt cannot make the container readable.
+ *
+ * THE CLIP GOES BY WHICHEVER PATH ITS SIZE CALLS FOR. `uploadVideo` sends
+ * anything at or above eight mebibytes as a resumable session whose parts are
+ * retried individually, and anything smaller in one request — the same
+ * boundary, on the same reasoning, as android's.
  */
 export async function runVideoUpload(
   client: ApolloClient,
+  guard: AuthGuard,
   video: PickedAsset,
   cover: CoverAsset,
   onVideo: UploadStep,
@@ -156,7 +176,7 @@ export async function runVideoUpload(
   }
 
   onVideo({ kind: "uploading" });
-  const uploaded = await uploadMedia(client, {
+  const uploaded = await uploadVideo(client, guard, {
     blob: stripped.blob,
     coverMediaId: poster.value.id,
   });
@@ -173,5 +193,5 @@ export async function runVideoUpload(
     });
     return;
   }
-  onVideo({ kind: "failed", message: "Couldn't reach the server.", retryable: true });
+  onVideo({ kind: "failed", message: transportMessage(uploaded), retryable: true });
 }

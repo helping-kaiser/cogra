@@ -73,6 +73,18 @@ impl Mailer for DevMailer {
     }
 }
 
+/// Appends one message to the configured sink, creating the path on the
+/// way.
+///
+/// The flush is not optional. `write_all` hands the bytes to a blocking
+/// task and returns before that task has necessarily run, and tokio's own
+/// documentation is explicit: "a file will not be closed immediately when
+/// it goes out of scope if there are any IO operations that have not yet
+/// completed", and "to ensure that a file is closed immediately when it
+/// is dropped, you should call `flush` before dropping it". Without it a
+/// message can be sent, the send awaited, and the message still be absent
+/// from the file — and any write error goes with the handle instead of
+/// reaching the caller.
 async fn append(path: &Path, mail: &Mail) -> std::io::Result<()> {
     use tokio::io::AsyncWriteExt;
 
@@ -93,7 +105,8 @@ async fn append(path: &Path, mail: &Mail) -> std::io::Result<()> {
         .append(true)
         .open(path)
         .await?;
-    file.write_all(entry.as_bytes()).await
+    file.write_all(entry.as_bytes()).await?;
+    file.flush().await
 }
 
 #[cfg(test)]
@@ -112,6 +125,11 @@ mod tests {
     /// configured path is created on the way — a nested target exercises
     /// that, since the usual `tmp_dev/` does not exist on a fresh
     /// checkout.
+    ///
+    /// The awaited send is the whole contract this pins: a message that
+    /// has been sent is readable from the file. It failed intermittently
+    /// on exactly the second message before `append` flushed, which is
+    /// the shape of the underlying defect rather than of the test.
     ///
     /// The configured sink is created on the way and every message appends to it in send order under a dated header.
     /// ´claim:mail:the-sink-is-created-and-appended-in-order´

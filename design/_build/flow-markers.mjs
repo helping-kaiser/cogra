@@ -251,8 +251,7 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
-// The Comments page (JSX boards; the three hand boards carry their attributes
-// directly). Sheet boards are scanExempt; badges stamped on under-scrim
+// The Comments page. Sheet boards are scanExempt; badges stamped on under-scrim
 // repeats sit dimmed beneath the wash, which reads correctly.
 Object.assign(FLOW_MARKERS, {
   ReplyEntry: [
@@ -288,10 +287,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'aria-label="Remove this picture"', tag: "button" },
     { n: 6, find: "+ Add pictures · 1 of 4", tag: "button" },
     { n: 7, find: ">Describe the pictures</button>", tag: "button" },
-    { n: 8, find: "#glovebox", tag: "span" },
+    { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
     { n: 9, find: ">Add a topic</button>", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
-    { n: 11, find: "This creates 2 signed actions", tag: "div" },
+    { n: 11, find: "This creates 2 signed actions", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
   ],
@@ -340,9 +339,8 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
-// The Compose page's JSX boards (the 13 hand boards carry their attributes
-// directly). The sheet boards are scanExempt; only the sheet layer and its
-// scrim are stamped.
+// The Compose page's boards. The sheet boards are scanExempt; only the sheet
+// layer and its scrim are stamped.
 Object.assign(FLOW_MARKERS, {
   ReferencePicker: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
@@ -399,21 +397,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Share this profile</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
-  // The detail view with the terms unfolded — PostDetail's own anatomy, so its
-  // numbering is PostDetail's, unchanged.
-  PostLicense: [
-    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
-    { n: 2, find: 'aria-label="More on this post"', tag: "button" },
-    { n: 3, find: '<a href="/u/', tag: "a" },
-    { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
-    { n: 5, find: 'aria-label="Topics and references"', tag: "button" },
-    { n: 6, find: 'aria-label="Take a stance on this post"', tag: "button" },
-    { n: 6, find: ">Choose your stance</button>", tag: "button" },
-    { n: 7, find: ">Post Score</span>", tag: "button" },
-    { n: 8, find: 'aria-label="3 comments"', tag: "button" },
-    { n: 9, find: 'aria-label="Share this post"', tag: "button" },
-    ...nav(10),
-  ],
+  // The license sheet, over the post and over the thread. Both are scanExempt:
+  // the terms are a block to read, not a set of controls, so the only thing
+  // either board wires is the wash that drops the sheet. CommentLicense has two
+  // — the thread's and the sheet's — and they take the same number, as on
+  // CommentMenu: outside the sheet is outside it whichever wash the finger
+  // lands on.
+  PostLicense: [{ n: 1, find: 'class="cg-scrim-in"', tag: "div" }],
+  CommentLicense: [{ n: 1, find: 'class="cg-scrim-in"', tag: "div", all: true }],
   ComposeCited: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
@@ -430,8 +421,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="Manage the pictures"', tag: "button" },
     { n: 4, find: "<input", tag: "input" },
     { n: 5, find: "<textarea", tag: "textarea" },
-    { n: 6, find: "#fieldnotes", tag: "span" },
-    { n: 6, find: "#coastroad", tag: "span" },
+    { n: 6, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
+    { n: 6, find: 'aria-label="Remove #coastroad"', tag: "button" },
     { n: 7, find: ">Add a topic</button>", tag: "button" },
     { n: 8, find: 'aria-label="Remove The long way home', tag: "button" },
     { n: 9, find: "+ Cite something", tag: "button" },
@@ -482,8 +473,99 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
-// The Media page (HelpDialog, the one Patterns board, carries its attributes
-// directly as a hand board).
+// The compose wizard's LEGACY BOARDS, converted (the conformance round): ten
+// boards that were hand-authored `.dc.html` with no source behind them now
+// render from `screens/`, so their inline `data-flow` stamps become markers
+// here. Same numbers, same elements, same edges — only the authorship moved.
+// The seal's three sheet boards are scanExempt; only the sheet layer and its
+// scrim are stamped, and the seal beneath them is inert in those states.
+Object.assign(FLOW_MARKERS, {
+  ComposeWords: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: ">Add pictures instead</button>", tag: "button" },
+    { n: 5, find: "1px solid var(--border-field)", tag: "div" },
+  ],
+  ComposePick: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: ">Write words instead</button>", tag: "button" },
+    { n: 5, find: ">Show all</button>", tag: "button" },
+    { n: 6, find: ">Cover</span>", tag: "div" },
+    { n: 7, find: 'aria-label="Remove this picture"', tag: "button" },
+    { n: 8, find: ">Your photos app</span>", tag: "button" },
+    // Every tile of the roll is the same control repeated — one edge covers
+    // them, the way one edge covers a feed's repeated per-post affordances.
+    { n: 9, find: "position:relative;width:125px", tag: "div", all: true },
+  ],
+  ComposeCrop: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: ">Tall 4:5</button>", tag: "button" },
+    { n: 4, find: ">Square 1:1</button>", tag: "button" },
+    { n: 4, find: ">Wide 1.91:1</button>", tag: "button" },
+    { n: 5, find: "transform:scale(1.15)", tag: "div" },
+    { n: 6, find: "position:relative;width:48px", tag: "div", all: true },
+  ],
+  ComposeCover: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: "transform:translate(-50%, -50%)", tag: "span" },
+    { n: 4, find: 'class="cg-cover-frame"', tag: "div", all: true },
+    { n: 5, find: 'class="cg-cover-own"', tag: "div" },
+    { n: 6, find: ">Next</button>", tag: "button" },
+  ],
+  ComposeDraft: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Discard</button>", tag: "button" },
+    { n: 4, find: ">Continue</button>", tag: "button" },
+  ],
+  ComposeSeal: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
+    { n: 4, find: ">Change</button>", tag: "button" },
+    { n: 5, find: ">Adjust</button>", tag: "button" },
+    { n: 6, find: ">Mark</button>", tag: "button" },
+    { n: 7, find: ">Sign and publish</button>", tag: "button" },
+    { n: 8, find: ">Back</button>", tag: "button" },
+  ],
+  ComposeKeyAbsent: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Change</button>", tag: "button" },
+    { n: 4, find: 'aria-label="Your key"', tag: "button" },
+    { n: 5, find: ">Restore the key</button>", tag: "button" },
+    { n: 6, find: ">Keep the draft, restore later</button>", tag: "button" },
+  ],
+  ComposeLicense: [
+    { n: 1, find: 'aria-label="License"', tag: "button" },
+    { n: 2, find: 'data-axis="credit"', tag: "label", all: true },
+    { n: 3, find: 'data-axis="record"', tag: "label", all: true },
+    { n: 4, find: ">Done</button>", tag: "button" },
+    { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ComposeSensitive: [
+    { n: 1, find: 'aria-label="Sensitive"', tag: "button" },
+    { n: 2, find: 'role="switch"', tag: "button" },
+    { n: 3, find: "<input", tag: "input" },
+    { n: 4, find: ">Done</button>", tag: "button" },
+    { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ComposePad: [
+    { n: 1, find: 'aria-label="How stances work"', tag: "button" },
+    { n: 2, find: 'aria-label="Stance pad', tag: "div" },
+    { n: 3, find: ">Cancel</button>", tag: "button" },
+    { n: 4, find: ">Set</button>", tag: "button" },
+    { n: 5, find: "background:var(--scrim-wash", tag: "div" },
+  ],
+});
+
+// The Media page.
 Object.assign(FLOW_MARKERS, {
   FeedGallery: [
     { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
@@ -511,7 +593,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: ">Write words instead</button>", tag: "button" },
-    { n: 5, find: ">Show all</span>", tag: "span" },
+    { n: 5, find: ">Show all</button>", tag: "button" },
     { n: 6, find: 'aria-label="Remove this picture"', tag: "button", all: true },
     { n: 7, find: ">Remove it</button>", tag: "button", all: true },
   ],
@@ -559,10 +641,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'aria-label="Remove this video"', tag: "button" },
     { n: 6, find: ">Describe the video</button>", tag: "button" },
     { n: 7, find: ">Change the cover</button>", tag: "button" },
-    { n: 8, find: "#glovebox", tag: "span" },
+    { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
     { n: 9, find: ">Add a topic</button>", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
-    { n: 11, find: "This creates 2 signed actions", tag: "div" },
+    { n: 11, find: "This creates 2 signed actions", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
   ],
@@ -575,9 +657,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Change the cover</button>", tag: "button" },
     { n: 7, find: 'value="The long way home"', tag: "input" },
     { n: 8, find: 'rows="2"', tag: "textarea" },
-    { n: 9, find: "#coastroad", tag: "span" },
+    { n: 9, find: 'aria-label="Remove #coastroad"', tag: "button" },
     { n: 10, find: ">Add a topic</button>", tag: "button" },
-    { n: 11, find: "This creates 3 signed actions", tag: "div" },
+    { n: 11, find: "This creates 3 signed actions", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
   ],
@@ -590,7 +672,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Describe the pictures</button>", tag: "button" },
     { n: 7, find: 'type="text"', tag: "input" },
     { n: 8, find: 'rows="2"', tag: "textarea" },
-    { n: 9, find: "#tidemarket", tag: "span" },
+    { n: 9, find: 'aria-label="Remove #tidemarket"', tag: "button" },
     { n: 10, find: ">Add a topic</button>", tag: "button" },
     { n: 11, find: ">Next</button>", tag: "button" },
   ],
@@ -622,7 +704,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: ">Write words instead</button>", tag: "button" },
-    { n: 5, find: ">Show all</span>", tag: "span" },
+    { n: 5, find: ">Show all</button>", tag: "button" },
     { n: 6, find: 'aria-label="Remove this picture"', tag: "button" },
     { n: 7, find: "1px dashed var(--border-field)", tag: "div" },
     { n: 8, find: ">Choose from your files</button>", tag: "button" },
@@ -935,6 +1017,138 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "whatever the wind allows.</textarea>", tag: "textarea" },
     { n: 5, find: 'value="solferreira.art"', tag: "input" },
     { n: 6, find: ">Save</button>", tag: "button" },
+  ],
+});
+
+/* The entry-and-keys family, converted off the masters (legacy-conversion lane
+   A, 2026-09-04): the eight boards that had only hand markup until now. The
+   via numbers are the hand boards' own — every one of them re-anchored to the
+   element the master renders in that slot, so graph.json needed no edit. The
+   fields key off `id` (they start empty, so there is no value text to key
+   off), and the back arrows off PageHeader's accessible name. */
+Object.assign(FLOW_MARKERS, {
+  InviteEntry: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="invite-link"', tag: "input" },
+    { n: 3, find: ">Continue</button>", tag: "button" },
+    { n: 4, find: ">Already have an account? Sign in</button>", tag: "button" },
+    { n: 5, find: ">Just looking? Browse the feed", tag: "button" },
+  ],
+  JoinInvalid: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="invite-link"', tag: "input" },
+    { n: 3, find: ">Continue</button>", tag: "button" },
+    { n: 4, find: ">Already have an account? Sign in</button>", tag: "button" },
+    { n: 5, find: ">Just looking? Browse the feed", tag: "button" },
+  ],
+  Reset: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="reset-email"', tag: "input" },
+    { n: 3, find: ">Send reset link</button>", tag: "button" },
+  ],
+  KeyCeremony: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: ">Create my recovery code</button>", tag: "button" },
+    { n: 3, find: ">Not now</button>", tag: "button" },
+  ],
+  // The ceremony's two dialogs. Both are scanExempt: the arrow and the words
+  // beneath the scrim are inactive while the ask is open, so only the
+  // dialog's own pair carries a number — the hand boards stamped exactly
+  // these two and left the arrow bare.
+  KeyConfirm: [
+    { n: 1, find: ">Cancel</button>", tag: "button" },
+    { n: 2, find: ">Show my code</button>", tag: "button" },
+  ],
+  KeyDecline: [
+    { n: 1, find: ">I accept the risk</button>", tag: "button" },
+    { n: 2, find: ">Go back</button>", tag: "button" },
+  ],
+  Verified: [{ n: 1, find: ">Back to CoGra</button>", tag: "button" }],
+  // The ask over the borrowed view, also scanExempt. TWO "Sign in or join"
+  // buttons stand on this board — the band's and the ask's — and both take
+  // the number, the way the comments page's under-scrim repeats do: one edge
+  // covers them, because both words lead to the same screen.
+  GuestGate: [
+    { n: 1, find: ">Keep browsing</button>", tag: "button" },
+    { n: 2, find: ">Sign in or join</button>", tag: "button", all: true },
+  ],
+});
+
+/* The reply and edit wizards, the two overlays and the pattern boards
+   (legacy-conversion lane C, 2026-09-04): the last nine boards that had only
+   hand markup. Their via numbers are the hand boards' own — every one
+   re-anchored to the element the master renders in that slot, so graph.json
+   needed no edit. Five of the nine are overlay states and were already drawn
+   with only the top layer live; they take a `scanExempt` line saying so, and
+   `NetworkError` takes one saying why a pattern exemplar wires only its
+   retry. */
+Object.assign(FLOW_MARKERS, {
+  ReplyCompose: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    // The words the reply is made of — the body itself is the "control",
+    // the way the composer boards stamp their fields.
+    { n: 4, find: "The third headland light is real", tag: "p" },
+    { n: 5, find: "+ Add pictures or a video", tag: "button" },
+  ],
+  ReplyPad: [
+    { n: 1, find: 'aria-label="How stances work"', tag: "button" },
+    { n: 2, find: 'aria-label="Stance pad for the post you answer"', tag: "div" },
+    { n: 3, find: ">Cancel</button>", tag: "button" },
+    { n: 4, find: ">Set</button>", tag: "button" },
+    { n: 5, find: "background:var(--scrim-wash", tag: "div" },
+  ],
+  // The bare seal. `ReplyCited` is this list plus its staged reference's ×.
+  ReplySeal: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
+    { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
+    { n: 4, find: "+ Add a topic", tag: "button" },
+    { n: 5, find: "+ Cite something", tag: "button" },
+    { n: 6, find: ">Adjust</button>", tag: "button" },
+    { n: 7, find: ">Change</button>", tag: "button" },
+    { n: 8, find: ">Mark</button>", tag: "button" },
+    { n: 9, find: ">Sign comment</button>", tag: "button" },
+    { n: 10, find: ">Back</button>", tag: "button" },
+  ],
+  EditCompose: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="Editing"', tag: "button" },
+    { n: 4, find: 'aria-label="Manage the pictures"', tag: "button" },
+    { n: 5, find: 'value="Salt maps of the coast road"', tag: "input" },
+    { n: 6, find: "paper against the salt crust.</textarea>", tag: "textarea" },
+    { n: 7, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove #saltmaps"', tag: "button" },
+    { n: 8, find: ">Add a topic</button>", tag: "button" },
+    { n: 9, find: 'aria-label="Remove The long way home', tag: "button" },
+    { n: 10, find: "+ Cite something", tag: "button" },
+    { n: 11, find: "This creates 3 signed actions", tag: "button" },
+    { n: 12, find: ">Sign the edit</button>", tag: "button" },
+    { n: 13, find: ">Mark</button>", tag: "button" },
+  ],
+  EditActs: [
+    { n: 1, find: ">Done</button>", tag: "button" },
+    { n: 2, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  NetworkError: [{ n: 1, find: ">Retry</button>", tag: "button" }],
+  // TWO "Restore the key" buttons stand on this board — the feed's own card
+  // beneath the wash and the pad's notice above it — and both take the number,
+  // the way the guest gate's two asks do: one edge covers them, because both
+  // words lead to the same screen.
+  PadKeyAbsent: [
+    { n: 1, find: 'aria-label="Your key"', tag: "button" },
+    { n: 2, find: ">Restore the key</button>", tag: "button", all: true },
+    { n: 3, find: ">Keep it pending, restore later</button>", tag: "button" },
+  ],
+  HelpDialog: [
+    { n: 1, find: ">Close</button>", tag: "button" },
+    { n: 2, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  DiscardConfirm: [
+    { n: 1, find: ">Keep writing</button>", tag: "button" },
+    { n: 2, find: ">Discard</button>", tag: "button" },
   ],
 });
 

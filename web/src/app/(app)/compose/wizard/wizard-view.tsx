@@ -361,6 +361,7 @@ export function ComposeWizard({
       started.current.add(cover.id);
       void runVideoUpload(
         client,
+        guard,
         video,
         cover,
         (upload) => dispatch({ type: "upload", id: video.id, upload }),
@@ -376,7 +377,7 @@ export function ComposeWizard({
         dispatch({ type: "upload", id: asset.id, upload }),
       );
     }
-  }, [uploading, state.assets, video, cover, ratio, client, dispatch]);
+  }, [uploading, state.assets, video, cover, ratio, client, guard, dispatch]);
 
   const retry = (id: string) => {
     started.current.delete(id);
@@ -462,8 +463,7 @@ export function ComposeWizard({
   };
 
   const finish = async (node: string, writes: readonly StagedWriteView[]) => {
-    const results = [];
-    for (const staged of writes) results.push(await signer.signStaged(staged));
+    const results = await signer.sign(writes);
     setBusy(false);
 
     if (results.every((result) => result.kind === "done")) {

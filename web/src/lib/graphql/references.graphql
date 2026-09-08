@@ -6,7 +6,7 @@
 #
 # References declared at creation ride `PreparePostInput.references` /
 # `PrepareCommentInput.references` in content.graphql, batched onto the
-# minting record. Field selections are inlined per the house style.
+# minting record. The shared selections live in `fragments.graphql`.
 
 # D20's finder. Exact-match resolution only today — a handle bare or
 # `@`-sigilled, or a UUID — with real search arriving in slice 2.7
@@ -19,6 +19,10 @@
 query ReferenceCandidates($query: String!, $limit: Int) {
   referenceCandidates(query: $query, limit: $limit) {
     targetId
+    # INLINE, not a fragment — see `fragments.graphql`, "what a citation
+    # points at". A fragment whose type condition is the union itself
+    # cannot be matched by `InMemoryCache` without a `possibleTypes` map,
+    # and the fields would silently read null.
     target {
       __typename
       ... on User {
@@ -74,15 +78,10 @@ query ReferenceCandidates($query: String!, $limit: Int) {
 mutation PrepareReference($input: PrepareReferenceInput!) {
   prepareReference(input: $input) {
     writes {
-      id
-      family
-      canonicalProposal
-      gcAfterEpochs
+      ...PreparedWriteFields
     }
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
@@ -96,15 +95,10 @@ mutation PrepareReference($input: PrepareReferenceInput!) {
 mutation PrepareReferenceWithdrawal($input: PrepareReferenceWithdrawalInput!) {
   prepareReferenceWithdrawal(input: $input) {
     writes {
-      id
-      family
-      canonicalProposal
-      gcAfterEpochs
+      ...PreparedWriteFields
     }
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }

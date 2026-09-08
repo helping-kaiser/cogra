@@ -60,7 +60,7 @@ over file values.
 | `API_HOST` | `0.0.0.0` | API bind address |
 | `API_PORT` | `8080` | API bind port |
 | `L1_INGEST_INTERVAL_SECS` | `2` | Mirror-ingestion poll interval of the API server |
-| `L1_EPOCH_CLOSE_INTERVAL_SECS` | *(unset)* | Dev epoch clock: the API host closes a stand-in epoch on this interval, so writes land without a manual `l1-dev close`; unset, epochs close only on the act budget or the CLI |
+| `L1_EPOCH_CLOSE_INTERVAL_SECS` | *(unset)* | Dev epoch clock: the API host closes a stand-in epoch on this interval, so writes land without a manual `l1-dev close`; unset, epochs close only on `l1-dev close` and nothing a client writes lands |
 | `STAGED_WRITE_GC_EPOCHS` | `8` | Epochs before an unlanded staged write is collected ([data-model.md "Staged writes"](data-model.md#staged-writes)) |
 | `SESSION_SIGNING_SEED` | *(unset)* | 32-byte hex seed of the Ed25519 session-signing key ([auth.md](auth.md#tokens)); unset in dev, an ephemeral key is generated and sessions die with the process |
 | `DEV_MAILER_LOG` | *(unset)* | Dev mailer log file (`tmp_dev/mailer.log` in `.env.example`, gitignored): every outbound message is also appended there, so hand tests read out-of-band secrets from one file; unset, no file logging |
@@ -152,6 +152,23 @@ The three that decide the shape of a session:
   client and design jobs, which need a JDK pair, the Android SDK, and
   Node.
 
+### The contract artifacts
+
+Four generated files sit at the repo root, and they all work the same
+way: the side that owns the fact writes the file, every consumer pins to
+it by test, and nothing transcribes a value out of it into code. A
+regeneration that changes a byte fails the exporter's own drift test and
+runs both client jobs, so a client can never quietly disagree with the
+server about a number it enforces.
+
+| Artifact | Owner | Regenerate |
+|---|---|---|
+| `schema.graphql` | the Rust schema | `make schema` |
+| `client-crypto-vectors.json` | `common::l1` | `make vectors` |
+| `client-constants.json` | `api` — caps, page size, registration grammar, write-handshake constants | `make constants` |
+| `stance-fold-vectors.json` | `common::l1::fold` | `make fold-vectors` |
+| `design-tokens.json` | design.md §2.2, via web | `make tokens` |
+
 ### What the gates cost
 
 Every recurring action gets an expected duration and a tolerance
@@ -163,12 +180,19 @@ noted; a cold build pays its dependency graph on top.
 
 | Action | Budget | Measured |
 |---|---|---|
-| `make lint-corpus` | 30 s | 12–17 s (2026-09-04, 1858 sources) |
-| `cargo test -p cogra-linter` | 3 min | 90 s (2026-09-04) |
-| `cargo fmt --all -- --check` | 30 s | 11 s (2026-09-04) |
+| `make lint-corpus` | 30 s | 10–17 s (2026-09-04, 1947 sources) |
+| `cargo test -p cogra-linter` | 3 min | 61–90 s (2026-09-04) |
+| `cargo fmt --all -- --check` | 30 s | 6–11 s (2026-09-04) |
+| `cargo test --all` | 12 min | 6 m 36 s (2026-09-04, warm, own test database) |
+| `make constants` | 60 s | 23 s (2026-09-04, cold `api` build) |
+| `make vectors` | 30 s | 3 s (2026-09-04) |
+| `make fold-vectors` | 30 s | 9 s (2026-09-04) |
 | `cargo clippy -p cogra-linter --all-targets` | 2 min | 36 s (2026-09-04) |
+| `cargo test -p api --test client_operations` | 2 min | 31–40 s (2026-09-04, warm, own test database) |
 | `make docs-link-check` | 60 s | 8.5 s (2026-09-04, 150 files / 1520 links) |
-| `make android-build` | 20 min | 13 min 2 s cold (2026-08-20) |
+| `make android-build` | 20 min | 13 min 2 s cold (2026-08-20); 12 min 21 s warm (2026-09-04) |
+| `make android-lint` | 3 min | 61 s (2026-09-04, warm) |
+| android module unit tests (5 modules) | 5 min | 115 s (2026-09-04, warm) |
 | `make wait-db` / `make wait-media` | `WAIT_TIMEOUT`, 300 s | seconds on a warm stack; the timeout is the bound, not the expectation |
 
 CI jobs carry the same discipline as `timeout-minutes`, which is the

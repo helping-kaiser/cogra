@@ -102,10 +102,11 @@ jobs:
               - '!design/**'
       # The frontend and design gates. Default (OR) quantifier: any of these
       # paths fires them. Kept in their own step because the OR semantics are
-      # incompatible with the `every` quantifier the Rust gate above needs. Both
-      # contract artifacts are listed for the same reason schema.graphql is:
-      # the frontend golden-vector tests pin to client-crypto-vectors.json,
-      # so a vector regeneration must run them, not just the Rust jobs.
+      # incompatible with the `every` quantifier the Rust gate above needs. Every
+      # contract artifact is listed for the same reason schema.graphql is: the
+      # frontend tests pin to client-crypto-vectors.json, client-constants.json
+      # and stance-fold-vectors.json, so regenerating one must run them and not
+      # only the Rust jobs.
       # `.github/workflows/**` is listed because these jobs' own setup steps
       # live there — an action bump must run them, or its green is vacuous.
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4
@@ -116,11 +117,15 @@ jobs:
               - 'android/**'
               - 'schema.graphql'
               - 'client-crypto-vectors.json'
+              - 'client-constants.json'
+              - 'stance-fold-vectors.json'
               - '.github/workflows/**'
             web:
               - 'web/**'
               - 'schema.graphql'
               - 'client-crypto-vectors.json'
+              - 'client-constants.json'
+              - 'stance-fold-vectors.json'
               - '.github/workflows/**'
             design:
               - 'design/**'
@@ -235,11 +240,15 @@ jobs:
         run: |
           cargo run -p api --bin export-schema > schema.graphql
           git diff --exit-code schema.graphql
-      # Same rationale for the other cross-platform contract artifact: the
-      # test already ran under `cargo test --all`; the named step makes
-      # client-crypto drift readable from the checks list alone.
+      # Same rationale for the three other cross-platform contract
+      # artifacts: each test already ran under `cargo test --all`; the named
+      # steps make contract drift readable from the checks list alone.
       - name: Check client-crypto-vectors.json drift
         run: cargo test -p common --test client_vectors
+      - name: Check client-constants.json drift
+        run: cargo test -p api --test client_constants
+      - name: Check stance-fold-vectors.json drift
+        run: cargo test -p common --test stance_fold_vectors
 
   # The client query-cost guards, on the change class they were written for.
   #

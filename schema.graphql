@@ -2708,7 +2708,8 @@ An expected business outcome, carried as data on the mutation payload
 """
 type UserError {
 	"""
-	Human-readable description of the refusal.
+	Developer-facing description of the refusal, for logs and
+	debugging. Clients localize off `code`, never off this string.
 	"""
 	message: String!
 	code: ErrorCode!

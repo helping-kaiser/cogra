@@ -7,6 +7,7 @@ use std::sync::Arc;
 use anyhow::Context;
 use api::auth::AuthConfig;
 use api::breach::{BreachCorpus, DisabledCorpus, HibpCorpus};
+use api::env_or;
 use api::l1::StandInBoundary;
 use api::mailer::{DevMailer, WebOrigin};
 use api::onboarding::OnboardingConfig;
@@ -14,10 +15,6 @@ use api::ratelimit::RateLimitConfig;
 use api::schema::ApiContext;
 use l1_standin::{StandIn, StandInConfig};
 use tracing_subscriber::EnvFilter;
-
-fn env_or(key: &str, default: &str) -> String {
-    std::env::var(key).unwrap_or_else(|_| default.to_string())
-}
 
 /// The session-signing key (auth.md "Access token"): from
 /// `SESSION_SIGNING_SEED` (32 bytes, hex). Absent in dev, an ephemeral

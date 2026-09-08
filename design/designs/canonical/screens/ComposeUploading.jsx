@@ -24,9 +24,7 @@ export function Screen() {
         <TextField label="Description" corner="Optional" rows={2} value="Everything the flats give up in one morning." />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>
-            Topics
-          </span>
+          <FieldLabel>Topics</FieldLabel>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <TopicRemovable topic="tidemarket" />
             <Button variant="outline" size="sm">Add a topic</Button>

@@ -29,6 +29,17 @@ tokio-util = { version = "0.7", features = ["io", "compat"] }
 # axum 0.8 matches the version async-graphql-axum 7 builds against, so the
 # GraphQLRequest extractor and the router agree on one axum.
 axum = { version = "0.8" }
+# `DefaultBodyLimit` only reaches extractors that read the body through
+# `Bytes`; the GraphQL handler consumes the body stream directly, and
+# axum's own documentation names `RequestBodyLimit` as the answer for
+# exactly that case ("if you need to use third party extractors and want
+# to make sure a limit is also applied there then `RequestBodyLimit`
+# should be used").
+tower-http = { version = "0.6", default-features = false, features = ["limit"] }
+# The limited body's error type, so the handler can tell "over the
+# ceiling" from "the connection broke" and answer 413 rather than 500 —
+# the same downcast axum's own `Bytes` extractor performs.
+http-body-util = { version = "0.1" }
 async-graphql = { version = "7" }
 async-graphql-axum = { version = "7" }
 

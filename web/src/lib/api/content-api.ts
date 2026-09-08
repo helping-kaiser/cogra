@@ -151,7 +151,10 @@ export function sensitiveInput(sensitive: boolean | undefined, reason: string | 
   };
 }
 
-/** One page per fetch; the server default is the same number. */
+/**
+ * One page per fetch — the server's own default, pinned to
+ * `client-constants.json` in `lib/client-constants.test.ts`.
+ */
 export const CONTENT_PAGE_SIZE = 20;
 
 /**

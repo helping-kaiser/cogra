@@ -1,0 +1,320 @@
+# The selections more than one document reads, declared once.
+#
+# Names MIRROR ANDROID'S (android/core/network/src/main/graphql):
+# the two clients read the same contract, and a reviewer comparing a
+# web document against its Kotlin twin should be reading the same
+# fragment name in both. A fragment lives here only where web actually
+# spreads it twice — a one-use fragment hides a selection instead of
+# sharing it.
+#
+# The spread is TYPE-TRANSPARENT: `codegen.ts` sets
+# `presetConfig.fragmentMasking: false`, so a consumer reads
+# `post.attachments[0].mimeType` off the query type exactly as it did
+# when the selection was written out inline.
+#
+# The `includePending` argument on `topics`/`references` names the
+# OPERATION'S variable. Every document spreading `PostFields` or
+# `CommentFields` therefore declares `$includePending`, which all three
+# reads already do.
+#
+# NO FRAGMENT HERE HAS AN ABSTRACT TYPE CONDITION. `InMemoryCache` cannot
+# match one without a `possibleTypes` map and reads its fields as null
+# instead of failing, so a union selection stays inline until the cache
+# carries one — see `ReferenceClaimFields`.
+
+# Every non-silent payload carries userErrors — empty exactly on
+# success (api-spec.md "Errors are tiered").
+fragment UserErrorFields on UserError {
+  message
+  code
+  field
+}
+
+# What a prepare hands back for this device to sign.
+#
+# Spread only by the four content prepares: `prepareStance`,
+# `prepareSeverance`, `prepareTag` and `approveApplicants` read a
+# narrower three-field selection, and widening them here would price
+# `gcAfterEpochs` onto documents that never read it.
+fragment PreparedWriteFields on PreparedWrite {
+  id
+  family
+  canonicalProposal
+  gcAfterEpochs
+}
+
+# A staged write as every leg of the handshake reads it — submit,
+# approve, the poll, and the applicant status.
+fragment StagedWriteFields on StagedWrite {
+  id
+  state
+  family
+  canonicalProposal
+  verifiedAct
+  record {
+    id
+  }
+}
+
+# What a client needs to draw an attachment and to honour its state.
+#
+# `digest`/`digestAlgo` are deliberately NOT selected: nothing in the
+# browser verifies bytes against the record yet, and every selected
+# field is priced against the query budget.
+fragment MediaFields on MediaAttachment {
+  id
+  url
+  altText
+  # NORMAL, or REDACTED once the bytes are gone — what lets the client
+  # draw the calm placeholder instead of a broken image.
+  status
+  # What the asset IS. A video renders a player rather than an image,
+  # and only the contract can say which this is.
+  mimeType
+  # Reserves the tile's space before a byte loads (design.md §6);
+  # `durationMs` reads null on a still.
+  options {
+    aspectRatio
+    durationMs
+  }
+  # A video's poster: the still shown before playback and wherever
+  # autoplay does not run. Spelled out rather than spreading this
+  # fragment, which cannot recurse; one level is all there is, since a
+  # poster is an image and never carries a poster of its own. It answers
+  # with its own `status`, so a removed cover reads REDACTED here like
+  # anywhere else.
+  coverMedia {
+    id
+    url
+    status
+    options {
+      aspectRatio
+    }
+  }
+}
+
+# A post as every card and every detail read draws it.
+#
+# THE QUERY BUDGET IS WHY THIS IS ONE FRAGMENT AND NOT A WIDER ONE. The
+# gallery is a bounded fold list rather than a connection, so it prices
+# at its cap; `digest` is deliberately unread, because checking the
+# transitive witness is not what a render does and the field would cost
+# its bound on every node. `sensitiveSelfMark` is likewise absent: it is
+# the author's own mark, which only an edit surface opens, and the
+# detail read adds it beside this spread rather than paying for it on
+# every feed card.
+fragment PostFields on Post {
+  id
+  title {
+    value
+    status
+  }
+  description {
+    value
+    status
+  }
+  content {
+    value
+    status
+  }
+  # The gallery, in the author's order, the first entry the cover.
+  attachments {
+    ...MediaFields
+  }
+  # One state for the whole set: sensitivity veils the body as one.
+  attachmentsStatus
+  author {
+    id
+    handle
+    displayName {
+      value
+    }
+    avatar {
+      url
+    }
+  }
+  createdAt
+  updatedAt
+  landing {
+    state
+  }
+  moderationStatus
+  license {
+    attribution
+    provenance
+  }
+  # The chip row (D8): the author's own current tags only — the
+  # content-intrinsic channel, the one that needs no forward-path
+  # weight (feed-ranking.md §4; the ranker arrives in slice 3).
+  topics(includePending: $includePending) {
+    hashtag {
+      id
+      name {
+        value
+        status
+      }
+    }
+    relevance
+    confidence
+    pending
+  }
+  # The reference row (D12, D16): the author's own current citations
+  # only, on the same content-intrinsic channel.
+  references(includePending: $includePending) {
+    ...ReferenceClaimFields
+  }
+}
+
+# A comment as the thread read and the expand read both draw it.
+#
+# `replies` is deliberately NOT here: the two documents ask for the
+# branch with different arguments in mind, and each states its own
+# reason for counting rather than carrying it.
+fragment CommentFields on Comment {
+  id
+  content {
+    value
+    status
+  }
+  # A comment is text **plus** optional media — deliberately not the
+  # post's exclusive-or (D16) — capped at four.
+  attachments {
+    ...MediaFields
+  }
+  # One state for the whole set: sensitivity veils the body as one.
+  attachmentsStatus
+  author {
+    id
+    handle
+    displayName {
+      value
+    }
+    avatar {
+      url
+    }
+  }
+  createdAt
+  updatedAt
+  landing {
+    state
+  }
+  moderationStatus
+  license {
+    attribution
+    provenance
+  }
+  topics(includePending: $includePending) {
+    hashtag {
+      id
+      name {
+        value
+        status
+      }
+    }
+    relevance
+    confidence
+    pending
+  }
+  references(includePending: $includePending) {
+    ...ReferenceClaimFields
+  }
+}
+
+# One standing citation.
+#
+# `target` is nullable and `targetId` is not: the fold reads the record
+# mirror, which reaches further than the display store, so a citation
+# can stand as a substrate fact this instance cannot type.
+fragment ReferenceClaimFields on ReferenceClaim {
+  targetId
+  relevance
+  support
+  # What removing this citation costs: the counter-records that net its
+  # bundle to (0, 0), off the RAW sums the clipped pair has already
+  # lost. An editing surface confirms against this BEFORE it prepares
+  # anything — the feed's own row never edits, but the compose edit
+  # surface builds its drafts from this same type, so the field the
+  # withdrawal confirm reads has to be on the selection.
+  withdrawalCost
+  pending
+  # WHAT A CITATION POINTS AT, AND WHY IT IS NOT A FRAGMENT. Typed so a
+  # chip renders without a second read; a referenced comment opens the
+  # post carrying it — comment permalinks are a parked item — so the
+  # selection walks up far enough to find one.
+  #
+  # `ReferenceTarget` is a UNION, and a fragment whose type condition is
+  # an abstract type cannot be matched by `InMemoryCache` unless the cache
+  # is given a `possibleTypes` map (Apollo, "Using fragments with unions
+  # and interfaces"). This app configures none, so such a fragment reads
+  # every field inside it as null rather than failing — which is why the
+  # one selection here that would earn a fragment twice over stays
+  # written out, here and in `references.graphql`. Give the cache a
+  # generated `possibleTypes` and both copies collapse into one.
+  target {
+    __typename
+    ... on User {
+      id
+      handle
+      displayName {
+        value
+      }
+    }
+    ... on Post {
+      id
+      title {
+        value
+      }
+      content {
+        value
+      }
+      author {
+        handle
+      }
+    }
+    ... on Comment {
+      id
+      content {
+        value
+      }
+      author {
+        handle
+      }
+      target {
+        __typename
+        ... on Post {
+          id
+        }
+        ... on Comment {
+          target {
+            __typename
+            ... on Post {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# The viewer's bundle toward one node, and where a candidate pick lands
+# it. `projected` is null exactly when the read named no pick.
+fragment StanceBundleFields on StanceBundle {
+  pDirected
+  pInterest
+  # The sums before the clip. The landing line folds them locally so it
+  # can move with the thumb, and every surface that explains cost states
+  # them rather than the clipped fold (design.md §8.3).
+  rawPDirected
+  rawPInterest
+  recordCount
+  inert
+  severed
+  severanceCost
+  projected {
+    pDirected
+    pInterest
+    inert
+    severed
+  }
+}

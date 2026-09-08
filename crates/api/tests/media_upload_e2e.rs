@@ -24,7 +24,7 @@ use tower::ServiceExt;
 use uuid::Uuid;
 
 mod rig;
-use rig::TestMailer;
+use rig::{TestMailer, photo_with_location};
 
 const BOUNDARY: &str = "cogra-test-boundary";
 
@@ -216,31 +216,6 @@ async fn body_json(response: axum::response::Response) -> Value {
             String::from_utf8_lossy(&bytes)
         )
     })
-}
-
-fn chunk(fourcc: &[u8; 4], payload: &[u8]) -> Vec<u8> {
-    let mut out = Vec::new();
-    out.extend_from_slice(fourcc);
-    out.extend_from_slice(&(payload.len() as u32).to_le_bytes());
-    out.extend_from_slice(payload);
-    if payload.len() % 2 == 1 {
-        out.push(0);
-    }
-    out
-}
-
-/// A 1×1 lossless WebP carrying an EXIF chunk with a location in it —
-/// the shape a phone camera hands over, and the shape that must never
-/// reach public storage intact.
-fn photo_with_location() -> Vec<u8> {
-    let mut body = chunk(b"VP8L", &[0x2F, 0x00, 0x00, 0x00, 0x00, 0x88, 0x88, 0x08]);
-    body.extend_from_slice(&chunk(b"EXIF", b"GPS 52.5200 N 13.4050 E"));
-    let mut out = Vec::new();
-    out.extend_from_slice(b"RIFF");
-    out.extend_from_slice(&((4 + body.len()) as u32).to_le_bytes());
-    out.extend_from_slice(b"WEBP");
-    out.extend_from_slice(&body);
-    out
 }
 
 /// The whole carriage round trip. The digest the contract publishes is
@@ -596,6 +571,45 @@ async fn a_video_uploads_with_its_duration_and_poster(pool: PgPool) {
 
     let key = format!("{}.mp4", uploaded["media"]["id"].as_str().expect("id"));
     assert!(rig.blobs.exists(&key).await.expect("head"));
+}
+
+/// An asset row is immutable once written, poster included, so the
+/// second upload cannot take the poster it names — and being handed the
+/// first upload's row as a success would leave the author with neither
+/// an error nor what they asked for.
+///
+/// Re-uploading identical bytes under a different poster is refused against coverMediaId rather than silently keeping the first poster.
+/// ´claim:media:a-re-upload-may-not-rename-the-poster´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_re_upload_naming_a_different_poster_is_refused(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let first_cover = rig.upload(&token, &photo_with_location()).await;
+    let first_id =
+        Uuid::parse_str(first_cover["media"]["id"].as_str().expect("id")).expect("a uuid");
+    let second_cover = rig.upload(&token, &rig::animated_webp()).await;
+    let second_id =
+        Uuid::parse_str(second_cover["media"]["id"].as_str().expect("id")).expect("a uuid");
+    assert_ne!(first_id, second_id, "two distinct stills");
+
+    let movie = h264_movie(3_000);
+    let stored = rig.upload_with_cover(&token, &movie, Some(first_id)).await;
+    assert_eq!(stored["media"]["coverMedia"]["id"], first_id.to_string());
+
+    let again = rig.upload_with_cover(&token, &movie, Some(second_id)).await;
+    assert_eq!(
+        refused_at(&again),
+        vec!["coverMediaId"],
+        "the poster the author just chose is not silently discarded: {again}"
+    );
+
+    let same = rig.upload_with_cover(&token, &movie, Some(first_id)).await;
+    assert_eq!(
+        same["media"]["id"], stored["media"]["id"],
+        "naming the same poster still deduplicates: {same}"
+    );
 }
 
 /// The four ways a named poster is wrong, each refused against the field

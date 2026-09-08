@@ -16,11 +16,8 @@ common    = { path = "../common" }
 sqlx      = { workspace = true }
 tokio     = { workspace = true }
 thiserror = { workspace = true }
-anyhow    = { workspace = true }
 tracing   = { workspace = true }
-chrono    = { workspace = true }
 rand      = { workspace = true }
 ed25519-dalek = { workspace = true }
-hex       = { workspace = true }
 
 [dev-dependencies]

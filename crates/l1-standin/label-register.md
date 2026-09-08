@@ -7,20 +7,30 @@ edit is a finding rather than a change.
 Owner pkg.l1-standin, profile rust-test: one row per covered asset, ordered bytewise by
 label.
 
-| Label                                                                        | Asset                                                     |
-| ---------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `test:integration:act-budget-caps-the-epoch`                                 | act_budget_caps_the_epoch                                 |
-| `test:integration:approve-verifies-the-witness`                              | approve_verifies_the_witness                              |
-| `test:integration:bid-is-fresh-mint-only-while-ordinary-send-stays-legal`    | bid_is_fresh_mint_only_while_ordinary_send_stays_legal    |
-| `test:integration:close-loop-publishes-on-the-interval`                      | close_loop_publishes_on_the_interval                      |
-| `test:integration:dependencies-defer-and-order`                              | dependencies_defer_and_order                              |
-| `test:integration:empty-close-publishes-nothing`                             | empty_close_publishes_nothing                             |
-| `test:integration:founding-participant-self-loops-at-its-own-mint`           | founding_participant_self_loops_at_its_own_mint           |
-| `test:integration:handshake-lands-a-record`                                  | handshake_lands_a_record                                  |
-| `test:integration:hyper-acts-project-two-legs-at-one-key`                    | hyper_acts_project_two_legs_at_one_key                    |
-| `test:integration:insolvent-authors-defer-until-funded`                      | insolvent_authors_defer_until_funded                      |
-| `test:integration:maturity-grows-with-prior-degree`                          | maturity_grows_with_prior_degree                          |
-| `test:integration:publish-toward-an-existing-mint-revises-rather-than-mints` | publish_toward_an_existing_mint_revises_rather_than_mints |
-| `test:integration:seal-rejects-authentication-failures`                      | seal_rejects_authentication_failures                      |
-| `test:integration:seal-rejects-formation-failures`                           | seal_rejects_formation_failures                           |
-| `test:integration:seal-rejects-identifier-reuse-and-key-change`              | seal_rejects_identifier_reuse_and_key_change              |
+| Label                                                                        | Asset                                                      |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `test:integration:a-malformed-stored-act-wedges-the-close`                   | a_malformed_stored_act_wedges_the_close                    |
+| `test:integration:a-stored-hyper-act-without-a-middle-is-refused`            | a_stored_hyper_act_without_a_middle_is_refused             |
+| `test:integration:act-budget-caps-the-epoch`                                 | act_budget_caps_the_epoch                                  |
+| `test:integration:approve-verifies-the-witness`                              | approve_verifies_the_witness                               |
+| `test:integration:approving-does-not-close-an-epoch`                         | approving_does_not_close_an_epoch                          |
+| `test:integration:bid-is-fresh-mint-only-while-ordinary-send-stays-legal`    | bid_is_fresh_mint_only_while_ordinary_send_stays_legal     |
+| `test:integration:close-loop-publishes-on-the-interval`                      | close_loop_publishes_on_the_interval                       |
+| `test:integration:dependencies-defer-and-order`                              | dependencies_defer_and_order                               |
+| `test:integration:empty-close-publishes-nothing`                             | empty_close_publishes_nothing                              |
+| `test:integration:founding-participant-self-loops-at-its-own-mint`           | founding_participant_self_loops_at_its_own_mint            |
+| `test:integration:handshake-lands-a-record`                                  | handshake_lands_a_record                                   |
+| `test:integration:hyper-acts-project-two-legs-at-one-key`                    | hyper_acts_project_two_legs_at_one_key                     |
+| `test:integration:insolvent-authors-defer-until-funded`                      | insolvent_authors_defer_until_funded                       |
+| `test:integration:maturity-grows-with-prior-degree`                          | maturity_grows_with_prior_degree                           |
+| `test:integration:no-migration-outside-the-stand-in-reads-its-tables`        | no_migration_outside_the_stand_in_reads_its_tables         |
+| `test:integration:publish-toward-an-existing-mint-revises-rather-than-mints` | publish_toward_an_existing_mint_revises_rather_than_mints  |
+| `test:integration:seal-rejects-authentication-failures`                      | seal_rejects_authentication_failures                       |
+| `test:integration:seal-rejects-formation-failures`                           | seal_rejects_formation_failures                            |
+| `test:integration:seal-rejects-identifier-reuse-and-key-change`              | seal_rejects_identifier_reuse_and_key_change               |
+| `test:unit:a-hyper-acts-two-legs-do-not-mature-one-another`                  | a_hyper_acts_two_legs_do_not_mature_one_another            |
+| `test:unit:a-later-approved-dependency-still-lands-first`                    | a_later_approved_dependency_still_lands_first              |
+| `test:unit:an-unsatisfied-prerequisite-defers-the-whole-chain`               | an_unsatisfied_prerequisite_defers_the_whole_chain         |
+| `test:unit:every-arrangement-of-a-chain-publishes-in-dependency-order`       | every_arrangement_of_a_chain_publishes_in_dependency_order |
+| `test:unit:insolvency-defers-and-solvency-is-debited-once-per-act`           | insolvency_defers_and_solvency_is_debited_once_per_act     |
+| `test:unit:the-budget-caps-the-epoch`                                        | the_budget_caps_the_epoch                                  |

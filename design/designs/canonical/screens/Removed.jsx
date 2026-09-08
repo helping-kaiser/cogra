@@ -7,7 +7,7 @@ export function Screen() {
       <DetailColumn>
         {/* The responses live on in the comments sheet — the glyph still counts
             them, which is itself the proof that nothing was quietly deleted. */}
-        <PostCard author={SOL} content="" timestamp="3d" variant="detail" redacted={{ reason: "author", when: "today" }} score="9.10" comments={2} />
+        <PostCard author={SOL} timestamp="3d" variant="detail" redacted={{ reason: "author", when: "today" }} score="9.10" comments={2} />
       </DetailColumn>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>

@@ -18,6 +18,14 @@ import {
   type InviteCheck,
 } from "@/lib/api/onboarding-api";
 import { extractInviteId } from "@/lib/onboarding/invite-input";
+import {
+  emailPlausible,
+  handleValid,
+  HANDLE_MAX_CHARS,
+  HANDLE_MIN_CHARS,
+  passwordValid,
+  PASSWORD_MIN_CHARS,
+} from "@/lib/onboarding/registration-rules";
 import { deviceLabel } from "@/lib/session/device-label";
 import { useAuthPhase, useTokenStore } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
@@ -190,7 +198,7 @@ function ApplyForm({ inviteId }: { inviteId: string }) {
   const [errorField, setErrorField] = useState<string | null>(null);
   const [transportFailed, setTransportFailed] = useState(false);
 
-  const formValid = handle.length >= 3 && email.includes("@") && password.length >= 12;
+  const formValid = handleValid(handle) && emailPlausible(email) && passwordValid(password);
   const canSubmit = formValid && !inProgress;
 
   const clearErrors = () => {
@@ -255,7 +263,7 @@ function ApplyForm({ inviteId }: { inviteId: string }) {
           aria-describedby="handle-rules"
         />
         <p id="handle-rules" className="text-body-small text-on-surface-variant">
-          3–30 characters: a–z, 0–9, _
+          {HANDLE_MIN_CHARS}–{HANDLE_MAX_CHARS} characters: a–z, 0–9, _
         </p>
       </div>
       <div className="flex flex-col gap-1">
@@ -287,7 +295,9 @@ function ApplyForm({ inviteId }: { inviteId: string }) {
           autoComplete="new-password"
           testId="apply_password"
         />
-        <p className="text-body-small text-on-surface-variant">At least 12 characters.</p>
+        <p className="text-body-small text-on-surface-variant">
+          At least {PASSWORD_MIN_CHARS} characters.
+        </p>
       </div>
       {error !== null && (
         <p role="alert" data-testid="apply_error" className="text-body-medium text-error">

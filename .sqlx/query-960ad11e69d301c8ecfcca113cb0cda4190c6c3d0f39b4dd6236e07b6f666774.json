@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO l1_host (singleton, signing_seed) VALUES (TRUE, $1)\n                     ON CONFLICT (singleton) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "960ad11e69d301c8ecfcca113cb0cda4190c6c3d0f39b4dd6236e07b6f666774"
+}

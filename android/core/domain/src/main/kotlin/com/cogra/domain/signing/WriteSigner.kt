@@ -54,7 +54,7 @@ class NoActorKeyException : Exception("no actor key on this device")
  * Anything else (RATE_LIMITED backoff, INTERNAL fault, UNAUTHENTICATED,
  * a code this build does not know) keeps the material for `resume`.
  */
-private val TERMINAL_REFUSALS = setOf(
+internal val TERMINAL_REFUSALS = setOf(
     ErrorCode.SIGNATURE_INVALID,
     ErrorCode.STAGED_WRITE_EXPIRED,
     ErrorCode.NOT_FOUND,
@@ -69,8 +69,8 @@ class WriteSigner @Inject constructor(
 ) {
     /** Seal-await polling budget: the stand-in seals synchronously, so a
      *  short bounded poll only covers the asynchronous contract. */
-    private val sealPollAttempts = 5
-    private val sealPollDelayMs = 1_000L
+    internal val sealPollAttempts = 5
+    internal val sealPollDelayMs = 1_000L
 
     /**
      * Runs the two-signature handshake for every prepared write. Each

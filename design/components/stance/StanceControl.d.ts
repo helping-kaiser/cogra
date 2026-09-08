@@ -29,6 +29,12 @@ export interface StanceControlProps {
   padInset?: number;
   /** One-time coaching lines (the first vouch), between the field and the landing line. */
   padNote?: JSX.Element;
+  /** The presentational variant a profile header wears: the anchor stretched to
+   *  the row's width, with its words drawn beside the face. */
+  wide?: boolean;
+  /** The anchor restyled to sit on photography: a line-face glyph in the rail's
+   *  family instead of the card's muted emoji. Restyles the anchor only. */
+  overMedia?: boolean;
 }
 
 export declare function StanceControl(props: StanceControlProps): JSX.Element;

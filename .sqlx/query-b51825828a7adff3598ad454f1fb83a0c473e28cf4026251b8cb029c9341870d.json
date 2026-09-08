@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO l1_node_state (node_id, frontier, degree)\n         SELECT * FROM UNNEST($1::TEXT[], $2::BIGINT[], $3::BIGINT[])\n         ON CONFLICT (node_id) DO UPDATE\n         SET frontier = EXCLUDED.frontier, degree = EXCLUDED.degree",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Int8Array",
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b51825828a7adff3598ad454f1fb83a0c473e28cf4026251b8cb029c9341870d"
+}

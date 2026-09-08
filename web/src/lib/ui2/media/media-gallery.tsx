@@ -26,10 +26,17 @@ import { tileRatio } from "./aspect";
 import { MediaTile, type MediaTileProps } from "./media-tile";
 import type { PlayerSurface } from "./video-player";
 
+/**
+ * One entry in a gallery — always a real attachment, never the tile's
+ * asset-less placeholder, so `mimeType` is REQUIRED here even though
+ * `MediaTile` takes it optionally. That is what makes an omitted
+ * `mimeType` selection a compile error at the read that built the items
+ * rather than an image tile where a player belongs.
+ */
 export type GalleryItem = Pick<
   MediaTileProps,
-  "src" | "altText" | "sourceRatio" | "label" | "mimeType" | "poster" | "durationMs"
->;
+  "src" | "altText" | "sourceRatio" | "label" | "poster" | "durationMs"
+> & { mimeType: string };
 
 export type { PlayerSurface } from "./video-player";
 

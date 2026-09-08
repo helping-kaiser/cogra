@@ -184,21 +184,31 @@ export function ComponentGallery() {
         <MediaTile label="9:16, capped at 4:5" sourceRatio={9 / 16} testId="gallery-tile-capped" />
       </Section>
 
+      {/*
+        Source-less items: the gallery draws each one's reserved region and the
+        label that says what belongs there. They still name the type they stand
+        in for — the app serves WebP stills — because a gallery entry is an
+        attachment, and an attachment always knows what it is.
+      */}
       <Section title="Media — galleries">
         <MediaGallery
-          items={[{ label: "One", sourceRatio: 1 }]}
+          items={[{ label: "One", sourceRatio: 1, mimeType: "image/webp" }]}
           testId="gallery-one"
         />
         <MediaGallery
           items={[
-            { label: "1", sourceRatio: 1 },
-            { label: "2", sourceRatio: 1 },
-            { label: "3", sourceRatio: 1 },
+            { label: "1", sourceRatio: 1, mimeType: "image/webp" },
+            { label: "2", sourceRatio: 1, mimeType: "image/webp" },
+            { label: "3", sourceRatio: 1, mimeType: "image/webp" },
           ]}
           testId="gallery-three"
         />
         <MediaGallery
-          items={Array.from({ length: 7 }, (_, i) => ({ label: `${i + 1}`, sourceRatio: 1 }))}
+          items={Array.from({ length: 7 }, (_, i) => ({
+            label: `${i + 1}`,
+            sourceRatio: 1,
+            mimeType: "image/webp",
+          }))}
           testId="gallery-many"
         />
       </Section>

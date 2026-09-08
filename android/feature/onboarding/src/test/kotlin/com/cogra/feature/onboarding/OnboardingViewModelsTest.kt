@@ -5,6 +5,7 @@ import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.InviteCheck
+import com.cogra.domain.MAX_HANDLE_LENGTH
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserError
 import com.cogra.domain.identity.KeyCeremony
@@ -200,6 +201,33 @@ class OnboardingViewModelsTest {
         assertThat(vm.state.value.formValid).isTrue()
         vm.onPasswordChange("short")
         assertThat(vm.state.value.formValid).isFalse()
+    }
+
+    // The two rules the server enforces that the form used to leave to
+    // it: a handle over the ceiling and a handle outside the charset
+    // both came back as a refusal after the round trip.
+    @Test
+    fun theFormGateHoldsOnTheHandleCeilingAndCharset() {
+        val vm = applyViewModel()
+        vm.onEmailChange("joiner@example.com")
+        vm.onPasswordChange("a strong password")
+
+        vm.onHandleChange("a".repeat(MAX_HANDLE_LENGTH))
+        assertThat(vm.state.value.formValid).isTrue()
+        vm.onHandleChange("a".repeat(MAX_HANDLE_LENGTH + 1))
+        assertThat(vm.state.value.formValid).isFalse()
+
+        // The field folds case as it is typed, so an uppercase letter
+        // is already lowercase by the time the rule sees it — but a
+        // hyphen or a dot is not something folding can rescue.
+        vm.onHandleChange("Joiner")
+        assertThat(vm.state.value.formValid).isTrue()
+        vm.onHandleChange("joiner-two")
+        assertThat(vm.state.value.formValid).isFalse()
+        vm.onHandleChange("joiner.two")
+        assertThat(vm.state.value.formValid).isFalse()
+        vm.onHandleChange("joiner_two")
+        assertThat(vm.state.value.formValid).isTrue()
     }
 
     // ----------------------------------------------------------------

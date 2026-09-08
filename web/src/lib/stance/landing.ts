@@ -20,7 +20,7 @@
 // for it in `commitChecked` before every commit, severance check
 // included. This module never decides what gets written.
 
-import { clampPair, type StancePair } from "./model";
+import { clampPair, isInert, isSevered, type StancePair } from "./model";
 import type { StanceLanding } from "./stance-data";
 
 /**
@@ -36,9 +36,5 @@ export function localLanding(rawSum: StancePair, pick: StancePair): StanceLandin
     pDirected: rawSum.pDirected + pick.pDirected,
     pInterest: rawSum.pInterest + pick.pInterest,
   });
-  return {
-    landing,
-    inert: landing.pDirected === 0 || landing.pInterest === 0,
-    severed: landing.pDirected === 0 && landing.pInterest === 0,
-  };
+  return { landing, inert: isInert(landing), severed: isSevered(landing) };
 }

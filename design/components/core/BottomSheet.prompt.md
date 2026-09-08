@@ -5,7 +5,7 @@ const [open, setOpen] = React.useState(false);
 
 <BottomSheet open={open} onClose={() => setOpen(false)} ariaLabel="Post actions">
   <SheetTitle>This post</SheetTitle>
-  <SheetItem label="License terms" onSelect={() => { setOpen(false); showLicense(); }} />
+  <SheetItem label="License terms" onSelect={() => { setOpen(false); openLicenseSheet(); }} />
   <SheetItem label="Copy link" onSelect={() => setOpen(false)} />
   <SheetItem label="Report" onSelect={() => setOpen(false)} />
 </BottomSheet>

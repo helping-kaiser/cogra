@@ -1,6 +1,6 @@
 import React from "react";
 import { BottomSheet, SheetTitle } from "../core/BottomSheet.jsx";
-import { Button } from "../core/Button.jsx";
+import { Button, InlineAction } from "../core/Button.jsx";
 import { Icon } from "../navigation/Icon.jsx";
 import { MediaThumb } from "./MediaThumb.jsx";
 
@@ -56,26 +56,9 @@ export function PickedSheet({ open = false, onClose, items = [], onDone, inline 
                   Described
                 </span>
               ) : (
-                <button
-                  type="button"
-                  onClick={item.onDescribe}
-                  className="cg-state cg-focus cg-hit"
-                  style={{
-                    alignSelf: "flex-start",
-                    border: 0,
-                    background: "none",
-                    padding: 0,
-                    cursor: "pointer",
-                    fontFamily: "var(--font-sans)",
-                    fontSize: "var(--text-label-small)",
-                    lineHeight: "var(--text-label-small--line-height)",
-                    fontWeight: "var(--text-label-small--font-weight)",
-                    letterSpacing: "0.5px",
-                    color: "var(--primary)",
-                  }}
-                >
+                <InlineAction size="sm" selfStart onClick={item.onDescribe}>
                   Describe
-                </button>
+                </InlineAction>
               )}
             </span>
             <button

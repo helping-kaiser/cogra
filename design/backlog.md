@@ -122,11 +122,9 @@ variant, the where-you-are comment affordance on detail;
 `StanceControl` `defaultOpen`/`defaultPick`/`padInset`/`padNote` so
 a static board shows the parked pad from the master. Screens can
 keep canvas tweak chips via `PROPS`/`VALS` exports. The rule is
-readme §13 *Masters, variants, and screens*. **Remaining:** the
-task-flow boards (compose wizard, seals, key/auth ceremony screens)
-are still hand-authored `.dc.html` — convert them as their sections
-are next touched; `ReplyPad`/`ComposePad` (hand-copied pads) are
-first in line.
+readme §13 *Masters, variants, and screens*. The conformance round
+(2026-09-04) finished the job: every canonical board renders from
+`screens/`, and no hand-written `.dc.html` is left on the canvas.
 The canonical artboards hand-copy component markup, so system updates
 don't propagate — the entry-session post cards already drifted
 (missing elements newer boards carry). Change the authoring model so
@@ -416,12 +414,128 @@ Two follow-ups the round surfaces, still open:
   `aria-describedby`, and the supporting-line span isn't marked
   `role="alert"`. Needs a ruling on whether every field error should
   announce, or only the ones a screen reader wouldn't otherwise catch.
-- **NetworkError, ComposeSeal and ReplySeal still owe their
-  componentize-first pass** — hand-coded boards the componentize
-  principle (above) applies to but hasn't reached yet; each needs its
-  own round before any further alteration. `ReplyCited` draws the same
-  seal over the real masters, so ReplySeal's pass has its target
-  already drawn: reconcile the two and the hand-coded copy retires.
+- **Every board on the canvas renders from a JSX source** — the
+  conformance round (2026-09-04) converted all 27 boards that had
+  only hand-written `.dc.html` behind them: the compose wizard's
+  ten, the entry-and-keys family's eight, and the reply and edit
+  wizards, the two overlays and the pattern boards — `ReplyCompose`,
+  `ReplyPad`, `ReplySeal`, `EditCompose`, `EditActs`,
+  `DiscardConfirm`, `HelpDialog`, `NetworkError`, `PadKeyAbsent`.
+  119 screens, all of them reachable by the pipeline, none of them
+  hand-copying component markup. Every via kept its number and its
+  meaning, so `graph.json` took no edge; the conversion's visible
+  corrections are the ones a rebuild over the masters makes —
+  `ReplySeal` and `ReplyCited` now say one "+ Cite something"
+  between them, `ReplyCompose` and `DiscardConfirm` one "+ Add
+  pictures or a video", `NetworkError`'s stance row prints the pair
+  its own reference row prints, and `PadKeyAbsent`'s feed card grew
+  everything `PostCard` grew since it was drawn.
+  Two shapes moved into `_shared.jsx` on the way, both by the rule
+  that a body on a second board stops being board-local: the reply
+  seal's add-rows, and the reply composer itself.
+
+  **What the last nine surfaced**, each a ruling still owed:
+  - **`NetworkError` wires one control of eight.** The board is the
+    seal, and over the masters its header, its three facts and its
+    way back are real buttons again — but the graph gives it only
+    the retry, so it carries a `scanExempt` line saying the rest are
+    `ComposeSeal`'s controls, wired there. Its uploading twin wires
+    all eight. Either the fault board wires its own, or the
+    exemption stands as the pattern boards' rule.
+  - **The overlays abbreviate the surface under them, each
+    differently.** `ReplyPad`, `EditActs` and `HelpDialog` each draw
+    a shortened version of the seal or edit they cover, and
+    differently from one another — the same question `ComposePad`
+    and the license and sensitive sheets left open, now on three
+    more boards. Preserved as drawn.
+  - **`DiscardConfirm` gives the filled button to the destructive
+    answer**, where `RemoveConfirm` gives it to the safe one.
+    Preserved as drawn.
+  - **The composer's "+ Add" speaks in two voices.** `ReplyCompose`
+    says it as a bare small word; `ReplyPictures` and its siblings
+    say the same thing as a small text pill. The same three-voices
+    question the cite word has.
+  - **`FactRow` has no note slot.** The reply pad's seal carried its
+    coaching line inside the ruled block; the master's seal rules
+    enclose the row, so the line now stands beneath it.
+- **What the compose-wizard conversion surfaced**, each needing a
+  ruling before anyone fills it in:
+  - **`SheetTitle` has no trailing slot.** The license and sensitive
+    sheets each need the sheet's name plus the screen's one "?" (and
+    the sensitive one the switch besides), so both assemble the row
+    by hand — the same six-copies drift that made `stageLabel` and
+    `help` slots on `WizardHeader`.
+  - **`HelpDot` has no tonal-panel variant.** It spends `--primary`
+    on the glyph and `--border-hairline` on the ring, which inside
+    the key-absent `tertiary-container` block is the second colour
+    family `Button`'s `inverse` exists to avoid, so that board draws
+    its own ring in `currentColor`.
+  - **`PickPrompt` requires an escape.** The draft board's
+    fresh-start line is the same caption with nothing to escape to;
+    it is spelled at the master's values instead of taking it.
+  - **No one-axis stance pad exists.** `ComposePad` draws its own
+    and `ReplyPad` will want the same one. Its readout is 😄 "Glad",
+    which is in no `STANCE_ANCHORS` row (the nearest anchor to a
+    gentle positive is 🙂 "Nice") — the face and the words need a
+    ruling before either board can read from the table.
+  - **A flow badge on a field never paints.** The badge's `::after`
+    generates no box on a replaced element, and the composer boards
+    stamp the `<input>`/`<textarea>` itself (`ComposeCited`,
+    `ComposeDetails`, `ComposeUploading`, `EditComposeVideo`,
+    `ComposeSensitive`) — check-flows verifies the attribute, not the
+    paint. The badge belongs on the field's wrapper; `ComposeLicense`
+    already stamps the row rather than its hidden radio.
+  - **The seal is drawn four ways under its own overlays.** The
+    license, sensitive and pad boards each abbreviate the seal
+    beneath the scrim differently — and differently from
+    `ComposeSeal` itself. The conversion preserved each as drawn;
+    whether an overlay should sit over the real seal is a drawing
+    ruling.
+  - **The device-gallery grid now lives on three boards** —
+    `ComposePick` live, `ComposePickVideo` dead, `ComposeDraft`
+    dimmed — each screen-local by the rule that the grid exists on
+    one step of one flow. Three is where that rule stops being true.
+- **Held rulings from the conformance round (2026-09-04)** — each a
+  visible-change question the round parked rather than decided:
+  ChipMini's tone (Chip `sm` renders 26px bordered on a different
+  fill; a borderless readout tone would keep the seal board exact);
+  the reply seal's staged reference (stays a fact in the acts card
+  as drawn, or becomes a `StagedReference` row like the post's);
+  the Mark action's two drawings (text-Button pill on the comment
+  edits vs bare word on the reply seal — `FactRow`'s prose says the
+  slot takes an `InlineAction`); the "+ Cite something" three voices
+  (legacy span / bare small word / small pill); the topic chip's ×
+  (drawn but not a button — same shape as the "Show all" ruling);
+  the acts line's target (the chevron is drawn but unwired; the
+  whole line is the honest control); the add-rows' `overflow:hidden`
+  clipping their 48px hit overlay; the wizard footer's shape (only
+  3 of 12 Next buttons carry a padded footer of their own, and
+  `SealFooter` deliberately owns no padding — a footer master would
+  install a competing answer); the comments-sheet shell (verbatim
+  between `ReplyMedia` and the thread sheet — factor or leave).
+- **Two questions the body-XOR pass left open (2026-09-04)**, both
+  drawing-level: (a) a media post's DETAIL view now shows only its
+  description, at body-medium on `text-secondary` where a body-large
+  paragraph used to stand — the smallest reading of the ruling, but
+  the post page's only words are now set as a caption (`PostDetail`,
+  `PostDetailVideo`, `ComposeLanded`, `RemoveConfirm`, `RemoveMenu`);
+  (b) the text body's 22-line clamp comes from the ruled formula
+  floor(358 × 5/4 ÷ 20), i.e. an UNCAPPED 4:5 picture, while
+  `--media-max-height` caps the real picture at 376px on the 390×844
+  board — so a body at the ceiling stands ~64px taller than the media
+  post it is meant to match. Re-derive against the cap, or keep the
+  formula as the intent.
+- **Conformance-round leftovers, no ruling needed, just work**:
+  `PendingMarker` and `StanceValue` are unused across the canvas
+  since the chronicle fold (prune from the prelude destructure or
+  wait for a user); the quiet-note ramp hardcodes 0.4px tracking
+  where the label-small token says 0.5px (`QuietNote` + `ActsFooter`
+  together, one-line fix that moves pixels — needs an eye);
+  board-glue still duplicated in twos and fours (the license lock
+  ×4, the seal avatar row ×2, the vouch card head ×2);
+  `_ds_manifest.json` frozen at the import commit (only the claude.ai
+  app refreshes it); `_adherence.oxlintrc.json` has no wired runner
+  and predates the round's new masters.
 
 **Round 4 — the applicant once-each acts (2026-09-03).** The stance
 face and New post starts on `ApplicantFeed`, `ApplicantWaiting`,

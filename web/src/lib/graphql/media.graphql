@@ -7,21 +7,66 @@
 # scalar rides a GraphQL multipart request — see `apollo-link.ts` for the
 # mechanism and its source.
 
+# An upload answers with the SAME selection a gallery read carries
+# (`MediaFields`), so a freshly uploaded asset is drawable without a
+# second read — and so the two clients read one shape rather than each
+# guessing which half of the asset an upload owes them.
 mutation UploadMedia($input: UploadMediaInput!) {
   uploadMedia(input: $input) {
     media {
-      id
-      url
-      altText
-      status
-      options {
-        aspectRatio
-      }
+      ...MediaFields
     }
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
+    }
+  }
+}
+
+# The resumable path, for anything too large to risk in one request.
+#
+# `declaredBytes` fixes the cut and buys an early refusal; it is never
+# evidence about the bytes. The server dictates `partSizeBytes` because
+# guessing it wrong is only discovered at assembly.
+#
+# `kind` is `VIDEO` at every call site this app has. `MediaUploadKind.STILL`
+# is reserved: a still is capped at 10 MiB, below the 8 MiB threshold in
+# practice and never worth a three-round-trip session, so no client names it.
+mutation BeginMediaUpload($declaredBytes: Int!, $kind: MediaUploadKind!) {
+  beginMediaUpload(input: { declaredBytes: $declaredBytes, kind: $kind }) {
+    upload {
+      id
+      partSizeBytes
+      partCount
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+# Assembles the parts and answers with `uploadMedia`'s own payload, so one
+# reader serves both paths — which is why it spreads the same fragment.
+#
+# **Safe to retry**: a client whose connection dropped waiting for this reply
+# calls it again and is handed the same asset.
+mutation CompleteMediaUpload($uploadId: UUID!, $coverMediaId: UUID) {
+  completeMediaUpload(input: { uploadId: $uploadId, coverMediaId: $coverMediaId }) {
+    media {
+      ...MediaFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+# Gives the parts back now rather than at expiry — what a cancelled compose
+# owes the store, which otherwise holds them for a day.
+mutation AbortMediaUpload($uploadId: UUID!) {
+  abortMediaUpload(input: { uploadId: $uploadId }) {
+    aborted
+    userErrors {
+      ...UserErrorFields
     }
   }
 }

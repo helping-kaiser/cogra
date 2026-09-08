@@ -52,23 +52,10 @@ export function Screen() {
   return (
     <>
       <WizardHeader title="New post" />
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 24px" }}>
-        <p style={{ margin: 0, flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
-          Pick one picture, several, or one video.
-        </p>
-        <Button variant="text" size="sm">Write words instead</Button>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "4px 24px 12px", borderBottom: "1px solid var(--border-hairline)" }}>
-        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "0.5px", color: "var(--text-secondary)" }}>
-          Picked · 1
-        </span>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <MediaThumb src="post-photo.jpg" alt="" width={114} height={64} video onRemove={() => {}} removeLabel="Remove this video" />
-          <span style={{ flex: 1, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-            A video is the whole post. Its cover comes next.
-          </span>
-        </div>
-      </div>
+      <PickPrompt caption="Pick one picture, several, or one video." escapeLabel="Write words instead" />
+      <PickTray count={1} caption="A video is the whole post. Its cover comes next.">
+        <MediaThumb src="post-photo.jpg" alt="" width={114} height={64} video onRemove={() => {}} removeLabel="Remove this video" />
+      </PickTray>
       <DeadGrid />
       <div style={{ padding: "12px 24px 16px" }}>
         <Button style={{ width: "100%" }}>Next</Button>

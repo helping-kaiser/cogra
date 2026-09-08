@@ -8,6 +8,12 @@
 //! The wire form is versioned CBOR over the same deterministic subset as the
 //! signing bases; the structural body travels as its exact canonical bytes,
 //! so what the device parses is what it signs.
+//!
+//! No container here pre-allocates from its declared length: a CBOR array
+//! head is attacker-controlled and the elements behind it are not, so the
+//! allocation is grown on real items and bounded by the bytes actually
+//! present — the same rule [`crate::envelope`] states for the envelope
+//! decoder.
 
 use super::encoding::{DecodeError, Decoder, Encoder};
 use super::handshake::{PreSignedProposal, Proposal, StructuralBody, VerifiedAct};
@@ -41,7 +47,7 @@ fn decode_body(bytes: &[u8]) -> Result<StructuralBody, WireError> {
     let settlement_ref = d.text_or_null()?.map(|s| ActId::parse(&s)).transpose()?;
     let license = d.text_or_null()?;
     let n = d.array()?;
-    let mut asserted_parents = Vec::with_capacity(n as usize);
+    let mut asserted_parents = Vec::new();
     for _ in 0..n {
         asserted_parents.push(ActId::parse(&d.text()?)?);
     }
@@ -72,7 +78,7 @@ fn encode_deps(e: &mut Encoder, deps: &[ActId]) {
 
 fn decode_deps(d: &mut Decoder) -> Result<Vec<ActId>, WireError> {
     let n = d.array()?;
-    let mut deps = Vec::with_capacity(n as usize);
+    let mut deps = Vec::new();
     for _ in 0..n {
         deps.push(ActId::parse(&d.text()?)?);
     }

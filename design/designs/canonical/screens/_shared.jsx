@@ -21,6 +21,7 @@ const {
   TopicChip,
   Card,
   Button,
+  InlineAction,
   Icon,
   MediaGallery,
   MediaAttachment,
@@ -32,6 +33,7 @@ const {
   SheetItem,
   SheetTitle,
   TextField,
+  FieldLabel,
   PasswordField,
   RecoveryCode,
   SearchBar,
@@ -48,6 +50,8 @@ const {
   MoneyFigure,
   CgtMark,
   MediaThumb,
+  PickTray,
+  PickPrompt,
   PickedRow,
   DescribeCounter,
   PickedSheet,
@@ -65,6 +69,7 @@ const {
   StancePad,
   StanceReadout,
   StanceValue,
+  TransportError,
   SensitiveVeil,
   SensitiveScope,
   RedactedContent,
@@ -78,8 +83,23 @@ const {
   ReelCaption,
   PinnedClip,
   LICENSE_MENU_LABEL,
-  LICENSE_MENU_LABEL_SHOWN,
+  LicenseTerms,
   NodeMark,
+  TopicRemovable,
+  StagedReference,
+  RefusedFile,
+  ActsFooter,
+  SealFooter,
+  FactRow,
+  QuotedRow,
+  CoverRow,
+  Caret,
+  SectionLabel,
+  QuietNote,
+  StanceRow,
+  TabBar,
+  ContentRow,
+  CropViewport,
 } = components;
 
 /* A standing of one gentle record — the vouch-back default made a bundle. */
@@ -105,11 +125,12 @@ const SOL_ADDRESS_NEW = "lq1qqw7t3xk0zfvljmv2u49h5tld6mfj7z2vhnn0mjcz2q0edgp5yh3
 const CITE_ROW = { label: "Cite in a new post", onSelect: () => {} };
 const CITE_MENU = [CITE_ROW];
 
+/* A POST'S BODY IS WORDS XOR MEDIA (post.md). Every fixture with a picture
+   carries its words as the DESCRIPTION — the caption beside the body — and no
+   `content`; only the text posts below have one. */
 const ADA_POST = {
   author: ADA,
   title: "The long way home",
-  content:
-    "The light does something at the third headland that I have never managed to photograph properly, and I have tried maybe a dozen times now. This is the closest I have come.",
   description: "Took the coast road instead of the tunnel. Four hours longer, worth every minute.",
   timestamp: "2h",
   media: [{ src: "post-photo.jpg", ratio: "wide", fit: "cover" }],
@@ -134,7 +155,7 @@ const TOBIAS_POST = {
 const SOL_POST = {
   author: SOL,
   title: "Salt maps of the coast road",
-  content:
+  description:
     "Rubbings from three weekends at low tide — paper against the salt crust, the side of a wax stick, and whatever the wind allowed.",
   timestamp: "3d",
   media: [
@@ -153,7 +174,7 @@ const SOL_POST = {
 const MIRA_GALLERY_POST = {
   author: MIRA,
   title: "Sunday at the tide market",
-  content:
+  description:
     "Everything the flats give up in one morning — the stand by the sea wall had honey from the headland hives again.",
   timestamp: "4h",
   media: [
@@ -220,6 +241,44 @@ function TaskCard({ title, body, children }) {
   );
 }
 
+/* The key ceremony, as the two dialogs find it (readme §13, entry). KeyConfirm
+   and KeyDecline are the SAME screen under a different ask, so the screen is
+   written once and the boards differ only in the dialog stacked on it — the
+   ThreadDetail rule: a body on a second board stops being board-local. The
+   ceremony's own second paragraph and its two buttons belong to KeyCeremony,
+   where they are still reachable; under a modal they are not, and drawing
+   controls the dialog has taken away would be drawing a lie. */
+function KeyPledge() {
+  return (
+    <>
+      <PageHeader backHref="#" backLabel="Back" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: "var(--text-headline-small)",
+            lineHeight: "var(--text-headline-small--line-height)",
+            fontWeight: "var(--text-headline-small--font-weight)",
+          }}
+        >
+          Your key
+        </h1>
+        <p
+          style={{
+            margin: "8px 0 0",
+            fontSize: "var(--text-body-large)",
+            lineHeight: "var(--text-body-large--line-height)",
+            letterSpacing: "var(--text-body-large--letter-spacing)",
+          }}
+        >
+          Everything you publish is signed with a key that is created on this device and stays in your hands — CoGra never
+          holds it and can never reissue it.
+        </p>
+      </div>
+    </>
+  );
+}
+
 /* The detail surface's header: back plus the ONE overflow. On a detail view the
    menu lives up here and the card's own dot yields (PostCard hides it in
    detail) — two dots would be two menus for one post. */
@@ -244,35 +303,37 @@ const OWN_POST_MENU = [
   LICENSE_ROW,
 ];
 const READER_POST_MENU = [LICENSE_ROW, CITE_ROW];
-/* The same menu once the terms are unfolded: the row that revealed them is the
-   row that folds them away, so it changes its words rather than its place. */
-const READER_POST_MENU_SHOWN = [{ label: LICENSE_MENU_LABEL_SHOWN, onSelect: () => {} }, CITE_ROW];
+/* WHAT THE LICENSE ROW OPENS (readme §13, the menus round). The terms come up
+   from the bottom edge over the surface the reader asked from, and go back to
+   it the way any sheet does — the scrim, the swipe, Escape. A block unfolded
+   inside a post had no such way back, which is the whole reason this is a
+   sheet.
+
+   BOARD GLUE, not a master — the `DetailHeader` rule: masters stacked with the
+   sheet's own gutter and no new drawing between them. `LicenseTerms` draws the
+   terms here exactly as the read side has always drawn them.
+
+   IT CARRIES NO `SheetTitle`. The inset heads itself — its caption is the words
+   the reader tapped, and the public-domain word rides that same line — so a
+   title above it would say License terms twice, a few pixels apart, in two
+   sizes. The sheet's name lives on the `aria-label`, which is where a screen
+   reader asks for it. */
+function LicenseSheet({ license }) {
+  return (
+    <BottomSheet open ariaLabel="License terms">
+      <div style={{ padding: "0 24px" }}>
+        <LicenseTerms license={license} />
+      </div>
+    </BottomSheet>
+  );
+}
+
 /* Another's profile: no license (a profile declares none) and no citing — the
    word for referencing a person is mentioning (readme §13, the menus round). */
 const PROFILE_MENU = [
   { label: "Mention in a new post", onSelect: () => {} },
   { label: "Share this profile", onSelect: () => {} },
 ];
-
-/* A quiet section caption (the references sheet's groups, Explore's recents,
-   the sectioned surfaces). */
-function SectionLabel({ children }) {
-  return (
-    <span
-      style={{
-        display: "block",
-        padding: "12px 24px 4px",
-        fontSize: "var(--text-label-small)",
-        lineHeight: "var(--text-label-small--line-height)",
-        fontWeight: "var(--text-label-small--font-weight)",
-        letterSpacing: "var(--text-label-small--letter-spacing, 0.5px)",
-        color: "var(--text-secondary)",
-      }}
-    >
-      {children}
-    </span>
-  );
-}
 
 /* A device-local recent query — a quiet row, never a record (readme §13). */
 function RecentRow({ text }) {
@@ -398,150 +459,33 @@ function ProfileBand({ children }) {
   );
 }
 
-/* A person row on the stances page — the actor, and THE STANCE THE ROW IS
-   ABOUT (jakob 2026-09-01): the record's own value, face and pair, read-only.
-   Unlike a follow, a stance has sign and magnitude, so the value is the
-   row's information; acting on the person means opening their profile first
-   — the whole row does exactly that. */
-function StanceRow({ name, handle, src, pDirected, pInterest }) {
-  return (
-    <button
-      type="button"
-      className="cg-state cg-focus"
-      style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", boxSizing: "border-box", minHeight: 56, border: 0, background: "none", padding: "6px 16px", cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left" }}
-    >
-      <MonogramAvatar name={name} size={40} src={src} />
-      <span style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>{name}</span>
-        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>@{handle}</span>
-      </span>
-      <StanceValue pDirected={pDirected} pInterest={pInterest} />
-    </button>
-  );
-}
+/* The chronicle's tab row (profile round, 2026-09-01): the `TabBar` master
+   holding the chronicle's own three glyphs. What lives here is the tab data —
+   the row itself is the one every list-choosing surface draws, and the icon
+   cells take their accessible names from these labels, which is the only way
+   an icon-only control gets one.
 
-/* The chronicle's tab row (profile round, 2026-09-01): full-width icon tabs,
-   the way every social profile draws this row — the segmented pill was ruled
-   out at three options. Icon-only cells with accessible names; the selected
-   tab speaks in primary AND a 2px underline. The underline is a deliberate
-   deviation from "selection is colour only": an icon's colour alone is too
-   quiet to carry which of three same-weight glyphs is on. Screen-local until
-   it settles, then it graduates to components/. */
-function ChronicleTabs({ value = "everything" }) {
-  const TABS = [
-    { id: "posts", icon: "dynamic_feed", label: "Posts" },
-    { id: "comments", icon: "chat_bubble", label: "Comments" },
-    { id: "everything", icon: "history", label: "Everything" },
-  ];
-  return (
-    <div role="group" aria-label="What the chronicle shows" style={{ display: "flex", borderBottom: "1px solid var(--border-hairline)" }}>
-      {TABS.map((tab) => {
-        const selected = tab.id === value;
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            aria-pressed={selected}
-            aria-label={tab.label}
-            className="cg-state cg-focus"
-            style={{
-              flex: 1,
-              display: "grid",
-              placeItems: "center",
-              minHeight: "var(--touch-target-min)",
-              border: 0,
-              background: "none",
-              padding: 0,
-              cursor: "pointer",
-              color: selected ? "var(--primary)" : "var(--text-secondary)",
-              boxShadow: selected ? "inset 0 -2px 0 var(--primary)" : "none",
-            }}
-          >
-            <Icon name={tab.icon} size={22} />
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-/* The profile's chronicle as CONTAINERS, the wallet history's anatomy (jakob
-   2026-09-01 — "draw inspiration from there"): each act its own card on the
-   surface-card ground, a leading 40px disc carrying the act's kind (a glyph,
-   or the stance record's own face), the verb and its snippet, the time on the
-   trailing edge, Still settling where an act pends. A card with somewhere to
-   go is a button; a record with no destination is the same card, inert. */
-function ChronicleCard({ glyph, face, label, context, snippet, time, pending = false, link = true }) {
-  const disc = (
-    <span
-      style={{ width: 40, height: 40, borderRadius: "var(--radius-full)", background: "var(--surface-container-high)", color: "var(--text-secondary)", display: "grid", placeItems: "center", flex: "none" }}
-    >
-      {face ? <StanceValue pDirected={face.pDirected} pInterest={face.pInterest} showPair={false} /> : <Icon name={glyph ?? "history"} size={20} />}
-    </span>
-  );
-  const inner = (
-    <>
-      {disc}
-      <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-        <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-          <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>{label}</span>
-          {context && <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>{context}</span>}
-        </span>
-        {snippet && (
-          <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{snippet}</span>
-        )}
-      </span>
-      <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flex: "none" }}>
-        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>{time}</span>
-        {pending && <PendingMarker />}
-      </span>
-    </>
-  );
-  const style = {
-    display: "flex",
-    alignItems: "center",
-    gap: "var(--space-3)",
-    width: "100%",
-    boxSizing: "border-box",
-    border: 0,
-    borderRadius: "var(--radius-medium)",
-    background: "var(--surface-card)",
-    padding: "var(--space-3)",
-    fontFamily: "var(--font-sans)",
-    color: "var(--on-surface)",
-    textAlign: "left",
-  };
-  return link ? (
-    <button type="button" className="cg-state cg-focus" style={{ ...style, cursor: "pointer" }}>
-      {inner}
-    </button>
-  ) : (
-    <div style={style}>{inner}</div>
-  );
-}
+   The chronicle's cards are `ContentRow`'s `chronicle` variant, written where
+   they are read: each act its own card on the surface-card ground, a leading
+   disc carrying the act's kind (a glyph, or the stance record's own face),
+   the verb and its snippet, the time on the trailing edge, Still settling
+   where an act pends. A card with somewhere to go is a button; a record with
+   no destination is the same card, `inert`. */
+const CHRONICLE_TABS = [
+  { id: "posts", icon: "dynamic_feed", label: "Posts" },
+  { id: "comments", icon: "chat_bubble", label: "Comments" },
+  { id: "everything", icon: "history", label: "Everything" },
+];
+/* The tab strip's own name, assigned beside the tabs it names — a decided copy
+   string is an atom (readme, Masters and atoms), and five boards spelling it
+   out is five chances for one of them to say something else. */
+const CHRONICLE_TABS_LABEL = "What the chronicle shows";
 
 /* The chronicle column: cards on 8px of surface, the wallet history's seam. */
 function ChronicleList({ children }) {
   return (
     <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "8px 16px 0" }}>
       {children}
-    </div>
-  );
-}
-
-/* A file the surface refused (comment video round, 2026-09-02): the tile wears
-   MediaThumb's failed badge, the words sit beside it in UploadErrorLine, and
-   the only way out is Remove it — retrying cannot make a file smaller or a
-   format readable. The refusal is drawn where the file was offered, never in a
-   dialog and never in a snackbar. A file nothing can read has no preview, so
-   its tile is empty on purpose. Screen-local until a second product needs it. */
-function RefusedFile({ src, alt = "", video = false, message }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
-      <MediaThumb src={src} alt={alt} video={video} failed />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <UploadErrorLine message={message} onRemove={() => {}} />
-      </div>
     </div>
   );
 }
@@ -573,72 +517,6 @@ function ThreadDetail({ menuItems = READER_POST_MENU }) {
   );
 }
 
-/* A REFERENCE ALREADY STAGED IN A COMPOSER (readme §13, the menus round). The
-   composer's own row for a citation the author has committed to: the kind's
-   mark from the one glyph assignment, what it points at, the pair signed on the
-   act, and the × that takes it back out. The mark is `NodeMark`, so a person
-   arrives as a circle and everything else as its tile — the menus round's whole
-   point is that citing a post and mentioning a person stage the same fact, and
-   a row that drew them differently would deny it. */
-function StagedReference({ kind = "post", name, sub, src, value }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 48, padding: "8px 12px", borderRadius: "var(--radius-small)", background: "var(--surface-container-highest)", boxSizing: "border-box" }}>
-      <NodeMark kind={kind} name={name} src={src} />
-      <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-        <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
-        {sub && <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{sub}</span>}
-      </span>
-      {value && (
-        <span style={{ flex: "none", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{value}</span>
-      )}
-      <button
-        type="button"
-        aria-label={`Remove ${name}`}
-        className="cg-state cg-focus"
-        style={{ flex: "none", display: "grid", placeItems: "center", height: 32, width: 32, border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0 }}
-      >
-        <Icon name="close" size={18} />
-      </button>
-    </div>
-  );
-}
-
-/* A composer field's label — the wizard stages' own caption weight. */
-function ComposeFieldLabel({ children, note }) {
-  return (
-    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-      <span style={{ flex: 1, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>{children}</span>
-      {note && <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>{note}</span>}
-    </div>
-  );
-}
-
-/* The removable topic chip — a compose-only pattern, not yet a master
-   (item 17). Shared the moment a second details board staged topics. */
-function TopicRemovable({ topic }) {
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 6,
-        minHeight: 32,
-        padding: "4px 12px",
-        borderRadius: "var(--radius-full)",
-        background: "var(--secondary-container)",
-        color: "var(--on-secondary-container)",
-        fontSize: "var(--text-label-large)",
-        lineHeight: "var(--text-label-large--line-height)",
-        fontWeight: "var(--text-label-large--font-weight)",
-        letterSpacing: "var(--text-label-large--letter-spacing)",
-      }}
-    >
-      #{topic}
-      <Icon name="close" size={16} />
-    </span>
-  );
-}
-
 /* Someone else's profile, whole — shared the moment its own overflow menu
    needed the same page with a sheet over it (readme §13, the menus round). */
 function ProfileOtherBody() {
@@ -666,13 +544,13 @@ function ProfileOtherBody() {
             showHandle={false}
           />
         </div>
-        <ChronicleTabs value="everything" />
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />
         <ChronicleList>
-          <ChronicleCard glyph="dynamic_feed" label="Published a post" time="2h" snippet="The long way home — the light does something at the third headland." />
-          <ChronicleCard glyph="chat_bubble" label="Commented" time="1d" snippet="The glovebox camera earns its keep — this is the print from 2019." />
-          <ChronicleCard face={{ pDirected: 0.6, pInterest: 0.3 }} label="Took a stance" context="on @tobias" time="2d" link={false} />
-          <ChronicleCard glyph="dynamic_feed" label="Published a post" time="5d" snippet="Took the coast road instead of the tunnel. Four hours longer, worth every minute." />
-          <ChronicleCard glyph="person" label="Updated their profile" time="1w" link={false} />
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="2h" second="The long way home — the light does something at the third headland." onOpen={() => {}} />
+          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="1d" second="The glovebox camera earns its keep — this is the print from 2019." onOpen={() => {}} />
+          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Took a stance" titleAside="on @tobias" trailing="2d" inert />
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="5d" second="Took the coast road instead of the tunnel. Four hours longer, worth every minute." onOpen={() => {}} />
+          <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated their profile" trailing="1w" inert />
         </ChronicleList>
       </div>
       <BottomNav active={null} slots={ALL_SLOTS} inline />
@@ -680,79 +558,154 @@ function ProfileOtherBody() {
   );
 }
 
-function CommentsThreadSheet() {
+/* THE REPLY WIZARD'S FIRST STAGE, whole (legacy conversion, lane C): the thing
+   being answered, the words being written, the way to add pictures to them, and
+   the foot. It lives here for the KeyPledge reason — `DiscardConfirm` draws
+   this same composer under its dialog, and a body on a second board stops being
+   board-local. Drawn once, the two boards cannot disagree about what the
+   composer's "+ Add" offers, which is exactly what the hand copies had done. */
+function ReplyDraft() {
+  return (
+    <>
+      <WizardHeader title="Reply" leaveLabel="Leave — the reply is discarded" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
+        <QuotedRow
+          title="The long way home — @ada"
+          snippet="The light does something at the third headland that I have never managed…"
+          name="Ada Okonkwo"
+          src="ava1.jpg"
+        />
+
+        <p style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)" }}>
+          The third headland light is real — I have a print from 2019 that almost catches it. Almost.
+          <Caret />
+        </p>
+
+        <InlineAction size="sm" selfStart>+ Add pictures or a video</InlineAction>
+
+        <div style={{ flex: 1 }} />
+
+        <QuietNote>Words first — pictures can join them.</QuietNote>
+        <Button style={{ width: "100%" }}>Next</Button>
+      </div>
+    </>
+  );
+}
+
+/* THE REPLY SEAL'S ADD-ROWS — a primary word where a value would sit, so what
+   you could still add lines up with what you have already added. It is
+   `InlineAction`'s small rung, left-aligned and held to one line, and it does
+   NOT clip itself (jakob's ruling): the acts row's value slot already ends a
+   long value in an ellipsis, and a second `overflow: hidden` on the word only
+   cut the atom's 48px hit overlay back to the ink. Truncation belongs to the
+   row; the target belongs to the word.
+
+   It lives here because BOTH reply seals draw it — the bare one and the one
+   with a reference staged are one surface in two states, and a row spelled
+   twice is a row that drifts. */
+function AddRow({ children }) {
+  return (
+    <InlineAction size="sm" style={{ textAlign: "left", whiteSpace: "nowrap" }}>
+      {children}
+    </InlineAction>
+  );
+}
+
+/* The comment sheet's composer foot: your face, and the field that opens a
+   comment. Every sheet of comments carries it, so it is written once. */
+function CommentComposerFoot() {
+  return (
+    <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 0", borderTop: "1px solid var(--border-hairline)" }}>
+      <MonogramAvatar name="Sol Ferreira" />
+      <div style={{ flex: 1 }}>
+        <TextField label="Add a comment" value="" />
+      </div>
+    </div>
+  );
+}
+
+/* The comments sheet itself — the sheet, its title, the list the comments
+   stand in, and the composer at its foot. It is BOARD GLUE, not a master: the
+   readme's rule is that a shape reused across PRODUCTS becomes a component,
+   and this one is reused across BOARDS of one surface. Every board that opens
+   comments draws the same frame and differs only in the cards inside it, so
+   the cards are the children and the frame is written once. */
+function CommentsSheet({ children }) {
   return (
     <BottomSheet open ariaLabel="Comments" height="calc(100% - 72px)">
       <SheetTitle>Comments</SheetTitle>
       <ul style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 12, margin: 0, padding: "0 16px", listStyle: "none" }}>
-        <CommentCard
-          author={TOBIAS}
-          content="That stretch after the second bend is the reason I keep a camera in the glovebox."
-          timestamp="1h"
-          bundle={mkBundle(0.1, 0.1)}
-          onReply={() => {}}
-          replyCount={2}
-          onOpenReplies={() => {}}
-          topics={["glovebox", "coastroad"]}
-          references={1}
-          license={{ attribution: 0, provenance: 0 }}
-          menuItems={CITE_MENU}
-        />
-        {/* The veiled comment sits SECOND, where the frame still shows it
-            whole: the thread is taller than the sheet, and a state drawn
-            below the fold is a state nobody can check. The whole body — the
-            words and the two pictures with them — is under one
-            comment-scale block, while the author, the timestamp and the
-            stance stay readable. */}
-        <CommentCard
-          author={MIRA}
-          content="The gulls had been at it before the tide came back. Two frames, both grim."
-          timestamp="10m"
-          media={[
-            { src: "comment-shingle.jpg", ratio: "4 / 3", fit: "cover", alt: "A stretch of shingle at low tide." },
-            { src: "comment-gulls.jpg", ratio: "1 / 1", fit: "cover", alt: "Gulls on the tideline." },
-          ]}
-          sensitive={{ reason: "A dead seabird in the second frame." }}
-          onReply={() => {}}
-          license={{ attribution: 0, provenance: 0 }}
-          menuItems={CITE_MENU}
-        />
-        <CommentCard
-          author={SOL}
-          content="Which headland is the third one, counting from the ferry landing?"
-          timestamp="45m"
-          onReply={() => {}}
-          license={{ attribution: 0, provenance: 0 }}
-          menuItems={CITE_MENU}
-          replies={[
-            {
-              id: "r1",
-              author: ADA,
-              content: "The one past the pines — the road dips right before it.",
-              timestamp: "40m",
-              onReply: () => {},
-              license: { attribution: 0, provenance: 0 },
-              menuItems: CITE_MENU,
-            },
-            {
-              id: "r2",
-              author: TOBIAS,
-              content: "@ada That dip floods at spring tide, mind the sign.",
-              timestamp: "22m",
-              onReply: () => {},
-              license: { attribution: 0, provenance: 0 },
-              menuItems: CITE_MENU,
-            },
-          ]}
-        />
+        {children}
       </ul>
-      <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 0", borderTop: "1px solid var(--border-hairline)" }}>
-        <MonogramAvatar name="Sol Ferreira" />
-        <div style={{ flex: 1 }}>
-          <TextField label="Add a comment" value="" />
-        </div>
-      </div>
+      <CommentComposerFoot />
     </BottomSheet>
+  );
+}
+
+function CommentsThreadSheet() {
+  return (
+    <CommentsSheet>
+      <CommentCard
+        author={TOBIAS}
+        content="That stretch after the second bend is the reason I keep a camera in the glovebox."
+        timestamp="1h"
+        bundle={mkBundle(0.1, 0.1)}
+        onReply={() => {}}
+        replyCount={2}
+        onOpenReplies={() => {}}
+        topics={["glovebox", "coastroad"]}
+        references={1}
+        license={{ attribution: 0, provenance: 0 }}
+        menuItems={CITE_MENU}
+      />
+      {/* The veiled comment sits SECOND, where the frame still shows it
+          whole: the thread is taller than the sheet, and a state drawn
+          below the fold is a state nobody can check. The whole body — the
+          words and the two pictures with them — is under one
+          comment-scale block, while the author, the timestamp and the
+          stance stay readable. */}
+      <CommentCard
+        author={MIRA}
+        content="The gulls had been at it before the tide came back. Two frames, both grim."
+        timestamp="10m"
+        media={[
+          { src: "comment-shingle.jpg", ratio: "4 / 3", fit: "cover", alt: "A stretch of shingle at low tide." },
+          { src: "comment-gulls.jpg", ratio: "1 / 1", fit: "cover", alt: "Gulls on the tideline." },
+        ]}
+        sensitive={{ reason: "A dead seabird in the second frame." }}
+        onReply={() => {}}
+        license={{ attribution: 0, provenance: 0 }}
+        menuItems={CITE_MENU}
+      />
+      <CommentCard
+        author={SOL}
+        content="Which headland is the third one, counting from the ferry landing?"
+        timestamp="45m"
+        onReply={() => {}}
+        license={{ attribution: 0, provenance: 0 }}
+        menuItems={CITE_MENU}
+        replies={[
+          {
+            id: "r1",
+            author: ADA,
+            content: "The one past the pines — the road dips right before it.",
+            timestamp: "40m",
+            onReply: () => {},
+            license: { attribution: 0, provenance: 0 },
+            menuItems: CITE_MENU,
+          },
+          {
+            id: "r2",
+            author: TOBIAS,
+            content: "@ada That dip floods at spring tide, mind the sign.",
+            timestamp: "22m",
+            onReply: () => {},
+            license: { attribution: 0, provenance: 0 },
+            menuItems: CITE_MENU,
+          },
+        ]}
+      />
+    </CommentsSheet>
   );
 }
 
@@ -773,7 +726,7 @@ const CLIP_LAKESIDE = {
 const MIRA_CLIP_POST = {
   author: MIRA,
   title: "The lake, doing nothing, for forty seconds",
-  content:
+  description:
     "Stood there long enough that the midges found me. Worth it for the last ten seconds, when the far shore goes the colour of the water.",
   timestamp: "35m",
   media: [CLIP_LAKESIDE],

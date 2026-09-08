@@ -108,6 +108,71 @@ pub fn x_real_ip_app(
     )
 }
 
+/// One RIFF chunk: the four-character code, the little-endian payload
+/// size, the payload, and the pad byte an odd size takes.
+pub fn webp_chunk(fourcc: &[u8; 4], payload: &[u8]) -> Vec<u8> {
+    let mut out = Vec::new();
+    out.extend_from_slice(fourcc);
+    out.extend_from_slice(&(payload.len() as u32).to_le_bytes());
+    out.extend_from_slice(payload);
+    if payload.len() % 2 == 1 {
+        out.push(0);
+    }
+    out
+}
+
+/// A WebP container around a chunk sequence.
+pub fn webp_container(body: &[u8]) -> Vec<u8> {
+    let mut out = Vec::new();
+    out.extend_from_slice(b"RIFF");
+    out.extend_from_slice(&((4 + body.len()) as u32).to_le_bytes());
+    out.extend_from_slice(b"WEBP");
+    out.extend_from_slice(body);
+    out
+}
+
+/// A 1×1 lossless WebP carrying an EXIF chunk with a location in it —
+/// the shape a phone camera hands over, and the shape that must never
+/// reach public storage intact.
+///
+/// Both upload suites want the same bytes and for the same reason: the
+/// strip changes them, so a path that stored what arrived instead of
+/// what the pipeline produced shows up as a different digest.
+pub fn photo_with_location() -> Vec<u8> {
+    let mut body = webp_chunk(b"VP8L", &[0x2F, 0x00, 0x00, 0x00, 0x00, 0x88, 0x88, 0x08]);
+    body.extend_from_slice(&webp_chunk(b"EXIF", b"GPS 52.5200 N 13.4050 E"));
+    webp_container(&body)
+}
+
+/// A two-frame animated WebP, built to the container specification's
+/// `ANMF` layout: x, y, width-minus-one and height-minus-one as 24-bit
+/// little-endian triples, then the frame duration, then a flag byte,
+/// then the frame's own image chunk.
+///
+/// A second still that is genuinely a second still: the strip removes
+/// EXIF, so two photos differing only in their location metadata
+/// deduplicate to one asset.
+pub fn animated_webp() -> Vec<u8> {
+    let mut vp8x = vec![0x02, 0, 0, 0];
+    vp8x.extend_from_slice(&[0, 0, 0]);
+    vp8x.extend_from_slice(&[0, 0, 0]);
+    let mut body = webp_chunk(b"VP8X", &vp8x);
+    body.extend_from_slice(&webp_chunk(b"ANIM", &[0, 0, 0, 0, 0, 0]));
+    for duration in [40u32, 60] {
+        let mut frame = Vec::new();
+        for triple in [0u32, 0, 0, 0, duration] {
+            frame.extend_from_slice(&triple.to_le_bytes()[..3]);
+        }
+        frame.push(0);
+        frame.extend_from_slice(&webp_chunk(
+            b"VP8L",
+            &[0x2F, 0x00, 0x00, 0x00, 0x00, 0x88, 0x88, 0x08],
+        ));
+        body.extend_from_slice(&webp_chunk(b"ANMF", &frame));
+    }
+    webp_container(&body)
+}
+
 /// Collects a response body as JSON.
 pub async fn body_json(response: axum::response::Response) -> serde_json::Value {
     use http_body_util::BodyExt;
