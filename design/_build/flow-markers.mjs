@@ -384,9 +384,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Cite in a new post</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
-  // TWO SCRIMS on this board — the thread's and the menu's — and both take the
-  // same number: the edge is "tap outside", and outside the menu is the whole
-  // screen whichever wash the finger lands on.
+  // TWO WASHES on this board — the thread's, and the menu's stacked over the
+  // thread it dims — and both take the same number: the edge is "tap outside",
+  // and outside the menu is the whole screen.
   CommentMenu: [
     { n: 1, find: ">License terms</button>", tag: "button" },
     { n: 2, find: ">Cite in a new post</button>", tag: "button" },
@@ -400,9 +400,8 @@ Object.assign(FLOW_MARKERS, {
   // The license sheet, over the post and over the thread. Both are scanExempt:
   // the terms are a block to read, not a set of controls, so the only thing
   // either board wires is the wash that drops the sheet. CommentLicense has two
-  // — the thread's and the sheet's — and they take the same number, as on
-  // CommentMenu: outside the sheet is outside it whichever wash the finger
-  // lands on.
+  // — the thread's and the sheet's stacked over it — and they take the same
+  // number, as on CommentMenu: outside the sheet is outside it.
   PostLicense: [{ n: 1, find: 'class="cg-scrim-in"', tag: "div" }],
   CommentLicense: [{ n: 1, find: 'class="cg-scrim-in"', tag: "div", all: true }],
   ComposeCited: [

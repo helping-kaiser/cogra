@@ -319,10 +319,14 @@ const READER_POST_MENU = [LICENSE_ROW, CITE_ROW];
    the reader tapped, and the public-domain word rides that same line — so a
    title above it would say License terms twice, a few pixels apart, in two
    sizes. The sheet's name lives on the `aria-label`, which is where a screen
-   reader asks for it. */
-function LicenseSheet({ license }) {
+   reader asks for it.
+
+   `stacked` is for the copy that comes up over the comments thread: a sheet over
+   a sheet takes the layer above, so its wash dims the thread and its surface
+   takes the next rung. Over the post detail there is nothing to stack on. */
+function LicenseSheet({ license, stacked = false }) {
   return (
-    <BottomSheet open ariaLabel="License terms">
+    <BottomSheet open stacked={stacked} ariaLabel="License terms">
       <div style={{ padding: "0 24px" }}>
         <LicenseTerms license={license} />
       </div>
