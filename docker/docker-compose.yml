@@ -29,7 +29,11 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # postgres:18 images moved the declared volume from
+      # /var/lib/postgresql/data to /var/lib/postgresql (PGDATA now lives
+      # in a version-specific subdirectory inside it); mounting the old
+      # path would leave the real data dir outside the named volume.
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gnp}"]
       interval: 5s
