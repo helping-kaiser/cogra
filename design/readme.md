@@ -2260,6 +2260,15 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   above. They carry the two readings besides, Ada's credit-on-every-use
   against the comment's public domain. Both are `scanExempt` and wire
   one number, the wash: the terms are a block to read, not controls.
+- **A sheet over a sheet dims what it covers and takes the next
+  rung.** `BottomSheet`'s `stacked` lifts the upper sheet a layer, so
+  the wash it already draws falls between the two instead of under
+  both, and its surface moves to `surfaceContainerHighest` — elevation
+  is tonal, and two surfaces at one rung claim one elevation. The
+  sheet below keeps its top edge, its handle and its title in view,
+  dimmed: depth you can see beats depth you infer. `CommentMenu` and
+  `CommentLicense` are the two boards that stack, both over the
+  comments thread.
 - **The terms are drawn, not printed.** A quiet inset at the medium
   rung: a caption naming the words the reader tapped, then one row per
   axis with the two readings aligned so the pair reads as a pair. It
