@@ -595,23 +595,18 @@ function ReplyDraft() {
 }
 
 /* THE REPLY SEAL'S ADD-ROWS — a primary word where a value would sit, so what
-   you could still add lines up with what you have already added. It is
-   `InlineAction`'s small rung, left-aligned and held to one line, and it does
-   NOT clip itself (jakob's ruling): the acts row's value slot already ends a
-   long value in an ellipsis, and a second `overflow: hidden` on the word only
-   cut the atom's 48px hit overlay back to the ink. Truncation belongs to the
-   row; the target belongs to the word.
+   you could still add lines up with what you have already added. They are
+   `ActsCard`'s action rows: the whole row is the control, because a word whose
+   only slot clips its overflow is a word whose 48px target is cut back to the
+   ink. Truncation belongs to the value slot, and an action row has none.
 
-   It lives here because BOTH reply seals draw it — the bare one and the one
+   They live here because BOTH reply seals draw them — the bare one and the one
    with a reference staged are one surface in two states, and a row spelled
    twice is a row that drifts. */
-function AddRow({ children }) {
-  return (
-    <InlineAction size="sm" style={{ textAlign: "left", whiteSpace: "nowrap" }}>
-      {children}
-    </InlineAction>
-  );
-}
+const ADD_ROWS = [
+  { label: "", action: "+ Add a topic", count: "1 more action" },
+  { label: "", action: "+ Cite something", count: "1 more action" },
+];
 
 /* The comment sheet's composer foot: your face, and the field that opens a
    comment. Every sheet of comments carries it, so it is written once. */

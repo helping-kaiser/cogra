@@ -497,8 +497,7 @@ Two follow-ups the round surfaces, still open:
   (legacy span / bare small word / small pill); the topic chip's ×
   (drawn but not a button — same shape as the "Show all" ruling);
   the acts line's target (the chevron is drawn but unwired; the
-  whole line is the honest control); the add-rows' `overflow:hidden`
-  clipping their 48px hit overlay; the wizard footer's shape (only
+  whole line is the honest control); the wizard footer's shape (only
   3 of 12 Next buttons carry a padded footer of their own, and
   `SealFooter` deliberately owns no padding — a footer master would
   install a competing answer); the comments-sheet shell (verbatim

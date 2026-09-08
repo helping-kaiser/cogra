@@ -32,8 +32,7 @@ export function Screen() {
         <ActsCard
           rows={[
             { label: "Comment", value: "Reply to @ada's post", count: "1 action" },
-            { label: "", value: <AddRow>+ Add a topic</AddRow>, count: "1 more action" },
-            { label: "", value: <AddRow>+ Cite something</AddRow>, count: "1 more action" },
+            ...ADD_ROWS,
           ]}
           total="1 signed action"
         />

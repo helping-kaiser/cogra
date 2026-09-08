@@ -6,7 +6,14 @@
  */
 export interface ActsCardRow {
   label: string;
-  value: React.ReactNode;
+  /** A fact row's value. Ends a long one in an ellipsis. */
+  value?: React.ReactNode;
+  /**
+   * An action row's words — what could still be added. The whole row is the
+   * button then, and nothing in it truncates. Exclusive with `value`.
+   */
+  action?: React.ReactNode;
+  onAct?: () => void;
   /** e.g. "1 action". */
   count?: string;
 }
