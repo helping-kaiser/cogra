@@ -131,4 +131,17 @@
     <string name="designsystem_cover_frame">Frame %1$d</string>
     <string name="designsystem_cover_own">Your own cover picture</string>
     <string name="designsystem_cover_own_action">A cover picture of your own</string>
+
+    <!-- The video surface's two controls. Both are labelled by what the
+         press does, not by what the clip is doing, which is what a
+         screen reader announces on a button. -->
+    <string name="designsystem_video_play">Play</string>
+    <string name="designsystem_video_pause">Pause</string>
+    <string name="designsystem_video_mute">Mute</string>
+    <string name="designsystem_video_unmute">Unmute</string>
+
+    <!-- The gallery's dot row, read as a position. Positional arguments
+         because the order of the two numbers is a property of the
+         language, not of the layout. -->
+    <string name="designsystem_gallery_position">Picture %1$d of %2$d</string>
 </resources>

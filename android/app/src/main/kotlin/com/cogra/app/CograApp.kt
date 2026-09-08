@@ -3,10 +3,12 @@ package com.cogra.app
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import androidx.lifecycle.ProcessLifecycleOwner
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
 import coil3.video.VideoFrameDecoder
+import com.cogra.core.designsystem.v2.media.VideoStageLifecycle
 import com.cogra.domain.CograLog
 import dagger.hilt.android.HiltAndroidApp
 
@@ -23,6 +25,9 @@ import dagger.hilt.android.HiltAndroidApp
  * a sink is installed, and this is the only place that installs one —
  * under the *app's* own `BuildConfig.DEBUG`, which is the build the
  * user is running rather than the variant some library was compiled as.
+ *
+ * It is also where the video stage meets the only lifecycle whose scope
+ * matches it — the process's, so a backgrounded app holds no decoder.
  */
 @HiltAndroidApp
 class CograApp : Application(), SingletonImageLoader.Factory {
@@ -34,6 +39,7 @@ class CograApp : Application(), SingletonImageLoader.Factory {
                 if (cause == null) Log.w("CoGra/$tag", message) else Log.w("CoGra/$tag", message, cause)
             }
         }
+        ProcessLifecycleOwner.get().lifecycle.addObserver(VideoStageLifecycle)
     }
 
     override fun newImageLoader(context: PlatformContext): ImageLoader =

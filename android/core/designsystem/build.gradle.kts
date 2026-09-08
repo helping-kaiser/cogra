@@ -10,9 +10,9 @@ android {
 
     buildFeatures {
         compose = true
-        // For `BuildConfig.DEBUG` alone: the video surface's trace is
-        // gated on it so R8 folds the whole thing out of release, where
-        // a constant `false` leaves neither the calls nor their strings.
+        // For `BuildConfig.DEBUG` alone: the video surface's trace tests
+        // it on every call, and builds the line it would log only on the
+        // debug side of that test.
         buildConfig = true
     }
 
@@ -55,6 +55,9 @@ dependencies {
     // The key gate: BiometricPrompt needs the hosting FragmentActivity,
     // which LocalActivity supplies.
     implementation(libs.androidx.activity.compose)
+    // The video surface claims and surrenders the shared player on the
+    // host's ON_START/ON_STOP, so it needs Compose's lifecycle effects.
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.fragment)
     implementation(libs.kotlinx.coroutines.core)
