@@ -129,6 +129,9 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    // ProcessLifecycleOwner: the shell hands the video stage the one
+    // lifecycle whose scope matches it — the process, not a screen.
+    implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.hilt.navigation.compose)
 
     implementation(platform(libs.androidx.compose.bom))

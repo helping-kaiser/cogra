@@ -18,12 +18,7 @@ class VideoPosterCoverTest {
     @Test
     fun aSurfaceWithNoFrameYetShowsThePoster() {
         assertThat(
-            posterCovers(
-                coverSurface = true,
-                hasPlayer = true,
-                alreadyRendered = false,
-                clipOnStage = true,
-            ),
+            posterCovers(alreadyRendered = false, clipOnStage = true),
         ).isTrue()
     }
 
@@ -32,12 +27,7 @@ class VideoPosterCoverTest {
         // Another clip took the stage; there is no frame of this one
         // anywhere to show, so the cover is all there is.
         assertThat(
-            posterCovers(
-                coverSurface = false,
-                hasPlayer = false,
-                alreadyRendered = true,
-                clipOnStage = false,
-            ),
+            posterCovers(alreadyRendered = true, clipOnStage = false),
         ).isTrue()
     }
 
@@ -45,19 +35,10 @@ class VideoPosterCoverTest {
     fun aSurfaceMidHandoverOnTheSameClipShowsNothing() {
         // The reported flash: during the crossfade the arriving surface
         // holds the token and is drawing this very clip, so the leaving
-        // one draws nothing and lets it through. Its own
-        // `PresentationState` says "no frame" about itself either way,
-        // which must not bring the cover back.
-        for (coverSurface in listOf(false, true)) {
-            assertThat(
-                posterCovers(
-                    coverSurface = coverSurface,
-                    hasPlayer = false,
-                    alreadyRendered = true,
-                    clipOnStage = true,
-                ),
-            ).isFalse()
-        }
+        // one draws nothing and lets it through.
+        assertThat(
+            posterCovers(alreadyRendered = true, clipOnStage = true),
+        ).isFalse()
     }
 
     @Test
@@ -65,12 +46,7 @@ class VideoPosterCoverTest {
         // Same handover, but nothing has rendered yet: there is no frame
         // to let through, so the cover is still the honest stand-in.
         assertThat(
-            posterCovers(
-                coverSurface = true,
-                hasPlayer = false,
-                alreadyRendered = false,
-                clipOnStage = true,
-            ),
+            posterCovers(alreadyRendered = false, clipOnStage = true),
         ).isTrue()
     }
 
@@ -80,25 +56,19 @@ class VideoPosterCoverTest {
         // itself, but the clip has a face of its own by now and the
         // cover has no job.
         assertThat(
-            posterCovers(
-                coverSurface = true,
-                hasPlayer = true,
-                alreadyRendered = true,
-                clipOnStage = true,
-            ),
+            posterCovers(alreadyRendered = true, clipOnStage = true),
         ).isFalse()
     }
 
     @Test
-    fun aReadySurfaceShowsTheVideo() {
+    fun aClipTheStageHasNotDrawnWearsItsCoverWhateverTheSurfaceThinks() {
+        // The returning app: the stage released its player and built a
+        // new one, so nothing of this clip has been drawn. The surface's
+        // own state is remembered across that swap and still reports the
+        // released player's frame — which is why it is not asked.
         assertThat(
-            posterCovers(
-                coverSurface = false,
-                hasPlayer = true,
-                alreadyRendered = false,
-                clipOnStage = true,
-            ),
-        ).isFalse()
+            posterCovers(alreadyRendered = false, clipOnStage = true),
+        ).isTrue()
     }
 
     @Test
@@ -106,36 +76,13 @@ class VideoPosterCoverTest {
         // The reason is what the device log prints, and "the cover
         // flashed" has more than one cause.
         assertThat(
-            posterReason(
-                coverSurface = false,
-                hasPlayer = false,
-                alreadyRendered = false,
-                clipOnStage = false,
-            ),
+            posterReason(alreadyRendered = false, clipOnStage = false),
         ).contains("no clip on stage")
         assertThat(
-            posterReason(
-                coverSurface = true,
-                hasPlayer = true,
-                alreadyRendered = false,
-                clipOnStage = true,
-            ),
+            posterReason(alreadyRendered = false, clipOnStage = true),
         ).contains("no frame rendered yet")
         assertThat(
-            posterReason(
-                coverSurface = false,
-                hasPlayer = true,
-                alreadyRendered = true,
-                clipOnStage = true,
-            ),
-        ).isNull()
-        assertThat(
-            posterReason(
-                coverSurface = true,
-                hasPlayer = false,
-                alreadyRendered = true,
-                clipOnStage = true,
-            ),
+            posterReason(alreadyRendered = true, clipOnStage = true),
         ).isNull()
     }
 }
