@@ -394,7 +394,7 @@ the start — and delivery splits by content kind.
   someone is scrolling past. The **post detail** carries real
   transport — play/pause and a seekable timeline, uniform for every
   clip, its chrome auto-hiding — and so does the fullscreen viewer
-  (2.5.3); the stream (2.7) carries sound and a drag-to-seek line.
+  (2.5.3); the stream (slice 3) carries sound and a drag-to-seek line.
   A portrait clip's tap opens the post detail here, like every other
   media tap; the stream takes that tap when it ships in slice 3.
 - **A clip keeps its own ratio, clamped to tall**: 16:9 and 1:1
@@ -411,9 +411,8 @@ the start — and delivery splits by content kind.
 The non-media rulings the compose session produced, separable
 from the media path and carrying their own doc write-back:
 
-- The **default-license account setting** and the sensitive
-  self-mark's contract field, which the wizard needs and the
-  contract does not yet carry.
+- The **default-license account setting**, which the wizard
+  promises and the contract does not yet carry.
 - **Edit as one batch**: an edit carrying its topic and citation
   acts together.
 - Media in the **comment composer**, and the full feed-card
@@ -426,9 +425,11 @@ from the media path and carrying their own doc write-back:
   measured against. It carries **no acts** and does not show the
   description, and it is dismissed by the X, a swipe down, or the
   backdrop.
-- **Share**, on the post detail: one tap to the platform's own share
-  sheet, a glyph with no count of ours. Whether a feed card carries
-  one is still open, so the row there is unchanged.
+- **Share**, on the post detail and on the feed card alike: one tap
+  to the platform's own share sheet, a glyph with no count of ours.
+  The action row has a stated order — stance, score, comment, share
+  — which is also its queue: on a phone too narrow for all four,
+  share is the first to move into the ⋮ menu.
 - **Surfaces:** backend, API, Android, web.
 
 ### Slice 2.6 — Private viewer state
