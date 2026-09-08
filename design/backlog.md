@@ -451,10 +451,10 @@ Two follow-ups the round surfaces, still open:
     fresh-start line is the same caption with nothing to escape to;
     it is spelled at the master's values instead of taking it.
   - **No one-axis stance pad exists.** `ComposePad` draws its own
-    and `ReplyPad` will want the same one. Its readout is 😄 "Glad",
-    which is in no `STANCE_ANCHORS` row (the nearest anchor to a
-    gentle positive is 🙂 "Nice") — the face and the words need a
-    ruling before either board can read from the table.
+    and `ReplyPad` will want the same one. Its readout now reads the
+    table — 🙂 "Nice", the nearest anchor at +0.30 — so what is left
+    is the field itself: a master for the line, or two boards
+    drawing one.
   - **A flow badge on a field never paints.** The badge's `::after`
     generates no box on a replaced element, and the composer boards
     stamp the `<input>`/`<textarea>` itself (`ComposeCited`,
