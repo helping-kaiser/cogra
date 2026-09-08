@@ -1,20 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <baseline version="1.0">
     <file name="src/main/kotlin/com/cogra/app/CograApp.kt">
-        <error line="28" column="18" source="standard:class-signature" />
-        <error line="28" column="33" source="standard:class-signature" />
+        <error line="33" column="18" source="standard:class-signature" />
+        <error line="33" column="33" source="standard:class-signature" />
     </file>
     <file name="src/main/kotlin/com/cogra/app/di/AppModule.kt">
         <error line="6" column="1" source="standard:import-ordering" />
     </file>
     <file name="src/main/kotlin/com/cogra/app/navigation/CograNavGraph.kt">
         <error line="11" column="1" source="standard:import-ordering" />
-        <error line="115" column="5" source="standard:class-signature" />
-        <error line="116" column="5" source="standard:class-signature" />
-        <error line="116" column="43" source="standard:class-signature" />
-        <error line="214" column="5" source="standard:class-signature" />
-        <error line="214" column="24" source="standard:class-signature" />
-        <error line="355" column="20" source="standard:op-spacing" />
+        <error line="117" column="5" source="standard:class-signature" />
+        <error line="118" column="5" source="standard:class-signature" />
+        <error line="118" column="43" source="standard:class-signature" />
+        <error line="257" column="5" source="standard:class-signature" />
+        <error line="257" column="24" source="standard:class-signature" />
     </file>
     <file name="src/main/kotlin/com/cogra/app/ui/SecurityNoticeDialog.kt">
         <error line="10" column="1" source="standard:import-ordering" />
