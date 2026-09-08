@@ -58,13 +58,14 @@ const DESCRIPTION_CLAMP_LINES = 2;
 
 /* THE TEXT BODY'S CEILING — a text post stands about as tall as a media post,
    never taller, so a feed of both keeps one rhythm. Derived from the tokens
-   rather than chosen: the feed card fills the 390px phone frame and spends
-   `--card-padding` (16px) on each side, leaving 358px of content; the tallest
-   crop the composer allows is 4:5, so a media post's picture is 358 × 5/4 =
-   447.5px of card; `--text-body-medium--line-height` is 1.25rem = 20px.
-   floor(447.5 / 20) = 22 lines. Past that the body folds and `More` opens it.
-   The detail view is the read surface and clamps nothing. */
-const TEXT_BODY_CLAMP_LINES = 22;
+   rather than chosen, and against the picture the reader actually sees: a 4:5
+   crop wants 447.5px at the card's 358px content width, but `--media-max-height`
+   caps it first — on the 390×844 board, 844 less the 44px safe area, the 64px
+   bottom bar and the 360px worst-case chrome leaves 376px.
+   `--text-body-medium--line-height` is 1.25rem = 20px, so floor(376 / 20) = 18
+   lines. Past that the body folds and `More` opens it. The detail view is the
+   read surface and clamps nothing. */
+const TEXT_BODY_CLAMP_LINES = 18;
 
 /* A static render cannot measure a paragraph, so the opener is offered on an
    estimate from the same tokens: at `--text-body-medium` (0.875rem = 14px) the
@@ -185,7 +186,7 @@ export function PostCard({
 
   // Only where there is something folded away. "More" is a text control, not a
   // link: it opens the text in place and never navigates. A media post's caption
-  // is clamped to two lines and always carries it; a text post's body has 22
+  // is clamped to two lines and always carries it; a text post's body has 18
   // lines to fill first, so there the opener waits on the estimate above.
   const folded = hasMedia
     ? Boolean(description)

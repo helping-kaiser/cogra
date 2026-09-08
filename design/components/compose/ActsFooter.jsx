@@ -33,7 +33,7 @@ export function ActsFooter({ count, onOpen }) {
       type="button"
       onClick={onOpen}
       className={BUTTON_CLASS}
-      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, border: 0, background: "none", padding: 0, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}
+      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, border: 0, background: "none", padding: 0, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}
     >
       This creates {count} signed actions
       <span style={{ display: "inline-flex" }}>

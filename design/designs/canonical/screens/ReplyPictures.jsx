@@ -28,7 +28,7 @@ export function Screen() {
 
         <DescribeCounter described={0} total={2} onDescribe={() => {}} />
 
-        <Button variant="text" size="sm" selfStart>+ Add pictures · 2 of 4</Button>
+        <InlineAction size="sm" selfStart>+ Add pictures · 2 of 4</InlineAction>
 
         <div style={{ flex: 1 }} />
 

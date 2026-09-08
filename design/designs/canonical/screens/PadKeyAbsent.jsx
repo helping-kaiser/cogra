@@ -10,10 +10,9 @@
    key.
 
    THE NOTICE IS `ComposeKeyAbsent`'s, which is `WalletKeyAbsent`'s: a
-   `tertiary-container` panel, the "?" ring drawn in the panel's own
-   `currentColor` (the master spends `--primary` on the glyph, a second colour
-   family inside a tonal block), and the restore button in `Button`'s `inverse`
-   — the filled button that takes the panel's pair turned over.
+   `tertiary-container` panel, the "?" in `HelpDot`'s `inverse` — the ring the
+   panel's own `currentColor` draws — and the restore button in `Button`'s
+   `inverse`, the filled button that takes the panel's pair turned over.
 
    THE FEED BENEATH IS `KeyElsewhere`'s, the same shell with the same task card:
    this is that screen, one tap in. Its post carries no standing, because the
@@ -83,19 +82,7 @@ export function Screen() {
             <h2 style={{ margin: 0, flex: 1, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
               Your key isn't on this browser
             </h2>
-            <button
-              type="button"
-              aria-label="Your key"
-              className="cg-focus"
-              style={{ display: "grid", placeItems: "center", height: "var(--touch-target-min)", width: "var(--touch-target-min)", border: 0, background: "none", borderRadius: "var(--radius-full)", cursor: "pointer", flex: "none", color: "inherit" }}
-            >
-              <span
-                aria-hidden="true"
-                style={{ display: "grid", placeItems: "center", height: 32, width: 32, borderRadius: "var(--radius-full)", border: "1px solid currentColor", fontFamily: "var(--font-sans)", fontSize: "var(--text-label-large)", fontWeight: "var(--text-label-large--font-weight)" }}
-              >
-                ?
-              </span>
-            </button>
+            <HelpDot ariaLabel="Your key" variant="inverse" />
           </div>
           <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
             Signing needs your key, which isn't in this browser — the write waits as pending.

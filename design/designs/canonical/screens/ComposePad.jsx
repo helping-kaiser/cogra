@@ -15,26 +15,14 @@
    EVERYTHING AROUND THE FIELD IS THE PAD'S OWN GRAMMAR, kept: the "?" in the
    top-right corner out of the readouts' reading order (`HelpDot`, at the
    master's geometry), the pick's readout ABOVE the field where a thumb cannot
-   cover it, the note, and Cancel · Set — release never commits, Set does. */
+   cover it, the note, and Cancel · Set — release never commits, Set does.
+
+   THE SEAL BENEATH IS THE SEAL — `ComposeSealBody`, the same body
+   `ComposeSeal` draws. What a wash covers is inert, not shortened. */
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" stageLabel="Last step" />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
-        <ActsCard total="4 signed actions" note="they land together, or none does" />
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow label="License" value="Public domain — your default" />
-          <FactRow
-            label="Where you stand on it"
-            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
-            action="Adjust"
-            last
-          />
-        </div>
-        <div style={{ flex: 1 }} />
-        <Button style={{ width: "100%" }}>Sign and publish</Button>
-      </div>
+      <ComposeSealBody />
 
       {/* The wash over the shell; the parked pad above it stays sharp. */}
       <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "var(--scrim-wash, rgba(0, 0, 0, 0.5))" }} />
@@ -67,12 +55,18 @@ export function Screen() {
           <span aria-hidden="true" style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
             Your pick
           </span>
+          {/* THE FACE AND THE WORD COME FROM `STANCE_ANCHORS`: at +0.30 the
+              nearest anchor is the table's first row, 🙂 "Nice" (0.15 / 0.15).
+              They are spelled here because `nearestAnchor` is not among the
+              names the bundle exposes to screens — the value is the table's,
+              not this board's, and the pad must never name a face the system
+              has no row for. */}
           <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
-            <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>😄</span>
+            <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🙂</span>
             <span style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.30</span>
           </span>
           <span style={{ position: "absolute", width: "1px", height: "1px", padding: 0, margin: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 }}>
-            Glad, For or against +0.30
+            Nice, For or against +0.30
           </span>
         </div>
 

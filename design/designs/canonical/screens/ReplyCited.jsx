@@ -15,7 +15,7 @@
    same shape — a state of a surface, drawn because it is designed, declared as
    an entry because no tap reaches it. */
 
-/* The card's own affordance rows are `_shared.jsx`'s `AddRow` — `ReplySeal`
+/* The card's own affordance rows are `_shared.jsx`'s `ADD_ROWS` — `ReplySeal`
    draws the same pair without the staged reference, and the two are one
    surface in two states. */
 
@@ -51,8 +51,7 @@ export function Screen() {
               ),
               count: "1 action",
             },
-            { label: "", value: <AddRow>+ Add a topic</AddRow>, count: "1 more action" },
-            { label: "", value: <AddRow>+ Cite something</AddRow>, count: "1 more action" },
+            ...ADD_ROWS,
           ]}
           total="2 signed actions"
           note="they land together, or none does"

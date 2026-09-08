@@ -68,7 +68,7 @@ export function Screen() {
           />
         </div>
 
-        <Button variant="text" size="sm" selfStart>+ Add pictures · 4 of 4</Button>
+        <InlineAction size="sm" selfStart>+ Add pictures · 4 of 4</InlineAction>
 
         <div style={{ flex: 1 }} />
 

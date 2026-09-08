@@ -18,28 +18,13 @@
    own post there is only one thing a pick could be about, and here there are
    two — the post being answered, and the comment being written.
 
-   THE NOTE LEAVES THE RULED BLOCK. Under the wash the seal draws its one fact
-   with the coaching line inside the rules; `FactRow`'s seal rules enclose the
-   row itself and the master has no note slot, so the same words stand directly
-   beneath the block as the `QuietNote` they always were. */
+   THE SEAL BENEATH IS THE SEAL — `ReplySealBody`, the same body `ReplySeal`
+   draws. What a wash covers is inert, not shortened, so the acts card keeps its
+   add-rows and the three facts stand where the reader left them. */
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" leaveLabel="Leave — the reply is discarded" stageLabel="Last step" />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuietNote>Reply to "The long way home" — 89 characters.</QuietNote>
-        <ActsCard total="1 signed action" />
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow
-            label="Toward what you answer"
-            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
-            last
-          />
-        </div>
-        <QuietNote>Replying also signs where you stand on the post it answers.</QuietNote>
-        <div style={{ flex: 1 }} />
-        <Button style={{ width: "100%" }}>Sign comment</Button>
-      </div>
+      <ReplySealBody />
 
       {/* The wash over the shell; the parked pad above it stays sharp. */}
       <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "var(--scrim-wash, rgba(0, 0, 0, 0.5))" }} />
