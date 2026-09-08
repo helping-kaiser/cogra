@@ -755,7 +755,17 @@ function EditComposeBody() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>References</FieldLabel>
-          <StagedReference kind="post" name="The long way home — @ada" src="post-photo.jpg" />
+          {/* The composer's whole staged form, as `ComposeDetails` draws it:
+              the kind under the name, and the pair the citation signs. An edit
+              stages the same citation a first draft does, so it shows back the
+              same facts. */}
+          <StagedReference
+            kind="post"
+            name="The long way home — @ada"
+            sub="Post"
+            src="post-photo.jpg"
+            value="+0.10 / +0.10"
+          />
           <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
         </div>
 
