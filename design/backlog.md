@@ -492,10 +492,13 @@ Two follow-ups the round surfaces, still open:
 - **Conformance-round leftovers, no ruling needed, just work**:
   `PendingMarker` and `StanceValue` are unused across the canvas
   since the chronicle fold (prune from the prelude destructure or
-  wait for a user); the quiet-note ramp hardcodes 0.4px tracking
-  where the label-small token says 0.5px (`QuietNote` + `ActsFooter`
-  together, one-line fix that moves pixels — needs an eye);
-  board-glue still duplicated in twos and fours (the license lock
+  wait for a user); **fourteen more label-small sites still spell
+  0.4px** where the token says 0.5px — `ActsCard` ×2, `PickedRow` ×3,
+  `CoverRow`, `DescribeSheet`, `PickedSheet`, `PickTray`,
+  `UploadNotice`, `EarnedChart`, `PayoutAddress` ×2, `WalletBalance`
+  — each a conform item under §7's rule that a component never states
+  a raw type value, and each moves pixels, so the sweep wants one eye
+  over its boards; board-glue still duplicated in twos and fours (the license lock
   ×4, the seal avatar row ×2, the vouch card head ×2);
   `_ds_manifest.json` frozen at the import commit (only the claude.ai
   app refreshes it); `_adherence.oxlintrc.json` has no wired runner

@@ -475,6 +475,14 @@ from a link is what the control does: performing an action is a button,
 going somewhere is a link. A button dressed as an underlined link is
 neither.
 
+**A component never states a raw type value.** Type arrives as a role,
+and a role is four tokens together — size, line-height, weight and
+tracking. A component that spells `letterSpacing: "0.4px"` beside
+`var(--text-label-small)` has left the ramp for a number nothing
+maintains: the token says `0.03125rem`, and the two drift the moment
+the ramp is retuned. Take all four or take none; if a role needs a
+value the ramp does not carry, the ramp is what changes.
+
 ### 7.1 Proposed — built ahead of the product
 
 A separate **"Proposed"** group in the Design System tab, and a separate
