@@ -46,7 +46,7 @@ export interface PostCardProps {
   /** Fires when a stance on this post is signed, so the shell can keep it. */
   onCommit?: (pick: import("../stance/StanceReadout").StancePair, bundle: StanceBundle) => void;
   /**
-   * "summary" clamps the body to a 4:5 media post's height (22 lines) and the
+   * "summary" clamps the body to a capped media post's height (18 lines) and the
    * description to two, and links the text region — the feed. "detail" sets the
    * body at body-large, unclamped and unlinked — the post page.
    */

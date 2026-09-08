@@ -2394,8 +2394,8 @@ a master, and every master is one component with variants as props
   the media and drops the words), and both kinds order **title ·
   body · description**, the caption last, with the 4px seam between
   the two fields. The description clamps to **two lines** in the
-  feed; a text body clamps at **22** — floor(358px × 5/4 ÷ 20px),
-  the height a 4:5 picture takes at the card's own content width, so
+  feed; a text body clamps at **18** — floor(376px ÷ 20px), the
+  height a picture takes once `--media-max-height` has capped it, so
   a feed of both kinds keeps one rhythm. The detail view clamps
   nothing. Every fixture with a picture now carries its words as the
   description, the stream's caption takes the description too, and
