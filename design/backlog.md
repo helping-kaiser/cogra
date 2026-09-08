@@ -1207,6 +1207,6 @@ conform items for the feature session, not design work still owed:
    the author chip, the profile header, a mention, a search result.
    The handle alone, never a stand-in name.
 
-One edge the ruling does not reach: `PrepareCollectiveInput` takes
-`displayName: String!`, so a Collective is still founded with a name.
-Whether the same optionality belongs there is unasked.
+**A Collective keeps its founding name.** The optionality does not reach
+`PrepareCollectiveInput`: its `displayName` stays `String!`, so founding
+a Collective still means naming it (ruled 2026-09-08).
