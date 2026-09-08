@@ -115,10 +115,10 @@ export function LicenseChooser({ value = PUBLIC_DOMAIN, onChange, name = "licens
    its own reading on its own row, the two readings aligned so the pair reads
    as a pair.
 
-   It takes NO fill. The sheet it comes up in is already the highest container
-   rung, so a filled inset on top of it would either invert between the themes
-   or claim an elevation this owes nothing to; a hairline at the medium rung
-   recesses it in both. Nothing here is coloured — the terms are neither a warning nor a
+   It takes NO fill. The sheet it comes up in is a raised container already, so a
+   filled inset on top of it would either invert between the themes or claim an
+   elevation this owes nothing to; a hairline at the medium rung recesses it in
+   both. Nothing here is coloured — the terms are neither a warning nor a
    promotion, and `--error` is spoken for (readme §13, the input-error round). */
 export function LicenseTerms({ license = PUBLIC_DOMAIN }) {
   const publicDomain = license.attribution === 0 && license.provenance === 0;

@@ -2263,14 +2263,15 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
 - **The terms are drawn, not printed.** A quiet inset at the medium
   rung: a caption naming the words the reader tapped, then one row per
   axis with the two readings aligned so the pair reads as a pair. It
-  takes **no fill** — the sheet is already the highest container rung,
-  and a filled inset over it would invert between the themes — and no
-  colour, the terms being neither warning nor promotion. Public domain
-  is the pair readers already have a word for, so the word rides the
-  caption while the rows still spell what it means. The sheet takes
-  **no `SheetTitle`**: the inset heads itself, and a heading above it
-  would say License terms twice, a few pixels apart, in two sizes —
-  the sheet's name lives on its `aria-label`. The read side got its
+  takes **no fill** — the sheet it sits in is a raised container
+  already, and a filled inset over it would invert between the
+  themes — and no colour, the terms being neither warning nor
+  promotion. Public domain is the pair readers already have a word
+  for, so the word rides the caption while the rows still spell what
+  it means. The sheet takes **no `SheetTitle`**: the inset heads
+  itself, and a heading above it would say License terms twice, a few
+  pixels apart, in two sizes — the sheet's name lives on its
+  `aria-label`. The read side got its
   **own readings**: the chooser's hints address the author declaring
   the terms, and on a read surface "Every use credits you" tells a
   reuser they are owed the credit they in fact owe.
