@@ -67,6 +67,10 @@ export function Screen() {
           <FactRow label="Sensitive" value="Not marked" action="Mark" last />
         </div>
 
+        {/* `ReplySeal` carries the same line: the two are one surface in two
+            states, and a note on one of them only is a disagreement. */}
+        <QuietNote>Replying also signs where you stand on the post it answers.</QuietNote>
+
         <div style={{ flex: 1 }} />
 
         <SealFooter signLabel="Sign comment" />
