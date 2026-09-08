@@ -57,6 +57,11 @@ export interface MediaAttachmentProps {
   duration?: string;
   /** 0..1 along the timeline. */
   progress?: number;
+  /**
+   * Whether the transport offers the fullscreen toggle. False only where the
+   * surface has no fullscreen to open — the composer's cover preview.
+   */
+  fullscreen?: boolean;
 }
 
 export declare function MediaAttachment(props: MediaAttachmentProps): JSX.Element;

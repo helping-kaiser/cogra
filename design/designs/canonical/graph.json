@@ -627,10 +627,20 @@
 
     { "from": "ComposeCover", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposePick", "case": "one stage back — the video path never crosses the crop" }] },
     { "from": "ComposeCover", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },
-    { "from": "ComposeCover", "via": 3, "kind": "detour", "label": "play", "to": [{ "terminal": "self", "case": "plays the preview" }] },
+    { "from": "ComposeCover", "via": 3, "kind": "detour", "label": "play", "to": [{ "board": "ComposeCoverPlaying", "case": "the preview runs — the cover gives way to the transport" }] },
     { "from": "ComposeCover", "via": 4, "kind": "advance", "label": "frame options", "to": [{ "terminal": "self", "case": "picks the face — 1s, 10%, 50%, 90%, deduped on a short clip" }] },
     { "from": "ComposeCover", "via": 5, "kind": "advance", "label": "A picture (tile)", "to": [{ "terminal": "os", "case": "the device's own picker — a cover of your own" }, { "board": "CoverCrop", "case": "the picture comes back through the crop, locked to the video's shape" }] },
     { "from": "ComposeCover", "via": 6, "kind": "advance", "label": "Next", "to": [{ "board": "ComposeDetails" }] },
+
+    { "from": "ComposeCoverPlaying", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposePick", "case": "one stage back — the video path never crosses the crop" }] },
+    { "from": "ComposeCoverPlaying", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },
+    { "from": "ComposeCoverPlaying", "via": 3, "kind": "detour", "label": "play/pause", "to": [{ "terminal": "self", "case": "the preview stops and starts where it is — the cover does not come back" }] },
+    { "from": "ComposeCoverPlaying", "via": 4, "kind": "detour", "label": "skip ten seconds", "to": [{ "terminal": "self", "case": "back or forward, the preview stays where it is drawn" }] },
+    { "from": "ComposeCoverPlaying", "via": 5, "kind": "detour", "label": "seek line", "to": [{ "terminal": "self", "case": "tap or drag — the preview moves under the finger" }] },
+    { "from": "ComposeCoverPlaying", "via": 6, "kind": "detour", "label": "video sound", "to": [{ "terminal": "self", "case": "the sticky decision every video shares" }] },
+    { "from": "ComposeCoverPlaying", "via": 7, "kind": "advance", "label": "frame options", "to": [{ "terminal": "self", "case": "picks the face — the strip is unchanged by playing" }] },
+    { "from": "ComposeCoverPlaying", "via": 8, "kind": "advance", "label": "A picture (tile)", "to": [{ "terminal": "os", "case": "the device's own picker — a cover of your own" }, { "board": "CoverCrop", "case": "the picture comes back through the crop, locked to the video's shape" }] },
+    { "from": "ComposeCoverPlaying", "via": 9, "kind": "advance", "label": "Next", "to": [{ "board": "ComposeDetails" }] },
 
     { "from": "ComposePickVideo", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "terminal": "back", "case": "the first stage — leaves toward where compose began, draft kept" }] },
     { "from": "ComposePickVideo", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept, no confirmation" }] },
