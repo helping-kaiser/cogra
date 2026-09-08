@@ -395,10 +395,10 @@ the settlement/tip/rail record views, the settings and invites screens,
 the item / offer surfaces, the Sky (item 16), and item 13's Post Score
 drill-down.
 
-**Round 3 — the input-error boards (2026-09-03).** Five boards, one
+**Round 3 — the input-error boards (2026-09-03).** Four boards, one
 per surface: `JoinErrors`, `SignInError`, `RestoreError`,
-`RecoveryCodeMismatch`, `ProfileEditError` — the field-error,
-wrong-credentials, wrong-code and code-mismatch gaps, closed. Each
+`RecoveryCodeMismatch` — the field-error, wrong-credentials,
+wrong-code and code-mismatch gaps, closed. Each
 copies its parent screen and changes only the errored parts;
 `TextField`/`PasswordField` grew an `error` prop (M3's text-field
 error state) the round before this one, and `RecoveryCode` grew an
@@ -1183,3 +1183,30 @@ for the feature session, not design work still owed:
    (`guidelines/copy-voice.md`, awaiting blessing). A clip announced
    as a picture is the card saying something untrue to the one reader
    who cannot see the difference.
+
+### 36 · A display name is optional · *design* · **ruled**
+
+Ruled by jakob 2026-09-08, against the input-error round's premise
+that a profile must carry a written name. Account creation never asks
+for one, a profile with none is presented by its handle alone, and the
+handle is the only name the product requires. All three below are
+conform items for the feature session, not design work still owed:
+
+1. **`Actor.displayName` is optional — a breaking schema change.**
+   Its `ModeratedText.value` is null where the actor never wrote one,
+   the shape every optional moderated field already takes, and
+   `prepareProfileUpdate` takes the explicit-null clear it used to
+   refuse ([api-spec.md](../docs/implementation/api-spec.md)).
+   Backend, `schema.graphql` and both generated clients move
+   together.
+2. **Profile edit validates nothing locally.** The empty-name check
+   was the surface's only local rule, so `ProfileEditError` retires
+   with it: Save's outcomes are the seal, and the faults the seal
+   already owns.
+3. **Every surface that prints a name falls back to the handle** —
+   the author chip, the profile header, a mention, a search result.
+   The handle alone, never a stand-in name.
+
+One edge the ruling does not reach: `PrepareCollectiveInput` takes
+`displayName: String!`, so a Collective is still founded with a name.
+Whether the same optionality belongs there is unasked.

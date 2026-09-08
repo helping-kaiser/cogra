@@ -2186,9 +2186,8 @@ the ruling that an applicant stages each kind of act once (2026-09-01).
 
 ### The input-error round — 2026-09-03
 
-Five of item 23's still-owed gaps — field-error, wrong-credentials,
-wrong-code, code-mismatch — closed onto boards (jakob's rulings the
-same day).
+Item 23's field-error, wrong-credentials, wrong-code and code-mismatch
+gaps, closed onto boards (jakob's rulings the same day).
 
 - **A field error wears M3's own text-field error state**: the
   outline and label switch to `--error`, and a body-small supporting
@@ -2210,8 +2209,8 @@ same day).
 - **Each surface words its own error.** Unlike the offline board, one
   network-error master answering for every surface, an input error is
   worded per field and per surface — "That handle is taken." is not
-  interchangeable with "That code doesn't check out." — so each of the
-  five boards carries its own copy, not a shared component's default
+  interchangeable with "That code doesn't check out." — so each
+  errored board carries its own copy, not a shared component's default
   text.
 - **Componentize before you alter.** Hand-coded boards get rebuilt
   from real masters before an error state is drawn onto them, and this
@@ -2224,15 +2223,15 @@ same day).
   next submit, so typing never produces a field that turns red out of
   nowhere.
 
-Five boards drawn: `JoinErrors` (Handle taken, Password too short —
+Four boards drawn: `JoinErrors` (Handle taken, Password too short —
 Email untouched), `SignInError` (the form-level fault line),
-`RestoreError` (the recovery-code field), `RecoveryCodeMismatch` (the
-confirm field — `RecoveryCode` grew an `error` pass-through to reach
-it, mirroring `TextField`'s own anatomy, since the component draws its
-own field rather than composing `TextField`), and `ProfileEditError`
-(Display name). Each board's submit control keeps its parent's other
-outcomes and replaces only the gap with a `self` case — the line
-updates in place rather than sending the reader anywhere. Census 114
+`RestoreError` (the recovery-code field), and `RecoveryCodeMismatch`
+(the confirm field — `RecoveryCode` grew an `error` pass-through to
+reach it, mirroring `TextField`'s own anatomy, since the component
+draws its own field rather than composing `TextField`). Each board's
+submit control keeps its parent's other outcomes and replaces only
+the gap with a `self` case — the line updates in place rather than
+sending the reader anywhere. Census 114
 → 109 gaps, 867 → 897 edges; the 56/51/5 flow census is unchanged,
 since no declared flow walks an error path.
 
