@@ -381,3 +381,19 @@ among the acts one signature commits:
   wizard's details stage uses. It drops the gloss listing what can be
   cited: the staged row above it now shows a citation, and an example
   beats a list.
+
+## Awaiting blessing — the parked-rulings round
+
+Drawn, and up for review in the same pass. Kept apart from the blessed
+lines above until then.
+
+**A card's media description names the kind of thing it has.** The
+description is what a screen reader is given for a post card's body, so
+a clip announced as a picture is the card telling a reader something
+untrue — and it is the only place the difference is sayable, the two
+looking alike until one plays:
+
+- `1 clip · 0:24` — a video post. The duration belongs in the words:
+  it is the one fact about a clip a reader decides on before playing
+  it, and the eye reads it off the cover.
+- `1 picture` · `4 pictures` — a picture post, the count alone.
