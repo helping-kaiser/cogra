@@ -2468,8 +2468,7 @@ a master, and every master is one component with variants as props
   question): ChipMini's tone, the reply seal's staged-reference
   placement, the Mark drawings, the wizard footer's shape, the
   comments-sheet shell, the "+ Cite something" voices, the topic
-  chip's ×, the acts line's target, and the composer's "+ Add"
-  voices.
+  chip's ×, and the acts line's target.
 - **The gate**: 939 edges · 82 gaps · flows 58/53/5, unchanged end
   to end — which is the round's whole claim: the canvas redrawn
   from masters without the graph moving.
