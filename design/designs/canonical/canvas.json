@@ -830,6 +830,15 @@
       "page": "media"
     },
     {
+      "file": "ComposeCoverPlaying.dc.html",
+      "title": "Cover · the preview playing",
+      "x": 2880,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
       "file": "FeedCover.dc.html",
       "title": "Feed · the cover at rest",
       "x": 0,
