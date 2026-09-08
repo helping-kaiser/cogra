@@ -18,6 +18,12 @@ export interface BottomSheetProps {
    * needs the surface to own the height. Children manage their own scrolling.
    */
   height?: string;
+  /**
+   * This sheet opens over another sheet. It takes the layer above, so its own
+   * wash falls between the two and dims the sheet below, and its surface takes
+   * the next tonal rung — `surfaceContainerHighest`.
+   */
+  stacked?: boolean;
 }
 
 export declare function BottomSheet(props: BottomSheetProps): JSX.Element | null;
