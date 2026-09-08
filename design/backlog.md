@@ -1158,27 +1158,28 @@ The questions:
    someone stood over time — the most sensitive of the five to draw,
    and the one most likely to want a shape of its own.
 
-### 35 · Video playback — decisions the transition fix surfaced · *design*
+### 35 · Video playback — decisions the transition fix surfaced · *design* · **ruled**
 
 Filed by the feature loop 2026-09-03, from the on-device transition
-fix (PR #615). The fix made the feed↔detail handover clean without
-choosing any new look; three choices surfaced that are design's:
+fix (PR #615), which made the feed↔detail handover clean without
+choosing any new look. Ruled 2026-09-08; all three are conform items
+for the feature session, not design work still owed:
 
-1. **The media frame is genuinely wider on detail than on the
-   card** — measured 996×996 vs 912×912, each from its own screen's
-   padding (Card + 16dp padding vs the detail's 32dp inset). Not a
-   bug: measured once per screen, stable. During the handover the
-   picture therefore grows ~9% — invisible-ish today, moot if the
-   full-width feed rework equalizes them. Decide: should the two
-   frames match (and which one wins), or does the rework settle it?
-2. **The screen transition itself.** Feed and PostDetail declare no
-   enter/exit transitions, so Navigation Compose's default crossfade
-   runs, and with the fix it now reads clean. If a designed
-   transition is wanted for media continuity (slide, shared-element
-   growth of the video frame, anything), that's a drawn decision —
-   the fix deliberately did not invent one.
-3. **The video card's accessibility description says "1 picture"**
-   (verbatim: "1 picture: league is Life") — a video post is
-   indistinguishable from a picture post to a screen reader and to
-   UI tooling. The card's a11y copy needs the clip's own words
-   (copy-voice territory), presumably with its duration.
+1. **Media renders full-bleed on the card and on the detail alike.**
+   The frame is the screen's width on both, which is what the canvas
+   already draws — the app's 996×996 detail and 912×912 card come
+   from a 32dp inset and a Card's 16dp padding, and both insets are
+   drift. Equal frames also cost the handover its ~9% growth: with
+   nothing to grow between, the picture simply stays.
+2. **The transition is a shared element on the media frame; the
+   chrome fades.** M3's container transform — the one thing the
+   reader is following is the picture, so it persists in place while
+   the surface around it changes. With the frames equalized by (1)
+   the shared element does not resize, which is what makes the
+   handover read as one surface opening rather than two screens
+   swapping.
+3. **A video post's card description says the clip**, never
+   "1 picture" — `1 clip · 0:24`, the kind and its duration
+   (`guidelines/copy-voice.md`, awaiting blessing). A clip announced
+   as a picture is the card saying something untrue to the one reader
+   who cannot see the difference.
