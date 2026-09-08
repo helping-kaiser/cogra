@@ -2453,10 +2453,9 @@ a master, and every master is one component with variants as props
   placement, the Mark drawings, the wizard footer's shape, the
   comments-sheet shell, the "+ Cite something" voices, the topic
   chip's ×, the acts line's target, the composer's "+ Add" voices,
-  how each overlay abbreviates the surface under it, the discard
-  dialog's button weighting, and how much of a pattern board's own
-  setting the graph should wire — `NetworkError` gives an edge to
-  its retry alone, and says so in a `scanExempt` line.
+  the discard dialog's button weighting, and how much of a pattern
+  board's own setting the graph should wire — `NetworkError` gives
+  an edge to its retry alone, and says so in a `scanExempt` line.
 - **The gate**: 939 edges · 82 gaps · flows 58/53/5, unchanged end
   to end — which is the round's whole claim: the canvas redrawn
   from masters without the graph moving.

@@ -15,7 +15,10 @@
 
    THE ROW IS THE CONTROL, the way `Checkbox` makes it one: a real radio input,
    visually hidden, with the drawn dot and the words inside the label that names
-   it. The dot was a span that nothing could reach or press. */
+   it. The dot was a span that nothing could reach or press.
+
+   THE SEAL BENEATH IS THE SEAL — `ComposeSealBody`, the same body
+   `ComposeSeal` draws. What a sheet covers is inert, not shortened. */
 
 const CREDIT = [
   { label: "No credit", hint: "Nobody owes you a name." },
@@ -77,22 +80,7 @@ function Axis({ axis, name, tiers, chosen }) {
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" stageLabel="Last step" />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
-        <ActsCard total="4 signed actions" note="they land together, or none does" />
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow label="License" value="Public domain — your default" action="Change" />
-          <FactRow
-            label="Where you stand on it"
-            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
-            action="Adjust"
-            last
-          />
-        </div>
-        <div style={{ flex: 1 }} />
-        <Button style={{ width: "100%" }}>Sign and publish</Button>
-      </div>
+      <ComposeSealBody />
 
       <BottomSheet open ariaLabel="License terms">
         <SheetTitle trailing={<HelpDot ariaLabel="License" />}>License</SheetTitle>
