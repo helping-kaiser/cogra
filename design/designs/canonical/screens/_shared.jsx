@@ -418,9 +418,11 @@ function SearchTriggerRow({ reading }) {
   );
 }
 
-/* The "?" — the master, defaulted to this canvas's usual label. */
-function HelpDot({ ariaLabel = "How searching works" }) {
-  return <SystemHelpDot ariaLabel={ariaLabel} />;
+/* The "?" — the master, defaulted to this canvas's usual label. Everything else
+   the master takes passes straight through; a shim that swallows props is a
+   second component wearing the master's name. */
+function HelpDot({ ariaLabel = "How searching works", ...rest }) {
+  return <SystemHelpDot ariaLabel={ariaLabel} {...rest} />;
 }
 
 /* The own-profile band cluster (profile round): the share control and the gear

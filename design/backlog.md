@@ -460,11 +460,6 @@ Two follow-ups the round surfaces, still open:
     enclose the row, so the line now stands beneath it.
 - **What the compose-wizard conversion surfaced**, each needing a
   ruling before anyone fills it in:
-  - **`HelpDot` has no tonal-panel variant.** It spends `--primary`
-    on the glyph and `--border-hairline` on the ring, which inside
-    the key-absent `tertiary-container` block is the second colour
-    family `Button`'s `inverse` exists to avoid, so that board draws
-    its own ring in `currentColor`.
   - **`PickPrompt` requires an escape.** The draft board's
     fresh-start line is the same caption with nothing to escape to;
     it is spelled at the master's values instead of taking it.

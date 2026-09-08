@@ -8,11 +8,11 @@
    the filled button that takes the panel's own pair turned over instead of a
    `primary` fill arguing with it.
 
-   THE PANEL'S "?" IS DRAWN HERE, not `HelpDot`. The master spends `--primary`
-   on the glyph and `--border-hairline` on its ring, which is right on the
-   page's ground and is a second colour family inside a tonal block. The ring
-   here is the panel's own `currentColor`, at the master's geometry — 32px of
-   ring inside the 48px target.
+   THE PANEL'S "?" IS `HelpDot`'s `inverse`. On the page's ground the master
+   spends `--primary` on the glyph and `--border-hairline` on its ring, which
+   inside a tonal block is a second colour family; the variant rings in the
+   panel's own `currentColor` at the same geometry — 32px inside the 48px
+   target.
 
    NO SIGN BUTTON, so no `SealFooter`: the pair that footer draws is commit and
    the way back, and there is nothing to commit until the key is here. What
@@ -54,19 +54,7 @@ export function Screen() {
             <h2 style={{ margin: 0, flex: 1, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
               Your key isn't on this browser
             </h2>
-            <button
-              type="button"
-              aria-label="Your key"
-              className="cg-focus"
-              style={{ display: "grid", placeItems: "center", height: "var(--touch-target-min)", width: "var(--touch-target-min)", border: 0, background: "none", borderRadius: "var(--radius-full)", cursor: "pointer", flex: "none", color: "inherit" }}
-            >
-              <span
-                aria-hidden="true"
-                style={{ display: "grid", placeItems: "center", height: 32, width: 32, borderRadius: "var(--radius-full)", border: "1px solid currentColor", fontFamily: "var(--font-sans)", fontSize: "var(--text-label-large)", fontWeight: "var(--text-label-large--font-weight)" }}
-              >
-                ?
-              </span>
-            </button>
+            <HelpDot ariaLabel="Your key" variant="inverse" />
           </div>
           <Button variant="inverse" style={{ width: "100%" }}>Restore the key</Button>
         </div>
