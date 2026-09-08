@@ -970,13 +970,10 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
-/* The five errored boards (input-errors bite 3, 2026-09-03): each copies its
+/* The errored boards (input-errors bite 3, 2026-09-03): each copies its
    parent's control anatomy exactly, so its markers reuse the parent's
    `find` patterns 1:1 — the error props change styling and a supporting
-   line, never the elements a reader can tap. ProfileEditError is the one
-   exception: Display name's value goes empty to match "can't be empty",
-   so its marker keys off that empty attribute instead of the master's
-   sample name. */
+   line, never the elements a reader can tap. */
 Object.assign(FLOW_MARKERS, {
   JoinErrors: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
@@ -1009,14 +1006,6 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: ">Copy</button>", tag: "button" },
     { n: 2, find: 'type="text"', tag: "input" },
     { n: 3, find: ">I&#x27;ve written it down</button>", tag: "button" },
-  ],
-  ProfileEditError: [
-    { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: ">Change picture</button>", tag: "button" },
-    { n: 3, find: 'value=""', tag: "input" },
-    { n: 4, find: "whatever the wind allows.</textarea>", tag: "textarea" },
-    { n: 5, find: 'value="solferreira.art"', tag: "input" },
-    { n: 6, find: ">Save</button>", tag: "button" },
   ],
 });
 

@@ -1095,7 +1095,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 1542,
+      "h": 1282,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1131,15 +1131,6 @@
       "title": "Profile edit · what you sign",
       "x": 480,
       "y": 964,
-      "w": 390,
-      "h": 844,
-      "page": "profile"
-    },
-    {
-      "file": "ProfileEditError.dc.html",
-      "title": "Edit profile · an empty name",
-      "x": 0,
-      "y": 1928,
       "w": 390,
       "h": 844,
       "page": "profile"
