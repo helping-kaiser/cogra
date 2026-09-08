@@ -395,10 +395,10 @@ the settlement/tip/rail record views, the settings and invites screens,
 the item / offer surfaces, the Sky (item 16), and item 13's Post Score
 drill-down.
 
-**Round 3 — the input-error boards (2026-09-03).** Five boards, one
+**Round 3 — the input-error boards (2026-09-03).** Four boards, one
 per surface: `JoinErrors`, `SignInError`, `RestoreError`,
-`RecoveryCodeMismatch`, `ProfileEditError` — the field-error,
-wrong-credentials, wrong-code and code-mismatch gaps, closed. Each
+`RecoveryCodeMismatch` — the field-error, wrong-credentials,
+wrong-code and code-mismatch gaps, closed. Each
 copies its parent screen and changes only the errored parts;
 `TextField`/`PasswordField` grew an `error` prop (M3's text-field
 error state) the round before this one, and `RecoveryCode` grew an
@@ -434,50 +434,23 @@ Two follow-ups the round surfaces, still open:
   that a body on a second board stops being board-local: the reply
   seal's add-rows, and the reply composer itself.
 
-  **What the last nine surfaced**, each a ruling still owed:
-  - **`NetworkError` wires one control of eight.** The board is the
-    seal, and over the masters its header, its three facts and its
-    way back are real buttons again — but the graph gives it only
-    the retry, so it carries a `scanExempt` line saying the rest are
-    `ComposeSeal`'s controls, wired there. Its uploading twin wires
-    all eight. Either the fault board wires its own, or the
-    exemption stands as the pattern boards' rule.
-  - **The overlays abbreviate the surface under them, each
-    differently.** `ReplyPad`, `EditActs` and `HelpDialog` each draw
-    a shortened version of the seal or edit they cover, and
-    differently from one another — the same question `ComposePad`
-    and the license and sensitive sheets left open, now on three
-    more boards. Preserved as drawn.
-  - **`DiscardConfirm` gives the filled button to the destructive
-    answer**, where `RemoveConfirm` gives it to the safe one.
-    Preserved as drawn.
-  - **The composer's "+ Add" speaks in two voices.** `ReplyCompose`
-    says it as a bare small word; `ReplyPictures` and its siblings
-    say the same thing as a small text pill. The same three-voices
-    question the cite word has.
-  - **`FactRow` has no note slot.** The reply pad's seal carried its
-    coaching line inside the ruled block; the master's seal rules
-    enclose the row, so the line now stands beneath it.
+- **One line has no home**: "Replying also signs where you stand on
+  the post it answers." It was the reply pad's abbreviated seal's
+  coaching note, and the pad now covers the real reply seal, which
+  never carried it. Either the seal earns the line — `FactRow` has no
+  note slot, so it would stand beneath the ruled block or the master
+  would grow one — or the copy retires. A copy question, not a
+  drawing one.
 - **What the compose-wizard conversion surfaced**, each needing a
   ruling before anyone fills it in:
-  - **`SheetTitle` has no trailing slot.** The license and sensitive
-    sheets each need the sheet's name plus the screen's one "?" (and
-    the sensitive one the switch besides), so both assemble the row
-    by hand — the same six-copies drift that made `stageLabel` and
-    `help` slots on `WizardHeader`.
-  - **`HelpDot` has no tonal-panel variant.** It spends `--primary`
-    on the glyph and `--border-hairline` on the ring, which inside
-    the key-absent `tertiary-container` block is the second colour
-    family `Button`'s `inverse` exists to avoid, so that board draws
-    its own ring in `currentColor`.
   - **`PickPrompt` requires an escape.** The draft board's
     fresh-start line is the same caption with nothing to escape to;
     it is spelled at the master's values instead of taking it.
   - **No one-axis stance pad exists.** `ComposePad` draws its own
-    and `ReplyPad` will want the same one. Its readout is 😄 "Glad",
-    which is in no `STANCE_ANCHORS` row (the nearest anchor to a
-    gentle positive is 🙂 "Nice") — the face and the words need a
-    ruling before either board can read from the table.
+    and `ReplyPad` will want the same one. Its readout now reads the
+    table — 🙂 "Nice", the nearest anchor at +0.30 — so what is left
+    is the field itself: a master for the line, or two boards
+    drawing one.
   - **A flow badge on a field never paints.** The badge's `::after`
     generates no box on a replaced element, and the composer boards
     stamp the `<input>`/`<textarea>` itself (`ComposeCited`,
@@ -485,12 +458,6 @@ Two follow-ups the round surfaces, still open:
     `ComposeSensitive`) — check-flows verifies the attribute, not the
     paint. The badge belongs on the field's wrapper; `ComposeLicense`
     already stamps the row rather than its hidden radio.
-  - **The seal is drawn four ways under its own overlays.** The
-    license, sensitive and pad boards each abbreviate the seal
-    beneath the scrim differently — and differently from
-    `ComposeSeal` itself. The conversion preserved each as drawn;
-    whether an overlay should sit over the real seal is a drawing
-    ruling.
   - **The device-gallery grid now lives on three boards** —
     `ComposePick` live, `ComposePickVideo` dead, `ComposeDraft`
     dimmed — each screen-local by the rule that the grid exists on
@@ -507,31 +474,27 @@ Two follow-ups the round surfaces, still open:
   (legacy span / bare small word / small pill); the topic chip's ×
   (drawn but not a button — same shape as the "Show all" ruling);
   the acts line's target (the chevron is drawn but unwired; the
-  whole line is the honest control); the add-rows' `overflow:hidden`
-  clipping their 48px hit overlay; the wizard footer's shape (only
+  whole line is the honest control); the wizard footer's shape (only
   3 of 12 Next buttons carry a padded footer of their own, and
   `SealFooter` deliberately owns no padding — a footer master would
   install a competing answer); the comments-sheet shell (verbatim
   between `ReplyMedia` and the thread sheet — factor or leave).
-- **Two questions the body-XOR pass left open (2026-09-04)**, both
-  drawing-level: (a) a media post's DETAIL view now shows only its
+- **One question the body-XOR pass left open (2026-09-04)**,
+  drawing-level: a media post's DETAIL view now shows only its
   description, at body-medium on `text-secondary` where a body-large
   paragraph used to stand — the smallest reading of the ruling, but
   the post page's only words are now set as a caption (`PostDetail`,
-  `PostDetailVideo`, `ComposeLanded`, `RemoveConfirm`, `RemoveMenu`);
-  (b) the text body's 22-line clamp comes from the ruled formula
-  floor(358 × 5/4 ÷ 20), i.e. an UNCAPPED 4:5 picture, while
-  `--media-max-height` caps the real picture at 376px on the 390×844
-  board — so a body at the ceiling stands ~64px taller than the media
-  post it is meant to match. Re-derive against the cap, or keep the
-  formula as the intent.
+  `PostDetailVideo`, `ComposeLanded`, `RemoveConfirm`, `RemoveMenu`).
 - **Conformance-round leftovers, no ruling needed, just work**:
   `PendingMarker` and `StanceValue` are unused across the canvas
   since the chronicle fold (prune from the prelude destructure or
-  wait for a user); the quiet-note ramp hardcodes 0.4px tracking
-  where the label-small token says 0.5px (`QuietNote` + `ActsFooter`
-  together, one-line fix that moves pixels — needs an eye);
-  board-glue still duplicated in twos and fours (the license lock
+  wait for a user); **fourteen more label-small sites still spell
+  0.4px** where the token says 0.5px — `ActsCard` ×2, `PickedRow` ×3,
+  `CoverRow`, `DescribeSheet`, `PickedSheet`, `PickTray`,
+  `UploadNotice`, `EarnedChart`, `PayoutAddress` ×2, `WalletBalance`
+  — each a conform item under §7's rule that a component never states
+  a raw type value, and each moves pixels, so the sweep wants one eye
+  over its boards; board-glue still duplicated in twos and fours (the license lock
   ×4, the seal avatar row ×2, the vouch card head ×2);
   `_ds_manifest.json` frozen at the import commit (only the claude.ai
   app refreshes it); `_adherence.oxlintrc.json` has no wired runner
@@ -1195,27 +1158,55 @@ The questions:
    someone stood over time — the most sensitive of the five to draw,
    and the one most likely to want a shape of its own.
 
-### 35 · Video playback — decisions the transition fix surfaced · *design*
+### 35 · Video playback — decisions the transition fix surfaced · *design* · **ruled**
 
 Filed by the feature loop 2026-09-03, from the on-device transition
-fix (PR #615). The fix made the feed↔detail handover clean without
-choosing any new look; three choices surfaced that are design's:
+fix (PR #615), which made the feed↔detail handover clean without
+choosing any new look. Ruled 2026-09-08; all three are conform items
+for the feature session, not design work still owed:
 
-1. **The media frame is genuinely wider on detail than on the
-   card** — measured 996×996 vs 912×912, each from its own screen's
-   padding (Card + 16dp padding vs the detail's 32dp inset). Not a
-   bug: measured once per screen, stable. During the handover the
-   picture therefore grows ~9% — invisible-ish today, moot if the
-   full-width feed rework equalizes them. Decide: should the two
-   frames match (and which one wins), or does the rework settle it?
-2. **The screen transition itself.** Feed and PostDetail declare no
-   enter/exit transitions, so Navigation Compose's default crossfade
-   runs, and with the fix it now reads clean. If a designed
-   transition is wanted for media continuity (slide, shared-element
-   growth of the video frame, anything), that's a drawn decision —
-   the fix deliberately did not invent one.
-3. **The video card's accessibility description says "1 picture"**
-   (verbatim: "1 picture: league is Life") — a video post is
-   indistinguishable from a picture post to a screen reader and to
-   UI tooling. The card's a11y copy needs the clip's own words
-   (copy-voice territory), presumably with its duration.
+1. **Media renders full-bleed on the card and on the detail alike.**
+   The frame is the screen's width on both, which is what the canvas
+   already draws — the app's 996×996 detail and 912×912 card come
+   from a 32dp inset and a Card's 16dp padding, and both insets are
+   drift. Equal frames also cost the handover its ~9% growth: with
+   nothing to grow between, the picture simply stays.
+2. **The transition is a shared element on the media frame; the
+   chrome fades.** M3's container transform — the one thing the
+   reader is following is the picture, so it persists in place while
+   the surface around it changes. With the frames equalized by (1)
+   the shared element does not resize, which is what makes the
+   handover read as one surface opening rather than two screens
+   swapping.
+3. **A video post's card description says the clip**, never
+   "1 picture" — `1 clip · 0:24`, the kind and its duration
+   (`guidelines/copy-voice.md`, awaiting blessing). A clip announced
+   as a picture is the card saying something untrue to the one reader
+   who cannot see the difference.
+
+### 36 · A display name is optional · *design* · **ruled**
+
+Ruled by jakob 2026-09-08, against the input-error round's premise
+that a profile must carry a written name. Account creation never asks
+for one, a profile with none is presented by its handle alone, and the
+handle is the only name the product requires. All three below are
+conform items for the feature session, not design work still owed:
+
+1. **`Actor.displayName` is optional — a breaking schema change.**
+   Its `ModeratedText.value` is null where the actor never wrote one,
+   the shape every optional moderated field already takes, and
+   `prepareProfileUpdate` takes the explicit-null clear it used to
+   refuse ([api-spec.md](../docs/implementation/api-spec.md)).
+   Backend, `schema.graphql` and both generated clients move
+   together.
+2. **Profile edit validates nothing locally.** The empty-name check
+   was the surface's only local rule, so `ProfileEditError` retires
+   with it: Save's outcomes are the seal, and the faults the seal
+   already owns.
+3. **Every surface that prints a name falls back to the handle** —
+   the author chip, the profile header, a mention, a search result.
+   The handle alone, never a stand-in name.
+
+**A Collective keeps its founding name.** The optionality does not reach
+`PrepareCollectiveInput`: its `displayName` stays `String!`, so founding
+a Collective still means naming it (ruled 2026-09-08).

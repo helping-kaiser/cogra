@@ -9,6 +9,11 @@
    and the sheet comes up over it — the same stack `CommentMenu` draws, with the
    answer in place of the menu that asked for it.
 
+   THE STACK IS DRAWN AS LAYERS. The terms sheet is `stacked`, so its wash falls
+   between the two and dims the thread, and its surface takes the rung above the
+   thread's. The thread's own top — its handle, its title — stays in view over
+   the terms, which is what says the reader is still in it.
+
    TOBIAS'S COMMENT IS PUBLIC DOMAIN: both axes at zero, the one reading readers
    already have a word for, and the word rides the caption while the rows still
    spell what it means. The post's sheet draws the other case, where the two
@@ -18,7 +23,7 @@ export function Screen() {
     <>
       <ThreadDetail />
       <CommentsThreadSheet />
-      <LicenseSheet license={{ attribution: 0, provenance: 0 }} />
+      <LicenseSheet stacked license={{ attribution: 0, provenance: 0 }} />
     </>
   );
 }

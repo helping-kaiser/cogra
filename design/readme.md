@@ -475,6 +475,14 @@ from a link is what the control does: performing an action is a button,
 going somewhere is a link. A button dressed as an underlined link is
 neither.
 
+**A component never states a raw type value.** Type arrives as a role,
+and a role is four tokens together — size, line-height, weight and
+tracking. A component that spells `letterSpacing: "0.4px"` beside
+`var(--text-label-small)` has left the ramp for a number nothing
+maintains: the token says `0.03125rem`, and the two drift the moment
+the ramp is retuned. Take all four or take none; if a role needs a
+value the ramp does not carry, the ramp is what changes.
+
 ### 7.1 Proposed — built ahead of the product
 
 A separate **"Proposed"** group in the Design System tab, and a separate
@@ -1595,7 +1603,15 @@ entry first". What stands:
   an edge target. `boardKinds` marks reference boards (anatomy plates,
   the maps themselves) that are vocabulary, not destinations;
   `scanExempt` names boards whose semantic elements are inactive in
-  the drawn state (the pad board under its scrim).
+  the drawn state (the pad board under its scrim). **A pattern
+  exemplar is exempt for the second reason**: it is drawn on a real
+  surface to show one behaviour, and only that behaviour is its
+  own — the surface's other controls belong to the board that owns
+  them and are wired there, so wiring them twice would give one
+  control two edges. `NetworkError` is the exemplar: the retry the
+  failure offers is the board's whole subject, and its `scanExempt`
+  line names `ComposeSeal` as the home of the rest. The next pattern
+  board says the same and cites this rule.
 - **Every edge declares its `kind`** — what the control *does*, not
   where it lands. Five, and never a default: **`advance`** is
   forward progress toward a journey's conclusion (Next, Sign, Save,
@@ -2170,9 +2186,8 @@ the ruling that an applicant stages each kind of act once (2026-09-01).
 
 ### The input-error round — 2026-09-03
 
-Five of item 23's still-owed gaps — field-error, wrong-credentials,
-wrong-code, code-mismatch — closed onto boards (jakob's rulings the
-same day).
+Item 23's field-error, wrong-credentials, wrong-code and code-mismatch
+gaps, closed onto boards (jakob's rulings the same day).
 
 - **A field error wears M3's own text-field error state**: the
   outline and label switch to `--error`, and a body-small supporting
@@ -2194,8 +2209,8 @@ same day).
 - **Each surface words its own error.** Unlike the offline board, one
   network-error master answering for every surface, an input error is
   worded per field and per surface — "That handle is taken." is not
-  interchangeable with "That code doesn't check out." — so each of the
-  five boards carries its own copy, not a shared component's default
+  interchangeable with "That code doesn't check out." — so each
+  errored board carries its own copy, not a shared component's default
   text.
 - **Componentize before you alter.** Hand-coded boards get rebuilt
   from real masters before an error state is drawn onto them, and this
@@ -2208,15 +2223,15 @@ same day).
   next submit, so typing never produces a field that turns red out of
   nowhere.
 
-Five boards drawn: `JoinErrors` (Handle taken, Password too short —
+Four boards drawn: `JoinErrors` (Handle taken, Password too short —
 Email untouched), `SignInError` (the form-level fault line),
-`RestoreError` (the recovery-code field), `RecoveryCodeMismatch` (the
-confirm field — `RecoveryCode` grew an `error` pass-through to reach
-it, mirroring `TextField`'s own anatomy, since the component draws its
-own field rather than composing `TextField`), and `ProfileEditError`
-(Display name). Each board's submit control keeps its parent's other
-outcomes and replaces only the gap with a `self` case — the line
-updates in place rather than sending the reader anywhere. Census 114
+`RestoreError` (the recovery-code field), and `RecoveryCodeMismatch`
+(the confirm field — `RecoveryCode` grew an `error` pass-through to
+reach it, mirroring `TextField`'s own anatomy, since the component
+draws its own field rather than composing `TextField`). Each board's
+submit control keeps its parent's other outcomes and replaces only
+the gap with a `self` case — the line updates in place rather than
+sending the reader anywhere. Census 114
 → 109 gaps, 867 → 897 edges; the 56/51/5 flow census is unchanged,
 since no declared flow walks an error path.
 
@@ -2245,17 +2260,27 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   above. They carry the two readings besides, Ada's credit-on-every-use
   against the comment's public domain. Both are `scanExempt` and wire
   one number, the wash: the terms are a block to read, not controls.
+- **A sheet over a sheet dims what it covers and takes the next
+  rung.** `BottomSheet`'s `stacked` lifts the upper sheet a layer, so
+  the wash it already draws falls between the two instead of under
+  both, and its surface moves to `surfaceContainerHighest` — elevation
+  is tonal, and two surfaces at one rung claim one elevation. The
+  sheet below keeps its top edge, its handle and its title in view,
+  dimmed: depth you can see beats depth you infer. `CommentMenu` and
+  `CommentLicense` are the two boards that stack, both over the
+  comments thread.
 - **The terms are drawn, not printed.** A quiet inset at the medium
   rung: a caption naming the words the reader tapped, then one row per
   axis with the two readings aligned so the pair reads as a pair. It
-  takes **no fill** — the sheet is already the highest container rung,
-  and a filled inset over it would invert between the themes — and no
-  colour, the terms being neither warning nor promotion. Public domain
-  is the pair readers already have a word for, so the word rides the
-  caption while the rows still spell what it means. The sheet takes
-  **no `SheetTitle`**: the inset heads itself, and a heading above it
-  would say License terms twice, a few pixels apart, in two sizes —
-  the sheet's name lives on its `aria-label`. The read side got its
+  takes **no fill** — the sheet it sits in is a raised container
+  already, and a filled inset over it would invert between the
+  themes — and no colour, the terms being neither warning nor
+  promotion. Public domain is the pair readers already have a word
+  for, so the word rides the caption while the rows still spell what
+  it means. The sheet takes **no `SheetTitle`**: the inset heads
+  itself, and a heading above it would say License terms twice, a few
+  pixels apart, in two sizes — the sheet's name lives on its
+  `aria-label`. The read side got its
   **own readings**: the chooser's hints address the author declaring
   the terms, and on a read surface "Every use credits you" tells a
   reuser they are owed the credit they in fact owe.
@@ -2394,8 +2419,8 @@ a master, and every master is one component with variants as props
   the media and drops the words), and both kinds order **title ·
   body · description**, the caption last, with the 4px seam between
   the two fields. The description clamps to **two lines** in the
-  feed; a text body clamps at **22** — floor(358px × 5/4 ÷ 20px),
-  the height a 4:5 picture takes at the card's own content width, so
+  feed; a text body clamps at **18** — floor(376px ÷ 20px), the
+  height a picture takes once `--media-max-height` has capped it, so
   a feed of both kinds keeps one rhythm. The detail view clamps
   nothing. Every fixture with a picture now carries its words as the
   description, the stream's caption takes the description too, and
@@ -2442,9 +2467,9 @@ a master, and every master is one component with variants as props
   locks a shape and masks around it, which is right for a profile
   picture and a video cover and wrong for the post crop, where the
   author is choosing the shape. `LicenseChooser` draws the two axes
-  as wrapped native radios with no hints; the sheet gives each
-  reading its own row and its consequence, which the master would
-  delete. `StancePad` is the square where both parameters are the
+  as wrapped native radios; the sheet gives each reading its own row
+  and reads the master's tiers for the words, so the layout diverges
+  and the terms cannot. `StancePad` is the square where both parameters are the
   author's, and on one's own post the second is not — your own post
   always reaches you in full, so that board draws **one axis**, and
   the system owns no one-axis pad to draw it with.
@@ -2452,14 +2477,90 @@ a master, and every master is one component with variants as props
   question): ChipMini's tone, the reply seal's staged-reference
   placement, the Mark drawings, the wizard footer's shape, the
   comments-sheet shell, the "+ Cite something" voices, the topic
-  chip's ×, the acts line's target, the composer's "+ Add" voices,
-  how each overlay abbreviates the surface under it, the discard
-  dialog's button weighting, and how much of a pattern board's own
-  setting the graph should wire — `NetworkError` gives an edge to
-  its retry alone, and says so in a `scanExempt` line.
+  chip's ×, and the acts line's target.
 - **The gate**: 939 edges · 82 gaps · flows 58/53/5, unchanged end
   to end — which is the round's whole claim: the canvas redrawn
   from masters without the graph moving.
+
+### The parked rulings — 2026-09-08
+
+The questions the conformance round held, answered by jakob and
+applied in one pass. Every visible pixel on the canvas moves for one
+of these and nothing else.
+
+- **An overlay sits over the REAL surface.** A sheet, a dialog or a
+  wash covers the surface the reader came from, so the board draws
+  that surface whole rather than a shortened stand-in of it — the
+  round's largest visible change, on six boards. The post's seal, the
+  reply's seal and the post edit are each written once in
+  `_shared.jsx` and drawn by the board that owns them and by every
+  overlay over them, by the same rule that moved `ReplyDraft` there:
+  a body on a second board stops being board-local. The under-layers
+  stay inert, which is what their `scanExempt` lines already say, so
+  the graph does not move.
+- **The text body's clamp is derived against the picture the reader
+  sees.** `--media-max-height` caps a 4:5 crop before its uncapped
+  447.5px — 376px on the 390×844 board — so the ceiling is
+  floor(376 ÷ 20) = **18** lines, and a text post again stands as
+  tall as the media post beside it rather than ~64px taller.
+- **`SheetTitle` owns the heading's row.** `trailing` takes what the
+  line carries besides the name — the screen's one "?", the switch a
+  sheet exists for — and the license and sensitive sheets stop
+  assembling that row by hand. Their names take the master's
+  `title-medium`.
+- **`HelpDot` has an `inverse`**, `Button`'s word for the same
+  situation: on a tonal panel the ring and the glyph take the panel's
+  own `currentColor` instead of spending `--border-hairline` and
+  `--primary` inside a block that has a colour family already. The
+  two key-absent boards adopt it and render byte-identical.
+- **An acts row that offers an act is the button.** `ActsCard`'s
+  second row kind has no value slot to clip, so the seal's add-rows
+  keep the 48px target their word promises instead of having it cut
+  back to the ink. Truncation stays where a long value needs it.
+- **A pattern exemplar wires only the behaviour it exemplifies** —
+  the `scanExempt` convention's stated rule now (§13, canvas pages),
+  with `NetworkError` as its exemplar: the surface's other controls
+  belong to the board that owns them, and wiring them twice would
+  give one control two edges.
+- **The discard dialog gives its filled button to the safe answer**,
+  `RemoveConfirm`'s weighting. A think-twice dialog exists to make
+  the costly answer deliberate; the destructive word stays quiet.
+- **The license sheet reads the master's tiers.** `ATTRIBUTION_TIERS`
+  and `PROVENANCE_TIERS` carry the readings and their hints, so the
+  sheet keeps its own layout — one axis per section, one reading per
+  row — and cannot say a shorter version of what a license promises.
+- **The one-axis pad names a face the table has**: at +0.30 the
+  nearest `STANCE_ANCHORS` row is the first, 🙂 "Nice".
+- **A component never states a raw type value** (§7). The quiet note
+  and the acts footer take `--text-label-small--letter-spacing`, and
+  the label-small line gains 0.1px of tracking on 32 boards.
+- **The composer's "+ Add" speaks in one voice** — the bare small
+  word on all five sites. An action riding the end of somebody else's
+  line is an `InlineAction`; the pill is for an action that owns its
+  line.
+- **The edit's staged reference shows the whole staged fact**, as
+  `ComposeDetails` draws it: the kind under the name, and the pair
+  the citation signs.
+- **Item 35 ruled** (video playback): media is full-bleed on card and
+  detail alike, the handover is a shared element on the media frame
+  with the chrome fading, and a video post's card description says
+  `1 clip · 0:24` rather than "1 picture". All three are conform
+  items for the apps.
+- **A display name is optional.** Account creation never asks for
+  one, so nothing may require it later: an explicit null clears the
+  field, and a profile with no name written is presented by its
+  handle (api-spec's profile-update clause; the breaking schema
+  change is backlog item 36). A Collective is the exception — it is
+  founded with a name and `PrepareCollectiveInput` keeps saying so.
+  With the requirement gone, "A display name can't be empty." became
+  a false sentence and `ProfileEditError` retired with it — profile
+  edit has no true local failure left to exemplify, so Save's edge
+  carries the seal alone and no gap opens.
+- **The gate**: 921 edges · 81 gaps · flows 58/53/5 at the round's
+  close. The rulings themselves moved nothing — the under-layers
+  grew real controls only on boards the scan already exempts — and
+  the six edges that left were `ProfileEditError`'s, gone with the
+  board.
 
 ## 14. Index
 

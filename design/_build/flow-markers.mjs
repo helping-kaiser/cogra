@@ -384,9 +384,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Cite in a new post</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
-  // TWO SCRIMS on this board — the thread's and the menu's — and both take the
-  // same number: the edge is "tap outside", and outside the menu is the whole
-  // screen whichever wash the finger lands on.
+  // TWO WASHES on this board — the thread's, and the menu's stacked over the
+  // thread it dims — and both take the same number: the edge is "tap outside",
+  // and outside the menu is the whole screen.
   CommentMenu: [
     { n: 1, find: ">License terms</button>", tag: "button" },
     { n: 2, find: ">Cite in a new post</button>", tag: "button" },
@@ -400,9 +400,8 @@ Object.assign(FLOW_MARKERS, {
   // The license sheet, over the post and over the thread. Both are scanExempt:
   // the terms are a block to read, not a set of controls, so the only thing
   // either board wires is the wash that drops the sheet. CommentLicense has two
-  // — the thread's and the sheet's — and they take the same number, as on
-  // CommentMenu: outside the sheet is outside it whichever wash the finger
-  // lands on.
+  // — the thread's and the sheet's stacked over it — and they take the same
+  // number, as on CommentMenu: outside the sheet is outside it.
   PostLicense: [{ n: 1, find: 'class="cg-scrim-in"', tag: "div" }],
   CommentLicense: [{ n: 1, find: 'class="cg-scrim-in"', tag: "div", all: true }],
   ComposeCited: [
@@ -970,13 +969,10 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
-/* The five errored boards (input-errors bite 3, 2026-09-03): each copies its
+/* The errored boards (input-errors bite 3, 2026-09-03): each copies its
    parent's control anatomy exactly, so its markers reuse the parent's
    `find` patterns 1:1 — the error props change styling and a supporting
-   line, never the elements a reader can tap. ProfileEditError is the one
-   exception: Display name's value goes empty to match "can't be empty",
-   so its marker keys off that empty attribute instead of the master's
-   sample name. */
+   line, never the elements a reader can tap. */
 Object.assign(FLOW_MARKERS, {
   JoinErrors: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
@@ -1009,14 +1005,6 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: ">Copy</button>", tag: "button" },
     { n: 2, find: 'type="text"', tag: "input" },
     { n: 3, find: ">I&#x27;ve written it down</button>", tag: "button" },
-  ],
-  ProfileEditError: [
-    { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: ">Change picture</button>", tag: "button" },
-    { n: 3, find: 'value=""', tag: "input" },
-    { n: 4, find: "whatever the wind allows.</textarea>", tag: "textarea" },
-    { n: 5, find: 'value="solferreira.art"', tag: "input" },
-    { n: 6, find: ">Save</button>", tag: "button" },
   ],
 });
 

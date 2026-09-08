@@ -189,6 +189,10 @@ title, at most two short paragraphs, Close. The texts, verbatim
   nothing here is signed or shared. / It lasts until you change it,
   on this device only. Your default lives in settings.
 
+The stream and the viewer earn no "?". The stream is the feed the
+reader already knows, and the viewer is one picture with a way out —
+a dialog explaining either would be explaining the obvious.
+
 ## Refused files
 
 Drawn on *Reply · files refused* and *Pick · files refused*
@@ -205,6 +209,8 @@ out (*Remove it*; never *Retry* — retrying cannot change the answer):
 - `A comment carries pictures or one video, not both.`
 - `That GIF moves, and CoGra can't take a moving GIF here. A still one
   is fine.`
+- `That's more than a post carries — up to ten pictures.`
+- `That's more than a comment carries — up to four pictures.`
 
 **Screens say MB; the caps are MiB.** The limit enforced is the binary
 one — 50 MiB is 52.4 MB — so the number on screen under-promises and
@@ -217,16 +223,12 @@ for a post is refused by its cap, and a video the product would have
 taken is refused by the mixed-kind line. One file, one line, the
 nearest reason.
 
-## Awaiting blessing — the video conform round
+Two removal marks, never interchangeable: `Removed by its author` —
+"The words and pictures are gone. The post's place in the thread, and
+every response, remain." — and `Removed under the platform's rules` —
+"A passed proposal removed it. The decision is public."
 
-Drawn, and up for review in the same pass. Kept apart from the blessed
-lines above until then.
-
-**Count refusals** — an eleventh picture in a post, a fifth in a
-comment; the refusal row the count case never had:
-
-- `That's more than a post carries — up to ten pictures.`
-- `That's more than a comment carries — up to four pictures.`
+## Staging a video
 
 **A video is the whole body** — the quiet line where the add control
 used to be, once a clip is staged:
@@ -249,12 +251,11 @@ and the way back to it from an edit:
 - `The cover takes the video's shape.`
 - `Change the cover`
 
-## Awaiting blessing — the reel round
+## Accessible names
 
 The words the stream, the video transport and the viewer put in front
-of a reader. Almost all of them are **accessible names**: these controls
-are glyphs, so what is written here is what a screen reader says, and it
-is the only wording they have.
+of a reader. These controls are glyphs, so what is written here is what
+a screen reader says, and it is the only wording they have.
 
 **The transport**, one control one verb — each says what the tap will
 DO, the way the sound toggle already does:
@@ -276,64 +277,43 @@ DO, the way the sound toggle already does:
   in the accessibility tree tells a listener the verb but not the
   object.
 
-No screen here earns a "?". The stream is the feed the reader already
-knows, and the viewer is one picture with a way out — a dialog
-explaining either would be explaining the obvious.
+## The staged-act snackbar
 
-Two removal marks, never interchangeable: `Removed by its author` —
-"The words and pictures are gone. The post's place in the thread, and
-every response, remain." — and `Removed under the platform's rules` —
-"A passed proposal removed it. The decision is public."
+An applicant's second tap of a kind already staged answers here instead
+of opening the real surface again; one line per kind, same shape:
 
-## Awaiting blessing — the applicant once-each round
+- `Your post is staged — it lands with you.`
+- `Your stance is staged — it lands with you.`
 
-Drawn, and up for review in the same pass. Kept apart from the blessed
-lines above until then.
+## Field errors
 
-**The staged-act snackbar** — an applicant's second tap of a kind
-already staged answers here instead of opening the real surface again;
-one line per kind, same shape:
-
-- "Your post is staged — it lands with you."
-- "Your stance is staged — it lands with you."
-
-## Awaiting blessing — the input-error round
-
-The lines the five errored entry/profile boards carry, drawn and up
-for review in the same pass. Two are drawn on a surface; two are
-copy-only this round, named for the field-error state they will wear
-once the client validates locally.
+The lines the errored entry and profile boards carry — a field's own
+supporting line, or a form-level fault line where the system genuinely
+doesn't know which field is wrong.
 
 **Drawn** — a board renders these verbatim:
 
 - `That handle is taken.` — Join's Handle field, the server's answer.
 - `A password is at least 12 characters.` — Join's Password field, a
   local format failure.
-- "That email and password don't match." — SignIn's form-level fault
-  line. This one already appears above as a register example; it
-  graduates onto a surface this round.
+- `That email and password don't match.` — SignIn's form-level fault
+  line, in the failure voice the register already writes in.
 - `That code doesn't check out.` — Restore's recovery-code field.
 - `That doesn't match the code above.` — the key ceremony's confirm
   field, on RecoveryCodeMismatch.
-- `A display name can't be empty.` — ProfileEdit's Display name field.
 
 **Copy-only** — named, not yet drawn on a board (no client-side format
 validation exists yet to trigger them):
 
-- "A handle is 3–30 characters: a–z, 0–9, _." — Join's Handle field,
+- `A handle is 3–30 characters: a–z, 0–9, _.` — Join's Handle field,
   a local format failure.
 - `That doesn't look like an email address.` — Join's Email field, a
   local format failure.
 
-## Awaiting blessing — the menus round
+## Menu rows
 
-The words the three overflow menus and the license sheet put in front
-of a reader. The menu rows were already in the fixtures and
-the graph; what is genuinely new is the license block's own readings,
-because the read side stopped borrowing the chooser's.
-
-**The menu rows**, unchanged in wording and settled in spelling — one
-`License terms` everywhere, never the British spelling:
+The words the three overflow menus put in front of a reader, settled in
+spelling — one `License terms` everywhere, never the British spelling:
 
 - `License terms` — the one row, on a post's menu and a comment's
   alike. It opens the terms in a sheet over the surface the reader
@@ -345,10 +325,12 @@ because the read side stopped borrowing the chooser's.
 - `Share your profile` — your own, where it is the accessible name of
   the band's share glyph rather than a row, the menu having gone.
 
-**The license block's readings** — NEW, and the reason they exist: the
-chooser's hints speak to the author declaring the terms, so a read
-surface that reused them told a reuser they were owed the credit they
-in fact owe. These address the reuser instead. One per axis value:
+## The license block
+
+**The readings the sheet gives a reuser.** The chooser's hints speak to
+the author declaring the terms, so a read surface that reused them told
+a reuser they were owed the credit they in fact owe. These address the
+reuser instead. One per axis value:
 
 - Credit — `Not required` · `Required for commercial use` ·
   `Required for every use`
@@ -367,6 +349,8 @@ in fact owe. These address the reuser instead. One per axis value:
   own legends, so a reader who published a post meets the same two
   words on both sides.
 
+## Staged references
+
 **A staged reference's remove control** takes the referenced thing's
 own name as its accessible name — "Remove The long way home — @ada" —
 because a row of citations wants each × to say which one it drops.
@@ -381,3 +365,19 @@ among the acts one signature commits:
   wizard's details stage uses. It drops the gloss listing what can be
   cited: the staged row above it now shows a citation, and an example
   beats a list.
+
+## Awaiting blessing — the parked-rulings round
+
+Drawn, and up for review in the same pass. Kept apart from the blessed
+lines above until then.
+
+**A card's media description names the kind of thing it has.** The
+description is what a screen reader is given for a post card's body, so
+a clip announced as a picture is the card telling a reader something
+untrue — and it is the only place the difference is sayable, the two
+looking alike until one plays:
+
+- `1 clip · 0:24` — a video post. The duration belongs in the words:
+  it is the one fact about a clip a reader decides on before playing
+  it, and the eye reads it off the cover.
+- `1 picture` · `4 pictures` — a picture post, the count alone.

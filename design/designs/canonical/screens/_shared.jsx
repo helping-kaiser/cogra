@@ -84,6 +84,8 @@ const {
   PinnedClip,
   LICENSE_MENU_LABEL,
   LicenseTerms,
+  ATTRIBUTION_TIERS,
+  PROVENANCE_TIERS,
   NodeMark,
   TopicRemovable,
   StagedReference,
@@ -317,10 +319,14 @@ const READER_POST_MENU = [LICENSE_ROW, CITE_ROW];
    the reader tapped, and the public-domain word rides that same line — so a
    title above it would say License terms twice, a few pixels apart, in two
    sizes. The sheet's name lives on the `aria-label`, which is where a screen
-   reader asks for it. */
-function LicenseSheet({ license }) {
+   reader asks for it.
+
+   `stacked` is for the copy that comes up over the comments thread: a sheet over
+   a sheet takes the layer above, so its wash dims the thread and its surface
+   takes the next rung. Over the post detail there is nothing to stack on. */
+function LicenseSheet({ license, stacked = false }) {
   return (
-    <BottomSheet open ariaLabel="License terms">
+    <BottomSheet open stacked={stacked} ariaLabel="License terms">
       <div style={{ padding: "0 24px" }}>
         <LicenseTerms license={license} />
       </div>
@@ -418,9 +424,11 @@ function SearchTriggerRow({ reading }) {
   );
 }
 
-/* The "?" — the master, defaulted to this canvas's usual label. */
-function HelpDot({ ariaLabel = "How searching works" }) {
-  return <SystemHelpDot ariaLabel={ariaLabel} />;
+/* The "?" — the master, defaulted to this canvas's usual label. Everything else
+   the master takes passes straight through; a shim that swallows props is a
+   second component wearing the master's name. */
+function HelpDot({ ariaLabel = "How searching works", ...rest }) {
+  return <SystemHelpDot ariaLabel={ariaLabel} {...rest} />;
 }
 
 /* The own-profile band cluster (profile round): the share control and the gear
@@ -593,21 +601,197 @@ function ReplyDraft() {
 }
 
 /* THE REPLY SEAL'S ADD-ROWS — a primary word where a value would sit, so what
-   you could still add lines up with what you have already added. It is
-   `InlineAction`'s small rung, left-aligned and held to one line, and it does
-   NOT clip itself (jakob's ruling): the acts row's value slot already ends a
-   long value in an ellipsis, and a second `overflow: hidden` on the word only
-   cut the atom's 48px hit overlay back to the ink. Truncation belongs to the
-   row; the target belongs to the word.
+   you could still add lines up with what you have already added. They are
+   `ActsCard`'s action rows: the whole row is the control, because a word whose
+   only slot clips its overflow is a word whose 48px target is cut back to the
+   ink. Truncation belongs to the value slot, and an action row has none.
 
-   It lives here because BOTH reply seals draw it — the bare one and the one
+   They live here because BOTH reply seals draw them — the bare one and the one
    with a reference staged are one surface in two states, and a row spelled
    twice is a row that drifts. */
-function AddRow({ children }) {
+const ADD_ROWS = [
+  { label: "", action: "+ Add a topic", count: "1 more action" },
+  { label: "", action: "+ Cite something", count: "1 more action" },
+];
+
+/* ── WHAT AN OVERLAY SITS ON (jakob's ruling, 2026-09-08) ──────────────────
+   A sheet, a dialog or a wash covers the surface the reader came from, and
+   that surface is the real one — not a shortened stand-in of it. An overlay
+   board therefore draws the board beneath it whole, and each of those bodies
+   is written once here for the `KeyPledge` reason: a body on a second board
+   stops being board-local, and three sketches of one seal are three chances
+   to disagree about it.
+
+   The bodies stay inert under their overlay — the boards say so in their
+   `scanExempt` lines — so nothing here is wired; it is drawn. */
+
+/* THE POST'S SEAL, whole — `ComposeSeal` itself, and what the stance pad, the
+   license sheet, the sensitive sheet and the "?" dialog stand on. */
+function ComposeSealBody() {
   return (
-    <InlineAction size="sm" style={{ textAlign: "left", whiteSpace: "nowrap" }}>
-      {children}
-    </InlineAction>
+    <>
+      <WizardHeader title="What you sign" stageLabel="Last step" help="Signed actions" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
+        <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
+
+        <ActsCard
+          rows={[
+            { label: "Post", value: "Salt maps of the coast road", count: "1 action" },
+            {
+              label: "Topics",
+              value: (
+                <span style={{ display: "flex", gap: 6, overflow: "hidden", alignItems: "center" }}>
+                  <Chip label="#fieldnotes" tone="readout" />
+                  <Chip label="#coastroad" tone="readout" />
+                </span>
+              ),
+              count: "2 actions",
+            },
+            {
+              label: "References",
+              /* The staged citation carries the stance that rides with it, so
+                 the row is two lines: what is cited, and what signing it says
+                 about the citer. */
+              value: (
+                <span style={{ display: "flex", flexDirection: "column", padding: "6px 0", minWidth: 0 }}>
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>The long way home — @ada</span>
+                  <StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />
+                </span>
+              ),
+              count: "1 action",
+            },
+          ]}
+          total="4 signed actions"
+          note="they land together, or none does"
+        />
+
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <FactRow label="License" value="Public domain — your default" action="Change" />
+          <FactRow
+            label="Where you stand on it"
+            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
+            action="Adjust"
+          />
+          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+        </div>
+
+        <div style={{ flex: 1 }} />
+
+        <SealFooter signLabel="Sign and publish" />
+      </div>
+    </>
+  );
+}
+
+/* THE REPLY'S SEAL, whole — `ReplySeal` itself, and what the reply's stance pad
+   stands on. */
+function ReplySealBody() {
+  return (
+    <>
+      <WizardHeader
+        title="What you sign"
+        leaveLabel="Leave — the reply is discarded"
+        stageLabel="Last step"
+        help="Signed actions"
+      />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
+        <QuietNote>Reply to "The long way home" — 89 characters.</QuietNote>
+
+        {/* One act signed, so no all-or-nothing subline: it appears the moment a
+            signature carries more than one thing (`ActsCard`'s rule). */}
+        <ActsCard
+          rows={[
+            { label: "Comment", value: "Reply to @ada's post", count: "1 action" },
+            ...ADD_ROWS,
+          ]}
+          total="1 signed action"
+        />
+
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <FactRow
+            label="Toward what you answer"
+            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
+            action="Adjust"
+          />
+          <FactRow label="License" value="Public domain — your default" action="Change" />
+          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+        </div>
+
+        <div style={{ flex: 1 }} />
+
+        <SealFooter signLabel="Sign comment" />
+      </div>
+    </>
+  );
+}
+
+/* THE POST EDIT, whole — `EditCompose` itself, and what its acts sheet stands
+   on. */
+function EditComposeBody() {
+  return (
+    <>
+      <WizardHeader title="Edit post" leaveLabel="Leave — your draft is kept" help="Editing" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
+        <PickedRow
+          items={[{ src: "post-photo.jpg" }, { src: "inviter.jpg" }]}
+          caption="2 pictures — the body"
+          onManage={() => {}}
+        />
+
+        <TextField label="Title" corner="Optional" value="Salt maps of the coast road" />
+
+        <TextField
+          label="Description"
+          corner="Optional"
+          rows={2}
+          value="Rubbings from three weekends at low tide — paper against the salt crust."
+        />
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <FieldLabel>Topics</FieldLabel>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <TopicRemovable topic="fieldnotes" />
+            <TopicRemovable topic="saltmaps" />
+            <Button variant="outline" size="sm">Add a topic</Button>
+          </div>
+          <QuietNote>Withdrawn: #coastroad</QuietNote>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <FieldLabel>References</FieldLabel>
+          {/* The composer's whole staged form, as `ComposeDetails` draws it:
+              the kind under the name, and the pair the citation signs. An edit
+              stages the same citation a first draft does, so it shows back the
+              same facts. */}
+          <StagedReference
+            kind="post"
+            name="The long way home — @ada"
+            sub="Post"
+            src="post-photo.jpg"
+            value="+0.10 / +0.10"
+          />
+          <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <FactRow
+            label="License"
+            value="Public domain"
+            action={
+              <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
+                <Icon name="lock" size={16} />
+              </span>
+            }
+          />
+          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+        </div>
+
+        <div style={{ flex: 1 }} />
+
+        <ActsFooter count={3} />
+        <Button style={{ width: "100%" }}>Sign the edit</Button>
+      </div>
+    </>
   );
 }
 

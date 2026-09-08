@@ -574,8 +574,13 @@ type Landing {
 interface Actor implements Node {
   # + Node fields (id, createdAt, updatedAt, outgoingRecords, incomingRecords)
   "The unique mention handle — one namespace across Users,
-   Collectives, and system actors."
+   Collectives, and system actors. The one required name: an actor
+   always has it, and a profile with nothing else written is
+   presented by it."
   handle: ModeratedText!
+  "The written name shown above the handle. Optional — `value` is
+   null where the actor never wrote one, the same shape every
+   optional moderated field takes."
   displayName: ModeratedText!
   avatar: ModeratedMedia!
   websiteUrl: ModeratedText!
@@ -3016,10 +3021,11 @@ input PrepareReferenceWithdrawalInput {
  Registration: L1's own profile-update idiom, payload only, never
  identity (substrate.md §9). Covers the display fields and the
  witnessed payout address (a Liquid address — ledger.md). Omitted
- fields are untouched. displayName refuses the explicit-null
- clear — a profile always shows a name. For a Collective's
- profile, actAs routes through its governed edit flow. The handle
- is L2 account state, not profile payload — see changeHandle."
+ fields are untouched; an explicit null clears the field,
+ displayName included — a profile with no name written is
+ presented by its handle. For a Collective's profile, actAs routes
+ through its governed edit flow. The handle is L2 account state,
+ not profile payload — see changeHandle."
 input PrepareProfileUpdateInput {
   displayName: String
   bio: String

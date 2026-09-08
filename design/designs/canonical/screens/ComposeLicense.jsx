@@ -2,32 +2,20 @@
    round): the terms anyone reusing this post is held to, declared before the
    post is signed. The screen beneath is inert while the sheet is up.
 
-   IT IS NOT `LicenseChooser`. The master is the same two axes with the same
-   three named readings each, and it draws them as a wrapped row of native
-   radios with no hints — a form control for a settings page. This sheet is the
-   author's decision surface: one axis per section, one reading per row, and
-   the consequence of each reading spelled at the end of its own line, which is
-   the half a chooser without hints leaves the author to guess. Forcing the
-   master here would delete six lines of copy and reflow the sheet; forcing the
-   sheet's shape into the master would make one board the owner of a component
-   four surfaces share. So the rows are drawn here, and the divergence is
-   reported rather than papered over.
+   IT IS NOT `LicenseChooser`'s LAYOUT, BUT IT IS ITS WORDS. The master draws
+   the two axes as a wrapped row of native radios — a form control for a
+   settings page — where this sheet is the author's decision surface: one axis
+   per section, one reading per row, and the consequence of each reading spelled
+   at the end of its own line. The shape is the sheet's; the readings and their
+   hints are `ATTRIBUTION_TIERS` and `PROVENANCE_TIERS`, so what a license
+   promises is written once and this board cannot say a shorter version of it.
 
    THE ROW IS THE CONTROL, the way `Checkbox` makes it one: a real radio input,
    visually hidden, with the drawn dot and the words inside the label that names
-   it. The dot was a span that nothing could reach or press. */
+   it. The dot was a span that nothing could reach or press.
 
-const CREDIT = [
-  { label: "No credit", hint: "Nobody owes you a name." },
-  { label: "Credit commercially", hint: "Commercial uses credit you." },
-  { label: "Credit always", hint: "Every use credits you." },
-];
-
-const RECORD = [
-  { label: "No record", hint: "Uses go unlogged." },
-  { label: "Record commercially", hint: "Commercial uses are logged." },
-  { label: "Record always", hint: "Every use is logged publicly." },
-];
+   THE SEAL BENEATH IS THE SEAL — `ComposeSealBody`, the same body
+   `ComposeSeal` draws. What a sheet covers is inert, not shortened. */
 
 function AxisLabel({ children }) {
   return (
@@ -77,38 +65,18 @@ function Axis({ axis, name, tiers, chosen }) {
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" stageLabel="Last step" />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
-        <ActsCard total="4 signed actions" note="they land together, or none does" />
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow label="License" value="Public domain — your default" action="Change" />
-          <FactRow
-            label="Where you stand on it"
-            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
-            action="Adjust"
-            last
-          />
-        </div>
-        <div style={{ flex: 1 }} />
-        <Button style={{ width: "100%" }}>Sign and publish</Button>
-      </div>
+      <ComposeSealBody />
 
       <BottomSheet open ariaLabel="License terms">
+        <SheetTitle trailing={<HelpDot ariaLabel="License" />}>License</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "0 24px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <h2 style={{ margin: 0, flex: 1, fontSize: "var(--text-title-large)", lineHeight: "var(--text-title-large--line-height)", fontWeight: "var(--text-title-large--font-weight)" }}>
-              License
-            </h2>
-            <HelpDot ariaLabel="License" />
-          </div>
           <QuietNote>Terms for anyone who reuses this.</QuietNote>
 
           <AxisLabel>Credit</AxisLabel>
-          <Axis axis="credit" name="license-attribution" tiers={CREDIT} chosen={2} />
+          <Axis axis="credit" name="license-attribution" tiers={ATTRIBUTION_TIERS} chosen={2} />
 
           <AxisLabel>Public record of use</AxisLabel>
-          <Axis axis="record" name="license-provenance" tiers={RECORD} chosen={0} />
+          <Axis axis="record" name="license-provenance" tiers={PROVENANCE_TIERS} chosen={0} />
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
             <span style={{ flex: 1, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
