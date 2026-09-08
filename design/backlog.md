@@ -301,13 +301,27 @@ profiles as spheres varying in size, colour and brightness by their
 weight. Mostly its own thing and mostly outside this system — last on
 purpose.
 
-### 20 · Settings — the defaults surface · *design*
+### 20 · Settings — the whole surface · *design* · **gates 2.5.3**
 Three shipped "?" texts already promise it: "Your default lives in
 settings" (the license, and now the filter), and "Swap the input in
-settings" (the stance pads). Design the settings surface that keeps
-those promises — the default license, the reader's stance input, the
-default feed filter — and the pattern the rest of settings will
-follow. Added 2026-08-28 out of item 19's review.
+settings" (the stance pads). Two boards reach it as a gap
+(`Profile/3`, `ProfileApplicant/3` → *the settings screen (not
+designed)*), and 2.5.3 cannot ship without it: the
+**default-license account setting** is the one 2.5.3 deliverable
+with neither a contract field nor a screen, and the license sheet
+already promises it in words.
+
+The round runs in three moves. **Census first** — slice 1 already
+shipped settings-shaped controls (backup, recovery, export) on
+Android and web; find them and read what they are, because the
+surface is being designed around existing furniture, not onto an
+empty page. **Then the whole surface** — its sections, its
+navigation, and the pattern every later setting follows; a defaults
+page designed alone is a page the next setting breaks. **Then the
+default license on top**, as the first setting that pattern carries,
+with the account-preference shape `api-spec.md` still owes it.
+Added 2026-08-28 out of item 19's review; reshaped by the slice-2.5
+round.
 
 ### 22 · Canvas flows + pages · *process*
 The canonical canvas has outgrown one flat plane (77+ boards):
@@ -408,12 +422,12 @@ input-error round* records jakob's six rulings.
 
 Two follow-ups the round surfaces, still open:
 
-- **aria-describedby wiring for field errors** — an open a11y question
-  from the `TextField`/`PasswordField` error-state round: the error
-  text renders beside the field but isn't yet wired to the input via
-  `aria-describedby`, and the supporting-line span isn't marked
-  `role="alert"`. Needs a ruling on whether every field error should
-  announce, or only the ones a screen reader wouldn't otherwise catch.
+- ~~**aria-describedby wiring for field errors**~~ — closed by the
+  slice-2.5 round: every field error announces, uniformly. The
+  supporting line carries an id the control names in
+  `aria-describedby`; in the error state the control adds
+  `aria-invalid` and the line takes `role="alert"`. Both masters,
+  no pixel moved.
 - **Every board on the canvas renders from a JSX source** — the
   conformance round (2026-09-04) converted all 27 boards that had
   only hand-written `.dc.html` behind them: the compose wizard's
@@ -434,13 +448,10 @@ Two follow-ups the round surfaces, still open:
   that a body on a second board stops being board-local: the reply
   seal's add-rows, and the reply composer itself.
 
-- **One line has no home**: "Replying also signs where you stand on
-  the post it answers." It was the reply pad's abbreviated seal's
-  coaching note, and the pad now covers the real reply seal, which
-  never carried it. Either the seal earns the line — `FactRow` has no
-  note slot, so it would stand beneath the ruled block or the master
-  would grow one — or the copy retires. A copy question, not a
-  drawing one.
+- ~~**One line has no home**~~: "Replying also signs where you stand
+  on the post it answers." Closed by the slice-2.5 round — the seal
+  earns it, as a `QuietNote` beneath the ruled block, on both states
+  of the seal. `FactRow` grew no slot.
 - **What the compose-wizard conversion surfaced**, each needing a
   ruling before anyone fills it in:
   - **`PickPrompt` requires an escape.** The draft board's
@@ -463,22 +474,47 @@ Two follow-ups the round surfaces, still open:
     dimmed — each screen-local by the rule that the grid exists on
     one step of one flow. Three is where that rule stops being true.
 - **Held rulings from the conformance round (2026-09-04)** — each a
-  visible-change question the round parked rather than decided:
-  ChipMini's tone (Chip `sm` renders 26px bordered on a different
-  fill; a borderless readout tone would keep the seal board exact);
-  the reply seal's staged reference (stays a fact in the acts card
-  as drawn, or becomes a `StagedReference` row like the post's);
-  the Mark action's two drawings (text-Button pill on the comment
-  edits vs bare word on the reply seal — `FactRow`'s prose says the
-  slot takes an `InlineAction`); the "+ Cite something" three voices
-  (legacy span / bare small word / small pill); the topic chip's ×
-  (drawn but not a button — same shape as the "Show all" ruling);
-  the acts line's target (the chevron is drawn but unwired; the
-  whole line is the honest control); the wizard footer's shape (only
-  3 of 12 Next buttons carry a padded footer of their own, and
-  `SealFooter` deliberately owns no padding — a footer master would
-  install a competing answer); the comments-sheet shell (verbatim
-  between `ReplyMedia` and the thread sheet — factor or leave).
+  visible-change question the round parked rather than decided.
+  Five are answered in the sources: ChipMini's tone (`Chip` gained
+  the borderless `readout` tone and the seal board adopted it), the
+  "+ Cite something" three voices (the bare small word on all five
+  sites), the topic chip's × (the × is the button, not the pill),
+  the acts line's target (the whole line is the button), and the
+  comments-sheet shell (factored — `_shared.jsx`'s `CommentsSheet`,
+  drawn by `ReplyMedia` and the thread sheet).
+
+  Three are still held:
+  - **The reply seal's staged reference** — stays a fact in the acts
+    card as drawn, or becomes a `StagedReference` row like the
+    post's. Drawn as an acts row and blessed as one in
+    `copy-voice.md`, but the question itself has no recorded answer.
+  - **The Mark action's two drawings** — text-Button pill on the
+    comment edits vs bare word on the reply seal. Every board now
+    spells `FactRow … action="Mark"`, which reads settled in
+    practice and is recorded nowhere as ruled.
+  - **The wizard footer's shape** — see the entry below; the
+    slice-2.5 round reopened it on a count.
+
+- **A `WizardFooter` master needs one more ruling before it can be
+  adopted** (slice-2.5 round). The held note's count is off, and the
+  correction changes the question. **Thirteen** boards draw a Next.
+  **Four** wrap it in a footer of its own — `ComposePick`,
+  `ComposePickVideo`, `ComposePicked`, `ComposePickedErrors` — and
+  they are exactly the four whose content above runs edge to edge,
+  so the footer is where their padding has to come from. The other
+  **nine** put the Next inside a column that already carries the
+  24px sides, each ending on its own bottom value: 16px on the
+  details and crop boards, 24px on `ComposeWords`, and a 12px or
+  16px margin above the button on `ComposeWords` and
+  `ComposePickWeb`. A master owning `12px 24px 16px` therefore
+  cannot land on those nine as drawn — inside the column it doubles
+  the sides to 48px, and outside it lifts the button past the
+  column's `overflow: hidden` and resets nine different bottom
+  rhythms to one. Which of those two, and what each board loses, is
+  the ruling. (`ComposeLicense`'s hand-assembled row is a third
+  anatomy again — a sheet's action row, hairline · summary · Done —
+  not a wizard footer; its raw `0.5px` was in `AxisLabel` and is
+  fixed under §7.)
 - **One question the body-XOR pass left open (2026-09-04)**,
   drawing-level: a media post's DETAIL view now shows only its
   description, at body-medium on `text-secondary` where a body-large
@@ -930,9 +966,11 @@ one contradiction to reconcile:
 5. **Frame-sample positions are undrawn.** The cover step offers
    three frames; nothing says where they come from. Web ships
    10% / 50% / 90% (avoiding fade-in black at t=0) — bless or rule.
-6. **The cover preview's playing state is undrawn.** The board draws
-   only rest; web shows the element's native controls once playing
-   (announced deviation — a preview you cannot pause is worse).
+6. ~~**The cover preview's playing state is undrawn.**~~ Closed by
+   the slice-2.5 round: *Cover · the preview playing* draws it with
+   the post detail's own transport, minus a fullscreen toggle the
+   composer has nowhere to send. Web's native-controls deviation
+   retires with it — a conform item for that app.
 7. **Contradiction to reconcile:** the readme block above says GIF
    "never refuses" because the device converts — true on Android,
    but the ruled web behavior (jakob 2026-09-02, after #596) is that
@@ -978,9 +1016,10 @@ one contradiction to reconcile:
     row), so the edit surface needs deciding, not just drawing.
 13. **The describe sheet still speaks picture to a clip** — the
     master's title and field label aren't blessed for video.
-14. **A clip's upload FAILURE on the composer is undrawn** —
-    refusals are boarded at pick; a failed send reuses the tile
-    ring + no-Retry line (both apps' interim).
+14. ~~**A clip's upload FAILURE on the composer is undrawn**~~ —
+    the comment scale is *Reply · the clip didn't upload*, and the
+    slice-2.5 round ruled the post scale takes that board 1:1: same
+    tile ring, same words, Retry beside Remove. No board of its own.
 
 **The video conform round — all fourteen ruled and built (jakob
 2026-09-03).** Rulings in readme §13, *The video conform round*;
@@ -1210,3 +1249,19 @@ conform items for the feature session, not design work still owed:
 **A Collective keeps its founding name.** The optionality does not reach
 `PrepareCollectiveInput`: its `displayName` stays `String!`, so founding
 a Collective still means naming it (ruled 2026-09-08).
+
+### 37 · The edit batch's mechanics are the implementation's call · *implementation*
+
+Ruled by jakob 2026-09-08. A new tag or citation is **not an edit in
+the mechanical sense** — the records are separate gestures, and
+`PreparePostEditInput` keeps carrying no `tags` or `references`. For
+the author, though, the edit screen is the right place to reach them,
+and the boards draw that: the content edit and its topic and citation
+acts stage together and seal as one.
+
+**The UX invariant is fixed and not the implementation's to move**:
+one seal, one act count, all-or-nothing. **How that is assembled is
+the implementation session's own decision** — one prepare that grows
+the fields, or the client staging the three prepares and sealing the
+batch. The boards and the contract are both satisfied by the second,
+which is why the contract is not moving to meet the first.
