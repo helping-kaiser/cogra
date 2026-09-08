@@ -434,13 +434,13 @@ Two follow-ups the round surfaces, still open:
   that a body on a second board stops being board-local: the reply
   seal's add-rows, and the reply composer itself.
 
-  **What the last nine surfaced**, each a ruling still owed:
-  - **"Replying also signs where you stand on the post it answers."
-    is no longer drawn anywhere.** The line was the reply pad's
-    abbreviated seal's coaching note; the pad now covers the real
-    reply seal, which never carried it. Either the seal earns the
-    line — `FactRow` has no note slot, so it would stand beneath the
-    ruled block or the master would grow one — or the copy retires.
+- **One line has no home**: "Replying also signs where you stand on
+  the post it answers." It was the reply pad's abbreviated seal's
+  coaching note, and the pad now covers the real reply seal, which
+  never carried it. Either the seal earns the line — `FactRow` has no
+  note slot, so it would stand beneath the ruled block or the master
+  would grow one — or the copy retires. A copy question, not a
+  drawing one.
 - **What the compose-wizard conversion surfaced**, each needing a
   ruling before anyone fills it in:
   - **`PickPrompt` requires an escape.** The draft board's
