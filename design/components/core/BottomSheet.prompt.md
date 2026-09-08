@@ -11,6 +11,7 @@ const [open, setOpen] = React.useState(false);
 </BottomSheet>
 ```
 
+- **The heading's row is `SheetTitle`'s, never the board's.** When the line carries something besides the name — the screen's one "?", the switch the sheet exists for — it goes in `trailing`: `<SheetTitle trailing={<HelpDot ariaLabel="License" />}>License</SheetTitle>`. A close control is the one thing the slot never takes.
 - **It covers the bottom bar.** A sheet is a decision surface; a navigation bar peeking under it offers to leave mid-decision.
 - **Never open beside the stance pad.** One parked surface at a time — the pad owns the same corner of the screen.
 - **Top corners only**, at the 28px rung. The bottom edge is the screen's, and a rounded bottom flush to the edge draws a gap that is not there.

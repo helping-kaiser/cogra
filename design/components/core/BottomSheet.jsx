@@ -138,11 +138,25 @@ export function SheetItem({ label, onSelect, ariaLabel }) {
 
 /* A sheet's own heading, when the choices need naming. `title-medium`, sentence
    case, and never a close button beside it: the scrim and Escape already do that,
-   and a third way out is a third thing to read. */
-export function SheetTitle({ children }) {
+   and a third way out is a third thing to read.
+
+   `trailing` is the slot for what the heading line carries besides its name — the
+   screen's one "?", or the switch the sheet exists for. It is the heading's own
+   row, so a sheet that needs one stops assembling a heading by hand; a close
+   control is still the one thing it never takes. */
+export function SheetTitle({ children, trailing }) {
+  const heading = { fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" };
+  if (!trailing) {
+    return (
+      <h2 style={{ margin: 0, padding: "0 var(--space-6) var(--space-2)", ...heading }}>
+        {children}
+      </h2>
+    );
+  }
   return (
-    <h2 style={{ margin: 0, padding: "0 var(--space-6) var(--space-2)", fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
-      {children}
-    </h2>
+    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", padding: "0 var(--space-6) var(--space-2)" }}>
+      <h2 style={{ margin: 0, flex: 1, ...heading }}>{children}</h2>
+      {trailing}
+    </div>
   );
 }
