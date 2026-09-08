@@ -2546,9 +2546,21 @@ of these and nothing else.
   with the chrome fading, and a video post's card description says
   `1 clip · 0:24` rather than "1 picture". All three are conform
   items for the apps.
-- **The gate**: 927 edges · 81 gaps · flows 58/53/5, unchanged end to
-  end — the under-layers grew real controls, and every one of them
-  sits on a board the scan already exempts.
+- **A display name is optional.** Account creation never asks for
+  one, so nothing may require it later: an explicit null clears the
+  field, and a profile with no name written is presented by its
+  handle (api-spec's profile-update clause; the breaking schema
+  change is backlog item 36). A Collective is the exception — it is
+  founded with a name and `PrepareCollectiveInput` keeps saying so.
+  With the requirement gone, "A display name can't be empty." became
+  a false sentence and `ProfileEditError` retired with it — profile
+  edit has no true local failure left to exemplify, so Save's edge
+  carries the seal alone and no gap opens.
+- **The gate**: 921 edges · 81 gaps · flows 58/53/5 at the round's
+  close. The rulings themselves moved nothing — the under-layers
+  grew real controls only on boards the scan already exempts — and
+  the six edges that left were `ProfileEditError`'s, gone with the
+  board.
 
 ## 14. Index
 
