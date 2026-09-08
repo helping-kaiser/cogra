@@ -2450,9 +2450,9 @@ a master, and every master is one component with variants as props
   locks a shape and masks around it, which is right for a profile
   picture and a video cover and wrong for the post crop, where the
   author is choosing the shape. `LicenseChooser` draws the two axes
-  as wrapped native radios with no hints; the sheet gives each
-  reading its own row and its consequence, which the master would
-  delete. `StancePad` is the square where both parameters are the
+  as wrapped native radios; the sheet gives each reading its own row
+  and reads the master's tiers for the words, so the layout diverges
+  and the terms cannot. `StancePad` is the square where both parameters are the
   author's, and on one's own post the second is not — your own post
   always reaches you in full, so that board draws **one axis**, and
   the system owns no one-axis pad to draw it with.

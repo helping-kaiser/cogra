@@ -2,16 +2,13 @@
    round): the terms anyone reusing this post is held to, declared before the
    post is signed. The screen beneath is inert while the sheet is up.
 
-   IT IS NOT `LicenseChooser`. The master is the same two axes with the same
-   three named readings each, and it draws them as a wrapped row of native
-   radios with no hints — a form control for a settings page. This sheet is the
-   author's decision surface: one axis per section, one reading per row, and
-   the consequence of each reading spelled at the end of its own line, which is
-   the half a chooser without hints leaves the author to guess. Forcing the
-   master here would delete six lines of copy and reflow the sheet; forcing the
-   sheet's shape into the master would make one board the owner of a component
-   four surfaces share. So the rows are drawn here, and the divergence is
-   reported rather than papered over.
+   IT IS NOT `LicenseChooser`'s LAYOUT, BUT IT IS ITS WORDS. The master draws
+   the two axes as a wrapped row of native radios — a form control for a
+   settings page — where this sheet is the author's decision surface: one axis
+   per section, one reading per row, and the consequence of each reading spelled
+   at the end of its own line. The shape is the sheet's; the readings and their
+   hints are `ATTRIBUTION_TIERS` and `PROVENANCE_TIERS`, so what a license
+   promises is written once and this board cannot say a shorter version of it.
 
    THE ROW IS THE CONTROL, the way `Checkbox` makes it one: a real radio input,
    visually hidden, with the drawn dot and the words inside the label that names
@@ -19,18 +16,6 @@
 
    THE SEAL BENEATH IS THE SEAL — `ComposeSealBody`, the same body
    `ComposeSeal` draws. What a sheet covers is inert, not shortened. */
-
-const CREDIT = [
-  { label: "No credit", hint: "Nobody owes you a name." },
-  { label: "Credit commercially", hint: "Commercial uses credit you." },
-  { label: "Credit always", hint: "Every use credits you." },
-];
-
-const RECORD = [
-  { label: "No record", hint: "Uses go unlogged." },
-  { label: "Record commercially", hint: "Commercial uses are logged." },
-  { label: "Record always", hint: "Every use is logged publicly." },
-];
 
 function AxisLabel({ children }) {
   return (
@@ -88,10 +73,10 @@ export function Screen() {
           <QuietNote>Terms for anyone who reuses this.</QuietNote>
 
           <AxisLabel>Credit</AxisLabel>
-          <Axis axis="credit" name="license-attribution" tiers={CREDIT} chosen={2} />
+          <Axis axis="credit" name="license-attribution" tiers={ATTRIBUTION_TIERS} chosen={2} />
 
           <AxisLabel>Public record of use</AxisLabel>
-          <Axis axis="record" name="license-provenance" tiers={RECORD} chosen={0} />
+          <Axis axis="record" name="license-provenance" tiers={PROVENANCE_TIERS} chosen={0} />
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
             <span style={{ flex: 1, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
