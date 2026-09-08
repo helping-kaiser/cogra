@@ -2562,6 +2562,91 @@ of these and nothing else.
   the six edges that left were `ProfileEditError`'s, gone with the
   board.
 
+### The slice-2.5 rulings — 2026-09-08
+
+The readiness census for slice 2.5 found the media path itself
+gap-free and the blocks elsewhere: three stale contracts, one
+missing destination, and a handful of drawing questions only jakob
+could close. These are the answers, and what each one moved.
+
+- **A tap on a gallery card's picture opens the post.** Every
+  single-media card's region is «post media» and opens the post;
+  the two gallery boards drew a pager and no way in, so a reader
+  on a gallery card could not reach the post through its picture.
+  The pager keeps the swipe and gains the tap — one region, two
+  gestures, declared the way the stance face already declares its
+  tap and its press-and-hold: one via, two outcomes. The edge
+  count does not move, because a second outcome is not a second
+  edge.
+- **A portrait clip's tap opens the post detail until the stream
+  ships.** The stream is slice 3's surface and the canvas draws it
+  as the end state; 2.5.2 needs the tap to land somewhere real in
+  the meantime, and the post detail is where every other media tap
+  already goes. A roadmap sentence, no rewiring — slice 3 takes
+  the tap back when it arrives.
+- **A post-scale clip upload failure takes `ReplyVideoFailed`
+  1:1.** The comment scale is drawn, the fault is the same fault,
+  and the blessing is the precedent the web avatar flow and web
+  `ReplyVideo` already ride. No board.
+- **The cover preview's playing state is its own board.** The
+  video conform round ruled that the cover "is the clip's face
+  wherever the clip isn't running, and never returns once playback
+  has started" — so a play disc and a pause button cannot share a
+  frame, and rest and playing cannot share a board. *Cover · the
+  preview playing* draws the post detail's own transport over the
+  running clip, which retires web's native-controls deviation. It
+  carries **no fullscreen toggle**: the clip is not published yet,
+  there is no viewer to open, and a drawn control the graph cannot
+  wire would have to invent a gap to point at. `MediaAttachment`
+  passes `fullscreen` through for it and every other board renders
+  byte-identical.
+- **The reply seal earns the orphaned line.** "Replying also signs
+  where you stand on the post it answers." stands as a `QuietNote`
+  beneath the ruled block — `FactRow` grows no note slot, because
+  the line is a fact about replying rather than about any one row.
+  It lands on both states of the seal: they are one surface, and a
+  note on one of them only is a disagreement.
+- **`Chip`'s borderless `readout` tone** is the seal board's 26px
+  chip, and `ChipMini` is retired — answered in the sources
+  already, and recorded here because the backlog was still calling
+  it held.
+- **Every field error announces and names its field.** The
+  supporting line carries an id the control names in
+  `aria-describedby`; in the error state the control adds
+  `aria-invalid` and the line takes `role="alert"` — the W3C forms
+  tutorial's own wiring, applied uniformly rather than field by
+  field, because a rule about which errors are worth announcing is
+  a rule nobody can predict. Markup only: no pixel moved, proved
+  by the renders, whose every changed byte is one of those four
+  attributes.
+- **The wizard footer is NOT ruled** — the question came back with
+  its premise corrected. Thirteen boards draw a Next, not twelve;
+  four hand-draw the padded footer, not three, and they are
+  exactly the four whose content runs edge to edge. The other nine
+  sit in a column that already owns the padding, each ending on
+  its own bottom value, so a master owning `12px 24px 16px` either
+  doubles their sides to 48px or lifts the button out of the
+  column and flattens nine rhythms into one. Which, and what each
+  board gives up, is still jakob's (backlog).
+- **The docs say what is true now.** The sensitive self-mark's
+  contract field ships and 2.5.3 stops claiming it does not; the
+  stream is slice 3's, not 2.7's, which is Search; share is on the
+  feed card with the row's stated order. `comment.md` gains the
+  comment's media grammar — four pictures or one video with its
+  poster, the clip at half a post's budget — and says the no-cover
+  rule of the gallery so it cannot be read as denying the clip its
+  face. `api-spec.md`'s post edit takes the nullable body the
+  shipped schema already has, and its tag-and-citation line states
+  the mechanics without denying that the edit surface stages them:
+  the records are separate gestures, the seal is one.
+- **The gate**: 119 → **120 screens**, 921 → **930 edges**, **81
+  gaps** and **flows 58/53/5** unchanged. Every unit of that
+  movement is the cover preview's board and the nine edges it
+  brought. Nothing else on the canvas moved a pixel except the
+  reply seal's three boards, which gained the line, and the
+  license sheet's two axis labels, which swapped a raw `0.5px` for
+  the tracking token that is the same half-pixel.
+
 ## 14. Index
 
 **Root**
