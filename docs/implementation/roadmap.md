@@ -395,6 +395,8 @@ the start — and delivery splits by content kind.
   transport — play/pause and a seekable timeline, uniform for every
   clip, its chrome auto-hiding — and so does the fullscreen viewer
   (2.5.3); the stream (2.7) carries sound and a drag-to-seek line.
+  A portrait clip's tap opens the post detail here, like every other
+  media tap; the stream takes that tap when it ships in slice 3.
 - **A clip keeps its own ratio, clamped to tall**: 16:9 and 1:1
   display true, anything taller than 4:5 centre-crops to 4:5, and
   the cover crops identically. Nothing is letterboxed. Where the
