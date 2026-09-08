@@ -435,13 +435,6 @@ Two follow-ups the round surfaces, still open:
   seal's add-rows, and the reply composer itself.
 
   **What the last nine surfaced**, each a ruling still owed:
-  - **`NetworkError` wires one control of eight.** The board is the
-    seal, and over the masters its header, its three facts and its
-    way back are real buttons again — but the graph gives it only
-    the retry, so it carries a `scanExempt` line saying the rest are
-    `ComposeSeal`'s controls, wired there. Its uploading twin wires
-    all eight. Either the fault board wires its own, or the
-    exemption stands as the pattern boards' rule.
   - **`DiscardConfirm` gives the filled button to the destructive
     answer**, where `RemoveConfirm` gives it to the safe one.
     Preserved as drawn.

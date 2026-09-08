@@ -1595,7 +1595,15 @@ entry first". What stands:
   an edge target. `boardKinds` marks reference boards (anatomy plates,
   the maps themselves) that are vocabulary, not destinations;
   `scanExempt` names boards whose semantic elements are inactive in
-  the drawn state (the pad board under its scrim).
+  the drawn state (the pad board under its scrim). **A pattern
+  exemplar is exempt for the second reason**: it is drawn on a real
+  surface to show one behaviour, and only that behaviour is its
+  own — the surface's other controls belong to the board that owns
+  them and are wired there, so wiring them twice would give one
+  control two edges. `NetworkError` is the exemplar: the retry the
+  failure offers is the board's whole subject, and its `scanExempt`
+  line names `ComposeSeal` as the home of the rest. The next pattern
+  board says the same and cites this rule.
 - **Every edge declares its `kind`** — what the control *does*, not
   where it lands. Five, and never a default: **`advance`** is
   forward progress toward a journey's conclusion (Next, Sign, Save,
@@ -2453,9 +2461,7 @@ a master, and every master is one component with variants as props
   placement, the Mark drawings, the wizard footer's shape, the
   comments-sheet shell, the "+ Cite something" voices, the topic
   chip's ×, the acts line's target, the composer's "+ Add" voices,
-  the discard dialog's button weighting, and how much of a pattern
-  board's own setting the graph should wire — `NetworkError` gives
-  an edge to its retry alone, and says so in a `scanExempt` line.
+  and the discard dialog's button weighting.
 - **The gate**: 939 edges · 82 gaps · flows 58/53/5, unchanged end
   to end — which is the round's whole claim: the canvas redrawn
   from masters without the graph moving.
