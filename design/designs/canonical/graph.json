@@ -34,6 +34,7 @@
     "ReplyPad": "the wash covers the reply's seal, whole — its header, its add-rows, its three facts and its foot are inactive in this state; only the parked pad is live",
     "EditActs": "the acts sheet covers the edit — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "HelpDialog": "the \"?\" dialog covers the seal — everything beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
+    "ReplyPadHelp": "the \"?\" dialog covers the parked pad, which covers the reply's seal — two washes deep, and only the dialog (and its scrim) is live",
     "DiscardConfirm": "the discard dialog covers the composer it was raised from — everything beneath the scrim is inactive in this state; only the dialog's own pair is live",
     "PadKeyAbsent": "the wash covers the feed — the band, the post card and nav beneath it are inactive in this state; only the parked pad and the key notice inside it are live",
     "NetworkError": "the fault in place — a pattern exemplar drawn on the seal, where the retry the failure offers is the only thing this board is about; the seal's own header, facts and way back are `ComposeSeal`'s controls, wired on that board",
@@ -598,7 +599,9 @@
     { "from": "ReplyPicturesWeb", "via": 7, "kind": "advance", "label": "+ Add pictures · 2 of 4", "to": [{ "terminal": "os", "case": "the browser's file dialog" }] },
     { "from": "ReplyPicturesWeb", "via": 8, "kind": "advance", "label": "…or drop pictures or a video here", "to": [{ "terminal": "self", "case": "dropped pictures land in the tray" }, { "board": "ReplyVideo", "case": "a dropped video — the composer's video state, web taking it 1:1" }] },
 
-    { "from": "ReplyPad", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
+    { "from": "ReplyPad", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "ReplyPadHelp", "case": "the reply pad's own topic — the post pad's text says the opposite of what is true here" }] },
+    { "from": "ReplyPadHelp", "via": 1, "kind": "back", "label": "Close", "to": [{ "board": "ReplyPad" }] },
+    { "from": "ReplyPadHelp", "via": 2, "kind": "back", "label": "scrim — press outside", "to": [{ "board": "ReplyPad" }] },
     { "from": "ReplyPad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick" }] },
     { "from": "ReplyPad", "via": 3, "kind": "cancel", "label": "Cancel", "to": [{ "board": "ReplySeal", "case": "nothing staged" }] },
     { "from": "ReplyPad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "ReplySeal", "case": "the adjusted stance on the seal" }] },

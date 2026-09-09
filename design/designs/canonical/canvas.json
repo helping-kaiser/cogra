@@ -569,6 +569,15 @@
       "page": "comments"
     },
     {
+      "file": "ReplyPadHelp.dc.html",
+      "title": "Reply · the pad's \"?\"",
+      "x": 5280,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
       "file": "EditCompose.dc.html",
       "title": "Edit post",
       "x": 0,
@@ -1074,9 +1083,9 @@
     },
     {
       "file": "MapComments.dc.html",
-      "x": -3610,
+      "x": -3900,
       "y": 0,
-      "w": 3190,
+      "w": 3480,
       "h": 1490,
       "page": "comments",
       "title": "Comments · flow map"
