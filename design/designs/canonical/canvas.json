@@ -209,6 +209,42 @@
       "page": "entry"
     },
     {
+      "file": "ResetNew.dc.html",
+      "title": "Set a new password",
+      "x": 0,
+      "y": 6168,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "InviteEntryError.dc.html",
+      "title": "Enter your invite · that isn't a link",
+      "x": 480,
+      "y": 6168,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "VerifiedApp.dc.html",
+      "title": "Email verified · in the app",
+      "x": 960,
+      "y": 6168,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "VerifyExpired.dc.html",
+      "title": "Verification link · already used or expired",
+      "x": 1440,
+      "y": 6168,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "ComposePick.dc.html",
       "title": "Compose · pick the body",
       "x": 0,
@@ -527,6 +563,15 @@
       "file": "CommentEditVideo.dc.html",
       "title": "Edit comment · a clip",
       "x": 4800,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
+      "file": "ReplyPadHelp.dc.html",
+      "title": "Reply · the pad's \"?\"",
+      "x": 5280,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -1023,7 +1068,7 @@
       "x": -1580,
       "y": 0,
       "w": 1160,
-      "h": 3284,
+      "h": 3592,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -1038,9 +1083,9 @@
     },
     {
       "file": "MapComments.dc.html",
-      "x": -3610,
+      "x": -3900,
       "y": 0,
-      "w": 3190,
+      "w": 3480,
       "h": 1490,
       "page": "comments",
       "title": "Comments · flow map"
@@ -1104,7 +1149,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 1282,
+      "h": 1329,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1139,6 +1184,33 @@
       "file": "ProfileEditSeal.dc.html",
       "title": "Profile edit · what you sign",
       "x": 480,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileMoreFailed.dc.html",
+      "title": "Profile · the chronicle can't load more",
+      "x": 960,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileNotFound.dc.html",
+      "title": "Profile · no such profile",
+      "x": 1440,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileUnreachable.dc.html",
+      "title": "Profile · can't reach the server",
+      "x": 1920,
       "y": 964,
       "w": 390,
       "h": 844,
