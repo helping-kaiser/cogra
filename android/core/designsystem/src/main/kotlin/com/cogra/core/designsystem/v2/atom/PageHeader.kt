@@ -2,6 +2,7 @@ package com.cogra.core.designsystem.v2.atom
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -15,7 +16,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import com.cogra.core.designsystem.R
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
@@ -53,7 +56,7 @@ fun PageHeader(
     title: String? = null,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
-    backContentDescription: String? = null,
+    backContentDescription: String? = stringResource(R.string.page_header_back),
     action: @Composable (() -> Unit)? = null,
     testTag: String? = null,
 ) {
@@ -85,17 +88,23 @@ fun PageHeader(
         // One filling weight does both jobs the board's `space-between` does:
         // the title draws at the start of the space it is given, and the
         // trailing action is pushed flush right whatever the title's length.
-        Text(
-            text = title.orEmpty(),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = Space.x1)
-                .testTag(testTag?.let { "${it}_title" } ?: "page_header_title"),
-        )
+        // A band with no title — every entry screen's — still needs the
+        // spacer, and a screen reader does not need an empty heading.
+        if (title == null) {
+            Spacer(Modifier.weight(1f))
+        } else {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = Space.x1)
+                    .testTag(testTag?.let { "${it}_title" } ?: "page_header_title"),
+            )
+        }
 
         action?.invoke()
     }

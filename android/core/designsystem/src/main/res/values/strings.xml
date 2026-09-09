@@ -20,6 +20,10 @@
     <!-- The read shell's band (design.md §6). -->
     <string name="cogra_band_chats">Chats</string>
 
+    <!-- The house page header's back target (design.md §11). An icon never
+         carries meaning alone: the label lives in the accessibility tree. -->
+    <string name="page_header_back">Back</string>
+
     <!-- The topic chip (design.md §6). -->
     <string name="topic_chip_remove">Remove %1$s</string>
     <!-- A revealed claim: compact on screen, spelled out for TalkBack (F8). -->
