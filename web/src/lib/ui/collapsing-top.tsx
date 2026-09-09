@@ -19,7 +19,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { scrollOffsetOf, useScrollHost, viewportHeightOf } from "./scroll-host";
+import { scrollElementOf, scrollOffsetOf, useScrollHost, viewportHeightOf } from "./scroll-host";
 
 export function CollapsingTop({ children }: { children: React.ReactNode }) {
   const sentinel = useRef<HTMLDivElement>(null);
@@ -54,7 +54,7 @@ export function CollapsingTop({ children }: { children: React.ReactNode }) {
         ticking = false;
       });
     };
-    const target: HTMLElement | Window = host ?? window;
+    const target: HTMLElement | Window = scrollElementOf(host) ?? window;
     target.addEventListener("scroll", onScroll, { passive: true });
     return () => target.removeEventListener("scroll", onScroll);
   }, [host]);

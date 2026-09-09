@@ -23,7 +23,7 @@
 // the nav as a static sibling) and what the ruling asks for.
 
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useRef } from "react";
 
 import { useAuthPhase } from "@/lib/session/provider";
 import { BottomNav } from "@/lib/ui/bottom-nav";
@@ -48,14 +48,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const showBar = phase !== "resolving" && readSurface;
   const active =
     pathname === "/feed" ? "feed" : pathname === "/profile" ? "profile" : null;
-  // State rather than a ref: the scroller is CONTEXT, and a ref's mutation
-  // does not re-render the consumers that need to subscribe to it.
-  const [scroller, setScroller] = useState<HTMLElement | null>(null);
+  const scroller = useRef<HTMLDivElement>(null);
   return (
     <div className="flex h-dvh flex-col">
       <ScrollHostProvider value={scroller}>
         <div
-          ref={setScroller}
+          ref={scroller}
           data-testid="app-scroller"
           className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden"
         >
