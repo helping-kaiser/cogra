@@ -535,8 +535,11 @@ arrive together.
 the filter's accessible name, and carries the group footnote's first
 sentence where a covering sheet hides the footnote: `Every feed starts
 from this.` The second sentence stays under the row, where the reader
-meets it first. Nothing else in the sheet changes — the sections, hints
-and `Reset` are the feed's own.
+meets it first. The sections, hints and `Reset` are the feed's own. Its
+foot reads the choice back in the trigger's own word — `Posts`, nothing
+more, because the title has already asked the question and the note
+above has already said what the answer binds — and commits it with
+`Done`, the word both of the page's sheets use.
 
 **Change your password** (`ChangePassword`) opens with the row's
 footnote said where the act is, plus the half it could not say there:
@@ -572,11 +575,18 @@ that is not true. Both apps say *Check both inboxes — either message's
 code confirms the change*, which reads as one message being enough;
 `auth.md` and `api-spec.md` say the change applies only once both sides
 have landed, and that the two sides are not the same errand. The board
-says so: `A code went to sol@solferreira.art and a link to
-sol@ferreira.studio. Both have to be answered, in either order, before
-your email moves.` The field keeps its shipped name, `Confirmation
-code`, with `From the message to sol@solferreira.art.` under it so the
-reader knows which message to open; `Confirm email change` keeps its
-own. Last: `Until both sides land your account keeps the address it
-has, and a reset still goes there.`
+names the asymmetry first: `Two messages, two different errands — a
+code to type here, and a link to open at the new address. Your email
+moves when both have been answered, in either order.` Then it draws the
+pair, captioned `Both have to land`, each side its address and its
+state — `Code` / `sol@solferreira.art — still waiting` and `Link` /
+`sol@ferreira.studio — still waiting`. `Still waiting` is the resting
+state said the way `Still settling` says its own: what has not happened
+yet, plainly, with no apology and no progress theatre. The field keeps
+its shipped name, `Confirmation code`, with `From the message to
+sol@solferreira.art.` under it so the reader knows which message to
+open. The commitment is `Confirm the code`, which is what pressing it
+does — *Confirm email change* is what a reader would have believed it
+did, and a control says what will happen. Last: `Until both sides land
+your account keeps the address it has, and a reset still goes there.`
 

@@ -2969,8 +2969,8 @@ of them invents a control.
   signed and stays there. The account default says what it actually
   does: where every new post starts, binding nothing already
   published — `api-spec.md`'s own wording, said to a reader. It keeps
-  `Done`, because a license has nothing to show until it is used,
-  where the filter applies live and can be watched.
+  `Done`: over settings nothing reacts behind a sheet to be watched,
+  and both of the page's sheets commit.
 - **The filter's two ends now meet.** The help text has always said
   *your default lives in settings*; this is settings, and it is the
   same sheet — `FeedFilterSheet`, the half of `FeedFilter` that is not
@@ -3006,6 +3006,43 @@ of them invents a control.
   hand-drawn board moved a pixel — not even `Settings`, whose body
   moved to `_shared.jsx` byte for byte; only the five generated maps,
   which follow the edges.
+
+Reviewed on the boards themselves, and three findings came back. Each
+is a thing the drawing said that the surface would not hold.
+
+- **A reading squeezed to a stub is not a reading.** `LicenseAxis` gave
+  the tier's name flex-basis zero, so `Credit commercially` and
+  `Record commercially` broke over two lines while their consequence
+  wrapped ragged beside them — and the axis stopped reading as a
+  column, which is the one thing an axis of three has to do. The name
+  now takes the width its words need and the consequence takes what is
+  left, ragged to the LEFT so every row ends where the one-line rows
+  end. The dot and the consequence centre on the name's first line, so
+  a longer consequence grows the row downward and nothing above moves.
+  **The defect was the seal's too** — `ComposeLicense` had shipped it
+  since the conformance round, and one master carries both sheets, so
+  the compose board is the fix's second attributed hunk.
+- **A sheet that covers its own trigger has to commit somewhere the
+  reader can reach.** Titled, the filter sheet runs past its 88% and
+  `Reset` became the last scrolled item, at the screen's bottom lip
+  with nothing under it. `FeedFilterSheet` gains a `foot`: given one it
+  owns its height, the sections scroll inside it, and the Done row —
+  the license sheets' third anatomy — is pinned beneath them, clear of
+  the safe area the sheet already pads for. Given none it is sized by
+  its content, so the feed's own sheet is unchanged; the feed's filter
+  is the one that applies live, and the one with no `Done`.
+- **A confirmation that draws one half reads as the whole.**
+  `ChangeEmailConfirm` showed the field for the code and nothing for
+  the link waiting at the new address, and `Confirm email change` said
+  the press finished the job. `auth.md` is explicit that it does not.
+  Both sides are drawn as a pair now, each naming its address and
+  saying it is still outstanding, and the commitment is `Confirm the
+  code` — what pressing it actually does.
+- **The gate**: **137 screens**, **1006 edges**, **79 gaps**, **flows
+  58/53/5** — every count unchanged, because none of the three is a
+  route. Four boards moved: the three reviewed, plus `ComposeLicense`
+  through the shared axis. `FeedSheet`'s only diff is a generated
+  `useId` value, which followed the master's new branch and no pixel.
 
 ## 14. Index
 
