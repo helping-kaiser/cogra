@@ -37,22 +37,28 @@ data class CommentEditState(
     val referenceSection: ReferenceSectionState = ReferenceSectionState(),
 
     /**
-     * The author's own mark on the comment being edited, **as it
-     * stands**.
+     * The author's own mark on the comment, as the edit will leave it.
      *
-     * `CommentEdit` draws no switch for it — 1:1 with the board, which
-     * has no Mark row — but `PrepareCommentEditInput` is complete-state,
-     * so a mark the edit does not re-state is a mark the edit removes.
-     * These two fields are read when the edit opens and sent back
-     * untouched, which is what stops an edit from silently unveiling a
-     * comment its author marked (design/backlog.md item 25 part 2 is the
-     * open design question about ever *changing* it).
+     * `PrepareCommentEditInput` is complete-state, so a mark the edit
+     * does not re-state is a mark the edit removes: these are seeded
+     * from the read and sent back whether or not the author touched
+     * them. The board's Mark row is what lets them touch them
+     * (design/backlog.md item 25 part 2) — the license is fixed by
+     * contract at signing, while the mark is the author's ongoing
+     * judgment about their own words.
      */
     val sensitive: Boolean = false,
     val sensitiveReason: String? = null,
 
+    /** The mark as the read found it — what a change is measured against. */
+    val loadedSensitive: Boolean = false,
+    val loadedSensitiveReason: String? = null,
+
     /** The acts sheet (`CommentEditActs`), open. */
     val actsOpen: Boolean = false,
+
+    /** `ComposeSensitive`, open over the edit. */
+    val sensitiveOpen: Boolean = false,
 
     /** The leave the author has been asked to confirm (`DiscardConfirm`). */
     val confirmingDiscard: Boolean = false,
@@ -95,18 +101,33 @@ data class CommentEditState(
      */
     val hasSomethingToLose: Boolean get() = signedActionCount > 0
 
-    val anySheetOpen: Boolean get() = actsOpen || describingIndex != null
+    val anySheetOpen: Boolean get() = actsOpen || sensitiveOpen || describingIndex != null
+
+    /**
+     * Whether the author moved their own mark.
+     *
+     * The reason counts only where it is shown: on an unmarked comment
+     * it is not sent at all, so changing it under a switch that is off
+     * is not a change to anything.
+     */
+    val markMoved: Boolean
+        get() = sensitive != loadedSensitive ||
+            (sensitive && sensitiveReason.orEmpty() != loadedSensitiveReason.orEmpty())
 
     /**
      * Whether the edit record itself is worth staging.
      *
-     * An edit opened and left alone stages nothing: the words and the
-     * gallery are the edit record's whole payload, so if neither moved
-     * there is nothing for it to say, and a topic change beside it is
-     * its own act anyway (F10).
+     * An edit opened and left alone stages nothing: the words, the
+     * gallery and the mark are the edit record's whole payload, so if
+     * none moved there is nothing for it to say, and a topic change
+     * beside it is its own act anyway (F10).
+     *
+     * The mark is a term of that same record, so moving it stages the
+     * edit the way the body does — a comment whose only change is the
+     * author's own mark still has to write one, or the mark never moves.
      */
     val contentChanged: Boolean
-        get() = body != loadedBody || uploadedIds != loadedAttachmentIds
+        get() = body != loadedBody || uploadedIds != loadedAttachmentIds || markMoved
 
     /**
      * What the edit signs: the Edit record when the body or the gallery
@@ -162,4 +183,4 @@ fun CommentEditState.withAltText(uri: String, text: String): CommentEditState =
 
 /** Drops every drawer without leaving the screen. */
 fun CommentEditState.closedSheets(): CommentEditState =
-    copy(actsOpen = false, describingIndex = null)
+    copy(actsOpen = false, sensitiveOpen = false, describingIndex = null)

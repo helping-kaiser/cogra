@@ -38,6 +38,7 @@ import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.feature.content.ReferenceEntry
 import com.cogra.feature.content.TopicEntry
 import com.cogra.feature.content.wizard.LicenseSheet
+import com.cogra.feature.content.wizard.SensitiveSheet
 import com.cogra.feature.content.wizard.WizardBody
 import com.cogra.feature.content.wizard.WizardFooter
 
@@ -126,6 +127,8 @@ fun ReplyWizardRoute(
         onCloseSheet = viewModel::onCloseSheet,
         onLicenseChange = viewModel::onLicenseChange,
         onStanceChange = viewModel::onStanceChange,
+        onSensitiveChange = viewModel::onSensitiveChange,
+        onSensitiveReasonChange = viewModel::onSensitiveReasonChange,
         onOpenHelp = viewModel::onOpenHelp,
         onCloseHelp = viewModel::onCloseHelp,
         onSign = viewModel::onSign,
@@ -181,6 +184,8 @@ internal fun ReplyWizardScreen(
     onCloseSheet: () -> Unit,
     onLicenseChange: (com.cogra.domain.LicenseChoice) -> Unit,
     onStanceChange: (Double, Double) -> Unit,
+    onSensitiveChange: (Boolean) -> Unit,
+    onSensitiveReasonChange: (String) -> Unit,
     onOpenHelp: (HelpTopic) -> Unit,
     onCloseHelp: () -> Unit,
     onSign: () -> Unit,
@@ -340,6 +345,18 @@ internal fun ReplyWizardScreen(
                     onChange = onStanceChange,
                     onSet = onCloseSheet,
                     onCancel = onCloseSheet,
+                )
+
+                // The post seal's own sheet, not a comment-scale copy:
+                // its one line reads for both scales (ruling 42).
+                state.sheet == ReplySealSheet.Sensitive -> SensitiveSheet(
+                    marked = state.sensitive,
+                    reason = state.sensitiveReason,
+                    onMarkedChange = onSensitiveChange,
+                    onReasonChange = onSensitiveReasonChange,
+                    onDone = onCloseSheet,
+                    onHelp = { onOpenHelp(HelpTopic.MarkingAsSensitive) },
+                    testTagPrefix = "reply",
                 )
 
                 state.sheet == ReplySealSheet.Topics -> CograSheetSurface(testTag = "reply_topics_sheet") {

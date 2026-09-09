@@ -232,6 +232,58 @@ class CommentEditViewModelTest {
         assertThat(vm.state.value.saved).isTrue()
     }
 
+    /**
+     * The mark is a term of the edit record, so moving it alone still
+     * has to write one — otherwise the switch moves on screen and
+     * nothing reaches the graph (backlog 25.2).
+     */
+    @Test
+    fun anEditWhoseOnlyChangeIsTheMarkStillStagesItsRecord() = runTest(dispatcher) {
+        val vm = opened()
+        assertThat(vm.state.value.canSign).isFalse()
+
+        vm.onSensitiveChange(true)
+        vm.onSensitiveReasonChange("A dead seabird.")
+        assertThat(vm.state.value.signedActionCount).isEqualTo(1)
+        assertThat(vm.state.value.canSign).isTrue()
+
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.editCalls).isEqualTo(1)
+        // The words are untouched and ride complete all the same.
+        assertThat(content.lastBody).isEqualTo("As it stands")
+        assertThat(content.lastSensitive).isTrue()
+        assertThat(content.lastSensitiveReason).isEqualTo("A dead seabird.")
+    }
+
+    /** A reason moved under an off switch is a change to nothing. */
+    @Test
+    fun aReasonTypedWhileUnmarkedStagesNothing() = runTest(dispatcher) {
+        val vm = opened()
+        vm.onSensitiveReasonChange("Never shown")
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+        assertThat(vm.state.value.canSign).isFalse()
+    }
+
+    @Test
+    fun unmarkingAMarkedCommentDropsItsReasonWithIt() = runTest(dispatcher) {
+        content.loaded = Outcome.Success(
+            CommentForEdit(
+                comment = testComment("c1", body = "As it stands"),
+                selfMark = SelfMarkView(sensitive = true, reason = "graphic"),
+            ),
+        )
+        val vm = opened()
+        vm.onSensitiveChange(false)
+
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.lastSensitive).isFalse()
+        assertThat(content.lastSensitiveReason).isNull()
+    }
+
     @Test
     fun anEditThatChangedOnlyATopicStagesNoEditRecord() = runTest(dispatcher) {
         val vm = opened()

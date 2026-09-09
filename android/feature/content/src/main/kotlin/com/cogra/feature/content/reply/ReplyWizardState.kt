@@ -41,12 +41,12 @@ enum class ReplyStep { Compose, Seal }
  * the two declaring sections). One at a time: each is a drawer the
  * author opened over the same seal.
  *
- * **There is no `Sensitive`** — jakob 2026-09-01: `ReplySeal`'s "Mark"
- * row (graph.json `via=8`) is not built until a veiled comment has a
- * face, because the row without the veiled result is a switch whose
- * effect nothing draws (design/backlog.md item 25 part 4, which names
- * this lane as the one it blocks). The wire contract keeps its
- * `sensitive` field, defaulted and untouched.
+ * [Sensitive] is `ReplySeal`'s Mark row (graph.json `via=8`), opening
+ * the one `ComposeSensitive` sheet every marking surface opens. It
+ * waited on a veiled comment having a face — a switch whose result
+ * nothing draws is not a control — and design/backlog.md item 25 part 4
+ * built that face on 2026-09-02: "the reply-wizard lanes can implement
+ * ReplySeal 1:1".
  *
  * [Topics] and [References] carry the sections the post wizard shows
  * inline on its details stage. The seal draws them as rows, and
@@ -54,7 +54,7 @@ enum class ReplyStep { Compose, Seal }
  * picker `graph.json` points at is **not boarded**, so the row opens the
  * topic entry the app already ships rather than a screen invented here.
  */
-enum class ReplySealSheet { None, License, Stance, Topics, References }
+enum class ReplySealSheet { None, License, Stance, Sensitive, Topics, References }
 
 /** Whether the reply answers the post itself or one of its comments. */
 enum class ReplyTargetKind { Post, Comment }
@@ -152,6 +152,14 @@ data class ReplyWizardState(
     val pDirected: Double = DEFAULT_P,
     /** Effort — the pad's vertical axis, More against Less. */
     val pInterest: Double = DEFAULT_P,
+    /**
+     * The author's own sensitive mark. On a comment the veil covers the
+     * words and pictures as one — there is no description to leave
+     * standing (ruling 42).
+     */
+    val sensitive: Boolean = false,
+    /** Shown on the veil; only ever sent under [sensitive]. */
+    val sensitiveReason: String = "",
     val sheet: ReplySealSheet = ReplySealSheet.None,
 
     /** Which picture `DescribeSheet` is describing, by index into [picked]. */
