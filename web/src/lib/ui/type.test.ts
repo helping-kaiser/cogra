@@ -155,17 +155,22 @@ describe("type", () => {
   it("leaves no ad-hoc size, weight, or tracking in any screen", () => {
     // The analogue of palette.test.ts's no-raw-hex rule: a screen that sets its
     // own size is what makes the next scale change a rewrite instead of a token
-    // edit. `tracking-wider` survives in one place — it is the recovery code's
-    // legibility device (§3), not styling.
+    // edit. Two exceptions, each a mark rather than styling: `tracking-wider`
+    // is the recovery code's legibility device (§3), and `font-semibold` is the
+    // wordmark's own weight (§6, the mark) — the design master writes the same
+    // 600 as a literal because the wordmark is not on the type ramp.
     const adHoc = /\btext-(?:xs|sm|base|lg|[2-9]?xl)\b|\bfont-(?:thin|extralight|light|normal|medium|semibold|bold|extrabold|black)\b|\bleading-|\btracking-/;
+    const EXEMPT: Record<string, string> = {
+      "recovery-code.tsx": "tracking-wider",
+      "cogra-band.tsx": "font-semibold",
+    };
     const offenders: string[] = [];
     const files = sourceFiles();
     expect(files.length, "scanned nothing — the walk is broken").toBeGreaterThan(20);
     for (const file of files) {
       const source = readFileSync(file, "utf-8");
-      const stripped = file.endsWith("recovery-code.tsx")
-        ? source.replaceAll("tracking-wider", "")
-        : source;
+      const exempt = Object.entries(EXEMPT).find(([name]) => file.endsWith(name));
+      const stripped = exempt === undefined ? source : source.replaceAll(exempt[1], "");
       if (adHoc.test(stripped)) offenders.push(file);
     }
     expect(offenders).toEqual([]);

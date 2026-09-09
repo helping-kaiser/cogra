@@ -20,8 +20,8 @@ import { RestoreCard } from "@/app/applicant-status";
 import { StatusBanners } from "@/app/status-banners";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
+import { CograBand } from "@/lib/ui/cogra-band";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
-import { PageHeader } from "@/lib/ui/page-header";
 import { PostCard } from "@/lib/ui/post-card";
 import { ComposeNotice, composeOutcomeOf } from "./compose-notice";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
@@ -106,16 +106,24 @@ export function FeedView({
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
+    // The band is chrome and full-bleed, so the gutter belongs to the content
+    // below it rather than to the column that holds both.
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 pb-6">
       <CollapsingTop>
-        <PageHeader title="Feed" />
-        {/* Must-act, so it collapses into the header and follows the
-            reader back up instead of living only at the top. */}
-        {phase === "signedIn" && keyOnDevice === false && <RestoreCard />}
-        {/* The signed-out reader's card rides the same slot: the one
-            sign-in-or-join entry, in place of a header action. */}
-        {phase === "signedOut" && <GuestBanner />}
+        {/* A tab root wears the mark, not a page title: the reader knows which
+            tab they are on from the bar, and the band's other half works. */}
+        <CograBand>
+          <div className="flex flex-col gap-4 px-6">
+            {/* Must-act, so it collapses into the header and follows the
+                reader back up instead of living only at the top. */}
+            {phase === "signedIn" && keyOnDevice === false && <RestoreCard />}
+            {/* The signed-out reader's card rides the same slot: the one
+                sign-in-or-join entry, in place of a header action. */}
+            {phase === "signedOut" && <GuestBanner />}
+          </div>
+        </CograBand>
       </CollapsingTop>
+      <div className="flex flex-col gap-4 px-6">
       {/* The account-status banners ride the active tab (design.md §6). */}
       {phase === "signedIn" && <StatusBanners />}
       {/* What the wizard just did, if anything. Dismissing drops the query
@@ -186,6 +194,7 @@ export function FeedView({
             Load more
           </Button>
         ))}
+      </div>
     </main>
   );
 }
