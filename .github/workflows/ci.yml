@@ -201,7 +201,7 @@ jobs:
     timeout-minutes: 45
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:18-alpine
         env:
           POSTGRES_USER: gnp
           POSTGRES_PASSWORD: gnp_secret
@@ -279,7 +279,7 @@ jobs:
     timeout-minutes: 30
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:18-alpine
         env:
           POSTGRES_USER: gnp
           POSTGRES_PASSWORD: gnp_secret
