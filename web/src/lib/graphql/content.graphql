@@ -60,6 +60,18 @@ query Posts($first: Int!, $after: String, $includePending: Boolean! = true) {
     edges {
       node {
         ...PostFields
+        # THE CARD'S COMMENT AFFORDANCE (design/components/content/PostCard.jsx
+        # :317-349): "read the replies" is a different intent from "read the
+        # post", so the count is on the card rather than behind its tap. Asked
+        # for the same way the thread read asks for a branch — `first: 0` for
+        # no edges at all, and `totalCount` alone, the one aggregate the budget
+        # charges nothing for — so a feed of twenty cards still costs twenty
+        # posts. It stays outside `PostFields` because the detail read selects
+        # the same connection with a page of edges, and one response key cannot
+        # carry two argument sets.
+        comments(first: 0, includePending: $includePending) {
+          totalCount
+        }
       }
     }
     pageInfo {
@@ -89,6 +101,9 @@ query PostDetail(
       after: $commentsAfter
       includePending: $includePending
     ) {
+      # The detail card wears the same comment affordance the feed card does,
+      # and the count it states is the WHOLE thread's, not this page's.
+      totalCount
       edges {
         node {
           ...CommentFields

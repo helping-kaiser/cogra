@@ -40,6 +40,7 @@ import com.cogra.core.designsystem.PasswordTextField
 import com.cogra.core.designsystem.RecoveryCodeConfirm
 import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.domain.ErrorCode
+import com.cogra.domain.identity.recoveryCodePrefixDiverged
 import com.cogra.domain.identity.recoveryCodeTypedBack
 
 // --------------------------------------------------------------------
@@ -361,6 +362,7 @@ fun KeyCeremonyScreen(
                             code = code,
                             explainer = stringResource(R.string.backup_code_explainer),
                             matches = { recoveryCodeTypedBack(code, it) },
+                            diverged = { recoveryCodePrefixDiverged(code, it) },
                             onConfirmed = onCodeSaved,
                             modifier = Modifier.padding(16.dp),
                         )
