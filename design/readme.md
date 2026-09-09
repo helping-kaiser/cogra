@@ -470,7 +470,7 @@ is a different thing from a piece the apps have not reached yet.
 
 | Directory | Components |
 |---|---|
-| `components/core/` | `Button`, `InlineAction`, `Card`, `ContentRow`, `FactRow`, `SectionLabel`, `QuietNote`, `QuotedRow`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip`, `HelpDot`, `MoneyFigure`, `CgtMark` |
+| `components/core/` | `Button`, `InlineAction`, `Card`, `ContentRow`, `FactRow`, `SettingsGroup`, `SettingsRow`, `Switch`, `SectionLabel`, `QuietNote`, `QuotedRow`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip`, `HelpDot`, `MoneyFigure`, `CgtMark` |
 | `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow`, `ShareButton`, `NodeMark` |
 | `components/forms/` | `TextField`, `FieldLabel`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
 | `components/navigation/` | `PageHeader`, `BottomNav`, `TabBar`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand` |
@@ -631,6 +631,16 @@ paper over:
   hairline (M3's 2px checkbox border loses to §4's one-weight rule),
   `primary` fill with the inlined `check` glyph when checked, and the whole
   row — label included — as the 48px target.
+- `SettingsGroup` / `SettingsRow` / `Switch` — the settings anatomy, and the
+  house switch with it. Both apps ship a settings screen whose sections each
+  invented a layout, and the design had drawn none of it; one row shape is
+  what lets a page of eight groups read as a page. A quiet heading above, a
+  filled card of rows, a footnote under — the footnote being what keeps a row
+  to one line of status. The trailing edge is the variant (a switch, a value
+  and a chevron, a chevron, or a control of the row's own), and the chevron
+  means one thing only: this opens another surface. The switch was drawn once
+  on the sensitive sheet and stayed a control while there was one of it; a
+  second surface is what makes it a component.
 - `BorrowedViewBand` — §13's borrowed vantage point, as a component: names
   whose view a guest or applicant feed is ranked from, carries the one
   sign-in-or-join entry, and subsumes the guest notice on those surfaces.
@@ -2914,6 +2924,177 @@ whole canvas rather than a fix to one board.
   `MapEntry` is the only board that moved: three readouts take their new
   destinations, three connectors appear where a terminal drew none, and
   two inbound counts rise with them.
+### The settings round — 2026-09-09
+
+The surface three shipped "?" texts had been promising and no board had
+ever drawn. Both apps have shipped a full settings screen since slice 1;
+the design owed it a shape, and 2.5.3's default-license preference owed
+it a home. Ruled by jakob the same day (backlog item 20).
+
+- **One scrolling page, ordered by use.** Theme, taking a stance,
+  writing, reading, key backup, sessions, credentials, sign out — a
+  frequency ranking, not a taxonomy, which is why credentials sit near
+  the bottom where a taxonomist would have led with them. It is a task
+  the reader leaves rather than a place they live in, so it carries no
+  bottom bar and the back arrow goes where the gear was. The board draws
+  the whole scroll: the ruling this round records is an order, and an
+  order cut off at 844px is an order nobody can review.
+- **`SettingsGroup` and `SettingsRow` are the anatomy**, minted here
+  because eight groups improvising eight layouts is the page the ruling
+  asked us to leave behind. A quiet heading above, a filled card of
+  rows, a footnote under it — and the footnote is what keeps a row
+  short: the fact a group owes the reader is said once, beneath it,
+  instead of inside every row. The trailing edge is the variant, and
+  the chevron means one thing only: this opens another surface. The
+  **house switch** joins them: drawn once on the sensitive sheet, and a
+  component the moment a second surface wanted one.
+- **No leading icons, and that is §5 rather than taste.** The page
+  would want brightness, palette, key, devices, logout, and the
+  system has none of them; icons here are exported from Material's set,
+  never drawn. Grouping and headings do the scanning work an inset
+  grouped list asks of them anyway.
+- **Theme is drawn on the page, not behind a picker.** It is the one
+  setting whose effect is the surface the reader is standing on, so a
+  chooser covering the page would hide the very thing it changes. Three
+  one-word readings need no explaining and take the segmented control,
+  which sheds the group's card: a bordered pill inside a filled card is
+  two containers saying the same thing a few pixels apart. The stance
+  input's three readings each need a line, so they stay rows.
+- **Credentials become rows.** Both apps stack three whole forms — six
+  fields, three commitments — on the settings page itself. Each is now
+  a row showing where it stands, and the three screens behind them are
+  gaps, honestly named. That is the round's one deliberate subtraction
+  from what ships.
+- **The default license is the contract's first account preference.**
+  It joins `UserPreferences`, the cross-device type `api-spec.md`
+  already carried, and its row opens the sheet the seal opens — one
+  license surface, never a second. Theme and the stance input stay
+  device-local and out of the contract.
+- **The backup ceremony splits in two.** The settings card stops
+  showing a code inline (item 41.1): `SettingsBackup` states the
+  consequence and takes the proof, and the drawn `RecoveryCode` board
+  is what the commitment leads to, trap and all. It is `Restore`'s
+  shape on purpose — the two screens ask for the same secret in the
+  same words for opposite reasons. **The proof step is the platform's**:
+  a screen-lock gate where the OS offers one, the current code where it
+  cannot.
+- **`YourKey` draws the revealed state**, because what no other surface
+  shows is what an export looks like: two encodings of one secret, each
+  named exactly — PEM, PKCS#8, hex, Ed25519, §3's stated exception. The
+  gate in front of it is the platform's, like the backup's.
+- **The gate**: 128 → **131 screens**, 958 → **979 edges**, 81 → **82
+  gaps**, and **flows 58/53/5** unchanged. The three new boards carry 21
+  edges; two gaps closed where the profile's gear had pointed at
+  nothing, and three opened where the credential rows now point at
+  screens the round did not draw. No board outside the round's own moved
+  a pixel — only the generated maps, which grew with the edges.
+
+Reviewed the same day, and finished on the review's own ruling. The
+page had five rows pointing at nothing of its own: two borrowed a board
+from another screen, three ended in an honest gap.
+jakob's reading was that a canonical canvas which stops at the row is
+a canvas implementation finishes by guessing, and guessing is where a
+settings page starts looking improvised. Six boards close it, and none
+of them invents a control.
+
+- **A borrowed sheet is not a drawn board.** Pointing the license row
+  at `ComposeLicense` and the reading row at `FeedSheet` was true about
+  the control and silent about the surface: those boards draw the seal
+  and the feed beneath their sheets, and neither is what a reader is
+  standing on when they open the row. `SettingsLicense` and
+  `SettingsReading` draw the same sheets over the settings page, which
+  is what the product actually shows.
+- **The page beneath is the page, not a few of its rows.** Both boards
+  render `SettingsBody` — the same body `Settings` draws — because the
+  ruling this round records is an ORDER, and a hand-made handful of
+  rows under a wash would be a second order nobody ratified. `Settings`
+  frames the whole scroll; these two keep the phone's 844 and let the
+  page run past it, the way a scrolling page under a sheet does.
+- **A settings sheet is titled by the row that opened it.** The seal's
+  sheet needs no heading — the composer is still visible around it —
+  but a sheet that covers the surface it came from has to say what it
+  is. The title is the row's own words, so the two cannot drift, and
+  the "?" moves onto the heading's row, which is `SheetTitle`'s own
+  rule. Neither sheet gained a control; one gained a heading.
+- **The license sheet's settings reading is the one line it owed.**
+  *Terms for anyone who reuses this* is written for the post being
+  signed and stays there. The account default says what it actually
+  does: where every new post starts, binding nothing already
+  published — `api-spec.md`'s own wording, said to a reader. It keeps
+  `Done`: over settings nothing reacts behind a sheet to be watched,
+  and both of the page's sheets commit.
+- **The filter's two ends now meet.** The help text has always said
+  *your default lives in settings*; this is settings, and it is the
+  same sheet — `FeedFilterSheet`, the half of `FeedFilter` that is not
+  the pill. Search took the trigger alone because it owns its sheet;
+  settings takes the sheet alone because its row is the trigger. The
+  order section keeps §13's standing obligation: the drawn default is
+  `Ranked`, and until slice 3's ranker ships the shipped one reads
+  Newest, here as in the feed.
+- **Three credential screens, one family.** `ChangePassword`,
+  `ChangeHandle` and `ChangeEmail` take `Restore`'s column, which
+  `SettingsBackup` already took: heading, the consequence, the fields,
+  one commitment, the thing to know last. Each carries a fact the apps
+  leave to be discovered — the password change keeps THIS device signed
+  in where a reset does not, a freed handle is claimable and its links
+  die, and an email change is proved from both ends.
+- **The email change is two boards, and the line both apps ship is
+  wrong.** *Check both inboxes — either message's code confirms the
+  change* tells a reader one message finishes the job. `auth.md` and
+  `api-spec.md` agree it does not: the mutation takes either side's
+  proof in either order, but the change applies only once BOTH have
+  landed — and the two errands differ, a code to type from the current
+  address and a link to click at the new one. The code field does not
+  exist until the messages have gone, so the request and the
+  confirmation are two states and two boards.
+- **What is drawn is the resting state.** Validation is on submit
+  (§13's timing rule), so an untouched form has nothing marked. The
+  marked states of all four task screens are undrawn, and so is the
+  half-confirmed email — the graph carries that one as an outcome of
+  the confirm rather than a board.
+- **The gate**: 131 → **137 screens**, 979 → **1006 edges**, 82 → **79
+  gaps**, and **flows 58/53/5** unchanged. The six boards carry 27
+  edges and close exactly the three credential gaps, opening none. No
+  hand-drawn board moved a pixel — not even `Settings`, whose body
+  moved to `_shared.jsx` byte for byte; only the five generated maps,
+  which follow the edges.
+
+Reviewed on the boards themselves, and three findings came back. Each
+is a thing the drawing said that the surface would not hold.
+
+- **A reading squeezed to a stub is not a reading.** `LicenseAxis` gave
+  the tier's name flex-basis zero, so `Credit commercially` and
+  `Record commercially` broke over two lines while their consequence
+  wrapped ragged beside them — and the axis stopped reading as a
+  column, which is the one thing an axis of three has to do. The name
+  now takes the width its words need and the consequence takes what is
+  left, ragged to the LEFT so every row ends where the one-line rows
+  end. The dot and the consequence centre on the name's first line, so
+  a longer consequence grows the row downward and nothing above moves.
+  **The defect was the seal's too** — `ComposeLicense` had shipped it
+  since the conformance round, and one master carries both sheets, so
+  the compose board is the fix's second attributed hunk.
+- **A sheet that covers its own trigger has to commit somewhere the
+  reader can reach.** Titled, the filter sheet runs past its 88% and
+  `Reset` became the last scrolled item, at the screen's bottom lip
+  with nothing under it. `FeedFilterSheet` gains a `foot`: given one it
+  owns its height, the sections scroll inside it, and the Done row —
+  the license sheets' third anatomy — is pinned beneath them, clear of
+  the safe area the sheet already pads for. Given none it is sized by
+  its content, so the feed's own sheet is unchanged; the feed's filter
+  is the one that applies live, and the one with no `Done`.
+- **A confirmation that draws one half reads as the whole.**
+  `ChangeEmailConfirm` showed the field for the code and nothing for
+  the link waiting at the new address, and `Confirm email change` said
+  the press finished the job. `auth.md` is explicit that it does not.
+  Both sides are drawn as a pair now, each naming its address and
+  saying it is still outstanding, and the commitment is `Confirm the
+  code` — what pressing it actually does.
+- **The gate**: **137 screens**, **1006 edges**, **79 gaps**, **flows
+  58/53/5** — every count unchanged, because none of the three is a
+  route. Four boards moved: the three reviewed, plus `ComposeLicense`
+  through the shared axis. `FeedSheet`'s only diff is a generated
+  `useId` value, which followed the master's new branch and no pixel.
 
 ## 14. Index
 

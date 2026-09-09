@@ -1146,10 +1146,10 @@
     },
     {
       "file": "MapProfile.dc.html",
-      "x": -2450,
+      "x": -3030,
       "y": 0,
-      "w": 2030,
-      "h": 1329,
+      "w": 2610,
+      "h": 2080,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1239,6 +1239,87 @@
       "title": "Profile · the comments view",
       "x": 2400,
       "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "Settings.dc.html",
+      "title": "Settings · the whole page",
+      "x": 0,
+      "y": 1928,
+      "w": 390,
+      "h": 1774,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsBackup.dc.html",
+      "title": "Settings · a new recovery code",
+      "x": 480,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "YourKey.dc.html",
+      "title": "Settings · your key",
+      "x": 960,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsLicense.dc.html",
+      "title": "Settings · the default license",
+      "x": 1440,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsReading.dc.html",
+      "title": "Settings · what your feed shows",
+      "x": 1920,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ChangePassword.dc.html",
+      "title": "Settings · change your password",
+      "x": 2400,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ChangeHandle.dc.html",
+      "title": "Settings · change your handle",
+      "x": 2880,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ChangeEmail.dc.html",
+      "title": "Settings · change your email",
+      "x": 3360,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ChangeEmailConfirm.dc.html",
+      "title": "Settings · confirm the email change",
+      "x": 3840,
+      "y": 1928,
       "w": 390,
       "h": 844,
       "page": "profile"

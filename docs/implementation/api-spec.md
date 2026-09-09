@@ -1432,6 +1432,12 @@ type UserPreferences {
   "Sensitive-content filter aggressiveness: 0 (show everything) to 10
    (strictest); null when unset, so the frontend default applies."
   contentFilteringSeverityLevel: Int
+  "The license the composer starts a new post from; null when unset, so
+   the composer starts at public domain (0/0). It seeds the authoring-time
+   declaration and binds nothing: the license is settled per post at its
+   genesis signing, and changing this never reaches a post already
+   published."
+  defaultLicense: License
 }
 
 "An outstanding invite link issued by an actor — service-side
@@ -4286,6 +4292,9 @@ type MarkChatReadPayload { chat: Chat! }
 input SetPreferencesInput {
   "0 (show everything) to 10 (strictest); null restores the default."
   contentFilteringSeverityLevel: Int
+  "The license new posts start from; null restores public domain (0/0).
+   Both axes take the same three readings the composer publishes."
+  defaultLicense: LicenseInput
 }
 type SetPreferencesPayload { preferences: UserPreferences! }
 

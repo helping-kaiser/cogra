@@ -137,8 +137,32 @@ export function FilterTrigger({ reading, onOpen, expanded = false, ariaLabel = "
   );
 }
 
-export function FeedFilter({ value = FEED_FILTER_DEFAULT, onChange, onHelp, defaultOpen = false, ariaLabel = "What your feed shows" }) {
-  const [open, setOpen] = React.useState(defaultOpen);
+/* THE SHEET ALONE — for a surface that owns its trigger. `FilterTrigger` is
+   already the half search takes; this is the other half, and the settings
+   page is what asked for it: its Reading row IS the trigger, so the row opens
+   this sheet directly and the filter is one control rather than two drawings
+   of one.
+
+   `lead` IS WHAT A TITLED SHEET SAYS FIRST. The feed's sheet needs no heading
+   — the pill that opened it is a thumb away, still on screen — so its "?"
+   sits in the corner the trigger left it in. A sheet that covers the surface
+   it was opened from does need one, and `SheetTitle` already rules where the
+   "?" goes then: on the heading's own row. The slot carries both, so the two
+   readings differ where they must and nowhere else.
+
+   `foot` IS THE OTHER HALF OF THAT DIFFERENCE. Over a feed the filter applies
+   live and there is nothing to commit — the list behind it rearranges and the
+   reader watches it happen. Over settings nothing reacts, so the choice is
+   committed, and the sheet takes the Done row the license sheets take: a
+   hairline, the reading, the button, inside the sheet's own inset.
+
+   A SHEET WITH A FOOT OWNS ITS HEIGHT. Ten kinds and four sections already
+   outrun 88% of the screen, so a commitment appended after them would sit
+   below the fold — the one control that must always be reachable, reachable
+   only by scrolling. So the sections scroll inside the sheet and the foot is
+   pinned under them, which is the anatomy `BottomSheet`'s own `height` exists
+   for. A sheet with no foot is sized by its content, exactly as before. */
+export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp, open = false, onClose, ariaLabel = "What your feed shows", lead, foot }) {
   const set = (patch) => onChange && onChange({ ...value, ...patch });
   const toggle = (key, entry) => {
     const list = value[key] || [];
@@ -146,37 +170,62 @@ export function FeedFilter({ value = FEED_FILTER_DEFAULT, onChange, onHelp, defa
   };
   const postsish = (value.kinds || []).some((kind) => kind === "posts" || kind === "comments");
 
-  return (
+  const sections = (
     <>
-      <FilterTrigger reading={feedFilterSummary(value)} onOpen={() => setOpen(true)} expanded={open} ariaLabel={ariaLabel} />
-      {/* Ten kinds plus four sections outgrow the sheet's 62% default — the
-          filter opens taller so the whole control is present; it still scrolls
-          on shorter screens. The sheet carries its own "?" (like the pads):
-          the dialog explains the filter and names the settings default. */}
-      <BottomSheet open={open} onClose={() => setOpen(false)} ariaLabel={ariaLabel} maxHeight="88%">
+      <FilterSection label="What gets ranked" hint="Everything that can reach your feed. Combine as many as you like.">
+        {FEED_KINDS.map((kind) => (
+          <Chip key={kind.value} label={kind.label} selected={(value.kinds || []).includes(kind.value)} onToggle={() => toggle("kinds", kind.value)} />
+        ))}
+      </FilterSection>
+      <FilterSection label="Kinds of post" hint={postsish ? "Combine them: photos and video with no text posts is a legitimate feed." : "Applies once posts or comments are in."}>
+        {FEED_FORMS.map((form) => (
+          <Chip key={form.value} label={form.label} selected={(value.forms || []).includes(form.value)} onToggle={() => toggle("forms", form.value)} disabled={!postsish} />
+        ))}
+      </FilterSection>
+      <OrderSection order={value.order} onOrder={(order) => set({ order })} seen={value.seen === true} onSeen={(seen) => set({ seen })} />
+      <FilterSection label="Also show" hint="Sensitive content stays veiled until you tap it. A removed post keeps its place — author, time, and where it sat in the thread — never the content.">
+        {FEED_ALSO.map((entry) => (
+          <Chip key={entry.value} label={entry.label} selected={(value.also || []).includes(entry.value)} onToggle={() => toggle("also", entry.value)} />
+        ))}
+      </FilterSection>
+      <div style={{ padding: "0 var(--space-6)" }}>
+        <Button variant="text" size="sm" selfStart onClick={() => onChange && onChange(FEED_FILTER_DEFAULT)}>Reset</Button>
+      </div>
+    </>
+  );
+
+  return (
+    /* Ten kinds plus four sections outgrow the sheet's 62% default — the
+       filter opens taller so the whole control is present; it still scrolls
+       on shorter screens. The sheet carries its own "?" (like the pads):
+       the dialog explains the filter and names the settings default. */
+    <BottomSheet open={open} onClose={onClose} ariaLabel={ariaLabel} {...(foot ? { height: "88%" } : { maxHeight: "88%" })}>
+      {lead ?? (
         <div style={{ position: "absolute", top: "var(--space-1)", right: "var(--space-2)" }}>
           <HelpDot ariaLabel="How the filter works" onOpen={onHelp} />
         </div>
-        <FilterSection label="What gets ranked" hint="Everything that can reach your feed. Combine as many as you like.">
-          {FEED_KINDS.map((kind) => (
-            <Chip key={kind.value} label={kind.label} selected={(value.kinds || []).includes(kind.value)} onToggle={() => toggle("kinds", kind.value)} />
-          ))}
-        </FilterSection>
-        <FilterSection label="Kinds of post" hint={postsish ? "Combine them: photos and video with no text posts is a legitimate feed." : "Applies once posts or comments are in."}>
-          {FEED_FORMS.map((form) => (
-            <Chip key={form.value} label={form.label} selected={(value.forms || []).includes(form.value)} onToggle={() => toggle("forms", form.value)} disabled={!postsish} />
-          ))}
-        </FilterSection>
-        <OrderSection order={value.order} onOrder={(order) => set({ order })} seen={value.seen === true} onSeen={(seen) => set({ seen })} />
-        <FilterSection label="Also show" hint="Sensitive content stays veiled until you tap it. A removed post keeps its place — author, time, and where it sat in the thread — never the content.">
-          {FEED_ALSO.map((entry) => (
-            <Chip key={entry.value} label={entry.label} selected={(value.also || []).includes(entry.value)} onToggle={() => toggle("also", entry.value)} />
-          ))}
-        </FilterSection>
-        <div style={{ padding: "0 var(--space-6)" }}>
-          <Button variant="text" size="sm" selfStart onClick={() => onChange && onChange(FEED_FILTER_DEFAULT)}>Reset</Button>
-        </div>
-      </BottomSheet>
+      )}
+      {foot ? (
+        <>
+          {/* `Reset` ends the scroll rather than the sheet, and keeps a section's
+              own gap between itself and the hairline below it. */}
+          <div style={{ flex: 1, minHeight: 0, overflowY: "auto", paddingBottom: "var(--space-4)" }}>{sections}</div>
+          {foot}
+        </>
+      ) : (
+        sections
+      )}
+    </BottomSheet>
+  );
+}
+
+export function FeedFilter({ value = FEED_FILTER_DEFAULT, onChange, onHelp, defaultOpen = false, ariaLabel = "What your feed shows" }) {
+  const [open, setOpen] = React.useState(defaultOpen);
+
+  return (
+    <>
+      <FilterTrigger reading={feedFilterSummary(value)} onOpen={() => setOpen(true)} expanded={open} ariaLabel={ariaLabel} />
+      <FeedFilterSheet value={value} onChange={onChange} onHelp={onHelp} open={open} onClose={() => setOpen(false)} ariaLabel={ariaLabel} />
     </>
   );
 }
