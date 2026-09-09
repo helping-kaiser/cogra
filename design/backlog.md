@@ -1285,3 +1285,40 @@ layout unoptimized until this round runs. What parked into it:
 
 Nothing desktop-specific is built before this round.
 
+
+### 39 · The UI conformance audit's undrawn states · *design* · **the states are drawn**
+
+The 2026-09-08 audit found states both apps reach and no board draws;
+where the design was silent both apps invented an answer, and the two
+answers disagree. jakob ruled the whole set 2026-09-09. The six that
+needed **drawing** are done — readme §13, *The audit states*:
+
+- ~~**16 · Chronicle pagination**~~ — infinite scroll matching the
+  feed, and `ProfileMoreFailed` for the page that doesn't arrive.
+- ~~**17 · Profile not-found and whole-profile read-failure**~~ —
+  `ProfileNotFound` (terminal) and `ProfileUnreachable` (retries).
+- ~~**18 · The set-new-password surface**~~ — `ResetNew`, the reset
+  link's destination. The **token** finding needs nothing here: the
+  boards have always said *link*, and the apps take their lines.
+- ~~**19 · Malformed-invite input**~~ — `InviteEntryError`, one line.
+- ~~**20 · Android's verification landing**~~ — `VerifiedApp` and
+  `VerifyExpired`. Links only; no in-app token paste.
+- ~~**25 · The reply-pad help topic**~~ — `ReplyPadHelp`. The copy was
+  already blessed; the board and the edge were what was missing.
+
+**jakob blessed the whole set 2026-09-09** and the lines sit in
+`copy-voice.md`'s topical sections. What remains is conform work, not
+drawing, and belongs to the apps: they take these boards' lines
+verbatim, and the word **token** leaves the reset and verify flows when
+they do. The desktop questions — the fullscreen viewer and the desktop
+card idiom — are parked to item 38 by jakob's scope ruling.
+
+### 40 · The field flow badge is invisible, and the gate likes it that way · *build*
+
+`check-flows` verifies `data-flow` on the `<input>` opening tag itself,
+but `::after` generates no box on a replaced element, so every field
+badge is invisible-but-valid — six boards before the audit-states round
+and its fields since. Either the gate learns to accept the attribute on
+the field's wrapper (and the boards move it where it paints), or the
+readme's "the gate verifies the attribute, not the paint" stays the
+stated rule and this item closes as written.
