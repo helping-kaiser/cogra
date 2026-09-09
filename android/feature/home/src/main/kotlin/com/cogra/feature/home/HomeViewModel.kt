@@ -44,6 +44,7 @@ data class HomeUiState(
     val verified: Boolean = false,
     /** The verify refusal to render; null when none. */
     val verifyError: ErrorCode? = null,
+    /** One-shot: a fresh token was just sent; cleared once shown. */
     val resent: Boolean = false,
     val resending: Boolean = false,
     /** The resend refusal to render; null when none. */
@@ -65,6 +66,7 @@ data class HomeUiState(
     val pDirected: Double = DEFAULT_STANCE,
     val pInterest: Double = DEFAULT_STANCE,
     val signing: Boolean = false,
+    /** One-shot: the vouch-back was just signed; cleared once shown. */
     val reciprocated: Boolean = false,
     val signingFailed: Boolean = false,
     /** Handshakes parked mid-flight on this device. */
@@ -331,4 +333,8 @@ class HomeViewModel @Inject constructor(
     fun onActorRestoredShown() {
         _state.update { it.copy(actorRestored = false) }
     }
+
+    fun onReciprocatedShown() = _state.update { it.copy(reciprocated = false) }
+
+    fun onResentShown() = _state.update { it.copy(resent = false) }
 }
