@@ -65,6 +65,7 @@ import com.cogra.feature.content.reply.CommentEditRoute
 import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.content.reply.ReplyTargetKind
 import com.cogra.feature.content.reply.ReplyWizardRoute
+import com.cogra.feature.home.BorrowedViewBandRoute
 import com.cogra.feature.home.KeyRestoreBannerRoute
 import com.cogra.feature.home.StatusBannersRoute
 import com.cogra.feature.invites.InvitesRoute
@@ -422,6 +423,11 @@ private fun CograNavGraphContent(
             KeyRestoreBannerRoute(onRestoreActor = { navController.navigate(Restore) })
         }
     }
+    val borrowedViewBand: @Composable () -> Unit = {
+        if (signedIn == true) {
+            BorrowedViewBandRoute()
+        }
+    }
     val statusBanners: @Composable (Boolean, () -> Unit) -> Unit = { restored, onConsumed ->
         if (signedIn == true) {
             StatusBannersRoute(
@@ -537,9 +543,21 @@ private fun CograNavGraphContent(
                     // Pushes the login screen (the web guest entries link
                     // to /login), so back returns to the reading context.
                     onSignInOrJoin = { navController.navigate(Login) },
+                    // The chats affordance the band carries (jakob
+                    // 2026-09-01). A signed-out tap opens the guest gate,
+                    // which is the edge the canvas draws; the signed-in
+                    // destination is a declared gap ("the chat surface (not
+                    // designed)"), so no control is drawn for a member
+                    // until it exists.
+                    onChats = if (signedIn == false) {
+                        { joinPrompt = true }
+                    } else {
+                        null
+                    },
                     refreshSignal = signedResult,
                     onRefreshSignalConsumed = consumeSigned,
                     keyBanner = keyBanner,
+                    borrowedViewBand = borrowedViewBand,
                     banners = { statusBanners(actorRestored, consumeRestored) },
                 )
             }
