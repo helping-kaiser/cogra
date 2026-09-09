@@ -16,6 +16,8 @@ import {
 } from "@/lib/api/profile-api";
 import { uploadMedia } from "@/lib/api/media-api";
 import { firstRefusalMessage, mediaRefusalMessage } from "@/lib/ui/error-messages";
+import { TOO_BIG_PICTURE } from "@/lib/compose/pick";
+import { pictureTooBig } from "@/lib/ui2/media/caps";
 import { encodeForUpload } from "@/lib/ui2/media/encode-image";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useAuthPhase } from "@/lib/session/provider";
@@ -95,6 +97,11 @@ export default function ProfileEditPage() {
       encoded = await encodeForUpload(choice.file, { ratio, crop: choice.crop });
     } catch {
       return { selection: "unchanged", error: "This browser couldn't read that picture." };
+    }
+    // HT-19: an avatar is a picture and takes the picture cap, in the composer's
+    // own words and at the same moment — on the encoded bytes, before they go.
+    if (pictureTooBig(encoded.blob)) {
+      return { selection: "unchanged", error: TOO_BIG_PICTURE };
     }
     const result = await uploadMedia(client, { blob: encoded.blob });
     if (result.kind === "success") return { selection: { mediaId: result.value.id } };
