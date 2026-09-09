@@ -73,7 +73,7 @@ export function SensitiveSheet({
           </button>
         </div>
         <p className="m-0 text-body-medium">
-          Veils the pictures and the description until a reader chooses to look.
+          Veils the pictures and the words until a reader chooses to look.
         </p>
         <TextField
           label="Why?"

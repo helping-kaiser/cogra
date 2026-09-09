@@ -12,11 +12,11 @@
     </file>
     <file name="src/main/kotlin/com/cogra/feature/auth/PasswordResetScreens.kt">
         <error line="6" column="1" source="standard:import-ordering" />
-        <error line="58" column="5" source="standard:class-signature" />
-        <error line="58" column="44" source="standard:class-signature" />
+        <error line="59" column="5" source="standard:class-signature" />
+        <error line="59" column="44" source="standard:class-signature" />
     </file>
     <file name="src/main/kotlin/com/cogra/feature/auth/RestoreScreen.kt">
-        <error line="108" column="1" source="standard:no-consecutive-blank-lines" />
+        <error line="112" column="1" source="standard:no-consecutive-blank-lines" />
     </file>
     <file name="src/main/kotlin/com/cogra/feature/auth/RestoreViewModel.kt">
         <error line="3" column="1" source="standard:import-ordering" />

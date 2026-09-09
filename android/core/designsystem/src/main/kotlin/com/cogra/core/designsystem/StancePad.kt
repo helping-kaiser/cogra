@@ -200,8 +200,14 @@ private val TARGET_MIN = 48.dp
  */
 private const val RESTING_FACE = "😐"
 
-/** Muted and translucent: M3's own disabled-content opacity. */
-private const val RESTING_FACE_ALPHA = 0.38f
+/**
+ * Muted and translucent (`--opacity-resting-face`, design/readme.md §4 —
+ * "the resting stance face at 40% opacity"). Deliberately NOT the 0.38
+ * disabled opacity it looks like: the resting face is not a disabled
+ * control, and the 2026-09-09 ruling that retired the second disabled
+ * token kept this one for exactly that reason.
+ */
+private const val RESTING_FACE_ALPHA = 0.4f
 
 /** How far an overlay stands off the target it belongs to. */
 private val PAD_GAP = 8.dp
