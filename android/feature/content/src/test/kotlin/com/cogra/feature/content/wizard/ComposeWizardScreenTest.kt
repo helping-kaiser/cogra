@@ -281,7 +281,7 @@ class ComposeWizardScreenTest {
         compose.onNodeWithTag("wizard_sensitive_reason").assertIsNotEnabled()
 
         compose.onNodeWithText(
-            "Veils the pictures and the description until a reader chooses to look.",
+            "Veils the pictures and the words until a reader chooses to look.",
         ).assertExists()
     }
 
