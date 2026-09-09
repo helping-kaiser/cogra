@@ -1017,7 +1017,8 @@ entry, the vouch screen, the key ceremony, recovery code, sign-in,
 restore) is a full-focus task screen with a back arrow, never a
 bottom sheet. Canonical screens: `designs/canonical/`. During the
 dev phase the collapsing top and the sign-in screen carry an APK
-download line.
+download line. **It is the web's alone** — the line offers a browser
+visitor the app they are not in, and the app itself never carries it.
 
 The recovery-code screen is a trap: no back affordance, and the only
 way out is the code typed or pasted back. A think-twice dialog gates
