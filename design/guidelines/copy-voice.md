@@ -383,3 +383,76 @@ looking alike until one plays:
   it is the one fact about a clip a reader decides on before playing
   it, and the eye reads it off the cover.
 - `1 picture` · `4 pictures` — a picture post, the count alone.
+
+## Awaiting blessing — the audit-states round
+
+Drawn on the boards the 2026-09-09 rulings added, and up for review in
+the same pass. Once blessed each line moves to the section it belongs
+to above. The reply pad's help topic is absent from this list on
+purpose: **Toward what you answer** was already blessed, and the round
+drew a board for it rather than writing a second version of it.
+
+**The chronicle's failed next page** (`ProfileMoreFailed`). The
+chronicle scrolls like the feed, so the only drawn state is the one
+where a page does not arrive. jakob's own words for it:
+
+- `Couldn't load more` — the fact, `text-secondary` at body-medium,
+  not `--error`: rows are already on screen, so the page that didn't
+  come means stale, not gone.
+- `Retry` — the way out, an `InlineAction` at the end of that line.
+
+**A profile that isn't there, and one that wouldn't load** (`ProfileNotFound`,
+`ProfileUnreachable`). Two states, and the difference between them is
+the whole design — an answer that was no, and no answer at all:
+
+- `This profile doesn't exist.` — the terminal state. Both apps already
+  ship this exact sentence; adopting it costs nothing and settles the
+  wording where it already agrees. It carries no way on, because
+  nothing about trying again makes a profile exist.
+- `Can't reach the server — this profile can't load right now.` — the
+  fault. It is §3's own feed variant (`Can't reach the server — new
+  posts can't load right now.`) with the noun this surface is about.
+  The long house line ends in "and try again", which beside a Retry
+  says try again twice — the same reason the reply's failed upload is
+  drawn short.
+
+**Setting the new password** (`ResetNew`). The stage behind the reset
+link, which no board drew. `At least 12 characters.` is Join's hint
+verbatim and `This restores your sign-in only…` is Reset's quiet note
+verbatim — neither needs blessing again:
+
+- `Set a new password` — the heading.
+- `Setting a new password signs out every device. You sign in again
+  with the new one.` — the consequence, said where the act happens.
+  Reset's request screen already carries the first fact; this is the
+  screen that acts on it.
+- `New password` — the field's label.
+- `Set the new password` — the commitment.
+
+**Nothing that reads as an invite** (`InviteEntryError`):
+
+- `That doesn't look like an invite link.` — the field's own supporting
+  line. It takes the shape the register already uses for a local format
+  failure (`That doesn't look like an email address.`) and names the
+  link, because the field asks for a link. Web's invented line adds "or
+  its code", describing a field this design does not draw; Android's
+  says "doesn't contain an invite code", describing a paste this design
+  does not ask for. Belongs under **Field errors**, drawn, once blessed.
+
+**The verification link, in the app** (`VerifiedApp`, `VerifyExpired`).
+`Email verified` and `Resend the link` are taken verbatim from the
+browser landing and the applicant feed's card:
+
+- `Your application moved a step. The rest of it is waiting for you on
+  the feed.` — the app's landing. The browser's second sentence ("You
+  can go back to the app — it already knows") is addressed to a reader
+  who is not in the app, so it cannot stand here.
+- `Go to the feed` — the way on, naming its destination the way `Back
+  to CoGra` names the browser's.
+- `This link doesn't work anymore` — the dead link's heading, in
+  `JoinInvalid`'s idiom (`This invite can't be used anymore`).
+- `It may have expired or already been used. Send yourself a fresh one
+  — your application is untouched, and the new link picks it back up.`
+  — the two possibilities, the way forward, and the reassurance
+  `JoinInvalid` also carries, because a reader who reads "expired"
+  without it assumes the application expired too.
