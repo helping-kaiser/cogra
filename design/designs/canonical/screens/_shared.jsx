@@ -688,6 +688,69 @@ function ComposeSealBody() {
 
 /* THE REPLY'S SEAL, whole — `ReplySeal` itself, and what the reply's stance pad
    stands on. */
+/* The reply's parked pad over its seal — `ReplyPad`'s whole drawing, lifted
+   here the moment a second board needed it (the help dialog opened from its
+   "?"). Same rule as `ReplySealBody` and `ProfileOtherBody`: what a modal
+   covers is inert, not shortened, so the board underneath must be the real
+   one and not a stand-in — and the way to guarantee that is one markup, two
+   screens. */
+function ReplyPadBody() {
+  return (
+    <>
+      <ReplySealBody />
+
+      {/* The wash over the shell; the parked pad above it stays sharp. */}
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "var(--scrim-wash, rgba(0, 0, 0, 0.5))" }} />
+
+      <div
+        style={{
+          position: "absolute",
+          left: 30,
+          right: 30,
+          bottom: 24,
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+          borderRadius: "var(--radius-extra-large)",
+          background: "var(--surface-dialog)",
+          color: "var(--on-surface)",
+          padding: "var(--card-padding)",
+          boxSizing: "border-box",
+        }}
+      >
+        <span style={{ position: "absolute", top: 4, right: 4 }}>
+          <HelpDot ariaLabel="How stances work" />
+        </span>
+
+        {/* The pick's readout, above the field where a thumb cannot cover it:
+            what the pick is toward, then the face and the pair under it. The
+            readout clears the corner the "?" sits in. */}
+        <div style={{ display: "flex", flexDirection: "column", paddingRight: 40 }}>
+          <span aria-hidden="true" style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
+            Toward "The long way home"
+          </span>
+          <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
+            <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🙂</span>
+            <span style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.10 / +0.10</span>
+          </span>
+          <span style={{ position: "absolute", width: "1px", height: "1px", padding: 0, margin: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 }}>
+            Nice, For or against +0.10, How much reaches you +0.10
+          </span>
+        </div>
+
+        <div role="group" aria-label="Stance pad for the post you answer" style={{ alignSelf: "center", width: 240 }}>
+          <StancePad value={{ pDirected: 0.1, pInterest: 0.1 }} />
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+          <Button variant="text" size="sm">Cancel</Button>
+          <Button size="sm">Set</Button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function ReplySealBody() {
   return (
     <>

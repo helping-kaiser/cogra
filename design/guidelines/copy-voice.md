@@ -311,6 +311,9 @@ validation exists yet to trigger them):
   a local format failure.
 - `That doesn't look like an email address.` — Join's Email field, a
   local format failure.
+- `That doesn't look like an invite link.` — the invite field's local
+  format failure, in the email line's shape; it names the link because
+  the field asks for a link. Drawn on `InviteEntryError`.
 
 ## Menu rows
 
@@ -368,6 +371,44 @@ among the acts one signature commits:
   cited: the staged row above it now shows a citation, and an example
   beats a list.
 
+## Missing and unreachable
+
+The dead ends and failed loads, blessed with the audit-states round.
+The difference between the first two is the whole design — an answer
+that was no, and no answer at all:
+
+- `This profile doesn't exist.` — the terminal state, on
+  `ProfileNotFound`. It carries no way on, because nothing about trying
+  again makes a profile exist.
+- `Can't reach the server — this profile can't load right now.` — the
+  fault, on `ProfileUnreachable`, with an outlined Retry. The feed
+  variant with the noun this surface is about; the long house line ends
+  in "and try again", which beside a Retry says try again twice.
+- `Couldn't load more` · `Retry` — the chronicle page that didn't
+  arrive, on `ProfileMoreFailed`: the fact at body-medium
+  `text-secondary` (rows are already on screen, so the missing page
+  means stale, not gone), the way out an `InlineAction` ending the line.
+
+## The reset and verify landings
+
+Blessed with the audit-states round:
+
+- `Set a new password` · `New password` · `Set the new password` — the
+  reset link's destination (`ResetNew`): heading, field label,
+  commitment.
+- `Setting a new password signs out every device. You sign in again
+  with the new one.` — the consequence, said where the act happens
+  (auth.md: password reset revokes every session).
+- `Your application moved a step. The rest of it is waiting for you on
+  the feed.` · `Go to the feed` — the app's verification landing
+  (`VerifiedApp`); the way on names its destination.
+- `This link doesn't work anymore` — the dead verify link's heading
+  (`VerifyExpired`), in `JoinInvalid`'s idiom.
+- `It may have expired or already been used. Send yourself a fresh one
+  — your application is untouched, and the new link picks it back up.`
+  — the two possibilities, the way forward, and the reassurance a
+  reader who reads "expired" without it would miss.
+
 ## Awaiting blessing — the parked-rulings round
 
 Drawn, and up for review in the same pass. Kept apart from the blessed
@@ -383,3 +424,4 @@ looking alike until one plays:
   it is the one fact about a clip a reader decides on before playing
   it, and the eye reads it off the cover.
 - `1 picture` · `4 pictures` — a picture post, the count alone.
+
