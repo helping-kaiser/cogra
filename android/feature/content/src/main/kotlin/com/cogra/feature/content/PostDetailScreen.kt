@@ -46,6 +46,7 @@ import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
+import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.domain.CommentView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
@@ -174,6 +175,12 @@ fun PostDetailScreen(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
+                // The 48dp band every board draws (`spacing.css`
+                // `--top-bar-height`, `PageHeader.jsx`); M3's small bar
+                // defaults to 64dp, which is a rung the design does not
+                // have. `expandedHeight` is the documented way to set it,
+                // and the collapse arithmetic follows it.
+                expandedHeight = Layout.TopBarHeight,
                 colors = surfaceTopAppBarColors(),
                 scrollBehavior = collapsingTop.scrollBehavior,
                 title = { Text(state.post?.title?.value.orEmpty()) },
