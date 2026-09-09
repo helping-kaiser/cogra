@@ -58,7 +58,7 @@ export function ShareButton({
           if (outcome === "copied") onCopied();
         });
       }}
-      className="cg-state cg-focus cg-hit flex items-center rounded-full px-2 py-1.5 text-on-surface-variant"
+      className="cg-state cg-focus cg-hit flex flex-none items-center rounded-full px-2 py-1.5 text-on-surface-variant"
     >
       <Icon name="share" size={18} />
     </button>
