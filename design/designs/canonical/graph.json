@@ -12,6 +12,8 @@
     "KeyDecline": "the without-a-backup dialog covers the ceremony — the arrow beneath the scrim is inactive in this state; only the dialog's own pair is live",
     "VouchBackPad": "the scrim wash covers the shell — its semantic elements (band, nav, the vouch card's own controls) are inactive in this state; only the parked pad is live",
     "FeedSheet": "the filter sheet covers the feed — the trigger, post cards, and nav beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
+    "SettingsLicense": "the license sheet covers the settings page — every row beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "SettingsReading": "the filter sheet covers the settings page — every row beneath the scrim is inactive in this state, the theme pill among them; only the sheet (and its scrim) is live",
     "ExploreFilter": "the search filter sheet covers the results — the field, trigger, rows, and nav beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
     "ReplyEntry": "the comments sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "ReplyMedia": "the comments sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
@@ -452,7 +454,7 @@
     { "from": "FeedSheet", "via": 3, "kind": "advance", "label": "Ranked / Newest", "to": [{ "terminal": "self", "case": "swaps the order" }] },
     { "from": "FeedSheet", "via": 4, "kind": "advance", "label": "show already seen", "to": [{ "terminal": "self", "case": "the toggle flips" }] },
     { "from": "FeedSheet", "via": 5, "kind": "advance", "label": "Reset", "to": [{ "terminal": "self", "case": "back to the default" }] },
-    { "from": "FeedSheet", "via": 6, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "Feed", "case": "unchanged" }, { "board": "FeedNarrowed", "case": "narrowed" }, { "board": "FeedNothing", "case": "everything off" }, { "board": "FeedFar", "case": "far from the default" }, { "board": "Settings", "case": "opened from settings — the row reads the new default back" }] },
+    { "from": "FeedSheet", "via": 6, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "Feed", "case": "unchanged" }, { "board": "FeedNarrowed", "case": "narrowed" }, { "board": "FeedNothing", "case": "everything off" }, { "board": "FeedFar", "case": "far from the default" }] },
 
     { "from": "FeedNarrowed", "via": 1, "kind": "advance", "label": "filter chip (deviations spelled out)", "to": [{ "board": "FeedSheet" }] },
     { "from": "FeedNarrowed", "via": 2, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
@@ -703,8 +705,8 @@
     { "from": "ComposeLicense", "via": 1, "kind": "detour", "label": "? — License", "to": [{ "board": "HelpDialog", "case": "the License text" }] },
     { "from": "ComposeLicense", "via": 2, "kind": "advance", "label": "Credit options", "to": [{ "terminal": "self", "case": "one of three" }] },
     { "from": "ComposeLicense", "via": 3, "kind": "advance", "label": "Public-record options", "to": [{ "terminal": "self", "case": "one of three" }] },
-    { "from": "ComposeLicense", "via": 4, "kind": "advance", "label": "Done", "to": [{ "board": "ComposeSeal", "case": "the sheet closes — the row reads the choice" }, { "board": "Settings", "case": "opened from settings — the default row reads the choice" }] },
-    { "from": "ComposeLicense", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "ComposeSeal", "case": "the sheet closes" }, { "board": "Settings", "case": "opened from settings" }] },
+    { "from": "ComposeLicense", "via": 4, "kind": "advance", "label": "Done", "to": [{ "board": "ComposeSeal", "case": "the sheet closes — the row reads the choice" }] },
+    { "from": "ComposeLicense", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "ComposeSeal", "case": "the sheet closes" }] },
 
     { "from": "ComposePad", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
     { "from": "ComposePad", "via": 2, "kind": "advance", "label": "the one-axis pad", "to": [{ "terminal": "self", "case": "For/Against only — your own post always reaches you in full" }] },
@@ -1166,15 +1168,15 @@
     { "from": "Settings", "via": 2, "kind": "advance", "label": "Light / Dark / Auto", "to": [{ "terminal": "self", "case": "the page repaints — the choice is this device's, never the account's" }] },
     { "from": "Settings", "via": 3, "kind": "advance", "label": "how a stance is taken", "to": [{ "terminal": "self", "case": "one of three — it replaces the pad everywhere" }] },
     { "from": "Settings", "via": 4, "kind": "advance", "label": "Confirm multi-action submits", "to": [{ "terminal": "self", "case": "the switch flips" }] },
-    { "from": "Settings", "via": 5, "kind": "advance", "label": "Default license", "to": [{ "board": "ComposeLicense", "case": "the seal's own license sheet, over settings — here it sets the account's default rather than one post's terms" }] },
-    { "from": "Settings", "via": 6, "kind": "advance", "label": "What your feed shows", "to": [{ "board": "FeedSheet", "case": "the feed's own filter sheet, over settings — here it sets the default every feed starts from" }] },
+    { "from": "Settings", "via": 5, "kind": "advance", "label": "Default license", "to": [{ "board": "SettingsLicense", "case": "the license sheet over settings — the same question the seal asks, set here as what every new post starts from" }] },
+    { "from": "Settings", "via": 6, "kind": "advance", "label": "What your feed shows", "to": [{ "board": "SettingsReading", "case": "the filter sheet over settings — the same control the feed carries, set here as the default every feed opens with" }] },
     { "from": "Settings", "via": 7, "kind": "advance", "label": "Recovery code", "to": [{ "board": "SettingsBackup" }] },
     { "from": "Settings", "via": 8, "kind": "advance", "label": "Your key", "to": [{ "board": "YourKey", "case": "after the platform's own unlock — the phone's lock on Android, the current code in a browser whose seed is sealed" }] },
     { "from": "Settings", "via": 9, "kind": "advance", "label": "Revoke", "to": [{ "terminal": "self", "case": "the row goes — the snackbar answers" }] },
     { "from": "Settings", "via": 10, "kind": "advance", "label": "Sign out everywhere else", "to": [{ "terminal": "self", "case": "every row but this one goes — the snackbar answers" }] },
-    { "from": "Settings", "via": 11, "kind": "advance", "label": "Password", "to": [{ "gap": "the change-password screen (not designed)" }] },
-    { "from": "Settings", "via": 12, "kind": "advance", "label": "Handle", "to": [{ "gap": "the change-handle screen (not designed)" }] },
-    { "from": "Settings", "via": 13, "kind": "advance", "label": "Email", "to": [{ "gap": "the change-email screen, both confirmation codes (not designed)" }] },
+    { "from": "Settings", "via": 11, "kind": "advance", "label": "Password", "to": [{ "board": "ChangePassword" }] },
+    { "from": "Settings", "via": 12, "kind": "advance", "label": "Handle", "to": [{ "board": "ChangeHandle" }] },
+    { "from": "Settings", "via": 13, "kind": "advance", "label": "Email", "to": [{ "board": "ChangeEmail", "case": "the request; the confirmation is its own board" }, { "board": "ChangeEmailConfirm", "case": "a change already in flight — the row returns to the side still owed" }] },
     { "from": "Settings", "via": 14, "kind": "advance", "label": "Don't remember this account on this device", "to": [{ "terminal": "self", "case": "the switch flips — it decides what signing out clears, and the login form carries the same one" }] },
     { "from": "Settings", "via": 15, "kind": "advance", "label": "Sign out", "to": [{ "board": "SignIn", "case": "remembered — the session ends and the account stays offered here" }, { "board": "SignIn", "case": "not remembered — the key and the unpublished draft go with the session" }] },
 
@@ -1184,6 +1186,39 @@
 
     { "from": "YourKey", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Settings" }] },
     { "from": "YourKey", "via": 2, "kind": "advance", "label": "Copy the PEM block", "to": [{ "terminal": "self", "case": "the PEM lands on the clipboard" }] },
-    { "from": "YourKey", "via": 3, "kind": "advance", "label": "Copy the raw hex", "to": [{ "terminal": "self", "case": "the hex lands on the clipboard" }] }
+    { "from": "YourKey", "via": 3, "kind": "advance", "label": "Copy the raw hex", "to": [{ "terminal": "self", "case": "the hex lands on the clipboard" }] },
+
+    { "from": "SettingsLicense", "via": 1, "kind": "detour", "label": "? — License", "to": [{ "board": "HelpDialog", "case": "the License text" }] },
+    { "from": "SettingsLicense", "via": 2, "kind": "advance", "label": "Credit options", "to": [{ "terminal": "self", "case": "one of three — it seeds the next post, never the last" }] },
+    { "from": "SettingsLicense", "via": 3, "kind": "advance", "label": "Public-record options", "to": [{ "terminal": "self", "case": "one of three — it seeds the next post, never the last" }] },
+    { "from": "SettingsLicense", "via": 4, "kind": "advance", "label": "Done", "to": [{ "board": "Settings", "case": "the sheet closes — the Default license row reads the new default" }] },
+    { "from": "SettingsLicense", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "Settings", "case": "the sheet closes — the default is what it was, the way the seal's sheet leaves a post's terms" }] },
+
+    { "from": "SettingsReading", "via": 1, "kind": "detour", "label": "? — How the filter works", "to": [{ "board": "HelpDialog", "case": "the filter text" }] },
+    { "from": "SettingsReading", "via": 2, "kind": "advance", "label": "filter chips (kinds · forms · also show)", "to": [{ "terminal": "self", "case": "adjusts what a feed starts out admitting" }] },
+    { "from": "SettingsReading", "via": 3, "kind": "advance", "label": "Ranked / Newest", "to": [{ "terminal": "self", "case": "swaps the default order" }] },
+    { "from": "SettingsReading", "via": 4, "kind": "advance", "label": "show already seen", "to": [{ "terminal": "self", "case": "the toggle flips" }] },
+    { "from": "SettingsReading", "via": 5, "kind": "advance", "label": "Reset", "to": [{ "terminal": "self", "case": "back to the shipped default" }] },
+    { "from": "SettingsReading", "via": 6, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "Settings", "case": "the sheet closes — it applied live, and the row reads the new default back" }] },
+
+    { "from": "ChangePassword", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Settings", "case": "nothing is lost — no password has changed" }] },
+    { "from": "ChangePassword", "via": 2, "kind": "advance", "label": "Current password", "to": [{ "terminal": "self", "case": "typing — a live session is not proof enough on its own" }] },
+    { "from": "ChangePassword", "via": 3, "kind": "advance", "label": "New password", "to": [{ "terminal": "self", "case": "typing" }] },
+    { "from": "ChangePassword", "via": 4, "kind": "advance", "label": "reveal password", "to": [{ "terminal": "self", "case": "the password shows — one control, drawn on both fields" }] },
+    { "from": "ChangePassword", "via": 5, "kind": "advance", "label": "Change password", "to": [{ "board": "Settings", "case": "changed — the snackbar answers, and every other device is signed out" }] },
+
+    { "from": "ChangeHandle", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Settings", "case": "nothing is lost — the handle is untouched" }] },
+    { "from": "ChangeHandle", "via": 2, "kind": "advance", "label": "New handle", "to": [{ "terminal": "self", "case": "typing" }] },
+    { "from": "ChangeHandle", "via": 3, "kind": "advance", "label": "Change handle", "to": [{ "board": "Settings", "case": "changed — the snackbar answers and the Handle row reads the new one" }] },
+
+    { "from": "ChangeEmail", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Settings", "case": "nothing is lost — no messages have gone out" }] },
+    { "from": "ChangeEmail", "via": 2, "kind": "advance", "label": "New email", "to": [{ "terminal": "self", "case": "typing" }] },
+    { "from": "ChangeEmail", "via": 3, "kind": "advance", "label": "Current password", "to": [{ "terminal": "self", "case": "typing — the address is the account's only way back, so it is re-proved" }] },
+    { "from": "ChangeEmail", "via": 4, "kind": "advance", "label": "reveal password", "to": [{ "terminal": "self", "case": "the password shows" }] },
+    { "from": "ChangeEmail", "via": 5, "kind": "advance", "label": "Change email", "to": [{ "board": "ChangeEmailConfirm", "case": "both messages sent — the code is typed here, the link is clicked there" }] },
+
+    { "from": "ChangeEmailConfirm", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Settings", "case": "the change stays live for its window — the Email row leads back here" }] },
+    { "from": "ChangeEmailConfirm", "via": 2, "kind": "advance", "label": "Confirmation code", "to": [{ "terminal": "self", "case": "typing — the code from the current address" }] },
+    { "from": "ChangeEmailConfirm", "via": 3, "kind": "advance", "label": "Confirm email change", "to": [{ "board": "Settings", "case": "the link was clicked too — the address moves and the snackbar answers" }, { "terminal": "self", "case": "this side only — the change waits for the new address's link, and the row still reads the old address" }] }
   ]
 }
