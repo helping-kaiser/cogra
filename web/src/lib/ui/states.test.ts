@@ -53,3 +53,48 @@ describe("interaction states", () => {
     ).toEqual([]);
   });
 });
+
+// design/tokens/transitions.css and the two named durations of motion.css. The
+// nine classes are the shared vocabulary — a surface that invents its own is
+// how two sheets end up leaving different edges.
+describe("transitions", () => {
+  const DURATIONS = {
+    "--duration-nav-forward": "300ms",
+    "--duration-nav-back": "200ms",
+    "--duration-sheet-in": "400ms",
+    "--duration-sheet-out": "200ms",
+    "--duration-dialog-in": "200ms",
+    "--duration-scrim": "200ms",
+    "--duration-collapsing-top": "200ms",
+    "--duration-snackbar": "4000ms",
+  } as const;
+
+  it("declares every named duration and the travel", () => {
+    for (const [token, value] of Object.entries(DURATIONS)) {
+      expect(CSS, token).toContain(`${token}: ${value};`);
+    }
+    expect(CSS).toContain("--nav-travel: 12%;");
+  });
+
+  it("carries the nine transition classes", () => {
+    for (const name of [
+      "cg-nav-in",
+      "cg-nav-out",
+      "cg-nav-back-in",
+      "cg-nav-back-out",
+      "cg-sheet-in",
+      "cg-sheet-out",
+      "cg-dialog-in",
+      "cg-scrim-in",
+      "cg-scrim-out",
+    ]) {
+      expect(CSS, name).toContain(`.${name} {`);
+    }
+  });
+
+  it("stills the collapsing top and every transition under reduced motion", () => {
+    const reduced = CSS.slice(CSS.indexOf("@media (prefers-reduced-motion: reduce)"));
+    expect(reduced).toContain("--duration-collapsing-top: 0ms;");
+    expect(reduced).toContain("animation: none");
+  });
+});

@@ -54,7 +54,10 @@ export function CollapsingTop({ children }: { children: React.ReactNode }) {
       <div
         ref={region}
         data-testid="collapsing-top"
-        className={`sticky top-0 z-20 flex flex-col gap-4 bg-surface pb-2 transition-transform duration-200 ${
+        // The duration is the token, not a literal, so a reader who asked for
+        // stillness is answered by `tokens-2.css` zeroing it rather than by
+        // this component remembering to ask.
+        className={`sticky top-0 z-20 flex flex-col gap-4 bg-surface pb-2 transition-transform duration-[var(--duration-collapsing-top)] ${
           hidden ? "-translate-y-[110%]" : "translate-y-0"
         }`}
       >
