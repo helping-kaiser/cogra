@@ -1134,9 +1134,14 @@ private fun StanceLandingLine(landing: StanceLanding?, testTagPrefix: String) {
 /**
  * A pair in the reader's own words plus its values. Numbers are in
  * scope, and every one shown is explainable (design.md §7).
+ *
+ * Public because every surface that shows a pair owes the reader this
+ * announcement, and the reply seal is outside this module — a second
+ * copy of the wording there is exactly the drift a design system exists
+ * to prevent.
  */
 @Composable
-internal fun StancePoint.reading(): String = stringResource(
+fun StancePoint.reading(): String = stringResource(
     R.string.stance_reading,
     stringResource(R.string.stance_axis_directed),
     twoPlaces(directed),
@@ -1148,9 +1153,12 @@ internal fun StancePoint.reading(): String = stringResource(
  * The bare pair, `+0.40 / +0.20`-style (design.md §8.3). Compact because
  * it sits under a face and a field that already say which axis is which;
  * every place it is shown names the axes in its accessibility text.
+ *
+ * Public for the same reason [reading] is: the reply seal writes the
+ * same pair, and one wording is what keeps two surfaces one language.
  */
 @Composable
-internal fun StancePoint.pair(): String =
+fun StancePoint.pair(): String =
     stringResource(R.string.stance_pair, twoPlaces(directed), twoPlaces(interest))
 
 /**
