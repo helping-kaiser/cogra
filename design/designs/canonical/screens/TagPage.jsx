@@ -11,21 +11,14 @@
    in this system (`TopicChip`), and a page titled `saltmaps` would be the one
    place it is not.
 
-   THE FOLLOW CONTROL IS THE STANCE CONTROL, because following a tag IS a
-   stance: hashtag.md §3 makes it an **Affinity** record, Actor → Type, and
-   api-spec.md's `viewerStance` on `Hashtag` is "the follow control's read"
-   with `prepareStance` as its write. Its two parameters are signed over
-   [-1, +1] like every other stance, so the pad fits it exactly — a second,
-   toggle-shaped gesture for a record family this system already has a control
-   for would hide that following is a signed, priced act.
-
-   AND IT IS DRAWN AS THE END STATE, WITH THE OBLIGATION NAMED. The roadmap is
-   explicit: "Topic follow is backend-accepted but client-hidden until the
-   topic feed lands (slice 3)". The canvas draws the destination; the register
-   carries the obligation — the same split the feed's filter keeps, where the
-   drawn default is `Ranked` and the shipped label reads Newest until the
-   ranker ships. Implementation cannot read this control as permission to ship
-   it before slice 3.
+   THE HEADER CARRIES NO FOLLOW CONTROL (jakob's review, 2026-09-09). Following
+   a tag is real — an **Affinity** record, Actor → Type, `viewerStance` its
+   read — but a stance anchor on the header's trailing edge read as a stance
+   readout for the post the reader arrived from, not as a gesture toward the
+   tag. Rather than draw a control that misreads, the page draws none: the
+   follow gesture is owed its surface in slice 3's round, which is also when
+   the roadmap lets it ship at all ("Topic follow is backend-accepted but
+   client-hidden until the topic feed lands").
 
    NO ORDER CONTROL, AND THAT IS THE CONTRACT (jakob's ruling). `taggedContent`
    is `(limit: Int)` returning a plain list, newest claim first, and the schema
@@ -44,7 +37,10 @@
    post card; a tagged comment is `CommentCard` in the out-of-thread shape
    `ProfileComments` already draws, leading with the thread it answers, because
    a comment met away from its thread has to say what it is answering. Neither
-   is redrawn here.
+   is redrawn here. THE COMMENT OFFERS NO REPLY AFFORDANCES (jakob's review):
+   on this page a card is a doorway — its thread is reached through the post —
+   so there is no Reply and no view-replies line to promise conversation in a
+   place that only lists.
 
    WHAT THE LIST SERVES IS THE AUTHOR'S OWN CLAIMS, and 2.3 could not serve
    more: `taggedContent` reads "the content-intrinsic channel: claims whose
@@ -81,15 +77,8 @@ export const FRAME = { width: 390, height: 1280 };
 export function Screen() {
   return (
     <>
-      <PageHeader
-        title="#saltmaps"
-        backHref="#"
-        backLabel="Back to Explore"
-        action={<StanceControl targetLabel="this tag" bundle={mkBundle(0.4, 0.3)} onCommit={() => {}} />}
-      />
+      <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "4px 0 0" }}>
-        <QuietNote>Everything its author tagged #saltmaps, newest claim first.</QuietNote>
-
         <TaggedRow pair="+0.10 / 1.00" pending>
           <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
         </TaggedRow>
@@ -105,9 +94,6 @@ export function Screen() {
             timestamp="4d"
             license={{ attribution: 0, provenance: 0 }}
             bundle={mkBundle(0.1, 0.1)}
-            replyCount={2}
-            onOpenReplies={() => {}}
-            onReply={() => {}}
             target="“Salt maps of the coast road” — @sol"
             onOpenTarget={() => {}}
           />

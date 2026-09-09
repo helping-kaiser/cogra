@@ -1616,15 +1616,15 @@ settle, each named where it was found rather than folded into the round.
 1. **The accessible stance path does not name its target.**
    `StanceControl`'s skip-link reads `Choose your stance` on every
    instance while the face beside it names what it stances ("Your
-   stance on this post", "…on this tag"). `TagPage` draws four stance
-   controls, so it carries four identically-named buttons — the exact
+   stance on this post", "…on this comment"). `TagPage` draws three stance
+   controls, so it carries three identically-named buttons — the exact
    defect `TopicRemovable`'s aria-label ruling fixed for the × ("a row
    of these is a row of identically-named controls otherwise"). The fix
    is one line in the master and a repin across the thirty-four boards
    that draw a stance, which is why the round did not take it: its
    pixel bar admits only its own boards. Until then the tag page gives
    the accessible path one via of its own, which is honest about what
-   those four buttons share.
+   those buttons share.
 2. **A staged reference still has no pair editor** — item 18's
    remaining half. A citation's axes are both signed, so unlike a tag's
    it is the pad's own shape; whether the composer opens the pad there
@@ -1640,3 +1640,9 @@ settle, each named where it was found rather than folded into the round.
    round drew the tag as an indirect hit whose second line says the
    route out loud ("tagged by @sol") rather than let the row imply an
    answer. A ruling would settle the row's shape.
+5. **The follow gesture has no surface.** The round drew it as the
+   stance anchor on the tag page's header and jakob's review removed
+   it: beside the entrance post's context it read as that post's
+   stance readout, not a gesture toward the tag. An Affinity toward a
+   Type stays real and pad-shaped; slice 3's round — the first that
+   may ship a follow at all — owes it a home that cannot be misread.
