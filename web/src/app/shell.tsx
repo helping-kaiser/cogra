@@ -33,14 +33,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const phase = useAuthPhase();
   const pathname = usePathname();
   const signedIn = phase === "signedIn";
-  // A post's own page is a read surface; the wizards hanging off it are task
-  // flows, and a task flow carries a back arrow instead of the bar
-  // (`BottomNav.prompt.md`). `/posts/<id>` alone has no third segment.
-  const postDrillIn =
-    pathname.startsWith("/posts/") && pathname.split("/").length === 3;
   const readSurface =
     pathname === "/feed" ||
-    postDrillIn ||
+    pathname.startsWith("/posts/") ||
     pathname.startsWith("/u/") ||
     // The own profile is a gated read surface: its frame waits for the
     // gate, which replaces a signed-out arrival with /login.
