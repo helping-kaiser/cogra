@@ -152,6 +152,8 @@ class PostDetailViewModelTest {
             attachments: List<AttachmentClaim>,
             pDirected: Double?,
             pInterest: Double?,
+            sensitive: Boolean,
+            sensitiveReason: String?,
         ): Outcome<PreparedContentView> {
             replyTargets += target
             commentPrepared += 1
