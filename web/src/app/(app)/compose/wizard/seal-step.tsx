@@ -18,7 +18,7 @@
 
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { PillButton, TextAction } from "@/lib/ui2/pill-button";
-import { TextField } from "@/lib/ui2/text-field";
+import { SensitiveSheet } from "@/lib/ui2/compose/sensitive-sheet";
 import { UploadStatusLine } from "@/lib/ui2/compose/upload-notice";
 import { StanceSlider } from "@/lib/ui/stance-slider";
 import { LicenseChooser } from "@/lib/ui/license-fields";
@@ -240,68 +240,16 @@ export function SealStep({
         </div>
       </BottomSheet>
 
-      {/* THE AUTHOR'S OWN SENSITIVE MARK (ComposeSensitive). The switch is the
-          declaration and the reason is optional beside it; the reason is only
-          ever sent WITH the mark, because a reason on an unmarked post is a
-          field-level refusal. */}
-      <BottomSheet
+      <SensitiveSheet
         open={sheet === "sensitive"}
+        marked={state.sensitive}
+        reason={state.sensitiveReason}
+        onMarked={onSensitive}
+        onReason={onSensitiveReason}
         onClose={() => onSheet("none")}
-        title="Mark as sensitive"
-        testId="wizard-sensitive-sheet"
-      >
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <span className="flex-1" />
-            <button
-              type="button"
-              data-testid="wizard-sensitive-help"
-              aria-label="Marking as sensitive"
-              onClick={() => onHelp()}
-              className="cg-state cg-focus flex size-8 flex-none items-center justify-center rounded-full border border-outline-variant text-label-large text-primary"
-            >
-              ?
-            </button>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={state.sensitive}
-              aria-label="Mark as sensitive"
-              data-testid="wizard-sensitive-switch"
-              onClick={() => onSensitive(!state.sensitive)}
-              className={`cg-focus relative h-6 w-11 flex-none rounded-full ${
-                state.sensitive ? "bg-primary" : "bg-surface-container-highest"
-              }`}
-            >
-              <span
-                aria-hidden="true"
-                className={`absolute top-[3px] size-[18px] rounded-full ${
-                  state.sensitive ? "right-[3px] bg-on-primary" : "left-[3px] bg-outline"
-                }`}
-              />
-            </button>
-          </div>
-          <p className="m-0 text-body-medium">
-            Veils the pictures and the description until a reader chooses to look.
-          </p>
-          <TextField
-            label="Why?"
-            value={state.sensitiveReason}
-            onChange={onSensitiveReason}
-            testId="wizard-sensitive-reason"
-            // The corner says where it lands, which is what makes it worth
-            // writing — a reason nobody sees is a form field for its own sake.
-            optionalLabel="Optional — shown on the veil"
-            optional
-            disabled={!state.sensitive}
-          />
-          <div className="flex justify-end">
-            <PillButton testId="wizard-sensitive-done" onClick={() => onSheet("none")}>
-              Done
-            </PillButton>
-          </div>
-        </div>
-      </BottomSheet>
+        onHelp={() => onHelp()}
+        testIdPrefix="wizard"
+      />
     </div>
   );
 }
