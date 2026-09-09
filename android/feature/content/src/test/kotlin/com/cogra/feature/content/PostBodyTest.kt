@@ -11,6 +11,7 @@ import androidx.compose.ui.test.performClick
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.ModeratedField
+import com.cogra.domain.ModerationState
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -99,11 +100,50 @@ class PostBodyTest {
                 description = null,
                 attachments = listOf(picture),
                 attachmentsStatus = FieldStatus.REDACTED,
+                moderation = ModerationState.NORMAL,
                 testTagPrefix = "t",
             )
         }
         compose.onNodeWithTag("t_removed").assertIsDisplayed()
         compose.onNodeWithTag("t_gallery").assertDoesNotExist()
+    }
+
+    // The two removals have to stay distinguishable, or a verdict hides
+    // behind an author's own decision. The wordings are asserted in full
+    // for the same reason `RemovedPlaceholder`'s own test does it.
+
+    @Test
+    fun aRemovalWithNoVerdictOnItReadsAsTheAuthorsOwn() {
+        showRemoved(ModerationState.NORMAL)
+
+        compose.onNodeWithText("Removed by its author").assertIsDisplayed()
+    }
+
+    @Test
+    fun aPlatformRemovalSaysSoRatherThanBorrowingTheAuthorsVoice() {
+        showRemoved(ModerationState.ILLEGAL)
+
+        compose.onNodeWithText("Removed under the platform's rules").assertIsDisplayed()
+    }
+
+    @Test
+    fun aStateThisBuildCannotNameIsNotReadAsAVerdict() {
+        showRemoved(ModerationState.UNKNOWN)
+
+        compose.onNodeWithText("Removed by its author").assertIsDisplayed()
+    }
+
+    private fun showRemoved(moderation: ModerationState) {
+        compose.setContent {
+            PostBody(
+                content = words,
+                description = null,
+                attachments = listOf(picture),
+                attachmentsStatus = FieldStatus.REDACTED,
+                moderation = moderation,
+                testTagPrefix = "t",
+            )
+        }
     }
 
     @Test
@@ -118,6 +158,7 @@ class PostBodyTest {
                 description = null,
                 attachments = listOf(picture),
                 attachmentsStatus = FieldStatus.SENSITIVE,
+                moderation = ModerationState.SENSITIVE,
                 testTagPrefix = "t",
                 revealed = revealed,
                 onReveal = { revealed = true },
@@ -137,6 +178,7 @@ class PostBodyTest {
                 description = null,
                 attachments = listOf(picture),
                 attachmentsStatus = FieldStatus.SENSITIVE,
+                moderation = ModerationState.SENSITIVE,
                 testTagPrefix = "t",
                 revealed = true,
             )
@@ -153,6 +195,7 @@ class PostBodyTest {
                 description = null,
                 attachments = listOf(picture),
                 attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
                 testTagPrefix = "t",
             )
         }
@@ -170,6 +213,7 @@ class PostBodyTest {
                 description = null,
                 attachments = listOf(picture, picture.copy(id = "m2")),
                 attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
                 testTagPrefix = "c",
                 surface = BodySurface.Comment,
             )
@@ -189,6 +233,7 @@ class PostBodyTest {
                 description = null,
                 attachments = listOf(picture),
                 attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
                 testTagPrefix = "p",
             )
         }

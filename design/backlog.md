@@ -319,10 +319,27 @@ surface is being designed around existing furniture, not onto an
 empty page. **Then the whole surface** — its sections, its
 navigation, and the pattern every later setting follows; a defaults
 page designed alone is a page the next setting breaks. **Then the
-default license on top**, as the first setting that pattern carries,
+default license joins the surface** as one setting among the others,
 with the account-preference shape `api-spec.md` still owes it.
 Added 2026-08-28 out of item 19's review; reshaped by the slice-2.5
 round.
+
+Ruled 2026-09-09 (jakob), shaping the surface before it is drawn:
+
+- **Order by use, most- to least-used.** The page's order is a
+  frequency ranking, not a taxonomy — what a reader reaches for
+  often sits high, regardless of which section a taxonomist would
+  file it under.
+- **The default license is one setting among the others**, placed by
+  the same frequency rule — "on top" in the roadmap meant on top of
+  the round's work, never literally first on the page.
+- **A theme setting joins the surface**: light, dark, and auto
+  (device default). Likely high on the page. It implies the census
+  answers what dark support exists today — in the apps and in the
+  design tokens.
+- **The settings backup card becomes a dedicated screen** riding the
+  drawn RecoveryCode board (item 41.1's ruling): same stakes, same
+  screen; the round draws it in context.
 
 ### 22 · Canvas flows + pages · *process*
 The canonical canvas has outgrown one flat plane (77+ boards):
@@ -1285,7 +1302,6 @@ layout unoptimized until this round runs. What parked into it:
 
 Nothing desktop-specific is built before this round.
 
-
 ### 39 · The UI conformance audit's undrawn states · *design* · **the states are drawn**
 
 The 2026-09-08 audit found states both apps reach and no board draws;
@@ -1322,3 +1338,81 @@ and its fields since. Either the gate learns to accept the attribute on
 the field's wrapper (and the boards move it where it paints), or the
 readme's "the gate verifies the attribute, not the paint" stays the
 stated rule and this item closes as written.
+
+### 41 · The recovery code's two loose ends · *design* · **ruled**
+
+Filed by the W0 conform lane 2026-09-09 (questions 29 and 30 of the
+conformance audit's design-session list). Both sit on the recovery
+code; neither blocked the fixes that shipped.
+
+1. **The settings backup card shows a recovery code no board draws
+   there.** The ceremony's code lives on a dedicated screen and is
+   now the trap the board rules — back swallowed until the typed-back
+   confirmation. Settings shows the same code inside a card on the
+   settings screen itself: the mismatch line arrived for free through
+   the shared component, the trap did not — trapping back there would
+   strand the reader in settings. The stakes are the ceremony's (the
+   code is shown once and never stored), so the choices are: give the
+   settings backup its own screen riding the drawn board, trap the
+   settings screen while the code is up, or bless the card as a
+   deliberately lighter surface. Implementation's input: the
+   dedicated screen — same stakes, same screen; the other two either
+   invent a trap no board draws or leave the loss open.
+
+2. **`graph.json` fires the mismatch on a press the master forbids —
+   and the platforms split on it.** The RecoveryCode→
+   RecoveryCodeMismatch edge triggers on pressing "I've written it
+   down" with a wrong code, but the RecoveryCode master draws that
+   button `disabled={!matches}` — the press cannot happen. Each W0
+   lane resolved the contradiction toward a different source.
+   Android follows the master: the button stays disabled until the
+   code matches and the line appears in place from the first wrong
+   character — which also flags a reader mid-way through typing
+   correctly, since a partial never matches the whole. Web follows
+   the readme's validation timing ("on submit, then live only where
+   already marked") and the edge: the button is live once anything
+   is typed, a wrong press puts the line on the field, and from then
+   on it re-reads live. The ruling picks the reading — the losing
+   platform is a one-line fix — and settles the timing with it. If
+   an eager signal is wanted, the honest one is prefix divergence: a
+   typed prefix the code doesn't start with can never become right,
+   while a correct partial shows nothing.
+
+**Ruled by jakob 2026-09-09**, both ends:
+
+1. **The settings backup gets its own screen**, riding the drawn
+   RecoveryCode board — same stakes, same screen. Item 20 carries it:
+   the settings round draws it in context.
+2. **The earned button stands, and the mismatch is a diverged
+   prefix.** "I've written it down" keeps `disabled={!matches}`, so
+   the line answers the typing rather than a press that cannot
+   happen: it appears the moment the typed text stops being a prefix
+   of the code, never on an empty field and never on a correct
+   partial, because a partial is still on its way to being right and
+   a diverged prefix never can be. `graph.json`'s edge reads the
+   divergence, `RecoveryCodeMismatch` holds a real diverged prefix,
+   and readme §13 names the recovery gate as the on-submit timing
+   rule's one exception — the button never enables on a divergence,
+   so a signal held for submit never comes. Both apps conform: web's
+   button stops being live before the code matches, and Android's
+   line waits for divergence instead of firing on any partial.
+
+### 42 · The sensitive sheet's line is post-shaped · *design* · **ruled**
+
+Filed by the w0-web lane 2026-09-09. Item 25.2's Mark row is now on
+the comment editor, and it opens the same ComposeSensitive sheet the
+post seal uses — whose one explanatory line, "Veils the pictures and
+the description until a reader chooses to look", is written for the
+post. On a comment the veil covers the words and pictures as one.
+The apps show the drawn line verbatim rather than invent comment
+copy. Ruling: one line for both scales, or a comment wording — and
+if the latter, its words.
+
+**Ruled by jakob 2026-09-09: one line for both scales.** The sheet
+says `Veils the pictures and the words until a reader chooses to
+look.` — a comment has no description to name, and a post's
+description is words. **The "?" behind the sheet still says *the
+description***: the dialog's paragraph is separately blessed copy in
+`guidelines/copy-voice.md`, and this ruling reached the sheet's line
+only, so the same mark is explained two ways until that text is
+blessed again.
