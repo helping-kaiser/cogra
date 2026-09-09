@@ -29,13 +29,15 @@ class ProfileScreensTest {
         onFilterChange: (ChronicleFilter) -> Unit = {},
         onBack: (() -> Unit)? = null,
         onStance: (String, String) -> Unit = { _, _ -> },
+        profileSavedResult: Boolean = false,
+        onProfileSavedResultConsumed: () -> Unit = {},
     ) {
         compose.setContent {
             ProfileScreen(
                 stanceControl = { target, tag -> onStance(target, tag) },
                 state = state,
-                profileSavedResult = false,
-                onProfileSavedResultConsumed = {},
+                profileSavedResult = profileSavedResult,
+                onProfileSavedResultConsumed = onProfileSavedResultConsumed,
                 onFilterChange = onFilterChange,
                 onLoadMore = {},
                 onRetry = {},
@@ -60,6 +62,29 @@ class ProfileScreensTest {
         own = own,
         applicant = applicant,
     )
+
+    @Test
+    fun aSavedEditConfirmsOnTheProfilesOwnHost() {
+        render(loaded(own = true), profileSavedResult = true)
+        compose.onNodeWithTag("profile_snackbar").assertExists()
+    }
+
+    @Test
+    fun theSavedResultIsConsumedOnlyAfterTheSnackbarHasRun() {
+        // Consuming first flips the effect's key and cancels the
+        // suspending show, so the confirmation died in the frame it was
+        // posted (HT-8). The whole bug is the ordering, and only a
+        // round-tripping consume can see it.
+        var consumed = false
+        render(
+            loaded(own = true),
+            profileSavedResult = true,
+            onProfileSavedResultConsumed = { consumed = true },
+        )
+        assertThat(consumed).isFalse()
+        compose.mainClock.advanceTimeBy(10_000)
+        assertThat(consumed).isTrue()
+    }
 
     @Test
     fun theHeaderRendersTheProfileFields() {
