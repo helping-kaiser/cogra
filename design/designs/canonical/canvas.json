@@ -1104,7 +1104,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 1282,
+      "h": 1329,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1148,6 +1148,24 @@
       "file": "ProfileMoreFailed.dc.html",
       "title": "Profile · the chronicle can't load more",
       "x": 960,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileNotFound.dc.html",
+      "title": "Profile · no such profile",
+      "x": 1440,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileUnreachable.dc.html",
+      "title": "Profile · can't reach the server",
+      "x": 1920,
       "y": 964,
       "w": 390,
       "h": 844,

@@ -58,7 +58,9 @@
     "FeedCover": "a feed whose posts carry clips, one before its first play and one the device will not autoplay — content and device, not a tap",
     "ViewerLandscape": "the viewer with the device turned — rotation, not a tap",
     "ReplyCited": "the reply's seal with a reference staged — the picker hands its pick back to the composer it was opened from, so this is a state of the seal, not a screen a tap navigates to",
-    "ProfileMoreFailed": "the chronicle scrolled on and the next page didn't arrive — scrolling and a fault, not a tap"
+    "ProfileMoreFailed": "the chronicle scrolled on and the next page didn't arrive — scrolling and a fault, not a tap",
+    "ProfileNotFound": "a shared profile link whose handle resolves to nothing — a link from outside the app, not a tap; an author chip inside it always names a profile that exists",
+    "ProfileUnreachable": "a profile opened and the read never reached the server — a fault, not a tap"
   },
   "boardKinds": {
     "Theme": "reference",
@@ -1032,6 +1034,21 @@
     { "from": "Profile", "via": 14, "kind": "nav", "label": "nav · Profile", "to": [{ "terminal": "self", "case": "already here" }] },
 
     { "from": "ProfileMoreFailed", "via": 1, "kind": "advance", "label": "Retry", "to": [{ "board": "Profile", "case": "the page comes this time — the row gives way to rows" }, { "terminal": "self", "case": "still nothing — the row stays where it stood", "info": true }] },
+
+    { "from": "ProfileNotFound", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to wherever the link was opened from" }] },
+    { "from": "ProfileNotFound", "via": 2, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed" }] },
+    { "from": "ProfileNotFound", "via": 3, "kind": "nav", "label": "nav · Explore", "to": [{ "board": "Explore" }] },
+    { "from": "ProfileNotFound", "via": 4, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
+    { "from": "ProfileNotFound", "via": 5, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
+    { "from": "ProfileNotFound", "via": 6, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+
+    { "from": "ProfileUnreachable", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to wherever the profile was opened from" }] },
+    { "from": "ProfileUnreachable", "via": 2, "kind": "advance", "label": "Retry", "to": [{ "board": "ProfileOther", "case": "reaches this time — the profile loads" }, { "terminal": "self", "case": "still nothing — the fault stays in place", "info": true }] },
+    { "from": "ProfileUnreachable", "via": 3, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed" }] },
+    { "from": "ProfileUnreachable", "via": 4, "kind": "nav", "label": "nav · Explore", "to": [{ "board": "Explore" }] },
+    { "from": "ProfileUnreachable", "via": 5, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
+    { "from": "ProfileUnreachable", "via": 6, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
+    { "from": "ProfileUnreachable", "via": 7, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
 
     { "from": "ProfileOther", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to wherever the chip was" }] },
     { "from": "ProfileOther", "via": 2, "kind": "detour", "label": "profile overflow ⋮", "to": [{ "board": "ProfileMenu", "case": "another's profile sheet (master)" }] },
