@@ -30,7 +30,7 @@ export function JoinPrompt({
       ref={ref}
       data-testid="join-prompt"
       onClose={onClose}
-      className="m-auto w-[min(90vw,20rem)] rounded-extra-large bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
+      className="cg-dialog-in m-auto w-[min(90vw,20rem)] rounded-extra-large bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
     >
       <h2 className="text-headline-small">Join the conversation</h2>
       <p className="mt-2 text-body-medium text-on-surface-variant">

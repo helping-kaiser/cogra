@@ -71,7 +71,7 @@ export function MultiActionConfirm({
       ref={ref}
       data-testid={`${testIdPrefix}-multi-action-confirm`}
       onClose={onCancel}
-      className="m-auto w-[min(90vw,22rem)] rounded-extra-large bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
+      className="cg-dialog-in m-auto w-[min(90vw,22rem)] rounded-extra-large bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
     >
       <h2 className="text-headline-small">Sign {count} actions?</h2>
       <p

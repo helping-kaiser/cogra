@@ -44,7 +44,7 @@ export function Chip({
         // alone (design.md §10).
         aria-pressed={onClick ? selected : undefined}
         onClick={onClick}
-        className={`cg-state cg-focus cg-hit box-border inline-flex min-h-8 items-center gap-1.5 rounded-full px-3 py-1 text-label-large disabled:opacity-40 ${tone}`}
+        className={`cg-state cg-focus cg-hit box-border inline-flex min-h-8 items-center gap-1.5 rounded-full px-3 py-1 text-label-large disabled:opacity-[var(--state-disabled)] ${tone}`}
       >
         {children}
         {onDismiss && (
@@ -62,7 +62,7 @@ export function Chip({
           aria-label={dismissLabel ?? "Remove"}
           disabled={disabled}
           onClick={onDismiss}
-          className="cg-focus absolute top-1/2 right-2 -translate-y-1/2 disabled:opacity-40"
+          className="cg-focus absolute top-1/2 right-2 -translate-y-1/2 disabled:opacity-[var(--state-disabled)]"
         >
           <DismissGlyph />
         </button>
