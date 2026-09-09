@@ -96,7 +96,39 @@ describe("AppShell", () => {
     },
   );
 
-  it.each(["/compose", "/profile/edit", "/settings", "/settings/key", "/invites", "/key", "/restore"])(
+  // The bar is chrome by structure: a viewport-tall column, a scrolling
+  // middle, the band as the column's last child. A `fixed` band is laid out
+  // against a mobile browser's layout viewport and slides under the fold on a
+  // long page — which is what a long post detail did.
+  it("hangs the bar off a viewport-tall column whose middle scrolls", async () => {
+    renderWithProviders(
+      <AppShell>
+        <p>content</p>
+      </AppShell>,
+      { store: signedInStore() },
+    );
+    const scroller = await screen.findByTestId("app-scroller");
+    expect(scroller.className).toContain("overflow-y-auto");
+    expect(scroller.className).toContain("flex-1");
+    expect(scroller.parentElement?.className).toContain("h-dvh");
+    // The content scrolls INSIDE that middle; the band is its sibling, so no
+    // amount of content can reach it.
+    expect(scroller).toContainElement(screen.getByText("content"));
+    expect(scroller).not.toContainElement(screen.getByTestId("bottom-nav"));
+  });
+
+  it.each([
+    "/compose",
+    "/profile/edit",
+    "/settings",
+    "/settings/key",
+    "/invites",
+    "/key",
+    "/restore",
+    // The wizards hanging off a post are task flows, not the post's page.
+    "/posts/post-1/reply",
+    "/posts/post-1/edit",
+  ])(
     "leaves the task flow %s without the bar",
     async (path) => {
       pathname = path;
