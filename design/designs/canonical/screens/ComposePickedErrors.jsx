@@ -64,9 +64,7 @@ export function Screen() {
         />
       </div>
       <div style={{ flex: 1 }} />
-      <div style={{ padding: "12px 24px 16px" }}>
-        <Button style={{ width: "100%" }}>Next</Button>
-      </div>
+      <WizardFooter />
     </>
   );
 }

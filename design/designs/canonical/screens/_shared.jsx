@@ -92,6 +92,7 @@ const {
   RefusedFile,
   ActsFooter,
   SealFooter,
+  WizardFooter,
   FactRow,
   QuotedRow,
   CoverRow,

@@ -57,9 +57,7 @@ export function Screen() {
         <MediaThumb src="post-photo.jpg" alt="" width={114} height={64} video onRemove={() => {}} removeLabel="Remove this video" />
       </PickTray>
       <DeadGrid />
-      <div style={{ padding: "12px 24px 16px" }}>
-        <Button style={{ width: "100%" }}>Next</Button>
-      </div>
+      <WizardFooter />
     </>
   );
 }
