@@ -1002,8 +1002,8 @@ const BAND_HEIGHT = 64;
 /* ── The license sheet's axis rows (the seal's, and the account default's) ──
    The chooser master draws the two axes as a wrapped row of native radios — a
    form control for a settings page — where a sheet is a decision surface: one
-   axis per section, one reading per row, the consequence spelled at the end of
-   its own line. Two boards now ask the same question of one reader, so the rows
+   axis per section, one reading per row, the consequence under the words it
+   qualifies. Two boards now ask the same question of one reader, so the rows
    are written once and neither can say a shorter version of the other.
 
    THE ROW IS THE CONTROL, the way `Checkbox` makes it one: a real radio input,
@@ -1011,18 +1011,18 @@ const BAND_HEIGHT = 64;
    it. The dot is `SettingsRow`'s, to the pixel — a license axis and a settings
    choice are the same question asked twice.
 
-   THE READING KEEPS ITS LINE; THE CONSEQUENCE TAKES WHAT IS LEFT. The reading is
-   what a reader is choosing between, so it is measured by its own words and
-   never squeezed — `Credit commercially` and `Record commercially` are two words
-   wide and stay one line. The consequence is the flexible half: it fills the
-   rest of the row, wraps into that column when its sentence is longer than one
-   line, and sets ragged to the LEFT so its right edge lands where a one-line
-   consequence's does. A trailing column that wrapped ragged-right would end each
-   row in a different place and the axis would stop reading as a column at all.
+   THE CONSEQUENCE SITS UNDER ITS READING, as supporting text — `SettingsRow`'s
+   own label-over-status stack, at the same 2px. Every row is then the same
+   shape and begins at the same left edge whatever its sentence costs: the
+   reading names the choice, the line beneath says what it obliges, and a long
+   consequence wraps across the sheet's full measure rather than into a narrow
+   trailing column. The rows sit 6px apart — three times the 2px inside a row,
+   so a reading and its consequence read as one block and the next choice
+   reads as the next one.
 
-   THE ROW IS ALIGNED TO THE READING'S FIRST LINE, not to its own middle: the dot
-   and the consequence centre on the 20px line the reading occupies, so a
-   three-line consequence grows the row downward and nothing above it moves. */
+   THE DOT KEEPS THE READING'S FIRST LINE: 1px is half of what the 20px reading
+   line has over an 18px dot, so the dot centres on the words that name the
+   choice and a two-line consequence grows the row downward beneath it. */
 function LicenseAxisLabel({ children }) {
   return (
     <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
@@ -1033,7 +1033,7 @@ function LicenseAxisLabel({ children }) {
 
 function LicenseAxis({ axis, name, tiers, chosen }) {
   return (
-    <div role="radiogroup" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <div role="radiogroup" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       {tiers.map((tier, index) => (
         /* The ROW carries the flow number, not the input inside it: a visually
            hidden radio cannot show a badge, and the row is what a reader
@@ -1045,9 +1045,8 @@ function LicenseAxis({ axis, name, tiers, chosen }) {
             defaultChecked={index === chosen}
             style={{ position: "absolute", opacity: 0, width: "1px", height: "1px", margin: 0 }}
           />
-          {/* 1px and 2px are the halves of what the 20px reading line has over an
-              18px dot and a 16px consequence line — each centres on the reading's
-              first line rather than on the row. */}
+          {/* 1px is half of what the 20px reading line has over an 18px dot: the
+              dot centres on the reading, not on the row. */}
           <span
             aria-hidden="true"
             style={{
@@ -1060,11 +1059,13 @@ function LicenseAxis({ axis, name, tiers, chosen }) {
               border: index === chosen ? "5px solid var(--primary)" : "1px solid var(--border-field)",
             }}
           />
-          <span style={{ flex: "0 1 auto", minWidth: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }}>
-            {tier.label}
-          </span>
-          <span style={{ flex: 1, minWidth: 0, marginTop: 2, textAlign: "right", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
-            {tier.hint}
+          <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+            <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }}>
+              {tier.label}
+            </span>
+            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
+              {tier.hint}
+            </span>
           </span>
         </label>
       ))}
