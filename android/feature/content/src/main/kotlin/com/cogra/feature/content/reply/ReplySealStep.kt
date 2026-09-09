@@ -340,7 +340,7 @@ internal fun ReplyPadSheet(
         // someone else's content and both axes are the author's. A dot
         // that opens wrong words is worse than no dot.
         SheetTitle(text = "Toward \"${target?.title.orEmpty()}\"")
-        StanceReading(StancePoint(pDirected, pInterest), large = true)
+        StanceReading(StancePoint(pDirected, pInterest))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             StancePadField(
                 pick = StancePoint(pDirected, pInterest),
@@ -394,13 +394,11 @@ private fun StanceReading(pick: StancePoint) {
             .semantics(mergeDescendants = true) { contentDescription = "$words, $spoken" }
             .testTag("reply_pad_reading"),
     ) {
+        // The face sits one type step above the pair, which is the
+        // board's own proportion for this readout.
         Text(
             text = anchor.emoji,
-            style = if (large) {
-                MaterialTheme.typography.titleLarge
-            } else {
-                MaterialTheme.typography.bodyMedium
-            },
+            style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.clearAndSetSemantics { },
         )
         Text(
