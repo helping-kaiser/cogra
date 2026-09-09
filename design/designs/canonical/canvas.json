@@ -227,6 +227,24 @@
       "page": "entry"
     },
     {
+      "file": "VerifiedApp.dc.html",
+      "title": "Email verified · in the app",
+      "x": 960,
+      "y": 6168,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "VerifyExpired.dc.html",
+      "title": "Verification link · already used or expired",
+      "x": 1440,
+      "y": 6168,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "ComposePick.dc.html",
       "title": "Compose · pick the body",
       "x": 0,

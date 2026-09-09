@@ -61,7 +61,9 @@
     "ProfileMoreFailed": "the chronicle scrolled on and the next page didn't arrive — scrolling and a fault, not a tap",
     "ProfileNotFound": "a shared profile link whose handle resolves to nothing — a link from outside the app, not a tap; an author chip inside it always names a profile that exists",
     "ProfileUnreachable": "a profile opened and the read never reached the server — a fault, not a tap",
-    "ResetNew": "opened from the reset mail's link — the destination `Reset` promised, reached from the mail app and not by a tap of ours"
+    "ResetNew": "opened from the reset mail's link — the destination `Reset` promised, reached from the mail app and not by a tap of ours",
+    "VerifiedApp": "the verification mail's link, opened where App Links hand the URL to the app rather than to a browser — platform, not a tap",
+    "VerifyExpired": "the same link, spent or timed out by the time it was opened — a link's age, not a tap"
   },
   "boardKinds": {
     "Theme": "reference",
@@ -237,6 +239,11 @@
     { "from": "JoinInvalid", "via": 5, "kind": "cancel", "label": "Just looking? Browse the feed", "to": [{ "board": "FeedBare" }] },
 
     { "from": "Verified", "via": 1, "kind": "advance", "label": "Back to CoGra", "to": [{ "board": "ApplicantFeed", "case": "application still running" }, { "board": "Feed", "case": "already a member" }] },
+
+    { "from": "VerifiedApp", "via": 1, "kind": "advance", "label": "Go to the feed", "to": [{ "board": "ApplicantFeed", "case": "application still running — the remaining task cards" }, { "board": "Feed", "case": "already a member" }] },
+
+    { "from": "VerifyExpired", "via": 1, "kind": "advance", "label": "Resend the link", "to": [{ "terminal": "self", "case": "a fresh link goes out — the same act the applicant feed's card offers" }] },
+    { "from": "VerifyExpired", "via": 2, "kind": "advance", "label": "Go to the feed", "to": [{ "board": "ApplicantFeed", "case": "application still running — the verify card is still there" }, { "board": "Feed", "case": "already a member" }] },
 
     { "from": "KeyCeremony", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "ApplicantFeed" }] },
     { "from": "KeyCeremony", "via": 2, "kind": "advance", "label": "Create my recovery code", "to": [{ "board": "KeyConfirm" }] },

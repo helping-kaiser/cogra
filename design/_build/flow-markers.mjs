@@ -1086,6 +1086,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Go back</button>", tag: "button" },
   ],
   Verified: [{ n: 1, find: ">Back to CoGra</button>", tag: "button" }],
+  // Neither draws a back arrow: a mail link has no previous screen of ours.
+  VerifiedApp: [{ n: 1, find: ">Go to the feed</button>", tag: "button" }],
+  VerifyExpired: [
+    { n: 1, find: ">Resend the link</button>", tag: "button" },
+    { n: 2, find: ">Go to the feed</button>", tag: "button" },
+  ],
   // The ask over the borrowed view, also scanExempt. TWO "Sign in or join"
   // buttons stand on this board — the band's and the ask's — and both take
   // the number, the way the comments page's under-scrim repeats do: one edge
