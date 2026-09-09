@@ -3,14 +3,14 @@
 // ReplySeal / ReplyPad / ComposeKeyAbsent — the reply's last screen, where
 // every act is named with its price before anything is signed.
 //
-// THE SENSITIVE ROW IS NOT HERE, and its absence is approved rather than an
-// oversight (jakob 2026-09-01). The board draws "Sensitive · Not marked · Mark"
-// as its third term row, but a sensitive-marked COMMENT has no veiled read
-// state yet (design backlog item 25.4), so the switch would promise a veil the
-// reader never gets. `PrepareCommentInput.sensitive` stays on the wire and
-// stays defaulted — the contract is untouched, only the control is held back.
-// The License row takes the closing hairline the Sensitive row used to carry,
-// so the group is still drawn shut.
+// THE SENSITIVE ROW IS THE BOARD'S THIRD TERM ROW — "Sensitive · Not marked ·
+// Mark" (`_shared.jsx:780-788`), opening the same `ComposeSensitive` sheet the
+// post seal and the comment editor open. It was held back while a
+// sensitive-marked COMMENT had no veiled read state, so that the switch could
+// not promise a veil the reader never got; design backlog item 25.4 built that
+// veil on 2026-09-02 and says in as many words that "the reply-wizard lanes
+// can implement ReplySeal 1:1". The row closes the group now, and the License
+// row gives back the closing hairline it was holding.
 //
 // THE TOPIC AND CITATION ROWS ARE THE BOARD'S, THE CONTROLS ARE THE PRODUCT'S.
 // ReplySeal draws "+ Add a topic" and "+ Cite something" inside the acts card,
@@ -22,6 +22,7 @@
 
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { PillButton, TextAction } from "@/lib/ui2/pill-button";
+import { SensitiveSheet } from "@/lib/ui2/compose/sensitive-sheet";
 import { StancePad } from "@/lib/ui2/compose/stance-pad";
 import { UploadStatusLine } from "@/lib/ui2/compose/upload-notice";
 import { LicenseChooser } from "@/lib/ui/license-fields";
@@ -44,7 +45,13 @@ import {
 } from "@/lib/compose/reply-wizard";
 import { uploadsPending } from "@/lib/compose/comment-media";
 
-export type ReplySheet = "none" | "license" | "stance" | "topics" | "references";
+export type ReplySheet =
+  | "none"
+  | "license"
+  | "stance"
+  | "topics"
+  | "references"
+  | "sensitive";
 
 export function ReplySealStep({
   state,
@@ -62,6 +69,9 @@ export function ReplySealStep({
   onSetStance,
   onTags,
   onReferences,
+  onSensitive,
+  onSensitiveReason,
+  onSensitiveHelp,
   onSign,
   onBack,
   onRestoreKey,
@@ -83,6 +93,9 @@ export function ReplySealStep({
   onSetStance: () => void;
   onTags: (next: readonly TagDraft[]) => void;
   onReferences: (next: readonly ReferenceDraft[]) => void;
+  onSensitive: (next: boolean) => void;
+  onSensitiveReason: (next: string) => void;
+  onSensitiveHelp: () => void;
   onSign: () => void;
   onBack: () => void;
   onRestoreKey: () => void;
@@ -148,6 +161,20 @@ export function ReplySealStep({
           action="Change"
           testId="reply-open-license"
           onAction={() => onSheet("license")}
+        />
+        <TermRow
+          label="Sensitive"
+          value={
+            <span
+              className="text-body-medium text-on-surface-variant"
+              data-testid="reply-sensitive-value"
+            >
+              {state.sensitive ? "Marked" : "Not marked"}
+            </span>
+          }
+          action={state.sensitive ? "Change" : "Mark"}
+          testId="reply-open-sensitive"
+          onAction={() => onSheet("sensitive")}
           last
         />
       </div>
@@ -308,6 +335,19 @@ export function ReplySealStep({
           </div>
         </div>
       </BottomSheet>
+
+      {/* The same sheet the post seal and the comment editor open — one mark,
+          explained one way (design/backlog.md item 42). */}
+      <SensitiveSheet
+        open={sheet === "sensitive"}
+        marked={state.sensitive}
+        reason={state.sensitiveReason}
+        onMarked={onSensitive}
+        onReason={onSensitiveReason}
+        onClose={() => onSheet("none")}
+        onHelp={onSensitiveHelp}
+        testIdPrefix="reply"
+      />
     </div>
   );
 }

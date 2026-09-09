@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { TopicsLine, countsText } from "./topics-line";
+import { TopicsLine, chipsThatFit, countsText } from "./topics-line";
 
 const topic = (name: string) => ({ name, pending: false });
 
@@ -14,6 +14,31 @@ describe("countsText", () => {
     expect(countsText(1, 0)).toBe("· 1 topic");
     expect(countsText(23, 3)).toBe("· 23 topics · 3 references");
     expect(countsText(0, 1)).toBe("· 1 reference");
+  });
+});
+
+describe("chipsThatFit", () => {
+  // 120px of line, two 50px chips, and counts that grow as chips are dropped.
+  const chips = [50, 50];
+  const counts = [70, 45, 0];
+
+  it("shows every chip that fits beside the counts it leaves", () => {
+    // Two chips: 50 + 50 + 0 counts + one 8px gap = 108.
+    expect(chipsThatFit(120, chips, counts)).toBe(2);
+  });
+
+  it("drops the chip that would be cut and lets the counts state it", () => {
+    // Two would need 108; one needs 50 + 45 + 8 = 103.
+    expect(chipsThatFit(105, chips, counts)).toBe(1);
+  });
+
+  it("falls back to the counts alone where no chip fits whole", () => {
+    expect(chipsThatFit(80, chips, counts)).toBe(0);
+  });
+
+  // A line laid out at zero width has not been measured; it has not said no.
+  it("keeps every chip while the line has no width to measure against", () => {
+    expect(chipsThatFit(0, chips, counts)).toBe(2);
   });
 });
 
@@ -48,11 +73,31 @@ describe("TopicsLine", () => {
     expect(screen.queryByTestId("post-references")).not.toBeInTheDocument();
   });
 
-  it("keeps the line to one row, capped, never wrapping", () => {
+  it("keeps the line to one row, never wrapping", () => {
     render(<TopicsLine topics={[topic("rust")]} references={0} testIdPrefix="post" />);
     expect(screen.getByTestId("post-topics").className).toContain("flex-nowrap");
     expect(screen.getByTestId("post-topics").className).toContain("overflow-hidden");
-    expect(screen.getByTestId("post-topic-rust").className).toContain("max-w-24");
+  });
+
+  // Jakob's ruling, 2026-09-09: a chip is drawn whole or not at all. The
+  // master's 96px ellipsis cap is the thing being corrected, so no chip may
+  // carry a width ceiling or an overflow rule that could cut its label.
+  it("never gives a chip a width ceiling to be cut against", () => {
+    render(<TopicsLine topics={[topic("rust")]} references={0} testIdPrefix="post" />);
+    const chip = screen.getByTestId("post-topic-rust").className;
+    expect(chip).not.toContain("max-w-");
+    expect(chip).not.toContain("text-ellipsis");
+    expect(chip).not.toContain("overflow-hidden");
+  });
+
+  // The `…` the pending marker used to append is indistinguishable from a
+  // truncated label, which is exactly what the ruling forbids.
+  it("ends a pending topic's chip in its own name, never an ellipsis", () => {
+    render(
+      <TopicsLine topics={[{ name: "rust", pending: true }]} references={0} testIdPrefix="post" />,
+    );
+    expect(screen.getByTestId("post-topic-rust")).toHaveTextContent(/^#rust$/);
+    expect(screen.queryByTestId("post-topic-rust-pending")).not.toBeInTheDocument();
   });
 
   it("lets a summary card's chips navigate to their topics", () => {

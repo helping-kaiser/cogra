@@ -55,10 +55,20 @@ export function hasCode(outcome: Outcome<unknown>, code: ErrorCode): boolean {
   return outcome.kind === "refused" && outcome.errors.some((e) => e.code === code);
 }
 
-// Two deliberate lifts out of the transport tier: UNAUTHENTICATED, so
+// Three deliberate lifts out of the transport tier: UNAUTHENTICATED, so
 // the auth guard can refresh-and-replay on it; RATE_LIMITED, because a
-// deliberate backoff rendered as "can't reach the server" misleads. The
-// guard replays only on UNAUTHENTICATED.
+// deliberate backoff rendered as "can't reach the server" misleads; and
+// FORBIDDEN, for the same reason as RATE_LIMITED and with more at stake.
+// The guard replays only on UNAUTHENTICATED.
+//
+// FORBIDDEN IS AN ANSWER, NOT A FAULT. Acting mutations read the account
+// state live and refuse a non-member at the transport tier
+// (`crates/api/src/schema/mutation.rs`: "a FORBIDDEN transport fault
+// otherwise, never a userError"), so an account that cannot act yet — an
+// applicant whose email is not verified, say — was told the server could not
+// be reached. It can; it said no. Lifted, it reaches the same
+// `writeRefusalMessage` vocabulary every other refusal does, and the reader
+// is answered rather than sent to check their connection.
 function classify(error: unknown): Outcome<never> {
   if (CombinedGraphQLErrors.is(error)) {
     if (error.errors.some((e) => e.extensions?.code === "UNAUTHENTICATED")) {
@@ -67,6 +77,11 @@ function classify(error: unknown): Outcome<never> {
     if (error.errors.some((e) => e.extensions?.code === "RATE_LIMITED")) {
       return refused([
         { code: "RATE_LIMITED", message: "too many attempts, wait before retrying", field: null },
+      ]);
+    }
+    if (error.errors.some((e) => e.extensions?.code === "FORBIDDEN")) {
+      return refused([
+        { code: "FORBIDDEN", message: "this account may not act yet", field: null },
       ]);
     }
   }
