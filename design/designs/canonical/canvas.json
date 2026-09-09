@@ -218,6 +218,15 @@
       "page": "entry"
     },
     {
+      "file": "InviteEntryError.dc.html",
+      "title": "Enter your invite · that isn't a link",
+      "x": 480,
+      "y": 6168,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "ComposePick.dc.html",
       "title": "Compose · pick the body",
       "x": 0,
@@ -1032,7 +1041,7 @@
       "x": -1580,
       "y": 0,
       "w": 1160,
-      "h": 3532,
+      "h": 3592,
       "page": "entry",
       "title": "Entry · flow map"
     },

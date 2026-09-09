@@ -204,9 +204,15 @@
 
     { "from": "InviteEntry", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back" }] },
     { "from": "InviteEntry", "via": 2, "kind": "advance", "label": "invite link field", "to": [{ "terminal": "self", "case": "typing" }] },
-    { "from": "InviteEntry", "via": 3, "kind": "advance", "label": "Continue", "to": [{ "board": "Join", "case": "the link checks out" }, { "board": "JoinInvalid", "case": "unusable link" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "InviteEntry", "via": 3, "kind": "advance", "label": "Continue", "to": [{ "board": "Join", "case": "the link checks out" }, { "board": "JoinInvalid", "case": "unusable link" }, { "board": "InviteEntryError", "case": "nothing that reads as a link — the field says so in place" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "InviteEntry", "via": 4, "kind": "advance", "label": "Already have an account? Sign in", "to": [{ "board": "SignIn" }] },
     { "from": "InviteEntry", "via": 5, "kind": "cancel", "label": "Just looking? Browse the feed", "to": [{ "board": "Main", "case": "an inviter's link seen — their borrowed view" }, { "board": "FeedBare", "case": "no usable link — the bare view" }] },
+
+    { "from": "InviteEntryError", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back" }] },
+    { "from": "InviteEntryError", "via": 2, "kind": "advance", "label": "invite link field", "to": [{ "terminal": "self", "case": "typing — the field re-checks itself once it is already marked" }] },
+    { "from": "InviteEntryError", "via": 3, "kind": "advance", "label": "Continue", "to": [{ "board": "Join", "case": "the link checks out" }, { "board": "JoinInvalid", "case": "unusable link" }, { "terminal": "self", "case": "still nothing that reads as a link — the line updates in place" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "InviteEntryError", "via": 4, "kind": "advance", "label": "Already have an account? Sign in", "to": [{ "board": "SignIn" }] },
+    { "from": "InviteEntryError", "via": 5, "kind": "cancel", "label": "Just looking? Browse the feed", "to": [{ "board": "FeedBare", "case": "no usable link — the bare view" }] },
 
     { "from": "Join", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "InviteEntry" }] },
     { "from": "Join", "via": 2, "kind": "advance", "label": "Handle field", "to": [{ "terminal": "self", "case": "typing" }] },

@@ -1043,6 +1043,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Already have an account? Sign in</button>", tag: "button" },
     { n: 5, find: ">Just looking? Browse the feed", tag: "button" },
   ],
+  InviteEntryError: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="invite-link"', tag: "input" },
+    { n: 3, find: ">Continue</button>", tag: "button" },
+    { n: 4, find: ">Already have an account? Sign in</button>", tag: "button" },
+    { n: 5, find: ">Just looking? Browse the feed", tag: "button" },
+  ],
   JoinInvalid: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'id="invite-link"', tag: "input" },
