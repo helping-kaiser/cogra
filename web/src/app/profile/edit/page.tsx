@@ -2,8 +2,14 @@
 
 // The profile edit form — a parallel Registration prepared by the
 // backend and signed in this browser (substrate.md §9). The form holds
-// the full field set: a blanked bio or website clears; the display
-// name cannot blank. Client-gated like the (app) group.
+// the full field set, and a blanked bio or website clears. Client-gated
+// like the (app) group.
+//
+// THIS SURFACE VALIDATES NOTHING LOCALLY (design/backlog.md item 36.2). A
+// display name is optional — account creation never asks for one and a profile
+// with none is presented by its handle — so the empty-name check that used to
+// stand here was a rule the product does not have. It was this form's only
+// local rule; Save's outcomes are the seal's and the faults the seal owns.
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -45,7 +51,6 @@ export default function ProfileEditPage() {
   const [bio, setBio] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [emptyName, setEmptyName] = useState(false);
   const [refusedMessage, setRefusedMessage] = useState<string | null>(null);
   const [signIncomplete, setSignIncomplete] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -119,10 +124,6 @@ export default function ProfileEditPage() {
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (submitting) return;
-    if (displayName.trim() === "") {
-      setEmptyName(true);
-      return;
-    }
     setSubmitting(true);
     setRefusedMessage(null);
     setSignIncomplete(false);
@@ -195,19 +196,11 @@ export default function ProfileEditPage() {
             Display name
             <input
               value={displayName}
-              onChange={(event) => {
-                setDisplayName(event.target.value);
-                setEmptyName(false);
-              }}
+              onChange={(event) => setDisplayName(event.target.value)}
               data-testid="profile-edit-display-name"
               className={field}
             />
           </label>
-          {emptyName && (
-            <p role="alert" data-testid="profile-edit-empty-name" className="text-body-small text-error">
-              A display name is required.
-            </p>
-          )}
           <label className="flex flex-col gap-1 text-label-large">
             Bio
             <textarea
