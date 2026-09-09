@@ -158,17 +158,19 @@ class ComposeWizardViewModelTest {
         /** Nothing decodes as a picture — the refused-format case. */
         var unreadable = false
 
-        /** What the store says a picked file weighs; null = it will not say. */
-        var size: Long? = 1_024
+        /** What the pipeline's OWN output weighs — the cap's subject. */
+        var encodedBytes = 4
 
         override suspend fun process(uri: String, crop: CropSpec): ProcessedPicture? {
             media.pending.addLast(uri)
-            return if (uri in undecodable) null else ProcessedPicture(ByteArray(4), 100, 125)
+            return if (uri in undecodable) {
+                null
+            } else {
+                ProcessedPicture(ByteArray(encodedBytes), 100, 125)
+            }
         }
 
         override suspend fun aspectRatio(uri: String): Float? = if (unreadable) null else 0.8f
-
-        override suspend fun sizeBytes(uri: String): Long? = size
     }
 
     private val drafts = object : ComposeDraftStore {
@@ -1065,34 +1067,38 @@ class ComposeWizardViewModelTest {
         assertThat(vm.state.value.refused).isEmpty()
     }
 
+    /**
+     * HT-17. The still cap is spent on the ENCODED bytes, so a picture
+     * only breaks it after the pipeline has done its shrinking — which
+     * is why the pick itself accepts a file of any size.
+     */
     @Test
-    fun aPictureOverItsCapIsRefusedWithTheCapItBroke() = runTest(dispatcher) {
-        processor.size = ComposeWizardViewModel.MAX_PICTURE_BYTES + 1
+    fun aPictureOverItsCapAfterEncodingFailsItsUpload() = runTest(dispatcher) {
+        processor.encodedBytes = (ComposeWizardViewModel.MAX_PICTURE_BYTES + 1).toInt()
         val vm = viewModel()
-        vm.start()
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.onTogglePick("huge.jpg")
-        dispatcher.scheduler.advanceUntilIdle()
+        vm.toSealWithMedia("huge.jpg")
 
-        assertThat(vm.state.value.picked).isEmpty()
-        val refused = vm.state.value.refused.single()
-        assertThat(refused.reason).isEqualTo(UploadFailure.PICTURE_TOO_BIG)
-        // It is a readable picture, so the row can preview it.
-        assertThat(refused.uri).isEqualTo("huge.jpg")
+        val upload = vm.state.value.picked.single().upload
+        assertThat((upload as AssetUpload.Failed).reason)
+            .isEqualTo(UploadFailure.PICTURE_TOO_BIG)
+        // Nothing was sent, and the seal cannot be crossed.
+        assertThat(media.uploads).isEqualTo(0)
+        assertThat(vm.state.value.uploadsComplete).isFalse()
     }
 
+    /**
+     * The camera photo the refusal used to catch: twelve megabytes as it
+     * stands, a few hundred kilobytes once the pipeline has shrunk it.
+     * Weighing the picked file refused exactly this.
+     */
     @Test
-    fun aFileTheStoreWillNotWeighIsLetThrough() = runTest(dispatcher) {
-        processor.size = null
+    fun aBigCameraPhotoThatEncodesSmallIsAccepted() = runTest(dispatcher) {
+        processor.encodedBytes = 320 * 1024
         val vm = viewModel()
-        vm.start()
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.onTogglePick("unmeasured.jpg")
-        dispatcher.scheduler.advanceUntilIdle()
+        vm.toSealWithMedia("camera.jpg")
 
-        // An unmeasurable file is judged by the server, not refused here.
         assertThat(vm.state.value.refused).isEmpty()
-        assertThat(vm.state.value.picked.map { it.uri }).containsExactly("unmeasured.jpg")
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m1"))
     }
 
     @Test
@@ -1113,7 +1119,6 @@ class ComposeWizardViewModelTest {
     fun aBigRecordingThatCompressesSmallIsAccepted() = runTest(dispatcher) {
         // The whole point of re-encoding: weighing the original would
         // refuse a post the ruling means to allow.
-        processor.size = 400L * 1024 * 1024
         video.outputBytes = 20L * 1024 * 1024
         val vm = viewModel()
         vm.toDetailsWithVideo()

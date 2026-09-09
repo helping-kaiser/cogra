@@ -8,6 +8,7 @@ import com.cogra.domain.ProfileView
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.media.overPictureCap
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
@@ -121,6 +122,13 @@ class AvatarFlowViewModel @Inject constructor(
                 _state.update { it.copy(upload = AvatarUpload.Failed(UNREADABLE)) }
                 return@launch
             }
+            // The same ten megabytes a post's media takes (HT-19, jakob's
+            // ruling): one asset kind through one `uploadMedia`, weighed
+            // on the encode's output like every other still.
+            if (picture.overPictureCap()) {
+                _state.update { it.copy(upload = AvatarUpload.Failed(TOO_BIG)) }
+                return@launch
+            }
             // A profile picture carries no description: it is not content
             // a reader reads, and the monogram is its stated fallback.
             val next = when (val outcome = media.uploadMedia(picture)) {
@@ -186,6 +194,10 @@ class AvatarFlowViewModel @Inject constructor(
         const val AVATAR_RATIO = 1f
 
         const val UNREADABLE = "That file could not be read as a picture."
+
+        /** The sentence the composers say, word for word. */
+        const val TOO_BIG = "That picture is too big — a picture can be up to 10 MB."
+
         const val REFUSED = "The server would not take that picture."
         const val REFUSED_CHANGE = "That change was refused."
         const val TRANSPORT = "The upload could not reach the server."

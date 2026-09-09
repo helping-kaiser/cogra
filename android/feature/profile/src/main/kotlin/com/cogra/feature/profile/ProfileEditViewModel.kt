@@ -7,6 +7,7 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.media.overPictureCap
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
@@ -158,6 +159,13 @@ class ProfileEditViewModel @Inject constructor(
             val processed = processor.process(uri, CropSpec(targetRatio = AVATAR_RATIO))
             val next = if (processed == null) {
                 ProfileImageState.Failed(uri, UNREADABLE)
+            } else if (processed.overPictureCap()) {
+                // A profile picture takes the same cap a post's media
+                // does (HT-19, jakob's ruling): it is the same asset kind
+                // through the same `uploadMedia`, so a limit it did not
+                // enforce was a hole rather than a difference. Weighed on
+                // the encode's output, which is what the server measures.
+                ProfileImageState.Failed(uri, TOO_BIG)
             } else {
                 when (val outcome = media.uploadMedia(processed)) {
                     is Outcome.Success ->
@@ -207,11 +215,15 @@ class ProfileEditViewModel @Inject constructor(
         }
     }
 
-    private companion object {
+    internal companion object {
         /** D13's fixed crop: a circle-masked square. */
         const val AVATAR_RATIO = 1f
 
         const val UNREADABLE = "That file could not be read as a picture."
+
+        /** The sentence the composers say, word for word. */
+        const val TOO_BIG = "That picture is too big — a picture can be up to 10 MB."
+
         const val REFUSED = "The server would not take that picture."
         const val TRANSPORT = "The upload could not reach the server."
     }

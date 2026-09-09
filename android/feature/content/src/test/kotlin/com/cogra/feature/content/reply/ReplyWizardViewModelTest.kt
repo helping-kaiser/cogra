@@ -132,11 +132,9 @@ class ReplyWizardViewModelTest {
     private class ScriptedProcessor : ThrowingMediaProcessor() {
         var processed: ProcessedPicture? = ProcessedPicture(ByteArray(4), 100, 100)
         var ratio: Float? = 1f
-        var size: Long? = 1_000
 
         override suspend fun process(uri: String, crop: CropSpec): ProcessedPicture? = processed
         override suspend fun aspectRatio(uri: String): Float? = ratio
-        override suspend fun sizeBytes(uri: String): Long? = size
     }
 
     private class ScriptedVideo : ThrowingVideoProcessor() {
@@ -220,19 +218,24 @@ class ReplyWizardViewModelTest {
         assertThat(refused.uri).isNull()
     }
 
+    /**
+     * HT-17. The still cap is spent on the ENCODED bytes — the ones that
+     * would be sent — so a picture breaks it at its upload rather than at
+     * the pick, and nothing leaves either way.
+     */
     @Test
-    fun anOversizePictureIsRefusedBeforeAByteLeaves() = runTest(dispatcher) {
-        processor.size = ReplyWizardViewModel.MAX_PICTURE_BYTES + 1
+    fun anOversizePictureFailsItsUploadBeforeAByteLeaves() = runTest(dispatcher) {
+        val overCap = (ReplyWizardViewModel.MAX_PICTURE_BYTES + 1).toInt()
+        processor.processed = ProcessedPicture(ByteArray(overCap), 100, 100)
         val vm = viewModel()
 
         vm.onPicked("huge.jpg")
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(media.order).isEmpty()
-        val refused = vm.state.value.refused.single()
-        assertThat(refused.reason).isEqualTo(UploadFailure.PICTURE_TOO_BIG)
-        // It is a readable picture, so the row can preview it.
-        assertThat(refused.uri).isEqualTo("huge.jpg")
+        val upload = vm.state.value.picked.single().upload
+        assertThat((upload as AssetUpload.Failed).reason)
+            .isEqualTo(UploadFailure.PICTURE_TOO_BIG)
     }
 
     @Test

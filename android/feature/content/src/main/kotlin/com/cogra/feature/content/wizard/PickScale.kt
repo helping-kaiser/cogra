@@ -19,9 +19,6 @@ package com.cogra.feature.content.wizard
 
 import com.cogra.domain.media.MediaProcessor
 
-/** A still's cap, the same on both surfaces: ten mebibytes (D9). */
-internal const val PICTURE_MAX_BYTES = 10L * 1024 * 1024
-
 /** A post's clip: the same hundred megabytes a full gallery costs. */
 internal const val POST_VIDEO_MAX_BYTES = 100L * 1024 * 1024
 
@@ -29,19 +26,19 @@ internal const val POST_VIDEO_MAX_BYTES = 100L * 1024 * 1024
 internal const val COMMENT_VIDEO_MAX_BYTES = 50L * 1024 * 1024
 
 /**
- * What a surface's media costs and what a file over the clip cap is
- * refused as.
+ * What a surface's clip costs and what a file over that cap is refused
+ * as. A still's cap is not here: it is the same on both surfaces and it
+ * is spent at the upload, on the encode's own bytes
+ * (`com.cogra.domain.media.overPictureCap`).
  */
-internal data class PickScale(val pictureMaxBytes: Long, val videoMaxBytes: Long, val tooBigVideo: UploadFailure)
+internal data class PickScale(val videoMaxBytes: Long, val tooBigVideo: UploadFailure)
 
 internal val POST_SCALE = PickScale(
-    pictureMaxBytes = PICTURE_MAX_BYTES,
     videoMaxBytes = POST_VIDEO_MAX_BYTES,
     tooBigVideo = UploadFailure.POST_VIDEO_TOO_BIG,
 )
 
 internal val COMMENT_SCALE = PickScale(
-    pictureMaxBytes = PICTURE_MAX_BYTES,
     videoMaxBytes = COMMENT_VIDEO_MAX_BYTES,
     tooBigVideo = UploadFailure.COMMENT_VIDEO_TOO_BIG,
 )
@@ -57,28 +54,28 @@ internal val COMMENT_SCALE = PickScale(
  * refused where it was offered is far better than one accepted and
  * failed at upload.
  *
- * A picture is weighed as it stands rather than after the pipeline
- * downscales it: the board weighs the file the author offered, and a
- * cap nobody can predict is worse than one they can. A clip is weighed
- * the other way round — see [refusesVideo].
+ * NO SIZE CHECK ON A PICTURE HERE. The cap is on the bytes that are
+ * UPLOADED, and a still is downscaled to 1080 and re-encoded to WebP
+ * before any of them leave (`ImageProcessing`), so a phone camera's
+ * twelve-megabyte original becomes a few hundred kilobytes. Screening
+ * the SOURCE against the upload cap refused ordinary camera photos the
+ * product would have taken happily; the upload weighs the encode's
+ * output instead (`overPictureCap`), which is the thing the server
+ * actually measures. A clip carries no such shrinking pass at the pick,
+ * which is why [refusesVideo] still exists — judged on the transcode's
+ * output for the same reason.
  */
 internal suspend fun screenPicture(
     uri: String,
     processor: MediaProcessor,
-    scale: PickScale,
     knownReadable: Boolean = false,
-): RefusedPick? {
+): RefusedPick? =
     if (!knownReadable && processor.aspectRatio(uri) == null) {
         // No preview to draw for a file nothing can read, so no uri.
-        return RefusedPick(uri = null, reason = UploadFailure.UNREADABLE_FILE)
-    }
-    val size = processor.sizeBytes(uri)
-    return if (size != null && size > scale.pictureMaxBytes) {
-        RefusedPick(uri = uri, reason = UploadFailure.PICTURE_TOO_BIG)
+        RefusedPick(uri = null, reason = UploadFailure.UNREADABLE_FILE)
     } else {
         null
     }
-}
 
 /**
  * Whether a re-encoded clip still exceeds what this surface sends.

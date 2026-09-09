@@ -10,10 +10,12 @@ import com.cogra.domain.UserError
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.media.PICTURE_MAX_BYTES
 import com.cogra.domain.media.ProcessedVideo
 import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
+import com.cogra.domain.media.overPictureCap
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.signing.NoActorKeyException
@@ -28,7 +30,6 @@ import com.cogra.feature.content.tagFieldIndex
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.COMMENT_SCALE
 import com.cogra.feature.content.wizard.COMMENT_VIDEO_MAX_BYTES
-import com.cogra.feature.content.wizard.PICTURE_MAX_BYTES
 import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.uploadPicture
 import com.cogra.feature.content.wizard.CoverChoice
@@ -153,7 +154,7 @@ class ReplyWizardViewModel @Inject constructor(
      * hands over a bare URI, so nothing here is known-readable.
      */
     private suspend fun refusePicture(uri: String): Boolean {
-        val refusal = screenPicture(uri, processor, scale) ?: return true
+        val refusal = screenPicture(uri, processor) ?: return true
         _state.update { it.copy(refused = it.refused + refusal) }
         return false
     }
@@ -326,6 +327,12 @@ class ReplyWizardViewModel @Inject constructor(
         }
         if (picture == null) {
             _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.UNREADABLE_COVER)) }
+            return null
+        }
+        // A cover is an ordinary still and rides the still cap, on the
+        // encoded bytes exactly as a picture does.
+        if (picture.overPictureCap()) {
+            _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.PICTURE_TOO_BIG)) }
             return null
         }
         return when (val outcome = media.uploadMedia(picture)) {

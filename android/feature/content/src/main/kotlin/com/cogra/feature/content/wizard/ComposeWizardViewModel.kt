@@ -13,10 +13,12 @@ import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.MediaProcessor
+import com.cogra.domain.media.PICTURE_MAX_BYTES
 import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.media.overPictureCap
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.signing.NoActorKeyException
@@ -275,13 +277,13 @@ class ComposeWizardViewModel @Inject constructor(
             } else {
                 video.info(uri)
             }
-            // The shared screening (`PickScale.kt`), at the post's
-            // scale: unreadable or over the still cap is refused where
-            // it was offered rather than accepted and failed later
-            // (`ComposePickedErrors`). A clip is screened after its
-            // transcode instead — see `startVideoUpload`.
+            // The shared screening (`PickScale.kt`): a file nothing can
+            // read is refused where it was offered rather than accepted
+            // and failed later (`ComposePickedErrors`). Bytes are weighed
+            // after the pass that shrinks them — a still at its upload,
+            // a clip after its transcode (see `startVideoUpload`).
             if (clip == null) {
-                val refusal = screenPicture(uri, processor, scale, knownReadable = known != null)
+                val refusal = screenPicture(uri, processor, knownReadable = known != null)
                 if (refusal != null) {
                     _state.update { it.copy(refused = it.refused + refusal) }
                     return@launch
@@ -741,6 +743,12 @@ class ComposeWizardViewModel @Inject constructor(
         }
         if (picture == null) {
             _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.UNREADABLE_COVER)) }
+            return null
+        }
+        // A cover is an ordinary still and rides the still cap, on the
+        // encoded bytes exactly as a picture does.
+        if (picture.overPictureCap()) {
+            _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.PICTURE_TOO_BIG)) }
             return null
         }
         return when (val outcome = media.uploadMedia(picture)) {
