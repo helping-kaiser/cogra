@@ -12,7 +12,7 @@
 // first paint, so opening a post and coming back is not a fresh feed.
 
 import Link from "next/link";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
@@ -75,10 +75,11 @@ export function FeedView({
   const router = useRouter();
   const outcome = composeOutcomeOf(useSearchParams().get("compose"));
   const host = useScrollHost();
-  // Read ONCE, at mount: what the feed left behind last time it was on
-  // screen. Seeding the state from it is what makes the pages come back
-  // synchronously, on the first render, before anything is painted.
-  const remembered = useRef(recallFeed()).current;
+  // Read ONCE, at mount, through a lazy state initializer — the one thing
+  // that may be read during render and never changes under it. What the feed
+  // left behind last time it was on screen; seeding the state below from it is
+  // what makes the pages come back on the FIRST render, before any paint.
+  const [remembered] = useState(recallFeed);
   const [posts, setPosts] = useState<readonly PostView[]>(remembered?.posts ?? []);
   const [endCursor, setEndCursor] = useState<string | null>(remembered?.endCursor ?? null);
   const [hasNextPage, setHasNextPage] = useState(remembered?.hasNextPage ?? false);

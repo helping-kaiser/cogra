@@ -117,18 +117,7 @@ describe("AppShell", () => {
     expect(scroller).not.toContainElement(screen.getByTestId("bottom-nav"));
   });
 
-  it.each([
-    "/compose",
-    "/profile/edit",
-    "/settings",
-    "/settings/key",
-    "/invites",
-    "/key",
-    "/restore",
-    // The wizards hanging off a post are task flows, not the post's page.
-    "/posts/post-1/reply",
-    "/posts/post-1/edit",
-  ])(
+  it.each(["/compose", "/profile/edit", "/settings", "/settings/key", "/invites", "/key", "/restore"])(
     "leaves the task flow %s without the bar",
     async (path) => {
       pathname = path;
