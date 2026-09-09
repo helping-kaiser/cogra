@@ -28,6 +28,12 @@ query HashtagDetail($name: String!, $includePending: Boolean! = true) {
         # a post whose attachments cannot say whether they move.
         ... on Post {
           ...PostFields
+          # The card wears the comments affordance wherever it is drawn, and
+          # the count is asked for the same cost-free way the feed asks: no
+          # edges, one aggregate.
+          comments(first: 0, includePending: $includePending) {
+            totalCount
+          }
         }
         # A tagged comment draws a line, not a card: it opens the post
         # carrying it, so the selection stops at what that line needs.
