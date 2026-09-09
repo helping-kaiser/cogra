@@ -617,7 +617,7 @@ function ReplyDraft() {
    with a reference staged are one surface in two states, and a row spelled
    twice is a row that drifts. */
 const ADD_ROWS = [
-  { label: "", action: "+ Add a topic", count: "1 more action" },
+  { label: "", action: "+ Add a tag", count: "1 more action" },
   { label: "", action: "+ Cite something", count: "1 more action" },
 ];
 
@@ -645,7 +645,7 @@ function ComposeSealBody() {
           rows={[
             { label: "Post", value: "Salt maps of the coast road", count: "1 action" },
             {
-              label: "Topics",
+              label: "Tags",
               value: (
                 <span style={{ display: "flex", gap: 6, overflow: "hidden", alignItems: "center" }}>
                   <Chip label="#fieldnotes" tone="readout" />
@@ -823,12 +823,12 @@ function EditComposeBody() {
         />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Topics</FieldLabel>
+          <FieldLabel>Tags</FieldLabel>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <TopicRemovable topic="fieldnotes" />
-            <TopicRemovable topic="saltmaps" />
-            <Button variant="outline" size="sm">Add a topic</Button>
+            <TopicRemovable topic="fieldnotes" onEdit={() => {}} />
+            <TopicRemovable topic="saltmaps" onEdit={() => {}} />
           </div>
+          <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
           <QuietNote>Withdrawn: #coastroad</QuietNote>
         </div>
 
