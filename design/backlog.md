@@ -1445,7 +1445,39 @@ description is words. The "?" behind the sheet caught up with the
 settings round (jakob's re-bless, same day): its paragraph now reads
 *the words* too, and the mark is explained one way again.
 
-### 43 · The sensitive sheet still draws its own switch · *system*
+### 43 · What the shell round could not finish · *design*
+
+Filed by the w1-web conform lane 2026-09-09. Three stops, each a
+question the boards leave open; none blocked the rest of the shell.
+
+1. **Three entry arrows point nowhere drawable.** The PageHeader
+   master rules the arrow is a LINK — "a deep-linked visitor with no
+   history still lands somewhere sensible" — and three entry boards
+   draw destinations (`Join`→InviteEntry, `Reset`→SignIn,
+   `KeyCeremony`→ApplicantFeed), but `InviteEntry`, `SignIn` and
+   `Restore` draw `{"kind":"back","to":[{"terminal":"back"}]}` — the
+   history the master forbids relying on. Where do those three
+   arrows point for a visitor who arrived by URL? The band waits on
+   the answer for all six entry screens (adopting three of six would
+   split the flow's look); the conformance register carries the
+   entry task-screen layout under W7.
+2. **`CograBand`'s chats line contradicts the graph.** The master's
+   docblock says the chats affordance rides *every* tab root;
+   `graph.json` routes a signed-in chats tap to
+   `{"gap": "the chat surface (not designed)"}`. Both cannot be
+   acted on at once — the apps currently follow the graph (no dead
+   button; the band draws the affordance only once a surface exists).
+   Bless that reading or redraw the edge.
+3. **`BorrowedViewBand` cannot yet be true.** The band names a
+   borrowed *ranking* vantage ("the label is what makes borrowed
+   ranking honest"), but the feed is chronological until slice 3's
+   ranker — the same label-vs-behaviour divergence §13 forbids for
+   the feed filter — and the contract exposes no borrowed-vantage
+   actor for an anonymous or applicant reader anyway.
+   Implementation's input: the band lands with the ranker (and the
+   schema field it needs), and the guest card stands until then.
+
+### 44 · The sensitive sheet still draws its own switch · *system*
 
 Filed by the settings round 2026-09-09. `ComposeSensitive` drew the
 system's only switch inline, correctly — one instance is a control,

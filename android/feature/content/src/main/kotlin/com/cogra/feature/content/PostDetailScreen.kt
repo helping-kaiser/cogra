@@ -332,6 +332,7 @@ private fun PostWithThread(
                     description = post.description,
                     attachments = post.attachments,
                     attachmentsStatus = post.attachmentsStatus,
+                    moderation = post.moderation,
                     testTagPrefix = "detail",
                     modifier = Modifier.testTag("detail_body"),
                     // The same set the feed reads: a reader who already
@@ -611,6 +612,7 @@ private fun CommentThread(
                     description = null,
                     attachments = comment.attachments,
                     attachmentsStatus = comment.attachmentsStatus,
+                    moderation = comment.moderation,
                     testTagPrefix = "comment_${comment.id}",
                     surface = BodySurface.Comment,
                     revealed = state.reveals.isRevealed(comment.id, comment.sensitiveMark()),

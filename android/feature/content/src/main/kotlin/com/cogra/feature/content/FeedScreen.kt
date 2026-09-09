@@ -401,6 +401,7 @@ private fun PostCard(
                 description = post.description,
                 attachments = post.attachments,
                 attachmentsStatus = post.attachmentsStatus,
+                moderation = post.moderation,
                 testTagPrefix = "feed_post_${post.id}",
                 maxBodyLines = FEED_BODY_LINES,
                 // The whole gallery is one target opening the post: a
