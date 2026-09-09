@@ -319,10 +319,27 @@ surface is being designed around existing furniture, not onto an
 empty page. **Then the whole surface** — its sections, its
 navigation, and the pattern every later setting follows; a defaults
 page designed alone is a page the next setting breaks. **Then the
-default license on top**, as the first setting that pattern carries,
+default license joins the surface** as one setting among the others,
 with the account-preference shape `api-spec.md` still owes it.
 Added 2026-08-28 out of item 19's review; reshaped by the slice-2.5
 round.
+
+Ruled 2026-09-09 (jakob), shaping the surface before it is drawn:
+
+- **Order by use, most- to least-used.** The page's order is a
+  frequency ranking, not a taxonomy — what a reader reaches for
+  often sits high, regardless of which section a taxonomist would
+  file it under.
+- **The default license is one setting among the others**, placed by
+  the same frequency rule — "on top" in the roadmap meant on top of
+  the round's work, never literally first on the page.
+- **A theme setting joins the surface**: light, dark, and auto
+  (device default). Likely high on the page. It implies the census
+  answers what dark support exists today — in the apps and in the
+  design tokens.
+- **The settings backup card becomes a dedicated screen** riding the
+  drawn RecoveryCode board (item 41.1's ruling): same stakes, same
+  screen; the round draws it in context.
 
 ### 22 · Canvas flows + pages · *process*
 The canonical canvas has outgrown one flat plane (77+ boards):
