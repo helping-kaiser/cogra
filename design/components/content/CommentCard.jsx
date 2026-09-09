@@ -61,6 +61,7 @@ export function CommentCard({
   onReply,
   onEdit,
   own = false,
+  attach = false,
   targetLabel = "this comment",
   target,
   targetKind = "post",
@@ -104,7 +105,9 @@ export function CommentCard({
         listStyle: "none",
       }}
     >
-      <Card>
+      {/* `attach` squares the top-left corner so a row flag (TaggedRow) fuses
+          with the card (jakob's review, the tag round). */}
+      <Card style={attach ? { borderTopLeftRadius: 0 } : undefined}>
         {/* The comment's TARGET pointer (jakob 2026-09-01): where a comment
             shows OUT of its thread — the profile's comments view, a search
             result — the card leads with what it answers, one line, one tap to

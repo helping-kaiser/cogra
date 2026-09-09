@@ -70,6 +70,11 @@ export interface CommentCardProps {
   menuItems?: readonly { label: string; onSelect?: () => void }[];
   /** An open reply or edit composer, rendered between the card and its replies. */
   children?: React.ReactNode;
+  /**
+   * Squares the top-left corner so a row flag (TaggedRow) fuses with the
+   * card. Defaults to false.
+   */
+  attach?: boolean;
 }
 
 export declare function CommentCard(props: CommentCardProps): JSX.Element;

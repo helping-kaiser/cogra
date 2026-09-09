@@ -26,10 +26,12 @@ import { PendingMarker } from "../honesty/PendingMarker.jsx";
    A CLAIM STILL IN FLIGHT SAYS SO, with the same marker every other
    unsettled record wears.
 
-   THE CLAIM IS ATTACHED, NOT HOVERING (jakob's review, 2026-09-09): the line
-   draws as a small flag sitting on the card's top edge — zero gap, its own
-   surface, top corners rounded — so the claim and the content it put here
-   read as one thing. A free-floating line between cards belonged to neither
+   THE CLAIM IS ATTACHED, NOT HOVERING (jakob's review, 2026-09-09, twice
+   refined): the line draws as a flag flush with the screen's left edge, zero
+   gap to the card, and the card squares its top-left corner under it
+   (`attach` on the card masters) — so flag and card fuse into one
+   folder-tab silhouette instead of a rounded card with a sticker floating
+   near its curve. A free-floating line between cards belonged to neither
    neighbour. */
 
 export function TaggedRow({ pair, pending = false, children }) {
@@ -41,7 +43,6 @@ export function TaggedRow({ pair, pending = false, children }) {
           alignItems: "center",
           alignSelf: "flex-start",
           gap: "var(--space-2)",
-          margin: "0 0 0 var(--space-4)",
           padding: "2px 10px",
           background: "var(--surface-container-high)",
           borderRadius: "var(--radius-small) var(--radius-small) 0 0",

@@ -59,8 +59,8 @@
    frame is the state the board draws.
 
    THE REFERENCES TAKEN, and what was refused: Mastodon's hashtag page gives
-   the shape — the tag as the title, the follow control on the header's
-   trailing edge, a plain chronological column of whole posts. Its "N people
+   the shape — the tag as the title, a plain chronological column of whole
+   posts (its header follow was taken too, then removed at review). Its "N people
    talking" figure is refused: a global popularity count is exactly the badge
    farming §3 rules out, and every number this product shows has to be the
    viewer's own and explainable. Instagram's tag page agrees with us about
@@ -80,15 +80,16 @@ export function Screen() {
       <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "4px 0 0" }}>
         <TaggedRow pair="+0.10 / 1.00" pending>
-          <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
+          <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
         </TaggedRow>
 
         <TaggedRow pair="+0.55 / 1.00">
-          <PostCard {...SOL_POST} bundle={mkBundle(0.1, 0.1)} />
+          <PostCard attach {...SOL_POST} bundle={mkBundle(0.1, 0.1)} />
         </TaggedRow>
 
         <TaggedRow pair="+0.40 / 0.90">
           <CommentCard
+            attach
             author={ADA}
             content="Low tide is kinder to the rubbings than noon ever was."
             timestamp="4d"
