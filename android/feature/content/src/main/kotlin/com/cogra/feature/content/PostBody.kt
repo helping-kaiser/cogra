@@ -207,13 +207,6 @@ internal fun MediaAssetView.toItem(): MediaItem {
 }
 
 /**
- * Whether the whole body is gone.
- *
- * A words post is removed when its `content` is REDACTED; a media post
- * when its gallery is. UNKNOWN counts as removed on both: a state this
- * build cannot name is never rendered as if it were fine.
- */
-/**
  * Which of the two removals a reader is looking at.
  *
  * The docs require the two to stay distinguishable, since collapsing
@@ -224,6 +217,13 @@ internal fun MediaAssetView.toItem(): MediaItem {
 internal fun removalReason(moderation: ModerationState): RemovalReason =
     if (moderation == ModerationState.ILLEGAL) RemovalReason.Platform else RemovalReason.Author
 
+/**
+ * Whether the whole body is gone.
+ *
+ * A words post is removed when its `content` is REDACTED; a media post
+ * when its gallery is. UNKNOWN counts as removed on both: a state this
+ * build cannot name is never rendered as if it were fine.
+ */
 internal fun isRemoved(
     content: ModeratedField,
     attachments: List<MediaAssetView>,
