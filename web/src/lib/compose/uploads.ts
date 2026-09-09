@@ -12,8 +12,10 @@ import { uploadMedia, uploadVideo, UploadPartsError } from "@/lib/api/media-api"
 import type { Outcome, UserError } from "@/lib/api/outcome";
 import type { AuthGuard } from "@/lib/session/guard";
 import { mediaRefusalMessage } from "@/lib/ui/error-messages";
+import { pictureTooBig } from "@/lib/ui2/media/caps";
 import { encodeForUpload } from "@/lib/ui2/media/encode-image";
 import { stripVideoMetadata } from "@/lib/ui2/media/strip-video";
+import { TOO_BIG_PICTURE } from "./pick";
 import type { AssetUpload, CoverAsset, PickedAsset } from "./wizard";
 
 export type UploadStep = (next: AssetUpload) => void;
@@ -69,6 +71,11 @@ export async function runUpload(
       message: "This browser couldn't read that picture.",
       retryable: false,
     });
+    return;
+  }
+  if (pictureTooBig(encoded.blob)) {
+    // Not retryable: the same source encodes to the same bytes next time.
+    step({ kind: "failed", message: TOO_BIG_PICTURE, retryable: false });
     return;
   }
 
@@ -142,6 +149,13 @@ export async function runVideoUpload(
     encoded = await encodeForUpload(cover.file);
   } catch {
     onCover({ kind: "failed", message: "This browser couldn't read that cover.", retryable: false });
+    onVideo({ kind: "failed", message: "The cover didn't upload.", retryable: true });
+    return;
+  }
+  // A cover is an ordinary still and rides the still cap, on the encoded bytes
+  // exactly as a picture does.
+  if (pictureTooBig(encoded.blob)) {
+    onCover({ kind: "failed", message: TOO_BIG_PICTURE, retryable: false });
     onVideo({ kind: "failed", message: "The cover didn't upload.", retryable: true });
     return;
   }

@@ -85,18 +85,42 @@ function referenceClaim(
   };
 }
 
+/** One picture as the detail read serves it, ready to be re-stated. */
+function attachment(id: string, altText: string | null = null) {
+  return {
+    __typename: "MediaAttachment",
+    id,
+    url: `https://media.test/${id}.webp`,
+    altText,
+    status: "NORMAL",
+    mimeType: "image/webp",
+    options: { __typename: "MediaOptions", aspectRatio: "1:1", durationMs: null },
+    coverMedia: null,
+  };
+}
+
 /** The edit screen's own read, with whatever claims the post carries. */
 function editablePost(
   topics: ReturnType<typeof topicClaim>[] = [],
   references: ReturnType<typeof referenceClaim>[] = [],
+  attachments: ReturnType<typeof attachment>[] = [],
 ) {
+  // A post's body is words XOR media, so a fixture carrying pictures carries
+  // no words — the shape the server would actually have served.
+  const media = attachments.length > 0;
   return {
     post: {
       __typename: "Post",
       id: "p1",
       title: { __typename: "ModeratedText", value: "Old title", status: "NORMAL" },
       description: { __typename: "ModeratedText", value: null, status: "NORMAL" },
-      content: { __typename: "ModeratedText", value: "Old body", status: "NORMAL" },
+      content: {
+        __typename: "ModeratedText",
+        value: media ? null : "Old body",
+        status: "NORMAL",
+      },
+      attachments,
+      attachmentsStatus: "NORMAL",
       author: { __typename: "User", id: "u1", handle: "alice" },
       createdAt: "2026-08-12T10:00:00Z",
       updatedAt: "2026-08-12T10:00:00Z",
@@ -345,32 +369,7 @@ describe("ComposeForm", () => {
     searchParams = new URLSearchParams("post=p1");
     let editVariables: Record<string, unknown> | null = null;
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({
-          data: {
-            post: {
-              __typename: "Post",
-              id: "p1",
-              title: { __typename: "ModeratedText", value: "Old title", status: "NORMAL" },
-              description: { __typename: "ModeratedText", value: null, status: "NORMAL" },
-              content: { __typename: "ModeratedText", value: "Old body", status: "NORMAL" },
-              author: { __typename: "User", id: "u1", handle: "alice" },
-              createdAt: "2026-08-12T10:00:00Z",
-              updatedAt: "2026-08-12T10:00:00Z",
-              landing: { __typename: "Landing", state: "LANDED" },
-              moderationStatus: "NORMAL",
-              license: { __typename: "License", attribution: 0, provenance: 0 },
-              topics: [],
-              references: [],
-              comments: {
-                __typename: "CommentConnection",
-                edges: [],
-                pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
-              },
-            },
-          },
-        }),
-      ),
+      graphql.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
       graphql.mutation("PreparePostEdit", ({ variables }) => {
         editVariables = variables;
         return HttpResponse.json({ data: preparedPayload("preparePostEdit", "p1") });
@@ -396,7 +395,56 @@ describe("ComposeForm", () => {
         title: null,
         description: null,
         content: "New body",
+        // A words post has no gallery, and an empty one travels as null.
+        attachments: null,
         // The edit re-states the mark the post carries, rather than dropping it.
+        sensitive: false,
+        sensitiveReason: null,
+      },
+    });
+  });
+
+  // HT-18, the data-loss defect: an edit is COMPLETE STATE, so a gallery this
+  // surface cannot author still has to be re-stated — otherwise saving replaces
+  // an image post's body with whatever the form holds and the pictures are gone.
+  it("carries an image post's gallery through the edit, in order and described", async () => {
+    searchParams = new URLSearchParams("post=p1");
+    let editVariables: Record<string, unknown> | null = null;
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: editablePost([], [], [attachment("m-1", "A jetty"), attachment("m-2")]),
+        }),
+      ),
+      graphql.mutation("PreparePostEdit", ({ variables }) => {
+        editVariables = variables;
+        return HttpResponse.json({ data: preparedPayload("preparePostEdit", "p1") });
+      }),
+    );
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+
+    // The pictures are SHOWN, which is what makes "nothing I could see changed"
+    // true — and there is no words field to type a body into.
+    expect(await screen.findByTestId("compose-media")).toBeInTheDocument();
+    expect(screen.queryByTestId("compose-body")).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByTestId("compose-title"), { target: { value: "New title" } });
+    fireEvent.click(screen.getByTestId("compose-submit"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
+    expect(editVariables).toEqual({
+      input: {
+        id: "p1",
+        title: "New title",
+        description: null,
+        content: "",
+        attachments: [
+          { mediaId: "m-1", displayOrder: 0, isCover: true, altText: "A jetty" },
+          { mediaId: "m-2", displayOrder: 1, isCover: false, altText: null },
+        ],
         sensitive: false,
         sensitiveReason: null,
       },
