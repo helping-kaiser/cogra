@@ -37,13 +37,12 @@ import { prepareTag } from "@/lib/api/topics-api";
 import { prepareReference, prepareReferenceWithdrawal } from "@/lib/api/references-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { tagChanges, WITHDRAWN_RELEVANCE, type TagDraft } from "@/lib/topics/draft";
-import { referenceChipEntries, referenceDrafts } from "@/lib/references/claims";
+import { referenceDrafts } from "@/lib/references/claims";
 import {
   referenceActs,
   referenceChanges,
   type ReferenceDraft,
 } from "@/lib/references/draft";
-import { ReferenceChipRow } from "@/lib/ui/reference-chip-row";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
@@ -60,8 +59,13 @@ import {
   bodyIsSensitive,
   commentHasVideo,
   hasMedia,
+  payloadIsRedacted,
   sensitiveSignature,
 } from "@/lib/ui/post-media";
+import { PostCard } from "@/lib/ui/post-card";
+import { LINK_COPIED } from "@/lib/ui/share";
+import { shortTimestamp } from "@/lib/ui/timestamp";
+import { TopicsLine } from "@/lib/ui/topics-line";
 import type { ReplyTarget } from "@/lib/compose/reply-wizard";
 import {
   addTo,
@@ -86,30 +90,8 @@ import { commentTarget, ReplyWizard } from "./reply/reply-wizard-view";
 import { CommentEditView } from "./edit/comment-edit-view";
 import { MultiActionConfirm } from "@/lib/ui/signed-actions";
 import { StanceControl } from "@/lib/ui/stance-control";
-import { TopicChipRow, type TopicChipEntry } from "@/lib/ui/topic-chip-row";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
-
-/**
- * `TopicClaim[]` off any content node, projected down to the chip row's
- * shape. The detail view carries the values along (F8) — the row shows
- * them only once a reader asks.
- */
-function chipEntries(
-  topics: readonly {
-    hashtag: { name: { value?: string | null } };
-    pending: boolean;
-    relevance: number;
-    confidence: number;
-  }[],
-): readonly TopicChipEntry[] {
-  return topics.map((claim) => ({
-    name: claim.hashtag.name.value ?? "",
-    pending: claim.pending,
-    relevance: claim.relevance,
-    confidence: claim.confidence,
-  }));
-}
 
 /** Any node of the thread tree — a comment or a nested reply. */
 type ThreadComment = CommentView | ReplyView;
@@ -209,6 +191,8 @@ export function PostView({
   // the wizard's own machine, and nothing of a discarded comment survives here.
   const [replying, setReplying] = useState<ReplyTarget | null>(null);
   const [commentSigned, setCommentSigned] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const dismissLinkCopied = useCallback(() => setLinkCopied(false), []);
   // Stable, so the snackbar's own timer is not restarted by every render of
   // the thread underneath it.
   const dismissCommentSigned = useCallback(() => setCommentSigned(false), []);
@@ -627,14 +611,28 @@ export function PostView({
         style={{ marginLeft: `${Math.min(depth, MAX_INDENT_DEPTH) * 12}px` }}
       >
         <Card>
-          {comment.author && (
-            <ActorChip
-              handle={comment.author.handle}
-              displayName={comment.author.displayName.value}
-              avatarUrl={comment.author.avatar?.url}
-              testId={`comment-author-${comment.id}`}
-            />
-          )}
+          {/* THE HEADER LINE: the author left, the age right — the same shape
+              the post card wears (`CommentCard.jsx:149-155`). Both apps read
+              `createdAt` for the Edited comparison and drew none of it. */}
+          <div className="flex items-center justify-between gap-2">
+            {comment.author && (
+              <ActorChip
+                handle={comment.author.handle}
+                displayName={comment.author.displayName.value}
+                avatarUrl={comment.author.avatar?.url}
+                testId={`comment-author-${comment.id}`}
+              />
+            )}
+            {shortTimestamp(comment.createdAt) !== "" && (
+              <time
+                dateTime={comment.createdAt}
+                data-testid={`comment-${comment.id}-timestamp`}
+                className="flex-none text-body-small text-on-surface-variant"
+              >
+                {shortTimestamp(comment.createdAt)}
+              </time>
+            )}
+          </div>
               {/* A comment is text PLUS optional media — the XOR is the post's
                   rule alone (D16) — so both render, and both are veiled as one
                   body when the comment is marked. */}
@@ -689,20 +687,17 @@ export function PostView({
               {isPending(comment) && (
                 <PendingMarker testId={`comment-pending-${comment.id}`} />
               )}
-              {/* Read-only everywhere on a card or a detail view (F3):
-                  the plain, tappable chip row (design.md §6) — here on
-                  the detail surface, with the F8 values toggle. */}
-              <TopicChipRow
-                topics={chipEntries(comment.topics)}
+              {/* THE SAME ONE LINE A POST WEARS (`CommentCard.jsx:163-165`):
+                  two chips then the counts, never two wrapping rows. The full
+                  set — and the values a reader can ask for — live in the
+                  topics-and-references sheet, which is not drawn here yet. */}
+              <TopicsLine
+                topics={comment.topics.map((claim) => ({
+                  name: claim.hashtag.name.value ?? "",
+                  pending: claim.pending,
+                }))}
+                references={comment.references.length}
                 testIdPrefix={`comment-${comment.id}`}
-                revealable
-              />
-              {/* The reference row under the body (D16), with the
-                  values toggle this detail surface offers. */}
-              <ReferenceChipRow
-                references={referenceChipEntries(comment.references)}
-                testIdPrefix={`comment-${comment.id}`}
-                revealable
               />
               {/* The comment carries its own stance control (design.md §6). */}
               <StanceControl
@@ -858,63 +853,41 @@ export function PostView({
   };
 
   const isOwnPost = viewerId !== null && post.author?.id === viewerId;
+  // A REMOVED POST HAS NO MENU LEFT — back is the whole header (`Removed.jsx`),
+  // and the license rode the payload, so a redacted record has none to show.
+  // What survives is the skeleton the card draws: author, timestamp, thread
+  // position, and the stance a reader can still take.
+  const redacted = payloadIsRedacted(post);
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
-      {header(isOwnPost)}
-      {/* The title stands outside the veil and above the gallery; everything
-          else in the body region is veiled as one (D12). */}
-      {post.title.value && (
-        <h1 className="text-headline-small" data-testid="post-title">
-          {post.title.value}
-        </h1>
-      )}
-      <BodyRegion
-        veiled={bodyIsSensitive(post)}
-        testId="post"
-        nodeId={post.id}
-        signature={sensitiveSignature(post)}
-      >
-        {hasMedia(post) && (
-          <PostMedia node={post} testId="post-media" bleed="page" preloadLead />
-        )}
-        {post.description.value && (
-          <p className="text-body-medium text-on-surface-variant">{post.description.value}</p>
-        )}
-        {/* Null on a media post, whose body is its gallery. */}
-        {post.content.value && (
-          <p className="whitespace-pre-wrap" data-testid="post-body">
-            {post.content.value}
-          </p>
-        )}
-      </BodyRegion>
-      {post.author && (
-        <ActorChip
-          handle={post.author.handle}
-          displayName={post.author.displayName.value}
-          avatarUrl={post.author.avatar?.url}
-          testId="post-author"
+      {header(isOwnPost && !redacted)}
+      {/* THE POST IS A CARD HERE TOO (`PostCard.jsx:363` — `<Card>` for every
+          variant, `detail` included). It was the page ground while its own
+          comments sat on cards, which is the inverse of the board's emphasis.
+          Edge to edge inside the page's gutter, so the card and the feed's
+          cards frame their media identically (design/backlog.md item 35). */}
+      <div className="-mx-6">
+        <PostCard
+          post={post}
+          variant="detail"
+          href={`/posts/${postId}`}
+          testId="post"
+          authorTestId="post-author"
+          stanceTestId="post-stance"
+          comments={post.comments.totalCount}
+          onOpenComments={() => {
+            // The ruled destination is the comments sheet, which is not drawn
+            // here yet — so the count takes the reader to the thread where it
+            // currently lives, at the foot of this page.
+            document.getElementById("post-comments")?.scrollIntoView?.({ block: "start" });
+          }}
+          onLinkCopied={() => setLinkCopied(true)}
         />
-      )}
-      <LicenseTerms license={post.license} testId="post-license-terms" />
-      {/* The post reads in full whether or not it has landed; the
-          marker carries the difference (design.md §9). An unlanded edit
-          marks the post too — the text on screen is that edit. */}
-      {isPending(post) && <PendingMarker testId="post-pending" />}
-      {/* Read-only here for everyone, the author included (F3): the
-          author changes their tags on the edit screen, where the rest of
-          the post is changed. */}
-      <TopicChipRow topics={chipEntries(post.topics)} testIdPrefix="post" revealable />
-      {/* Read-only here for everyone, the author included: references
-          are changed on the edit screen, where the rest of the post is
-          changed. The values toggle is this detail surface's (D16). */}
-      <ReferenceChipRow
-        references={referenceChipEntries(post.references)}
-        testIdPrefix="post"
-        revealable
-      />
+      </div>
+      {!redacted && <LicenseTerms license={post.license} testId="post-license-terms" />}
       {/* D20's Reference affordance on the post itself. */}
-      {phase === "signedIn" && (
+      {phase === "signedIn" && !redacted && (
         <Link
           href={`/compose?reference=${postId}`}
           data-testid="post-reference"
@@ -923,10 +896,10 @@ export function PostView({
           Reference
         </Link>
       )}
-      {/* The post card's stance control, on the detail surface (design.md §6). */}
-      <StanceControl target={{ id: postId, kind: "post", label: "this post" }} testIdPrefix="post-stance" />
       <hr className="border-outline-variant" />
-      <h2 className="text-title-medium">Comments</h2>
+      <h2 className="text-title-medium" id="post-comments">
+        Comments
+      </h2>
       {/* A failed whole-post refresh; a failed comments page surfaces
           at the load-more slot below instead (web.md "Design
           guidelines", the Android twin). */}
@@ -980,6 +953,13 @@ export function PostView({
         testId="comment-signed"
         message={commentSigned ? "Signed — it's in the thread now, still settling." : null}
         onDismiss={dismissCommentSigned}
+      />
+      {/* Where the browser has no platform share sheet the control copies the
+          link, and this is what says so (readme §13, the audit answers). */}
+      <Snackbar
+        testId="post-link-copied"
+        message={linkCopied ? LINK_COPIED : null}
+        onDismiss={dismissLinkCopied}
       />
       {/* ReplyEntry's entry row, pinned at the foot of the thread: the door
           that pins the POST as what the comment answers. The board draws the

@@ -62,10 +62,17 @@ function topicClaim(name: string) {
   };
 }
 
-function post(id: string, title: string, pending = false, topics: ReturnType<typeof topicClaim>[] = []) {
+function post(
+  id: string,
+  title: string,
+  pending = false,
+  topics: ReturnType<typeof topicClaim>[] = [],
+  comments = 0,
+) {
   return {
     __typename: "Post",
     id,
+    comments: { __typename: "CommentConnection", totalCount: comments },
     title: moderated(title),
     description: moderated(null),
     content: moderated(`body of ${id}`),
@@ -113,11 +120,81 @@ describe("FeedView", () => {
     renderWithProviders(<FeedView />, { store: signedInStore() });
     expect(await screen.findByTestId("feed-post-p1")).toHaveTextContent("First");
     expect(screen.queryByTestId("feed-signin")).not.toBeInTheDocument();
-    expect(screen.getByTestId("feed-post-p1")).toHaveAttribute("href", "/posts/p1");
+    expect(screen.getByTestId("feed-post-p1-link")).toHaveAttribute("href", "/posts/p1");
     expect(screen.queryByTestId("feed-empty")).not.toBeInTheDocument();
   });
 
-  it("carries the post's topic chip row, each chip navigating to its topic route", async () => {
+  // A FEED POST IS A FULL-WIDTH CONTAINER with 8px of surface as the seam
+  // (design/readme.md, "Feed containers — rounded full-width cards"): the list
+  // leaves the gutter its neighbours keep, so a card runs edge to edge.
+  it("runs its cards edge to edge with the ruled 8px seam", async () => {
+    server.use(
+      graphql.query("Posts", () =>
+        HttpResponse.json({ data: postsPage([post("p1", "First")], null, false) }),
+      ),
+    );
+    renderWithProviders(<FeedView />);
+    const list = await screen.findByTestId("feed-list");
+    expect(list.className).toContain("gap-2");
+    expect(list.className).not.toContain("px-6");
+  });
+
+  // The card's own header line: the author, and the post's age beside it.
+  it("carries the post's age on the card", async () => {
+    server.use(
+      graphql.query("Posts", () =>
+        HttpResponse.json({ data: postsPage([post("p1", "First")], null, false) }),
+      ),
+    );
+    renderWithProviders(<FeedView />);
+    const stamp = await screen.findByTestId("feed-post-p1-timestamp");
+    expect(stamp).toHaveAttribute("datetime", "2026-08-12T10:00:00Z");
+    expect(stamp.textContent).toMatch(/^(now|\d+[mhd])$/);
+  });
+
+  // The affordance row: stance, then the comment count, then share — one
+  // line, glyph plus number, the count spoken by the accessible name.
+  it("carries the comments affordance, leading to the thread", async () => {
+    server.use(
+      graphql.query("Posts", () =>
+        HttpResponse.json({ data: postsPage([post("p1", "First", false, [], 2)], null, false) }),
+      ),
+    );
+    renderWithProviders(<FeedView />);
+    const comments = await screen.findByTestId("feed-post-p1-comments");
+    expect(comments).toHaveAccessibleName("2 comments");
+    expect(comments).toHaveAttribute("href", "/posts/p1");
+    expect(comments).toHaveTextContent("2");
+  });
+
+  it("shows the comments glyph alone where there are none", async () => {
+    server.use(
+      graphql.query("Posts", () =>
+        HttpResponse.json({ data: postsPage([post("p1", "First")], null, false) }),
+      ),
+    );
+    renderWithProviders(<FeedView />);
+    const comments = await screen.findByTestId("feed-post-p1-comments");
+    expect(comments).toHaveAccessibleName("0 comments");
+    expect(comments).toHaveTextContent("");
+  });
+
+  // Two slots the row is drawn with and cannot fill yet, each absent rather
+  // than dead: the Post Score has no field on the contract until slice 3's
+  // ranker, and the overflow ⋮ has no menus drawn here yet.
+  it("draws neither the Post Score nor the overflow ⋮ until their surfaces exist", async () => {
+    server.use(
+      graphql.query("Posts", () =>
+        HttpResponse.json({ data: postsPage([post("p1", "First")], null, false) }),
+      ),
+    );
+    renderWithProviders(<FeedView />);
+    await screen.findByTestId("feed-post-p1");
+    expect(screen.queryByTestId("feed-post-p1-score")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("More on this post")).not.toBeInTheDocument();
+  });
+
+  it("carries the post's topics on one line, each chip navigating to its topic route", async () => {
     server.use(
       graphql.query("Posts", () =>
         HttpResponse.json({
@@ -145,7 +222,7 @@ describe("FeedView", () => {
     // link, since it acts rather than navigates.
     expect(await screen.findByTestId("feed-stance-p1")).toBeInTheDocument();
     expect(screen.getByTestId("feed-stance-p2")).toBeInTheDocument();
-    expect(screen.getByTestId("feed-post-p1")).not.toContainElement(
+    expect(screen.getByTestId("feed-post-p1-link")).not.toContainElement(
       screen.getByTestId("feed-stance-p1"),
     );
   });
@@ -268,8 +345,8 @@ describe("FeedView", () => {
       ),
     );
     renderWithProviders(<FeedView />);
-    expect(await screen.findByTestId("feed-pending-p1")).toHaveTextContent("Still settling");
-    expect(screen.queryByTestId("feed-pending-p2")).not.toBeInTheDocument();
+    expect(await screen.findByTestId("feed-post-p1-pending")).toHaveTextContent("Still settling");
+    expect(screen.queryByTestId("feed-post-p2-pending")).not.toBeInTheDocument();
     // Shown in full, never held back (design.md §9).
     expect(screen.getByTestId("feed-post-p1")).toHaveTextContent("Settling");
   });
@@ -293,7 +370,7 @@ describe("FeedView", () => {
     expect(await screen.findByTestId("feed-post-p3")).toBeInTheDocument();
     expect(screen.getAllByTestId("feed-post-p1")).toHaveLength(1);
     // The held copy stays as it was read — no reconciliation.
-    expect(screen.getByTestId("feed-pending-p1")).toBeInTheDocument();
+    expect(screen.getByTestId("feed-post-p1-pending")).toBeInTheDocument();
   });
 
   it("renders the transport error on a fault", async () => {
