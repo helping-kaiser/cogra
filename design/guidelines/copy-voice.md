@@ -114,7 +114,7 @@ title, at most two short paragraphs, Close. The texts, verbatim
   and can never change, not even by an edit. Your default lives in
   settings — Public domain until you change it.
 - **Marking as sensitive**: The mark veils the pictures and the
-  description until a reader chooses to look. The title stays
+  words until a reader chooses to look. The title stays
   readable, so choosing is informed. / Your reason, if you give one,
   is shown on the veil. The mark is public and travels with the post.
 - **Describing pictures** (the describe sheet): A description is
@@ -424,4 +424,169 @@ looking alike until one plays:
   it is the one fact about a clip a reader decides on before playing
   it, and the eye reads it off the cover.
 - `1 picture` · `4 pictures` — a picture post, the count alone.
+
+## Awaiting blessing — the settings round
+
+Drawn on `Settings`, `SettingsBackup` and `YourKey`, and up for review
+in the same pass. Where the two apps had drifted, one line is chosen
+here and both take it.
+
+**Group headings** — short noun phrases, sentence case, naming what a
+reader came for rather than what the system calls it: `Theme` ·
+`Taking a stance` · `Writing` · `Reading` · `Key backup` · `Sessions` ·
+`Credentials`. The sign-out group carries no heading; it is the end of
+the page, not a subject. `Writing` is the settled title — Android said
+Writing, web said Signing, and the setting is about what a submit does,
+not about the key.
+
+**A row's second line is status, not description.** `Last created
+12 August` · `Last used 2 days ago` · `This browser` · `Changed 3 weeks
+ago`. A switch is the exception, because its label alone cannot say what
+turning it on does.
+
+**Theme**: `Light` · `Dark` · `Auto`, and under them
+`Auto follows your device's own setting, and the choice stays on this
+device.` It is the one place a bare "device" is right: what Auto follows
+is the device's own light-or-dark setting, which is neither the browser's
+nor the app's.
+
+**Taking a stance** keeps the shipped readings and their hints —
+`The pad` / `Press and hold, then drift to where you stand.`,
+`Sliders` / `One slider per side of the stance.`, `Typed values` /
+`Type both numbers exactly.` — and moves the shipped body line under the
+group, where it is read once: `A tap always adds a small positive one.
+This is what a longer press opens, everywhere.`
+
+**The multi-action switch**, merged from the two apps:
+`Confirm multi-action submits` with
+`Ask first when one submit signs more than one action.` Web's clause
+about paying was the better fact and the worse place for it — a row is
+scanned — so it moves to the group's footnote:
+`Every signed action is paid for separately. A post's license is settled
+when it is first signed and never changes.` Android's *Ask before
+signing a submit that stages more than one action* loses on "stages",
+which is the repo's word for it, not the reader's.
+
+**The default license** row reads `Default license`, and its value is
+the current default in the words the license block already uses —
+`Public domain`. It opens the sheet the seal opens; that sheet's own
+`Terms for anyone who reuses this.` is written for one post and is the
+one line the settings route still owes a reading.
+
+**Reading**: `What your feed shows` — the filter sheet's own accessible
+name, so the row and the trigger cannot say different things — with the
+default read back through the trigger's own words (`Posts`). Under it:
+`Every feed starts from this. A change made inside a feed lasts until
+you change it back, on that device only.`
+
+**Key backup**: `Recovery code` and `Your key` are rows, not verbs. The
+shipped *Create a new recovery code* and *Show my key* were controls
+standing where a name belongs; the act keeps its words on the screen it
+happens on. The group's footnote: `Your key signs everything you publish
+and lives only in this browser. Your recovery code is the only way back.`
+
+**Sessions** keeps `Revoke` and `Sign out everywhere else`, and says the
+delay before it happens rather than only after:
+`A device you sign out can stay signed in for up to 15 minutes.` The
+current session's status is the platform noun — `This browser` on web,
+`This phone` in the app — replacing Android's shipped *(this device)*.
+
+**Credentials**: `Password`, `Handle`, `Email`, each showing where it
+stands, with `Changing your password signs out every other device.`
+under them — the fact `ResetNew` already says, moved in front of the act.
+
+**Sign out** carries the login form's own line verbatim —
+`Don't remember this account on this device` — with what it decides
+underneath: `Your key and your draft are cleared from this browser when
+you sign out.`
+
+**A new recovery code** (`SettingsBackup`): the heading, then
+`A new code re-encrypts your key and replaces the old backup — recovery
+always uses the newest one. Your current code was made on 12 August.`,
+the field `Current recovery code`, the commitment `Create a new recovery
+code`, and last: `The new code is shown once and never stored. Have
+somewhere to write it down before you go on — the old code stops working
+as soon as the new one exists.`
+
+**Your key** (`YourKey`) keeps web's body verbatim, and names the
+formats exactly, which is §7's stated exception: `Your actor key` ·
+`PEM (PKCS#8)` · `Raw hex — Ed25519 private key`. Each block's copy
+control is named for what it copies — `Copy the PEM block`, `Copy the
+raw hex` — because two controls reading "Copy" a thumb apart tell a
+listener the verb and not the object. Under them:
+`Nothing here is sent anywhere — the key is read from this browser and
+shown.`
+
+The six subpages the round's review added come up for blessing in the
+same pass. A sheet opened from settings is titled by the row that opened
+it, so each heading below is a row's own words.
+
+**The default license** (`SettingsLicense`) is titled `Default license`
+and says what a default does, which the seal's sheet cannot: `Where
+every new post starts. A post's terms settle when it is first signed, so
+changing this never reaches one you have already published.` The seal's
+`Terms for anyone who reuses this.` is written for the post in front of
+it and stays there. The reading under the axes names the pair the way
+the read surfaces do — `Public domain — nobody owes you a name, and uses
+go unlogged.`, the two tier hints joined, so the word and what it means
+arrive together.
+
+**What your feed shows** (`SettingsReading`) is titled with the row and
+the filter's accessible name, and carries the group footnote's first
+sentence where a covering sheet hides the footnote: `Every feed starts
+from this.` The second sentence stays under the row, where the reader
+meets it first. The sections, hints and `Reset` are the feed's own. Its
+foot reads the choice back in the trigger's own word — `Posts`, nothing
+more, because the title has already asked the question and the note
+above has already said what the answer binds — and commits it with
+`Done`, the word both of the page's sheets use.
+
+**Change your password** (`ChangePassword`) opens with the row's
+footnote said where the act is, plus the half it could not say there:
+`Changing your password signs out every other device. This one stays
+signed in.` `ResetNew`'s *every device* is not a drift — a reset
+revokes the session doing it and a change does not, and the two lines
+exist to keep that difference visible. Fields `Current password` and
+`New password` with `At least 12 characters.`, the commitment `Change
+password`, and last, the reason the first field is there at all:
+`Your current password is asked for even though you are signed in: a
+live session is not proof enough to change the credential behind it.`
+
+**Change your handle** (`ChangeHandle`) says the calm part before the
+costly one. `@sol is how people mention and find you. Everything you
+have published stays yours — the handle is a name, not the account.`
+The field is `New handle` with the rules where they are typed:
+`3 to 30 characters: letters, numbers and underscore. Handles are always
+lowercase.` — the fold is said because a reader who types capitals will
+otherwise think the field ate them. The commitment is `Change handle`,
+and the cost is last and unsoftened: `Links to your old handle stop
+working the moment you change it, and anyone can claim it afterwards.`
+
+**Change your email** (`ChangeEmail`) names why it is guarded: `Your
+email signs you in, and it is the only way back if you lose your
+password — so a change is proved from both ends.` Fields `New email` and
+`Current password`, the commitment `Change email`, and what happens
+next, with the address named rather than described: `A code goes to
+sol@solferreira.art and a link to the new address. Your email is
+unchanged until both have been answered.`
+
+**Confirm the change** (`ChangeEmailConfirm`) replaces a shipped line
+that is not true. Both apps say *Check both inboxes — either message's
+code confirms the change*, which reads as one message being enough;
+`auth.md` and `api-spec.md` say the change applies only once both sides
+have landed, and that the two sides are not the same errand. The board
+names the asymmetry first: `Two messages, two different errands — a
+code to type here, and a link to open at the new address. Your email
+moves when both have been answered, in either order.` Then it draws the
+pair, captioned `Both have to land`, each side its address and its
+state — `Code` / `sol@solferreira.art — still waiting` and `Link` /
+`sol@ferreira.studio — still waiting`. `Still waiting` is the resting
+state said the way `Still settling` says its own: what has not happened
+yet, plainly, with no apology and no progress theatre. The field keeps
+its shipped name, `Confirmation code`, with `From the message to
+sol@solferreira.art.` under it so the reader knows which message to
+open. The commitment is `Confirm the code`, which is what pressing it
+does — *Confirm email change* is what a reader would have believed it
+did, and a control says what will happen. Last: `Until both sides land
+your account keeps the address it has, and a reset still goes there.`
 
