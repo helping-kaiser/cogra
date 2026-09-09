@@ -1,9 +1,13 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { act, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { SHEET_OUT_MS } from "@/lib/ui/motion";
 import { BottomSheet, SheetItem } from "./bottom-sheet";
 
 describe("BottomSheet", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
   it("opens and closes with the prop that governs it", () => {
     const { rerender } = render(
       <BottomSheet open={false} onClose={() => {}} title="The license">
@@ -25,7 +29,21 @@ describe("BottomSheet", () => {
         <p>Terms</p>
       </BottomSheet>,
     );
+    // It leaves the edge it entered from before it goes, so the close waits
+    // out the exit animation rather than snapping the surface away.
+    expect(dialog.className).toContain("cg-sheet-out");
+    expect(dialog.open).toBe(true);
+    act(() => void vi.advanceTimersByTime(SHEET_OUT_MS));
     expect(dialog.open).toBe(false);
+  });
+
+  it("rises from the bottom edge on the way in", () => {
+    render(
+      <BottomSheet open onClose={() => {}} title="The license">
+        <p>Terms</p>
+      </BottomSheet>,
+    );
+    expect(screen.getByTestId("bottom-sheet").className).toContain("cg-sheet-in");
   });
 
   it("is named by its title, so what opened is announced", () => {

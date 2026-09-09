@@ -77,4 +77,18 @@ describe("CollapsingTop", () => {
     await scrollTo(80);
     expectShown(true);
   });
+
+  // The travel is only honest about reduced motion if the duration is the
+  // token: `tokens-2.css` zeroes `--duration-collapsing-top` under
+  // `prefers-reduced-motion`, and a literal `duration-200` cannot be zeroed.
+  it("takes its duration from the token, so stillness can be asked for", () => {
+    render(
+      <CollapsingTop>
+        <p>header</p>
+      </CollapsingTop>,
+    );
+    const region = screen.getByTestId("collapsing-top");
+    expect(region.className).toContain("duration-[var(--duration-collapsing-top)]");
+    expect(region.className).not.toMatch(/duration-\d/);
+  });
 });
