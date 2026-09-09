@@ -1417,7 +1417,7 @@ description***: the dialog's paragraph is separately blessed copy in
 only, so the same mark is explained two ways until that text is
 blessed again.
 
-### 43 · What the shell round could not finish · *design*
+### 43 · What the shell round could not finish · *design* · **ruled**
 
 Filed by the w1-web conform lane 2026-09-09. Three stops, each a
 question the boards leave open; none blocked the rest of the shell.
@@ -1448,3 +1448,41 @@ question the boards leave open; none blocked the rest of the shell.
    actor for an anonymous or applicant reader anyway.
    Implementation's input: the band lands with the ranker (and the
    schema field it needs), and the guest card stands until then.
+
+**Ruled by jakob 2026-09-09**, all three stops:
+
+1. **The three arrows name boards.** `InviteEntry` and `SignIn` are
+   roots of the funnel, and up from a root is the public front door:
+   both go to `FeedBare`. `Restore` is reached only from signed-in
+   surfaces whose key is absent, so up is that reader's own home —
+   `KeyElsewhere`, which is also where the app opens for them. All six
+   entry screens now name a board, so the entry band's layout task
+   (W7) can take them together.
+2. **The canvas draws the whole app; each release builds its slice.**
+   Designing feature by feature would move the same surfaces every
+   time a new one arrived beside them, and every move is frontend work
+   done twice. So the boards settle the end state and the apps add the
+   pieces their slice binds: an affordance whose destination is
+   neither designed nor built stays out until one exists, and nothing
+   ships a dead or lying control. The rule lives in readme §2. It
+   settles the chats stop without redrawing anything — `CograBand`'s
+   line and the graph's gap were never in conflict, the band carries
+   chats because messaging belongs on every tab root, and the apps
+   draw it the release a chat surface exists. The edges stay as they
+   are; the docblock says which half is end state.
+3. **The borrowed-view band rides the ranker.** Implementation's
+   proposal stands: the band and the borrowed-vantage field it needs
+   land with slice 3's ranker, and the guest notice stands until then.
+   Roadmap slice 3 carries it.
+
+**`KeyElsewhere` is confirmed** (jakob, same day): `Main` is the
+signed-out invite-link feed — every act on it guest-gates — so the
+signed-in home the ruling's reason names is `KeyElsewhere`, the
+app-open entry for a key-absent reader, and the edge draws it.
+
+**The error twins keep their screens' arrows** (jakob, same day —
+stop 1 is about the screen, not the board): `InviteEntryError`,
+`SignInError` and `JoinInvalid` resolve to `FeedBare` and
+`RestoreError` to `KeyElsewhere`, each wearing its parent's case
+verbatim, because a screen and its error state are one control and
+one control reads one way.
