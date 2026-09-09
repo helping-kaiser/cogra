@@ -21,9 +21,11 @@
         "PostDetailVideo",
         "Profile",
         "ProfileComments",
+        "ProfileNotFound",
         "ProfileOther",
         "ProfilePosts",
         "ProfileStances",
+        "ProfileUnreachable",
         "Reel",
         "Removed",
         "VouchBack",
@@ -33,7 +35,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 25 boards → ComposePick",
+        "start · «nav · New post» on 27 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -59,9 +61,11 @@
         "PostDetailVideo",
         "Profile",
         "ProfileComments",
+        "ProfileNotFound",
         "ProfileOther",
         "ProfilePosts",
         "ProfileStances",
+        "ProfileUnreachable",
         "Reel",
         "Removed",
         "VouchBack",
@@ -605,9 +609,11 @@
         "PostDetailVideo",
         "Profile",
         "ProfileComments",
+        "ProfileNotFound",
         "ProfileOther",
         "ProfilePosts",
         "ProfileStances",
+        "ProfileUnreachable",
         "Reel",
         "Removed",
         "VouchBack",
@@ -617,7 +623,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 25 boards → ComposePick",
+        "start · «nav · New post» on 27 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -643,9 +649,11 @@
         "PostDetailVideo",
         "Profile",
         "ProfileComments",
+        "ProfileNotFound",
         "ProfileOther",
         "ProfilePosts",
         "ProfileStances",
+        "ProfileUnreachable",
         "Reel",
         "Removed",
         "VouchBack",
@@ -675,9 +683,11 @@
         "PostDetailVideo",
         "Profile",
         "ProfileComments",
+        "ProfileNotFound",
         "ProfileOther",
         "ProfilePosts",
         "ProfileStances",
+        "ProfileUnreachable",
         "Reel",
         "Removed",
         "VouchBack",
@@ -687,7 +697,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 25 boards → ComposePick",
+        "start · «nav · New post» on 27 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a video — its face",
         "ComposeCover · 6 «Next» → ComposeDetails",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -713,9 +723,11 @@
         "PostDetailVideo",
         "Profile",
         "ProfileComments",
+        "ProfileNotFound",
         "ProfileOther",
         "ProfilePosts",
         "ProfileStances",
+        "ProfileUnreachable",
         "Reel",
         "Removed",
         "VouchBack",
@@ -1816,6 +1828,14 @@
       ],
       "endpoint": []
     },
+    "ProfileNotFound": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words"
+      ],
+      "endpoint": []
+    },
     "ProfileOther": {
       "flows": [
         "find-the-thread-a-comment-answers",
@@ -1858,6 +1878,14 @@
       "endpoint": [
         "see-who-stands-with-someone"
       ]
+    },
+    "ProfileUnreachable": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-video",
+        "publish-words"
+      ],
+      "endpoint": []
     },
     "ReaderPostMenu": {
       "flows": [
