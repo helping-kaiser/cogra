@@ -105,6 +105,16 @@ desktop visitor gets whatever the mobile-derived layout gives — not
 optimized, and accepted as such. The desktop variant is a design round of
 its own, later.
 
+**The canvas draws the whole app; each release builds its slice.**
+Designing feature by feature would move the same surfaces every time a new
+one arrived beside them, and every move is frontend work done twice — so
+the boards settle the end state once and the apps add the pieces their
+slice binds. An affordance whose destination is neither designed nor built
+stays out of the apps until one exists: never a dead control, and never a
+label that says what the code does not do (the feed's filter reads
+*Newest* until the ranker ships, §13 below). A drawn surface a release does
+not carry yet is staged, not divergent.
+
 ---
 
 ## 3. Content fundamentals
