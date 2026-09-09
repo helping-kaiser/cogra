@@ -28,6 +28,7 @@ export function TopicChip({
   onSelect,
   selectLabel,
   expanded,
+  capped = false,
   testId,
 }: {
   /** The canonical name (hashtag.md §1) — displayed as `#name`. */
@@ -44,13 +45,24 @@ export function TopicChip({
   selectLabel?: string;
   /** Whether `onSelect`'s panel is open, for the label's `aria-expanded`. */
   expanded?: boolean;
+  /**
+   * The one-line form `TopicsLine` uses: capped at 96px and ellipsised, so
+   * two whole chips always fit beside the counts. `inline-block` rather than
+   * `inline-flex` because `text-overflow` needs an inline formatting context
+   * — the same swap `design/components/content/TopicsLine.jsx:21-28` makes.
+   */
+  capped?: boolean;
   testId?: string;
 }) {
   const label = `#${name}`;
   return (
     <span
       data-testid={testId}
-      className="inline-flex items-center gap-1 rounded-full bg-secondary-container px-3 py-1 text-label-medium text-on-secondary-container"
+      className={
+        capped
+          ? "inline-block max-w-24 flex-none overflow-hidden text-ellipsis whitespace-nowrap rounded-full bg-secondary-container px-3 py-1 align-middle text-label-medium text-on-secondary-container"
+          : "inline-flex items-center gap-1 rounded-full bg-secondary-container px-3 py-1 text-label-medium text-on-secondary-container"
+      }
     >
       {href !== undefined ? (
         <Link href={href} data-testid={testId !== undefined ? `${testId}-link` : undefined}>
