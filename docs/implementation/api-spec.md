@@ -3252,6 +3252,12 @@ says so.
   another account's, a video, removed, or absent is refused at
   `["attachments", "<i>", "coverMediaId"]`, as is a cover named on
   an attachment that is not a video.
+- **A profile picture is the uploader's own still**, so an avatar
+  answers to the picture cap and never the video one — the profile
+  carries one image, picked and cropped circular 1:1, and no
+  profile surface plays a clip. A video, another account's asset, a
+  removed one, or an id naming nothing is refused at
+  `["avatarMediaId"]`.
 - **Ten pictures per post, four per comment — or, at either
   scale, one video with its cover**, checked whole before a single
   act is staged, each refusal naming the offender at
