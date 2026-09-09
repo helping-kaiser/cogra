@@ -105,6 +105,16 @@ desktop visitor gets whatever the mobile-derived layout gives — not
 optimized, and accepted as such. The desktop variant is a design round of
 its own, later.
 
+**The canvas draws the whole app; each release builds its slice.**
+Designing feature by feature would move the same surfaces every time a new
+one arrived beside them, and every move is frontend work done twice — so
+the boards settle the end state once and the apps add the pieces their
+slice binds. An affordance whose destination is neither designed nor built
+stays out of the apps until one exists: never a dead control, and never a
+label that says what the code does not do (the feed's filter reads
+*Newest* until the ranker ships, §13 below). A drawn surface a release does
+not carry yet is staged, not divergent.
+
 ---
 
 ## 3. Content fundamentals
@@ -2861,6 +2871,49 @@ component said different things and each app picked a different one.
   `ComposeSensitive` for its line, `RecoveryCodeMismatch` for the
   prefix in its field, and `MapEntry`, which is 13px taller because the
   reworded edge wraps.
+
+### The shell round's stops — 2026-09-09
+
+Three stops the w1-web conform lane filed against the shell (backlog
+item 43), ruled by jakob the same day. The middle one is a rule for the
+whole canvas rather than a fix to one board.
+
+- **The entry arrows name boards.** The header's arrow is a link and
+  never history, so a deep-linked visitor has to land somewhere: the
+  three entry screens that pointed at `back` now name a destination.
+  `InviteEntry` and `SignIn` are roots of the funnel and up from a root
+  is the public front door, `FeedBare`. `Restore` is reached only from
+  signed-in surfaces whose key is absent, so up is that reader's own
+  home — `KeyElsewhere`, which is also where the app opens for them, and
+  which re-offers the restore they walked away from. All six entry
+  screens name a board now, so the entry band's layout task can take
+  them together instead of splitting the flow's look.
+- **The canvas draws the whole app; each release builds its slice.**
+  Designing feature by feature would move the same surfaces every time a
+  new one arrived beside them, and every move is frontend work done
+  twice — so the boards settle the end state and the apps add the pieces
+  their slice binds. An affordance whose destination is neither designed
+  nor built stays out until one exists: never a dead control, never a
+  label saying what the code does not do. The statement lives in §2, and
+  the Newest ruling above is the same principle read from the label's
+  end.
+- **The chats affordance is end-state truth.** `CograBand`'s line and
+  the graph's gap were never in conflict. The band carries chats because
+  messaging belongs on every tab root; the apps draw it the release a
+  chat surface exists to receive the tap. Nothing is redrawn — the edges
+  stay as they are, and the docblock says which half is the end state.
+- **The borrowed-view band rides the ranker.** It names a borrowed
+  *ranking* vantage and the feed is chronological until slice 3, so the
+  band and the borrowed-vantage field the contract owes land with the
+  ranker; the guest notice stands until then. Drawn ahead of built is
+  the staging rule, not the label-versus-behaviour divergence the Newest
+  ruling refuses — that one is about what a shipped control claims.
+- **The gate**: **128 screens**, **958 edges**, **81 gaps** and **flows
+  58/53/5**, every one unchanged — three edges were reworded in place,
+  and nothing was drawn or pointed at that was not there before.
+  `MapEntry` is the only board that moved: three readouts take their new
+  destinations, three connectors appear where a terminal drew none, and
+  two inbound counts rise with them.
 
 ## 14. Index
 

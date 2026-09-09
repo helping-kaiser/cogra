@@ -15,7 +15,13 @@ import { Icon } from "./Icon.jsx";
    major screen, so every tab root's band carries the chats affordance built in.
    It sits LEFT of the screen's own trailing control, so the ruled corner
    occupants (the feed's filter trigger, the profile's gear) keep their edge.
-   `chats={false}` opts a band out where messaging cannot apply. */
+   `chats={false}` opts a band out where messaging cannot apply.
+
+   That line is the end state, not a shipping claim. The apps draw the
+   affordance the release a chat surface exists to receive the tap — until
+   then `graph.json` routes the tap to a gap and the button stays out, which
+   is the staging rule in readme §2: the canvas draws the whole app, each
+   release builds its slice, and nothing ships a control that leads nowhere. */
 
 export function CograBand({ trailing, chats = true, children }) {
   return (
