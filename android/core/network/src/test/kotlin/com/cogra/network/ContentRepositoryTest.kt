@@ -102,7 +102,9 @@ class ContentRepositoryTest {
         id: String = "m1",
         altText: String? = "A salt crust",
         status: String = "NORMAL",
-        aspectRatio: String? = "0.8",
+        // "W:H" in lowest terms, which is what the contract serves
+        // (api-spec.md `MediaOptions`) — never a decimal.
+        aspectRatio: String? = "4:5",
         mimeType: String = "image/webp",
         durationMs: Int? = null,
         coverId: String? = null,
@@ -121,7 +123,7 @@ class ContentRepositoryTest {
         """
         {"__typename":"MediaAttachment","id":"$it","url":"https://media/$it",
          "status":"$status",
-         "options":{"__typename":"MediaOptions","aspectRatio":"0.5625"}}
+         "options":{"__typename":"MediaOptions","aspectRatio":"9:16"}}
         """.trimIndent()
     } ?: "null"
 
@@ -274,7 +276,7 @@ class ContentRepositoryTest {
                 postJson(
                     "p1",
                     "Salt maps",
-                    attachments = "[${mediaJson("m1")},${mediaJson("m2", altText = null, aspectRatio = "1.91")}]",
+                    attachments = "[${mediaJson("m1")},${mediaJson("m2", altText = null, aspectRatio = "16:9")}]",
                 )
             }}],
                "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
@@ -287,7 +289,10 @@ class ContentRepositoryTest {
         // null rather than acquiring a fabricated description (D20).
         assertThat(post.attachments[0].altText).isEqualTo("A salt crust")
         assertThat(post.attachments[1].altText).isNull()
-        assertThat(post.attachments[1].aspectRatio).isEqualTo(1.91f)
+        // The contract states a shape as "W:H", so the tile reserves the
+        // shape the server measured rather than falling back to square.
+        assertThat(post.attachments[0].aspectRatio).isEqualTo(4f / 5f)
+        assertThat(post.attachments[1].aspectRatio).isWithin(0.0001f).of(16f / 9f)
     }
 
     @Test
@@ -302,7 +307,7 @@ class ContentRepositoryTest {
                         mediaJson(
                             "v1",
                             mimeType = "video/mp4",
-                            aspectRatio = "0.5625",
+                            aspectRatio = "9:16",
                             durationMs = 42_000,
                             coverId = "c1",
                         )
@@ -318,6 +323,10 @@ class ContentRepositoryTest {
         assertThat(asset.durationMs).isEqualTo(42_000)
         assertThat(asset.cover?.id).isEqualTo("c1")
         assertThat(asset.cover?.status).isEqualTo(FieldStatus.NORMAL)
+        // HT-21. A portrait clip's own shape, which is what sizes the
+        // player's surface — read as a decimal it fell back to square and
+        // the surface stretched the frames into it.
+        assertThat(asset.aspectRatio).isEqualTo(9f / 16f)
     }
 
     @Test
