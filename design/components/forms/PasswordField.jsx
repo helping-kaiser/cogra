@@ -13,11 +13,17 @@ import { Icon } from "../navigation/Icon.jsx";
    component duplicates TextField's field markup rather than composing it: one
    body-small line under the field, `text-secondary` for what the field will
    accept and `--error` for the message when it is refused — the error replacing
-   the hint, never joining it, and taking the outline and the label with it. */
+   the hint, never joining it, and taking the outline and the label with it.
+
+   The line is wired to the input exactly as `TextField` wires its own —
+   `aria-describedby` always, `aria-invalid` and `role="alert"` in the error
+   state — because duplicating the markup must not mean duplicating it minus
+   the part that makes the message reach anyone. */
 
 export function PasswordField({ label, value, onChange, autoComplete = "current-password", id, hint, error }) {
   const generated = React.useId();
   const fieldId = id ?? generated;
+  const supportId = `${fieldId}-support`;
   const [visible, setVisible] = React.useState(false);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
@@ -39,6 +45,8 @@ export function PasswordField({ label, value, onChange, autoComplete = "current-
           type={visible ? "text" : "password"}
           value={value}
           autoComplete={autoComplete}
+          aria-describedby={error || hint ? supportId : undefined}
+          aria-invalid={error ? "true" : undefined}
           onChange={(event) => onChange && onChange(event.target.value)}
           style={{
             flex: 1,
@@ -77,6 +85,8 @@ export function PasswordField({ label, value, onChange, autoComplete = "current-
       </div>
       {(error || hint) && (
         <span
+          id={supportId}
+          role={error ? "alert" : undefined}
           style={{
             fontSize: "var(--text-body-small)",
             lineHeight: "var(--text-body-small--line-height)",

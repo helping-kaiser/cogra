@@ -78,6 +78,8 @@ punctuation.
 - `A signing key can only ever back one account, so this account needs
   its own.`
 - `This is the only way to restore your key.`
+- `Replying also signs where you stand on the post it answers.` — the
+  reply seal's note, under the ruled block on both its states.
 
 ## Naming
 
