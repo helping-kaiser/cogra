@@ -1310,6 +1310,19 @@ describe("the alternate inputs", () => {
     expect(route.className).toContain("focus:not-sr-only");
   });
 
+  // The card's affordance row is one line that never wraps, and this control
+  // is the widest thing in it: the reading's WORDS give way, never the face
+  // and never the pair — the two channels §8.3 and §10 need on screen.
+  it("shorten their words rather than push the affordance row off one line", async () => {
+    mount({ seed: { "post-1": { records: [{ pDirected: 0.55, pInterest: 0.2 }] } } });
+    await settle();
+    expect(screen.getByTestId(`${PREFIX}-resting-face`).className).toContain("flex-none");
+    expect(screen.getByTestId(`${PREFIX}-resting-exact`).className).toContain("flex-none");
+    const words = screen.getByTestId(`${PREFIX}-resting-exact`).previousElementSibling;
+    expect(words).toHaveTextContent("Like this");
+    expect(words?.className).toContain("truncate");
+  });
+
   it("are reachable without ever dragging", async () => {
     mount();
     await settle();

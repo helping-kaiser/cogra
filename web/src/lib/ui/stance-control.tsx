@@ -502,13 +502,19 @@ export function StanceControl({
   return (
     // The control owns its touches (§8.3): nothing it receives reaches
     // the card or the link behind it.
+    // THE CARD'S AFFORDANCE ROW IS ONE LINE THAT NEVER WRAPS
+    // (`PostCard.jsx:300-309`, whose row carries `minWidth: 0` for exactly
+    // this): the control is the widest thing in it, so it is the thing that
+    // gives way. The reading's words shorten before the row does; the emoji
+    // and the pair never do, because the numbers are part of the default
+    // reading (§8.3). Standing alone, nothing shrinks it.
     <div
-      className="relative flex flex-col gap-1"
+      className="relative flex min-w-0 flex-col gap-1"
       onClick={(event) => event.stopPropagation()}
       onPointerDown={(event) => event.stopPropagation()}
       onPointerUp={(event) => event.stopPropagation()}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 items-center gap-2">
         {/* 48px minimum, including at rest (design.md §4). */}
         <button
           ref={buttonRef}
@@ -539,23 +545,25 @@ export function StanceControl({
             data-testid={`${testIdPrefix}-resting-face`}
             className={
               restingFace === null
-                ? "text-title-large opacity-40 grayscale"
-                : "text-title-large"
+                ? "flex-none text-title-large opacity-40 grayscale"
+                : "flex-none text-title-large"
             }
           >
             {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}
           </span>
           {/* Colour never carries stance alone: the words say it too
               (design.md §10) — and the exact pair with them, because the
-              numbers are part of the default reading (§8.3). */}
-          <span aria-hidden="true">
+              numbers are part of the default reading (§8.3). The words are
+              what gives way where the affordance row is tight; the face and
+              the pair are the two channels that must not. */}
+          <span aria-hidden="true" className="truncate">
             {restingFace === null ? NO_STANDING_LABEL : restingFace.label}
           </span>
           {restingPair !== null && (
             <span
               aria-hidden="true"
               data-testid={`${testIdPrefix}-resting-exact`}
-              className="text-body-small text-on-surface-variant"
+              className="flex-none text-body-small text-on-surface-variant"
             >
               {formatStancePair(restingPair)}
             </span>
