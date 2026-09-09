@@ -1,0 +1,55 @@
+<!-- @dsCard group="Components" viewport="760x560" name="Settings rows" subtitle="The group — heading, card of rows, footnote — and the row's four trailing edges, plus the house switch" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{padding:16px}.grid{display:grid;grid-template-columns:342px 342px;gap:24px;align-items:start}.col{display:flex;flex-direction:column;gap:16px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}.switches{display:flex;gap:16px;align-items:center}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { SettingsGroup, SettingsRow, Switch, SegmentedFilter, InlineAction } = window.CoGraDesignSystem_9084ba;
+function Demo(){return (
+<div className="grid">
+  <div className="col">
+    <span className="lbl">A group: heading, card of rows, footnote — the footnote is what keeps a row short</span>
+    <SettingsGroup label="Writing" footnote="Every signed action is paid for separately.">
+      <SettingsRow checked label="Confirm multi-action submits" status="Ask first when one submit signs more than one action."/>
+      <SettingsRow label="Default license" value="Public domain"/>
+    </SettingsGroup>
+
+    <span className="lbl">Choice rows — one radio group, the license sheet's own dot</span>
+    <SettingsGroup label="Taking a stance" footnote="A tap always adds a small positive one.">
+      <SettingsRow name="card-stance" selected label="The pad" status="Press and hold, then drift to where you stand."/>
+      <SettingsRow name="card-stance" selected={false} label="Sliders" status="One slider per side of the stance."/>
+    </SettingsGroup>
+
+    <span className="lbl">The house switch, both states — the knob travels as well as changing colour</span>
+    <div className="switches">
+      <Switch ariaLabel="On" checked/>
+      <Switch ariaLabel="Off"/>
+    </div>
+  </div>
+
+  <div className="col">
+    <span className="lbl">A row with its own control — inert, because the word at its end is the target</span>
+    <SettingsGroup label="Sessions" footnote="A device you sign out can stay signed in for up to 15 minutes.">
+      <SettingsRow label="Firefox on Ubuntu" status="This browser" inert/>
+      <SettingsRow label="Pixel 8" status="Last used 2 days ago" inert trailing={<InlineAction>Revoke</InlineAction>}/>
+      <SettingsRow action label="Sign out everywhere else"/>
+    </SettingsGroup>
+
+    <span className="lbl">Chevron alone, and a value beside it — both mean "this opens another surface"</span>
+    <SettingsGroup label="Key backup">
+      <SettingsRow label="Recovery code" status="Last created 12 August"/>
+      <SettingsRow label="Your key"/>
+    </SettingsGroup>
+
+    <span className="lbl">A bare group — the control draws its own container, so the card goes</span>
+    <SettingsGroup bare label="Theme" footnote="Auto follows your device's own setting.">
+      <div><SegmentedFilter block ariaLabel="Theme" value="auto" options={[{value:"light",label:"Light"},{value:"dark",label:"Dark"},{value:"auto",label:"Auto"}]}/></div>
+    </SettingsGroup>
+  </div>
+</div>)}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script></body></html>
