@@ -1285,7 +1285,6 @@ layout unoptimized until this round runs. What parked into it:
 
 Nothing desktop-specific is built before this round.
 
-
 ### 39 · The UI conformance audit's undrawn states · *design* · **the states are drawn**
 
 The 2026-09-08 audit found states both apps reach and no board draws;
@@ -1322,3 +1321,53 @@ and its fields since. Either the gate learns to accept the attribute on
 the field's wrapper (and the boards move it where it paints), or the
 readme's "the gate verifies the attribute, not the paint" stays the
 stated rule and this item closes as written.
+
+### 41 · The recovery code's two loose ends · *design*
+
+Filed by the W0 conform lane 2026-09-09 (questions 29 and 30 of the
+conformance audit's design-session list). Both sit on the recovery
+code; neither blocked the fixes that shipped.
+
+1. **The settings backup card shows a recovery code no board draws
+   there.** The ceremony's code lives on a dedicated screen and is
+   now the trap the board rules — back swallowed until the typed-back
+   confirmation. Settings shows the same code inside a card on the
+   settings screen itself: the mismatch line arrived for free through
+   the shared component, the trap did not — trapping back there would
+   strand the reader in settings. The stakes are the ceremony's (the
+   code is shown once and never stored), so the choices are: give the
+   settings backup its own screen riding the drawn board, trap the
+   settings screen while the code is up, or bless the card as a
+   deliberately lighter surface. Implementation's input: the
+   dedicated screen — same stakes, same screen; the other two either
+   invent a trap no board draws or leave the loss open.
+
+2. **`graph.json` fires the mismatch on a press the master forbids —
+   and the platforms split on it.** The RecoveryCode→
+   RecoveryCodeMismatch edge triggers on pressing "I've written it
+   down" with a wrong code, but the RecoveryCode master draws that
+   button `disabled={!matches}` — the press cannot happen. Each W0
+   lane resolved the contradiction toward a different source.
+   Android follows the master: the button stays disabled until the
+   code matches and the line appears in place from the first wrong
+   character — which also flags a reader mid-way through typing
+   correctly, since a partial never matches the whole. Web follows
+   the readme's validation timing ("on submit, then live only where
+   already marked") and the edge: the button is live once anything
+   is typed, a wrong press puts the line on the field, and from then
+   on it re-reads live. The ruling picks the reading — the losing
+   platform is a one-line fix — and settles the timing with it. If
+   an eager signal is wanted, the honest one is prefix divergence: a
+   typed prefix the code doesn't start with can never become right,
+   while a correct partial shows nothing.
+
+### 42 · The sensitive sheet's line is post-shaped · *design*
+
+Filed by the w0-web lane 2026-09-09. Item 25.2's Mark row is now on
+the comment editor, and it opens the same ComposeSensitive sheet the
+post seal uses — whose one explanatory line, "Veils the pictures and
+the description until a reader chooses to look", is written for the
+post. On a comment the veil covers the words and pictures as one.
+The apps show the drawn line verbatim rather than invent comment
+copy. Ruling: one line for both scales, or a comment wording — and
+if the latter, its words.
