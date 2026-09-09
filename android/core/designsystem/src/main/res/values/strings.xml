@@ -6,6 +6,7 @@
     <string name="recovery_code_copied">Copied</string>
     <string name="recovery_code_type_back">Type or paste the code to confirm</string>
     <string name="recovery_code_saved">I\'ve written it down</string>
+    <string name="recovery_code_mismatch">That doesn\'t match the code above.</string>
     <string name="pending_settling">Still settling</string>
 
     <!-- The topic chip (design.md §6). -->

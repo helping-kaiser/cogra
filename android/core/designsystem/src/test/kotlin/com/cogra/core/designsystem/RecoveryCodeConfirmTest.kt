@@ -11,6 +11,7 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -72,6 +73,40 @@ class RecoveryCodeConfirmTest {
 
         compose.onNodeWithTag("recovery_code_saved").assertIsNotEnabled()
         assertThat(confirmed).isEqualTo(0)
+    }
+
+    // The line is the field's own supporting text, so it merges into the
+    // field's node — which is what has TalkBack read it with the field.
+    private fun mismatchLine() =
+        compose.onNodeWithTag("recovery_code_mismatch", useUnmergedTree = true)
+
+    @Test
+    fun aWrongAnswerSaysSoRatherThanOnlyClosingTheButton() {
+        show()
+
+        compose.onNodeWithTag("recovery_code_typed_back").performTextInput("ABCDE")
+
+        mismatchLine().assertExists()
+    }
+
+    @Test
+    fun anUntouchedFieldIsNotYetAMistake() {
+        show()
+
+        mismatchLine().assertDoesNotExist()
+    }
+
+    @Test
+    fun theMismatchLineGoesWhenTheCodeIsAnswered() {
+        show()
+
+        compose.onNodeWithTag("recovery_code_typed_back").performTextInput("ABCDE")
+        mismatchLine().assertExists()
+
+        compose.onNodeWithTag("recovery_code_typed_back").performTextClearance()
+        compose.onNodeWithTag("recovery_code_typed_back").performTextInput(CODE)
+
+        mismatchLine().assertDoesNotExist()
     }
 
     @Test

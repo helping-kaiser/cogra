@@ -112,11 +112,12 @@ fun Modifier.onVisibilityChanged(onChange: (Float) -> Unit): Modifier =
  * decoder warms up. Autoplay follows visibility, muted, and the mute
  * control is the shared one — tapping it here answers for every clip.
  *
- * **A reading surface wears sound and nothing else** (`ReplyMedia`,
- * 2026-09-02): "no play/pause and no duration pill: presence on screen
- * is the policy on a reading surface, exactly as on a post's card". A
- * feed card, a post detail and a comment are all reading surfaces; the
- * composer is not, which is where the running time is shown instead.
+ * **The surface decides the controls, never the clip**
+ * (`design/readme.md`, the control ladder): a feed card carries the
+ * sound disc alone; a detail view and the fullscreen viewer carry the
+ * full transport; the stream carries sound and a seek line. No length
+ * threshold enters into it, because a reader who learns a control on
+ * one clip has to find it on the next.
  *
  * @param url the clip.
  * @param posterUrl the still that stands in before the first frame, and
