@@ -52,7 +52,10 @@ import { VideoTransport } from "./VideoControls.jsx";
      a feed card, the sound disc and nothing else; `"transport"` — a detail view,
      play/pause and a real timeline; `"play"` — the one card that draws play,
      because the device suppressed autoplay and nothing is going to start; and
-     `"none"` where the surface draws its own.
+     `"none"` where the surface draws its own. `fullscreen` rides through to the
+     transport for the one surface that has no fullscreen to offer — the
+     composer's cover preview, where the clip is not published yet and there is
+     no viewer to open.
    · THE COVER IS THE CLIP'S FACE WHEREVER THE CLIP ISN'T RUNNING (`resting`):
      first paint before autoplay, and every context where autoplay is suppressed
      — reduced motion, data saver. It never returns once playback has started.
@@ -160,6 +163,7 @@ export function MediaAttachment({
   elapsed = "0:00",
   duration = "0:00",
   progress = 0,
+  fullscreen = true,
 }) {
   const [muted, setMuted] = useGlobalMute();
   const videoRef = React.useRef(null);
@@ -270,6 +274,7 @@ export function MediaAttachment({
           duration={duration}
           progress={progress}
           muted={muted}
+          fullscreen={fullscreen}
           onToggleMute={() => setMuted(!muted)}
         />
       )}

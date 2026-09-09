@@ -52,8 +52,15 @@ The record carries:
 A Comment is **words plus optional media** — deliberately
 asymmetric to the Post's body XOR, because an answer is words
 first. A picture supports the words; it never replaces them.
-A comment gallery has no cover: nothing leads a set that only
-ever accompanies a body.
+
+The media follows the Post's grammar at a comment's scale:
+**four pictures or one video, never both kinds**, the clip
+capped at 50 MiB — half a post's, the same asymmetry the four
+pictures carry against a post's ten — and carrying the poster
+that stands for it wherever it isn't running. No picture leads
+a comment's gallery: a set that only ever accompanies a body
+has nothing to be the face of, so the only cover here is the
+clip's.
 
 A Collective commenting is the same gesture by the Collective's
 own actor ([collectives.md](collectives.md)).

@@ -717,6 +717,11 @@ function ReplySealBody() {
           <FactRow label="Sensitive" value="Not marked" action="Mark" last />
         </div>
 
+        {/* The stance the reply carries is a fact about replying, not about
+            this row — so it stands under the ruled block rather than inside
+            it, where `FactRow` has no slot for it. */}
+        <QuietNote>Replying also signs where you stand on the post it answers.</QuietNote>
+
         <div style={{ flex: 1 }} />
 
         <SealFooter signLabel="Sign comment" />

@@ -517,6 +517,18 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'class="cg-cover-own"', tag: "div" },
     { n: 6, find: ">Next</button>", tag: "button" },
   ],
+  ComposeCoverPlaying: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="Pause"', tag: "button" },
+    { n: 4, find: 'aria-label="Back ten seconds"', tag: "button" },
+    { n: 4, find: 'aria-label="Forward ten seconds"', tag: "button" },
+    { n: 5, find: 'aria-label="Seek"', tag: "div" },
+    { n: 6, find: 'aria-label="Turn sound on"', tag: "button" },
+    { n: 7, find: 'class="cg-cover-frame"', tag: "div", all: true },
+    { n: 8, find: 'class="cg-cover-own"', tag: "div" },
+    { n: 9, find: ">Next</button>", tag: "button" },
+  ],
   ComposeDraft: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
